@@ -6,7 +6,7 @@ using System.ComponentModel;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Various predefined font weights for use with <see cref="T:SkiaSharp.SKTypeface" />.
+	/// Various predefined font weights for use with <see cref="SKTypeface" />.
 	/// </summary>
 	/// <remarks>Font weights can range from anywhere between 100 to 1000 (inclusive).</remarks>
 	public enum SKFontStyleWeight
@@ -58,7 +58,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Various predefined font widths for use with <see cref="T:SkiaSharp.SKTypeface" />.
+	/// Various predefined font widths for use with <see cref="SKTypeface" />.
 	/// </summary>
 	public enum SKFontStyleWidth
 	{
@@ -166,7 +166,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Convenience methods for <see cref="T:SkiaSharp.SKPixelGeometry" />.
+	/// Convenience methods for <see cref="SKPixelGeometry" />.
 	/// </summary>
 	public static partial class SkiaExtensions
 	{
@@ -331,7 +331,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Additional options to pass to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="T:SkiaSharp.SKCodecOptions" />.
+	/// Additional options to pass to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="SKCodecOptions" />.
 	/// </summary>
 	public struct SKCodecOptions : IEquatable<SKCodecOptions>
 	{
@@ -347,7 +347,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Create a new instance of <see cref="T:SkiaSharp.SKCodecOptions" /> with the specified zero-initialization.
+		/// Create a new instance of <see cref="SKCodecOptions" /> with the specified zero-initialization.
 		/// </summary>
 		/// <param name="zeroInitialized">The zero-initialization.</param>
 		public SKCodecOptions (SKZeroInitialized zeroInitialized)
@@ -358,7 +358,7 @@ namespace SkiaSharp
 			PriorFrame = -1;
 		}
 		/// <summary>
-		/// Create a new instance of <see cref="T:SkiaSharp.SKCodecOptions" /> with the specified subset rectangle and zero-initialization.
+		/// Create a new instance of <see cref="SKCodecOptions" /> with the specified subset rectangle and zero-initialization.
 		/// </summary>
 		/// <param name="zeroInitialized">The zero-initialization.</param>
 		/// <param name="subset">The subset rectangle.</param>
@@ -370,7 +370,7 @@ namespace SkiaSharp
 			PriorFrame = -1;
 		}
 		/// <summary>
-		/// Create a new instance of <see cref="T:SkiaSharp.SKCodecOptions" /> with the specified subset rectangle.
+		/// Create a new instance of <see cref="SKCodecOptions" /> with the specified subset rectangle.
 		/// </summary>
 		/// <param name="subset">The subset rectangle.</param>
 		public SKCodecOptions (SKRectI subset)
@@ -381,7 +381,7 @@ namespace SkiaSharp
 			PriorFrame = -1;
 		}
 		/// <summary>
-		/// Create a new instance of <see cref="T:SkiaSharp.SKCodecOptions" /> with the specified frame index.
+		/// Create a new instance of <see cref="SKCodecOptions" /> with the specified frame index.
 		/// </summary>
 		/// <param name="frameIndex">The frame to decode.</param>
 		/// <remarks>Only meaningful for multi-frame images.</remarks>
@@ -393,7 +393,7 @@ namespace SkiaSharp
 			PriorFrame = -1;
 		}
 		/// <summary>
-		/// Create a new instance of <see cref="T:SkiaSharp.SKCodecOptions" />.
+		/// Create a new instance of <see cref="SKCodecOptions" />.
 		/// </summary>
 		/// <param name="frameIndex">The frame to decode.</param>
 		/// <param name="priorFrame">The previous frame to decode.</param>
@@ -567,7 +567,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Specifies coordinates to divide a bitmap into (<see cref="P:SkiaSharp.SKLattice.XDivs" /> * <see cref="P:SkiaSharp.SKLattice.YDivs" />) rectangles.
+	/// Specifies coordinates to divide a bitmap into (<see cref="SKLattice.XDivs" /> * <see cref="SKLattice.YDivs" />) rectangles.
 	/// </summary>
 	/// <remarks>If the lattice divs or bounds are invalid, the entire lattice structure will be ignored on the draw call.</remarks>
 	public struct SKLattice : IEquatable<SKLattice>
@@ -660,7 +660,7 @@ namespace SkiaSharp
 		public const int DefaultEncodingQuality = 101;
 
 		/// <summary>
-		/// Gets a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the values set to the defaults.
+		/// Gets a new instance of <see cref="SKDocumentPdfMetadata" /> with the values set to the defaults.
 		/// </summary>
 		public static readonly SKDocumentPdfMetadata Default;
 
@@ -674,7 +674,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the specified raster DPI.
+		/// Creates a new instance of <see cref="SKDocumentPdfMetadata" /> with the specified raster DPI.
 		/// </summary>
 		/// <param name="rasterDpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
 		/// <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
@@ -694,7 +694,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the specified encoding quality.
+		/// Creates a new instance of <see cref="SKDocumentPdfMetadata" /> with the specified encoding quality.
 		/// </summary>
 		/// <param name="encodingQuality">The encoding quality.</param>
 		/// <remarks>The encoding quality is between 0 and 100. A quality of 101 indicates lossless encoding.</remarks>
@@ -714,7 +714,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKDocumentPdfMetadata" /> with the specified raster DPI and encoding quality.
+		/// Creates a new instance of <see cref="SKDocumentPdfMetadata" /> with the specified raster DPI and encoding quality.
 		/// </summary>
 		/// <param name="rasterDpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
 		/// <param name="encodingQuality">The encoding quality.</param>
@@ -854,7 +854,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKHighContrastConfig" />.
+		/// Creates a new instance of <see cref="SKHighContrastConfig" />.
 		/// </summary>
 		/// <param name="grayscale">Whether or not the color will be converted to grayscale.</param>
 		/// <param name="invertStyle">Whether or not to invert brightness, lightness, or neither.</param>
@@ -882,7 +882,7 @@ namespace SkiaSharp
 	public unsafe partial struct SKPngEncoderOptions
 	{
 		/// <summary>
-		/// Gets a new instance of <see cref="T:SkiaSharp.SKPngEncoderOptions" /> with the values set to the defaults.
+		/// Gets a new instance of <see cref="SKPngEncoderOptions" /> with the values set to the defaults.
 		/// </summary>
 		public static readonly SKPngEncoderOptions Default;
 
@@ -892,7 +892,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKPngEncoderOptions" />.
+		/// Creates a new instance of <see cref="SKPngEncoderOptions" />.
 		/// </summary>
 		/// <param name="filterFlags">The filtering flags.</param>
 		/// <param name="zLibLevel">The compression level in the range 0..9.</param>
@@ -925,7 +925,7 @@ namespace SkiaSharp
 	public unsafe partial struct SKJpegEncoderOptions
 	{
 		/// <summary>
-		/// Gets a new instance of <see cref="T:SkiaSharp.SKJpegEncoderOptions" /> with the values set to the defaults.
+		/// Gets a new instance of <see cref="SKJpegEncoderOptions" /> with the values set to the defaults.
 		/// </summary>
 		public static readonly SKJpegEncoderOptions Default;
 
@@ -946,7 +946,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKJpegEncoderOptions" />.
+		/// Creates a new instance of <see cref="SKJpegEncoderOptions" />.
 		/// </summary>
 		/// <param name="quality">The quality of the encoding in the range 0 to 100.</param>
 		/// <param name="downsample">The downsampling factor for the U and V components.</param>
@@ -986,7 +986,7 @@ namespace SkiaSharp
 	public unsafe partial struct SKWebpEncoderOptions
 	{
 		/// <summary>
-		/// Gets a new instance of <see cref="T:SkiaSharp.SKWebpEncoderOptions" /> with the values set to the defaults.
+		/// Gets a new instance of <see cref="SKWebpEncoderOptions" /> with the values set to the defaults.
 		/// </summary>
 		public static readonly SKWebpEncoderOptions Default;
 
@@ -996,7 +996,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKWebpEncoderOptions" />.
+		/// Creates a new instance of <see cref="SKWebpEncoderOptions" />.
 		/// </summary>
 		/// <param name="compression">The compression level.</param>
 		/// <param name="quality">The quality of the encoding in the range 0.0 to 100.0.</param>

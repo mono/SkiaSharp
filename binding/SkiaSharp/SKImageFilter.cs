@@ -3,7 +3,7 @@
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Image filters for use with the <see cref="P:SkiaSharp.SKPaint.ImageFilter" /> property of a <see cref="T:SkiaSharp.SKPaint" />.
+	/// Image filters for use with the <see cref="SKPaint.ImageFilter" /> property of a <see cref="SKPaint" />.
 	/// </summary>
 	public unsafe class SKImageFilter : SKObject, ISKReferenceCounted
 	{
@@ -27,7 +27,7 @@ namespace SkiaSharp
 		/// <param name="matrix">The transformation matrix.</param>
 		/// <param name="quality">The quality.</param>
 		/// <param name="input">The input filter to use.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+		/// <returns>Returns the new <see cref="SKImageFilter" />, or null on error.</returns>
 		[Obsolete("Use SetMatrix(in SKMatrix, SKSamplingOptions, SKImageFilter) instead.", true)]
 		public static SKImageFilter CreateMatrix (SKMatrix matrix, SKFilterQuality quality, SKImageFilter? input) =>
 			CreateMatrix (in matrix, quality.ToSamplingOptions (), input);
@@ -91,7 +91,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="outer">The outer (second) filter to apply.</param>
 		/// <param name="inner">The inner (first) filter to apply.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+		/// <returns>Returns the new <see cref="SKImageFilter" />, or null on error.</returns>
 		public static SKImageFilter CreateCompose (SKImageFilter outer, SKImageFilter inner)
 		{
 			_ = outer ?? throw new ArgumentNullException (nameof (outer));
@@ -324,7 +324,7 @@ namespace SkiaSharp
 		/// Creates an image filter that draws a picture.
 		/// </summary>
 		/// <param name="picture">The picture to draw.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+		/// <returns>Returns the new <see cref="SKImageFilter" />, or null on error.</returns>
 		public static SKImageFilter CreatePicture (SKPicture picture)
 		{
 			_ = picture ?? throw new ArgumentNullException (nameof (picture));
@@ -336,7 +336,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="picture">The picture to draw.</param>
 		/// <param name="cropRect">The rectangle to which the output processing will be limited.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+		/// <returns>Returns the new <see cref="SKImageFilter" />, or null on error.</returns>
 		public static SKImageFilter CreatePicture (SKPicture picture, SKRect cropRect)
 		{
 			_ = picture ?? throw new ArgumentNullException (nameof (picture));
@@ -354,7 +354,7 @@ namespace SkiaSharp
 		/// <param name="src">The pixels to tile.</param>
 		/// <param name="dst">The pixels where the tiles are drawn</param>
 		/// <param name="input">The input filter to use.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+		/// <returns>Returns the new <see cref="SKImageFilter" />, or null on error.</returns>
 		public static SKImageFilter CreateTile (SKRect src, SKRect dst, SKImageFilter? input)
 		{
 			_ = input ?? throw new ArgumentNullException (nameof (input));
@@ -412,7 +412,7 @@ namespace SkiaSharp
 		/// Creates an image filter that draws an image.
 		/// </summary>
 		/// <param name="image">The image to draw.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+		/// <returns>Returns the new <see cref="SKImageFilter" />, or null on error.</returns>
 		public static SKImageFilter CreateImage (SKImage image) =>
 			CreateImage (image, new SKSamplingOptions (SKCubicResampler.Mitchell));
 
@@ -435,7 +435,7 @@ namespace SkiaSharp
 		/// <param name="src">The rectangle of the source image to draw.</param>
 		/// <param name="dst">The rectangle of the destination area.</param>
 		/// <param name="filterQuality">The filter quality.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageFilter" />, or null on error.</returns>
+		/// <returns>Returns the new <see cref="SKImageFilter" />, or null on error.</returns>
 		[Obsolete("Use CreateImage(SKImage, SKRect, SKRect, SKSamplingOptions) instead.", true)]
 		public static SKImageFilter CreateImage (SKImage image, SKRect src, SKRect dst, SKFilterQuality filterQuality) =>
 			CreateImage (image, src, dst, filterQuality.ToSamplingOptions ());

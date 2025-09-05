@@ -8,7 +8,7 @@ using EGLConfig = Javax.Microedition.Khronos.Egl.EGLConfig;
 namespace SkiaSharp.Views.Android
 {
 	/// <summary>
-	/// An abstract implementation of <see cref="global::Android.Opengl.GLSurfaceView.IRenderer" /> that provides a <see cref="T:SkiaSharp.SKSurface" /> for drawing.
+	/// An abstract implementation of <see cref="global::Android.Opengl.GLSurfaceView.IRenderer" /> that provides a <see cref="SKSurface" /> for drawing.
 	/// </summary>
 	public abstract class SKGLSurfaceViewRenderer : Java.Lang.Object, GLSurfaceView.IRenderer
 	{

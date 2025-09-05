@@ -6,21 +6,46 @@ namespace SkiaSharp.Views.Maui
 {
 	public class SKTouchEventArgs : EventArgs
 	{
+		/// <param name="id"></param>
+		/// <param name="type"></param>
+		/// <param name="location"></param>
+		/// <param name="inContact"></param>
 		public SKTouchEventArgs(long id, SKTouchAction type, SKPoint location, bool inContact)
 			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact, 0, 1)
 		{
 		}
 
+		/// <param name="id"></param>
+		/// <param name="type"></param>
+		/// <param name="mouseButton"></param>
+		/// <param name="deviceType"></param>
+		/// <param name="location"></param>
+		/// <param name="inContact"></param>
 		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact)
 			: this(id, type, mouseButton, deviceType, location, inContact, 0, 1)
 		{
 		}
 
+		/// <param name="id"></param>
+		/// <param name="type"></param>
+		/// <param name="mouseButton"></param>
+		/// <param name="deviceType"></param>
+		/// <param name="location"></param>
+		/// <param name="inContact"></param>
+		/// <param name="wheelDelta"></param>
 		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta)
 			: this(id, type, mouseButton, deviceType, location, inContact, wheelDelta, 1)
 		{
 		}
 
+		/// <param name="id"></param>
+		/// <param name="type"></param>
+		/// <param name="mouseButton"></param>
+		/// <param name="deviceType"></param>
+		/// <param name="location"></param>
+		/// <param name="inContact"></param>
+		/// <param name="wheelDelta"></param>
+		/// <param name="pressure"></param>
 		public SKTouchEventArgs(long id, SKTouchAction type, SKMouseButton mouseButton, SKTouchDeviceType deviceType, SKPoint location, bool inContact, int wheelDelta, float pressure)
 		{
 			Id = id;

@@ -13,9 +13,9 @@ using System.Runtime.CompilerServices;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// The <see cref="T:SkiaSharp.GRGlInterface" /> is used to interface with OpenGL.
+	/// The <see cref="GRGlInterface" /> is used to interface with OpenGL.
 	/// </summary>
-	/// <remarks>A <see cref="T:SkiaSharp.GRContext" /> does not interact directly with the underlying backend, instead it uses an OpenGL interface.</remarks>
+	/// <remarks>A <see cref="GRContext" /> does not interact directly with the underlying backend, instead it uses an OpenGL interface.</remarks>
 	public unsafe partial class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)
@@ -119,7 +119,7 @@ namespace SkiaSharp
 		//
 
 		/// <summary>
-		/// Validates that the <see cref="T:SkiaSharp.GRGlInterface" /> supports its advertised standard.
+		/// Validates that the <see cref="GRGlInterface" /> supports its advertised standard.
 		/// </summary>
 		/// <returns>Returns true if all the entry points are specified, and any required extensions exist.</returns>
 		public bool Validate () =>

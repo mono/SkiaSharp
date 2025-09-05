@@ -6,7 +6,7 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="T:SkiaSharp.SKStreamAsset" /> (a seekable, rewindable Skia stream)
+	/// Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="SKStreamAsset" /> (a seekable, rewindable Skia stream)
 	/// </summary>
 	/// <remarks>The following example shows how to wrap a <see cref="System.IO.Stream" /> that
 	/// represents a stream into an embedded resource in an assembly and use it with

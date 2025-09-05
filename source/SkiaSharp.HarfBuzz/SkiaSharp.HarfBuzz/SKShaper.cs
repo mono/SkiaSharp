@@ -16,7 +16,7 @@ namespace SkiaSharp.HarfBuzz
 		private Buffer hbBuffer;
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper" /> instance using the specified typeface.
+		/// Creates a new <see cref="SKShaper" /> instance using the specified typeface.
 		/// </summary>
 		/// <param name="typeface">The typeface to use for the text shaping.</param>
 		public SKShaper(SKTypeface typeface)
@@ -45,9 +45,9 @@ namespace SkiaSharp.HarfBuzz
 		public SKTypeface Typeface { get; private set; }
 
 		/// <summary>
-		/// Releases all resources used by this <see cref="T:SkiaSharp.HarfBuzz.SKShaper" />.
+		/// Releases all resources used by this <see cref="SKShaper" />.
 		/// </summary>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.HarfBuzz.SKShaper" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="SKShaper" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		public void Dispose()
 		{
 			hbFont?.Dispose();
@@ -192,7 +192,7 @@ namespace SkiaSharp.HarfBuzz
 		public class Result
 		{
 			/// <summary>
-			/// Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper.Result" /> instance using empty values.
+			/// Creates a new <see cref="SKShaper.Result" /> instance using empty values.
 			/// </summary>
 			public Result()
 			{
@@ -203,7 +203,7 @@ namespace SkiaSharp.HarfBuzz
 			}
 
 			/// <summary>
-			/// Creates a new <see cref="T:SkiaSharp.HarfBuzz.SKShaper.Result" /> instance using the specified values.
+			/// Creates a new <see cref="SKShaper.Result" /> instance using the specified values.
 			/// </summary>
 			/// <param name="codepoints">The glyph Unicode code points.</param>
 			/// <param name="clusters">The glyph clusters.</param>

@@ -3,7 +3,7 @@
 namespace SkiaSharp.HarfBuzz
 {
 	/// <summary>
-	/// Various extension methods to integrate a SkiaSharp <see cref="T:SkiaSharp.SKCanvas" /> and HarfBuzz.
+	/// Various extension methods to integrate a SkiaSharp <see cref="SKCanvas" /> and HarfBuzz.
 	/// </summary>
 	public static class CanvasExtensions
 	{

@@ -16,7 +16,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKRoundRect" /> with all values initialized to 0.
+		/// Creates a new instance of <see cref="SKRoundRect" /> with all values initialized to 0.
 		/// </summary>
 		public SKRoundRect ()
 			: this (SkiaApi.sk_rrect_new (), true)
@@ -28,7 +28,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKRoundRect" /> with all radii set to 0.
+		/// Creates a new instance of <see cref="SKRoundRect" /> with all radii set to 0.
 		/// </summary>
 		/// <param name="rect">The bounds of the new rectangle.</param>
 		public SKRoundRect (SKRect rect)
@@ -41,7 +41,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKRoundRect" /> with the same radii for all four corners.
+		/// Creates a new instance of <see cref="SKRoundRect" /> with the same radii for all four corners.
 		/// </summary>
 		/// <param name="rect">The bounds of the new rectangle.</param>
 		/// <param name="radius">The radii of the corners.</param>
@@ -51,7 +51,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKRoundRect" /> with the same radii for all four corners.
+		/// Creates a new instance of <see cref="SKRoundRect" /> with the same radii for all four corners.
 		/// </summary>
 		/// <param name="rect">The bounds of the new rectangle.</param>
 		/// <param name="xRadius">The radii of the corners along the x-axis.</param>
@@ -66,7 +66,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a copy of a <see cref="T:SkiaSharp.SKRoundRect" />.
+		/// Creates a copy of a <see cref="SKRoundRect" />.
 		/// </summary>
 		/// <param name="rrect">The rounded rectangle to copy.</param>
 		public SKRoundRect (SKRoundRect rrect)

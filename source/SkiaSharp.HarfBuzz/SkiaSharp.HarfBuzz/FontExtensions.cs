@@ -5,7 +5,7 @@ using HarfBuzzSharp;
 namespace SkiaSharp.HarfBuzz
 {
 	/// <summary>
-	/// Various extension methods to integrate SkiaSharp and a HarfBuzz <see cref="T:HarfBuzzSharp.Font" />.
+	/// Various extension methods to integrate SkiaSharp and a HarfBuzz <see cref="Font" />.
 	/// </summary>
 	public static class FontExtensions
 	{

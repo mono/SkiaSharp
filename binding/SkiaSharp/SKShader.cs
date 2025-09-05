@@ -6,7 +6,7 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Shaders specify the source color(s) for what is being drawn in the <see cref="T:SkiaSharp.SKPaint" />.
+	/// Shaders specify the source color(s) for what is being drawn in the <see cref="SKPaint" />.
 	/// </summary>
 	/// <remarks>Shaders specify the source colors for what is being drawn. If a paint has no
 	/// shader, then the paint's color is used. If the paint has a shader, then the
@@ -215,7 +215,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Creates a new "empty" shader that will not draw anything.
 		/// </summary>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateEmpty () =>
 			GetObject (SkiaApi.sk_shader_new_empty ());
 
@@ -225,7 +225,7 @@ namespace SkiaSharp
 		/// Creates a new shader that just draws the specified color.
 		/// </summary>
 		/// <param name="color">The color to paint.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateColor (SKColor color) =>
 			GetObject (SkiaApi.sk_shader_new_color ((uint)color));
 
@@ -234,7 +234,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="color">The color to paint.</param>
 		/// <param name="colorspace">The colorspace to use.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateColor (SKColorF color, SKColorSpace colorspace)
 		{
 			if (colorspace == null)
@@ -249,7 +249,7 @@ namespace SkiaSharp
 		/// Creates a new shader that will draw with the specified bitmap.
 		/// </summary>
 		/// <param name="src">The bitmap to use inside the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		/// <remarks>If the bitmap cannot be used (has no pixels, or its dimensions exceed
 		/// implementation limits) then an empty shader may be returned. If the source
 		/// bitmap's color type is <see cref="SkiaSharp.SKColorType.Alpha8" /> then that mask will
@@ -263,7 +263,7 @@ namespace SkiaSharp
 		/// <param name="src">The bitmap to use inside the shader.</param>
 		/// <param name="tmx">The tiling mode to use when sampling the bitmap in the x-direction.</param>
 		/// <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		/// <remarks>If the bitmap cannot be used (has no pixels, or its dimensions exceed
 		/// implementation limits) then an empty shader may be returned. If the source
 		/// bitmap's color type is <see cref="SkiaSharp.SKColorType.Alpha8" /> then that mask will
@@ -283,7 +283,7 @@ namespace SkiaSharp
 		/// <param name="tmx">The tiling mode to use when sampling the bitmap in the x-direction.</param>
 		/// <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		/// <remarks>If the bitmap cannot be used (has no pixels, or its dimensions exceed
 		/// implementation limits) then an empty shader may be returned. If the source
 		/// bitmap's color type is <see cref="SkiaSharp.SKColorType.Alpha8" /> then that mask will
@@ -341,7 +341,7 @@ namespace SkiaSharp
 		/// <param name="src">The picture to use inside the shader.</param>
 		/// <param name="tmx">The tiling mode to use when sampling the picture in the x-direction.</param>
 		/// <param name="tmy">The tiling mode to use when sampling the picture in the y-direction.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy) =>
 			src?.ToShader (tmx, tmy) ?? throw new ArgumentNullException (nameof (src));
 
@@ -355,7 +355,7 @@ namespace SkiaSharp
 		/// <param name="tmx">The tiling mode to use when sampling the picture in the x-direction.</param>
 		/// <param name="tmy">The tiling mode to use when sampling the picture in the y-direction.</param>
 		/// <param name="tile">The tile rectangle in picture coordinates.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		/// <remarks>The tile rectangle represents the subset (or superset) of the picture used when building a tile. It is not affected by
 		/// the local matrix and does not imply scaling (only translation and cropping).</remarks>
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile) =>
@@ -372,7 +372,7 @@ namespace SkiaSharp
 		/// <param name="tmy">The tiling mode to use when sampling the picture in the y-direction.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
 		/// <param name="tile">The tile rectangle in picture coordinates.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		/// <remarks>The tile rectangle represents the subset (or superset) of the picture used when building a tile. It is not affected by
 		/// the local matrix and does not imply scaling (only translation and cropping).</remarks>
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
@@ -390,7 +390,7 @@ namespace SkiaSharp
 		/// <param name="end">The end point for the gradient.</param>
 		/// <param name="colors">The array colors to be distributed between the two points.</param>
 		/// <param name="mode">The tiling mode.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, SKShaderTileMode mode) =>
 			CreateLinearGradient (start, end, colors, null, mode);
 
@@ -402,7 +402,7 @@ namespace SkiaSharp
 		/// <param name="colors">The array colors to be distributed between the two points.</param>
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
 		/// <param name="mode">The tiling mode.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, float[] colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
@@ -426,7 +426,7 @@ namespace SkiaSharp
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
 		/// <param name="mode">The tiling mode.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateLinearGradient (SKPoint start, SKPoint end, SKColor[] colors, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
@@ -499,7 +499,7 @@ namespace SkiaSharp
 		/// <param name="radius">The positive radius of the circle for this gradient.</param>
 		/// <param name="colors">The array colors to be distributed between the center and edge of the circle.</param>
 		/// <param name="mode">The tiling mode.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, SKShaderTileMode mode) =>
 			CreateRadialGradient (center, radius, colors, null, mode);
 
@@ -511,7 +511,7 @@ namespace SkiaSharp
 		/// <param name="colors">The array colors to be distributed between the center and edge of the circle.</param>
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
 		/// <param name="mode">The tiling mode.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
@@ -534,7 +534,7 @@ namespace SkiaSharp
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
 		/// <param name="mode">The tiling mode.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateRadialGradient (SKPoint center, float radius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
@@ -602,7 +602,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="center">The coordinates of the center of the sweep.</param>
 		/// <param name="colors">The array colors to be distributed around the center.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors) =>
 			CreateSweepGradient (center, colors, null, SKShaderTileMode.Clamp, 0, 360);
 
@@ -612,7 +612,7 @@ namespace SkiaSharp
 		/// <param name="center">The coordinates of the center of the sweep.</param>
 		/// <param name="colors">The array colors to be distributed around the center.</param>
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos) =>
 			CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360);
 
@@ -623,7 +623,7 @@ namespace SkiaSharp
 		/// <param name="colors">The array colors to be distributed around the center.</param>
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKMatrix localMatrix) =>
 			CreateSweepGradient (center, colors, colorPos, SKShaderTileMode.Clamp, 0, 360, localMatrix);
 
@@ -635,7 +635,7 @@ namespace SkiaSharp
 		/// <param name="tileMode">The tiling mode.</param>
 		/// <param name="startAngle">The start of the angular range.</param>
 		/// <param name="endAngle">The end of the angular range.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, SKShaderTileMode tileMode, float startAngle, float endAngle) =>
 			CreateSweepGradient (center, colors, null, tileMode, startAngle, endAngle);
 
@@ -648,7 +648,7 @@ namespace SkiaSharp
 		/// <param name="tileMode">The tiling mode.</param>
 		/// <param name="startAngle">The start of the angular range.</param>
 		/// <param name="endAngle">The end of the angular range.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle)
 		{
 			if (colors == null)
@@ -672,7 +672,7 @@ namespace SkiaSharp
 		/// <param name="startAngle">The start of the angular range.</param>
 		/// <param name="endAngle">The end of the angular range.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateSweepGradient (SKPoint center, SKColor[] colors, float[] colorPos, SKShaderTileMode tileMode, float startAngle, float endAngle, SKMatrix localMatrix)
 		{
 			if (colors == null)
@@ -768,7 +768,7 @@ namespace SkiaSharp
 		/// <param name="endRadius">The radius at the end point.</param>
 		/// <param name="colors">The array colors to be distributed between the two points.</param>
 		/// <param name="mode">The tiling mode.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or null on error.</returns>
 		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, SKShaderTileMode mode) =>
 			CreateTwoPointConicalGradient (start, startRadius, end, endRadius, colors, null, mode);
 
@@ -782,7 +782,7 @@ namespace SkiaSharp
 		/// <param name="colors">The array colors to be distributed between the two points.</param>
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
 		/// <param name="mode">The tiling mode.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or null on error.</returns>
 		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode)
 		{
 			if (colors == null)
@@ -807,7 +807,7 @@ namespace SkiaSharp
 		/// <param name="colorPos">The positions (in the range of 0..1) of each corresponding color, or null to evenly distribute the colors.</param>
 		/// <param name="mode">The tiling mode.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateTwoPointConicalGradient (SKPoint start, float startRadius, SKPoint end, float endRadius, SKColor[] colors, float[] colorPos, SKShaderTileMode mode, SKMatrix localMatrix)
 		{
 			if (colors == null)
@@ -883,7 +883,7 @@ namespace SkiaSharp
 		/// <param name="baseFrequencyY">The frequency in the y-direction in the range of 0..1.</param>
 		/// <param name="numOctaves">The number of octaves, usually fairly small.</param>
 		/// <param name="seed">The randomization seed.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreatePerlinNoiseFractalNoise (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed) =>
 			GetObject (SkiaApi.sk_shader_new_perlin_noise_fractal_noise (baseFrequencyX, baseFrequencyY, numOctaves, seed, null));
 
@@ -895,7 +895,7 @@ namespace SkiaSharp
 		/// <param name="numOctaves">The number of octaves, usually fairly small.</param>
 		/// <param name="seed">The randomization seed.</param>
 		/// <param name="tileSize">The tile size used to modify the frequencies so that the noise will be tileable for the given size.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreatePerlinNoiseFractalNoise (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize) =>
 			CreatePerlinNoiseFractalNoise (baseFrequencyX, baseFrequencyY, numOctaves, seed, (SKSizeI)tileSize);
 
@@ -916,7 +916,7 @@ namespace SkiaSharp
 		/// <param name="baseFrequencyY">The frequency in the y-direction in the range of 0..1.</param>
 		/// <param name="numOctaves">The number of octaves, usually fairly small.</param>
 		/// <param name="seed">The randomization seed.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed) =>
 			GetObject (SkiaApi.sk_shader_new_perlin_noise_turbulence (baseFrequencyX, baseFrequencyY, numOctaves, seed, null));
 
@@ -928,7 +928,7 @@ namespace SkiaSharp
 		/// <param name="numOctaves">The number of octaves, usually fairly small.</param>
 		/// <param name="seed">The randomization seed.</param>
 		/// <param name="tileSize">The tile size used to modify the frequencies so that the noise will be tileable for the given size.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, SKPointI tileSize) =>
 			CreatePerlinNoiseTurbulence (baseFrequencyX, baseFrequencyY, numOctaves, seed, (SKSizeI)tileSize);
 
@@ -943,11 +943,11 @@ namespace SkiaSharp
 		// CreateCompose
 
 		/// <summary>
-		/// Create a new compose shader, which combines two shaders by the <see cref="F:SkiaSharp.SKBlendMode.SrcOver" /> blend mode.
+		/// Create a new compose shader, which combines two shaders by the <see cref="SKBlendMode.SrcOver" /> blend mode.
 		/// </summary>
 		/// <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
 		/// <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB) =>
 			CreateCompose (shaderA, shaderB, SKBlendMode.SrcOver);
 
@@ -957,7 +957,7 @@ namespace SkiaSharp
 		/// <param name="shaderA">The colors from this shader are seen as the destination by the blend mode.</param>
 		/// <param name="shaderB">The colors from this shader are seen as the source by the blend mode.</param>
 		/// <param name="mode">The blend mode that combines the two shaders.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKBlendMode mode)
 		{
 			if (shaderA == null)
@@ -992,7 +992,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="shader">The shader to apply.</param>
 		/// <param name="filter">The color filter to apply.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or an empty shader on error. This function never returns null.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
 		public static SKShader CreateColorFilter (SKShader shader, SKColorFilter filter)
 		{
 			if (shader == null)
@@ -1010,7 +1010,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="shader">The shader to apply.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
-		/// <returns>Returns a new <see cref="T:SkiaSharp.SKShader" />, or null on error.</returns>
+		/// <returns>Returns a new <see cref="SKShader" />, or null on error.</returns>
 		public static SKShader CreateLocalMatrix (SKShader shader, SKMatrix localMatrix)
 		{
 			if (shader == null)

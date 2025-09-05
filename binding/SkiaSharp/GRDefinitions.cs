@@ -9,7 +9,7 @@ using GRBackendObject = System.IntPtr;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRGlBackendState)" /> method when using a <see cref="F:SkiaSharp.GRBackend.OpenGL" /> backend.
+	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRGlBackendState)" /> method when using a <see cref="GRBackend.OpenGL" /> backend.
 	/// </summary>
 	[Flags]
 	public enum GRGlBackendState : UInt32
@@ -94,7 +94,7 @@ namespace SkiaSharp
 	public partial struct GRGlFramebufferInfo
 	{
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.GRGlFramebufferInfo" /> with the specified parameters.
+		/// Creates a new <see cref="GRGlFramebufferInfo" /> with the specified parameters.
 		/// </summary>
 		/// <param name="fboId">The OpenGL framebuffer ID.</param>
 		public GRGlFramebufferInfo (uint fboId)
@@ -106,7 +106,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.GRGlFramebufferInfo" /> with the specified parameters.
+		/// Creates a new <see cref="GRGlFramebufferInfo" /> with the specified parameters.
 		/// </summary>
 		/// <param name="fboId">The OpenGL framebuffer ID.</param>
 		/// <param name="format">The sized, internal format of the OpenGL framebuffer.</param>
@@ -136,7 +136,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.GRGlTextureInfo" /> with the specified parameters.
+		/// Creates a new <see cref="GRGlTextureInfo" /> with the specified parameters.
 		/// </summary>
 		/// <param name="target">The OpenGL texture target.</param>
 		/// <param name="id">The OpenGL texture ID.</param>
@@ -212,14 +212,14 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Convenience methods for <see cref="T:SkiaSharp.SKPixelGeometry" />.
+	/// Convenience methods for <see cref="SKPixelGeometry" />.
 	/// </summary>
 	public static partial class SkiaExtensions
 	{
 		/// <summary>
-		/// Converts a <see cref="T:SkiaSharp.SKColorType" /> to the equivalent OpenGL sized format, if possible.
+		/// Converts a <see cref="SKColorType" /> to the equivalent OpenGL sized format, if possible.
 		/// </summary>
-		/// <param name="colorType">The <see cref="T:SkiaSharp.SKColorType" /> to convert.</param>
+		/// <param name="colorType">The <see cref="SKColorType" /> to convert.</param>
 		/// <returns>Returns the equivalent OpenGL sized format, or 0 if there is none.</returns>
 		public static uint ToGlSizedFormat (this SKColorType colorType) =>
 			colorType switch {

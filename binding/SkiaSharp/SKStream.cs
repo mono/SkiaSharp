@@ -413,7 +413,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKFileStream" /> that wraps the file with the specified path.
+		/// Creates a new <see cref="SKFileStream" /> that wraps the file with the specified path.
 		/// </summary>
 		/// <param name="path">The existing file to open for reading.</param>
 		public SKFileStream (string path)
@@ -444,7 +444,7 @@ namespace SkiaSharp
 		public bool IsValid => SkiaApi.sk_filestream_is_valid (Handle);
 
 		/// <summary>
-		/// Determines whether the specified path is supported by a <see cref="T:SkiaSharp.SKFileStream" />.
+		/// Determines whether the specified path is supported by a <see cref="SKFileStream" />.
 		/// </summary>
 		/// <param name="path">The path to check.</param>
 		/// <returns>Returns <see langword="true" /> if the path is supported, otherwise <see langword="false" />.</returns>
@@ -477,7 +477,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKMemoryStream" /> with an empty buffer.
+		/// Creates a new instance of <see cref="SKMemoryStream" /> with an empty buffer.
 		/// </summary>
 		public SKMemoryStream ()
 			: this (SkiaApi.sk_memorystream_new (), true)
@@ -488,7 +488,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKMemoryStream" /> with a buffer size of the specified size.
+		/// Creates a new instance of <see cref="SKMemoryStream" /> with a buffer size of the specified size.
 		/// </summary>
 		/// <param name="length">The size of the stream buffer.</param>
 		public SKMemoryStream (ulong length)
@@ -508,7 +508,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKMemoryStream" /> with the buffer being the provided data.
+		/// Creates a new instance of <see cref="SKMemoryStream" /> with the buffer being the provided data.
 		/// </summary>
 		/// <param name="data">The data to initialize the stream with.</param>
 		public SKMemoryStream (SKData data)
@@ -520,7 +520,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKMemoryStream" /> with a copy of the provided data.
+		/// Creates a new instance of <see cref="SKMemoryStream" /> with a copy of the provided data.
 		/// </summary>
 		/// <param name="data">The data to initialize the stream with.</param>
 		public SKMemoryStream (byte[] data)
@@ -756,7 +756,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKFileWStream" /> that wraps the file with the specified path.
+		/// Creates a new <see cref="SKFileWStream" /> that wraps the file with the specified path.
 		/// </summary>
 		/// <param name="path">The new or existing file to open for writing.</param>
 		public SKFileWStream (string path)
@@ -787,7 +787,7 @@ namespace SkiaSharp
 		public bool IsValid => SkiaApi.sk_filewstream_is_valid (Handle);
 
 		/// <summary>
-		/// Determines whether the specified path is supported by a <see cref="T:SkiaSharp.SKFileWStream" />.
+		/// Determines whether the specified path is supported by a <see cref="SKFileWStream" />.
 		/// </summary>
 		/// <param name="path">The path to check.</param>
 		/// <returns>Returns <see langword="true" /> if the path is supported, otherwise <see langword="false" />.</returns>
@@ -820,7 +820,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Create a new instance of <see cref="T:SkiaSharp.SKDynamicMemoryWStream" /> with an empty buffer.
+		/// Create a new instance of <see cref="SKDynamicMemoryWStream" /> with an empty buffer.
 		/// </summary>
 		public SKDynamicMemoryWStream ()
 			: base (SkiaApi.sk_dynamicmemorywstream_new (), true)
@@ -853,9 +853,9 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Returns a <see cref="T:SkiaSharp.SKData" /> instance of the data in the current stream, and then resets the current stream.
+		/// Returns a <see cref="SKData" /> instance of the data in the current stream, and then resets the current stream.
 		/// </summary>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKData" /> instance.</returns>
+		/// <returns>Returns the <see cref="SKData" /> instance.</returns>
 		/// <remarks>After calling this method, this stream is reset to it's empty state.</remarks>
 		public SKData DetachAsData ()
 		{

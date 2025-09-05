@@ -28,7 +28,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKFontStyle" /> with a normal weight, a normal width and upright.
+		/// Creates a new <see cref="SKFontStyle" /> with a normal weight, a normal width and upright.
 		/// </summary>
 		public SKFontStyle ()
 			: this (SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)
@@ -36,7 +36,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKFontStyle" /> with the specified weight, width and slant.
+		/// Creates a new <see cref="SKFontStyle" /> with the specified weight, width and slant.
 		/// </summary>
 		/// <param name="weight">The weight (light or bold).</param>
 		/// <param name="width">The width (condensed or expanded).</param>
@@ -47,7 +47,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKFontStyle" /> with the specified weight, width and slant.
+		/// Creates a new <see cref="SKFontStyle" /> with the specified weight, width and slant.
 		/// </summary>
 		/// <param name="weight">The weight (light or bold).</param>
 		/// <param name="width">The width (condensed or expanded).</param>
@@ -66,13 +66,13 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the weight of this style.
 		/// </summary>
-		/// <remarks>The weight could potentially be one of the values of <see cref="F:SkiaSharp.SKFontStyleWeight" />.</remarks>
+		/// <remarks>The weight could potentially be one of the values of <see cref="SKFontStyleWeight" />.</remarks>
 		public int Weight => SkiaApi.sk_fontstyle_get_weight (Handle);
 
 		/// <summary>
 		/// Gets the width of this style.
 		/// </summary>
-		/// <remarks>The weight could potentially be one of the values of <see cref="F:SkiaSharp.SKFontStyleWidth" />.</remarks>
+		/// <remarks>The weight could potentially be one of the values of <see cref="SKFontStyleWidth" />.</remarks>
 		public int Width => SkiaApi.sk_fontstyle_get_width (Handle);
 
 		/// <summary>

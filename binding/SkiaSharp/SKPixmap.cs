@@ -4,7 +4,7 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Pairs <see cref="T:SkiaSharp.SKImageInfo" /> with actual pixels and rowbytes.
+	/// Pairs <see cref="SKImageInfo" /> with actual pixels and rowbytes.
 	/// </summary>
 	/// <remarks>This class does not try to manage the lifetime of the pixel memory (nor the color table if provided).</remarks>
 	public unsafe class SKPixmap : SKObject
@@ -20,7 +20,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates an empty instance of <see cref="T:SkiaSharp.SKPixmap" />.
+		/// Creates an empty instance of <see cref="SKPixmap" />.
 		/// </summary>
 		public SKPixmap ()
 			: this (SkiaApi.sk_pixmap_new (), true)
@@ -31,7 +31,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates an instance of <see cref="T:SkiaSharp.SKPixmap" />.
+		/// Creates an instance of <see cref="SKPixmap" />.
 		/// </summary>
 		/// <param name="info">The image information of the pixels.</param>
 		/// <param name="addr">The memory address of the pixels.</param>
@@ -41,7 +41,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates an instance of <see cref="T:SkiaSharp.SKPixmap" />.
+		/// Creates an instance of <see cref="SKPixmap" />.
 		/// </summary>
 		/// <param name="info">The image information of the pixels.</param>
 		/// <param name="addr">The memory address of the pixels.</param>
@@ -354,7 +354,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="encoder">The file format used to encode the pixmap.</param>
 		/// <param name="quality">The quality level to use for the pixmap.</param>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded pixmap.</returns>
+		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded pixmap.</returns>
 		public SKData? Encode (SKEncodedImageFormat encoder, int quality)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
@@ -398,7 +398,7 @@ namespace SkiaSharp
 		/// Encodes the pixmap as a WEBP.
 		/// </summary>
 		/// <param name="options">The options to use when creating the encoder.</param>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded pixmap.</returns>
+		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded pixmap.</returns>
 		public SKData? Encode (SKWebpEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
@@ -433,7 +433,7 @@ namespace SkiaSharp
 		/// Encodes the pixmap as a JPEG.
 		/// </summary>
 		/// <param name="options">The options to use when creating the encoder.</param>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded pixmap.</returns>
+		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded pixmap.</returns>
 		public SKData? Encode (SKJpegEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
@@ -468,7 +468,7 @@ namespace SkiaSharp
 		/// Encodes the pixmap as a PNG.
 		/// </summary>
 		/// <param name="options">The options to use when creating the encoder.</param>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded pixmap.</returns>
+		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded pixmap.</returns>
 		public SKData? Encode (SKPngEncoderOptions options)
 		{
 			using var stream = new SKDynamicMemoryWStream ();
@@ -500,7 +500,7 @@ namespace SkiaSharp
 		// ExtractSubset
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKPixmap" /> which is a subset of this pixmap.
+		/// Creates a new <see cref="SKPixmap" /> which is a subset of this pixmap.
 		/// </summary>
 		/// <param name="subset">The bounds of the pixmap subset to retrieve.</param>
 		/// <returns>Returns a subset of the pixmap.</returns>
@@ -515,7 +515,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKPixmap" /> which is a subset of this pixmap.
+		/// Creates a new <see cref="SKPixmap" /> which is a subset of this pixmap.
 		/// </summary>
 		/// <param name="result">The pixmap to store the subset pixels.</param>
 		/// <param name="subset">The bounds of the pixmap subset to retrieve.</param>
@@ -564,26 +564,26 @@ namespace SkiaSharp
 		// With*
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKPixmap" /> with the same properties as this <see cref="T:SkiaSharp.SKPixmap" />, but with the specified color type.
+		/// Creates a new <see cref="SKPixmap" /> with the same properties as this <see cref="SKPixmap" />, but with the specified color type.
 		/// </summary>
 		/// <param name="newColorType">The color type.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKPixmap" />.</returns>
+		/// <returns>Returns the new <see cref="SKPixmap" />.</returns>
 		public SKPixmap WithColorType (SKColorType newColorType) =>
 			new SKPixmap (Info.WithColorType (newColorType), GetPixels (), RowBytes);
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKPixmap" /> with the same properties as this <see cref="T:SkiaSharp.SKPixmap" />, but with the specified color space.
+		/// Creates a new <see cref="SKPixmap" /> with the same properties as this <see cref="SKPixmap" />, but with the specified color space.
 		/// </summary>
 		/// <param name="newColorSpace">The color space.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKPixmap" />.</returns>
+		/// <returns>Returns the new <see cref="SKPixmap" />.</returns>
 		public SKPixmap WithColorSpace (SKColorSpace newColorSpace) =>
 			new SKPixmap (Info.WithColorSpace (newColorSpace), GetPixels (), RowBytes);
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKPixmap" /> with the same properties as this <see cref="T:SkiaSharp.SKPixmap" />, but with the specified transparency type.
+		/// Creates a new <see cref="SKPixmap" /> with the same properties as this <see cref="SKPixmap" />, but with the specified transparency type.
 		/// </summary>
 		/// <param name="newAlphaType">The alpha/transparency type.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKPixmap" />.</returns>
+		/// <returns>Returns the new <see cref="SKPixmap" />.</returns>
 		public SKPixmap WithAlphaType (SKAlphaType newAlphaType) =>
 			new SKPixmap (Info.WithAlphaType (newAlphaType), GetPixels (), RowBytes);
 	}

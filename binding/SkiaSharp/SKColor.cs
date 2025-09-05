@@ -112,7 +112,7 @@ namespace SkiaSharp
 		/// <param name="s">The saturation value.</param>
 		/// <param name="l">The lightness/luminosity value.</param>
 		/// <param name="a">The alpha value.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+		/// <returns>The new <see cref="SKColor" /> instance.</returns>
 		public static SKColor FromHsl (float h, float s, float l, byte a = 255)
 		{
 			var colorf = SKColorF.FromHsl (h, s, l);
@@ -132,7 +132,7 @@ namespace SkiaSharp
 		/// <param name="s">The saturation value.</param>
 		/// <param name="v">The value/brightness value.</param>
 		/// <param name="a">The alpha value.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+		/// <returns>The new <see cref="SKColor" /> instance.</returns>
 		public static SKColor FromHsv (float h, float s, float v, byte a = 255)
 		{
 			var colorf = SKColorF.FromHsv (h, s, v);
@@ -151,7 +151,7 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="l">The lightness/luminosity value.</param>
-		/// <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="P:SkiaSharp.SKColor.Alpha" />.</remarks>
+		/// <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="SKColor.Alpha" />.</remarks>
 		public readonly void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 255
@@ -169,7 +169,7 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="v">The value/brightness value.</param>
-		/// <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="P:SkiaSharp.SKColor.Alpha" />.</remarks>
+		/// <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="SKColor.Alpha" />.</remarks>
 		public readonly void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 255
@@ -204,7 +204,7 @@ namespace SkiaSharp
 			other is SKColor f && Equals (f);
 
 		/// <summary>
-		/// Indicates whether two <see cref="T:SkiaSharp.SKColor" /> objects are equal.
+		/// Indicates whether two <see cref="SKColor" /> objects are equal.
 		/// </summary>
 		/// <param name="left">The first color to compare.</param>
 		/// <param name="right">The second color to compare.</param>
@@ -213,7 +213,7 @@ namespace SkiaSharp
 			left.Equals (right);
 
 		/// <summary>
-		/// Indicates whether two <see cref="T:SkiaSharp.SKColor" /> objects are different.
+		/// Indicates whether two <see cref="SKColor" /> objects are different.
 		/// </summary>
 		/// <param name="left">The first color to compare.</param>
 		/// <param name="right">The second color to compare.</param>
@@ -229,15 +229,15 @@ namespace SkiaSharp
 			color.GetHashCode ();
 
 		/// <summary>
-		/// Converts a UInt32 to a <see cref="T:SkiaSharp.SKColor" />.
+		/// Converts a UInt32 to a <see cref="SKColor" />.
 		/// </summary>
 		/// <param name="color">The UInt32 representation of a color.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+		/// <returns>The new <see cref="SKColor" /> instance.</returns>
 		public static implicit operator SKColor (uint color) =>
 			new SKColor (color);
 
 		/// <summary>
-		/// Converts a <see cref="T:SkiaSharp.SKColor" /> to a UInt32.
+		/// Converts a <see cref="SKColor" /> to a UInt32.
 		/// </summary>
 		/// <param name="color">The color to convert.</param>
 		/// <returns>The UInt32 value for the color.</returns>
@@ -245,10 +245,10 @@ namespace SkiaSharp
 			color.color;
 
 		/// <summary>
-		/// Converts the hexadecimal string representation of a color to its <see cref="T:SkiaSharp.SKColor" /> equivalent.
+		/// Converts the hexadecimal string representation of a color to its <see cref="SKColor" /> equivalent.
 		/// </summary>
 		/// <param name="hexString">The hexadecimal string representation of a color.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKColor" /> instance.</returns>
+		/// <returns>The new <see cref="SKColor" /> instance.</returns>
 		/// <remarks>This method can parse a string in the forms with or without a preceding '#' character: AARRGGB, RRGGBB, ARGB, RGB.</remarks>
 		public static SKColor Parse (string hexString)
 		{
@@ -258,10 +258,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts the hexadecimal string representation of a color to its <see cref="T:SkiaSharp.SKColor" /> equivalent.
+		/// Converts the hexadecimal string representation of a color to its <see cref="SKColor" /> equivalent.
 		/// </summary>
 		/// <param name="hexString">The hexadecimal string representation of a color.</param>
-		/// <param name="color">The new <see cref="T:SkiaSharp.SKColor" /> instance.</param>
+		/// <param name="color">The new <see cref="SKColor" /> instance.</param>
 		/// <returns>Returns true if the conversion was successful, otherwise false.</returns>
 		/// <remarks>This method can parse a string in the forms with or without a preceding '#' character: AARRGGB, RRGGBB, ARGB, RGB.</remarks>
 		public static bool TryParse (string hexString, out SKColor color)

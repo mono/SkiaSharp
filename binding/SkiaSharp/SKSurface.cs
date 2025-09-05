@@ -660,7 +660,7 @@ namespace SkiaSharp
 		/// <param name="width">The desired width for the surface.</param>
 		/// <param name="height">The desired height for the surface.</param>
 		/// <returns>Returns the new surface if it could be created, otherwise <see langword="null" />.</returns>
-		/// <remarks>Drawing to the <see cref="T:SkiaSharp.SKCanvas" /> returned from <see cref="P:SkiaSharp.SKSurface.Canvas" /> has no effect. Calling <see cref="M:SkiaSharp.SKSurface.Snapshot" /> on the returned <see cref="T:SkiaSharp.SKSurface" /> returns <see langword="null" />.</remarks>
+		/// <remarks>Drawing to the <see cref="SKCanvas" /> returned from <see cref="SKSurface.Canvas" /> has no effect. Calling <see cref="M:SkiaSharp.SKSurface.Snapshot" /> on the returned <see cref="SKSurface" /> returns <see langword="null" />.</remarks>
 		public static SKSurface CreateNull (int width, int height) =>
 			GetObject (SkiaApi.sk_surface_new_null (width, height));
 
@@ -684,8 +684,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Takes a snapshot of the surface and returns it as an image.
 		/// </summary>
-		/// <returns>An <see cref="T:SkiaSharp.SKImage" /> that contains a snapshot of the current image.</returns>
-		/// <remarks>You can use this method to take an <see cref="T:SkiaSharp.SKImage" /> snapshot of the current state of the surface.</remarks>
+		/// <returns>An <see cref="SKImage" /> that contains a snapshot of the current image.</returns>
+		/// <remarks>You can use this method to take an <see cref="SKImage" /> snapshot of the current state of the surface.</remarks>
 		public SKImage Snapshot () =>
 			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
 

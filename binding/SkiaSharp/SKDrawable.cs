@@ -6,7 +6,7 @@ using System.Threading;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Represents the base class for objects that draw into <see cref="T:SkiaSharp.SKCanvas" />.
+	/// Represents the base class for objects that draw into <see cref="SKCanvas" />.
 	/// </summary>
 	/// <remarks>The object has a generation ID, which is guaranteed to be unique across all
 	/// drawables. To allow for clients of the drawable that may want to cache the
@@ -111,7 +111,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Create an immutable snapshot of the drawing.
 		/// </summary>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKPicture" /> snapshot.</returns>
+		/// <returns>Returns the <see cref="SKPicture" /> snapshot.</returns>
 		public SKPicture Snapshot () =>
 			SKPicture.GetObject (SkiaApi.sk_drawable_new_picture_snapshot (Handle), unrefExisting: false);
 

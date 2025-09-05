@@ -16,6 +16,9 @@ namespace SkiaSharp.Views.Windows
 namespace SkiaSharp.Views.UWP
 #endif
 {
+	/// <summary>
+	/// A SwapChainPanel that wraps an ANGLE OpenGL ES context.
+	/// </summary>
 	public class AngleSwapChainPanel : SwapChainPanel
 	{
 		private static readonly DependencyProperty ProxyVisibilityProperty =
@@ -44,6 +47,9 @@ namespace SkiaSharp.Views.UWP
 
 		private bool pendingSizeChange = false;
 
+		/// <summary>
+		/// Creates a new instance of <see cref="AngleSwapChainPanel" />.
+		/// </summary>
 		public AngleSwapChainPanel()
 		{
 			lastCompositionScaleX = CompositionScaleX;
@@ -73,10 +79,19 @@ namespace SkiaSharp.Views.UWP
 			SetBinding(ProxyVisibilityProperty, binding);
 		}
 
+		/// <summary>
+		/// Gets or sets a value indicating whether drawing occurs on a background thread, or the main UI thread
+		/// </summary>
 		public bool DrawInBackground { get; set; }
 
+		/// <summary>
+		/// Gets or sets the scaling for the renderbuffer dimensions.
+		/// </summary>
 		public double ContentsScale { get; private set; }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether to use a render loop, or on-demand rendering.
+		/// </summary>
 		public bool EnableRenderLoop
 		{
 			get => enableRenderLoop;
@@ -90,6 +105,9 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
+		/// <summary>
+		/// Invalidates the entire surface of the control and causes the control to be redrawn.
+		/// </summary>
 		public void Invalidate()
 		{
 			if (!isLoaded || EnableRenderLoop)

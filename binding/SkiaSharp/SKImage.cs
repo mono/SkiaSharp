@@ -30,10 +30,10 @@ namespace SkiaSharp
 		// create brand new image
 
 		/// <summary>
-		/// Creates a new raster-based <see cref="T:SkiaSharp.SKImage" /> using the specified information.
+		/// Creates a new raster-based <see cref="SKImage" /> using the specified information.
 		/// </summary>
 		/// <param name="info">The image information to use.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImage" /> instance.</returns>
+		/// <returns>Returns the new <see cref="SKImage" /> instance.</returns>
 		public static SKImage Create (SKImageInfo info)
 		{
 			var pixels = Marshal.AllocCoTaskMem (info.BytesSize);
@@ -390,7 +390,7 @@ namespace SkiaSharp
 		// create a new image from a bitmap
 
 		/// <summary>
-		/// Creates a new image from the provided <see cref="T:SkiaSharp.SKBitmap" />.
+		/// Creates a new image from the provided <see cref="SKBitmap" />.
 		/// </summary>
 		/// <param name="bitmap">The bitmap that will be used as the source for the image.</param>
 		/// <returns>An image whose contents are the contents of the specified bitmap.</returns>
@@ -637,7 +637,7 @@ namespace SkiaSharp
 		// create a new image from a picture
 
 		/// <summary>
-		/// Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.
+		/// Creates a new image from the provided <see cref="SKPicture" />.
 		/// </summary>
 		/// <param name="picture">The picture.</param>
 		/// <param name="dimensions">The size of the raster image.</param>
@@ -646,7 +646,7 @@ namespace SkiaSharp
 			FromPicture (picture, dimensions, null, null, false, SKColorSpace.CreateSrgb (), null);
 
 		/// <summary>
-		/// Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.
+		/// Creates a new image from the provided <see cref="SKPicture" />.
 		/// </summary>
 		/// <param name="picture">The picture.</param>
 		/// <param name="dimensions">The size of the raster image.</param>
@@ -656,7 +656,7 @@ namespace SkiaSharp
 			FromPicture (picture, dimensions, &matrix, null, false, SKColorSpace.CreateSrgb (), null);
 
 		/// <summary>
-		/// Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.
+		/// Creates a new image from the provided <see cref="SKPicture" />.
 		/// </summary>
 		/// <param name="picture">The picture.</param>
 		/// <param name="dimensions">The size of the raster image.</param>
@@ -666,7 +666,7 @@ namespace SkiaSharp
 			FromPicture (picture, dimensions, null, paint, false, SKColorSpace.CreateSrgb (), null);
 
 		/// <summary>
-		/// Creates a new image from the provided <see cref="T:SkiaSharp.SKPicture" />.
+		/// Creates a new image from the provided <see cref="SKPicture" />.
 		/// </summary>
 		/// <param name="picture">The picture.</param>
 		/// <param name="dimensions">The size of the raster image.</param>
@@ -688,10 +688,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Encodes the image using the <see cref="F:SkiaSharp.SKImageEncodeFormat.Png" /> format.
+		/// Encodes the image using the <see cref="SKImageEncodeFormat.Png" /> format.
 		/// </summary>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
-		/// <remarks>Use the overload that takes a <see cref="T:SkiaSharp.SKImageEncodeFormat" /> if you want to encode in a different format.</remarks>
+		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded image.</returns>
+		/// <remarks>Use the overload that takes a <see cref="SKImageEncodeFormat" /> if you want to encode in a different format.</remarks>
 		public SKData Encode ()
 		{
 			if (EncodedData is not null)
@@ -705,7 +705,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="format">The file format used to encode the image.</param>
 		/// <param name="quality">The quality level to use for the image. This is in the range from 0-100.</param>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKData" /> wrapping the encoded image.</returns>
+		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded image.</returns>
 		/// <remarks>The quality is a suggestion, and not all formats (for example, PNG) respect or support it.</remarks>
 		public SKData Encode (SKEncodedImageFormat format, int quality)
 		{
@@ -738,7 +738,7 @@ namespace SkiaSharp
 			SkiaApi.sk_image_get_unique_id (Handle);
 
 		/// <summary>
-		/// Gets the configured <see cref="T:SkiaSharp.SKAlphaType" /> for the bitmap.
+		/// Gets the configured <see cref="SKAlphaType" /> for the bitmap.
 		/// </summary>
 		public SKAlphaType AlphaType =>
 			SkiaApi.sk_image_get_alpha_type (Handle);
@@ -762,7 +762,7 @@ namespace SkiaSharp
 			SkiaApi.sk_image_is_alpha_only (Handle);
 
 		/// <summary>
-		/// Gets the encoded image pixels as a <see cref="T:SkiaSharp.SKData" />, if the image was created from supported encoded stream format.
+		/// Gets the encoded image pixels as a <see cref="SKData" />, if the image was created from supported encoded stream format.
 		/// </summary>
 		/// <remarks>Returns <see langword="null" /> if the image mage contents are not encoded.</remarks>
 		public SKData EncodedData =>

@@ -12,9 +12,9 @@ namespace SkiaSharp
 	// TODO: `GetAddr` and `GetPixel` are confusing
 
 	/// <summary>
-	/// The <see cref="T:SkiaSharp.SKBitmap" /> specifies a raster bitmap.
+	/// The <see cref="SKBitmap" /> specifies a raster bitmap.
 	/// </summary>
-	/// <remarks><para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="T:SkiaSharp.SKCanvas" />, but they are also used to specify the target of a <see cref="T:SkiaSharp.SKCanvas" />' drawing operations.</para><para>A <see cref="T:SkiaSharp.SKBitmap" /> exposes <see cref="M:SkiaSharp.SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method, and then call the <see cref="M:SkiaSharp.SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para><para>(Note: As of SkiaSharp 1.60.0, calls to <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> and <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> are no longer required, and they no longer exist as part of the API.)</para></remarks>
+	/// <remarks><para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="SKCanvas" />, but they are also used to specify the target of a <see cref="SKCanvas" />' drawing operations.</para><para>A <see cref="SKBitmap" /> exposes <see cref="M:SkiaSharp.SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> method, and then call the <see cref="M:SkiaSharp.SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para><para>(Note: As of SkiaSharp 1.60.0, calls to <see cref="M:SkiaSharp.SKBitmap.LockPixels" /> and <see cref="M:SkiaSharp.SKBitmap.UnlockPixels" /> are no longer required, and they no longer exist as part of the API.)</para></remarks>
 	public unsafe class SKBitmap : SKObject, ISKSkipObjectRegistration
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
@@ -26,7 +26,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Default constructor that creates a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="F:SkiaSharp.SKColorType.Unknown" />.
+		/// Default constructor that creates a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="SKColorType.Unknown" />.
 		/// </summary>
 		/// <remarks>This constructor does not allocate a backing store for the bitmap.</remarks>
 		public SKBitmap ()
@@ -38,11 +38,11 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a bitmap with the given width, height and opacity with color type set to <see cref="F:SkiaSharp.SKImageInfo.PlatformColorType" />
+		/// Creates a bitmap with the given width, height and opacity with color type set to <see cref="SKImageInfo.PlatformColorType" />
 		/// </summary>
 		/// <param name="width">The desired width in pixels.</param>
 		/// <param name="height">The desired height in pixels.</param>
-		/// <param name="isOpaque">If true, sets the <see cref="T:SkiaSharp.SKAlphaType" /> to <see cref="F:SkiaSharp.SKAlphaType.Opaque" />, otherwise it sets it to <see cref="F:SkiaSharp.SKAlphaType.Premul" />.</param>
+		/// <param name="isOpaque">If true, sets the <see cref="SKAlphaType" /> to <see cref="SKAlphaType.Opaque" />, otherwise it sets it to <see cref="SKAlphaType.Premul" />.</param>
 		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
 		public SKBitmap (int width, int height, bool isOpaque = false)
 			: this (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul)
@@ -54,8 +54,8 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="width">The desired width in pixels.</param>
 		/// <param name="height">The desired height in pixels.</param>
-		/// <param name="colorType">The desired <see cref="T:SkiaSharp.SKColorType" />.</param>
-		/// <param name="alphaType">The desired <see cref="T:SkiaSharp.SKAlphaType" />.</param>
+		/// <param name="colorType">The desired <see cref="SKColorType" />.</param>
+		/// <param name="alphaType">The desired <see cref="SKAlphaType" />.</param>
 		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
 		public SKBitmap (int width, int height, SKColorType colorType, SKAlphaType alphaType)
 			: this (new SKImageInfo (width, height, colorType, alphaType))
@@ -73,7 +73,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Constructor that configures the bitmap based on an <see cref="T:SkiaSharp.SKImageInfo" /> specification.
+		/// Constructor that configures the bitmap based on an <see cref="SKImageInfo" /> specification.
 		/// </summary>
 		/// <param name="info">The description of the desired image format.</param>
 		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
@@ -83,7 +83,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Constructor that configures the bitmap based on an <see cref="T:SkiaSharp.SKImageInfo" /> specification, and the specified number of bytes per row (the stride size)
+		/// Constructor that configures the bitmap based on an <see cref="SKImageInfo" /> specification, and the specified number of bytes per row (the stride size)
 		/// </summary>
 		/// <param name="info">The description of the desired image format.</param>
 		/// <param name="rowBytes">The number of bytes per row.</param>
@@ -97,7 +97,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Constructor that configures the bitmap based on an <see cref="T:SkiaSharp.SKImageInfo" /> specification.
+		/// Constructor that configures the bitmap based on an <see cref="SKImageInfo" /> specification.
 		/// </summary>
 		/// <param name="info">The description of the desired image format.</param>
 		/// <param name="flags">The additional flags.</param>
@@ -157,7 +157,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Reset the bitmap to its initial state.
 		/// </summary>
-		/// <remarks>The result is a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="F:SkiaSharp.SKColorType.Unknown" />. If we are a (shared) owner of the pixels, that ownership is decremented.</remarks>
+		/// <remarks>The result is a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="SKColorType.Unknown" />. If we are a (shared) owner of the pixels, that ownership is decremented.</remarks>
 		public void Reset ()
 		{
 			SkiaApi.sk_bitmap_reset (Handle);
@@ -211,7 +211,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="x">The x-cordinate.</param>
 		/// <param name="y">The y-cordinate.</param>
-		/// <returns>Alpha only color types return black with the appropriate alpha set. The value is undefined for <see cref="F:SkiaSharp.SKColorType.Unknown" />, if the coordinates are out of bounds, if the bitmap does not have any pixels, or has not be locked with <see cref="M:SkiaSharp.SKBitmap.LockPixels" />.</returns>
+		/// <returns>Alpha only color types return black with the appropriate alpha set. The value is undefined for <see cref="SKColorType.Unknown" />, if the coordinates are out of bounds, if the bitmap does not have any pixels, or has not be locked with <see cref="M:SkiaSharp.SKBitmap.LockPixels" />.</returns>
 		/// <remarks>In most cases this will require unpremultiplying the color.</remarks>
 		public SKColor GetPixel (int x, int y)
 		{
@@ -409,7 +409,7 @@ namespace SkiaSharp
 		public bool ReadyToDraw => SkiaApi.sk_bitmap_ready_to_draw (Handle);
 
 		/// <summary>
-		/// Gets an instance of <see cref="T:SkiaSharp.SKImageInfo" /> with all the properties of the bitmap.
+		/// Gets an instance of <see cref="SKImageInfo" /> with all the properties of the bitmap.
 		/// </summary>
 		public SKImageInfo Info {
 			get {
@@ -441,9 +441,9 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets the configured <see cref="T:SkiaSharp.SKAlphaType" /> for the bitmap.
+		/// Gets the configured <see cref="SKAlphaType" /> for the bitmap.
 		/// </summary>
-		/// <value>The configured <see cref="T:SkiaSharp.SKAlphaType" />.</value>
+		/// <value>The configured <see cref="SKAlphaType" />.</value>
 		/// <remarks>This determines the kind of encoding used for the alpha channel, opaque, premultiplied or unpremultiplied.</remarks>
 		public SKAlphaType AlphaType {
 			get { return Info.AlphaType; }
@@ -459,7 +459,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of bytes used per pixel.
 		/// </summary>
-		/// <remarks>This is calculated from the <see cref="P:SkiaSharp.SKBitmap.ColorType" />. If the color type is <see cref="F:SkiaSharp.SKColorType.Unknown" />, then the value will be 0.</remarks>
+		/// <remarks>This is calculated from the <see cref="SKBitmap.ColorType" />. If the color type is <see cref="SKColorType.Unknown" />, then the value will be 0.</remarks>
 		public int BytesPerPixel {
 			get { return Info.BytesPerPixel; }
 		}
@@ -467,13 +467,13 @@ namespace SkiaSharp
 		/// <summary>
 		/// The number of bytes per row.
 		/// </summary>
-		/// <remarks>The same as <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</remarks>
+		/// <remarks>The same as <see cref="SKImageInfo.RowBytes" />.</remarks>
 		public int RowBytes {
 			get { return (int)SkiaApi.sk_bitmap_get_row_bytes (Handle); }
 		}
 
 		/// <summary>
-		/// Returns the byte size of the pixels, based on the <see cref="P:SkiaSharp.SKBitmap.Height" /> and <see cref="P:SkiaSharp.SKBitmap.RowBytes" />.
+		/// Returns the byte size of the pixels, based on the <see cref="SKBitmap.Height" /> and <see cref="SKBitmap.RowBytes" />.
 		/// </summary>
 		/// <value>The byte size of the pixels.</value>
 		/// <remarks>Note: this truncates the result to 32-bits.</remarks>
@@ -576,7 +576,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the bitmap has empty dimensions.
 		/// </summary>
-		/// <remarks>In most cases, <see cref="P:SkiaSharp.SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="P:SkiaSharp.SKBitmap.IsNull" /> as well.</remarks>
+		/// <remarks>In most cases, <see cref="SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="SKBitmap.IsNull" /> as well.</remarks>
 		public bool IsEmpty {
 			get { return Info.IsEmpty; }
 		}
@@ -584,7 +584,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the bitmap has any pixelref.
 		/// </summary>
-		/// <remarks>This can return true even if the dimensions of the bitmap are not empty. In most cases, <see cref="P:SkiaSharp.SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="P:SkiaSharp.SKBitmap.IsEmpty" /> as well.</remarks>
+		/// <remarks>This can return true even if the dimensions of the bitmap are not empty. In most cases, <see cref="SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="SKBitmap.IsEmpty" /> as well.</remarks>
 		public bool IsNull {
 			get { return SkiaApi.sk_bitmap_is_null (Handle); }
 		}
@@ -611,7 +611,7 @@ namespace SkiaSharp
 		/// Decode the bitmap information using the specified stream.
 		/// </summary>
 		/// <param name="stream">The stream to decode.</param>
-		/// <returns>The decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+		/// <returns>The decoded bitmap information, or <see cref="SKImageInfo.Empty" /> if there was an error.</returns>
 		public static SKImageInfo DecodeBounds (Stream stream)
 		{
 			if (stream == null) {
@@ -626,7 +626,7 @@ namespace SkiaSharp
 		/// Decode the bitmap information using the specified stream.
 		/// </summary>
 		/// <param name="stream">The stream to decode.</param>
-		/// <returns>The decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+		/// <returns>The decoded bitmap information, or <see cref="SKImageInfo.Empty" /> if there was an error.</returns>
 		public static SKImageInfo DecodeBounds (SKStream stream)
 		{
 			if (stream == null) {
@@ -641,7 +641,7 @@ namespace SkiaSharp
 		/// Decode the bitmap information using the specified data.
 		/// </summary>
 		/// <param name="data">The data to decode.</param>
-		/// <returns>The decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+		/// <returns>The decoded bitmap information, or <see cref="SKImageInfo.Empty" /> if there was an error.</returns>
 		public static SKImageInfo DecodeBounds (SKData data)
 		{
 			if (data == null) {
@@ -656,7 +656,7 @@ namespace SkiaSharp
 		/// Decode the bitmap information for the specified filename.
 		/// </summary>
 		/// <param name="filename">The filename of the bitmap to decode.</param>
-		/// <returns>The decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+		/// <returns>The decoded bitmap information, or <see cref="SKImageInfo.Empty" /> if there was an error.</returns>
 		public static SKImageInfo DecodeBounds (string filename)
 		{
 			if (filename == null) {
@@ -671,7 +671,7 @@ namespace SkiaSharp
 		/// Decode the bitmap information using the specified byte buffer.
 		/// </summary>
 		/// <param name="buffer">The byte buffer to decode.</param>
-		/// <returns>The decoded bitmap information, or <see cref="F:SkiaSharp.SKImageInfo.Empty" /> if there was an error.</returns>
+		/// <returns>The decoded bitmap information, or <see cref="SKImageInfo.Empty" /> if there was an error.</returns>
 		public static SKImageInfo DecodeBounds (byte[] buffer) =>
 			DecodeBounds (buffer.AsSpan ());
 
@@ -1143,7 +1143,7 @@ namespace SkiaSharp
 		/// Creates a new bitmap from a copy of the pixel data in the specified image.
 		/// </summary>
 		/// <param name="image">The image to use to create a bitmap.</param>
-		/// <returns>Returns a new instance of <see cref="T:SkiaSharp.SKBitmap" />, or null if the bitmap could not be created.</returns>
+		/// <returns>Returns a new instance of <see cref="SKBitmap" />, or null if the bitmap could not be created.</returns>
 		public static SKBitmap FromImage (SKImage image)
 		{
 			if (image == null) {

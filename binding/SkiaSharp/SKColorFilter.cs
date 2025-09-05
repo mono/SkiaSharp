@@ -5,7 +5,7 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Color filters for use with the <see cref="P:SkiaSharp.SKPaint.ColorFilter" /> property of a <see cref="T:SkiaSharp.SKPaint" />.
+	/// Color filters for use with the <see cref="SKPaint.ColorFilter" /> property of a <see cref="SKPaint" />.
 	/// </summary>
 	public unsafe class SKColorFilter : SKObject, ISKReferenceCounted
 	{
@@ -55,8 +55,8 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="c">The source color used with the specified mode.</param>
 		/// <param name="mode">The blend mode mode that is applied to each color.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />, or <see langword="null" /> if the mode will have no effect.</returns>
-		/// <remarks>If the <paramref name="mode" /> is <see cref="F:SkiaSharp.SKBlendMode.Dst" />, this function will return <see langword="null" /> (since that mode will have no effect on the result).</remarks>
+		/// <returns>Returns the new <see cref="SKColorFilter" />, or <see langword="null" /> if the mode will have no effect.</returns>
+		/// <remarks>If the <paramref name="mode" /> is <see cref="SKBlendMode.Dst" />, this function will return <see langword="null" /> (since that mode will have no effect on the result).</remarks>
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
 			return GetObject (SkiaApi.sk_colorfilter_new_mode((uint)c, mode));
@@ -67,7 +67,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="mul">The color to multiply the source color by. The alpha component is ignored.</param>
 		/// <param name="add">The color to add to the source color. The alpha component is ignored.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		public static SKColorFilter CreateLighting(SKColor mul, SKColor add)
 		{
 			return GetObject (SkiaApi.sk_colorfilter_new_lighting((uint)mul, (uint)add));
@@ -78,7 +78,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="outer">The outer (second) filter to apply.</param>
 		/// <param name="inner">The inner (first) filter to apply.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		public static SKColorFilter CreateCompose(SKColorFilter outer, SKColorFilter inner)
 		{
 			if (outer == null)
@@ -99,8 +99,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Creates a new color filter that transforms a color by a 4x5 (row-major) matrix.
 		/// </summary>
-		/// <param name="matrix">An array of <see cref="F:SkiaSharp.SKColorFilter.ColorMatrixSize" /> elements.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <param name="matrix">An array of <see cref="SKColorFilter.ColorMatrixSize" /> elements.</param>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		/// <remarks>The matrix is in row-major order and the translation column is specified in unnormalized, 0...255, space.</remarks>
 		public static SKColorFilter CreateColorMatrix(float[] matrix)
 		{
@@ -130,7 +130,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Creates a new luminance-to-alpha color filter.
 		/// </summary>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		public static SKColorFilter CreateLumaColor()
 		{
 			return GetObject (SkiaApi.sk_colorfilter_new_luma_color());
@@ -139,8 +139,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Creates a new table color filter.
 		/// </summary>
-		/// <param name="table">The table of values for each color component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <param name="table">The table of values for each color component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		public static SKColorFilter CreateTable(byte[] table)
 		{
 			if (table == null)
@@ -160,11 +160,11 @@ namespace SkiaSharp
 		/// <summary>
 		/// Creates a new table color filter.
 		/// </summary>
-		/// <param name="tableA">The table of values for the alpha component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
-		/// <param name="tableR">The table of values for the red component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
-		/// <param name="tableG">The table of values for the green component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
-		/// <param name="tableB">The table of values for the blue component, with a length of <see cref="F:SkiaSharp.SKColorTable.MaxLength" />.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <param name="tableA">The table of values for the alpha component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
+		/// <param name="tableR">The table of values for the red component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
+		/// <param name="tableG">The table of values for the green component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
+		/// <param name="tableB">The table of values for the blue component, with a length of <see cref="SKColorTable.MaxLength" />.</param>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		public static SKColorFilter CreateTable(byte[] tableA, byte[] tableR, byte[] tableG, byte[] tableB)
 		{
 			if (tableA == null)
@@ -201,7 +201,7 @@ namespace SkiaSharp
 		/// Creates a new high contrast color filter which provides transformations to improve contrast for users with low vision.
 		/// </summary>
 		/// <param name="config">The high contrast configuration settings.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		/// <remarks>Applies the following transformations in this order: conversion to grayscale, color inversion, increasing the resulting contrast.</remarks>
 		public static SKColorFilter CreateHighContrast(SKHighContrastConfig config)
 		{
@@ -214,7 +214,7 @@ namespace SkiaSharp
 		/// <param name="grayscale">Whether or not the color will be converted to grayscale.</param>
 		/// <param name="invertStyle">Whether or not to invert brightness, lightness, or neither.</param>
 		/// <param name="contrast">The amount to adjust the contrast by, in the range -1.0 through 1.0.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKColorFilter" />.</returns>
+		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
 		/// <remarks>Applies the following transformations in this order: conversion to grayscale, color inversion, increasing the resulting contrast.</remarks>
 		public static SKColorFilter CreateHighContrast(bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast)
 		{

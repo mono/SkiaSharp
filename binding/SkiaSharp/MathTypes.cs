@@ -8,11 +8,11 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.
 	/// </summary>
-	/// <remarks>To convert a <see cref="T:SkiaSharp.SKPoint" /> to a <see cref="T:SkiaSharp.SKPointI" />, use <see cref="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="M:SkiaSharp.SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
+	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="M:SkiaSharp.SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
 	public partial struct SKPoint
 	{
 		/// <summary>
-		/// Represents a new instance of the <see cref="T:SkiaSharp.SKPoint" /> class with member data left uninitialized.
+		/// Represents a new instance of the <see cref="SKPoint" /> class with member data left uninitialized.
 		/// </summary>
 		public static readonly SKPoint Empty;
 
@@ -64,9 +64,9 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts this <see cref="T:SkiaSharp.SKPoint" /> to a human readable string.
+		/// Converts this <see cref="SKPoint" /> to a human readable string.
 		/// </summary>
-		/// <returns>A string that represents this <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <returns>A string that represents this <see cref="SKPoint" />.</returns>
 		public readonly override string ToString () => $"{{X={x}, Y={y}}}";
 
 		/// <summary>
@@ -152,32 +152,32 @@ namespace SkiaSharp
 		public static SKPoint Add (SKPoint pt, SKPoint sz) => pt + sz;
 
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a specified size.
+		/// Translates a <see cref="SKPoint" /> by the negative of a specified size.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
-		/// <param name="sz">The <see cref="T:SkiaSharp.SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
+		/// <param name="sz">The <see cref="SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint Subtract (SKPoint pt, SKSizeI sz) => pt - sz;
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a specified size.
+		/// Translates a <see cref="SKPoint" /> by the negative of a specified size.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
-		/// <param name="sz">The <see cref="T:SkiaSharp.SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
+		/// <param name="sz">The <see cref="SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint Subtract (SKPoint pt, SKSize sz) => pt - sz;
 		/// <summary>
 		/// Translates a given point by the negative of a specified offset.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
 		/// <param name="sz">The offset that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint Subtract (SKPoint pt, SKPointI sz) => pt - sz;
 		/// <summary>
 		/// Translates a given point by the negative of a specified offset.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
 		/// <param name="sz">The offset that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint Subtract (SKPoint pt, SKPoint sz) => pt - sz;
 
 		/// <summary>
@@ -214,35 +214,35 @@ namespace SkiaSharp
 			new SKPoint (pt.x + sz.X, pt.y + sz.Y);
 
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a given <see cref="T:SkiaSharp.SKSizeI" />.
+		/// Translates a <see cref="SKPoint" /> by the negative of a given <see cref="SKSizeI" />.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
-		/// <param name="sz">The <see cref="T:SkiaSharp.SKSizeI" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
+		/// <param name="sz">The <see cref="SKSizeI" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint operator - (SKPoint pt, SKSizeI sz) =>
 			new SKPoint (pt.X - sz.Width, pt.Y - sz.Height);
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPoint" /> by the negative of a given <see cref="T:SkiaSharp.SKSize" />.
+		/// Translates a <see cref="SKPoint" /> by the negative of a given <see cref="SKSize" />.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
-		/// <param name="sz">The <see cref="T:SkiaSharp.SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
+		/// <param name="sz">The <see cref="SKSize" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint operator - (SKPoint pt, SKSize sz) =>
 			new SKPoint (pt.X - sz.Width, pt.Y - sz.Height);
 		/// <summary>
 		/// Translates a given point by the negative of a specified offset.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
 		/// <param name="sz">The point that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint operator - (SKPoint pt, SKPointI sz) =>
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
 		/// <summary>
 		/// Translates a given point by the negative of a specified offset.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPoint" /> to translate.</param>
+		/// <param name="pt">The <see cref="SKPoint" /> to translate.</param>
 		/// <param name="sz">The point that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <returns>The translated <see cref="SKPoint" />.</returns>
 		public static SKPoint operator - (SKPoint pt, SKPoint sz) =>
 			new SKPoint (pt.X - sz.X, pt.Y - sz.Y);
 
@@ -259,14 +259,14 @@ namespace SkiaSharp
 	public partial struct SKPointI
 	{
 		/// <summary>
-		/// Represents a new instance of the <see cref="T:SkiaSharp.SKPointI" /> class with member data left uninitialized.
+		/// Represents a new instance of the <see cref="SKPointI" /> class with member data left uninitialized.
 		/// </summary>
 		public static readonly SKPointI Empty;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:SkiaSharp.SKPointI" /> class from a <see cref="T:SkiaSharp.SKSizeI" />.
+		/// Initializes a new instance of the <see cref="SKPointI" /> class from a <see cref="SKSizeI" />.
 		/// </summary>
-		/// <param name="sz">A <see cref="T:SkiaSharp.SKSizeI" /> that specifies the coordinates for the new <see cref="T:SkiaSharp.SKPointI" />.</param>
+		/// <param name="sz">A <see cref="SKSizeI" /> that specifies the coordinates for the new <see cref="SKPointI" />.</param>
 		public SKPointI (SKSizeI sz)
 		{
 			x = sz.Width;
@@ -285,7 +285,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets a value indicating whether this <see cref="T:SkiaSharp.SKPointI" /> is empty.
+		/// Gets a value indicating whether this <see cref="SKPointI" /> is empty.
 		/// </summary>
 		public readonly bool IsEmpty => this == Empty;
 
@@ -300,10 +300,10 @@ namespace SkiaSharp
 		public readonly int LengthSquared => x * x + y * y;
 
 		/// <summary>
-		/// Translates this <see cref="T:SkiaSharp.SKPointI" /> by the specified <see cref="T:SkiaSharp.SKPointI" />.
+		/// Translates this <see cref="SKPointI" /> by the specified <see cref="SKPointI" />.
 		/// </summary>
-		/// <param name="p">The <see cref="T:SkiaSharp.SKPointI" /> used to offset this <see cref="T:SkiaSharp.SKPointI" />.</param>
-		/// <remarks>This method adjusts the <see cref="P:SkiaSharp.SKPointI.X" /> and <see cref="P:SkiaSharp.SKPointI.Y" /> values of this <see cref="T:System.Drawing.Point" /> to the sum of the <see cref="P:SkiaSharp.SKPointI.X" /> and <see cref="P:SkiaSharp.SKPointI.Y" /> values of this <see cref="T:SkiaSharp.SKPointI" /> and <paramref name="p" />.</remarks>
+		/// <param name="p">The <see cref="SKPointI" /> used to offset this <see cref="SKPointI" />.</param>
+		/// <remarks>This method adjusts the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of this <see cref="T:System.Drawing.Point" /> to the sum of the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of this <see cref="SKPointI" /> and <paramref name="p" />.</remarks>
 		public void Offset (SKPointI p)
 		{
 			x += p.X;
@@ -311,7 +311,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Translates this <see cref="T:SkiaSharp.SKPointI" /> by the specified amount.
+		/// Translates this <see cref="SKPointI" /> by the specified amount.
 		/// </summary>
 		/// <param name="dx">The amount to offset the x-coordinate.</param>
 		/// <param name="dy">The amount to offset the y-coordinate.</param>
@@ -322,9 +322,9 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts this <see cref="T:SkiaSharp.SKPointI" /> to a human readable string.
+		/// Converts this <see cref="SKPointI" /> to a human readable string.
 		/// </summary>
-		/// <returns>A string that represents this <see cref="T:SkiaSharp.SKPointI" />.</returns>
+		/// <returns>A string that represents this <see cref="SKPointI" />.</returns>
 		public readonly override string ToString () => $"{{X={x},Y={y}}}";
 
 		/// <summary>
@@ -381,10 +381,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKPoint" /> to a <see cref="T:SkiaSharp.SKPointI" /> by rounding the values of the <see cref="T:SkiaSharp.SKPoint" /> to the next higher integer values.
+		/// Converts the specified <see cref="SKPoint" /> to a <see cref="SKPointI" /> by rounding the values of the <see cref="SKPoint" /> to the next higher integer values.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKPoint" /> to convert.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKPointI" /> this method converts to.</returns>
+		/// <param name="value">The <see cref="SKPoint" /> to convert.</param>
+		/// <returns>The <see cref="SKPointI" /> this method converts to.</returns>
 		public static SKPointI Ceiling (SKPoint value)
 		{
 			int x, y;
@@ -397,10 +397,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKPoint" /> to a <see cref="T:SkiaSharp.SKPointI" /> object by rounding the <see cref="T:SkiaSharp.SKPoint" /> values to the nearest integer.
+		/// Converts the specified <see cref="SKPoint" /> to a <see cref="SKPointI" /> object by rounding the <see cref="SKPoint" /> values to the nearest integer.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKPoint" /> to convert.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKPointI" /> this method converts to.</returns>
+		/// <param name="value">The <see cref="SKPoint" /> to convert.</param>
+		/// <returns>The <see cref="SKPointI" /> this method converts to.</returns>
 		public static SKPointI Round (SKPoint value)
 		{
 			int x, y;
@@ -413,10 +413,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKPoint" /> to a <see cref="T:SkiaSharp.SKPointI" /> by truncating the values of the <see cref="T:SkiaSharp.SKPoint" />.
+		/// Converts the specified <see cref="SKPoint" /> to a <see cref="SKPointI" /> by truncating the values of the <see cref="SKPoint" />.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKPoint" /> to convert.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKPoint" /> this method converts to.</returns>
+		/// <param name="value">The <see cref="SKPoint" /> to convert.</param>
+		/// <returns>The <see cref="SKPoint" /> this method converts to.</returns>
 		public static SKPointI Truncate (SKPoint value)
 		{
 			int x, y;
@@ -429,14 +429,14 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Translates a given <see cref="T:SkiaSharp.SKPointI" /> by the specified <see cref="T:SkiaSharp.SKSizeI" />.
+		/// Translates a given <see cref="SKPointI" /> by the specified <see cref="SKSizeI" />.
 		/// </summary>
 		/// <param name="pt">The point to translate.</param>
 		/// <param name="sz">The size that specifies the number to add to the coordinates of <paramref name="pt" />.</param>
 		/// <returns>The translated point.</returns>
 		public static SKPointI Add (SKPointI pt, SKSizeI sz) => pt + sz;
 		/// <summary>
-		/// Translates a given <see cref="T:SkiaSharp.SKPointI" /> by the specified point.
+		/// Translates a given <see cref="SKPointI" /> by the specified point.
 		/// </summary>
 		/// <param name="pt">The point to translate.</param>
 		/// <param name="sz">The point that specifies the number to add to the coordinates of <paramref name="pt" />.</param>
@@ -444,66 +444,66 @@ namespace SkiaSharp
 		public static SKPointI Add (SKPointI pt, SKPointI sz) => pt + sz;
 
 		/// <summary>
-		/// Returns the result of subtracting specified <see cref="T:SkiaSharp.SKSizeI" /> from the specified <see cref="T:SkiaSharp.SKPointI" />.
+		/// Returns the result of subtracting specified <see cref="SKSizeI" /> from the specified <see cref="SKPointI" />.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPointI" /> to be subtracted from.</param>
-		/// <param name="sz">The <see cref="T:SkiaSharp.SKSizeI" /> to subtract from the <see cref="T:SkiaSharp.SKPointI" />.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKPointI" /> that is the result of the subtraction operation.</returns>
+		/// <param name="pt">The <see cref="SKPointI" /> to be subtracted from.</param>
+		/// <param name="sz">The <see cref="SKSizeI" /> to subtract from the <see cref="SKPointI" />.</param>
+		/// <returns>The <see cref="SKPointI" /> that is the result of the subtraction operation.</returns>
 		public static SKPointI Subtract (SKPointI pt, SKSizeI sz) => pt - sz;
 		/// <summary>
-		/// Returns the result of subtracting specified point from the specified <see cref="T:SkiaSharp.SKPointI" />.
+		/// Returns the result of subtracting specified point from the specified <see cref="SKPointI" />.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPointI" /> to be subtracted from.</param>
-		/// <param name="sz">The point to subtract from the <see cref="T:SkiaSharp.SKPointI" />.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKPointI" /> that is the result of the subtraction operation.</returns>
+		/// <param name="pt">The <see cref="SKPointI" /> to be subtracted from.</param>
+		/// <param name="sz">The point to subtract from the <see cref="SKPointI" />.</param>
+		/// <returns>The <see cref="SKPointI" /> that is the result of the subtraction operation.</returns>
 		public static SKPointI Subtract (SKPointI pt, SKPointI sz) => pt - sz;
 
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPointI" /> by a given <see cref="T:SkiaSharp.SKSizeI" />.
+		/// Translates a <see cref="SKPointI" /> by a given <see cref="SKSizeI" />.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPointI" /> to translate.</param>
-		/// <param name="sz">A <see cref="T:SkiaSharp.SKSizeI" /> that specifies the pair of numbers to add to the coordinates of <paramref name="pt" />.</param>
-		/// <returns>Returns the translated <see cref="T:SkiaSharp.SKPointI" />.</returns>
+		/// <param name="pt">The <see cref="SKPointI" /> to translate.</param>
+		/// <param name="sz">A <see cref="SKSizeI" /> that specifies the pair of numbers to add to the coordinates of <paramref name="pt" />.</param>
+		/// <returns>Returns the translated <see cref="SKPointI" />.</returns>
 		public static SKPointI operator + (SKPointI pt, SKSizeI sz) =>
 			new SKPointI (pt.X + sz.Width, pt.Y + sz.Height);
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPointI" /> by a given offset.
+		/// Translates a <see cref="SKPointI" /> by a given offset.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPointI" /> to translate.</param>
+		/// <param name="pt">The <see cref="SKPointI" /> to translate.</param>
 		/// <param name="sz">A point that specifies the pair of numbers to add to the coordinates of <paramref name="pt" />.</param>
-		/// <returns>Returns the translated <see cref="T:SkiaSharp.SKPointI" />.</returns>
+		/// <returns>Returns the translated <see cref="SKPointI" />.</returns>
 		public static SKPointI operator + (SKPointI pt, SKPointI sz) =>
 			new SKPointI (pt.X + sz.X, pt.Y + sz.Y);
 
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPointI" /> by the negative of a given <see cref="T:SkiaSharp.SKSizeI" />.
+		/// Translates a <see cref="SKPointI" /> by the negative of a given <see cref="SKSizeI" />.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPointI" /> to translate.</param>
-		/// <param name="sz">The <see cref="T:SkiaSharp.SKSizeI" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPointI" />.</returns>
+		/// <param name="pt">The <see cref="SKPointI" /> to translate.</param>
+		/// <param name="sz">The <see cref="SKSizeI" /> that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
+		/// <returns>The translated <see cref="SKPointI" />.</returns>
 		public static SKPointI operator - (SKPointI pt, SKSizeI sz) =>
 			new SKPointI (pt.X - sz.Width, pt.Y - sz.Height);
 		/// <summary>
-		/// Translates a <see cref="T:SkiaSharp.SKPointI" /> by the negative of a given point.
+		/// Translates a <see cref="SKPointI" /> by the negative of a given point.
 		/// </summary>
-		/// <param name="pt">The <see cref="T:SkiaSharp.SKPointI" /> to translate.</param>
+		/// <param name="pt">The <see cref="SKPointI" /> to translate.</param>
 		/// <param name="sz">The point that specifies the numbers to subtract from the coordinates of <paramref name="pt" />.</param>
-		/// <returns>The translated <see cref="T:SkiaSharp.SKPointI" />.</returns>
+		/// <returns>The translated <see cref="SKPointI" />.</returns>
 		public static SKPointI operator - (SKPointI pt, SKPointI sz) =>
 			new SKPointI (pt.X - sz.X, pt.Y - sz.Y);
 
 		/// <summary>
-		/// Converts an <see cref="T:SkiaSharp.SKPointI" /> into an <see cref="T:SkiaSharp.SKSizeI" />.
+		/// Converts an <see cref="SKPointI" /> into an <see cref="SKSizeI" />.
 		/// </summary>
-		/// <param name="p">The <see cref="T:SkiaSharp.SKPointI" /> to convert.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKSizeI" />.</returns>
+		/// <param name="p">The <see cref="SKPointI" /> to convert.</param>
+		/// <returns>The new <see cref="SKSizeI" />.</returns>
 		public static explicit operator SKSizeI (SKPointI p) =>
 			new SKSizeI (p.X, p.Y);
 		/// <summary>
-		/// Converts an <see cref="T:SkiaSharp.SKPointI" /> into an <see cref="T:SkiaSharp.SKPoint" />.
+		/// Converts an <see cref="SKPointI" /> into an <see cref="SKPoint" />.
 		/// </summary>
-		/// <param name="p">The <see cref="T:SkiaSharp.SKPointI" /> to convert.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <param name="p">The <see cref="SKPointI" /> to convert.</param>
+		/// <returns>The new <see cref="SKPoint" />.</returns>
 		public static implicit operator SKPoint (SKPointI p) =>
 			new SKPoint (p.X, p.Y);
 
@@ -517,7 +517,7 @@ namespace SkiaSharp
 	public partial struct SKPoint3
 	{
 		/// <summary>
-		/// Represents a new instance of the <see cref="T:SkiaSharp.SKPoint3" /> class with member data left uninitialized.
+		/// Represents a new instance of the <see cref="SKPoint3" /> class with member data left uninitialized.
 		/// </summary>
 		public static readonly SKPoint3 Empty;
 
@@ -535,14 +535,14 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets a value indicating whether this <see cref="T:SkiaSharp.SKPoint3" /> is empty.
+		/// Gets a value indicating whether this <see cref="SKPoint3" /> is empty.
 		/// </summary>
 		public readonly bool IsEmpty => this == Empty;
 
 		/// <summary>
-		/// Converts this <see cref="T:SkiaSharp.SKPoint3" /> to a human readable string.
+		/// Converts this <see cref="SKPoint3" /> to a human readable string.
 		/// </summary>
-		/// <returns>A string that represents this <see cref="T:SkiaSharp.SKPoint3" />.</returns>
+		/// <returns>A string that represents this <see cref="SKPoint3" />.</returns>
 		public readonly override string ToString () => $"{{X={x}, Y={y}, Z={z}}}";
 
 		/// <summary>
@@ -592,7 +592,7 @@ namespace SkiaSharp
 	public partial struct SKSize
 	{
 		/// <summary>
-		/// Represents a new instance of the <see cref="T:SkiaSharp.SKSize" /> class with member data left uninitialized.
+		/// Represents a new instance of the <see cref="SKSize" /> class with member data left uninitialized.
 		/// </summary>
 		public static readonly SKSize Empty;
 
@@ -618,21 +618,21 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets a value that indicates whether this <see cref="T:SkiaSharp.SKSize" /> structure has zero width and height.
+		/// Gets a value that indicates whether this <see cref="SKSize" /> structure has zero width and height.
 		/// </summary>
 		public readonly bool IsEmpty => this == Empty;
 
 		/// <summary>
-		/// Converts a <see cref="T:SkiaSharp.SKSize" /> structure to a <see cref="T:SkiaSharp.SKPoint" /> structure.
+		/// Converts a <see cref="SKSize" /> structure to a <see cref="SKPoint" /> structure.
 		/// </summary>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKPoint" /> structure.</returns>
+		/// <returns>Returns a <see cref="SKPoint" /> structure.</returns>
 		public readonly SKPoint ToPoint () =>
 			new SKPoint (w, h);
 
 		/// <summary>
-		/// Converts a <see cref="T:SkiaSharp.SKSize" /> structure to a <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Converts a <see cref="SKSize" /> structure to a <see cref="SKSizeI" /> structure.
 		/// </summary>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKSizeI" /> structure.</returns>
+		/// <returns>Returns a <see cref="SKSizeI" /> structure.</returns>
 		public readonly SKSizeI ToSizeI ()
 		{
 			int w, h;
@@ -645,58 +645,58 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts this <see cref="T:SkiaSharp.SKSize" /> to a human readable string.
+		/// Converts this <see cref="SKSize" /> to a human readable string.
 		/// </summary>
-		/// <returns>A string that represents this <see cref="T:SkiaSharp.SKSize" />.</returns>
+		/// <returns>A string that represents this <see cref="SKSize" />.</returns>
 		public readonly override string ToString () =>
 			$"{{Width={w}, Height={h}}}";
 
 		/// <summary>
-		/// Adds the width and height of one <see cref="T:SkiaSharp.SKSize" /> structure to the width and height of another <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Adds the width and height of one <see cref="SKSize" /> structure to the width and height of another <see cref="SKSize" /> structure.
 		/// </summary>
-		/// <param name="sz1">The first <see cref="T:SkiaSharp.SKSize" /> structure to add.</param>
-		/// <param name="sz2">The second <see cref="T:SkiaSharp.SKSize" /> structure to add.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSize" /> structure that is the result of the addition operation.</returns>
+		/// <param name="sz1">The first <see cref="SKSize" /> structure to add.</param>
+		/// <param name="sz2">The second <see cref="SKSize" /> structure to add.</param>
+		/// <returns>A <see cref="SKSize" /> structure that is the result of the addition operation.</returns>
 		public static SKSize Add (SKSize sz1, SKSize sz2) => sz1 + sz2;
 
 		/// <summary>
-		/// Subtracts the width and height of one <see cref="T:SkiaSharp.SKSize" /> structure from the width and height of another <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Subtracts the width and height of one <see cref="SKSize" /> structure from the width and height of another <see cref="SKSize" /> structure.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSize" /> structure on the left side of the subtraction operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSize" /> structure on the right side of the subtraction operator.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSize" /> that is the result of the subtraction operation.</returns>
+		/// <param name="sz1">The <see cref="SKSize" /> structure on the left side of the subtraction operator.</param>
+		/// <param name="sz2">The <see cref="SKSize" /> structure on the right side of the subtraction operator.</param>
+		/// <returns>A <see cref="SKSize" /> that is the result of the subtraction operation.</returns>
 		public static SKSize Subtract (SKSize sz1, SKSize sz2) => sz1 - sz2;
 
 		/// <summary>
-		/// Adds the width and height of one <see cref="T:SkiaSharp.SKSize" /> structure to the width and height of another <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Adds the width and height of one <see cref="SKSize" /> structure to the width and height of another <see cref="SKSize" /> structure.
 		/// </summary>
-		/// <param name="sz1">The first <see cref="T:SkiaSharp.SKSize" /> structure to add.</param>
-		/// <param name="sz2">The second <see cref="T:SkiaSharp.SKSize" /> structure to add.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSize" /> structure that is the result of the addition operation.</returns>
+		/// <param name="sz1">The first <see cref="SKSize" /> structure to add.</param>
+		/// <param name="sz2">The second <see cref="SKSize" /> structure to add.</param>
+		/// <returns>A <see cref="SKSize" /> structure that is the result of the addition operation.</returns>
 		public static SKSize operator + (SKSize sz1, SKSize sz2) =>
 			new SKSize (sz1.Width + sz2.Width, sz1.Height + sz2.Height);
 
 		/// <summary>
-		/// Subtracts the width and height of one <see cref="T:SkiaSharp.SKSize" /> structure from the width and height of another <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Subtracts the width and height of one <see cref="SKSize" /> structure from the width and height of another <see cref="SKSize" /> structure.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSize" /> structure on the left side of the subtraction operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSize" /> structure on the right side of the subtraction operator.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSize" /> that is the result of the subtraction operation.</returns>
+		/// <param name="sz1">The <see cref="SKSize" /> structure on the left side of the subtraction operator.</param>
+		/// <param name="sz2">The <see cref="SKSize" /> structure on the right side of the subtraction operator.</param>
+		/// <returns>A <see cref="SKSize" /> that is the result of the subtraction operation.</returns>
 		public static SKSize operator - (SKSize sz1, SKSize sz2) =>
 			new SKSize (sz1.Width - sz2.Width, sz1.Height - sz2.Height);
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKSize" /> structure to a <see cref="T:SkiaSharp.SKPoint" /> structure.
+		/// Converts the specified <see cref="SKSize" /> structure to a <see cref="SKPoint" /> structure.
 		/// </summary>
-		/// <param name="size">The <see cref="T:SkiaSharp.SKSize" /> structure to be converted.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKPoint" /> structure structure to which this operator converts.</returns>
+		/// <param name="size">The <see cref="SKSize" /> structure to be converted.</param>
+		/// <returns>The <see cref="SKPoint" /> structure structure to which this operator converts.</returns>
 		public static explicit operator SKPoint (SKSize size) =>
 			new SKPoint (size.Width, size.Height);
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKSizeI" /> structure to a <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Converts the specified <see cref="SKSizeI" /> structure to a <see cref="SKSize" /> structure.
 		/// </summary>
-		/// <param name="size">The <see cref="T:SkiaSharp.SKSizeI" /> structure to be converted.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKSize" /> structure structure to which this operator converts.</returns>
+		/// <param name="size">The <see cref="SKSizeI" /> structure to be converted.</param>
+		/// <returns>The <see cref="SKSize" /> structure structure to which this operator converts.</returns>
 		public static implicit operator SKSize (SKSizeI size) =>
 			new SKSize (size.Width, size.Height);
 	}
@@ -707,7 +707,7 @@ namespace SkiaSharp
 	public partial struct SKSizeI
 	{
 		/// <summary>
-		/// Represents a new instance of the <see cref="T:SkiaSharp.SKSizeI" /> class with member data left uninitialized.
+		/// Represents a new instance of the <see cref="SKSizeI" /> class with member data left uninitialized.
 		/// </summary>
 		public static readonly SKSizeI Empty;
 
@@ -733,62 +733,62 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets a value that indicates whether this <see cref="T:SkiaSharp.SKSizeI" /> structure has zero width and height.
+		/// Gets a value that indicates whether this <see cref="SKSizeI" /> structure has zero width and height.
 		/// </summary>
 		public readonly bool IsEmpty => this == Empty;
 
 		/// <summary>
-		/// Converts a <see cref="T:SkiaSharp.SKSizeI" /> structure to a <see cref="T:SkiaSharp.SKPointI" /> structure.
+		/// Converts a <see cref="SKSizeI" /> structure to a <see cref="SKPointI" /> structure.
 		/// </summary>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKPointI" /> structure.</returns>
+		/// <returns>Returns a <see cref="SKPointI" /> structure.</returns>
 		public readonly SKPointI ToPointI () => new SKPointI (w, h);
 
 		/// <summary>
-		/// Converts this <see cref="T:SkiaSharp.SKSizeI" /> to a human readable string.
+		/// Converts this <see cref="SKSizeI" /> to a human readable string.
 		/// </summary>
-		/// <returns>A string that represents this <see cref="T:SkiaSharp.SKSizeI" />.</returns>
+		/// <returns>A string that represents this <see cref="SKSizeI" />.</returns>
 		public readonly override string ToString () =>
 			$"{{Width={w}, Height={h}}}";
 
 		/// <summary>
-		/// Adds the width and height of one <see cref="T:SkiaSharp.SKSizeI" /> structure to the width and height of another <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Adds the width and height of one <see cref="SKSizeI" /> structure to the width and height of another <see cref="SKSizeI" /> structure.
 		/// </summary>
-		/// <param name="sz1">The first <see cref="T:SkiaSharp.SKSizeI" /> structure to add.</param>
-		/// <param name="sz2">The second <see cref="T:SkiaSharp.SKSizeI" /> structure to add.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSizeI" /> structure that is the result of the addition operation.</returns>
+		/// <param name="sz1">The first <see cref="SKSizeI" /> structure to add.</param>
+		/// <param name="sz2">The second <see cref="SKSizeI" /> structure to add.</param>
+		/// <returns>A <see cref="SKSizeI" /> structure that is the result of the addition operation.</returns>
 		public static SKSizeI Add (SKSizeI sz1, SKSizeI sz2) => sz1 + sz2;
 
 		/// <summary>
-		/// Subtracts the width and height of one <see cref="T:SkiaSharp.SKSizeI" /> structure from the width and height of another <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Subtracts the width and height of one <see cref="SKSizeI" /> structure from the width and height of another <see cref="SKSizeI" /> structure.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the left side of the subtraction operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the right side of the subtraction operator.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSizeI" /> that is the result of the subtraction operation.</returns>
+		/// <param name="sz1">The <see cref="SKSizeI" /> structure on the left side of the subtraction operator.</param>
+		/// <param name="sz2">The <see cref="SKSizeI" /> structure on the right side of the subtraction operator.</param>
+		/// <returns>A <see cref="SKSizeI" /> that is the result of the subtraction operation.</returns>
 		public static SKSizeI Subtract (SKSizeI sz1, SKSizeI sz2) => sz1 - sz2;
 
 		/// <summary>
-		/// Adds the width and height of one <see cref="T:SkiaSharp.SKSizeI" /> structure to the width and height of another <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Adds the width and height of one <see cref="SKSizeI" /> structure to the width and height of another <see cref="SKSizeI" /> structure.
 		/// </summary>
-		/// <param name="sz1">The first <see cref="T:SkiaSharp.SKSizeI" /> structure to add.</param>
-		/// <param name="sz2">The second <see cref="T:SkiaSharp.SKSizeI" /> structure to add.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSizeI" /> structure that is the result of the addition operation.</returns>
+		/// <param name="sz1">The first <see cref="SKSizeI" /> structure to add.</param>
+		/// <param name="sz2">The second <see cref="SKSizeI" /> structure to add.</param>
+		/// <returns>A <see cref="SKSizeI" /> structure that is the result of the addition operation.</returns>
 		public static SKSizeI operator + (SKSizeI sz1, SKSizeI sz2) =>
 			new SKSizeI (sz1.Width + sz2.Width, sz1.Height + sz2.Height);
 
 		/// <summary>
-		/// Subtracts the width and height of one <see cref="T:SkiaSharp.SKSizeI" /> structure from the width and height of another <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Subtracts the width and height of one <see cref="SKSizeI" /> structure from the width and height of another <see cref="SKSizeI" /> structure.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the left side of the subtraction operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the right side of the subtraction operator.</param>
-		/// <returns>A <see cref="T:SkiaSharp.SKSizeI" /> that is the result of the subtraction operation.</returns>
+		/// <param name="sz1">The <see cref="SKSizeI" /> structure on the left side of the subtraction operator.</param>
+		/// <param name="sz2">The <see cref="SKSizeI" /> structure on the right side of the subtraction operator.</param>
+		/// <returns>A <see cref="SKSizeI" /> that is the result of the subtraction operation.</returns>
 		public static SKSizeI operator - (SKSizeI sz1, SKSizeI sz2) =>
 			new SKSizeI (sz1.Width - sz2.Width, sz1.Height - sz2.Height);
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKSizeI" /> structure to a <see cref="T:SkiaSharp.SKPointI" /> structure.
+		/// Converts the specified <see cref="SKSizeI" /> structure to a <see cref="SKPointI" /> structure.
 		/// </summary>
-		/// <param name="size">The <see cref="T:SkiaSharp.SKSizeI" /> structure to be converted.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKPointI" /> structure structure to which this operator converts.</returns>
+		/// <param name="size">The <see cref="SKSizeI" /> structure to be converted.</param>
+		/// <returns>The <see cref="SKPointI" /> structure structure to which this operator converts.</returns>
 		public static explicit operator SKPointI (SKSizeI size) =>
 			new SKPointI (size.Width, size.Height);
 	}
@@ -799,12 +799,12 @@ namespace SkiaSharp
 	public partial struct SKRect
 	{
 		/// <summary>
-		/// Represents a new instance of the <see cref="T:SkiaSharp.SKRect" /> class with member data left uninitialized.
+		/// Represents a new instance of the <see cref="SKRect" /> class with member data left uninitialized.
 		/// </summary>
 		public static readonly SKRect Empty;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:SkiaSharp.SKRect" /> class with the specified upper-left corner and lower-right corner.
+		/// Initializes a new instance of the <see cref="SKRect" /> class with the specified upper-left corner and lower-right corner.
 		/// </summary>
 		/// <param name="left">The left coordinate.</param>
 		/// <param name="top">The top coordinate.</param>
@@ -834,7 +834,7 @@ namespace SkiaSharp
 		public readonly float Width => right - left;
 
 		/// <summary>
-		/// Gets the height of the <see cref="T:SkiaSharp.SKRect" />.
+		/// Gets the height of the <see cref="SKRect" />.
 		/// </summary>
 		public readonly float Height => bottom - top;
 
@@ -922,12 +922,12 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates and returns an enlarged copy of the specified <see cref="T:SkiaSharp.SKRect" /> structure. The copy is enlarged by the specified amount and the original rectangle remains unmodified.
+		/// Creates and returns an enlarged copy of the specified <see cref="SKRect" /> structure. The copy is enlarged by the specified amount and the original rectangle remains unmodified.
 		/// </summary>
-		/// <param name="rect">The <see cref="T:SkiaSharp.SKRect" /> to be copied. This rectangle is not modified.</param>
+		/// <param name="rect">The <see cref="SKRect" /> to be copied. This rectangle is not modified.</param>
 		/// <param name="x">The amount to enlarge the copy of the rectangle horizontally.</param>
 		/// <param name="y">The amount to enlarge the copy of the rectangle vertically.</param>
-		/// <returns>The enlarged <see cref="T:SkiaSharp.SKRect" />.</returns>
+		/// <returns>The enlarged <see cref="SKRect" />.</returns>
 		public static SKRect Inflate (SKRect rect, float x, float y)
 		{
 			var r = new SKRect (rect.left, rect.top, rect.right, rect.bottom);
@@ -936,17 +936,17 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Enlarges this <see cref="T:SkiaSharp.SKRect" /> structure by the specified amount.
+		/// Enlarges this <see cref="SKRect" /> structure by the specified amount.
 		/// </summary>
-		/// <param name="size">The amount to inflate this <see cref="T:SkiaSharp.SKRect" />.</param>
+		/// <param name="size">The amount to inflate this <see cref="SKRect" />.</param>
 		public void Inflate (SKSize size) =>
 			Inflate (size.Width, size.Height);
 
 		/// <summary>
-		/// Enlarges this <see cref="T:SkiaSharp.SKRect" /> structure by the specified amount.
+		/// Enlarges this <see cref="SKRect" /> structure by the specified amount.
 		/// </summary>
-		/// <param name="x">The amount to inflate this <see cref="T:SkiaSharp.SKRect" /> structure horizontally.</param>
-		/// <param name="y">The amount to inflate this <see cref="T:SkiaSharp.SKRect" /> structure vertically.</param>
+		/// <param name="x">The amount to inflate this <see cref="SKRect" /> structure horizontally.</param>
+		/// <param name="y">The amount to inflate this <see cref="SKRect" /> structure vertically.</param>
 		public void Inflate (float x, float y)
 		{
 			left -= x;
@@ -956,11 +956,11 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Returns a <see cref="T:SkiaSharp.SKRect" /> structure that represents the intersection of two rectangles. If there is no intersection, and empty <see cref="T:SkiaSharp.SKRect" /> is returned.
+		/// Returns a <see cref="SKRect" /> structure that represents the intersection of two rectangles. If there is no intersection, and empty <see cref="SKRect" /> is returned.
 		/// </summary>
 		/// <param name="a">A rectangle to intersect.</param>
 		/// <param name="b">A rectangle to intersect.</param>
-		/// <returns>A third <see cref="T:SkiaSharp.SKRect" /> structure the size of which represents the overlapped area of the two specified rectangles.</returns>
+		/// <returns>A third <see cref="SKRect" /> structure the size of which represents the overlapped area of the two specified rectangles.</returns>
 		public static SKRect Intersect (SKRect a, SKRect b)
 		{
 			if (!a.IntersectsWithInclusive (b)) {
@@ -974,7 +974,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Replaces this <see cref="T:SkiaSharp.SKRect" /> structure with the intersection of itself and the specified <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// Replaces this <see cref="SKRect" /> structure with the intersection of itself and the specified <see cref="SKRect" /> structure.
 		/// </summary>
 		/// <param name="rect">The rectangle to intersect.</param>
 		public void Intersect (SKRect rect) =>
@@ -985,7 +985,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="a">A rectangle to union.</param>
 		/// <param name="b">A rectangle to union.</param>
-		/// <returns>A third <see cref="T:SkiaSharp.SKRect" /> structure that contains both of the two rectangles that form the union.</returns>
+		/// <returns>A third <see cref="SKRect" /> structure that contains both of the two rectangles that form the union.</returns>
 		public static SKRect Union (SKRect a, SKRect b) =>
 			new SKRect (
 				Math.Min (a.left, b.left),
@@ -994,17 +994,17 @@ namespace SkiaSharp
 				Math.Max (a.bottom, b.bottom));
 
 		/// <summary>
-		/// Replaces this <see cref="T:SkiaSharp.SKRect" /> structure with the union of itself and the specified <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// Replaces this <see cref="SKRect" /> structure with the union of itself and the specified <see cref="SKRect" /> structure.
 		/// </summary>
 		/// <param name="rect">A rectangle to union.</param>
 		public void Union (SKRect rect) =>
 			this = Union (this, rect);
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKRectI" /> structure to a <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// Converts the specified <see cref="SKRectI" /> structure to a <see cref="SKRect" /> structure.
 		/// </summary>
-		/// <param name="r">The <see cref="T:SkiaSharp.SKRectI" /> structure to convert.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKRect" /> structure that is converted from the specified <see cref="T:SkiaSharp.SKRectI" /> structure.</returns>
+		/// <param name="r">The <see cref="SKRectI" /> structure to convert.</param>
+		/// <returns>The <see cref="SKRect" /> structure that is converted from the specified <see cref="SKRectI" /> structure.</returns>
 		public static implicit operator SKRect (SKRectI r) =>
 			new SKRect (r.Left, r.Top, r.Right, r.Bottom);
 
@@ -1070,9 +1070,9 @@ namespace SkiaSharp
 		public void Offset (SKPoint pos) => Offset (pos.X, pos.Y);
 
 		/// <summary>
-		/// Converts this <see cref="T:SkiaSharp.SKRect" /> to a human readable string.
+		/// Converts this <see cref="SKRect" /> to a human readable string.
 		/// </summary>
-		/// <returns>A string that represents this <see cref="T:SkiaSharp.SKRect" />.</returns>
+		/// <returns>A string that represents this <see cref="SKRect" />.</returns>
 		public readonly override string ToString () =>
 			$"{{Left={Left},Top={Top},Width={Width},Height={Height}}}";
 
@@ -1120,12 +1120,12 @@ namespace SkiaSharp
 	public partial struct SKRectI
 	{
 		/// <summary>
-		/// Represents a new instance of the <see cref="T:SkiaSharp.SKRectI" /> class with member data left uninitialized.
+		/// Represents a new instance of the <see cref="SKRectI" /> class with member data left uninitialized.
 		/// </summary>
 		public static readonly SKRectI Empty;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="T:SkiaSharp.SKRectI" /> class with the specified upper-left corner and lower-right corner.
+		/// Initializes a new instance of the <see cref="SKRectI" /> class with the specified upper-left corner and lower-right corner.
 		/// </summary>
 		/// <param name="left">The left coordinate.</param>
 		/// <param name="top">The top coordinate.</param>
@@ -1150,12 +1150,12 @@ namespace SkiaSharp
 		public readonly int MidY => top + (Height / 2);
 
 		/// <summary>
-		/// Gets the width of the <see cref="T:SkiaSharp.SKRectI" />.
+		/// Gets the width of the <see cref="SKRectI" />.
 		/// </summary>
 		public readonly int Width => right - left;
 
 		/// <summary>
-		/// Gets the height of the <see cref="T:SkiaSharp.SKRectI" />.
+		/// Gets the height of the <see cref="SKRectI" />.
 		/// </summary>
 		public readonly int Height => bottom - top;
 
@@ -1165,7 +1165,7 @@ namespace SkiaSharp
 		public readonly bool IsEmpty => this == Empty;
 
 		/// <summary>
-		/// Gets or sets the size of the <see cref="T:SkiaSharp.SKRectI" />.
+		/// Gets or sets the size of the <see cref="SKRectI" />.
 		/// </summary>
 		public SKSizeI Size {
 			readonly get => new SKSizeI (Width, Height);
@@ -1221,19 +1221,19 @@ namespace SkiaSharp
 			Floor (((SKRect)this).AspectFill (size));
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKRect" /> structure to a <see cref="T:SkiaSharp.SKRectI" /> structure by rounding the <see cref="T:SkiaSharp.SKRect" /> values to the next higher integer values.
+		/// Converts the specified <see cref="SKRect" /> structure to a <see cref="SKRectI" /> structure by rounding the <see cref="SKRect" /> values to the next higher integer values.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKRect" /> structure to be converted.</param>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <param name="value">The <see cref="SKRect" /> structure to be converted.</param>
+		/// <returns>Returns a <see cref="SKRectI" />.</returns>
 		public static SKRectI Ceiling (SKRect value) =>
 			Ceiling (value, false);
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKRect" /> structure to a <see cref="T:SkiaSharp.SKRectI" /> structure by rounding the <see cref="T:SkiaSharp.SKRect" /> values to the next higher integer values.
+		/// Converts the specified <see cref="SKRect" /> structure to a <see cref="SKRectI" /> structure by rounding the <see cref="SKRect" /> values to the next higher integer values.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKRect" /> structure to be converted.</param>
+		/// <param name="value">The <see cref="SKRect" /> structure to be converted.</param>
 		/// <param name="outwards">Whether or not to move in the direction of the side.</param>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <returns>Returns a <see cref="SKRectI" />.</returns>
 		public static SKRectI Ceiling (SKRect value, bool outwards)
 		{
 			int x, y, r, b;
@@ -1248,12 +1248,12 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates and returns an enlarged copy of the specified <see cref="T:SkiaSharp.SKRectI" /> structure. The copy is enlarged by the specified amount and the original rectangle remains unmodified.
+		/// Creates and returns an enlarged copy of the specified <see cref="SKRectI" /> structure. The copy is enlarged by the specified amount and the original rectangle remains unmodified.
 		/// </summary>
-		/// <param name="rect">The <see cref="T:SkiaSharp.SKRectI" /> to be copied. This rectangle is not modified.</param>
+		/// <param name="rect">The <see cref="SKRectI" /> to be copied. This rectangle is not modified.</param>
 		/// <param name="x">The amount to enlarge the copy of the rectangle horizontally.</param>
 		/// <param name="y">The amount to enlarge the copy of the rectangle vertically.</param>
-		/// <returns>The enlarged <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <returns>The enlarged <see cref="SKRectI" />.</returns>
 		public static SKRectI Inflate (SKRectI rect, int x, int y)
 		{
 			var r = new SKRectI (rect.left, rect.top, rect.right, rect.bottom);
@@ -1262,17 +1262,17 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Enlarges this <see cref="T:SkiaSharp.SKRectI" /> structure by the specified amount.
+		/// Enlarges this <see cref="SKRectI" /> structure by the specified amount.
 		/// </summary>
-		/// <param name="size">The amount to inflate this <see cref="T:SkiaSharp.SKRectI" />.</param>
+		/// <param name="size">The amount to inflate this <see cref="SKRectI" />.</param>
 		public void Inflate (SKSizeI size) =>
 			Inflate (size.Width, size.Height);
 
 		/// <summary>
-		/// Enlarges this <see cref="T:SkiaSharp.SKRectI" /> structure by the specified amount.
+		/// Enlarges this <see cref="SKRectI" /> structure by the specified amount.
 		/// </summary>
-		/// <param name="width">The amount to inflate this <see cref="T:SkiaSharp.SKRectI" /> structure horizontally.</param>
-		/// <param name="height">The amount to inflate this <see cref="T:SkiaSharp.SKRectI" /> structure vertically.</param>
+		/// <param name="width">The amount to inflate this <see cref="SKRectI" /> structure horizontally.</param>
+		/// <param name="height">The amount to inflate this <see cref="SKRectI" /> structure vertically.</param>
 		public void Inflate (int width, int height)
 		{
 			left -= width;
@@ -1282,11 +1282,11 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Returns a <see cref="T:SkiaSharp.SKRectI" /> structure that represents the intersection of two rectangles. If there is no intersection, and empty <see cref="T:SkiaSharp.SKRectI" /> is returned.
+		/// Returns a <see cref="SKRectI" /> structure that represents the intersection of two rectangles. If there is no intersection, and empty <see cref="SKRectI" /> is returned.
 		/// </summary>
 		/// <param name="a">A rectangle to intersect.</param>
 		/// <param name="b">A rectangle to intersect.</param>
-		/// <returns>A third <see cref="T:SkiaSharp.SKRectI" /> structure the size of which represents the overlapped area of the two specified rectangles.</returns>
+		/// <returns>A third <see cref="SKRectI" /> structure the size of which represents the overlapped area of the two specified rectangles.</returns>
 		public static SKRectI Intersect (SKRectI a, SKRectI b)
 		{
 			if (!a.IntersectsWithInclusive (b))
@@ -1300,17 +1300,17 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Replaces this <see cref="T:SkiaSharp.SKRectI" /> structure with the intersection of itself and the specified <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// Replaces this <see cref="SKRectI" /> structure with the intersection of itself and the specified <see cref="SKRectI" /> structure.
 		/// </summary>
 		/// <param name="rect">The rectangle to intersect.</param>
 		public void Intersect (SKRectI rect) =>
 			this = Intersect (this, rect);
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKRect" /> structure to a <see cref="T:SkiaSharp.SKRectI" /> structure by rounding the <see cref="T:SkiaSharp.SKRect" /> values to the nearest integer values.
+		/// Converts the specified <see cref="SKRect" /> structure to a <see cref="SKRectI" /> structure by rounding the <see cref="SKRect" /> values to the nearest integer values.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKRect" /> structure to be converted.</param>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <param name="value">The <see cref="SKRect" /> structure to be converted.</param>
+		/// <returns>Returns a <see cref="SKRectI" />.</returns>
 		public static SKRectI Round (SKRect value)
 		{
 			int x, y, r, b;
@@ -1325,18 +1325,18 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKRect" /> structure to a <see cref="T:SkiaSharp.SKRectI" /> structure by rounding the <see cref="T:SkiaSharp.SKRect" /> values to the closest lower integer values.
+		/// Converts the specified <see cref="SKRect" /> structure to a <see cref="SKRectI" /> structure by rounding the <see cref="SKRect" /> values to the closest lower integer values.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKRect" /> structure to be converted.</param>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <param name="value">The <see cref="SKRect" /> structure to be converted.</param>
+		/// <returns>Returns a <see cref="SKRectI" />.</returns>
 		public static SKRectI Floor (SKRect value) => Floor (value, false);
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKRect" /> structure to a <see cref="T:SkiaSharp.SKRectI" /> structure by rounding the <see cref="T:SkiaSharp.SKRect" /> values to the closest lower integer values.
+		/// Converts the specified <see cref="SKRect" /> structure to a <see cref="SKRectI" /> structure by rounding the <see cref="SKRect" /> values to the closest lower integer values.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKRect" /> structure to be converted.</param>
+		/// <param name="value">The <see cref="SKRect" /> structure to be converted.</param>
 		/// <param name="inwards">Whether or not to move in the direction of the side.</param>
-		/// <returns>Returns a <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <returns>Returns a <see cref="SKRectI" />.</returns>
 		public static SKRectI Floor (SKRect value, bool inwards)
 		{
 			int x, y, r, b;
@@ -1351,10 +1351,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts the specified <see cref="T:SkiaSharp.SKRect" /> structure to a <see cref="T:SkiaSharp.SKRectI" /> structure by truncating the <see cref="T:SkiaSharp.SKRect" /> values.
+		/// Converts the specified <see cref="SKRect" /> structure to a <see cref="SKRectI" /> structure by truncating the <see cref="SKRect" /> values.
 		/// </summary>
-		/// <param name="value">The <see cref="T:SkiaSharp.SKRect" /> to be converted.</param>
-		/// <returns>The truncated value of the <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <param name="value">The <see cref="SKRect" /> to be converted.</param>
+		/// <returns>The truncated value of the <see cref="SKRectI" />.</returns>
 		public static SKRectI Truncate (SKRect value)
 		{
 			int x, y, r, b;
@@ -1373,7 +1373,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="a">A rectangle to union.</param>
 		/// <param name="b">A rectangle to union.</param>
-		/// <returns>A third <see cref="T:SkiaSharp.SKRectI" /> structure that contains both of the two rectangles that form the union.</returns>
+		/// <returns>A third <see cref="SKRectI" /> structure that contains both of the two rectangles that form the union.</returns>
 		public static SKRectI Union (SKRectI a, SKRectI b) =>
 			new SKRectI (
 				Math.Min (a.Left, b.Left),
@@ -1382,7 +1382,7 @@ namespace SkiaSharp
 				Math.Max (a.Bottom, b.Bottom));
 
 		/// <summary>
-		/// Replaces this <see cref="T:SkiaSharp.SKRectI" /> structure with the union of itself and the specified <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// Replaces this <see cref="SKRectI" /> structure with the union of itself and the specified <see cref="SKRectI" /> structure.
 		/// </summary>
 		/// <param name="rect">A rectangle to union.</param>
 		public void Union (SKRectI rect) =>
@@ -1450,9 +1450,9 @@ namespace SkiaSharp
 		public void Offset (SKPointI pos) => Offset (pos.X, pos.Y);
 
 		/// <summary>
-		/// Converts this <see cref="T:SkiaSharp.SKRectI" /> to a human readable string.
+		/// Converts this <see cref="SKRectI" /> to a human readable string.
 		/// </summary>
-		/// <returns>A string that represents this <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <returns>A string that represents this <see cref="SKRectI" />.</returns>
 		public readonly override string ToString () =>
 			$"{{Left={Left},Top={Top},Width={Width},Height={Height}}}";
 

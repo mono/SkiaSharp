@@ -28,17 +28,17 @@ namespace SkiaSharp
 		// CreateGl
 
 		/// <summary>
-		/// Creates a <see cref="T:SkiaSharp.GRContext" /> for an OpenGL context.
+		/// Creates a <see cref="GRContext" /> for an OpenGL context.
 		/// </summary>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.GRContext" /> if one was created, otherwise <see langword="null" />.</returns>
+		/// <returns>Returns the new <see cref="GRContext" /> if one was created, otherwise <see langword="null" />.</returns>
 		public static GRContext CreateGl () =>
 			CreateGl (null, null);
 
 		/// <summary>
-		/// Creates a <see cref="T:SkiaSharp.GRContext" /> for an OpenGL context.
+		/// Creates a <see cref="GRContext" /> for an OpenGL context.
 		/// </summary>
 		/// <param name="backendContext">The OpenGL interface to use.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.GRContext" /> if one was created, otherwise <see langword="null" />.</returns>
+		/// <returns>Returns the new <see cref="GRContext" /> if one was created, otherwise <see langword="null" />.</returns>
 		public static GRContext CreateGl (GRGlInterface backendContext) =>
 			CreateGl (backendContext, null);
 
@@ -129,7 +129,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Abandons all GPU resources and assumes the underlying backend 3D API context is not longer usable. After returning it will assume that the underlying context may no longer be valid.
 		/// </summary>
-		/// <param name="releaseResources">Use true to indicate that the underlying 3D context is not yet lost and the <see cref="T:SkiaSharp.GRContext" /> will cleanup all allocated resources before returning. Using false will ensure that the destructors of the <see cref="T:SkiaSharp.GRContext" /> and any of its created resource objects will not make backend 3D API calls.</param>
+		/// <param name="releaseResources">Use true to indicate that the underlying 3D context is not yet lost and the <see cref="GRContext" /> will cleanup all allocated resources before returning. Using false will ensure that the destructors of the <see cref="GRContext" /> and any of its created resource objects will not make backend 3D API calls.</param>
 		public void AbandonContext (bool releaseResources = false)
 		{
 			if (releaseResources)

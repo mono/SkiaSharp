@@ -16,7 +16,7 @@ namespace HarfBuzzSharp
 		internal const int NameBufferLength = 128;
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Font" /> using a specific font face.
+		/// Creates a new <see cref="Font" /> using a specific font face.
 		/// </summary>
 		/// <param name="face">The face to use.</param>
 		public Font (Face face)

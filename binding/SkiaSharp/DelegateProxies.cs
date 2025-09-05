@@ -19,7 +19,7 @@ namespace SkiaSharp
 	public delegate void SKBitmapReleaseDelegate (IntPtr address, object context);
 
 	/// <summary>
-	/// The delegate that is used when a <see cref="T:SkiaSharp.SKData" /> instance is about to be released.
+	/// The delegate that is used when a <see cref="SKData" /> instance is about to be released.
 	/// </summary>
 	/// <param name="address">The pointer to the byte buffer.</param>
 	/// <param name="context">The user state passed to <see cref="M:SkiaSharp.SKData.Create(System.IntPtr,System.Int32,SkiaSharp.SKDataReleaseDelegate,System.Object)" />.</param>

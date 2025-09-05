@@ -12,12 +12,12 @@ namespace HarfBuzzSharp
 		private static readonly Lazy<Face> emptyFace = new Lazy<Face> (() => new StaticFace (HarfBuzzApi.hb_face_get_empty ()));
 
 		/// <summary>
-		/// Gets a reference to the empty <see cref="T:HarfBuzzSharp.Face" /> instance.
+		/// Gets a reference to the empty <see cref="Face" /> instance.
 		/// </summary>
 		public static Face Empty => emptyFace.Value;
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Face" /> instance, using the specified typeface blob.
+		/// Creates a new <see cref="Face" /> instance, using the specified typeface blob.
 		/// </summary>
 		/// <param name="blob">The typeface data.</param>
 		/// <param name="index">The zero-based face index in a collection.</param>
@@ -27,7 +27,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Face" /> instance, using the specified typeface blob.
+		/// Creates a new <see cref="Face" /> instance, using the specified typeface blob.
 		/// </summary>
 		/// <param name="blob">The typeface data.</param>
 		/// <param name="index">The zero-based face index in a collection.</param>
@@ -46,7 +46,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Face" /> instance, using the delegate to assemble the data.
+		/// Creates a new <see cref="Face" /> instance, using the delegate to assemble the data.
 		/// </summary>
 		/// <param name="getTable">The delegate to retrieve the table data.</param>
 		public Face (GetTableDelegate getTable)

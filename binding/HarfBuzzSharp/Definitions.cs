@@ -10,7 +10,7 @@ namespace HarfBuzzSharp
 	public unsafe partial struct GlyphInfo
 	{
 		/// <summary>
-		/// Gets the <see cref="T:HarfBuzzSharp.GlyphFlags" /> for this instance.
+		/// Gets the <see cref="GlyphFlags" /> for this instance.
 		/// </summary>
 		public GlyphFlags GlyphFlags {
 			get {

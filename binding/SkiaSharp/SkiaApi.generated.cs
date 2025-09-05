@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -18530,7 +18530,7 @@ namespace SkiaSharp {
 			obj is SKColorF f && Equals (f);
 
 		/// <summary>
-		/// Indicates whether two <see cref="T:SkiaSharp.SKColorF" /> objects are equal.
+		/// Indicates whether two <see cref="SKColorF" /> objects are equal.
 		/// </summary>
 		/// <param name="left">The first color to compare.</param>
 		/// <param name="right">The second color to compare.</param>
@@ -18539,7 +18539,7 @@ namespace SkiaSharp {
 			left.Equals (right);
 
 		/// <summary>
-		/// Indicates whether two <see cref="T:SkiaSharp.SKColorF" /> objects are different.
+		/// Indicates whether two <see cref="SKColorF" /> objects are different.
 		/// </summary>
 		/// <param name="left">The first color to compare.</param>
 		/// <param name="right">The second color to compare.</param>
@@ -19244,7 +19244,7 @@ namespace SkiaSharp {
 		// public int32_t x
 		private Int32 x;
 		/// <summary>
-		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPointI" />.
+		/// Gets or sets the x-coordinate of this <see cref="SKPointI" />.
 		/// </summary>
 		public Int32 X {
 			readonly get => x;
@@ -19254,7 +19254,7 @@ namespace SkiaSharp {
 		// public int32_t y
 		private Int32 y;
 		/// <summary>
-		/// Gets or sets the y-coordinate of this <see cref="T:SkiaSharp.SKPointI" />
+		/// Gets or sets the y-coordinate of this <see cref="SKPointI" />
 		/// </summary>
 		public Int32 Y {
 			readonly get => y;
@@ -19262,38 +19262,38 @@ namespace SkiaSharp {
 		}
 
 		/// <summary>
-		/// Specifies whether this <see cref="T:SkiaSharp.SKPointI" /> contains the same coordinates as the specified <see cref="T:SkiaSharp.SKPointI" />.
+		/// Specifies whether this <see cref="SKPointI" /> contains the same coordinates as the specified <see cref="SKPointI" />.
 		/// </summary>
-		/// <param name="obj">The <see cref="T:SkiaSharp.SKPointI" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKPointI" />.</returns>
+		/// <param name="obj">The <see cref="SKPointI" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="SKPointI" />.</returns>
 		public readonly bool Equals (SKPointI obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y;
 #pragma warning restore CS8909
 
 		/// <summary>
-		/// Specifies whether this <see cref="T:SkiaSharp.SKPointI" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// Specifies whether this <see cref="SKPointI" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
 		/// </summary>
 		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKPointI" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKPointI" />.</returns>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="SKPointI" /> and has the same coordinates as this <see cref="SKPointI" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKPointI f && Equals (f);
 
 		/// <summary>
 		/// Determines whether the coordinates of the specified points are equal.
 		/// </summary>
-		/// <param name="left">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
-		/// <param name="right">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
-		/// <returns>true if the <see cref="P:SkiaSharp.SKPointI.X" /> and <see cref="P:SkiaSharp.SKPointI.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures are equal; otherwise, false.</returns>
+		/// <param name="left">A <see cref="SKPointI" /> to compare.</param>
+		/// <param name="right">A <see cref="SKPointI" /> to compare.</param>
+		/// <returns>true if the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of the left and right <see cref="SKPoint" /> structures are equal; otherwise, false.</returns>
 		public static bool operator == (SKPointI left, SKPointI right) =>
 			left.Equals (right);
 
 		/// <summary>
 		/// Determines whether the coordinates of the specified points are not equal.
 		/// </summary>
-		/// <param name="left">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
-		/// <param name="right">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
-		/// <returns>true if the <see cref="P:SkiaSharp.SKPointI.X" /> and <see cref="P:SkiaSharp.SKPointI.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures differ; otherwise, false.</returns>
+		/// <param name="left">A <see cref="SKPointI" /> to compare.</param>
+		/// <param name="right">A <see cref="SKPointI" /> to compare.</param>
+		/// <returns>true if the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of the left and right <see cref="SKPoint" /> structures differ; otherwise, false.</returns>
 		public static bool operator != (SKPointI left, SKPointI right) =>
 			!left.Equals (right);
 
@@ -19321,7 +19321,7 @@ namespace SkiaSharp {
 		// public int32_t left
 		private Int32 left;
 		/// <summary>
-		/// Gets or sets the x-coordinate of the left edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// Gets or sets the x-coordinate of the left edge of this <see cref="SKRectI" /> structure.
 		/// </summary>
 		public Int32 Left {
 			readonly get => left;
@@ -19331,7 +19331,7 @@ namespace SkiaSharp {
 		// public int32_t top
 		private Int32 top;
 		/// <summary>
-		/// Gets or sets the y-coordinate of the top edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// Gets or sets the y-coordinate of the top edge of this <see cref="SKRectI" /> structure.
 		/// </summary>
 		public Int32 Top {
 			readonly get => top;
@@ -19341,7 +19341,7 @@ namespace SkiaSharp {
 		// public int32_t right
 		private Int32 right;
 		/// <summary>
-		/// Gets or sets the x-coordinate of the right edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// Gets or sets the x-coordinate of the right edge of this <see cref="SKRectI" /> structure.
 		/// </summary>
 		public Int32 Right {
 			readonly get => right;
@@ -19351,7 +19351,7 @@ namespace SkiaSharp {
 		// public int32_t bottom
 		private Int32 bottom;
 		/// <summary>
-		/// Gets or sets the y-coordinate of the bottom edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// Gets or sets the y-coordinate of the bottom edge of this <see cref="SKRectI" /> structure.
 		/// </summary>
 		public Int32 Bottom {
 			readonly get => bottom;
@@ -19359,10 +19359,10 @@ namespace SkiaSharp {
 		}
 
 		/// <summary>
-		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:SkiaSharp.SKRectI" />.
+		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="SKRectI" />.
 		/// </summary>
-		/// <param name="obj">The <see cref="T:SkiaSharp.SKRectI" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <param name="obj">The <see cref="SKRectI" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="SKRectI" />.</returns>
 		public readonly bool Equals (SKRectI obj) =>
 #pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
@@ -19372,25 +19372,25 @@ namespace SkiaSharp {
 		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:System.Object" />.
 		/// </summary>
 		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKRectI" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKRectI" />.</returns>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="SKRectI" /> and has the same coordinates as this <see cref="SKRectI" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKRectI f && Equals (f);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKRectI" /> structures have equal location and size.
+		/// Tests whether two <see cref="SKRectI" /> structures have equal location and size.
 		/// </summary>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the left of the equality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the right of the equality operator.</param>
-		/// <returns>This operator returns true if the two specified <see cref="T:SkiaSharp.SKRectI" /> structures have equal <see cref="P:SkiaSharp.SKRectI.Left" />, <see cref="P:SkiaSharp.SKRectI.Top" />, <see cref="P:SkiaSharp.SKRectI.Right" />, or <see cref="P:SkiaSharp.SKRectI.Bottom" /> properties.</returns>
+		/// <param name="left">The <see cref="SKRectI" /> structure that is to the left of the equality operator.</param>
+		/// <param name="right">The <see cref="SKRectI" /> structure that is to the right of the equality operator.</param>
+		/// <returns>This operator returns true if the two specified <see cref="SKRectI" /> structures have equal <see cref="SKRectI.Left" />, <see cref="SKRectI.Top" />, <see cref="SKRectI.Right" />, or <see cref="SKRectI.Bottom" /> properties.</returns>
 		public static bool operator == (SKRectI left, SKRectI right) =>
 			left.Equals (right);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKRectI" /> structures differ in location or size.
+		/// Tests whether two <see cref="SKRectI" /> structures differ in location or size.
 		/// </summary>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the right of the inequality operator.</param>
-		/// <returns>This operator returns true if any of the <see cref="P:SkiaSharp.SKRectI.Left" />, <see cref="P:SkiaSharp.SKRectI.Top" />, <see cref="P:SkiaSharp.SKRectI.Right" />, or <see cref="P:SkiaSharp.SKRectI.Bottom" /> properties of the two <see cref="T:SkiaSharp.SKRectI" /> structures are unequal; otherwise false.</returns>
+		/// <param name="left">The <see cref="SKRectI" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="right">The <see cref="SKRectI" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if any of the <see cref="SKRectI.Left" />, <see cref="SKRectI.Top" />, <see cref="SKRectI.Right" />, or <see cref="SKRectI.Bottom" /> properties of the two <see cref="SKRectI" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKRectI left, SKRectI right) =>
 			!left.Equals (right);
 
@@ -19419,7 +19419,7 @@ namespace SkiaSharp {
 		// public int32_t w
 		private Int32 w;
 		/// <summary>
-		/// Gets or sets the horizontal component of this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Gets or sets the horizontal component of this <see cref="SKSizeI" /> structure.
 		/// </summary>
 		public Int32 Width {
 			readonly get => w;
@@ -19429,7 +19429,7 @@ namespace SkiaSharp {
 		// public int32_t h
 		private Int32 h;
 		/// <summary>
-		/// Gets or sets the vertical component of this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Gets or sets the vertical component of this <see cref="SKSizeI" /> structure.
 		/// </summary>
 		public Int32 Height {
 			readonly get => h;
@@ -19437,49 +19437,49 @@ namespace SkiaSharp {
 		}
 
 		/// <summary>
-		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSizeI" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Tests to see whether the specified object is a <see cref="SKSizeI" /> structure with the same dimensions as this <see cref="SKSizeI" /> structure.
 		/// </summary>
-		/// <param name="obj">The <see cref="T:SkiaSharp.SKSizeI" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKSizeI" />.</returns>
+		/// <param name="obj">The <see cref="SKSizeI" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="SKSizeI" />.</returns>
 		public readonly bool Equals (SKSizeI obj) =>
 #pragma warning disable CS8909
 			w == obj.w && h == obj.h;
 #pragma warning restore CS8909
 
 		/// <summary>
-		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSizeI" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Tests to see whether the specified object is a <see cref="SKSizeI" /> structure with the same dimensions as this <see cref="SKSizeI" /> structure.
 		/// </summary>
 		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKSizeI" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKSizeI" />.</returns>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="SKSizeI" /> and has the same coordinates as this <see cref="SKSizeI" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKSizeI f && Equals (f);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKSizeI" /> structures are equal.
+		/// Tests whether two <see cref="SKSizeI" /> structures are equal.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the left side of the equality operator.</param>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the left side of the equality operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the right of the equality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the right of the equality operator.</param>
-		/// <returns>This operator returns true if both <see cref="T:SkiaSharp.SKSizeI" /> structures have equal <see cref="P:SkiaSharp.SKSizeI.Width" /> and <see cref="P:SkiaSharp.SKSizeI.Height" />; otherwise, false.</returns>
+		/// <param name="sz1">The <see cref="SKSizeI" /> structure on the left side of the equality operator.</param>
+		/// <param name="left">The <see cref="SKSizeI" /> structure on the left side of the equality operator.</param>
+		/// <param name="sz2">The <see cref="SKSizeI" /> structure on the right of the equality operator.</param>
+		/// <param name="right">The <see cref="SKSizeI" /> structure on the right of the equality operator.</param>
+		/// <returns>This operator returns true if both <see cref="SKSizeI" /> structures have equal <see cref="SKSizeI.Width" /> and <see cref="SKSizeI.Height" />; otherwise, false.</returns>
 		public static bool operator == (SKSizeI left, SKSizeI right) =>
 			left.Equals (right);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKSizeI" /> structures are different.
+		/// Tests whether two <see cref="SKSizeI" /> structures are different.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the right of the inequality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the right of the inequality operator.</param>
-		/// <returns>This operator returns true if either of the <see cref="P:SkiaSharp.SKSizeI.Width" /> and <see cref="P:SkiaSharp.SKSizeI.Height" /> properties of the two <see cref="T:SkiaSharp.SKSizeI" /> structures are unequal; otherwise false.</returns>
+		/// <param name="sz1">The <see cref="SKSizeI" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="left">The <see cref="SKSizeI" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="sz2">The <see cref="SKSizeI" /> structure that is to the right of the inequality operator.</param>
+		/// <param name="right">The <see cref="SKSizeI" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if either of the <see cref="SKSizeI.Width" /> and <see cref="SKSizeI.Height" /> properties of the two <see cref="SKSizeI" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKSizeI left, SKSizeI right) =>
 			!left.Equals (right);
 
 		/// <summary>
-		/// Returns a hash code for this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// Returns a hash code for this <see cref="SKSizeI" /> structure.
 		/// </summary>
-		/// <returns>An integer value that specifies a hash value for this <see cref="T:SkiaSharp.SKSizeI" /> structure.</returns>
+		/// <returns>An integer value that specifies a hash value for this <see cref="SKSizeI" /> structure.</returns>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -19897,7 +19897,7 @@ namespace SkiaSharp {
 	/// <summary>
 	/// A 3x3 transformation matrix with perspective.
 	/// </summary>
-	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="P:SkiaSharp.SKMatrix.Persp0" />, <see cref="P:SkiaSharp.SKMatrix.Persp1" />, <see cref="P:SkiaSharp.SKMatrix.Persp2" /> fields of the matrix.</remarks>
+	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="SKMatrix.Persp0" />, <see cref="SKMatrix.Persp1" />, <see cref="SKMatrix.Persp2" /> fields of the matrix.</remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKMatrix : IEquatable<SKMatrix> {
 		// public float scaleX
@@ -20241,13 +20241,13 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.
 	/// </summary>
-	/// <remarks>To convert a <see cref="T:SkiaSharp.SKPoint" /> to a <see cref="T:SkiaSharp.SKPointI" />, use <see cref="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="M:SkiaSharp.SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
+	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="M:SkiaSharp.SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKPoint : IEquatable<SKPoint> {
 		// public float x
 		private Single x;
 		/// <summary>
-		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint" />.
+		/// Gets or sets the x-coordinate of this <see cref="SKPoint" />.
 		/// </summary>
 		public Single X {
 			readonly get => x;
@@ -20257,7 +20257,7 @@ namespace SkiaSharp {
 		// public float y
 		private Single y;
 		/// <summary>
-		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint" />.
+		/// Gets or sets the x-coordinate of this <see cref="SKPoint" />.
 		/// </summary>
 		public Single Y {
 			readonly get => y;
@@ -20265,38 +20265,38 @@ namespace SkiaSharp {
 		}
 
 		/// <summary>
-		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint" /> contains the same coordinates as the specified <see cref="T:SkiaSharp.SKPoint" />.
+		/// Specifies whether this <see cref="SKPoint" /> contains the same coordinates as the specified <see cref="SKPoint" />.
 		/// </summary>
-		/// <param name="obj">The <see cref="T:SkiaSharp.SKPoint" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <param name="obj">The <see cref="SKPoint" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="SKPoint" />.</returns>
 		public readonly bool Equals (SKPoint obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y;
 #pragma warning restore CS8909
 
 		/// <summary>
-		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// Specifies whether this <see cref="SKPoint" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
 		/// </summary>
 		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKPoint" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKPoint" />.</returns>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="SKPoint" /> and has the same coordinates as this <see cref="SKPoint" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKPoint f && Equals (f);
 
 		/// <summary>
-		/// Compares two <see cref="T:SkiaSharp.SKPoint" /> structures. The result specifies whether the values of the <see cref="P:SkiaSharp.SKPoint.X" /> and <see cref="P:SkiaSharp.SKPoint.Y" /> properties of the two <see cref="T:SkiaSharp.SKPoint" /> structures are equal.
+		/// Compares two <see cref="SKPoint" /> structures. The result specifies whether the values of the <see cref="SKPoint.X" /> and <see cref="SKPoint.Y" /> properties of the two <see cref="SKPoint" /> structures are equal.
 		/// </summary>
-		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
-		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
-		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint.X" /> and <see cref="P:SkiaSharp.SKPoint.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures are equal; otherwise, false.</returns>
+		/// <param name="left">A <see cref="SKPoint" /> to compare.</param>
+		/// <param name="right">A <see cref="SKPoint" /> to compare.</param>
+		/// <returns>true if the <see cref="SKPoint.X" /> and <see cref="SKPoint.Y" /> values of the left and right <see cref="SKPoint" /> structures are equal; otherwise, false.</returns>
 		public static bool operator == (SKPoint left, SKPoint right) =>
 			left.Equals (right);
 
 		/// <summary>
 		/// Determines whether the coordinates of the specified points are not equal.
 		/// </summary>
-		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
-		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
-		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint.X" /> and <see cref="P:SkiaSharp.SKPoint.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures differ; otherwise, false.</returns>
+		/// <param name="left">A <see cref="SKPoint" /> to compare.</param>
+		/// <param name="right">A <see cref="SKPoint" /> to compare.</param>
+		/// <returns>true if the <see cref="SKPoint.X" /> and <see cref="SKPoint.Y" /> values of the left and right <see cref="SKPoint" /> structures differ; otherwise, false.</returns>
 		public static bool operator != (SKPoint left, SKPoint right) =>
 			!left.Equals (right);
 
@@ -20324,7 +20324,7 @@ namespace SkiaSharp {
 		// public float x
 		private Single x;
 		/// <summary>
-		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint3" />.
+		/// Gets or sets the x-coordinate of this <see cref="SKPoint3" />.
 		/// </summary>
 		public Single X {
 			readonly get => x;
@@ -20334,7 +20334,7 @@ namespace SkiaSharp {
 		// public float y
 		private Single y;
 		/// <summary>
-		/// Gets or sets the y-coordinate of this <see cref="T:SkiaSharp.SKPoint3" />.
+		/// Gets or sets the y-coordinate of this <see cref="SKPoint3" />.
 		/// </summary>
 		public Single Y {
 			readonly get => y;
@@ -20344,7 +20344,7 @@ namespace SkiaSharp {
 		// public float z
 		private Single z;
 		/// <summary>
-		/// Gets or sets the z-coordinate of this <see cref="T:SkiaSharp.SKPoint3" />.
+		/// Gets or sets the z-coordinate of this <see cref="SKPoint3" />.
 		/// </summary>
 		public Single Z {
 			readonly get => z;
@@ -20352,38 +20352,38 @@ namespace SkiaSharp {
 		}
 
 		/// <summary>
-		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint3" /> contains the same coordinates as the specified <see cref="T:SkiaSharp.SKPoint3" />.
+		/// Specifies whether this <see cref="SKPoint3" /> contains the same coordinates as the specified <see cref="SKPoint3" />.
 		/// </summary>
-		/// <param name="obj">The <see cref="T:SkiaSharp.SKPoint3" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKPoint3" />.</returns>
+		/// <param name="obj">The <see cref="SKPoint3" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="SKPoint3" />.</returns>
 		public readonly bool Equals (SKPoint3 obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y && z == obj.z;
 #pragma warning restore CS8909
 
 		/// <summary>
-		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint3" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// Specifies whether this <see cref="SKPoint3" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
 		/// </summary>
 		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKPoint3" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKPoint3" />.</returns>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="SKPoint3" /> and has the same coordinates as this <see cref="SKPoint3" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKPoint3 f && Equals (f);
 
 		/// <summary>
-		/// Compares two <see cref="T:SkiaSharp.SKPoint3" /> structures. The result specifies whether the values of the <see cref="P:SkiaSharp.SKPoint3.X" /> and <see cref="P:SkiaSharp.SKPoint3.Y" /> properties of the two <see cref="T:SkiaSharp.SKPoint3" /> structures are equal.
+		/// Compares two <see cref="SKPoint3" /> structures. The result specifies whether the values of the <see cref="SKPoint3.X" /> and <see cref="SKPoint3.Y" /> properties of the two <see cref="SKPoint3" /> structures are equal.
 		/// </summary>
-		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
-		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
-		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint3.X" />, <see cref="P:SkiaSharp.SKPoint3.Y" /> and <see cref="P:SkiaSharp.SKPoint3.Z" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures are equal; otherwise, false.</returns>
+		/// <param name="left">A <see cref="SKPoint3" /> to compare.</param>
+		/// <param name="right">A <see cref="SKPoint3" /> to compare.</param>
+		/// <returns>true if the <see cref="SKPoint3.X" />, <see cref="SKPoint3.Y" /> and <see cref="SKPoint3.Z" /> values of the left and right <see cref="SKPoint" /> structures are equal; otherwise, false.</returns>
 		public static bool operator == (SKPoint3 left, SKPoint3 right) =>
 			left.Equals (right);
 
 		/// <summary>
 		/// Determines whether the coordinates of the specified points are not equal.
 		/// </summary>
-		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
-		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
-		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint3.X" />, <see cref="P:SkiaSharp.SKPoint3.Y" /> and <see cref="P:SkiaSharp.SKPoint3.Z" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures differ; otherwise, false.</returns>
+		/// <param name="left">A <see cref="SKPoint3" /> to compare.</param>
+		/// <param name="right">A <see cref="SKPoint3" /> to compare.</param>
+		/// <returns>true if the <see cref="SKPoint3.X" />, <see cref="SKPoint3.Y" /> and <see cref="SKPoint3.Z" /> values of the left and right <see cref="SKPoint" /> structures differ; otherwise, false.</returns>
 		public static bool operator != (SKPoint3 left, SKPoint3 right) =>
 			!left.Equals (right);
 
@@ -20412,7 +20412,7 @@ namespace SkiaSharp {
 		// public float left
 		private Single left;
 		/// <summary>
-		/// Gets or sets the x-coordinate of the left edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// Gets or sets the x-coordinate of the left edge of this <see cref="SKRect" /> structure.
 		/// </summary>
 		public Single Left {
 			readonly get => left;
@@ -20422,7 +20422,7 @@ namespace SkiaSharp {
 		// public float top
 		private Single top;
 		/// <summary>
-		/// Gets or sets the y-coordinate of the top edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// Gets or sets the y-coordinate of the top edge of this <see cref="SKRect" /> structure.
 		/// </summary>
 		public Single Top {
 			readonly get => top;
@@ -20432,7 +20432,7 @@ namespace SkiaSharp {
 		// public float right
 		private Single right;
 		/// <summary>
-		/// Gets or sets the x-coordinate of the right edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// Gets or sets the x-coordinate of the right edge of this <see cref="SKRect" /> structure.
 		/// </summary>
 		public Single Right {
 			readonly get => right;
@@ -20442,7 +20442,7 @@ namespace SkiaSharp {
 		// public float bottom
 		private Single bottom;
 		/// <summary>
-		/// Gets or sets the y-coordinate of the bottom edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// Gets or sets the y-coordinate of the bottom edge of this <see cref="SKRect" /> structure.
 		/// </summary>
 		public Single Bottom {
 			readonly get => bottom;
@@ -20450,10 +20450,10 @@ namespace SkiaSharp {
 		}
 
 		/// <summary>
-		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:SkiaSharp.SKRect" />.
+		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="SKRect" />.
 		/// </summary>
-		/// <param name="obj">The <see cref="T:SkiaSharp.SKRect" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKRect" />.</returns>
+		/// <param name="obj">The <see cref="SKRect" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="SKRect" />.</returns>
 		public readonly bool Equals (SKRect obj) =>
 #pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
@@ -20463,25 +20463,25 @@ namespace SkiaSharp {
 		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:System.Object" />.
 		/// </summary>
 		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKRect" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKRect" />.</returns>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="SKRect" /> and has the same coordinates as this <see cref="SKRect" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKRect f && Equals (f);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKRect" /> structures have equal coordinates.
+		/// Tests whether two <see cref="SKRect" /> structures have equal coordinates.
 		/// </summary>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the left of the equality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the right of the equality operator.</param>
-		/// <returns>This operator returns true if the two specified <see cref="T:SkiaSharp.SKRect" /> structures have equal <see cref="P:SkiaSharp.SKRect.Left" />, <see cref="P:SkiaSharp.SKRect.Top" />, <see cref="P:SkiaSharp.SKRect.Right" />, and <see cref="P:SkiaSharp.SKRect.Bottom" /> properties.</returns>
+		/// <param name="left">The <see cref="SKRect" /> structure that is to the left of the equality operator.</param>
+		/// <param name="right">The <see cref="SKRect" /> structure that is to the right of the equality operator.</param>
+		/// <returns>This operator returns true if the two specified <see cref="SKRect" /> structures have equal <see cref="SKRect.Left" />, <see cref="SKRect.Top" />, <see cref="SKRect.Right" />, and <see cref="SKRect.Bottom" /> properties.</returns>
 		public static bool operator == (SKRect left, SKRect right) =>
 			left.Equals (right);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKRect" /> structures differ in coordinates.
+		/// Tests whether two <see cref="SKRect" /> structures differ in coordinates.
 		/// </summary>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the right of the inequality operator.</param>
-		/// <returns>This operator returns true if any of the <see cref="P:SkiaSharp.SKRect.Left" />, <see cref="P:SkiaSharp.SKRect.Top" />, <see cref="P:SkiaSharp.SKRect.Right" />, or <see cref="P:SkiaSharp.SKRect.Bottom" /> properties of the two <see cref="T:SkiaSharp.SKRect" /> structures are unequal; otherwise false.</returns>
+		/// <param name="left">The <see cref="SKRect" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="right">The <see cref="SKRect" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if any of the <see cref="SKRect.Left" />, <see cref="SKRect.Top" />, <see cref="SKRect.Right" />, or <see cref="SKRect.Bottom" /> properties of the two <see cref="SKRect" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKRect left, SKRect right) =>
 			!left.Equals (right);
 
@@ -20713,7 +20713,7 @@ namespace SkiaSharp {
 		// public float w
 		private Single w;
 		/// <summary>
-		/// Gets or sets the horizontal component of this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Gets or sets the horizontal component of this <see cref="SKSize" /> structure.
 		/// </summary>
 		public Single Width {
 			readonly get => w;
@@ -20723,7 +20723,7 @@ namespace SkiaSharp {
 		// public float h
 		private Single h;
 		/// <summary>
-		/// Gets or sets the vertical component of this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Gets or sets the vertical component of this <see cref="SKSize" /> structure.
 		/// </summary>
 		public Single Height {
 			readonly get => h;
@@ -20731,49 +20731,49 @@ namespace SkiaSharp {
 		}
 
 		/// <summary>
-		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSize" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Tests to see whether the specified object is a <see cref="SKSize" /> structure with the same dimensions as this <see cref="SKSize" /> structure.
 		/// </summary>
-		/// <param name="obj">The <see cref="T:SkiaSharp.SKSize" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKSize" />.</returns>
+		/// <param name="obj">The <see cref="SKSize" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="SKSize" />.</returns>
 		public readonly bool Equals (SKSize obj) =>
 #pragma warning disable CS8909
 			w == obj.w && h == obj.h;
 #pragma warning restore CS8909
 
 		/// <summary>
-		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSize" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Tests to see whether the specified object is a <see cref="SKSize" /> structure with the same dimensions as this <see cref="SKSize" /> structure.
 		/// </summary>
 		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
-		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKSize" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKSize" />.</returns>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="SKSize" /> and has the same coordinates as this <see cref="SKSize" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKSize f && Equals (f);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKSize" /> structures are equal.
+		/// Tests whether two <see cref="SKSize" /> structures are equal.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSize" /> structure on the left side of the equality operator.</param>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKSize" /> structure on the left side of the equality operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSize" /> structure on the right of the equality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKSize" /> structure on the right of the equality operator.</param>
-		/// <returns>This operator returns true if both <see cref="T:SkiaSharp.SKSize" /> structures have equal <see cref="P:SkiaSharp.SKSize.Width" /> and <see cref="P:SkiaSharp.SKSize.Height" />; otherwise, false.</returns>
+		/// <param name="sz1">The <see cref="SKSize" /> structure on the left side of the equality operator.</param>
+		/// <param name="left">The <see cref="SKSize" /> structure on the left side of the equality operator.</param>
+		/// <param name="sz2">The <see cref="SKSize" /> structure on the right of the equality operator.</param>
+		/// <param name="right">The <see cref="SKSize" /> structure on the right of the equality operator.</param>
+		/// <returns>This operator returns true if both <see cref="SKSize" /> structures have equal <see cref="SKSize.Width" /> and <see cref="SKSize.Height" />; otherwise, false.</returns>
 		public static bool operator == (SKSize left, SKSize right) =>
 			left.Equals (right);
 
 		/// <summary>
-		/// Tests whether two <see cref="T:SkiaSharp.SKSize" /> structures are different.
+		/// Tests whether two <see cref="SKSize" /> structures are different.
 		/// </summary>
-		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="left">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the left of the inequality operator.</param>
-		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the right of the inequality operator.</param>
-		/// <param name="right">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the right of the inequality operator.</param>
-		/// <returns>This operator returns true if either of the <see cref="P:SkiaSharp.SKSize.Width" /> and <see cref="P:SkiaSharp.SKSize.Height" /> properties of the two <see cref="T:SkiaSharp.SKSize" /> structures are unequal; otherwise false.</returns>
+		/// <param name="sz1">The <see cref="SKSize" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="left">The <see cref="SKSize" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="sz2">The <see cref="SKSize" /> structure that is to the right of the inequality operator.</param>
+		/// <param name="right">The <see cref="SKSize" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if either of the <see cref="SKSize.Width" /> and <see cref="SKSize.Height" /> properties of the two <see cref="SKSize" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKSize left, SKSize right) =>
 			!left.Equals (right);
 
 		/// <summary>
-		/// Returns a hash code for this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// Returns a hash code for this <see cref="SKSize" /> structure.
 		/// </summary>
-		/// <returns>An integer value that specifies a hash value for this <see cref="T:SkiaSharp.SKSize" /> structure.</returns>
+		/// <returns>An integer value that specifies a hash value for this <see cref="SKSize" /> structure.</returns>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -21176,7 +21176,7 @@ namespace SkiaSharp {
 
 	// sk_codec_result_t
 	/// <summary>
-	/// Used to describe the result of a call to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="T:SkiaSharp.SKCodecOptions" />.
+	/// Used to describe the result of a call to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="SKCodecOptions" />.
 	/// </summary>
 	/// <remarks>Result is the union of possible results from subclasses.</remarks>
 	public enum SKCodecResult {
@@ -21236,7 +21236,7 @@ namespace SkiaSharp {
 	/// <summary>
 	/// The orders in which scanlines can be returned.
 	/// </summary>
-	/// <remarks>These values are obtained through the <see cref="P:SkiaSharp.SKCodec.ScanlineOrder" /> property.</remarks>
+	/// <remarks>These values are obtained through the <see cref="SKCodec.ScanlineOrder" /> property.</remarks>
 	public enum SKCodecScanlineOrder {
 		// TOP_DOWN_SK_CODEC_SCANLINE_ORDER = 0
 		/// <summary>
@@ -21245,14 +21245,14 @@ namespace SkiaSharp {
 		TopDown = 0,
 		// BOTTOM_UP_SK_CODEC_SCANLINE_ORDER = 1
 		/// <summary>
-		/// Indicates that the scanline decoder reliably outputs rows, but they will be returned in reverse order. The <see cref="P:SkiaSharp.SKCodec.NextScanline" /> property can be used to determine the actual y-coordinate of the next output row.
+		/// Indicates that the scanline decoder reliably outputs rows, but they will be returned in reverse order. The <see cref="SKCodec.NextScanline" /> property can be used to determine the actual y-coordinate of the next output row.
 		/// </summary>
 		BottomUp = 1,
 	}
 
 	// sk_codec_zero_initialized_t
 	/// <summary>
-	/// Whether or not the memory passed to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> (or one of the overloads that accepts a <see cref="T:SkiaSharp.SKCodecOptions" />) is zero initialized
+	/// Whether or not the memory passed to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> (or one of the overloads that accepts a <see cref="SKCodecOptions" />) is zero initialized
 	/// </summary>
 	public enum SKZeroInitialized {
 		// YES_SK_CODEC_ZERO_INITIALIZED = 0
@@ -21365,7 +21365,7 @@ namespace SkiaSharp {
 
 	// sk_encoded_image_format_t
 	/// <summary>
-	/// The various formats used by a <see cref="T:SkiaSharp.SKCodec" />.
+	/// The various formats used by a <see cref="SKCodec" />.
 	/// </summary>
 	public enum SKEncodedImageFormat {
 		// BMP_SK_ENCODED_FORMAT = 0
@@ -21436,7 +21436,7 @@ namespace SkiaSharp {
 
 	// sk_encodedorigin_t
 	/// <summary>
-	/// Represents various origin values returned by <see cref="P:SkiaSharp.SKCodec.Origin" />.
+	/// Represents various origin values returned by <see cref="SKCodec.Origin" />.
 	/// </summary>
 	public enum SKEncodedOrigin {
 		// TOP_LEFT_SK_ENCODED_ORIGIN = 1
@@ -21481,7 +21481,7 @@ namespace SkiaSharp {
 		LeftBottom = 8,
 		// DEFAULT_SK_ENCODED_ORIGIN = TOP_LEFT_SK_ENCODED_ORIGIN
 		/// <summary>
-		/// This is equivalent to <see cref="F:SkiaSharp.SKEncodedOrigin.TopLeft" />.
+		/// This is equivalent to <see cref="SKEncodedOrigin.TopLeft" />.
 		/// </summary>
 		Default = 1,
 	}
@@ -21518,7 +21518,7 @@ namespace SkiaSharp {
 
 	// sk_font_style_slant_t
 	/// <summary>
-	/// Various font slants for use with <see cref="T:SkiaSharp.SKTypeface" />.
+	/// Various font slants for use with <see cref="SKTypeface" />.
 	/// </summary>
 	public enum SKFontStyleSlant {
 		// UPRIGHT_SK_FONT_STYLE_SLANT = 0
@@ -21633,7 +21633,7 @@ namespace SkiaSharp {
 		Transparent = 1,
 		// FIXED_COLOR_SK_LATTICE_RECT_TYPE = 2
 		/// <summary>
-		/// Draw the associated <see cref="P:SkiaSharp.SKLattice.Colors" /> entry into the lattice rectangle.
+		/// Draw the associated <see cref="SKLattice.Colors" /> entry into the lattice rectangle.
 		/// </summary>
 		FixedColor = 2,
 	}
@@ -21784,19 +21784,19 @@ namespace SkiaSharp {
 		EvenOdd = 1,
 		// INVERSE_WINDING_SK_PATH_FILLTYPE = 2
 		/// <summary>
-		/// Same as <see cref="F:SkiaSharp.SKPathFillType.Winding" />, but draws outside of the path, rather than inside.
+		/// Same as <see cref="SKPathFillType.Winding" />, but draws outside of the path, rather than inside.
 		/// </summary>
 		InverseWinding = 2,
 		// INVERSE_EVENODD_SK_PATH_FILLTYPE = 3
 		/// <summary>
-		/// Same as <see cref="F:SkiaSharp.SKPathFillType.EvenOdd" />, but draws outside of the path, rather than inside.
+		/// Same as <see cref="SKPathFillType.EvenOdd" />, but draws outside of the path, rather than inside.
 		/// </summary>
 		InverseEvenOdd = 3,
 	}
 
 	// sk_path_segment_mask_t
 	/// <summary>
-	/// The flags used by <see cref="P:SkiaSharp.SKPath.SegmentMasks" />.
+	/// The flags used by <see cref="SKPath.SegmentMasks" />.
 	/// </summary>
 	[Flags]
 	public enum SKPathSegmentMask {
@@ -21824,7 +21824,7 @@ namespace SkiaSharp {
 
 	// sk_path_verb_t
 	/// <summary>
-	/// Verbs contained in an <see cref="T:SkiaSharp.SKPath" />.
+	/// Verbs contained in an <see cref="SKPath" />.
 	/// </summary>
 	/// <remarks>In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.</remarks>
 	public enum SKPathVerb {
@@ -21925,7 +21925,7 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Describes how LCD strips are organized for each pixel.
 	/// </summary>
-	/// <remarks>Description of how the LCD strips are arranged for each pixel. If this is unknown, or the pixels are meant to be "portable" and/or transformed before showing (e.g. rotated, scaled) then use <see cref="F:SkiaSharp.SKPixelGeometry.Unknown" />.</remarks>
+	/// <remarks>Description of how the LCD strips are arranged for each pixel. If this is unknown, or the pixels are meant to be "portable" and/or transformed before showing (e.g. rotated, scaled) then use <see cref="SKPixelGeometry.Unknown" />.</remarks>
 	public enum SKPixelGeometry {
 		// UNKNOWN_SK_PIXELGEOMETRY = 0
 		/// <summary>
@@ -22199,7 +22199,7 @@ namespace SkiaSharp {
 
 	// sk_stroke_cap_t
 	/// <summary>
-	/// Various options for <see cref="P:SkiaSharp.SKPaint.StrokeCap" />.
+	/// Various options for <see cref="SKPaint.StrokeCap" />.
 	/// </summary>
 	/// <remarks>This is the treatment that is applied to the beginning and end of each non-closed contour (e.g. lines).</remarks>
 	public enum SKStrokeCap {
@@ -22245,7 +22245,7 @@ namespace SkiaSharp {
 
 	// sk_surfaceprops_flags_t
 	/// <summary>
-	/// Flags for the <see cref="T:SkiaSharp.SKSurfaceProps" />.
+	/// Flags for the <see cref="SKSurfaceProps" />.
 	/// </summary>
 	[Flags]
 	public enum SKSurfacePropsFlags {

@@ -23,7 +23,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new OpenGL <see cref="T:SkiaSharp.GRBackendRenderTarget" /> with the specified properties and framebuffer.
+		/// Creates a new OpenGL <see cref="GRBackendRenderTarget" /> with the specified properties and framebuffer.
 		/// </summary>
 		/// <param name="width">The width of the render target.</param>
 		/// <param name="height">The height of the render target.</param>
@@ -114,7 +114,7 @@ namespace SkiaSharp
 			SkiaApi.gr_backendrendertarget_delete (Handle);
 
 		/// <summary>
-		/// Gets a value indicating whether or not the <see cref="T:SkiaSharp.GRBackendRenderTarget" /> was initialized.
+		/// Gets a value indicating whether or not the <see cref="GRBackendRenderTarget" /> was initialized.
 		/// </summary>
 		public bool IsValid => SkiaApi.gr_backendrendertarget_is_valid (Handle);
 		/// <summary>

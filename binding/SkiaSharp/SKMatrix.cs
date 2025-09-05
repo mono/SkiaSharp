@@ -7,7 +7,7 @@ namespace SkiaSharp
 	/// <summary>
 	/// A 3x3 transformation matrix with perspective.
 	/// </summary>
-	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="P:SkiaSharp.SKMatrix.Persp0" />, <see cref="P:SkiaSharp.SKMatrix.Persp1" />, <see cref="P:SkiaSharp.SKMatrix.Persp2" /> fields of the matrix.</remarks>
+	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="SKMatrix.Persp0" />, <see cref="SKMatrix.Persp1" />, <see cref="SKMatrix.Persp2" /> fields of the matrix.</remarks>
 	public unsafe partial struct SKMatrix
 	{
 		internal const float DegreesToRadians = (float)Math.PI / 180.0f;
@@ -53,7 +53,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKMatrix" /> using the specified values.
+		/// Creates a new instance of <see cref="SKMatrix" /> using the specified values.
 		/// </summary>
 		/// <param name="scaleX">The scaling in the x-direction.</param>
 		/// <param name="skewX">The skew in the x-direction.</param>
@@ -118,7 +118,7 @@ namespace SkiaSharp
 		/// Populates the specified array with the matrix values.
 		/// </summary>
 		/// <param name="values">The array to populate.</param>
-		/// <remarks>The result will be the same as <see cref="P:SkiaSharp.SKMatrix.Values" />.</remarks>
+		/// <remarks>The result will be the same as <see cref="SKMatrix.Values" />.</remarks>
 		public readonly void GetValues (float[] values)
 		{
 			if (values == null)

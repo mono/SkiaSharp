@@ -11,7 +11,7 @@ namespace HarfBuzzSharp
 	/// <param name="font">The font.</param>
 	/// <param name="fontData">The additional data passed to <see cref="M:HarfBuzzSharp.Font.SetFontFunctions(HarfBuzzSharp.FontFunctions,System.Object,HarfBuzzSharp.ReleaseDelegate)" /> when the functions were set.</param>
 	/// <param name="extents">The font extents.</param>
-	/// <returns>Return true if the <see cref="T:HarfBuzzSharp.Font" /> has extents, otherwise false.</returns>
+	/// <returns>Return true if the <see cref="Font" /> has extents, otherwise false.</returns>
 	public delegate bool FontExtentsDelegate (Font font, object fontData, out FontExtents extents);
 
 	public delegate bool NominalGlyphDelegate (Font font, object fontData, uint unicode, out uint glyph);

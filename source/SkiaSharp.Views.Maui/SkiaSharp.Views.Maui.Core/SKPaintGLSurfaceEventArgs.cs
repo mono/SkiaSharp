@@ -7,11 +7,17 @@ namespace SkiaSharp.Views.Maui
 {
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
+		/// <param name="surface"></param>
+		/// <param name="renderTarget"></param>
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget)
 			: this(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888)
 		{
 		}
 
+		/// <param name="surface"></param>
+		/// <param name="renderTarget"></param>
+		/// <param name="origin"></param>
+		/// <param name="colorType"></param>
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType)
 		{
 			Surface = surface;

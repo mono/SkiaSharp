@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -7233,7 +7233,7 @@ namespace HarfBuzzSharp {
 		Characters = 2,
 		// HB_BUFFER_CLUSTER_LEVEL_DEFAULT = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
 		/// <summary>
-		/// Default cluster level (<see cref="F:HarfBuzzSharp.ClusterLevel.MonotoneGraphemes" />).
+		/// Default cluster level (<see cref="ClusterLevel.MonotoneGraphemes" />).
 		/// </summary>
 		Default = 0,
 	}
@@ -7366,7 +7366,7 @@ namespace HarfBuzzSharp {
 
 	// hb_direction_t
 	/// <summary>
-	/// Various text directions that can be set via <see cref="P:HarfBuzzSharp.Buffer.Direction" />.
+	/// Various text directions that can be set via <see cref="Buffer.Direction" />.
 	/// </summary>
 	public enum Direction {
 		// HB_DIRECTION_INVALID = 0
@@ -7398,7 +7398,7 @@ namespace HarfBuzzSharp {
 
 	// hb_glyph_flags_t
 	/// <summary>
-	/// Represents the various glyph flags of a <see cref="T:HarfBuzzSharp.GlyphInfo" />.
+	/// Represents the various glyph flags of a <see cref="GlyphInfo" />.
 	/// </summary>
 	[Flags]
 	public enum GlyphFlags {
@@ -7416,9 +7416,9 @@ namespace HarfBuzzSharp {
 
 	// hb_memory_mode_t
 	/// <summary>
-	/// Various memory modes for  <see cref="T:HarfBuzzSharp.Blob" />
+	/// Various memory modes for  <see cref="Blob" />
 	/// </summary>
-	/// <remarks>In no case shall the HarfBuzz client modify memory that is passed to HarfBuzz in a blob. If there is any such possibility, <see cref="F:HarfBuzzSharp.MemoryMode.Duplicate" /> should be used such that HarfBuzz makes a copy immediately.</remarks>
+	/// <remarks>In no case shall the HarfBuzz client modify memory that is passed to HarfBuzz in a blob. If there is any such possibility, <see cref="MemoryMode.Duplicate" /> should be used such that HarfBuzz makes a copy immediately.</remarks>
 	public enum MemoryMode {
 		// HB_MEMORY_MODE_DUPLICATE = 0
 		/// <summary>
@@ -7437,7 +7437,7 @@ namespace HarfBuzzSharp {
 		Writeable = 2,
 		// HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE = 3
 		/// <summary>
-		/// The font file was mmap()ed, but <see cref="F:HarfBuzzSharp.MemoryMode.ReadOnly" /> should still be used.
+		/// The font file was mmap()ed, but <see cref="MemoryMode.ReadOnly" /> should still be used.
 		/// </summary>
 		ReadOnlyMayMakeWriteable = 3,
 	}

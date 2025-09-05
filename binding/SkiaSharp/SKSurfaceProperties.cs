@@ -6,7 +6,7 @@ using System.ComponentModel;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Describes properties and constraints of a given <see cref="T:SkiaSharp.SKSurface" />.
+	/// Describes properties and constraints of a given <see cref="SKSurface" />.
 	/// </summary>
 	/// <remarks>The rendering engine can parse these during drawing, and can sometimes optimize its performance (e.g. disabling an expensive feature).</remarks>
 	public class SKSurfaceProperties : SKObject
@@ -17,7 +17,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKSurfaceProperties" /> instance.
+		/// Creates a new <see cref="SKSurfaceProperties" /> instance.
 		/// </summary>
 		/// <param name="pixelGeometry">The description of how the LCD strips are arranged for each pixel.</param>
 		public SKSurfaceProperties (SKPixelGeometry pixelGeometry)
@@ -26,7 +26,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKSurfaceProperties" /> instance.
+		/// Creates a new <see cref="SKSurfaceProperties" /> instance.
 		/// </summary>
 		/// <param name="flags">The flags to use when creating the surface.</param>
 		/// <param name="pixelGeometry">The LCD geometry of each pixel on the surface.</param>
@@ -36,7 +36,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKSurfaceProperties" /> instance.
+		/// Creates a new <see cref="SKSurfaceProperties" /> instance.
 		/// </summary>
 		/// <param name="flags">The flags to use when creating the surface.</param>
 		/// <param name="pixelGeometry">The LCD geometry of each pixel on the surface.</param>

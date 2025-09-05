@@ -16,7 +16,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKOverdrawCanvas" /> that wraps the specified <see cref="T:SkiaSharp.SKCanvas" />.
+		/// Creates a new <see cref="SKOverdrawCanvas" /> that wraps the specified <see cref="SKCanvas" />.
 		/// </summary>
 		/// <param name="canvas">The canvas to draw on.</param>
 		public SKOverdrawCanvas (SKCanvas canvas)

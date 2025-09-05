@@ -5,7 +5,7 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// A type of <see cref="T:SkiaSharp.SKCanvas" /> that draws to multiple canvases at the same time.
+	/// A type of <see cref="SKCanvas" /> that draws to multiple canvases at the same time.
 	/// </summary>
 	public class SKNWayCanvas : SKNoDrawCanvas
 	{
@@ -15,7 +15,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKNWayCanvas" /> with the specified dimensions.
+		/// Creates a new <see cref="SKNWayCanvas" /> with the specified dimensions.
 		/// </summary>
 		/// <param name="width">The width of the canvas.</param>
 		/// <param name="height">The height of the canvas.</param>

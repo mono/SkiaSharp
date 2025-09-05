@@ -7,7 +7,7 @@ using Android.Util;
 namespace SkiaSharp.Views.Android
 {
 	/// <summary>
-	/// An implementation of <see cref="global::Android.Opengl.GLSurfaceView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="T:SkiaSharp.SKSurface" />.
+	/// An implementation of <see cref="global::Android.Opengl.GLSurfaceView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="SKSurface" />.
 	/// </summary>
 	public class SKGLSurfaceView : GLSurfaceView
 	{

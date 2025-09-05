@@ -17,7 +17,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new, empty <see cref="T:SkiaSharp.SKFontStyleSet" />.
+		/// Creates a new, empty <see cref="SKFontStyleSet" />.
 		/// </summary>
 		public SKFontStyleSet ()
 			: this (SkiaApi.sk_fontstyleset_create_empty (), true)
@@ -52,10 +52,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKTypeface" /> with the style that is the closest match to the style at the specified index.
+		/// Creates a new <see cref="SKTypeface" /> with the style that is the closest match to the style at the specified index.
 		/// </summary>
 		/// <param name="index">The index of the font style to match.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />.</returns>
+		/// <returns>Returns the new <see cref="SKTypeface" />.</returns>
 		public SKTypeface CreateTypeface (int index)
 		{
 			if (index < 0 || index >= Count)
@@ -68,10 +68,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKTypeface" /> with a style that is the closest match to the specified font style.
+		/// Creates a new <see cref="SKTypeface" /> with a style that is the closest match to the specified font style.
 		/// </summary>
 		/// <param name="style">The font style to match.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />.</returns>
+		/// <returns>Returns the new <see cref="SKTypeface" />.</returns>
 		public SKTypeface CreateTypeface (SKFontStyle style)
 		{
 			if (style == null)

@@ -366,7 +366,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// A builder object that is used to create a <see cref="T:SkiaSharp.SKTextBlob" />.
+	/// A builder object that is used to create a <see cref="SKTextBlob" />.
 	/// </summary>
 	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
 	{
@@ -376,7 +376,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKTextBlobBuilder" />.
+		/// Creates a new instance of <see cref="SKTextBlobBuilder" />.
 		/// </summary>
 		public SKTextBlobBuilder ()
 			: this (SkiaApi.sk_textblob_builder_new (), true)
@@ -392,9 +392,9 @@ namespace SkiaSharp
 		// Build
 
 		/// <summary>
-		/// Create the <see cref="T:SkiaSharp.SKTextBlob" /> from all the added runs.
+		/// Create the <see cref="SKTextBlob" /> from all the added runs.
 		/// </summary>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKTextBlob" /> if there were runs, otherwise <see langword="null" />.</returns>
+		/// <returns>Returns the new <see cref="SKTextBlob" /> if there were runs, otherwise <see langword="null" />.</returns>
 		public SKTextBlob? Build ()
 		{
 			var blob = SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));

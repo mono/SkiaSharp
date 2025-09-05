@@ -40,13 +40,13 @@ namespace SkiaSharp
 	public unsafe struct SKImageInfo : IEquatable<SKImageInfo>
 	{
 		/// <summary>
-		/// An empty <see cref="T:SkiaSharp.SKImageInfo" />.
+		/// An empty <see cref="SKImageInfo" />.
 		/// </summary>
 		public static readonly SKImageInfo Empty;
 		/// <summary>
 		/// The current 32-bit color for the current platform.
 		/// </summary>
-		/// <remarks>On Windows, it is typically <see cref="F:SkiaSharp.SKColorType.Bgra8888" />, and on Unix-based systems (macOS, Linux) it is typically <see cref="F:SkiaSharp.SKColorType.Rgba8888" />.</remarks>
+		/// <remarks>On Windows, it is typically <see cref="SKColorType.Bgra8888" />, and on Unix-based systems (macOS, Linux) it is typically <see cref="SKColorType.Rgba8888" />.</remarks>
 		public static readonly SKColorType PlatformColorType;
 		/// <summary>
 		/// The number of bits to shift left for the alpha color component.
@@ -103,7 +103,7 @@ namespace SkiaSharp
 		public SKColorSpace ColorSpace { get; set; }
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the specified width and height.
+		/// Creates a new <see cref="SKImageInfo" /> with the specified width and height.
 		/// </summary>
 		/// <param name="width">The width.</param>
 		/// <param name="height">The height.</param>
@@ -117,7 +117,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the specified width, height and color type.
+		/// Creates a new <see cref="SKImageInfo" /> with the specified width, height and color type.
 		/// </summary>
 		/// <param name="width">The width.</param>
 		/// <param name="height">The height.</param>
@@ -132,7 +132,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the specified width, height, color type and transparency type.
+		/// Creates a new <see cref="SKImageInfo" /> with the specified width, height, color type and transparency type.
 		/// </summary>
 		/// <param name="width">The width.</param>
 		/// <param name="height">The height.</param>
@@ -148,7 +148,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the specified width, height, color type, transparency type and color space.
+		/// Creates a new <see cref="SKImageInfo" /> with the specified width, height, color type, transparency type and color space.
 		/// </summary>
 		/// <param name="width">The width.</param>
 		/// <param name="height">The height.</param>
@@ -167,7 +167,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of bytes used per pixel.
 		/// </summary>
-		/// <remarks>This is calculated from the <see cref="P:SkiaSharp.SKImageInfo.ColorType" />. If the color type is <see cref="F:SkiaSharp.SKColorType.Unknown" />, then the value will be 0.</remarks>
+		/// <remarks>This is calculated from the <see cref="SKImageInfo.ColorType" />. If the color type is <see cref="SKColorType.Unknown" />, then the value will be 0.</remarks>
 		public readonly int BytesPerPixel =>
 			ColorType.GetBytesPerPixel ();
 
@@ -177,31 +177,31 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of bits used per pixel.
 		/// </summary>
-		/// <remarks>This is equivalent to multiplying the <see cref="P:SkiaSharp.SKImageInfo.BytesPerPixel" /> by 8 (the number of bits in a byte).</remarks>
+		/// <remarks>This is equivalent to multiplying the <see cref="SKImageInfo.BytesPerPixel" /> by 8 (the number of bits in a byte).</remarks>
 		public readonly int BitsPerPixel => BytesPerPixel * 8;
 
 		/// <summary>
 		/// Gets the total number of bytes needed to store the bitmap data.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="P:SkiaSharp.SKImageInfo.Width" /> * <see cref="P:SkiaSharp.SKImageInfo.Height" /> * <see cref="P:SkiaSharp.SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.Height" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
 		public readonly int BytesSize => Width * Height * BytesPerPixel;
 
 		/// <summary>
 		/// Gets the total number of bytes needed to store the bitmap data as a 64-bit integer.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="P:SkiaSharp.SKImageInfo.Width" /> * <see cref="P:SkiaSharp.SKImageInfo.Height" /> * <see cref="P:SkiaSharp.SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.Height" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
 		public readonly long BytesSize64 => (long)Width * (long)Height * (long)BytesPerPixel;
 
 		/// <summary>
 		/// Gets the number of bytes per row.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="P:SkiaSharp.SKImageInfo.Width" /> * <see cref="P:SkiaSharp.SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
 		public readonly int RowBytes => Width * BytesPerPixel;
 
 		/// <summary>
 		/// Gets the number of bytes per row as a 64-bit integer.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="P:SkiaSharp.SKImageInfo.Width" /> * <see cref="P:SkiaSharp.SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
 		public readonly long RowBytes64 => (long)Width * (long)BytesPerPixel;
 
 		/// <summary>
@@ -234,11 +234,11 @@ namespace SkiaSharp
 			WithSize (size.Width, size.Height);
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the same properties as this <see cref="T:SkiaSharp.SKImageInfo" />, but with the specified dimensions.
+		/// Creates a new <see cref="SKImageInfo" /> with the same properties as this <see cref="SKImageInfo" />, but with the specified dimensions.
 		/// </summary>
 		/// <param name="width">The width.</param>
 		/// <param name="height">The height.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageInfo" />.</returns>
+		/// <returns>Returns the new <see cref="SKImageInfo" />.</returns>
 		public readonly SKImageInfo WithSize (int width, int height)
 		{
 			var copy = this;
@@ -248,10 +248,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the same properties as this <see cref="T:SkiaSharp.SKImageInfo" />, but with the specified color type.
+		/// Creates a new <see cref="SKImageInfo" /> with the same properties as this <see cref="SKImageInfo" />, but with the specified color type.
 		/// </summary>
 		/// <param name="newColorType">The color type.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageInfo" />.</returns>
+		/// <returns>Returns the new <see cref="SKImageInfo" />.</returns>
 		public readonly SKImageInfo WithColorType (SKColorType newColorType)
 		{
 			var copy = this;
@@ -260,10 +260,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the same properties as this <see cref="T:SkiaSharp.SKImageInfo" />, but with the specified color space.
+		/// Creates a new <see cref="SKImageInfo" /> with the same properties as this <see cref="SKImageInfo" />, but with the specified color space.
 		/// </summary>
 		/// <param name="newColorSpace">The color space.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageInfo" />.</returns>
+		/// <returns>Returns the new <see cref="SKImageInfo" />.</returns>
 		public readonly SKImageInfo WithColorSpace (SKColorSpace newColorSpace)
 		{
 			var copy = this;
@@ -272,10 +272,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKImageInfo" /> with the same properties as this <see cref="T:SkiaSharp.SKImageInfo" />, but with the specified transparency type.
+		/// Creates a new <see cref="SKImageInfo" /> with the same properties as this <see cref="SKImageInfo" />, but with the specified transparency type.
 		/// </summary>
 		/// <param name="newAlphaType">The alpha/transparency type.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKImageInfo" />.</returns>
+		/// <returns>Returns the new <see cref="SKImageInfo" />.</returns>
 		public readonly SKImageInfo WithAlphaType (SKAlphaType newAlphaType)
 		{
 			var copy = this;

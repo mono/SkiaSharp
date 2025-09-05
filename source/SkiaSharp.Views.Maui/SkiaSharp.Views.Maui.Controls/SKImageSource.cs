@@ -20,6 +20,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			return Task.FromResult(false);
 		}
 
+		/// <param name="image"></param>
 		public static implicit operator SKImageImageSource(SKImage image)
 		{
 			return new SKImageImageSource
@@ -28,6 +29,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			};
 		}
 
+		/// <param name="source"></param>
 		public static implicit operator SKImage(SKImageImageSource source)
 		{
 			return source?.Image;
@@ -56,6 +58,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			return Task.FromResult(false);
 		}
 
+		/// <param name="bitmap"></param>
 		public static implicit operator SKBitmapImageSource(SKBitmap bitmap)
 		{
 			return new SKBitmapImageSource
@@ -64,6 +67,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			};
 		}
 
+		/// <param name="source"></param>
 		public static implicit operator SKBitmap(SKBitmapImageSource source)
 		{
 			return source?.Bitmap;
@@ -92,6 +96,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			return Task.FromResult(false);
 		}
 
+		/// <param name="pixmap"></param>
 		public static implicit operator SKPixmapImageSource(SKPixmap pixmap)
 		{
 			return new SKPixmapImageSource
@@ -100,6 +105,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			};
 		}
 
+		/// <param name="source"></param>
 		public static implicit operator SKPixmap(SKPixmapImageSource source)
 		{
 			return source?.Pixmap;
@@ -136,6 +142,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			return Task.FromResult(false);
 		}
 
+		/// <param name="source"></param>
 		public static explicit operator SKPicture(SKPictureImageSource source)
 		{
 			return source?.Picture;

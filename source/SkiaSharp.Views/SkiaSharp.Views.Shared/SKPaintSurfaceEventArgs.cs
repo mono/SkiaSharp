@@ -30,6 +30,8 @@ namespace SkiaSharp.Views.Blazor
 		/// <summary>
 		/// Creates a new instance of the <see cref="SKPaintSurfaceEventArgs" /> event arguments.
 		/// </summary>
+		/// <param name="surface">The surface that is being drawn on.</param>
+		/// <param name="info">The information about the surface.</param>
 		public SKPaintSurfaceEventArgs(SKSurface surface, SKImageInfo info)
 			: this(surface, info, info)
 		{

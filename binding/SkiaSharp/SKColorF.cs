@@ -109,7 +109,7 @@ namespace SkiaSharp
 		/// <param name="s">The saturation value.</param>
 		/// <param name="l">The lightness/luminosity value.</param>
 		/// <param name="a">The alpha value.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKColorF" /> instance.</returns>
+		/// <returns>The new <see cref="SKColorF" /> instance.</returns>
 		public static SKColorF FromHsl (float h, float s, float l, float a = 1f)
 		{
 			// convert from percentages
@@ -163,7 +163,7 @@ namespace SkiaSharp
 		/// <param name="s">The saturation value.</param>
 		/// <param name="v">The value/brightness value.</param>
 		/// <param name="a">The alpha value.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKColorF" /> instance.</returns>
+		/// <returns>The new <see cref="SKColorF" /> instance.</returns>
 		public static SKColorF FromHsv (float h, float s, float v, float a = 1f)
 		{
 			// convert from percentages
@@ -223,7 +223,7 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="l">The lightness/luminosity value.</param>
-		/// <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="P:SkiaSharp.SKColorF.Alpha" />.</remarks>
+		/// <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="SKColorF.Alpha" />.</remarks>
 		public readonly void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 1
@@ -276,7 +276,7 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="v">The value/brightness value.</param>
-		/// <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="P:SkiaSharp.SKColorF.Alpha" />.</remarks>
+		/// <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="SKColorF.Alpha" />.</remarks>
 		public readonly void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 1
@@ -328,10 +328,10 @@ namespace SkiaSharp
 			((SKColor)this).ToString ();
 
 		/// <summary>
-		/// Converts a <see cref="T:SkiaSharp.SKColor" /> to a <see cref="T:SkiaSharp.SKColorF" />.
+		/// Converts a <see cref="SKColor" /> to a <see cref="SKColorF" />.
 		/// </summary>
-		/// <param name="color">The <see cref="T:SkiaSharp.SKColor" />.</param>
-		/// <returns>The new <see cref="T:SkiaSharp.SKColorF" /> instance.</returns>
+		/// <param name="color">The <see cref="SKColor" />.</param>
+		/// <returns>The new <see cref="SKColorF" /> instance.</returns>
 		public static implicit operator SKColorF (SKColor color)
 		{
 			SKColorF colorF;
@@ -340,10 +340,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Converts a <see cref="T:SkiaSharp.SKColorF" /> to a <see cref="T:SkiaSharp.SKColor" />.
+		/// Converts a <see cref="SKColorF" /> to a <see cref="SKColor" />.
 		/// </summary>
 		/// <param name="color">The color to convert.</param>
-		/// <returns>The <see cref="T:SkiaSharp.SKColor" />.</returns>
+		/// <returns>The <see cref="SKColor" />.</returns>
 		/// <remarks>As a result of converting a floating-point color to an integer color, some data loss will occur.</remarks>
 		public static explicit operator SKColor (SKColorF color) =>
 			SkiaApi.sk_color4f_to_color (&color);

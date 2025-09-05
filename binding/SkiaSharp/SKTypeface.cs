@@ -55,7 +55,7 @@ namespace SkiaSharp
 		public static SKTypeface Default => defaultTypeface;
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKTypeface" /> which is the default, Normal typeface.
+		/// Creates a new <see cref="SKTypeface" /> which is the default, Normal typeface.
 		/// </summary>
 		/// <remarks>This will never be null.</remarks>
 		public static SKTypeface CreateDefault ()
@@ -205,19 +205,19 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the font weight for the typeface.
 		/// </summary>
-		/// <remarks>This may be one of the values in <see cref="T:SkiaSharp.SKFontStyleWeight" />.</remarks>
+		/// <remarks>This may be one of the values in <see cref="SKFontStyleWeight" />.</remarks>
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
 
 		/// <summary>
 		/// Gets the font width for the typeface.
 		/// </summary>
-		/// <remarks>This may be one of the values in <see cref="T:SkiaSharp.SKFontStyleWidth" />.</remarks>
+		/// <remarks>This may be one of the values in <see cref="SKFontStyleWidth" />.</remarks>
 		public int FontWidth => SkiaApi.sk_typeface_get_font_width (Handle);
 
 		/// <summary>
 		/// Gets the font slant for the typeface.
 		/// </summary>
-		/// <remarks>This may be one of the values in <see cref="T:SkiaSharp.SKFontStyleSlant" />.</remarks>
+		/// <remarks>This may be one of the values in <see cref="SKFontStyleSlant" />.</remarks>
 		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
 
 		/// <summary>

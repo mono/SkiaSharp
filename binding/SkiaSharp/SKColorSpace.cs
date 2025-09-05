@@ -89,36 +89,36 @@ namespace SkiaSharp
 		// CreateSrgb
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> that represents the sRGB color space.
+		/// Creates a new instance of <see cref="SKColorSpace" /> that represents the sRGB color space.
 		/// </summary>
-		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+		/// <returns>Returns the new instance of <see cref="SKColorSpace" />.</returns>
 		public static SKColorSpace CreateSrgb () => srgb;
 
 		// CreateSrgbLinear
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> with the sRGB primaries, but a linear (1.0) gamma
+		/// Creates a new instance of <see cref="SKColorSpace" /> with the sRGB primaries, but a linear (1.0) gamma
 		/// </summary>
-		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+		/// <returns>Returns the new instance of <see cref="SKColorSpace" />.</returns>
 		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
 
 		// CreateIcc
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from an ICC profile.
+		/// Creates a new instance of <see cref="SKColorSpace" /> from an ICC profile.
 		/// </summary>
 		/// <param name="input">The ICC profile data.</param>
 		/// <param name="length">The size of the data.</param>
-		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+		/// <returns>Returns the new instance of <see cref="SKColorSpace" />.</returns>
 		public static SKColorSpace CreateIcc (IntPtr input, long length) =>
 			CreateIcc (SKColorSpaceIccProfile.Create (input, length));
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from an ICC profile.
+		/// Creates a new instance of <see cref="SKColorSpace" /> from an ICC profile.
 		/// </summary>
 		/// <param name="input">The ICC profile data.</param>
 		/// <param name="length">The size of the data.</param>
-		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+		/// <returns>Returns the new instance of <see cref="SKColorSpace" />.</returns>
 		public static SKColorSpace CreateIcc (byte[] input, long length)
 		{
 			if (input == null)
@@ -130,10 +130,10 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from an ICC profile.
+		/// Creates a new instance of <see cref="SKColorSpace" /> from an ICC profile.
 		/// </summary>
 		/// <param name="input">The ICC profile data.</param>
-		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
+		/// <returns>Returns the new instance of <see cref="SKColorSpace" />.</returns>
 		public static SKColorSpace CreateIcc (byte[] input) =>
 			CreateIcc (input.AsSpan ());
 

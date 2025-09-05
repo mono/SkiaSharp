@@ -8,7 +8,7 @@ namespace SkiaSharp
 	/// <summary>
 	/// A read-only stream that buffers the specified first chunk of bytes.
 	/// </summary>
-	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
+	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
 	public class SKFrontBufferedStream : Stream
 	{
 		/// <summary>
@@ -26,7 +26,7 @@ namespace SkiaSharp
 		private byte[] internalBuffer;
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// Creates a new instance of <see cref="SKFrontBufferedStream" /> that wraps the specified stream.
 		/// </summary>
 		/// <param name="stream">The stream to buffer.</param>
 		public SKFrontBufferedStream(Stream stream)
@@ -35,7 +35,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// Creates a new instance of <see cref="SKFrontBufferedStream" /> that wraps the specified stream.
 		/// </summary>
 		/// <param name="stream">The stream to buffer.</param>
 		/// <param name="bufferSize">The number of bytes to buffer.</param>
@@ -45,7 +45,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// Creates a new instance of <see cref="SKFrontBufferedStream" /> that wraps the specified stream.
 		/// </summary>
 		/// <param name="stream">The stream to buffer.</param>
 		/// <param name="disposeUnderlyingStream">Whether or not to dispose the underlying stream when this stream is disposed.</param>
@@ -55,7 +55,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// Creates a new instance of <see cref="SKFrontBufferedStream" /> that wraps the specified stream.
 		/// </summary>
 		/// <param name="stream">The stream to buffer.</param>
 		/// <param name="bufferSize">The number of bytes to buffer.</param>

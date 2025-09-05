@@ -18,24 +18,24 @@ namespace SkiaSharp
 		public readonly static SKMatrix44 Identity = Matrix4x4.Identity;
 
 		/// <summary>
-		/// Creates a new, uninitialized instance of <see cref="T:SkiaSharp.SKMatrix44" />.
+		/// Creates a new, uninitialized instance of <see cref="SKMatrix44" />.
 		/// </summary>
 		public SKMatrix44 ()
 		{
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKMatrix44" /> using the values from a <see cref="T:SkiaSharp.SKMatrix" /> instance.
+		/// Creates a new instance of <see cref="SKMatrix44" /> using the values from a <see cref="SKMatrix" /> instance.
 		/// </summary>
-		/// <param name="src">The <see cref="T:SkiaSharp.SKMatrix" /> instance.</param>
-		/// <remarks>When converting from <see cref="T:SkiaSharp.SKMatrix" /> to <see cref="T:SkiaSharp.SKMatrix44" />, the third row and column remain as identity.</remarks>
+		/// <param name="src">The <see cref="SKMatrix" /> instance.</param>
+		/// <remarks>When converting from <see cref="SKMatrix" /> to <see cref="SKMatrix44" />, the third row and column remain as identity.</remarks>
 		public SKMatrix44 (SKMatrix src)
 		{
 			this = src;
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKMatrix44" /> using the values from another instance.
+		/// Creates a new instance of <see cref="SKMatrix44" /> using the values from another instance.
 		/// </summary>
 		/// <param name="src">The matrix to copy.</param>
 		public SKMatrix44 (SKMatrix44 src)
@@ -429,9 +429,9 @@ namespace SkiaSharp
 		// properties
 
 		/// <summary>
-		/// Gets the <see cref="T:SkiaSharp.SKMatrix" /> equivalent of the current matrix.
+		/// Gets the <see cref="SKMatrix" /> equivalent of the current matrix.
 		/// </summary>
-		/// <remarks>When converting from <see cref="T:SkiaSharp.SKMatrix44" /> to <see cref="T:SkiaSharp.SKMatrix" />, the third row and column is dropped.</remarks>
+		/// <remarks>When converting from <see cref="SKMatrix44" /> to <see cref="SKMatrix" />, the third row and column is dropped.</remarks>
 		public SKMatrix Matrix =>
 			new SKMatrix (
 				m00, m10, m30,

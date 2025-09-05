@@ -368,7 +368,7 @@ namespace SkiaSharp
 		// Clear
 
 		/// <summary>
-		/// Replaces all the pixels in the canvas' current clip with the <see cref="P:SkiaSharp.SKColors.Empty" /> color.
+		/// Replaces all the pixels in the canvas' current clip with the <see cref="SKColors.Empty" /> color.
 		/// </summary>
 		public void Clear () =>
 			Clear (SKColors.Empty);
@@ -399,7 +399,7 @@ namespace SkiaSharp
 		/// Efficiently restores the state to a specific level.
 		/// </summary>
 		/// <param name="count">The number of <see cref="M:SkiaSharp.SKCanvas.Save" /> levels to restore from, or -1 to restore all the way back to the initial value.</param>
-		/// <remarks>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="P:SkiaSharp.SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</remarks>
+		/// <remarks>Efficient way to pop any calls to <see cref="M:SkiaSharp.SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</remarks>
 		public void RestoreToCount (int count)
 		{
 			SkiaApi.sk_canvas_restore_to_count (Handle, count);

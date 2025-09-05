@@ -28,10 +28,10 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Parses the ISO 15924 tag into the corresponding <see cref="T:HarfBuzzSharp.Tag" />.
+		/// Parses the ISO 15924 tag into the corresponding <see cref="Tag" />.
 		/// </summary>
 		/// <param name="tag">The ISO 15924 tag to parse.</param>
-		/// <returns>Returns the <see cref="T:HarfBuzzSharp.Tag" /> that corresponds the tag that was parsed.</returns>
+		/// <returns>Returns the <see cref="Tag" /> that corresponds the tag that was parsed.</returns>
 		public static Tag Parse (string tag)
 		{
 			if (string.IsNullOrEmpty (tag))
@@ -50,7 +50,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Returns a string representation of the value of this instance of the <see cref="T:HarfBuzzSharp.Tag" />.
+		/// Returns a string representation of the value of this instance of the <see cref="Tag" />.
 		/// </summary>
 		/// <returns>Returns a string representation.</returns>
 		public override string ToString ()

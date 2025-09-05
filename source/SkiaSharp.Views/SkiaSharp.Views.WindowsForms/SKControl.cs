@@ -6,6 +6,9 @@ using System.Windows.Forms;
 
 namespace SkiaSharp.Views.Desktop
 {
+	/// <summary>
+	/// A control that can be drawn on using SkiaSharp drawing commands.
+	/// </summary>
 	[DefaultEvent("PaintSurface")]
 	[DefaultProperty("Name")]
 	public class SKControl : Control
@@ -14,6 +17,9 @@ namespace SkiaSharp.Views.Desktop
 
 		private Bitmap bitmap;
 
+		/// <summary>
+		/// Creates a new instance of the <see cref="SKControl" /> view.
+		/// </summary>
 		public SKControl()
 		{
 			DoubleBuffered = true;
@@ -22,8 +28,31 @@ namespace SkiaSharp.Views.Desktop
 			designMode = DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime;
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => bitmap == null ? SKSize.Empty : new SKSize(bitmap.Width, bitmap.Height);
 
+		/// <summary>
+		/// Occurs when the the canvas needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SkiaSharp.Views.Desktop.SKControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SkiaSharp.Views.Desktop.SKControl.PaintSurface" />
+		/// event.
+		/// ## Examples
+		/// ```csharp
+		/// myView.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.Info.Width;
+		/// var surfaceHeight = e.Info.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush ();
+		/// };
+		/// ```</remarks>
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 

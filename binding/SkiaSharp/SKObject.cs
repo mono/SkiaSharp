@@ -10,7 +10,7 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents a tracked native object.
 	/// </summary>
-	/// <remarks>This object wraps a native handle and keeps track of it's lifetime for the garbage collector. For a simple object, use <see cref="T:SkiaSharp.SKNativeObject" />.</remarks>
+	/// <remarks>This object wraps a native handle and keeps track of it's lifetime for the garbage collector. For a simple object, use <see cref="SKNativeObject" />.</remarks>
 	public abstract class SKObject : SKNativeObject
 	{
 		private readonly object locker = new object ();
@@ -220,7 +220,7 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents a native object.
 	/// </summary>
-	/// <remarks>This object just wraps a native handle with the managed dispose pattern. For a tracked object, use <see cref="T:SkiaSharp.SKObject" />.</remarks>
+	/// <remarks>This object just wraps a native handle with the managed dispose pattern. For a tracked object, use <see cref="SKObject" />.</remarks>
 	public abstract class SKNativeObject : IDisposable
 	{
 		internal bool fromFinalizer = false;
@@ -292,9 +292,9 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Releases all resources used by this <see cref="T:SkiaSharp.SKNativeObject" />.
+		/// Releases all resources used by this <see cref="SKNativeObject" />.
 		/// </summary>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="T:SkiaSharp.SKNativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <remarks>Always dispose the object before you release your last reference to the <see cref="SKNativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
 		public void Dispose ()
 		{
 			if (IgnorePublicDispose)

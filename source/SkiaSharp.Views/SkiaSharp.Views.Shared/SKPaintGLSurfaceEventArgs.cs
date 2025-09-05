@@ -33,6 +33,8 @@ namespace SkiaSharp.Views.Blazor
 		/// <summary>
 		/// Creates a new instance of the <see cref="SKPaintGLSurfaceEventArgs" /> event arguments.
 		/// </summary>
+		/// <param name="surface">The surface that is being drawn on.</param>
+		/// <param name="renderTarget">The render target that is currently being drawn.</param>
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget)
 			: this(surface, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888)
 		{
@@ -41,6 +43,10 @@ namespace SkiaSharp.Views.Blazor
 		/// <summary>
 		/// Creates a new instance of the <see cref="SKPaintGLSurfaceEventArgs" /> event arguments.
 		/// </summary>
+		/// <param name="surface">The surface that is being drawn on.</param>
+		/// <param name="renderTarget">The render target that is currently being drawn.</param>
+		/// <param name="origin">The surface origin of the render target.</param>
+		/// <param name="colorType">The color type of the render target.</param>
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKColorType colorType)
 		{
 			Surface = surface;
@@ -51,11 +57,20 @@ namespace SkiaSharp.Views.Blazor
 			RawInfo = Info;
 		}
 
+		/// <param name="surface"></param>
+		/// <param name="renderTarget"></param>
+		/// <param name="origin"></param>
+		/// <param name="info"></param>
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info)
 			: this(surface, renderTarget, origin, info, info)
 		{
 		}
 
+		/// <param name="surface"></param>
+		/// <param name="renderTarget"></param>
+		/// <param name="origin"></param>
+		/// <param name="info"></param>
+		/// <param name="rawInfo"></param>
 		public SKPaintGLSurfaceEventArgs(SKSurface surface, GRBackendRenderTarget renderTarget, GRSurfaceOrigin origin, SKImageInfo info, SKImageInfo rawInfo)
 		{
 			Surface = surface;

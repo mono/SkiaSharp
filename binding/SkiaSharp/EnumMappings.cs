@@ -28,7 +28,7 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Convenience methods for <see cref="T:SkiaSharp.SKPixelGeometry" />.
+	/// Convenience methods for <see cref="SKPixelGeometry" />.
 	/// </summary>
 	public static partial class SkiaExtensions
 	{

@@ -10,6 +10,9 @@ using OpenTK.Graphics.ES20;
 
 namespace SkiaSharp.Views.Desktop
 {
+	/// <summary>
+	/// A hardware-accelerated control that can be drawn on using SkiaSharp drawing commands.
+	/// </summary>
 	[DefaultEvent("PaintSurface")]
 	[DefaultProperty("Name")]
 	public class SKGLControl : GLControl
@@ -40,6 +43,9 @@ namespace SkiaSharp.Views.Desktop
 			Initialize();
 		}
 #else
+		/// <summary>
+		/// Creates a new instance of the <see cref="SKGLControl" /> view.
+		/// </summary>
 		public SKGLControl()
 			: base(new GraphicsMode(new ColorFormat(8, 8, 8, 8), 24, 8))
 		{
@@ -66,10 +72,36 @@ namespace SkiaSharp.Views.Desktop
 			ResizeRedraw = true;
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>
+		/// Gets the current GPU context.
+		/// </summary>
 		public GRContext GRContext => grContext;
 
+		/// <summary>
+		/// Occurs when the surface needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SkiaSharp.Views.Desktop.SKGLControl.OnPaintSurface(SkiaSharp.Views.Desktop.SKPaintGLSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SkiaSharp.Views.Desktop.SKGLControl.PaintSurface" />
+		/// event.
+		/// ## Examples
+		/// ```csharp
+		/// myView.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.BackendRenderTarget.Width;
+		/// var surfaceHeight = e.BackendRenderTarget.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush ();
+		/// };
+		/// ```</remarks>
 		[Category("Appearance")]
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 

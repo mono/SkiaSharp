@@ -6,7 +6,7 @@ using Android.Views;
 namespace SkiaSharp.Views.Android
 {
 	/// <summary>
-	/// An implementation of <see cref="global::Android.Views.SurfaceView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="T:SkiaSharp.SKSurface" />.
+	/// An implementation of <see cref="global::Android.Views.SurfaceView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="SKSurface" />.
 	/// </summary>
 	public class SKSurfaceView : SurfaceView, ISurfaceHolderCallback
 	{

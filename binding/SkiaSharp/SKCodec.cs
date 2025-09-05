@@ -71,7 +71,7 @@ namespace SkiaSharp
 		/// Modifies the specified subset to one that can decoded from this codec.
 		/// </summary>
 		/// <param name="desiredSubset">The desired subset of the original bounds, which may be modified to a subset which is supported.</param>
-		/// <returns>Returns true if this codec supports decoding the desired subset, otherwise false. The final subset can be used with <see cref="P:SkiaSharp.SKCodecOptions.Subset" />.</returns>
+		/// <returns>Returns true if this codec supports decoding the desired subset, otherwise false. The final subset can be used with <see cref="SKCodecOptions.Subset" />.</returns>
 		public bool GetValidSubset (ref SKRectI desiredSubset)
 		{
 			fixed (SKRectI* ds = &desiredSubset) {
@@ -80,7 +80,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets the image data from the codec using the current <see cref="P:SkiaSharp.SKCodec.Info" />.
+		/// Gets the image data from the codec using the current <see cref="SKCodec.Info" />.
 		/// </summary>
 		public byte[] Pixels {
 			get {
@@ -143,7 +143,7 @@ namespace SkiaSharp
 		/// Decode the bitmap into the specified memory block.
 		/// </summary>
 		/// <param name="pixels">The memory block with the decoded bitmap.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		public SKCodecResult GetPixels (out byte[] pixels) =>
 			GetPixels (Info, out pixels);
 
@@ -152,7 +152,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="info">The description of the desired output format expected by the caller.</param>
 		/// <param name="pixels">The memory block with the decoded bitmap.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		/// <remarks>The specified <see cref="SkiaSharp.SKImageInfo" />, can either be
 		/// <see cref="SkiaSharp.SKCodec.Info" />, or a new instance with a different
 		/// configuration - which the codec may choose to ignore.
@@ -170,8 +170,8 @@ namespace SkiaSharp
 		/// Decode the bitmap into the specified memory block.
 		/// </summary>
 		/// <param name="info">The description of the desired output format expected by the caller.</param>
-		/// <param name="pixels">The memory block to hold the decoded bitmap, with a length of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <param name="pixels">The memory block to hold the decoded bitmap, with a length of at least <see cref="SKImageInfo.BytesSize" />.</param>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		/// <remarks>The specified <see cref="SkiaSharp.SKImageInfo" />, can either be
 		/// <see cref="SkiaSharp.SKCodec.Info" />, or a new instance with a different
 		/// configuration - which the codec may choose to ignore.
@@ -193,8 +193,8 @@ namespace SkiaSharp
 		/// Decode the bitmap into the specified memory block.
 		/// </summary>
 		/// <param name="info">The description of the desired output format expected by the caller.</param>
-		/// <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="SKImageInfo.BytesSize" />.</param>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		/// <remarks>The specified <see cref="SkiaSharp.SKImageInfo" />, can either be
 		/// <see cref="SkiaSharp.SKCodec.Info" />, or a new instance with a different
 		/// configuration - which the codec may choose to ignore.
@@ -209,9 +209,9 @@ namespace SkiaSharp
 		/// Decode the bitmap into the specified memory block.
 		/// </summary>
 		/// <param name="info">The description of the desired output format expected by the caller.</param>
-		/// <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
+		/// <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="SKImageInfo.BytesSize" />.</param>
 		/// <param name="options">The bitmap decoding options.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		/// <remarks>The specified <see cref="SkiaSharp.SKImageInfo" />, can either be
 		/// <see cref="SkiaSharp.SKCodec.Info" />, or a new instance with a different
 		/// configuration - which the codec may choose to ignore.
@@ -226,10 +226,10 @@ namespace SkiaSharp
 		/// Decode the bitmap into the specified memory block.
 		/// </summary>
 		/// <param name="info">The description of the desired output format expected by the caller.</param>
-		/// <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="P:SkiaSharp.SKImageInfo.BytesSize" />.</param>
-		/// <param name="rowBytes">The number of bytes in a row, typically <see cref="P:SkiaSharp.SKImageInfo.RowBytes" />.</param>
+		/// <param name="pixels">The memory block to hold the decoded bitmap, with a total size of at least <see cref="SKImageInfo.BytesSize" />.</param>
+		/// <param name="rowBytes">The number of bytes in a row, typically <see cref="SKImageInfo.RowBytes" />.</param>
 		/// <param name="options">The bitmap decoding options.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		/// <remarks>The specified <see cref="SkiaSharp.SKImageInfo" />, can either be
 		/// <see cref="SkiaSharp.SKCodec.Info" />, or a new instance with a different
 		/// configuration - which the codec may choose to ignore.
@@ -262,11 +262,11 @@ namespace SkiaSharp
 		/// <summary>
 		/// Prepare for an incremental decode with the specified options.
 		/// </summary>
-		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="SKCodec.Info" />, this implies a scale.</param>
 		/// <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
 		/// <param name="rowBytes">The stride of the memory to write to.</param>
 		/// <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes, SKCodecOptions options)
 		{
 			if (pixels == IntPtr.Zero)
@@ -291,10 +291,10 @@ namespace SkiaSharp
 		/// <summary>
 		/// Prepare for an incremental decode with the specified options.
 		/// </summary>
-		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="SKCodec.Info" />, this implies a scale.</param>
 		/// <param name="pixels">The memory to write to. Needs to be large enough to hold the subset, if present, or the full image.</param>
 		/// <param name="rowBytes">The stride of the memory to write to.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		public SKCodecResult StartIncrementalDecode (SKImageInfo info, IntPtr pixels, int rowBytes)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
@@ -306,8 +306,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Start or continue the incremental decode.
 		/// </summary>
-		/// <param name="rowsDecoded">The total number of lines initialized. Only meaningful if this method returns <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" />.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+		/// <param name="rowsDecoded">The total number of lines initialized. Only meaningful if this method returns <see cref="SKCodecResult.IncompleteInput" />.</param>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="SKCodecResult.IncompleteInput" /> otherwise.</returns>
 		/// <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
 		public SKCodecResult IncrementalDecode (out int rowsDecoded)
 		{
@@ -319,7 +319,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Start or continue the incremental decode.
 		/// </summary>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="F:SkiaSharp.SKCodecResult.IncompleteInput" /> otherwise.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> if all lines requested in <see cref="M:SkiaSharp.SKCodec.StartIncrementalDecode(SkiaSharp.SKImageInfo,System.IntPtr,System.Int32)" /> have been completely decoded. <see cref="SKCodecResult.IncompleteInput" /> otherwise.</returns>
 		/// <remarks>Unlike <see cref="M:SkiaSharp.SKCodec.GetPixels(System.Byte[]@)" />, this does not do any filling. This is left up to the caller, since they may be skipping lines or continuing the decode later.</remarks>
 		public SKCodecResult IncrementalDecode () =>
 			SkiaApi.sk_codec_incremental_decode (Handle, null);
@@ -329,9 +329,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Prepare for a scanline decode with the specified options.
 		/// </summary>
-		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
+		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="SKCodec.Info" />, this implies a scale.</param>
 		/// <param name="options">The decoding options, including if memory is zero initialized and whether to decode a subset.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		/// <remarks>Not all codecs support this.</remarks>
 		public SKCodecResult StartScanlineDecode (SKImageInfo info, SKCodecOptions options)
 		{
@@ -354,8 +354,8 @@ namespace SkiaSharp
 		/// <summary>
 		/// Prepare for a scanline decode.
 		/// </summary>
-		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="P:SkiaSharp.SKCodec.Info" />, this implies a scale.</param>
-		/// <returns>Returns <see cref="F:SkiaSharp.SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
+		/// <param name="info">The image information of the destination. If the dimensions do not match those of <see cref="SKCodec.Info" />, this implies a scale.</param>
+		/// <returns>Returns <see cref="SKCodecResult.Success" /> on success, or another value explaining the type of failure.</returns>
 		/// <remarks>Not all codecs support this.</remarks>
 		public SKCodecResult StartScanlineDecode (SKImageInfo info)
 		{

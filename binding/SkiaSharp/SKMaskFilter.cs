@@ -9,7 +9,7 @@ namespace SkiaSharp
 	// TODO: `computeFastBounds`
 
 	/// <summary>
-	/// Mask filters perform transformations on an alpha-channel mask before drawing. A mask filter is set using the <see cref="P:SkiaSharp.SKPaint.MaskFilter" /> property on <see cref="T:SkiaSharp.SKPaint" /> type.
+	/// Mask filters perform transformations on an alpha-channel mask before drawing. A mask filter is set using the <see cref="SKPaint.MaskFilter" /> property on <see cref="SKPaint" /> type.
 	/// </summary>
 	public unsafe class SKMaskFilter : SKObject, ISKReferenceCounted
 	{
@@ -52,7 +52,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="blurStyle">The style of blurring.</param>
 		/// <param name="sigma">The standard deviation (greater than 0) of the Gaussian blur to apply.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or <see langword="null" /> on error.</returns>
+		/// <returns>Returns the new <see cref="SKMaskFilter" />, or <see langword="null" /> on error.</returns>
 		public static SKMaskFilter CreateBlur (SKBlurStyle blurStyle, float sigma)
 		{
 			return GetObject (SkiaApi.sk_maskfilter_new_blur (blurStyle, sigma));
@@ -70,7 +70,7 @@ namespace SkiaSharp
 		/// Creates a mask filter that applies a table lookup on each of the alpha values in the mask.
 		/// </summary>
 		/// <param name="table">The lookup table with exactly 256 elements.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or <see langword="null" /> on error.</returns>
+		/// <returns>Returns the new <see cref="SKMaskFilter" />, or <see langword="null" /> on error.</returns>
 		public static SKMaskFilter CreateTable (byte[] table)
 		{
 			if (table == null)
@@ -86,7 +86,7 @@ namespace SkiaSharp
 		/// Creates a mask filter that applies gamma.
 		/// </summary>
 		/// <param name="gamma">The gamma.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or <see langword="null" /> on error.</returns>
+		/// <returns>Returns the new <see cref="SKMaskFilter" />, or <see langword="null" /> on error.</returns>
 		public static SKMaskFilter CreateGamma (float gamma)
 		{
 			return GetObject (SkiaApi.sk_maskfilter_new_gamma (gamma));
@@ -97,7 +97,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="min">The minimum alpha value.</param>
 		/// <param name="max">The maximum alpha value.</param>
-		/// <returns>Returns the new <see cref="T:SkiaSharp.SKMaskFilter" />, or <see langword="null" /> on error.</returns>
+		/// <returns>Returns the new <see cref="SKMaskFilter" />, or <see langword="null" /> on error.</returns>
 		public static SKMaskFilter CreateClip (byte min, byte max)
 		{
 			return GetObject (SkiaApi.sk_maskfilter_new_clip (min, max));

@@ -5,7 +5,7 @@ using System;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// The picture recorder is used to record drawing operations made to a <see cref="T:SkiaSharp.SKCanvas" /> and stored in a <see cref="T:SkiaSharp.SKPicture" />.
+	/// The picture recorder is used to record drawing operations made to a <see cref="SKCanvas" /> and stored in a <see cref="SKPicture" />.
 	/// </summary>
 	public unsafe class SKPictureRecorder : SKObject, ISKSkipObjectRegistration
 	{
@@ -15,7 +15,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of the <see cref="T:SkiaSharp.SKPictureRecorder" />.
+		/// Creates a new instance of the <see cref="SKPictureRecorder" />.
 		/// </summary>
 		public SKPictureRecorder ()
 			: this (SkiaApi.sk_picture_recorder_new (), true)
@@ -35,7 +35,7 @@ namespace SkiaSharp
 		/// Start the recording process and return the recording canvas.
 		/// </summary>
 		/// <param name="cullRect">The culling rectangle for the new picture.</param>
-		/// <returns>Returns the current recording canvas. The same can be retrieved using <see cref="P:SkiaSharp.SKPictureRecorder.RecordingCanvas" />.</returns>
+		/// <returns>Returns the current recording canvas. The same can be retrieved using <see cref="SKPictureRecorder.RecordingCanvas" />.</returns>
 		public SKCanvas BeginRecording (SKRect cullRect)
 		{
 			return OwnedBy (SKCanvas.GetObject (SkiaApi.sk_picture_recorder_begin_recording (Handle, &cullRect), false), this);
@@ -63,7 +63,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Signal that the caller is done recording.
 		/// </summary>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKPicture" /> containing the recorded content.</returns>
+		/// <returns>Returns the <see cref="SKPicture" /> containing the recorded content.</returns>
 		/// <remarks>This invalidates the canvas returned by
 		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording%2A" /> and
 		/// <see cref="SkiaSharp.SKPictureRecorder.RecordingCanvas" />.</remarks>
@@ -75,7 +75,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Signal that the caller is done recording.
 		/// </summary>
-		/// <returns>Returns the <see cref="T:SkiaSharp.SKDrawable" /> containing the recorded content.</returns>
+		/// <returns>Returns the <see cref="SKDrawable" /> containing the recorded content.</returns>
 		/// <remarks>This invalidates the canvas returned by
 		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording%2A" /> and
 		/// <see cref="SkiaSharp.SKPictureRecorder.RecordingCanvas" />.

@@ -13,7 +13,7 @@ namespace SkiaSharp
 		public static readonly SKColorSpacePrimaries Empty;
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKColorSpacePrimaries" /> instance.
+		/// Creates a new <see cref="SKColorSpacePrimaries" /> instance.
 		/// </summary>
 		/// <param name="values">The values of the primaries and white point.</param>
 		/// <remarks>There must be exactly 8 values in the array with the form [RX, RY, GX, GY, BX, BY, WX, WY].</remarks>
@@ -35,7 +35,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:SkiaSharp.SKColorSpacePrimaries" /> instance.
+		/// Creates a new <see cref="SKColorSpacePrimaries" /> instance.
 		/// </summary>
 		/// <param name="rx">The red X-coordinate.</param>
 		/// <param name="ry">The red Y-coordinate.</param>
@@ -134,7 +134,7 @@ namespace SkiaSharp
 		public static readonly SKColorSpaceTransferFn Empty;
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpaceTransferFn" />.
+		/// Creates a new instance of <see cref="SKColorSpaceTransferFn" />.
 		/// </summary>
 		/// <param name="values">The values of the coefficients.</param>
 		/// <remarks>There must be exactly 7 values in the array with the form [G, A, B, C, D, E, F].</remarks>
@@ -155,7 +155,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpaceTransferFn" />.
+		/// Creates a new instance of <see cref="SKColorSpaceTransferFn" />.
 		/// </summary>
 		/// <param name="g">The G coefficient.</param>
 		/// <param name="a">The A coefficient.</param>

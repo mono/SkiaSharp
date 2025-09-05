@@ -13,7 +13,7 @@ namespace HarfBuzzSharp
 		private const int MaxFeatureStringSize = 128;
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Feature" /> instance with the specified tag.
+		/// Creates a new <see cref="Feature" /> instance with the specified tag.
 		/// </summary>
 		/// <param name="tag">The tag to use.</param>
 		public Feature (Tag tag)
@@ -22,7 +22,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Feature" /> instance with the specified tag.
+		/// Creates a new <see cref="Feature" /> instance with the specified tag.
 		/// </summary>
 		/// <param name="tag">The tag to use.</param>
 		/// <param name="value">The value to use.</param>
@@ -32,7 +32,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Feature" /> instance with the specified tag.
+		/// Creates a new <see cref="Feature" /> instance with the specified tag.
 		/// </summary>
 		/// <param name="tag">The tag to use.</param>
 		/// <param name="value">The value to use.</param>

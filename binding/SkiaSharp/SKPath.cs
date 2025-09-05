@@ -68,7 +68,7 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the path's fill type.
 		/// </summary>
-		/// <remarks>This is used to define how "inside" is computed. The default value is <see cref="F:SkiaSharp.SKPathFillType.Winding" />.</remarks>
+		/// <remarks>This is used to define how "inside" is computed. The default value is <see cref="SKPathFillType.Winding" />.</remarks>
 		public SKPathFillType FillType {
 			get => SkiaApi.sk_path_get_filltype (Handle);
 			set => SkiaApi.sk_path_set_filltype (Handle, value);
@@ -141,7 +141,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <value>The point at the specified index.</value>
 		/// <param name="index">The index of the point to get.</param>
-		/// <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="P:SkiaSharp.SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
+		/// <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
 		public SKPoint this[int index] => GetPoint (index);
 
 		/// <summary>
@@ -177,7 +177,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets the "tight" bounds of the path. Unlike <see cref="P:SkiaSharp.SKPath.Bounds" />, the control points of curves are excluded.
+		/// Gets the "tight" bounds of the path. Unlike <see cref="SKPath.Bounds" />, the control points of curves are excluded.
 		/// </summary>
 		/// <value>The tight bounds of the path.</value>
 		public SKRect TightBounds {
@@ -194,7 +194,7 @@ namespace SkiaSharp
 		/// Returns the oval bounds of the path.
 		/// </summary>
 		/// <returns>Returns the oval bounds of the path.</returns>
-		/// <remarks>If the path is not a single oval or circle, then an empty rectangle is returned. See also <see cref="P:SkiaSharp.SKPath.IsOval" />.</remarks>
+		/// <remarks>If the path is not a single oval or circle, then an empty rectangle is returned. See also <see cref="SKPath.IsOval" />.</remarks>
 		public SKRect GetOvalBounds ()
 		{
 			SKRect bounds;
@@ -209,7 +209,7 @@ namespace SkiaSharp
 		/// Returns the round rectangle of the path.
 		/// </summary>
 		/// <returns>Returns the round rectangle of the path.</returns>
-		/// <remarks>If the path is not a single round rectangle, then <see langword="null" /> is returned. See also <see cref="P:SkiaSharp.SKPath.IsRoundRect" />.</remarks>
+		/// <remarks>If the path is not a single round rectangle, then <see langword="null" /> is returned. See also <see cref="SKPath.IsRoundRect" />.</remarks>
 		public SKRoundRect GetRoundRect ()
 		{
 			var rrect = new SKRoundRect ();
@@ -226,7 +226,7 @@ namespace SkiaSharp
 		/// Returns the two points of the path.
 		/// </summary>
 		/// <returns>Returns the two points of the path.</returns>
-		/// <remarks>If the path is not a single, straight line, then <see langword="null" /> is returned. See also <see cref="P:SkiaSharp.SKPath.IsLine" />.</remarks>
+		/// <remarks>If the path is not a single, straight line, then <see langword="null" /> is returned. See also <see cref="SKPath.IsLine" />.</remarks>
 		public SKPoint[] GetLine ()
 		{
 			var temp = new SKPoint[2];
@@ -244,7 +244,7 @@ namespace SkiaSharp
 		/// Returns the rectangle of the path.
 		/// </summary>
 		/// <returns>Returns the rectangle of the path.</returns>
-		/// <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="P:SkiaSharp.SKPath.IsRect" />.</remarks>
+		/// <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="SKPath.IsRect" />.</remarks>
 		public SKRect GetRect () =>
 			GetRect (out var isClosed, out var direction);
 
@@ -254,7 +254,7 @@ namespace SkiaSharp
 		/// <param name="isClosed">Whether or not the rectangle is closed.</param>
 		/// <param name="direction">The direction of the rectangle.</param>
 		/// <returns>Returns the rectangle of the path.</returns>
-		/// <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="P:SkiaSharp.SKPath.IsRect" />.</remarks>
+		/// <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="SKPath.IsRect" />.</remarks>
 		public SKRect GetRect (out bool isClosed, out SKPathDirection direction)
 		{
 			byte c;
@@ -275,7 +275,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="index">The index of the point to return.</param>
 		/// <returns>The point at the specified index.</returns>
-		/// <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="P:SkiaSharp.SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
+		/// <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
 		public SKPoint GetPoint (int index)
 		{
 			if (index < 0 || index >= PointCount)
@@ -312,7 +312,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Returns true if the point (x, y) is contained by the path, taking into account the <see cref="P:SkiaSharp.SKPath.FillType" />.
+		/// Returns true if the point (x, y) is contained by the path, taking into account the <see cref="SKPath.FillType" />.
 		/// </summary>
 		/// <param name="x">The x-coordinate to check.</param>
 		/// <param name="y">The y-coordinate to check.</param>
@@ -791,7 +791,7 @@ namespace SkiaSharp
 		/// <param name="other">The path containing the elements to be added to the current path.</param>
 		/// <param name="dx">The amount to translate the path in X as it is added.</param>
 		/// <param name="dy">The amount to translate the path in Y as it is added.</param>
-		/// <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPathAddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPathAddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+		/// <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="SKPathAddMode.Append" /> mode, contours are added as new contours. On <see cref="SKPathAddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
 		public void AddPath (SKPath other, float dx, float dy, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
@@ -805,7 +805,7 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="other">The path containing the elements to be added to the current path.</param>
 		/// <param name="matrix">Transformation matrix applied to the <paramref name="other" /> path.</param>
-		/// <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPathAddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPathAddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+		/// <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="SKPathAddMode.Append" /> mode, contours are added as new contours. On <see cref="SKPathAddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
 		public void AddPath (SKPath other, in SKMatrix matrix, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
@@ -819,7 +819,7 @@ namespace SkiaSharp
 		/// Extends the current path with the path elements from another path, using the specified extension mode.
 		/// </summary>
 		/// <param name="other">The path containing the elements to be added to the current path.</param>
-		/// <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="F:SkiaSharp.SKPathAddMode.Append" /> mode, contours are added as new contours. On <see cref="F:SkiaSharp.SKPathAddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
+		/// <param name="mode">Determines how the <paramref name="other" /> path contours are added to the path. On <see cref="SKPathAddMode.Append" /> mode, contours are added as new contours. On <see cref="SKPathAddMode.Extend" /> mode, the last contour of the path is extended with the first contour of the <paramref name="other" /> path.</param>
 		public void AddPath (SKPath other, SKPathAddMode mode = SKPathAddMode.Append)
 		{
 			if (other == null)
@@ -1136,14 +1136,14 @@ namespace SkiaSharp
 			/// Returns a value indicating whether the last call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returns a line which was the result of a <see cref="M:SkiaSharp.SKPath.Close" /> command.
 			/// </summary>
 			/// <returns>Returns true if the last call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a line which was the result of a <see cref="M:SkiaSharp.SKPath.Close" /> command.</returns>
-			/// <remarks>If the call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a different value than <see cref="F:SkiaSharp.SKPathVerb.Line" />, the result is undefined.</remarks>
+			/// <remarks>If the call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a different value than <see cref="SKPathVerb.Line" />, the result is undefined.</remarks>
 			public bool IsCloseLine () =>
 				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
 
 			/// <summary>
 			/// Returns a value indicating whether the current contour is closed.
 			/// </summary>
-			/// <returns>Returns true if the current contour is closed (has a <see cref="E:SkiaSharp.SKPathVerb.Close" />).</returns>
+			/// <returns>Returns true if the current contour is closed (has a <see cref="SKPathVerb.Close" />).</returns>
 			public bool IsCloseContour () =>
 				SkiaApi.sk_path_iter_is_closed_contour (Handle) != 0;
 		}
@@ -1193,7 +1193,7 @@ namespace SkiaSharp
 			/// <summary>
 			/// Returns the weight for the current conic.
 			/// </summary>
-			/// <remarks>Only valid if the current segment returned by <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> was <see cref="F:SkiaSharp.SKPathVerb.Conic" />.</remarks>
+			/// <remarks>Only valid if the current segment returned by <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> was <see cref="SKPathVerb.Conic" />.</remarks>
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
 
@@ -1211,7 +1211,7 @@ namespace SkiaSharp
 		public class OpBuilder : SKObject, ISKSkipObjectRegistration
 		{
 			/// <summary>
-			/// Creates an instance of <see cref="T:SkiaSharp.SKPath.OpBuilder" />.
+			/// Creates an instance of <see cref="SKPath.OpBuilder" />.
 			/// </summary>
 			public OpBuilder ()
 				: base (SkiaApi.sk_opbuilder_new (), true)

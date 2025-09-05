@@ -13,7 +13,7 @@ namespace SkiaSharp.Views.Android
 #endif
 {
 	/// <summary>
-	/// An implementation of <see cref="GLTextureView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="T:SkiaSharp.SKSurface" />.
+	/// An implementation of <see cref="GLTextureView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="SKSurface" />.
 	/// </summary>
 #if HAS_UNO
 	internal

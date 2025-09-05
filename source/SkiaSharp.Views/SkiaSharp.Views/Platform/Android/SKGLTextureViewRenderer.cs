@@ -14,7 +14,7 @@ namespace SkiaSharp.Views.Android
 #endif
 {
 	/// <summary>
-	/// An abstract implementation of <see cref="GLTextureView.IRenderer" /> that provides a <see cref="T:SkiaSharp.SKSurface" /> for drawing.
+	/// An abstract implementation of <see cref="GLTextureView.IRenderer" /> that provides a <see cref="SKSurface" /> for drawing.
 	/// </summary>
 #if HAS_UNO
 	internal

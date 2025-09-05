@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="T:SkiaSharp.SKWStream" /> (a writeable Skia stream)
+	/// Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="SKWStream" /> (a writeable Skia stream)
 	/// </summary>
 	public class SKManagedWStream : SKAbstractManagedWStream
 	{

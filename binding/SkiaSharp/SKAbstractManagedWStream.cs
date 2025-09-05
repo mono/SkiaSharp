@@ -8,7 +8,7 @@ using System.Threading;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Represents a <see cref="T:SkiaSharp.SKWStream" /> (a writeable Skia stream).
+	/// Represents a <see cref="SKWStream" /> (a writeable Skia stream).
 	/// </summary>
 	public unsafe abstract class SKAbstractManagedWStream : SKWStream
 	{

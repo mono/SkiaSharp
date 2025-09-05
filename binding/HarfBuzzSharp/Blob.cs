@@ -13,7 +13,7 @@ namespace HarfBuzzSharp
 		private static readonly Lazy<Blob> emptyBlob = new Lazy<Blob> (() => new StaticBlob (HarfBuzzApi.hb_blob_get_empty ()));
 
 		/// <summary>
-		/// Gets a reference to the empty <see cref="T:HarfBuzzSharp.Blob" /> instance.
+		/// Gets a reference to the empty <see cref="Blob" /> instance.
 		/// </summary>
 		public static Blob Empty => emptyBlob.Value;
 
@@ -23,7 +23,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance, wrapping the specified data.
+		/// Creates a new <see cref="Blob" /> instance, wrapping the specified data.
 		/// </summary>
 		/// <param name="data">The data to wrap.</param>
 		/// <param name="length">The length of the data being wrapped.</param>
@@ -35,7 +35,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance, wrapping the specified data.
+		/// Creates a new <see cref="Blob" /> instance, wrapping the specified data.
 		/// </summary>
 		/// <param name="data">The data to wrap.</param>
 		/// <param name="length">The length of the data being wrapped.</param>
@@ -102,10 +102,10 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance from the contents of the file.
+		/// Creates a new <see cref="Blob" /> instance from the contents of the file.
 		/// </summary>
 		/// <param name="fileName">The path to the file to load.</param>
-		/// <returns>Returns the new <see cref="T:HarfBuzzSharp.Blob" /> instance.</returns>
+		/// <returns>Returns the new <see cref="Blob" /> instance.</returns>
 		public static Blob FromFile (string fileName)
 		{
 			if (!File.Exists (fileName)) {
@@ -117,10 +117,10 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="T:HarfBuzzSharp.Blob" /> instance from the contents of the stream.
+		/// Creates a new <see cref="Blob" /> instance from the contents of the stream.
 		/// </summary>
 		/// <param name="stream">The stream to use.</param>
-		/// <returns>Returns the new <see cref="T:HarfBuzzSharp.Blob" /> instance.</returns>
+		/// <returns>Returns the new <see cref="Blob" /> instance.</returns>
 		public static unsafe Blob FromStream (Stream stream)
 		{
 			// TODO: check to see if we can avoid the second copy (the ToArray)

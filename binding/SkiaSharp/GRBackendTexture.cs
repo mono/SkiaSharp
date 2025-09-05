@@ -24,7 +24,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Creates a new OpenGL <see cref="T:SkiaSharp.GRBackendTexture" /> with the specified properties and texture.
+		/// Creates a new OpenGL <see cref="GRBackendTexture" /> with the specified properties and texture.
 		/// </summary>
 		/// <param name="width">The width of the render target.</param>
 		/// <param name="height">The height of the render target.</param>
@@ -97,7 +97,7 @@ namespace SkiaSharp
 			SkiaApi.gr_backendtexture_delete (Handle);
 
 		/// <summary>
-		/// Gets a value indicating whether or not the <see cref="T:SkiaSharp.GRBackendTexture" /> was initialized.
+		/// Gets a value indicating whether or not the <see cref="GRBackendTexture" /> was initialized.
 		/// </summary>
 		public bool IsValid => SkiaApi.gr_backendtexture_is_valid (Handle);
 		/// <summary>
