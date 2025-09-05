@@ -672,30 +672,30 @@
   - [ ] M:HarfBuzzSharp.Script.TryParse(System.String,HarfBuzzSharp.Script@)
   - [ ] P:HarfBuzzSharp.Script.HorizontalDirection
 - [x] HarfBuzzSharp.ScriptDelegate
-- [ ] HarfBuzzSharp.SerializeFlag
-  - [ ] F:HarfBuzzSharp.SerializeFlag.Default
-  - [ ] F:HarfBuzzSharp.SerializeFlag.GlyphExtents
-  - [ ] F:HarfBuzzSharp.SerializeFlag.GlyphFlags
-  - [ ] F:HarfBuzzSharp.SerializeFlag.NoAdvances
-  - [ ] F:HarfBuzzSharp.SerializeFlag.NoClusters
-  - [ ] F:HarfBuzzSharp.SerializeFlag.NoGlyphNames
-  - [ ] F:HarfBuzzSharp.SerializeFlag.NoPositions
-- [ ] HarfBuzzSharp.SerializeFormat
-  - [ ] F:HarfBuzzSharp.SerializeFormat.Invalid
-  - [ ] F:HarfBuzzSharp.SerializeFormat.Json
-  - [ ] F:HarfBuzzSharp.SerializeFormat.Text
-- [ ] HarfBuzzSharp.Tag
-  - [ ] F:HarfBuzzSharp.Tag.Max
-  - [ ] F:HarfBuzzSharp.Tag.MaxSigned
-  - [ ] F:HarfBuzzSharp.Tag.None
-  - [ ] M:HarfBuzzSharp.Tag.#ctor(System.Char,System.Char,System.Char,System.Char)
-  - [ ] M:HarfBuzzSharp.Tag.Equals(HarfBuzzSharp.Tag)
-  - [ ] M:HarfBuzzSharp.Tag.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.Tag.GetHashCode
-  - [ ] M:HarfBuzzSharp.Tag.op_Implicit(HarfBuzzSharp.Tag)~System.UInt32
-  - [ ] M:HarfBuzzSharp.Tag.op_Implicit(System.UInt32)~HarfBuzzSharp.Tag
-  - [ ] M:HarfBuzzSharp.Tag.Parse(System.String)
-  - [ ] M:HarfBuzzSharp.Tag.ToString
+- [x] HarfBuzzSharp.SerializeFlag
+  - [x] F:HarfBuzzSharp.SerializeFlag.Default
+  - [x] F:HarfBuzzSharp.SerializeFlag.GlyphExtents
+  - [x] F:HarfBuzzSharp.SerializeFlag.GlyphFlags
+  - [x] F:HarfBuzzSharp.SerializeFlag.NoAdvances
+  - [x] F:HarfBuzzSharp.SerializeFlag.NoClusters
+  - [x] F:HarfBuzzSharp.SerializeFlag.NoGlyphNames
+  - [x] F:HarfBuzzSharp.SerializeFlag.NoPositions
+- [x] HarfBuzzSharp.SerializeFormat
+  - [x] F:HarfBuzzSharp.SerializeFormat.Invalid
+  - [x] F:HarfBuzzSharp.SerializeFormat.Json
+  - [x] F:HarfBuzzSharp.SerializeFormat.Text
+- [x] HarfBuzzSharp.Tag
+  - [x] F:HarfBuzzSharp.Tag.Max
+  - [x] F:HarfBuzzSharp.Tag.MaxSigned
+  - [x] F:HarfBuzzSharp.Tag.None
+  - [x] M:HarfBuzzSharp.Tag.#ctor(System.Char,System.Char,System.Char,System.Char)
+  - [x] M:HarfBuzzSharp.Tag.Equals(HarfBuzzSharp.Tag)
+  - [x] M:HarfBuzzSharp.Tag.Equals(System.Object)
+  - [x] M:HarfBuzzSharp.Tag.GetHashCode
+  - [x] M:HarfBuzzSharp.Tag.op_Implicit(HarfBuzzSharp.Tag)~System.UInt32
+  - [x] M:HarfBuzzSharp.Tag.op_Implicit(System.UInt32)~HarfBuzzSharp.Tag
+  - [x] M:HarfBuzzSharp.Tag.Parse(System.String)
+  - [x] M:HarfBuzzSharp.Tag.ToString
 - [ ] HarfBuzzSharp.UnicodeCombiningClass
   - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Above
   - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.AboveLeft
