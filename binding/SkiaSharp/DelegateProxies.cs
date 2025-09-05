@@ -1,4 +1,4 @@
-#nullable disable
+﻿#nullable disable
 // ReSharper disable InconsistentNaming
 // ReSharper disable PartialMethodParameterNameMismatch
 

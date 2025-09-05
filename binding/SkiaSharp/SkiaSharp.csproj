@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(AllTargetFrameworks)</TargetFrameworks>
+    <TargetFramework>net8.0</TargetFramework>
+    <!-- <TargetFrameworks>$(AllTargetFrameworks)</TargetFrameworks> -->
     <RootNamespace>SkiaSharp</RootNamespace>
     <AssemblyName>SkiaSharp</AssemblyName>
     <PackagingGroup>SkiaSharp</PackagingGroup>
@@ -15,7 +16,7 @@
   <PropertyGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
     <DefineConstants>$(DefineConstants);USE_LIBRARY_IMPORT</DefineConstants>
   </PropertyGroup>
-  <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
+  <!-- <ItemGroup Condition="'$(BuildingInsideVisualStudio)' != 'true'">
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Android\SkiaSharp.NativeAssets.Android.csproj" Condition="$(TargetFramework.Contains('-android'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.iOS\SkiaSharp.NativeAssets.iOS.csproj" Condition="$(TargetFramework.Contains('-ios'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.MacCatalyst\SkiaSharp.NativeAssets.MacCatalyst.csproj" Condition="$(TargetFramework.Contains('-maccatalyst'))" />
@@ -23,7 +24,7 @@
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Tizen\SkiaSharp.NativeAssets.Tizen.csproj" Condition="$(TargetFramework.Contains('-tizen'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.tvOS\SkiaSharp.NativeAssets.tvOS.csproj" Condition="$(TargetFramework.Contains('-tvos'))" />
     <ProjectReference Include="..\SkiaSharp.NativeAssets.Win32\SkiaSharp.NativeAssets.Win32.csproj" Condition="$(TargetFramework.Contains('-windows')) or !$(TargetFramework.Contains('-'))" />
-  </ItemGroup>
+  </ItemGroup> -->
   <ItemGroup>
     <Compile Include="..\Binding.Shared\**\*.cs" Link="%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
