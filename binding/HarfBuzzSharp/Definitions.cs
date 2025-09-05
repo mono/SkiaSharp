@@ -4,8 +4,14 @@ using System;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// Represents a glyph and its relation to the input text.
+	/// </summary>
 	public unsafe partial struct GlyphInfo
 	{
+		/// <summary>
+		/// Gets the <see cref="GlyphFlags" /> for this instance.
+		/// </summary>
 		public GlyphFlags GlyphFlags {
 			get {
 				fixed (GlyphInfo* f = &this) {
