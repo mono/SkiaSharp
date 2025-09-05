@@ -781,37 +781,37 @@
   - [x] P:HarfBuzzSharp.UnicodeFunctions.Empty
   - [x] P:HarfBuzzSharp.UnicodeFunctions.IsImmutable
   - [x] P:HarfBuzzSharp.UnicodeFunctions.Parent
-- [ ] HarfBuzzSharp.UnicodeGeneralCategory
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.ClosePunctuation
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.ConnectPunctuation
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.Control
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.CurrencySymbol
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.DashPunctuation
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.DecimalNumber
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.EnclosingMark
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.FinalPunctuation
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.Format
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.InitialPunctuation
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.LetterNumber
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.LineSeparator
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.LowercaseLetter
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.MathSymbol
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.ModifierLetter
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.ModifierSymbol
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.NonSpacingMark
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.OpenPunctuation
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherLetter
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherNumber
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherPunctuation
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherSymbol
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.ParagraphSeparator
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.PrivateUse
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.SpaceSeparator
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.SpacingMark
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.Surrogate
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.TitlecaseLetter
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.Unassigned
-  - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.UppercaseLetter
+- [x] HarfBuzzSharp.UnicodeGeneralCategory
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.ClosePunctuation
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.ConnectPunctuation
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.Control
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.CurrencySymbol
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.DashPunctuation
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.DecimalNumber
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.EnclosingMark
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.FinalPunctuation
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.Format
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.InitialPunctuation
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.LetterNumber
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.LineSeparator
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.LowercaseLetter
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.MathSymbol
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.ModifierLetter
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.ModifierSymbol
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.NonSpacingMark
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.OpenPunctuation
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherLetter
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherNumber
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherPunctuation
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.OtherSymbol
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.ParagraphSeparator
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.PrivateUse
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.SpaceSeparator
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.SpacingMark
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.Surrogate
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.TitlecaseLetter
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.Unassigned
+  - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.UppercaseLetter
 - [ ] HarfBuzzSharp.Variation
   - [ ] M:HarfBuzzSharp.Variation.Equals(HarfBuzzSharp.Variation)
   - [ ] M:HarfBuzzSharp.Variation.Equals(System.Object)

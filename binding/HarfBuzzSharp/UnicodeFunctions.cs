@@ -27,6 +27,13 @@ namespace HarfBuzzSharp
 		/// </remarks>
 		public static UnicodeFunctions Default => defaultFunctions.Value;
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>
+		/// To be added.
+		/// </remarks>
 		public static UnicodeFunctions Empty => emptyFunctions.Value;
 
 		internal UnicodeFunctions (IntPtr handle)
@@ -52,8 +59,22 @@ namespace HarfBuzzSharp
 			Handle = HarfBuzzApi.hb_unicode_funcs_create (parent.Handle);
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>
+		/// To be added.
+		/// </remarks>
 		public UnicodeFunctions Parent { get; }
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>
+		/// To be added.
+		/// </remarks>
 		public bool IsImmutable => HarfBuzzApi.hb_unicode_funcs_is_immutable (Handle);
 
 		/// <summary>

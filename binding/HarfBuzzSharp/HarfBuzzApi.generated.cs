@@ -7945,66 +7945,162 @@ namespace HarfBuzzSharp {
 	}
 
 	// hb_unicode_general_category_t
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <remarks>
+	/// To be added.
+	/// </remarks>
 	public enum UnicodeGeneralCategory {
 		// HB_UNICODE_GENERAL_CATEGORY_CONTROL = 0
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		Control = 0,
 		// HB_UNICODE_GENERAL_CATEGORY_FORMAT = 1
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		Format = 1,
 		// HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED = 2
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		Unassigned = 2,
 		// HB_UNICODE_GENERAL_CATEGORY_PRIVATE_USE = 3
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		PrivateUse = 3,
 		// HB_UNICODE_GENERAL_CATEGORY_SURROGATE = 4
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		Surrogate = 4,
 		// HB_UNICODE_GENERAL_CATEGORY_LOWERCASE_LETTER = 5
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		LowercaseLetter = 5,
 		// HB_UNICODE_GENERAL_CATEGORY_MODIFIER_LETTER = 6
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		ModifierLetter = 6,
 		// HB_UNICODE_GENERAL_CATEGORY_OTHER_LETTER = 7
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		OtherLetter = 7,
 		// HB_UNICODE_GENERAL_CATEGORY_TITLECASE_LETTER = 8
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		TitlecaseLetter = 8,
 		// HB_UNICODE_GENERAL_CATEGORY_UPPERCASE_LETTER = 9
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		UppercaseLetter = 9,
 		// HB_UNICODE_GENERAL_CATEGORY_SPACING_MARK = 10
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		SpacingMark = 10,
 		// HB_UNICODE_GENERAL_CATEGORY_ENCLOSING_MARK = 11
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		EnclosingMark = 11,
 		// HB_UNICODE_GENERAL_CATEGORY_NON_SPACING_MARK = 12
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		NonSpacingMark = 12,
 		// HB_UNICODE_GENERAL_CATEGORY_DECIMAL_NUMBER = 13
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		DecimalNumber = 13,
 		// HB_UNICODE_GENERAL_CATEGORY_LETTER_NUMBER = 14
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		LetterNumber = 14,
 		// HB_UNICODE_GENERAL_CATEGORY_OTHER_NUMBER = 15
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		OtherNumber = 15,
 		// HB_UNICODE_GENERAL_CATEGORY_CONNECT_PUNCTUATION = 16
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		ConnectPunctuation = 16,
 		// HB_UNICODE_GENERAL_CATEGORY_DASH_PUNCTUATION = 17
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		DashPunctuation = 17,
 		// HB_UNICODE_GENERAL_CATEGORY_CLOSE_PUNCTUATION = 18
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		ClosePunctuation = 18,
 		// HB_UNICODE_GENERAL_CATEGORY_FINAL_PUNCTUATION = 19
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		FinalPunctuation = 19,
 		// HB_UNICODE_GENERAL_CATEGORY_INITIAL_PUNCTUATION = 20
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		InitialPunctuation = 20,
 		// HB_UNICODE_GENERAL_CATEGORY_OTHER_PUNCTUATION = 21
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		OtherPunctuation = 21,
 		// HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION = 22
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		OpenPunctuation = 22,
 		// HB_UNICODE_GENERAL_CATEGORY_CURRENCY_SYMBOL = 23
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		CurrencySymbol = 23,
 		// HB_UNICODE_GENERAL_CATEGORY_MODIFIER_SYMBOL = 24
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		ModifierSymbol = 24,
 		// HB_UNICODE_GENERAL_CATEGORY_MATH_SYMBOL = 25
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		MathSymbol = 25,
 		// HB_UNICODE_GENERAL_CATEGORY_OTHER_SYMBOL = 26
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		OtherSymbol = 26,
 		// HB_UNICODE_GENERAL_CATEGORY_LINE_SEPARATOR = 27
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		LineSeparator = 27,
 		// HB_UNICODE_GENERAL_CATEGORY_PARAGRAPH_SEPARATOR = 28
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		ParagraphSeparator = 28,
 		// HB_UNICODE_GENERAL_CATEGORY_SPACE_SEPARATOR = 29
+		/// <summary>
+		/// To be added.
+		/// </summary>
 		SpaceSeparator = 29,
 	}
 }
