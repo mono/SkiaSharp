@@ -454,7 +454,7 @@ namespace SkiaSharp.Views.Android
 		/// The renderer is responsible for making OpenGL calls to render a frame.
 		/// Typically, <see cref="SkiaSharp.Views.Android.GLTextureView" /> clients create their
 		/// own classes that implement this interface, and then call
-		/// <xref:SkiaSharp.Views.Android.GLTextureView.SetRenderer?displayProperty=nameWithType>
+		/// <see cref="SetRenderer" />
 		/// to register the renderer with the <see cref="SkiaSharp.Views.Android.GLTextureView" />.
 		/// </remarks>
 		public interface IRenderer

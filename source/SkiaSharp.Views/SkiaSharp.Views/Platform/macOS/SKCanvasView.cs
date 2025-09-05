@@ -93,11 +93,6 @@ namespace SkiaSharp.Views.Mac
 		/// method, or by attaching a handler to the
 		/// <see cref="SKCanvasView.PaintSurface" />
 		/// event.
-		/// > [!NOTE]
-		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then the
-		/// > <see cref="SKCanvasView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.SKImageInfo)" />
-		/// > method should be overridden instead of
-		/// > <see cref="SKCanvasView.OnPaintSurface(SKPaintSurfaceEventArgs)" />.
 		/// ## Examples
 		/// ```csharp
 		/// myView.PaintSurface += (sender, e) => {

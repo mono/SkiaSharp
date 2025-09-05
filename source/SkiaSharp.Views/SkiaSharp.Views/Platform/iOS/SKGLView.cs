@@ -204,11 +204,6 @@ namespace SkiaSharp.Views.iOS
 		/// method, or by attaching a handler to the
 		/// <see cref="SKGLView.PaintSurface" />
 		/// event.
-		/// > [!NOTE]
-		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then the
-		/// > <see cref="SKGLView.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" />
-		/// > method should be overridden instead of
-		/// > <see cref="SKGLView.OnPaintSurface(SKPaintGLSurfaceEventArgs)" />.
 		/// ## Examples
 		/// ```csharp
 		/// myView.PaintSurface += (sender, e) => {

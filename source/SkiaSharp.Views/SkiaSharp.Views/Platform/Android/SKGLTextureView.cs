@@ -76,11 +76,6 @@ namespace SkiaSharp.Views.Android
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.Android.SKGLTextureView.PaintSurface" />
 		/// event.
-		/// > [!NOTE]
-		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then
-		/// > renderers are used instead of events. See
-		/// > <see cref="SkiaSharp.Views.Android.SKGLTextureView.ISKRenderer" /> and
-		/// > <see cref="SkiaSharp.Views.Android.SKGLTextureView.SetRenderer(SkiaSharp.Views.Android.SKGLTextureView.ISKRenderer)" />.
 		/// ## Examples
 		/// ```csharp
 		/// myView.PaintSurface += (sender, e) => {

@@ -5,7 +5,7 @@ using Microsoft.Maui;
 namespace SkiaSharp.Views.Maui
 {
 	/// <summary>
-	/// Provides data for the <see cref="SKCanvasView.Touch" /> or <see cref="SKGLView.Touch" /> event.
+	/// Provides data for the Touch event.
 	/// </summary>
 	public class SKTouchEventArgs : EventArgs
 	{

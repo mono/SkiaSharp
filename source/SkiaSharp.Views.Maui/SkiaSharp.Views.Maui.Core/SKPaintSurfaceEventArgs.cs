@@ -5,7 +5,7 @@ using Microsoft.Maui;
 namespace SkiaSharp.Views.Maui
 {
 	/// <summary>
-	/// Provides data for the <see cref="SKCanvasView.PaintSurface" /> event.
+	/// Provides data for the PaintSurface event.
 	/// </summary>
 	public class SKPaintSurfaceEventArgs : EventArgs
 	{

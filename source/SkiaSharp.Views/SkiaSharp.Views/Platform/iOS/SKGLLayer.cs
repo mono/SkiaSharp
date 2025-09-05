@@ -153,15 +153,10 @@ namespace SkiaSharp.Views.iOS
 		/// </summary>
 		/// <remarks>
 		/// There are two ways to draw on this surface: by overriding the
-		/// <see cref="SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)" />
+		/// <see cref="OnPaintSurface(SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
-		/// <see cref="SkiaSharp.Views.tvOS.SKGLLayer.PaintSurface" />
+		/// <see cref="PaintSurface" />
 		/// event.
-		/// > [!NOTE]
-		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then the
-		/// > <see cref="SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" />
-		/// > method should be overridden instead of
-		/// > <see cref="SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)" />.
 		/// ## Examples
 		/// ```csharp
 		/// myLayer.PaintSurface += (sender, e) => {
