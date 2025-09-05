@@ -5,184 +5,245 @@ using System;
 namespace SkiaSharp
 {
 	// TODO: carefully consider the `PeekPixels`, `ReadPixels`
-
+	
 	/// <summary>
-	/// Encapsulates all of the state about drawing into a device (bitmap or surface).
+	///   Encapsulates all of the state about drawing into a device (bitmap or surface).
 	/// </summary>
 	/// <remarks>
-	/// A canvas encapsulates all of the state about drawing into a device (bitmap or
-	/// surface).
-	/// This includes a reference to the device itself, and a stack of matrix/clip
-	/// values. For any given draw call (e.g. DrawRect), the geometry of the object
-	/// being drawn is transformed by the concatenation of all the matrices in the
-	/// stack. The transformed geometry is clipped by the intersection of all of the
-	/// clips in the stack.
-	/// While the canvas holds the state of the drawing device, the state (style) of
-	/// the object being drawn is held by the paint, which is provided as a parameter
-	/// to each of the "Draw" methods. The paint holds attributes such as color,
-	/// typeface, the text size, the stroke width, the shader (for example, gradients,
-	/// patterns), etc.
-	/// The canvas is returned when accessing the
-	/// <see cref="SkiaSharp.SKSurface.Canvas" /> property of a
-	/// surface.
-	/// ### Construction
-	/// SkiaSharp has multiple backends which receive <see cref="SkiaSharp.SKCanvas" />
-	/// drawing commands, including:
-	/// * Raster Surface
-	/// * GPU Surface
-	/// * PDF Document
-	/// * XPS Document _(experimental)_
-	/// * SVG Canvas _(experimental)_
-	/// * Picture
-	/// * Null Canvas _(for testing)_
-	/// #### Constructing a Raster Surface
-	/// The raster backend draws to a block of memory. This memory can be managed by
-	/// SkiaSharp or by the client.
-	/// The recommended way of creating a canvas for the Raster and Ganesh backends is
-	/// to use a <see cref="SkiaSharp.SKSurface" />, which is an object that manages the
-	/// memory into which the canvas commands are drawn.
-	/// ```csharp
+	///   <para>
+	///     A canvas encapsulates all of the state about drawing into a device (bitmap or
+	///     surface). This includes a reference to the device itself, and a stack of matrix/clip
+	///     values. For any given draw call (e.g. DrawRect), the geometry of the object
+	///     being drawn is transformed by the concatenation of all the matrices in the
+	///     stack. The transformed geometry is clipped by the intersection of all of the
+	///     clips in the stack.
+	///   </para>
+	///   <para>
+	///     While the canvas holds the state of the drawing device, the state (style) of
+	///     the object being drawn is held by the paint, which is provided as a parameter
+	///     to each of the "Draw" methods. The paint holds attributes such as color,
+	///     typeface, the text size, the stroke width, the shader (for example, gradients,
+	///     patterns), etc.
+	///   </para>
+	///   <para>
+	///     The canvas is returned when accessing the
+	///     <see cref="SkiaSharp.SKSurface.Canvas" /> property of a surface.
+	///   </para>
+	///   <para>
+	///     <b>Construction</b>
+	///   </para>
+	///   <para>
+	///     SkiaSharp has multiple backends which receive <see cref="SkiaSharp.SKCanvas" />
+	///     drawing commands, including:
+	///   </para>
+	///   <list type="bullet">
+	///     <item>Raster Surface</item>
+	///     <item>GPU Surface</item>
+	///     <item>PDF Document</item>
+	///     <item>XPS Document <i>(experimental)</i></item>
+	///     <item>SVG Canvas <i>(experimental)</i></item>
+	///     <item>Picture</item>
+	///     <item>Null Canvas <i>(for testing)</i></item>
+	///   </list>
+	///   <para>
+	///     <b>Constructing a Raster Surface</b>
+	///   </para>
+	///   <para>
+	///     The raster backend draws to a block of memory. This memory can be managed by
+	///     SkiaSharp or by the client.
+	///     The recommended way of creating a canvas for the Raster and Ganesh backends is
+	///     to use a <see cref="SkiaSharp.SKSurface" />, which is an object that manages the
+	///     memory into which the canvas commands are drawn.
+	///   </para>
+	///   <code language="csharp"><![CDATA[
 	/// // define the surface properties
 	/// var info = new SKImageInfo(256, 256);
 	/// // construct a new surface
 	/// var surface = SKSurface.Create(info);
+	/// 
 	/// // get the canvas from the surface
 	/// var canvas = surface.Canvas;
-	/// // draw on the canvas ...
-	/// ```
-	/// Alternatively, we could have specified the memory for the surface explicitly,
-	/// instead of asking SkiaSharp to manage it.
-	/// ```csharp
+	/// 
+	/// // draw on the canvas
+	/// ]]></code>
+	///   <para>
+	///     Alternatively, we could have specified the memory for the surface explicitly,
+	///     instead of asking SkiaSharp to manage it.
+	///   </para>
+	///   <code language="csharp"><![CDATA[
 	/// // define the surface properties
 	/// var info = new SKImageInfo(256, 256);
 	/// // allocate memory
 	/// var memory = Marshal.AllocCoTaskMem(info.BytesSize);
 	/// // construct a surface around the existing memory
 	/// var surface = SKSurface.Create(info, memory, info.RowBytes);
+	/// 
 	/// // get the canvas from the surface
 	/// var canvas = surface.Canvas;
-	/// // draw on the canvas ...
-	/// ```
-	/// #### Constructing a GPU Surface
-	/// GPU surfaces must have a <see cref="SkiaSharp.GRContext" /> object which manages the
-	/// GPU context, and related caches for textures and fonts.
-	/// <see cref="SkiaSharp.GRContext" /> objects are matched one to one with OpenGL contexts
-	/// or Vulkan devices. That is, all <see cref="SkiaSharp.SKSurface" /> instances that will
-	/// be rendered to using the same OpenGL context or Vulkan device should share a
-	/// <see cref="SkiaSharp.GRContext" />.
-	/// SkiaSharp does not create an OpenGL context or a Vulkan device for you. In
-	/// OpenGL mode it also assumes that the correct OpenGL context has been made
-	/// current to the current thread when SkiaSharp calls are made.
-	/// ```csharp
-	/// // an OpenGL context must be created and set as current
-	/// // define the surface properties
-	/// var info = new SKImageInfo(256, 256);
-	/// // create the surface
-	/// var context = GRContext.CreateGl();
-	/// var surface = SKSurface.Create(context, false, info);
-	/// // get the canvas from the surface
-	/// var canvas = surface.Canvas;
-	/// // draw on the canvas ...
-	/// ```
-	/// #### Constructing a PDF Document
-	/// The PDF backend uses <see cref="SkiaSharp.SKDocument" /> instead of
-	/// <see cref="SkiaSharp.SKSurface" />, since a document must include multiple pages.
-	/// ```csharp
+	/// 
+	/// // draw on the canvas
+	/// ]]></code>
+	///   <para>
+	///     <b>Constructing a GPU Surface</b>
+	///   </para>
+	///   <para>
+	///     GPU surfaces must have a <see cref="SkiaSharp.GRContext" /> object which manages the
+	///     GPU context, and related caches for textures and fonts.
+	///     <see cref="SkiaSharp.GRContext" /> objects are matched one to one with OpenGL contexts
+	///     or Vulkan devices. That is, all <see cref="SkiaSharp.SKSurface" /> instances that will
+	///     be rendered to using the same OpenGL context or Vulkan device should share a
+	///     <see cref="SkiaSharp.GRContext" />.
+	///     SkiaSharp does not create an OpenGL context or a Vulkan device for you. In
+	///     OpenGL mode it also assumes that the correct OpenGL context has been made
+	///     current to the current thread when SkiaSharp calls are made.
+	///   </para>
+	///   <para>
+	///     <b>Constructing a PDF Document</b>
+	///   </para>
+	///   <para>
+	///     The PDF backend uses <see cref="SkiaSharp.SKDocument" /> instead of
+	///     <see cref="SkiaSharp.SKSurface" />, since a document must include multiple pages.
+	///   </para>
+	///   <code language="csharp"><![CDATA[
 	/// // create the document
 	/// var stream = SKFileWStream.OpenStream("document.pdf");
 	/// var document = SKDocument.CreatePdf(stream);
+	/// 
 	/// // get the canvas from the page
 	/// var canvas = document.BeginPage(256, 256);
-	/// // draw on the canvas ...
+	/// 
+	/// // draw on the canvas
+	/// 
 	/// // end the page and document
 	/// document.EndPage();
 	/// document.Close();
-	/// ```
-	/// #### Constructing a XPS Document _(experimental)_
-	/// The XPS backend uses <see cref="SkiaSharp.SKDocument" /> instead of
-	/// <see cref="SkiaSharp.SKSurface" />, since a document must include multiple pages.
-	/// ```csharp
+	/// ]]></code>
+	///   <para>
+	///     <b>Constructing a XPS Document _(experimental)_</b>
+	///   </para>
+	///   <para>
+	///     The XPS backend uses <see cref="SkiaSharp.SKDocument" /> instead of
+	///     <see cref="SkiaSharp.SKSurface" />, since a document must include multiple pages.
+	///   </para>
+	///   <code language="csharp"><![CDATA[
 	/// // create the document
 	/// var stream = SKFileWStream.OpenStream("document.xps");
 	/// var document = SKDocument.CreateXps(stream);
+	/// 
 	/// // get the canvas from the page
 	/// var canvas = document.BeginPage(256, 256);
-	/// // draw on the canvas ...
+	/// 
+	/// // draw on the canvas
+	/// 
 	/// // end the page and document
 	/// document.EndPage();
 	/// document.Close();
-	/// ```
-	/// #### Constructing a SVG Canvas _(experimental)_
-	/// The SVG backend uses <see cref="SkiaSharp.SKSvgCanvas" />.
-	/// ```csharp
+	/// ]]></code>
+	///   <para>
+	///     <b>Constructing a SVG Canvas _(experimental)_</b>
+	///   </para>
+	///   <para>
+	///     The SVG backend uses <see cref="SkiaSharp.SKSvgCanvas" />.
+	///   </para>
+	///   <code language="csharp"><![CDATA[
 	/// // create the canvas
 	/// var stream = SKFileWStream.OpenStream("image.svg");
 	/// var writer = new SKXmlStreamWriter(stream);
 	/// var canvas = SKSvgCanvas.Create(SKRect.Create(256, 256), writer);
-	/// // draw on the canvas ...
-	/// ```
-	/// #### Constructing a Picture
-	/// The XPS backend uses <see cref="SkiaSharp.SKPictureRecorder" /> instead of
-	/// <see cref="SkiaSharp.SKSurface" />.
-	/// ```csharp
+	/// 
+	/// // draw on the canvas
+	/// ]]></code>
+	///   <para>
+	///     <b>Constructing a Picture</b>
+	///   </para>
+	///   <para>
+	///     The XPS backend uses <see cref="SkiaSharp.SKPictureRecorder" /> instead of
+	///     <see cref="SkiaSharp.SKSurface" />.
+	///   </para>
+	///   <code language="csharp"><![CDATA[
 	/// // create the picture recorder
 	/// var recorder = new SKPictureRecorder();
+	/// 
 	/// // get the canvas from the page
 	/// var canvas = recorder.BeginRecording(SKRect.Create(256, 256));
-	/// // draw on the canvas ...
+	/// 
+	/// // draw on the canvas
+	/// 
 	/// // finish recording
 	/// var picture = recorder.EndRecording();
-	/// ```
-	/// #### Constructing a Null Canvas _(for testing)_
-	/// The null canvas is a canvas that ignores all drawing commands and does
-	/// nothing.
-	/// ```csharp
+	/// ]]></code>
+	///   <para>
+	///     <b>Constructing a Null Canvas _(for testing)_</b>
+	///   </para>
+	///   <para>
+	///     The null canvas is a canvas that ignores all drawing commands and does
+	///     nothing.
+	///   </para>
+	///   <code language="csharp"><![CDATA[
 	/// // create the dummy canvas
 	/// var canvas = new SKNoDrawCanvas(256, 256);
-	/// // draw on the canvas ...
-	/// ```
-	/// ### Transformations
-	/// The canvas supports a number of 2D transformations. Unlike other 2D graphic
-	/// systems like CoreGraphics or Cairo, SKCanvas extends the transformations to
-	/// include perspectives.
-	/// You can use the <see cref="SkiaSharp.SKCanvas.Scale(float)" />,
-	/// <see cref="SkiaSharp.SKCanvas.Skew(float, float)" />, <see cref="SkiaSharp.SKCanvas.Translate(float, float)" />,
-	/// <see cref="SkiaSharp.SKCanvas.RotateDegrees(float)" />,
-	/// <see cref="SkiaSharp.SKCanvas.RotateRadians(float)" /> to perform some of the most common
-	/// 2D transformations.
-	/// For more control you can use the <see cref="SkiaSharp.SKCanvas.SetMatrix(in SKMatrix)" /> to set
-	/// an arbitrary transformation using the <see cref="SkiaSharp.SKMatrix" /> and the
-	/// <see cref="SkiaSharp.SKCanvas.Concat(in SKMatrix)" /> to concatenate an <see cref="SkiaSharp.SKMatrix" />
-	/// transformation to the current matrix in use.
-	/// The <see cref="SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of
-	/// the matrix.
-	/// ### Drawing
-	/// The drawing operations can take a <see cref="SkiaSharp.SKPaint" /> parameter to affect
-	/// their drawing. You use <see cref="SkiaSharp.SKPaint" /> objects to cache the style and
-	/// color information to draw geometries, texts and bitmaps.
-	/// ### Clipping and State
-	/// It is possible to save the current transformations by calling the
-	/// <see cref="SkiaSharp.SKCanvas.Save" /> method which preserves the current
-	/// transformation matrix, you can then alter the matrix and restore the previous
-	/// state by using the <see cref="SkiaSharp.SKCanvas.Restore" /> or
-	/// <see cref="SkiaSharp.SKCanvas.RestoreToCount" /> methods.
-	/// Additionally, it is possible to push a new state with
-	/// <see cref="SkiaSharp.SKCanvas.SaveLayer(SKRect, SKPaint?)" /> which will make an offscreen copy of a
-	/// region, and once the drawing is completed, calling the
-	/// <see cref="SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap
-	/// into this canvas.
-	/// ## Examples
-	/// ```csharp
+	/// 
+	/// // draw on the canvas
+	/// ]]></code>
+	///   <para>
+	///     <b>Transformations</b>
+	///   </para>
+	///   <para>
+	///     The canvas supports a number of 2D transformations. Unlike other 2D graphic
+	///     systems like CoreGraphics or Cairo, SKCanvas extends the transformations to
+	///     include perspectives.
+	///     You can use the <see cref="SkiaSharp.SKCanvas.Scale(float)" />,
+	///     <see cref="SkiaSharp.SKCanvas.Skew(float, float)" />, <see cref="SkiaSharp.SKCanvas.Translate(float, float)" />,
+	///     <see cref="SkiaSharp.SKCanvas.RotateDegrees(float)" />,
+	///     <see cref="SkiaSharp.SKCanvas.RotateRadians(float)" /> to perform some of the most common
+	///     2D transformations.
+	///     For more control you can use the <see cref="SkiaSharp.SKCanvas.SetMatrix(in SKMatrix)" /> to set
+	///     an arbitrary transformation using the <see cref="SkiaSharp.SKMatrix" /> and the
+	///     <see cref="SkiaSharp.SKCanvas.Concat(in SKMatrix)" /> to concatenate an <see cref="SkiaSharp.SKMatrix" />
+	///     transformation to the current matrix in use.
+	///     The <see cref="SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of
+	///     the matrix.
+	///   </para>
+	///   <para>
+	///     <b>Drawing</b>
+	///   </para>
+	///   <para>
+	///     The drawing operations can take a <see cref="SkiaSharp.SKPaint" /> parameter to affect
+	///     their drawing. You use <see cref="SkiaSharp.SKPaint" /> objects to cache the style and
+	///     color information to draw geometries, texts and bitmaps.
+	///   </para>
+	///   <para>
+	///     <b>Clipping and State</b>
+	///   </para>
+	///   <para>
+	///     It is possible to save the current transformations by calling the
+	///     <see cref="SkiaSharp.SKCanvas.Save" /> method which preserves the current
+	///     transformation matrix, you can then alter the matrix and restore the previous
+	///     state by using the <see cref="SkiaSharp.SKCanvas.Restore" /> or
+	///     <see cref="SkiaSharp.SKCanvas.RestoreToCount" /> methods.
+	///     Additionally, it is possible to push a new state with
+	///     <see cref="SkiaSharp.SKCanvas.SaveLayer(SKRect, SKPaint?)" /> which will make an offscreen copy of a
+	///     region, and once the drawing is completed, calling the
+	///     <see cref="SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap
+	///     into this canvas.
+	///   </para>
+	/// </remarks>
+	/// <example>
+	///   <code language="csharp"><![CDATA[
 	/// var info = new SKImageInfo(640, 480);
-	/// using (var surface = SKSurface.Create(info)) {
+	/// using var surface = SKSurface.Create(info);
 	/// SKCanvas canvas = surface.Canvas;
+	/// 
+	/// // clear the canvas fo drawing
 	/// canvas.Clear(SKColors.White);
+	/// 
 	/// // set up drawing tools
 	/// var paint = new SKPaint {
-	/// IsAntialias = true,
-	/// Color = new SKColor(0x2c, 0x3e, 0x50),
-	/// StrokeCap = SKStrokeCap.Round
+	/// 	IsAntialias = true,
+	/// 	Color = new SKColor(0x2c, 0x3e, 0x50),
+	/// 	StrokeCap = SKStrokeCap.Round
 	/// };
+	/// 
 	/// // create the Xamagon path
 	/// var path = new SKPath();
 	/// path.MoveTo(71.4311121f, 56f);
@@ -199,11 +260,11 @@ namespace SkiaSharp
 	/// path.CubicTo(120.020241f, 57.5737917f, 117.323748f, 56.0054182f, 114.568946f, 56f);
 	/// path.LineTo(71.4311121f, 56f);
 	/// path.Close();
+	/// 
 	/// // draw the Xamagon path
 	/// canvas.DrawPath(path, paint);
-	/// }
-	/// ```
-	/// </remarks>
+	/// ]]></code>
+	/// </example>
 	public unsafe class SKCanvas : SKObject
 	{
 		private const int PatchCornerCount = 4;
@@ -283,7 +344,7 @@ namespace SkiaSharp
 
 		// Save*
 
-		#nullable enable
+#nullable enable
 		/// <summary>
 		/// Saves the canvas state.
 		/// </summary>
@@ -336,7 +397,7 @@ namespace SkiaSharp
 
 		public int SaveLayer () =>
 			SkiaApi.sk_canvas_save_layer (Handle, null, IntPtr.Zero);
-		#nullable disable
+#nullable disable
 
 		// DrawColor
 
@@ -1005,7 +1066,7 @@ namespace SkiaSharp
 		public void DrawImage (SKImage image, SKPoint p, SKPaint paint = null)
 		{
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, p.X, p.Y, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+			DrawImage (image, p.X, p.Y, paint?.FilterQuality.ToSamplingOptions () ?? SKSamplingOptions.Default, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
@@ -1024,7 +1085,7 @@ namespace SkiaSharp
 		public void DrawImage (SKImage image, float x, float y, SKPaint paint = null)
 		{
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, x, y, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+			DrawImage (image, x, y, paint?.FilterQuality.ToSamplingOptions () ?? SKSamplingOptions.Default, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
@@ -1044,7 +1105,7 @@ namespace SkiaSharp
 		public void DrawImage (SKImage image, SKRect dest, SKPaint paint = null)
 		{
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, null, &dest, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+			DrawImage (image, null, &dest, paint?.FilterQuality.ToSamplingOptions () ?? SKSamplingOptions.Default, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
@@ -1063,7 +1124,7 @@ namespace SkiaSharp
 		public void DrawImage (SKImage image, SKRect source, SKRect dest, SKPaint paint = null)
 		{
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawImage (image, &source, &dest, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, paint);
+			DrawImage (image, &source, &dest, paint?.FilterQuality.ToSamplingOptions () ?? SKSamplingOptions.Default, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 		}
 
@@ -1436,7 +1497,7 @@ namespace SkiaSharp
 #nullable enable
 		public GRRecordingContext? Context =>
 			GRRecordingContext.GetObject (SkiaApi.sk_get_recording_context (Handle), owns: false, unrefExisting: false);
-		#nullable disable
+#nullable disable
 
 		// Flush
 
@@ -1717,7 +1778,7 @@ namespace SkiaSharp
 		/// Replaces the current matrix with a copy of the specified matrix.
 		/// </summary>
 		/// <param name="matrix">The matrix that will be copied into the current matrix.</param>
-		[Obsolete("Use SetMatrix(in SKMatrix) instead.", true)]
+		[Obsolete ("Use SetMatrix(in SKMatrix) instead.", true)]
 		public void SetMatrix (SKMatrix matrix) =>
 			SetMatrix (in matrix);
 
@@ -1880,7 +1941,7 @@ namespace SkiaSharp
 		/// <param name="paint"></param>
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
+			DrawAtlas (atlas, sprites, transforms, null, SKBlendMode.Dst, paint?.FilterQuality.ToSamplingOptions () ?? SKSamplingOptions.Default, null, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKSamplingOptions sampling, SKPaint paint = null) =>
@@ -1894,7 +1955,7 @@ namespace SkiaSharp
 		/// <param name="paint"></param>
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, null, paint);
+			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions () ?? SKSamplingOptions.Default, null, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKPaint paint = null) =>
@@ -1909,7 +1970,7 @@ namespace SkiaSharp
 		/// <param name="paint"></param>
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKRect cullRect, SKPaint paint = null) =>
 #pragma warning disable CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
-			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions() ?? SKSamplingOptions.Default, &cullRect, paint);
+			DrawAtlas (atlas, sprites, transforms, colors, mode, paint?.FilterQuality.ToSamplingOptions () ?? SKSamplingOptions.Default, &cullRect, paint);
 #pragma warning restore CS0618 // 'SKPaint.FilterQuality' is obsolete: 'Use SKSamplingOptions instead.'
 
 		public void DrawAtlas (SKImage atlas, SKRect[] sprites, SKRotationScaleMatrix[] transforms, SKColor[] colors, SKBlendMode mode, SKSamplingOptions sampling, SKRect cullRect, SKPaint paint = null) =>
@@ -1978,27 +2039,30 @@ namespace SkiaSharp
 	}
 
 	/// <summary>
-	/// Convenience class used to restore the canvas state in a using statement.
+	///   Convenience class used to restore the canvas state in a using statement.
 	/// </summary>
 	/// <remarks>
-	/// This class can be used in a using statement to save the state of the canvas
-	/// (matrix, clip and draw filter) allowing you to change these components and have
-	/// them automatically undone by virtue of having the
-	/// <see cref="SkiaSharp.SKAutoCanvasRestore.Dispose" /> method restore the canvas state to
-	/// the state it was when this instance was created.
-	/// ## Examples
-	/// ```csharp
+	///   This class can be used in a using statement to save the state of the canvas
+	///   (matrix, clip and draw filter) allowing you to change these components and have
+	///   them automatically undone by virtue of having the
+	///   <see cref="SkiaSharp.SKAutoCanvasRestore.Dispose" /> method restore the canvas state to
+	///   the state it was when this instance was created.
+	/// </remarks>
+	/// <example>
+	///   <code language="csharp"><![CDATA[
 	/// SKCanvas canvas = ...;
 	/// using (new SKAutoCanvasRestore(canvas)) {
-	/// // perform some transform
-	/// canvas.RotateDegrees(45);
-	/// // draw as usual
-	/// var paint = new SKPaint ();
-	/// canavs.DrawRect (10, 10, 100, 100, paint);
-	/// // automatically restore to original transform
+	/// 	// perform some transform
+	/// 	canvas.RotateDegrees(45);
+	/// 
+	/// 	// draw as usual
+	/// 	var paint = new SKPaint ();
+	/// 	canvas.DrawRect (10, 10, 100, 100, paint);
+	/// 
+	/// 	// automatically restore to original transform
 	/// }
-	/// ```
-	/// </remarks>
+	/// ]]></code>
+	/// </example>
 	public class SKAutoCanvasRestore : IDisposable
 	{
 		private SKCanvas canvas;
@@ -2032,15 +2096,21 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// <para>Disposes the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was created.</para><para>This operation will not do anything if you had previously manually called the <see cref="SKAutoCanvasRestore.Restore" /> method.</para>
+		/// Disposes the canvas restore point, restoring the state of the canvas (matrix,
+		/// clip and draw filter) to the state it was when the object was created.
 		/// </summary>
+		/// <remarks>
+		/// This operation will not do anything if you had previously manually called
+		/// the <see cref="SKAutoCanvasRestore.Restore" /> method.
+		/// </remarks>
 		public void Dispose ()
 		{
 			Restore ();
 		}
 
 		/// <summary>
-		/// Restores the canvas restore point, restoring the state of the canvas (matrix, clip and draw filter) to the state it was when the object was creatd.
+		/// Restores the canvas restore point, restoring the state of the canvas (matrix,
+		/// clip and draw filter) to the state it was when the object was created.
 		/// </summary>
 		public void Restore ()
 		{

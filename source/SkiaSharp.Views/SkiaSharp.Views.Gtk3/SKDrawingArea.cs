@@ -42,7 +42,7 @@ namespace SkiaSharp.Views.Gtk
 		/// </para>
 		/// </remarks>
 		/// <example>
-		/// <code language="csharp">
+		/// <code language="csharp"><![CDATA[
 		/// myView.PaintSurface += (sender, e) => 
 		/// {
 		///     var surface = e.Surface;
@@ -52,7 +52,7 @@ namespace SkiaSharp.Views.Gtk
 		/// 
 		///     // draw on the canvas
 		/// };
-		/// </code>
+		/// ]]></code>
 		/// </example>
 		[Category("Appearance")]
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;

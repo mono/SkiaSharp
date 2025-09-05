@@ -6,185 +6,218 @@ using System.IO;
 namespace SkiaSharp
 {
 	/// <summary>
-	/// Shaders specify the source color(s) for what is being drawn in the <see cref="SKPaint" />.
+	///   Shaders specify the source color(s) for what is being drawn in the <see cref="SKPaint" />.
 	/// </summary>
 	/// <remarks>
-	/// Shaders specify the source colors for what is being drawn. If a paint has no
-	/// shader, then the paint's color is used. If the paint has a shader, then the
-	/// shader's colors are used instead, but they are modulated by the paint's alpha.
-	/// This makes it easy to create a shader once (for example, bitmap tiling or
-	/// gradient) and then change its transparency without having to modify the
-	/// original shader, only the paint's alpha needs to be modified.
-	/// Shaders are created by calling one of the static "Create" methods.
-	/// ## Examples
-	/// ### Linear Gradient Shader Example
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // create the shader
-	/// var colors = new SKColor[] {
-	/// new SKColor(0, 0, 255),
-	/// new SKColor(0, 255, 0)
-	/// };
-	/// var shader = SKShader.CreateLinearGradient(
-	/// new SKPoint(0, 0),
-	/// new SKPoint(255, 255),
-	/// colors,
-	/// null,
-	/// SKShaderTileMode.Clamp);
-	/// // use the shader
-	/// var paint = new SKPaint {
-	/// Shader = shader
-	/// };
-	/// canvas.DrawPaint(paint);
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![Linear Gradient](~/docs-images/linear.png "Linear Gradient")
-	/// ### Radial Gradient Shader Example
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // create the shader
-	/// var colors = new SKColor[] {
-	/// new SKColor(0, 0, 255),
-	/// new SKColor(0, 255, 0)
-	/// };
-	/// var shader = SKShader.CreateRadialGradient(
-	/// new SKPoint(128, 128),
-	/// 180,
-	/// colors,
-	/// null,
-	/// SKShaderTileMode.Clamp);
-	/// // use the shader
-	/// var paint = new SKPaint {
-	/// Shader = shader
-	/// };
-	/// canvas.DrawPaint(paint);
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![Radial Gradient](~/docs-images/radial.png "Radial Gradient")
-	/// ### Two-point Conical Gradient Shader Example
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // create the shader
-	/// var colors = new SKColor[] {
-	/// new SKColor(0, 0, 255),
-	/// new SKColor(0, 255, 0)
-	/// };
-	/// var shader = SKShader.CreateTwoPointConicalGradient(
-	/// new SKPoint(128, 128),
-	/// 128,
-	/// new SKPoint(128, 16),
-	/// 16,
-	/// colors,
-	/// null,
-	/// SKShaderTileMode.Clamp);
-	/// // use the shader
-	/// var paint = new SKPaint {
-	/// Shader = shader
-	/// };
-	/// canvas.DrawPaint(paint);
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![Two-point Conical Gradient](~/docs-images/twopoint.png "Two-point Conical Gradient")
-	/// ### Sweep Gradient Shader Example
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // create the shader
-	/// var colors = new SKColor[] {
-	/// new SKColor(0, 255, 255),
-	/// new SKColor(255, 0, 255),
-	/// new SKColor(255, 255, 0),
-	/// new SKColor(0, 255, 255)
-	/// };
-	/// var shader = SKShader.CreateSweepGradient(
-	/// new SKPoint(128, 128),
-	/// colors,
-	/// null);
-	/// // use the shader
-	/// var paint = new SKPaint {
-	/// Shader = shader
-	/// };
-	/// canvas.DrawPaint(paint);
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![Sweep Gradient](~/docs-images/sweep.png "Sweep Gradient")
-	/// ### Fractal Perlin Noise Shader Example
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // create the shader
-	/// var shader = SKShader.CreatePerlinNoiseFractalNoise(0.5f, 0.5f, 4, 0);
-	/// // use the shader
-	/// var paint = new SKPaint {
-	/// Shader = shader
-	/// };
-	/// canvas.DrawPaint(paint);
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![Fractal Perlin Noise](~/docs-images/fractal-perlin-noise.png "Fractal Perlin Noise")
-	/// ### Perlin Noise Turbulence Shader Example
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // create the shader
-	/// var shader = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
-	/// // use the shader
-	/// var paint = new SKPaint {
-	/// Shader = shader
-	/// };
-	/// canvas.DrawPaint(paint);
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![Fractal Perlin Noise](~/docs-images/perlin-noise-turbulence.png "Fractal Perlin Noise")
-	/// ### Compose Shader Example
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // create the first shader
-	/// var colors = new SKColor[] {
-	/// new SKColor(0, 255, 255),
-	/// new SKColor(255, 0, 255),
-	/// new SKColor(255, 255, 0),
-	/// new SKColor(0, 255, 255)
-	/// };
-	/// var sweep = SKShader.CreateSweepGradient(new SKPoint(128, 128), colors, null);
-	/// // create the second shader
-	/// var turbulence = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
-	/// // create the compose shader
-	/// var shader = SKShader.CreateCompose(sweep, turbulence, SKBlendMode.SrcOver);
-	/// // use the compose shader
-	/// var paint = new SKPaint {
-	/// Shader = shader
-	/// };
-	/// canvas.DrawPaint(paint);
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![Compose Shader](~/docs-images/compose.png "Compose Shader")
+	///   <para>
+	///     Shaders specify the source colors for what is being drawn. If a paint has no
+	///     shader, then the paint's color is used. If the paint has a shader, then the
+	///     shader's colors are used instead, but they are modulated by the paint's alpha.
+	///   </para>
+	///   <para>
+	///     This makes it easy to create a shader once (for example, bitmap tiling or
+	///     gradient) and then change its transparency without having to modify the
+	///     original shader, only the paint's alpha needs to be modified.
+	///   </para>
+	///   <para>
+	///     Shaders are created by calling one of the static "Create" methods.
+	///   </para>
 	/// </remarks>
+	/// <example>
+	///   <para>
+	///     <b>Linear Gradient Shader Example</b>
+	///   </para>
+	///   <code language="csharp"><![CDATA[
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) {
+	/// 	SKCanvas canvas = surface.Canvas;
+	/// 	canvas.Clear(SKColors.White);
+	/// 	// create the shader
+	/// 	var colors = new SKColor[] {
+	/// 		new SKColor(0, 0, 255),
+	/// 		new SKColor(0, 255, 0)
+	/// 	};
+	/// 	var shader = SKShader.CreateLinearGradient(
+	/// 		new SKPoint(0, 0),
+	/// 		new SKPoint(255, 255),
+	/// 		colors,
+	/// 		null,
+	/// 		SKShaderTileMode.Clamp);
+	/// 	// use the shader
+	/// 	var paint = new SKPaint {
+	/// 		Shader = shader
+	/// 	};
+	/// 	canvas.DrawPaint(paint);
+	/// }
+	/// ]]></code>
+	///   <para>The example above produces the following:</para>
+	///   <para><img src="~/docs-images/linear.png" alt="Linear Gradient" title="Linear Gradient" /></para>
+	/// </example>
+	/// <example>
+	///   <para>
+	///     <b>Radial Gradient Shader Example</b>
+	///   </para>
+	///   <code language="csharp"><![CDATA[
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) {
+	/// 	SKCanvas canvas = surface.Canvas;
+	/// 	canvas.Clear(SKColors.White);
+	/// 	// create the shader
+	/// 	var colors = new SKColor[] {
+	/// 		new SKColor(0, 0, 255),
+	/// 		new SKColor(0, 255, 0)
+	/// 	};
+	/// 	var shader = SKShader.CreateRadialGradient(
+	/// 		new SKPoint(128, 128),
+	/// 		180,
+	/// 		colors,
+	/// 		null,
+	/// 		SKShaderTileMode.Clamp);
+	/// 	// use the shader
+	/// 	var paint = new SKPaint {
+	/// 		Shader = shader
+	/// 	};
+	/// 	canvas.DrawPaint(paint);
+	/// }
+	/// ]]></code>
+	///   <para>The example above produces the following:</para>
+	///   <para><img src="~/docs-images/radial.png" alt="Radial Gradient" title="Radial Gradient" /></para>
+	/// </example>
+	/// <example>
+	///   <para>
+	///     <b>Two-point Conical Gradient Shader Example</b>
+	///   </para>
+	///   <code language="csharp"><![CDATA[
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) {
+	/// 	SKCanvas canvas = surface.Canvas;
+	/// 	canvas.Clear(SKColors.White);
+	/// 	// create the shader
+	/// 	var colors = new SKColor[] {
+	/// 		new SKColor(0, 0, 255),
+	/// 		new SKColor(0, 255, 0)
+	/// 	};
+	/// 	var shader = SKShader.CreateTwoPointConicalGradient(
+	/// 		new SKPoint(128, 128),
+	/// 		128,
+	/// 		new SKPoint(128, 16),
+	/// 		16,
+	/// 		colors,
+	/// 		null,
+	/// 		SKShaderTileMode.Clamp);
+	/// 	// use the shader
+	/// 	var paint = new SKPaint {
+	/// 		Shader = shader
+	/// 	};
+	/// 	canvas.DrawPaint(paint);
+	/// }
+	/// ]]></code>
+	///   <para>The example above produces the following:</para>
+	///   <para><img src="~/docs-images/twopoint.png" alt="Two-point Conical Gradient" title="Two-point Conical Gradient" /></para>
+	/// </example>
+	/// <example>
+	///   <para>
+	///     <b>Sweep Gradient Shader Example</b>
+	///   </para>
+	///   <code language="csharp"><![CDATA[
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) {
+	/// 	SKCanvas canvas = surface.Canvas;
+	/// 	canvas.Clear(SKColors.White);
+	/// 	// create the shader
+	/// 	var colors = new SKColor[] {
+	/// 		new SKColor(0, 255, 255),
+	/// 		new SKColor(255, 0, 255),
+	/// 		new SKColor(255, 255, 0),
+	/// 		new SKColor(0, 255, 255)
+	/// 	};
+	/// 	var shader = SKShader.CreateSweepGradient(
+	/// 		new SKPoint(128, 128),
+	/// 		colors,
+	/// 		null);
+	/// 	// use the shader
+	/// 	var paint = new SKPaint {
+	/// 		Shader = shader
+	/// 	};
+	/// 	canvas.DrawPaint(paint);
+	/// }
+	/// ]]></code>
+	///   <para>The example above produces the following:</para>
+	///   <para><img src="~/docs-images/sweep.png" alt="Sweep Gradient" title="Sweep Gradient" /></para>
+	/// </example>
+	/// <example>
+	///   <para>
+	///     <b>Fractal Perlin Noise Shader Example</b>
+	///   </para>
+	///   <code language="csharp"><![CDATA[
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) {
+	/// 	SKCanvas canvas = surface.Canvas;
+	/// 	canvas.Clear(SKColors.White);
+	/// 	// create the shader
+	/// 	var shader = SKShader.CreatePerlinNoiseFractalNoise(0.5f, 0.5f, 4, 0);
+	/// 	// use the shader
+	/// 	var paint = new SKPaint {
+	/// 		Shader = shader
+	/// 	};
+	/// 	canvas.DrawPaint(paint);
+	/// }
+	/// ]]></code>
+	///   <para>The example above produces the following:</para>
+	///   <para><img src="~/docs-images/fractal-perlin-noise.png" alt="Fractal Perlin Noise" title="Fractal Perlin Noise" /></para>
+	/// </example>
+	/// <example>
+	///   <para>
+	///     <b>Perlin Noise Turbulence Shader Example</b>
+	///   </para>
+	///   <code language="csharp"><![CDATA[
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) {
+	/// 	SKCanvas canvas = surface.Canvas;
+	/// 	canvas.Clear(SKColors.White);
+	/// 	// create the shader
+	/// 	var shader = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+	/// 	// use the shader
+	/// 	var paint = new SKPaint {
+	/// 		Shader = shader
+	/// 	};
+	/// 	canvas.DrawPaint(paint);
+	/// }
+	/// ]]></code>
+	///   <para>The example above produces the following:</para>
+	///   <para><img src="~/docs-images/perlin-noise-turbulence.png" alt="Fractal Perlin Noise" title="Fractal Perlin Noise" /></para>
+	/// </example>
+	/// <example>
+	///   <para>
+	///     <b>Compose Shader Example</b>
+	///   </para>
+	///   <code language="csharp"><![CDATA[
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) {
+	/// 	SKCanvas canvas = surface.Canvas;
+	/// 	canvas.Clear(SKColors.White);
+	/// 	// create the first shader
+	/// 	var colors = new SKColor[] {
+	/// 		new SKColor(0, 255, 255),
+	/// 		new SKColor(255, 0, 255),
+	/// 		new SKColor(255, 255, 0),
+	/// 		new SKColor(0, 255, 255)
+	/// 	};
+	/// 	var sweep = SKShader.CreateSweepGradient(new SKPoint(128, 128), colors, null);
+	/// 	// create the second shader
+	/// 	var turbulence = SKShader.CreatePerlinNoiseTurbulence(0.05f, 0.05f, 4, 0);
+	/// 	// create the compose shader
+	/// 	var shader = SKShader.CreateCompose(sweep, turbulence, SKBlendMode.SrcOver);
+	/// 	// use the compose shader
+	/// 	var paint = new SKPaint {
+	/// 		Shader = shader
+	/// 	};
+	/// 	canvas.DrawPaint(paint);
+	/// }
+	/// ]]></code>
+	///   <para>The example above produces the following:</para>
+	///   <para><img src="~/docs-images/compose.png" alt="Compose Shader" title="Compose Shader" /></para>
+	/// </example>
 	public unsafe class SKShader : SKObject, ISKReferenceCounted
 	{
 		internal SKShader (IntPtr handle, bool owns)

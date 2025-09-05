@@ -12,28 +12,33 @@ namespace SkiaSharp
 	/// The following example shows how to wrap a <see cref="System.IO.Stream" /> that
 	/// represents a stream into an embedded resource in an assembly and use it with
 	/// SkiaSharp APIs that use resources:
-	/// ## Examples
-	/// ```csharp
+	/// </remarks>
+	/// <example>
+	/// <code language="csharp"><![CDATA[
 	/// public static void BitmapShader (SKCanvas canvas, int width, int height)
 	/// {
-	/// var assembly = typeof(Demos).GetTypeInfo ().Assembly;
-	/// // load the image from the embedded resource stream
-	/// using (var resource = assembly.GetManifestResourceStream ("embedded.png"))
-	/// using (var stream = new SKManagedStream(resource))
-	/// using (var source = SKBitmap.Decode (stream)) {
-	/// var matrix = SKMatrix.MakeRotation (30.0f);
-	/// using (var shader = SKShader.CreateBitmap (source, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix))
-	/// using (var paint = new SKPaint ()) {
-	/// paint.IsAntialias = true;
-	/// paint.Shader = shader;
-	/// // tile the bitmap
-	/// canvas.Clear (SKColors.White);
-	/// canvas.DrawPaint (paint);
+	/// 	var assembly = typeof(Demos).GetTypeInfo ().Assembly;
+	/// 
+	/// 	// load the image from the embedded resource stream
+	/// 	using var resource = assembly.GetManifestResourceStream ("embedded.png");
+	/// 	using var stream = new SKManagedStream(resource);
+	/// 	using var source = SKBitmap.Decode (stream);
+	/// 
+	/// 	// create the shader and paint
+	/// 	var matrix = SKMatrix.MakeRotation (30.0f);
+	/// 	using var shader = SKShader.CreateBitmap (source, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix);
+	/// 	using var paint = new SKPaint
+	/// 	{
+	/// 		IsAntialias = true,
+	/// 		Shader = shader
+	/// 	};
+	/// 
+	/// 	// tile the bitmap
+	/// 	canvas.Clear (SKColors.White);
+	/// 	canvas.DrawPaint (paint);
 	/// }
-	/// }
-	/// }
-	/// ```
-	/// </remarks>
+	/// ]]></code>
+	/// </example>
 	public class SKManagedStream : SKAbstractManagedStream
 	{
 		private Stream stream;

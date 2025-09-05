@@ -167,7 +167,7 @@ namespace SkiaSharp.Views.Android
 		/// </para>
 		/// </remarks>
 		/// <example>
-		/// <code language="csharp">
+		/// <code language="csharp"><![CDATA[
 		/// SKCanvasView myView = ...;
 		/// myView.PaintSurface += (sender, e) => 
 		/// {
@@ -178,7 +178,7 @@ namespace SkiaSharp.Views.Android
 		/// 
 		///     // draw on the canvas
 		/// };
-		/// </code>
+		/// ]]></code>
 		/// </example>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 

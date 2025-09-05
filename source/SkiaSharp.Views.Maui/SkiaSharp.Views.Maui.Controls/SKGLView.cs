@@ -80,7 +80,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// </para>
 		/// </remarks>
 		/// <example>
-		/// <code language="csharp">
+		/// <code language="csharp"><![CDATA[
 		/// SKGLView myView = ...;
 		/// myView.PaintSurface += (sender, e) => 
 		/// {
@@ -91,7 +91,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// 
 		///     // draw on the canvas
 		/// };
-		/// </code>
+		/// ]]></code>
 		/// </example>
 		public event EventHandler<SKPaintGLSurfaceEventArgs>? PaintSurface;
 

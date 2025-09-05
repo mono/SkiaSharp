@@ -104,7 +104,7 @@ namespace SkiaSharp.Views.Mac
 		/// </para>
 		/// </remarks>
 		/// <example>
-		/// <code language="csharp">
+		/// <code language="csharp"><![CDATA[
 		/// myLayer.PaintSurface += (sender, e) => 
 		/// {
 		///     var surface = e.Surface;
@@ -114,7 +114,7 @@ namespace SkiaSharp.Views.Mac
 		/// 
 		///     // draw on the canvas
 		/// };
-		/// </code>
+		/// ]]></code>
 		/// </example>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;

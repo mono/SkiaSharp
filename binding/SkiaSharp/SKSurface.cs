@@ -9,27 +9,28 @@ namespace SkiaSharp
 	/// Represents the backend/results of drawing to a canvas.
 	/// </summary>
 	/// <remarks>
-	/// <para>
-	/// The surface represents the backend/results of drawing to a canvas. For raster
-	/// drawing, the surface will be pixels, but (for example) when drawing into a
-	/// PDF or <see cref="SkiaSharp.SKPicture" /> canvas, the surface stores the recorded
-	/// commands.
-	/// </para>
-	/// <para>
-	/// The surface always has non-zero dimensions. If there is a request for a new
-	/// surface, and either of the requested dimensions are zero, then <see langword="null" /> will
-	/// be returned.
-	/// </para>
-	/// <para>
-	/// Once you create a surface with one of its <see cref="SkiaSharp.SKSurface.Create(SKImageInfo)" />
-	/// methods, you can draw into the canvas returned by the
-	/// <see cref="SkiaSharp.SKSurface.Canvas" /> property. Once the drawing is complete, you
-	/// can retrieve an <see cref="SkiaSharp.SKImage" /> by calling the
-	/// <see cref="SkiaSharp.SKSurface.Snapshot()" /> method.
-	/// </para>
+	///   <para>
+	///     The surface represents the backend/results of drawing to a canvas. For raster
+	///     drawing, the surface will be pixels, but (for example) when drawing into a
+	///     PDF or <see cref="SkiaSharp.SKPicture" /> canvas, the surface stores the recorded
+	///     commands.
+	///   </para>
+	///   <para>
+	///     The surface always has non-zero dimensions. If there is a request for a new
+	///     surface, and either of the requested dimensions are zero, then <see langword="null" /> will
+	///     be returned.
+	///   </para>
+	///   <para>
+	///     Once you create a surface with one of its <see cref="SkiaSharp.SKSurface.Create(SKImageInfo)" />
+	///     methods, you can draw into the canvas returned by the
+	///     <see cref="SkiaSharp.SKSurface.Canvas" /> property. Once the drawing is complete, you
+	///     can retrieve an <see cref="SkiaSharp.SKImage" /> by calling the
+	///     <see cref="SkiaSharp.SKSurface.Snapshot()" /> method.
+	///   </para>
 	/// </remarks>
 	/// <example>
-	/// <code language="csharp">
+	///   <code language="csharp">
+	///     <![CDATA[
 	/// var info = new SKImageInfo(256, 256);
 	/// using (var surface = SKSurface.Create(info)) 
 	/// {
@@ -54,13 +55,14 @@ namespace SkiaSharp
 	///         canvas.DrawRect(rect, (i % 16 == 0) ? redBrush : blueBrush);
 	///     }
 	/// }
-	/// </code>
-	/// <para>
-	/// The example above produces the following:
-	/// </para>
-	/// <para>
-	/// <img src="~/docs-images/surface-rects.png" alt="SKSurface" />
-	/// </para>
+	/// ]]>
+	///   </code>
+	///   <para>
+	///     The example above produces the following:
+	///   </para>
+	///   <para>
+	///     <img src="~/docs-images/surface-rects.png" alt="SKSurface" />
+	///   </para>
 	/// </example>
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
@@ -649,7 +651,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
 		}
 
-		#if __MACOS__ || __IOS__
+#if __MACOS__ || __IOS__
 		
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>
 			Create ((GRRecordingContext)context, layer, origin, sampleCount, colorType, out drawable);
@@ -683,7 +685,7 @@ namespace SkiaSharp
 		public static SKSurface Create (GRRecordingContext context, MetalKit.MTKView view, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, SKColorSpace colorspace, SKSurfaceProperties props) =>
 			GetObject (SkiaApi.sk_surface_new_metal_view (context.Handle, (void*)(IntPtr)view.Handle, origin, sampleCount, colorType.ToNative (), colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
 
-		#endif
+#endif
 
 		// NULL surface
 
