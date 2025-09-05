@@ -892,24 +892,24 @@
   - [x] P:SkiaSharp.GRBackendTexture.Rect
   - [x] P:SkiaSharp.GRBackendTexture.Size
   - [x] P:SkiaSharp.GRBackendTexture.Width
-- [ ] SkiaSharp.GRBackendTextureDesc
-  - [ ] M:SkiaSharp.GRBackendTextureDesc.Equals(SkiaSharp.GRBackendTextureDesc)
-  - [ ] M:SkiaSharp.GRBackendTextureDesc.Equals(System.Object)
-  - [ ] M:SkiaSharp.GRBackendTextureDesc.GetHashCode
-  - [ ] M:SkiaSharp.GRBackendTextureDesc.op_Equality(SkiaSharp.GRBackendTextureDesc,SkiaSharp.GRBackendTextureDesc)
-  - [ ] M:SkiaSharp.GRBackendTextureDesc.op_Inequality(SkiaSharp.GRBackendTextureDesc,SkiaSharp.GRBackendTextureDesc)
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.Config
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.Flags
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.Height
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.Origin
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.Rect
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.SampleCount
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.Size
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.TextureHandle
-  - [ ] P:SkiaSharp.GRBackendTextureDesc.Width
-- [ ] SkiaSharp.GRBackendTextureDescFlags
-  - [ ] F:SkiaSharp.GRBackendTextureDescFlags.None
-  - [ ] F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget
+- [ ] SkiaSharp.GRBackendTextureDesc - Missing in code: entire type removed from current implementation (obsolete)
+  - [ ] M:SkiaSharp.GRBackendTextureDesc.Equals(SkiaSharp.GRBackendTextureDesc) - Missing in code: type removed
+  - [ ] M:SkiaSharp.GRBackendTextureDesc.Equals(System.Object) - Missing in code: type removed
+  - [ ] M:SkiaSharp.GRBackendTextureDesc.GetHashCode - Missing in code: type removed
+  - [ ] M:SkiaSharp.GRBackendTextureDesc.op_Equality(SkiaSharp.GRBackendTextureDesc,SkiaSharp.GRBackendTextureDesc) - Missing in code: type removed
+  - [ ] M:SkiaSharp.GRBackendTextureDesc.op_Inequality(SkiaSharp.GRBackendTextureDesc,SkiaSharp.GRBackendTextureDesc) - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.Config - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.Flags - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.Height - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.Origin - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.Rect - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.SampleCount - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.Size - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.TextureHandle - Missing in code: type removed
+  - [ ] P:SkiaSharp.GRBackendTextureDesc.Width - Missing in code: type removed
+- [ ] SkiaSharp.GRBackendTextureDescFlags - Missing in code: entire type removed from current implementation (obsolete)
+  - [ ] F:SkiaSharp.GRBackendTextureDescFlags.None - Missing in code: type removed
+  - [ ] F:SkiaSharp.GRBackendTextureDescFlags.RenderTarget - Missing in code: type removed
 - [ ] SkiaSharp.GRContext
   - [ ] M:SkiaSharp.GRContext.AbandonContext(System.Boolean)
   - [ ] M:SkiaSharp.GRContext.Create(SkiaSharp.GRBackend,SkiaSharp.GRGlInterface,SkiaSharp.GRContextOptions)
@@ -979,21 +979,21 @@
   - [ ] F:SkiaSharp.GRContextOptionsGpuPathRenderers.Small
   - [ ] F:SkiaSharp.GRContextOptionsGpuPathRenderers.StencilAndCover
   - [ ] F:SkiaSharp.GRContextOptionsGpuPathRenderers.Tessellating
-- [ ] SkiaSharp.GRGlBackendState
-  - [ ] F:SkiaSharp.GRGlBackendState.All
-  - [ ] F:SkiaSharp.GRGlBackendState.Blend
-  - [ ] F:SkiaSharp.GRGlBackendState.FixedFunction
-  - [ ] F:SkiaSharp.GRGlBackendState.Misc
-  - [ ] F:SkiaSharp.GRGlBackendState.MSAAEnable
-  - [ ] F:SkiaSharp.GRGlBackendState.None
-  - [ ] F:SkiaSharp.GRGlBackendState.PathRendering
-  - [ ] F:SkiaSharp.GRGlBackendState.PixelStore
-  - [ ] F:SkiaSharp.GRGlBackendState.Program
-  - [ ] F:SkiaSharp.GRGlBackendState.RenderTarget
-  - [ ] F:SkiaSharp.GRGlBackendState.Stencil
-  - [ ] F:SkiaSharp.GRGlBackendState.TextureBinding
-  - [ ] F:SkiaSharp.GRGlBackendState.Vertex
-  - [ ] F:SkiaSharp.GRGlBackendState.View
+- [x] SkiaSharp.GRGlBackendState
+  - [x] F:SkiaSharp.GRGlBackendState.All
+  - [x] F:SkiaSharp.GRGlBackendState.Blend
+  - [x] F:SkiaSharp.GRGlBackendState.FixedFunction
+  - [x] F:SkiaSharp.GRGlBackendState.Misc
+  - [x] F:SkiaSharp.GRGlBackendState.MSAAEnable
+  - [x] F:SkiaSharp.GRGlBackendState.None
+  - [x] F:SkiaSharp.GRGlBackendState.PathRendering
+  - [x] F:SkiaSharp.GRGlBackendState.PixelStore
+  - [x] F:SkiaSharp.GRGlBackendState.Program
+  - [x] F:SkiaSharp.GRGlBackendState.RenderTarget
+  - [x] F:SkiaSharp.GRGlBackendState.Stencil
+  - [x] F:SkiaSharp.GRGlBackendState.TextureBinding
+  - [x] F:SkiaSharp.GRGlBackendState.Vertex
+  - [x] F:SkiaSharp.GRGlBackendState.View
 - [ ] SkiaSharp.GRGlBackendTextureDesc
   - [ ] M:SkiaSharp.GRGlBackendTextureDesc.Equals(SkiaSharp.GRGlBackendTextureDesc)
   - [ ] M:SkiaSharp.GRGlBackendTextureDesc.Equals(System.Object)

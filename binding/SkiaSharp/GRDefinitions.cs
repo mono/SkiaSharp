@@ -8,22 +8,69 @@ using GRBackendObject = System.IntPtr;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRGlBackendState)" /> method when using a <see cref="F:SkiaSharp.GRBackend.OpenGL" /> backend.
+	/// </summary>
+	/// <remarks>
+	/// </remarks>
 	[Flags]
 	public enum GRGlBackendState : UInt32
 	{
+		/// <summary>
+		/// Reset nothing.
+		/// </summary>
 		None = 0,
+		/// <summary>
+		/// Reset the render target state.
+		/// </summary>
 		RenderTarget = 1 << 0,
+		/// <summary>
+		/// Reset the texture binding state.
+		/// </summary>
 		TextureBinding = 1 << 1,
+		/// <summary>
+		/// Reset the view state.
+		/// </summary>
 		View = 1 << 2, // scissor and viewport
+		/// <summary>
+		/// Reset the blend state.
+		/// </summary>
 		Blend = 1 << 3,
+		/// <summary>
+		/// Reset the multisample state.
+		/// </summary>
 		MSAAEnable = 1 << 4,
+		/// <summary>
+		/// Reset the vertex state.
+		/// </summary>
 		Vertex = 1 << 5,
+		/// <summary>
+		/// Reset the stencil state.
+		/// </summary>
 		Stencil = 1 << 6,
+		/// <summary>
+		/// Reset the pixel store state.
+		/// </summary>
 		PixelStore = 1 << 7,
+		/// <summary>
+		/// Reset the program state.
+		/// </summary>
 		Program = 1 << 8,
+		/// <summary>
+		/// Reset the fixed function state.
+		/// </summary>
 		FixedFunction = 1 << 9,
+		/// <summary>
+		/// Reset the miscellaneous state.
+		/// </summary>
 		Misc = 1 << 10,
+		/// <summary>
+		/// Reset the path rendering state.
+		/// </summary>
 		PathRendering = 1 << 11,
+		/// <summary>
+		/// Reset all state.
+		/// </summary>
 		All = 0xffff
 	}
 
