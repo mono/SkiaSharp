@@ -4,6 +4,9 @@ using System;
 
 namespace HarfBuzzSharp
 {
+	/// <summary>
+	/// Represents a particular Unicode script.
+	/// </summary>
 	public partial struct Script : IEquatable<Script>
 	{
 		private readonly Tag tag;

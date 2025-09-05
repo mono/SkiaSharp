@@ -299,14 +299,14 @@
   - [x] P:HarfBuzzSharp.NativeObject.Handle
 - [x] HarfBuzzSharp.NominalGlyphDelegate
 - [x] HarfBuzzSharp.NominalGlyphsDelegate
-- [ ] HarfBuzzSharp.OpenTypeColorLayer
-  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.Equals(HarfBuzzSharp.OpenTypeColorLayer)
-  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.GetHashCode
-  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.op_Equality(HarfBuzzSharp.OpenTypeColorLayer,HarfBuzzSharp.OpenTypeColorLayer)
-  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.op_Inequality(HarfBuzzSharp.OpenTypeColorLayer,HarfBuzzSharp.OpenTypeColorLayer)
-  - [ ] P:HarfBuzzSharp.OpenTypeColorLayer.ColorIndex
-  - [ ] P:HarfBuzzSharp.OpenTypeColorLayer.Glyph
+- [ ] HarfBuzzSharp.OpenTypeColorLayer - Generated code: cannot add documentation comments
+  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.Equals(HarfBuzzSharp.OpenTypeColorLayer) - Generated code
+  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.Equals(System.Object) - Generated code
+  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.GetHashCode - Generated code
+  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.op_Equality(HarfBuzzSharp.OpenTypeColorLayer,HarfBuzzSharp.OpenTypeColorLayer) - Generated code
+  - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.op_Inequality(HarfBuzzSharp.OpenTypeColorLayer,HarfBuzzSharp.OpenTypeColorLayer) - Generated code
+  - [ ] P:HarfBuzzSharp.OpenTypeColorLayer.ColorIndex - Generated code
+  - [ ] P:HarfBuzzSharp.OpenTypeColorLayer.Glyph - Generated code
 - [ ] HarfBuzzSharp.OpenTypeColorPaletteFlags
   - [ ] F:HarfBuzzSharp.OpenTypeColorPaletteFlags.Default
   - [ ] F:HarfBuzzSharp.OpenTypeColorPaletteFlags.UsableWithDarkBackground
@@ -508,7 +508,7 @@
   - [ ] P:HarfBuzzSharp.OpenTypeVarAxisInfo.MinValue
   - [ ] P:HarfBuzzSharp.OpenTypeVarAxisInfo.NameId
   - [ ] P:HarfBuzzSharp.OpenTypeVarAxisInfo.Tag
-- [ ] HarfBuzzSharp.ReleaseDelegate
+- [x] HarfBuzzSharp.ReleaseDelegate
 - [ ] HarfBuzzSharp.Script
   - [ ] F:HarfBuzzSharp.Script.Adlam
   - [ ] F:HarfBuzzSharp.Script.Ahom
@@ -671,7 +671,7 @@
   - [ ] M:HarfBuzzSharp.Script.ToString
   - [ ] M:HarfBuzzSharp.Script.TryParse(System.String,HarfBuzzSharp.Script@)
   - [ ] P:HarfBuzzSharp.Script.HorizontalDirection
-- [ ] HarfBuzzSharp.ScriptDelegate
+- [x] HarfBuzzSharp.ScriptDelegate
 - [ ] HarfBuzzSharp.SerializeFlag
   - [ ] F:HarfBuzzSharp.SerializeFlag.Default
   - [ ] F:HarfBuzzSharp.SerializeFlag.GlyphExtents

@@ -32,6 +32,12 @@ namespace HarfBuzzSharp
 	/// <param name="ufuncs">To be added.</param>
 	/// <param name="unicode">To be added.</param>
 	/// <returns>To be added.</returns>
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="ufuncs">To be added.</param>
+	/// <param name="unicode">To be added.</param>
+	/// <returns>To be added.</returns>
 	/// <remarks>To be added.</remarks>
 	public delegate Script ScriptDelegate (UnicodeFunctions ufuncs, uint unicode);
 
