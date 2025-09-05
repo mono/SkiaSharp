@@ -249,34 +249,34 @@
   - [ ] P:HarfBuzzSharp.GlyphExtents.Width - Generated code
   - [ ] P:HarfBuzzSharp.GlyphExtents.XBearing - Generated code
   - [ ] P:HarfBuzzSharp.GlyphExtents.YBearing - Generated code
-- [ ] HarfBuzzSharp.GlyphExtentsDelegate
-- [ ] HarfBuzzSharp.GlyphFlags
-  - [ ] F:HarfBuzzSharp.GlyphFlags.Defined
-  - [ ] F:HarfBuzzSharp.GlyphFlags.UnsafeToBreak
-- [ ] HarfBuzzSharp.GlyphFromNameDelegate
-- [ ] HarfBuzzSharp.GlyphInfo
-  - [ ] M:HarfBuzzSharp.GlyphInfo.Equals(HarfBuzzSharp.GlyphInfo)
-  - [ ] M:HarfBuzzSharp.GlyphInfo.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.GlyphInfo.GetHashCode
-  - [ ] M:HarfBuzzSharp.GlyphInfo.op_Equality(HarfBuzzSharp.GlyphInfo,HarfBuzzSharp.GlyphInfo)
-  - [ ] M:HarfBuzzSharp.GlyphInfo.op_Inequality(HarfBuzzSharp.GlyphInfo,HarfBuzzSharp.GlyphInfo)
-  - [ ] P:HarfBuzzSharp.GlyphInfo.Cluster
-  - [ ] P:HarfBuzzSharp.GlyphInfo.Codepoint
-  - [ ] P:HarfBuzzSharp.GlyphInfo.GlyphFlags
-  - [ ] P:HarfBuzzSharp.GlyphInfo.Mask
-- [ ] HarfBuzzSharp.GlyphKerningDelegate
-- [ ] HarfBuzzSharp.GlyphNameDelegate
-- [ ] HarfBuzzSharp.GlyphOriginDelegate
-- [ ] HarfBuzzSharp.GlyphPosition
-  - [ ] M:HarfBuzzSharp.GlyphPosition.Equals(HarfBuzzSharp.GlyphPosition)
-  - [ ] M:HarfBuzzSharp.GlyphPosition.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.GlyphPosition.GetHashCode
-  - [ ] M:HarfBuzzSharp.GlyphPosition.op_Equality(HarfBuzzSharp.GlyphPosition,HarfBuzzSharp.GlyphPosition)
-  - [ ] M:HarfBuzzSharp.GlyphPosition.op_Inequality(HarfBuzzSharp.GlyphPosition,HarfBuzzSharp.GlyphPosition)
-  - [ ] P:HarfBuzzSharp.GlyphPosition.XAdvance
-  - [ ] P:HarfBuzzSharp.GlyphPosition.XOffset
-  - [ ] P:HarfBuzzSharp.GlyphPosition.YAdvance
-  - [ ] P:HarfBuzzSharp.GlyphPosition.YOffset
+- [x] HarfBuzzSharp.GlyphExtentsDelegate
+- [ ] HarfBuzzSharp.GlyphFlags - Generated code: cannot add documentation comments
+  - [ ] F:HarfBuzzSharp.GlyphFlags.Defined - Generated code
+  - [ ] F:HarfBuzzSharp.GlyphFlags.UnsafeToBreak - Generated code
+- [x] HarfBuzzSharp.GlyphFromNameDelegate
+- [ ] HarfBuzzSharp.GlyphInfo - Generated code: cannot add documentation comments
+  - [ ] M:HarfBuzzSharp.GlyphInfo.Equals(HarfBuzzSharp.GlyphInfo) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphInfo.Equals(System.Object) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphInfo.GetHashCode - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphInfo.op_Equality(HarfBuzzSharp.GlyphInfo,HarfBuzzSharp.GlyphInfo) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphInfo.op_Inequality(HarfBuzzSharp.GlyphInfo,HarfBuzzSharp.GlyphInfo) - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphInfo.Cluster - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphInfo.Codepoint - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphInfo.GlyphFlags - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphInfo.Mask - Generated code
+- [x] HarfBuzzSharp.GlyphKerningDelegate
+- [x] HarfBuzzSharp.GlyphNameDelegate
+- [x] HarfBuzzSharp.GlyphOriginDelegate
+- [ ] HarfBuzzSharp.GlyphPosition - Generated code: cannot add documentation comments
+  - [ ] M:HarfBuzzSharp.GlyphPosition.Equals(HarfBuzzSharp.GlyphPosition) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphPosition.Equals(System.Object) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphPosition.GetHashCode - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphPosition.op_Equality(HarfBuzzSharp.GlyphPosition,HarfBuzzSharp.GlyphPosition) - Generated code
+  - [ ] M:HarfBuzzSharp.GlyphPosition.op_Inequality(HarfBuzzSharp.GlyphPosition,HarfBuzzSharp.GlyphPosition) - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphPosition.XAdvance - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphPosition.XOffset - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphPosition.YAdvance - Generated code
+  - [ ] P:HarfBuzzSharp.GlyphPosition.YOffset - Generated code
 - [ ] HarfBuzzSharp.Language
   - [ ] M:HarfBuzzSharp.Language.#ctor(System.Globalization.CultureInfo)
   - [ ] M:HarfBuzzSharp.Language.#ctor(System.String)

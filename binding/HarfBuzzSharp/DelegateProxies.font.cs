@@ -42,10 +42,38 @@ namespace HarfBuzzSharp
 	/// <remarks>To be added.</remarks>
 	public delegate void GlyphAdvancesDelegate (Font font, object fontData, uint count, ReadOnlySpan<uint> glyphs, Span<int> advances);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="glyph">To be added.</param>
+	/// <param name="x">To be added.</param>
+	/// <param name="y">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool GlyphOriginDelegate (Font font, object fontData, uint glyph, out int x, out int y);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="firstGlyph">To be added.</param>
+	/// <param name="secondGlyph">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate int GlyphKerningDelegate (Font font, object fontData, uint firstGlyph, uint secondGlyph);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="glyph">To be added.</param>
+	/// <param name="extents">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool GlyphExtentsDelegate (Font font, object fontData, uint glyph, out GlyphExtents extents);
 
 	/// <summary>
@@ -61,8 +89,26 @@ namespace HarfBuzzSharp
 	/// <remarks>To be added.</remarks>
 	public delegate bool GlyphContourPointDelegate (Font font, object fontData, uint glyph, uint pointIndex, out int x, out int y);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="glyph">To be added.</param>
+	/// <param name="name">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool GlyphNameDelegate (Font font, object fontData, uint glyph, out string name);
 
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <param name="font">To be added.</param>
+	/// <param name="fontData">To be added.</param>
+	/// <param name="name">To be added.</param>
+	/// <param name="glyph">To be added.</param>
+	/// <returns>To be added.</returns>
+	/// <remarks>To be added.</remarks>
 	public delegate bool GlyphFromNameDelegate (Font font, object fontData, string name, out uint glyph);
 
 	internal static unsafe partial class DelegateProxies
