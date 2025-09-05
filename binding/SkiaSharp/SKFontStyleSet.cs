@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections;
@@ -6,6 +6,9 @@ using System.Collections.Generic;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Represets the set of styles for a particular font family.
+	/// </summary>
 	public class SKFontStyleSet : SKObject, ISKReferenceCounted, IEnumerable<SKFontStyle>, IReadOnlyCollection<SKFontStyle>, IReadOnlyList<SKFontStyle>
 	{
 		internal SKFontStyleSet (IntPtr handle, bool owns)
@@ -13,6 +16,9 @@ namespace SkiaSharp
 		{
 		}
 
+		/// <summary>
+		/// Creates a new, empty <see cref="T:SkiaSharp.SKFontStyleSet" />.
+		/// </summary>
 		public SKFontStyleSet ()
 			: this (SkiaApi.sk_fontstyleset_create_empty (), true)
 		{
@@ -21,10 +27,22 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		/// <summary>
+		/// Gets the number of font styles in the set.
+		/// </summary>
 		public int Count => SkiaApi.sk_fontstyleset_get_count (Handle);
 
+		/// <summary>
+		/// Gets the font style at the specified index.
+		/// </summary>
+		/// <param name="index">The index of the font style.</param>
 		public SKFontStyle this[int index] => GetStyle (index);
 
+		/// <summary>
+		/// Returns the name of the font style.
+		/// </summary>
+		/// <param name="index">The index of the font style.</param>
+		/// <returns>Returns the name of the font style.</returns>
 		public string GetStyleName (int index)
 		{
 			using var str = new SKString ();
@@ -33,6 +51,11 @@ namespace SkiaSharp
 			return (string)str;
 		}
 
+		/// <summary>
+		/// Creates a new <see cref="T:SkiaSharp.SKTypeface" /> with the style that is the closest match to the style at the specified index.
+		/// </summary>
+		/// <param name="index">The index of the font style to match.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />.</returns>
 		public SKTypeface CreateTypeface (int index)
 		{
 			if (index < 0 || index >= Count)
@@ -44,6 +67,11 @@ namespace SkiaSharp
 			return tf;
 		}
 
+		/// <summary>
+		/// Creates a new <see cref="T:SkiaSharp.SKTypeface" /> with a style that is the closest match to the specified font style.
+		/// </summary>
+		/// <param name="style">The font style to match.</param>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKTypeface" />.</returns>
 		public SKTypeface CreateTypeface (SKFontStyle style)
 		{
 			if (style == null)
@@ -55,6 +83,10 @@ namespace SkiaSharp
 			return tf;
 		}
 
+		/// <summary>
+		/// Returns an enumerator that iterates through the font styles.
+		/// </summary>
+		/// <returns>Returns an enumerator.</returns>
 		public IEnumerator<SKFontStyle> GetEnumerator () => GetStyles ().GetEnumerator ();
 
 		IEnumerator IEnumerable.GetEnumerator () => GetStyles ().GetEnumerator ();

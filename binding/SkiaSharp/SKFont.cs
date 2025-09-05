@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +24,10 @@ namespace SkiaSharp
 				throw new InvalidOperationException ("Unable to create a new SKFont instance.");
 		}
 
+		/// <param name="typeface"></param>
+		/// <param name="size"></param>
+		/// <param name="scaleX"></param>
+		/// <param name="skewX"></param>
 		public SKFont (SKTypeface typeface, float size = DefaultSize, float scaleX = DefaultScaleX, float skewX = DefaultSkewX)
 			: this (SkiaApi.sk_font_new_with_values (typeface?.Handle ?? IntPtr.Zero, size, scaleX, skewX), true)
 		{
@@ -108,6 +112,7 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="metrics"></param>
 		public float GetFontMetrics (out SKFontMetrics metrics)
 		{
 			fixed (SKFontMetrics* m = &metrics) {
@@ -117,6 +122,7 @@ namespace SkiaSharp
 
 		// GetGlyph
 
+		/// <param name="codepoint"></param>
 		public ushort GetGlyph (int codepoint) =>
 			SkiaApi.sk_font_unichar_to_glyph (Handle, codepoint);
 
@@ -129,6 +135,8 @@ namespace SkiaSharp
 			return glyphs;
 		}
 
+		/// <param name="codepoints"></param>
+		/// <param name="glyphs"></param>
 		public void GetGlyphs (ReadOnlySpan<int> codepoints, Span<ushort> glyphs)
 		{
 			if (codepoints.IsEmpty)
@@ -165,9 +173,13 @@ namespace SkiaSharp
 		public ushort[] GetGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
 			GetGlyphs ((void*)text, length, encoding);
 
+		/// <param name="text"></param>
+		/// <param name="glyphs"></param>
 		public void GetGlyphs (string text, Span<ushort> glyphs) =>
 			GetGlyphs (text.AsSpan (), glyphs);
 
+		/// <param name="text"></param>
+		/// <param name="glyphs"></param>
 		public void GetGlyphs (ReadOnlySpan<char> text, Span<ushort> glyphs)
 		{
 			fixed (void* t = text) {
@@ -175,6 +187,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
+		/// <param name="glyphs"></param>
 		public void GetGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding, Span<ushort> glyphs)
 		{
 			fixed (void* t = text) {
@@ -182,6 +197,10 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
+		/// <param name="glyphs"></param>
 		public void GetGlyphs (IntPtr text, int length, SKTextEncoding encoding, Span<ushort> glyphs) =>
 			GetGlyphs ((void*)text, length, encoding, glyphs);
 
@@ -211,23 +230,32 @@ namespace SkiaSharp
 
 		// ContainsGlyph
 
+		/// <param name="codepoint"></param>
 		public bool ContainsGlyph (int codepoint) =>
 			GetGlyph (codepoint) != 0;
 
 		// ContainsGlyphs
 
+		/// <param name="codepoints"></param>
 		public bool ContainsGlyphs (ReadOnlySpan<int> codepoints) =>
 			ContainsGlyphs (GetGlyphs (codepoints));
 
+		/// <param name="text"></param>
 		public bool ContainsGlyphs (string text) =>
 			ContainsGlyphs (GetGlyphs (text));
 
+		/// <param name="text"></param>
 		public bool ContainsGlyphs (ReadOnlySpan<char> text) =>
 			ContainsGlyphs (GetGlyphs (text));
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
 		public bool ContainsGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding) =>
 			ContainsGlyphs (GetGlyphs (text, encoding));
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
 		public bool ContainsGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
 			ContainsGlyphs (GetGlyphs (text, length, encoding));
 
@@ -236,9 +264,11 @@ namespace SkiaSharp
 
 		// CountGlyphs
 
+		/// <param name="text"></param>
 		public int CountGlyphs (string text) =>
 			CountGlyphs (text.AsSpan ());
 
+		/// <param name="text"></param>
 		public int CountGlyphs (ReadOnlySpan<char> text)
 		{
 			fixed (void* t = text) {
@@ -246,6 +276,8 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
 		public int CountGlyphs (ReadOnlySpan<byte> text, SKTextEncoding encoding)
 		{
 			fixed (void* t = text) {
@@ -253,6 +285,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
 		public int CountGlyphs (IntPtr text, int length, SKTextEncoding encoding) =>
 			CountGlyphs ((void*)text, length, encoding);
 
@@ -324,6 +359,8 @@ namespace SkiaSharp
 
 		// MeasureText (glyphs)
 
+		/// <param name="glyphs"></param>
+		/// <param name="paint"></param>
 		public float MeasureText (ReadOnlySpan<ushort> glyphs, SKPaint paint = null)
 		{
 			fixed (ushort* gp = glyphs) {
@@ -331,6 +368,9 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="glyphs"></param>
+		/// <param name="bounds"></param>
+		/// <param name="paint"></param>
 		public float MeasureText (ReadOnlySpan<ushort> glyphs, out SKRect bounds, SKPaint paint = null)
 		{
 			fixed (ushort* gp = glyphs)
@@ -467,6 +507,9 @@ namespace SkiaSharp
 			return positions;
 		}
 
+		/// <param name="glyphs"></param>
+		/// <param name="positions"></param>
+		/// <param name="origin"></param>
 		public void GetGlyphPositions (ReadOnlySpan<ushort> glyphs, Span<SKPoint> positions, SKPoint origin = default)
 		{
 			if (glyphs.Length != positions.Length)
@@ -557,6 +600,9 @@ namespace SkiaSharp
 			return offsets;
 		}
 
+		/// <param name="glyphs"></param>
+		/// <param name="offsets"></param>
+		/// <param name="origin"></param>
 		public void GetGlyphOffsets (ReadOnlySpan<ushort> glyphs, Span<float> offsets, float origin = 0f)
 		{
 			if (glyphs.Length != offsets.Length)
@@ -700,6 +746,10 @@ namespace SkiaSharp
 			return widths;
 		}
 
+		/// <param name="glyphs"></param>
+		/// <param name="widths"></param>
+		/// <param name="bounds"></param>
+		/// <param name="paint"></param>
 		public void GetGlyphWidths (ReadOnlySpan<ushort> glyphs, Span<float> widths, Span<SKRect> bounds, SKPaint paint = null)
 		{
 			fixed (ushort* gp = glyphs)
@@ -713,6 +763,7 @@ namespace SkiaSharp
 
 		// GetGlyphPath
 
+		/// <param name="glyph"></param>
 		public SKPath GetGlyphPath (ushort glyph)
 		{
 			var path = new SKPath ();
@@ -791,6 +842,8 @@ namespace SkiaSharp
 
 		// GetGlyphPaths
 
+		/// <param name="glyphs"></param>
+		/// <param name="glyphPathDelegate"></param>
 		public void GetGlyphPaths (ReadOnlySpan<ushort> glyphs, SKGlyphPathDelegate glyphPathDelegate)
 		{
 			DelegateProxies.Create (glyphPathDelegate, out var gch, out var ctx);

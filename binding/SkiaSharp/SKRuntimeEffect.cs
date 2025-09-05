@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Collections;
@@ -147,12 +147,15 @@ namespace SkiaSharp
 		public SKColorFilter ToColorFilter () =>
 			ToColorFilter ((SKData)null, null);
 
+		/// <param name="uniforms"></param>
 		public SKColorFilter ToColorFilter (SKRuntimeEffectUniforms uniforms) =>
 			ToColorFilter (uniforms.ToData (), null);
 
 		private SKColorFilter ToColorFilter (SKData uniforms) =>
 			ToColorFilter (uniforms, null);
 
+		/// <param name="uniforms"></param>
+		/// <param name="children"></param>
 		public SKColorFilter ToColorFilter (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children) =>
 			ToColorFilter (uniforms.ToData (), children.ToArray ());
 
@@ -244,6 +247,7 @@ namespace SkiaSharp
 		private readonly Dictionary<string, Variable> uniforms;
 		private SKData data;
 
+		/// <param name="effect"></param>
 		public SKRuntimeEffectUniforms (SKRuntimeEffect effect)
 		{
 			if (effect == null)
@@ -283,13 +287,17 @@ namespace SkiaSharp
 			data = SKData.Create (data.Size);
 		}
 
+		/// <param name="name"></param>
 		public bool Contains (string name) =>
 			Array.IndexOf (names, name) != -1;
 
+		/// <param name="name"></param>
 		public SKRuntimeEffectUniform this[string name] {
 			set => Add (name, value);
 		}
 
+		/// <param name="name"></param>
+		/// <param name="value"></param>
 		public void Add (string name, SKRuntimeEffectUniform value)
 		{
 			var index = Array.IndexOf (names, name);
@@ -367,6 +375,7 @@ namespace SkiaSharp
 		private readonly string[] names;
 		private readonly SKObject[] children;
 
+		/// <param name="effect"></param>
 		public SKRuntimeEffectChildren (SKRuntimeEffect effect)
 		{
 			_ = effect ?? throw new ArgumentNullException (nameof (effect));
@@ -384,9 +393,11 @@ namespace SkiaSharp
 		public void Reset () =>
 			Array.Clear (children, 0, children.Length);
 
+		/// <param name="name"></param>
 		public bool Contains (string name) =>
 			Array.IndexOf (names, name) != -1;
 
+		/// <param name="name"></param>
 		public SKRuntimeEffectChild? this[string name] {
 			set => Add (name, value);
 		}
@@ -475,13 +486,17 @@ namespace SkiaSharp
 
 		// float
 
+		/// <param name="value"></param>
 		public static implicit operator SKRuntimeEffectUniform (float value) =>
 			new SKRuntimeEffectUniform (DataType.Float, sizeof (float), floatValue: value);
 
+		/// <param name="value"></param>
 		public static implicit operator SKRuntimeEffectUniform (float[] value) => (ReadOnlySpan<float>)value;
 
+		/// <param name="value"></param>
 		public static implicit operator SKRuntimeEffectUniform (Span<float> value) => (ReadOnlySpan<float>)value;
 
+		/// <param name="value"></param>
 		public static implicit operator SKRuntimeEffectUniform (ReadOnlySpan<float> value) =>
 			new SKRuntimeEffectUniform (DataType.FloatArray, sizeof (float) * value.Length, floatArray: value);
 
@@ -516,6 +531,7 @@ namespace SkiaSharp
 
 		// float matrix
 
+		/// <param name="value"></param>
 		public static implicit operator SKRuntimeEffectUniform (float[][] value)
 		{
 			var floats = new List<float> ();
@@ -525,10 +541,12 @@ namespace SkiaSharp
 			return floats.ToArray ();
 		}
 
+		/// <param name="value"></param>
 		public static implicit operator SKRuntimeEffectUniform (SKMatrix value) => value.Values;
 
 		// writer
 
+		/// <param name="data"></param>
 		public void WriteTo (Span<byte> data)
 		{
 			switch (Type) {

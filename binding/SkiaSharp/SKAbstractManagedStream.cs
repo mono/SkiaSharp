@@ -1,10 +1,13 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Threading;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Represents a <see cref="T:SkiaSharp.SKStreamAsset" /> (a seekable, rewindable Skia stream).
+	/// </summary>
 	public unsafe abstract class SKAbstractManagedStream : SKStreamAsset
 	{
 		private static readonly SKManagedStreamDelegates delegates;

@@ -1,10 +1,13 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Represents a color space.
+	/// </summary>
 	public unsafe class SKColorSpace : SKObject, ISKNonVirtualReferenceCounted
 	{
 		private static readonly SKColorSpace srgb;
@@ -43,18 +46,36 @@ namespace SkiaSharp
 
 		// properties
 
+		/// <summary>
+		/// Gets a value indicating whether or not the color space gamma is near enough to be approximated as sRGB.
+		/// </summary>
 		public bool GammaIsCloseToSrgb =>
 			SkiaApi.sk_colorspace_gamma_close_to_srgb (Handle);
 
+		/// <summary>
+		/// Gets a value indicating whether or not the color space gamma is linear.
+		/// </summary>
 		public bool GammaIsLinear =>
 			SkiaApi.sk_colorspace_gamma_is_linear (Handle);
 
+		/// <summary>
+		/// Gets a value indicating whether or not the color space is sRGB.
+		/// </summary>
 		public bool IsSrgb =>
 			SkiaApi.sk_colorspace_is_srgb (Handle);
 
+		/// <summary>
+		/// Gets a value indicating whether the transfer function can be represented as coefficients to the standard equation.
+		/// </summary>
 		public bool IsNumericalTransferFunction =>
 			GetNumericalTransferFunction (out _);
 
+		/// <summary>
+		/// Compare two color spaces to determine if they are equivalent.
+		/// </summary>
+		/// <param name="left">The first color space.</param>
+		/// <param name="right">The second color space.</param>
+		/// <returns>Returns <see langword="true" /> if both color spaces are equivalent, otherwise <see langword="false" />.</returns>
 		public static bool Equal (SKColorSpace left, SKColorSpace right)
 		{
 			if (left == null)
@@ -67,17 +88,37 @@ namespace SkiaSharp
 
 		// CreateSrgb
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> that represents the sRGB color space.
+		/// </summary>
+		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
 		public static SKColorSpace CreateSrgb () => srgb;
 
 		// CreateSrgbLinear
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> with the sRGB primaries, but a linear (1.0) gamma
+		/// </summary>
+		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
 		public static SKColorSpace CreateSrgbLinear () => srgbLinear;
 
 		// CreateIcc
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from an ICC profile.
+		/// </summary>
+		/// <param name="input">The ICC profile data.</param>
+		/// <param name="length">The size of the data.</param>
+		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
 		public static SKColorSpace CreateIcc (IntPtr input, long length) =>
 			CreateIcc (SKColorSpaceIccProfile.Create (input, length));
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from an ICC profile.
+		/// </summary>
+		/// <param name="input">The ICC profile data.</param>
+		/// <param name="length">The size of the data.</param>
+		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
 		public static SKColorSpace CreateIcc (byte[] input, long length)
 		{
 			if (input == null)
@@ -88,15 +129,23 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpace" /> from an ICC profile.
+		/// </summary>
+		/// <param name="input">The ICC profile data.</param>
+		/// <returns>Returns the new instance of <see cref="T:SkiaSharp.SKColorSpace" />.</returns>
 		public static SKColorSpace CreateIcc (byte[] input) =>
 			CreateIcc (input.AsSpan ());
 
+		/// <param name="input"></param>
 		public static SKColorSpace CreateIcc (ReadOnlySpan<byte> input) =>
 			CreateIcc (SKColorSpaceIccProfile.Create (input));
 
+		/// <param name="input"></param>
 		public static SKColorSpace CreateIcc (SKData input) =>
 			CreateIcc (SKColorSpaceIccProfile.Create (input));
 
+		/// <param name="profile"></param>
 		public static SKColorSpace CreateIcc (SKColorSpaceIccProfile profile)
 		{
 			if (profile == null)
@@ -107,6 +156,8 @@ namespace SkiaSharp
 
 		// CreateRgb
 
+		/// <param name="transferFn"></param>
+		/// <param name="toXyzD50"></param>
 		public static SKColorSpace CreateRgb (SKColorSpaceTransferFn transferFn, SKColorSpaceXyz toXyzD50) =>
 			GetObject (SkiaApi.sk_colorspace_new_rgb (&transferFn, &toXyzD50));
 
@@ -115,6 +166,11 @@ namespace SkiaSharp
 		public SKColorSpaceTransferFn GetNumericalTransferFunction () =>
 			GetNumericalTransferFunction (out var fn) ? fn : SKColorSpaceTransferFn.Empty;
 
+		/// <summary>
+		/// Returns the values of the coefficients to the standard equation.
+		/// </summary>
+		/// <param name="fn">The values of the coefficients to the standard equation.</param>
+		/// <returns>Returns <see langword="true" /> if transfer function can be represented as coefficients to the standard equation, otherwise <see langword="false" />.</returns>
 		public bool GetNumericalTransferFunction (out SKColorSpaceTransferFn fn)
 		{
 			fixed (SKColorSpaceTransferFn* f = &fn) {
@@ -133,6 +189,7 @@ namespace SkiaSharp
 
 		// ToColorSpaceXyz
 
+		/// <param name="toXyzD50"></param>
 		public bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
 		{
 			fixed (SKColorSpaceXyz* xyz = &toXyzD50) {

@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
@@ -12,6 +12,10 @@ using System.Runtime.CompilerServices;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// The <see cref="T:SkiaSharp.GRGlInterface" /> is used to interface with OpenGL.
+	/// </summary>
+	/// <remarks>A <see cref="T:SkiaSharp.GRContext" /> does not interact directly with the underlying backend, instead it uses an OpenGL interface.</remarks>
 	public unsafe partial class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)
@@ -49,6 +53,7 @@ namespace SkiaSharp
 
 		// Create* (assemble)
 
+		/// <param name="get"></param>
 		public static GRGlInterface Create (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -60,9 +65,11 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="get"></param>
 		public static GRGlInterface CreateAngle (GRGlGetProcedureAddressDelegate get) =>
 			CreateGles (get); // ANGLE is just a GLES v2 over DX v9+
 
+		/// <param name="get"></param>
 		public static GRGlInterface CreateOpenGl (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -74,6 +81,7 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="get"></param>
 		public static GRGlInterface CreateGles (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -85,6 +93,7 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="get"></param>
 		public static GRGlInterface CreateWebGl (GRGlGetProcedureAddressDelegate get)
 		{
 			DelegateProxies.Create (get, out var gch, out var ctx);
@@ -96,6 +105,7 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="evas"></param>
 		public static GRGlInterface CreateEvas (IntPtr evas)
 		{
 #if __TIZEN__
@@ -108,9 +118,18 @@ namespace SkiaSharp
 
 		//
 
+		/// <summary>
+		/// Validates that the <see cref="T:SkiaSharp.GRGlInterface" /> supports its advertised standard.
+		/// </summary>
+		/// <returns>Returns true if all the entry points are specified, and any required extensions exist.</returns>
 		public bool Validate () =>
 			SkiaApi.gr_glinterface_validate (Handle);
 
+		/// <summary>
+		/// Checks to see if the underlying OpenGL backend has the specified extension.
+		/// </summary>
+		/// <param name="extension">The extension to check for.</param>
+		/// <returns>Returns true if the backend has the extension, otherwise false.</returns>
 		public bool HasExtension (string extension) =>
 			SkiaApi.gr_glinterface_has_extension (Handle, extension);
 

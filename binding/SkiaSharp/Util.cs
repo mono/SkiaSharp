@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Buffers;
@@ -119,6 +119,9 @@ namespace SkiaSharp
 #endif
 	}
 
+	/// <summary>
+	/// Various utility methods for when working with strings and text.
+	/// </summary>
 	public unsafe static class StringUtilities
 	{
 		internal const string NullTerminator = "\0";
@@ -145,6 +148,12 @@ namespace SkiaSharp
 
 		// GetUnicodeCharacterCode
 
+		/// <summary>
+		/// Returns the Unicode character code for the specified character.
+		/// </summary>
+		/// <param name="character">The character to get the Unicode character code.</param>
+		/// <param name="encoding">The encoding of the string.</param>
+		/// <returns>Returns the Unicode character code.</returns>
 		public static int GetUnicodeCharacterCode (string character, SKTextEncoding encoding)
 		{
 			if (character == null)
@@ -158,6 +167,12 @@ namespace SkiaSharp
 
 		// GetEncodedText
 
+		/// <summary>
+		/// Encodes the specified string using the encoding as a byte array.
+		/// </summary>
+		/// <param name="text">The text to encode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the encoded text as a byte array.</returns>
 		public static byte[] GetEncodedText (string text, SKTextEncoding encoding) =>
 			GetEncodedText (text.AsSpan (), encoding);
 
@@ -169,6 +184,8 @@ namespace SkiaSharp
 			return GetEncodedText (text.AsSpan (), encoding);
 		}
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
 		public static byte[] GetEncodedText (ReadOnlySpan<char> text, SKTextEncoding encoding) =>
 			encoding switch {
 				SKTextEncoding.Utf8 => Encoding.UTF8.GetBytes (text),
@@ -179,12 +196,33 @@ namespace SkiaSharp
 
 		// GetString
 
+		/// <summary>
+		/// Decodes the specified bytes as a string.
+		/// </summary>
+		/// <param name="data">The pointer to the bytes representing text.</param>
+		/// <param name="dataLength">The number of bytes to decode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
 		public static string GetString (IntPtr data, int dataLength, SKTextEncoding encoding) =>
 			GetString (data.AsReadOnlySpan (dataLength), 0, dataLength, encoding);
 
+		/// <summary>
+		/// Decodes the specified bytes as a string.
+		/// </summary>
+		/// <param name="data">The bytes representing text.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
 		public static string GetString (byte[] data, SKTextEncoding encoding) =>
 			GetString (data, 0, data.Length, encoding);
 
+		/// <summary>
+		/// Encodes the specified string using the encoding as a byte array.
+		/// </summary>
+		/// <param name="data">The bytes representing text.</param>
+		/// <param name="index">The index to start decoding.</param>
+		/// <param name="count">The number of bytes to decode.</param>
+		/// <param name="encoding">The encoding to use.</param>
+		/// <returns>Returns the decoded text.</returns>
 		public static string GetString (byte[] data, int index, int count, SKTextEncoding encoding)
 		{
 			if (data == null)
@@ -198,9 +236,15 @@ namespace SkiaSharp
 			};
 		}
 
+		/// <param name="data"></param>
+		/// <param name="encoding"></param>
 		public static string GetString (ReadOnlySpan<byte> data, SKTextEncoding encoding) =>
 			GetString (data, 0, data.Length, encoding);
 
+		/// <param name="data"></param>
+		/// <param name="index"></param>
+		/// <param name="count"></param>
+		/// <param name="encoding"></param>
 		public static string GetString (ReadOnlySpan<byte> data, int index, int count, SKTextEncoding encoding)
 		{
 			data = data.Slice (index, count);

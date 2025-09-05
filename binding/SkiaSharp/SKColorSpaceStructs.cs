@@ -1,14 +1,22 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Describes a color gamut with primaries and a white point.
+	/// </summary>
 	public unsafe partial struct SKColorSpacePrimaries
 	{
 		public static readonly SKColorSpacePrimaries Empty;
 
+		/// <summary>
+		/// Creates a new <see cref="T:SkiaSharp.SKColorSpacePrimaries" /> instance.
+		/// </summary>
+		/// <param name="values">The values of the primaries and white point.</param>
+		/// <remarks>There must be exactly 8 values in the array with the form [RX, RY, GX, GY, BX, BY, WX, WY].</remarks>
 		public SKColorSpacePrimaries (float[] values)
 		{
 			if (values == null)
@@ -26,6 +34,17 @@ namespace SkiaSharp
 			fWY = values[7];
 		}
 
+		/// <summary>
+		/// Creates a new <see cref="T:SkiaSharp.SKColorSpacePrimaries" /> instance.
+		/// </summary>
+		/// <param name="rx">The red X-coordinate.</param>
+		/// <param name="ry">The red Y-coordinate.</param>
+		/// <param name="gx">The green X-coordinate.</param>
+		/// <param name="gy">The green Y-coordinate.</param>
+		/// <param name="bx">The blue X-coordinate.</param>
+		/// <param name="by">The blue Y-coordinate.</param>
+		/// <param name="wx">The white X-coordinate.</param>
+		/// <param name="wy">The white Y-coordinate.</param>
 		public SKColorSpacePrimaries (float rx, float ry, float gx, float gy, float bx, float by, float wx, float wy)
 		{
 			fRX = rx;
@@ -38,9 +57,14 @@ namespace SkiaSharp
 			fWY = wy;
 		}
 
+		/// <summary>
+		/// Gets the values of the primaries and white as an array with the form [RX, RY, GX, GY, BX, BY, WX, WY].
+		/// </summary>
+		/// <remarks>]</remarks>
 		public readonly float[] Values =>
 			new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
 
+		/// <param name="toXyzD50"></param>
 		public readonly bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
 		{
 			fixed (SKColorSpacePrimaries* t = &this)
@@ -53,6 +77,10 @@ namespace SkiaSharp
 			ToColorSpaceXyz (out var toXYZ) ? toXYZ : SKColorSpaceXyz.Empty;
 	}
 
+	/// <summary>
+	/// Represents the coefficients for a common transfer function equation.
+	/// </summary>
+	/// <remarks><para>The coefficients are specified as a transformation from a curved space to linear. </para><para></para><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para></para><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para></remarks>
 	public unsafe partial struct SKColorSpaceTransferFn
 	{
 		public static SKColorSpaceTransferFn Srgb {
@@ -105,6 +133,11 @@ namespace SkiaSharp
 
 		public static readonly SKColorSpaceTransferFn Empty;
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpaceTransferFn" />.
+		/// </summary>
+		/// <param name="values">The values of the coefficients.</param>
+		/// <remarks>There must be exactly 7 values in the array with the form [G, A, B, C, D, E, F].</remarks>
 		public SKColorSpaceTransferFn (float[] values)
 		{
 			if (values == null)
@@ -121,6 +154,16 @@ namespace SkiaSharp
 			fF = values[6];
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKColorSpaceTransferFn" />.
+		/// </summary>
+		/// <param name="g">The G coefficient.</param>
+		/// <param name="a">The A coefficient.</param>
+		/// <param name="b">The B coefficient.</param>
+		/// <param name="c">The C coefficient.</param>
+		/// <param name="d">The D coefficient.</param>
+		/// <param name="e">The E coefficient.</param>
+		/// <param name="f">The F coefficient.</param>
 		public SKColorSpaceTransferFn (float g, float a, float b, float c, float d, float e, float f)
 		{
 			fG = g;
@@ -132,9 +175,16 @@ namespace SkiaSharp
 			fF = f;
 		}
 
+		/// <summary>
+		/// Gets the coefficients as an array with the form [G, A, B, C, D, E, F].
+		/// </summary>
 		public readonly float[] Values =>
 			new[] { fG, fA, fB, fC, fD, fE, fF };
 
+		/// <summary>
+		/// Inverts coefficients for a common transfer function equation.
+		/// </summary>
+		/// <returns>Returns the mathematically inverted parametric transfer function equation.</returns>
 		public readonly SKColorSpaceTransferFn Invert ()
 		{
 			SKColorSpaceTransferFn inverted;
@@ -144,6 +194,12 @@ namespace SkiaSharp
 			return inverted;
 		}
 
+		/// <summary>
+		/// Transform a single input by this transfer function.
+		/// </summary>
+		/// <param name="x">The input to transform.</param>
+		/// <returns>Returns the transformed input.</returns>
+		/// <remarks>For negative inputs, returns `-Transform(Math.Abs(x))`.</remarks>
 		public readonly float Transform (float x)
 		{
 			fixed (SKColorSpaceTransferFn* t = &this) {
@@ -202,6 +258,7 @@ namespace SkiaSharp
 				0, 1, 0,
 				0, 0, 1);
 
+		/// <param name="value"></param>
 		public SKColorSpaceXyz (float value)
 		{
 			fM00 = value;
@@ -217,6 +274,7 @@ namespace SkiaSharp
 			fM22 = value;
 		}
 
+		/// <param name="values"></param>
 		public SKColorSpaceXyz (float[] values)
 		{
 			if (values == null)
@@ -237,6 +295,15 @@ namespace SkiaSharp
 			fM22 = values[8];
 		}
 
+		/// <param name="m00"></param>
+		/// <param name="m01"></param>
+		/// <param name="m02"></param>
+		/// <param name="m10"></param>
+		/// <param name="m11"></param>
+		/// <param name="m12"></param>
+		/// <param name="m20"></param>
+		/// <param name="m21"></param>
+		/// <param name="m22"></param>
 		public SKColorSpaceXyz (
 			float m00, float m01, float m02,
 			float m10, float m11, float m12,
@@ -279,6 +346,8 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="x"></param>
+		/// <param name="y"></param>
 		public readonly float this[int x, int y] {
 			get {
 				if (x < 0 || x >= 3)
@@ -312,6 +381,8 @@ namespace SkiaSharp
 			return inverted;
 		}
 
+		/// <param name="a"></param>
+		/// <param name="b"></param>
 		public static SKColorSpaceXyz Concat (SKColorSpaceXyz a, SKColorSpaceXyz b)
 		{
 			SKColorSpaceXyz result;
@@ -352,6 +423,7 @@ namespace SkiaSharp
 
 		// ToColorSpaceXyz
 
+		/// <param name="toXyzD50"></param>
 		public bool ToColorSpaceXyz (out SKColorSpaceXyz toXyzD50)
 		{
 			fixed (SKColorSpaceXyz* xyz = &toXyzD50) {
@@ -364,9 +436,11 @@ namespace SkiaSharp
 
 		// Create
 
+		/// <param name="data"></param>
 		public static SKColorSpaceIccProfile Create (byte[] data) =>
 			Create (data.AsSpan ());
 
+		/// <param name="data"></param>
 		public static SKColorSpaceIccProfile Create (ReadOnlySpan<byte> data)
 		{
 			if (data.IsEmpty)
@@ -379,6 +453,7 @@ namespace SkiaSharp
 			return icc;
 		}
 
+		/// <param name="data"></param>
 		public static SKColorSpaceIccProfile Create (SKData data)
 		{
 			if (data == null)
@@ -390,6 +465,8 @@ namespace SkiaSharp
 			return Referenced (Create (data.Data, data.Size), data);
 		}
 
+		/// <param name="data"></param>
+		/// <param name="length"></param>
 		public static SKColorSpaceIccProfile Create (IntPtr data, long length)
 		{
 			if (data == IntPtr.Zero)

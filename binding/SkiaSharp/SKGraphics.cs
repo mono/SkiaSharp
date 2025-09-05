@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
@@ -28,6 +28,7 @@ namespace SkiaSharp
 		public static long GetFontCacheLimit () =>
 			(long)SkiaApi.sk_graphics_get_font_cache_limit ();
 
+		/// <param name="bytes"></param>
 		public static long SetFontCacheLimit (long bytes) =>
 			(long)SkiaApi.sk_graphics_set_font_cache_limit ((IntPtr)bytes);
 
@@ -37,6 +38,7 @@ namespace SkiaSharp
 		public static int GetFontCacheCountLimit () =>
 			SkiaApi.sk_graphics_get_font_cache_count_limit ();
 
+		/// <param name="count"></param>
 		public static int SetFontCacheCountLimit (int count) =>
 			SkiaApi.sk_graphics_set_font_cache_count_limit (count);
 
@@ -48,17 +50,20 @@ namespace SkiaSharp
 		public static long GetResourceCacheTotalByteLimit () =>
 			(long)SkiaApi.sk_graphics_get_resource_cache_total_byte_limit ();
 
+		/// <param name="bytes"></param>
 		public static long SetResourceCacheTotalByteLimit (long bytes) =>
 			(long)SkiaApi.sk_graphics_set_resource_cache_total_byte_limit ((IntPtr)bytes);
 
 		public static long GetResourceCacheSingleAllocationByteLimit () =>
 			(long)SkiaApi.sk_graphics_get_resource_cache_single_allocation_byte_limit ();
 
+		/// <param name="bytes"></param>
 		public static long SetResourceCacheSingleAllocationByteLimit (long bytes) =>
 			(long)SkiaApi.sk_graphics_set_resource_cache_single_allocation_byte_limit ((IntPtr)bytes);
 
 		// dump
 
+		/// <param name="dump"></param>
 		public static void DumpMemoryStatistics (SKTraceMemoryDump dump) =>
 			SkiaApi.sk_graphics_dump_memory_statistics (dump?.Handle ?? throw new ArgumentNullException (nameof (dump)));
 	}

@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.InteropServices;
@@ -6,6 +6,10 @@ using System.IO;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// A read-only stream that buffers the specified first chunk of bytes.
+	/// </summary>
+	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="T:SkiaSharp.SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
 	public class SKFrontBufferedManagedStream : SKAbstractManagedStream
 	{
 		private SKStream stream;
@@ -18,21 +22,43 @@ namespace SkiaSharp
 		private int bufferedSoFar;
 		private int offset;
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// </summary>
+		/// <param name="managedStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		public SKFrontBufferedManagedStream (Stream managedStream, int bufferSize)
 			: this (managedStream, bufferSize, false)
 		{
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// </summary>
+		/// <param name="managedStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <param name="disposeUnderlyingStream">Whether or not to dispose the underlying stream when this stream is disposed.</param>
 		public SKFrontBufferedManagedStream (Stream managedStream, int bufferSize, bool disposeUnderlyingStream)
 			: this (new SKManagedStream (managedStream, disposeUnderlyingStream), bufferSize, true)
 		{
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// </summary>
+		/// <param name="nativeStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
 		public SKFrontBufferedManagedStream (SKStream nativeStream, int bufferSize)
 			: this (nativeStream, bufferSize, false)
 		{
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKFrontBufferedStream" /> that wraps the specified stream.
+		/// </summary>
+		/// <param name="nativeStream">The stream to buffer.</param>
+		/// <param name="bufferSize">The number of bytes to buffer.</param>
+		/// <param name="disposeUnderlyingStream">Whether or not to dispose the underlying stream when this stream is disposed.</param>
 		public SKFrontBufferedManagedStream (SKStream nativeStream, int bufferSize, bool disposeUnderlyingStream)
 		{
 			var length = nativeStream.HasLength ? nativeStream.Length : 0;

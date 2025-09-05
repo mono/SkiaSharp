@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Buffers;
@@ -7,16 +7,29 @@ using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="T:SkiaSharp.SKWStream" /> (a writeable Skia stream)
+	/// </summary>
 	public class SKManagedWStream : SKAbstractManagedWStream
 	{
 		private Stream stream;
 		private readonly bool disposeStream;
 
+		/// <summary>
+		/// Creates a new writeable stream from a <see cref="T:System.IO.Stream" />.
+		/// </summary>
+		/// <param name="managedStream">The managed stream.</param>
+		/// <remarks>The underlying stream is not disposed when this object is disposed.</remarks>
 		public SKManagedWStream (Stream managedStream)
 			: this (managedStream, false)
 		{
 		}
 
+		/// <summary>
+		/// Creates a new writeable stream from a <see cref="T:System.IO.Stream" />.
+		/// </summary>
+		/// <param name="managedStream">The managed stream.</param>
+		/// <param name="disposeManagedStream">If this is set to <see langword="true" />, the provided <see langword="managedStream" /> will be disposed when this instance is disposed.</param>
 		public SKManagedWStream (Stream managedStream, bool disposeManagedStream)
 			: this (managedStream, disposeManagedStream, true)
 		{

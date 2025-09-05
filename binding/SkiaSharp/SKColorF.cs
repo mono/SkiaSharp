@@ -1,15 +1,28 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// 16-bit, floating-point, ARGB unpremultiplied color value.
+	/// </summary>
+	/// <remarks>The color components are always in a known order.</remarks>
 	public readonly unsafe partial struct SKColorF
 	{
 		private const float EPSILON = 0.001f;
 
+		/// <summary>
+		/// Gets an "empty" color, with zero for all the components.
+		/// </summary>
 		public static readonly SKColorF Empty;
 
+		/// <summary>
+		/// Creates a color from the specified red, green and blue components.
+		/// </summary>
+		/// <param name="red">The red component.</param>
+		/// <param name="green">The green component.</param>
+		/// <param name="blue">The blue component.</param>
 		public SKColorF (float red, float green, float blue)
 		{
 			fR = red;
@@ -18,6 +31,13 @@ namespace SkiaSharp
 			fA = 1f;
 		}
 
+		/// <summary>
+		/// Creates a color from the specified red, green, blue and alpha components.
+		/// </summary>
+		/// <param name="red">The red component.</param>
+		/// <param name="green">The green component.</param>
+		/// <param name="blue">The blue component.</param>
+		/// <param name="alpha">The alpha component.</param>
 		public SKColorF (float red, float green, float blue, float alpha)
 		{
 			fR = red;
@@ -26,18 +46,37 @@ namespace SkiaSharp
 			fA = alpha;
 		}
 
+		/// <summary>
+		/// Returns a new color based on this current instance, but with the new red channel value.
+		/// </summary>
+		/// <param name="red">The new red component.</param>
 		public readonly SKColorF WithRed (float red) =>
 			new SKColorF (red, fG, fB, fA);
 
+		/// <summary>
+		/// Returns a new color based on this current instance, but with the new green channel value.
+		/// </summary>
+		/// <param name="green">The new green component.</param>
 		public readonly SKColorF WithGreen (float green) =>
 			new SKColorF (fR, green, fB, fA);
 
+		/// <summary>
+		/// Returns a new color based on this current instance, but with the new blue channel value.
+		/// </summary>
+		/// <param name="blue">The new blue component.</param>
 		public readonly SKColorF WithBlue (float blue) =>
 			new SKColorF (fR, fG, blue, fA);
 
+		/// <summary>
+		/// Returns a new color based on this current instance, but with the new alpha channel value.
+		/// </summary>
+		/// <param name="alpha">The new alpha component.</param>
 		public readonly SKColorF WithAlpha (float alpha) =>
 			new SKColorF (fR, fG, fB, alpha);
 
+		/// <summary>
+		/// Gets the hue value.
+		/// </summary>
 		public readonly float Hue {
 			get {
 				ToHsv (out var h, out _, out _);
@@ -45,6 +84,10 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Clamp the color components in the range [0..1].
+		/// </summary>
+		/// <returns>Returns the clamped color.</returns>
 		public readonly SKColorF Clamp ()
 		{
 			return new SKColorF (Clamp (fR), Clamp (fG), Clamp (fB), Clamp (fA));
@@ -59,6 +102,14 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Creates a color from the specified hue, saturation, lightness/luminosity and alpha values.
+		/// </summary>
+		/// <param name="h">The hue value.</param>
+		/// <param name="s">The saturation value.</param>
+		/// <param name="l">The lightness/luminosity value.</param>
+		/// <param name="a">The alpha value.</param>
+		/// <returns>The new <see cref="T:SkiaSharp.SKColorF" /> instance.</returns>
 		public static SKColorF FromHsl (float h, float s, float l, float a = 1f)
 		{
 			// convert from percentages
@@ -105,6 +156,14 @@ namespace SkiaSharp
 			return (v1);
 		}
 
+		/// <summary>
+		/// Creates a color from the specified hue, saturation, value/brightness and alpha values.
+		/// </summary>
+		/// <param name="h">The hue value.</param>
+		/// <param name="s">The saturation value.</param>
+		/// <param name="v">The value/brightness value.</param>
+		/// <param name="a">The alpha value.</param>
+		/// <returns>The new <see cref="T:SkiaSharp.SKColorF" /> instance.</returns>
 		public static SKColorF FromHsv (float h, float s, float v, float a = 1f)
 		{
 			// convert from percentages
@@ -158,6 +217,13 @@ namespace SkiaSharp
 			return new SKColorF (r, g, b, a);
 		}
 
+		/// <summary>
+		/// Converts the current color into it's hue, saturation and lightness/luminosity values.
+		/// </summary>
+		/// <param name="h">The hue value.</param>
+		/// <param name="s">The saturation value.</param>
+		/// <param name="l">The lightness/luminosity value.</param>
+		/// <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="P:SkiaSharp.SKColorF.Alpha" />.</remarks>
 		public readonly void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 1
@@ -204,6 +270,13 @@ namespace SkiaSharp
 			l = l * 100f;
 		}
 
+		/// <summary>
+		/// Converts the current color into it's hue, saturation and value/brightness values.
+		/// </summary>
+		/// <param name="h">The hue value.</param>
+		/// <param name="s">The saturation value.</param>
+		/// <param name="v">The value/brightness value.</param>
+		/// <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="P:SkiaSharp.SKColorF.Alpha" />.</remarks>
 		public readonly void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 1
@@ -247,9 +320,18 @@ namespace SkiaSharp
 			v = v * 100f;
 		}
 
+		/// <summary>
+		/// Returns the color as a string in the format: #AARRGGBB.
+		/// </summary>
+		/// <remarks>As a result of converting a floating-point color to an integer color, some data loss will occur.</remarks>
 		public readonly override string ToString () =>
 			((SKColor)this).ToString ();
 
+		/// <summary>
+		/// Converts a <see cref="T:SkiaSharp.SKColor" /> to a <see cref="T:SkiaSharp.SKColorF" />.
+		/// </summary>
+		/// <param name="color">The <see cref="T:SkiaSharp.SKColor" />.</param>
+		/// <returns>The new <see cref="T:SkiaSharp.SKColorF" /> instance.</returns>
 		public static implicit operator SKColorF (SKColor color)
 		{
 			SKColorF colorF;
@@ -257,6 +339,12 @@ namespace SkiaSharp
 			return colorF;
 		}
 
+		/// <summary>
+		/// Converts a <see cref="T:SkiaSharp.SKColorF" /> to a <see cref="T:SkiaSharp.SKColor" />.
+		/// </summary>
+		/// <param name="color">The color to convert.</param>
+		/// <returns>The <see cref="T:SkiaSharp.SKColor" />.</returns>
+		/// <remarks>As a result of converting a floating-point color to an integer color, some data loss will occur.</remarks>
 		public static explicit operator SKColor (SKColorF color) =>
 			SkiaApi.sk_color4f_to_color (&color);
 	}

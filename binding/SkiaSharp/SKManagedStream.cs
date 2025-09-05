@@ -1,10 +1,37 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.IO;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="T:SkiaSharp.SKStreamAsset" /> (a seekable, rewindable Skia stream)
+	/// </summary>
+	/// <remarks>The following example shows how to wrap a <see cref="System.IO.Stream" /> that
+	/// represents a stream into an embedded resource in an assembly and use it with
+	/// SkiaSharp APIs that use resources:
+	/// ## Examples
+	/// ```csharp
+	/// public static void BitmapShader (SKCanvas canvas, int width, int height)
+	/// {
+	/// var assembly = typeof(Demos).GetTypeInfo ().Assembly;
+	/// // load the image from the embedded resource stream
+	/// using (var resource = assembly.GetManifestResourceStream ("embedded.png"))
+	/// using (var stream = new SKManagedStream(resource))
+	/// using (var source = SKBitmap.Decode (stream)) {
+	/// var matrix = SKMatrix.MakeRotation (30.0f);
+	/// using (var shader = SKShader.CreateBitmap (source, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, matrix))
+	/// using (var paint = new SKPaint ()) {
+	/// paint.IsAntialias = true;
+	/// paint.Shader = shader;
+	/// // tile the bitmap
+	/// canvas.Clear (SKColors.White);
+	/// canvas.DrawPaint (paint);
+	/// }
+	/// }
+	/// }
+	/// ```</remarks>
 	public class SKManagedStream : SKAbstractManagedStream
 	{
 		private Stream stream;
@@ -16,11 +43,21 @@ namespace SkiaSharp
 		private WeakReference parent;
 		private WeakReference child;
 
+		/// <summary>
+		/// Creates a new read-only stream from a <see cref="T:System.IO.Stream" />.
+		/// </summary>
+		/// <param name="managedStream">The managed stream.</param>
+		/// <remarks>The underlying stream is not disposed when this object is disposed.</remarks>
 		public SKManagedStream (Stream managedStream)
 			: this (managedStream, false)
 		{
 		}
 
+		/// <summary>
+		/// Creates a new read-only stream from a <see cref="T:System.IO.Stream" />, can optionally dispose the provided stream when this stream is disposed.
+		/// </summary>
+		/// <param name="managedStream">The managed stream.</param>
+		/// <param name="disposeManagedStream">If this is set to <see langword="true" />, the provided <see langword="managedStream" /> will be disposed when this instance is disposed.</param>
 		public SKManagedStream (Stream managedStream, bool disposeManagedStream)
 			: base (true)
 		{
@@ -28,6 +65,11 @@ namespace SkiaSharp
 			disposeStream = disposeManagedStream;
 		}
 
+		/// <summary>
+		/// Copy the contents of this stream into the destination stream.
+		/// </summary>
+		/// <param name="destination">The destination stream.</param>
+		/// <returns>Returns the number of bytes that were copied.</returns>
 		public int CopyTo (SKWStream destination)
 		{
 			if (destination == null)
@@ -44,6 +86,10 @@ namespace SkiaSharp
 			return total;
 		}
 
+		/// <summary>
+		/// Copies the contents of this stream into a new memory stream.
+		/// </summary>
+		/// <returns>Returns the new memory stream.</returns>
 		public SKStreamAsset ToMemoryStream ()
 		{
 			using var native = new SKDynamicMemoryWStream ();

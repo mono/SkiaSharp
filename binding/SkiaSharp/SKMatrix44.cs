@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Numerics;
@@ -6,6 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// A 3D, 4x4 matrix.
+	/// </summary>
 	public unsafe partial struct SKMatrix44
 	{
 		internal const float DegreesToRadians = (float)Math.PI / 180.0f;
@@ -14,15 +17,27 @@ namespace SkiaSharp
 
 		public readonly static SKMatrix44 Identity = Matrix4x4.Identity;
 
+		/// <summary>
+		/// Creates a new, uninitialized instance of <see cref="T:SkiaSharp.SKMatrix44" />.
+		/// </summary>
 		public SKMatrix44 ()
 		{
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKMatrix44" /> using the values from a <see cref="T:SkiaSharp.SKMatrix" /> instance.
+		/// </summary>
+		/// <param name="src">The <see cref="T:SkiaSharp.SKMatrix" /> instance.</param>
+		/// <remarks>When converting from <see cref="T:SkiaSharp.SKMatrix" /> to <see cref="T:SkiaSharp.SKMatrix44" />, the third row and column remain as identity.</remarks>
 		public SKMatrix44 (SKMatrix src)
 		{
 			this = src;
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKMatrix44" /> using the values from another instance.
+		/// </summary>
+		/// <param name="src">The matrix to copy.</param>
 		public SKMatrix44 (SKMatrix44 src)
 		{
 			this = src;
@@ -57,11 +72,27 @@ namespace SkiaSharp
 
 		// Create*
 
+		/// <summary>
+		/// Creates a new identity matrix.
+		/// </summary>
+		/// <returns>Returns the new identity matrix.</returns>
+		/// <remarks>This is equivalent to creating an uninitialized matrix, and invoking <see cref="M:SkiaSharp.SKMatrix44.SetIdentity" />.</remarks>
 		public static SKMatrix44 CreateIdentity () => Identity;
 
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="z"></param>
 		public static SKMatrix44 CreateTranslation (float x, float y, float z) =>
 			Matrix4x4.CreateTranslation (x, y, z);
 
+		/// <summary>
+		/// Creates a new scale matrix.
+		/// </summary>
+		/// <param name="x">The amount, along the x-axis, to scale.</param>
+		/// <param name="y">The amount, along the y-axis, to scale.</param>
+		/// <param name="z">The amount, along the z-axis, to scale.</param>
+		/// <returns>Returns the new scale matrix.</returns>
+		/// <remarks>This is equivalent to creating an uninitialized matrix and passing the values to <see cref="M:SkiaSharp.SKMatrix44.SetScale(System.Single,System.Single,System.Single)" />.</remarks>
 		public static SKMatrix44 CreateScale (float x, float y, float z) =>
 			Matrix4x4.CreateScale (x, y, z);
 
@@ -70,6 +101,15 @@ namespace SkiaSharp
 
 		// CreateRotation*
 
+		/// <summary>
+		/// Creates a new rotation matrix.
+		/// </summary>
+		/// <param name="x">The x-axis to rotate around.</param>
+		/// <param name="y">The y-axis to rotate around.</param>
+		/// <param name="z">The z-axis to rotate around.</param>
+		/// <param name="radians">The amount, in radians, to rotate by.</param>
+		/// <returns>Returns the new rotation matrix.</returns>
+		/// <remarks>This is equivalent to creating an uninitialized matrix and passing the values to <see cref="M:SkiaSharp.SKMatrix44.SetRotationAbout(System.Single,System.Single,System.Single,System.Single)" />.</remarks>
 		public static SKMatrix44 CreateRotation (float x, float y, float z, float radians) =>
 			Matrix4x4.CreateFromAxisAngle (new Vector3 (x, y, z), radians);
 
@@ -93,6 +133,15 @@ namespace SkiaSharp
 
 		// CreateRotation*Degrees
 
+		/// <summary>
+		/// Creates a new rotation matrix.
+		/// </summary>
+		/// <param name="x">The x-axis to rotate around.</param>
+		/// <param name="y">The y-axis to rotate around.</param>
+		/// <param name="z">The z-axis to rotate around.</param>
+		/// <param name="degrees">The amount, in degrees, to rotate by.</param>
+		/// <returns>Returns the new rotation matrix.</returns>
+		/// <remarks>This is equivalent to creating an uninitialized matrix and passing the values to <see cref="M:SkiaSharp.SKMatrix44.SetRotationAboutDegrees(System.Single,System.Single,System.Single,System.Single)" />.</remarks>
 		public static SKMatrix44 CreateRotationDegrees (float x, float y, float z, float degrees) =>
 			Matrix4x4.CreateFromAxisAngle (new Vector3 (x, y, z), degrees * DegreesToRadians);
 
@@ -142,6 +191,10 @@ namespace SkiaSharp
 
 		// To*
 
+		/// <summary>
+		/// Converts the current matrix to a row-major array.
+		/// </summary>
+		/// <returns>Returns the new row-major array.</returns>
 		public readonly float[] ToRowMajor ()
 		{
 			var dst = new float[16];
@@ -149,6 +202,10 @@ namespace SkiaSharp
 			return dst;
 		}
 
+		/// <summary>
+		/// Converts the current matrix to a column-major array.
+		/// </summary>
+		/// <returns>Returns the new column-major array.</returns>
 		public readonly float[] ToColumnMajor ()
 		{
 			var dst = new float[16];
@@ -224,6 +281,10 @@ namespace SkiaSharp
 			return false;
 		}
 
+		/// <summary>
+		/// Creates an inverted matrix from the current matrix.
+		/// </summary>
+		/// <returns>Returns the inverted matrix if it is invertible, otherwise <see langword="null" />.</returns>
 		public readonly SKMatrix44 Invert ()
 		{
 			if (Matrix4x4.Invert (this, out var inverted))
@@ -234,16 +295,28 @@ namespace SkiaSharp
 
 		// Transpose
 
+		/// <summary>
+		/// Transposes the current matrix.
+		/// </summary>
 		public readonly SKMatrix44 Transpose () =>
 			Matrix4x4.Transpose (this);
 
 		// Determinant
 
+		/// <summary>
+		/// Calculates the determinant of the matrix.
+		/// </summary>
+		/// <returns>Returns the determinant.</returns>
 		public readonly float Determinant () =>
 			((Matrix4x4)this).GetDeterminant ();
 
 		// MapPoints
 
+		/// <summary>
+		/// Applies the matrix to a point.
+		/// </summary>
+		/// <param name="src">The point to map.</param>
+		/// <returns>Returns a new point with the matrix applied.</returns>
 		public readonly SKPoint MapPoint (SKPoint point) =>
 			Vector2.Transform (point, this);
 
@@ -302,9 +375,17 @@ namespace SkiaSharp
 		public static SKMatrix44 Concat (SKMatrix44 first, SKMatrix44 second) =>
 			first * second;
 
+		/// <summary>
+		/// Pre-concatenates the matrix with the specified matrix.
+		/// </summary>
+		/// <param name="m">The matrix to concatenate.</param>
 		public readonly SKMatrix44 PreConcat (SKMatrix44 matrix) =>
 			this * matrix;
 
+		/// <summary>
+		/// Post-concatenates the current matrix with the specified matrix.
+		/// </summary>
+		/// <param name="m">The matrix to concatenate.</param>
 		public readonly SKMatrix44 PostConcat (SKMatrix44 matrix) =>
 			matrix * this;
 
@@ -347,12 +428,22 @@ namespace SkiaSharp
 
 		// properties
 
+		/// <summary>
+		/// Gets the <see cref="T:SkiaSharp.SKMatrix" /> equivalent of the current matrix.
+		/// </summary>
+		/// <remarks>When converting from <see cref="T:SkiaSharp.SKMatrix44" /> to <see cref="T:SkiaSharp.SKMatrix" />, the third row and column is dropped.</remarks>
 		public SKMatrix Matrix =>
 			new SKMatrix (
 				m00, m10, m30,
 				m01, m11, m31,
 				m03, m13, m33);
 
+		/// <summary>
+		/// Gets or sets a value in the matrix.
+		/// </summary>
+		/// <value>Returns the value found at the specified coordinates.</value>
+		/// <param name="row">The row to retrieve the value from.</param>
+		/// <param name="column">The column to retrieve the value from.</param>
 		public float this[int row, int column] {
 			get => row switch {
 				0 => column switch {
@@ -467,6 +558,7 @@ namespace SkiaSharp
 
 		// type casting
 
+		/// <param name="matrix"></param>
 		public static implicit operator SKMatrix44 (SKMatrix matrix) =>
 			new SKMatrix44 (
 				matrix.ScaleX, matrix.SkewY, 0, matrix.Persp0,

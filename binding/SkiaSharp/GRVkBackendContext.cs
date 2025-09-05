@@ -1,13 +1,13 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.InteropServices;
 
 namespace SkiaSharp
 {
-#if THROW_OBJECT_EXCEPTIONS
-	using GCHandle = SkiaSharp.GCHandleProxy;
-#endif
+	#if THROW_OBJECT_EXCEPTIONS
+		using GCHandle = SkiaSharp.GCHandleProxy;
+	#endif
 
 	public unsafe class GRVkBackendContext : IDisposable
 	{

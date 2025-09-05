@@ -17708,10 +17708,16 @@ namespace SkiaSharp {
 	}
 
 	// gr_gl_framebufferinfo_t
+	/// <summary>
+	/// Represents a handle to an existing OpenGL framebuffer.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GRGlFramebufferInfo : IEquatable<GRGlFramebufferInfo> {
 		// public unsigned int fFBOID
 		private UInt32 fFBOID;
+		/// <summary>
+		/// Gets or sets the OpenGL framebuffer ID.
+		/// </summary>
 		public UInt32 FramebufferObjectId {
 			readonly get => fFBOID;
 			set => fFBOID = value;
@@ -17719,6 +17725,9 @@ namespace SkiaSharp {
 
 		// public unsigned int fFormat
 		private UInt32 fFormat;
+		/// <summary>
+		/// Gets or sets the sized, internal format of the OpenGL framebuffer.
+		/// </summary>
 		public UInt32 Format {
 			readonly get => fFormat;
 			set => fFormat = value;
@@ -17731,17 +17740,23 @@ namespace SkiaSharp {
 			set => fProtected = value ? (byte)1 : (byte)0;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (GRGlFramebufferInfo obj) =>
 #pragma warning disable CS8909
 			fFBOID == obj.fFBOID && fFormat == obj.fFormat && fProtected == obj.fProtected;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is GRGlFramebufferInfo f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (GRGlFramebufferInfo left, GRGlFramebufferInfo right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (GRGlFramebufferInfo left, GRGlFramebufferInfo right) =>
 			!left.Equals (right);
 
@@ -17757,10 +17772,16 @@ namespace SkiaSharp {
 	}
 
 	// gr_gl_textureinfo_t
+	/// <summary>
+	/// Represents a handle to an existing OpenGL texture.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GRGlTextureInfo : IEquatable<GRGlTextureInfo> {
 		// public unsigned int fTarget
 		private UInt32 fTarget;
+		/// <summary>
+		/// Gets or sets the OpenGL texture target.
+		/// </summary>
 		public UInt32 Target {
 			readonly get => fTarget;
 			set => fTarget = value;
@@ -17768,6 +17789,9 @@ namespace SkiaSharp {
 
 		// public unsigned int fID
 		private UInt32 fID;
+		/// <summary>
+		/// Gets or sets the OpenGL texture ID.
+		/// </summary>
 		public UInt32 Id {
 			readonly get => fID;
 			set => fID = value;
@@ -17775,6 +17799,9 @@ namespace SkiaSharp {
 
 		// public unsigned int fFormat
 		private UInt32 fFormat;
+		/// <summary>
+		/// Gets or sets the sized, internal format of the OpenGL texture.
+		/// </summary>
 		public UInt32 Format {
 			readonly get => fFormat;
 			set => fFormat = value;
@@ -17787,17 +17814,23 @@ namespace SkiaSharp {
 			set => fProtected = value ? (byte)1 : (byte)0;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (GRGlTextureInfo obj) =>
 #pragma warning disable CS8909
 			fTarget == obj.fTarget && fID == obj.fID && fFormat == obj.fFormat && fProtected == obj.fProtected;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is GRGlTextureInfo f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (GRGlTextureInfo left, GRGlTextureInfo right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (GRGlTextureInfo left, GRGlTextureInfo right) =>
 			!left.Equals (right);
 
@@ -17883,17 +17916,23 @@ namespace SkiaSharp {
 		// public bool _private_fUsesSystemHeap
 		private Byte fUsesSystemHeap;
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (GRVkAlloc obj) =>
 #pragma warning disable CS8909
 			fMemory == obj.fMemory && fOffset == obj.fOffset && fSize == obj.fSize && fFlags == obj.fFlags && fBackendMemory == obj.fBackendMemory && fUsesSystemHeap == obj.fUsesSystemHeap;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is GRVkAlloc f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (GRVkAlloc left, GRVkAlloc right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (GRVkAlloc left, GRVkAlloc right) =>
 			!left.Equals (right);
 
@@ -18099,17 +18138,23 @@ namespace SkiaSharp {
 			set => fSharingMode = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (GRVkImageInfo obj) =>
 #pragma warning disable CS8909
 			fImage == obj.fImage && fAlloc == obj.fAlloc && fImageTiling == obj.fImageTiling && fImageLayout == obj.fImageLayout && fFormat == obj.fFormat && fImageUsageFlags == obj.fImageUsageFlags && fSampleCount == obj.fSampleCount && fLevelCount == obj.fLevelCount && fCurrentQueueFamily == obj.fCurrentQueueFamily && fProtected == obj.fProtected && fYcbcrConversionInfo == obj.fYcbcrConversionInfo && fSharingMode == obj.fSharingMode;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is GRVkImageInfo f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (GRVkImageInfo left, GRVkImageInfo right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (GRVkImageInfo left, GRVkImageInfo right) =>
 			!left.Equals (right);
 
@@ -18199,17 +18244,23 @@ namespace SkiaSharp {
 			set => fFormatFeatures = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
 #pragma warning disable CS8909
 			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is GrVkYcbcrConversionInfo f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (GrVkYcbcrConversionInfo left, GrVkYcbcrConversionInfo right) =>
 			!left.Equals (right);
 
@@ -18272,10 +18323,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_codec_frameinfo_t
+	/// <summary>
+	/// Information about individual frames in a multi-framed image.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKCodecFrameInfo : IEquatable<SKCodecFrameInfo> {
 		// public int fRequiredFrame
 		private Int32 fRequiredFrame;
+		/// <summary>
+		/// Gets or sets the frame that this frame needs to be blended with, or -1.
+		/// </summary>
 		public Int32 RequiredFrame {
 			readonly get => fRequiredFrame;
 			set => fRequiredFrame = value;
@@ -18283,6 +18340,9 @@ namespace SkiaSharp {
 
 		// public int fDuration
 		private Int32 fDuration;
+		/// <summary>
+		/// Gets or sets the number of milliseconds to show this frame.
+		/// </summary>
 		public Int32 Duration {
 			readonly get => fDuration;
 			set => fDuration = value;
@@ -18290,6 +18350,9 @@ namespace SkiaSharp {
 
 		// public bool fFullyReceived
 		private Byte fFullyReceived;
+		/// <summary>
+		/// Gets or sets a value indicating whether the end marker for this frame is contained in the stream.
+		/// </summary>
 		public bool FullyRecieved {
 			readonly get => fFullyReceived > 0;
 			set => fFullyReceived = value ? (byte)1 : (byte)0;
@@ -18297,6 +18360,9 @@ namespace SkiaSharp {
 
 		// public sk_alphatype_t fAlphaType
 		private SKAlphaType fAlphaType;
+		/// <summary>
+		/// Gets or sets a value indicating the frame's alpha value.
+		/// </summary>
 		public SKAlphaType AlphaType {
 			readonly get => fAlphaType;
 			set => fAlphaType = value;
@@ -18311,6 +18377,9 @@ namespace SkiaSharp {
 
 		// public sk_codecanimation_disposalmethod_t fDisposalMethod
 		private SKCodecAnimationDisposalMethod fDisposalMethod;
+		/// <summary>
+		/// Gets or sets the method indicating how the current frame should be modified before decoding the next one.
+		/// </summary>
 		public SKCodecAnimationDisposalMethod DisposalMethod {
 			readonly get => fDisposalMethod;
 			set => fDisposalMethod = value;
@@ -18330,17 +18399,23 @@ namespace SkiaSharp {
 			set => fFrameRect = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKCodecFrameInfo obj) =>
 #pragma warning disable CS8909
 			fRequiredFrame == obj.fRequiredFrame && fDuration == obj.fDuration && fFullyReceived == obj.fFullyReceived && fAlphaType == obj.fAlphaType && fHasAlphaWithinBounds == obj.fHasAlphaWithinBounds && fDisposalMethod == obj.fDisposalMethod && fBlend == obj.fBlend && fFrameRect == obj.fFrameRect;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKCodecFrameInfo f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKCodecFrameInfo left, SKCodecFrameInfo right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKCodecFrameInfo left, SKCodecFrameInfo right) =>
 			!left.Equals (right);
 
@@ -18402,38 +18477,80 @@ namespace SkiaSharp {
 	}
 
 	// sk_color4f_t
+	/// <summary>
+	/// 16-bit, floating-point, ARGB unpremultiplied color value.
+	/// </summary>
+	/// <remarks>The color components are always in a known order.</remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKColorF : IEquatable<SKColorF> {
 		// public float fR
 		private readonly Single fR;
+		/// <summary>
+		/// Gets the red component of the color.
+		/// </summary>
 		public readonly Single Red => fR;
 
 		// public float fG
 		private readonly Single fG;
+		/// <summary>
+		/// Gets the green component of the color.
+		/// </summary>
 		public readonly Single Green => fG;
 
 		// public float fB
 		private readonly Single fB;
+		/// <summary>
+		/// Gets the blue component of the color.
+		/// </summary>
 		public readonly Single Blue => fB;
 
 		// public float fA
 		private readonly Single fA;
+		/// <summary>
+		/// Gets the alpha component of the color.
+		/// </summary>
 		public readonly Single Alpha => fA;
 
+		/// <summary>
+		/// Determines whether the specified object is equal to the current object.
+		/// </summary>
+		/// <param name="obj">The color to compare with the current color.</param>
+		/// <returns>Returns <see langword="true" /> if the specified object is equal to the current object; otherwise, <see langword="false" />.</returns>
 		public readonly bool Equals (SKColorF obj) =>
 #pragma warning disable CS8909
 			fR == obj.fR && fG == obj.fG && fB == obj.fB && fA == obj.fA;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Determines whether the specified object is equal to the current object.
+		/// </summary>
+		/// <param name="obj">The object to compare with the current object.</param>
+		/// <returns>Returns <see langword="true" /> if the specified object is equal to the current object; otherwise, <see langword="false" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorF f && Equals (f);
 
+		/// <summary>
+		/// Indicates whether two <see cref="T:SkiaSharp.SKColorF" /> objects are equal.
+		/// </summary>
+		/// <param name="left">The first color to compare.</param>
+		/// <param name="right">The second color to compare.</param>
+		/// <returns>Returns <see langword="true" /> if <paramref name="left" /> is equal to <paramref name="right" />, otherwise <see langword="false" />.</returns>
 		public static bool operator == (SKColorF left, SKColorF right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Indicates whether two <see cref="T:SkiaSharp.SKColorF" /> objects are different.
+		/// </summary>
+		/// <param name="left">The first color to compare.</param>
+		/// <param name="right">The second color to compare.</param>
+		/// <returns>Returns <see langword="true" /> if <paramref name="left" /> is not equal to <paramref name="right" />, otherwise <see langword="false" />.</returns>
 		public static bool operator != (SKColorF left, SKColorF right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Serves as the default hash function.
+		/// </summary>
+		/// <returns>Returns a hash code for the current object.</returns>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -18447,10 +18564,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_colorspace_primaries_t
+	/// <summary>
+	/// Describes a color gamut with primaries and a white point.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKColorSpacePrimaries : IEquatable<SKColorSpacePrimaries> {
 		// public float fRX
 		private Single fRX;
+		/// <summary>
+		/// Gets or sets the red X-coordinate.
+		/// </summary>
 		public Single RX {
 			readonly get => fRX;
 			set => fRX = value;
@@ -18458,6 +18581,9 @@ namespace SkiaSharp {
 
 		// public float fRY
 		private Single fRY;
+		/// <summary>
+		/// Gets or sets the red Y-coordinate.
+		/// </summary>
 		public Single RY {
 			readonly get => fRY;
 			set => fRY = value;
@@ -18465,6 +18591,9 @@ namespace SkiaSharp {
 
 		// public float fGX
 		private Single fGX;
+		/// <summary>
+		/// Gets or sets the green X-coordinate.
+		/// </summary>
 		public Single GX {
 			readonly get => fGX;
 			set => fGX = value;
@@ -18472,6 +18601,9 @@ namespace SkiaSharp {
 
 		// public float fGY
 		private Single fGY;
+		/// <summary>
+		/// Gets or sets the green Y-coordinate.
+		/// </summary>
 		public Single GY {
 			readonly get => fGY;
 			set => fGY = value;
@@ -18479,6 +18611,9 @@ namespace SkiaSharp {
 
 		// public float fBX
 		private Single fBX;
+		/// <summary>
+		/// Gets or sets the blue X-coordinate.
+		/// </summary>
 		public Single BX {
 			readonly get => fBX;
 			set => fBX = value;
@@ -18486,6 +18621,9 @@ namespace SkiaSharp {
 
 		// public float fBY
 		private Single fBY;
+		/// <summary>
+		/// Gets or sets the blue Y-coordinate.
+		/// </summary>
 		public Single BY {
 			readonly get => fBY;
 			set => fBY = value;
@@ -18493,6 +18631,9 @@ namespace SkiaSharp {
 
 		// public float fWX
 		private Single fWX;
+		/// <summary>
+		/// Gets or sets the white X-coordinate.
+		/// </summary>
 		public Single WX {
 			readonly get => fWX;
 			set => fWX = value;
@@ -18500,22 +18641,31 @@ namespace SkiaSharp {
 
 		// public float fWY
 		private Single fWY;
+		/// <summary>
+		/// Gets or sets the white Y-coordinate.
+		/// </summary>
 		public Single WY {
 			readonly get => fWY;
 			set => fWY = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKColorSpacePrimaries obj) =>
 #pragma warning disable CS8909
 			fRX == obj.fRX && fRY == obj.fRY && fGX == obj.fGX && fGY == obj.fGY && fBX == obj.fBX && fBY == obj.fBY && fWX == obj.fWX && fWY == obj.fWY;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpacePrimaries f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKColorSpacePrimaries left, SKColorSpacePrimaries right) =>
 			!left.Equals (right);
 
@@ -18536,10 +18686,17 @@ namespace SkiaSharp {
 	}
 
 	// sk_colorspace_transfer_fn_t
+	/// <summary>
+	/// Represents the coefficients for a common transfer function equation.
+	/// </summary>
+	/// <remarks><para>The coefficients are specified as a transformation from a curved space to linear. </para><para></para><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para></para><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para></remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKColorSpaceTransferFn : IEquatable<SKColorSpaceTransferFn> {
 		// public float fG
 		private Single fG;
+		/// <summary>
+		/// Gets or sets the G coefficient.
+		/// </summary>
 		public Single G {
 			readonly get => fG;
 			set => fG = value;
@@ -18547,6 +18704,9 @@ namespace SkiaSharp {
 
 		// public float fA
 		private Single fA;
+		/// <summary>
+		/// Gets or sets the A coefficient.
+		/// </summary>
 		public Single A {
 			readonly get => fA;
 			set => fA = value;
@@ -18554,6 +18714,9 @@ namespace SkiaSharp {
 
 		// public float fB
 		private Single fB;
+		/// <summary>
+		/// Gets or sets the B coefficient.
+		/// </summary>
 		public Single B {
 			readonly get => fB;
 			set => fB = value;
@@ -18561,6 +18724,9 @@ namespace SkiaSharp {
 
 		// public float fC
 		private Single fC;
+		/// <summary>
+		/// Gets or sets the C coefficient.
+		/// </summary>
 		public Single C {
 			readonly get => fC;
 			set => fC = value;
@@ -18568,6 +18734,9 @@ namespace SkiaSharp {
 
 		// public float fD
 		private Single fD;
+		/// <summary>
+		/// Gets or sets the D coefficient.
+		/// </summary>
 		public Single D {
 			readonly get => fD;
 			set => fD = value;
@@ -18575,6 +18744,9 @@ namespace SkiaSharp {
 
 		// public float fE
 		private Single fE;
+		/// <summary>
+		/// Gets or sets the E coefficient.
+		/// </summary>
 		public Single E {
 			readonly get => fE;
 			set => fE = value;
@@ -18582,22 +18754,31 @@ namespace SkiaSharp {
 
 		// public float fF
 		private Single fF;
+		/// <summary>
+		/// Gets or sets the F coefficient.
+		/// </summary>
 		public Single F {
 			readonly get => fF;
 			set => fF = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKColorSpaceTransferFn obj) =>
 #pragma warning disable CS8909
 			fG == obj.fG && fA == obj.fA && fB == obj.fB && fC == obj.fC && fD == obj.fD && fE == obj.fE && fF == obj.fF;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpaceTransferFn f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKColorSpaceTransferFn left, SKColorSpaceTransferFn right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKColorSpaceTransferFn left, SKColorSpaceTransferFn right) =>
 			!left.Equals (right);
 
@@ -18646,17 +18827,23 @@ namespace SkiaSharp {
 		// public float fM22
 		private Single fM22;
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKColorSpaceXyz obj) =>
 #pragma warning disable CS8909
 			fM00 == obj.fM00 && fM01 == obj.fM01 && fM02 == obj.fM02 && fM10 == obj.fM10 && fM11 == obj.fM11 && fM12 == obj.fM12 && fM20 == obj.fM20 && fM21 == obj.fM21 && fM22 == obj.fM22;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKColorSpaceXyz f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKColorSpaceXyz left, SKColorSpaceXyz right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKColorSpaceXyz left, SKColorSpaceXyz right) =>
 			!left.Equals (right);
 
@@ -18839,6 +19026,9 @@ namespace SkiaSharp {
 	}
 
 	// sk_fontmetrics_t
+	/// <summary>
+	/// Structure to represent measurements for a font.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKFontMetrics : IEquatable<SKFontMetrics> {
 		// public uint32_t fFlags
@@ -18889,17 +19079,23 @@ namespace SkiaSharp {
 		// public float fStrikeoutPosition
 		private Single fStrikeoutPosition;
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKFontMetrics obj) =>
 #pragma warning disable CS8909
 			fFlags == obj.fFlags && fTop == obj.fTop && fAscent == obj.fAscent && fDescent == obj.fDescent && fBottom == obj.fBottom && fLeading == obj.fLeading && fAvgCharWidth == obj.fAvgCharWidth && fMaxCharWidth == obj.fMaxCharWidth && fXMin == obj.fXMin && fXMax == obj.fXMax && fXHeight == obj.fXHeight && fCapHeight == obj.fCapHeight && fUnderlineThickness == obj.fUnderlineThickness && fUnderlinePosition == obj.fUnderlinePosition && fStrikeoutThickness == obj.fStrikeoutThickness && fStrikeoutPosition == obj.fStrikeoutPosition;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKFontMetrics f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKFontMetrics left, SKFontMetrics right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKFontMetrics left, SKFontMetrics right) =>
 			!left.Equals (right);
 
@@ -18928,10 +19124,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_highcontrastconfig_t
+	/// <summary>
+	/// High contrast configuration settings for use with <see cref="M:SkiaSharp.SKColorFilter.CreateHighContrast(SkiaSharp.SKHighContrastConfig)" />.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKHighContrastConfig : IEquatable<SKHighContrastConfig> {
 		// public bool fGrayscale
 		private Byte fGrayscale;
+		/// <summary>
+		/// Gets or sets a value indicating whether the color will be converted to grayscale.
+		/// </summary>
 		public bool Grayscale {
 			readonly get => fGrayscale > 0;
 			set => fGrayscale = value ? (byte)1 : (byte)0;
@@ -18939,6 +19141,9 @@ namespace SkiaSharp {
 
 		// public sk_highcontrastconfig_invertstyle_t fInvertStyle
 		private SKHighContrastConfigInvertStyle fInvertStyle;
+		/// <summary>
+		/// Gets or sets a value indicating whether to invert brightness, lightness, or neither.
+		/// </summary>
 		public SKHighContrastConfigInvertStyle InvertStyle {
 			readonly get => fInvertStyle;
 			set => fInvertStyle = value;
@@ -18946,22 +19151,31 @@ namespace SkiaSharp {
 
 		// public float fContrast
 		private Single fContrast;
+		/// <summary>
+		/// Gets or sets the amount to adjust the contrast by, in the range -1.0 through 1.0..
+		/// </summary>
 		public Single Contrast {
 			readonly get => fContrast;
 			set => fContrast = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKHighContrastConfig obj) =>
 #pragma warning disable CS8909
 			fGrayscale == obj.fGrayscale && fInvertStyle == obj.fInvertStyle && fContrast == obj.fContrast;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKHighContrastConfig f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKHighContrastConfig left, SKHighContrastConfig right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKHighContrastConfig left, SKHighContrastConfig right) =>
 			!left.Equals (right);
 
@@ -19022,10 +19236,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_ipoint_t
+	/// <summary>
+	/// Represents an ordered pair of integer x- and y-coordinates that defines a point in a two-dimensional plane.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKPointI : IEquatable<SKPointI> {
 		// public int32_t x
 		private Int32 x;
+		/// <summary>
+		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPointI" />.
+		/// </summary>
 		public Int32 X {
 			readonly get => x;
 			set => x = value;
@@ -19033,25 +19253,55 @@ namespace SkiaSharp {
 
 		// public int32_t y
 		private Int32 y;
+		/// <summary>
+		/// Gets or sets the y-coordinate of this <see cref="T:SkiaSharp.SKPointI" />
+		/// </summary>
 		public Int32 Y {
 			readonly get => y;
 			set => y = value;
 		}
 
+		/// <summary>
+		/// Specifies whether this <see cref="T:SkiaSharp.SKPointI" /> contains the same coordinates as the specified <see cref="T:SkiaSharp.SKPointI" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKPointI" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKPointI" />.</returns>
 		public readonly bool Equals (SKPointI obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Specifies whether this <see cref="T:SkiaSharp.SKPointI" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKPointI" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKPointI" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKPointI f && Equals (f);
 
+		/// <summary>
+		/// Determines whether the coordinates of the specified points are equal.
+		/// </summary>
+		/// <param name="left">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
+		/// <param name="right">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
+		/// <returns>true if the <see cref="P:SkiaSharp.SKPointI.X" /> and <see cref="P:SkiaSharp.SKPointI.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures are equal; otherwise, false.</returns>
 		public static bool operator == (SKPointI left, SKPointI right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Determines whether the coordinates of the specified points are not equal.
+		/// </summary>
+		/// <param name="left">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
+		/// <param name="right">A <see cref="T:SkiaSharp.SKPointI" /> to compare.</param>
+		/// <returns>true if the <see cref="P:SkiaSharp.SKPointI.X" /> and <see cref="P:SkiaSharp.SKPointI.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures differ; otherwise, false.</returns>
 		public static bool operator != (SKPointI left, SKPointI right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Calculates the hashcode for this point.
+		/// </summary>
+		/// <returns>Returns the hashcode for this point.</returns>
+		/// <remarks>You should avoid depending on GetHashCode for unique values, as two point objects with the same values for their X and Y properties may return the same hash code. This behavior could change in a future release.</remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -19063,10 +19313,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_irect_t
+	/// <summary>
+	/// Stores a set of four integers that represent the upper-left corner and lower-right corner of a rectangle.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKRectI : IEquatable<SKRectI> {
 		// public int32_t left
 		private Int32 left;
+		/// <summary>
+		/// Gets or sets the x-coordinate of the left edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// </summary>
 		public Int32 Left {
 			readonly get => left;
 			set => left = value;
@@ -19074,6 +19330,9 @@ namespace SkiaSharp {
 
 		// public int32_t top
 		private Int32 top;
+		/// <summary>
+		/// Gets or sets the y-coordinate of the top edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// </summary>
 		public Int32 Top {
 			readonly get => top;
 			set => top = value;
@@ -19081,6 +19340,9 @@ namespace SkiaSharp {
 
 		// public int32_t right
 		private Int32 right;
+		/// <summary>
+		/// Gets or sets the x-coordinate of the right edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// </summary>
 		public Int32 Right {
 			readonly get => right;
 			set => right = value;
@@ -19088,25 +19350,54 @@ namespace SkiaSharp {
 
 		// public int32_t bottom
 		private Int32 bottom;
+		/// <summary>
+		/// Gets or sets the y-coordinate of the bottom edge of this <see cref="T:SkiaSharp.SKRectI" /> structure.
+		/// </summary>
 		public Int32 Bottom {
 			readonly get => bottom;
 			set => bottom = value;
 		}
 
+		/// <summary>
+		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:SkiaSharp.SKRectI" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKRectI" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKRectI" />.</returns>
 		public readonly bool Equals (SKRectI obj) =>
 #pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKRectI" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKRectI" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKRectI f && Equals (f);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKRectI" /> structures have equal location and size.
+		/// </summary>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the left of the equality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the right of the equality operator.</param>
+		/// <returns>This operator returns true if the two specified <see cref="T:SkiaSharp.SKRectI" /> structures have equal <see cref="P:SkiaSharp.SKRectI.Left" />, <see cref="P:SkiaSharp.SKRectI.Top" />, <see cref="P:SkiaSharp.SKRectI.Right" />, or <see cref="P:SkiaSharp.SKRectI.Bottom" /> properties.</returns>
 		public static bool operator == (SKRectI left, SKRectI right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKRectI" /> structures differ in location or size.
+		/// </summary>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKRectI" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if any of the <see cref="P:SkiaSharp.SKRectI.Left" />, <see cref="P:SkiaSharp.SKRectI.Top" />, <see cref="P:SkiaSharp.SKRectI.Right" />, or <see cref="P:SkiaSharp.SKRectI.Bottom" /> properties of the two <see cref="T:SkiaSharp.SKRectI" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKRectI left, SKRectI right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Calculates the hashcode for this rectangle.
+		/// </summary>
+		/// <returns>Returns the hashcode for this rectangle.</returns>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -19120,10 +19411,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_isize_t
+	/// <summary>
+	/// Stores an ordered pair of integers describing the width and height of a rectangle.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKSizeI : IEquatable<SKSizeI> {
 		// public int32_t w
 		private Int32 w;
+		/// <summary>
+		/// Gets or sets the horizontal component of this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// </summary>
 		public Int32 Width {
 			readonly get => w;
 			set => w = value;
@@ -19131,25 +19428,58 @@ namespace SkiaSharp {
 
 		// public int32_t h
 		private Int32 h;
+		/// <summary>
+		/// Gets or sets the vertical component of this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// </summary>
 		public Int32 Height {
 			readonly get => h;
 			set => h = value;
 		}
 
+		/// <summary>
+		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSizeI" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKSizeI" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKSizeI" />.</returns>
 		public readonly bool Equals (SKSizeI obj) =>
 #pragma warning disable CS8909
 			w == obj.w && h == obj.h;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSizeI" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKSizeI" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKSizeI" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKSizeI f && Equals (f);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKSizeI" /> structures are equal.
+		/// </summary>
+		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the left side of the equality operator.</param>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the left side of the equality operator.</param>
+		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the right of the equality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKSizeI" /> structure on the right of the equality operator.</param>
+		/// <returns>This operator returns true if both <see cref="T:SkiaSharp.SKSizeI" /> structures have equal <see cref="P:SkiaSharp.SKSizeI.Width" /> and <see cref="P:SkiaSharp.SKSizeI.Height" />; otherwise, false.</returns>
 		public static bool operator == (SKSizeI left, SKSizeI right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKSizeI" /> structures are different.
+		/// </summary>
+		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the right of the inequality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKSizeI" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if either of the <see cref="P:SkiaSharp.SKSizeI.Width" /> and <see cref="P:SkiaSharp.SKSizeI.Height" /> properties of the two <see cref="T:SkiaSharp.SKSizeI" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKSizeI left, SKSizeI right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Returns a hash code for this <see cref="T:SkiaSharp.SKSizeI" /> structure.
+		/// </summary>
+		/// <returns>An integer value that specifies a hash value for this <see cref="T:SkiaSharp.SKSizeI" /> structure.</returns>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -19161,6 +19491,9 @@ namespace SkiaSharp {
 	}
 
 	// sk_jpegencoder_options_t
+	/// <summary>
+	/// Options to control the JPEG encoding.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKJpegEncoderOptions : IEquatable<SKJpegEncoderOptions> {
 		// public int fQuality
@@ -19181,17 +19514,23 @@ namespace SkiaSharp {
 		// public const char* fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKJpegEncoderOptions obj) =>
 #pragma warning disable CS8909
 			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && xmpMetadata == obj.xmpMetadata && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKJpegEncoderOptions f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKJpegEncoderOptions left, SKJpegEncoderOptions right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKJpegEncoderOptions left, SKJpegEncoderOptions right) =>
 			!left.Equals (right);
 
@@ -19555,10 +19894,17 @@ namespace SkiaSharp {
 	}
 
 	// sk_matrix_t
+	/// <summary>
+	/// A 3x3 transformation matrix with perspective.
+	/// </summary>
+	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="P:SkiaSharp.SKMatrix.Persp0" />, <see cref="P:SkiaSharp.SKMatrix.Persp1" />, <see cref="P:SkiaSharp.SKMatrix.Persp2" /> fields of the matrix.</remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKMatrix : IEquatable<SKMatrix> {
 		// public float scaleX
 		private Single scaleX;
+		/// <summary>
+		/// Gets or sets the scaling in the x-direction.
+		/// </summary>
 		public Single ScaleX {
 			readonly get => scaleX;
 			set => scaleX = value;
@@ -19566,6 +19912,9 @@ namespace SkiaSharp {
 
 		// public float skewX
 		private Single skewX;
+		/// <summary>
+		/// Gets or sets the skew in the x-direction.
+		/// </summary>
 		public Single SkewX {
 			readonly get => skewX;
 			set => skewX = value;
@@ -19573,6 +19922,9 @@ namespace SkiaSharp {
 
 		// public float transX
 		private Single transX;
+		/// <summary>
+		/// Get or sets the translation in the x-direction.
+		/// </summary>
 		public Single TransX {
 			readonly get => transX;
 			set => transX = value;
@@ -19580,6 +19932,9 @@ namespace SkiaSharp {
 
 		// public float skewY
 		private Single skewY;
+		/// <summary>
+		/// Gets or sets the skew in the y-direction.
+		/// </summary>
 		public Single SkewY {
 			readonly get => skewY;
 			set => skewY = value;
@@ -19587,6 +19942,9 @@ namespace SkiaSharp {
 
 		// public float scaleY
 		private Single scaleY;
+		/// <summary>
+		/// Gets or sets the scaling in the y-direction.
+		/// </summary>
 		public Single ScaleY {
 			readonly get => scaleY;
 			set => scaleY = value;
@@ -19594,6 +19952,9 @@ namespace SkiaSharp {
 
 		// public float transY
 		private Single transY;
+		/// <summary>
+		/// Get or sets the translation in the y-direction.
+		/// </summary>
 		public Single TransY {
 			readonly get => transY;
 			set => transY = value;
@@ -19601,6 +19962,9 @@ namespace SkiaSharp {
 
 		// public float persp0
 		private Single persp0;
+		/// <summary>
+		/// Gets or sets the x-perspective.
+		/// </summary>
 		public Single Persp0 {
 			readonly get => persp0;
 			set => persp0 = value;
@@ -19608,6 +19972,9 @@ namespace SkiaSharp {
 
 		// public float persp1
 		private Single persp1;
+		/// <summary>
+		/// Gets or sets the y-perspective.
+		/// </summary>
 		public Single Persp1 {
 			readonly get => persp1;
 			set => persp1 = value;
@@ -19615,22 +19982,31 @@ namespace SkiaSharp {
 
 		// public float persp2
 		private Single persp2;
+		/// <summary>
+		/// Gets or sets the z-perspective.
+		/// </summary>
 		public Single Persp2 {
 			readonly get => persp2;
 			set => persp2 = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKMatrix obj) =>
 #pragma warning disable CS8909
 			scaleX == obj.scaleX && skewX == obj.skewX && transX == obj.transX && skewY == obj.skewY && scaleY == obj.scaleY && transY == obj.transY && persp0 == obj.persp0 && persp1 == obj.persp1 && persp2 == obj.persp2;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKMatrix f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKMatrix left, SKMatrix right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKMatrix left, SKMatrix right) =>
 			!left.Equals (right);
 
@@ -19652,6 +20028,9 @@ namespace SkiaSharp {
 	}
 
 	// sk_matrix44_t
+	/// <summary>
+	/// A 3D, 4x4 matrix.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKMatrix44 : IEquatable<SKMatrix44> {
 		// public float m00
@@ -19805,6 +20184,9 @@ namespace SkiaSharp {
 	}
 
 	// sk_pngencoder_options_t
+	/// <summary>
+	/// Options to control the PNG encoding.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKPngEncoderOptions : IEquatable<SKPngEncoderOptions> {
 		// public sk_pngencoder_filterflags_t fFilterFlags
@@ -19822,17 +20204,23 @@ namespace SkiaSharp {
 		// public const char* fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
 #pragma warning disable CS8909
 			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKPngEncoderOptions f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKPngEncoderOptions left, SKPngEncoderOptions right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKPngEncoderOptions left, SKPngEncoderOptions right) =>
 			!left.Equals (right);
 
@@ -19850,10 +20238,17 @@ namespace SkiaSharp {
 	}
 
 	// sk_point_t
+	/// <summary>
+	/// Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.
+	/// </summary>
+	/// <remarks>To convert a <see cref="T:SkiaSharp.SKPoint" /> to a <see cref="T:SkiaSharp.SKPointI" />, use <see cref="M:SkiaSharp.SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="M:SkiaSharp.SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKPoint : IEquatable<SKPoint> {
 		// public float x
 		private Single x;
+		/// <summary>
+		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint" />.
+		/// </summary>
 		public Single X {
 			readonly get => x;
 			set => x = value;
@@ -19861,25 +20256,55 @@ namespace SkiaSharp {
 
 		// public float y
 		private Single y;
+		/// <summary>
+		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint" />.
+		/// </summary>
 		public Single Y {
 			readonly get => y;
 			set => y = value;
 		}
 
+		/// <summary>
+		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint" /> contains the same coordinates as the specified <see cref="T:SkiaSharp.SKPoint" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKPoint" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKPoint" />.</returns>
 		public readonly bool Equals (SKPoint obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKPoint" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKPoint" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKPoint f && Equals (f);
 
+		/// <summary>
+		/// Compares two <see cref="T:SkiaSharp.SKPoint" /> structures. The result specifies whether the values of the <see cref="P:SkiaSharp.SKPoint.X" /> and <see cref="P:SkiaSharp.SKPoint.Y" /> properties of the two <see cref="T:SkiaSharp.SKPoint" /> structures are equal.
+		/// </summary>
+		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint.X" /> and <see cref="P:SkiaSharp.SKPoint.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures are equal; otherwise, false.</returns>
 		public static bool operator == (SKPoint left, SKPoint right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Determines whether the coordinates of the specified points are not equal.
+		/// </summary>
+		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint" /> to compare.</param>
+		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint.X" /> and <see cref="P:SkiaSharp.SKPoint.Y" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures differ; otherwise, false.</returns>
 		public static bool operator != (SKPoint left, SKPoint right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Calculates the hashcode for this point.
+		/// </summary>
+		/// <returns>Returns the hashcode for this point.</returns>
+		/// <remarks>You should avoid depending on GetHashCode for unique values, as two <see cref="T:System.Drawing.Point" /> objects with the same values for their X and Y properties may return the same hash code. This behavior could change in a future release.</remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -19891,10 +20316,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_point3_t
+	/// <summary>
+	/// Represents an ordered pair of floating-point x-, y- and z-coordinates that defines a point in a three-dimensional plane.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKPoint3 : IEquatable<SKPoint3> {
 		// public float x
 		private Single x;
+		/// <summary>
+		/// Gets or sets the x-coordinate of this <see cref="T:SkiaSharp.SKPoint3" />.
+		/// </summary>
 		public Single X {
 			readonly get => x;
 			set => x = value;
@@ -19902,6 +20333,9 @@ namespace SkiaSharp {
 
 		// public float y
 		private Single y;
+		/// <summary>
+		/// Gets or sets the y-coordinate of this <see cref="T:SkiaSharp.SKPoint3" />.
+		/// </summary>
 		public Single Y {
 			readonly get => y;
 			set => y = value;
@@ -19909,25 +20343,55 @@ namespace SkiaSharp {
 
 		// public float z
 		private Single z;
+		/// <summary>
+		/// Gets or sets the z-coordinate of this <see cref="T:SkiaSharp.SKPoint3" />.
+		/// </summary>
 		public Single Z {
 			readonly get => z;
 			set => z = value;
 		}
 
+		/// <summary>
+		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint3" /> contains the same coordinates as the specified <see cref="T:SkiaSharp.SKPoint3" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKPoint3" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKPoint3" />.</returns>
 		public readonly bool Equals (SKPoint3 obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y && z == obj.z;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint3" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKPoint3" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKPoint3" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKPoint3 f && Equals (f);
 
+		/// <summary>
+		/// Compares two <see cref="T:SkiaSharp.SKPoint3" /> structures. The result specifies whether the values of the <see cref="P:SkiaSharp.SKPoint3.X" /> and <see cref="P:SkiaSharp.SKPoint3.Y" /> properties of the two <see cref="T:SkiaSharp.SKPoint3" /> structures are equal.
+		/// </summary>
+		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
+		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
+		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint3.X" />, <see cref="P:SkiaSharp.SKPoint3.Y" /> and <see cref="P:SkiaSharp.SKPoint3.Z" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures are equal; otherwise, false.</returns>
 		public static bool operator == (SKPoint3 left, SKPoint3 right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Determines whether the coordinates of the specified points are not equal.
+		/// </summary>
+		/// <param name="left">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
+		/// <param name="right">A <see cref="T:SkiaSharp.SKPoint3" /> to compare.</param>
+		/// <returns>true if the <see cref="P:SkiaSharp.SKPoint3.X" />, <see cref="P:SkiaSharp.SKPoint3.Y" /> and <see cref="P:SkiaSharp.SKPoint3.Z" /> values of the left and right <see cref="T:SkiaSharp.SKPoint" /> structures differ; otherwise, false.</returns>
 		public static bool operator != (SKPoint3 left, SKPoint3 right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Calculates the hashcode for this point.
+		/// </summary>
+		/// <returns>Returns the hashcode for this point.</returns>
+		/// <remarks>You should avoid depending on GetHashCode for unique values, as two <see cref="T:System.Drawing.Point" /> objects with the same values for their X, Y and Z properties may return the same hash code. This behavior could change in a future release.</remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -19940,10 +20404,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_rect_t
+	/// <summary>
+	/// Stores a set of four floating-point numbers that represent the upper-left corner and lower-right corner of a rectangle.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKRect : IEquatable<SKRect> {
 		// public float left
 		private Single left;
+		/// <summary>
+		/// Gets or sets the x-coordinate of the left edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// </summary>
 		public Single Left {
 			readonly get => left;
 			set => left = value;
@@ -19951,6 +20421,9 @@ namespace SkiaSharp {
 
 		// public float top
 		private Single top;
+		/// <summary>
+		/// Gets or sets the y-coordinate of the top edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// </summary>
 		public Single Top {
 			readonly get => top;
 			set => top = value;
@@ -19958,6 +20431,9 @@ namespace SkiaSharp {
 
 		// public float right
 		private Single right;
+		/// <summary>
+		/// Gets or sets the x-coordinate of the right edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// </summary>
 		public Single Right {
 			readonly get => right;
 			set => right = value;
@@ -19965,25 +20441,54 @@ namespace SkiaSharp {
 
 		// public float bottom
 		private Single bottom;
+		/// <summary>
+		/// Gets or sets the y-coordinate of the bottom edge of this <see cref="T:SkiaSharp.SKRect" /> structure.
+		/// </summary>
 		public Single Bottom {
 			readonly get => bottom;
 			set => bottom = value;
 		}
 
+		/// <summary>
+		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:SkiaSharp.SKRect" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKRect" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKRect" />.</returns>
 		public readonly bool Equals (SKRect obj) =>
 #pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:System.Object" />.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKRect" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKRect" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKRect f && Equals (f);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKRect" /> structures have equal coordinates.
+		/// </summary>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the left of the equality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the right of the equality operator.</param>
+		/// <returns>This operator returns true if the two specified <see cref="T:SkiaSharp.SKRect" /> structures have equal <see cref="P:SkiaSharp.SKRect.Left" />, <see cref="P:SkiaSharp.SKRect.Top" />, <see cref="P:SkiaSharp.SKRect.Right" />, and <see cref="P:SkiaSharp.SKRect.Bottom" /> properties.</returns>
 		public static bool operator == (SKRect left, SKRect right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKRect" /> structures differ in coordinates.
+		/// </summary>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKRect" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if any of the <see cref="P:SkiaSharp.SKRect.Left" />, <see cref="P:SkiaSharp.SKRect.Top" />, <see cref="P:SkiaSharp.SKRect.Right" />, or <see cref="P:SkiaSharp.SKRect.Bottom" /> properties of the two <see cref="T:SkiaSharp.SKRect" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKRect left, SKRect right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Calculates the hashcode for this rectangle.
+		/// </summary>
+		/// <returns>Returns the hashcode for this rectangle.</returns>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -20027,17 +20532,23 @@ namespace SkiaSharp {
 			set => fTY = value;
 		}
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKRotationScaleMatrix obj) =>
 #pragma warning disable CS8909
 			fSCos == obj.fSCos && fSSin == obj.fSSin && fTX == obj.fTX && fTY == obj.fTY;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKRotationScaleMatrix f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKRotationScaleMatrix left, SKRotationScaleMatrix right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKRotationScaleMatrix left, SKRotationScaleMatrix right) =>
 			!left.Equals (right);
 
@@ -20194,10 +20705,16 @@ namespace SkiaSharp {
 	}
 
 	// sk_size_t
+	/// <summary>
+	/// Stores an ordered pair of floating-point numbers describing the width and height of a rectangle.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKSize : IEquatable<SKSize> {
 		// public float w
 		private Single w;
+		/// <summary>
+		/// Gets or sets the horizontal component of this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// </summary>
 		public Single Width {
 			readonly get => w;
 			set => w = value;
@@ -20205,25 +20722,58 @@ namespace SkiaSharp {
 
 		// public float h
 		private Single h;
+		/// <summary>
+		/// Gets or sets the vertical component of this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// </summary>
 		public Single Height {
 			readonly get => h;
 			set => h = value;
 		}
 
+		/// <summary>
+		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSize" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:SkiaSharp.SKSize" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> has the same coordinates as this <see cref="T:SkiaSharp.SKSize" />.</returns>
 		public readonly bool Equals (SKSize obj) =>
 #pragma warning disable CS8909
 			w == obj.w && h == obj.h;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <summary>
+		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSize" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// </summary>
+		/// <param name="obj">The <see cref="T:System.Object" /> to test.</param>
+		/// <returns>This method returns true if <paramref name="obj" /> is a <see cref="T:SkiaSharp.SKSize" /> and has the same coordinates as this <see cref="T:SkiaSharp.SKSize" />.</returns>
 		public readonly override bool Equals (object obj) =>
 			obj is SKSize f && Equals (f);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKSize" /> structures are equal.
+		/// </summary>
+		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSize" /> structure on the left side of the equality operator.</param>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKSize" /> structure on the left side of the equality operator.</param>
+		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSize" /> structure on the right of the equality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKSize" /> structure on the right of the equality operator.</param>
+		/// <returns>This operator returns true if both <see cref="T:SkiaSharp.SKSize" /> structures have equal <see cref="P:SkiaSharp.SKSize.Width" /> and <see cref="P:SkiaSharp.SKSize.Height" />; otherwise, false.</returns>
 		public static bool operator == (SKSize left, SKSize right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// Tests whether two <see cref="T:SkiaSharp.SKSize" /> structures are different.
+		/// </summary>
+		/// <param name="sz1">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="left">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the left of the inequality operator.</param>
+		/// <param name="sz2">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the right of the inequality operator.</param>
+		/// <param name="right">The <see cref="T:SkiaSharp.SKSize" /> structure that is to the right of the inequality operator.</param>
+		/// <returns>This operator returns true if either of the <see cref="P:SkiaSharp.SKSize.Width" /> and <see cref="P:SkiaSharp.SKSize.Height" /> properties of the two <see cref="T:SkiaSharp.SKSize" /> structures are unequal; otherwise false.</returns>
 		public static bool operator != (SKSize left, SKSize right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// Returns a hash code for this <see cref="T:SkiaSharp.SKSize" /> structure.
+		/// </summary>
+		/// <returns>An integer value that specifies a hash value for this <see cref="T:SkiaSharp.SKSize" /> structure.</returns>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -20276,6 +20826,9 @@ namespace SkiaSharp {
 	}
 
 	// sk_webpencoder_options_t
+	/// <summary>
+	/// Options to control the WEBP encoding.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKWebpEncoderOptions : IEquatable<SKWebpEncoderOptions> {
 		// public sk_webpencoder_compression_t fCompression
@@ -20290,17 +20843,23 @@ namespace SkiaSharp {
 		// public const char* fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
+		/// <param name="obj"></param>
 		public readonly bool Equals (SKWebpEncoderOptions obj) =>
 #pragma warning disable CS8909
 			fCompression == obj.fCompression && fQuality == obj.fQuality && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
-#pragma warning restore CS8909
+		#pragma warning restore CS8909
 
+		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
 			obj is SKWebpEncoderOptions f && Equals (f);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator == (SKWebpEncoderOptions left, SKWebpEncoderOptions right) =>
 			left.Equals (right);
 
+		/// <param name="left"></param>
+		/// <param name="right"></param>
 		public static bool operator != (SKWebpEncoderOptions left, SKWebpEncoderOptions right) =>
 			!left.Equals (right);
 
@@ -20338,105 +20897,251 @@ namespace SkiaSharp {
 	}
 
 	// gr_surfaceorigin_t
+	/// <summary>
+	/// The origin of a texture.
+	/// </summary>
 	public enum GRSurfaceOrigin {
 		// TOP_LEFT_GR_SURFACE_ORIGIN = 0
+		/// <summary>
+		/// Origin is at the top-left.
+		/// </summary>
 		TopLeft = 0,
 		// BOTTOM_LEFT_GR_SURFACE_ORIGIN = 1
+		/// <summary>
+		/// Origin is at the bottom-left.
+		/// </summary>
 		BottomLeft = 1,
 	}
 
 	// sk_alphatype_t
+	/// <summary>
+	/// Describes how to interpret the alpha component of a pixel.
+	/// </summary>
 	public enum SKAlphaType {
 		// UNKNOWN_SK_ALPHATYPE = 0
 		Unknown = 0,
 		// OPAQUE_SK_ALPHATYPE = 1
+		/// <summary>
+		/// All pixels are stored as opaque.
+		/// </summary>
 		Opaque = 1,
 		// PREMUL_SK_ALPHATYPE = 2
+		/// <summary>
+		/// <para>All pixels have their alpha premultiplied in their color components.</para><para>This is the natural format for the rendering target pixels.</para>
+		/// </summary>
 		Premul = 2,
 		// UNPREMUL_SK_ALPHATYPE = 3
+		/// <summary>
+		/// <para>All pixels have their color components stored without any regard to the alpha. e.g. this is the default configuration for PNG images.</para><para>This alpha-type is ONLY supported for input images. Rendering cannot generate this on output.</para>
+		/// </summary>
 		Unpremul = 3,
 	}
 
 	// sk_bitmap_allocflags_t
+	/// <summary>
+	/// Flags to use with <see cref="M:SkiaSharp.SKBitmap.#ctor" />.
+	/// </summary>
 	[Flags]
 	public enum SKBitmapAllocFlags {
 		// NONE_SK_BITMAP_ALLOC_FLAGS = 0
+		/// <summary>
+		/// Default bitmap allocation flag.
+		/// </summary>
 		None = 0,
 		// ZERO_PIXELS_SK_BITMAP_ALLOC_FLAGS = 1 << 0
+		/// <summary>
+		/// Initialize the bitmap with zeroed data.
+		/// </summary>
 		ZeroPixels = 1,
 	}
 
 	// sk_blendmode_t
+	/// <summary>
+	/// Predefined blend modes.
+	/// </summary>
+	/// <remarks>- **Porter Duff Compositing Operators**
+	/// Defined algebra of compositing.
+	/// These operators control the results of mixing the four sub-pixel regions
+	/// formed by the overlapping of graphical objects that have an alpha or
+	/// pixel coverage channel/value.
+	/// - **Separable Blend Mode**
+	/// Each component of the result color is completely determined by the
+	/// corresponding components of the constituent backdrop and source colors.
+	/// - **Non-Separable Blend Mode**
+	/// Considers all color components in combination as opposed to the
+	/// separable ones that look at each component individually.</remarks>
 	public enum SKBlendMode {
 		// CLEAR_SK_BLENDMODE = 0
+		/// <summary>
+		/// No regions are enabled. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_clr.svg)
+		/// </summary>
 		Clear = 0,
 		// SRC_SK_BLENDMODE = 1
+		/// <summary>
+		/// Only the source will be present. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src.svg)
+		/// </summary>
 		Src = 1,
 		// DST_SK_BLENDMODE = 2
+		/// <summary>
+		/// Only the destination will be present. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst.svg)
+		/// </summary>
 		Dst = 2,
 		// SRCOVER_SK_BLENDMODE = 3
+		/// <summary>
+		/// Source is placed over the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-over.svg)
+		/// </summary>
 		SrcOver = 3,
 		// DSTOVER_SK_BLENDMODE = 4
+		/// <summary>
+		/// Destination is placed over the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-over.svg)
+		/// </summary>
 		DstOver = 4,
 		// SRCIN_SK_BLENDMODE = 5
+		/// <summary>
+		/// The source that overlaps the destination, replaces the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-in.svg)
+		/// </summary>
 		SrcIn = 5,
 		// DSTIN_SK_BLENDMODE = 6
+		/// <summary>
+		/// Destination which overlaps the source, replaces the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-in.svg)
+		/// </summary>
 		DstIn = 6,
 		// SRCOUT_SK_BLENDMODE = 7
+		/// <summary>
+		/// Source is placed, where it falls outside of the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-out.svg)
+		/// </summary>
 		SrcOut = 7,
 		// DSTOUT_SK_BLENDMODE = 8
+		/// <summary>
+		/// Destination is placed, where it falls outside of the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-out.svg)
+		/// </summary>
 		DstOut = 8,
 		// SRCATOP_SK_BLENDMODE = 9
+		/// <summary>
+		/// Source which overlaps the destination, replaces the destination. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_src-atop.svg)
+		/// </summary>
 		SrcATop = 9,
 		// DSTATOP_SK_BLENDMODE = 10
+		/// <summary>
+		/// Destination which overlaps the source replaces the source. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_dst-atop.svg)
+		/// </summary>
 		DstATop = 10,
 		// XOR_SK_BLENDMODE = 11
+		/// <summary>
+		/// The non-overlapping regions of source and destination are combined. [Porter Duff Compositing Operators] (https://drafts.fxtf.org/compositing-1/examples/PD_xor.svg)
+		/// </summary>
 		Xor = 11,
 		// PLUS_SK_BLENDMODE = 12
+		/// <summary>
+		/// Display the sum of the source image and destination image. [Porter Duff Compositing Operators]
+		/// </summary>
 		Plus = 12,
 		// MODULATE_SK_BLENDMODE = 13
+		/// <summary>
+		/// Multiplies all components (= alpha and color). [Separable Blend Modes]
+		/// </summary>
 		Modulate = 13,
 		// SCREEN_SK_BLENDMODE = 14
+		/// <summary>
+		/// Multiplies the complements of the backdrop and source color values, then complements the result. [Separable Blend Modes]
+		/// </summary>
 		Screen = 14,
 		// OVERLAY_SK_BLENDMODE = 15
+		/// <summary>
+		/// Multiplies or screens the colors, depending on the backdrop color value. [Separable Blend Modes]
+		/// </summary>
 		Overlay = 15,
 		// DARKEN_SK_BLENDMODE = 16
+		/// <summary>
+		/// Selects the darker of the backdrop and source colors. [Separable Blend Modes]
+		/// </summary>
 		Darken = 16,
 		// LIGHTEN_SK_BLENDMODE = 17
+		/// <summary>
+		/// Selects the lighter of the backdrop and source colors. [Separable Blend Modes]
+		/// </summary>
 		Lighten = 17,
 		// COLORDODGE_SK_BLENDMODE = 18
+		/// <summary>
+		/// Brightens the backdrop color to reflect the source color. [Separable Blend Modes]
+		/// </summary>
 		ColorDodge = 18,
 		// COLORBURN_SK_BLENDMODE = 19
+		/// <summary>
+		/// Darkens the backdrop color to reflect the source color. [Separable Blend Modes]
+		/// </summary>
 		ColorBurn = 19,
 		// HARDLIGHT_SK_BLENDMODE = 20
+		/// <summary>
+		/// Multiplies or screens the colors, depending on the source color value. [Separable Blend Modes]
+		/// </summary>
 		HardLight = 20,
 		// SOFTLIGHT_SK_BLENDMODE = 21
+		/// <summary>
+		/// Darkens or lightens the colors, depending on the source color value. [Separable Blend Modes]
+		/// </summary>
 		SoftLight = 21,
 		// DIFFERENCE_SK_BLENDMODE = 22
+		/// <summary>
+		/// Subtracts the darker of the two constituent colors from the lighter color. [Separable Blend Modes]
+		/// </summary>
 		Difference = 22,
 		// EXCLUSION_SK_BLENDMODE = 23
+		/// <summary>
+		/// Produces an effect similar to that of the Difference mode but lower in contrast. [Separable Blend Modes]
+		/// </summary>
 		Exclusion = 23,
 		// MULTIPLY_SK_BLENDMODE = 24
+		/// <summary>
+		/// The source color is multiplied by the destination color and replaces the destination [Separable Blend Modes]
+		/// </summary>
 		Multiply = 24,
 		// HUE_SK_BLENDMODE = 25
+		/// <summary>
+		/// Creates a color with the hue of the source color and the saturation and luminosity of the backdrop color. [Non-Separable Blend Modes]
+		/// </summary>
 		Hue = 25,
 		// SATURATION_SK_BLENDMODE = 26
+		/// <summary>
+		/// Creates a color with the saturation of the source color and the hue and luminosity of the backdrop color. [Non-Separable Blend Modes]
+		/// </summary>
 		Saturation = 26,
 		// COLOR_SK_BLENDMODE = 27
+		/// <summary>
+		/// Creates a color with the hue and saturation of the source color and the luminosity of the backdrop color. [Non-Separable Blend Modes]
+		/// </summary>
 		Color = 27,
 		// LUMINOSITY_SK_BLENDMODE = 28
+		/// <summary>
+		/// Creates a color with the luminosity of the source color and the hue and saturation of the backdrop color. [Non-Separable Blend Modes]
+		/// </summary>
 		Luminosity = 28,
 	}
 
 	// sk_blurstyle_t
+	/// <summary>
+	/// Blur types for the <see cref="M:SkiaSharp.SKMaskFilter.CreateBlur(SkiaSharp.SKBlurStyle,System.Single)" /> method and its overloads.
+	/// </summary>
 	public enum SKBlurStyle {
 		// NORMAL_SK_BLUR_STYLE = 0
+		/// <summary>
+		/// Fuzzy inside and outside
+		/// </summary>
 		Normal = 0,
 		// SOLID_SK_BLUR_STYLE = 1
+		/// <summary>
+		/// Solid inside, fuzzy outside
+		/// </summary>
 		Solid = 1,
 		// OUTER_SK_BLUR_STYLE = 2
+		/// <summary>
+		/// Nothing inside, fuzzy outside
+		/// </summary>
 		Outer = 2,
 		// INNER_SK_BLUR_STYLE = 3
+		/// <summary>
+		/// Fuzzy inside, nothing outside
+		/// </summary>
 		Inner = 3,
 	}
 
@@ -20453,50 +21158,112 @@ namespace SkiaSharp {
 	}
 
 	// sk_clipop_t
+	/// <summary>
+	/// The logical operations that can be performed when combining two regions.
+	/// </summary>
 	public enum SKClipOperation {
 		// DIFFERENCE_SK_CLIPOP = 0
+		/// <summary>
+		/// Subtract the op region from the first region.
+		/// </summary>
 		Difference = 0,
 		// INTERSECT_SK_CLIPOP = 1
+		/// <summary>
+		/// Intersect the two regions.
+		/// </summary>
 		Intersect = 1,
 	}
 
 	// sk_codec_result_t
+	/// <summary>
+	/// Used to describe the result of a call to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="T:SkiaSharp.SKCodecOptions" />.
+	/// </summary>
+	/// <remarks>Result is the union of possible results from subclasses.</remarks>
 	public enum SKCodecResult {
 		// SUCCESS_SK_CODEC_RESULT = 0
+		/// <summary>
+		/// The general return value for success.
+		/// </summary>
 		Success = 0,
 		// INCOMPLETE_INPUT_SK_CODEC_RESULT = 1
+		/// <summary>
+		/// The input is incomplete. A partial image was generated.
+		/// </summary>
 		IncompleteInput = 1,
 		// ERROR_IN_INPUT_SK_CODEC_RESULT = 2
+		/// <summary>
+		/// There was an error in the imput data. If returned from an incremental decode, decoding cannot continue, even with more data.
+		/// </summary>
 		ErrorInInput = 2,
 		// INVALID_CONVERSION_SK_CODEC_RESULT = 3
+		/// <summary>
+		/// The codec cannot convert to match the request, ignoring dimensions.
+		/// </summary>
 		InvalidConversion = 3,
 		// INVALID_SCALE_SK_CODEC_RESULT = 4
+		/// <summary>
+		/// The generator cannot scale to requested size.
+		/// </summary>
 		InvalidScale = 4,
 		// INVALID_PARAMETERS_SK_CODEC_RESULT = 5
+		/// <summary>
+		/// The parameters (besides info) are invalid. e.g. null pixels, row bytes too small, etc.
+		/// </summary>
 		InvalidParameters = 5,
 		// INVALID_INPUT_SK_CODEC_RESULT = 6
+		/// <summary>
+		/// The input did not contain a valid image.
+		/// </summary>
 		InvalidInput = 6,
 		// COULD_NOT_REWIND_SK_CODEC_RESULT = 7
+		/// <summary>
+		/// Fulfilling this request requires rewinding the input, which is not supported for this input.
+		/// </summary>
 		CouldNotRewind = 7,
 		// INTERNAL_ERROR_SK_CODEC_RESULT = 8
+		/// <summary>
+		/// An internal memory occurred, such as an out-of-memory error.
+		/// </summary>
 		InternalError = 8,
 		// UNIMPLEMENTED_SK_CODEC_RESULT = 9
+		/// <summary>
+		/// This method is not supported by this codec.
+		/// </summary>
 		Unimplemented = 9,
 	}
 
 	// sk_codec_scanline_order_t
+	/// <summary>
+	/// The orders in which scanlines can be returned.
+	/// </summary>
+	/// <remarks>These values are obtained through the <see cref="P:SkiaSharp.SKCodec.ScanlineOrder" /> property.</remarks>
 	public enum SKCodecScanlineOrder {
 		// TOP_DOWN_SK_CODEC_SCANLINE_ORDER = 0
+		/// <summary>
+		/// Indicates that the image can be decoded reliably using the scanline decoder, and that rows will be output in the logical order.
+		/// </summary>
 		TopDown = 0,
 		// BOTTOM_UP_SK_CODEC_SCANLINE_ORDER = 1
+		/// <summary>
+		/// Indicates that the scanline decoder reliably outputs rows, but they will be returned in reverse order. The <see cref="P:SkiaSharp.SKCodec.NextScanline" /> property can be used to determine the actual y-coordinate of the next output row.
+		/// </summary>
 		BottomUp = 1,
 	}
 
 	// sk_codec_zero_initialized_t
+	/// <summary>
+	/// Whether or not the memory passed to <see cref="M:SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> (or one of the overloads that accepts a <see cref="T:SkiaSharp.SKCodecOptions" />) is zero initialized
+	/// </summary>
 	public enum SKZeroInitialized {
 		// YES_SK_CODEC_ZERO_INITIALIZED = 0
+		/// <summary>
+		/// The memory passed is zero initialized, so the codec may take advantage of this by skipping writing zeroes.
+		/// </summary>
 		Yes = 0,
 		// NO_SK_CODEC_ZERO_INITIALIZED = 1
+		/// <summary>
+		/// The memory passed has not been initialized to zero, so the codec must write all zeros to memory.
+		/// </summary>
 		No = 1,
 	}
 
@@ -20509,12 +21276,24 @@ namespace SkiaSharp {
 	}
 
 	// sk_codecanimation_disposalmethod_t
+	/// <summary>
+	/// Represents how the next frame in the image is based on the current frame.
+	/// </summary>
 	public enum SKCodecAnimationDisposalMethod {
 		// KEEP_SK_CODEC_ANIMATION_DISPOSAL_METHOD = 1
+		/// <summary>
+		/// The next frame should be drawn on top of this one.
+		/// </summary>
 		Keep = 1,
 		// RESTORE_BG_COLOR_SK_CODEC_ANIMATION_DISPOSAL_METHOD = 2
+		/// <summary>
+		/// The area inside this frame's rectangle should be cleared to the background color before drawing the next frame.
+		/// </summary>
 		RestoreBackgroundColor = 2,
 		// RESTORE_PREVIOUS_SK_CODEC_ANIMATION_DISPOSAL_METHOD = 3
+		/// <summary>
+		/// The next frame should be drawn on top of the previous frame - i.e. disregarding this one.
+		/// </summary>
 		RestorePrevious = 3,
 	}
 
@@ -20585,30 +21364,69 @@ namespace SkiaSharp {
 	}
 
 	// sk_encoded_image_format_t
+	/// <summary>
+	/// The various formats used by a <see cref="T:SkiaSharp.SKCodec" />.
+	/// </summary>
 	public enum SKEncodedImageFormat {
 		// BMP_SK_ENCODED_FORMAT = 0
+		/// <summary>
+		/// The BMP image format.
+		/// </summary>
 		Bmp = 0,
 		// GIF_SK_ENCODED_FORMAT = 1
+		/// <summary>
+		/// The GIF image format.
+		/// </summary>
 		Gif = 1,
 		// ICO_SK_ENCODED_FORMAT = 2
+		/// <summary>
+		/// The ICO image format.
+		/// </summary>
 		Ico = 2,
 		// JPEG_SK_ENCODED_FORMAT = 3
+		/// <summary>
+		/// The JPEG image format.
+		/// </summary>
 		Jpeg = 3,
 		// PNG_SK_ENCODED_FORMAT = 4
+		/// <summary>
+		/// The PNG image format.
+		/// </summary>
 		Png = 4,
 		// WBMP_SK_ENCODED_FORMAT = 5
+		/// <summary>
+		/// The WBMP image format.
+		/// </summary>
 		Wbmp = 5,
 		// WEBP_SK_ENCODED_FORMAT = 6
+		/// <summary>
+		/// The WEBP image format.
+		/// </summary>
 		Webp = 6,
 		// PKM_SK_ENCODED_FORMAT = 7
+		/// <summary>
+		/// The PKM image format.
+		/// </summary>
 		Pkm = 7,
 		// KTX_SK_ENCODED_FORMAT = 8
+		/// <summary>
+		/// The KTX image format.
+		/// </summary>
 		Ktx = 8,
 		// ASTC_SK_ENCODED_FORMAT = 9
+		/// <summary>
+		/// The ASTC image format.
+		/// </summary>
 		Astc = 9,
 		// DNG_SK_ENCODED_FORMAT = 10
+		/// <summary>
+		/// The Adobe DNG image format.
+		/// </summary>
 		Dng = 10,
 		// HEIF_SK_ENCODED_FORMAT = 11
+		/// <summary>
+		/// The HEIF or High Efficiency Image File format.
+		/// </summary>
 		Heif = 11,
 		// AVIF_SK_ENCODED_FORMAT = 12
 		Avif = 12,
@@ -20617,24 +21435,54 @@ namespace SkiaSharp {
 	}
 
 	// sk_encodedorigin_t
+	/// <summary>
+	/// Represents various origin values returned by <see cref="P:SkiaSharp.SKCodec.Origin" />.
+	/// </summary>
 	public enum SKEncodedOrigin {
 		// TOP_LEFT_SK_ENCODED_ORIGIN = 1
+		/// <summary>
+		/// Default.
+		/// </summary>
 		TopLeft = 1,
 		// TOP_RIGHT_SK_ENCODED_ORIGIN = 2
+		/// <summary>
+		/// Reflected across y-axis.
+		/// </summary>
 		TopRight = 2,
 		// BOTTOM_RIGHT_SK_ENCODED_ORIGIN = 3
+		/// <summary>
+		/// Rotated 180°.
+		/// </summary>
 		BottomRight = 3,
 		// BOTTOM_LEFT_SK_ENCODED_ORIGIN = 4
+		/// <summary>
+		/// Reflected across x-axis.
+		/// </summary>
 		BottomLeft = 4,
 		// LEFT_TOP_SK_ENCODED_ORIGIN = 5
+		/// <summary>
+		/// Reflected across x-axis. Rotated 90° counter-clockwise.
+		/// </summary>
 		LeftTop = 5,
 		// RIGHT_TOP_SK_ENCODED_ORIGIN = 6
+		/// <summary>
+		/// Rotated 90° clockwise.
+		/// </summary>
 		RightTop = 6,
 		// RIGHT_BOTTOM_SK_ENCODED_ORIGIN = 7
+		/// <summary>
+		/// Reflected across x-axis. Rotated 90° clockwise.
+		/// </summary>
 		RightBottom = 7,
 		// LEFT_BOTTOM_SK_ENCODED_ORIGIN = 8
+		/// <summary>
+		/// Rotated 90° counter-clockwise.
+		/// </summary>
 		LeftBottom = 8,
 		// DEFAULT_SK_ENCODED_ORIGIN = TOP_LEFT_SK_ENCODED_ORIGIN
+		/// <summary>
+		/// This is equivalent to <see cref="F:SkiaSharp.SKEncodedOrigin.TopLeft" />.
+		/// </summary>
 		Default = 1,
 	}
 
@@ -20669,58 +21517,124 @@ namespace SkiaSharp {
 	}
 
 	// sk_font_style_slant_t
+	/// <summary>
+	/// Various font slants for use with <see cref="T:SkiaSharp.SKTypeface" />.
+	/// </summary>
 	public enum SKFontStyleSlant {
 		// UPRIGHT_SK_FONT_STYLE_SLANT = 0
+		/// <summary>
+		/// The upright/normal font slant.
+		/// </summary>
 		Upright = 0,
 		// ITALIC_SK_FONT_STYLE_SLANT = 1
+		/// <summary>
+		/// The italic font slant, in which the slanted characters appear as they were designed.
+		/// </summary>
 		Italic = 1,
 		// OBLIQUE_SK_FONT_STYLE_SLANT = 2
+		/// <summary>
+		/// The oblique font slant, in which the characters are artificially slanted.
+		/// </summary>
 		Oblique = 2,
 	}
 
 	// sk_highcontrastconfig_invertstyle_t
+	/// <summary>
+	/// Various invert styles for high contrast calculations.
+	/// </summary>
 	public enum SKHighContrastConfigInvertStyle {
 		// NO_INVERT_SK_HIGH_CONTRAST_CONFIG_INVERT_STYLE = 0
+		/// <summary>
+		/// Do not invert.
+		/// </summary>
 		NoInvert = 0,
 		// INVERT_BRIGHTNESS_SK_HIGH_CONTRAST_CONFIG_INVERT_STYLE = 1
+		/// <summary>
+		/// Invert the brightness.
+		/// </summary>
 		InvertBrightness = 1,
 		// INVERT_LIGHTNESS_SK_HIGH_CONTRAST_CONFIG_INVERT_STYLE = 2
+		/// <summary>
+		/// Invert the lightness.
+		/// </summary>
 		InvertLightness = 2,
 	}
 
 	// sk_image_caching_hint_t
+	/// <summary>
+	/// Hints to image calls where the system might cache computed intermediates.
+	/// </summary>
 	public enum SKImageCachingHint {
 		// ALLOW_SK_IMAGE_CACHING_HINT = 0
+		/// <summary>
+		/// Use the system's default behaviour.
+		/// </summary>
 		Allow = 0,
 		// DISALLOW_SK_IMAGE_CACHING_HINT = 1
+		/// <summary>
+		/// Caching should be avoided
+		/// </summary>
 		Disallow = 1,
 	}
 
 	// sk_jpegencoder_alphaoption_t
+	/// <summary>
+	/// Various options to control how alpha should be handled.
+	/// </summary>
 	public enum SKJpegEncoderAlphaOption {
 		// IGNORE_SK_JPEGENCODER_ALPHA_OPTION = 0
+		/// <summary>
+		/// Ignore the alpha channel and treat the image as opaque.
+		/// </summary>
 		Ignore = 0,
 		// BLEND_ON_BLACK_SK_JPEGENCODER_ALPHA_OPTION = 1
+		/// <summary>
+		/// Blend the pixels onto a black background before encoding.
+		/// </summary>
 		BlendOnBlack = 1,
 	}
 
 	// sk_jpegencoder_downsample_t
+	/// <summary>
+	/// Various options for the downsampling factor of the U and V components.
+	/// </summary>
 	public enum SKJpegEncoderDownsample {
 		// DOWNSAMPLE_420_SK_JPEGENCODER_DOWNSAMPLE = 0
+		/// <summary>
+		/// Reduction by a factor of two in both the horizontal and vertical directions.
+		/// </summary>
 		Downsample420 = 0,
 		// DOWNSAMPLE_422_SK_JPEGENCODER_DOWNSAMPLE = 1
+		/// <summary>
+		/// Reduction by a factor of two in the horizontal direction.
+		/// </summary>
 		Downsample422 = 1,
 		// DOWNSAMPLE_444_SK_JPEGENCODER_DOWNSAMPLE = 2
+		/// <summary>
+		/// No downsampling.
+		/// </summary>
 		Downsample444 = 2,
 	}
 
 	// sk_lattice_recttype_t
+	/// <summary>
+	/// Optional setting per rectangular grid entry to make it transparent, or to fill the grid entry with a color.
+	/// </summary>
 	public enum SKLatticeRectType {
 		// DEFAULT_SK_LATTICE_RECT_TYPE = 0
+		/// <summary>
+		/// Draw the bitmap into the lattice rectangle.
+		/// </summary>
 		Default = 0,
 		// TRANSPARENT_SK_LATTICE_RECT_TYPE = 1
+		/// <summary>
+		/// Skip the lattice rectangle (make it transparent).
+		/// </summary>
 		Transparent = 1,
 		// FIXED_COLOR_SK_LATTICE_RECT_TYPE = 2
+		/// <summary>
+		/// Draw the associated <see cref="P:SkiaSharp.SKLattice.Colors" /> entry into the lattice rectangle.
+		/// </summary>
 		FixedColor = 2,
 	}
 
@@ -20735,209 +21649,474 @@ namespace SkiaSharp {
 	}
 
 	// sk_paint_style_t
+	/// <summary>
+	/// Indications on how to draw geometry.
+	/// </summary>
+	/// <remarks>Styles apply to rectangle, oval, path, and text. Bitmaps are always drawn in
+	/// <see cref="SkiaSharp.SKPaintStyle.Fill" />, and lines are always drawn in
+	/// <see cref="SkiaSharp.SKPaintStyle.Stroke" />.
+	/// <see cref="SkiaSharp.SKPaintStyle.StrokeAndFill" /> implicitly draws the result with
+	/// <see cref="SkiaSharp.SKPathFillType.Winding" /> so if the original path is even-odd,
+	/// the results may not appear the same as if it was drawn twice, filled and then
+	/// stroked.</remarks>
 	public enum SKPaintStyle {
 		// FILL_SK_PAINT_STYLE = 0
+		/// <summary>
+		/// Fill the geometry.
+		/// </summary>
 		Fill = 0,
 		// STROKE_SK_PAINT_STYLE = 1
+		/// <summary>
+		/// Stroke the geometry.
+		/// </summary>
 		Stroke = 1,
 		// STROKE_AND_FILL_SK_PAINT_STYLE = 2
+		/// <summary>
+		/// Fill and stroke the geometry.
+		/// </summary>
 		StrokeAndFill = 2,
 	}
 
 	// sk_path_add_mode_t
+	/// <summary>
+	/// Controls how a path is added to another path.
+	/// </summary>
 	public enum SKPathAddMode {
 		// APPEND_SK_PATH_ADD_MODE = 0
+		/// <summary>
+		/// Source path contours are added as new contours.
+		/// </summary>
 		Append = 0,
 		// EXTEND_SK_PATH_ADD_MODE = 1
+		/// <summary>
+		/// The path is added by extending the last contour of the destination path with the first contour of the source path. If the last contour of the destination path is closed, then it will not be extended. Instead, the start of source path will be extended by a straight line to the end point of the destination path.
+		/// </summary>
 		Extend = 1,
 	}
 
 	// sk_path_arc_size_t
+	/// <summary>
+	/// Indication for whether the smaller or larger of possible two arcs is drawn.
+	/// </summary>
 	public enum SKPathArcSize {
 		// SMALL_SK_PATH_ARC_SIZE = 0
+		/// <summary>
+		/// The smaller of the two possible arcs.
+		/// </summary>
 		Small = 0,
 		// LARGE_SK_PATH_ARC_SIZE = 1
+		/// <summary>
+		/// The larger of the two possible arcs.
+		/// </summary>
 		Large = 1,
 	}
 
 	// sk_path_direction_t
+	/// <summary>
+	/// Direction for path contours.
+	/// </summary>
 	public enum SKPathDirection {
 		// CW_SK_PATH_DIRECTION = 0
+		/// <summary>
+		/// Clockwise direction for adding closed contours.
+		/// </summary>
 		Clockwise = 0,
 		// CCW_SK_PATH_DIRECTION = 1
+		/// <summary>
+		/// Counter-clockwise direction for adding closed contours.
+		/// </summary>
 		CounterClockwise = 1,
 	}
 
 	// sk_path_effect_1d_style_t
+	/// <summary>
+	/// How to transform path at each point (based on the current position and tangent).
+	/// </summary>
 	public enum SKPath1DPathEffectStyle {
 		// TRANSLATE_SK_PATH_EFFECT_1D_STYLE = 0
+		/// <summary>
+		/// Translate the shape to each position.
+		/// </summary>
 		Translate = 0,
 		// ROTATE_SK_PATH_EFFECT_1D_STYLE = 1
+		/// <summary>
+		/// Rotate the shape about its center.
+		/// </summary>
 		Rotate = 1,
 		// MORPH_SK_PATH_EFFECT_1D_STYLE = 2
+		/// <summary>
+		/// Transform each point, and turn lines into curves.
+		/// </summary>
 		Morph = 2,
 	}
 
 	// sk_path_effect_trim_mode_t
+	/// <summary>
+	/// Represents the type of trimming to perform.
+	/// </summary>
 	public enum SKTrimPathEffectMode {
 		// NORMAL_SK_PATH_EFFECT_TRIM_MODE = 0
+		/// <summary>
+		/// Trim the path around the start and stop, preserving [start, stop]
+		/// </summary>
 		Normal = 0,
 		// INVERTED_SK_PATH_EFFECT_TRIM_MODE = 1
+		/// <summary>
+		/// Remove the path between the start and stop, preserving [0, start] and [stop, 1]
+		/// </summary>
 		Inverted = 1,
 	}
 
 	// sk_path_filltype_t
+	/// <summary>
+	/// Possible path fill type values.
+	/// </summary>
 	public enum SKPathFillType {
 		// WINDING_SK_PATH_FILLTYPE = 0
+		/// <summary>
+		/// Specifies that "inside" is computed by a non-zero sum of signed edge crossings.
+		/// </summary>
 		Winding = 0,
 		// EVENODD_SK_PATH_FILLTYPE = 1
+		/// <summary>
+		/// Specifies that "inside" is computed by an odd number of edge crossings.
+		/// </summary>
 		EvenOdd = 1,
 		// INVERSE_WINDING_SK_PATH_FILLTYPE = 2
+		/// <summary>
+		/// Same as <see cref="F:SkiaSharp.SKPathFillType.Winding" />, but draws outside of the path, rather than inside.
+		/// </summary>
 		InverseWinding = 2,
 		// INVERSE_EVENODD_SK_PATH_FILLTYPE = 3
+		/// <summary>
+		/// Same as <see cref="F:SkiaSharp.SKPathFillType.EvenOdd" />, but draws outside of the path, rather than inside.
+		/// </summary>
 		InverseEvenOdd = 3,
 	}
 
 	// sk_path_segment_mask_t
+	/// <summary>
+	/// The flags used by <see cref="P:SkiaSharp.SKPath.SegmentMasks" />.
+	/// </summary>
 	[Flags]
 	public enum SKPathSegmentMask {
 		// LINE_SK_PATH_SEGMENT_MASK = 1 << 0
+		/// <summary>
+		/// The path contains one or more line segments.
+		/// </summary>
 		Line = 1,
 		// QUAD_SK_PATH_SEGMENT_MASK = 1 << 1
+		/// <summary>
+		/// The path contains one or more quad segments.
+		/// </summary>
 		Quad = 2,
 		// CONIC_SK_PATH_SEGMENT_MASK = 1 << 2
+		/// <summary>
+		/// The path contains one or more conic segments.
+		/// </summary>
 		Conic = 4,
 		// CUBIC_SK_PATH_SEGMENT_MASK = 1 << 3
+		/// <summary>
+		/// The path contains one or more cubic segments.
+		/// </summary>
 		Cubic = 8,
 	}
 
 	// sk_path_verb_t
+	/// <summary>
+	/// Verbs contained in an <see cref="T:SkiaSharp.SKPath" />.
+	/// </summary>
+	/// <remarks>In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.</remarks>
 	public enum SKPathVerb {
 		// MOVE_SK_PATH_VERB = 0
+		/// <summary>
+		/// Move command, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return a single point.
+		/// </summary>
 		Move = 0,
 		// LINE_SK_PATH_VERB = 1
+		/// <summary>
+		/// Line path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return two points.
+		/// </summary>
 		Line = 1,
 		// QUAD_SK_PATH_VERB = 2
+		/// <summary>
+		/// Quad command, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points.
+		/// </summary>
 		Quad = 2,
 		// CONIC_SK_PATH_VERB = 3
+		/// <summary>
+		/// Conic path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return three points, plus the <see cref="M:SkiaSharp.SKPath.RawIterator.ConicWeight" /> point.
+		/// </summary>
 		Conic = 3,
 		// CUBIC_SK_PATH_VERB = 4
+		/// <summary>
+		/// Cubic path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return four points.
+		/// </summary>
 		Cubic = 4,
 		// CLOSE_SK_PATH_VERB = 5
+		/// <summary>
+		/// Close path, a call to <see cref="M:SkiaSharp.SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="M:SkiaSharp.SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> will return one point (contour's <see cref="M:SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" /> point).
+		/// </summary>
 		Close = 5,
 		// DONE_SK_PATH_VERB = 6
+		/// <summary>
+		/// The path is completed, points will not contain any data.
+		/// </summary>
 		Done = 6,
 	}
 
 	// sk_pathmeasure_matrixflags_t
+	/// <summary>
+	/// Flags to indicate how to compute a matrix from a position along a path.
+	/// </summary>
+	/// <remarks>This is used with <see cref="M:SkiaSharp.SKPathMeasure.GetMatrix(System.Single,SkiaSharp.SKMatrix@,SkiaSharp.SKPathMeasureMatrixFlags)" />.</remarks>
 	[Flags]
 	public enum SKPathMeasureMatrixFlags {
 		// GET_POSITION_SK_PATHMEASURE_MATRIXFLAGS = 0x01
+		/// <summary>
+		/// Use the coordinates of the point along the path.
+		/// </summary>
 		GetPosition = 1,
 		// GET_TANGENT_SK_PATHMEASURE_MATRIXFLAGS = 0x02
+		/// <summary>
+		/// Use the coordinates of the tangent along the path.
+		/// </summary>
 		GetTangent = 2,
 		// GET_POS_AND_TAN_SK_PATHMEASURE_MATRIXFLAGS = GET_POSITION_SK_PATHMEASURE_MATRIXFLAGS | GET_TANGENT_SK_PATHMEASURE_MATRIXFLAGS
+		/// <summary>
+		/// Use the coordinates of the point and the tangent along the path.
+		/// </summary>
 		GetPositionAndTangent = 3,
 	}
 
 	// sk_pathop_t
+	/// <summary>
+	/// The logical operations that can be performed when combining two paths using <see cref="M:SkiaSharp.SKPath.Op(SkiaSharp.SKPath,SkiaSharp.SKPathOp)" />.
+	/// </summary>
 	public enum SKPathOp {
 		// DIFFERENCE_SK_PATHOP = 0
+		/// <summary>
+		/// Subtract the op path from the current path.
+		/// </summary>
 		Difference = 0,
 		// INTERSECT_SK_PATHOP = 1
+		/// <summary>
+		/// Intersect the two paths.
+		/// </summary>
 		Intersect = 1,
 		// UNION_SK_PATHOP = 2
+		/// <summary>
+		/// Union (inclusive-or) the two paths.
+		/// </summary>
 		Union = 2,
 		// XOR_SK_PATHOP = 3
+		/// <summary>
+		/// Exclusive-or the two paths.
+		/// </summary>
 		Xor = 3,
 		// REVERSE_DIFFERENCE_SK_PATHOP = 4
+		/// <summary>
+		/// Subtract the current path from the op path.
+		/// </summary>
 		ReverseDifference = 4,
 	}
 
 	// sk_pixelgeometry_t
+	/// <summary>
+	/// Describes how LCD strips are organized for each pixel.
+	/// </summary>
+	/// <remarks>Description of how the LCD strips are arranged for each pixel. If this is unknown, or the pixels are meant to be "portable" and/or transformed before showing (e.g. rotated, scaled) then use <see cref="F:SkiaSharp.SKPixelGeometry.Unknown" />.</remarks>
 	public enum SKPixelGeometry {
 		// UNKNOWN_SK_PIXELGEOMETRY = 0
+		/// <summary>
+		/// Use if the order is not known or the pixels are meant to be "portable" and/or transformed before showing (e.g. rotated, scaled).
+		/// </summary>
 		Unknown = 0,
 		// RGB_H_SK_PIXELGEOMETRY = 1
+		/// <summary>
+		/// Pixels are made up horizontal red, green and blue lights.
+		/// </summary>
 		RgbHorizontal = 1,
 		// BGR_H_SK_PIXELGEOMETRY = 2
+		/// <summary>
+		/// Pixels are made up horizontal blue, green and red lights.
+		/// </summary>
 		BgrHorizontal = 2,
 		// RGB_V_SK_PIXELGEOMETRY = 3
+		/// <summary>
+		/// Pixels are made up vertical red, green and blue lights.
+		/// </summary>
 		RgbVertical = 3,
 		// BGR_V_SK_PIXELGEOMETRY = 4
+		/// <summary>
+		/// Pixels are made up vertical blue, green and red lights.
+		/// </summary>
 		BgrVertical = 4,
 	}
 
 	// sk_pngencoder_filterflags_t
+	/// <summary>
+	/// Various row filters to use when encoding a PNG.
+	/// </summary>
 	[Flags]
 	public enum SKPngEncoderFilterFlags {
 		// ZERO_SK_PNGENCODER_FILTER_FLAGS = 0x00
+		/// <summary>
+		/// Do not use any filters.
+		/// </summary>
 		NoFilters = 0,
 		// NONE_SK_PNGENCODER_FILTER_FLAGS = 0x08
+		/// <summary>
+		/// Transmit unmodified.
+		/// </summary>
 		None = 8,
 		// SUB_SK_PNGENCODER_FILTER_FLAGS = 0x10
+		/// <summary>
+		/// Transmit the difference between each byte and the value of the corresponding byte of the prior pixel. [Sub(x) = Raw(x) - Raw(x-bpp)]
+		/// </summary>
 		Sub = 16,
 		// UP_SK_PNGENCODER_FILTER_FLAGS = 0x20
+		/// <summary>
+		/// Transmit the difference between each byte and the value of the corresponding byte of the pixel above. [Up(x) = Raw(x) - Prior(x)]
+		/// </summary>
 		Up = 32,
 		// AVG_SK_PNGENCODER_FILTER_FLAGS = 0x40
+		/// <summary>
+		/// Use the average of the two neighboring pixels (left and above) to predict the value of a pixel. [Average(x) = Raw(x) - floor((Raw(x-bpp)+Prior(x))/2)]
+		/// </summary>
 		Avg = 64,
 		// PAETH_SK_PNGENCODER_FILTER_FLAGS = 0x80
+		/// <summary>
+		/// Compute a simple linear function of the three neighboring pixels (left, above, upper left), then chooses as predictor the neighboring pixel closest to the computed value. [Paeth(x) = Raw(x) - PaethPredictor(Raw(x-bpp), Prior(x), Prior(x-bpp))]
+		/// </summary>
 		Paeth = 128,
 		// ALL_SK_PNGENCODER_FILTER_FLAGS = NONE_SK_PNGENCODER_FILTER_FLAGS | SUB_SK_PNGENCODER_FILTER_FLAGS | UP_SK_PNGENCODER_FILTER_FLAGS | AVG_SK_PNGENCODER_FILTER_FLAGS | PAETH_SK_PNGENCODER_FILTER_FLAGS
+		/// <summary>
+		/// Try all the filters.
+		/// </summary>
 		AllFilters = 248,
 	}
 
 	// sk_point_mode_t
+	/// <summary>
+	/// Possible values to interpret the incoming array of points for the <see cref="M:SkiaSharp.SKCanvas.DrawPoints(SkiaSharp.SKPointMode,SkiaSharp.SKPoint[],SkiaSharp.SKPaint)" /> method.
+	/// </summary>
 	public enum SKPointMode {
 		// POINTS_SK_POINT_MODE = 0
+		/// <summary>
+		/// Interpret the data as coordinates for points.
+		/// </summary>
 		Points = 0,
 		// LINES_SK_POINT_MODE = 1
+		/// <summary>
+		/// Interpret the data as coordinates for lines.
+		/// </summary>
 		Lines = 1,
 		// POLYGON_SK_POINT_MODE = 2
+		/// <summary>
+		/// Interpret the data as coordinates for polygons.
+		/// </summary>
 		Polygon = 2,
 	}
 
 	// sk_region_op_t
+	/// <summary>
+	/// The logical operations that can be performed when combining two regions.
+	/// </summary>
 	public enum SKRegionOperation {
 		// DIFFERENCE_SK_REGION_OP = 0
+		/// <summary>
+		/// Subtract the op region from the first region.
+		/// </summary>
 		Difference = 0,
 		// INTERSECT_SK_REGION_OP = 1
+		/// <summary>
+		/// Intersect the two regions.
+		/// </summary>
 		Intersect = 1,
 		// UNION_SK_REGION_OP = 2
+		/// <summary>
+		/// Union (inclusive-or) the two regions.
+		/// </summary>
 		Union = 2,
 		// XOR_SK_REGION_OP = 3
+		/// <summary>
+		/// Exclusive-or the two regions.
+		/// </summary>
 		XOR = 3,
 		// REVERSE_DIFFERENCE_SK_REGION_OP = 4
+		/// <summary>
+		/// Subtract the first region from the op region.
+		/// </summary>
 		ReverseDifference = 4,
 		// REPLACE_SK_REGION_OP = 5
+		/// <summary>
+		/// Replace the destination region with the op region.
+		/// </summary>
 		Replace = 5,
 	}
 
 	// sk_rrect_corner_t
+	/// <summary>
+	/// Represents the corners of a rounded rectangle.
+	/// </summary>
 	public enum SKRoundRectCorner {
 		// UPPER_LEFT_SK_RRECT_CORNER = 0
+		/// <summary>
+		/// The upper-left or top-left corner.
+		/// </summary>
 		UpperLeft = 0,
 		// UPPER_RIGHT_SK_RRECT_CORNER = 1
+		/// <summary>
+		/// The upper-right or top-right corner.
+		/// </summary>
 		UpperRight = 1,
 		// LOWER_RIGHT_SK_RRECT_CORNER = 2
+		/// <summary>
+		/// The lower-right or bottom-right corner.
+		/// </summary>
 		LowerRight = 2,
 		// LOWER_LEFT_SK_RRECT_CORNER = 3
+		/// <summary>
+		/// The lower-left or bottom-left corner.
+		/// </summary>
 		LowerLeft = 3,
 	}
 
 	// sk_rrect_type_t
+	/// <summary>
+	/// Represents the various sub-types of rounded rectangles.
+	/// </summary>
 	public enum SKRoundRectType {
 		// EMPTY_SK_RRECT_TYPE = 0
+		/// <summary>
+		/// An empty (all zero) rounded rectangle.
+		/// </summary>
 		Empty = 0,
 		// RECT_SK_RRECT_TYPE = 1
+		/// <summary>
+		/// A non-empty rounded rectangle with zero radii at all corners.
+		/// </summary>
 		Rect = 1,
 		// OVAL_SK_RRECT_TYPE = 2
+		/// <summary>
+		/// A non-empty rounded rectangle with the x-radii equal to half the width and the y-radii equal to half the height.
+		/// </summary>
 		Oval = 2,
 		// SIMPLE_SK_RRECT_TYPE = 3
+		/// <summary>
+		/// A non-empty rounded rectangle with equal x-radii and equal y-radii.
+		/// </summary>
 		Simple = 3,
 		// NINE_PATCH_SK_RRECT_TYPE = 4
+		/// <summary>
+		/// A non-empty rounded rectangle where the left x-radii are equal, the top y-radii are equal, the right x-radii are equal and the bottom y-radii are equal.
+		/// </summary>
 		NinePatch = 4,
 		// COMPLEX_SK_RRECT_TYPE = 5
+		/// <summary>
+		/// A non-empty rounded rectangle with at least one corner non-zero.
+		/// </summary>
 		Complex = 5,
 	}
 
@@ -20995,83 +22174,178 @@ namespace SkiaSharp {
 	}
 
 	// sk_shader_tilemode_t
+	/// <summary>
+	/// Indications on how the shader should handle drawing outside the original bounds.
+	/// </summary>
 	public enum SKShaderTileMode {
 		// CLAMP_SK_SHADER_TILEMODE = 0
+		/// <summary>
+		/// Replicate the edge color.
+		/// </summary>
 		Clamp = 0,
 		// REPEAT_SK_SHADER_TILEMODE = 1
+		/// <summary>
+		/// Repeat the shader's image horizontally and vertically.
+		/// </summary>
 		Repeat = 1,
 		// MIRROR_SK_SHADER_TILEMODE = 2
+		/// <summary>
+		/// Repeat the shader's image horizontally and vertically, alternating mirror images so that adjacent images always seam.
+		/// </summary>
 		Mirror = 2,
 		// DECAL_SK_SHADER_TILEMODE = 3
 		Decal = 3,
 	}
 
 	// sk_stroke_cap_t
+	/// <summary>
+	/// Various options for <see cref="P:SkiaSharp.SKPaint.StrokeCap" />.
+	/// </summary>
+	/// <remarks>This is the treatment that is applied to the beginning and end of each non-closed contour (e.g. lines).</remarks>
 	public enum SKStrokeCap {
 		// BUTT_SK_STROKE_CAP = 0
+		/// <summary>
+		/// Begin/end contours with no extension.
+		/// </summary>
 		Butt = 0,
 		// ROUND_SK_STROKE_CAP = 1
+		/// <summary>
+		/// Begin/end contours with a semi-circle extension.
+		/// </summary>
 		Round = 1,
 		// SQUARE_SK_STROKE_CAP = 2
+		/// <summary>
+		/// Begin/end contours with a half square extension.
+		/// </summary>
 		Square = 2,
 	}
 
 	// sk_stroke_join_t
+	/// <summary>
+	/// Join style for stroking operations.
+	/// </summary>
+	/// <remarks>This is the treatment that is applied to corners in paths and rectangles.</remarks>
 	public enum SKStrokeJoin {
 		// MITER_SK_STROKE_JOIN = 0
+		/// <summary>
+		/// Connect path segments with a sharp join.
+		/// </summary>
 		Miter = 0,
 		// ROUND_SK_STROKE_JOIN = 1
+		/// <summary>
+		/// Connect path segments with a round join.
+		/// </summary>
 		Round = 1,
 		// BEVEL_SK_STROKE_JOIN = 2
+		/// <summary>
+		/// Connect path segments with a flat bevel join.
+		/// </summary>
 		Bevel = 2,
 	}
 
 	// sk_surfaceprops_flags_t
+	/// <summary>
+	/// Flags for the <see cref="T:SkiaSharp.SKSurfaceProps" />.
+	/// </summary>
 	[Flags]
 	public enum SKSurfacePropsFlags {
 		// NONE_SK_SURFACE_PROPS_FLAGS = 0
+		/// <summary>
+		/// Use default properties.
+		/// </summary>
 		None = 0,
 		// USE_DEVICE_INDEPENDENT_FONTS_SK_SURFACE_PROPS_FLAGS = 1 << 0
+		/// <summary>
+		/// Use device independent fonts.
+		/// </summary>
 		UseDeviceIndependentFonts = 1,
 	}
 
 	// sk_text_align_t
+	/// <summary>
+	/// Possible text alignment values.
+	/// </summary>
 	public enum SKTextAlign {
 		// LEFT_SK_TEXT_ALIGN = 0
+		/// <summary>
+		/// Left align the text.
+		/// </summary>
 		Left = 0,
 		// CENTER_SK_TEXT_ALIGN = 1
+		/// <summary>
+		/// Center the text.
+		/// </summary>
 		Center = 1,
 		// RIGHT_SK_TEXT_ALIGN = 2
+		/// <summary>
+		/// Right align the text.
+		/// </summary>
 		Right = 2,
 	}
 
 	// sk_text_encoding_t
+	/// <summary>
+	/// Possible text encodings.
+	/// </summary>
 	public enum SKTextEncoding {
 		// UTF8_SK_TEXT_ENCODING = 0
+		/// <summary>
+		/// The buffer contains UTF-8 encoded characters.
+		/// </summary>
 		Utf8 = 0,
 		// UTF16_SK_TEXT_ENCODING = 1
+		/// <summary>
+		/// The buffer contains UTF-16 encoded characters.
+		/// </summary>
 		Utf16 = 1,
 		// UTF32_SK_TEXT_ENCODING = 2
+		/// <summary>
+		/// The buffer contains UTF-32 encoded characters.
+		/// </summary>
 		Utf32 = 2,
 		// GLYPH_ID_SK_TEXT_ENCODING = 3
+		/// <summary>
+		/// The buffer contains glyph ids.
+		/// </summary>
 		GlyphId = 3,
 	}
 
 	// sk_vertices_vertex_mode_t
+	/// <summary>
+	/// Various mode with which to interpret triangles when invoking <see cref="M:SkiaSharp.SKCanvas.DrawVertices(SkiaSharp.SKVertexMode,SkiaSharp.SKPoint[],SkiaSharp.SKColor[],SkiaSharp.SKPaint)" />.
+	/// </summary>
 	public enum SKVertexMode {
 		// TRIANGLES_SK_VERTICES_VERTEX_MODE = 0
+		/// <summary>
+		/// The vertices are a triangle list.
+		/// </summary>
 		Triangles = 0,
 		// TRIANGLE_STRIP_SK_VERTICES_VERTEX_MODE = 1
+		/// <summary>
+		/// The vertices are a triangle strip.
+		/// </summary>
 		TriangleStrip = 1,
 		// TRIANGLE_FAN_SK_VERTICES_VERTEX_MODE = 2
+		/// <summary>
+		/// The vertices are a triangle fan.
+		/// </summary>
 		TriangleFan = 2,
 	}
 
 	// sk_webpencoder_compression_t
+	/// <summary>
+	/// The various types of compression for WEBP files.
+	/// </summary>
 	public enum SKWebpEncoderCompression {
 		// LOSSY_SK_WEBPENCODER_COMPTRESSION = 0
+		/// <summary>
+		/// Compress the files by reducing image quality.
+		/// </summary>
 		Lossy = 0,
 		// LOSSLESS_SK_WEBPENCODER_COMPTRESSION = 1
+		/// <summary>
+		/// Compress the file without loosing data.
+		/// </summary>
 		Lossless = 1,
 	}
 }

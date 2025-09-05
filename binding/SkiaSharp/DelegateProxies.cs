@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 // ReSharper disable InconsistentNaming
 // ReSharper disable PartialMethodParameterNameMismatch
 
@@ -11,20 +11,50 @@ namespace SkiaSharp
 {
 	// public delegates
 
+	/// <summary>
+	/// The delegate that is used when releasing the memory for a bitmap.
+	/// </summary>
+	/// <param name="address">The memory address of the pixels being released.</param>
+	/// <param name="context">The user data that was provided when installing the pixels.</param>
 	public delegate void SKBitmapReleaseDelegate (IntPtr address, object context);
 
+	/// <summary>
+	/// The delegate that is used when a <see cref="T:SkiaSharp.SKData" /> instance is about to be released.
+	/// </summary>
+	/// <param name="address">The pointer to the byte buffer.</param>
+	/// <param name="context">The user state passed to <see cref="M:SkiaSharp.SKData.Create(System.IntPtr,System.Int32,SkiaSharp.SKDataReleaseDelegate,System.Object)" />.</param>
 	public delegate void SKDataReleaseDelegate (IntPtr address, object context);
 
+	/// <summary>
+	/// The delegate that is used when releasing the memory for a raster-based image.
+	/// </summary>
+	/// <param name="pixels">The memory address of the pixels being released.</param>
+	/// <param name="context">The user data that was provided when creating the image.</param>
 	public delegate void SKImageRasterReleaseDelegate (IntPtr pixels, object context);
 
+	/// <summary>
+	/// The delegate that is used when releasing the memory for a texture-based image.
+	/// </summary>
+	/// <param name="context">The context of the image.</param>
 	public delegate void SKImageTextureReleaseDelegate (object context);
 
+	/// <summary>
+	/// The delegate that is used when releasing the memory for a surface.
+	/// </summary>
+	/// <param name="address">The memory address of the pixels being released.</param>
+	/// <param name="context">The user data that was provided when creating the surface.</param>
 	public delegate void SKSurfaceReleaseDelegate (IntPtr address, object context);
 
+	/// <param name="name"></param>
 	public delegate IntPtr GRGlGetProcedureAddressDelegate (string name);
 
+	/// <param name="name"></param>
+	/// <param name="instance"></param>
+	/// <param name="device"></param>
 	public delegate IntPtr GRVkGetProcedureAddressDelegate (string name, IntPtr instance, IntPtr device);
 
+	/// <param name="path"></param>
+	/// <param name="matrix"></param>
 	public delegate void SKGlyphPathDelegate (SKPath path, SKMatrix matrix);
 
 	internal static unsafe partial class DelegateProxies

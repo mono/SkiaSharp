@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
@@ -10,6 +10,10 @@ namespace SkiaSharp
 
 		public static readonly SKRotationScaleMatrix Identity = new SKRotationScaleMatrix (1, 0, 0, 0);
 
+		/// <param name="scos"></param>
+		/// <param name="ssin"></param>
+		/// <param name="tx"></param>
+		/// <param name="ty"></param>
 		public SKRotationScaleMatrix (float scos, float ssin, float tx, float ty)
 		{
 			fSCos = scos;
@@ -21,9 +25,21 @@ namespace SkiaSharp
 		public readonly SKMatrix ToMatrix () =>
 			new SKMatrix (fSCos, -fSSin, fTX, fSSin, fSCos, fTY, 0, 0, 1);
 
+		/// <param name="scale"></param>
+		/// <param name="degrees"></param>
+		/// <param name="tx"></param>
+		/// <param name="ty"></param>
+		/// <param name="anchorX"></param>
+		/// <param name="anchorY"></param>
 		public static SKRotationScaleMatrix CreateDegrees (float scale, float degrees, float tx, float ty, float anchorX, float anchorY) =>
 			Create (scale, degrees * SKMatrix.DegreesToRadians, tx, ty, anchorX, anchorY);
 
+		/// <param name="scale"></param>
+		/// <param name="radians"></param>
+		/// <param name="tx"></param>
+		/// <param name="ty"></param>
+		/// <param name="anchorX"></param>
+		/// <param name="anchorY"></param>
 		public static SKRotationScaleMatrix Create (float scale, float radians, float tx, float ty, float anchorX, float anchorY)
 		{
 			var s = (float)Math.Sin (radians) * scale;
@@ -37,15 +53,24 @@ namespace SkiaSharp
 		public static SKRotationScaleMatrix CreateIdentity () =>
 			new SKRotationScaleMatrix (1, 0, 0, 0);
 
+		/// <param name="x"></param>
+		/// <param name="y"></param>
 		public static SKRotationScaleMatrix CreateTranslation (float x, float y) =>
 			new SKRotationScaleMatrix (1, 0, x, y);
 
+		/// <param name="s"></param>
 		public static SKRotationScaleMatrix CreateScale (float s) =>
 			new SKRotationScaleMatrix (s, 0, 0, 0);
 
+		/// <param name="radians"></param>
+		/// <param name="anchorX"></param>
+		/// <param name="anchorY"></param>
 		public static SKRotationScaleMatrix CreateRotation (float radians, float anchorX, float anchorY) =>
 			Create (1, radians, 0, 0, anchorX, anchorY);
 
+		/// <param name="degrees"></param>
+		/// <param name="anchorX"></param>
+		/// <param name="anchorY"></param>
 		public static SKRotationScaleMatrix CreateRotationDegrees (float degrees, float anchorX, float anchorY) =>
 			CreateDegrees (1, degrees, 0, 0, anchorX, anchorY);
 	}

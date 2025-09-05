@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
@@ -20,6 +20,7 @@ namespace SkiaSharp
 
 		public Span<ushort> Glyphs => new (internalBuffer.glyphs, Size);
 
+		/// <param name="glyphs"></param>
 		public void SetGlyphs (ReadOnlySpan<ushort> glyphs) => glyphs.CopyTo (Glyphs);
 
 		[Obsolete ("Use Glyphs instead.")]
@@ -35,6 +36,7 @@ namespace SkiaSharp
 
 		public Span<float> Positions => new (internalBuffer.pos, Size);
 
+		/// <param name="positions"></param>
 		public void SetPositions (ReadOnlySpan<float> positions) => positions.CopyTo (Positions);
 
 		[Obsolete ("Use Positions instead.")]
@@ -50,6 +52,7 @@ namespace SkiaSharp
 
 		public Span<SKPoint> Positions => new (internalBuffer.pos, Size);
 
+		/// <param name="positions"></param>
 		public void SetPositions (ReadOnlySpan<SKPoint> positions) => positions.CopyTo (Positions);
 
 		[Obsolete ("Use Positions instead.")]
@@ -70,6 +73,7 @@ namespace SkiaSharp
 		[Obsolete ("Use Positions instead.")]
 		public Span<SKRotationScaleMatrix> GetRotationScaleSpan () => Positions;
 
+		/// <param name="positions"></param>
 		[Obsolete ("Use SetPositions instead.")]
 		public void SetRotationScale (ReadOnlySpan<SKRotationScaleMatrix> positions) => SetPositions (positions);
 	}

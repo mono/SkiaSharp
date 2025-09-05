@@ -1,9 +1,13 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// A 3x3 transformation matrix with perspective.
+	/// </summary>
+	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="P:SkiaSharp.SKMatrix.Persp0" />, <see cref="P:SkiaSharp.SKMatrix.Persp1" />, <see cref="P:SkiaSharp.SKMatrix.Persp2" /> fields of the matrix.</remarks>
 	public unsafe partial struct SKMatrix
 	{
 		internal const float DegreesToRadians = (float)Math.PI / 180.0f;
@@ -27,6 +31,7 @@ namespace SkiaSharp
 			public const int Count = 9;
 		}
 
+		/// <param name="values"></param>
 		public SKMatrix (float[] values)
 		{
 			if (values == null)
@@ -47,6 +52,18 @@ namespace SkiaSharp
 			persp2 = values[Indices.Persp2];
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKMatrix" /> using the specified values.
+		/// </summary>
+		/// <param name="scaleX">The scaling in the x-direction.</param>
+		/// <param name="skewX">The skew in the x-direction.</param>
+		/// <param name="transX">The translation in the x-direction.</param>
+		/// <param name="skewY">The skew in the y-direction.</param>
+		/// <param name="scaleY">The scaling in the y-direction.</param>
+		/// <param name="transY">The translation in the y-direction.</param>
+		/// <param name="persp0">The x-perspective.</param>
+		/// <param name="persp1">The y-perspective.</param>
+		/// <param name="persp2">The z-perspective.</param>
 		public SKMatrix (
 			float scaleX, float skewX, float transX,
 			float skewY, float scaleY, float transY,
@@ -67,6 +84,9 @@ namespace SkiaSharp
 
 		// Values
 
+		/// <summary>
+		/// Gets or sets the matrix as a flat array: [ScaleX, SkewX, TransX, SkewY, ScaleY, TransY, Persp0, Persp1, Persp2].
+		/// </summary>
 		public float[] Values {
 			readonly get =>
 				new float[9] {
@@ -94,6 +114,11 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Populates the specified array with the matrix values.
+		/// </summary>
+		/// <param name="values">The array to populate.</param>
+		/// <remarks>The result will be the same as <see cref="P:SkiaSharp.SKMatrix.Values" />.</remarks>
 		public readonly void GetValues (float[] values)
 		{
 			if (values == null)
@@ -119,6 +144,8 @@ namespace SkiaSharp
 		public static SKMatrix CreateIdentity () =>
 			new SKMatrix { scaleX = 1, scaleY = 1, persp2 = 1 };
 
+		/// <param name="x"></param>
+		/// <param name="y"></param>
 		public static SKMatrix CreateTranslation (float x, float y)
 		{
 			if (x == 0 && y == 0)
@@ -133,6 +160,8 @@ namespace SkiaSharp
 			};
 		}
 
+		/// <param name="x"></param>
+		/// <param name="y"></param>
 		public static SKMatrix CreateScale (float x, float y)
 		{
 			if (x == 1 && y == 1)
@@ -145,6 +174,10 @@ namespace SkiaSharp
 			};
 		}
 
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="pivotX"></param>
+		/// <param name="pivotY"></param>
 		public static SKMatrix CreateScale (float x, float y, float pivotX, float pivotY)
 		{
 			if (x == 1 && y == 1)
@@ -162,6 +195,7 @@ namespace SkiaSharp
 			};
 		}
 
+		/// <param name="radians"></param>
 		public static SKMatrix CreateRotation (float radians)
 		{
 			if (radians == 0)
@@ -175,6 +209,9 @@ namespace SkiaSharp
 			return matrix;
 		}
 
+		/// <param name="radians"></param>
+		/// <param name="pivotX"></param>
+		/// <param name="pivotY"></param>
 		public static SKMatrix CreateRotation (float radians, float pivotX, float pivotY)
 		{
 			if (radians == 0)
@@ -188,6 +225,7 @@ namespace SkiaSharp
 			return matrix;
 		}
 
+		/// <param name="degrees"></param>
 		public static SKMatrix CreateRotationDegrees (float degrees)
 		{
 			if (degrees == 0)
@@ -196,6 +234,9 @@ namespace SkiaSharp
 			return CreateRotation (degrees * DegreesToRadians);
 		}
 
+		/// <param name="degrees"></param>
+		/// <param name="pivotX"></param>
+		/// <param name="pivotY"></param>
 		public static SKMatrix CreateRotationDegrees (float degrees, float pivotX, float pivotY)
 		{
 			if (degrees == 0)
@@ -204,6 +245,8 @@ namespace SkiaSharp
 			return CreateRotation (degrees * DegreesToRadians, pivotX, pivotY);
 		}
 
+		/// <param name="x"></param>
+		/// <param name="y"></param>
 		public static SKMatrix CreateSkew (float x, float y)
 		{
 			if (x == 0 && y == 0)
@@ -218,6 +261,10 @@ namespace SkiaSharp
 			};
 		}
 
+		/// <param name="sx"></param>
+		/// <param name="sy"></param>
+		/// <param name="tx"></param>
+		/// <param name="ty"></param>
 		public static SKMatrix CreateScaleTranslation (float sx, float sy, float tx, float ty)
 		{
 			if (sx == 0 && sy == 0 && tx == 0 && ty == 0)
@@ -248,6 +295,11 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Attempts to invert the matrix, if possible the inverse matrix contains the result.
+		/// </summary>
+		/// <param name="inverse">The destination value to store the inverted matrix if the matrix can be inverted.</param>
+		/// <returns>True if the matrix can be inverted, and the inverse parameter is initialized with the inverted matrix, false otherwise.</returns>
 		public readonly bool TryInvert (out SKMatrix inverse)
 		{
 			fixed (SKMatrix* i = &inverse)
@@ -266,6 +318,8 @@ namespace SkiaSharp
 
 		// *Concat
 
+		/// <param name="first"></param>
+		/// <param name="second"></param>
 		public static SKMatrix Concat (SKMatrix first, SKMatrix second)
 		{
 			SKMatrix target;
@@ -273,6 +327,7 @@ namespace SkiaSharp
 			return target;
 		}
 
+		/// <param name="matrix"></param>
 		public readonly SKMatrix PreConcat (SKMatrix matrix)
 		{
 			var target = this;
@@ -280,6 +335,7 @@ namespace SkiaSharp
 			return target;
 		}
 
+		/// <param name="matrix"></param>
 		public readonly SKMatrix PostConcat (SKMatrix matrix)
 		{
 			var target = this;
@@ -287,6 +343,13 @@ namespace SkiaSharp
 			return target;
 		}
 
+		/// <summary>
+		/// Concatenates the specified matrices into the resulting target matrix.
+		/// </summary>
+		/// <param name="target">The result matrix value.</param>
+		/// <param name="first">The first matrix to concatenate.</param>
+		/// <param name="second">The second matrix to concatenate.</param>
+		/// <remarks>Either source matrices can also be the target matrix.</remarks>
 		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
 		{
 			fixed (SKMatrix* t = &target) {
@@ -296,6 +359,11 @@ namespace SkiaSharp
 
 		// MapRect
 
+		/// <summary>
+		/// Applies the matrix to a rectangle.
+		/// </summary>
+		/// <param name="source">The source rectangle to map.</param>
+		/// <returns>Returns the mapped rectangle.</returns>
 		public readonly SKRect MapRect (SKRect source)
 		{
 			SKRect dest;
@@ -307,9 +375,22 @@ namespace SkiaSharp
 
 		// MapPoints
 
+		/// <summary>
+		/// Applies the matrix to a point.
+		/// </summary>
+		/// <param name="point">The point to map.</param>
+		/// <returns>Returns the mapped point.</returns>
+		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVector(System.Single,System.Single)" /> to ignore the translation.</remarks>
 		public readonly SKPoint MapPoint (SKPoint point) =>
 			MapPoint (point.X, point.Y);
 
+		/// <summary>
+		/// Applies the matrix to a point.
+		/// </summary>
+		/// <param name="x">The x-coordinate.</param>
+		/// <param name="y">The y-coordinate.</param>
+		/// <returns>Returns the mapped point.</returns>
+		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVector(System.Single,System.Single)" /> to ignore the translation.</remarks>
 		public readonly SKPoint MapPoint (float x, float y)
 		{
 			SKPoint result;
@@ -331,6 +412,12 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Applies the matrix to an array of points.
+		/// </summary>
+		/// <param name="result">The array where the mapped results will be stored (needs to have the same number of elements of the <paramref name="points" /> array).</param>
+		/// <param name="points">The array of points to be mapped.</param>
+		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVectors(SkiaSharp.SKPoint[],SkiaSharp.SKPoint[])" /> to ignore the translation.</remarks>
 		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
 		{
 			if (result == null)
@@ -347,6 +434,12 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Applies the matrix to an array of points.
+		/// </summary>
+		/// <param name="points">The array of points to be mapped.</param>
+		/// <returns>Returns the new array allocated with the mapped results.</returns>
+		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapVectors(SkiaSharp.SKPoint[])" /> to ignore the translation.</remarks>
 		public readonly SKPoint[] MapPoints (SKPoint[] points)
 		{
 			if (points == null)
@@ -359,9 +452,17 @@ namespace SkiaSharp
 
 		// MapVectors
 
+		/// <param name="vector"></param>
 		public readonly SKPoint MapVector (SKPoint vector) =>
 			MapVector (vector.X, vector.Y);
 
+		/// <summary>
+		/// Applies the matrix to a vector, ignoring translation.
+		/// </summary>
+		/// <param name="x">The x-component of the vector.</param>
+		/// <param name="y">The y-component of the vector.</param>
+		/// <returns>Returns the mapped point.</returns>
+		/// <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapXY(System.Single,System.Single)" /> to take the translation into consideration.</remarks>
 		public readonly SKPoint MapVector (float x, float y)
 		{
 			SKPoint result;
@@ -383,6 +484,12 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Apply the to the array of vectors and return the mapped results..
+		/// </summary>
+		/// <param name="result">The array where the mapped results will be stored (needs to have the same number of elements of the <paramref name="vectors" /> array).</param>
+		/// <param name="vectors">The array of vectors to map.</param>
+		/// <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapPoints(SkiaSharp.SKPoint[],SkiaSharp.SKPoint[])" /> to take the translation into consideration.</remarks>
 		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
 		{
 			if (result == null)
@@ -399,6 +506,12 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Applies the matrix to the array of vectors, ignoring translation, and returns the mapped results.
+		/// </summary>
+		/// <param name="vectors">The array of vectors to map.</param>
+		/// <returns>Returns the new array allocated with the mapped results.</returns>
+		/// <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="M:SkiaSharp.SKMatrix.MapPoints(SkiaSharp.SKPoint[])" /> to take the translation into consideration.</remarks>
 		public readonly SKPoint[] MapVectors (SKPoint[] vectors)
 		{
 			if (vectors == null)
@@ -411,6 +524,11 @@ namespace SkiaSharp
 
 		// MapRadius
 
+		/// <summary>
+		/// Calculates the mean radius of a circle after it has been mapped by this matrix.
+		/// </summary>
+		/// <param name="radius">The radius to map.</param>
+		/// <returns>Returns the mean radius.</returns>
 		public readonly float MapRadius (float radius)
 		{
 			fixed (SKMatrix* t = &this) {

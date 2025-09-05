@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
@@ -19,6 +19,7 @@ namespace SkiaSharp
 
 		public int MaxRenderTargetSize => SkiaApi.gr_recording_context_max_render_target_size (Handle);
 
+		/// <param name="colorType"></param>
 		public int GetMaxSurfaceSampleCount (SKColorType colorType) =>
 			SkiaApi.gr_recording_context_get_max_surface_sample_count_for_color_type (Handle, colorType.ToNative ());
 

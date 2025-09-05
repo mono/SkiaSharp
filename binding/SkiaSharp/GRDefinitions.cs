@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.ComponentModel;
@@ -8,34 +8,95 @@ using GRBackendObject = System.IntPtr;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRGlBackendState)" /> method when using a <see cref="F:SkiaSharp.GRBackend.OpenGL" /> backend.
+	/// </summary>
 	[Flags]
 	public enum GRGlBackendState : UInt32
 	{
+		/// <summary>
+		/// Reset nothing.
+		/// </summary>
 		None = 0,
+		/// <summary>
+		/// Reset the render target.
+		/// </summary>
 		RenderTarget = 1 << 0,
+		/// <summary>
+		/// Reset the texture binding state.
+		/// </summary>
 		TextureBinding = 1 << 1,
+		/// <summary>
+		/// Reset the scissor and viewport state.
+		/// </summary>
 		View = 1 << 2, // scissor and viewport
+		/// <summary>
+		/// Reset the blend state.
+		/// </summary>
 		Blend = 1 << 3,
+		/// <summary>
+		/// Reset the MSAA state
+		/// </summary>
 		MSAAEnable = 1 << 4,
+		/// <summary>
+		/// Reset the vertex buffer state.
+		/// </summary>
 		Vertex = 1 << 5,
+		/// <summary>
+		/// Reset the stencil state.
+		/// </summary>
 		Stencil = 1 << 6,
+		/// <summary>
+		/// Reset the pixel store state.
+		/// </summary>
 		PixelStore = 1 << 7,
+		/// <summary>
+		/// Reset the program state.
+		/// </summary>
 		Program = 1 << 8,
+		/// <summary>
+		/// Reset the fixed function state.
+		/// </summary>
 		FixedFunction = 1 << 9,
+		/// <summary>
+		/// Reset miscellaneous state.
+		/// </summary>
 		Misc = 1 << 10,
+		/// <summary>
+		/// Reset the path rendering state.
+		/// </summary>
 		PathRendering = 1 << 11,
+		/// <summary>
+		/// Reset all the context state.
+		/// </summary>
 		All = 0xffff
 	}
 
+	/// <summary>
+	/// Various flags for the <see cref="M:SkiaSharp.GRContext.ResetContext(SkiaSharp.GRBackendState)" /> method.
+	/// </summary>
 	[Flags]
 	public enum GRBackendState : UInt32
 	{
+		/// <summary>
+		/// Reset nothing.
+		/// </summary>
 		None = 0,
+		/// <summary>
+		/// Reset all the context state for any backend.
+		/// </summary>
 		All = 0xffffffff,
 	}
 
+	/// <summary>
+	/// Represents a handle to an existing OpenGL framebuffer.
+	/// </summary>
 	public partial struct GRGlFramebufferInfo
 	{
+		/// <summary>
+		/// Creates a new <see cref="T:SkiaSharp.GRGlFramebufferInfo" /> with the specified parameters.
+		/// </summary>
+		/// <param name="fboId">The OpenGL framebuffer ID.</param>
 		public GRGlFramebufferInfo (uint fboId)
 		{
 			fProtected = default;
@@ -44,6 +105,11 @@ namespace SkiaSharp
 			fFormat = 0;
 		}
 
+		/// <summary>
+		/// Creates a new <see cref="T:SkiaSharp.GRGlFramebufferInfo" /> with the specified parameters.
+		/// </summary>
+		/// <param name="fboId">The OpenGL framebuffer ID.</param>
+		/// <param name="format">The sized, internal format of the OpenGL framebuffer.</param>
 		public GRGlFramebufferInfo (uint fboId, uint format)
 		{
 			fProtected = default;
@@ -53,8 +119,13 @@ namespace SkiaSharp
 		}
 	}
 
+	/// <summary>
+	/// Represents a handle to an existing OpenGL texture.
+	/// </summary>
 	public partial struct GRGlTextureInfo
 	{
+		/// <param name="target"></param>
+		/// <param name="id"></param>
 		public GRGlTextureInfo (uint target, uint id)
 		{
 			fProtected = default;
@@ -64,6 +135,12 @@ namespace SkiaSharp
 			fFormat = 0;
 		}
 
+		/// <summary>
+		/// Creates a new <see cref="T:SkiaSharp.GRGlTextureInfo" /> with the specified parameters.
+		/// </summary>
+		/// <param name="target">The OpenGL texture target.</param>
+		/// <param name="id">The OpenGL texture ID.</param>
+		/// <param name="format">The sized, internal format of the OpenGL texture.</param>
 		public GRGlTextureInfo (uint target, uint id, uint format)
 		{
 			fProtected = default;
@@ -134,8 +211,16 @@ namespace SkiaSharp
 		}
 	}
 
+	/// <summary>
+	/// Convenience methods for <see cref="T:SkiaSharp.SKPixelGeometry" />.
+	/// </summary>
 	public static partial class SkiaExtensions
 	{
+		/// <summary>
+		/// Converts a <see cref="T:SkiaSharp.SKColorType" /> to the equivalent OpenGL sized format, if possible.
+		/// </summary>
+		/// <param name="colorType">The <see cref="T:SkiaSharp.SKColorType" /> to convert.</param>
+		/// <returns>Returns the equivalent OpenGL sized format, or 0 if there is none.</returns>
 		public static uint ToGlSizedFormat (this SKColorType colorType) =>
 			colorType switch {
 				SKColorType.Unknown => 0,

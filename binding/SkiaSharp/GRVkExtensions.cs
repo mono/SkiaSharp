@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 
@@ -19,12 +19,22 @@ namespace SkiaSharp
 		protected override void DisposeNative () =>
 			SkiaApi.gr_vk_extensions_delete (Handle);
 
+		/// <param name="extension"></param>
+		/// <param name="minVersion"></param>
 		public void HasExtension (string extension, int minVersion) =>
 			SkiaApi.gr_vk_extensions_has_extension (Handle, extension, (uint)minVersion);
 
+		/// <param name="getProc"></param>
+		/// <param name="vkInstance"></param>
+		/// <param name="vkPhysicalDevice"></param>
 		public void Initialize (GRVkGetProcedureAddressDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice) =>
 			Initialize (getProc, vkInstance, vkPhysicalDevice, null, null);
 
+		/// <param name="getProc"></param>
+		/// <param name="vkInstance"></param>
+		/// <param name="vkPhysicalDevice"></param>
+		/// <param name="instanceExtensions"></param>
+		/// <param name="deviceExtensions"></param>
 		public void Initialize (GRVkGetProcedureAddressDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice, string[] instanceExtensions, string[] deviceExtensions)
 		{
 			DelegateProxies.Create (getProc, out var gch, out var ctx);
@@ -38,6 +48,11 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="getProc"></param>
+		/// <param name="vkInstance"></param>
+		/// <param name="vkPhysicalDevice"></param>
+		/// <param name="instanceExtensions"></param>
+		/// <param name="deviceExtensions"></param>
 		public static GRVkExtensions Create (GRVkGetProcedureAddressDelegate getProc, IntPtr vkInstance, IntPtr vkPhysicalDevice, string[] instanceExtensions, string[] deviceExtensions)
 		{
 			var extensions = new GRVkExtensions ();

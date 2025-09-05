@@ -1,7 +1,10 @@
-﻿using System;
+using System;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Represents multiple text runs of glyphs and positions.
+	/// </summary>
 	public unsafe class SKTextBlob : SKObject, ISKNonVirtualReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal SKTextBlob (IntPtr x, bool owns)
@@ -16,6 +19,9 @@ namespace SkiaSharp
 
 		void ISKNonVirtualReferenceCounted.UnreferenceNative () => SkiaApi.sk_textblob_unref (Handle);
 
+		/// <summary>
+		/// Gets the conservative blob bounding box.
+		/// </summary>
 		public SKRect Bounds {
 			get {
 				SKRect bounds;
@@ -24,13 +30,22 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <summary>
+		/// Gets the unique, non-zero value representing the text blob.
+		/// </summary>
 		public uint UniqueId => SkiaApi.sk_textblob_get_unique_id (Handle);
 
 		// Create
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? Create (string text, SKFont font, SKPoint origin = default) =>
 			Create (text.AsSpan (), font, origin);
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? Create (ReadOnlySpan<char> text, SKFont font, SKPoint origin = default)
 		{
 			fixed (void* t = text) {
@@ -38,9 +53,18 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? Create (IntPtr text, int length, SKTextEncoding encoding, SKFont font, SKPoint origin = default) =>
 			Create (text.AsReadOnlySpan (length), encoding, font, origin);
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? Create (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, SKPoint origin = default)
 		{
 			fixed (void* t = text) {
@@ -66,9 +90,17 @@ namespace SkiaSharp
 
 		// CreateHorizontal
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
+		/// <param name="y"></param>
 		public static SKTextBlob? CreateHorizontal (string text, SKFont font, ReadOnlySpan<float> positions, float y) =>
 			CreateHorizontal (text.AsSpan (), font, positions, y);
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
+		/// <param name="y"></param>
 		public static SKTextBlob? CreateHorizontal (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
 			fixed (void* t = text) {
@@ -76,9 +108,20 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
+		/// <param name="y"></param>
 		public static SKTextBlob? CreateHorizontal (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y) =>
 			CreateHorizontal (text.AsReadOnlySpan (length), encoding, font, positions, y);
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
+		/// <param name="y"></param>
 		public static SKTextBlob? CreateHorizontal (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
 			fixed (void* t = text) {
@@ -104,9 +147,15 @@ namespace SkiaSharp
 
 		// CreatePositioned
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreatePositioned (string text, SKFont font, ReadOnlySpan<SKPoint> positions) =>
 			CreatePositioned (text.AsSpan (), font, positions);
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreatePositioned (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			fixed (void* t = text) {
@@ -114,9 +163,18 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreatePositioned (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions) =>
 			CreatePositioned (text.AsReadOnlySpan (length), encoding, font, positions);
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreatePositioned (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			fixed (void* t = text) {
@@ -142,9 +200,15 @@ namespace SkiaSharp
 
 		// CreateRotationScale
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreateRotationScale (string text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
 			CreateRotationScale (text.AsSpan (), font, positions);
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreateRotationScale (ReadOnlySpan<char> text, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
 			fixed (void* t = text) {
@@ -152,9 +216,18 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreateRotationScale (IntPtr text, int length, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions) =>
 			CreateRotationScale (text.AsReadOnlySpan (length), encoding, font, positions);
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public static SKTextBlob? CreateRotationScale (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
 			fixed (void* t = text) {
@@ -180,9 +253,19 @@ namespace SkiaSharp
 
 		// CreatePathPositioned
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="path"></param>
+		/// <param name="textAlign"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? CreatePathPositioned (string text, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default) =>
 			CreatePathPositioned (text.AsSpan (), font, path, textAlign, origin);
 
+		/// <param name="text"></param>
+		/// <param name="font"></param>
+		/// <param name="path"></param>
+		/// <param name="textAlign"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? CreatePathPositioned (ReadOnlySpan<char> text, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default)
 		{
 			fixed (void* t = text) {
@@ -190,9 +273,22 @@ namespace SkiaSharp
 			}
 		}
 
+		/// <param name="text"></param>
+		/// <param name="length"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="path"></param>
+		/// <param name="textAlign"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? CreatePathPositioned (IntPtr text, int length, SKTextEncoding encoding, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default) =>
 			CreatePathPositioned (text.AsReadOnlySpan (length), encoding, font, path, textAlign, origin);
 
+		/// <param name="text"></param>
+		/// <param name="encoding"></param>
+		/// <param name="font"></param>
+		/// <param name="path"></param>
+		/// <param name="textAlign"></param>
+		/// <param name="origin"></param>
 		public static SKTextBlob? CreatePathPositioned (ReadOnlySpan<byte> text, SKTextEncoding encoding, SKFont font, SKPath path, SKTextAlign textAlign = SKTextAlign.Left, SKPoint origin = default)
 		{
 			fixed (void* t = text) {
@@ -225,6 +321,9 @@ namespace SkiaSharp
 
 		// GetIntercepts
 
+		/// <param name="upperBounds"></param>
+		/// <param name="lowerBounds"></param>
+		/// <param name="paint"></param>
 		public float[] GetIntercepts (float upperBounds, float lowerBounds, SKPaint? paint = null)
 		{
 			var n = CountIntercepts (upperBounds, lowerBounds, paint);
@@ -233,6 +332,10 @@ namespace SkiaSharp
 			return intervals;
 		}
 
+		/// <param name="upperBounds"></param>
+		/// <param name="lowerBounds"></param>
+		/// <param name="intervals"></param>
+		/// <param name="paint"></param>
 		public void GetIntercepts (float upperBounds, float lowerBounds, Span<float> intervals, SKPaint? paint = null)
 		{
 			var bounds = stackalloc float[2];
@@ -245,6 +348,9 @@ namespace SkiaSharp
 
 		// CountIntercepts
 
+		/// <param name="upperBounds"></param>
+		/// <param name="lowerBounds"></param>
+		/// <param name="paint"></param>
 		public int CountIntercepts (float upperBounds, float lowerBounds, SKPaint? paint = null)
 		{
 			var bounds = stackalloc float[2];
@@ -259,6 +365,9 @@ namespace SkiaSharp
 			handle == IntPtr.Zero ? null : new SKTextBlob (handle, true);
 	}
 
+	/// <summary>
+	/// A builder object that is used to create a <see cref="T:SkiaSharp.SKTextBlob" />.
+	/// </summary>
 	public unsafe class SKTextBlobBuilder : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKTextBlobBuilder (IntPtr x, bool owns)
@@ -266,6 +375,9 @@ namespace SkiaSharp
 		{
 		}
 
+		/// <summary>
+		/// Creates a new instance of <see cref="T:SkiaSharp.SKTextBlobBuilder" />.
+		/// </summary>
 		public SKTextBlobBuilder ()
 			: this (SkiaApi.sk_textblob_builder_new (), true)
 		{
@@ -279,6 +391,10 @@ namespace SkiaSharp
 
 		// Build
 
+		/// <summary>
+		/// Create the <see cref="T:SkiaSharp.SKTextBlob" /> from all the added runs.
+		/// </summary>
+		/// <returns>Returns the new <see cref="T:SkiaSharp.SKTextBlob" /> if there were runs, otherwise <see langword="null" />.</returns>
 		public SKTextBlob? Build ()
 		{
 			var blob = SKTextBlob.GetObject (SkiaApi.sk_textblob_builder_make (Handle));
@@ -288,6 +404,9 @@ namespace SkiaSharp
 
 		// AddRun
 
+		/// <param name="glyphs"></param>
+		/// <param name="font"></param>
+		/// <param name="origin"></param>
 		public void AddRun (ReadOnlySpan<ushort> glyphs, SKFont font, SKPoint origin = default)
 		{
 			var buffer = AllocateRawPositionedRun (font, glyphs.Length);
@@ -297,6 +416,10 @@ namespace SkiaSharp
 
 		// AddHorizontalRun
 
+		/// <param name="glyphs"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
+		/// <param name="y"></param>
 		public void AddHorizontalRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<float> positions, float y)
 		{
 			var buffer = AllocateRawHorizontalRun (font, glyphs.Length, y);
@@ -306,6 +429,9 @@ namespace SkiaSharp
 
 		// AddPositionedRun
 
+		/// <param name="glyphs"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public void AddPositionedRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<SKPoint> positions)
 		{
 			var buffer = AllocateRawPositionedRun (font, glyphs.Length);
@@ -315,6 +441,9 @@ namespace SkiaSharp
 
 		// AddRotationScaleRun 
 
+		/// <param name="glyphs"></param>
+		/// <param name="font"></param>
+		/// <param name="positions"></param>
 		public void AddRotationScaleRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<SKRotationScaleMatrix> positions)
 		{
 			var buffer = AllocateRawRotationScaleRun (font, glyphs.Length);
@@ -324,6 +453,12 @@ namespace SkiaSharp
 
 		// AddPathPositionedRun
 
+		/// <param name="glyphs"></param>
+		/// <param name="font"></param>
+		/// <param name="glyphWidths"></param>
+		/// <param name="glyphOffsets"></param>
+		/// <param name="path"></param>
+		/// <param name="textAlign"></param>
 		public void AddPathPositionedRun (ReadOnlySpan<ushort> glyphs, SKFont font, ReadOnlySpan<float> glyphWidths, ReadOnlySpan<SKPoint> glyphOffsets, SKPath path, SKTextAlign textAlign = SKTextAlign.Left)
 		{
 			using var pathMeasure = new SKPathMeasure (path);
@@ -379,6 +514,11 @@ namespace SkiaSharp
 
 		// Allocate*Run
 
+		/// <param name="font"></param>
+		/// <param name="count"></param>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="bounds"></param>
 		public SKRunBuffer AllocateRun (SKFont font, int count, float x, float y, SKRect? bounds = null)
 		{
 			var buffer = AllocateRawRun (font, count, x, y, bounds);
@@ -421,6 +561,10 @@ namespace SkiaSharp
 
 		// Allocate*HorizontalRun
 
+		/// <param name="font"></param>
+		/// <param name="count"></param>
+		/// <param name="y"></param>
+		/// <param name="bounds"></param>
 		public SKHorizontalRunBuffer AllocateHorizontalRun (SKFont font, int count, float y, SKRect? bounds = null)
 		{
 			var buffer = AllocateRawHorizontalRun (font, count, y, bounds);
@@ -464,6 +608,9 @@ namespace SkiaSharp
 
 		// AllocatePositionedRun
 
+		/// <param name="font"></param>
+		/// <param name="count"></param>
+		/// <param name="bounds"></param>
 		public SKPositionedRunBuffer AllocatePositionedRun (SKFont font, int count, SKRect? bounds = null)
 		{
 			var buffer = AllocateRawPositionedRun (font, count, bounds);

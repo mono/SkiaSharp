@@ -1,4 +1,4 @@
-﻿#nullable disable
+#nullable disable
 
 using System;
 using System.Runtime.CompilerServices;
@@ -7,6 +7,9 @@ using System.Threading;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Represents a <see cref="T:SkiaSharp.SKWStream" /> (a writeable Skia stream).
+	/// </summary>
 	public unsafe abstract class SKAbstractManagedWStream : SKWStream
 	{
 		private static readonly SKManagedWStreamDelegates delegates;
