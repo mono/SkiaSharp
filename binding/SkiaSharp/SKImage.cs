@@ -16,7 +16,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// An abstraction for drawing a rectangle of pixels.
 	/// </summary>
-	/// <remarks><para>An image is an abstraction of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para><para></para><para>The content of an image is always immutable, though the actual storage may change, if for example that image can be recreated via encoded data or other means.</para><para></para><para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para></remarks>
+	/// <remarks>
+	/// <para>An image is an abstraction of pixels, though the particular type of image could be actually storing its data on the GPU, or as drawing commands (picture or PDF or otherwise), ready to be played back into another canvas.</para><para></para><para>The content of an image is always immutable, though the actual storage may change, if for example that image can be recreated via encoded data or other means.</para><para></para><para>An image always has a non-zero dimensions. If there is a request to create a new image, either directly or via a surface, and either of the requested dimensions are zero, then <see langword="null" /> will be returned.</para>
+	/// </remarks>
 	public unsafe class SKImage : SKObject, ISKReferenceCounted
 	{
 		internal SKImage (IntPtr x, bool owns)
@@ -394,7 +396,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="bitmap">The bitmap that will be used as the source for the image.</param>
 		/// <returns>An image whose contents are the contents of the specified bitmap.</returns>
-		/// <remarks>If the bitmap is marked immutable, and its pixel memory is shareable, it may be shared instead of copied.</remarks>
+		/// <remarks>
+		/// If the bitmap is marked immutable, and its pixel memory is shareable, it may be shared instead of copied.
+		/// </remarks>
 		public static SKImage FromBitmap (SKBitmap bitmap)
 		{
 			if (bitmap == null)
@@ -553,7 +557,9 @@ namespace SkiaSharp
 		/// <param name="texture">The description of the existing backend texture.</param>
 		/// <param name="colorType">The color type to use for the image.</param>
 		/// <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
-		/// <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+		/// <remarks>
+		/// SkiaSharp will delete or recycle the texture when the image is released.
+		/// </remarks>
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, SKColorType colorType) =>
 			FromAdoptedTexture ((GRRecordingContext)context, texture, colorType);
 
@@ -565,7 +571,9 @@ namespace SkiaSharp
 		/// <param name="origin">The origin of the texture.</param>
 		/// <param name="colorType">The color type to use for the image.</param>
 		/// <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
-		/// <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+		/// <remarks>
+		/// SkiaSharp will delete or recycle the texture when the image is released.
+		/// </remarks>
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType) =>
 			FromAdoptedTexture ((GRRecordingContext)context, texture, origin, colorType);
 
@@ -578,7 +586,9 @@ namespace SkiaSharp
 		/// <param name="colorType">The color type to use for the image.</param>
 		/// <param name="alpha">The transparency mode to use for the image.</param>
 		/// <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
-		/// <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+		/// <remarks>
+		/// SkiaSharp will delete or recycle the texture when the image is released.
+		/// </remarks>
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha) =>
 			FromAdoptedTexture ((GRRecordingContext)context, texture, origin, colorType, alpha);
 
@@ -592,7 +602,9 @@ namespace SkiaSharp
 		/// <param name="alpha">The transparency mode to use for the image.</param>
 		/// <param name="colorspace">The colorspace to use for the image.</param>
 		/// <returns>Returns the new image, or <see langword="null" /> if the specified texture is unsupported.</returns>
-		/// <remarks>SkiaSharp will delete or recycle the texture when the image is released.</remarks>
+		/// <remarks>
+		/// SkiaSharp will delete or recycle the texture when the image is released.
+		/// </remarks>
 		public static SKImage FromAdoptedTexture (GRContext context, GRBackendTexture texture, GRSurfaceOrigin origin, SKColorType colorType, SKAlphaType alpha, SKColorSpace colorspace) =>
 			FromAdoptedTexture ((GRRecordingContext)context, texture, origin, colorType, alpha, colorspace);
 
@@ -691,7 +703,9 @@ namespace SkiaSharp
 		/// Encodes the image using the <see cref="SKImageEncodeFormat.Png" /> format.
 		/// </summary>
 		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded image.</returns>
-		/// <remarks>Use the overload that takes a <see cref="SKImageEncodeFormat" /> if you want to encode in a different format.</remarks>
+		/// <remarks>
+		/// Use the overload that takes a <see cref="SKImageEncodeFormat" /> if you want to encode in a different format.
+		/// </remarks>
 		public SKData Encode ()
 		{
 			if (EncodedData is not null)
@@ -706,7 +720,9 @@ namespace SkiaSharp
 		/// <param name="format">The file format used to encode the image.</param>
 		/// <param name="quality">The quality level to use for the image. This is in the range from 0-100.</param>
 		/// <returns>Returns the <see cref="SKData" /> wrapping the encoded image.</returns>
-		/// <remarks>The quality is a suggestion, and not all formats (for example, PNG) respect or support it.</remarks>
+		/// <remarks>
+		/// The quality is a suggestion, and not all formats (for example, PNG) respect or support it.
+		/// </remarks>
 		public SKData Encode (SKEncodedImageFormat format, int quality)
 		{
 			var raster = ToRasterImage (true);
@@ -764,7 +780,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the encoded image pixels as a <see cref="SKData" />, if the image was created from supported encoded stream format.
 		/// </summary>
-		/// <remarks>Returns <see langword="null" /> if the image mage contents are not encoded.</remarks>
+		/// <remarks>
+		/// Returns <see langword="null" /> if the image mage contents are not encoded.
+		/// </remarks>
 		public SKData EncodedData =>
 			SKData.GetObject (SkiaApi.sk_image_ref_encoded (Handle));
 
@@ -873,7 +891,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the image is backed by an image-generator or other source that creates (and caches) its pixels / texture on-demand.
 		/// </summary>
-		/// <remarks>If this method returns <see langword="false" />, then <see cref="SKImage.PeekPixels" /> will return <see langword="null" />.</remarks>
+		/// <remarks>
+		/// If this method returns <see langword="false" />, then <see cref="SKImage.PeekPixels" /> will return <see langword="null" />.
+		/// </remarks>
 		public bool IsLazyGenerated =>
 			SkiaApi.sk_image_is_lazy_generated (Handle);
 
@@ -907,7 +927,9 @@ namespace SkiaSharp
 		/// <param name="srcX">The source x-coordinate to start reading from.</param>
 		/// <param name="srcY">The source y-coordinate to start reading from.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+		/// <remarks>
+		/// This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.
+		/// </remarks>
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY) =>
 			ReadPixels (dstInfo, dstPixels, dstRowBytes, srcX, srcY, SKImageCachingHint.Allow);
 
@@ -921,7 +943,9 @@ namespace SkiaSharp
 		/// <param name="srcY">The source y-coordinate to start reading from.</param>
 		/// <param name="cachingHint">Whether or not to cache intermediate results.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+		/// <remarks>
+		/// This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.
+		/// </remarks>
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY, SKImageCachingHint cachingHint)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);
@@ -941,7 +965,9 @@ namespace SkiaSharp
 		/// <param name="srcX">The source x-coordinate to start reading from.</param>
 		/// <param name="srcY">The source y-coordinate to start reading from.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+		/// <remarks>
+		/// This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.
+		/// </remarks>
 		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY) =>
 			ReadPixels (pixmap, srcX, srcY, SKImageCachingHint.Allow);
 
@@ -953,7 +979,9 @@ namespace SkiaSharp
 		/// <param name="srcY">The source y-coordinate to start reading from.</param>
 		/// <param name="cachingHint">Whether or not to cache intermediate results.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.</remarks>
+		/// <remarks>
+		/// This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dst.Info.Width, dst.Info.Height] does not intersect the image, or if the color type/alpha type could not be converted to the destination types.
+		/// </remarks>
 		public bool ReadPixels (SKPixmap pixmap, int srcX, int srcY, SKImageCachingHint cachingHint)
 		{
 			if (pixmap == null)
@@ -1006,7 +1034,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="subset">The rectangle indicating the subset to obtain.</param>
 		/// <returns>Returns the new image, or <see langword="null" /> if there was an error or the rectangle does not intersect the image.</returns>
-		/// <remarks>The underlying implementation may share the pixels, or it may make a copy.</remarks>
+		/// <remarks>
+		/// The underlying implementation may share the pixels, or it may make a copy.
+		/// </remarks>
 		public SKImage Subset (SKRectI subset)
 		{
 			return GetObject (SkiaApi.sk_image_make_subset_raster (Handle, &subset));

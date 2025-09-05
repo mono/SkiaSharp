@@ -28,7 +28,9 @@ namespace SkiaSharp
 		/// Creates a new instance of <see cref="SKMatrix44" /> using the values from a <see cref="SKMatrix" /> instance.
 		/// </summary>
 		/// <param name="src">The <see cref="SKMatrix" /> instance.</param>
-		/// <remarks>When converting from <see cref="SKMatrix" /> to <see cref="SKMatrix44" />, the third row and column remain as identity.</remarks>
+		/// <remarks>
+		/// When converting from <see cref="SKMatrix" /> to <see cref="SKMatrix44" />, the third row and column remain as identity.
+		/// </remarks>
 		public SKMatrix44 (SKMatrix src)
 		{
 			this = src;
@@ -76,7 +78,9 @@ namespace SkiaSharp
 		/// Creates a new identity matrix.
 		/// </summary>
 		/// <returns>Returns the new identity matrix.</returns>
-		/// <remarks>This is equivalent to creating an uninitialized matrix, and invoking <see cref="SKMatrix44.SetIdentity" />.</remarks>
+		/// <remarks>
+		/// This is equivalent to creating an uninitialized matrix, and invoking <see cref="SKMatrix44.SetIdentity" />.
+		/// </remarks>
 		public static SKMatrix44 CreateIdentity () => Identity;
 
 		/// <param name="x"></param>
@@ -92,7 +96,9 @@ namespace SkiaSharp
 		/// <param name="y">The amount, along the y-axis, to scale.</param>
 		/// <param name="z">The amount, along the z-axis, to scale.</param>
 		/// <returns>Returns the new scale matrix.</returns>
-		/// <remarks>This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetScale(System.Single,System.Single,System.Single)" />.</remarks>
+		/// <remarks>
+		/// This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetScale(System.Single,System.Single,System.Single)" />.
+		/// </remarks>
 		public static SKMatrix44 CreateScale (float x, float y, float z) =>
 			Matrix4x4.CreateScale (x, y, z);
 
@@ -109,7 +115,9 @@ namespace SkiaSharp
 		/// <param name="z">The z-axis to rotate around.</param>
 		/// <param name="radians">The amount, in radians, to rotate by.</param>
 		/// <returns>Returns the new rotation matrix.</returns>
-		/// <remarks>This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetRotationAbout(System.Single,System.Single,System.Single,System.Single)" />.</remarks>
+		/// <remarks>
+		/// This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetRotationAbout(System.Single,System.Single,System.Single,System.Single)" />.
+		/// </remarks>
 		public static SKMatrix44 CreateRotation (float x, float y, float z, float radians) =>
 			Matrix4x4.CreateFromAxisAngle (new Vector3 (x, y, z), radians);
 
@@ -141,7 +149,9 @@ namespace SkiaSharp
 		/// <param name="z">The z-axis to rotate around.</param>
 		/// <param name="degrees">The amount, in degrees, to rotate by.</param>
 		/// <returns>Returns the new rotation matrix.</returns>
-		/// <remarks>This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetRotationAboutDegrees(System.Single,System.Single,System.Single,System.Single)" />.</remarks>
+		/// <remarks>
+		/// This is equivalent to creating an uninitialized matrix and passing the values to <see cref="SKMatrix44.SetRotationAboutDegrees(System.Single,System.Single,System.Single,System.Single)" />.
+		/// </remarks>
 		public static SKMatrix44 CreateRotationDegrees (float x, float y, float z, float degrees) =>
 			Matrix4x4.CreateFromAxisAngle (new Vector3 (x, y, z), degrees * DegreesToRadians);
 
@@ -431,7 +441,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the <see cref="SKMatrix" /> equivalent of the current matrix.
 		/// </summary>
-		/// <remarks>When converting from <see cref="SKMatrix44" /> to <see cref="SKMatrix" />, the third row and column is dropped.</remarks>
+		/// <remarks>
+		/// When converting from <see cref="SKMatrix44" /> to <see cref="SKMatrix" />, the third row and column is dropped.
+		/// </remarks>
 		public SKMatrix Matrix =>
 			new SKMatrix (
 				m00, m10, m30,

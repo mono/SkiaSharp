@@ -84,13 +84,17 @@ namespace SkiaSharp.Views.iOS
 		/// <summary>
 		/// Gets the current canvas size.
 		/// </summary>
-		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
+		/// <remarks>
+		/// The canvas size may be different to the view size as a result of the current device's pixel density.
+		/// </remarks>
 		public SKSize CanvasSize { get; private set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.
 		/// </summary>
-		/// <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
+		/// <remarks>
+		/// By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.
+		/// </remarks>
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
@@ -161,7 +165,8 @@ namespace SkiaSharp.Views.iOS
 		/// <summary>
 		/// Occurs when the the canvas needs to be redrawn.
 		/// </summary>
-		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <remarks>
+		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SkiaSharp.Views.tvOS.SKCanvasView.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.tvOS.SKCanvasView.PaintSurface" />
@@ -181,7 +186,8 @@ namespace SkiaSharp.Views.iOS
 		/// // draw on the canvas
 		/// canvas.Flush ();
 		/// };
-		/// ```</remarks>
+		/// ```
+		/// </remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)

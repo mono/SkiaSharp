@@ -84,7 +84,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="index">The index of the font style set to retrieve.</param>
 		/// <returns>Returns the font style set.</returns>
-		/// <remarks>The index must be in the range of [0, <see cref="SKFontManager.FontFamilyCount" />).</remarks>
+		/// <remarks>
+		/// The index must be in the range of [0, <see cref="SKFontManager.FontFamilyCount" />).
+		/// </remarks>
 		public SKFontStyleSet GetFontStyles (int index)
 		{
 			return SKFontStyleSet.GetObject (SkiaApi.sk_fontmgr_create_styleset (Handle, index));
@@ -95,7 +97,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="familyName">The family name to use when searching.</param>
 		/// <returns>Returns a <see cref="SKFontStyleSet" /> with all the font styles supported by the specified family.</returns>
-		/// <remarks>Never returns <see langword="null" /> and will return an empty set if the family is not found.</remarks>
+		/// <remarks>
+		/// Never returns <see langword="null" /> and will return an empty set if the family is not found.
+		/// </remarks>
 		public SKFontStyleSet GetFontStyles (string familyName)
 		{
 			var familyNameUtf8ByteList = StringUtilities.GetEncodedText (familyName, SKTextEncoding.Utf8, addNull: true);
@@ -114,7 +118,9 @@ namespace SkiaSharp
 		/// <param name="familyName">The family name to use when searching.</param>
 		/// <param name="style">The font style to use when searching.</param>
 		/// <returns>Returns the <see cref="SKTypeface" /> that contains the given family name and style, or the default font if no matching font was found.</returns>
-		/// <remarks>Will never return <see langword="null" />, as it will return the default font if no matching font is found.</remarks>
+		/// <remarks>
+		/// Will never return <see langword="null" />, as it will return the default font if no matching font is found.
+		/// </remarks>
 		public SKTypeface MatchFamily (string familyName, SKFontStyle style)
 		{
 			if (style == null)
@@ -242,13 +248,15 @@ namespace SkiaSharp
 		/// <param name="bcp47">The ISO 639, 15924, and 3166-1 code to use when searching, such as "ja" and "zh".</param>
 		/// <param name="character">The character to find a typeface for.</param>
 		/// <returns>Returns the <see cref="SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-		/// <remarks>Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+		/// <remarks>
+		/// Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
 		/// is fine to just pass a ISO 639 here. The first item is the least significant
 		/// fallback, and the last is the most significant.
 		/// If no specified codes match, any font with the requested character will be
 		/// matched.
 		/// This method may return <see langword="null" /> if no family can be found for the character
-		/// in the system fallback.</remarks>
+		/// in the system fallback.
+		/// </remarks>
 		public SKTypeface MatchCharacter (string familyName, string[] bcp47, char character)
 		{
 			return MatchCharacter (familyName, SKFontStyle.Normal, bcp47, character);
@@ -261,13 +269,15 @@ namespace SkiaSharp
 		/// <param name="bcp47">The ISO 639, 15924, and 3166-1 code to use when searching, such as "ja" and "zh".</param>
 		/// <param name="character">The character to find a typeface for.</param>
 		/// <returns>Returns the <see cref="SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-		/// <remarks>Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+		/// <remarks>
+		/// Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
 		/// is fine to just pass a ISO 639 here. The first item is the least significant
 		/// fallback, and the last is the most significant.
 		/// If no specified codes match, any font with the requested character will be
 		/// matched.
 		/// This method may return <see langword="null" /> if no family can be found for the character
-		/// in the system fallback.</remarks>
+		/// in the system fallback.
+		/// </remarks>
 		public SKTypeface MatchCharacter (string familyName, string[] bcp47, int character)
 		{
 			return MatchCharacter (familyName, SKFontStyle.Normal, bcp47, character);
@@ -283,13 +293,15 @@ namespace SkiaSharp
 		/// <param name="bcp47">The ISO 639, 15924, and 3166-1 code to use when searching, such as "ja" and "zh".</param>
 		/// <param name="character">The character to find a typeface for.</param>
 		/// <returns>Returns the <see cref="SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-		/// <remarks>Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+		/// <remarks>
+		/// Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
 		/// is fine to just pass a ISO 639 here. The first item is the least significant
 		/// fallback, and the last is the most significant.
 		/// If no specified codes match, any font with the requested character will be
 		/// matched.
 		/// This method may return <see langword="null" /> if no family can be found for the character
-		/// in the system fallback.</remarks>
+		/// in the system fallback.
+		/// </remarks>
 		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, char character)
 		{
 			return MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
@@ -305,13 +317,15 @@ namespace SkiaSharp
 		/// <param name="bcp47">The ISO 639, 15924, and 3166-1 code to use when searching, such as "ja" and "zh".</param>
 		/// <param name="character">The character to find a typeface for.</param>
 		/// <returns>Returns the <see cref="SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-		/// <remarks>Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+		/// <remarks>
+		/// Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
 		/// is fine to just pass a ISO 639 here. The first item is the least significant
 		/// fallback, and the last is the most significant.
 		/// If no specified codes match, any font with the requested character will be
 		/// matched.
 		/// This method may return <see langword="null" /> if no family can be found for the character
-		/// in the system fallback.</remarks>
+		/// in the system fallback.
+		/// </remarks>
 		public SKTypeface MatchCharacter (string familyName, SKFontStyleWeight weight, SKFontStyleWidth width, SKFontStyleSlant slant, string[] bcp47, int character)
 		{
 			return MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
@@ -327,13 +341,15 @@ namespace SkiaSharp
 		/// <param name="bcp47">The ISO 639, 15924, and 3166-1 code to use when searching, such as "ja" and "zh".</param>
 		/// <param name="character">The character to find a typeface for.</param>
 		/// <returns>Returns the <see cref="SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-		/// <remarks>Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+		/// <remarks>
+		/// Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
 		/// is fine to just pass a ISO 639 here. The first item is the least significant
 		/// fallback, and the last is the most significant.
 		/// If no specified codes match, any font with the requested character will be
 		/// matched.
 		/// This method may return <see langword="null" /> if no family can be found for the character
-		/// in the system fallback.</remarks>
+		/// in the system fallback.
+		/// </remarks>
 		public SKTypeface MatchCharacter (string familyName, int weight, int width, SKFontStyleSlant slant, string[] bcp47, int character)
 		{
 			return MatchCharacter (familyName, new SKFontStyle (weight, width, slant), bcp47, character);
@@ -347,13 +363,15 @@ namespace SkiaSharp
 		/// <param name="bcp47">The ISO 639, 15924, and 3166-1 code to use when searching, such as "ja" and "zh".</param>
 		/// <param name="character">The character to find a typeface for.</param>
 		/// <returns>Returns the <see cref="SKTypeface" /> that contains the given character, or <see langword="null" /> if none was found.</returns>
-		/// <remarks>Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
+		/// <remarks>
+		/// Note that `bcp47` is a combination of ISO 639, 15924, and3166-1 codes, so it
 		/// is fine to just pass a ISO 639 here. The first item is the least significant
 		/// fallback, and the last is the most significant.
 		/// If no specified codes match, any font with the requested character will be
 		/// matched.
 		/// This method may return <see langword="null" /> if no family can be found for the character
-		/// in the system fallback.</remarks>
+		/// in the system fallback.
+		/// </remarks>
 		public SKTypeface MatchCharacter (string familyName, SKFontStyle style, string[] bcp47, int character)
 		{
 			if (style == null)

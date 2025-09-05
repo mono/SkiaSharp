@@ -22,7 +22,9 @@ namespace SkiaSharp.Views.Tizen
 		/// <summary>
 		/// Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.
 		/// </summary>
-		/// <remarks>By default, when <see langword="false" />, the canvas is resized to 1 canvas pixel per display pixel. When <see langword="true" />, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
+		/// <remarks>
+		/// By default, when <see langword="false" />, the canvas is resized to 1 canvas pixel per display pixel. When <see langword="true" />, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.
+		/// </remarks>
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
@@ -40,7 +42,8 @@ namespace SkiaSharp.Views.Tizen
 		/// <summary>
 		/// Occurs when the surface needs to be redrawn.
 		/// </summary>
-		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <remarks>
+		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SkiaSharp.Views.Tizen.SKCanvasView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.Tizen.SKCanvasView.PaintSurface" />
@@ -55,7 +58,8 @@ namespace SkiaSharp.Views.Tizen
 		/// // draw on the canvas
 		/// canvas.Flush ();
 		/// };
-		/// ```</remarks>
+		/// ```
+		/// </remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected override SKSizeI GetSurfaceSize() => canvasSize;

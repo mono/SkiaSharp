@@ -7,7 +7,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// A type of <see cref="SKCanvas" /> that provides a base type for canvases that do not need to rasterize.
 	/// </summary>
-	/// <remarks>These canvases are not backed by any device/pixels and they use conservative clipping (clipping calls only use rectangles).</remarks>
+	/// <remarks>
+	/// These canvases are not backed by any device/pixels and they use conservative clipping (clipping calls only use rectangles).
+	/// </remarks>
 	public class SKNoDrawCanvas : SKCanvas
 	{
 		internal SKNoDrawCanvas (IntPtr handle, bool owns)

@@ -7,7 +7,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// 16-bit, floating-point, ARGB unpremultiplied color value.
 	/// </summary>
-	/// <remarks>The color components are always in a known order.</remarks>
+	/// <remarks>
+	/// The color components are always in a known order.
+	/// </remarks>
 	public readonly unsafe partial struct SKColorF
 	{
 		private const float EPSILON = 0.001f;
@@ -223,7 +225,9 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="l">The lightness/luminosity value.</param>
-		/// <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="SKColorF.Alpha" />.</remarks>
+		/// <remarks>
+		/// The alpha value is separate from the HSL calculation and will always be the same as <see cref="SKColorF.Alpha" />.
+		/// </remarks>
 		public readonly void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 1
@@ -276,7 +280,9 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="v">The value/brightness value.</param>
-		/// <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="SKColorF.Alpha" />.</remarks>
+		/// <remarks>
+		/// The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="SKColorF.Alpha" />.
+		/// </remarks>
 		public readonly void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 1
@@ -323,7 +329,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Returns the color as a string in the format: #AARRGGBB.
 		/// </summary>
-		/// <remarks>As a result of converting a floating-point color to an integer color, some data loss will occur.</remarks>
+		/// <remarks>
+		/// As a result of converting a floating-point color to an integer color, some data loss will occur.
+		/// </remarks>
 		public readonly override string ToString () =>
 			((SKColor)this).ToString ();
 
@@ -344,7 +352,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="color">The color to convert.</param>
 		/// <returns>The <see cref="SKColor" />.</returns>
-		/// <remarks>As a result of converting a floating-point color to an integer color, some data loss will occur.</remarks>
+		/// <remarks>
+		/// As a result of converting a floating-point color to an integer color, some data loss will occur.
+		/// </remarks>
 		public static explicit operator SKColor (SKColorF color) =>
 			SkiaApi.sk_color4f_to_color (&color);
 	}

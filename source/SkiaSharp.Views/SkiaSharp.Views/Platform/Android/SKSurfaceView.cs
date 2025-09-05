@@ -54,7 +54,9 @@ namespace SkiaSharp.Views.Android
 		/// <summary>
 		/// Gets the current canvas size.
 		/// </summary>
-		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
+		/// <remarks>
+		/// The canvas size may be different to the view size as a result of the current device's pixel density.
+		/// </remarks>
 		public SKSize CanvasSize => surfaceFactory.Info.Size;
 
 		// ISurfaceHolderCallback

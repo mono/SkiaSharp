@@ -8,7 +8,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Various predefined font weights for use with <see cref="SKTypeface" />.
 	/// </summary>
-	/// <remarks>Font weights can range from anywhere between 100 to 1000 (inclusive).</remarks>
+	/// <remarks>
+	/// Font weights can range from anywhere between 100 to 1000 (inclusive).
+	/// </remarks>
 	public enum SKFontStyleWeight
 	{
 		/// <summary>
@@ -338,7 +340,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the default options.
 		/// </summary>
-		/// <remarks>The default value is not zero-initialized and without a subset rectangle.</remarks>
+		/// <remarks>
+		/// The default value is not zero-initialized and without a subset rectangle.
+		/// </remarks>
 		public static readonly SKCodecOptions Default;
 
 		static SKCodecOptions ()
@@ -384,7 +388,9 @@ namespace SkiaSharp
 		/// Create a new instance of <see cref="SKCodecOptions" /> with the specified frame index.
 		/// </summary>
 		/// <param name="frameIndex">The frame to decode.</param>
-		/// <remarks>Only meaningful for multi-frame images.</remarks>
+		/// <remarks>
+		/// Only meaningful for multi-frame images.
+		/// </remarks>
 		public SKCodecOptions (int frameIndex)
 		{
 			ZeroInitialized = SKZeroInitialized.No;
@@ -397,7 +403,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="frameIndex">The frame to decode.</param>
 		/// <param name="priorFrame">The previous frame to decode.</param>
-		/// <remarks>Only meaningful for multi-frame images.</remarks>
+		/// <remarks>
+		/// Only meaningful for multi-frame images.
+		/// </remarks>
 		public SKCodecOptions (int frameIndex, int priorFrame)
 		{
 			ZeroInitialized = SKZeroInitialized.No;
@@ -421,19 +429,23 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the frame to decode.
 		/// </summary>
-		/// <remarks>Only meaningful for multi-frame images.</remarks>
+		/// <remarks>
+		/// Only meaningful for multi-frame images.
+		/// </remarks>
 		public int FrameIndex { readonly get; set; }
 		/// <summary>
 		/// Gets or sets a value indicating which frame, if any, the destination bitmap already contains.
 		/// </summary>
-		/// <remarks>Only meaningful for multi-frame images.
+		/// <remarks>
+		/// Only meaningful for multi-frame images.
 		/// If <see cref="SkiaSharp.SKCodecOptions.FrameIndex" /> needs to be blended with a prior
 		/// frame (as reported by `SKCodec.FrameInfo[FrameIndex].RequiredFrame`), the
 		/// client can set this to any non-<see cref="SkiaSharp.SKCodecAnimationDisposalMethod.RestorePrevious" />
 		/// frame in the range [RequiredFrame, FrameIndex) to indicate that that frame is
 		/// already in the destination. <see cref="SkiaSharp.SKCodecOptions.ZeroInitialized" /> is
 		/// ignored in this case.
-		/// If set to -1, the codec will decode any necessary required frame(s) first.</remarks>
+		/// If set to -1, the codec will decode any necessary required frame(s) first.
+		/// </remarks>
 		public int PriorFrame { readonly get; set; }
 
 		/// <param name="obj"></param>
@@ -481,43 +493,57 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the greatest distance above the baseline for any glyph.
 		/// </summary>
-		/// <remarks>Will be &lt;= 0.</remarks>
+		/// <remarks>
+		/// Will be &lt;= 0.
+		/// </remarks>
 		public readonly float Top => fTop;
 
 		/// <summary>
 		/// Gets the recommended distance above the baseline.
 		/// </summary>
-		/// <remarks>Will be &lt;= 0.</remarks>
+		/// <remarks>
+		/// Will be &lt;= 0.
+		/// </remarks>
 		public readonly float Ascent => fAscent;
 
 		/// <summary>
 		/// Gets the recommended distance below the baseline.
 		/// </summary>
-		/// <remarks>Will be &gt;= 0.</remarks>
+		/// <remarks>
+		/// Will be &gt;= 0.
+		/// </remarks>
 		public readonly float Descent => fDescent;
 
 		/// <summary>
 		/// Gets the greatest distance below the baseline for any glyph.
 		/// </summary>
-		/// <remarks>Will be &gt;= 0.</remarks>
+		/// <remarks>
+		/// Will be &gt;= 0.
+		/// </remarks>
 		public readonly float Bottom => fBottom;
 
 		/// <summary>
 		/// Gets the recommended distance to add between lines of text.
 		/// </summary>
-		/// <remarks>Will be &gt;= 0.</remarks>
+		/// <remarks>
+		/// Will be &gt;= 0.
+		/// </remarks>
 		public readonly float Leading => fLeading;
 
 		/// <summary>
 		/// Gets the average character width.
 		/// </summary>
-		/// <remarks>Will be &gt;= 0.</remarks>
+		/// <remarks>
+		/// Will be &gt;= 0.
+		/// </remarks>
 		public readonly float AverageCharacterWidth => fAvgCharWidth;
 
 		/// <summary>
 		/// Gets the max character width.
 		/// </summary>
-		/// <remarks>Will be &gt;= 0.</remarks>
+		/// <remarks>
+		/// Will be &gt;= 0.
+		/// </remarks>
 		public readonly float MaxCharacterWidth => fMaxCharWidth;
 
 		/// <summary>
@@ -533,24 +559,32 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the height of an 'x' in px.
 		/// </summary>
-		/// <remarks>0 if no 'x' in face.</remarks>
+		/// <remarks>
+		/// 0 if no 'x' in face.
+		/// </remarks>
 		public readonly float XHeight => fXHeight;
 
 		/// <summary>
 		/// Gets the cap height.
 		/// </summary>
-		/// <remarks>Will be &gt; 0, or 0 if cannot be determined.</remarks>
+		/// <remarks>
+		/// Will be &gt; 0, or 0 if cannot be determined.
+		/// </remarks>
 		public readonly float CapHeight => fCapHeight;
 
 		/// <summary>
 		/// Gets the thickness of the underline.
 		/// </summary>
-		/// <remarks><para>0 - if the thickness can not be determined</para><para>null - if the thickness is not set.</para></remarks>
+		/// <remarks>
+		/// <para>0 - if the thickness can not be determined</para><para>null - if the thickness is not set.</para>
+		/// </remarks>
 		public readonly float? UnderlineThickness => GetIfValid (fUnderlineThickness, flagsUnderlineThicknessIsValid);
 		/// <summary>
 		/// Gets the position of the top of the underline stroke relative to the baseline.
 		/// </summary>
-		/// <remarks><para>Negative - underline should be drawn above baseline.</para><para>Positive - underline should be drawn below baseline.</para><para>Zero - underline should be drawn on baseline.underline position, or 0 if cannot be determined.</para><para>null - does not have an UnderlinePosition.</para></remarks>
+		/// <remarks>
+		/// <para>Negative - underline should be drawn above baseline.</para><para>Positive - underline should be drawn below baseline.</para><para>Zero - underline should be drawn on baseline.underline position, or 0 if cannot be determined.</para><para>null - does not have an UnderlinePosition.</para>
+		/// </remarks>
 		public readonly float? UnderlinePosition => GetIfValid (fUnderlinePosition, flagsUnderlinePositionIsValid);
 		/// <summary>
 		/// Gets the thickness of the strikeout.
@@ -559,7 +593,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the position of the bottom of the strikeout stroke relative to the baseline.
 		/// </summary>
-		/// <remarks>This value is typically negative when valid.</remarks>
+		/// <remarks>
+		/// This value is typically negative when valid.
+		/// </remarks>
 		public readonly float? StrikeoutPosition => GetIfValid (fStrikeoutPosition, flagsStrikeoutPositionIsValid);
 
 		private readonly float? GetIfValid (float value, uint flag) =>
@@ -569,7 +605,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Specifies coordinates to divide a bitmap into (<see cref="SKLattice.XDivs" /> * <see cref="SKLattice.YDivs" />) rectangles.
 	/// </summary>
-	/// <remarks>If the lattice divs or bounds are invalid, the entire lattice structure will be ignored on the draw call.</remarks>
+	/// <remarks>
+	/// If the lattice divs or bounds are invalid, the entire lattice structure will be ignored on the draw call.
+	/// </remarks>
 	public struct SKLattice : IEquatable<SKLattice>
 	{
 		/// <summary>
@@ -677,7 +715,9 @@ namespace SkiaSharp
 		/// Creates a new instance of <see cref="SKDocumentPdfMetadata" /> with the specified raster DPI.
 		/// </summary>
 		/// <param name="rasterDpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
-		/// <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+		/// <remarks>
+		/// PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// </remarks>
 		public SKDocumentPdfMetadata (float rasterDpi)
 		{
 			Title = null;
@@ -697,7 +737,9 @@ namespace SkiaSharp
 		/// Creates a new instance of <see cref="SKDocumentPdfMetadata" /> with the specified encoding quality.
 		/// </summary>
 		/// <param name="encodingQuality">The encoding quality.</param>
-		/// <remarks>The encoding quality is between 0 and 100. A quality of 101 indicates lossless encoding.</remarks>
+		/// <remarks>
+		/// The encoding quality is between 0 and 100. A quality of 101 indicates lossless encoding.
+		/// </remarks>
 		public SKDocumentPdfMetadata (int encodingQuality)
 		{
 			Title = null;
@@ -718,7 +760,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rasterDpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
 		/// <param name="encodingQuality">The encoding quality.</param>
-		/// <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm. The encoding quality is between 0 and 100. A quality of 101 indicates lossless encoding.</remarks>
+		/// <remarks>
+		/// PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm. The encoding quality is between 0 and 100. A quality of 101 indicates lossless encoding.
+		/// </remarks>
 		public SKDocumentPdfMetadata (float rasterDpi, int encodingQuality)
 		{
 			Title = null;
@@ -757,7 +801,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// The product that is converting this document to PDF.
 		/// </summary>
-		/// <remarks>Leave empty to get the default, correct value.</remarks>
+		/// <remarks>
+		/// Leave empty to get the default, correct value.
+		/// </remarks>
 		public string Producer { readonly get; set; }
 		/// <summary>
 		/// The date and time the document was created.
@@ -770,26 +816,32 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the DPI (pixels-per-inch) at which features without native PDF support will be rasterized.
 		/// </summary>
-		/// <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// <remarks>
+		/// PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
 		/// A larger DPI would create a PDF that reflects the original intent with better
 		/// fidelity, but it can make for larger PDF files too, which would use more
 		/// memory while rendering, and it would be slower to be processed or sent online
-		/// or to printer.</remarks>
+		/// or to printer.
+		/// </remarks>
 		public float RasterDpi { readonly get; set; }
 		/// <summary>
 		/// Gets or sets a value indicating whether or not make the document PDF/A-2b conformant.
 		/// </summary>
-		/// <remarks>If true, include XMP metadata, a document UUID, and sRGB output intent
+		/// <remarks>
+		/// If true, include XMP metadata, a document UUID, and sRGB output intent
 		/// information. This adds length to the document and makes it non-reproducable,
-		/// but are necessary features for PDF/A-2b conformance.</remarks>
+		/// but are necessary features for PDF/A-2b conformance.
+		/// </remarks>
 		public bool PdfA { readonly get; set; }
 		/// <summary>
 		/// Gets or sets the encoding quality.
 		/// </summary>
-		/// <remarks>Encoding quality controls the trade-off between size and quality. By default
+		/// <remarks>
+		/// Encoding quality controls the trade-off between size and quality. By default
 		/// this is set to 101 percent, which corresponds to lossless encoding. If this
-		/// value is set to a value <= 100, and the image is opaque, it will be encoded
-		/// (using JPEG) with that quality setting.</remarks>
+		/// value is set to a value &lt;= 100, and the image is opaque, it will be encoded
+		/// (using JPEG) with that quality setting.
+		/// </remarks>
 		public int EncodingQuality { readonly get; set; }
 
 		/// <param name="obj"></param>
@@ -909,13 +961,17 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the filtering flags.
 		/// </summary>
-		/// <remarks><para>If a single filter is chosen, then that filter will be used for every row.</para><para>If multiple filters are chosen, then a heuristic will be used to guess which filter will encode smallest, then apply that filter. This happens on a per row basis, different rows can use different filters.</para><para>Using a single filter (or less filters) is typically faster. Trying all of the filters may help minimize the output file size.</para></remarks>
+		/// <remarks>
+		/// <para>If a single filter is chosen, then that filter will be used for every row.</para><para>If multiple filters are chosen, then a heuristic will be used to guess which filter will encode smallest, then apply that filter. This happens on a per row basis, different rows can use different filters.</para><para>Using a single filter (or less filters) is typically faster. Trying all of the filters may help minimize the output file size.</para>
+		/// </remarks>
 		public SKPngEncoderFilterFlags FilterFlags => fFilterFlags;
 
 		/// <summary>
 		/// Gets or sets the compression level in the range 0..9.
 		/// </summary>
-		/// <remarks>A value of 0 is a special case to skip compression entirely, creating dramatically larger PNGs.</remarks>
+		/// <remarks>
+		/// A value of 0 is a special case to skip compression entirely, creating dramatically larger PNGs.
+		/// </remarks>
 		public int ZLibLevel => fZLibLevel;
 	}
 
@@ -965,13 +1021,17 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the value to control how alpha is handled.
 		/// </summary>
-		/// <remarks>JPEGs must be opaque, so this instructs the encoder on how to handle input images with alpha.</remarks>
+		/// <remarks>
+		/// JPEGs must be opaque, so this instructs the encoder on how to handle input images with alpha.
+		/// </remarks>
 		public SKJpegEncoderAlphaOption AlphaOption => fAlphaOption;
 
 		/// <summary>
 		/// Gets or sets the downsampling factor for the U and V components.
 		/// </summary>
-		/// <remarks>This is only meaningful if the image is not gray, since gray will not be encoded as YUV.</remarks>
+		/// <remarks>
+		/// This is only meaningful if the image is not gray, since gray will not be encoded as YUV.
+		/// </remarks>
 		public SKJpegEncoderDownsample Downsample => fDownsample;
 
 		/// <summary>
@@ -1017,7 +1077,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the quality of the encoding.
 		/// </summary>
-		/// <remarks><param>If the compression is lossy, then the quality corresponds to the visual quality. Lower values are smaller, but will have reduced quality.</param><param>If the compression is lossless, then the quality corresponds effort put into compressing the file. Lower values are faster, but higher values have smaller files.</param></remarks>
+		/// <remarks>
+		/// <param>If the compression is lossy, then the quality corresponds to the visual quality. Lower values are smaller, but will have reduced quality.</param><param>If the compression is lossless, then the quality corresponds effort put into compressing the file. Lower values are faster, but higher values have smaller files.</param>
+		/// </remarks>
 		public float Quality => fQuality;
 	}
 

@@ -47,7 +47,9 @@ namespace SkiaSharp.HarfBuzz
 		/// <summary>
 		/// Releases all resources used by this <see cref="SKShaper" />.
 		/// </summary>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="SKShaper" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <remarks>
+		/// Always dispose the object before you release your last reference to the <see cref="SKShaper" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.
+		/// </remarks>
 		public void Dispose()
 		{
 			hbFont?.Dispose();

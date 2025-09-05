@@ -27,7 +27,9 @@ namespace SkiaSharp.Views.Blazor
 	/// <summary>
 	/// Provides data for the <see cref="SKGLView.PaintSurface" /> event.
 	/// </summary>
-	/// <remarks>The event does not yet exist nor is this type currently in use, but exists for cross-platform compatibility.</remarks>
+	/// <remarks>
+	/// The event does not yet exist nor is this type currently in use, but exists for cross-platform compatibility.
+	/// </remarks>
 	public class SKPaintGLSurfaceEventArgs : EventArgs
 	{
 		/// <summary>

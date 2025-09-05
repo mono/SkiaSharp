@@ -72,7 +72,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the bounds of this region.
 		/// </summary>
-		/// <remarks>If the region is empty, returns an empty rectangle.</remarks>
+		/// <remarks>
+		/// If the region is empty, returns an empty rectangle.
+		/// </remarks>
 		public SKRectI Bounds {
 			get {
 				SKRectI rect;
@@ -100,7 +102,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="path">The path to check with.</param>
 		/// <returns>Returns true if the specified path is completely inside the current region, otherwise false.</returns>
-		/// <remarks>This works for simple (rectangular) and complex path, and always returns the correct result. If either the path or the region is empty, this method returns false.</remarks>
+		/// <remarks>
+		/// This works for simple (rectangular) and complex path, and always returns the correct result. If either the path or the region is empty, this method returns false.
+		/// </remarks>
 		public bool Contains (SKPath path)
 		{
 			if (path == null)
@@ -115,7 +119,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="src">The region to check with.</param>
 		/// <returns>Returns true if the specified region is completely inside the current region, otherwise false.</returns>
-		/// <remarks>This works for simple (rectangular) and complex regions, and always returns the correct result. If either region is empty, this method returns false.</remarks>
+		/// <remarks>
+		/// This works for simple (rectangular) and complex regions, and always returns the correct result. If either region is empty, this method returns false.
+		/// </remarks>
 		public bool Contains (SKRegion src)
 		{
 			if (src == null)
@@ -146,7 +152,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The rect to check with.</param>
 		/// <returns>Returns true if the specified rect is completely inside the current region, otherwise false.</returns>
-		/// <remarks>If either the rect or the region is empty, this method returns false.</remarks>
+		/// <remarks>
+		/// If either the rect or the region is empty, this method returns false.
+		/// </remarks>
 		public bool Contains (SKRectI rect) =>
 			SkiaApi.sk_region_contains_rect (Handle, &rect);
 
@@ -260,7 +268,9 @@ namespace SkiaSharp
 		/// <param name="path">The replacement path.</param>
 		/// <param name="clip">The clipping region.</param>
 		/// <returns>Returns true if the resulting region is non-empty.</returns>
-		/// <remarks>This produces a region that is identical to the pixels that would be drawn by the path (with no anti-aliasing) with the specified clip.</remarks>
+		/// <remarks>
+		/// This produces a region that is identical to the pixels that would be drawn by the path (with no anti-aliasing) with the specified clip.
+		/// </remarks>
 		public bool SetPath (SKPath path, SKRegion clip)
 		{
 			if (path == null)
@@ -276,7 +286,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="path">The replacement path.</param>
 		/// <returns>Returns true if the resulting region is non-empty.</returns>
-		/// <remarks>This produces a region that is identical to the pixels that would be drawn by the path (with no anti-aliasing) with the current region as the clip.</remarks>
+		/// <remarks>
+		/// This produces a region that is identical to the pixels that would be drawn by the path (with no anti-aliasing) with the current region as the clip.
+		/// </remarks>
 		public bool SetPath (SKPath path)
 		{
 			if (path == null)

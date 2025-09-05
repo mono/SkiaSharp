@@ -8,13 +8,15 @@ namespace SkiaSharp
 	/// <summary>
 	/// Wrap an existing render target created by the client in the 3D API.
 	/// </summary>
-	/// <remarks>The client is responsible for ensuring that the underlying 3D API object lives
+	/// <remarks>
+	/// The client is responsible for ensuring that the underlying 3D API object lives
 	/// at least as long as the <see cref="SkiaSharp.GRBackendRenderTarget" /> object wrapping
 	/// it.
 	/// We require the client to explicitly provide information about the target, such
 	/// as width, height, and pixel configuration, rather than querying the 3D API for
 	/// these values. We expect these properties to be immutable even if the 3D API
-	/// doesn't require this (eg: OpenGL).</remarks>
+	/// doesn't require this (eg: OpenGL).
+	/// </remarks>
 	public unsafe class GRBackendRenderTarget : SKObject, ISKSkipObjectRegistration
 	{
 		internal GRBackendRenderTarget (IntPtr handle, bool owns)
@@ -128,7 +130,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of samples per pixel.
 		/// </summary>
-		/// <remarks>This is used to influence decisions about applying other forms of anti-aliasing.</remarks>
+		/// <remarks>
+		/// This is used to influence decisions about applying other forms of anti-aliasing.
+		/// </remarks>
 		public int SampleCount => SkiaApi.gr_backendrendertarget_get_samples (Handle);
 		/// <summary>
 		/// Gets the number of bits of stencil per-pixel.

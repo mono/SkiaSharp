@@ -18,7 +18,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether all the bytes in the stream have been read.
 		/// </summary>
-		/// <remarks>This method may return true if there was an error, and the stream cannot be read anymore.</remarks>
+		/// <remarks>
+		/// This method may return true if there was an error, and the stream cannot be read anymore.
+		/// </remarks>
 		public bool IsAtEnd {
 			get {
 				return SkiaApi.sk_stream_is_at_end (Handle);
@@ -246,7 +248,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="position">The absolute position.</param>
 		/// <returns>Returns true if seeking is supported and the seek was successful, otherwise false.</returns>
-		/// <remarks>If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).</remarks>
+		/// <remarks>
+		/// If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).
+		/// </remarks>
 		public bool Seek (int position)
 		{
 			return SkiaApi.sk_stream_seek (Handle, (IntPtr)position);
@@ -257,7 +261,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="offset">The relative offset.</param>
 		/// <returns>Returns true if seeking is supported and the seek was successful, otherwise false.</returns>
-		/// <remarks>If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).</remarks>
+		/// <remarks>
+		/// If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).
+		/// </remarks>
 		public bool Move (long offset) => Move ((int)offset);
 
 		/// <summary>
@@ -265,7 +271,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="offset">The relative offset.</param>
 		/// <returns>Returns true if seeking is supported and the seek was successful, otherwise false.</returns>
-		/// <remarks>If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).</remarks>
+		/// <remarks>
+		/// If an attempt is made to move to a position outside the stream, the position will be set to the closest point within the stream (beginning or end).
+		/// </remarks>
 		public bool Move (int offset)
 		{
 			return SkiaApi.sk_stream_move (Handle, offset);
@@ -593,7 +601,9 @@ namespace SkiaSharp
 		/// Write a newline character to the stream, if one was not already written.
 		/// </summary>
 		/// <returns>Returns true if the write succeeded, otherwise false.</returns>
-		/// <remarks>If the last character was a newline character, this method does nothing.</remarks>
+		/// <remarks>
+		/// If the last character was a newline character, this method does nothing.
+		/// </remarks>
 		public bool NewLine ()
 		{
 			return SkiaApi.sk_wstream_newline (Handle);
@@ -834,7 +844,9 @@ namespace SkiaSharp
 		/// Returns a copy of the data written so far.
 		/// </summary>
 		/// <returns>A copy of the data.</returns>
-		/// <remarks>The caller is responsible for releasing the memory.</remarks>
+		/// <remarks>
+		/// The caller is responsible for releasing the memory.
+		/// </remarks>
 		public SKData CopyToData ()
 		{
 			var data = SKData.Create (BytesWritten);
@@ -846,7 +858,9 @@ namespace SkiaSharp
 		/// Returns a read-only stream with the current data, and then resets the current stream.
 		/// </summary>
 		/// <returns>The stream with the data.</returns>
-		/// <remarks>After calling this method, this stream is reset to it's empty state.</remarks>
+		/// <remarks>
+		/// After calling this method, this stream is reset to it's empty state.
+		/// </remarks>
 		public SKStreamAsset DetachAsStream ()
 		{
 			return SKStreamAssetImplementation.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_stream (Handle));
@@ -856,7 +870,9 @@ namespace SkiaSharp
 		/// Returns a <see cref="SKData" /> instance of the data in the current stream, and then resets the current stream.
 		/// </summary>
 		/// <returns>Returns the <see cref="SKData" /> instance.</returns>
-		/// <remarks>After calling this method, this stream is reset to it's empty state.</remarks>
+		/// <remarks>
+		/// After calling this method, this stream is reset to it's empty state.
+		/// </remarks>
 		public SKData DetachAsData ()
 		{
 			return SKData.GetObject (SkiaApi.sk_dynamicmemorywstream_detach_as_data (Handle));

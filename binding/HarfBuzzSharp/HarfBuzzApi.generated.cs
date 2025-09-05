@@ -6680,7 +6680,9 @@ namespace HarfBuzzSharp {
 		/// <summary>
 		/// Gets or sets the Unicode code point (or the glyph index after shaping).
 		/// </summary>
-		/// <remarks>This represents either a Unicode code point (before shaping) or a glyph index (after shaping).</remarks>
+		/// <remarks>
+		/// This represents either a Unicode code point (before shaping) or a glyph index (after shaping).
+		/// </remarks>
 		public UInt32 Codepoint {
 			readonly get => codepoint;
 			set => codepoint = value;
@@ -6770,7 +6772,9 @@ namespace HarfBuzzSharp {
 		/// <summary>
 		/// Gets or sets how much the glyph moves horizontally before drawing it.
 		/// </summary>
-		/// <remarks>This should not affect how much the line advances.</remarks>
+		/// <remarks>
+		/// This should not affect how much the line advances.
+		/// </remarks>
 		public Int32 XOffset {
 			readonly get => x_offset;
 			set => x_offset = value;
@@ -6781,7 +6785,9 @@ namespace HarfBuzzSharp {
 		/// <summary>
 		/// Gets or sets how much the glyph moves horizontally before drawing it.
 		/// </summary>
-		/// <remarks>This should not affect how much the line advances.</remarks>
+		/// <remarks>
+		/// This should not affect how much the line advances.
+		/// </remarks>
 		public Int32 YOffset {
 			readonly get => y_offset;
 			set => y_offset = value;
@@ -7418,7 +7424,9 @@ namespace HarfBuzzSharp {
 	/// <summary>
 	/// Various memory modes for  <see cref="Blob" />
 	/// </summary>
-	/// <remarks>In no case shall the HarfBuzz client modify memory that is passed to HarfBuzz in a blob. If there is any such possibility, <see cref="MemoryMode.Duplicate" /> should be used such that HarfBuzz makes a copy immediately.</remarks>
+	/// <remarks>
+	/// In no case shall the HarfBuzz client modify memory that is passed to HarfBuzz in a blob. If there is any such possibility, <see cref="MemoryMode.Duplicate" /> should be used such that HarfBuzz makes a copy immediately.
+	/// </remarks>
 	public enum MemoryMode {
 		// HB_MEMORY_MODE_DUPLICATE = 0
 		/// <summary>

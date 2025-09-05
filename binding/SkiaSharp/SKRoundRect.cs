@@ -7,7 +7,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents a rounded rectangle with a potentially different radii for each corner.
 	/// </summary>
-	/// <remarks>If either of a corner's radii are 0 the corner will be square and negative radii are not allowed (they are clamped to zero).</remarks>
+	/// <remarks>
+	/// If either of a corner's radii are 0 the corner will be square and negative radii are not allowed (they are clamped to zero).
+	/// </remarks>
 	public unsafe class SKRoundRect : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKRoundRect (IntPtr handle, bool owns)
@@ -94,7 +96,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the radii of the corners.
 		/// </summary>
-		/// <remarks>The order of the corners are clockwise from the top left: Top Left, Top Right, Bottom Right, Bottom Left.</remarks>
+		/// <remarks>
+		/// The order of the corners are clockwise from the top left: Top Left, Top Right, Bottom Right, Bottom Left.
+		/// </remarks>
 		public SKPoint[] Radii => new[] {
 			GetRadii(SKRoundRectCorner.UpperLeft),
 			GetRadii(SKRoundRectCorner.UpperRight),
@@ -244,7 +248,9 @@ namespace SkiaSharp
 		/// Deflate the rectangle by the specified amount.
 		/// </summary>
 		/// <param name="size">The amount to deflate the rectangle by.</param>
-		/// <remarks>The corner radii are adjusted by the amount of the deflation if they are round.</remarks>
+		/// <remarks>
+		/// The corner radii are adjusted by the amount of the deflation if they are round.
+		/// </remarks>
 		public void Deflate (SKSize size)
 		{
 			Deflate (size.Width, size.Height);
@@ -255,7 +261,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="dx">The amount to deflate the rectangle by along the x-axis.</param>
 		/// <param name="dy">The amount to deflate the rectangle by along the y-axis.</param>
-		/// <remarks>The corner radii are adjusted by the amount of the deflation if they are round.</remarks>
+		/// <remarks>
+		/// The corner radii are adjusted by the amount of the deflation if they are round.
+		/// </remarks>
 		public void Deflate (float dx, float dy)
 		{
 			SkiaApi.sk_rrect_inset (Handle, dx, dy);
@@ -265,7 +273,9 @@ namespace SkiaSharp
 		/// Inflate the rectangle by the specified amount.
 		/// </summary>
 		/// <param name="size">The amount to inflate the rectangle by.</param>
-		/// <remarks>The corner radii are adjusted by the amount of the inflation if they are round.</remarks>
+		/// <remarks>
+		/// The corner radii are adjusted by the amount of the inflation if they are round.
+		/// </remarks>
 		public void Inflate (SKSize size)
 		{
 			Inflate (size.Width, size.Height);
@@ -276,7 +286,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="dx">The amount to inflate the rectangle by along the x-axis.</param>
 		/// <param name="dy">The amount to inflate the rectangle by along the y-axis.</param>
-		/// <remarks>The corner radii are adjusted by the amount of the inflation if they are round.</remarks>
+		/// <remarks>
+		/// The corner radii are adjusted by the amount of the inflation if they are round.
+		/// </remarks>
 		public void Inflate (float dx, float dy)
 		{
 			SkiaApi.sk_rrect_outset (Handle, dx, dy);
@@ -307,7 +319,9 @@ namespace SkiaSharp
 		/// <param name="matrix">The transformation matrix.</param>
 		/// <param name="transformed">The transformed rounded rectangle.</param>
 		/// <returns>Returns a <see langword="true" /> if the transformation was successful, otherwise <see langword="false" /> .</returns>
-		/// <remarks>The transformation matrix must be a scale and/or translation matrix.</remarks>
+		/// <remarks>
+		/// The transformation matrix must be a scale and/or translation matrix.
+		/// </remarks>
 		public bool TryTransform (SKMatrix matrix, out SKRoundRect transformed)
 		{
 			var destHandle = SkiaApi.sk_rrect_new ();
@@ -325,7 +339,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="matrix">The transformation matrix.</param>
 		/// <returns>Returns a new, transformed rectangle if the matrix was valid, otherwise null.</returns>
-		/// <remarks>The transformation matrix must be a scale and/or translation matrix.</remarks>
+		/// <remarks>
+		/// The transformation matrix must be a scale and/or translation matrix.
+		/// </remarks>
 		public SKRoundRect Transform (SKMatrix matrix)
 		{
 			if (TryTransform (matrix, out var transformed)) {

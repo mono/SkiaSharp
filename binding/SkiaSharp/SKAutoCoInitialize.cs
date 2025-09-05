@@ -9,7 +9,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Convenience class used to automatically initialize and uninitialize COM on supported platforms.
 	/// </summary>
-	/// <remarks><para>This is only supported on Windows, and is usually not needed. However, when creating a .NET Core app, COM may not be initialized.</para><para>Currently, only <see cref="SKDocument" /> and more specifically, XPS documents require COM.</para></remarks>
+	/// <remarks>
+	/// <para>This is only supported on Windows, and is usually not needed. However, when creating a .NET Core app, COM may not be initialized.</para><para>Currently, only <see cref="SKDocument" /> and more specifically, XPS documents require COM.</para>
+	/// </remarks>
 	public partial class SKAutoCoInitialize : IDisposable
 	{
 		private long hResult;

@@ -14,7 +14,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// The <see cref="SKBitmap" /> specifies a raster bitmap.
 	/// </summary>
-	/// <remarks><para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="SKCanvas" />, but they are also used to specify the target of a <see cref="SKCanvas" />' drawing operations.</para><para>A <see cref="SKBitmap" /> exposes <see cref="SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="SKBitmap.LockPixels" /> method, and then call the <see cref="SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para><para>(Note: As of SkiaSharp 1.60.0, calls to <see cref="SKBitmap.LockPixels" /> and <see cref="SKBitmap.UnlockPixels" /> are no longer required, and they no longer exist as part of the API.)</para></remarks>
+	/// <remarks>
+	/// <para>A bitmap has an integer width and height, and a format (color type), and a pointer to the actual pixels. Bitmaps can be drawn into a <see cref="SKCanvas" />, but they are also used to specify the target of a <see cref="SKCanvas" />' drawing operations.</para><para>A <see cref="SKBitmap" /> exposes <see cref="SKBitmap.GetPixels" />, which lets a caller write its pixels. To retrieve a pointer to the raw image data of the bitmap, call the <see cref="SKBitmap.LockPixels" /> method, and then call the <see cref="SKBitmap.GetPixels" /> method to get a pointer to the image data.  Once you no longer need to use the raw data pointer, call the <see cref="SKBitmap.UnlockPixels" /> method. The raw data is laid out in the format configured at the time that the bitmap was created.</para><para>(Note: As of SkiaSharp 1.60.0, calls to <see cref="SKBitmap.LockPixels" /> and <see cref="SKBitmap.UnlockPixels" /> are no longer required, and they no longer exist as part of the API.)</para>
+	/// </remarks>
 	public unsafe class SKBitmap : SKObject, ISKSkipObjectRegistration
 	{
 		private const string UnsupportedColorTypeMessage = "Setting the ColorTable is only supported for bitmaps with ColorTypes of Index8.";
@@ -28,7 +30,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Default constructor that creates a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="SKColorType.Unknown" />.
 		/// </summary>
-		/// <remarks>This constructor does not allocate a backing store for the bitmap.</remarks>
+		/// <remarks>
+		/// This constructor does not allocate a backing store for the bitmap.
+		/// </remarks>
 		public SKBitmap ()
 			: this (SkiaApi.sk_bitmap_new (), true)
 		{
@@ -43,7 +47,9 @@ namespace SkiaSharp
 		/// <param name="width">The desired width in pixels.</param>
 		/// <param name="height">The desired height in pixels.</param>
 		/// <param name="isOpaque">If true, sets the <see cref="SKAlphaType" /> to <see cref="SKAlphaType.Opaque" />, otherwise it sets it to <see cref="SKAlphaType.Premul" />.</param>
-		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
+		/// <remarks>
+		/// This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).
+		/// </remarks>
 		public SKBitmap (int width, int height, bool isOpaque = false)
 			: this (width, height, SKImageInfo.PlatformColorType, isOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul)
 		{
@@ -56,7 +62,9 @@ namespace SkiaSharp
 		/// <param name="height">The desired height in pixels.</param>
 		/// <param name="colorType">The desired <see cref="SKColorType" />.</param>
 		/// <param name="alphaType">The desired <see cref="SKAlphaType" />.</param>
-		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
+		/// <remarks>
+		/// This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).
+		/// </remarks>
 		public SKBitmap (int width, int height, SKColorType colorType, SKAlphaType alphaType)
 			: this (new SKImageInfo (width, height, colorType, alphaType))
 		{
@@ -76,7 +84,9 @@ namespace SkiaSharp
 		/// Constructor that configures the bitmap based on an <see cref="SKImageInfo" /> specification.
 		/// </summary>
 		/// <param name="info">The description of the desired image format.</param>
-		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
+		/// <remarks>
+		/// This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).
+		/// </remarks>
 		public SKBitmap (SKImageInfo info)
 			: this (info, info.RowBytes)
 		{
@@ -87,7 +97,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="info">The description of the desired image format.</param>
 		/// <param name="rowBytes">The number of bytes per row.</param>
-		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
+		/// <remarks>
+		/// This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).
+		/// </remarks>
 		public SKBitmap (SKImageInfo info, int rowBytes)
 			: this ()
 		{
@@ -101,7 +113,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="info">The description of the desired image format.</param>
 		/// <param name="flags">The additional flags.</param>
-		/// <remarks>This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).</remarks>
+		/// <remarks>
+		/// This constructor might throw an exception if it is not possible to create a bitmap with the specified configuration (for example, the image info requires a color table, and there is no color table).
+		/// </remarks>
 		public SKBitmap (SKImageInfo info, SKBitmapAllocFlags flags)
 			: this ()
 		{
@@ -157,7 +171,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Reset the bitmap to its initial state.
 		/// </summary>
-		/// <remarks>The result is a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="SKColorType.Unknown" />. If we are a (shared) owner of the pixels, that ownership is decremented.</remarks>
+		/// <remarks>
+		/// The result is a bitmap with zero width and height, and no pixels. Its color type is set to <see cref="SKColorType.Unknown" />. If we are a (shared) owner of the pixels, that ownership is decremented.
+		/// </remarks>
 		public void Reset ()
 		{
 			SkiaApi.sk_bitmap_reset (Handle);
@@ -168,7 +184,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Marks the bitmap as immutable.
 		/// </summary>
-		/// <remarks>Marks this bitmap as immutable, meaning that the contents of its pixels will not change for the lifetime of the bitmap and of the underlying pixelref. This state can be set, but it cannot be cleared once it is set. This state propagates to all other bitmaps that share the same pixelref.</remarks>
+		/// <remarks>
+		/// Marks this bitmap as immutable, meaning that the contents of its pixels will not change for the lifetime of the bitmap and of the underlying pixelref. This state can be set, but it cannot be cleared once it is set. This state propagates to all other bitmaps that share the same pixelref.
+		/// </remarks>
 		public void SetImmutable ()
 		{
 			SkiaApi.sk_bitmap_set_immutable (Handle);
@@ -180,7 +198,9 @@ namespace SkiaSharp
 		/// Fill the entire bitmap with the specified color.
 		/// </summary>
 		/// <param name="color">The color to fill.</param>
-		/// <remarks>If the bitmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+		/// <remarks>
+		/// If the bitmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.
+		/// </remarks>
 		public void Erase (SKColor color)
 		{
 			SkiaApi.sk_bitmap_erase (Handle, (uint)color);
@@ -191,7 +211,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="color">The color to fill.</param>
 		/// <param name="rect">The area to fill.</param>
-		/// <remarks>If the bitmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+		/// <remarks>
+		/// If the bitmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.
+		/// </remarks>
 		public void Erase (SKColor color, SKRectI rect)
 		{
 			SkiaApi.sk_bitmap_erase_rect (Handle, (uint)color, &rect);
@@ -212,7 +234,9 @@ namespace SkiaSharp
 		/// <param name="x">The x-cordinate.</param>
 		/// <param name="y">The y-cordinate.</param>
 		/// <returns>Alpha only color types return black with the appropriate alpha set. The value is undefined for <see cref="SKColorType.Unknown" />, if the coordinates are out of bounds, if the bitmap does not have any pixels, or has not be locked with <see cref="SKBitmap.LockPixels" />.</returns>
-		/// <remarks>In most cases this will require unpremultiplying the color.</remarks>
+		/// <remarks>
+		/// In most cases this will require unpremultiplying the color.
+		/// </remarks>
 		public SKColor GetPixel (int x, int y)
 		{
 			return SkiaApi.sk_bitmap_get_pixel_color (Handle, x, y);
@@ -224,7 +248,9 @@ namespace SkiaSharp
 		/// <param name="x">The x-coordinate.</param>
 		/// <param name="y">The y-coordinate.</param>
 		/// <param name="color">The color to set.</param>
-		/// <remarks>This method will set the color of the pixel on the bitmap to the specified <paramref name="color" /> performing any necessary color conversions to the format of the bitmap.</remarks>
+		/// <remarks>
+		/// This method will set the color of the pixel on the bitmap to the specified <paramref name="color" /> performing any necessary color conversions to the format of the bitmap.
+		/// </remarks>
 		public void SetPixel (int x, int y, SKColor color)
 		{
 			var info = Info;
@@ -341,7 +367,9 @@ namespace SkiaSharp
 		/// <param name="destination">The bitmap that will be set to a subset of this bitmap.</param>
 		/// <param name="subset">The rectangle of pixels in this bitmap that the destination will reference.</param>
 		/// <returns>Returns true if the subset was retrieved, false otherwise.</returns>
-		/// <remarks>If possible, the retrieved bitmap will share the pixel memory, and just point into a subset of it. However, if the color type does not support this, a local copy will be made and associated with the destination bitmap.</remarks>
+		/// <remarks>
+		/// If possible, the retrieved bitmap will share the pixel memory, and just point into a subset of it. However, if the color type does not support this, a local copy will be made and associated with the destination bitmap.
+		/// </remarks>
 		public bool ExtractSubset (SKBitmap destination, SKRectI subset)
 		{
 			if (destination == null) {
@@ -444,7 +472,9 @@ namespace SkiaSharp
 		/// Gets the configured <see cref="SKAlphaType" /> for the bitmap.
 		/// </summary>
 		/// <value>The configured <see cref="SKAlphaType" />.</value>
-		/// <remarks>This determines the kind of encoding used for the alpha channel, opaque, premultiplied or unpremultiplied.</remarks>
+		/// <remarks>
+		/// This determines the kind of encoding used for the alpha channel, opaque, premultiplied or unpremultiplied.
+		/// </remarks>
 		public SKAlphaType AlphaType {
 			get { return Info.AlphaType; }
 		}
@@ -459,7 +489,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of bytes used per pixel.
 		/// </summary>
-		/// <remarks>This is calculated from the <see cref="SKBitmap.ColorType" />. If the color type is <see cref="SKColorType.Unknown" />, then the value will be 0.</remarks>
+		/// <remarks>
+		/// This is calculated from the <see cref="SKBitmap.ColorType" />. If the color type is <see cref="SKColorType.Unknown" />, then the value will be 0.
+		/// </remarks>
 		public int BytesPerPixel {
 			get { return Info.BytesPerPixel; }
 		}
@@ -467,7 +499,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// The number of bytes per row.
 		/// </summary>
-		/// <remarks>The same as <see cref="SKImageInfo.RowBytes" />.</remarks>
+		/// <remarks>
+		/// The same as <see cref="SKImageInfo.RowBytes" />.
+		/// </remarks>
 		public int RowBytes {
 			get { return (int)SkiaApi.sk_bitmap_get_row_bytes (Handle); }
 		}
@@ -476,7 +510,9 @@ namespace SkiaSharp
 		/// Returns the byte size of the pixels, based on the <see cref="SKBitmap.Height" /> and <see cref="SKBitmap.RowBytes" />.
 		/// </summary>
 		/// <value>The byte size of the pixels.</value>
-		/// <remarks>Note: this truncates the result to 32-bits.</remarks>
+		/// <remarks>
+		/// Note: this truncates the result to 32-bits.
+		/// </remarks>
 		public int ByteCount {
 			get { return (int)SkiaApi.sk_bitmap_get_byte_count (Handle); }
 		}
@@ -494,7 +530,9 @@ namespace SkiaSharp
 		/// Returns a span that wraps the pixel data.
 		/// </summary>
 		/// <returns>Returns the span.</returns>
-		/// <remarks>This span is only valid as long as the bitmap is valid</remarks>
+		/// <remarks>
+		/// This span is only valid as long as the bitmap is valid
+		/// </remarks>
 		public Span<byte> GetPixelSpan () =>
 			new Span<byte> ((void*)GetPixels (out var length), (int)length);
 
@@ -576,7 +614,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the bitmap has empty dimensions.
 		/// </summary>
-		/// <remarks>In most cases, <see cref="SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="SKBitmap.IsNull" /> as well.</remarks>
+		/// <remarks>
+		/// In most cases, <see cref="SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="SKBitmap.IsNull" /> as well.
+		/// </remarks>
 		public bool IsEmpty {
 			get { return Info.IsEmpty; }
 		}
@@ -584,7 +624,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the bitmap has any pixelref.
 		/// </summary>
-		/// <remarks>This can return true even if the dimensions of the bitmap are not empty. In most cases, <see cref="SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="SKBitmap.IsEmpty" /> as well.</remarks>
+		/// <remarks>
+		/// This can return true even if the dimensions of the bitmap are not empty. In most cases, <see cref="SKBitmap.DrawsNothing" /> will return the desired result as it checks <see cref="SKBitmap.IsEmpty" /> as well.
+		/// </remarks>
 		public bool IsNull {
 			get { return SkiaApi.sk_bitmap_is_null (Handle); }
 		}
@@ -600,7 +642,9 @@ namespace SkiaSharp
 		/// Indicates if the bitmap contents are immutable.
 		/// </summary>
 		/// <value>Returns <see langword="true" /> if it is immutable, <see langword="false" /> otherwise.</value>
-		/// <remarks>Immutability means that the contents of its pixels will not change for the lifetime of the bitmap.</remarks>
+		/// <remarks>
+		/// Immutability means that the contents of its pixels will not change for the lifetime of the bitmap.
+		/// </remarks>
 		public bool IsImmutable {
 			get { return SkiaApi.sk_bitmap_is_immutable (Handle); }
 		}
@@ -995,7 +1039,9 @@ namespace SkiaSharp
 		/// Returns the pixels if they are available without having to lock the bitmap.
 		/// </summary>
 		/// <returns>Returns the pixels if they are available, otherwise <see langword="null" />.</returns>
-		/// <remarks>If the pixels are available without locking, then the pixmap is only valid until the bitmap changes in any way, in which case the pixmap becomes invalid.</remarks>
+		/// <remarks>
+		/// If the pixels are available without locking, then the pixmap is only valid until the bitmap changes in any way, in which case the pixmap becomes invalid.
+		/// </remarks>
 		public SKPixmap PeekPixels ()
 		{
 			SKPixmap pixmap = new SKPixmap ();
@@ -1067,7 +1113,8 @@ namespace SkiaSharp
 		/// <param name="destination">The bitmap to recieve the scaled and converted pixels.</param>
 		/// <param name="quality">The level of quality to use when scaling the pixels.</param>
 		/// <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>Pixels are copied only if pixel conversion is possible.
+		/// <remarks>
+		/// Pixels are copied only if pixel conversion is possible.
 		/// If the color type is <see cref="SkiaSharp.SKColorType.Gray8" />, or
 		/// <see cref="SkiaSharp.SKColorType.Alpha8" />, the destination color type must match.
 		/// If the color type is <see cref="SkiaSharp.SKColorType.Gray8" />, destination
@@ -1083,7 +1130,8 @@ namespace SkiaSharp
 		/// - <see cref="SkiaSharp.SKFilterQuality.Medium" /> is typically implemented with
 		/// bilerp filter, and mipmap when size is reduced.
 		/// - <see cref="SkiaSharp.SKFilterQuality.High" /> is slowest, typically implemented
-		/// with the bicubic filter.</remarks>
+		/// with the bicubic filter.
+		/// </remarks>
 		[Obsolete ("Use ScalePixels(SKBitmap destination, SKSamplingOptions sampling) instead.")]
 		public bool ScalePixels (SKBitmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
@@ -1094,7 +1142,8 @@ namespace SkiaSharp
 		/// <param name="destination">The pixmap to recieve the scaled and converted pixels.</param>
 		/// <param name="quality">The level of quality to use when scaling the pixels.</param>
 		/// <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>Pixels are copied only if pixel conversion is possible.
+		/// <remarks>
+		/// Pixels are copied only if pixel conversion is possible.
 		/// If the color type is <see cref="SkiaSharp.SKColorType.Gray8" />, or
 		/// <see cref="SkiaSharp.SKColorType.Alpha8" />, the destination color type must match.
 		/// If the color type is <see cref="SkiaSharp.SKColorType.Gray8" />, destination
@@ -1110,7 +1159,8 @@ namespace SkiaSharp
 		/// - <see cref="SkiaSharp.SKFilterQuality.Medium" /> is typically implemented with
 		/// bilerp filter, and mipmap when size is reduced.
 		/// - <see cref="SkiaSharp.SKFilterQuality.High" /> is slowest, typically implemented
-		/// with the bicubic filter.</remarks>
+		/// with the bicubic filter.
+		/// </remarks>
 		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());

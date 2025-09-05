@@ -56,7 +56,9 @@ namespace SkiaSharp
 		/// <param name="c">The source color used with the specified mode.</param>
 		/// <param name="mode">The blend mode mode that is applied to each color.</param>
 		/// <returns>Returns the new <see cref="SKColorFilter" />, or <see langword="null" /> if the mode will have no effect.</returns>
-		/// <remarks>If the <paramref name="mode" /> is <see cref="SKBlendMode.Dst" />, this function will return <see langword="null" /> (since that mode will have no effect on the result).</remarks>
+		/// <remarks>
+		/// If the <paramref name="mode" /> is <see cref="SKBlendMode.Dst" />, this function will return <see langword="null" /> (since that mode will have no effect on the result).
+		/// </remarks>
 		public static SKColorFilter CreateBlendMode(SKColor c, SKBlendMode mode)
 		{
 			return GetObject (SkiaApi.sk_colorfilter_new_mode((uint)c, mode));
@@ -101,7 +103,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="matrix">An array of <see cref="SKColorFilter.ColorMatrixSize" /> elements.</param>
 		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
-		/// <remarks>The matrix is in row-major order and the translation column is specified in unnormalized, 0...255, space.</remarks>
+		/// <remarks>
+		/// The matrix is in row-major order and the translation column is specified in unnormalized, 0...255, space.
+		/// </remarks>
 		public static SKColorFilter CreateColorMatrix(float[] matrix)
 		{
 			if (matrix == null)
@@ -202,7 +206,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="config">The high contrast configuration settings.</param>
 		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
-		/// <remarks>Applies the following transformations in this order: conversion to grayscale, color inversion, increasing the resulting contrast.</remarks>
+		/// <remarks>
+		/// Applies the following transformations in this order: conversion to grayscale, color inversion, increasing the resulting contrast.
+		/// </remarks>
 		public static SKColorFilter CreateHighContrast(SKHighContrastConfig config)
 		{
 			return GetObject (SkiaApi.sk_colorfilter_new_high_contrast(&config));
@@ -215,7 +221,9 @@ namespace SkiaSharp
 		/// <param name="invertStyle">Whether or not to invert brightness, lightness, or neither.</param>
 		/// <param name="contrast">The amount to adjust the contrast by, in the range -1.0 through 1.0.</param>
 		/// <returns>Returns the new <see cref="SKColorFilter" />.</returns>
-		/// <remarks>Applies the following transformations in this order: conversion to grayscale, color inversion, increasing the resulting contrast.</remarks>
+		/// <remarks>
+		/// Applies the following transformations in this order: conversion to grayscale, color inversion, increasing the resulting contrast.
+		/// </remarks>
 		public static SKColorFilter CreateHighContrast(bool grayscale, SKHighContrastConfigInvertStyle invertStyle, float contrast)
 		{
 			return CreateHighContrast(new SKHighContrastConfig(grayscale, invertStyle, contrast));

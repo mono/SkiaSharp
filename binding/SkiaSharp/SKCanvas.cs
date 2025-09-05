@@ -9,7 +9,8 @@ namespace SkiaSharp
 	/// <summary>
 	/// Encapsulates all of the state about drawing into a device (bitmap or surface).
 	/// </summary>
-	/// <remarks>A canvas encapsulates all of the state about drawing into a device (bitmap or
+	/// <remarks>
+	/// A canvas encapsulates all of the state about drawing into a device (bitmap or
 	/// surface).
 	/// This includes a reference to the device itself, and a stack of matrix/clip
 	/// values. For any given draw call (e.g. DrawRect), the geometry of the object
@@ -22,7 +23,7 @@ namespace SkiaSharp
 	/// typeface, the text size, the stroke width, the shader (for example, gradients,
 	/// patterns), etc.
 	/// The canvas is returned when accessing the
-	/// <xref:SkiaSharp.SKSurface.Canvas?displayProperty=nameWithType> property of a
+	/// <see cref="SkiaSharp.SKSurface.Canvas" /> property of a
 	/// surface.
 	/// ### Construction
 	/// SkiaSharp has multiple backends which receive <see cref="SkiaSharp.SKCanvas" />
@@ -144,16 +145,16 @@ namespace SkiaSharp
 	/// The canvas supports a number of 2D transformations. Unlike other 2D graphic
 	/// systems like CoreGraphics or Cairo, SKCanvas extends the transformations to
 	/// include perspectives.
-	/// You can use the <see cref="SkiaSharp.SKCanvas.Scale%2A" />,
-	/// <see cref="SkiaSharp.SKCanvas.Skew%2A" />, <see cref="SkiaSharp.SKCanvas.Translate%2A" />,
-	/// <see cref="SkiaSharp.SKCanvas.RotateDegrees%2A" />,
-	/// <see cref="SkiaSharp.SKCanvas.RotateRadians%2A" /> to perform some of the most common
+	/// You can use the <see cref="SkiaSharp.SKCanvas.Scale" />,
+	/// <see cref="SkiaSharp.SKCanvas.Skew" />, <see cref="SkiaSharp.SKCanvas.Translate" />,
+	/// <see cref="SkiaSharp.SKCanvas.RotateDegrees" />,
+	/// <see cref="SkiaSharp.SKCanvas.RotateRadians" /> to perform some of the most common
 	/// 2D transformations.
-	/// For more control you can use the <see cref="SkiaSharp.SKCanvas.SetMatrix%2A" /> to set
+	/// For more control you can use the <see cref="SkiaSharp.SKCanvas.SetMatrix" /> to set
 	/// an arbitrary transformation using the <see cref="SkiaSharp.SKMatrix" /> and the
-	/// <see cref="SkiaSharp.SKCanvas.Concat%2A" /> to concatenate an <see cref="SkiaSharp.SKMatrix" />
+	/// <see cref="SkiaSharp.SKCanvas.Concat" /> to concatenate an <see cref="SkiaSharp.SKMatrix" />
 	/// transformation to the current matrix in use.
-	/// The <see cref="SkiaSharp.SKCanvas.ResetMatrix%2A" /> can be used to reset the state of
+	/// The <see cref="SkiaSharp.SKCanvas.ResetMatrix" /> can be used to reset the state of
 	/// the matrix.
 	/// ### Drawing
 	/// The drawing operations can take a <see cref="SkiaSharp.SKPaint" /> parameter to affect
@@ -161,12 +162,12 @@ namespace SkiaSharp
 	/// color information to draw geometries, texts and bitmaps.
 	/// ### Clipping and State
 	/// It is possible to save the current transformations by calling the
-	/// <see cref="SkiaSharp.SKCanvas.Save%2A" /> method which preserves the current
+	/// <see cref="SkiaSharp.SKCanvas.Save" /> method which preserves the current
 	/// transformation matrix, you can then alter the matrix and restore the previous
-	/// state by using the <see cref="SkiaSharp.SKCanvas.Restore%2A" /> or
-	/// <see cref="SkiaSharp.SKCanvas.RestoreToCount%2A" /> methods.
+	/// state by using the <see cref="SkiaSharp.SKCanvas.Restore" /> or
+	/// <see cref="SkiaSharp.SKCanvas.RestoreToCount" /> methods.
 	/// Additionally, it is possible to push a new state with
-	/// <see cref="SkiaSharp.SKCanvas.SaveLayer%2A" /> which will make an offscreen copy of a
+	/// <see cref="SkiaSharp.SKCanvas.SaveLayer" /> which will make an offscreen copy of a
 	/// region, and once the drawing is completed, calling the
 	/// <see cref="SkiaSharp.SKCanvas.Restore" /> method which copies the offscreen bitmap
 	/// into this canvas.
@@ -201,7 +202,8 @@ namespace SkiaSharp
 	/// // draw the Xamagon path
 	/// canvas.DrawPath(path, paint);
 	/// }
-	/// ```</remarks>
+	/// ```
+	/// </remarks>
 	public unsafe class SKCanvas : SKObject
 	{
 		private const int PatchCornerCount = 4;
@@ -218,7 +220,9 @@ namespace SkiaSharp
 		/// Creates a canvas with the specified bitmap to draw into.
 		/// </summary>
 		/// <param name="bitmap">The bitmap for the canvas to draw into.</param>
-		/// <remarks>The structure of the bitmap is copied into the canvas.</remarks>
+		/// <remarks>
+		/// The structure of the bitmap is copied into the canvas.
+		/// </remarks>
 		public SKCanvas (SKBitmap bitmap)
 			: this (IntPtr.Zero, true)
 		{
@@ -236,12 +240,14 @@ namespace SkiaSharp
 		/// <summary>
 		/// Makes the canvas contents undefined.
 		/// </summary>
-		/// <remarks>Subsequent calls that read the canvas pixels, such as drawing with <see cref="SkiaSharp.SKBlendMode" />, return undefined
+		/// <remarks>
+		/// Subsequent calls that read the canvas pixels, such as drawing with <see cref="SkiaSharp.SKBlendMode" />, return undefined
 		/// results. Calling this method does not change clip or matrix and may do nothing, depending on the implementation
 		/// of the underlying <see cref="SkiaSharp.SKSurface" />.
 		/// <see cref="SkiaSharp.SKCanvas.Discard" /> allows optimized performance on subsequent draws by removing cached data associated
 		/// with the underlying <see cref="SkiaSharp.SKSurface" />. It is not necessary to call <see cref="SkiaSharp.SKCanvas.Discard" /> once
-		/// done with <see cref="SkiaSharp.SKCanvas" />; any cached data is deleted when the owning <see cref="SkiaSharp.SKSurface" /> is deleted.</remarks>
+		/// done with <see cref="SkiaSharp.SKCanvas" />; any cached data is deleted when the owning <see cref="SkiaSharp.SKSurface" /> is deleted.
+		/// </remarks>
 		public void Discard () =>
 			SkiaApi.sk_canvas_discard (Handle);
 
@@ -252,7 +258,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The rectangle to compare with the current clip.</param>
 		/// <returns>Returns true if the rectangle (transformed by the canvas' matrix) does not intersect with the canvas' clip.</returns>
-		/// <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
+		/// <remarks>
+		/// Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).
+		/// </remarks>
 		public bool QuickReject (SKRect rect)
 		{
 			return SkiaApi.sk_canvas_quick_reject (Handle, &rect);
@@ -263,7 +271,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="path">The path to compare with the current clip.</param>
 		/// <returns>Returns true if the path (transformed by the canvas' matrix) does not intersect with the canvas' clip.</returns>
-		/// <remarks>Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).</remarks>
+		/// <remarks>
+		/// Call this to check if an area you intend to draw into is clipped out (and therefore you can skip making the draw calls).
+		/// </remarks>
 		public bool QuickReject (SKPath path)
 		{
 			if (path == null)
@@ -278,7 +288,9 @@ namespace SkiaSharp
 		/// Saves the canvas state.
 		/// </summary>
 		/// <returns>The value to pass to <see cref="SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
-		/// <remarks>This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concatenate or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.</remarks>
+		/// <remarks>
+		/// This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concatenate or clipping path or drawing filter all operate on this copy. When the balancing call to <see cref="SKCanvas.Restore" /> is made, the previous matrix, clipping, and drawing filters are restored.
+		/// </remarks>
 		public int Save ()
 		{
 			if (Handle == IntPtr.Zero)
@@ -292,14 +304,16 @@ namespace SkiaSharp
 		/// <param name="limit">This clipping rectangle hint to limit the size of the offscreen bitmap.</param>
 		/// <param name="paint">This is copied, and is applied to the offscreen when <see cref="SKCanvas.Restore" /> is called.</param>
 		/// <returns>The value to pass to <see cref="SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
-		/// <remarks>This behaves the same as <see cref="SkiaSharp.SKCanvas.Save" /> but in addition it
+		/// <remarks>
+		/// This behaves the same as <see cref="SkiaSharp.SKCanvas.Save" /> but in addition it
 		/// allocates an offscreen bitmap. All drawing calls are directed there, and only
 		/// when the balancing call to <see cref="SkiaSharp.SKCanvas.Restore" /> is made is that
 		/// offscreen transfered to the canvas (or the previous layer).
 		/// The limit rectangle, is used as a hint to limit the size of the offscreen
 		/// bitmap, and thus drawing may be clipped to it, though that clipping is not
 		/// guaranteed to happen. If exact clipping is desired, use
-		/// <see cref="SkiaSharp.SKCanvas.ClipRect(SkiaSharp.SKRect,SkiaSharp.SKClipOperation,System.Boolean)" />.</remarks>
+		/// <see cref="SkiaSharp.SKCanvas.ClipRect(SkiaSharp.SKRect,SkiaSharp.SKClipOperation,System.Boolean)" />.
+		/// </remarks>
 		public int SaveLayer (SKRect limit, SKPaint? paint) =>
 			SkiaApi.sk_canvas_save_layer (Handle, &limit, paint?.Handle ?? IntPtr.Zero);
 
@@ -308,7 +322,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="paint">This is copied, and is applied to the offscreen when <see cref="SKCanvas.Restore" /> is called.</param>
 		/// <returns>The value to pass to <see cref="SKCanvas.RestoreToCount(System.Int32)" /> to balance this save.</returns>
-		/// <remarks>This behaves the same as <see cref="SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).</remarks>
+		/// <remarks>
+		/// This behaves the same as <see cref="SKCanvas.Save" /> but in addition it allocates an offscreen bitmap. All drawing calls are directed there, and only when the balancing call to <see cref="SKCanvas.Restore" /> is made is that offscreen transfered to the canvas (or the previous layer).
+		/// </remarks>
 		public int SaveLayer (SKPaint? paint) =>
 			SkiaApi.sk_canvas_save_layer (Handle, null, paint?.Handle ?? IntPtr.Zero);
 
@@ -389,7 +405,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Restore the canvas state.
 		/// </summary>
-		/// <remarks>This call balances a previous call to <see cref="SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last save call. It is an error to restore more times than was previously saved.</remarks>
+		/// <remarks>
+		/// This call balances a previous call to <see cref="SKCanvas.Save" />, and is used to remove all modifications to the matrix, clip and draw filter state since the last save call. It is an error to restore more times than was previously saved.
+		/// </remarks>
 		public void Restore ()
 		{
 			SkiaApi.sk_canvas_restore (Handle);
@@ -399,7 +417,9 @@ namespace SkiaSharp
 		/// Efficiently restores the state to a specific level.
 		/// </summary>
 		/// <param name="count">The number of <see cref="SKCanvas.Save" /> levels to restore from, or -1 to restore all the way back to the initial value.</param>
-		/// <remarks>Efficient way to pop any calls to <see cref="SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.</remarks>
+		/// <remarks>
+		/// Efficient way to pop any calls to <see cref="SKCanvas.Save" /> that happened after the save count reached <paramref name="count" />. It is an error for <paramref name="count" /> to be greater than <see cref="SKCanvas.SaveCount" />. To pop all the way back to the initial matrix/clip context set count to -1.
+		/// </remarks>
 		public void RestoreToCount (int count)
 		{
 			SkiaApi.sk_canvas_restore_to_count (Handle, count);
@@ -672,7 +692,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="bounds">The resulting clip bounds.</param>
 		/// <returns>Returns true if the clip bounds are non-empty, otherwise false.</returns>
-		/// <remarks>This can be useful in that it tells you that drawing outside of these bounds will be clipped out.</remarks>
+		/// <remarks>
+		/// This can be useful in that it tells you that drawing outside of these bounds will be clipped out.
+		/// </remarks>
 		public bool GetLocalClipBounds (out SKRect bounds)
 		{
 			fixed (SKRect* b = &bounds) {
@@ -755,7 +777,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The rounded rectangle to draw.</param>
 		/// <param name="paint">The paint to use when drawing the rectangle.</param>
-		/// <remarks>The paint to use when drawing the rounded rectangle.</remarks>
+		/// <remarks>
+		/// The paint to use when drawing the rounded rectangle.
+		/// </remarks>
 		public void DrawRoundRect (SKRoundRect rect, SKPaint paint)
 		{
 			if (rect == null)
@@ -800,7 +824,9 @@ namespace SkiaSharp
 		/// <param name="rect">The rectangle to draw.</param>
 		/// <param name="r">The radius of the oval used to round the corners.</param>
 		/// <param name="paint">The paint to use when drawing the rectangle.</param>
-		/// <remarks>The paint to use when drawing the rectangle.</remarks>
+		/// <remarks>
+		/// The paint to use when drawing the rectangle.
+		/// </remarks>
 		public void DrawRoundRect (SKRect rect, SKSize r, SKPaint paint)
 		{
 			DrawRoundRect (rect, r.Width, r.Height, paint);
@@ -895,7 +921,8 @@ namespace SkiaSharp
 		/// <param name="mode">Determines how the points array will be interpreted: as points, as coordinates to draw lines, or as coordinates of a polygon.</param>
 		/// <param name="points">The array of points to draw.</param>
 		/// <param name="paint">The paint to use when drawing the points.</param>
-		/// <remarks>For <see cref="SkiaSharp.SKPointMode.Points" />, each point is drawn centered at its
+		/// <remarks>
+		/// For <see cref="SkiaSharp.SKPointMode.Points" />, each point is drawn centered at its
 		/// coordinate, and its size is specified by the paint's stroke-width. It draws as
 		/// a square, unless the paint's <see cref="SkiaSharp.SKPaint.StrokeCap" /> is
 		/// <see cref="SkiaSharp.SKStrokeCap.Round" />, in which the points are drawn as circles.
@@ -906,7 +933,8 @@ namespace SkiaSharp
 		/// Note that, while similar, the line and polygon modes draw slightly differently
 		/// than the equivalent path built with a series of move to, line to calls, in
 		/// that the path will draw all of its contours at once, with no interactions if
-		/// contours intersect each other (think <see cref="SkiaSharp.SKBlendMode.Xor" />).</remarks>
+		/// contours intersect each other (think <see cref="SkiaSharp.SKBlendMode.Xor" />).
+		/// </remarks>
 		public void DrawPoints (SKPointMode mode, SKPoint[] points, SKPaint paint)
 		{
 			if (paint == null)
@@ -1083,13 +1111,15 @@ namespace SkiaSharp
 		/// <param name="picture">The picture to draw.</param>
 		/// <param name="matrix">The matrix to apply while painting.</param>
 		/// <param name="paint">The paint to use when drawing the picture, or <see langword="null" />.</param>
-		/// <remarks>This is equivalent to calling <see cref="SkiaSharp.SKCanvas.Save" />, followed by
+		/// <remarks>
+		/// This is equivalent to calling <see cref="SkiaSharp.SKCanvas.Save" />, followed by
 		/// <see cref="SkiaSharp.SKCanvas.Concat(SkiaSharp.SKMatrix)" /> with the specified `matrix`,
 		/// <see cref="SkiaSharp.SKCanvas.DrawPicture(SkiaSharp.SKPicture,SkiaSharp.SKPaint)" />
 		/// and then <see cref="SkiaSharp.SKCanvas.Restore" />.
 		/// If paint is non-null, the picture is drawn into a temporary buffer, and then
 		/// the paint's alpha, color filter, image filter, blend mode are applied to that
-		/// buffer as it is drawn to the canvas.</remarks>
+		/// buffer as it is drawn to the canvas.
+		/// </remarks>
 		public void DrawPicture (SKPicture picture, in SKMatrix matrix, SKPaint paint = null)
 		{
 			if (picture == null)
@@ -1413,7 +1443,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Triggers the immediate execution of all pending draw operations.
 		/// </summary>
-		/// <remarks>For the GPU backend this will resolve all rendering to the GPU surface backing the surface that owns this canvas.</remarks>
+		/// <remarks>
+		/// For the GPU backend this will resolve all rendering to the GPU surface backing the surface that owns this canvas.
+		/// </remarks>
 		public void Flush ()
 		{
 			(Context as GRContext)?.Flush ();
@@ -1427,10 +1459,12 @@ namespace SkiaSharp
 		/// <param name="rect">The bounds of the annotation.</param>
 		/// <param name="key">The name of the annotation.</param>
 		/// <param name="value">The blob of data to attach to the annotation.</param>
-		/// <remarks>The caller still retains its ownership of the data (if any).
+		/// <remarks>
+		/// The caller still retains its ownership of the data (if any).
 		/// Note: on may canvas types, this information is ignored, but some
 		/// canvases (e.g. recording a picture or drawing to a PDF document) will pass on
-		/// this information.</remarks>
+		/// this information.
+		/// </remarks>
 		public void DrawAnnotation (SKRect rect, string key, SKData value)
 		{
 			var bytes = StringUtilities.GetEncodedText (key, SKTextEncoding.Utf8, true);
@@ -1444,9 +1478,11 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The bounds of the annotation.</param>
 		/// <param name="value">The data that specifies the URL.</param>
-		/// <remarks>The caller is responsible for managing its ownership of the data.
+		/// <remarks>
+		/// The caller is responsible for managing its ownership of the data.
 		/// If the backend of this canvas does not support annotations, this call is
-		/// safely ignored.</remarks>
+		/// safely ignored.
+		/// </remarks>
 		public void DrawUrlAnnotation (SKRect rect, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_url_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
@@ -1458,7 +1494,9 @@ namespace SkiaSharp
 		/// <param name="rect">The bounds of the annotation.</param>
 		/// <param name="value">The URL.</param>
 		/// <returns>Returns the actual data object that was attached to the canvas.</returns>
-		/// <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
+		/// <remarks>
+		/// If the backend of this canvas does not support annotations, this call is safely ignored.
+		/// </remarks>
 		public SKData DrawUrlAnnotation (SKRect rect, string value)
 		{
 			var data = SKData.FromCString (value);
@@ -1471,9 +1509,11 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="point">The location of the destination.</param>
 		/// <param name="value">The data that specifies the name of the destination.</param>
-		/// <remarks>The caller is responsible for managing its ownership of the data.
+		/// <remarks>
+		/// The caller is responsible for managing its ownership of the data.
 		/// If the backend of this canvas does not support annotations, this call is
-		/// safely ignored.</remarks>
+		/// safely ignored.
+		/// </remarks>
 		public void DrawNamedDestinationAnnotation (SKPoint point, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_named_destination_annotation (Handle, &point, value == null ? IntPtr.Zero : value.Handle);
@@ -1485,7 +1525,9 @@ namespace SkiaSharp
 		/// <param name="point">The location of the destination.</param>
 		/// <param name="value">The name of the destination.</param>
 		/// <returns>Returns the actual data object that was attached to the canvas.</returns>
-		/// <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
+		/// <remarks>
+		/// If the backend of this canvas does not support annotations, this call is safely ignored.
+		/// </remarks>
 		public SKData DrawNamedDestinationAnnotation (SKPoint point, string value)
 		{
 			var data = SKData.FromCString (value);
@@ -1498,9 +1540,11 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The bounds of the annotation.</param>
 		/// <param name="value">The data that specifies the name of the link's destination.</param>
-		/// <remarks>The caller is responsible for managing its ownership of the data.
+		/// <remarks>
+		/// The caller is responsible for managing its ownership of the data.
 		/// If the backend of this canvas does not support annotations, this call is
-		/// safely ignored.</remarks>
+		/// safely ignored.
+		/// </remarks>
 		public void DrawLinkDestinationAnnotation (SKRect rect, SKData value)
 		{
 			SkiaApi.sk_canvas_draw_link_destination_annotation (Handle, &rect, value == null ? IntPtr.Zero : value.Handle);
@@ -1512,7 +1556,9 @@ namespace SkiaSharp
 		/// <param name="rect">The bounds of the annotation.</param>
 		/// <param name="value">The name of the link's destination.</param>
 		/// <returns>Returns the actual data object that was attached to the canvas.</returns>
-		/// <remarks>If the backend of this canvas does not support annotations, this call is safely ignored.</remarks>
+		/// <remarks>
+		/// If the backend of this canvas does not support annotations, this call is safely ignored.
+		/// </remarks>
 		public SKData DrawLinkDestinationAnnotation (SKRect rect, string value)
 		{
 			var data = SKData.FromCString (value);
@@ -1685,7 +1731,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the current matrix on the canvas.
 		/// </summary>
-		/// <remarks>This does not account for the translate in any of the devices.</remarks>
+		/// <remarks>
+		/// This does not account for the translate in any of the devices.
+		/// </remarks>
 		public SKMatrix TotalMatrix => TotalMatrix44.Matrix;
 
 		public SKMatrix44 TotalMatrix44 {
@@ -1701,7 +1749,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of matrix/clip states on the canvas' private stack.
 		/// </summary>
-		/// <remarks>This will equal the number of <see cref="SKCanvas.Save" /> calls minus <see cref="SKCanvas.Restore" /> calls + 1. The save count on a new canvas is 1.</remarks>
+		/// <remarks>
+		/// This will equal the number of <see cref="SKCanvas.Save" /> calls minus <see cref="SKCanvas.Restore" /> calls + 1. The save count on a new canvas is 1.
+		/// </remarks>
 		public int SaveCount => SkiaApi.sk_canvas_get_save_count (Handle);
 
 		// DrawVertices
@@ -1727,7 +1777,9 @@ namespace SkiaSharp
 		/// <param name="texs">The coordinates in texture space (not UV space) for each vertex. May be <see langword="null" />.</param>
 		/// <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
 		/// <param name="paint">The shader/texture.</param>
-		/// <remarks>If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.</remarks>
+		/// <remarks>
+		/// If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.
+		/// </remarks>
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKPaint paint)
 		{
 			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors);
@@ -1743,7 +1795,9 @@ namespace SkiaSharp
 		/// <param name="colors">The color for each vertex, to be interpolated across the triangle. May be <see langword="null" />.</param>
 		/// <param name="indices">The array of indices to reference into the vertex (texture coordinates, colors) array.</param>
 		/// <param name="paint">The shader/texture.</param>
-		/// <remarks>If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.</remarks>
+		/// <remarks>
+		/// If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.
+		/// </remarks>
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, UInt16[] indices, SKPaint paint)
 		{
 			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
@@ -1760,7 +1814,9 @@ namespace SkiaSharp
 		/// <param name="mode">The blend mode to use to combine the colors with the texture, before being drawn using the paint. Used if both texture coordinates and colors are present.</param>
 		/// <param name="indices">The array of indices to reference into the vertex (texture coordinates, colors) array.</param>
 		/// <param name="paint">The shader/texture.</param>
-		/// <remarks>If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.</remarks>
+		/// <remarks>
+		/// If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.
+		/// </remarks>
 		public void DrawVertices (SKVertexMode vmode, SKPoint[] vertices, SKPoint[] texs, SKColor[] colors, SKBlendMode mode, UInt16[] indices, SKPaint paint)
 		{
 			var vert = SKVertices.CreateCopy (vmode, vertices, texs, colors, indices);
@@ -1773,7 +1829,9 @@ namespace SkiaSharp
 		/// <param name="vertices">The mesh to draw.</param>
 		/// <param name="mode">The blend mode to use to combine the colors with the texture, before being drawn using the paint. Used if both texture coordinates and colors are present.</param>
 		/// <param name="paint">The shader/texture.</param>
-		/// <remarks>If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.</remarks>
+		/// <remarks>
+		/// If both textures and vertex-colors are <see langword="null" />, it strokes hairlines with the paint's color. This behavior is a useful debugging mode to visualize the mesh.
+		/// </remarks>
 		public void DrawVertices (SKVertices vertices, SKBlendMode mode, SKPaint paint)
 		{
 			if (vertices == null)
@@ -1922,7 +1980,8 @@ namespace SkiaSharp
 	/// <summary>
 	/// Convenience class used to restore the canvas state in a using statement.
 	/// </summary>
-	/// <remarks>This class can be used in a using statement to save the state of the canvas
+	/// <remarks>
+	/// This class can be used in a using statement to save the state of the canvas
 	/// (matrix, clip and draw filter) allowing you to change these components and have
 	/// them automatically undone by virtue of having the
 	/// <see cref="SkiaSharp.SKAutoCanvasRestore.Dispose" /> method restore the canvas state to
@@ -1938,7 +1997,8 @@ namespace SkiaSharp
 	/// canavs.DrawRect (10, 10, 100, 100, paint);
 	/// // automatically restore to original transform
 	/// }
-	/// ```</remarks>
+	/// ```
+	/// </remarks>
 	public class SKAutoCanvasRestore : IDisposable
 	{
 		private SKCanvas canvas;

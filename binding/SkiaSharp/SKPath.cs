@@ -27,7 +27,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// A compound geometric path.
 	/// </summary>
-	/// <remarks>A path encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.</remarks>
+	/// <remarks>
+	/// A path encapsulates compound (multiple contour) geometric paths consisting of straight line segments, quadratic curves, and cubic curves.
+	/// </remarks>
 	public unsafe class SKPath : SKObject, ISKSkipObjectRegistration
 	{
 		internal SKPath (IntPtr handle, bool owns)
@@ -50,7 +52,9 @@ namespace SkiaSharp
 		/// Creates a path by making a copy of an existing path.
 		/// </summary>
 		/// <param name="path">The path to clone.</param>
-		/// <remarks>This constructor can throw InvalidOperationException if there is a problem copying the source path.</remarks>
+		/// <remarks>
+		/// This constructor can throw InvalidOperationException if there is a problem copying the source path.
+		/// </remarks>
 		public SKPath (SKPath path)
 			: this (SkiaApi.sk_path_clone (path.Handle), true)
 		{
@@ -68,7 +72,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the path's fill type.
 		/// </summary>
-		/// <remarks>This is used to define how "inside" is computed. The default value is <see cref="SKPathFillType.Winding" />.</remarks>
+		/// <remarks>
+		/// This is used to define how "inside" is computed. The default value is <see cref="SKPathFillType.Winding" />.
+		/// </remarks>
 		public SKPathFillType FillType {
 			get => SkiaApi.sk_path_get_filltype (Handle);
 			set => SkiaApi.sk_path_set_filltype (Handle, value);
@@ -77,19 +83,25 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the path's convexity.
 		/// </summary>
-		/// <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
+		/// <remarks>
+		/// If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).
+		/// </remarks>
 		public SKPathConvexity Convexity => IsConvex ? SKPathConvexity.Convex : SKPathConvexity.Concave;
 
 		/// <summary>
 		/// Gets a value indicating whether the path is convex.
 		/// </summary>
-		/// <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
+		/// <remarks>
+		/// If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).
+		/// </remarks>
 		public bool IsConvex => SkiaApi.sk_path_is_convex (Handle);
 
 		/// <summary>
 		/// Gets a value indicating whether the path is concave.
 		/// </summary>
-		/// <remarks>If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).</remarks>
+		/// <remarks>
+		/// If it is currently unknown, then this function will attempt to compute the convexity (and cache the result).
+		/// </remarks>
 		public bool IsConcave => !IsConvex;
 
 		/// <summary>
@@ -100,25 +112,33 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets a value indicating whether the path is a single oval or circle.
 		/// </summary>
-		/// <remarks>See also <see cref="SKPath.GetOvalBounds" />.</remarks>
+		/// <remarks>
+		/// See also <see cref="SKPath.GetOvalBounds" />.
+		/// </remarks>
 		public bool IsOval => SkiaApi.sk_path_is_oval (Handle, null);
 
 		/// <summary>
 		/// Gets a value indicating whether the path is a single, round rectangle.
 		/// </summary>
-		/// <remarks>See also <see cref="SKPath.GetRoundRect" />.</remarks>
+		/// <remarks>
+		/// See also <see cref="SKPath.GetRoundRect" />.
+		/// </remarks>
 		public bool IsRoundRect => SkiaApi.sk_path_is_rrect (Handle, IntPtr.Zero);
 
 		/// <summary>
 		/// Gets a value indicating whether the path is a single, straight line.
 		/// </summary>
-		/// <remarks>See also <see cref="SKPath.GetLine" />.</remarks>
+		/// <remarks>
+		/// See also <see cref="SKPath.GetLine" />.
+		/// </remarks>
 		public bool IsLine => SkiaApi.sk_path_is_line (Handle, null);
 
 		/// <summary>
 		/// Gets a value indicating whether the path is a single rectangle.
 		/// </summary>
-		/// <remarks>See also <see cref="SKPath.GetRect" /> and <see cref="SKPath.GetRect(System.Boolean@,SkiaSharp.SKPathDirection@)" />.</remarks>
+		/// <remarks>
+		/// See also <see cref="SKPath.GetRect" /> and <see cref="SKPath.GetRect(out bool, out SkiaSharp.SKPathDirection)" />.
+		/// </remarks>
 		public bool IsRect => SkiaApi.sk_path_is_rect (Handle, null, null, null);
 
 		/// <summary>
@@ -141,15 +161,19 @@ namespace SkiaSharp
 		/// </summary>
 		/// <value>The point at the specified index.</value>
 		/// <param name="index">The index of the point to get.</param>
-		/// <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
+		/// <remarks>
+		/// If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="SKPath.PointCount" />), then the returned coordinates will be (0, 0).
+		/// </remarks>
 		public SKPoint this[int index] => GetPoint (index);
 
 		/// <summary>
 		/// Gets all the points in the path.
 		/// </summary>
-		/// <remarks>The number of points will be <see cref="SkiaSharp.SKPath.PointCount" />, To only
+		/// <remarks>
+		/// The number of points will be <see cref="SkiaSharp.SKPath.PointCount" />, To only
 		/// return a subset of the points in the path, use
-		/// <see cref="SkiaSharp.SKPath.GetPoints%2A" />.</remarks>
+		/// <see cref="SkiaSharp.SKPath.GetPoints" />.
+		/// </remarks>
 		public SKPoint[] Points => GetPoints (PointCount);
 
 		/// <summary>
@@ -167,7 +191,9 @@ namespace SkiaSharp
 		/// Gets the bounds of the path's points. If the path contains zero points/verbs, this will return the empty rectangle.
 		/// </summary>
 		/// <value>Gets the bounds of the path's points.</value>
-		/// <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompasses all points, even isolated MoveTo either preceding or following the last non-degenerate contour.</remarks>
+		/// <remarks>
+		/// This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompasses all points, even isolated MoveTo either preceding or following the last non-degenerate contour.
+		/// </remarks>
 		public SKRect Bounds {
 			get {
 				SKRect rect;
@@ -194,7 +220,9 @@ namespace SkiaSharp
 		/// Returns the oval bounds of the path.
 		/// </summary>
 		/// <returns>Returns the oval bounds of the path.</returns>
-		/// <remarks>If the path is not a single oval or circle, then an empty rectangle is returned. See also <see cref="SKPath.IsOval" />.</remarks>
+		/// <remarks>
+		/// If the path is not a single oval or circle, then an empty rectangle is returned. See also <see cref="SKPath.IsOval" />.
+		/// </remarks>
 		public SKRect GetOvalBounds ()
 		{
 			SKRect bounds;
@@ -209,7 +237,9 @@ namespace SkiaSharp
 		/// Returns the round rectangle of the path.
 		/// </summary>
 		/// <returns>Returns the round rectangle of the path.</returns>
-		/// <remarks>If the path is not a single round rectangle, then <see langword="null" /> is returned. See also <see cref="SKPath.IsRoundRect" />.</remarks>
+		/// <remarks>
+		/// If the path is not a single round rectangle, then <see langword="null" /> is returned. See also <see cref="SKPath.IsRoundRect" />.
+		/// </remarks>
 		public SKRoundRect GetRoundRect ()
 		{
 			var rrect = new SKRoundRect ();
@@ -226,7 +256,9 @@ namespace SkiaSharp
 		/// Returns the two points of the path.
 		/// </summary>
 		/// <returns>Returns the two points of the path.</returns>
-		/// <remarks>If the path is not a single, straight line, then <see langword="null" /> is returned. See also <see cref="SKPath.IsLine" />.</remarks>
+		/// <remarks>
+		/// If the path is not a single, straight line, then <see langword="null" /> is returned. See also <see cref="SKPath.IsLine" />.
+		/// </remarks>
 		public SKPoint[] GetLine ()
 		{
 			var temp = new SKPoint[2];
@@ -244,7 +276,9 @@ namespace SkiaSharp
 		/// Returns the rectangle of the path.
 		/// </summary>
 		/// <returns>Returns the rectangle of the path.</returns>
-		/// <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="SKPath.IsRect" />.</remarks>
+		/// <remarks>
+		/// If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="SKPath.IsRect" />.
+		/// </remarks>
 		public SKRect GetRect () =>
 			GetRect (out var isClosed, out var direction);
 
@@ -254,7 +288,9 @@ namespace SkiaSharp
 		/// <param name="isClosed">Whether or not the rectangle is closed.</param>
 		/// <param name="direction">The direction of the rectangle.</param>
 		/// <returns>Returns the rectangle of the path.</returns>
-		/// <remarks>If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="SKPath.IsRect" />.</remarks>
+		/// <remarks>
+		/// If the path is not a single rectangle, then an empty rectangle is returned. See also <see cref="SKPath.IsRect" />.
+		/// </remarks>
 		public SKRect GetRect (out bool isClosed, out SKPathDirection direction)
 		{
 			byte c;
@@ -275,7 +311,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="index">The index of the point to return.</param>
 		/// <returns>The point at the specified index.</returns>
-		/// <remarks>If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="SKPath.PointCount" />), then the returned coordinates will be (0, 0).</remarks>
+		/// <remarks>
+		/// If the index is out of range (i.e. is not 0 &lt;= index &lt; <see cref="SKPath.PointCount" />), then the returned coordinates will be (0, 0).
+		/// </remarks>
 		public SKPoint GetPoint (int index)
 		{
 			if (index < 0 || index >= PointCount)
@@ -372,8 +410,10 @@ namespace SkiaSharp
 		/// Add a line from the last point to the specified point (x, y).
 		/// </summary>
 		/// <param name="point">The coordinates of the end of a line.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo(SkiaSharp.SKPoint)" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void LineTo (SKPoint point) =>
 			SkiaApi.sk_path_line_to (Handle, point.X, point.Y);
 
@@ -382,8 +422,10 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="x">The x-coordinate of the end of a line.</param>
 		/// <param name="y">The y-coordinate of the end of a line.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void LineTo (float x, float y) =>
 			SkiaApi.sk_path_line_to (Handle, x, y);
 
@@ -391,8 +433,10 @@ namespace SkiaSharp
 		/// Same as <see cref="SKPath.LineTo(SkiaSharp.SKPoint)" /> but the coordinates are considered relative to the last point on this contour.
 		/// </summary>
 		/// <param name="point">The amount to add to the coordinates of the last point on this contour, to specify the end of a line.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RLineTo (SKPoint point) =>
 			SkiaApi.sk_path_rline_to (Handle, point.X, point.Y);
 
@@ -401,8 +445,10 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="dx">The amount to add to the x-coordinate of the last point on this contour, to specify the end of a line.</param>
 		/// <param name="dy">The amount to add to the y-coordinate of the last point on this contour, to specify the end of a line.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RLineTo (float dx, float dy) =>
 			SkiaApi.sk_path_rline_to (Handle, dx, dy);
 
@@ -411,10 +457,12 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="point0">The coordinates of the control point on a quadratic curve.</param>
 		/// <param name="point1">The coordinates of the end point on a quadratic curve.</param>
-		/// <remarks>Add a quadratic bezier from the last point, approaching control point
+		/// <remarks>
+		/// Add a quadratic bezier from the last point, approaching control point
 		/// (`point0`), and ending at `point1`.
-		/// If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void QuadTo (SKPoint point0, SKPoint point1) =>
 			SkiaApi.sk_path_quad_to (Handle, point0.X, point0.Y, point1.X, point1.Y);
 
@@ -425,10 +473,12 @@ namespace SkiaSharp
 		/// <param name="y0">The y-coordinate of the control point on a quadratic curve.</param>
 		/// <param name="x1">The x-coordinate of the end point on a quadratic curve.</param>
 		/// <param name="y1">The y-coordinate of the end point on a quadratic curve.</param>
-		/// <remarks>Add a quadratic bezier from the last point, approaching control point
+		/// <remarks>
+		/// Add a quadratic bezier from the last point, approaching control point
 		/// (`x0`, `y0`), and ending at (`x1`, `y1`).
-		/// If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void QuadTo (float x0, float y0, float x1, float y1) =>
 			SkiaApi.sk_path_quad_to (Handle, x0, y0, x1, y1);
 
@@ -437,8 +487,10 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the control point on a quadratic curve.</param>
 		/// <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify end point on a quadratic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RQuadTo (SKPoint point0, SKPoint point1) =>
 			SkiaApi.sk_path_rquad_to (Handle, point0.X, point0.Y, point1.X, point1.Y);
 
@@ -449,8 +501,10 @@ namespace SkiaSharp
 		/// <param name="dy0">The amount to add to the y-coordinate of the last point on this contour, to specify the control point on a quadratic curve.</param>
 		/// <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
 		/// <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify end point on a quadratic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RQuadTo (float dx0, float dy0, float dx1, float dy1) =>
 			SkiaApi.sk_path_rquad_to (Handle, dx0, dy0, dx1, dy1);
 
@@ -460,8 +514,10 @@ namespace SkiaSharp
 		/// <param name="point0">The coordinates of the control point of the conic curve.</param>
 		/// <param name="point1">The coordinates of the end point of the conic curve.</param>
 		/// <param name="w">The weight of the conic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void ConicTo (SKPoint point0, SKPoint point1, float w) =>
 			SkiaApi.sk_path_conic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, w);
 
@@ -473,8 +529,10 @@ namespace SkiaSharp
 		/// <param name="x1">The x-coordinate of the end point of the conic curve.</param>
 		/// <param name="y1">The y-coordinate of the end point of the conic curve.</param>
 		/// <param name="w">The weight of the conic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void ConicTo (float x0, float y0, float x1, float y1, float w) =>
 			SkiaApi.sk_path_conic_to (Handle, x0, y0, x1, y1, w);
 
@@ -484,8 +542,10 @@ namespace SkiaSharp
 		/// <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the control point of the conic curve.</param>
 		/// <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify the end point of the conic curve.</param>
 		/// <param name="w">The weight of the conic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RConicTo (SKPoint point0, SKPoint point1, float w) =>
 			SkiaApi.sk_path_rconic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, w);
 
@@ -497,8 +557,10 @@ namespace SkiaSharp
 		/// <param name="dx1">The amount to add to the x-coordinate of the last point on this contour, to specify the end point of the conic curve.</param>
 		/// <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify the end point of the conic curve.</param>
 		/// <param name="w">The weight of the conic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RConicTo (float dx0, float dy0, float dx1, float dy1, float w) =>
 			SkiaApi.sk_path_rconic_to (Handle, dx0, dy0, dx1, dy1, w);
 
@@ -508,8 +570,10 @@ namespace SkiaSharp
 		/// <param name="point0">The coordinates of the 1st control point on a cubic curve.</param>
 		/// <param name="point1">The coordinates of the 2nd control point on a cubic curve.</param>
 		/// <param name="point2">The coordinates of the end point on a cubic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void CubicTo (SKPoint point0, SKPoint point1, SKPoint point2) =>
 			SkiaApi.sk_path_cubic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, point2.X, point2.Y);
 
@@ -522,8 +586,10 @@ namespace SkiaSharp
 		/// <param name="y1">The y-coordinate of the 2nd control point on a cubic curve.</param>
 		/// <param name="x2">The x-coordinate of the end point on a cubic curve.</param>
 		/// <param name="y2">The y-coordinate of the end point on a cubic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void CubicTo (float x0, float y0, float x1, float y1, float x2, float y2) =>
 			SkiaApi.sk_path_cubic_to (Handle, x0, y0, x1, y1, x2, y2);
 
@@ -533,8 +599,10 @@ namespace SkiaSharp
 		/// <param name="point0">The amount to add to the coordinates of the last point on this contour, to specify the 1st control point on a cubic curve.</param>
 		/// <param name="point1">The amount to add to the coordinates of the last point on this contour, to specify the 2nd control point on a cubic curve.</param>
 		/// <param name="point2">The amount to add to the coordinates of the last point on this contour, to specify the end point on a cubic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RCubicTo (SKPoint point0, SKPoint point1, SKPoint point2) =>
 			SkiaApi.sk_path_rcubic_to (Handle, point0.X, point0.Y, point1.X, point1.Y, point2.X, point2.Y);
 
@@ -547,8 +615,10 @@ namespace SkiaSharp
 		/// <param name="dy1">The amount to add to the y-coordinate of the last point on this contour, to specify the 2nd control point on a cubic curve.</param>
 		/// <param name="dx2">The amount to add to the x-coordinate of the last point on this contour, to specify the end point on a cubic curve.</param>
 		/// <param name="dy2">The amount to add to the y-coordinate of the last point on this contour, to specify the end point on a cubic curve.</param>
-		/// <remarks>If no <see cref="SkiaSharp.SKPath.MoveTo%2A" /> call has been made for this contour,
-		/// the first point is automatically set to (0, 0).</remarks>
+		/// <remarks>
+		/// If no <see cref="SkiaSharp.SKPath.MoveTo" /> call has been made for this contour,
+		/// the first point is automatically set to (0, 0).
+		/// </remarks>
 		public void RCubicTo (float dx0, float dy0, float dx1, float dy1, float dx2, float dy2) =>
 			SkiaApi.sk_path_rcubic_to (Handle, dx0, dy0, dx1, dy1, dx2, dy2);
 
@@ -583,10 +653,12 @@ namespace SkiaSharp
 		/// <param name="startAngle">The starting angle (in degrees) where the arc begins.</param>
 		/// <param name="sweepAngle">The sweep angle (in degrees) measured clockwise.</param>
 		/// <param name="forceMoveTo">Whether to always begin a new contour with the arc.</param>
-		/// <remarks>If the start of the arc is different from the path's current last point, then
-		/// an automatic <see cref="SkiaSharp.SKPath.LineTo%2A" /> is added to connect the current
+		/// <remarks>
+		/// If the start of the arc is different from the path's current last point, then
+		/// an automatic <see cref="SkiaSharp.SKPath.LineTo" /> is added to connect the current
 		/// contour to the start of the arc. However, if the path is empty, then we call
-		/// <see cref="SkiaSharp.SKPath.MoveTo%2A" /> with the first point of the arc.</remarks>
+		/// <see cref="SkiaSharp.SKPath.MoveTo" /> with the first point of the arc.
+		/// </remarks>
 		public void ArcTo (SKRect oval, float startAngle, float sweepAngle, bool forceMoveTo) =>
 			SkiaApi.sk_path_arc_to_with_oval (Handle, &oval, startAngle, sweepAngle, forceMoveTo);
 
@@ -596,7 +668,9 @@ namespace SkiaSharp
 		/// <param name="point1">The corner coordinates.</param>
 		/// <param name="point2">The destination coordinates.</param>
 		/// <param name="radius">The corner radius.</param>
-		/// <remarks>This is the same as the PostScript call "arct".</remarks>
+		/// <remarks>
+		/// This is the same as the PostScript call "arct".
+		/// </remarks>
 		public void ArcTo (SKPoint point1, SKPoint point2, float radius) =>
 			SkiaApi.sk_path_arc_to_with_points (Handle, point1.X, point1.Y, point2.X, point2.Y, radius);
 
@@ -608,7 +682,9 @@ namespace SkiaSharp
 		/// <param name="x2">The destination x-coordinate.</param>
 		/// <param name="y2">The destination y-coordinate.</param>
 		/// <param name="radius">The corner radius.</param>
-		/// <remarks>This is the same as the PostScript call "arct".</remarks>
+		/// <remarks>
+		/// This is the same as the PostScript call "arct".
+		/// </remarks>
 		public void ArcTo (float x1, float y1, float x2, float y2, float radius) =>
 			SkiaApi.sk_path_arc_to_with_points (Handle, x1, y1, x2, y2, radius);
 
@@ -639,21 +715,27 @@ namespace SkiaSharp
 		/// <summary>
 		/// Closes the current contour.
 		/// </summary>
-		/// <remarks>If the current point is not equal to the first point of the contour, a line segment is automatically added.</remarks>
+		/// <remarks>
+		/// If the current point is not equal to the first point of the contour, a line segment is automatically added.
+		/// </remarks>
 		public void Close () =>
 			SkiaApi.sk_path_close (Handle);
 
 		/// <summary>
 		/// Clear any lines and curves from the path, making it empty.
 		/// </summary>
-		/// <remarks>Any internal storage for those lines/curves is retained, making reuse of the path potentially faster.</remarks>
+		/// <remarks>
+		/// Any internal storage for those lines/curves is retained, making reuse of the path potentially faster.
+		/// </remarks>
 		public void Rewind () =>
 			SkiaApi.sk_path_rewind (Handle);
 
 		/// <summary>
 		/// Clear any lines and curves from the path, making it empty.
 		/// </summary>
-		/// <remarks>This frees up internal storage associated with those segments.</remarks>
+		/// <remarks>
+		/// This frees up internal storage associated with those segments.
+		/// </remarks>
 		public void Reset () =>
 			SkiaApi.sk_path_reset (Handle);
 
@@ -671,7 +753,9 @@ namespace SkiaSharp
 		/// <param name="rect">The rectangle to add as a closed contour to the path</param>
 		/// <param name="direction">The direction to wind the rectangle's contour.</param>
 		/// <param name="startIndex">Initial point of the contour (initial <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" />), expressed as a corner index, starting in the upper-left position, clock-wise. Must be in the range of 0..3.</param>
-		/// <remarks>Add a closed rectangle contour to the path with an initial point of the contour (startIndex) expressed as a corner index.</remarks>
+		/// <remarks>
+		/// Add a closed rectangle contour to the path with an initial point of the contour (startIndex) expressed as a corner index.
+		/// </remarks>
 		public void AddRect (SKRect rect, SKPathDirection direction, uint startIndex)
 		{
 			if (startIndex > 3)
@@ -727,7 +811,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="rect">The bounds, if the path contains any points.</param>
 		/// <returns>Returns true if the path is not empty, otherwise false.</returns>
-		/// <remarks>This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompasses all points, even isolated MoveTo either preceding or following the last non-degenerate contour.</remarks>
+		/// <remarks>
+		/// This bounds may be larger than the actual shape, since curves do not extend as far as their control points. Additionally this bound encompasses all points, even isolated MoveTo either preceding or following the last non-degenerate contour.
+		/// </remarks>
 		public bool GetBounds (out SKRect rect)
 		{
 			var isEmpty = IsEmpty;
@@ -745,7 +831,9 @@ namespace SkiaSharp
 		/// Computes a bounds that is conservatively "snug" around the path.
 		/// </summary>
 		/// <returns>Returns the bounds.</returns>
-		/// <remarks><para>This assumes that the path will be filled.</para><para></para><para>It does not attempt to collapse away contours that are logically empty (e.g. MoveTo(x, y) + LineTo(x, y)) but will include them in the calculation.</para></remarks>
+		/// <remarks>
+		/// <para>This assumes that the path will be filled.</para><para></para><para>It does not attempt to collapse away contours that are logically empty (e.g. MoveTo(x, y) + LineTo(x, y)) but will include them in the calculation.</para>
+		/// </remarks>
 		public SKRect ComputeTightBounds ()
 		{
 			SKRect rect;
@@ -888,9 +976,11 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="forceClose">When this is true, each contour (as defined by a new starting move command) will be completed with a close verb regardless of the contour's contents.</param>
 		/// <returns>Returns an object that can be used to iterate over the various elements of the path.</returns>
-		/// <remarks>This iterator is able to clean up the path as the values are returned. If you
+		/// <remarks>
+		/// This iterator is able to clean up the path as the values are returned. If you
 		/// do not desire to get verbs that have been cleaned up, use the
-		/// <see cref="SkiaSharp.SKPath.CreateRawIterator%2A" /> method instead.</remarks>
+		/// <see cref="SkiaSharp.SKPath.CreateRawIterator" /> method instead.
+		/// </remarks>
 		public Iterator CreateIterator (bool forceClose) =>
 			new Iterator (this, forceClose);
 
@@ -898,9 +988,11 @@ namespace SkiaSharp
 		/// Creates a raw iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.
 		/// </summary>
 		/// <returns>Returns an object that can be used to iterate over the various elements of the path.</returns>
-		/// <remarks>Unlike the <see cref="SkiaSharp.SKPath.CreateIterator%2A" /> method, this iterator
+		/// <remarks>
+		/// Unlike the <see cref="SkiaSharp.SKPath.CreateIterator" /> method, this iterator
 		/// does not clean up or normalize the values in the path. It returns the raw
-		/// elements contained in the path.</remarks>
+		/// elements contained in the path.
+		/// </remarks>
 		public RawIterator CreateRawIterator () =>
 			new RawIterator (this);
 
@@ -943,7 +1035,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="result">The path to store the simplified path data. If simplification failed, then this is unmodified.</param>
 		/// <returns>Returns true if simplification was successful, otherwise false.</returns>
-		/// <remarks>The curve order is reduced where possible so that cubics may be turned into quadratics, and quadratics maybe turned into lines.</remarks>
+		/// <remarks>
+		/// The curve order is reduced where possible so that cubics may be turned into quadratics, and quadratics maybe turned into lines.
+		/// </remarks>
 		public bool Simplify (SKPath result)
 		{
 			if (result == null)
@@ -956,7 +1050,9 @@ namespace SkiaSharp
 		/// Return a simplified copy of the current path.
 		/// </summary>
 		/// <returns>Returns the new path if simplification was successful, otherwise null.</returns>
-		/// <remarks>The curve order is reduced where possible so that cubics may be turned into quadratics, and quadratics maybe turned into lines.</remarks>
+		/// <remarks>
+		/// The curve order is reduced where possible so that cubics may be turned into quadratics, and quadratics maybe turned into lines.
+		/// </remarks>
 		public SKPath Simplify ()
 		{
 			var result = new SKPath ();
@@ -969,7 +1065,7 @@ namespace SkiaSharp
 		}
 
 		/// <summary>
-		/// Gets the "tight" bounds of the path. Unlike <see cref="SKPath.GetBounds(SkiaSharp.SKRect@)" />, the control points of curves are excluded.
+		/// Gets the "tight" bounds of the path. Unlike <see cref="SKPath.GetBounds(out SkiaSharp.SKRect)" />, the control points of curves are excluded.
 		/// </summary>
 		/// <param name="result">The tight bounds of the path.</param>
 		/// <returns>Returns true if the bounds could be computed, otherwise false.</returns>
@@ -1069,7 +1165,9 @@ namespace SkiaSharp
 		/// <param name="pts">The collection to store the points.</param>
 		/// <param name="pow2">The tolerance to use (1 &lt;&lt; pow2).</param>
 		/// <returns>Returns the number of quads.</returns>
-		/// <remarks>The amount of storage needed for pts is: 1 + 2 * (1 &lt;&lt; pow2)</remarks>
+		/// <remarks>
+		/// The amount of storage needed for pts is: 1 + 2 * (1 &lt;&lt; pow2)
+		/// </remarks>
 		public static int ConvertConicToQuads (SKPoint p0, SKPoint p1, SKPoint p2, float w, SKPoint[] pts, int pow2)
 		{
 			if (pts == null)
@@ -1089,8 +1187,10 @@ namespace SkiaSharp
 		/// <summary>
 		/// Iterator object to scan the all of the segments (lines, quadratics, cubics) of each contours in a path.
 		/// </summary>
-		/// <remarks>Iterators are created by calling the
-		/// <xref:SkiaSharp.SKPath.CreateIterator%2A?displayProperty=nameWithType> method.</remarks>
+		/// <remarks>
+		/// Iterators are created by calling the
+		/// <see cref="SkiaSharp.SKPath.CreateIterator" /> method.
+		/// </remarks>
 		public class Iterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
@@ -1127,8 +1227,10 @@ namespace SkiaSharp
 			/// <summary>
 			/// Return the weight for the current conic.
 			/// </summary>
-			/// <remarks>Only valid if the current segment return by
-			/// <see cref="SkiaSharp.SKPath.Iterator.Next%2A" /> was <see cref="SkiaSharp.SKPathVerb.Conic" />.</remarks>
+			/// <remarks>
+			/// Only valid if the current segment return by
+			/// <see cref="SkiaSharp.SKPath.Iterator.Next" /> was <see cref="SkiaSharp.SKPathVerb.Conic" />.
+			/// </remarks>
 			public float ConicWeight () =>
 				SkiaApi.sk_path_iter_conic_weight (Handle);
 
@@ -1136,7 +1238,9 @@ namespace SkiaSharp
 			/// Returns a value indicating whether the last call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returns a line which was the result of a <see cref="SKPath.Close" /> command.
 			/// </summary>
 			/// <returns>Returns true if the last call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a line which was the result of a <see cref="SKPath.Close" /> command.</returns>
-			/// <remarks>If the call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a different value than <see cref="SKPathVerb.Line" />, the result is undefined.</remarks>
+			/// <remarks>
+			/// If the call to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> returned a different value than <see cref="SKPathVerb.Line" />, the result is undefined.
+			/// </remarks>
 			public bool IsCloseLine () =>
 				SkiaApi.sk_path_iter_is_close_line (Handle) != 0;
 
@@ -1151,9 +1255,11 @@ namespace SkiaSharp
 		/// <summary>
 		/// Iterator object to scan through the verbs in the path, providing the associated points.
 		/// </summary>
-		/// <remarks>Iterators are created by calling the
-		/// <xref:SkiaSharp.SKPath.CreateRawIterator%2A?displayProperty=nameWithType>
-		/// method.</remarks>
+		/// <remarks>
+		/// Iterators are created by calling the
+		/// <see cref="SkiaSharp.SKPath.CreateRawIterator" />
+		/// method.
+		/// </remarks>
 		public class RawIterator : SKObject, ISKSkipObjectRegistration
 		{
 			private readonly SKPath path;
@@ -1193,7 +1299,9 @@ namespace SkiaSharp
 			/// <summary>
 			/// Returns the weight for the current conic.
 			/// </summary>
-			/// <remarks>Only valid if the current segment returned by <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> was <see cref="SKPathVerb.Conic" />.</remarks>
+			/// <remarks>
+			/// Only valid if the current segment returned by <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" /> was <see cref="SKPathVerb.Conic" />.
+			/// </remarks>
 			public float ConicWeight () =>
 				SkiaApi.sk_path_rawiter_conic_weight (Handle);
 
@@ -1223,7 +1331,9 @@ namespace SkiaSharp
 			/// </summary>
 			/// <param name="path">The second operand.</param>
 			/// <param name="op">The operator to apply to the existing and supplied paths.</param>
-			/// <remarks>The builder is empty before the first path is added, so the result of a single add is ("empty-path" OP "path").</remarks>
+			/// <remarks>
+			/// The builder is empty before the first path is added, so the result of a single add is ("empty-path" OP "path").
+			/// </remarks>
 			public void Add (SKPath path, SKPathOp op) =>
 				SkiaApi.sk_opbuilder_add (Handle, path.Handle, op);
 

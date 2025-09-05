@@ -8,7 +8,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.
 	/// </summary>
-	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
+	/// <remarks>
+	/// To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="SKPointI.Truncate(SkiaSharp.SKPoint)" />.
+	/// </remarks>
 	public partial struct SKPoint
 	{
 		/// <summary>
@@ -303,7 +305,9 @@ namespace SkiaSharp
 		/// Translates this <see cref="SKPointI" /> by the specified <see cref="SKPointI" />.
 		/// </summary>
 		/// <param name="p">The <see cref="SKPointI" /> used to offset this <see cref="SKPointI" />.</param>
-		/// <remarks>This method adjusts the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of this <see cref="T:System.Drawing.Point" /> to the sum of the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of this <see cref="SKPointI" /> and <paramref name="p" />.</remarks>
+		/// <remarks>
+		/// This method adjusts the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of this <see cref="T:System.Drawing.Point" /> to the sum of the <see cref="SKPointI.X" /> and <see cref="SKPointI.Y" /> values of this <see cref="SKPointI" /> and <paramref name="p" />.
+		/// </remarks>
 		public void Offset (SKPointI p)
 		{
 			x += p.X;

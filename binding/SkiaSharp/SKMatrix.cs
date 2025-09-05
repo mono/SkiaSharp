@@ -7,7 +7,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// A 3x3 transformation matrix with perspective.
 	/// </summary>
-	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="SKMatrix.Persp0" />, <see cref="SKMatrix.Persp1" />, <see cref="SKMatrix.Persp2" /> fields of the matrix.</remarks>
+	/// <remarks>
+	/// It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="SKMatrix.Persp0" />, <see cref="SKMatrix.Persp1" />, <see cref="SKMatrix.Persp2" /> fields of the matrix.
+	/// </remarks>
 	public unsafe partial struct SKMatrix
 	{
 		internal const float DegreesToRadians = (float)Math.PI / 180.0f;
@@ -118,7 +120,9 @@ namespace SkiaSharp
 		/// Populates the specified array with the matrix values.
 		/// </summary>
 		/// <param name="values">The array to populate.</param>
-		/// <remarks>The result will be the same as <see cref="SKMatrix.Values" />.</remarks>
+		/// <remarks>
+		/// The result will be the same as <see cref="SKMatrix.Values" />.
+		/// </remarks>
 		public readonly void GetValues (float[] values)
 		{
 			if (values == null)
@@ -349,7 +353,9 @@ namespace SkiaSharp
 		/// <param name="target">The result matrix value.</param>
 		/// <param name="first">The first matrix to concatenate.</param>
 		/// <param name="second">The second matrix to concatenate.</param>
-		/// <remarks>Either source matrices can also be the target matrix.</remarks>
+		/// <remarks>
+		/// Either source matrices can also be the target matrix.
+		/// </remarks>
 		public static void Concat (ref SKMatrix target, SKMatrix first, SKMatrix second)
 		{
 			fixed (SKMatrix* t = &target) {
@@ -380,7 +386,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="point">The point to map.</param>
 		/// <returns>Returns the mapped point.</returns>
-		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVector(System.Single,System.Single)" /> to ignore the translation.</remarks>
+		/// <remarks>
+		/// Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVector(System.Single,System.Single)" /> to ignore the translation.
+		/// </remarks>
 		public readonly SKPoint MapPoint (SKPoint point) =>
 			MapPoint (point.X, point.Y);
 
@@ -390,7 +398,9 @@ namespace SkiaSharp
 		/// <param name="x">The x-coordinate.</param>
 		/// <param name="y">The y-coordinate.</param>
 		/// <returns>Returns the mapped point.</returns>
-		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVector(System.Single,System.Single)" /> to ignore the translation.</remarks>
+		/// <remarks>
+		/// Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVector(System.Single,System.Single)" /> to ignore the translation.
+		/// </remarks>
 		public readonly SKPoint MapPoint (float x, float y)
 		{
 			SKPoint result;
@@ -417,7 +427,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="result">The array where the mapped results will be stored (needs to have the same number of elements of the <paramref name="points" /> array).</param>
 		/// <param name="points">The array of points to be mapped.</param>
-		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVectors(SkiaSharp.SKPoint[],SkiaSharp.SKPoint[])" /> to ignore the translation.</remarks>
+		/// <remarks>
+		/// Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVectors(SkiaSharp.SKPoint[],SkiaSharp.SKPoint[])" /> to ignore the translation.
+		/// </remarks>
 		public readonly void MapPoints (SKPoint[] result, SKPoint[] points)
 		{
 			if (result == null)
@@ -439,7 +451,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="points">The array of points to be mapped.</param>
 		/// <returns>Returns the new array allocated with the mapped results.</returns>
-		/// <remarks>Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVectors(SkiaSharp.SKPoint[])" /> to ignore the translation.</remarks>
+		/// <remarks>
+		/// Mapping points uses all components of the matrix. Use <see cref="SKMatrix.MapVectors(SkiaSharp.SKPoint[])" /> to ignore the translation.
+		/// </remarks>
 		public readonly SKPoint[] MapPoints (SKPoint[] points)
 		{
 			if (points == null)
@@ -462,7 +476,9 @@ namespace SkiaSharp
 		/// <param name="x">The x-component of the vector.</param>
 		/// <param name="y">The y-component of the vector.</param>
 		/// <returns>Returns the mapped point.</returns>
-		/// <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapXY(System.Single,System.Single)" /> to take the translation into consideration.</remarks>
+		/// <remarks>
+		/// Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapXY(System.Single,System.Single)" /> to take the translation into consideration.
+		/// </remarks>
 		public readonly SKPoint MapVector (float x, float y)
 		{
 			SKPoint result;
@@ -489,7 +505,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="result">The array where the mapped results will be stored (needs to have the same number of elements of the <paramref name="vectors" /> array).</param>
 		/// <param name="vectors">The array of vectors to map.</param>
-		/// <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapPoints(SkiaSharp.SKPoint[],SkiaSharp.SKPoint[])" /> to take the translation into consideration.</remarks>
+		/// <remarks>
+		/// Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapPoints(SkiaSharp.SKPoint[],SkiaSharp.SKPoint[])" /> to take the translation into consideration.
+		/// </remarks>
 		public readonly void MapVectors (SKPoint[] result, SKPoint[] vectors)
 		{
 			if (result == null)
@@ -511,7 +529,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="vectors">The array of vectors to map.</param>
 		/// <returns>Returns the new array allocated with the mapped results.</returns>
-		/// <remarks>Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapPoints(SkiaSharp.SKPoint[])" /> to take the translation into consideration.</remarks>
+		/// <remarks>
+		/// Mapping vectors ignores the translation component in the matrix. Use <see cref="SKMatrix.MapPoints(SkiaSharp.SKPoint[])" /> to take the translation into consideration.
+		/// </remarks>
 		public readonly SKPoint[] MapVectors (SKPoint[] vectors)
 		{
 			if (vectors == null)

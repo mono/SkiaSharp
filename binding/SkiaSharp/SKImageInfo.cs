@@ -46,7 +46,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// The current 32-bit color for the current platform.
 		/// </summary>
-		/// <remarks>On Windows, it is typically <see cref="SKColorType.Bgra8888" />, and on Unix-based systems (macOS, Linux) it is typically <see cref="SKColorType.Rgba8888" />.</remarks>
+		/// <remarks>
+		/// On Windows, it is typically <see cref="SKColorType.Bgra8888" />, and on Unix-based systems (macOS, Linux) it is typically <see cref="SKColorType.Rgba8888" />.
+		/// </remarks>
 		public static readonly SKColorType PlatformColorType;
 		/// <summary>
 		/// The number of bits to shift left for the alpha color component.
@@ -167,7 +169,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of bytes used per pixel.
 		/// </summary>
-		/// <remarks>This is calculated from the <see cref="SKImageInfo.ColorType" />. If the color type is <see cref="SKColorType.Unknown" />, then the value will be 0.</remarks>
+		/// <remarks>
+		/// This is calculated from the <see cref="SKImageInfo.ColorType" />. If the color type is <see cref="SKColorType.Unknown" />, then the value will be 0.
+		/// </remarks>
 		public readonly int BytesPerPixel =>
 			ColorType.GetBytesPerPixel ();
 
@@ -177,31 +181,41 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the number of bits used per pixel.
 		/// </summary>
-		/// <remarks>This is equivalent to multiplying the <see cref="SKImageInfo.BytesPerPixel" /> by 8 (the number of bits in a byte).</remarks>
+		/// <remarks>
+		/// This is equivalent to multiplying the <see cref="SKImageInfo.BytesPerPixel" /> by 8 (the number of bits in a byte).
+		/// </remarks>
 		public readonly int BitsPerPixel => BytesPerPixel * 8;
 
 		/// <summary>
 		/// Gets the total number of bytes needed to store the bitmap data.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.Height" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>
+		/// This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.Height" /> * <see cref="SKImageInfo.BytesPerPixel" />.
+		/// </remarks>
 		public readonly int BytesSize => Width * Height * BytesPerPixel;
 
 		/// <summary>
 		/// Gets the total number of bytes needed to store the bitmap data as a 64-bit integer.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.Height" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>
+		/// This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.Height" /> * <see cref="SKImageInfo.BytesPerPixel" />.
+		/// </remarks>
 		public readonly long BytesSize64 => (long)Width * (long)Height * (long)BytesPerPixel;
 
 		/// <summary>
 		/// Gets the number of bytes per row.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>
+		/// This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.BytesPerPixel" />.
+		/// </remarks>
 		public readonly int RowBytes => Width * BytesPerPixel;
 
 		/// <summary>
 		/// Gets the number of bytes per row as a 64-bit integer.
 		/// </summary>
-		/// <remarks>This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.BytesPerPixel" />.</remarks>
+		/// <remarks>
+		/// This is calculated as: <see cref="SKImageInfo.Width" /> * <see cref="SKImageInfo.BytesPerPixel" />.
+		/// </remarks>
 		public readonly long RowBytes64 => (long)Width * (long)BytesPerPixel;
 
 		/// <summary>

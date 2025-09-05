@@ -107,7 +107,9 @@ namespace SkiaSharp.Views.Android
 		/// Set the GL wrapper.
 		/// </summary>
 		/// <param name="glWrapper">The GL wrapper.</param>
-		/// <remarks>Wrapping is typically used for debugging purposes.</remarks>
+		/// <remarks>
+		/// Wrapping is typically used for debugging purposes.
+		/// </remarks>
 		public void SetGLWrapper(IGLWrapper glWrapper)
 		{
 			this.glWrapper = glWrapper;
@@ -117,7 +119,9 @@ namespace SkiaSharp.Views.Android
 		/// Set the renderer associated with this view. Also starts the thread that will call the renderer, which in turn causes the rendering to start.
 		/// </summary>
 		/// <param name="renderer">The renderer to use to perform OpenGL drawing.</param>
-		/// <remarks>This method should be called once and only once in the life-cycle of a GLSurfaceView.</remarks>
+		/// <remarks>
+		/// This method should be called once and only once in the life-cycle of a GLSurfaceView.
+		/// </remarks>
 		public void SetRenderer(IRenderer renderer)
 		{
 			CheckRenderThreadState();
@@ -142,7 +146,9 @@ namespace SkiaSharp.Views.Android
 		/// Install a custom context factory.
 		/// </summary>
 		/// <param name="factory">The custom context factory.</param>
-		/// <remarks>If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
+		/// <remarks>
+		/// If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.
+		/// </remarks>
 		public void SetEGLContextFactory(IEGLContextFactory factory)
 		{
 			CheckRenderThreadState();
@@ -153,7 +159,9 @@ namespace SkiaSharp.Views.Android
 		/// Install a custom window surface factory.
 		/// </summary>
 		/// <param name="factory">The custom window surface factory.</param>
-		/// <remarks>If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
+		/// <remarks>
+		/// If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.
+		/// </remarks>
 		public void SetEGLWindowSurfaceFactory(IEGLWindowSurfaceFactory factory)
 		{
 			CheckRenderThreadState();
@@ -164,10 +172,12 @@ namespace SkiaSharp.Views.Android
 		/// Install a custom config chooser.
 		/// </summary>
 		/// <param name="configChooser">The custom config chooser.</param>
-		/// <remarks>If no EGL config chooser is set, then by default the view will choose an RGB
+		/// <remarks>
+		/// If no EGL config chooser is set, then by default the view will choose an RGB
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		/// If this method is called, it must be called before
-		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A" /> is called.</remarks>
+		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer" /> is called.
+		/// </remarks>
 		public void SetEGLConfigChooser(IEGLConfigChooser configChooser)
 		{
 			CheckRenderThreadState();
@@ -178,10 +188,12 @@ namespace SkiaSharp.Views.Android
 		/// Install a config chooser which will choose a config as close to 16-bit RGB as possible, with or without an optional depth buffer as close to 16-bits as possible.
 		/// </summary>
 		/// <param name="needDepth">Whether or not to include a depth buffer.</param>
-		/// <remarks>If no EGL config chooser is set, then by default the view will choose an RGB
+		/// <remarks>
+		/// If no EGL config chooser is set, then by default the view will choose an RGB
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		/// If this method is called, it must be called before
-		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A" /> is called.</remarks>
+		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer" /> is called.
+		/// </remarks>
 		public void SetEGLConfigChooser(bool needDepth)
 		{
 			SetEGLConfigChooser(new SimpleEGLConfigChooser(this, needDepth));
@@ -196,10 +208,12 @@ namespace SkiaSharp.Views.Android
 		/// <param name="alphaSize">The size of the alpha.</param>
 		/// <param name="depthSize">The size of the depth buffer.</param>
 		/// <param name="stencilSize">The size of the stencil buffer.</param>
-		/// <remarks>If no EGL config chooser is set, then by default the view will choose an RGB
+		/// <remarks>
+		/// If no EGL config chooser is set, then by default the view will choose an RGB
 		/// 888 surface with a depth buffer depth of at least 16 bits.
 		/// If this method is called, it must be called before
-		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A" /> is called.</remarks>
+		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer" /> is called.
+		/// </remarks>
 		public void SetEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize)
 		{
 			SetEGLConfigChooser(new ComponentSizeChooser(this, redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize));
@@ -209,7 +223,9 @@ namespace SkiaSharp.Views.Android
 		/// Inform the default context factory and default config chooser which context client version to pick.
 		/// </summary>
 		/// <param name="version">The context client version to choose. Use 2 for OpenGL ES 2.0</param>
-		/// <remarks>If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
+		/// <remarks>
+		/// If this method is called, it must be called before <see cref="GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.
+		/// </remarks>
 		public void SetEGLContextClientVersion(int version)
 		{
 			CheckRenderThreadState();
@@ -280,7 +296,9 @@ namespace SkiaSharp.Views.Android
 		/// <summary>
 		/// Inform the view that the activity is paused.
 		/// </summary>
-		/// <remarks>The owner of this view must call this method when the activity is paused. Calling this method will pause the rendering thread. Must not be called before a renderer has been set.</remarks>
+		/// <remarks>
+		/// The owner of this view must call this method when the activity is paused. Calling this method will pause the rendering thread. Must not be called before a renderer has been set.
+		/// </remarks>
 		public void OnPause()
 		{
 			glThread.OnPause();
@@ -289,7 +307,9 @@ namespace SkiaSharp.Views.Android
 		/// <summary>
 		/// Inform the view that the activity is resumed.
 		/// </summary>
-		/// <remarks>The owner of this view must call this method when the activity is resumed. Calling this method will recreate the OpenGL display and resume the rendering thread. Must not be called before a renderer has been set.</remarks>
+		/// <remarks>
+		/// The owner of this view must call this method when the activity is resumed. Calling this method will recreate the OpenGL display and resume the rendering thread. Must not be called before a renderer has been set.
+		/// </remarks>
 		public void OnResume()
 		{
 			glThread.OnResume();
@@ -391,7 +411,9 @@ namespace SkiaSharp.Views.Android
 		/// <summary>
 		/// An interface used to wrap a GL interface.
 		/// </summary>
-		/// <remarks>Typically used for implementing debugging and tracing on top of the default GL interface. You would typically use this by creating your own class that implemented all the GL methods by delegating to another GL instance. Then you could add your own behavior before or after calling the delegate. All the wrapper would do was instantiate and return the wrapped GL instance.</remarks>
+		/// <remarks>
+		/// Typically used for implementing debugging and tracing on top of the default GL interface. You would typically use this by creating your own class that implemented all the GL methods by delegating to another GL instance. Then you could add your own behavior before or after calling the delegate. All the wrapper would do was instantiate and return the wrapped GL instance.
+		/// </remarks>
 		public interface IGLWrapper
 		{
 			IGL Wrap(IGL gl);
@@ -428,11 +450,13 @@ namespace SkiaSharp.Views.Android
 		/// <summary>
 		/// A generic renderer interface.
 		/// </summary>
-		/// <remarks>The renderer is responsible for making OpenGL calls to render a frame.
+		/// <remarks>
+		/// The renderer is responsible for making OpenGL calls to render a frame.
 		/// Typically, <see cref="SkiaSharp.Views.Android.GLTextureView" /> clients create their
 		/// own classes that implement this interface, and then call
-		/// <xref:SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A?displayProperty=nameWithType>
-		/// to register the renderer with the <see cref="SkiaSharp.Views.Android.GLTextureView" />.</remarks>
+		/// <xref:SkiaSharp.Views.Android.GLTextureView.SetRenderer?displayProperty=nameWithType>
+		/// to register the renderer with the <see cref="SkiaSharp.Views.Android.GLTextureView" />.
+		/// </remarks>
 		public interface IRenderer
 		{
 			void OnDrawFrame(IGL10 gl);

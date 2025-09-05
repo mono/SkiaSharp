@@ -35,7 +35,9 @@ namespace SkiaSharp.Views.Mac
 		/// <summary>
 		/// Gets the current canvas size.
 		/// </summary>
-		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
+		/// <remarks>
+		/// The canvas size may be different to the view size as a result of the current device's pixel density.
+		/// </remarks>
 		public SKSize CanvasSize => lastSize;
 
 		/// <summary>
@@ -46,7 +48,8 @@ namespace SkiaSharp.Views.Mac
 		/// <summary>
 		/// Occurs when the the canvas needs to be redrawn.
 		/// </summary>
-		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <remarks>
+		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SKGLLayer.OnPaintSurface(SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SKGLLayer.PaintSurface" />
@@ -66,7 +69,8 @@ namespace SkiaSharp.Views.Mac
 		/// // draw on the canvas
 		/// canvas.Flush ();
 		/// };
-		/// ```</remarks>
+		/// ```
+		/// </remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)

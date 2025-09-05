@@ -46,7 +46,8 @@ namespace SkiaSharp.Views.Tizen
 		/// <summary>
 		/// Occurs when the surface needs to be redrawn.
 		/// </summary>
-		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <remarks>
+		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SkiaSharp.Views.Tizen.SKGLSurfaceView.OnDrawFrame(SkiaSharp.Views.Tizen.SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.Tizen.SKGLSurfaceView.PaintSurface" />
@@ -61,7 +62,8 @@ namespace SkiaSharp.Views.Tizen
 		/// // draw on the canvas
 		/// canvas.Flush ();
 		/// };
-		/// ```</remarks>
+		/// ```
+		/// </remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		/// <summary>

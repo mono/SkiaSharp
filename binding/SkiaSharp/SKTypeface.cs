@@ -9,13 +9,15 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents a specific typeface and intrinsic style of a font.
 	/// </summary>
-	/// <remarks>This is used in the paint, along with optionally algorithmic settings like
-	/// <xref:SkiaSharp.SKPaint.TextSize?displayProperty=nameWithType>,
-	/// <xref:SkiaSharp.SKPaint.TextSkewX?displayProperty=nameWithType>,
-	/// <xref:SkiaSharp.SKPaint.TextScaleX?displayProperty=nameWithType>, and
-	/// <xref:SkiaSharp.SKPaint.FakeBoldText?displayProperty=nameWithType>
+	/// <remarks>
+	/// This is used in the paint, along with optionally algorithmic settings like
+	/// <see cref="SkiaSharp.SKPaint.TextSize" />,
+	/// <see cref="SkiaSharp.SKPaint.TextSkewX" />,
+	/// <see cref="SkiaSharp.SKPaint.TextScaleX" />, and
+	/// <see cref="SkiaSharp.SKPaint.FakeBoldText" />
 	/// to specify how text appears when drawn (and measured).
-	/// Typeface objects are immutable, and so they can be shared between threads.</remarks>
+	/// Typeface objects are immutable, and so they can be shared between threads.
+	/// </remarks>
 	public unsafe class SKTypeface : SKObject, ISKReferenceCounted
 	{
 		private static readonly SKTypeface defaultTypeface;
@@ -51,13 +53,17 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the default, Normal typeface.
 		/// </summary>
-		/// <remarks>This will never be <see langword="null" />.</remarks>
+		/// <remarks>
+		/// This will never be <see langword="null" />.
+		/// </remarks>
 		public static SKTypeface Default => defaultTypeface;
 
 		/// <summary>
 		/// Creates a new <see cref="SKTypeface" /> which is the default, Normal typeface.
 		/// </summary>
-		/// <remarks>This will never be null.</remarks>
+		/// <remarks>
+		/// This will never be null.
+		/// </remarks>
 		public static SKTypeface CreateDefault ()
 		{
 			return GetObject (SkiaApi.sk_typeface_create_default ());
@@ -194,7 +200,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the family name for the typeface.
 		/// </summary>
-		/// <remarks>The family name will always be returned encoded as UTF8, but the language of the name is whatever the host platform chooses.</remarks>
+		/// <remarks>
+		/// The family name will always be returned encoded as UTF8, but the language of the name is whatever the host platform chooses.
+		/// </remarks>
 		public string FamilyName => (string)SKString.GetObject (SkiaApi.sk_typeface_get_family_name (Handle));
 
 		/// <summary>
@@ -205,41 +213,53 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the font weight for the typeface.
 		/// </summary>
-		/// <remarks>This may be one of the values in <see cref="SKFontStyleWeight" />.</remarks>
+		/// <remarks>
+		/// This may be one of the values in <see cref="SKFontStyleWeight" />.
+		/// </remarks>
 		public int FontWeight => SkiaApi.sk_typeface_get_font_weight (Handle);
 
 		/// <summary>
 		/// Gets the font width for the typeface.
 		/// </summary>
-		/// <remarks>This may be one of the values in <see cref="SKFontStyleWidth" />.</remarks>
+		/// <remarks>
+		/// This may be one of the values in <see cref="SKFontStyleWidth" />.
+		/// </remarks>
 		public int FontWidth => SkiaApi.sk_typeface_get_font_width (Handle);
 
 		/// <summary>
 		/// Gets the font slant for the typeface.
 		/// </summary>
-		/// <remarks>This may be one of the values in <see cref="SKFontStyleSlant" />.</remarks>
+		/// <remarks>
+		/// This may be one of the values in <see cref="SKFontStyleSlant" />.
+		/// </remarks>
 		public SKFontStyleSlant FontSlant => SkiaApi.sk_typeface_get_font_slant (Handle);
 
 		/// <summary>
 		/// Gets a value indicating whether the typeface claims to be a bold typeface.
 		/// </summary>
-		/// <remarks>A typeface is understood to be bold when the weight is greater than or equal to
-		/// 600 or <see cref="SkiaSharp.SKFontStyleWeight.SemiBold" />.</remarks>
+		/// <remarks>
+		/// A typeface is understood to be bold when the weight is greater than or equal to
+		/// 600 or <see cref="SkiaSharp.SKFontStyleWeight.SemiBold" />.
+		/// </remarks>
 		public bool IsBold => FontStyle.Weight >= (int)SKFontStyleWeight.SemiBold;
 
 		/// <summary>
 		/// Gets a value indicating whether the typeface claims to be slanted.
 		/// </summary>
-		/// <remarks>A typeface is understood to be italic when it has a slant of either
+		/// <remarks>
+		/// A typeface is understood to be italic when it has a slant of either
 		/// <see cref="SkiaSharp.SKFontStyleSlant.Italic" /> or
-		/// <see cref="SkiaSharp.SKFontStyleSlant.Oblique" />.</remarks>
+		/// <see cref="SkiaSharp.SKFontStyleSlant.Oblique" />.
+		/// </remarks>
 		public bool IsItalic => FontStyle.Slant != SKFontStyleSlant.Upright;
 
 		/// <summary>
 		/// Gets a value indicating whether the typeface claims to be fixed-pitch.
 		/// </summary>
-		/// <remarks>This does not guarentee that the advance widths will not vary as this is a
-		/// style bit on the typeface.</remarks>
+		/// <remarks>
+		/// This does not guarentee that the advance widths will not vary as this is a
+		/// style bit on the typeface.
+		/// </remarks>
 		public bool IsFixedPitch => SkiaApi.sk_typeface_is_fixed_pitch (Handle);
 
 		/// <summary>
@@ -473,7 +493,9 @@ namespace SkiaSharp
 		/// Returns a stream for the contents of the font data.
 		/// </summary>
 		/// <returns>Returns a stream for the contents of the font data, or <see langword="null" /> on failure.</returns>
-		/// <remarks>The caller is responsible for deleting the stream.</remarks>
+		/// <remarks>
+		/// The caller is responsible for deleting the stream.
+		/// </remarks>
 		public SKStreamAsset OpenStream () =>
 			OpenStream (out _);
 
@@ -482,7 +504,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="ttcIndex">The TrueTypeCollection index of this typeface within the stream, or 0 if the stream is not a collection.</param>
 		/// <returns>Returns a stream for the contents of the font data, or <see langword="null" /> on failure.</returns>
-		/// <remarks>The caller is responsible for deleting the stream.</remarks>
+		/// <remarks>
+		/// The caller is responsible for deleting the stream.
+		/// </remarks>
 		public SKStreamAsset OpenStream (out int ttcIndex)
 		{
 			fixed (int* ttc = &ttcIndex) {

@@ -31,7 +31,9 @@ namespace SkiaSharp
 		/// <param name="path">The path to use, or null.</param>
 		/// <param name="forceClosed">Controls whether or not the path is treated as closed.</param>
 		/// <param name="resScale">Controls the precision of the measure. Values greater 1 increase the precision (and possibly slow down the computation).</param>
-		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+		/// <remarks>
+		/// The path must remain valid for the lifetime of the measure object, or until <see cref="SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).
+		/// </remarks>
 		public SKPathMeasure (SKPath path, bool forceClosed = false, float resScale = 1)
 			: this (IntPtr.Zero, true)
 		{
@@ -84,7 +86,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="path">The path to use, or null.</param>
 		/// <param name="forceClosed">Controls whether or not the path is treated as closed.</param>
-		/// <remarks>The path must remain valid for the lifetime of the measure object, or until <see cref="SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).</remarks>
+		/// <remarks>
+		/// The path must remain valid for the lifetime of the measure object, or until <see cref="SKPathMeasure.SetPath(SkiaSharp.SKPath,System.Boolean)" /> is called with a different path (or null), since the measure object keeps a reference to the path object (does not copy its data).
+		/// </remarks>
 		public void SetPath (SKPath path, bool forceClosed)
 		{
 			SkiaApi.sk_pathmeasure_set_path (Handle, path == null ? IntPtr.Zero : path.Handle, forceClosed);
@@ -99,7 +103,9 @@ namespace SkiaSharp
 		/// <param name="position">The position of a point along the current contour.</param>
 		/// <param name="tangent">The tangent along the current contour.</param>
 		/// <returns>Returns false if there is no path, or a zero-length path was specified, in which case position and tangent are unchanged.</returns>
-		/// <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.</remarks>
+		/// <remarks>
+		/// Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.
+		/// </remarks>
 		public bool GetPositionAndTangent (float distance, out SKPoint position, out SKPoint tangent)
 		{
 			fixed (SKPoint* p = &position)
@@ -124,7 +130,9 @@ namespace SkiaSharp
 		/// <param name="distance">The distance to use.</param>
 		/// <param name="position">The position of a point along the current contour.</param>
 		/// <returns>Returns false if there is no path, or a zero-length path was specified, in which case position is unchanged.</returns>
-		/// <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.</remarks>
+		/// <remarks>
+		/// Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.
+		/// </remarks>
 		public bool GetPosition (float distance, out SKPoint position)
 		{
 			fixed (SKPoint* p = &position) {
@@ -148,7 +156,9 @@ namespace SkiaSharp
 		/// <param name="distance">The distance to use.</param>
 		/// <param name="tangent">The tangent along the current contour.</param>
 		/// <returns>Returns false if there is no path, or a zero-length path was specified, in which case position and tangent are unchanged.</returns>
-		/// <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.</remarks>
+		/// <remarks>
+		/// Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.
+		/// </remarks>
 		public bool GetTangent (float distance, out SKPoint tangent)
 		{
 			fixed (SKPoint* t = &tangent) {
@@ -174,7 +184,9 @@ namespace SkiaSharp
 		/// <param name="matrix">The computed matrix.</param>
 		/// <param name="flags">Flags to indicate how to compute the matrix.</param>
 		/// <returns>Returns false if there is no path, or a zero-length path was specified, in which case matrix is unchanged.</returns>
-		/// <remarks>Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.</remarks>
+		/// <remarks>
+		/// Distance is pinned to 0 &lt;= distance &lt;= <see cref="SKPathMeasure.Length" />.
+		/// </remarks>
 		public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasureMatrixFlags flags)
 		{
 			fixed (SKMatrix* m = &matrix) {
@@ -192,7 +204,9 @@ namespace SkiaSharp
 		/// <param name="dst">The path to hold the new segment.</param>
 		/// <param name="startWithMoveTo">If true, begin the path segment with a <see cref="SKPath.MoveTo(SkiaSharp.SKPoint)" />.</param>
 		/// <returns>Returns false if the segment is zero-length, otherwise returns true.</returns>
-		/// <remarks>The start and stop parameters are pinned to 0..<see cref="SKPathMeasure.Length" />.</remarks>
+		/// <remarks>
+		/// The start and stop parameters are pinned to 0..<see cref="SKPathMeasure.Length" />.
+		/// </remarks>
 		public bool GetSegment (float start, float stop, SKPath dst, bool startWithMoveTo)
 		{
 			if (dst == null)

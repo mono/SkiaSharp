@@ -19,7 +19,9 @@ namespace SkiaSharp
 		/// Creates a new writeable stream from a <see cref="T:System.IO.Stream" />.
 		/// </summary>
 		/// <param name="managedStream">The managed stream.</param>
-		/// <remarks>The underlying stream is not disposed when this object is disposed.</remarks>
+		/// <remarks>
+		/// The underlying stream is not disposed when this object is disposed.
+		/// </remarks>
 		public SKManagedWStream (Stream managedStream)
 			: this (managedStream, false)
 		{

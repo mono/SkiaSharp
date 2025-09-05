@@ -64,9 +64,11 @@ namespace SkiaSharp
 		/// Signal that the caller is done recording.
 		/// </summary>
 		/// <returns>Returns the <see cref="SKPicture" /> containing the recorded content.</returns>
-		/// <remarks>This invalidates the canvas returned by
-		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording%2A" /> and
-		/// <see cref="SkiaSharp.SKPictureRecorder.RecordingCanvas" />.</remarks>
+		/// <remarks>
+		/// This invalidates the canvas returned by
+		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording" /> and
+		/// <see cref="SkiaSharp.SKPictureRecorder.RecordingCanvas" />.
+		/// </remarks>
 		public SKPicture EndRecording ()
 		{
 			return SKPicture.GetObject (SkiaApi.sk_picture_recorder_end_recording (Handle));
@@ -76,15 +78,17 @@ namespace SkiaSharp
 		/// Signal that the caller is done recording.
 		/// </summary>
 		/// <returns>Returns the <see cref="SKDrawable" /> containing the recorded content.</returns>
-		/// <remarks>This invalidates the canvas returned by
-		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording%2A" /> and
+		/// <remarks>
+		/// This invalidates the canvas returned by
+		/// <see cref="SkiaSharp.SKPictureRecorder.BeginRecording" /> and
 		/// <see cref="SkiaSharp.SKPictureRecorder.RecordingCanvas" />.
-		/// Unlike <see cref="SkiaSharp.SKPictureRecorder.EndRecording%2A" />, which returns an
+		/// Unlike <see cref="SkiaSharp.SKPictureRecorder.EndRecording" />, which returns an
 		/// immutable picture, the returned drawable may contain live references to other
 		/// drawables (if they were added to the recording canvas) and therefore this
 		/// drawable will reflect the current state of those nested drawables anytime it
 		/// is drawn or a new picture is snapped from it (by calling
-		/// <see cref="SkiaSharp.SKDrawable.Snapshot%2A" />).</remarks>
+		/// <see cref="SkiaSharp.SKDrawable.Snapshot" />).
+		/// </remarks>
 		public SKDrawable EndRecordingAsDrawable ()
 		{
 			return SKDrawable.GetObject (SkiaApi.sk_picture_recorder_end_recording_as_drawable (Handle));

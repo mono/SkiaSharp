@@ -8,7 +8,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// 32-bit ARGB unpremultiplied color value.
 	/// </summary>
-	/// <remarks>The color components are always in a known order.</remarks>
+	/// <remarks>
+	/// The color components are always in a known order.
+	/// </remarks>
 	public readonly struct SKColor : IEquatable<SKColor>
 	{
 		/// <summary>
@@ -151,7 +153,9 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="l">The lightness/luminosity value.</param>
-		/// <remarks>The alpha value is separate from the HSL calculation and will always be the same as <see cref="SKColor.Alpha" />.</remarks>
+		/// <remarks>
+		/// The alpha value is separate from the HSL calculation and will always be the same as <see cref="SKColor.Alpha" />.
+		/// </remarks>
 		public readonly void ToHsl (out float h, out float s, out float l)
 		{
 			// RGB from 0 to 255
@@ -169,7 +173,9 @@ namespace SkiaSharp
 		/// <param name="h">The hue value.</param>
 		/// <param name="s">The saturation value.</param>
 		/// <param name="v">The value/brightness value.</param>
-		/// <remarks>The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="SKColor.Alpha" />.</remarks>
+		/// <remarks>
+		/// The alpha value is separate from the HSV/HSB calculation and will always be the same as <see cref="SKColor.Alpha" />.
+		/// </remarks>
 		public readonly void ToHsv (out float h, out float s, out float v)
 		{
 			// RGB from 0 to 255
@@ -249,7 +255,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="hexString">The hexadecimal string representation of a color.</param>
 		/// <returns>The new <see cref="SKColor" /> instance.</returns>
-		/// <remarks>This method can parse a string in the forms with or without a preceding '#' character: AARRGGB, RRGGBB, ARGB, RGB.</remarks>
+		/// <remarks>
+		/// This method can parse a string in the forms with or without a preceding '#' character: AARRGGB, RRGGBB, ARGB, RGB.
+		/// </remarks>
 		public static SKColor Parse (string hexString)
 		{
 			if (!TryParse (hexString, out var color))
@@ -263,7 +271,9 @@ namespace SkiaSharp
 		/// <param name="hexString">The hexadecimal string representation of a color.</param>
 		/// <param name="color">The new <see cref="SKColor" /> instance.</param>
 		/// <returns>Returns true if the conversion was successful, otherwise false.</returns>
-		/// <remarks>This method can parse a string in the forms with or without a preceding '#' character: AARRGGB, RRGGBB, ARGB, RGB.</remarks>
+		/// <remarks>
+		/// This method can parse a string in the forms with or without a preceding '#' character: AARRGGB, RRGGBB, ARGB, RGB.
+		/// </remarks>
 		public static bool TryParse (string hexString, out SKColor color)
 		{
 			if (string.IsNullOrWhiteSpace (hexString)) {

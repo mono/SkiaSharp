@@ -163,7 +163,9 @@ namespace SkiaSharp
 		/// Informs the context that the state was modified and should resend.
 		/// </summary>
 		/// <param name="state">Flags to control what is reset.</param>
-		/// <remarks>The context normally assumes that no outsider is setting state within the underlying 3D API's context/device/whatever. This method shouldn't be called frequently for good performance.</remarks>
+		/// <remarks>
+		/// The context normally assumes that no outsider is setting state within the underlying 3D API's context/device/whatever. This method shouldn't be called frequently for good performance.
+		/// </remarks>
 		public void ResetContext (GRGlBackendState state) =>
 			ResetContext ((uint)state);
 
@@ -171,7 +173,9 @@ namespace SkiaSharp
 		/// Informs the context that the state was modified and should resend.
 		/// </summary>
 		/// <param name="state">Flags to control what is reset.</param>
-		/// <remarks>The context normally assumes that no outsider is setting state within the underlying 3D API's context/device/whatever. This method shouldn't be called frequently for good performance.</remarks>
+		/// <remarks>
+		/// The context normally assumes that no outsider is setting state within the underlying 3D API's context/device/whatever. This method shouldn't be called frequently for good performance.
+		/// </remarks>
 		public void ResetContext (GRBackendState state = GRBackendState.All) =>
 			ResetContext ((uint)state);
 
@@ -179,7 +183,9 @@ namespace SkiaSharp
 		/// Informs the context that the state was modified and should resend.
 		/// </summary>
 		/// <param name="state">Flags to control what is reset.</param>
-		/// <remarks>The context normally assumes that no outsider is setting state within the underlying 3D API's context/device/whatever. This method shouldn't be called frequently for good performance.</remarks>
+		/// <remarks>
+		/// The context normally assumes that no outsider is setting state within the underlying 3D API's context/device/whatever. This method shouldn't be called frequently for good performance.
+		/// </remarks>
 		public void ResetContext (uint state) =>
 			SkiaApi.gr_direct_context_reset_context (Handle, state);
 
@@ -207,7 +213,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="colorType">The color type.</param>
 		/// <returns>Returns the maximum supported sample count.</returns>
-		/// <remarks>1 is returned if only non-MSAA rendering is supported for the color type. 0 is returned if rendering to this color type is not supported at all.</remarks>
+		/// <remarks>
+		/// 1 is returned if only non-MSAA rendering is supported for the color type. 0 is returned if rendering to this color type is not supported at all.
+		/// </remarks>
 		public new int GetMaxSurfaceSampleCount (SKColorType colorType) =>
 			base.GetMaxSurfaceSampleCount (colorType);
 

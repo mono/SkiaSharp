@@ -66,13 +66,17 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the weight of this style.
 		/// </summary>
-		/// <remarks>The weight could potentially be one of the values of <see cref="SKFontStyleWeight" />.</remarks>
+		/// <remarks>
+		/// The weight could potentially be one of the values of <see cref="SKFontStyleWeight" />.
+		/// </remarks>
 		public int Weight => SkiaApi.sk_fontstyle_get_weight (Handle);
 
 		/// <summary>
 		/// Gets the width of this style.
 		/// </summary>
-		/// <remarks>The weight could potentially be one of the values of <see cref="SKFontStyleWidth" />.</remarks>
+		/// <remarks>
+		/// The weight could potentially be one of the values of <see cref="SKFontStyleWidth" />.
+		/// </remarks>
 		public int Width => SkiaApi.sk_fontstyle_get_width (Handle);
 
 		/// <summary>

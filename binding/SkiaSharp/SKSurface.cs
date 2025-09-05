@@ -8,18 +8,19 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents the backend/results of drawing to a canvas.
 	/// </summary>
-	/// <remarks>The surface represents the backend/results of drawing to a canvas. For raster
+	/// <remarks>
+	/// The surface represents the backend/results of drawing to a canvas. For raster
 	/// drawing, the surface will be pixels, but (for example) when drawing into a
 	/// PDF or <see cref="SkiaSharp.SKPicture" /> canvas, the surface stores the recorded
 	/// commands.
 	/// The surface always has non-zero dimensions. If there is a request for a new
 	/// surface, and either of the requested dimensions are zero, then <see langword="null" /> will
 	/// be returned.
-	/// Once you create a surface with one of its <see cref="SkiaSharp.SKSurface.Create%2A" />
+	/// Once you create a surface with one of its <see cref="SkiaSharp.SKSurface.Create" />
 	/// methods, you can draw into the canvas returned by the
 	/// <see cref="SkiaSharp.SKSurface.Canvas" /> property. Once the drawing is complete, you
 	/// can retrieve an <see cref="SkiaSharp.SKImage" /> by calling the
-	/// <see cref="SkiaSharp.SKSurface.Snapshot%2A" /> method.
+	/// <see cref="SkiaSharp.SKSurface.Snapshot" /> method.
 	/// ## Examples
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -35,14 +36,15 @@ namespace SkiaSharp
 	/// Color = new SKColor(0, 0, 0xff),
 	/// IsStroke = true
 	/// };
-	/// for (int i = 0; i < 64; i += 8) {
+	/// for (int i = 0; i &lt; 64; i += 8) {
 	/// var rect = new SKRect(i, i, 256 - i - 1, 256 - i - 1);
 	/// canvas.DrawRect(rect, (i % 16 == 0) ? redBrush : blueBrush);
 	/// }
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![SKSurface](~/images/surface-rects.png "SKSurface")</remarks>
+	/// ![SKSurface](~/images/surface-rects.png "SKSurface")
+	/// </remarks>
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
 		internal SKSurface (IntPtr h, bool owns)
@@ -60,7 +62,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="info">Contains the image configuration parameters.</param>
 		/// <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
-		/// <remarks>This will create a buffer with the parameters specified in <paramref name="info" />.</remarks>
+		/// <remarks>
+		/// This will create a buffer with the parameters specified in <paramref name="info" />.
+		/// </remarks>
 		public static SKSurface Create (SKImageInfo info) =>
 			Create (info, 0, null);
 
@@ -70,7 +74,9 @@ namespace SkiaSharp
 		/// <param name="info">The image configuration parameters.</param>
 		/// <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
 		/// <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
-		/// <remarks>This will create a buffer with the parameters specified in <paramref name="info&amp;nbsp;" />.</remarks>
+		/// <remarks>
+		/// This will create a buffer with the parameters specified in <paramref name="info" />.
+		/// </remarks>
 		public static SKSurface Create (SKImageInfo info, int rowBytes) =>
 			Create (info, rowBytes, null);
 
@@ -80,7 +86,9 @@ namespace SkiaSharp
 		/// <param name="info">The image configuration parameters.</param>
 		/// <param name="props">The surface property configuration.</param>
 		/// <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
-		/// <remarks>This will create a buffer with the parameters specified in <paramref name="info&amp;nbsp;" />and the properties specified in <paramref name="props" />.</remarks>
+		/// <remarks>
+		/// This will create a buffer with the parameters specified in <paramref name="info" /> and the properties specified in <paramref name="props" />.
+		/// </remarks>
 		public static SKSurface Create (SKImageInfo info, SKSurfaceProperties props) =>
 			Create (info, 0, props);
 
@@ -91,7 +99,9 @@ namespace SkiaSharp
 		/// <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
 		/// <param name="props">The surface property configuration.</param>
 		/// <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
-		/// <remarks>This will create a buffer with the parameters specified in <paramref name="info" />and the properties specified in <paramref name="props" />.</remarks>
+		/// <remarks>
+		/// This will create a buffer with the parameters specified in <paramref name="info" />and the properties specified in <paramref name="props" />.
+		/// </remarks>
 		public static SKSurface Create (SKImageInfo info, int rowBytes, SKSurfaceProperties props)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
@@ -140,7 +150,9 @@ namespace SkiaSharp
 		/// <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
 		/// <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
 		/// <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
-		/// <remarks>This will create a buffer that will be backend by the in-memory buffer provided in <paramref name="pixels" />.</remarks>
+		/// <remarks>
+		/// This will create a buffer that will be backend by the in-memory buffer provided in <paramref name="pixels" />.
+		/// </remarks>
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes) =>
 			Create (info, pixels, rowBytes, null, null, null);
 
@@ -163,7 +175,9 @@ namespace SkiaSharp
 		/// <param name="pixels">The pointer to an in memory-buffer that can hold the image as specified.</param>
 		/// <param name="props">The surface property configuration.</param>
 		/// <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
-		/// <remarks>This will create a buffer with the parameters specified in <paramref name="info" />and the properties specified in <paramref name="props" />.</remarks>
+		/// <remarks>
+		/// This will create a buffer with the parameters specified in <paramref name="info" />and the properties specified in <paramref name="props" />.
+		/// </remarks>
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, SKSurfaceProperties props) =>
 			Create (info, pixels, info.RowBytes, null, null, props);
 
@@ -175,7 +189,9 @@ namespace SkiaSharp
 		/// <param name="rowBytes">The number of bytes per row in the pixel buffer.</param>
 		/// <param name="props">The surface property configuration.</param>
 		/// <returns>Returns the new surface if it could be created and the configuration is supported, otherwise <see langword="null" />.</returns>
-		/// <remarks>This will create a buffer that will be backend by the in-memory buffer provided in <paramref name="pixels" />.</remarks>
+		/// <remarks>
+		/// This will create a buffer that will be backend by the in-memory buffer provided in <paramref name="pixels" />.
+		/// </remarks>
 		public static SKSurface Create (SKImageInfo info, IntPtr pixels, int rowBytes, SKSurfaceProperties props) =>
 			Create (info, pixels, rowBytes, null, null, props);
 
@@ -660,7 +676,9 @@ namespace SkiaSharp
 		/// <param name="width">The desired width for the surface.</param>
 		/// <param name="height">The desired height for the surface.</param>
 		/// <returns>Returns the new surface if it could be created, otherwise <see langword="null" />.</returns>
-		/// <remarks>Drawing to the <see cref="SKCanvas" /> returned from <see cref="SKSurface.Canvas" /> has no effect. Calling <see cref="SKSurface.Snapshot" /> on the returned <see cref="SKSurface" /> returns <see langword="null" />.</remarks>
+		/// <remarks>
+		/// Drawing to the <see cref="SKCanvas" /> returned from <see cref="SKSurface.Canvas" /> has no effect. Calling <see cref="SKSurface.Snapshot" /> on the returned <see cref="SKSurface" /> returns <see langword="null" />.
+		/// </remarks>
 		public static SKSurface CreateNull (int width, int height) =>
 			GetObject (SkiaApi.sk_surface_new_null (width, height));
 
@@ -685,7 +703,9 @@ namespace SkiaSharp
 		/// Takes a snapshot of the surface and returns it as an image.
 		/// </summary>
 		/// <returns>An <see cref="SKImage" /> that contains a snapshot of the current image.</returns>
-		/// <remarks>You can use this method to take an <see cref="SKImage" /> snapshot of the current state of the surface.</remarks>
+		/// <remarks>
+		/// You can use this method to take an <see cref="SKImage" /> snapshot of the current state of the surface.
+		/// </remarks>
 		public SKImage Snapshot () =>
 			SKImage.GetObject (SkiaApi.sk_surface_new_image_snapshot (Handle));
 
@@ -712,7 +732,9 @@ namespace SkiaSharp
 		/// Returns the pixels, if they are available.
 		/// </summary>
 		/// <returns>Returns the pixels, if they are available, otherwise <see langword="null" />.</returns>
-		/// <remarks>If the pixels are available, then the surface is only valid until the surface changes in any way, in which case the pixmap becomes invalid.</remarks>
+		/// <remarks>
+		/// If the pixels are available, then the surface is only valid until the surface changes in any way, in which case the pixmap becomes invalid.
+		/// </remarks>
 		public SKPixmap PeekPixels ()
 		{
 			var pixmap = new SKPixmap ();
@@ -750,7 +772,9 @@ namespace SkiaSharp
 		/// <param name="srcX">The source x-coordinate to start reading from.</param>
 		/// <param name="srcY">The source y-coordinate to start reading from.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were read, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the surface, or if the color type/alpha type could not be converted to the destination types.</remarks>
+		/// <remarks>
+		/// This method may return <see langword="false" /> if the source rectangle [<paramref name="srcX" />, <paramref name="srcY" />, dstInfo.Width, dstInfo.Height] does not intersect the surface, or if the color type/alpha type could not be converted to the destination types.
+		/// </remarks>
 		public bool ReadPixels (SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
 		{
 			var cinfo = SKImageInfoNative.FromManaged (ref dstInfo);

@@ -65,7 +65,9 @@ namespace HarfBuzzSharp
 		/// <summary>
 		/// Releases all resources used by this <see cref="NativeObject" />.
 		/// </summary>
-		/// <remarks>Always dispose the object before you release your last reference to the <see cref="NativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.</remarks>
+		/// <remarks>
+		/// Always dispose the object before you release your last reference to the <see cref="NativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.
+		/// </remarks>
 		public void Dispose ()
 		{
 			Dispose (true);

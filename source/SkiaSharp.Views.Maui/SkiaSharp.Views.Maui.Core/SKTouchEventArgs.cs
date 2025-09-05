@@ -16,7 +16,9 @@ namespace SkiaSharp.Views.Maui
 		/// <param name="type">The type of touch action that initiated this event.</param>
 		/// <param name="location">The location of the touch.</param>
 		/// <param name="inContact">Whether or not the touch device is in contact with the screen.</param>
-		/// <remarks>This constructor sets the <see cref="SKTouchEventArgs.DeviceType" /> to <see cref="SKTouchDeviceType.Touch" /> and the <see cref="SKTouchEventArgs.MouseButton" /> to <see cref="SKMouseButton.Left" />.</remarks>
+		/// <remarks>
+		/// This constructor sets the <see cref="SKTouchEventArgs.DeviceType" /> to <see cref="SKTouchDeviceType.Touch" /> and the <see cref="SKTouchEventArgs.MouseButton" /> to <see cref="SKMouseButton.Left" />.
+		/// </remarks>
 		public SKTouchEventArgs(long id, SKTouchAction type, SKPoint location, bool inContact)
 			: this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact, 0, 1)
 		{
@@ -82,7 +84,9 @@ namespace SkiaSharp.Views.Maui
 		/// <summary>
 		/// Gets the ID that can be used to track this particular event.
 		/// </summary>
-		/// <remarks>This ID represents the finger/pointer ID or mouse button number that initiated the event. This ID will remain the same for the duration of the touch operation.</remarks>
+		/// <remarks>
+		/// This ID represents the finger/pointer ID or mouse button number that initiated the event. This ID will remain the same for the duration of the touch operation.
+		/// </remarks>
 		public long Id { get; private set; }
 
 		/// <summary>
@@ -98,7 +102,9 @@ namespace SkiaSharp.Views.Maui
 		/// <summary>
 		/// Gets a value indicating which mouse button resulted in this event being raised.
 		/// </summary>
-		/// <remarks>If the mouse was used, then this property will indicate which button was pressed. If a finger (touch) or pen was used, then this property will indicate left button.</remarks>
+		/// <remarks>
+		/// If the mouse was used, then this property will indicate which button was pressed. If a finger (touch) or pen was used, then this property will indicate left button.
+		/// </remarks>
 		public SKMouseButton MouseButton { get; private set; }
 
 		/// <summary>
@@ -119,7 +125,9 @@ namespace SkiaSharp.Views.Maui
 		/// <summary>
 		/// Gets the pressure of the touch event.
 		/// </summary>
-		/// <remarks>The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure), however values higher than 1 may be generated depending on the calibration of the input device.</remarks>
+		/// <remarks>
+		/// The pressure generally ranges from 0 (no pressure at all) to 1 (normal pressure), however values higher than 1 may be generated depending on the calibration of the input device.
+		/// </remarks>
 		public float Pressure { get; private set; }
 
 		/// <summary>

@@ -71,7 +71,8 @@ namespace SkiaSharp
 	/// <summary>
 	/// Holds the style and color information about how to draw geometries, text and bitmaps.
 	/// </summary>
-	/// <remarks>Anytime you draw something in SkiaSharp, and want to specify what color it is,
+	/// <remarks>
+	/// Anytime you draw something in SkiaSharp, and want to specify what color it is,
 	/// or how it blends with the background, or what style or font to draw it in, you
 	/// specify those attributes in a paint.
 	/// Unlike <see cref="SkiaSharp.SKCanvas" />, an paint object does not maintain an
@@ -161,7 +162,8 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![SKPaint and SKShader](~/images/gradient.png "SKPaint and SKShader")</remarks>
+	/// ![SKPaint and SKShader](~/images/gradient.png "SKPaint and SKShader")
+	/// </remarks>
 	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
 		[Obsolete]
@@ -250,7 +252,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets a value indicating whether LCD text rendering is enabled.
 		/// </summary>
-		/// <remarks><see cref="SKPaint.IsAntialias" /> must also be enabled for LCD rendering to be enabled.</remarks>
+		/// <remarks>
+		/// <see cref="SKPaint.IsAntialias" /> must also be enabled for LCD rendering to be enabled.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.Edging)} instead.")]
 		public bool LcdRenderText {
 			get => SkiaApi.sk_compatpaint_get_lcd_render_text (Handle);
@@ -296,7 +300,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets a value indicating whether to paint a stroke or the fill.
 		/// </summary>
-		/// <remarks>This is a shortcut way to set <see cref="SKPaint.Style" /> to either <see cref="SKPaintStyle.Stroke" /> or <see cref="SKPaintStyle.Fill" />.</remarks>
+		/// <remarks>
+		/// This is a shortcut way to set <see cref="SKPaint.Style" /> to either <see cref="SKPaintStyle.Stroke" /> or <see cref="SKPaintStyle.Fill" />.
+		/// </remarks>
 		public bool IsStroke {
 			get => Style != SKPaintStyle.Fill;
 			set => Style = value ? SKPaintStyle.Stroke : SKPaintStyle.Fill;
@@ -305,7 +311,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the painting style.
 		/// </summary>
-		/// <remarks>Can also be set using <see cref="SKPaint.IsStroke" />.</remarks>
+		/// <remarks>
+		/// Can also be set using <see cref="SKPaint.IsStroke" />.
+		/// </remarks>
 		public SKPaintStyle Style {
 			get => SkiaApi.sk_paint_get_style (Handle);
 			set => SkiaApi.sk_paint_set_style (Handle, value);
@@ -314,7 +322,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the paint's foreground color.
 		/// </summary>
-		/// <remarks>The color is a 32-bit value containing ARGB. This 32-bit value is not premultiplied, meaning that its alpha can be any value, regardless of the values of R, G and B.</remarks>
+		/// <remarks>
+		/// The color is a 32-bit value containing ARGB. This 32-bit value is not premultiplied, meaning that its alpha can be any value, regardless of the values of R, G and B.
+		/// </remarks>
 		public SKColor Color {
 			get => SkiaApi.sk_paint_get_color (Handle);
 			set => SkiaApi.sk_paint_set_color (Handle, (uint)value);
@@ -337,7 +347,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the paint's stroke width.
 		/// </summary>
-		/// <remarks>This is used whenever the <see cref="SKPaint.Style" /> is <see cref="SKPaintStyle.Stroke" /> or <see cref="SKPaintStyle.StrokeAndFill" />. The value of zero is the special hairline mode.   Hairlines always draw with a width of 1 pixel, regardless of the transformation matrix.</remarks>
+		/// <remarks>
+		/// This is used whenever the <see cref="SKPaint.Style" /> is <see cref="SKPaintStyle.Stroke" /> or <see cref="SKPaintStyle.StrokeAndFill" />. The value of zero is the special hairline mode.   Hairlines always draw with a width of 1 pixel, regardless of the transformation matrix.
+		/// </remarks>
 		public float StrokeWidth {
 			get => SkiaApi.sk_paint_get_stroke_width (Handle);
 			set => SkiaApi.sk_paint_set_stroke_width (Handle, value);
@@ -346,7 +358,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the paint's miter limit.
 		/// </summary>
-		/// <remarks>This is used whenever the <see cref="SKPaint.Style" /> is <see cref="SKPaintStyle.Stroke" /> or <see cref="SKPaintStyle.StrokeAndFill" /> to control the behavior of miter joins when the joins' angle is sharp.</remarks>
+		/// <remarks>
+		/// This is used whenever the <see cref="SKPaint.Style" /> is <see cref="SKPaintStyle.Stroke" /> or <see cref="SKPaintStyle.StrokeAndFill" /> to control the behavior of miter joins when the joins' angle is sharp.
+		/// </remarks>
 		public float StrokeMiter {
 			get => SkiaApi.sk_paint_get_stroke_miter (Handle);
 			set => SkiaApi.sk_paint_set_stroke_miter (Handle, value);
@@ -379,7 +393,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the mask filter to use when painting.
 		/// </summary>
-		/// <remarks>Mask filters control the transformations on the alpha channel before primitives are drawn. Examples are blur or emboss.</remarks>
+		/// <remarks>
+		/// Mask filters control the transformations on the alpha channel before primitives are drawn. Examples are blur or emboss.
+		/// </remarks>
 		public SKMaskFilter MaskFilter {
 			get => SKMaskFilter.GetObject (SkiaApi.sk_paint_get_maskfilter (Handle));
 			set => SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
@@ -417,7 +433,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the filter quality of the current paint.
 		/// </summary>
-		/// <remarks>This affects the quality (and performance) of drawing scaled images.</remarks>
+		/// <remarks>
+		/// This affects the quality (and performance) of drawing scaled images.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
 		public SKFilterQuality FilterQuality {
 			get => (SKFilterQuality)SkiaApi.sk_compatpaint_get_filter_quality (Handle);
@@ -454,7 +472,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets or sets the encoding used when drawing or measuring text.
 		/// </summary>
-		/// <remarks>This defaults to UTF-8 encoding.</remarks>
+		/// <remarks>
+		/// This defaults to UTF-8 encoding.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextEncoding)} method overloads instead.")]
 		public SKTextEncoding TextEncoding {
 			get => SkiaApi.sk_compatpaint_get_text_encoding (Handle);
@@ -519,7 +539,9 @@ namespace SkiaSharp
 		/// Creates a copy of the current paint.
 		/// </summary>
 		/// <returns>Returns the copy.</returns>
-		/// <remarks>The copy is a shallow copy, all references will still point to the same objects.</remarks>
+		/// <remarks>
+		/// The copy is a shallow copy, all references will still point to the same objects.
+		/// </remarks>
 		public SKPaint Clone () =>
 			GetObject (SkiaApi.sk_compatpaint_clone (Handle))!;
 
@@ -530,7 +552,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text to be measured.</param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
+		/// <remarks>
+		/// This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (string text) =>
 			GetFont ().MeasureText (text, this);
@@ -545,7 +569,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text to be measured.</param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
+		/// <remarks>
+		/// This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (byte[] text) =>
 			GetFont ().MeasureText (text, TextEncoding, this);
@@ -561,7 +587,9 @@ namespace SkiaSharp
 		/// <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+		/// <remarks>
+		/// The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (IntPtr buffer, int length) =>
 			GetFont ().MeasureText (buffer, length, TextEncoding, this);
@@ -572,7 +600,9 @@ namespace SkiaSharp
 		/// <param name="buffer">The pointer to a region holding text encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+		/// <remarks>
+		/// The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format.   This only consumes up to <paramref name="length" /> bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (IntPtr buffer, IntPtr length) =>
 			GetFont ().MeasureText (buffer, (int)length, TextEncoding, this);
@@ -583,7 +613,9 @@ namespace SkiaSharp
 		/// <param name="text">The text to be measured.</param>
 		/// <param name="bounds">The bounds of the text relative to (0, 0)</param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
+		/// <remarks>
+		/// This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (string text, ref SKRect bounds) =>
 			GetFont ().MeasureText (text, out bounds, this);
@@ -600,7 +632,9 @@ namespace SkiaSharp
 		/// <param name="text">The text to be measured.</param>
 		/// <param name="bounds">The bounds of the text relative to (0, 0)</param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.</remarks>
+		/// <remarks>
+		/// This will return the vertical measure if this is vertical text, in which case the returned value should be treated has a height instead of a width.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (byte[] text, ref SKRect bounds) =>
 			GetFont ().MeasureText (text, TextEncoding, out bounds, this);
@@ -618,11 +652,13 @@ namespace SkiaSharp
 		/// <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
 		/// <param name="bounds">The bounds of the text relative to (0, 0)</param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>This will return the vertical measure if this is vertical text, in which case
+		/// <remarks>
+		/// This will return the vertical measure if this is vertical text, in which case
 		/// the returned value should be treated has a height instead of a width.
 		/// The `buffer` parameter is a pointer to a region in memory that contains text
 		/// encoded in the <see cref="SkiaSharp.SKPaint.TextEncoding" /> format. This only
-		/// consumes up to `length` bytes from the buffer.</remarks>
+		/// consumes up to `length` bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (IntPtr buffer, int length, ref SKRect bounds) =>
 			GetFont ().MeasureText (buffer, length, TextEncoding, out bounds, this);
@@ -634,11 +670,13 @@ namespace SkiaSharp
 		/// <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
 		/// <param name="bounds">The bounds of the text relative to (0, 0)</param>
 		/// <returns>Returns the width of the text.</returns>
-		/// <remarks>This will return the vertical measure if this is vertical text, in which case
+		/// <remarks>
+		/// This will return the vertical measure if this is vertical text, in which case
 		/// the returned value should be treated has a height instead of a width.
 		/// The `buffer` parameter is a pointer to a region in memory that contains text
 		/// encoded in the <see cref="SkiaSharp.SKPaint.TextEncoding" /> format. This only
-		/// consumes up to `length` bytes from the buffer.</remarks>
+		/// consumes up to `length` bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.MeasureText)}() instead.")]
 		public float MeasureText (IntPtr buffer, IntPtr length, ref SKRect bounds) =>
 			GetFont ().MeasureText (buffer, (int)length, TextEncoding, out bounds, this);
@@ -747,7 +785,9 @@ namespace SkiaSharp
 		/// <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
 		/// <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
 		/// <returns>Returns the number of bytes of text that were measured.</returns>
-		/// <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+		/// <remarks>
+		/// The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
 		public long BreakText (IntPtr buffer, int length, float maxWidth) =>
 			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out _, this);
@@ -760,7 +800,9 @@ namespace SkiaSharp
 		/// <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
 		/// <param name="measuredWidth">The actual width of the measured text.</param>
 		/// <returns>Returns the number of bytes of text that were measured.</returns>
-		/// <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+		/// <remarks>
+		/// The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
 		public long BreakText (IntPtr buffer, int length, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (buffer, length, TextEncoding, maxWidth, out measuredWidth, this);
@@ -772,7 +814,9 @@ namespace SkiaSharp
 		/// <param name="length">The number of bytes to read from the <paramref name="buffer." /></param>
 		/// <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
 		/// <returns>Returns the number of bytes of text that were measured.</returns>
-		/// <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+		/// <remarks>
+		/// The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth) =>
 			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out _, this);
@@ -785,7 +829,9 @@ namespace SkiaSharp
 		/// <param name="maxWidth">The maximum width. Only the subset of text whose accumulated widths are &lt;= <paramref name="maxWidth" /> are measured.</param>
 		/// <param name="measuredWidth">The actual width of the measured text.</param>
 		/// <returns>Returns the number of bytes of text that were measured.</returns>
-		/// <remarks>The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.</remarks>
+		/// <remarks>
+		/// The <paramref name="buffer" /> parameter is a pointer to a region in memory that contains text encoded in the <see cref="SKPaint.TextEncoding" /> format. This only consumes up to <paramref name="length" /> bytes from the buffer.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.BreakText)}() instead.")]
 		public long BreakText (IntPtr buffer, IntPtr length, float maxWidth, out float measuredWidth) =>
 			GetFont ().BreakText (buffer, (int)length, TextEncoding, maxWidth, out measuredWidth, this);
@@ -1079,7 +1125,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text.</param>
 		/// <returns>Returns the glyph indices.</returns>
-		/// <remarks>This method does not check the text for valid character codes or valid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check the text for valid character codes or valid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
 		public ushort[] GetGlyphs (string text) =>
 			GetFont ().GetGlyphs (text);
@@ -1094,7 +1142,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <returns>Returns the glyph indices.</returns>
-		/// <remarks>This method does not check the text for valid character codes or valid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check the text for valid character codes or valid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
 		public ushort[] GetGlyphs (byte[] text) =>
 			GetFont ().GetGlyphs (text, TextEncoding);
@@ -1110,7 +1160,9 @@ namespace SkiaSharp
 		/// <param name="text">The text buffer encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns the glyph indices.</returns>
-		/// <remarks>This method does not check the text for valid character codes or valid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check the text for valid character codes or valid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
 		public ushort[] GetGlyphs (IntPtr text, int length) =>
 			GetFont ().GetGlyphs (text, length, TextEncoding);
@@ -1121,7 +1173,9 @@ namespace SkiaSharp
 		/// <param name="text">The text buffer encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns the glyph indices.</returns>
-		/// <remarks>This method does not check the text for valid character codes or valid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check the text for valid character codes or valid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphs)}() instead.")]
 		public ushort[] GetGlyphs (IntPtr text, IntPtr length) =>
 			GetFont ().GetGlyphs (text, (int)length, TextEncoding);
@@ -1133,7 +1187,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text.</param>
 		/// <returns>Returns true if all the characters corresponds to a non-zero glyph index, otherwise false if any characters in text are not supported in the typeface.</returns>
-		/// <remarks>This method does not check to see if the text contains invalid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check to see if the text contains invalid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
 		public bool ContainsGlyphs (string text) =>
 			GetFont ().ContainsGlyphs (text);
@@ -1148,7 +1204,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <returns>Returns true if all the characters corresponds to a non-zero glyph index, otherwise false if any characters in text are not supported in the typeface.</returns>
-		/// <remarks>This method does not check to see if the text contains invalid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check to see if the text contains invalid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
 		public bool ContainsGlyphs (byte[] text) =>
 			GetFont ().ContainsGlyphs (text, TextEncoding);
@@ -1164,7 +1222,9 @@ namespace SkiaSharp
 		/// <param name="text">The text buffer encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns true if all the characters corresponds to a non-zero glyph index, otherwise false if any characters in text are not supported in the typeface.</returns>
-		/// <remarks>This method does not check to see if the text contains invalid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check to see if the text contains invalid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
 		public bool ContainsGlyphs (IntPtr text, int length) =>
 			GetFont ().ContainsGlyphs (text, length, TextEncoding);
@@ -1175,7 +1235,9 @@ namespace SkiaSharp
 		/// <param name="text">The text buffer encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns true if all the characters corresponds to a non-zero glyph index, otherwise false if any characters in text are not supported in the typeface.</returns>
-		/// <remarks>This method does not check to see if the text contains invalid glyph indices.</remarks>
+		/// <remarks>
+		/// This method does not check to see if the text contains invalid glyph indices.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.ContainsGlyphs)}() instead.")]
 		public bool ContainsGlyphs (IntPtr text, IntPtr length) =>
 			GetFont ().ContainsGlyphs (text, (int)length, TextEncoding);
@@ -1241,12 +1303,14 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (string text) =>
 			GetFont ().GetGlyphWidths (text, this);
@@ -1261,12 +1325,14 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="text">The text encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (byte[] text) =>
 			GetFont ().GetGlyphWidths (text, TextEncoding, this);
@@ -1282,12 +1348,14 @@ namespace SkiaSharp
 		/// <param name="text">The text buffer encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (IntPtr text, int length) =>
 			GetFont ().GetGlyphWidths (text, length, TextEncoding, this);
@@ -1298,12 +1366,14 @@ namespace SkiaSharp
 		/// <param name="text">The text buffer encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="length">The length of the text buffer.</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (IntPtr text, IntPtr length) =>
 			GetFont ().GetGlyphWidths (text, (int)length, TextEncoding, this);
@@ -1314,12 +1384,14 @@ namespace SkiaSharp
 		/// <param name="text">The text.</param>
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (string text, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, out bounds, this);
@@ -1336,12 +1408,14 @@ namespace SkiaSharp
 		/// <param name="text">The text encoded using the encoding specified in <see cref="SKPaint.TextEncoding" /> format.</param>
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (byte[] text, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, TextEncoding, out bounds, this);
@@ -1359,12 +1433,14 @@ namespace SkiaSharp
 		/// <param name="length">The length of the text buffer.</param>
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (IntPtr text, int length, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, length, TextEncoding, out bounds, this);
@@ -1376,12 +1452,14 @@ namespace SkiaSharp
 		/// <param name="length">The length of the text buffer.</param>
 		/// <param name="bounds">The bounds for each glyph relative to (0, 0).</param>
 		/// <returns>Returns the text advances for each glyph.</returns>
-		/// <remarks>If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
+		/// <remarks>
+		/// If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is false, this method returns the
 		/// horizontal advance. If <see cref="SkiaSharp.SKPaint.IsVerticalText" /> is true, this
 		/// method returns the vertical advance.
 		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
-		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.</remarks>
+		/// <see cref="SkiaSharp.SKPaint.TextSize" /> to scale the widths and bounds.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKFont)}.{nameof (SKFont.GetGlyphWidths)}() instead.")]
 		public float[] GetGlyphWidths (IntPtr text, IntPtr length, out SKRect[] bounds) =>
 			GetFont ().GetGlyphWidths (text, (int)length, TextEncoding, out bounds, this);
@@ -1397,10 +1475,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetTextIntercepts (string text, float x, float y, float upperBounds, float lowerBounds) =>
 			GetTextIntercepts (text.AsSpan (), x, y, upperBounds, lowerBounds);
@@ -1429,10 +1509,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetTextIntercepts (byte[] text, float x, float y, float upperBounds, float lowerBounds) =>
 			GetTextIntercepts (text.AsSpan (), x, y, upperBounds, lowerBounds);
@@ -1462,10 +1544,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetTextIntercepts (IntPtr text, IntPtr length, float x, float y, float upperBounds, float lowerBounds) =>
 			GetTextIntercepts (text, (int)length, x, y, upperBounds, lowerBounds);
@@ -1480,10 +1564,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetTextIntercepts (IntPtr text, int length, float x, float y, float upperBounds, float lowerBounds)
 		{
@@ -1503,10 +1589,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetTextIntercepts (SKTextBlob text, float upperBounds, float lowerBounds)
 		{
@@ -1526,10 +1614,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetPositionedTextIntercepts (string text, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text.AsSpan (), positions, upperBounds, lowerBounds);
@@ -1556,10 +1646,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetPositionedTextIntercepts (byte[] text, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text.AsSpan (), positions, upperBounds, lowerBounds);
@@ -1587,10 +1679,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetPositionedTextIntercepts (IntPtr text, int length, SKPoint[] positions, float upperBounds, float lowerBounds) =>
 			GetPositionedTextIntercepts (text, (IntPtr)length, positions, upperBounds, lowerBounds);
@@ -1604,10 +1698,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetPositionedTextIntercepts (IntPtr text, IntPtr length, SKPoint[] positions, float upperBounds, float lowerBounds)
 		{
@@ -1629,10 +1725,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetHorizontalTextIntercepts (string text, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text.AsSpan (), xpositions, y, upperBounds, lowerBounds);
@@ -1661,10 +1759,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetHorizontalTextIntercepts (byte[] text, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text.AsSpan (), xpositions, y, upperBounds, lowerBounds);
@@ -1694,10 +1794,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetHorizontalTextIntercepts (IntPtr text, int length, float[] xpositions, float y, float upperBounds, float lowerBounds) =>
 			GetHorizontalTextIntercepts (text, (IntPtr)length, xpositions, y, upperBounds, lowerBounds);
@@ -1712,10 +1814,12 @@ namespace SkiaSharp
 		/// <param name="upperBounds">The upper line parallel to the advance.</param>
 		/// <param name="lowerBounds">The lower line parallel to the advance.</param>
 		/// <returns>Returns the intersections of two parallel lines and the glyphs.</returns>
-		/// <remarks>Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
+		/// <remarks>
+		/// Uses <see cref="SkiaSharp.SKPaint.TextEncoding" /> to decode text,
 		/// <see cref="SkiaSharp.SKPaint.Typeface" /> to get the font metrics, and
 		/// <see cref="SkiaSharp.SKPaint.TextSize" />, <see cref="SkiaSharp.SKPaint.FakeBoldText" />
-		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.</remarks>
+		/// and <see cref="SkiaSharp.SKPaint.PathEffect" /> to scale and modify the glyph paths.
+		/// </remarks>
 		[Obsolete ($"Use {nameof (SKTextBlob)}.{nameof (SKTextBlob.GetIntercepts)}() instead.")]
 		public float[] GetHorizontalTextIntercepts (IntPtr text, IntPtr length, float[] xpositions, float y, float upperBounds, float lowerBounds)
 		{

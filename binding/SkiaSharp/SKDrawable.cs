@@ -8,10 +8,12 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents the base class for objects that draw into <see cref="SKCanvas" />.
 	/// </summary>
-	/// <remarks>The object has a generation ID, which is guaranteed to be unique across all
+	/// <remarks>
+	/// The object has a generation ID, which is guaranteed to be unique across all
 	/// drawables. To allow for clients of the drawable that may want to cache the
 	/// results, the drawable must change its generation ID whenever its internal
-	/// state changes such that it will draw differently.</remarks>
+	/// state changes such that it will draw differently.
+	/// </remarks>
 	public unsafe class SKDrawable : SKObject, ISKReferenceCounted
 	{
 		private static readonly SKManagedDrawableDelegates delegates;
@@ -64,15 +66,19 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the unique value for this instance.
 		/// </summary>
-		/// <remarks>It is presumed that if two calls return the same value, then drawing this will result in the same image as well.</remarks>
+		/// <remarks>
+		/// It is presumed that if two calls return the same value, then drawing this will result in the same image as well.
+		/// </remarks>
 		public uint GenerationId => SkiaApi.sk_drawable_get_generation_id (Handle);
 
 		/// <summary>
 		/// Gets the conservative bounds of what the drawable will draw.
 		/// </summary>
-		/// <remarks>If the drawable can change what it draws (e.g. animation or in response to
+		/// <remarks>
+		/// If the drawable can change what it draws (e.g. animation or in response to
 		/// some external change), then this must return a bounds that is always valid for
-		/// all possible states.</remarks>
+		/// all possible states.
+		/// </remarks>
 		public SKRect Bounds {
 			get {
 				SKRect bounds;
@@ -118,7 +124,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Invalidate the drawing generation ID, indicating that the drawing has changed.
 		/// </summary>
-		/// <remarks>This is typically used by the object itself in response to its internal state changing.</remarks>
+		/// <remarks>
+		/// This is typically used by the object itself in response to its internal state changing.
+		/// </remarks>
 		public void NotifyDrawingChanged () =>
 			SkiaApi.sk_drawable_notify_drawing_changed (Handle);
 

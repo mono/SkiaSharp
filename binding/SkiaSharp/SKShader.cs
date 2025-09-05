@@ -8,7 +8,8 @@ namespace SkiaSharp
 	/// <summary>
 	/// Shaders specify the source color(s) for what is being drawn in the <see cref="SKPaint" />.
 	/// </summary>
-	/// <remarks>Shaders specify the source colors for what is being drawn. If a paint has no
+	/// <remarks>
+	/// Shaders specify the source colors for what is being drawn. If a paint has no
 	/// shader, then the paint's color is used. If the paint has a shader, then the
 	/// shader's colors are used instead, but they are modulated by the paint's alpha.
 	/// This makes it easy to create a shader once (for example, bitmap tiling or
@@ -182,7 +183,8 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Compose Shader](~/images/compose.png "Compose Shader")</remarks>
+	/// ![Compose Shader](~/images/compose.png "Compose Shader")
+	/// </remarks>
 	public unsafe class SKShader : SKObject, ISKReferenceCounted
 	{
 		internal SKShader (IntPtr handle, bool owns)
@@ -250,10 +252,12 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="src">The bitmap to use inside the shader.</param>
 		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
-		/// <remarks>If the bitmap cannot be used (has no pixels, or its dimensions exceed
+		/// <remarks>
+		/// If the bitmap cannot be used (has no pixels, or its dimensions exceed
 		/// implementation limits) then an empty shader may be returned. If the source
 		/// bitmap's color type is <see cref="SkiaSharp.SKColorType.Alpha8" /> then that mask will
-		/// be colorized using the color on the paint.</remarks>
+		/// be colorized using the color on the paint.
+		/// </remarks>
 		public static SKShader CreateBitmap (SKBitmap src) =>
 			CreateBitmap (src, SKShaderTileMode.Clamp, SKShaderTileMode.Clamp);
 
@@ -264,10 +268,12 @@ namespace SkiaSharp
 		/// <param name="tmx">The tiling mode to use when sampling the bitmap in the x-direction.</param>
 		/// <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
 		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
-		/// <remarks>If the bitmap cannot be used (has no pixels, or its dimensions exceed
+		/// <remarks>
+		/// If the bitmap cannot be used (has no pixels, or its dimensions exceed
 		/// implementation limits) then an empty shader may be returned. If the source
 		/// bitmap's color type is <see cref="SkiaSharp.SKColorType.Alpha8" /> then that mask will
-		/// be colorized using the color on the paint.</remarks>
+		/// be colorized using the color on the paint.
+		/// </remarks>
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy)
 		{
 			if (src == null)
@@ -284,10 +290,12 @@ namespace SkiaSharp
 		/// <param name="tmy">The tiling mode to use when sampling the bitmap in the y-direction.</param>
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
 		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
-		/// <remarks>If the bitmap cannot be used (has no pixels, or its dimensions exceed
+		/// <remarks>
+		/// If the bitmap cannot be used (has no pixels, or its dimensions exceed
 		/// implementation limits) then an empty shader may be returned. If the source
 		/// bitmap's color type is <see cref="SkiaSharp.SKColorType.Alpha8" /> then that mask will
-		/// be colorized using the color on the paint.</remarks>
+		/// be colorized using the color on the paint.
+		/// </remarks>
 		public static SKShader CreateBitmap (SKBitmap src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix)
 		{
 			if (src == null)
@@ -356,8 +364,10 @@ namespace SkiaSharp
 		/// <param name="tmy">The tiling mode to use when sampling the picture in the y-direction.</param>
 		/// <param name="tile">The tile rectangle in picture coordinates.</param>
 		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
-		/// <remarks>The tile rectangle represents the subset (or superset) of the picture used when building a tile. It is not affected by
-		/// the local matrix and does not imply scaling (only translation and cropping).</remarks>
+		/// <remarks>
+		/// The tile rectangle represents the subset (or superset) of the picture used when building a tile. It is not affected by
+		/// the local matrix and does not imply scaling (only translation and cropping).
+		/// </remarks>
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKRect tile) =>
 			src?.ToShader (tmx, tmy, tile) ?? throw new ArgumentNullException (nameof (src));
 
@@ -373,8 +383,10 @@ namespace SkiaSharp
 		/// <param name="localMatrix">The matrix to apply before applying the shader.</param>
 		/// <param name="tile">The tile rectangle in picture coordinates.</param>
 		/// <returns>Returns a new <see cref="SKShader" />, or an empty shader on error. This function never returns null.</returns>
-		/// <remarks>The tile rectangle represents the subset (or superset) of the picture used when building a tile. It is not affected by
-		/// the local matrix and does not imply scaling (only translation and cropping).</remarks>
+		/// <remarks>
+		/// The tile rectangle represents the subset (or superset) of the picture used when building a tile. It is not affected by
+		/// the local matrix and does not imply scaling (only translation and cropping).
+		/// </remarks>
 		public static SKShader CreatePicture (SKPicture src, SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix localMatrix, SKRect tile) =>
 			src?.ToShader (tmx, tmy, localMatrix, tile) ?? throw new ArgumentNullException (nameof (src));
 

@@ -8,7 +8,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// A read-only stream that buffers the specified first chunk of bytes.
 	/// </summary>
-	/// <remarks>This is useful for decoding images using streams that are not seekable, since <see cref="SKCodec" /> needs to read the first few bytes to determine the codec to use.</remarks>
+	/// <remarks>
+	/// This is useful for decoding images using streams that are not seekable, since <see cref="SKCodec" /> needs to read the first few bytes to determine the codec to use.
+	/// </remarks>
 	public class SKFrontBufferedStream : Stream
 	{
 		/// <summary>

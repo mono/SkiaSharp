@@ -7,7 +7,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// 32-bit ARGB premultiplied color value.
 	/// </summary>
-	/// <remarks>The byte order for this value is configuration dependent. This is different from <see cref="SKColor" />, which is unpremultiplied, and is always in the same byte order.</remarks>
+	/// <remarks>
+	/// The byte order for this value is configuration dependent. This is different from <see cref="SKColor" />, which is unpremultiplied, and is always in the same byte order.
+	/// </remarks>
 	public readonly unsafe struct SKPMColor : IEquatable<SKPMColor>
 	{
 		private readonly uint color;

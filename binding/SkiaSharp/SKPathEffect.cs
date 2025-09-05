@@ -23,7 +23,9 @@ namespace SkiaSharp
 		/// <param name="outer">The outer (second) path effect to apply.</param>
 		/// <param name="inner">The inner (first) path effect to apply.</param>
 		/// <returns>Returns the new <see cref="SKPathEffect" />, or null on error.</returns>
-		/// <remarks>The effect is to apply first the inner path effect and the the outer path effect (e.g. outer(inner(path))).</remarks>
+		/// <remarks>
+		/// The effect is to apply first the inner path effect and the the outer path effect (e.g. outer(inner(path))).
+		/// </remarks>
 		public static SKPathEffect CreateCompose(SKPathEffect outer, SKPathEffect inner)
 		{
 			if (outer == null)
@@ -39,7 +41,9 @@ namespace SkiaSharp
 		/// <param name="first">The first path effect to apply.</param>
 		/// <param name="second">The second path effect to apply.</param>
 		/// <returns>Returns the new <see cref="SKPathEffect" />, or null on error.</returns>
-		/// <remarks>The effect is to apply one path after the other.</remarks>
+		/// <remarks>
+		/// The effect is to apply one path after the other.
+		/// </remarks>
 		public static SKPathEffect CreateSum(SKPathEffect first, SKPathEffect second)
 		{
 			if (first == null)
@@ -116,7 +120,9 @@ namespace SkiaSharp
 		/// <param name="intervals">The definition of the dash pattern via an even number of entries.</param>
 		/// <param name="phase">The offset into the intervals array. (mod the sum of all of the intervals).</param>
 		/// <returns>Returns the new <see cref="SKPathEffect" />, or null on error.</returns>
-		/// <remarks><para>The dash pattern is defined via an array containing an even number of entries (&gt;=2), with the even indices specifying the length of "on" intervals, and the odd indices specifying the length of "off" intervals.</para><para>For example: if the intervals = new [] { 10, 20 } and the phase = 25, then the dash pattern will be: 5 pixels off, 10 pixels on, 20 pixels off, 10 pixels on, 20 pixels off, etc. A phase of -5, 25, 55, 85, etc. would all result in the same path, because the sum of all the intervals is 30.</para></remarks>
+		/// <remarks>
+		/// <para>The dash pattern is defined via an array containing an even number of entries (&gt;=2), with the even indices specifying the length of "on" intervals, and the odd indices specifying the length of "off" intervals.</para><para>For example: if the intervals = new [] { 10, 20 } and the phase = 25, then the dash pattern will be: 5 pixels off, 10 pixels on, 20 pixels off, 10 pixels on, 20 pixels off, etc. A phase of -5, 25, 55, 85, etc. would all result in the same path, because the sum of all the intervals is 30.</para>
+		/// </remarks>
 		public static SKPathEffect CreateDash(float[] intervals, float phase)
 		{
 			if (intervals == null)
@@ -134,7 +140,9 @@ namespace SkiaSharp
 		/// <param name="start">The start path offset between [0, 1] - inclusive.</param>
 		/// <param name="stop">The stop path offset between [0, 1] - inclusive.</param>
 		/// <returns>Returns the new <see cref="SKPathEffect" />, or null on error.</returns>
-		/// <remarks>If either the start or stop values are outside the [0, 1] range (inclusive), they will be pinned to the nearest legal value.</remarks>
+		/// <remarks>
+		/// If either the start or stop values are outside the [0, 1] range (inclusive), they will be pinned to the nearest legal value.
+		/// </remarks>
 		public static SKPathEffect CreateTrim(float start, float stop)
 		{
 			return CreateTrim(start, stop, SKTrimPathEffectMode.Normal);
@@ -147,7 +155,9 @@ namespace SkiaSharp
 		/// <param name="stop">The stop path offset between [0, 1] - inclusive.</param>
 		/// <param name="mode">The trim mode to use.</param>
 		/// <returns>Returns the new <see cref="SKPathEffect" />, or null on error.</returns>
-		/// <remarks>If either the start or stop values are outside the [0, 1] range (inclusive), they will be pinned to the nearest legal value.</remarks>
+		/// <remarks>
+		/// If either the start or stop values are outside the [0, 1] range (inclusive), they will be pinned to the nearest legal value.
+		/// </remarks>
 		public static SKPathEffect CreateTrim(float start, float stop, SKTrimPathEffectMode mode)
 		{
 			return GetObject(SkiaApi.sk_path_effect_create_trim(start, stop, mode));

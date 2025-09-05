@@ -20,7 +20,7 @@ namespace HarfBuzzSharp
 		}
 
 		/// <summary>
-		/// Creates a new <see cref="Buffer.#ctor" /> with default values.
+		/// Creates a new <see cref="Buffer" /> with default values.
 		/// </summary>
 		public Buffer ()
 			: this (HarfBuzzApi.hb_buffer_create ())
@@ -35,7 +35,9 @@ namespace HarfBuzzSharp
 		/// <summary>
 		/// Get or sets the text flow direction of the buffer.
 		/// </summary>
-		/// <remarks>No shaping can happen without setting the direction, or invoking <see cref="Buffer.GuessSegmentProperties" />.</remarks>
+		/// <remarks>
+		/// No shaping can happen without setting the direction, or invoking <see cref="Buffer.GuessSegmentProperties" />.
+		/// </remarks>
 		public Direction Direction {
 			get => HarfBuzzApi.hb_buffer_get_direction (Handle);
 			set => HarfBuzzApi.hb_buffer_set_direction (Handle, value);
@@ -74,7 +76,9 @@ namespace HarfBuzzSharp
 		/// <summary>
 		/// Gets or sets the size of the buffer.
 		/// </summary>
-		/// <remarks>If the new length is greater that the current length, more memory will be allocated. If the new length is less than the current length, the extra items will be cleared.</remarks>
+		/// <remarks>
+		/// If the new length is greater that the current length, more memory will be allocated. If the new length is less than the current length, the extra items will be cleared.
+		/// </remarks>
 		public int Length {
 			get => (int)HarfBuzzApi.hb_buffer_get_length (Handle);
 			set => HarfBuzzApi.hb_buffer_set_length (Handle, (uint)value);
@@ -88,7 +92,9 @@ namespace HarfBuzzSharp
 		/// <summary>
 		/// Gets the buffer glyph information array.
 		/// </summary>
-		/// <remarks>The information is valid as long as buffer contents are not modified.</remarks>
+		/// <remarks>
+		/// The information is valid as long as buffer contents are not modified.
+		/// </remarks>
 		public GlyphInfo[] GlyphInfos {
 			get {
 				var array = GetGlyphInfoSpan ().ToArray ();
@@ -100,7 +106,9 @@ namespace HarfBuzzSharp
 		/// <summary>
 		/// Gets the buffer glyph position array.
 		/// </summary>
-		/// <remarks>The positions are valid as long as buffer contents are not modified.</remarks>
+		/// <remarks>
+		/// The positions are valid as long as buffer contents are not modified.
+		/// </remarks>
 		public GlyphPosition[] GlyphPositions {
 			get {
 				var array = GetGlyphPositionSpan ().ToArray ();
@@ -116,7 +124,9 @@ namespace HarfBuzzSharp
 		/// </summary>
 		/// <param name="codepoint">The Unicode code point.</param>
 		/// <param name="cluster">The cluster value of the code point.</param>
-		/// <remarks>This function does not check the validity of the codepoint.</remarks>
+		/// <remarks>
+		/// This function does not check the validity of the codepoint.
+		/// </remarks>
 		public void Add (uint codepoint, uint cluster)
 		{
 			if (Length != 0 && ContentType != ContentType.Unicode)
@@ -248,7 +258,9 @@ namespace HarfBuzzSharp
 		/// Appends characters from the span to the buffer.
 		/// </summary>
 		/// <param name="text">The span of Unicode code points to append.</param>
-		/// <remarks>This function does not check the validity of the characters.</remarks>
+		/// <remarks>
+		/// This function does not check the validity of the characters.
+		/// </remarks>
 		public void AddCodepoints (ReadOnlySpan<uint> text) => AddCodepoints (text, 0, -1);
 
 		public unsafe void AddCodepoints (ReadOnlySpan<uint> text, int itemOffset, int itemLength)
@@ -309,7 +321,9 @@ namespace HarfBuzzSharp
 		/// <summary>
 		/// Clears the buffer's contents.
 		/// </summary>
-		/// <remarks>This operation preserves the Unicode functions and replacement code point.</remarks>
+		/// <remarks>
+		/// This operation preserves the Unicode functions and replacement code point.
+		/// </remarks>
 		public void ClearContents () => HarfBuzzApi.hb_buffer_clear_contents (Handle);
 
 		public void Reset () => HarfBuzzApi.hb_buffer_reset (Handle);

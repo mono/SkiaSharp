@@ -18480,7 +18480,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// 16-bit, floating-point, ARGB unpremultiplied color value.
 	/// </summary>
-	/// <remarks>The color components are always in a known order.</remarks>
+	/// <remarks>
+	/// The color components are always in a known order.
+	/// </remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public readonly unsafe partial struct SKColorF : IEquatable<SKColorF> {
 		// public float fR
@@ -18689,7 +18691,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Represents the coefficients for a common transfer function equation.
 	/// </summary>
-	/// <remarks><para>The coefficients are specified as a transformation from a curved space to linear. </para><para></para><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para></para><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para></remarks>
+	/// <remarks>
+	/// <para>The coefficients are specified as a transformation from a curved space to linear. </para><para></para><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para></para><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para>
+	/// </remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKColorSpaceTransferFn : IEquatable<SKColorSpaceTransferFn> {
 		// public float fG
@@ -19301,7 +19305,9 @@ namespace SkiaSharp {
 		/// Calculates the hashcode for this point.
 		/// </summary>
 		/// <returns>Returns the hashcode for this point.</returns>
-		/// <remarks>You should avoid depending on GetHashCode for unique values, as two point objects with the same values for their X and Y properties may return the same hash code. This behavior could change in a future release.</remarks>
+		/// <remarks>
+		/// You should avoid depending on GetHashCode for unique values, as two point objects with the same values for their X and Y properties may return the same hash code. This behavior could change in a future release.
+		/// </remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -19897,7 +19903,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// A 3x3 transformation matrix with perspective.
 	/// </summary>
-	/// <remarks>It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="SKMatrix.Persp0" />, <see cref="SKMatrix.Persp1" />, <see cref="SKMatrix.Persp2" /> fields of the matrix.</remarks>
+	/// <remarks>
+	/// It extends the traditional 2D affine transformation matrix with three perspective components that allow simple 3D effects to be created with it. Those components must be manually set by using the <see cref="SKMatrix.Persp0" />, <see cref="SKMatrix.Persp1" />, <see cref="SKMatrix.Persp2" /> fields of the matrix.
+	/// </remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKMatrix : IEquatable<SKMatrix> {
 		// public float scaleX
@@ -20241,7 +20249,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Represents an ordered pair of floating-point x- and y-coordinates that defines a point in a two-dimensional plane.
 	/// </summary>
-	/// <remarks>To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="SKPointI.Truncate(SkiaSharp.SKPoint)" />.</remarks>
+	/// <remarks>
+	/// To convert a <see cref="SKPoint" /> to a <see cref="SKPointI" />, use <see cref="SKPointI.Round(SkiaSharp.SKPoint)" /> or <see cref="SKPointI.Truncate(SkiaSharp.SKPoint)" />.
+	/// </remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKPoint : IEquatable<SKPoint> {
 		// public float x
@@ -20304,7 +20314,9 @@ namespace SkiaSharp {
 		/// Calculates the hashcode for this point.
 		/// </summary>
 		/// <returns>Returns the hashcode for this point.</returns>
-		/// <remarks>You should avoid depending on GetHashCode for unique values, as two <see cref="T:System.Drawing.Point" /> objects with the same values for their X and Y properties may return the same hash code. This behavior could change in a future release.</remarks>
+		/// <remarks>
+		/// You should avoid depending on GetHashCode for unique values, as two <see cref="T:System.Drawing.Point" /> objects with the same values for their X and Y properties may return the same hash code. This behavior could change in a future release.
+		/// </remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -20391,7 +20403,9 @@ namespace SkiaSharp {
 		/// Calculates the hashcode for this point.
 		/// </summary>
 		/// <returns>Returns the hashcode for this point.</returns>
-		/// <remarks>You should avoid depending on GetHashCode for unique values, as two <see cref="T:System.Drawing.Point" /> objects with the same values for their X, Y and Z properties may return the same hash code. This behavior could change in a future release.</remarks>
+		/// <remarks>
+		/// You should avoid depending on GetHashCode for unique values, as two <see cref="T:System.Drawing.Point" /> objects with the same values for their X, Y and Z properties may return the same hash code. This behavior could change in a future release.
+		/// </remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();
@@ -20939,7 +20953,7 @@ namespace SkiaSharp {
 
 	// sk_bitmap_allocflags_t
 	/// <summary>
-	/// Flags to use with <see cref="SKBitmap.#ctor" />.
+	/// Flags to use with <see cref="SKBitmap" /> constructors.
 	/// </summary>
 	[Flags]
 	public enum SKBitmapAllocFlags {
@@ -20959,7 +20973,8 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Predefined blend modes.
 	/// </summary>
-	/// <remarks>- **Porter Duff Compositing Operators**
+	/// <remarks>
+	/// - **Porter Duff Compositing Operators**
 	/// Defined algebra of compositing.
 	/// These operators control the results of mixing the four sub-pixel regions
 	/// formed by the overlapping of graphical objects that have an alpha or
@@ -20969,7 +20984,8 @@ namespace SkiaSharp {
 	/// corresponding components of the constituent backdrop and source colors.
 	/// - **Non-Separable Blend Mode**
 	/// Considers all color components in combination as opposed to the
-	/// separable ones that look at each component individually.</remarks>
+	/// separable ones that look at each component individually.
+	/// </remarks>
 	public enum SKBlendMode {
 		// CLEAR_SK_BLENDMODE = 0
 		/// <summary>
@@ -21178,7 +21194,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Used to describe the result of a call to <see cref="SKCodec.GetPixels(SkiaSharp.SKImageInfo,System.IntPtr,SkiaSharp.SKCodecOptions)" /> or one of the overloads that accepts a <see cref="SKCodecOptions" />.
 	/// </summary>
-	/// <remarks>Result is the union of possible results from subclasses.</remarks>
+	/// <remarks>
+	/// Result is the union of possible results from subclasses.
+	/// </remarks>
 	public enum SKCodecResult {
 		// SUCCESS_SK_CODEC_RESULT = 0
 		/// <summary>
@@ -21236,7 +21254,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// The orders in which scanlines can be returned.
 	/// </summary>
-	/// <remarks>These values are obtained through the <see cref="SKCodec.ScanlineOrder" /> property.</remarks>
+	/// <remarks>
+	/// These values are obtained through the <see cref="SKCodec.ScanlineOrder" /> property.
+	/// </remarks>
 	public enum SKCodecScanlineOrder {
 		// TOP_DOWN_SK_CODEC_SCANLINE_ORDER = 0
 		/// <summary>
@@ -21652,13 +21672,15 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Indications on how to draw geometry.
 	/// </summary>
-	/// <remarks>Styles apply to rectangle, oval, path, and text. Bitmaps are always drawn in
+	/// <remarks>
+	/// Styles apply to rectangle, oval, path, and text. Bitmaps are always drawn in
 	/// <see cref="SkiaSharp.SKPaintStyle.Fill" />, and lines are always drawn in
 	/// <see cref="SkiaSharp.SKPaintStyle.Stroke" />.
 	/// <see cref="SkiaSharp.SKPaintStyle.StrokeAndFill" /> implicitly draws the result with
 	/// <see cref="SkiaSharp.SKPathFillType.Winding" /> so if the original path is even-odd,
 	/// the results may not appear the same as if it was drawn twice, filled and then
-	/// stroked.</remarks>
+	/// stroked.
+	/// </remarks>
 	public enum SKPaintStyle {
 		// FILL_SK_PAINT_STYLE = 0
 		/// <summary>
@@ -21826,7 +21848,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Verbs contained in an <see cref="SKPath" />.
 	/// </summary>
-	/// <remarks>In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.</remarks>
+	/// <remarks>
+	/// In the description below, the number of points returned represents the number of valid entries on the return array of points that is passed to <see cref="SKPath.Iterator.Next(SkiaSharp.SKPoint[],System.Boolean,System.Boolean)" /> or <see cref="SKPath.RawIterator.Next(SkiaSharp.SKPoint[])" />.
+	/// </remarks>
 	public enum SKPathVerb {
 		// MOVE_SK_PATH_VERB = 0
 		/// <summary>
@@ -21869,7 +21893,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Flags to indicate how to compute a matrix from a position along a path.
 	/// </summary>
-	/// <remarks>This is used with <see cref="SKPathMeasure.GetMatrix(System.Single,SkiaSharp.SKMatrix@,SkiaSharp.SKPathMeasureMatrixFlags)" />.</remarks>
+	/// <remarks>
+	/// This is used with <see cref="SKPathMeasure.GetMatrix(System.Single,out SkiaSharp.SKMatrix,SkiaSharp.SKPathMeasureMatrixFlags)" />.
+	/// </remarks>
 	[Flags]
 	public enum SKPathMeasureMatrixFlags {
 		// GET_POSITION_SK_PATHMEASURE_MATRIXFLAGS = 0x01
@@ -21925,7 +21951,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Describes how LCD strips are organized for each pixel.
 	/// </summary>
-	/// <remarks>Description of how the LCD strips are arranged for each pixel. If this is unknown, or the pixels are meant to be "portable" and/or transformed before showing (e.g. rotated, scaled) then use <see cref="SKPixelGeometry.Unknown" />.</remarks>
+	/// <remarks>
+	/// Description of how the LCD strips are arranged for each pixel. If this is unknown, or the pixels are meant to be "portable" and/or transformed before showing (e.g. rotated, scaled) then use <see cref="SKPixelGeometry.Unknown" />.
+	/// </remarks>
 	public enum SKPixelGeometry {
 		// UNKNOWN_SK_PIXELGEOMETRY = 0
 		/// <summary>
@@ -22201,7 +22229,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Various options for <see cref="SKPaint.StrokeCap" />.
 	/// </summary>
-	/// <remarks>This is the treatment that is applied to the beginning and end of each non-closed contour (e.g. lines).</remarks>
+	/// <remarks>
+	/// This is the treatment that is applied to the beginning and end of each non-closed contour (e.g. lines).
+	/// </remarks>
 	public enum SKStrokeCap {
 		// BUTT_SK_STROKE_CAP = 0
 		/// <summary>
@@ -22224,7 +22254,9 @@ namespace SkiaSharp {
 	/// <summary>
 	/// Join style for stroking operations.
 	/// </summary>
-	/// <remarks>This is the treatment that is applied to corners in paths and rectangles.</remarks>
+	/// <remarks>
+	/// This is the treatment that is applied to corners in paths and rectangles.
+	/// </remarks>
 	public enum SKStrokeJoin {
 		// MITER_SK_STROKE_JOIN = 0
 		/// <summary>
@@ -22245,7 +22277,7 @@ namespace SkiaSharp {
 
 	// sk_surfaceprops_flags_t
 	/// <summary>
-	/// Flags for the <see cref="SKSurfaceProps" />.
+	/// Flags for the <see cref="SKSurfaceProperties" />.
 	/// </summary>
 	[Flags]
 	public enum SKSurfacePropsFlags {

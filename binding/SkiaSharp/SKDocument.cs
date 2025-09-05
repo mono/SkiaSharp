@@ -9,10 +9,12 @@ namespace SkiaSharp
 	/// <summary>
 	/// A high-level API for creating a document-based canvas.
 	/// </summary>
-	/// <remarks>For each page, call <see cref="SkiaSharp.SKDocument.BeginPage%2A" /> to get the
+	/// <remarks>
+	/// For each page, call <see cref="SkiaSharp.SKDocument.BeginPage" /> to get the
 	/// canvas, and then complete the page with a call to
-	/// <see cref="SkiaSharp.SKDocument.EndPage%2A" />. Finally, call
-	/// <see cref="SkiaSharp.SKDocument.Close%2A" /> to complete the document.</remarks>
+	/// <see cref="SkiaSharp.SKDocument.EndPage" />. Finally, call
+	/// <see cref="SkiaSharp.SKDocument.Close" /> to complete the document.
+	/// </remarks>
 	public unsafe class SKDocument : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		/// <summary>
@@ -40,7 +42,9 @@ namespace SkiaSharp
 		/// <param name="width">The width of the page.</param>
 		/// <param name="height">The height of the page.</param>
 		/// <returns>Returns a canvas for the new page.</returns>
-		/// <remarks>The document owns this canvas, and it will go out of scope when <see cref="SKDocument.EndPage" /> or <see cref="SKDocument.Close" /> is called, or the document is deleted.</remarks>
+		/// <remarks>
+		/// The document owns this canvas, and it will go out of scope when <see cref="SKDocument.EndPage" /> or <see cref="SKDocument.Close" /> is called, or the document is deleted.
+		/// </remarks>
 		public SKCanvas BeginPage (float width, float height) =>
 			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, null), false), this);
 
@@ -51,7 +55,9 @@ namespace SkiaSharp
 		/// <param name="height">The height of the page.</param>
 		/// <param name="content">The area for the page contents.</param>
 		/// <returns>Returns a canvas for the new page.</returns>
-		/// <remarks>The document owns this canvas, and it will go out of scope when <see cref="SKDocument.EndPage" /> or <see cref="SKDocument.Close" /> is called, or the document is deleted.</remarks>
+		/// <remarks>
+		/// The document owns this canvas, and it will go out of scope when <see cref="SKDocument.EndPage" /> or <see cref="SKDocument.Close" /> is called, or the document is deleted.
+		/// </remarks>
 		public SKCanvas BeginPage (float width, float height, SKRect content) =>
 			OwnedBy (SKCanvas.GetObject (SkiaApi.sk_document_begin_page (Handle, width, height, &content), false), this);
 
@@ -99,7 +105,9 @@ namespace SkiaSharp
 		/// <param name="path">The path of the file to write to.</param>
 		/// <param name="dpi">The DPI (pixels-per-inch) at which features without native XPS support will be rasterized.</param>
 		/// <returns>Returns the new XPS-backed document.</returns>
-		/// <remarks>XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+		/// <remarks>
+		/// XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// </remarks>
 		public static SKDocument CreateXps (string path, float dpi)
 		{
 			if (path == null) {
@@ -116,7 +124,9 @@ namespace SkiaSharp
 		/// <param name="stream">The stream to write to.</param>
 		/// <param name="dpi">The DPI (pixels-per-inch) at which features without native XPS support will be rasterized.</param>
 		/// <returns>Returns the new XPS-backed document.</returns>
-		/// <remarks>XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+		/// <remarks>
+		/// XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// </remarks>
 		public static SKDocument CreateXps (Stream stream, float dpi)
 		{
 			if (stream == null) {
@@ -133,7 +143,9 @@ namespace SkiaSharp
 		/// <param name="stream">The stream to write to.</param>
 		/// <param name="dpi">The DPI (pixels-per-inch) at which features without native XPS support will be rasterized.</param>
 		/// <returns>Returns the new XPS-backed document.</returns>
-		/// <remarks>XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+		/// <remarks>
+		/// XPS pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// </remarks>
 		public static SKDocument CreateXps (SKWStream stream, float dpi)
 		{
 			if (stream == null) {
@@ -195,7 +207,9 @@ namespace SkiaSharp
 		/// <param name="path">The path of the file to write to.</param>
 		/// <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
 		/// <returns>Returns the new PDF-backed document.</returns>
-		/// <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+		/// <remarks>
+		/// PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// </remarks>
 		public static SKDocument CreatePdf (string path, float dpi) =>
 			CreatePdf (path, new SKDocumentPdfMetadata (dpi));
 
@@ -205,7 +219,9 @@ namespace SkiaSharp
 		/// <param name="stream">The stream to write to.</param>
 		/// <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
 		/// <returns>Returns the new PDF-backed document.</returns>
-		/// <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+		/// <remarks>
+		/// PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// </remarks>
 		public static SKDocument CreatePdf (Stream stream, float dpi) =>
 			CreatePdf (stream, new SKDocumentPdfMetadata (dpi));
 
@@ -215,7 +231,9 @@ namespace SkiaSharp
 		/// <param name="stream">The stream to write to.</param>
 		/// <param name="dpi">The DPI (pixels-per-inch) at which features without native PDF support will be rasterized.</param>
 		/// <returns>Returns the new PDF-backed document.</returns>
-		/// <remarks>PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.</remarks>
+		/// <remarks>
+		/// PDF pages are sized in point units. 1 pt == 1/72 inch == 127/360 mm.
+		/// </remarks>
 		public static SKDocument CreatePdf (SKWStream stream, float dpi) =>
 			CreatePdf (stream, new SKDocumentPdfMetadata (dpi));
 

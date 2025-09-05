@@ -6,7 +6,7 @@ using System;
 namespace HarfBuzzSharp
 {
 	/// <summary>
-	/// The delegate that is invoked when <see cref="Font.TryGetHorizontalFontExtents(HarfBuzzSharp.FontExtents@)" /> or <see cref="Font.TryGetVerticalFontExtents(HarfBuzzSharp.FontExtents@)" /> is invoked.
+	/// The delegate that is invoked when <see cref="Font.TryGetHorizontalFontExtents(out HarfBuzzSharp.FontExtents)" /> or <see cref="Font.TryGetVerticalFontExtents(out HarfBuzzSharp.FontExtents)" /> is invoked.
 	/// </summary>
 	/// <param name="font">The font.</param>
 	/// <param name="fontData">The additional data passed to <see cref="Font.SetFontFunctions(HarfBuzzSharp.FontFunctions,System.Object,HarfBuzzSharp.ReleaseDelegate)" /> when the functions were set.</param>

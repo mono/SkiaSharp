@@ -16,7 +16,9 @@ namespace SkiaSharp
 		/// Creates a new <see cref="SKColorSpacePrimaries" /> instance.
 		/// </summary>
 		/// <param name="values">The values of the primaries and white point.</param>
-		/// <remarks>There must be exactly 8 values in the array with the form [RX, RY, GX, GY, BX, BY, WX, WY].</remarks>
+		/// <remarks>
+		/// There must be exactly 8 values in the array with the form [RX, RY, GX, GY, BX, BY, WX, WY].
+		/// </remarks>
 		public SKColorSpacePrimaries (float[] values)
 		{
 			if (values == null)
@@ -60,7 +62,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the values of the primaries and white as an array with the form [RX, RY, GX, GY, BX, BY, WX, WY].
 		/// </summary>
-		/// <remarks>]</remarks>
+		/// <remarks>
+		/// ]
+		/// </remarks>
 		public readonly float[] Values =>
 			new[] { fRX, fRY, fGX, fGY, fBX, fBY, fWX, fWY };
 
@@ -80,7 +84,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Represents the coefficients for a common transfer function equation.
 	/// </summary>
-	/// <remarks><para>The coefficients are specified as a transformation from a curved space to linear. </para><para></para><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para></para><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para></remarks>
+	/// <remarks>
+	/// <para>The coefficients are specified as a transformation from a curved space to linear. </para><para></para><para>LinearVal = C*InputVal + F;   (for 0.0f &lt;= InputVal &lt; D)</para><para>LinearVal = (A*InputVal + B)^G + E;   (for D &lt;= InputVal &lt;= 1.0f)</para><para></para><para>Function is undefined if InputVal is not in [ 0.0f, 1.0f ].</para><para>Resulting LinearVals must be in [ 0.0f, 1.0f ].</para><para>Function must be positive and increasing.</para>
+	/// </remarks>
 	public unsafe partial struct SKColorSpaceTransferFn
 	{
 		public static SKColorSpaceTransferFn Srgb {
@@ -137,7 +143,9 @@ namespace SkiaSharp
 		/// Creates a new instance of <see cref="SKColorSpaceTransferFn" />.
 		/// </summary>
 		/// <param name="values">The values of the coefficients.</param>
-		/// <remarks>There must be exactly 7 values in the array with the form [G, A, B, C, D, E, F].</remarks>
+		/// <remarks>
+		/// There must be exactly 7 values in the array with the form [G, A, B, C, D, E, F].
+		/// </remarks>
 		public SKColorSpaceTransferFn (float[] values)
 		{
 			if (values == null)
@@ -199,7 +207,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="x">The input to transform.</param>
 		/// <returns>Returns the transformed input.</returns>
-		/// <remarks>For negative inputs, returns `-Transform(Math.Abs(x))`.</remarks>
+		/// <remarks>
+		/// For negative inputs, returns `-Transform(Math.Abs(x))`.
+		/// </remarks>
 		public readonly float Transform (float x)
 		{
 			fixed (SKColorSpaceTransferFn* t = &this) {

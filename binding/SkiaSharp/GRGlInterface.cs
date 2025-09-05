@@ -15,7 +15,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// The <see cref="GRGlInterface" /> is used to interface with OpenGL.
 	/// </summary>
-	/// <remarks>A <see cref="GRContext" /> does not interact directly with the underlying backend, instead it uses an OpenGL interface.</remarks>
+	/// <remarks>
+	/// A <see cref="GRContext" /> does not interact directly with the underlying backend, instead it uses an OpenGL interface.
+	/// </remarks>
 	public unsafe partial class GRGlInterface : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration
 	{
 		internal GRGlInterface (IntPtr h, bool owns)

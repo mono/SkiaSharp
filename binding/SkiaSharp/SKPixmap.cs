@@ -6,7 +6,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Pairs <see cref="SKImageInfo" /> with actual pixels and rowbytes.
 	/// </summary>
-	/// <remarks>This class does not try to manage the lifetime of the pixel memory (nor the color table if provided).</remarks>
+	/// <remarks>
+	/// This class does not try to manage the lifetime of the pixel memory (nor the color table if provided).
+	/// </remarks>
 	public unsafe class SKPixmap : SKObject
 	{
 		private const string UnableToCreateInstanceMessage = "Unable to create a new SKPixmap instance.";
@@ -186,7 +188,9 @@ namespace SkiaSharp
 		/// Returns a span that wraps the pixel data.
 		/// </summary>
 		/// <returns>Returns the span.</returns>
-		/// <remarks>This span is only valid as long as the pixmap is valid</remarks>
+		/// <remarks>
+		/// This span is only valid as long as the pixmap is valid
+		/// </remarks>
 		public Span<byte> GetPixelSpan () =>
 			GetPixelSpan<byte> (0, 0);
 
@@ -272,7 +276,8 @@ namespace SkiaSharp
 		/// <param name="destination">The pixmap to receive the scaled and converted pixels.</param>
 		/// <param name="quality">The level of quality to use when scaling the pixels.</param>
 		/// <returns>Returns <see langword="true" /> on success, or <see langword="false" /> if there was an error.</returns>
-		/// <remarks>Pixels are copied only if pixel conversion is possible.
+		/// <remarks>
+		/// Pixels are copied only if pixel conversion is possible.
 		/// If the color type is <see cref="SkiaSharp.SKColorType.Gray8" />, or
 		/// <see cref="SkiaSharp.SKColorType.Alpha8" />, the destination color type must match.
 		/// If the color type is <see cref="SkiaSharp.SKColorType.Gray8" />, destination
@@ -288,7 +293,8 @@ namespace SkiaSharp
 		/// - <see cref="SkiaSharp.SKFilterQuality.Medium" /> is typically implemented with
 		/// bilerp filter, and mipmap when size is reduced.
 		/// - <see cref="SkiaSharp.SKFilterQuality.High" /> is slowest, typically implemented
-		/// with the bicubic filter.</remarks>
+		/// with the bicubic filter.
+		/// </remarks>
 		[Obsolete ("Use ScalePixels(SKPixmap destination, SKSamplingOptions sampling) instead.")]
 		public bool ScalePixels (SKPixmap destination, SKFilterQuality quality) =>
 			ScalePixels (destination, quality.ToSamplingOptions ());
@@ -533,7 +539,9 @@ namespace SkiaSharp
 		/// </summary>
 		/// <param name="color">The color to fill.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were changed, otherwise <see langword="false" />.</returns>
-		/// <remarks>If the pixmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+		/// <remarks>
+		/// If the pixmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.
+		/// </remarks>
 		public bool Erase (SKColor color) =>
 			Erase (color, Rect);
 
@@ -543,7 +551,9 @@ namespace SkiaSharp
 		/// <param name="color">The color to fill.</param>
 		/// <param name="subset">The subset of the pixmap to fill.</param>
 		/// <returns>Returns <see langword="true" /> if the pixels were changed, otherwise <see langword="false" />.</returns>
-		/// <remarks>If the pixmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.</remarks>
+		/// <remarks>
+		/// If the pixmap's color type does not support alpha (e.g. 565) then the alpha of the color is ignored (treated as opaque). If the color type only supports alpha (e.g. A1 or A8) then the color's R, G, B components are ignored.
+		/// </remarks>
 		public bool Erase (SKColor color, SKRectI subset) =>
 			SkiaApi.sk_pixmap_erase_color (Handle, (uint)color, &subset);
 

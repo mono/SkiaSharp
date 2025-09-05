@@ -9,7 +9,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// A specialized <see cref="SKCanvas" /> which generates SVG commands from its draw calls.
 	/// </summary>
-	/// <remarks>The canvas may buffer some drawing calls, so the output is not guaranteed to be valid or complete until the canvas instance is deleted.</remarks>
+	/// <remarks>
+	/// The canvas may buffer some drawing calls, so the output is not guaranteed to be valid or complete until the canvas instance is deleted.
+	/// </remarks>
 	public unsafe class SKSvgCanvas
 	{
 		private SKSvgCanvas ()

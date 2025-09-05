@@ -8,7 +8,8 @@ namespace SkiaSharp
 	/// <summary>
 	/// Wraps a <see cref="T:System.IO.Stream" /> into a <see cref="SKStreamAsset" /> (a seekable, rewindable Skia stream)
 	/// </summary>
-	/// <remarks>The following example shows how to wrap a <see cref="System.IO.Stream" /> that
+	/// <remarks>
+	/// The following example shows how to wrap a <see cref="System.IO.Stream" /> that
 	/// represents a stream into an embedded resource in an assembly and use it with
 	/// SkiaSharp APIs that use resources:
 	/// ## Examples
@@ -31,7 +32,8 @@ namespace SkiaSharp
 	/// }
 	/// }
 	/// }
-	/// ```</remarks>
+	/// ```
+	/// </remarks>
 	public class SKManagedStream : SKAbstractManagedStream
 	{
 		private Stream stream;
@@ -47,7 +49,9 @@ namespace SkiaSharp
 		/// Creates a new read-only stream from a <see cref="T:System.IO.Stream" />.
 		/// </summary>
 		/// <param name="managedStream">The managed stream.</param>
-		/// <remarks>The underlying stream is not disposed when this object is disposed.</remarks>
+		/// <remarks>
+		/// The underlying stream is not disposed when this object is disposed.
+		/// </remarks>
 		public SKManagedStream (Stream managedStream)
 			: this (managedStream, false)
 		{

@@ -28,7 +28,9 @@ namespace HarfBuzzSharp
 		/// <param name="data">The data to wrap.</param>
 		/// <param name="length">The length of the data being wrapped.</param>
 		/// <param name="mode">The memory mode to use.</param>
-		/// <remarks>If there was a problem creating the blob, or if the data length was zero, then an empty blob will be created.</remarks>
+		/// <remarks>
+		/// If there was a problem creating the blob, or if the data length was zero, then an empty blob will be created.
+		/// </remarks>
 		public Blob (IntPtr data, int length, MemoryMode mode)
 			: this (data, length, mode, null)
 		{
@@ -41,7 +43,9 @@ namespace HarfBuzzSharp
 		/// <param name="length">The length of the data being wrapped.</param>
 		/// <param name="mode">The memory mode to use.</param>
 		/// <param name="releaseDelegate">The delegate to invoke when the data is not needed anymore.</param>
-		/// <remarks>If there was a problem creating the blob, or if the data length was zero, then an empty blob will be created.</remarks>
+		/// <remarks>
+		/// If there was a problem creating the blob, or if the data length was zero, then an empty blob will be created.
+		/// </remarks>
 		public Blob (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseDelegate)
 			: this (Create (data, length, mode, releaseDelegate))
 		{
@@ -81,7 +85,9 @@ namespace HarfBuzzSharp
 		/// Returns a stream that wraps the data.
 		/// </summary>
 		/// <returns>Returns the stream that wraps the data.</returns>
-		/// <remarks>If the data is released, then the stream becomes invalid.</remarks>
+		/// <remarks>
+		/// If the data is released, then the stream becomes invalid.
+		/// </remarks>
 		public unsafe Stream AsStream ()
 		{
 			uint length;
@@ -93,7 +99,9 @@ namespace HarfBuzzSharp
 		/// Returns a span that wraps the data.
 		/// </summary>
 		/// <returns>Returns the span that wraps the data.</returns>
-		/// <remarks>If the data is released, then the span becomes invalid.</remarks>
+		/// <remarks>
+		/// If the data is released, then the span becomes invalid.
+		/// </remarks>
 		public unsafe Span<byte> AsSpan ()
 		{
 			uint length;

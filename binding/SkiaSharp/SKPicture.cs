@@ -8,7 +8,9 @@ namespace SkiaSharp
 	/// <summary>
 	/// Recorded drawing operations made to a <see cref="SKCanvas" /> to be played back at a later time.
 	/// </summary>
-	/// <remarks>This base class handles serialization and a few other miscellany.</remarks>
+	/// <remarks>
+	/// This base class handles serialization and a few other miscellany.
+	/// </remarks>
 	public unsafe class SKPicture : SKObject, ISKReferenceCounted
 	{
 		internal SKPicture (IntPtr h, bool owns)
@@ -28,7 +30,9 @@ namespace SkiaSharp
 		/// <summary>
 		/// Gets the culling rectangle for this picture.
 		/// </summary>
-		/// <remarks>Operations recorded into this picture that attempt to draw outside the culling rectangle might not be drawn.</remarks>
+		/// <remarks>
+		/// Operations recorded into this picture that attempt to draw outside the culling rectangle might not be drawn.
+		/// </remarks>
 		public SKRect CullRect {
 			get {
 				SKRect rect;

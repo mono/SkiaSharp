@@ -70,7 +70,8 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// <summary>
 		/// Occurs when the surface needs to be redrawn.
 		/// </summary>
-		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <remarks>
+		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SkiaSharp.Views.Maui.Controls.SKGLView.OnPaintSurface(SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.Maui.Controls.SKGLView.PaintSurface" />
@@ -86,7 +87,8 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// // draw on the canvas
 		/// canvas.Flush ();
 		/// };
-		/// ```</remarks>
+		/// ```
+		/// </remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs>? PaintSurface;
 
 		/// <summary>
@@ -97,7 +99,9 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// <summary>
 		/// Gets the current canvas size.
 		/// </summary>
-		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
+		/// <remarks>
+		/// The canvas size may be different to the view size as a result of the current device's pixel density.
+		/// </remarks>
 		public SKSize CanvasSize => lastCanvasSize;
 
 		/// <summary>
