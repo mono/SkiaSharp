@@ -8,24 +8,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace SkiaSharpGenerator;
 
-public sealed class DocumentationStore
+public sealed class DocumentationStore(string sourceFile)
 {
-	private string _source;
-    private readonly Dictionary<string, string> _docs = new Dictionary<string, string>(StringComparer.Ordinal);
+    private readonly string _source = File.ReadAllText(sourceFile);
+    private readonly Dictionary<string, string> _docs = new(StringComparer.Ordinal);
 
-	public static string Type(string name) =>
+    public static string Type(string name) =>
         $"T:{name}";
     public static string Field(string typeName, string fieldName) =>
         $"F:{typeName}.{fieldName}";
     public static string Property(string typeName, string propertyName) =>
         $"P:{typeName}.{propertyName}";
-	public static string Method(string typeName, string methodName, params string[] paramTypes) =>
+    public static string Method(string typeName, string methodName, params string[] paramTypes) =>
         $"M:{typeName}.{methodName}({string.Join(",", paramTypes)})";
-
-	public DocumentationStore(string sourceFile)
-    {
-        _source = File.ReadAllText(sourceFile);
-    }
 
     public void Load()
     {
@@ -66,96 +61,108 @@ public sealed class DocumentationStore
                     ProcessMember(m, typeName);
                 }
             }
+            else if (member is EnumDeclarationSyntax ed)
+            {
+                var enumName = ed.Identifier.Text;
+                foreach (var em in ed.Members)
+                {
+                    ProcessMember(em, enumName);
+                }
+            }
         }
     }
 
     private void AddIfAny(MemberDeclarationSyntax member, string? currentType)
     {
-        var xml = Extract(member);
-        if (xml == null)
-            return;
+        if (GetDocKey(member, currentType) is { } key && Extract(member) is { } xml)
+        {
+            _docs[key] = xml;
+        }
+    }
 
-        string? key = null;
+    private static string? GetDocKey(MemberDeclarationSyntax member, string? currentType)
+    {
         if (member is ClassDeclarationSyntax c)
-            key = Type(c.Identifier.Text);
+            return Type(c.Identifier.Text);
         else if (member is StructDeclarationSyntax s)
-            key = Type(s.Identifier.Text);
+            return Type(s.Identifier.Text);
         else if (member is InterfaceDeclarationSyntax i)
-            key = Type(i.Identifier.Text);
+            return Type(i.Identifier.Text);
         else if (member is EnumDeclarationSyntax e)
-            key = Type(e.Identifier.Text);
+            return Type(e.Identifier.Text);
+        else if (member is EnumMemberDeclarationSyntax em && em.Parent is EnumDeclarationSyntax ep)
+            return Field(ep.Identifier.Text, em.Identifier.Text);
         else if (member is DelegateDeclarationSyntax d)
-            key = Type(d.Identifier.Text);
+            return Type(d.Identifier.Text);
         else if (currentType != null && member is FieldDeclarationSyntax f)
-            key = Field(currentType, f.Declaration.Variables.First().Identifier.Text);
+            return Field(currentType, f.Declaration.Variables.First().Identifier.Text);
         else if (currentType != null && member is PropertyDeclarationSyntax p)
-            key = Property(currentType, p.Identifier.Text);
+            return Property(currentType, p.Identifier.Text);
         else if (currentType != null && member is MethodDeclarationSyntax m)
         {
             var paramTypes = m.ParameterList.Parameters
                 .Select(p => NormalizeType(p.Type))
                 .ToArray();
-            key = Method(currentType, m.Identifier.Text, paramTypes);
+            return Method(currentType, m.Identifier.Text, paramTypes);
         }
         else if (currentType != null && member is OperatorDeclarationSyntax op)
         {
             var paramTypes = op.ParameterList.Parameters
                 .Select(p => NormalizeType(p.Type))
                 .ToArray();
-            key = Method(currentType, GetOperatorMetadataName(op), paramTypes);
+            return Method(currentType, GetOperatorMetadataName(op), paramTypes);
         }
         else if (currentType != null && member is ConversionOperatorDeclarationSyntax cop)
         {
             var paramTypes = cop.ParameterList.Parameters
                 .Select(p => NormalizeType(p.Type))
                 .ToArray();
-            key = Method(currentType, cop.ImplicitOrExplicitKeyword.IsKind(SyntaxKind.ImplicitKeyword) ? "op_Implicit" : "op_Explicit", paramTypes);
+            return Method(currentType, cop.ImplicitOrExplicitKeyword.IsKind(SyntaxKind.ImplicitKeyword) ? "op_Implicit" : "op_Explicit", paramTypes);
         }
-
-        if (key != null)
-            _docs[key] = xml;
+        else
+            return null;
     }
 
-    private static string GetOperatorMetadataName(OperatorDeclarationSyntax op)
-    {
-        var paramCount = op.ParameterList.Parameters.Count;
-        switch (op.OperatorToken.Kind())
+    private static string GetOperatorMetadataName(OperatorDeclarationSyntax op) =>
+        op.OperatorToken.Kind() switch
         {
-            case SyntaxKind.PlusToken: return paramCount == 1 ? "op_UnaryPlus" : "op_Addition";
-            case SyntaxKind.MinusToken: return paramCount == 1 ? "op_UnaryNegation" : "op_Subtraction";
-            case SyntaxKind.AsteriskToken: return "op_Multiply";
-            case SyntaxKind.SlashToken: return "op_Division";
-            case SyntaxKind.PercentToken: return "op_Modulus";
-            case SyntaxKind.AmpersandToken: return "op_BitwiseAnd";
-            case SyntaxKind.BarToken: return "op_BitwiseOr";
-            case SyntaxKind.CaretToken: return "op_ExclusiveOr";
-            case SyntaxKind.LessThanLessThanToken: return "op_LeftShift";
-            case SyntaxKind.GreaterThanGreaterThanToken: return "op_RightShift";
-            case SyntaxKind.EqualsEqualsToken: return "op_Equality";
-            case SyntaxKind.ExclamationEqualsToken: return "op_Inequality";
-            case SyntaxKind.LessThanToken: return "op_LessThan";
-            case SyntaxKind.GreaterThanToken: return "op_GreaterThan";
-            case SyntaxKind.LessThanEqualsToken: return "op_LessThanOrEqual";
-            case SyntaxKind.GreaterThanEqualsToken: return "op_GreaterThanOrEqual";
-            case SyntaxKind.PlusPlusToken: return "op_Increment";
-            case SyntaxKind.MinusMinusToken: return "op_Decrement";
-            case SyntaxKind.ExclamationToken: return "op_LogicalNot";
-            case SyntaxKind.TildeToken: return "op_OnesComplement";
-            case SyntaxKind.TrueKeyword: return "op_True";
-            case SyntaxKind.FalseKeyword: return "op_False";
-            default: return "op_Unknown"; // fallback; unlikely but ensures a key if docs exist
-        }
-    }
+            SyntaxKind.PlusToken => op.ParameterList.Parameters.Count == 1 ? "op_UnaryPlus" : "op_Addition",
+            SyntaxKind.MinusToken => op.ParameterList.Parameters.Count == 1 ? "op_UnaryNegation" : "op_Subtraction",
+            SyntaxKind.AsteriskToken => "op_Multiply",
+            SyntaxKind.SlashToken => "op_Division",
+            SyntaxKind.PercentToken => "op_Modulus",
+            SyntaxKind.AmpersandToken => "op_BitwiseAnd",
+            SyntaxKind.BarToken => "op_BitwiseOr",
+            SyntaxKind.CaretToken => "op_ExclusiveOr",
+            SyntaxKind.LessThanLessThanToken => "op_LeftShift",
+            SyntaxKind.GreaterThanGreaterThanToken => "op_RightShift",
+            SyntaxKind.EqualsEqualsToken => "op_Equality",
+            SyntaxKind.ExclamationEqualsToken => "op_Inequality",
+            SyntaxKind.LessThanToken => "op_LessThan",
+            SyntaxKind.GreaterThanToken => "op_GreaterThan",
+            SyntaxKind.LessThanEqualsToken => "op_LessThanOrEqual",
+            SyntaxKind.GreaterThanEqualsToken => "op_GreaterThanOrEqual",
+            SyntaxKind.PlusPlusToken => "op_Increment",
+            SyntaxKind.MinusMinusToken => "op_Decrement",
+            SyntaxKind.ExclamationToken => "op_LogicalNot",
+            SyntaxKind.TildeToken => "op_OnesComplement",
+            SyntaxKind.TrueKeyword => "op_True",
+            SyntaxKind.FalseKeyword => "op_False",
+            _ => "op_Unknown",// fallback; unlikely but ensures a key if docs exist
+        };
 
     private static string NormalizeType(TypeSyntax? typeSyntax)
     {
         if (typeSyntax == null)
             return "?";
+
         // Strip trivia and normalize whitespace
         var text = typeSyntax.ToString().Trim();
+
         // Collapse spaces
         while (text.Contains("  "))
             text = text.Replace("  ", " ");
+
         return text;
     }
 
@@ -165,9 +172,13 @@ public sealed class DocumentationStore
         if (member is NamespaceDeclarationSyntax)
             return true;
 
-        // Enum members (EnumMemberDeclarationSyntax) are always effectively public in a public enum
+        // For enum declarations: require 'public'
         if (member is EnumDeclarationSyntax enumDecl)
             return enumDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword));
+
+        // Enum members (EnumMemberDeclarationSyntax) are always effectively public in a public enum
+        if (member is EnumMemberDeclarationSyntax enumMemberDecl)
+            return enumMemberDecl.Parent is EnumDeclarationSyntax parentDecl && parentDecl.Modifiers.Any(m => m.IsKind(SyntaxKind.PublicKeyword));
 
         // For type declarations: require 'public'
         if (member is TypeDeclarationSyntax typeDecl)

@@ -3,9 +3,14 @@
         "SkiaSharpGenerator": {
             "commandName": "Project",
         },
-        "SkiaSharpGenerator (Generate SkiaSharp)": {
+        "SkiaSharpGenerator (SkiaSharp)": {
             "commandName": "Project",
             "commandLineArgs": "generate --config binding/libSkiaSharp.json --root externals/skia --output binding/SkiaSharp/SkiaApi.generated.cs --verbose",
+            "workingDirectory": "$(ProjectDir)..\\.."
+        },
+        "SkiaSharpGenerator (HarfBuzzSharp)": {
+            "commandName": "Project",
+            "commandLineArgs": "generate --config binding/libHarfBuzzSharp.json --root externals/skia/third_party/externals/harfbuzz --output binding/HarfBuzzSharp/HarfBuzzApi.generated.cs --verbose",
             "workingDirectory": "$(ProjectDir)..\\.."
         }
     }
