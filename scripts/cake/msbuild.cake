@@ -28,6 +28,29 @@ string[] GetNuGetSources()
     return adds.ToArray();
 }
 
+ProcessArgumentBuilder AppendForwardingLogger(ProcessArgumentBuilder args)
+{
+	if (BuildSystem.IsLocalBuild)
+	    return args;
+
+	// URL copied from https://github.com/microsoft/azure-pipelines-tasks/blob/7faf3e8146d43753b9f360edfae3d2e75ad78c76/Tasks/DotNetCoreCLIV2/make.json
+	var loggerUrl = "https://vstsagenttools.blob.core.windows.net/tools/msbuildlogger/3/msbuildlogger.zip";
+
+	var AGENT_TEMPDIRECTORY = (DirectoryPath)EnvironmentVariable("AGENT_TEMPDIRECTORY");
+	var loggerDir = AGENT_TEMPDIRECTORY.Combine("msbuildlogger");
+	EnsureDirectoryExists(loggerDir);
+
+	var loggerZip = loggerDir.CombineWithFilePath("msbuildlogger.zip");
+	if (!FileExists(loggerZip))
+		DownloadFile(loggerUrl, loggerZip);
+
+	var loggerDll = loggerDir.CombineWithFilePath("Microsoft.TeamFoundation.DistributedTask.MSBuild.Logger.dll");
+	if (!FileExists(loggerDll))
+		Unzip(loggerZip, loggerDir);
+
+	return args.Append($"-dl:CentralLogger,\"{loggerDll}\"*ForwardingLogger,\"{loggerDll}\"");
+}
+
 void RunNuGetRestorePackagesConfig(FilePath sln)
 {
     var dir = sln.GetDirectory();
@@ -160,6 +183,51 @@ void RunDotNetBuild(
         }
     }
     c.Sources = GetNuGetSources();
+
+    c.ArgumentCustomization = AppendForwardingLogger;
     
     DotNetBuild(solution.FullPath, c);
+}
+
+void RunDotNetPack(
+    FilePath solution,
+    DirectoryPath outputPath = null,
+    string bl = ".pack",
+    string configuration = null,
+    string additionalArgs = null,
+    Dictionary<string, string> properties = null)
+{
+    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
+
+    var c = new DotNetPackSettings();
+    var msb = new DotNetMSBuildSettings();
+    c.MSBuildSettings = msb;
+
+    c.Configuration = configuration ?? CONFIGURATION;
+    c.Verbosity = DotNetVerbosity.Minimal;
+
+    var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
+    var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + bl + ".binlog");
+    msb.BinaryLogger = new MSBuildBinaryLoggerSettings {
+        Enabled = true,
+        FileName = blPath.FullPath,
+    };
+
+    c.NoBuild = true;
+
+    c.OutputDirectory = outputPath ?? OUTPUT_NUGETS_PATH;
+
+    msb.Properties ["NoDefaultExcludes"] = new [] { "true" };
+
+    if (properties != null) {
+        foreach (var prop in properties) {
+            if (!string.IsNullOrEmpty(prop.Value)) {
+                msb.Properties [prop.Key] = new [] { prop.Value };
+            }
+        }
+    }
+
+    c.ArgumentCustomization = args => AppendForwardingLogger(args).Append(additionalArgs);
+
+    DotNetPack(solution.FullPath, c);
 }
