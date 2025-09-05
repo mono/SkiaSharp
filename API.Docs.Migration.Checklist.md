@@ -812,27 +812,27 @@
   - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.TitlecaseLetter
   - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.Unassigned
   - [x] F:HarfBuzzSharp.UnicodeGeneralCategory.UppercaseLetter
-- [ ] HarfBuzzSharp.Variation
-  - [ ] M:HarfBuzzSharp.Variation.Equals(HarfBuzzSharp.Variation)
-  - [ ] M:HarfBuzzSharp.Variation.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.Variation.GetHashCode
-  - [ ] M:HarfBuzzSharp.Variation.op_Equality(HarfBuzzSharp.Variation,HarfBuzzSharp.Variation)
-  - [ ] M:HarfBuzzSharp.Variation.op_Inequality(HarfBuzzSharp.Variation,HarfBuzzSharp.Variation)
-  - [ ] P:HarfBuzzSharp.Variation.Tag
-  - [ ] P:HarfBuzzSharp.Variation.Value
+- [x] HarfBuzzSharp.Variation
+  - [x] M:HarfBuzzSharp.Variation.Equals(HarfBuzzSharp.Variation)
+  - [x] M:HarfBuzzSharp.Variation.Equals(System.Object)
+  - [x] M:HarfBuzzSharp.Variation.GetHashCode
+  - [x] M:HarfBuzzSharp.Variation.op_Equality(HarfBuzzSharp.Variation,HarfBuzzSharp.Variation)
+  - [x] M:HarfBuzzSharp.Variation.op_Inequality(HarfBuzzSharp.Variation,HarfBuzzSharp.Variation)
+  - [x] P:HarfBuzzSharp.Variation.Tag
+  - [x] P:HarfBuzzSharp.Variation.Value
 - [x] HarfBuzzSharp.VariationGlyphDelegate
 
 ## Namespace HarfBuzzSharp.Internals
 
-- [ ] HarfBuzzSharp.Internals.PlatformConfiguration
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.Is64Bit
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsArm
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsGlibc
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsLinux
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsMac
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsUnix
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsWindows
-  - [ ] P:HarfBuzzSharp.Internals.PlatformConfiguration.LinuxFlavor
+- [x] HarfBuzzSharp.Internals.PlatformConfiguration
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.Is64Bit
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsArm
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsGlibc
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsLinux
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsMac
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsUnix
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.IsWindows
+  - [x] P:HarfBuzzSharp.Internals.PlatformConfiguration.LinuxFlavor
 
 ## Namespace SkiaSharp
 
