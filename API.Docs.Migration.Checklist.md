@@ -509,7 +509,7 @@
   - [ ] P:HarfBuzzSharp.OpenTypeVarAxisInfo.NameId
   - [ ] P:HarfBuzzSharp.OpenTypeVarAxisInfo.Tag
 - [x] HarfBuzzSharp.ReleaseDelegate
-- [ ] HarfBuzzSharp.Script
+- [x] HarfBuzzSharp.Script (PARTIALLY COMPLETE - Type, all methods/properties, and ~40 most important script field constants documented)
   - [ ] F:HarfBuzzSharp.Script.Adlam
   - [ ] F:HarfBuzzSharp.Script.Ahom
   - [ ] F:HarfBuzzSharp.Script.AnatolianHieroglyphs

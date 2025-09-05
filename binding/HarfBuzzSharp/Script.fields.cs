@@ -128,76 +128,220 @@ namespace HarfBuzzSharp
 		/// <remarks></remarks>
 		public static readonly Script Katakana = new Script (new Tag ('K', 'a', 'n', 'a'));
 		// 1.1
+		/// <summary>
+		/// The Lao (Laoo) script typically used with text in the Lao (lo) language originating from Laos.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Lao = new Script (new Tag ('L', 'a', 'o', 'o'));
 		// 1.1
+		/// <summary>
+		/// The Latin (Latn) script typically used with text in the English (en) language originating from United Kingdom.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Latin = new Script (new Tag ('L', 'a', 't', 'n'));
 		// 1.1
+		/// <summary>
+		/// The Malayalam (Mlym) script typically used with text in the Malayalam (ml) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Malayalam = new Script (new Tag ('M', 'l', 'y', 'm'));
 		// 1.1
+		/// <summary>
+		/// The Oriya (Orya) script typically used with text in the Oriya (or) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Oriya = new Script (new Tag ('O', 'r', 'y', 'a'));
 		// 1.1
+		/// <summary>
+		/// The Tamil (Taml) script typically used with text in the Tamil (ta) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Tamil = new Script (new Tag ('T', 'a', 'm', 'l'));
 		// 1.1
+		/// <summary>
+		/// The Telugu (Telu) script typically used with text in the Telugu (te) language originating from India.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Telugu = new Script (new Tag ('T', 'e', 'l', 'u'));
 		// 1.1
+		/// <summary>
+		/// The Thai (Thai) script typically used with text in the Thai (th) language originating from Thailand.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Thai = new Script (new Tag ('T', 'h', 'a', 'i'));
 		// 2.0
+		/// <summary>
+		/// The Tibetan (Tibt) script typically used with text in the Tibetan (bo) language originating from China.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Tibetan = new Script (new Tag ('T', 'i', 'b', 't'));
 		// 3.0
+		/// <summary>
+		/// The Bopomofo (Bopo) script typically used with text in the Chinese (zh) language originating from China.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Bopomofo = new Script (new Tag ('B', 'o', 'p', 'o'));
 		// 3.0
+		/// <summary>
+		/// The Braille (Brai) script typically used with text in the Braille language originating from France.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Braille = new Script (new Tag ('B', 'r', 'a', 'i'));
 		// 3.0
+		/// <summary>
+		/// The Unified Canadian Aboriginal Syllabics (Cans) script typically used with text in the Cree (cr) language originating from Canada.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script CanadianSyllabics = new Script (new Tag ('C', 'a', 'n', 's'));
 		// 3.0
+		/// <summary>
+		/// The Cherokee (Cher) script typically used with text in the Cherokee (chr) language originating from United States.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Cherokee = new Script (new Tag ('C', 'h', 'e', 'r'));
 		// 3.0
+		/// <summary>
+		/// The Ethiopic (Ethi) script typically used with text in the Amharic (am) language originating from Ethiopia.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Ethiopic = new Script (new Tag ('E', 't', 'h', 'i'));
 		// 3.0
+		/// <summary>
+		/// The Khmer (Khmr) script typically used with text in the Khmer (km) language originating from Cambodia.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Khmer = new Script (new Tag ('K', 'h', 'm', 'r'));
 		// 3.0
+		/// <summary>
+		/// The Mongolian (Mong) script typically used with text in the Mongolian (mn) language originating from Mongolia.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Mongolian = new Script (new Tag ('M', 'o', 'n', 'g'));
 		// 3.0
+		/// <summary>
+		/// The Myanmar (Mymr) script typically used with text in the Myanmar (my) language originating from Myanmar.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Myanmar = new Script (new Tag ('M', 'y', 'm', 'r'));
 		// 3.0
+		/// <summary>
+		/// The Ogham (Ogam) script typically used with text in the Old Irish (sga) language originating from Ireland.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Ogham = new Script (new Tag ('O', 'g', 'a', 'm'));
 		// 3.0
+		/// <summary>
+		/// The Runic (Runr) script typically used with text in the Old Norse (non) language originating from Sweden.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Runic = new Script (new Tag ('R', 'u', 'n', 'r'));
 		// 3.0
+		/// <summary>
+		/// The Sinhala (Sinh) script typically used with text in the Sinhala (si) language originating from Sri Lanka.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Sinhala = new Script (new Tag ('S', 'i', 'n', 'h'));
 		// 3.0
+		/// <summary>
+		/// The Syriac (Syrc) script typically used with text in the Syriac (syr) language originating from Syria.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Syriac = new Script (new Tag ('S', 'y', 'r', 'c'));
 		// 3.0
+		/// <summary>
+		/// The Thaana (Thaa) script typically used with text in the Divehi (dv) language originating from Maldives.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Thaana = new Script (new Tag ('T', 'h', 'a', 'a'));
 		// 3.0
+		/// <summary>
+		/// The Yi (Yiii) script typically used with text in the Sichuan Yi (ii) language originating from China.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Yi = new Script (new Tag ('Y', 'i', 'i', 'i'));
 		// 3.1
+		/// <summary>
+		/// The Deseret (Dsrt) script typically used with text in the English (en) language originating from United States.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Deseret = new Script (new Tag ('D', 's', 'r', 't'));
 		// 3.1
+		/// <summary>
+		/// The Gothic (Goth) script typically used with text in the Gothic (got) language originating from Ukraine.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Gothic = new Script (new Tag ('G', 'o', 't', 'h'));
 		// 3.1
+		/// <summary>
+		/// The Old Italic (Ital) script typically used with text in the Etruscan (ett) language originating from Italy.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script OldItalic = new Script (new Tag ('I', 't', 'a', 'l'));
 		// 3.2
+		/// <summary>
+		/// The Buhid (Buhd) script typically used with text in the Buhid (bku) language originating from Philippines.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Buhid = new Script (new Tag ('B', 'u', 'h', 'd'));
 		// 3.2
+		/// <summary>
+		/// The Hanunoo (Hano) script typically used with text in the Hanunoo (hnn) language originating from Philippines.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Hanunoo = new Script (new Tag ('H', 'a', 'n', 'o'));
 		// 3.2
+		/// <summary>
+		/// The Tagalog (Tglg) script typically used with text in the Filipino (fil) language originating from Philippines.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Tagalog = new Script (new Tag ('T', 'g', 'l', 'g'));
 		// 3.2
+		/// <summary>
+		/// The Tagbanwa (Tagb) script typically used with text in the Tagbanwa (tbw) language originating from Philippines.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Tagbanwa = new Script (new Tag ('T', 'a', 'g', 'b'));
 		// 4.0
+		/// <summary>
+		/// The Cypriot (Cprt) script typically used with text in the Ancient Greek (grc) language originating from Cyprus.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Cypriot = new Script (new Tag ('C', 'p', 'r', 't'));
 		// 4.0
+		/// <summary>
+		/// The Limbu (Limb) script typically used with text in the Limbu (lif) language originating from Nepal.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Limbu = new Script (new Tag ('L', 'i', 'm', 'b'));
 		// 4.0
+		/// <summary>
+		/// The Linear B (Linb) script typically used with text in the Mycenaean Greek (gmy) language originating from Greece.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script LinearB = new Script (new Tag ('L', 'i', 'n', 'b'));
 		// 4.0
+		/// <summary>
+		/// The Osmanya (Osma) script typically used with text in the Somali (so) language originating from Somalia.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Osmanya = new Script (new Tag ('O', 's', 'm', 'a'));
 		// 4.0
+		/// <summary>
+		/// The Shavian (Shaw) script typically used with text in the English (en) language originating from United Kingdom.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Shavian = new Script (new Tag ('S', 'h', 'a', 'w'));
 		// 4.0
+		/// <summary>
+		/// The Tai Le (Tale) script typically used with text in the Tai Nüa (tdd) language originating from China.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script TaiLe = new Script (new Tag ('T', 'a', 'l', 'e'));
 		// 4.0
+		/// <summary>
+		/// The Ugaritic (Ugar) script typically used with text in the Ugaritic (uga) language originating from Syria.
+		/// </summary>
+		/// <remarks></remarks>
 		public static readonly Script Ugaritic = new Script (new Tag ('U', 'g', 'a', 'r'));
 		// 4.1
 		public static readonly Script Buginese = new Script (new Tag ('B', 'u', 'g', 'i'));
