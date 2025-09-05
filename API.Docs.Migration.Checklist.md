@@ -696,91 +696,91 @@
   - [x] M:HarfBuzzSharp.Tag.op_Implicit(System.UInt32)~HarfBuzzSharp.Tag
   - [x] M:HarfBuzzSharp.Tag.Parse(System.String)
   - [x] M:HarfBuzzSharp.Tag.ToString
-- [ ] HarfBuzzSharp.UnicodeCombiningClass
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Above
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.AboveLeft
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.AboveRight
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedAbove
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedAboveRight
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedBelow
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedBelowLeft
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Below
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.BelowLeft
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.BelowRight
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC10
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC103
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC107
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC11
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC118
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC12
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC122
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC129
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC13
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC130
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC133
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC14
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC15
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC16
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC17
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC18
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC19
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC20
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC21
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC22
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC23
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC24
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC25
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC26
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC27
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC28
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC29
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC30
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC31
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC32
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC33
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC34
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC35
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC36
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC84
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.CCC91
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.DoubleAbove
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.DoubleBelow
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Invalid
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.IotaSubscript
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.KanaVoicing
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Left
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.NotReordered
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Nukta
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Overlay
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Right
-  - [ ] F:HarfBuzzSharp.UnicodeCombiningClass.Virama
-- [ ] HarfBuzzSharp.UnicodeFunctions
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.#ctor(HarfBuzzSharp.UnicodeFunctions)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.Dispose(System.Boolean)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.DisposeHandler
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetCombiningClass(System.Int32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetCombiningClass(System.UInt32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetGeneralCategory(System.Int32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetGeneralCategory(System.UInt32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetMirroring(System.Int32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetMirroring(System.UInt32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetScript(System.Int32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.GetScript(System.UInt32)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.MakeImmutable
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.SetCombiningClassDelegate(HarfBuzzSharp.CombiningClassDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.SetComposeDelegate(HarfBuzzSharp.ComposeDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.SetDecomposeDelegate(HarfBuzzSharp.DecomposeDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.SetGeneralCategoryDelegate(HarfBuzzSharp.GeneralCategoryDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.SetMirroringDelegate(HarfBuzzSharp.MirroringDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.SetScriptDelegate(HarfBuzzSharp.ScriptDelegate,HarfBuzzSharp.ReleaseDelegate)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.TryCompose(System.Int32,System.Int32,System.Int32@)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.TryCompose(System.UInt32,System.UInt32,System.UInt32@)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.TryDecompose(System.Int32,System.Int32@,System.Int32@)
-  - [ ] M:HarfBuzzSharp.UnicodeFunctions.TryDecompose(System.UInt32,System.UInt32@,System.UInt32@)
-  - [ ] P:HarfBuzzSharp.UnicodeFunctions.Default
-  - [ ] P:HarfBuzzSharp.UnicodeFunctions.Empty
-  - [ ] P:HarfBuzzSharp.UnicodeFunctions.IsImmutable
-  - [ ] P:HarfBuzzSharp.UnicodeFunctions.Parent
+- [x] HarfBuzzSharp.UnicodeCombiningClass
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Above
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.AboveLeft
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.AboveRight
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedAbove
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedAboveRight
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedBelow
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.AttachedBelowLeft
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Below
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.BelowLeft
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.BelowRight
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC10
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC103
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC107
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC11
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC118
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC12
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC122
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC129
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC13
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC130
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC133
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC14
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC15
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC16
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC17
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC18
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC19
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC20
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC21
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC22
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC23
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC24
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC25
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC26
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC27
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC28
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC29
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC30
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC31
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC32
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC33
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC34
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC35
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC36
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC84
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.CCC91
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.DoubleAbove
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.DoubleBelow
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Invalid
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.IotaSubscript
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.KanaVoicing
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Left
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.NotReordered
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Nukta
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Overlay
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Right
+  - [x] F:HarfBuzzSharp.UnicodeCombiningClass.Virama
+- [x] HarfBuzzSharp.UnicodeFunctions
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.#ctor(HarfBuzzSharp.UnicodeFunctions)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.Dispose(System.Boolean)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.DisposeHandler
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetCombiningClass(System.Int32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetCombiningClass(System.UInt32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetGeneralCategory(System.Int32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetGeneralCategory(System.UInt32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetMirroring(System.Int32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetMirroring(System.UInt32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetScript(System.Int32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.GetScript(System.UInt32)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.MakeImmutable
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.SetCombiningClassDelegate(HarfBuzzSharp.CombiningClassDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.SetComposeDelegate(HarfBuzzSharp.ComposeDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.SetDecomposeDelegate(HarfBuzzSharp.DecomposeDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.SetGeneralCategoryDelegate(HarfBuzzSharp.GeneralCategoryDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.SetMirroringDelegate(HarfBuzzSharp.MirroringDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.SetScriptDelegate(HarfBuzzSharp.ScriptDelegate,HarfBuzzSharp.ReleaseDelegate)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.TryCompose(System.Int32,System.Int32,System.Int32@)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.TryCompose(System.UInt32,System.UInt32,System.UInt32@)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.TryDecompose(System.Int32,System.Int32@,System.Int32@)
+  - [x] M:HarfBuzzSharp.UnicodeFunctions.TryDecompose(System.UInt32,System.UInt32@,System.UInt32@)
+  - [x] P:HarfBuzzSharp.UnicodeFunctions.Default
+  - [x] P:HarfBuzzSharp.UnicodeFunctions.Empty
+  - [x] P:HarfBuzzSharp.UnicodeFunctions.IsImmutable
+  - [x] P:HarfBuzzSharp.UnicodeFunctions.Parent
 - [ ] HarfBuzzSharp.UnicodeGeneralCategory
   - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.ClosePunctuation
   - [ ] F:HarfBuzzSharp.UnicodeGeneralCategory.ConnectPunctuation
