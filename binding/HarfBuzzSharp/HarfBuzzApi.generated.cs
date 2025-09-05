@@ -7152,10 +7152,19 @@ namespace HarfBuzzSharp {
 	}
 
 	// hb_variation_t
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <remarks>To be added.</remarks>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct Variation : IEquatable<Variation> {
 		// public hb_tag_t tag
 		private UInt32 tag;
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public UInt32 Tag {
 			readonly get => tag;
 			set => tag = value;
@@ -7163,25 +7172,61 @@ namespace HarfBuzzSharp {
 
 		// public float value
 		private Single value;
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public Single Value {
 			readonly get => this.value;
 			set => this.value = value;
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="obj">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public readonly bool Equals (Variation obj) =>
 #pragma warning disable CS8909
 			tag == obj.tag && value == obj.value;
 #pragma warning restore CS8909
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="obj">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public readonly override bool Equals (object obj) =>
 			obj is Variation f && Equals (f);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="left">To be added.</param>
+		/// <param name="right">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public static bool operator == (Variation left, Variation right) =>
 			left.Equals (right);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <param name="left">To be added.</param>
+		/// <param name="right">To be added.</param>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public static bool operator != (Variation left, Variation right) =>
 			!left.Equals (right);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <returns>To be added.</returns>
+		/// <remarks>To be added.</remarks>
 		public readonly override int GetHashCode ()
 		{
 			var hash = new HashCode ();

@@ -14,12 +14,26 @@ namespace HarfBuzzSharp.Internals
 namespace SkiaSharp.Internals
 #endif
 {
+	/// <summary>
+	/// To be added.
+	/// </summary>
+	/// <remarks>To be added.</remarks>
 	public static class PlatformConfiguration
 	{
 		private const string LibCLibrary = "libc";
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool IsUnix => IsMac || IsLinux;
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool IsWindows {
 #if WINDOWS_UWP
 			get => true;
@@ -30,6 +44,11 @@ namespace SkiaSharp.Internals
 #endif
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool IsMac {
 #if WINDOWS_UWP
 			get => false;
@@ -40,6 +59,11 @@ namespace SkiaSharp.Internals
 #endif
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool IsLinux {
 #if WINDOWS_UWP
 			get => false;
@@ -50,6 +74,11 @@ namespace SkiaSharp.Internals
 #endif
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool IsArm {
 #if WINDOWS_UWP
 			get {
@@ -62,10 +91,20 @@ namespace SkiaSharp.Internals
 #endif
 		}
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool Is64Bit => IntPtr.Size == 8;
 
 		private static string linuxFlavor;
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static string LinuxFlavor
 		{
 			get
@@ -86,10 +125,20 @@ namespace SkiaSharp.Internals
 		}
 
 #if WINDOWS_UWP || __IOS__ || __TVOS__ || __MACOS__ || __MACCATALYST__ || __ANDROID__
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool IsGlibc { get; }
 #else
 		private static readonly Lazy<bool> isGlibcLazy = new Lazy<bool> (IsGlibcImplementation);
 
+		/// <summary>
+		/// To be added.
+		/// </summary>
+		/// <value>To be added.</value>
+		/// <remarks>To be added.</remarks>
 		public static bool IsGlibc => IsLinux && isGlibcLazy.Value;
 
 		private static bool IsGlibcImplementation ()

@@ -509,168 +509,168 @@
   - [ ] P:HarfBuzzSharp.OpenTypeVarAxisInfo.NameId
   - [ ] P:HarfBuzzSharp.OpenTypeVarAxisInfo.Tag
 - [x] HarfBuzzSharp.ReleaseDelegate
-- [x] HarfBuzzSharp.Script (PARTIALLY COMPLETE - Type, all methods/properties, and ~40 most important script field constants documented)
-  - [ ] F:HarfBuzzSharp.Script.Adlam
-  - [ ] F:HarfBuzzSharp.Script.Ahom
-  - [ ] F:HarfBuzzSharp.Script.AnatolianHieroglyphs
-  - [ ] F:HarfBuzzSharp.Script.Arabic
-  - [ ] F:HarfBuzzSharp.Script.Armenian
-  - [ ] F:HarfBuzzSharp.Script.Avestan
-  - [ ] F:HarfBuzzSharp.Script.Balinese
-  - [ ] F:HarfBuzzSharp.Script.Bamum
-  - [ ] F:HarfBuzzSharp.Script.BassaVah
-  - [ ] F:HarfBuzzSharp.Script.Batak
-  - [ ] F:HarfBuzzSharp.Script.Bengali
-  - [ ] F:HarfBuzzSharp.Script.Bhaiksuki
-  - [ ] F:HarfBuzzSharp.Script.Bopomofo
-  - [ ] F:HarfBuzzSharp.Script.Brahmi
-  - [ ] F:HarfBuzzSharp.Script.Braille
-  - [ ] F:HarfBuzzSharp.Script.Buginese
-  - [ ] F:HarfBuzzSharp.Script.Buhid
-  - [ ] F:HarfBuzzSharp.Script.CanadianSyllabics
-  - [ ] F:HarfBuzzSharp.Script.Carian
-  - [ ] F:HarfBuzzSharp.Script.CaucasianAlbanian
-  - [ ] F:HarfBuzzSharp.Script.Chakma
-  - [ ] F:HarfBuzzSharp.Script.Cham
-  - [ ] F:HarfBuzzSharp.Script.Cherokee
-  - [ ] F:HarfBuzzSharp.Script.Common
-  - [ ] F:HarfBuzzSharp.Script.Coptic
-  - [ ] F:HarfBuzzSharp.Script.Cuneiform
-  - [ ] F:HarfBuzzSharp.Script.Cypriot
-  - [ ] F:HarfBuzzSharp.Script.Cyrillic
-  - [ ] F:HarfBuzzSharp.Script.Deseret
-  - [ ] F:HarfBuzzSharp.Script.Devanagari
-  - [ ] F:HarfBuzzSharp.Script.Dogra
-  - [ ] F:HarfBuzzSharp.Script.Duployan
-  - [ ] F:HarfBuzzSharp.Script.EgyptianHieroglyphs
-  - [ ] F:HarfBuzzSharp.Script.Elbasan
-  - [ ] F:HarfBuzzSharp.Script.Ethiopic
-  - [ ] F:HarfBuzzSharp.Script.Georgian
-  - [ ] F:HarfBuzzSharp.Script.Glagolitic
-  - [ ] F:HarfBuzzSharp.Script.Gothic
-  - [ ] F:HarfBuzzSharp.Script.Grantha
-  - [ ] F:HarfBuzzSharp.Script.Greek
-  - [ ] F:HarfBuzzSharp.Script.Gujarati
-  - [ ] F:HarfBuzzSharp.Script.GunjalaGondi
-  - [ ] F:HarfBuzzSharp.Script.Gurmukhi
-  - [ ] F:HarfBuzzSharp.Script.Han
-  - [ ] F:HarfBuzzSharp.Script.Hangul
-  - [ ] F:HarfBuzzSharp.Script.HanifiRohingya
-  - [ ] F:HarfBuzzSharp.Script.Hanunoo
-  - [ ] F:HarfBuzzSharp.Script.Hatran
-  - [ ] F:HarfBuzzSharp.Script.Hebrew
-  - [ ] F:HarfBuzzSharp.Script.Hiragana
-  - [ ] F:HarfBuzzSharp.Script.ImperialAramaic
-  - [ ] F:HarfBuzzSharp.Script.Inherited
-  - [ ] F:HarfBuzzSharp.Script.InscriptionalPahlavi
-  - [ ] F:HarfBuzzSharp.Script.InscriptionalParthian
-  - [ ] F:HarfBuzzSharp.Script.Invalid
-  - [ ] F:HarfBuzzSharp.Script.Javanese
-  - [ ] F:HarfBuzzSharp.Script.Kaithi
-  - [ ] F:HarfBuzzSharp.Script.Kannada
-  - [ ] F:HarfBuzzSharp.Script.Katakana
-  - [ ] F:HarfBuzzSharp.Script.KayahLi
-  - [ ] F:HarfBuzzSharp.Script.Kharoshthi
-  - [ ] F:HarfBuzzSharp.Script.Khmer
-  - [ ] F:HarfBuzzSharp.Script.Khojki
-  - [ ] F:HarfBuzzSharp.Script.Khudawadi
-  - [ ] F:HarfBuzzSharp.Script.Lao
-  - [ ] F:HarfBuzzSharp.Script.Latin
-  - [ ] F:HarfBuzzSharp.Script.Lepcha
-  - [ ] F:HarfBuzzSharp.Script.Limbu
-  - [ ] F:HarfBuzzSharp.Script.LinearA
-  - [ ] F:HarfBuzzSharp.Script.LinearB
-  - [ ] F:HarfBuzzSharp.Script.Lisu
-  - [ ] F:HarfBuzzSharp.Script.Lycian
-  - [ ] F:HarfBuzzSharp.Script.Lydian
-  - [ ] F:HarfBuzzSharp.Script.Mahajani
-  - [ ] F:HarfBuzzSharp.Script.Makasar
-  - [ ] F:HarfBuzzSharp.Script.Malayalam
-  - [ ] F:HarfBuzzSharp.Script.Mandaic
-  - [ ] F:HarfBuzzSharp.Script.Manichaean
-  - [ ] F:HarfBuzzSharp.Script.Marchen
-  - [ ] F:HarfBuzzSharp.Script.MasaramGondi
-  - [ ] F:HarfBuzzSharp.Script.MaxValue
-  - [ ] F:HarfBuzzSharp.Script.MaxValueSigned
-  - [ ] F:HarfBuzzSharp.Script.Medefaidrin
-  - [ ] F:HarfBuzzSharp.Script.MeeteiMayek
-  - [ ] F:HarfBuzzSharp.Script.MendeKikakui
-  - [ ] F:HarfBuzzSharp.Script.MeroiticCursive
-  - [ ] F:HarfBuzzSharp.Script.MeroiticHieroglyphs
-  - [ ] F:HarfBuzzSharp.Script.Miao
-  - [ ] F:HarfBuzzSharp.Script.Modi
-  - [ ] F:HarfBuzzSharp.Script.Mongolian
-  - [ ] F:HarfBuzzSharp.Script.Mro
-  - [ ] F:HarfBuzzSharp.Script.Multani
-  - [ ] F:HarfBuzzSharp.Script.Myanmar
-  - [ ] F:HarfBuzzSharp.Script.Nabataean
-  - [ ] F:HarfBuzzSharp.Script.Newa
-  - [ ] F:HarfBuzzSharp.Script.NewTaiLue
-  - [ ] F:HarfBuzzSharp.Script.Nko
-  - [ ] F:HarfBuzzSharp.Script.Nushu
-  - [ ] F:HarfBuzzSharp.Script.Ogham
-  - [ ] F:HarfBuzzSharp.Script.OlChiki
-  - [ ] F:HarfBuzzSharp.Script.OldHungarian
-  - [ ] F:HarfBuzzSharp.Script.OldItalic
-  - [ ] F:HarfBuzzSharp.Script.OldNorthArabian
-  - [ ] F:HarfBuzzSharp.Script.OldPermic
-  - [ ] F:HarfBuzzSharp.Script.OldPersian
-  - [ ] F:HarfBuzzSharp.Script.OldSogdian
-  - [ ] F:HarfBuzzSharp.Script.OldSouthArabian
-  - [ ] F:HarfBuzzSharp.Script.OldTurkic
-  - [ ] F:HarfBuzzSharp.Script.Oriya
-  - [ ] F:HarfBuzzSharp.Script.Osage
-  - [ ] F:HarfBuzzSharp.Script.Osmanya
-  - [ ] F:HarfBuzzSharp.Script.PahawhHmong
-  - [ ] F:HarfBuzzSharp.Script.Palmyrene
-  - [ ] F:HarfBuzzSharp.Script.PauCinHau
-  - [ ] F:HarfBuzzSharp.Script.PhagsPa
-  - [ ] F:HarfBuzzSharp.Script.Phoenician
-  - [ ] F:HarfBuzzSharp.Script.PsalterPahlavi
-  - [ ] F:HarfBuzzSharp.Script.Rejang
-  - [ ] F:HarfBuzzSharp.Script.Runic
-  - [ ] F:HarfBuzzSharp.Script.Samaritan
-  - [ ] F:HarfBuzzSharp.Script.Saurashtra
-  - [ ] F:HarfBuzzSharp.Script.Sharada
-  - [ ] F:HarfBuzzSharp.Script.Shavian
-  - [ ] F:HarfBuzzSharp.Script.Siddham
-  - [ ] F:HarfBuzzSharp.Script.Signwriting
-  - [ ] F:HarfBuzzSharp.Script.Sinhala
-  - [ ] F:HarfBuzzSharp.Script.Sogdian
-  - [ ] F:HarfBuzzSharp.Script.SoraSompeng
-  - [ ] F:HarfBuzzSharp.Script.Soyombo
-  - [ ] F:HarfBuzzSharp.Script.Sundanese
-  - [ ] F:HarfBuzzSharp.Script.SylotiNagri
-  - [ ] F:HarfBuzzSharp.Script.Syriac
-  - [ ] F:HarfBuzzSharp.Script.Tagalog
-  - [ ] F:HarfBuzzSharp.Script.Tagbanwa
-  - [ ] F:HarfBuzzSharp.Script.TaiLe
-  - [ ] F:HarfBuzzSharp.Script.TaiTham
-  - [ ] F:HarfBuzzSharp.Script.TaiViet
-  - [ ] F:HarfBuzzSharp.Script.Takri
-  - [ ] F:HarfBuzzSharp.Script.Tamil
-  - [ ] F:HarfBuzzSharp.Script.Tangut
-  - [ ] F:HarfBuzzSharp.Script.Telugu
-  - [ ] F:HarfBuzzSharp.Script.Thaana
-  - [ ] F:HarfBuzzSharp.Script.Thai
-  - [ ] F:HarfBuzzSharp.Script.Tibetan
-  - [ ] F:HarfBuzzSharp.Script.Tifinagh
-  - [ ] F:HarfBuzzSharp.Script.Tirhuta
-  - [ ] F:HarfBuzzSharp.Script.Ugaritic
-  - [ ] F:HarfBuzzSharp.Script.Unknown
-  - [ ] F:HarfBuzzSharp.Script.Vai
-  - [ ] F:HarfBuzzSharp.Script.WarangCiti
-  - [ ] F:HarfBuzzSharp.Script.Yi
-  - [ ] F:HarfBuzzSharp.Script.ZanabazarSquare
-  - [ ] M:HarfBuzzSharp.Script.Equals(HarfBuzzSharp.Script)
-  - [ ] M:HarfBuzzSharp.Script.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.Script.GetHashCode
-  - [ ] M:HarfBuzzSharp.Script.op_Implicit(HarfBuzzSharp.Script)~System.UInt32
-  - [ ] M:HarfBuzzSharp.Script.op_Implicit(System.UInt32)~HarfBuzzSharp.Script
-  - [ ] M:HarfBuzzSharp.Script.Parse(System.String)
-  - [ ] M:HarfBuzzSharp.Script.ToString
-  - [ ] M:HarfBuzzSharp.Script.TryParse(System.String,HarfBuzzSharp.Script@)
-  - [ ] P:HarfBuzzSharp.Script.HorizontalDirection
+- [x] HarfBuzzSharp.Script (COMPLETE - Type, all methods/properties, and ALL 150+ script field constants documented)
+  - [x] F:HarfBuzzSharp.Script.Adlam
+  - [x] F:HarfBuzzSharp.Script.Ahom
+  - [x] F:HarfBuzzSharp.Script.AnatolianHieroglyphs
+  - [x] F:HarfBuzzSharp.Script.Arabic
+  - [x] F:HarfBuzzSharp.Script.Armenian
+  - [x] F:HarfBuzzSharp.Script.Avestan
+  - [x] F:HarfBuzzSharp.Script.Balinese
+  - [x] F:HarfBuzzSharp.Script.Bamum
+  - [x] F:HarfBuzzSharp.Script.BassaVah
+  - [x] F:HarfBuzzSharp.Script.Batak
+  - [x] F:HarfBuzzSharp.Script.Bengali
+  - [x] F:HarfBuzzSharp.Script.Bhaiksuki
+  - [x] F:HarfBuzzSharp.Script.Bopomofo
+  - [x] F:HarfBuzzSharp.Script.Brahmi
+  - [x] F:HarfBuzzSharp.Script.Braille
+  - [x] F:HarfBuzzSharp.Script.Buginese
+  - [x] F:HarfBuzzSharp.Script.Buhid
+  - [x] F:HarfBuzzSharp.Script.CanadianSyllabics
+  - [x] F:HarfBuzzSharp.Script.Carian
+  - [x] F:HarfBuzzSharp.Script.CaucasianAlbanian
+  - [x] F:HarfBuzzSharp.Script.Chakma
+  - [x] F:HarfBuzzSharp.Script.Cham
+  - [x] F:HarfBuzzSharp.Script.Cherokee
+  - [x] F:HarfBuzzSharp.Script.Common
+  - [x] F:HarfBuzzSharp.Script.Coptic
+  - [x] F:HarfBuzzSharp.Script.Cuneiform
+  - [x] F:HarfBuzzSharp.Script.Cypriot
+  - [x] F:HarfBuzzSharp.Script.Cyrillic
+  - [x] F:HarfBuzzSharp.Script.Deseret
+  - [x] F:HarfBuzzSharp.Script.Devanagari
+  - [x] F:HarfBuzzSharp.Script.Dogra
+  - [x] F:HarfBuzzSharp.Script.Duployan
+  - [x] F:HarfBuzzSharp.Script.EgyptianHieroglyphs
+  - [x] F:HarfBuzzSharp.Script.Elbasan
+  - [x] F:HarfBuzzSharp.Script.Ethiopic
+  - [x] F:HarfBuzzSharp.Script.Georgian
+  - [x] F:HarfBuzzSharp.Script.Glagolitic
+  - [x] F:HarfBuzzSharp.Script.Gothic
+  - [x] F:HarfBuzzSharp.Script.Grantha
+  - [x] F:HarfBuzzSharp.Script.Greek
+  - [x] F:HarfBuzzSharp.Script.Gujarati
+  - [x] F:HarfBuzzSharp.Script.GunjalaGondi
+  - [x] F:HarfBuzzSharp.Script.Gurmukhi
+  - [x] F:HarfBuzzSharp.Script.Han
+  - [x] F:HarfBuzzSharp.Script.Hangul
+  - [x] F:HarfBuzzSharp.Script.HanifiRohingya
+  - [x] F:HarfBuzzSharp.Script.Hanunoo
+  - [x] F:HarfBuzzSharp.Script.Hatran
+  - [x] F:HarfBuzzSharp.Script.Hebrew
+  - [x] F:HarfBuzzSharp.Script.Hiragana
+  - [x] F:HarfBuzzSharp.Script.ImperialAramaic
+  - [x] F:HarfBuzzSharp.Script.Inherited
+  - [x] F:HarfBuzzSharp.Script.InscriptionalPahlavi
+  - [x] F:HarfBuzzSharp.Script.InscriptionalParthian
+  - [x] F:HarfBuzzSharp.Script.Invalid
+  - [x] F:HarfBuzzSharp.Script.Javanese
+  - [x] F:HarfBuzzSharp.Script.Kaithi
+  - [x] F:HarfBuzzSharp.Script.Kannada
+  - [x] F:HarfBuzzSharp.Script.Katakana
+  - [x] F:HarfBuzzSharp.Script.KayahLi
+  - [x] F:HarfBuzzSharp.Script.Kharoshthi
+  - [x] F:HarfBuzzSharp.Script.Khmer
+  - [x] F:HarfBuzzSharp.Script.Khojki
+  - [x] F:HarfBuzzSharp.Script.Khudawadi
+  - [x] F:HarfBuzzSharp.Script.Lao
+  - [x] F:HarfBuzzSharp.Script.Latin
+  - [x] F:HarfBuzzSharp.Script.Lepcha
+  - [x] F:HarfBuzzSharp.Script.Limbu
+  - [x] F:HarfBuzzSharp.Script.LinearA
+  - [x] F:HarfBuzzSharp.Script.LinearB
+  - [x] F:HarfBuzzSharp.Script.Lisu
+  - [x] F:HarfBuzzSharp.Script.Lycian
+  - [x] F:HarfBuzzSharp.Script.Lydian
+  - [x] F:HarfBuzzSharp.Script.Mahajani
+  - [x] F:HarfBuzzSharp.Script.Makasar
+  - [x] F:HarfBuzzSharp.Script.Malayalam
+  - [x] F:HarfBuzzSharp.Script.Mandaic
+  - [x] F:HarfBuzzSharp.Script.Manichaean
+  - [x] F:HarfBuzzSharp.Script.Marchen
+  - [x] F:HarfBuzzSharp.Script.MasaramGondi
+  - [x] F:HarfBuzzSharp.Script.MaxValue
+  - [x] F:HarfBuzzSharp.Script.MaxValueSigned
+  - [x] F:HarfBuzzSharp.Script.Medefaidrin
+  - [x] F:HarfBuzzSharp.Script.MeeteiMayek
+  - [x] F:HarfBuzzSharp.Script.MendeKikakui
+  - [x] F:HarfBuzzSharp.Script.MeroiticCursive
+  - [x] F:HarfBuzzSharp.Script.MeroiticHieroglyphs
+  - [x] F:HarfBuzzSharp.Script.Miao
+  - [x] F:HarfBuzzSharp.Script.Modi
+  - [x] F:HarfBuzzSharp.Script.Mongolian
+  - [x] F:HarfBuzzSharp.Script.Mro
+  - [x] F:HarfBuzzSharp.Script.Multani
+  - [x] F:HarfBuzzSharp.Script.Myanmar
+  - [x] F:HarfBuzzSharp.Script.Nabataean
+  - [x] F:HarfBuzzSharp.Script.Newa
+  - [x] F:HarfBuzzSharp.Script.NewTaiLue
+  - [x] F:HarfBuzzSharp.Script.Nko
+  - [x] F:HarfBuzzSharp.Script.Nushu
+  - [x] F:HarfBuzzSharp.Script.Ogham
+  - [x] F:HarfBuzzSharp.Script.OlChiki
+  - [x] F:HarfBuzzSharp.Script.OldHungarian
+  - [x] F:HarfBuzzSharp.Script.OldItalic
+  - [x] F:HarfBuzzSharp.Script.OldNorthArabian
+  - [x] F:HarfBuzzSharp.Script.OldPermic
+  - [x] F:HarfBuzzSharp.Script.OldPersian
+  - [x] F:HarfBuzzSharp.Script.OldSogdian
+  - [x] F:HarfBuzzSharp.Script.OldSouthArabian
+  - [x] F:HarfBuzzSharp.Script.OldTurkic
+  - [x] F:HarfBuzzSharp.Script.Oriya
+  - [x] F:HarfBuzzSharp.Script.Osage
+  - [x] F:HarfBuzzSharp.Script.Osmanya
+  - [x] F:HarfBuzzSharp.Script.PahawhHmong
+  - [x] F:HarfBuzzSharp.Script.Palmyrene
+  - [x] F:HarfBuzzSharp.Script.PauCinHau
+  - [x] F:HarfBuzzSharp.Script.PhagsPa
+  - [x] F:HarfBuzzSharp.Script.Phoenician
+  - [x] F:HarfBuzzSharp.Script.PsalterPahlavi
+  - [x] F:HarfBuzzSharp.Script.Rejang
+  - [x] F:HarfBuzzSharp.Script.Runic
+  - [x] F:HarfBuzzSharp.Script.Samaritan
+  - [x] F:HarfBuzzSharp.Script.Saurashtra
+  - [x] F:HarfBuzzSharp.Script.Sharada
+  - [x] F:HarfBuzzSharp.Script.Shavian
+  - [x] F:HarfBuzzSharp.Script.Siddham
+  - [x] F:HarfBuzzSharp.Script.Signwriting
+  - [x] F:HarfBuzzSharp.Script.Sinhala
+  - [x] F:HarfBuzzSharp.Script.Sogdian
+  - [x] F:HarfBuzzSharp.Script.SoraSompeng
+  - [x] F:HarfBuzzSharp.Script.Soyombo
+  - [x] F:HarfBuzzSharp.Script.Sundanese
+  - [x] F:HarfBuzzSharp.Script.SylotiNagri
+  - [x] F:HarfBuzzSharp.Script.Syriac
+  - [x] F:HarfBuzzSharp.Script.Tagalog
+  - [x] F:HarfBuzzSharp.Script.Tagbanwa
+  - [x] F:HarfBuzzSharp.Script.TaiLe
+  - [x] F:HarfBuzzSharp.Script.TaiTham
+  - [x] F:HarfBuzzSharp.Script.TaiViet
+  - [x] F:HarfBuzzSharp.Script.Takri
+  - [x] F:HarfBuzzSharp.Script.Tamil
+  - [x] F:HarfBuzzSharp.Script.Tangut
+  - [x] F:HarfBuzzSharp.Script.Telugu
+  - [x] F:HarfBuzzSharp.Script.Thaana
+  - [x] F:HarfBuzzSharp.Script.Thai
+  - [x] F:HarfBuzzSharp.Script.Tibetan
+  - [x] F:HarfBuzzSharp.Script.Tifinagh
+  - [x] F:HarfBuzzSharp.Script.Tirhuta
+  - [x] F:HarfBuzzSharp.Script.Ugaritic
+  - [x] F:HarfBuzzSharp.Script.Unknown
+  - [x] F:HarfBuzzSharp.Script.Vai
+  - [x] F:HarfBuzzSharp.Script.WarangCiti
+  - [x] F:HarfBuzzSharp.Script.Yi
+  - [x] F:HarfBuzzSharp.Script.ZanabazarSquare
+  - [x] M:HarfBuzzSharp.Script.Equals(HarfBuzzSharp.Script)
+  - [x] M:HarfBuzzSharp.Script.Equals(System.Object)
+  - [x] M:HarfBuzzSharp.Script.GetHashCode
+  - [x] M:HarfBuzzSharp.Script.op_Implicit(HarfBuzzSharp.Script)~System.UInt32
+  - [x] M:HarfBuzzSharp.Script.op_Implicit(System.UInt32)~HarfBuzzSharp.Script
+  - [x] M:HarfBuzzSharp.Script.Parse(System.String)
+  - [x] M:HarfBuzzSharp.Script.ToString
+  - [x] M:HarfBuzzSharp.Script.TryParse(System.String,HarfBuzzSharp.Script@)
+  - [x] P:HarfBuzzSharp.Script.HorizontalDirection
 - [x] HarfBuzzSharp.ScriptDelegate
 - [x] HarfBuzzSharp.SerializeFlag
   - [x] F:HarfBuzzSharp.SerializeFlag.Default
