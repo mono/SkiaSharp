@@ -277,28 +277,28 @@
   - [ ] P:HarfBuzzSharp.GlyphPosition.XOffset - Generated code
   - [ ] P:HarfBuzzSharp.GlyphPosition.YAdvance - Generated code
   - [ ] P:HarfBuzzSharp.GlyphPosition.YOffset - Generated code
-- [ ] HarfBuzzSharp.Language
-  - [ ] M:HarfBuzzSharp.Language.#ctor(System.Globalization.CultureInfo)
-  - [ ] M:HarfBuzzSharp.Language.#ctor(System.String)
-  - [ ] M:HarfBuzzSharp.Language.Equals(System.Object)
-  - [ ] M:HarfBuzzSharp.Language.GetHashCode
-  - [ ] M:HarfBuzzSharp.Language.ToString
-  - [ ] P:HarfBuzzSharp.Language.Default
-  - [ ] P:HarfBuzzSharp.Language.Name
-- [ ] HarfBuzzSharp.MemoryMode
-  - [ ] F:HarfBuzzSharp.MemoryMode.Duplicate
-  - [ ] F:HarfBuzzSharp.MemoryMode.ReadOnly
-  - [ ] F:HarfBuzzSharp.MemoryMode.ReadOnlyMayMakeWriteable
-  - [ ] F:HarfBuzzSharp.MemoryMode.Writeable
-- [ ] HarfBuzzSharp.MirroringDelegate
-- [ ] HarfBuzzSharp.NativeObject
-  - [ ] M:HarfBuzzSharp.NativeObject.Dispose
-  - [ ] M:HarfBuzzSharp.NativeObject.Dispose(System.Boolean)
-  - [ ] M:HarfBuzzSharp.NativeObject.DisposeHandler
-  - [ ] M:HarfBuzzSharp.NativeObject.Finalize
-  - [ ] P:HarfBuzzSharp.NativeObject.Handle
-- [ ] HarfBuzzSharp.NominalGlyphDelegate
-- [ ] HarfBuzzSharp.NominalGlyphsDelegate
+- [x] HarfBuzzSharp.Language
+  - [x] M:HarfBuzzSharp.Language.#ctor(System.Globalization.CultureInfo)
+  - [x] M:HarfBuzzSharp.Language.#ctor(System.String)
+  - [x] M:HarfBuzzSharp.Language.Equals(System.Object)
+  - [x] M:HarfBuzzSharp.Language.GetHashCode
+  - [x] M:HarfBuzzSharp.Language.ToString
+  - [x] P:HarfBuzzSharp.Language.Default
+  - [x] P:HarfBuzzSharp.Language.Name
+- [ ] HarfBuzzSharp.MemoryMode - Generated code: cannot add documentation comments
+  - [ ] F:HarfBuzzSharp.MemoryMode.Duplicate - Generated code
+  - [ ] F:HarfBuzzSharp.MemoryMode.ReadOnly - Generated code
+  - [ ] F:HarfBuzzSharp.MemoryMode.ReadOnlyMayMakeWriteable - Generated code
+  - [ ] F:HarfBuzzSharp.MemoryMode.Writeable - Generated code
+- [x] HarfBuzzSharp.MirroringDelegate
+- [x] HarfBuzzSharp.NativeObject
+  - [x] M:HarfBuzzSharp.NativeObject.Dispose
+  - [x] M:HarfBuzzSharp.NativeObject.Dispose(System.Boolean)
+  - [x] M:HarfBuzzSharp.NativeObject.DisposeHandler
+  - [x] M:HarfBuzzSharp.NativeObject.Finalize
+  - [x] P:HarfBuzzSharp.NativeObject.Handle
+- [x] HarfBuzzSharp.NominalGlyphDelegate
+- [x] HarfBuzzSharp.NominalGlyphsDelegate
 - [ ] HarfBuzzSharp.OpenTypeColorLayer
   - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.Equals(HarfBuzzSharp.OpenTypeColorLayer)
   - [ ] M:HarfBuzzSharp.OpenTypeColorLayer.Equals(System.Object)
