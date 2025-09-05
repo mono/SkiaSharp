@@ -43,7 +43,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![SKSurface](~/images/surface-rects.png "SKSurface")
+	/// ![SKSurface](~/docs-images/surface-rects.png "SKSurface")
 	/// </remarks>
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{

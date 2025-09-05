@@ -42,7 +42,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Linear Gradient](~/images/linear.png "Linear Gradient")
+	/// ![Linear Gradient](~/docs-images/linear.png "Linear Gradient")
 	/// ### Radial Gradient Shader Example
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -68,7 +68,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Radial Gradient](~/images/radial.png "Radial Gradient")
+	/// ![Radial Gradient](~/docs-images/radial.png "Radial Gradient")
 	/// ### Two-point Conical Gradient Shader Example
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -96,7 +96,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Two-point Conical Gradient](~/images/twopoint.png "Two-point Conical Gradient")
+	/// ![Two-point Conical Gradient](~/docs-images/twopoint.png "Two-point Conical Gradient")
 	/// ### Sweep Gradient Shader Example
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -122,7 +122,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Sweep Gradient](~/images/sweep.png "Sweep Gradient")
+	/// ![Sweep Gradient](~/docs-images/sweep.png "Sweep Gradient")
 	/// ### Fractal Perlin Noise Shader Example
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -139,7 +139,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Fractal Perlin Noise](~/images/fractal-perlin-noise.png "Fractal Perlin Noise")
+	/// ![Fractal Perlin Noise](~/docs-images/fractal-perlin-noise.png "Fractal Perlin Noise")
 	/// ### Perlin Noise Turbulence Shader Example
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -156,7 +156,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Fractal Perlin Noise](~/images/perlin-noise-turbulence.png "Fractal Perlin Noise")
+	/// ![Fractal Perlin Noise](~/docs-images/perlin-noise-turbulence.png "Fractal Perlin Noise")
 	/// ### Compose Shader Example
 	/// ```csharp
 	/// var info = new SKImageInfo(256, 256);
@@ -183,7 +183,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![Compose Shader](~/images/compose.png "Compose Shader")
+	/// ![Compose Shader](~/docs-images/compose.png "Compose Shader")
 	/// </remarks>
 	public unsafe class SKShader : SKObject, ISKReferenceCounted
 	{

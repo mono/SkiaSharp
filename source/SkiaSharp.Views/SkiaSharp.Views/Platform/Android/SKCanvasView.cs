@@ -155,27 +155,31 @@ namespace SkiaSharp.Views.Android
 		}
 
 		/// <summary>
-		/// Occurs when the the canvas needs to be redrawn.
+		/// Occurs when the canvas needs to be redrawn.
 		/// </summary>
 		/// <remarks>
+		/// <para>
 		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SkiaSharp.Views.Android.SKCanvasView.OnPaintSurface(SkiaSharp.Views.Android.SKPaintSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.Android.SKCanvasView.PaintSurface" />
 		/// event.
-		/// ## Examples
-		/// ```csharp
-		/// SKCanvasView myView = ...;
-		/// myView.PaintSurface += (sender, e) => {
-		/// var surface = e.Surface;
-		/// var surfaceWidth = e.Info.Width;
-		/// var surfaceHeight = e.Info.Height;
-		/// var canvas = surface.Canvas;
-		/// // draw on the canvas
-		/// canvas.Flush();
-		/// };
-		/// ```
+		/// </para>
 		/// </remarks>
+		/// <example>
+		/// <code language="csharp">
+		/// SKCanvasView myView = ...;
+		/// myView.PaintSurface += (sender, e) => 
+		/// {
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.Info.Width;
+		///     var surfaceHeight = e.Info.Height;
+		///     var canvas = surface.Canvas;
+		/// 
+		///     // draw on the canvas
+		/// };
+		/// </code>
+		/// </example>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)

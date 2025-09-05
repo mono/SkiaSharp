@@ -132,7 +132,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![SKPaint and Text](~/images/SKPaintText.png "SKPaint and Text")
+	/// ![SKPaint and Text](~/docs-images/SKPaintText.png "SKPaint and Text")
 	/// ### Effects Example
 	/// The following example draws using a gradient instead of a single color. To do,
 	/// this a `SKShader` is assigned to the paint. Anything drawn with that paint
@@ -162,7 +162,7 @@ namespace SkiaSharp
 	/// }
 	/// ```
 	/// The example above produces the following:
-	/// ![SKPaint and SKShader](~/images/gradient.png "SKPaint and SKShader")
+	/// ![SKPaint and SKShader](~/docs-images/gradient.png "SKPaint and SKShader")
 	/// </remarks>
 	public unsafe class SKPaint : SKObject, ISKSkipObjectRegistration
 	{
