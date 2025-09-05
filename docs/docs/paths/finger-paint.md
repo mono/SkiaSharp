@@ -1,13 +1,13 @@
 ---
 title: "Finger Painting in SkiaSharp"
-description: "This article explains how to use your fingers to paint on the SkiaSharp canvas in a Xamarin.Forms application, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to use your fingers to paint on the SkiaSharp canvas in a .NET MAUI application, and demonstrates this with sample code."
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 56929D74-8F2C-44C6-90E6-3FBABCDC0A4B
 author: davidbritch
 ms.author: dabritch
 ms.date: 04/05/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Finger Painting in SkiaSharp
@@ -18,7 +18,7 @@ An `SKPath` object can be continually updated and displayed. This feature allows
 
 ![An exercise in finger painting](finger-paint-images/fingerpaintsample.png)
 
-The touch support in Xamarin.Forms does not allow tracking individual fingers on the screen, so a Xamarin.Forms touch-tracking effect has been developed to provide additional touch support. This effect is described in the article [**Invoking Events from Effects**](~/xamarin-forms/app-fundamentals/effects/touch-tracking.md). The sample program includes two pages that use SkiaSharp, including a finger-painting program.
+The touch support in .NET MAUI does not allow tracking individual fingers on the screen, so a .NET MAUI touch-tracking effect has been developed to provide additional touch support. This effect can provide additional touch support for advanced scenarios. The sample program includes two pages that use SkiaSharp, including a finger-painting program.
 
 The sample solution includes this touch-tracking event. The .NET Standard library project includes the `TouchEffect` class, the `TouchActionType` enumeration, the `TouchActionEventHandler` delegate, and the `TouchActionEventArgs` class. Each of the platform projects includes a `TouchEffect` class for that platform; the iOS project also contains a `TouchRecognizer` class.
 
@@ -29,7 +29,7 @@ The [**FingerPaintPage.xaml**](https://github.com/xamarin/xamarin-forms-samples/
 ```xaml
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Paths.FingerPaintPage"
              Title="Finger Paint">
@@ -130,7 +130,7 @@ public partial class FingerPaintPage : ContentPage
 }
 ```
 
-The points accompanying the touch-tracking events are Xamarin.Forms coordinates; these must be converted to SkiaSharp coordinates, which are pixels. That's the purpose of the `ConvertToPixel` method.
+The points accompanying the touch-tracking events are .NET MAUI coordinates; these must be converted to SkiaSharp coordinates, which are pixels. That's the purpose of the `ConvertToPixel` method.
 
 The `PaintSurface` handler then simply renders both collections of paths. The earlier completed paths appear underneath the paths in progress:
 

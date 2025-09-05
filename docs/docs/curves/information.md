@@ -1,13 +1,13 @@
 ---
 title: "Path Information and Enumeration"
 description: "This article explains how to get information about SkiaSharp paths and enumerate the contents, and demonstrates this with sample code."
-ms.service: xamarin
+ms.service: dotnet-maui
 ms.assetid: 8E8C5C6A-F324-4155-8652-7A77D231B3E5
-ms.subservice: xamarin-skiasharp
+ms.subservice: skiasharp
 author: davidbritch
 ms.author: dabritch
 ms.date: 09/12/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Path Information and Enumeration
@@ -34,7 +34,7 @@ This class is demonstrated in the **Path Length** sample, which is based on the 
 <local:InteractivePage xmlns="http://xamarin.com/schemas/2014/forms"
                        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                        xmlns:local="clr-namespace:SkiaSharpFormsDemos"
-                       xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+                       xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
                        xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="SkiaSharpFormsDemos.Curves.PathLengthPage"
                        Title="Path Length">

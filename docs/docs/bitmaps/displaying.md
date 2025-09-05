@@ -1,13 +1,13 @@
 ---
 title: "Displaying SkiaSharp bitmaps"
 description: "Learn how to display SkiaSharp bitmaps in pixel sizes and expanded to fill rectangles while preserving the aspect ratio."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 8E074F8D-4715-4146-8CC0-FD7A8290EDE9
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/17/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Displaying SkiaSharp bitmaps
@@ -313,7 +313,7 @@ The bitmap's aspect ratio is preserved but areas on the left and right of the bi
 
 ## A versatile bitmap display function
 
-XAML-based programming environments (such as UWP and Xamarin.Forms) have a facility to expand or shrink the size of bitmaps while preserving their aspect ratios. Although SkiaSharp does not include this feature, you can implement it yourself.
+XAML-based programming environments (such as WinUI and .NET MAUI) have a facility to expand or shrink the size of bitmaps while preserving their aspect ratios. Although SkiaSharp does not include this feature, you can implement it yourself.
 
 The `BitmapExtensions` class included in the sample application shows how. The class defines two new `DrawBitmap` methods that perform the aspect ratio calculation. These new methods are extension methods of `SKCanvas`.
 
@@ -331,7 +331,7 @@ public enum BitmapStretch
 }
 ```
 
-The `None`, `Fill`, `Uniform`, and `UniformToFill` members are the same as those in the UWP [`Stretch`](/uwp/api/Windows.UI.Xaml.Media.Stretch) enumeration. The similar Xamarin.Forms [`Aspect`](xref:Xamarin.Forms.Aspect) enumeration defines members `Fill`, `AspectFit`, and `AspectFill`.
+The `None`, `Fill`, `Uniform`, and `UniformToFill` members are the same as those in the WinUI [`Stretch`](/windows/windows-app-sdk/api/winrt/microsoft.ui.xaml.media.stretch) enumeration. The similar .NET MAUI [`Aspect`](xref:Microsoft.Maui.Aspect) enumeration defines members `Fill`, `AspectFit`, and `AspectFill`.
 
 The **Uniform Scaling** page shown above centers the bitmap within the rectangle, but you might want other options, such as positioning the bitmap at the left or right side of the rectangle, or the top or bottom. That's the purpose of the `BitmapAlignment` enumeration:
 
@@ -489,7 +489,7 @@ The first of these two new `DrawBitmap` methods is demonstrated in the **Scaling
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:SkiaSharpFormsDemos"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Bitmaps.ScalingModesPage"
              Title="Scaling Modes">
 

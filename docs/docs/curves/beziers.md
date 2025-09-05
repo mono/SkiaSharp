@@ -1,13 +1,13 @@
 ---
 title: "Three Types of Bézier Curves"
-description: "This article explains how to use SkiaSharp to render cubic, quadratic, and conic Bézier curves in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to use SkiaSharp to render cubic, quadratic, and conic Bézier curves in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 8FE0F6DC-16BC-435F-9626-DD1790C0145A
 author: davidbritch
 ms.author: dabritch
 ms.date: 05/25/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Three Types of Bézier Curves

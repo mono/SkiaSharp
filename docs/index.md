@@ -1,32 +1,32 @@
 ---
 title: "Overview"
-description: "SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. This guide explains how to use SkiaSharp for 2D graphics in your Xamarin.Forms applications."
-ms.service: xamarin
+description: "SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. This guide explains how to use SkiaSharp for 2D graphics in your .NET MAUI applications."
+ms.service: dotnet-maui
 ms.assetid: 2C348BEA-81DF-4794-8857-EB1DFF5E11DB
 author: davidbritch
 ms.author: dabritch
 ms.date: 09/11/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
-# SkiaSharp Graphics in Xamarin.Forms
+# SkiaSharp Graphics in .NET MAUI
 
-_Use SkiaSharp for 2D graphics in your Xamarin.Forms applications_
+_Use SkiaSharp for 2D graphics in your .NET MAUI applications_
 
-SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. You can use SkiaSharp in your Xamarin.Forms applications to draw 2D vector graphics, bitmaps, and text.
+SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. You can use SkiaSharp in your .NET MAUI applications to draw 2D vector graphics, bitmaps, and text.
 
-This guide assumes that you are familiar with Xamarin.Forms programming.
+This guide assumes that you are familiar with .NET MAUI programming.
 
 ## SkiaSharp Preliminaries
 
-SkiaSharp for Xamarin.Forms is packaged as a NuGet package. After you've created a Xamarin.Forms solution in Visual Studio or Visual Studio for Mac, you can use the NuGet package manager to search for the **SkiaSharp.Views.Forms** package and add it to your solution. If you check the **References** section of each project after adding SkiaSharp, you can see that various **SkiaSharp** libraries have been added to each of the projects in the solution.
+SkiaSharp for .NET MAUI is packaged as a NuGet package. After you've created a .NET MAUI solution in Visual Studio or Visual Studio for Mac, you can use the NuGet package manager to search for the **SkiaSharp.Views.Maui.Controls** package and add it to your solution. If you check the **References** section of your project after adding SkiaSharp, you can see that various **SkiaSharp** libraries have been added to your project.
 
-If your Xamarin.Forms application targets iOS, edit its **Info.plist** file to change the minimum deployment target to iOS 8.0.
+If your .NET MAUI application targets iOS, make sure your project targets iOS 11.0 or later as the minimum deployment target.
 
-In any C# page that uses SkiaSharp you'll want to include a `using` directive for the [`SkiaSharp`](xref:SkiaSharp) namespace, which encompasses all the SkiaSharp classes, structures, and enumerations that you'll use in your graphics programming. You'll also want a `using` directive for the [`SkiaSharp.Views.Forms`](xref:SkiaSharp.Views.Forms) namespace for the classes specific to Xamarin.Forms. This is a much smaller namespace, with the most important class being [`SKCanvasView`](xref:SkiaSharp.Views.Forms.SKCanvasView). This class derives from the Xamarin.Forms `View` class and hosts your SkiaSharp graphics output.
+In any C# page that uses SkiaSharp you'll want to include a `using` directive for the [`SkiaSharp`](xref:SkiaSharp) namespace, which encompasses all the SkiaSharp classes, structures, and enumerations that you'll use in your graphics programming. You'll also want a `using` directive for the [`SkiaSharp.Views.Maui.Controls`](xref:SkiaSharp.Views.Maui.Controls) namespace for the classes specific to .NET MAUI. This is a much smaller namespace, with the most important class being [`SKCanvasView`](xref:SkiaSharp.Views.Maui.Controls.SKCanvasView). This class derives from the .NET MAUI `View` class and hosts your SkiaSharp graphics output.
 
 > [!IMPORTANT]
-> The `SkiaSharp.Views.Forms` namespace also contains an `SKGLView` class that derives from `View` but uses OpenGL for rendering graphics. For purposes of simplicity, this guide restricts itself to `SKCanvasView`, but using `SKGLView` instead is quite similar.
+> The `SkiaSharp.Views.Maui.Controls` namespace also contains an `SKGLView` class that derives from `View` but uses OpenGL for rendering graphics. For purposes of simplicity, this guide restricts itself to `SKCanvasView`, but using `SKGLView` instead is quite similar.
 
 ## [SkiaSharp Drawing Basics](docs/basics/index.md)
 

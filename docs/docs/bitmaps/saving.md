@@ -1,13 +1,13 @@
 ---
 title: "Saving SkiaSharp bitmaps to files"
 description: "Explore the various file formats supported by SkiaSharp for saving bitmaps in the user's photo library."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 2D696CB6-B31B-42BC-8D3B-11D63B1E7D9C
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/10/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Saving SkiaSharp bitmaps to files
@@ -60,7 +60,7 @@ When you encode an `SKBitmap` object into a particular file format, generally yo
 
 Saving to a file in application local storage is quite easy because you can use standard `System.IO` classes and methods for this task. This technique is demonstrated in the article [**Animating SkiaSharp Bitmaps**](animating.md#bitmap-animation) in connection with animating a series of bitmaps of the Mandelbrot set.
 
-If you want the file to be shared by other applications, it must be saved to the user's photo library. This task requires platform-specific code and the use of the Xamarin.Forms [`DependencyService`](xref:Xamarin.Forms.DependencyService).
+If you want the file to be shared by other applications, it must be saved to the user's photo library. This task requires platform-specific code and the use of the .NET MAUI dependency injection.
 
 The **SkiaSharpFormsDemo** project in the sample application defines an `IPhotoLibrary` interface used with the `DependencyService` class. This defines the syntax of a `SavePhotoAsync` method:
 
@@ -282,7 +282,7 @@ The XAML file contains an `SKCanvasView` that displays a bitmap, while the rest 
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Bitmaps.SaveFileFormatsPage"
              Title="Save Bitmap Formats">
 
@@ -473,7 +473,7 @@ Much of this program is similar to the original **Finger Paint** program. One en
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Bitmaps.FingerPaintSavePage"
              Title="Finger Paint Save">

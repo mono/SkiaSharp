@@ -1,13 +1,13 @@
 ---
 title: "Animating SkiaSharp bitmaps"
 description: "Learn how to perform bitmap animation by sequentially displaying a series of bitmaps, and rendering animated GIF files."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 97142ADC-E2FD-418C-8A09-9C561AEE5BFD
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/12/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Animating SkiaSharp bitmaps
@@ -126,7 +126,7 @@ The **Mandelbrot Animation** XAML file includes two `Label` views, a `ProgressBa
 ```csharp
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="MandelAnima.MainPage"
              Title="Mandelbrot Animation">
 
@@ -468,7 +468,7 @@ The sample includes an animated GIF resource named **Newtons_cradle_animation_bo
 ```xaml
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Bitmaps.AnimatedGifPage"
              Title="Animated GIF">
 

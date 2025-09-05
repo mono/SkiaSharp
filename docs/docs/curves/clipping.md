@@ -1,13 +1,13 @@
 ---
 title: "Clipping with Paths and Regions"
 description: "This article explains how to use SkiaSharp paths to clip graphics to specific areas, and to create regions, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 8022FBF9-2208-43DB-94D8-0A4E9A5DA07F
 author: davidbritch
 ms.author: dabritch
 ms.date: 06/16/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Clipping with Paths and Regions

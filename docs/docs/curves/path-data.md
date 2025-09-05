@@ -1,13 +1,13 @@
 ---
 title: "SVG Path Data in SkiaSharp"
 description: "This article explains how to define SkiaSharp paths using text strings in the Scalable Vector Graphics format, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 1D53067B-3502-4D74-B89D-7EC496901AE2
 author: davidbritch
 ms.author: dabritch
 ms.date: 05/24/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # SVG Path Data in SkiaSharp
@@ -419,7 +419,7 @@ public class PrettyAnalogClockPage : ContentPage
 }
 ```
 
-Something special is done with the second hand, however. Because the clock is updated every 16 milliseconds, the `Millisecond` property of the `DateTime` value can potentially be used to animate a sweep second hand instead of one that moves in discrete jumps from second to second. But this code does not allow the movement to be smooth. Instead, it uses the Xamarin.Forms [`SpringIn`](xref:Xamarin.Forms.Easing.SpringIn) and [`SpringOut`](xref:Xamarin.Forms.Easing.SpringOut) animation easing functions for a different kind of movement. These easing functions cause the second hand to move in a jerkier manner &mdash; pulling back a little before it moves, and then slightly over-shooting its destination, an effect that unfortunately can't be reproduced in these static screenshots:
+Something special is done with the second hand, however. Because the clock is updated every 16 milliseconds, the `Millisecond` property of the `DateTime` value can potentially be used to animate a sweep second hand instead of one that moves in discrete jumps from second to second. But this code does not allow the movement to be smooth. Instead, it uses the .NET MAUI [`SpringIn`](xref:Microsoft.Maui.Easing.SpringIn) and [`SpringOut`](xref:Microsoft.Maui.Easing.SpringOut) animation easing functions for a different kind of movement. These easing functions cause the second hand to move in a jerkier manner &mdash; pulling back a little before it moves, and then slightly over-shooting its destination, an effect that unfortunately can't be reproduced in these static screenshots:
 
 [![Triple screenshot of the Pretty Analog Clock page](path-data-images/prettyanalogclock-small.png)](path-data-images/prettyanalogclock-large.png#lightbox "Triple screenshot of the Pretty Analog Clock page")
 

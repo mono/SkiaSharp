@@ -1,13 +1,13 @@
 ---
 title: "Cropping SkiaSharp bitmaps"
 description: "Learn how to use SkiaSharp to design a user interface for interactively desribing a cropping rectangle."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 0A79AB27-C69F-4376-8FFE-FF46E4783F30
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/17/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Cropping SkiaSharp bitmaps
@@ -391,7 +391,7 @@ class PhotoCropperCanvasView : SKCanvasView
         }
     }
 
-    SKPoint ConvertToPixel(Xamarin.Forms.Point pt)
+    SKPoint ConvertToPixel(Microsoft.Maui.Graphics.Point pt)
     {
         return new SKPoint((float)(CanvasSize.Width * pt.X / Width),
                            (float)(CanvasSize.Height * pt.Y / Height));
@@ -730,21 +730,21 @@ public partial class PhotoPuzzlePage3 : ContentPage
 
 The **Done** button handler obtains the width and height of the cropped bitmap (these two values should be the same) and then divides it into 15 separate bitmaps, each of which is 1/4 the width and height of the original. (The last of the possible 16 bitmaps is not created.) The `DrawBitmap` method with source and destination rectangle allows a bitmap to be created based on subset of a larger bitmap.
 
-## Converting to Xamarin.Forms bitmaps
+## Converting to .NET MAUI bitmaps
 
-In the `OnDoneButtonClicked` method, the array created for the 15 bitmaps is of type [`ImageSource`](xref:Xamarin.Forms.ImageSource):
+In the `OnDoneButtonClicked` method, the array created for the 15 bitmaps is of type [`ImageSource`](xref:Microsoft.Maui.Controls.ImageSource):
 
 ```csharp
 ImageSource[] imgSources = new ImageSource[15];
 ```
 
-`ImageSource` is the Xamarin.Forms base type that encapsulates a bitmap. Fortunately, SkiaSharp allows converting from SkiaSharp bitmaps to Xamarin.Forms bitmaps. The **SkiaSharp.Views.Forms** assembly defines an [`SKBitmapImageSource`](xref:SkiaSharp.Views.Forms.SKBitmapImageSource) class that derives from `ImageSource` but can be created based on a SkiaSharp `SKBitmap` object. `SKBitmapImageSource` even defines conversions between `SKBitmapImageSource` and `SKBitmap`, and that's how `SKBitmap` objects are stored in an array as Xamarin.Forms bitmaps:
+`ImageSource` is the .NET MAUI base type that encapsulates a bitmap. Fortunately, SkiaSharp allows converting from SkiaSharp bitmaps to .NET MAUI bitmaps. The **SkiaSharp.Views.Maui.Controls** assembly defines an [`SKBitmapImageSource`](xref:SkiaSharp.Views.Maui.Controls.SKBitmapImageSource) class that derives from `ImageSource` but can be created based on a SkiaSharp `SKBitmap` object. `SKBitmapImageSource` even defines conversions between `SKBitmapImageSource` and `SKBitmap`, and that's how `SKBitmap` objects are stored in an array as .NET MAUI bitmaps:
 
 ```csharp
 imgSources[4 * row + col] = (SKBitmapImageSource)bitmap;
 ```
 
-This array of bitmaps is passed as a constructor to `PhotoPuzzlePage4`. That page is entirely Xamarin.Forms and doesn't use any SkiaSharp. It is very similar to [**XamagonXuzzle**](https://github.com/xamarin/xamarin-forms-book-samples/tree/master/Chapter22/XamagonXuzzle), so it won't be described here, but it displays your selected photo divided into 15 square tiles:
+This array of bitmaps is passed as a constructor to `PhotoPuzzlePage4`. That page is entirely .NET MAUI and doesn't use any SkiaSharp. It is very similar to [**XamagonXuzzle**](https://github.com/xamarin/xamarin-forms-book-samples/tree/master/Chapter22/XamagonXuzzle), so it won't be described here, but it displays your selected photo divided into 15 square tiles:
 
 [![Photo Puzzle 1](cropping-images/PhotoPuzzle1.png "Photo Puzzle 1")](cropping-images/PhotoPuzzle1-Large.png#lightbox)
 

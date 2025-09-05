@@ -1,13 +1,13 @@
 ---
 title: "The Path Fill Types"
 description: "This article examines the different effects possible with SkiaSharp path fill types, and demonstrates this with sample code."
-ms.service: xamarin
+ms.service: dotnet-maui
 ms.assetid: 57103A7A-49A2-46AE-894C-7C2664682644
-ms.subservice: xamarin-skiasharp
+ms.subservice: skiasharp
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # The Path Fill Types
@@ -35,7 +35,7 @@ The classic example is a five-pointed star, as demonstrated in the **Five-Pointe
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Paths.FivePointedStarPage"
              Title="Five-Pointed Star">
     <Grid>

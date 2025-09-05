@@ -1,13 +1,13 @@
 ---
 title: "Three Ways to Draw an Arc"
 description: "This article explains how to use SkiaSharp to define arcs in three different ways, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: F1DA55E4-0182-4388-863C-5C340213BF3C
 author: davidbritch
 ms.author: dabritch
 ms.date: 05/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Three Ways to Draw an Arc

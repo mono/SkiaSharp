@@ -1,13 +1,13 @@
 ---
 title: "The Translate Transform"
-description: "This article examines how to use the translate transform to shift SkiaSharp graphics in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article examines how to use the translate transform to shift SkiaSharp graphics in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: BD28ADA1-49F9-44E2-A548-46024A29882F
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # The Translate Transform
@@ -210,7 +210,7 @@ Here's the result:
 
 [![Triple screenshot of the Hendecagram Array page](translate-images/hendecagramarray-small.png)](translate-images/hendecagramarray-large.png#lightbox "Triple screenshot of the Hendecagram Array page")
 
-Animations often involve transforms. The **Hendecagram Animation** page moves the 11-pointed star around in a circle. The [`HendecagramAnimationPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramAnimationPage.cs) class begins with some fields and overrides of the `OnAppearing` and `OnDisappearing` methods to start and stop a Xamarin.Forms timer:
+Animations often involve transforms. The **Hendecagram Animation** page moves the 11-pointed star around in a circle. The [`HendecagramAnimationPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramAnimationPage.cs) class begins with some fields and overrides of the `OnAppearing` and `OnDisappearing` methods to start and stop a .NET MAUI timer:
 
 ```csharp
 public class HendecagramAnimationPage : ContentPage

@@ -1,13 +1,13 @@
 ---
 title: "Bitmap Basics in SkiaSharp"
-description: "This article explains how to load bitmaps in SkiaSharp from various sources and display them in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to load bitmaps in SkiaSharp from various sources and display them in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 32C95DFF-9065-42D7-966C-D3DBD16906B3
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/17/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Bitmap Basics in SkiaSharp
@@ -113,7 +113,7 @@ This `Stream` object can be passed directly to the `SKBitmap.Decode` method.
 
 ## Loading a Bitmap from the Photo Library
 
-It's also possible for the user to load a photo from the device's picture library. This facility is not provided by Xamarin.Forms itself. The job requires a dependency service, such as the one described in the article [Picking a Photo from the Picture Library](~/xamarin-forms/app-fundamentals/dependency-service/photo-picker.md).
+It's also possible for the user to load a photo from the device's picture library. This facility is not provided by .NET MAUI itself. The job requires platform-specific code or a community library.
 
 The **IPhotoLibrary.cs** file in the **SkiaSharpFormsDemos** project and the three **PhotoLibrary.cs** files in the platform projects have been adapted from that article. In addition, the Android **MainActivity.cs** file has been modified as described in the article, and the iOS project has been given permission to access the photo library with two lines towards the bottom of the **info.plist** file.
 

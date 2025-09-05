@@ -1,13 +1,13 @@
 ---
 title: "Touch Manipulations"
 description: "This article explains how to use matrix transforms to implement touch dragging, pinching, and rotation, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: A0B8DD2D-7392-4EC5-BFB0-6209407AD650
 author: davidbritch
 ms.author: dabritch
 ms.date: 09/14/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Touch Manipulations
@@ -18,18 +18,18 @@ In multi-touch environments such as those on mobile devices, users often use the
 
 ![A bitmap subjected to translation, scaling, and rotation](touch-images/touchmanipulationsexample.png)
 
-All the samples shown here use the Xamarin.Forms touch-tracking effect presented in the article [**Invoking Events from Effects**](~/xamarin-forms/app-fundamentals/effects/touch-tracking.md).
+All the samples shown here use the .NET MAUI touch-tracking effect presented in the article [**Invoking Events from Effects**](~/xamarin-forms/app-fundamentals/effects/touch-tracking.md).
 
 ## Dragging and Translation
 
 One of the most important applications of matrix transforms is touch processing. A single [`SKMatrix`](xref:SkiaSharp.SKMatrix) value can consolidate a series of touch operations. 
 
-For single-finger dragging, the `SKMatrix` value performs translation. This is demonstrated in the **Bitmap Dragging** page. The XAML file instantiates an `SKCanvasView` in a Xamarin.Forms `Grid`. A `TouchEffect` object has been added to the `Effects` collection of that `Grid`:
+For single-finger dragging, the `SKMatrix` value performs translation. This is demonstrated in the **Bitmap Dragging** page. The XAML file instantiates an `SKCanvasView` in a .NET MAUI `Grid`. A `TouchEffect` object has been added to the `Effects` collection of that `Grid`:
 
 ```xaml
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Transforms.BitmapDraggingPage"
              Title="Bitmap Dragging">
@@ -87,7 +87,7 @@ public partial class BitmapDraggingPage : ContentPage
 
 Without any further code, the `SKMatrix` value is always the identify matrix, and it would have no effect on the display of the bitmap. The goal of the `OnTouchEffectAction` handler set in the XAML file is to alter the matrix value to reflect touch manipulations.
 
-The `OnTouchEffectAction` handler begins by converting the Xamarin.Forms `Point` value into a SkiaSharp `SKPoint` value. This is a simple matter of scaling based on the `Width` and `Height` properties of `SKCanvasView` (which are device-independent units) and the `CanvasSize` property, which is in units of pixels:
+The `OnTouchEffectAction` handler begins by converting the .NET MAUI `Point` value into a SkiaSharp `SKPoint` value. This is a simple matter of scaling based on the `Width` and `Height` properties of `SKCanvasView` (which are device-independent units) and the `CanvasSize` property, which is in units of pixels:
 
 ```csharp
 public partial class BitmapDraggingPage : ContentPage
@@ -99,7 +99,7 @@ public partial class BitmapDraggingPage : ContentPage
     ···
     void OnTouchEffectAction(object sender, TouchActionEventArgs args)
     {
-        // Convert Xamarin.Forms point to pixels
+        // Convert .NET MAUI point to pixels
         Point pt = args.Location;
         SKPoint point = 
             new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
@@ -166,7 +166,7 @@ public partial class BitmapScalingPage : ContentPage
     ···
     void OnTouchEffectAction(object sender, TouchActionEventArgs args)
     {
-        // Convert Xamarin.Forms point to pixels
+        // Convert .NET MAUI point to pixels
         Point pt = args.Location;
         SKPoint point =
             new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
@@ -278,7 +278,7 @@ public partial class BitmapRotationPage : ContentPage
     ···
     void OnTouchEffectAction(object sender, TouchActionEventArgs args)
     {
-        // Convert Xamarin.Forms point to pixels
+        // Convert .NET MAUI point to pixels
         Point pt = args.Location;
         SKPoint point =
             new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
@@ -422,7 +422,7 @@ The [**TouchManipulationPage.xaml**](https://github.com/xamarin/xamarin-forms-sa
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              xmlns:tt="clr-namespace:TouchTracking"
              xmlns:local="clr-namespace:SkiaSharpFormsDemos.Transforms"
              x:Class="SkiaSharpFormsDemos.Transforms.TouchManipulationPage"
@@ -523,7 +523,7 @@ public partial class TouchManipulationPage : ContentPage
     ...
     void OnTouchEffectAction(object sender, TouchActionEventArgs args)
     {
-        // Convert Xamarin.Forms point to pixels
+        // Convert .NET MAUI point to pixels
         Point pt = args.Location;
         SKPoint point =
             new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
@@ -969,7 +969,7 @@ public partial class BitmapScatterViewPage : ContentPage
     ...
     void OnTouchEffectAction(object sender, TouchActionEventArgs args)
     {
-        // Convert Xamarin.Forms point to pixels
+        // Convert .NET MAUI point to pixels
         Point pt = args.Location;
         SKPoint point =
             new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
@@ -1062,7 +1062,7 @@ The [**SingleFingerCornerScale.xaml**](https://github.com/xamarin/xamarin-forms-
 ```xaml
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Transforms.SingleFingerCornerScalePage"
              Title="Single Finger Corner Scale">
@@ -1141,7 +1141,7 @@ public partial class SingleFingerCornerScalePage : ContentPage
 
     void OnTouchEffectAction(object sender, TouchActionEventArgs args)
     {
-        // Convert Xamarin.Forms point to pixels
+        // Convert .NET MAUI point to pixels
         Point pt = args.Location;
         SKPoint point =
             new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),

@@ -1,13 +1,13 @@
 ---
 title: "Non-Affine Transforms"
 description: "This article explains how to create perspective and taper effects with the third column of the transform matrix, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
+ms.subservice: skiasharp
 ms.assetid: 785F4D13-7430-492E-B24E-3B45C560E9F1
 author: davidbritch
 ms.author: dabritch
 ms.date: 04/14/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+no-loc: [.NET MAUI, Microsoft.Maui]
 ---
 
 # Non-Affine Transforms
@@ -99,7 +99,7 @@ The **Test Perspective** page allows you to experiment with values of `Persp0` a
 ```xaml
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Transforms.TestPerspectivePage"
              Title="Test Perpsective">
     <Grid>
