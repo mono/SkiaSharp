@@ -1219,11 +1219,11 @@
   - [ ] M:SkiaSharp.SKAbstractManagedWStream.OnBytesWritten
   - [ ] M:SkiaSharp.SKAbstractManagedWStream.OnFlush
   - [ ] M:SkiaSharp.SKAbstractManagedWStream.OnWrite(System.IntPtr,System.IntPtr)
-- [ ] SkiaSharp.SKAlphaType
-  - [ ] F:SkiaSharp.SKAlphaType.Opaque
-  - [ ] F:SkiaSharp.SKAlphaType.Premul
-  - [ ] F:SkiaSharp.SKAlphaType.Unknown
-  - [ ] F:SkiaSharp.SKAlphaType.Unpremul
+- [x] SkiaSharp.SKAlphaType
+  - [x] F:SkiaSharp.SKAlphaType.Opaque
+  - [x] F:SkiaSharp.SKAlphaType.Premul
+  - [x] F:SkiaSharp.SKAlphaType.Unknown
+  - [x] F:SkiaSharp.SKAlphaType.Unpremul
 - [ ] SkiaSharp.SKAutoCanvasRestore
   - [ ] M:SkiaSharp.SKAutoCanvasRestore.#ctor(SkiaSharp.SKCanvas,System.Boolean)
   - [ ] M:SkiaSharp.SKAutoCanvasRestore.#ctor(SkiaSharp.SKCanvas)
