@@ -14,6 +14,9 @@ namespace SkiaSharp.Views.tvOS
 namespace SkiaSharp.Views.iOS
 #endif
 {
+	/// <summary>
+	/// A CoreAnimation OpenGL layer that can be drawn on using SkiaSharp drawing commands.
+	/// </summary>
 	[ObsoletedOSPlatform("tvos12.0", "Use 'Metal' instead.")]
 	[ObsoletedOSPlatform("ios12.0", "Use 'Metal' instead.")]
 	[SupportedOSPlatform("ios")]
@@ -38,15 +41,28 @@ namespace SkiaSharp.Views.iOS
 		private SKSizeI lastSize;
 		private bool recreateSurface = true;
 
+		/// <summary>
+		/// Default constructor that initializes a new instance of <see cref="SKGLLayer" />.
+		/// </summary>
 		public SKGLLayer()
 		{
 			Opaque = true;
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>
+		/// Gets the current GPU context.
+		/// </summary>
 		public GRContext GRContext => context;
 
+		/// <summary>
+		/// Redraws the layer's contents.
+		/// </summary>
 		public virtual void Render()
 		{
 			if (glContext == null)
@@ -113,6 +129,9 @@ namespace SkiaSharp.Views.iOS
 			EAGLContext.SetCurrentContext(null);
 		}
 
+		/// <summary>
+		/// Gets or sets the layer's frame rectangle.
+		/// </summary>
 		public override CGRect Frame
 		{
 			get { return base.Frame; }
@@ -127,6 +146,30 @@ namespace SkiaSharp.Views.iOS
 			}
 		}
 
+		/// <summary>
+		/// Occurs when the the canvas needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SkiaSharp.Views.tvOS.SKGLLayer.PaintSurface" />
+		/// event.
+		/// > [!NOTE]
+		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then the
+		/// > <see cref="SkiaSharp.Views.tvOS.SKGLLayer.DrawInSurface(SkiaSharp.SKSurface,SkiaSharp.GRBackendRenderTargetDesc)" />
+		/// > method should be overridden instead of
+		/// > <see cref="SkiaSharp.Views.tvOS.SKGLLayer.OnPaintSurface(SkiaSharp.Views.tvOS.SKPaintGLSurfaceEventArgs)" />.
+		/// ## Examples
+		/// ```csharp
+		/// myLayer.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.BackendRenderTarget.Width;
+		/// var surfaceHeight = e.BackendRenderTarget.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush ();
+		/// };
+		/// ```</remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
