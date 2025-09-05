@@ -8,6 +8,9 @@ using Android.Views;
 
 namespace SkiaSharp.Views.Android
 {
+	/// <summary>
+	/// A view that can be drawn on using SkiaSharp drawing commands.
+	/// </summary>
 	public class SKCanvasView : View
 	{
 		private bool ignorePixelScaling;
@@ -15,18 +18,33 @@ namespace SkiaSharp.Views.Android
 		private SurfaceFactory surfaceFactory;
 		private float density;
 
+		/// <summary>
+		/// Simple constructor to use when creating a <see cref="SKCanvasView" /> from code.
+		/// </summary>
+		/// <param name="context">The <see cref="global::Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
 		public SKCanvasView(Context context)
 			: base(context)
 		{
 			Initialize();
 		}
 
+		/// <summary>
+		/// Constructor that is called when inflating a <see cref="SKCanvasView" /> from XML.
+		/// </summary>
+		/// <param name="context">The <see cref="global::Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+		/// <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
 		public SKCanvasView(Context context, IAttributeSet attrs)
 			: base(context, attrs)
 		{
 			Initialize(attrs);
 		}
 
+		/// <summary>
+		/// Perform inflation from XML and apply a class-specific base style from a theme attribute.
+		/// </summary>
+		/// <param name="context">The <see cref="global::Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+		/// <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
+		/// <param name="defStyleAttr">An attribute in the current theme that contains a reference to a style resource that supplies default values for the view. Can be 0 to not look for defaults.</param>
 		public SKCanvasView(Context context, IAttributeSet attrs, int defStyleAttr)
 			: base(context, attrs, defStyleAttr)
 		{
@@ -61,8 +79,16 @@ namespace SkiaSharp.Views.Android
 			}
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize { get; private set; }
 
+		/// <summary>
+		/// Gets or sets a value indicating whether the drawing canvas should be resized on high resolution displays.
+		/// </summary>
+		/// <remarks>By default, when false, the canvas is resized to 1 canvas pixel per display pixel. When true, the canvas is resized to device independent pixels, and then stretched to fill the view. Although performance is improved and all objects are the same size on different display densities, blurring and pixelation may occur.</remarks>
 		public bool IgnorePixelScaling
 		{
 			get => ignorePixelScaling;
@@ -124,6 +150,26 @@ namespace SkiaSharp.Views.Android
 			surfaceFactory.UpdateCanvasSize(w, h);
 		}
 
+		/// <summary>
+		/// Occurs when the the canvas needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SkiaSharp.Views.Android.SKCanvasView.OnPaintSurface(SkiaSharp.Views.Android.SKPaintSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SkiaSharp.Views.Android.SKCanvasView.PaintSurface" />
+		/// event.
+		/// ## Examples
+		/// ```csharp
+		/// SKCanvasView myView = ...;
+		/// myView.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.Info.Width;
+		/// var surfaceHeight = e.Info.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush();
+		/// };
+		/// ```</remarks>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)

@@ -28,6 +28,9 @@ namespace SkiaSharp.Views.UWP
 namespace SkiaSharp.Views.Android
 #endif
 {
+	/// <summary>
+	/// An implementation of <see cref="global::Android.Views.TextureView" /> that uses the dedicated surface for displaying OpenGL rendering.
+	/// </summary>
 #if HAS_UNO
 	internal
 #else
@@ -47,12 +50,21 @@ namespace SkiaSharp.Views.Android
 		private IGLWrapper glWrapper;
 		private int eglContextClientVersion;
 
+		/// <summary>
+		/// Simple constructor to use when creating a <see cref="GLTextureView" /> from code.
+		/// </summary>
+		/// <param name="context">The <see cref="global::Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
 		public GLTextureView(Context context)
 			: base(context)
 		{
 			Initialize();
 		}
 
+		/// <summary>
+		/// Constructor that is called when inflating a <see cref="GLTextureView" /> from XML.
+		/// </summary>
+		/// <param name="context">The <see cref="global::Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+		/// <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
 		public GLTextureView(Context context, IAttributeSet attrs)
 			: base(context, attrs)
 		{
@@ -81,15 +93,31 @@ namespace SkiaSharp.Views.Android
 			base.Dispose(disposing);
 		}
 
+		/// <summary>
+		/// Gets or sets a value indicating whether the EGL context is preserved when the <see cref="global::Android.Views.TextureView" /> is paused and resumed.
+		/// </summary>
 		public bool PreserveEGLContextOnPause { get; set; }
 
+		/// <summary>
+		/// Gets or sets the current debug flags.
+		/// </summary>
 		public DebugFlags DebugFlags { get; set; }
 
+		/// <summary>
+		/// Set the GL wrapper.
+		/// </summary>
+		/// <param name="glWrapper">The GL wrapper.</param>
+		/// <remarks>Wrapping is typically used for debugging purposes.</remarks>
 		public void SetGLWrapper(IGLWrapper glWrapper)
 		{
 			this.glWrapper = glWrapper;
 		}
 
+		/// <summary>
+		/// Set the renderer associated with this view. Also starts the thread that will call the renderer, which in turn causes the rendering to start.
+		/// </summary>
+		/// <param name="renderer">The renderer to use to perform OpenGL drawing.</param>
+		/// <remarks>This method should be called once and only once in the life-cycle of a GLSurfaceView.</remarks>
 		public void SetRenderer(IRenderer renderer)
 		{
 			CheckRenderThreadState();
@@ -110,62 +138,127 @@ namespace SkiaSharp.Views.Android
 			glThread.Start();
 		}
 
+		/// <summary>
+		/// Install a custom context factory.
+		/// </summary>
+		/// <param name="factory">The custom context factory.</param>
+		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLContextFactory(IEGLContextFactory factory)
 		{
 			CheckRenderThreadState();
 			eglContextFactory = factory;
 		}
 
+		/// <summary>
+		/// Install a custom window surface factory.
+		/// </summary>
+		/// <param name="factory">The custom window surface factory.</param>
+		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLWindowSurfaceFactory(IEGLWindowSurfaceFactory factory)
 		{
 			CheckRenderThreadState();
 			eglWindowSurfaceFactory = factory;
 		}
 
+		/// <summary>
+		/// Install a custom config chooser.
+		/// </summary>
+		/// <param name="configChooser">The custom config chooser.</param>
+		/// <remarks>If no EGL config chooser is set, then by default the view will choose an RGB
+		/// 888 surface with a depth buffer depth of at least 16 bits.
+		/// If this method is called, it must be called before
+		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A" /> is called.</remarks>
 		public void SetEGLConfigChooser(IEGLConfigChooser configChooser)
 		{
 			CheckRenderThreadState();
 			eglConfigChooser = configChooser;
 		}
 
+		/// <summary>
+		/// Install a config chooser which will choose a config as close to 16-bit RGB as possible, with or without an optional depth buffer as close to 16-bits as possible.
+		/// </summary>
+		/// <param name="needDepth">Whether or not to include a depth buffer.</param>
+		/// <remarks>If no EGL config chooser is set, then by default the view will choose an RGB
+		/// 888 surface with a depth buffer depth of at least 16 bits.
+		/// If this method is called, it must be called before
+		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A" /> is called.</remarks>
 		public void SetEGLConfigChooser(bool needDepth)
 		{
 			SetEGLConfigChooser(new SimpleEGLConfigChooser(this, needDepth));
 		}
 
+		/// <summary>
+		/// Install a config chooser which will choose a config with at least the specified depth size and stencil size, and exactly the specified red size, green size, blue size and alpha size.
+		/// </summary>
+		/// <param name="redSize">The size of the red.</param>
+		/// <param name="greenSize">The size of the green.</param>
+		/// <param name="blueSize">The size of the blue.</param>
+		/// <param name="alphaSize">The size of the alpha.</param>
+		/// <param name="depthSize">The size of the depth buffer.</param>
+		/// <param name="stencilSize">The size of the stencil buffer.</param>
+		/// <remarks>If no EGL config chooser is set, then by default the view will choose an RGB
+		/// 888 surface with a depth buffer depth of at least 16 bits.
+		/// If this method is called, it must be called before
+		/// <see cref="SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A" /> is called.</remarks>
 		public void SetEGLConfigChooser(int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize)
 		{
 			SetEGLConfigChooser(new ComponentSizeChooser(this, redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize));
 		}
 
+		/// <summary>
+		/// Inform the default context factory and default config chooser which context client version to pick.
+		/// </summary>
+		/// <param name="version">The context client version to choose. Use 2 for OpenGL ES 2.0</param>
+		/// <remarks>If this method is called, it must be called before <see cref="M:SkiaSharp.Views.Android.GLTextureView.SetRenderer(SkiaSharp.Views.Android.GLTextureView.IRenderer)" /> is called.</remarks>
 		public void SetEGLContextClientVersion(int version)
 		{
 			CheckRenderThreadState();
 			eglContextClientVersion = version;
 		}
 
+		/// <summary>
+		/// Gets or sets the render mode.
+		/// </summary>
 		public Rendermode RenderMode
 		{
 			get { return glThread.GetRenderMode(); }
 			set { glThread.SetRenderMode(value); }
 		}
 
+		/// <summary>
+		/// Request that the renderer render a frame.
+		/// </summary>
 		public void RequestRender()
 		{
 			glThread.RequestRender();
 		}
 
+		/// <summary>
+		/// Invoked when the specified texture is updated through Android.Graphics.SurfaceTexture.UpdateTexImage.
+		/// </summary>
+		/// <param name="surface">The surface texture.</param>
 		public void OnSurfaceTextureUpdated(SurfaceTexture surface)
 		{
 			//glThread.RequestRender();
 		}
 
+		/// <summary>
+		/// Invoked when a texture is ready for use.
+		/// </summary>
+		/// <param name="surface">The surface texture.</param>
+		/// <param name="width">The width of the surface.</param>
+		/// <param name="height">The height of the surface.</param>
 		public void OnSurfaceTextureAvailable(SurfaceTexture surface, int width, int height)
 		{
 			glThread.OnSurfaceCreated();
 			glThread.RequestRender();
 		}
 
+		/// <summary>
+		/// Invoked when the specified texture is about to be destroyed.
+		/// </summary>
+		/// <param name="surface">The surface texture.</param>
+		/// <returns>Returns <see langword="true" /> if no rendering should happen inside the surface texture after this method is invoked, otherwise <see langword="false" /> if the client needs to call Android.Graphics.SurfaceTexture.Release. Most applications should return <see langword="true" />.</returns>
 		public bool OnSurfaceTextureDestroyed(SurfaceTexture surface)
 		{
 			// Surface will be destroyed when we return
@@ -173,26 +266,48 @@ namespace SkiaSharp.Views.Android
 			return true;
 		}
 
+		/// <summary>
+		/// Invoked when the texture's buffers size changed.
+		/// </summary>
+		/// <param name="surface">The surface texture.</param>
+		/// <param name="w">The new width of the surface.</param>
+		/// <param name="h">The new height of the surface.</param>
 		public void OnSurfaceTextureSizeChanged(SurfaceTexture surface, int w, int h)
 		{
 			glThread.OnWindowResize(w, h);
 		}
 
+		/// <summary>
+		/// Inform the view that the activity is paused.
+		/// </summary>
+		/// <remarks>The owner of this view must call this method when the activity is paused. Calling this method will pause the rendering thread. Must not be called before a renderer has been set.</remarks>
 		public void OnPause()
 		{
 			glThread.OnPause();
 		}
 
+		/// <summary>
+		/// Inform the view that the activity is resumed.
+		/// </summary>
+		/// <remarks>The owner of this view must call this method when the activity is resumed. Calling this method will recreate the OpenGL display and resume the rendering thread. Must not be called before a renderer has been set.</remarks>
 		public void OnResume()
 		{
 			glThread.OnResume();
 		}
 
+		/// <summary>
+		/// Queue an action to be run on the GL rendering thread.
+		/// </summary>
+		/// <param name="r">The action to be run on the GL rendering thread.</param>
 		public void QueueEvent(Action r)
 		{
 			QueueEvent(new Java.Lang.Runnable(r));
 		}
 
+		/// <summary>
+		/// Queue a runnable to be run on the GL rendering thread.
+		/// </summary>
+		/// <param name="r">The runnable to be run on the GL rendering thread.</param>
 		public void QueueEvent(Java.Lang.IRunnable r)
 		{
 			glThread.QueueEvent(r);
@@ -241,6 +356,18 @@ namespace SkiaSharp.Views.Android
 			}
 		}
 
+		/// <summary>
+		/// Called when the layout bounds of a view changes due to layout processing.
+		/// </summary>
+		/// <param name="v">The view whose bounds have changed.</param>
+		/// <param name="left">The new value of the view's left property.</param>
+		/// <param name="top">The new value of the view's top property.</param>
+		/// <param name="right">The new value of the view's right property.</param>
+		/// <param name="bottom">The new value of the view's bottom property.</param>
+		/// <param name="oldLeft">The previous value of the view's left property.</param>
+		/// <param name="oldTop">The previous value of the view's top property.</param>
+		/// <param name="oldRight">The previous value of the view's right property.</param>
+		/// <param name="oldBottom">The previous value of the view's bottom property.</param>
 		public void OnLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom)
 		{
 			OnSurfaceTextureSizeChanged(SurfaceTexture, right - left, bottom - top);
@@ -261,16 +388,26 @@ namespace SkiaSharp.Views.Android
 			Log.Error("GLTextureView", message);
 		}
 
+		/// <summary>
+		/// An interface used to wrap a GL interface.
+		/// </summary>
+		/// <remarks>Typically used for implementing debugging and tracing on top of the default GL interface. You would typically use this by creating your own class that implemented all the GL methods by delegating to another GL instance. Then you could add your own behavior before or after calling the delegate. All the wrapper would do was instantiate and return the wrapped GL instance.</remarks>
 		public interface IGLWrapper
 		{
 			IGL Wrap(IGL gl);
 		}
 
+		/// <summary>
+		/// An interface for choosing an EGLConfig configuration from a list of potential configurations.
+		/// </summary>
 		public interface IEGLConfigChooser
 		{
 			EGLConfig ChooseConfig(IEGL10 egl, EGLDisplay display);
 		}
 
+		/// <summary>
+		/// An interface for customizing the eglCreateContext and eglDestroyContext calls.
+		/// </summary>
 		public interface IEGLContextFactory
 		{
 			EGLContext CreateContext(IEGL10 egl, EGLDisplay display, EGLConfig eglConfig);
@@ -278,6 +415,9 @@ namespace SkiaSharp.Views.Android
 			void DestroyContext(IEGL10 egl, EGLDisplay display, EGLContext context);
 		}
 
+		/// <summary>
+		/// An interface for customizing the eglCreateWindowSurface and eglDestroySurface calls.
+		/// </summary>
 		public interface IEGLWindowSurfaceFactory
 		{
 			EGLSurface CreateWindowSurface(IEGL10 egl, EGLDisplay display, EGLConfig config, Java.Lang.Object nativeWindow);
@@ -285,6 +425,14 @@ namespace SkiaSharp.Views.Android
 			void DestroySurface(IEGL10 egl, EGLDisplay display, EGLSurface surface);
 		}
 
+		/// <summary>
+		/// A generic renderer interface.
+		/// </summary>
+		/// <remarks>The renderer is responsible for making OpenGL calls to render a frame.
+		/// Typically, <see cref="SkiaSharp.Views.Android.GLTextureView" /> clients create their
+		/// own classes that implement this interface, and then call
+		/// <xref:SkiaSharp.Views.Android.GLTextureView.SetRenderer%2A?displayProperty=nameWithType>
+		/// to register the renderer with the <see cref="SkiaSharp.Views.Android.GLTextureView" />.</remarks>
 		public interface IRenderer
 		{
 			void OnDrawFrame(IGL10 gl);

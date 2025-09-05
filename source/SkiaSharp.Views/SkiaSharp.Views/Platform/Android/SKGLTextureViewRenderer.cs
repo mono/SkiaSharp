@@ -13,6 +13,9 @@ namespace SkiaSharp.Views.UWP
 namespace SkiaSharp.Views.Android
 #endif
 {
+	/// <summary>
+	/// An abstract implementation of <see cref="GLTextureView.IRenderer" /> that provides a <see cref="T:SkiaSharp.SKSurface" /> for drawing.
+	/// </summary>
 #if HAS_UNO
 	internal
 #else
@@ -32,14 +35,25 @@ namespace SkiaSharp.Views.Android
 		private SKSizeI lastSize;
 		private SKSizeI newSize;
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => lastSize;
 
+		/// <summary>
+		/// Gets the current GPU context.
+		/// </summary>
 		public GRContext GRContext => context;
 
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
 		{
 		}
 
+		/// <summary>
+		/// Called to draw the current frame.
+		/// </summary>
+		/// <param name="gl">The GL interface.</param>
 		public void OnDrawFrame(IGL10 gl)
 		{
 			GLES10.GlClear(GLES10.GlColorBufferBit | GLES10.GlDepthBufferBit | GLES10.GlStencilBufferBit);
@@ -97,6 +111,12 @@ namespace SkiaSharp.Views.Android
 			context.Flush();
 		}
 
+		/// <summary>
+		/// Called when the surface changed size.
+		/// </summary>
+		/// <param name="gl">The GL interface.</param>
+		/// <param name="width">The new surface width.</param>
+		/// <param name="height">The new surface height.</param>
 		public void OnSurfaceChanged(IGL10 gl, int width, int height)
 		{
 			GLES20.GlViewport(0, 0, width, height);
@@ -105,11 +125,19 @@ namespace SkiaSharp.Views.Android
 			newSize = new SKSizeI(width, height);
 		}
 
+		/// <summary>
+		/// Called when the surface is created.
+		/// </summary>
+		/// <param name="gl">The GL interface.</param>
+		/// <param name="config">The EGLConfig of the created surface.</param>
 		public void OnSurfaceCreated(IGL10 gl, EGLConfig config)
 		{
 			FreeContext();
 		}
 
+		/// <summary>
+		/// Called when the surface has been lost.
+		/// </summary>
 		public void OnSurfaceDestroyed()
 		{
 			FreeContext();

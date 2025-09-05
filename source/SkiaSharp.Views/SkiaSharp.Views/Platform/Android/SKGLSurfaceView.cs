@@ -6,16 +6,28 @@ using Android.Util;
 
 namespace SkiaSharp.Views.Android
 {
+	/// <summary>
+	/// An implementation of <see cref="global::Android.Opengl.GLSurfaceView" /> that uses the dedicated surface for displaying a hardware-accelerated <see cref="T:SkiaSharp.SKSurface" />.
+	/// </summary>
 	public class SKGLSurfaceView : GLSurfaceView
 	{
 		private SKGLSurfaceViewRenderer renderer;
 
+		/// <summary>
+		/// Simple constructor to use when creating a <see cref="SKGLSurfaceView" /> from code.
+		/// </summary>
+		/// <param name="context">The <see cref="global::Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
 		public SKGLSurfaceView(Context context)
 			: base(context)
 		{
 			Initialize();
 		}
 
+		/// <summary>
+		/// Constructor that is called when inflating a <see cref="SKGLSurfaceView" /> from XML.
+		/// </summary>
+		/// <param name="context">The <see cref="global::Android.Content.Context" /> the view is running in, through which it can access the current theme, resources, etc.</param>
+		/// <param name="attrs">The attributes of the XML tag that is inflating the view.</param>
 		public SKGLSurfaceView(Context context, IAttributeSet attrs)
 			: base(context, attrs)
 		{
@@ -31,10 +43,41 @@ namespace SkiaSharp.Views.Android
 			SetRenderer(renderer);
 		}
 
+		/// <summary>
+		/// Gets the current canvas size.
+		/// </summary>
+		/// <remarks>The canvas size may be different to the view size as a result of the current device's pixel density.</remarks>
 		public SKSize CanvasSize => renderer.CanvasSize;
 
+		/// <summary>
+		/// Gets the current GPU context.
+		/// </summary>
 		public GRContext GRContext => renderer.GRContext;
 
+		/// <summary>
+		/// Occurs when the surface needs to be redrawn.
+		/// </summary>
+		/// <remarks>There are two ways to draw on this surface: by overriding the
+		/// <see cref="SkiaSharp.Views.Android.SKGLSurfaceView.OnPaintSurface(SkiaSharp.Views.Android.SKPaintGLSurfaceEventArgs)" />
+		/// method, or by attaching a handler to the
+		/// <see cref="SkiaSharp.Views.Android.SKGLSurfaceView.PaintSurface" />
+		/// event.
+		/// > [!NOTE]
+		/// > If a version of SkiaSharp prior to version v1.68.x is being used, then
+		/// > renderers are used instead of events. See
+		/// > <see cref="SkiaSharp.Views.Android.SKGLSurfaceView.ISKRenderer" /> and
+		/// > <see cref="SkiaSharp.Views.Android.SKGLSurfaceView.SetRenderer(SkiaSharp.Views.Android.SKGLSurfaceView.ISKRenderer)" />.
+		/// ## Examples
+		/// ```csharp
+		/// myView.PaintSurface += (sender, e) => {
+		/// var surface = e.Surface;
+		/// var surfaceWidth = e.BackendRenderTarget.Width;
+		/// var surfaceHeight = e.BackendRenderTarget.Height;
+		/// var canvas = surface.Canvas;
+		/// // draw on the canvas
+		/// canvas.Flush ();
+		/// };
+		/// ```</remarks>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)
