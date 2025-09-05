@@ -199,23 +199,27 @@ namespace SkiaSharp.Views.iOS
 		/// Occurs when the surface needs to be redrawn.
 		/// </summary>
 		/// <remarks>
+		/// <para>
 		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SKGLView.OnPaintSurface(SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SKGLView.PaintSurface" />
 		/// event.
-		/// ## Examples
-		/// ```csharp
-		/// myView.PaintSurface += (sender, e) => {
-		/// var surface = e.Surface;
-		/// var surfaceWidth = e.BackendRenderTarget.Width;
-		/// var surfaceHeight = e.BackendRenderTarget.Height;
-		/// var canvas = surface.Canvas;
-		/// // draw on the canvas
-		/// canvas.Flush ();
-		/// };
-		/// ```
+		/// </para>
 		/// </remarks>
+		/// <example>
+		/// <code language="csharp">
+		/// myView.PaintSurface += (sender, e) => 
+		/// {
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.BackendRenderTarget.Width;
+		///     var surfaceHeight = e.BackendRenderTarget.Height;
+		///     var canvas = surface.Canvas;
+		/// 
+		///     // draw on the canvas
+		/// };
+		/// </code>
+		/// </example>
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintGLSurfaceEventArgs e)

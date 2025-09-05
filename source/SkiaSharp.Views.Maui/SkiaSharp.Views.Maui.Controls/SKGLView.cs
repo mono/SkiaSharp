@@ -71,24 +71,28 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// Occurs when the surface needs to be redrawn.
 		/// </summary>
 		/// <remarks>
+		/// <para>
 		/// There are two ways to draw on this surface: by overriding the
 		/// <see cref="SkiaSharp.Views.Maui.Controls.SKGLView.OnPaintSurface(SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs)" />
 		/// method, or by attaching a handler to the
 		/// <see cref="SkiaSharp.Views.Maui.Controls.SKGLView.PaintSurface" />
 		/// event.
-		/// ## Examples
-		/// ```csharp
-		/// SKGLView myView = ...;
-		/// myView.PaintSurface += (sender, e) => {
-		/// var surface = e.Surface;
-		/// var surfaceWidth = e.BackendRenderTarget.Width;
-		/// var surfaceHeight = e.BackendRenderTarget.Height;
-		/// var canvas = surface.Canvas;
-		/// // draw on the canvas
-		/// canvas.Flush ();
-		/// };
-		/// ```
+		/// </para>
 		/// </remarks>
+		/// <example>
+		/// <code language="csharp">
+		/// SKGLView myView = ...;
+		/// myView.PaintSurface += (sender, e) => 
+		/// {
+		///     var surface = e.Surface;
+		///     var surfaceWidth = e.BackendRenderTarget.Width;
+		///     var surfaceHeight = e.BackendRenderTarget.Height;
+		///     var canvas = surface.Canvas;
+		/// 
+		///     // draw on the canvas
+		/// };
+		/// </code>
+		/// </example>
 		public event EventHandler<SKPaintGLSurfaceEventArgs>? PaintSurface;
 
 		/// <summary>
