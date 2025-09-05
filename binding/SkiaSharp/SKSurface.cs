@@ -9,42 +9,59 @@ namespace SkiaSharp
 	/// Represents the backend/results of drawing to a canvas.
 	/// </summary>
 	/// <remarks>
+	/// <para>
 	/// The surface represents the backend/results of drawing to a canvas. For raster
 	/// drawing, the surface will be pixels, but (for example) when drawing into a
 	/// PDF or <see cref="SkiaSharp.SKPicture" /> canvas, the surface stores the recorded
 	/// commands.
+	/// </para>
+	/// <para>
 	/// The surface always has non-zero dimensions. If there is a request for a new
 	/// surface, and either of the requested dimensions are zero, then <see langword="null" /> will
 	/// be returned.
+	/// </para>
+	/// <para>
 	/// Once you create a surface with one of its <see cref="SkiaSharp.SKSurface.Create(SKImageInfo)" />
 	/// methods, you can draw into the canvas returned by the
 	/// <see cref="SkiaSharp.SKSurface.Canvas" /> property. Once the drawing is complete, you
 	/// can retrieve an <see cref="SkiaSharp.SKImage" /> by calling the
 	/// <see cref="SkiaSharp.SKSurface.Snapshot()" /> method.
-	/// ## Examples
-	/// ```csharp
-	/// var info = new SKImageInfo(256, 256);
-	/// using (var surface = SKSurface.Create(info)) {
-	/// SKCanvas canvas = surface.Canvas;
-	/// canvas.Clear(SKColors.White);
-	/// // configure our brush
-	/// var redBrush = new SKPaint {
-	/// Color = new SKColor(0xff, 0, 0),
-	/// IsStroke = true
-	/// };
-	/// var blueBrush = new SKPaint {
-	/// Color = new SKColor(0, 0, 0xff),
-	/// IsStroke = true
-	/// };
-	/// for (int i = 0; i &lt; 64; i += 8) {
-	/// var rect = new SKRect(i, i, 256 - i - 1, 256 - i - 1);
-	/// canvas.DrawRect(rect, (i % 16 == 0) ? redBrush : blueBrush);
-	/// }
-	/// }
-	/// ```
-	/// The example above produces the following:
-	/// ![SKSurface](~/docs-images/surface-rects.png "SKSurface")
+	/// </para>
 	/// </remarks>
+	/// <example>
+	/// <code language="csharp">
+	/// var info = new SKImageInfo(256, 256);
+	/// using (var surface = SKSurface.Create(info)) 
+	/// {
+	///     SKCanvas canvas = surface.Canvas;
+	///     canvas.Clear(SKColors.White);
+	///     
+	///     // configure our brush
+	///     var redBrush = new SKPaint 
+	///     {
+	///         Color = new SKColor(0xff, 0, 0),
+	///         IsStroke = true
+	///     };
+	///     var blueBrush = new SKPaint 
+	///     {
+	///         Color = new SKColor(0, 0, 0xff),
+	///         IsStroke = true
+	///     };
+	///     
+	///     for (int i = 0; i &lt; 64; i += 8) 
+	///     {
+	///         var rect = new SKRect(i, i, 256 - i - 1, 256 - i - 1);
+	///         canvas.DrawRect(rect, (i % 16 == 0) ? redBrush : blueBrush);
+	///     }
+	/// }
+	/// </code>
+	/// <para>
+	/// The example above produces the following:
+	/// </para>
+	/// <para>
+	/// <img src="~/docs-images/surface-rects.png" alt="SKSurface" />
+	/// </para>
+	/// </example>
 	public unsafe class SKSurface : SKObject, ISKReferenceCounted
 	{
 		internal SKSurface (IntPtr h, bool owns)
