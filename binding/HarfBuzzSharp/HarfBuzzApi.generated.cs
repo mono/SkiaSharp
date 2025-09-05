@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -6504,7 +6504,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (Feature obj) =>
 #pragma warning disable CS8909
 			tag == obj.tag && value == obj.value && start == obj.start && end == obj.end;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is Feature f && Equals (f);
@@ -6581,7 +6581,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (FontExtents obj) =>
 #pragma warning disable CS8909
 			ascender == obj.ascender && descender == obj.descender && line_gap == obj.line_gap && reserved9 == obj.reserved9 && reserved8 == obj.reserved8 && reserved7 == obj.reserved7 && reserved6 == obj.reserved6 && reserved5 == obj.reserved5 && reserved4 == obj.reserved4 && reserved3 == obj.reserved3 && reserved2 == obj.reserved2 && reserved1 == obj.reserved1;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is FontExtents f && Equals (f);
@@ -6646,7 +6646,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (GlyphExtents obj) =>
 #pragma warning disable CS8909
 			x_bearing == obj.x_bearing && y_bearing == obj.y_bearing && width == obj.width && height == obj.height;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GlyphExtents f && Equals (f);
@@ -6715,7 +6715,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (GlyphInfo obj) =>
 #pragma warning disable CS8909
 			codepoint == obj.codepoint && mask == obj.mask && cluster == obj.cluster && var1 == obj.var1 && var2 == obj.var2;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GlyphInfo f && Equals (f);
@@ -6793,7 +6793,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (GlyphPosition obj) =>
 #pragma warning disable CS8909
 			x_advance == obj.x_advance && y_advance == obj.y_advance && x_offset == obj.x_offset && y_offset == obj.y_offset && var == obj.var;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is GlyphPosition f && Equals (f);
@@ -6837,7 +6837,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (OpenTypeColorLayer obj) =>
 #pragma warning disable CS8909
 			glyph == obj.glyph && color_index == obj.color_index;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is OpenTypeColorLayer f && Equals (f);
@@ -6899,7 +6899,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (OpenTypeMathGlyphPart obj) =>
 #pragma warning disable CS8909
 			glyph == obj.glyph && start_connector_length == obj.start_connector_length && end_connector_length == obj.end_connector_length && full_advance == obj.full_advance && flags == obj.flags;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is OpenTypeMathGlyphPart f && Equals (f);
@@ -6943,7 +6943,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (OpenTypeMathGlyphVariant obj) =>
 #pragma warning disable CS8909
 			glyph == obj.glyph && advance == obj.advance;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is OpenTypeMathGlyphVariant f && Equals (f);
@@ -6991,7 +6991,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (OpenTypeNameEntry obj) =>
 #pragma warning disable CS8909
 			name_id == obj.name_id && var == obj.var && language == obj.language;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is OpenTypeNameEntry f && Equals (f);
@@ -7071,7 +7071,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (OpenTypeVarAxisInfo obj) =>
 #pragma warning disable CS8909
 			axis_index == obj.axis_index && tag == obj.tag && name_id == obj.name_id && flags == obj.flags && min_value == obj.min_value && default_value == obj.default_value && max_value == obj.max_value && reserved == obj.reserved;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is OpenTypeVarAxisInfo f && Equals (f);
@@ -7139,7 +7139,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (OpenTypeVarAxis obj) =>
 #pragma warning disable CS8909
 			tag == obj.tag && name_id == obj.name_id && min_value == obj.min_value && default_value == obj.default_value && max_value == obj.max_value;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is OpenTypeVarAxis f && Equals (f);
@@ -7183,7 +7183,7 @@ namespace HarfBuzzSharp {
 		public readonly bool Equals (Variation obj) =>
 #pragma warning disable CS8909
 			tag == obj.tag && value == obj.value;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		public readonly override bool Equals (object obj) =>
 			obj is Variation f && Equals (f);

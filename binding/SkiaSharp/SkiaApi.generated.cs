@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
@@ -17744,7 +17744,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (GRGlFramebufferInfo obj) =>
 #pragma warning disable CS8909
 			fFBOID == obj.fFBOID && fFormat == obj.fFormat && fProtected == obj.fProtected;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -17818,7 +17818,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (GRGlTextureInfo obj) =>
 #pragma warning disable CS8909
 			fTarget == obj.fTarget && fID == obj.fID && fFormat == obj.fFormat && fProtected == obj.fProtected;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -17920,7 +17920,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (GRVkAlloc obj) =>
 #pragma warning disable CS8909
 			fMemory == obj.fMemory && fOffset == obj.fOffset && fSize == obj.fSize && fFlags == obj.fFlags && fBackendMemory == obj.fBackendMemory && fUsesSystemHeap == obj.fUsesSystemHeap;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -18142,7 +18142,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (GRVkImageInfo obj) =>
 #pragma warning disable CS8909
 			fImage == obj.fImage && fAlloc == obj.fAlloc && fImageTiling == obj.fImageTiling && fImageLayout == obj.fImageLayout && fFormat == obj.fFormat && fImageUsageFlags == obj.fImageUsageFlags && fSampleCount == obj.fSampleCount && fLevelCount == obj.fLevelCount && fCurrentQueueFamily == obj.fCurrentQueueFamily && fProtected == obj.fProtected && fYcbcrConversionInfo == obj.fYcbcrConversionInfo && fSharingMode == obj.fSharingMode;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -18248,7 +18248,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (GrVkYcbcrConversionInfo obj) =>
 #pragma warning disable CS8909
 			fFormat == obj.fFormat && fExternalFormat == obj.fExternalFormat && fYcbcrModel == obj.fYcbcrModel && fYcbcrRange == obj.fYcbcrRange && fXChromaOffset == obj.fXChromaOffset && fYChromaOffset == obj.fYChromaOffset && fChromaFilter == obj.fChromaFilter && fForceExplicitReconstruction == obj.fForceExplicitReconstruction && fFormatFeatures == obj.fFormatFeatures;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -18403,7 +18403,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKCodecFrameInfo obj) =>
 #pragma warning disable CS8909
 			fRequiredFrame == obj.fRequiredFrame && fDuration == obj.fDuration && fFullyReceived == obj.fFullyReceived && fAlphaType == obj.fAlphaType && fHasAlphaWithinBounds == obj.fHasAlphaWithinBounds && fDisposalMethod == obj.fDisposalMethod && fBlend == obj.fBlend && fFrameRect == obj.fFrameRect;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -18519,7 +18519,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKColorF obj) =>
 #pragma warning disable CS8909
 			fR == obj.fR && fG == obj.fG && fB == obj.fB && fA == obj.fA;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Determines whether the specified object is equal to the current object.
@@ -18653,7 +18653,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKColorSpacePrimaries obj) =>
 #pragma warning disable CS8909
 			fRX == obj.fRX && fRY == obj.fRY && fGX == obj.fGX && fGY == obj.fGY && fBX == obj.fBX && fBY == obj.fBY && fWX == obj.fWX && fWY == obj.fWY;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -18766,7 +18766,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKColorSpaceTransferFn obj) =>
 #pragma warning disable CS8909
 			fG == obj.fG && fA == obj.fA && fB == obj.fB && fC == obj.fC && fD == obj.fD && fE == obj.fE && fF == obj.fF;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -18831,7 +18831,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKColorSpaceXyz obj) =>
 #pragma warning disable CS8909
 			fM00 == obj.fM00 && fM01 == obj.fM01 && fM02 == obj.fM02 && fM10 == obj.fM10 && fM11 == obj.fM11 && fM12 == obj.fM12 && fM20 == obj.fM20 && fM21 == obj.fM21 && fM22 == obj.fM22;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -19083,7 +19083,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKFontMetrics obj) =>
 #pragma warning disable CS8909
 			fFlags == obj.fFlags && fTop == obj.fTop && fAscent == obj.fAscent && fDescent == obj.fDescent && fBottom == obj.fBottom && fLeading == obj.fLeading && fAvgCharWidth == obj.fAvgCharWidth && fMaxCharWidth == obj.fMaxCharWidth && fXMin == obj.fXMin && fXMax == obj.fXMax && fXHeight == obj.fXHeight && fCapHeight == obj.fCapHeight && fUnderlineThickness == obj.fUnderlineThickness && fUnderlinePosition == obj.fUnderlinePosition && fStrikeoutThickness == obj.fStrikeoutThickness && fStrikeoutPosition == obj.fStrikeoutPosition;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -19163,7 +19163,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKHighContrastConfig obj) =>
 #pragma warning disable CS8909
 			fGrayscale == obj.fGrayscale && fInvertStyle == obj.fInvertStyle && fContrast == obj.fContrast;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -19269,7 +19269,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKPointI obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Specifies whether this <see cref="T:SkiaSharp.SKPointI" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
@@ -19366,7 +19366,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKRectI obj) =>
 #pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:System.Object" />.
@@ -19444,7 +19444,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKSizeI obj) =>
 #pragma warning disable CS8909
 			w == obj.w && h == obj.h;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSizeI" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSizeI" /> structure.
@@ -19518,7 +19518,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKJpegEncoderOptions obj) =>
 #pragma warning disable CS8909
 			fQuality == obj.fQuality && fDownsample == obj.fDownsample && fAlphaOption == obj.fAlphaOption && xmpMetadata == obj.xmpMetadata && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -19994,7 +19994,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKMatrix obj) =>
 #pragma warning disable CS8909
 			scaleX == obj.scaleX && skewX == obj.skewX && transX == obj.transX && skewY == obj.skewY && scaleY == obj.scaleY && transY == obj.transY && persp0 == obj.persp0 && persp1 == obj.persp1 && persp2 == obj.persp2;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -20208,7 +20208,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
 #pragma warning disable CS8909
 			fFilterFlags == obj.fFilterFlags && fZLibLevel == obj.fZLibLevel && fComments == obj.fComments && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -20272,7 +20272,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKPoint obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
@@ -20359,7 +20359,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKPoint3 obj) =>
 #pragma warning disable CS8909
 			x == obj.x && y == obj.y && z == obj.z;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Specifies whether this <see cref="T:SkiaSharp.SKPoint3" /> contains the same coordinates as the specified <see cref="T:System.Object" />.
@@ -20457,7 +20457,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKRect obj) =>
 #pragma warning disable CS8909
 			left == obj.left && top == obj.top && right == obj.right && bottom == obj.bottom;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Specifies whether this rectangle contains the same coordinates as the specified <see cref="T:System.Object" />.
@@ -20536,7 +20536,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKRotationScaleMatrix obj) =>
 #pragma warning disable CS8909
 			fSCos == obj.fSCos && fSSin == obj.fSSin && fTX == obj.fTX && fTY == obj.fTY;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
@@ -20738,7 +20738,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKSize obj) =>
 #pragma warning disable CS8909
 			w == obj.w && h == obj.h;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <summary>
 		/// Tests to see whether the specified object is a <see cref="T:SkiaSharp.SKSize" /> structure with the same dimensions as this <see cref="T:SkiaSharp.SKSize" /> structure.
@@ -20847,7 +20847,7 @@ namespace SkiaSharp {
 		public readonly bool Equals (SKWebpEncoderOptions obj) =>
 #pragma warning disable CS8909
 			fCompression == obj.fCompression && fQuality == obj.fQuality && fICCProfile == obj.fICCProfile && fICCProfileDescription == obj.fICCProfileDescription;
-		#pragma warning restore CS8909
+#pragma warning restore CS8909
 
 		/// <param name="obj"></param>
 		public readonly override bool Equals (object obj) =>
