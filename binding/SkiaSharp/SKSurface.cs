@@ -219,7 +219,7 @@ namespace SkiaSharp
 			return GetObject (SkiaApi.sk_surface_new_render_target (context.Handle, budgeted, &cinfo, sampleCount, origin, props?.Handle ?? IntPtr.Zero, shouldCreateWithMips));
 		}
 
-#if __MACOS__ || __IOS__
+#if __MACOS__ || __IOS__ || __TVOS__
 
 		public static SKSurface Create (GRContext context, CoreAnimation.CAMetalLayer layer, GRSurfaceOrigin origin, int sampleCount, SKColorType colorType, out CoreAnimation.ICAMetalDrawable drawable) =>
 			Create ((GRRecordingContext)context, layer, origin, sampleCount, colorType, out drawable);
