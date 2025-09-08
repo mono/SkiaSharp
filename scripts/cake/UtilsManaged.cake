@@ -15,49 +15,6 @@ var UNSUPPORTED_TESTS = new Dictionary<string, string>
     { "SkipOn", skipTestOnPlatform },
 };
 
-void RunDotNetPack(
-    FilePath solution,
-    DirectoryPath outputPath = null,
-    string bl = ".pack",
-    string configuration = null,
-    string additionalArgs = null,
-    Dictionary<string, string> properties = null)
-{
-    EnsureDirectoryExists(OUTPUT_NUGETS_PATH);
-
-    var c = new DotNetPackSettings();
-    var msb = new DotNetMSBuildSettings();
-    c.MSBuildSettings = msb;
-
-    c.Configuration = configuration ?? CONFIGURATION;
-    c.Verbosity = DotNetVerbosity.Minimal;
-
-    var relativeSolution = MakeAbsolute(ROOT_PATH).GetRelativePath(MakeAbsolute(solution));
-    var blPath = ROOT_PATH.Combine("output/logs/binlogs").CombineWithFilePath(relativeSolution + bl + ".binlog");
-    msb.BinaryLogger = new MSBuildBinaryLoggerSettings {
-        Enabled = true,
-        FileName = blPath.FullPath,
-    };
-
-    c.NoBuild = true;
-
-    c.OutputDirectory = outputPath ?? OUTPUT_NUGETS_PATH;
-
-    msb.Properties ["NoDefaultExcludes"] = new [] { "true" };
-
-    if (properties != null) {
-        foreach (var prop in properties) {
-            if (!string.IsNullOrEmpty(prop.Value)) {
-                msb.Properties [prop.Key] = new [] { prop.Value };
-            }
-        }
-    }
-
-    c.ArgumentCustomization = args => args.Append(additionalArgs);
-
-    DotNetPack(solution.FullPath, c);
-}
-
 void RunTests(FilePath testAssembly, DirectoryPath output, bool is32)
 {
     var dir = testAssembly.GetDirectory();
