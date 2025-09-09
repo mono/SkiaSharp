@@ -141,12 +141,8 @@ extends:
                   $surrogateContents | Set-Content $destFile
                 displayName: Generate the surrogate files
               - pwsh: |
-                  $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
-                  foreach ($nupkg in $nupkgs) {
-                    $filename = $nupkg.Name.TrimEnd('.nupkg')
-                    $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
-                    Write-Host "Extracting '$nupkg' to '$dest'..."
-                    Expand-Archive $nupkg $dest
-                    Remove-Item $nupkg
-                  }
+                  ./scripts/extract-nupkg-files.ps1 `
+                    -SourcePath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg" `
+                    -DestinationPath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted" `
+                    -RemoveOriginal
                 displayName: Extract all the .nupkg files
