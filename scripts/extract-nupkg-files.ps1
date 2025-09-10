@@ -26,9 +26,9 @@ function Get-NuGetPackageInfo {
         
         # Return folder name based on whether version contains dash
         if ($version.Contains('-')) {
-            return "$packageId-Preview"
+            return "$packageId-0.0.0-preview.0"
         } else {
-            return "$packageId-Stable"
+            return "$packageId-0.0.0"
         }
     }
     catch {
