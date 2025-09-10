@@ -15,6 +15,7 @@ function Get-NuGetPackageInfo {
     try {
         # Get the folder name as fallback (this is the package ID)
         $packageId = Split-Path $ExtractedPath -Leaf
+        $isSymbols = $packageId.EndsWith(".symbols")
     
         # Try to find the .nuspec file to get the version
         $nuspecFile = Get-ChildItem -Path $ExtractedPath -Filter "*.nuspec" -Recurse | Select-Object -First 1
@@ -25,11 +26,18 @@ function Get-NuGetPackageInfo {
         $version = $nuspec.package.metadata.version
         
         # Return folder name based on whether version contains dash
-        if ($version.Contains('-')) {
-            return "$packageId-0.0.0-preview.0"
+        $folderName = if ($version.Contains('-')) {
+            "$packageId-0.0.0-preview.0"
         } else {
-            return "$packageId-0.0.0"
+            "$packageId-0.0.0"
         }
+        
+        # Append .symbols suffix for symbol packages
+        if ($isSymbols) {
+            $folderName += ".symbols"
+        }
+        
+        return $folderName
     }
     catch {
         # If parsing fails, fall through
