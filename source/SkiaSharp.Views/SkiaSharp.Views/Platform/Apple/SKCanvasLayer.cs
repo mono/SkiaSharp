@@ -117,7 +117,6 @@ namespace SkiaSharp.Views.Mac
 		/// ]]></code>
 		/// </example>
 		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
-		public event EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 
 		protected virtual void OnPaintSurface(SKPaintSurfaceEventArgs e)
 		{
