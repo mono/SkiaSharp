@@ -3,8 +3,6 @@ parameters:
     type: string
   - name: buildAgentLinuxNative
     type: object
-  - name: sdl
-    type: object
   - name: use1ESPipelineTemplates
     type: boolean
 
@@ -17,7 +15,6 @@ stages:
 
       - template: /scripts/azure-templates-jobs-linux-matrix.yml@self # Build Native Linux (Linux)
         parameters:
-          sdl: ${{ parameters.sdl }}
           buildExternals: ${{ parameters.buildExternals }}
           buildAgent: ${{ parameters.buildAgentLinuxNative }}
           use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
