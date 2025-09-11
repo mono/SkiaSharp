@@ -63,9 +63,8 @@ $(PackageNotes)</PackageDescription>
     ===================================================================================================================
   -->
   <Target Name="IncludeReferenceAssemblyTfmSpecificPackageFiles">
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="$(TargetRefPath)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetFileName)"
-                              Condition="Exists('$(TargetRefPath)')" />
+    <ItemGroup Condition="Exists('$(TargetRefPath)')">
+      <TfmSpecificPackageFile Include="$(TargetRefPath)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetFileName)" />
       <TfmSpecificPackageFile Include="$([System.IO.Path]::ChangeExtension('$(TargetPath)', '.xml'))" 
                               PackagePath="ref\$(NuGetShortFolderName)\$([System.IO.Path]::ChangeExtension('$(TargetFileName)', '.xml'))"
                               Condition="Exists($([System.IO.Path]::ChangeExtension('$(TargetPath)', '.xml')))" />
