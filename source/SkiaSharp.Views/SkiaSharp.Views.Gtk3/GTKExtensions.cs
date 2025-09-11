@@ -13,6 +13,7 @@ namespace SkiaSharp.Views.Gtk
 			return new SKPointI(point.X, point.Y);
 		}
 
+		/// <param name="point"></param>
 		public static Point ToPoint(this SKPointI point)
 		{
 			return new Point(point.X, point.Y);
@@ -25,6 +26,7 @@ namespace SkiaSharp.Views.Gtk
 			return new SKRectI(rect.Left, rect.Top, rect.Right, rect.Bottom);
 		}
 
+		/// <param name="rect"></param>
 		public static Rectangle ToRect(this SKRectI rect)
 		{
 			return new Rectangle(rect.Left, rect.Top, rect.Right, rect.Bottom);
@@ -37,6 +39,7 @@ namespace SkiaSharp.Views.Gtk
 			return new SKSizeI(size.Width, size.Height);
 		}
 
+		/// <param name="size"></param>
 		public static Size ToSize(this SKSizeI size)
 		{
 			return new Size(size.Width, size.Height);
@@ -54,6 +57,7 @@ namespace SkiaSharp.Views.Gtk
 			return new SKColor((byte)r, (byte)g, (byte)b);
 		}
 
+		/// <param name="color"></param>
 		public static Color ToColor(this SKColor color)
 		{
 			return new Color(color.Red, color.Green, color.Blue);
@@ -61,6 +65,8 @@ namespace SkiaSharp.Views.Gtk
 
 		// Pixbuf
 
+		/// <param name="picture"></param>
+		/// <param name="dimensions"></param>
 		public static Pixbuf ToPixbuf(this SKPicture picture, SKSizeI dimensions)
 		{
 			using (var image = SKImage.FromPicture(picture, dimensions))
@@ -69,6 +75,7 @@ namespace SkiaSharp.Views.Gtk
 			}
 		}
 
+		/// <param name="skiaImage"></param>
 		public static Pixbuf ToPixbuf(this SKImage skiaImage)
 		{
 			// TODO: maybe keep the same color types where we can, instead of just going to the platform default
@@ -91,6 +98,7 @@ namespace SkiaSharp.Views.Gtk
 			return pix;
 		}
 
+		/// <param name="skiaBitmap"></param>
 		public static Pixbuf ToPixbuf(this SKBitmap skiaBitmap)
 		{
 			using (var pixmap = skiaBitmap.PeekPixels())
@@ -102,6 +110,7 @@ namespace SkiaSharp.Views.Gtk
 			}
 		}
 
+		/// <param name="pixmap"></param>
 		public static Pixbuf ToPixbuf(this SKPixmap pixmap)
 		{
 			using (var image = SKImage.FromPixels(pixmap))

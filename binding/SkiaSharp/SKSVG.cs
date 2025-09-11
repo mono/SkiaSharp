@@ -6,6 +6,12 @@ using System.IO;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// A specialized <see cref="SKCanvas" /> which generates SVG commands from its draw calls.
+	/// </summary>
+	/// <remarks>
+	/// The canvas may buffer some drawing calls, so the output is not guaranteed to be valid or complete until the canvas instance is deleted.
+	/// </remarks>
 	public unsafe class SKSvgCanvas
 	{
 		private SKSvgCanvas ()
@@ -14,6 +20,8 @@ namespace SkiaSharp
 
 		// Create
 
+		/// <param name="bounds"></param>
+		/// <param name="stream"></param>
 		public static SKCanvas Create (SKRect bounds, Stream stream)
 		{
 			if (stream == null)
@@ -23,6 +31,8 @@ namespace SkiaSharp
 			return SKObject.Owned (Create (bounds, managed), managed);
 		}
 
+		/// <param name="bounds"></param>
+		/// <param name="stream"></param>
 		public static SKCanvas Create (SKRect bounds, SKWStream stream)
 		{
 			if (stream == null)
