@@ -398,6 +398,21 @@ namespace SkiaSharp.Tests
 		}
 
 		[SkippableFact]
+		public void TryGetLineMatchesGetLine()
+		{
+			using (var path = new SKPath())
+			{
+				path.LineTo(new SKPoint(100, 100));
+
+				var getLine = path.GetLine();
+				var tryGetLine = new SKPoint[2];
+				path.TryGetLine(tryGetLine);
+
+				Assert.Equal(getLine, tryGetLine);
+			}
+		}
+
+		[SkippableFact]
 		public void TrimPathEffectWorksInverted()
 		{
 			using (var bitmap = new SKBitmap(new SKImageInfo(100, 100)))
