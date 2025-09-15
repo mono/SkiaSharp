@@ -7,6 +7,12 @@ using System.Threading;
 
 namespace SkiaSharp
 {
+	/// <summary>
+	/// Represents a tracked native object.
+	/// </summary>
+	/// <remarks>
+	/// This object wraps a native handle and keeps track of it's lifetime for the garbage collector. For a simple object, use <see cref="SKNativeObject" />.
+	/// </remarks>
 	public abstract class SKObject : SKNativeObject
 	{
 		private readonly object locker = new object ();
@@ -56,6 +62,12 @@ namespace SkiaSharp
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
+		/// <summary>
+		/// Gets or sets the handle to the underlying native object.
+		/// </summary>
+		/// <remarks>
+		/// Setting this value will register this object with the lifetime tracker.
+		/// </remarks>
 		public override IntPtr Handle {
 			get => base.Handle;
 			protected set {
@@ -209,6 +221,12 @@ namespace SkiaSharp
 		}
 	}
 
+	/// <summary>
+	/// Represents a native object.
+	/// </summary>
+	/// <remarks>
+	/// This object just wraps a native handle with the managed dispose pattern. For a tracked object, use <see cref="SKObject" />.
+	/// </remarks>
 	public abstract class SKNativeObject : IDisposable
 	{
 		internal bool fromFinalizer = false;
@@ -233,6 +251,9 @@ namespace SkiaSharp
 			Dispose (false);
 		}
 
+		/// <summary>
+		/// Gets or sets the handle to the underlying native object.
+		/// </summary>
 		public virtual IntPtr Handle { get; protected set; }
 
 		protected internal virtual bool OwnsHandle { get; protected set; }
@@ -276,6 +297,12 @@ namespace SkiaSharp
 			Handle = IntPtr.Zero;
 		}
 
+		/// <summary>
+		/// Releases all resources used by this <see cref="SKNativeObject" />.
+		/// </summary>
+		/// <remarks>
+		/// Always dispose the object before you release your last reference to the <see cref="SKNativeObject" />. Otherwise, the resources it is using will not be freed until the garbage collector calls the finalizer.
+		/// </remarks>
 		public void Dispose ()
 		{
 			if (IgnorePublicDispose)

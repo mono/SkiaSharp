@@ -57,31 +57,19 @@ $(PackageNotes)</PackageDescription>
 
   <!--
     ===================================================================================================================
-    IncludeMDocTfmSpecificPackageFiles
-
-    Include the XML docs in the package.
-    ===================================================================================================================
-  -->
-  <Target Name="IncludeMDocTfmSpecificPackageFiles">
-    <ItemGroup>
-      <TfmSpecificPackageFile Include="$(MDocOutputPath)" PackagePath="lib\$(NuGetShortFolderName)\$(MDocOutputName)"
-                              Exclude="@(DocumentationProjectOutputGroupOutput)" Condition="Exists('$(MDocOutputPath)')" />
-    </ItemGroup>
-  </Target>
-
-  <!--
-    ===================================================================================================================
     IncludeReferenceAssemblyTfmSpecificPackageFiles
 
     Include the reference assembly in the package.
     ===================================================================================================================
   -->
-	<Target Name="IncludeReferenceAssemblyTfmSpecificPackageFiles">
-		<ItemGroup>
-			<TfmSpecificPackageFile Include="$(TargetRefPath)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetFileName)"
-                              Condition="Exists('$(TargetRefPath)')" />
-		</ItemGroup>
-	</Target>
+  <Target Name="IncludeReferenceAssemblyTfmSpecificPackageFiles">
+    <ItemGroup Condition="Exists('$(TargetRefPath)')">
+      <TfmSpecificPackageFile Include="$(TargetRefPath)" PackagePath="ref\$(NuGetShortFolderName)\$(TargetFileName)" />
+      <TfmSpecificPackageFile Include="$([System.IO.Path]::ChangeExtension('$(TargetPath)', '.xml'))" 
+                              PackagePath="ref\$(NuGetShortFolderName)\$([System.IO.Path]::ChangeExtension('$(TargetFileName)', '.xml'))"
+                              Condition="Exists($([System.IO.Path]::ChangeExtension('$(TargetPath)', '.xml')))" />
+    </ItemGroup>
+  </Target>
   
   <!--
     ===================================================================================================================
@@ -93,7 +81,6 @@ $(PackageNotes)</PackageDescription>
   <PropertyGroup>
     <_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
       _IncludeAdditionalTfmSpecificPackageFilesPrepare;
-      IncludeMDocTfmSpecificPackageFiles;
       IncludeReferenceAssemblyTfmSpecificPackageFiles;
       IncludeAdditionalTfmSpecificPackageFiles;
     </_IncludeAdditionalTfmSpecificPackageFilesDependsOn>
