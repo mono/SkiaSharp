@@ -65,11 +65,6 @@ stages:
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
               displayName: Prepare the build artifact for publishing
-            - pwsh: |
-                .\scripts\extract-nupkg-files.ps1 `
-                  -SourcePath ".\output\nugets*\*.*nupkg" `
-                  -DestinationPath ".\output\extracted_nugets"
-              displayName: Extract all the .nupkg files for scanning
           publishArtifacts:
             - name: package_normal_windows
               path: '.\output\output\'
@@ -77,6 +72,22 @@ stages:
               path: '.\output\nugets'
             - name: nuget_symbols
               path: '.\output\nugets-symbols'
+      - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
+        parameters:
+          name: scan_normal_windows
+          displayName: Scan NuGet Artifacts
+          buildAgent: ${{ parameters.buildAgentWindows}}
+          dependsOn: package_normal_windows
+          shouldPublish: false
+          requiredArtifacts:
+            - name: nuget
+            - name: nuget_symbols
+          postBuildSteps:
+            - pwsh: |
+                .\scripts\extract-nupkg-files.ps1 `
+                  -SourcePath ".\output\nugets*\*.*nupkg" `
+                  -DestinationPath ".\output\extracted_nugets"
+              displayName: Extract all the .nupkg files for scanning
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package Special NuGets
         parameters:
           name: package_special_windows
