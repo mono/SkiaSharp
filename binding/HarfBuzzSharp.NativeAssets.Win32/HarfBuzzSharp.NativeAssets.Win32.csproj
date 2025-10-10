@@ -3,12 +3,12 @@
     <TargetFrameworks>$(BasicTargetFrameworks);$(WindowsTargetFrameworks)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Win32</Title>
-    <IsWindowsNativeAssets>true</IsWindowsNativeAssets>
+    <IsNativeAssetsProject>true</IsNativeAssetsProject>
   </PropertyGroup>
   <ItemGroup>
-    <NativeWindowsPackageFile Include="..\..\output\native\windows\x64\libHarfBuzzSharp*" RuntimeIdentifier="win-x64" />
-    <NativeWindowsPackageFile Include="..\..\output\native\windows\x86\libHarfBuzzSharp*" RuntimeIdentifier="win-x86" />
-    <NativeWindowsPackageFile Include="..\..\output\native\windows\arm64\libHarfBuzzSharp*" RuntimeIdentifier="win-arm64" />
+    <NativeAssetPackageFile Include="..\..\output\native\windows\x64\libHarfBuzzSharp*" RuntimeIdentifier="win-x64" />
+    <NativeAssetPackageFile Include="..\..\output\native\windows\x86\libHarfBuzzSharp*" RuntimeIdentifier="win-x86" />
+    <NativeAssetPackageFile Include="..\..\output\native\windows\arm64\libHarfBuzzSharp*" RuntimeIdentifier="win-arm64" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
