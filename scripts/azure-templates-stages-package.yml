@@ -81,7 +81,11 @@ stages:
           shouldPublish: false
           requiredArtifacts:
             - name: nuget
+              dir: nugets
+              currentRun: true
             - name: nuget_symbols
+              dir: nugets-symbols
+              currentRun: true
           postBuildSteps:
             - pwsh: |
                 .\scripts\extract-nupkg-files.ps1 `
