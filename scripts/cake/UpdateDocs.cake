@@ -1,3 +1,115 @@
+// # dependencies
+// mdoc                                            release     5.8.9
+// harfbuzz                                        release     8.3.1
+// skia                                            release     m119
+// xunit                                           release     2.4.2
+// xunit.runner.console                            release     2.4.2
+// OpenTK                                          release     3.1.0
+// OpenTK.GLControl                                release     3.1.0
+// GtkSharp                                        release     3.24.24.95
+// GdkSharp                                        release     3.24.24.95
+// GLibSharp                                       release     3.24.24.95
+// AtkSharp                                        release     3.24.24.95
+// System.Memory                                   release     4.5.5
+// SharpVk                                         release     0.4.2
+// Uno.WinUI                                       release     5.2.175
+// Microsoft.WindowsAppSDK                         release     1.4.230913002
+// Microsoft.Maui.Graphics                         release     7.0.92
+// Microsoft.Windows.SDK.NET.Ref                   release     10.0.19041.27
+// Microsoft.AspNetCore.Components.Web             release     6.0.0
+// ANGLE                                           release     chromium/6275
+// Microsoft.iOS.Ref.net8.0_17.0                   release     17.0.8523
+// Microsoft.MacCatalyst.Ref.net8.0_17.0           release     17.0.8523
+// Microsoft.tvOS.Ref.net8.0_17.0                  release     17.0.8523
+// Microsoft.macOS.Ref.net8.0_14.0                 release     14.0.8523
+// Samsung.Tizen.Ref                               release     10.0.109
+// Xamarin.VisualStudio.Apple.Sdk                  url         https://download.visualstudio.microsoft.com/download/pr/42786999-d45b-4428-b946-248bb9676505/d37d5503fe30287fb73facbc34321865fdced518ba9205ab5581c7487e4ed6d6/Xamarin.VisualStudio.Apple.Sdk.17.12.0.94.vsix
+// Xamarin.Android.Sdk                             url         https://download.visualstudio.microsoft.com/download/pr/a3846965-8f4c-42fa-b728-b6ea5f0a2a16/90d568134f0f5b472e5c085fc6573c76bd40231892a89eb7551940dcc055eb8a/Xamarin.Android.Sdk-13.2.2.0.vsix
+
+async Task<NuGetDiff> CreateNuGetDiffAsync()
+{
+    var comparer = new NuGetDiff();
+    comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
+    comparer.IgnoreResolutionErrors = true;
+    
+    Verbose ($"Adding dependencies...");
+
+    await AddDep("OpenTK.GLControl", "NET20");
+    await AddDep("GtkSharp", "netstandard2.0");
+    await AddDep("GdkSharp", "netstandard2.0");
+    await AddDep("GLibSharp", "netstandard2.0");
+    await AddDep("AtkSharp", "netstandard2.0");
+    await AddDep("System.Memory", "netstandard2.0");
+    await AddDep("Microsoft.WindowsAppSDK", "net5.0-windows10.0.18362.0");
+    await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
+    await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
+    await AddDep("Microsoft.iOS.Ref.net8.0_17.0", "net8.0");
+    await AddDep("Microsoft.MacCatalyst.Ref.net8.0_17.0", "net8.0");
+    await AddDep("Microsoft.tvOS.Ref.net8.0_17.0", "net8.0");
+    await AddDep("Microsoft.macOS.Ref.net8.0_14.0", "net8.0");
+    await AddDep("Samsung.Tizen.Ref", "net8.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.iOS/v1.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.TVOS/v1.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.Mac/v2.0");
+    await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v1.0");
+    await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v13.0");
+
+    // some parts of SkiaSharp depend on other parts
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
+        comparer.SearchPaths.Add(dir.FullPath);
+
+    Verbose("Added search paths:");
+    foreach (var path in comparer.SearchPaths) {
+        var found = GetFiles($"{path}/*.dll").Any() || GetFiles($"{path}/*.winmd").Any();
+        Verbose($"    {(found ? " " : "!")} {path}");
+    }
+
+    return comparer;
+
+    async Task AddVsixDep(string id, string localPath, string type = "url")
+    {
+        var url = GetVersion(id, type);
+        var fileName = System.IO.Path.GetFileName(new Uri(url).LocalPath);
+        Verbose ($"    Adding VSIX dependency {id} ({fileName})...");
+        var dest = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, id.ToLower(), fileName);
+        if (!FileExists(dest)) {
+            EnsureDirectoryExists(System.IO.Path.GetDirectoryName(dest));
+            Verbose($"      Downloading {url} to {dest}");
+            DownloadFile(url, dest);
+        }
+        var extractDir = System.IO.Path.Combine(PACKAGE_CACHE_PATH.FullPath, id.ToLower(), System.IO.Path.GetFileNameWithoutExtension(fileName));
+        if (!DirectoryExists(extractDir)) {
+            Verbose($"      Extracting {dest} to {extractDir}");
+            EnsureDirectoryExists(extractDir);
+            DecompressArchive(dest, extractDir);
+        }
+        var searchPath = System.IO.Path.Combine(extractDir, localPath);
+        if (DirectoryExists(searchPath)) {
+            Verbose($"      Adding VSIX search path: {searchPath}");
+            comparer.SearchPaths.Add(searchPath);
+        } else {
+            Verbose($"      No VSIX search path found at: {searchPath}");
+        }
+    }
+        
+    async Task AddDep(string id, string platform, string type = "release")
+    {
+        var version = GetVersion(id, type);
+        Verbose ($"    Adding dependency {id} version {version}...");
+        var root = await comparer.ExtractCachedPackageAsync(id, version);
+        var libPath = System.IO.Path.Combine(root, "lib", platform);
+        var refPath = System.IO.Path.Combine(root, "ref", platform);
+        if (DirectoryExists(libPath)) {
+            Verbose ($"      lib path {libPath}");
+            comparer.SearchPaths.Add(libPath);
+        } else if (DirectoryExists(refPath)) {
+            Verbose ($"      ref path {libPath}");
+            comparer.SearchPaths.Add(refPath);
+        } else {
+            Verbose ($"      no lib or ref path");
+        }
+    }
+}
 
 void CopyChangelogs (DirectoryPath diffRoot, string id, string version)
 {
@@ -130,10 +242,6 @@ Task ("docs-api-diff-past")
     var comparer = await CreateNuGetDiffAsync ();
     comparer.SaveAssemblyApiInfo = true;
     comparer.SaveAssemblyMarkdownDiff = true;
-
-    // some parts of SkiaSharp depend on other parts
-    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
-        comparer.SearchPaths.Add(dir.FullPath);
 
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for NativeAssets as that has nothing but a native binary

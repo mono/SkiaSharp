@@ -95,6 +95,7 @@ if (IsRunningOnWindows ()) {
 var PREVIEW_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
 var TRACKED_NUGETS = new Dictionary<string, Version> {
+    // SkiaSharp core
     { "SkiaSharp",                                     new Version (1, 60, 0) },
     { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 60, 0) },
     { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 60, 0) },
@@ -118,6 +119,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "SkiaSharp.Views.Maui.Core",                     new Version (1, 60, 0) },
     { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 60, 0) },
     { "SkiaSharp.Views.Blazor",                        new Version (1, 60, 0) },
+    // HarfBuzzSharp core
     { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Android",            new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.iOS",                new Version (1, 0, 0) },
@@ -128,6 +130,7 @@ var TRACKED_NUGETS = new Dictionary<string, Version> {
     { "HarfBuzzSharp.NativeAssets.tvOS",               new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
     { "HarfBuzzSharp.NativeAssets.Win32",              new Version (1, 0, 0) },
+    // Extras
     { "SkiaSharp.HarfBuzz",                            new Version (1, 60, 0) },
     { "SkiaSharp.Skottie",                             new Version (1, 60, 0) },
     { "SkiaSharp.SceneGraph",                          new Version (1, 60, 0) },
