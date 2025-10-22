@@ -64,6 +64,8 @@ namespace SkiaSharp
 
 			if (Handle == IntPtr.Zero)
 				throw new InvalidOperationException ("Unable to create a new SKPaint instance.");
+
+			GC.KeepAlive (font);
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -155,8 +157,11 @@ namespace SkiaSharp
 			set => SkiaApi.sk_paint_set_color4f (Handle, &value, IntPtr.Zero);
 		}
 
-		public void SetColor (SKColorF color, SKColorSpace colorspace) =>
+		public void SetColor (SKColorF color, SKColorSpace colorspace)
+		{
 			SkiaApi.sk_paint_set_color4f (Handle, &color, colorspace?.Handle ?? IntPtr.Zero);
+			GC.KeepAlive (colorspace);
+		}
 
 		public float StrokeWidth {
 			get => SkiaApi.sk_paint_get_stroke_width (Handle);
@@ -180,22 +185,34 @@ namespace SkiaSharp
 
 		public SKShader Shader {
 			get => SKShader.GetObject (SkiaApi.sk_paint_get_shader (Handle));
-			set => SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
+			set {
+				SkiaApi.sk_paint_set_shader (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+			}
 		}
 
 		public SKMaskFilter MaskFilter {
 			get => SKMaskFilter.GetObject (SkiaApi.sk_paint_get_maskfilter (Handle));
-			set => SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+			set {
+				SkiaApi.sk_paint_set_maskfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+			}
 		}
 
 		public SKColorFilter ColorFilter {
 			get => SKColorFilter.GetObject (SkiaApi.sk_paint_get_colorfilter (Handle));
-			set => SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+			set {
+				SkiaApi.sk_paint_set_colorfilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+			}
 		}
 
 		public SKImageFilter ImageFilter {
 			get => SKImageFilter.GetObject (SkiaApi.sk_paint_get_imagefilter (Handle));
-			set => SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+			set {
+				SkiaApi.sk_paint_set_imagefilter (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+			}
 		}
 
 		public SKBlendMode BlendMode {
@@ -205,7 +222,10 @@ namespace SkiaSharp
 
 		public SKBlender Blender {
 			get => SKBlender.GetObject (SkiaApi.sk_paint_get_blender (Handle));
-			set => SkiaApi.sk_paint_set_blender (Handle, value == null ? IntPtr.Zero : value.Handle);
+			set {
+				SkiaApi.sk_paint_set_blender (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+			}
 		}
 
 		[Obsolete ($"Use {nameof (SKSamplingOptions)} instead.")]
@@ -252,7 +272,10 @@ namespace SkiaSharp
 
 		public SKPathEffect PathEffect {
 			get => SKPathEffect.GetObject (SkiaApi.sk_paint_get_path_effect (Handle));
-			set => SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
+			set {
+				SkiaApi.sk_paint_set_path_effect (Handle, value == null ? IntPtr.Zero : value.Handle);
+				GC.KeepAlive (value);
+			}
 		}
 
 		// FontSpacing
@@ -506,7 +529,10 @@ namespace SkiaSharp
 			_ = src ?? throw new ArgumentNullException (nameof (src));
 			_ = dst ?? throw new ArgumentNullException (nameof (dst));
 
-			return SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, cullRect, &matrix);
+			var result = SkiaApi.sk_paint_get_fill_path (Handle, src.Handle, dst.Handle, cullRect, &matrix);
+			GC.KeepAlive (src);
+			GC.KeepAlive (dst);
+			return result;
 		}
 
 		// CountGlyphs
