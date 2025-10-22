@@ -33,6 +33,7 @@ namespace SkiaSharp
 			if (Handle == IntPtr.Zero) {
 				throw new InvalidOperationException ("Unable to copy the SKPath instance.");
 			}
+			GC.KeepAlive (path);
 		}
 
 		protected override void Dispose (bool disposing) =>
@@ -293,6 +294,7 @@ namespace SkiaSharp
 			if (rect == null)
 				throw new ArgumentNullException (nameof (rect));
 			SkiaApi.sk_path_add_rrect (Handle, rect.Handle, direction);
+			GC.KeepAlive (rect);
 		}
 
 		public void AddRoundRect (SKRoundRect rect, SKPathDirection direction, uint startIndex)
@@ -300,6 +302,7 @@ namespace SkiaSharp
 			if (rect == null)
 				throw new ArgumentNullException (nameof (rect));
 			SkiaApi.sk_path_add_rrect_start (Handle, rect.Handle, direction, startIndex);
+			GC.KeepAlive (rect);
 		}
 
 		public void AddOval (SKRect rect, SKPathDirection direction = SKPathDirection.Clockwise) =>
@@ -357,6 +360,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (other));
 
 			SkiaApi.sk_path_add_path_offset (Handle, other.Handle, dx, dy, mode);
+			GC.KeepAlive (other);
 		}
 
 		public void AddPath (SKPath other, in SKMatrix matrix, SKPathAddMode mode = SKPathAddMode.Append)
@@ -366,6 +370,7 @@ namespace SkiaSharp
 
 			fixed (SKMatrix* m = &matrix)
 				SkiaApi.sk_path_add_path_matrix (Handle, other.Handle, m, mode);
+			GC.KeepAlive (other);
 		}
 
 		public void AddPath (SKPath other, SKPathAddMode mode = SKPathAddMode.Append)
@@ -374,6 +379,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (other));
 
 			SkiaApi.sk_path_add_path (Handle, other.Handle, mode);
+			GC.KeepAlive (other);
 		}
 
 		public void AddPathReverse (SKPath other)
@@ -382,6 +388,7 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (other));
 
 			SkiaApi.sk_path_add_path_reverse (Handle, other.Handle);
+			GC.KeepAlive (other);
 		}
 
 		public void AddRoundRect (SKRect rect, float rx, float ry, SKPathDirection dir = SKPathDirection.Clockwise) =>
