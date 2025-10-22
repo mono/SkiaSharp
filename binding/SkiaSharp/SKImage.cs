@@ -88,7 +88,9 @@ namespace SkiaSharp
 		{
 			if (pixmap == null)
 				throw new ArgumentNullException (nameof (pixmap));
-			return GetObject (SkiaApi.sk_image_new_raster_copy_with_pixmap (pixmap.Handle));
+			var image = GetObject (SkiaApi.sk_image_new_raster_copy_with_pixmap (pixmap.Handle));
+			GC.KeepAlive (pixmap);
+			return image;
 		}
 
 		public static SKImage FromPixelCopy (SKImageInfo info, ReadOnlySpan<byte> pixels) =>
@@ -113,7 +115,9 @@ namespace SkiaSharp
 			if (data == null)
 				throw new ArgumentNullException (nameof (data));
 			var cinfo = SKImageInfoNative.FromManaged (ref info);
-			return GetObject (SkiaApi.sk_image_new_raster_data (&cinfo, data.Handle, (IntPtr)rowBytes));
+			var image = GetObject (SkiaApi.sk_image_new_raster_data (&cinfo, data.Handle, (IntPtr)rowBytes));
+			GC.KeepAlive (data);
+			return image;
 		}
 
 		public static SKImage FromPixels (SKImageInfo info, IntPtr pixels)
@@ -169,7 +173,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (data));
 
 			var handle = SkiaApi.sk_image_new_from_encoded (data.Handle);
-			return GetObject (handle);
+			var image = GetObject (handle);
+			GC.KeepAlive (data);
+			return image;
 		}
 
 		public static SKImage FromEncodedData (ReadOnlySpan<byte> data)
@@ -457,6 +463,7 @@ namespace SkiaSharp
 			var result = SkiaApi.sk_image_peek_pixels (Handle, pixmap.Handle);
 			if (result)
 				pixmap.pixelSource = this;
+			GC.KeepAlive (pixmap);
 			return result;
 		}
 
