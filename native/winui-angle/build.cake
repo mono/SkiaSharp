@@ -122,7 +122,9 @@ Task("ANGLE")
                 $"angle_enable_null=false " +
                 $"angle_enable_wgpu=false " +
                 $"angle_enable_gl_desktop_backend=false " +
-                $"angle_enable_vulkan=false");
+                $"angle_enable_vulkan=false " +
+                $"extra_cflags=[ '/guard:cf' ] " +
+                $"extra_ldflags=[ '/guard:cf' ]");
 
             RunNinja(ANGLE_PATH, $"out/winui{suffix}/{arch}", target);
         }
