@@ -6484,6 +6484,9 @@ namespace HarfBuzzSharp {
 namespace HarfBuzzSharp {
 
 	// hb_feature_t
+	/// <summary>
+	/// Various font features and variations.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct Feature : IEquatable<Feature> {
 		// public hb_tag_t tag
@@ -6667,10 +6670,19 @@ namespace HarfBuzzSharp {
 	}
 
 	// hb_glyph_info_t
+	/// <summary>
+	/// Represents a glyph and its relation to the input text.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GlyphInfo : IEquatable<GlyphInfo> {
 		// public hb_codepoint_t codepoint
 		private UInt32 codepoint;
+		/// <summary>
+		/// Gets or sets the Unicode code point (or the glyph index after shaping).
+		/// </summary>
+		/// <remarks>
+		/// This represents either a Unicode code point (before shaping) or a glyph index (after shaping).
+		/// </remarks>
 		public UInt32 Codepoint {
 			readonly get => codepoint;
 			set => codepoint = value;
@@ -6678,6 +6690,9 @@ namespace HarfBuzzSharp {
 
 		// public hb_mask_t mask
 		private UInt32 mask;
+		/// <summary>
+		/// Gets or sets the glyph mask.
+		/// </summary>
 		public UInt32 Mask {
 			readonly get => mask;
 			set => mask = value;
@@ -6685,6 +6700,9 @@ namespace HarfBuzzSharp {
 
 		// public uint32_t cluster
 		private UInt32 cluster;
+		/// <summary>
+		/// Gets or sets the index of the character in the original text.
+		/// </summary>
 		public UInt32 Cluster {
 			readonly get => cluster;
 			set => cluster = value;
@@ -6724,10 +6742,16 @@ namespace HarfBuzzSharp {
 	}
 
 	// hb_glyph_position_t
+	/// <summary>
+	/// Represents the position of a glyph, relative to the current point.
+	/// </summary>
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GlyphPosition : IEquatable<GlyphPosition> {
 		// public hb_position_t x_advance
 		private Int32 x_advance;
+		/// <summary>
+		/// Gets or sets how much the line advances after drawing this glyph when setting text in horizontal direction.
+		/// </summary>
 		public Int32 XAdvance {
 			readonly get => x_advance;
 			set => x_advance = value;
@@ -6735,6 +6759,9 @@ namespace HarfBuzzSharp {
 
 		// public hb_position_t y_advance
 		private Int32 y_advance;
+		/// <summary>
+		/// Gets or sets how much the line advances after drawing this glyph when setting text in vertical direction.
+		/// </summary>
 		public Int32 YAdvance {
 			readonly get => y_advance;
 			set => y_advance = value;
@@ -6742,6 +6769,12 @@ namespace HarfBuzzSharp {
 
 		// public hb_position_t x_offset
 		private Int32 x_offset;
+		/// <summary>
+		/// Gets or sets how much the glyph moves horizontally before drawing it.
+		/// </summary>
+		/// <remarks>
+		/// This should not affect how much the line advances.
+		/// </remarks>
 		public Int32 XOffset {
 			readonly get => x_offset;
 			set => x_offset = value;
@@ -6749,6 +6782,12 @@ namespace HarfBuzzSharp {
 
 		// public hb_position_t y_offset
 		private Int32 y_offset;
+		/// <summary>
+		/// Gets or sets how much the glyph moves horizontally before drawing it.
+		/// </summary>
+		/// <remarks>
+		/// This should not affect how much the line advances.
+		/// </remarks>
 		public Int32 YOffset {
 			readonly get => y_offset;
 			set => y_offset = value;
@@ -7179,24 +7218,51 @@ namespace HarfBuzzSharp {
 namespace HarfBuzzSharp {
 
 	// hb_buffer_cluster_level_t
+	/// <summary>
+	/// The various levels of buffer clustering.
+	/// </summary>
 	public enum ClusterLevel {
 		// HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES = 0
+		/// <summary>
+		/// Cluster values grouped by graphemes into monotone order.
+		/// </summary>
 		MonotoneGraphemes = 0,
 		// HB_BUFFER_CLUSTER_LEVEL_MONOTONE_CHARACTERS = 1
+		/// <summary>
+		/// Cluster values grouped into monotone order.
+		/// </summary>
 		MonotoneCharacters = 1,
 		// HB_BUFFER_CLUSTER_LEVEL_CHARACTERS = 2
+		/// <summary>
+		/// Don't group cluster values.
+		/// </summary>
 		Characters = 2,
 		// HB_BUFFER_CLUSTER_LEVEL_DEFAULT = HB_BUFFER_CLUSTER_LEVEL_MONOTONE_GRAPHEMES
+		/// <summary>
+		/// Default cluster level (<see cref="ClusterLevel.MonotoneGraphemes" />).
+		/// </summary>
 		Default = 0,
 	}
 
 	// hb_buffer_content_type_t
+	/// <summary>
+	/// The various types of buffer contents.
+	/// </summary>
 	public enum ContentType {
 		// HB_BUFFER_CONTENT_TYPE_INVALID = 0
+		/// <summary>
+		/// Initial value for new buffer.
+		/// </summary>
 		Invalid = 0,
 		// HB_BUFFER_CONTENT_TYPE_UNICODE = 1
+		/// <summary>
+		/// The buffer contains input characters (before shaping).
+		/// </summary>
 		Unicode = 1,
 		// HB_BUFFER_CONTENT_TYPE_GLYPHS = 2
+		/// <summary>
+		/// The buffer contains output glyphs (after shaping).
+		/// </summary>
 		Glyphs = 2,
 	}
 
@@ -7240,66 +7306,147 @@ namespace HarfBuzzSharp {
 	}
 
 	// hb_buffer_serialize_flags_t
+	/// <summary>
+	/// The various flags that control what glyph information are serialized by <see cref="Buffer.SerializeGlyphs(System.Int32,System.Int32,HarfBuzzSharp.Font,HarfBuzzSharp.SerializeFormat,HarfBuzzSharp.SerializeFlag)" />.
+	/// </summary>
 	[Flags]
 	public enum SerializeFlag {
 		// HB_BUFFER_SERIALIZE_FLAG_DEFAULT = 0x00000000u
+		/// <summary>
+		/// Serialize glyph names, clusters and position information.
+		/// </summary>
 		Default = 0,
 		// HB_BUFFER_SERIALIZE_FLAG_NO_CLUSTERS = 0x00000001u
+		/// <summary>
+		/// Do not serialize glyph clusters.
+		/// </summary>
 		NoClusters = 1,
 		// HB_BUFFER_SERIALIZE_FLAG_NO_POSITIONS = 0x00000002u
+		/// <summary>
+		/// Do not serialize glyph position information.
+		/// </summary>
 		NoPositions = 2,
 		// HB_BUFFER_SERIALIZE_FLAG_NO_GLYPH_NAMES = 0x00000004u
+		/// <summary>
+		/// Do not serialize glyph names.
+		/// </summary>
 		NoGlyphNames = 4,
 		// HB_BUFFER_SERIALIZE_FLAG_GLYPH_EXTENTS = 0x00000008u
+		/// <summary>
+		/// Serialize glyph extents.
+		/// </summary>
 		GlyphExtents = 8,
 		// HB_BUFFER_SERIALIZE_FLAG_GLYPH_FLAGS = 0x00000010u
+		/// <summary>
+		/// Serialize glyph flags.
+		/// </summary>
 		GlyphFlags = 16,
 		// HB_BUFFER_SERIALIZE_FLAG_NO_ADVANCES = 0x00000020u
+		/// <summary>
+		/// Do not serialize glyph advances (glyph offsets will reflect absolute glyph positions).
+		/// </summary>
 		NoAdvances = 32,
 	}
 
 	// hb_buffer_serialize_format_t
+	/// <summary>
+	/// The various serialization and de-serialization formats.
+	/// </summary>
 	public enum SerializeFormat {
 		// HB_BUFFER_SERIALIZE_FORMAT_TEXT = 1413830740
+		/// <summary>
+		/// A human-readable, plain text format.
+		/// </summary>
 		Text = 1413830740,
 		// HB_BUFFER_SERIALIZE_FORMAT_JSON = 1246973774
+		/// <summary>
+		/// A machine-readable JSON format.
+		/// </summary>
 		Json = 1246973774,
 		// HB_BUFFER_SERIALIZE_FORMAT_INVALID = 0
+		/// <summary>
+		/// The format is invalid.
+		/// </summary>
 		Invalid = 0,
 	}
 
 	// hb_direction_t
+	/// <summary>
+	/// Various text directions that can be set via <see cref="Buffer.Direction" />.
+	/// </summary>
 	public enum Direction {
 		// HB_DIRECTION_INVALID = 0
+		/// <summary>
+		/// Initial, unset direction.
+		/// </summary>
 		Invalid = 0,
 		// HB_DIRECTION_LTR = 4
+		/// <summary>
+		/// Text is set horizontally from left to right.
+		/// </summary>
 		LeftToRight = 4,
 		// HB_DIRECTION_RTL = 5
+		/// <summary>
+		/// Text is set horizontally from right to left.
+		/// </summary>
 		RightToLeft = 5,
 		// HB_DIRECTION_TTB = 6
+		/// <summary>
+		/// Text is set vertically from top to bottom.
+		/// </summary>
 		TopToBottom = 6,
 		// HB_DIRECTION_BTT = 7
+		/// <summary>
+		/// Text is set vertically from bottom to top.
+		/// </summary>
 		BottomToTop = 7,
 	}
 
 	// hb_glyph_flags_t
+	/// <summary>
+	/// Represents the various glyph flags of a <see cref="GlyphInfo" />.
+	/// </summary>
 	[Flags]
 	public enum GlyphFlags {
 		// HB_GLYPH_FLAG_UNSAFE_TO_BREAK = 0x00000001
+		/// <summary>
+		/// If input text is broken at the beginning of the cluster this glyph is part of, then both sides need to be re-shaped, as the result might be different.
+		/// </summary>
 		UnsafeToBreak = 1,
 		// HB_GLYPH_FLAG_DEFINED = 0x00000001
+		/// <summary>
+		/// All the currently defined flags.
+		/// </summary>
 		Defined = 1,
 	}
 
 	// hb_memory_mode_t
+	/// <summary>
+	/// Various memory modes for  <see cref="Blob" />
+	/// </summary>
+	/// <remarks>
+	/// In no case shall the HarfBuzz client modify memory that is passed to HarfBuzz in a blob. If there is any such possibility, <see cref="MemoryMode.Duplicate" /> should be used such that HarfBuzz makes a copy immediately.
+	/// </remarks>
 	public enum MemoryMode {
 		// HB_MEMORY_MODE_DUPLICATE = 0
+		/// <summary>
+		/// HarfBuzz makes a copy immediately.
+		/// </summary>
 		Duplicate = 0,
 		// HB_MEMORY_MODE_READONLY = 1
+		/// <summary>
+		/// Default mode indicating that the memory won't be changed.
+		/// </summary>
 		ReadOnly = 1,
 		// HB_MEMORY_MODE_WRITABLE = 2
+		/// <summary>
+		/// Indicates that the data was copied solely for the purpose of passing to HarfBuzz.
+		/// </summary>
 		Writeable = 2,
 		// HB_MEMORY_MODE_READONLY_MAY_MAKE_WRITABLE = 3
+		/// <summary>
+		/// The font file was mmap()ed, but <see cref="MemoryMode.ReadOnly" /> should still be used.
+		/// </summary>
 		ReadOnlyMayMakeWriteable = 3,
 	}
 
