@@ -14,8 +14,8 @@
 
 2. **C API Layer** (`externals/skia/src/c/`)
    - C functions as P/Invoke targets
-   - **Exception firewall** - catches all C++ exceptions
-   - Returns error codes (bool/null), never throws
+   - **Minimal wrapper** - trusts C# validation
+   - Returns bool/null from C++ naturally, never throws
 
 3. **C++ Skia Layer** (`externals/skia/`)
    - Native graphics library
@@ -52,8 +52,8 @@ graph TB
     subgraph Layer2["C API Layer<br/>(externals/skia/include/c/*.h<br/>externals/skia/src/c/*.cpp)"]
         L2A[sk_canvas_*, sk_paint_*, sk_image_*, etc.]
         L2B[C functions with SK_C_API]
-        L2C[Exception firewall - catch all exceptions]
-        L2D[Return error codes bool/nullptr]
+        L2C[Minimal wrapper - trusts C# validation]
+        L2D[Returns bool/nullptr naturally from C++]
     end
     
     subgraph Layer3["C++ Skia Layer<br/>(externals/skia/)"]

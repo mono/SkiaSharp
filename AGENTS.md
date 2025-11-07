@@ -66,7 +66,7 @@ Pattern: SkType → sk_type_t* → SKType
 
 1. Find C++ API in Skia
 2. Identify pointer type (raw/owned/ref-counted)
-3. Add C API wrapper (exception firewall)
+3. Add C API wrapper (minimal pass-through)
 4. Add C API header
 5. Add P/Invoke declaration
 6. Add C# wrapper with validation
@@ -159,7 +159,7 @@ Owned → `SKObject` with `DisposeNative()`
 Raw → `owns: false` in handle  
 
 **"How to handle errors?"**  
-C API → Catch exceptions, return bool/null  
+C API → Minimal wrapper, pass through bool/null from C++  
 C# → Validate params, check returns, throw exceptions  
 
 👉 **See also:** [design/adding-new-apis.md#decision-flowcharts](design/adding-new-apis.md#decision-flowcharts)
@@ -178,4 +178,4 @@ See [design/adding-new-apis.md](design/adding-new-apis.md) for complete examples
 
 ---
 
-**Remember:** Three layers, three pointer types, exception firewall at C API.
+**Remember:** Three layers, three pointer types, C# is the safety boundary.

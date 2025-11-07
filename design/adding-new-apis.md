@@ -9,7 +9,7 @@
 
 1. **Find C++ API** - Locate in `externals/skia/include/core/`
 2. **Identify pointer type** - Check inheritance: `SkRefCnt`, `SkNVRefCnt<T>`, or owned
-3. **Add C API** - Create wrapper in `externals/skia/src/c/` with exception handling
+3. **Add C API** - Create minimal wrapper in `externals/skia/src/c/`
 4. **Add P/Invoke** - Declare in `binding/SkiaSharp/SkiaApi.cs`
 5. **Add C# wrapper** - Implement in `binding/SkiaSharp/SK*.cs` with validation
 
@@ -167,11 +167,7 @@ void sk_canvas_draw_arc(
     bool useCenter,
     const sk_paint_t* cpaint)
 {
-    // Defensive null checks (optional but recommended)
-    if (!ccanvas || !oval || !cpaint)
-        return;
-    
-    // Convert C types to C++ types and call
+    // Direct pass-through - C# validates all parameters
     AsCanvas(ccanvas)->drawArc(
         *AsRect(oval),        // Dereference pointer to get reference
         startAngle,           // SkScalar is float
@@ -184,8 +180,8 @@ void sk_canvas_draw_arc(
 **Key points:**
 - Type conversion macros: `AsCanvas()`, `AsRect()`, `AsPaint()`
 - Dereference pointers (`*`) to get C++ references
-- Keep implementation simple - C# validates parameters
-- No try-catch needed (C# prevents invalid inputs)
+- Direct pass-through - C# validates parameters before calling
+- No null checks needed (C# already validated)
 
 ### Special Cases
 

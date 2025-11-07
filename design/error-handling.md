@@ -416,29 +416,28 @@ bool SkBitmap::tryAllocPixels(const SkImageInfo& info) {
 
 ## Complete Error Flow Examples
 
-### Example 1: Drawing with Invalid Paint (Null Check)
+### Example 1: Drawing with Null Paint (Prevented by C#)
 
 ```csharp
-// C# Layer - Validation
+// C# Layer - Validation prevents bad calls
 public void DrawRect(SKRect rect, SKPaint paint)
 {
     if (paint == null)
         throw new ArgumentNullException(nameof(paint));  // ✓ Caught here
     
+    // Only reaches here with valid paint
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
+```
 
-// If validation was missing:
-// P/Invoke would pass IntPtr.Zero
-// ↓
-// C API Layer - Defensive Check
+```cpp
+// C API Layer - Actual implementation (trusts C# validation)
 SK_C_API void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint) {
-    if (!canvas || !rect || !paint)
-        return;  // ✓ Silently ignore - prevent crash
-    
     AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
 ```
+
+**Note:** C# validation ensures only valid pointers reach C API.
 
 ### Example 2: Image Creation Failure
 
@@ -456,17 +455,17 @@ public static SKImage FromEncodedData(SKData data)
     
     return GetObject(handle);
 }
+```
 
-// C API Layer
+```cpp
+// C API Layer - Actual implementation (passes through)
 SK_C_API sk_image_t* sk_image_new_from_encoded(const sk_data_t* data) {
-    try {
-        auto image = SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(data)));
-        return ToImage(image.release());  // Returns nullptr if failed
-    } catch (...) {
-        return nullptr;  // ✓ Catch exceptions, return null
-    }
+    auto image = SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(data)));
+    return ToImage(image.release());  // Returns nullptr if failed
 }
+```
 
+```cpp
 // C++ Layer
 sk_sp<SkImage> SkImages::DeferredFromEncodedData(sk_sp<SkData> data) {
     if (!data) {
@@ -642,8 +641,8 @@ SK_C_API sk_image_t* sk_image_new_from_encoded(const sk_data_t* data) {
 ### When a C# call fails:
 
 1. **Check C# validation** - Did parameter validation catch it?
-2. **Check return value** - Is C API returning error?
-3. **Check C API implementation** - Is it catching exceptions?
+2. **Check return value** - Is C API returning null/false from C++?
+3. **Check C API implementation** - Is it passing through the result correctly?
 4. **Check C++ behavior** - What does Skia return?
 5. **Check documentation** - Is the operation supported?
 

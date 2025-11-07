@@ -49,7 +49,7 @@ graph TB
     style CPP fill:#e1e8f5
 ```
 
-**Key principle:** C++ exceptions **cannot cross** the C API boundary. The C API layer catches all exceptions.
+**Key principle:** C++ exceptions **cannot cross** the C API boundary. The C API is a minimal wrapper that trusts C# to validate all parameters.
 
 ---
 
@@ -126,18 +126,14 @@ void sk_canvas_draw_circle(
     float radius,
     const sk_paint_t* paint)
 {
-    // Defensive null checks
-    if (!canvas || !paint)
-        return;
-    
-    // Call C++ method
+    // Direct pass-through - trusts C# validated parameters
     AsCanvas(canvas)->drawCircle(cx, cy, radius, *AsPaint(paint));
 }
 ```
 
 **Key points:**
 - Function name: `sk_<type>_<action>` pattern
-- Defensive null checks (C API must be safe)
+- Direct call to C++ - no validation (C# already validated)
 - `AsCanvas()` and `AsPaint()` convert opaque pointers to C++ types
 - Dereference with `*` to convert pointer to reference
 
@@ -264,13 +260,12 @@ public static SKImage FromEncodedData(SKData data)
 }
 ```
 
-### Pattern 3: Void Methods (Defensive Checks)
+### Pattern 3: Void Methods (Direct Pass-Through)
 
 **C API:**
 ```cpp
+// Direct pass-through - C# ensures valid parameters
 void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint) {
-    if (!canvas || !rect || !paint)
-        return;  // Defensive: fail silently
     AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
 ```
@@ -319,7 +314,7 @@ public void DrawRect(SKRect rect, SKPaint paint)
 }
 ```
 
-**Why this matters:** C API does NOT validate - it trusts C# to send valid pointers.
+**Why this matters:** C API does NOT validate - it trusts C# to send valid pointers. Passing null will cause a crash in native code.
 
 ### 3. ❌ Missing Parameter Validation
 ```csharp
@@ -532,9 +527,9 @@ dotnet cake --target=tests
 
 **Remember:**
 1. **Three layers:** C# → C API → C++
-2. **Exception firewall:** C API catches all exceptions
+2. **C# is safety boundary:** All validation happens in C# layer
 3. **Three pointer types:** Raw, Owned, Ref-counted
-4. **Always validate:** Check parameters in C# and C API
+4. **Always validate:** Check parameters in C# before P/Invoke
 5. **Check returns:** Handle null and false returns
 
 **When in doubt:**
