@@ -163,11 +163,43 @@ dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- gener
 
 ## Threading
 
-- Skia is **NOT thread-safe**
-- Most objects single-threaded only
-- Reference counting is atomic (thread-safe)
-- Immutable objects (SKImage) can be shared after creation
-- No automatic synchronization in wrappers
+**⚠️ Skia is NOT thread-safe** - Most objects must be used from a single thread.
+
+### Quick Thread-Safety Matrix
+
+| Type | Thread-Safe? | Can Share? | Notes |
+|------|--------------|------------|-------|
+| **SKCanvas** | ❌ No | No | Single-threaded only |
+| **SKPaint** | ❌ No | No | Each thread needs own instance |
+| **SKPath** | ❌ No | No | Build on one thread |
+| **SKImage** | ✅ Yes* | Yes | Read-only after creation |
+| **SKShader** | ✅ Yes* | Yes | Immutable, shareable |
+| **SKTypeface** | ✅ Yes* | Yes | Immutable, shareable |
+
+*Read-only safe: Can be shared across threads once created, but creation should be single-threaded.
+
+### Threading Rules
+
+1. **✅ DO:** Keep mutable objects (Canvas, Paint, Path) thread-local
+2. **✅ DO:** Share immutable objects (Image, Shader, Typeface) across threads
+3. **✅ DO:** Create objects on background threads for offscreen rendering
+4. **❌ DON'T:** Share SKCanvas across threads
+5. **❌ DON'T:** Modify SKPaint while another thread uses it
+
+### Safe Pattern: Background Rendering
+
+```csharp
+// ✅ Each thread has its own objects
+var image = await Task.Run(() => {
+    using var surface = SKSurface.Create(info);
+    using var canvas = surface.Canvas;  // Thread-local
+    using var paint = new SKPaint();    // Thread-local
+    canvas.DrawCircle(100, 100, 50, paint);
+    return surface.Snapshot();  // Immutable, safe to share
+});
+```
+
+**Details:** See [architecture-overview.md - Threading](design/architecture-overview.md#threading-model-and-concurrency)
 
 ## Build Commands
 

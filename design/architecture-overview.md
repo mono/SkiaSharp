@@ -324,19 +324,320 @@ dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- gener
 - Struct parameters passed by pointer
 - Bulk operations to minimize transitions
 
-## Threading Model
+## Threading Model and Concurrency
 
-**Skia is NOT thread-safe:**
-- Most Skia objects should only be accessed from a single thread
-- Canvas drawing must be single-threaded
-- Creating objects concurrently is generally safe
-- Immutable objects (like `SKImage`) can be shared across threads once created
+### TL;DR - Thread Safety Rules
 
-**SkiaSharp threading considerations:**
-- No automatic synchronization in wrappers
-- Developers must handle thread safety
-- `HandleDictionary` uses `ConcurrentDictionary` for thread-safe lookups
-- Disposal must be thread-aware
+**⚠️ Skia is NOT thread-safe by default**
+
+| Object Type | Thread Safety | Can Share? | Notes |
+|-------------|---------------|------------|-------|
+| **Canvas** | ❌ Not thread-safe | No | Single-threaded drawing only |
+| **Paint** | ❌ Not thread-safe | No | Each thread needs own instance |
+| **Path** | ❌ Not thread-safe | No | Build paths on one thread |
+| **Bitmap (mutable)** | ❌ Not thread-safe | No | Modifications single-threaded |
+| **Image (immutable)** | ✅ Read-only safe | Yes | Once created, can share |
+| **Shader** | ✅ Read-only safe | Yes | Immutable, can share |
+| **Typeface** | ✅ Read-only safe | Yes | Immutable, can share |
+| **Data** | ✅ Read-only safe | Yes | Immutable, can share |
+| **Creation** | ✅ Usually safe | N/A | Creating objects on different threads OK |
+
+**Golden Rule:** Don't use the same SKCanvas/SKPaint/SKPath from multiple threads simultaneously.
+
+### Detailed Threading Behavior
+
+#### Mutable Objects (Not Thread-Safe)
+
+**Examples:** SKCanvas, SKPaint, SKPath, SKBitmap (when being modified)
+
+**Behavior:**
+- Single-threaded use only
+- No internal locking
+- Race conditions if accessed from multiple threads
+- Undefined behavior if concurrent access
+
+**Correct Pattern:**
+```csharp
+// ✅ GOOD: Each thread has its own canvas
+void DrawOnThread1()
+{
+    using var surface1 = SKSurface.Create(info);
+    using var canvas1 = surface1.Canvas;
+    canvas1.DrawRect(...);  // Thread 1 only
+}
+
+void DrawOnThread2()
+{
+    using var surface2 = SKSurface.Create(info);
+    using var canvas2 = surface2.Canvas;
+    canvas2.DrawRect(...);  // Thread 2 only
+}
+```
+
+**Wrong Pattern:**
+```csharp
+// ❌ BAD: Sharing canvas between threads
+SKCanvas sharedCanvas;
+
+void DrawOnThread1()
+{
+    sharedCanvas.DrawRect(...);  // RACE CONDITION!
+}
+
+void DrawOnThread2()
+{
+    sharedCanvas.DrawCircle(...);  // RACE CONDITION!
+}
+```
+
+#### Immutable Objects (Thread-Safe for Reading)
+
+**Examples:** SKImage, SKShader, SKTypeface, SKData, SKPicture
+
+**Behavior:**
+- Read-only after creation
+- Safe to share across threads
+- Reference counting is thread-safe (atomic operations)
+- Multiple threads can use the same instance concurrently
+
+**Pattern:**
+```csharp
+// ✅ GOOD: Share immutable image across threads
+SKImage sharedImage = SKImage.FromEncodedData(data);
+
+void DrawOnThread1()
+{
+    using var surface = SKSurface.Create(info);
+    surface.Canvas.DrawImage(sharedImage, 0, 0);  // Safe
+}
+
+void DrawOnThread2()
+{
+    using var surface = SKSurface.Create(info);
+    surface.Canvas.DrawImage(sharedImage, 0, 0);  // Safe (same image)
+}
+```
+
+#### Object Creation (Usually Thread-Safe)
+
+Creating different objects on different threads is generally safe:
+
+```csharp
+// ✅ GOOD: Create different objects on different threads
+var task1 = Task.Run(() => 
+{
+    using var paint1 = new SKPaint { Color = SKColors.Red };
+    using var surface1 = SKSurface.Create(info);
+    // ... draw with paint1 and surface1
+});
+
+var task2 = Task.Run(() => 
+{
+    using var paint2 = new SKPaint { Color = SKColors.Blue };
+    using var surface2 = SKSurface.Create(info);
+    // ... draw with paint2 and surface2
+});
+
+await Task.WhenAll(task1, task2);  // Safe - different objects
+```
+
+### Threading Visualization
+
+```mermaid
+graph TB
+    subgraph Thread1["Thread 1"]
+        T1Canvas[SKCanvas 1]
+        T1Paint[SKPaint 1]
+        T1Path[SKPath 1]
+    end
+    
+    subgraph Thread2["Thread 2"]
+        T2Canvas[SKCanvas 2]
+        T2Paint[SKPaint 2]
+        T2Path[SKPath 2]
+    end
+    
+    subgraph Shared["Shared (Immutable)"]
+        Image[SKImage]
+        Shader[SKShader]
+        Typeface[SKTypeface]
+    end
+    
+    T1Canvas -->|Uses| Image
+    T2Canvas -->|Uses| Image
+    T1Paint -->|Uses| Shader
+    T2Paint -->|Uses| Shader
+    
+    style T1Canvas fill:#ffe1e1
+    style T1Paint fill:#ffe1e1
+    style T1Path fill:#ffe1e1
+    style T2Canvas fill:#ffe1e1
+    style T2Paint fill:#ffe1e1
+    style T2Path fill:#ffe1e1
+    style Image fill:#e1f5e1
+    style Shader fill:#e1f5e1
+    style Typeface fill:#e1f5e1
+```
+
+**Legend:**
+- 🔴 Red (mutable) = Thread-local only
+- 🟢 Green (immutable) = Can be shared
+
+### C# Wrapper Thread Safety
+
+**HandleDictionary:**
+- Uses `ConcurrentDictionary` for thread-safe lookups
+- Multiple threads can register/lookup handles safely
+- Prevents duplicate wrappers for the same native handle
+
+**Reference Counting:**
+- `ref()` and `unref()` operations are thread-safe
+- Uses atomic operations in native Skia
+- Safe to dispose from different thread than creation
+
+**Disposal:**
+- `Dispose()` can be called from any thread
+- But object must not be in use on another thread
+- Finalizer may run on GC thread
+
+### Common Threading Scenarios
+
+#### Scenario 1: Background Rendering
+
+```csharp
+// ✅ GOOD: Render on background thread
+var image = await Task.Run(() =>
+{
+    var info = new SKImageInfo(width, height);
+    using var surface = SKSurface.Create(info);
+    using var canvas = surface.Canvas;
+    using var paint = new SKPaint();
+    
+    // All objects local to this thread
+    canvas.Clear(SKColors.White);
+    canvas.DrawCircle(100, 100, 50, paint);
+    
+    return surface.Snapshot();  // Returns immutable SKImage
+});
+
+// Use image on UI thread
+imageView.Image = image;
+```
+
+#### Scenario 2: Parallel Tile Rendering
+
+```csharp
+// ✅ GOOD: Render tiles in parallel
+var tiles = Enumerable.Range(0, tileCount).Select(i => 
+    Task.Run(() => RenderTile(i))
+).ToArray();
+
+await Task.WhenAll(tiles);
+
+SKImage RenderTile(int index)
+{
+    // Each task has its own objects
+    using var surface = SKSurface.Create(tileInfo);
+    using var canvas = surface.Canvas;
+    using var paint = new SKPaint();
+    // ... render tile
+    return surface.Snapshot();
+}
+```
+
+#### Scenario 3: Shared Resources
+
+```csharp
+// ✅ GOOD: Load shared resources once
+class GraphicsCache
+{
+    private static readonly SKTypeface _font = SKTypeface.FromFile("font.ttf");
+    private static readonly SKImage _logo = SKImage.FromEncodedData("logo.png");
+    
+    // Multiple threads can use these immutable objects
+    public static void DrawWithSharedResources(SKCanvas canvas)
+    {
+        using var paint = new SKPaint { Typeface = _font };
+        canvas.DrawText("Hello", 0, 0, paint);
+        canvas.DrawImage(_logo, 100, 100);
+    }
+}
+```
+
+### Platform-Specific Threading Considerations
+
+#### UI Thread Affinity
+
+Some platforms require graphics operations on specific threads:
+
+**❌ Android/iOS:** Some surface operations may require UI thread
+**✅ Offscreen rendering:** Usually safe on any thread
+**✅ Image decoding:** Safe on background threads
+
+```csharp
+// Example: Decode on background, display on UI
+var bitmap = await Task.Run(() => 
+{
+    // Decode on background thread
+    return SKBitmap.Decode("large-image.jpg");
+});
+
+// Use on UI thread
+await MainThread.InvokeOnMainThreadAsync(() => 
+{
+    imageView.Bitmap = bitmap;
+});
+```
+
+### Debugging Threading Issues
+
+**Symptoms of threading bugs:**
+- Crashes with no clear cause
+- Corrupted rendering
+- Access violations
+- Intermittent failures
+
+**Tools to help:**
+```csharp
+// Add thread ID assertions in debug builds
+#if DEBUG
+private readonly int _creationThread = Thread.CurrentThread.ManagedThreadId;
+
+private void AssertCorrectThread()
+{
+    if (Thread.CurrentThread.ManagedThreadId != _creationThread)
+        throw new InvalidOperationException("Cross-thread access detected!");
+}
+#endif
+```
+
+### Best Practices Summary
+
+1. **✅ DO:** Keep mutable objects (Canvas, Paint, Path) thread-local
+2. **✅ DO:** Share immutable objects (Image, Shader, Typeface) freely
+3. **✅ DO:** Create objects on background threads for offscreen rendering
+4. **✅ DO:** Use thread-local storage or task-based parallelism
+5. **❌ DON'T:** Share SKCanvas across threads
+6. **❌ DON'T:** Modify SKPaint while another thread uses it
+7. **❌ DON'T:** Assume automatic synchronization
+8. **❌ DON'T:** Dispose objects still in use on other threads
+
+### SkiaSharp Threading Architecture
+
+**No automatic locking:**
+- SkiaSharp wrappers don't add locks
+- Performance-critical design
+- Developer responsibility to ensure thread safety
+
+**Thread-safe components:**
+- `HandleDictionary` uses `ConcurrentDictionary`
+- Reference counting uses atomic operations
+- Disposal is thread-safe (but must not be in use)
+
+**Not thread-safe:**
+- Individual wrapper objects (SKCanvas, SKPaint, etc.)
+- Mutable operations
+- State changes
 
 ## Next Steps
 

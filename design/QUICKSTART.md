@@ -438,6 +438,70 @@ SK_C_API sk_image_t* sk_image_new() {
 
 ---
 
+## Threading Quick Reference
+
+> **📚 Deep Dive:** See [architecture-overview.md - Threading Model](architecture-overview.md#threading-model-and-concurrency) for comprehensive threading documentation.
+
+### Thread Safety Matrix
+
+| Object Type | Thread-Safe? | Can Share? | Rule |
+|-------------|--------------|------------|------|
+| SKCanvas | ❌ No | No | One thread only |
+| SKPaint | ❌ No | No | One thread only |
+| SKPath | ❌ No | No | One thread only |
+| SKImage | ✅ Yes (read-only) | Yes | Immutable, shareable |
+| SKShader | ✅ Yes (read-only) | Yes | Immutable, shareable |
+| SKTypeface | ✅ Yes (read-only) | Yes | Immutable, shareable |
+
+### Pattern: Background Rendering
+
+```csharp
+// ✅ GOOD: Each thread has its own objects
+var image = await Task.Run(() =>
+{
+    using var surface = SKSurface.Create(info);
+    using var canvas = surface.Canvas;  // Thread-local canvas
+    using var paint = new SKPaint();    // Thread-local paint
+    
+    canvas.Clear(SKColors.White);
+    canvas.DrawCircle(100, 100, 50, paint);
+    
+    return surface.Snapshot();  // Returns immutable SKImage (shareable)
+});
+
+// Safe to use image on UI thread
+imageView.Image = image;
+```
+
+### Pattern: Shared Immutable Resources
+
+```csharp
+// ✅ GOOD: Load once, share across threads
+private static readonly SKTypeface _sharedFont = SKTypeface.FromFile("font.ttf");
+private static readonly SKImage _sharedLogo = SKImage.FromEncodedData("logo.png");
+
+void DrawOnAnyThread(SKCanvas canvas)
+{
+    // Immutable objects can be safely shared
+    using var paint = new SKPaint { Typeface = _sharedFont };
+    canvas.DrawImage(_sharedLogo, 0, 0);
+}
+```
+
+### ❌ Common Threading Mistake
+
+```csharp
+// WRONG: Sharing mutable objects across threads
+SKCanvas sharedCanvas;  // ❌ BAD!
+
+Task.Run(() => sharedCanvas.DrawRect(...));  // Thread 1
+Task.Run(() => sharedCanvas.DrawCircle(...)); // Thread 2 - RACE CONDITION!
+```
+
+**Remember:** Mutable objects (Canvas, Paint, Path) are NOT thread-safe. Keep them thread-local!
+
+---
+
 ## Next Steps
 
 ### For Quick Reference

@@ -43,6 +43,143 @@ Skia uses three fundamental categories of pointer types for memory management:
 
 Understanding which category an API uses is essential for creating correct bindings.
 
+## Memory Lifecycle Visualizations
+
+### Lifecycle: Owned Pointer (Unique Ownership)
+
+```mermaid
+sequenceDiagram
+    participant CS as C# Code
+    participant Wrapper as SKPaint Wrapper
+    participant PInvoke as P/Invoke
+    participant CAPI as C API
+    participant Native as Native SkPaint
+    
+    Note over CS,Native: Creation Phase
+    CS->>Wrapper: new SKPaint()
+    Wrapper->>PInvoke: sk_paint_new()
+    PInvoke->>CAPI: sk_paint_new()
+    CAPI->>Native: new SkPaint()
+    Native-->>CAPI: SkPaint* ptr
+    CAPI-->>PInvoke: sk_paint_t* handle
+    PInvoke-->>Wrapper: IntPtr handle
+    Wrapper-->>CS: SKPaint instance
+    Note over Wrapper: OwnsHandle = true
+    
+    Note over CS,Native: Usage Phase
+    CS->>Wrapper: SetColor(red)
+    Wrapper->>PInvoke: sk_paint_set_color(handle, red)
+    PInvoke->>CAPI: sk_paint_set_color(paint, red)
+    CAPI->>Native: paint->setColor(red)
+    
+    Note over CS,Native: Disposal Phase
+    CS->>Wrapper: Dispose() or GC
+    Wrapper->>PInvoke: sk_paint_delete(handle)
+    PInvoke->>CAPI: sk_paint_delete(paint)
+    CAPI->>Native: delete paint
+    Note over Native: Memory freed
+```
+
+**Key Points:**
+- Single owner (C# wrapper)
+- Explicit disposal required
+- No reference counting
+- Deterministic cleanup with `using` statement
+
+### Lifecycle: Reference-Counted Pointer (Shared Ownership)
+
+```mermaid
+sequenceDiagram
+    participant CS1 as C# Object 1
+    participant CS2 as C# Object 2
+    participant Wrapper1 as SKImage Wrapper 1
+    participant Wrapper2 as SKImage Wrapper 2
+    participant PInvoke as P/Invoke
+    participant CAPI as C API
+    participant Native as Native SkImage
+    
+    Note over Native: RefCount = 1
+    
+    Note over CS1,Native: First Reference
+    CS1->>Wrapper1: Create from native
+    Wrapper1->>PInvoke: sk_image_ref(handle)
+    PInvoke->>CAPI: sk_image_ref(image)
+    CAPI->>Native: image->ref()
+    Note over Native: RefCount = 2
+    
+    Note over CS2,Native: Second Reference (Share)
+    CS1->>CS2: Pass image reference
+    CS2->>Wrapper2: Create from same handle
+    Wrapper2->>PInvoke: sk_image_ref(handle)
+    PInvoke->>CAPI: sk_image_ref(image)
+    CAPI->>Native: image->ref()
+    Note over Native: RefCount = 3
+    
+    Note over CS1,Native: First Dispose
+    CS1->>Wrapper1: Dispose()
+    Wrapper1->>PInvoke: sk_image_unref(handle)
+    PInvoke->>CAPI: sk_image_unref(image)
+    CAPI->>Native: image->unref()
+    Note over Native: RefCount = 2<br/>(Still alive)
+    
+    Note over CS2,Native: Second Dispose
+    CS2->>Wrapper2: Dispose()
+    Wrapper2->>PInvoke: sk_image_unref(handle)
+    PInvoke->>CAPI: sk_image_unref(image)
+    CAPI->>Native: image->unref()
+    Note over Native: RefCount = 1<br/>(Original owner)
+    
+    Note over Native: Original unref()<br/>RefCount = 0<br/>Memory freed
+```
+
+**Key Points:**
+- Multiple owners allowed
+- Thread-safe reference counting
+- Automatic cleanup when last reference dropped
+- Each C# wrapper increments ref count
+
+### Lifecycle: Raw Pointer (Borrowed Reference)
+
+```mermaid
+sequenceDiagram
+    participant CS as C# Code
+    participant Canvas as SKCanvas
+    participant Surface as SKSurface
+    participant PInvoke as P/Invoke
+    participant CAPI as C API
+    participant Native as Native Objects
+    
+    Note over CS,Native: Canvas owns Surface
+    CS->>Canvas: canvas.Surface
+    Canvas->>PInvoke: sk_canvas_get_surface(handle)
+    PInvoke->>CAPI: sk_canvas_get_surface(canvas)
+    CAPI->>Native: canvas->getSurface()
+    Native-->>CAPI: SkSurface* (non-owning)
+    CAPI-->>PInvoke: sk_surface_t* handle
+    PInvoke-->>Canvas: IntPtr handle
+    Canvas->>Surface: new SKSurface(handle, owns: false)
+    Note over Surface: OwnsHandle = false
+    Surface-->>CS: SKSurface instance
+    
+    Note over CS,Native: Use the borrowed reference
+    CS->>Surface: Use surface methods
+    
+    Note over CS,Native: Dispose wrapper (NOT native)
+    CS->>Surface: Dispose()
+    Note over Surface: Only wrapper disposed<br/>Native object NOT freed<br/>(Canvas still owns it)
+    
+    Note over CS,Native: Canvas disposal frees surface
+    CS->>Canvas: Dispose()
+    Canvas->>PInvoke: sk_canvas_destroy(handle)
+    Note over Native: Canvas AND Surface freed
+```
+
+**Key Points:**
+- No ownership transfer
+- Parent object owns the native resource
+- C# wrapper is just a view
+- Disposing wrapper doesn't free native memory
+
 ## Pointer Type 1: Raw Pointers (Non-Owning)
 
 ### Native C++ Layer
