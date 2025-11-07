@@ -101,49 +101,31 @@ Use the documentation to trace through layers:
 4. Check implementation in `externals/skia/src/c/sk_*.cpp`
 5. Find C++ API in `externals/skia/include/core/Sk*.h`
 
-## Key Concepts Summary
+## Key Concepts at a Glance
 
 ### The Three-Layer Architecture
 
 ```
-┌─────────────────────────────────────┐
-│   C# Wrapper Layer                  │  ← Managed .NET code
-│   (binding/SkiaSharp/*.cs)          │     - Type safety
-│   - SKCanvas, SKPaint, SKImage      │     - Memory management
-└──────────────┬──────────────────────┘     - Validation
-               │ P/Invoke
-┌──────────────▼──────────────────────┐
-│   C API Layer                       │  ← Exception boundary
-│   (externals/skia/include/c/*.h)    │     - Never throws
-│   - sk_canvas_*, sk_paint_*         │     - Error codes
-└──────────────┬──────────────────────┘     - Type conversion
-               │ Casting
-┌──────────────▼──────────────────────┐
-│   C++ Skia Library                  │  ← Native graphics engine
-│   (externals/skia/include/core/*.h) │     - Original Skia API
-│   - SkCanvas, SkPaint, SkImage      │     - Implementation
-└─────────────────────────────────────┘
+C# Wrapper (binding/) → P/Invoke → C API (externals/skia/src/c/) → C++ Skia
 ```
 
-### Three Pointer Type Categories
+**→ Full details:** [architecture-overview.md](architecture-overview.md)
 
-Understanding pointer types is **critical** for working with SkiaSharp:
+### Three Pointer Types
 
-| Type | C++ | C API | C# | Cleanup | Examples |
-|------|-----|-------|-----|---------|----------|
-| **Raw (Non-Owning)** | `SkType*` param | `sk_type_t*` | `OwnsHandle=false` | None | Parameters, getters |
-| **Owned** | `new SkType()` | `sk_type_new/delete` | `SKObject` | `delete` | SKCanvas, SKPaint |
-| **Reference-Counted** | `sk_sp<SkType>` | `sk_type_ref/unref` | `ISKReferenceCounted` | `unref()` | SKImage, SKShader |
+| Type | Examples | Cleanup |
+|------|----------|---------|
+| **Raw** | Parameters, getters | None |
+| **Owned** | Canvas, Paint | `delete` |
+| **Ref-counted** | Image, Shader | `unref()` |
 
-**→ See [memory-management.md](memory-management.md) for detailed explanation**
+**→ Full details:** [memory-management.md](memory-management.md)
 
-### Error Handling Across Layers
+### Error Handling
 
-- **C++ Layer:** Can throw exceptions, use normal C++ error handling
-- **C API Layer:** **Never throws** - catches all exceptions, returns error codes (bool/null)
-- **C# Layer:** Validates parameters, checks return values, throws C# exceptions
+C++ throws → C API catches (returns bool/null) → C# checks & throws
 
-**→ See [error-handling.md](error-handling.md) for patterns and examples**
+**→ Full details:** [error-handling.md](error-handling.md)
 
 ## Use Cases Supported
 
