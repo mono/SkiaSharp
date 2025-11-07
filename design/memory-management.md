@@ -1,5 +1,34 @@
 # Memory Management in SkiaSharp
 
+> **Quick Start:** For a practical tutorial, see [QUICKSTART.md](QUICKSTART.md)  
+> **Quick Reference:** For a 2-minute overview, see [AGENTS.md](../AGENTS.md)
+
+## TL;DR
+
+**Three pointer types determine memory management:**
+
+1. **Raw Pointers (Non-Owning)** - Borrowed references, no cleanup
+   - C++: `const SkType&` parameters, getter returns
+   - C#: `owns: false` in constructor
+   - Example: Paint parameter in `DrawRect(rect, paint)`
+
+2. **Owned Pointers (Unique)** - One owner, explicit delete
+   - C++: Mutable objects like Canvas, Paint, Bitmap
+   - C API: `sk_type_new()` / `sk_type_delete()` pairs
+   - C#: `DisposeNative()` calls delete/destroy
+
+3. **Reference-Counted Pointers (Shared)** - Two variants:
+   - **Virtual** (`SkRefCnt`): Image, Shader, Surface → 8-16 byte overhead
+   - **Non-Virtual** (`SkNVRefCnt<T>`): Data, TextBlob → 4 byte overhead
+   - Both use `sk_sp<T>` and ref/unref pattern
+   - C#: `ISKReferenceCounted` or `ISKNonVirtualReferenceCounted`
+
+**How to identify:** Check C++ class inheritance (`SkRefCnt`, `SkNVRefCnt<T>`, or mutable type)
+
+**Critical:** Getting pointer type wrong → memory leaks or crashes
+
+---
+
 ## Introduction
 
 Understanding memory management is critical when working with SkiaSharp because it bridges managed C# code with unmanaged native code. This document explains the different pointer types used in Skia, how they map through the three layers, and how to properly manage object lifecycles.

@@ -186,7 +186,10 @@ dotnet cake --target=externals-download
 
 **Quick reference:** This file + code comments
 
+**Practical tutorial:** [design/QUICKSTART.md](design/QUICKSTART.md) - 10-minute walkthrough
+
 **Detailed guides** in `design/` folder:
+- `QUICKSTART.md` - **Start here!** Practical end-to-end tutorial
 - `architecture-overview.md` - Three-layer architecture, design principles
 - `memory-management.md` - **Critical**: Pointer types, ownership, lifecycle
 - `error-handling.md` - Error propagation patterns through layers

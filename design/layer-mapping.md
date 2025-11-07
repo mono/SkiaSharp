@@ -1,5 +1,32 @@
 # Layer Mapping Reference
 
+> **Quick Start:** For a practical tutorial, see [QUICKSTART.md](QUICKSTART.md)  
+> **Quick Reference:** For a 2-minute overview, see [AGENTS.md](../AGENTS.md)
+
+## TL;DR
+
+**Naming conventions across layers:**
+
+- **C++:** `SkCanvas::drawRect(const SkRect& rect, const SkPaint& paint)`
+- **C API:** `sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint)`
+- **C#:** `SKCanvas.DrawRect(SKRect rect, SKPaint paint)`
+
+**Type mapping patterns:**
+- C++ class → C opaque pointer → C# wrapper class
+- `SkType` → `sk_type_t*` → `SKType`
+- Value types map directly (int, float, bool, enums)
+
+**Function naming:**
+- C++: Method names: `drawRect()`, `clear()`
+- C API: `sk_<type>_<action>`: `sk_canvas_draw_rect()`, `sk_canvas_clear()`
+- C#: PascalCase methods: `DrawRect()`, `Clear()`
+
+See tables below for complete mappings of types, functions, and enums.
+
+---
+
+## Introduction
+
 This document provides detailed mappings between the three layers of SkiaSharp, serving as a quick reference for understanding how types, functions, and patterns translate across layer boundaries.
 
 ## Type Naming Conventions

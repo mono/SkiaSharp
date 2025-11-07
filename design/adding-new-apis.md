@@ -1,5 +1,38 @@
 # Adding New APIs to SkiaSharp
 
+> **Quick Start:** For a quick walkthrough, see [QUICKSTART.md](QUICKSTART.md)  
+> **Quick Reference:** For common patterns, see [AGENTS.md](../AGENTS.md)
+
+## TL;DR
+
+**5-step process to add a new API:**
+
+1. **Find C++ API** - Locate in `externals/skia/include/core/`
+2. **Identify pointer type** - Check inheritance: `SkRefCnt`, `SkNVRefCnt<T>`, or owned
+3. **Add C API** - Create wrapper in `externals/skia/src/c/` with exception handling
+4. **Add P/Invoke** - Declare in `binding/SkiaSharp/SkiaApi.cs`
+5. **Add C# wrapper** - Implement in `binding/SkiaSharp/SK*.cs` with validation
+
+**Critical decisions:**
+- Pointer type (determines disposal pattern)
+- Error handling (can it fail?)
+- Parameter types (ref-counted need `sk_ref_sp`)
+
+**File locations:**
+```
+C++:   externals/skia/include/core/SkCanvas.h
+C API: externals/skia/src/c/sk_canvas.cpp
+       externals/skia/include/c/sk_canvas.h  
+C#:    binding/SkiaSharp/SKCanvas.cs
+       binding/SkiaSharp/SkiaApi.cs
+```
+
+See [QUICKSTART.md](QUICKSTART.md) for a complete example, or continue below for comprehensive details.
+
+---
+
+## Introduction
+
 This guide walks through the complete process of adding a new Skia API to SkiaSharp, from identifying the C++ API to testing the final C# binding.
 
 ## Prerequisites

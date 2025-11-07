@@ -1,5 +1,37 @@
 # Error Handling in SkiaSharp
 
+> **Quick Start:** For a practical tutorial, see [QUICKSTART.md](QUICKSTART.md)  
+> **Quick Reference:** For a 2-minute overview, see [AGENTS.md](../AGENTS.md)
+
+## TL;DR
+
+**Exception firewall at C API layer:**
+
+- **C++ Layer:** Can throw exceptions normally
+- **C API Layer:** **NEVER throws exceptions** - catches all and returns error codes
+- **C# Layer:** Throws typed C# exceptions
+
+**Three error patterns:**
+1. **Boolean returns** - `TryXxx()` methods return `true`/`false`
+2. **Null returns** - Factory methods return `nullptr` on failure
+3. **Void methods** - Defensive null checks, fail silently
+
+**Key principle:** C++ exceptions cannot cross the C API boundary (would crash).
+
+**C API template:**
+```cpp
+SK_C_API result_type sk_function(...) {
+    if (!param) return error_value;  // Defensive check
+    try {
+        return CallCppFunction();
+    } catch (...) {
+        return error_value;  // Catch ALL exceptions
+    }
+}
+```
+
+---
+
 ## Introduction
 
 Error handling in SkiaSharp must navigate the complexities of crossing managed/unmanaged boundaries while maintaining safety and usability. This document explains how errors propagate through the three-layer architecture and the patterns used at each layer.

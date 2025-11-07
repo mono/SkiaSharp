@@ -1,5 +1,37 @@
 # SkiaSharp Architecture Overview
 
+> **Quick Start:** For a practical tutorial, see [QUICKSTART.md](QUICKSTART.md)  
+> **Quick Reference:** For a 2-minute overview, see [AGENTS.md](../AGENTS.md)
+
+## TL;DR
+
+**Three-layer architecture bridges C++ to C#:**
+
+1. **C# Wrapper Layer** (`binding/SkiaSharp/`)
+   - Public .NET API (SKCanvas, SKPaint, etc.)
+   - Validates parameters, throws exceptions
+   - Manages object lifecycles with IDisposable
+
+2. **C API Layer** (`externals/skia/src/c/`)
+   - C functions as P/Invoke targets
+   - **Exception firewall** - catches all C++ exceptions
+   - Returns error codes (bool/null), never throws
+
+3. **C++ Skia Layer** (`externals/skia/`)
+   - Native graphics library
+   - Can throw exceptions (C++ code)
+
+**Call flow:** `SKCanvas.DrawRect()` → (P/Invoke) → `sk_canvas_draw_rect()` → (type cast) → `SkCanvas::drawRect()`
+
+**Key design principles:**
+- Exceptions don't cross C boundary
+- Each layer has distinct responsibilities
+- Type conversions happen at layer boundaries
+
+See sections below for details on each layer, threading, and code generation.
+
+---
+
 ## Introduction
 
 SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google's Skia Graphics Library. It provides a three-layer architecture that wraps the native C++ Skia library in a safe, idiomatic C# API.

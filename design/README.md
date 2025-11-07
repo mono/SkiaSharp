@@ -1,12 +1,37 @@
-# SkiaSharp Architecture Documentation
+# SkiaSharp Design Documentation
 
-This folder contains comprehensive architecture documentation for SkiaSharp, designed to help both AI code assistants and human contributors understand and work with the codebase effectively.
+This folder contains comprehensive documentation for understanding and contributing to SkiaSharp.
+
+## 🚀 Start Here
+
+### For Quick Answers
+- **[../AGENTS.md](../AGENTS.md)** - 2-minute quick reference (AI agents, quick lookup)
+
+### For Getting Started  
+- **[QUICKSTART.md](QUICKSTART.md)** - **⭐ Start here!** 10-minute practical tutorial
+  - How to add an API end-to-end
+  - Pointer type identification flowchart
+  - Common mistakes and how to avoid them
+
+### For Comprehensive Reference
+Continue reading below for the complete documentation index.
+
+---
 
 ## Documentation Index
 
+### Getting Started
+
+0. **[QUICKSTART.md](QUICKSTART.md)** - **⭐ Practical tutorial (start here!)**
+   - Complete API addition walkthrough
+   - Pointer type decision flowchart
+   - Error handling patterns
+   - Top 10 common mistakes
+   - Quick examples for immediate productivity
+
 ### Core Architecture Documents
 
-1. **[architecture-overview.md](architecture-overview.md)** - Start here!
+1. **[architecture-overview.md](architecture-overview.md)** - Three-layer architecture
    - Three-layer architecture (C++ → C API → C#)
    - How components connect
    - Call flow examples
