@@ -184,8 +184,8 @@ void sk_canvas_draw_arc(
 **Key points:**
 - Type conversion macros: `AsCanvas()`, `AsRect()`, `AsPaint()`
 - Dereference pointers (`*`) to get C++ references
-- Add null checks for safety
-- No try-catch needed (drawArc doesn't throw)
+- Keep implementation simple - C# validates parameters
+- No try-catch needed (C# prevents invalid inputs)
 
 ### Special Cases
 
@@ -226,32 +226,26 @@ SK_C_API sk_image_t* sk_image_apply_filter(
 
 ```cpp
 SK_C_API bool sk_bitmap_try_alloc_pixels(
-    sk_bitmap_t* cbitmap,
-    const sk_imageinfo_t* cinfo)
+    sk_bitmap_t* bitmap,
+    const sk_imageinfo_t* info)
 {
-    if (!cbitmap || !cinfo)
-        return false;
-    
-    try {
-        return AsBitmap(cbitmap)->tryAllocPixels(AsImageInfo(cinfo));
-    } catch (...) {
-        return false;  // Catch allocation failures
-    }
+    // C++ method naturally returns bool
+    return AsBitmap(bitmap)->tryAllocPixels(AsImageInfo(info));
 }
 ```
+
+**Note:** C# validates `bitmap` and `info` before calling.
 
 #### Null Return for Factory Failure
 
 ```cpp
-SK_C_API sk_surface_t* sk_surface_new_raster(const sk_imageinfo_t* cinfo) {
-    try {
-        auto surface = SkSurfaces::Raster(AsImageInfo(cinfo));
-        return ToSurface(surface.release());  // Returns nullptr on failure
-    } catch (...) {
-        return nullptr;
-    }
+SK_C_API sk_surface_t* sk_surface_new_raster(const sk_imageinfo_t* info) {
+    auto surface = SkSurfaces::Raster(AsImageInfo(info));
+    return ToSurface(surface.release());  // Returns nullptr if Skia factory fails
 }
 ```
+
+**Note:** C# checks for `IntPtr.Zero` and throws exception.
 
 ## Step 3: Add P/Invoke Declaration
 
@@ -726,10 +720,10 @@ public SKColor Color
 ### C API Layer
 - [ ] Added function declaration to header
 - [ ] Implemented function in .cpp file
-- [ ] Added defensive null checks
 - [ ] Used correct type conversion macros
 - [ ] Handled ref-counting correctly (if applicable)
-- [ ] Added try-catch for error-prone operations
+- [ ] Used `.release()` on `sk_sp<T>` returns
+- [ ] Used `sk_ref_sp()` for ref-counted parameters
 
 ### P/Invoke Layer
 - [ ] Added P/Invoke declaration

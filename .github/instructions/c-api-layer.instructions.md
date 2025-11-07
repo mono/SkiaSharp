@@ -14,11 +14,12 @@ You are working in the C API layer that bridges Skia C++ to managed C#.
 
 ## Critical Rules
 
-- **Never let C++ exceptions cross into C functions** (no throw across C boundary)
 - All functions must use C linkage: `SK_C_API` or `extern "C"`
 - Use C-compatible types only (no C++ classes in signatures)
-- Return error codes or use out parameters for error signaling
-- Always validate parameters before passing to C++ code
+- **Trust C# to validate** - C API is a minimal wrapper
+- **No exception handling needed** - Skia rarely throws, C# prevents invalid inputs
+- **No parameter validation needed** - C# validates before calling
+- Keep implementations simple and direct
 
 ## Pointer Type Handling
 
@@ -79,45 +80,42 @@ AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 - Provide explicit create/destroy or ref/unref pairs
 - Never assume caller will manage memory unless documented
 
-## Error Handling Patterns
+## Error Handling Patterns (Actual Implementation)
 
-### Boolean Return
+### Boolean Return - Pass Through
 ```cpp
+// C++ method returns bool, C API passes it through
 SK_C_API bool sk_bitmap_try_alloc_pixels(sk_bitmap_t* bitmap, const sk_imageinfo_t* info) {
-    if (!bitmap || !info)
-        return false;
-    try {
-        return AsBitmap(bitmap)->tryAllocPixels(AsImageInfo(info));
-    } catch (...) {
-        return false;
-    }
+    return AsBitmap(bitmap)->tryAllocPixels(AsImageInfo(info));
 }
 ```
+
+**Note:** C# validates `bitmap` and `info` are non-null before calling.
 
 ### Null Return for Factory Failure
 ```cpp
+// Returns nullptr if Skia factory fails
 SK_C_API sk_surface_t* sk_surface_new_raster(const sk_imageinfo_t* info) {
-    try {
-        auto surface = SkSurfaces::Raster(AsImageInfo(info));
-        return ToSurface(surface.release());
-    } catch (...) {
-        return nullptr;
-    }
+    auto surface = SkSurfaces::Raster(AsImageInfo(info));
+    return ToSurface(surface.release());
 }
 ```
 
-### Defensive Null Checks
+**Note:** C# checks for `IntPtr.Zero` and throws exception if null.
+
+### Void Methods - Direct Call
 ```cpp
+// Simple pass-through - C# ensures valid parameters
 SK_C_API void sk_canvas_draw_rect(
     sk_canvas_t* canvas,
     const sk_rect_t* rect,
     const sk_paint_t* paint)
 {
-    if (!canvas || !rect || !paint)
-        return;
     AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
 ```
+
+**Design:** C API trusts C# has validated all parameters.
 
 ## Common Patterns
 
@@ -161,22 +159,30 @@ SK_C_API void sk_function(std::string name);
 SK_C_API void sk_function(const char* name);
 ```
 
-❌ **Don't forget to handle exceptions:**
+❌ **Don't add unnecessary validation:**
 ```cpp
-// WRONG - exception could escape
-SK_C_API sk_image_t* sk_image_new() {
-    return ToImage(SkImages::Make(...).release());
+// WRONG - C# already validated
+SK_C_API void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint) {
+    if (!canvas || !rect || !paint)  // Unnecessary - C# validated
+        return;
+    AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
 
-// CORRECT
-SK_C_API sk_image_t* sk_image_new() {
-    try {
-        return ToImage(SkImages::Make(...).release());
-    } catch (...) {
-        return nullptr;
-    }
+// CORRECT - trust C# validation
+SK_C_API void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint) {
+    AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
 ```
+
+❌ **Don't add try-catch unless truly necessary:**
+```cpp
+// Usually NOT needed - Skia rarely throws, C# validates inputs
+SK_C_API sk_image_t* sk_image_new_from_encoded(const sk_data_t* data) {
+    return ToImage(SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(data))).release());
+}
+```
+
+**Current implementation philosophy:** Minimal C API layer, safety enforced in C#.
 
 ## Documentation
 

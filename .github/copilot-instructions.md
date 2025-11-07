@@ -49,11 +49,11 @@ Three pointer types (see [memory-management.md](../design/memory-management.md))
 3. **Ref-Counted** - Image, Shader, Data → Call unref on dispose
 
 ### Error Handling
-- **C API:** Never throw exceptions, return bool/null
-- **C#:** Validate parameters, throw exceptions
+- **C API:** Minimal wrapper, trusts C# validation
+- **C#:** Validates ALL parameters, checks returns, throws exceptions
 
 ### Layer Boundaries
-- **C++ → C API:** Exception firewall, type conversion
+- **C++ → C API:** Direct calls, type conversion
 - **C API → C#:** P/Invoke, parameter validation
 
 ## Build & Test
@@ -79,4 +79,4 @@ dotnet cake --target=externals-download
 
 ---
 
-**Remember:** Three layers, three pointer types, exception firewall at C API.
+**Remember:** Three layers, three pointer types, C# is the safety boundary.

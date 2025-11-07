@@ -212,16 +212,10 @@ You've added a complete binding across all three layers.
 bool SkBitmap::tryAllocPixels(const SkImageInfo& info);
 ```
 
-**C API (catch exceptions):**
+**C API (pass through):**
 ```cpp
 bool sk_bitmap_try_alloc_pixels(sk_bitmap_t* bitmap, const sk_imageinfo_t* info) {
-    if (!bitmap || !info)
-        return false;
-    try {
-        return AsBitmap(bitmap)->tryAllocPixels(AsImageInfo(info));
-    } catch (...) {
-        return false;  // Exception caught, return failure
-    }
+    return AsBitmap(bitmap)->tryAllocPixels(AsImageInfo(info));
 }
 ```
 
@@ -247,17 +241,11 @@ public void AllocPixels(SKImageInfo info)
 sk_sp<SkImage> SkImages::DeferredFromEncodedData(sk_sp<SkData> data);
 ```
 
-**C API (catch exceptions, return null):**
+**C API (pass through):**
 ```cpp
 sk_image_t* sk_image_new_from_encoded(const sk_data_t* data) {
-    if (!data)
-        return nullptr;
-    try {
-        auto image = SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(data)));
-        return ToImage(image.release());
-    } catch (...) {
-        return nullptr;
-    }
+    auto image = SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(data)));
+    return ToImage(image.release());
 }
 ```
 
@@ -313,23 +301,25 @@ protected override void DisposeNative()
 // SKImage implements ISKReferenceCounted, which handles this automatically
 ```
 
-### 2. ❌ Throwing Exceptions in C API
-```cpp
-// WRONG: Exception crosses C boundary
-SK_C_API void sk_function() {
-    throw std::exception();  // CRASH!
+### 2. ❌ Passing NULL to C API (C# validation missing)
+
+```csharp
+// WRONG: No validation - will crash in C API!
+public void DrawRect(SKRect rect, SKPaint paint)
+{
+    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);  // Crashes if paint is null
 }
 
-// CORRECT: Catch and return error
-SK_C_API bool sk_function() {
-    try {
-        // ... operation
-        return true;
-    } catch (...) {
-        return false;
-    }
+// CORRECT: Validate in C# before calling C API
+public void DrawRect(SKRect rect, SKPaint paint)
+{
+    if (paint == null)
+        throw new ArgumentNullException(nameof(paint));
+    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
 ```
+
+**Why this matters:** C API does NOT validate - it trusts C# to send valid pointers.
 
 ### 3. ❌ Missing Parameter Validation
 ```csharp
@@ -406,20 +396,30 @@ public IntPtr NativeHandle { get; }
 internal IntPtr Handle { get; }
 ```
 
-### 9. ❌ Missing Defensive Null Checks in C API
-```cpp
-// WRONG: No null check
-SK_C_API void sk_canvas_clear(sk_canvas_t* canvas, sk_color_t color) {
-    AsCanvas(canvas)->clear(color);  // canvas could be null!
+### 9. ❌ Missing Validation in C# (not C API)
+
+```csharp
+// WRONG: Assuming disposed object check isn't needed
+public void DrawRect(SKRect rect, SKPaint paint)
+{
+    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
 
-// CORRECT: Check parameters
-SK_C_API void sk_canvas_clear(sk_canvas_t* canvas, sk_color_t color) {
-    if (!canvas)
-        return;
-    AsCanvas(canvas)->clear(color);
+// CORRECT: Check object state before calling C API
+public void DrawRect(SKRect rect, SKPaint paint)
+{
+    if (paint == null)
+        throw new ArgumentNullException(nameof(paint));
+    if (Handle == IntPtr.Zero)
+        throw new ObjectDisposedException(nameof(SKCanvas));
+    if (paint.Handle == IntPtr.Zero)
+        throw new ObjectDisposedException(nameof(paint));
+    
+    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
 ```
+
+**Remember:** C# is the safety boundary - validate everything before P/Invoke!
 
 ### 10. ❌ Forgetting .release() on sk_sp
 ```cpp
