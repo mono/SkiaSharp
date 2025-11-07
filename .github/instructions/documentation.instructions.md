@@ -6,6 +6,10 @@ applyTo: "design/**/*.md,*.md,!node_modules/**,!externals/**"
 
 You are working on project documentation.
 
+> **📚 Reference:**
+> - **Documentation Index:** [design/README.md](../../design/README.md)
+> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
+
 ## Documentation Standards
 
 - Use clear, concise language
@@ -18,6 +22,7 @@ You are working on project documentation.
 ## Code Examples Best Practices
 
 ### Always Show Disposal
+
 ```csharp
 // ✅ Good - proper disposal
 using (var paint = new SKPaint())
@@ -27,6 +32,7 @@ using (var paint = new SKPaint())
 ```
 
 ### Include Error Handling
+
 ```csharp
 if (string.IsNullOrEmpty(path))
     throw new ArgumentException("Path cannot be null or empty");

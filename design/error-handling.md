@@ -67,6 +67,67 @@ SK_C_API bool safe_function() {
 
 ## Error Handling Strategy by Layer
 
+```mermaid
+graph TB
+    subgraph CSharp["C# Layer"]
+        CS1[Validate parameters]
+        CS2[Call P/Invoke]
+        CS3[Check return value]
+        CS4{Error?}
+        CS5[Throw C# Exception]
+        CS6[Return result]
+        
+        CS1 --> CS2
+        CS2 --> CS3
+        CS3 --> CS4
+        CS4 -->|Yes| CS5
+        CS4 -->|No| CS6
+    end
+    
+    subgraph CAPI["C API Layer - Exception Firewall"]
+        C1[Validate parameters]
+        C2{Valid?}
+        C3[Try: Call C++]
+        C4{Exception?}
+        C5[Catch exception]
+        C6[Return error code]
+        C7[Return success]
+        
+        C1 --> C2
+        C2 -->|No| C6
+        C2 -->|Yes| C3
+        C3 --> C4
+        C4 -->|Yes| C5
+        C5 --> C6
+        C4 -->|No| C7
+    end
+    
+    subgraph CPP["C++ Layer"]
+        CPP1[Execute operation]
+        CPP2{Error?}
+        CPP3[Throw exception]
+        CPP4[Return result]
+        
+        CPP1 --> CPP2
+        CPP2 -->|Yes| CPP3
+        CPP2 -->|No| CPP4
+    end
+    
+    CS2 -.->|P/Invoke| C1
+    C3 -.->|Call| CPP1
+    CPP3 -.->|Caught by| C5
+    C6 -.->|Returned to| CS3
+    C7 -.->|Returned to| CS3
+    
+    style CSharp fill:#e1f5e1
+    style CAPI fill:#fff4e1
+    style CPP fill:#e1e8f5
+    style C5 fill:#ffe1e1
+    style CS5 fill:#ffe1e1
+```
+
+**Layer characteristics:**
+
 ```
 ┌─────────────────────────────────────────────────┐
 │ C# Layer                                        │

@@ -6,6 +6,11 @@ applyTo: "externals/skia/include/**/*.h,externals/skia/src/**/*.cpp,!externals/s
 
 You are viewing native Skia C++ code. This is **upstream code** and should generally **NOT be modified directly**.
 
+> **📚 Documentation:**
+> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
+> - **Memory Management:** [design/memory-management.md](../../design/memory-management.md) - See pointer type identification
+> - **Adding APIs:** [design/adding-new-apis.md](../../design/adding-new-apis.md) - How to create bindings
+
 ## Understanding This Code
 
 - This is the source C++ library that SkiaSharp wraps
@@ -14,6 +19,9 @@ You are viewing native Skia C++ code. This is **upstream code** and should gener
 - Note: Raw `T*` may be owning or non-owning (check docs/context)
 
 ## Pointer Type Identification
+
+> **💡 See [design/memory-management.md](../../design/memory-management.md) for complete guide.**
+> Quick reference below:
 
 ### Smart Pointers (Ownership)
 - **`sk_sp<T>`** - Skia Smart Pointer (Reference Counted)

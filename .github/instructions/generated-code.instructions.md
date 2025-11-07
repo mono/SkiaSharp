@@ -6,6 +6,8 @@ applyTo: "binding/SkiaSharp/**/*.generated.cs,binding/SkiaSharp/**/SkiaApi.gener
 
 You are viewing or working near **GENERATED CODE**.
 
+> **⚠️ Important:** Do NOT manually edit generated files. See [design/adding-new-apis.md](../../design/adding-new-apis.md) for the proper process.
+
 ## Critical Rules
 
 - ⛔ **DO NOT manually edit generated files**

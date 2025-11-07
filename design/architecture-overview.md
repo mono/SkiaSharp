@@ -40,32 +40,35 @@ SkiaSharp is a cross-platform 2D graphics API for .NET platforms based on Google
 
 SkiaSharp's architecture consists of three distinct layers that work together to provide C# access to native Skia functionality:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    C# Wrapper Layer                         │
-│  (binding/SkiaSharp/*.cs)                                   │
-│  - SKCanvas, SKPaint, SKImage, etc.                         │
-│  - Object-oriented C# API                                   │
-│  - Memory management & lifecycle                            │
-│  - Type safety & null checking                              │
-└────────────────────┬────────────────────────────────────────┘
-                     │ P/Invoke (SkiaApi.cs)
-┌────────────────────▼────────────────────────────────────────┐
-│                     C API Layer                             │
-│  (externals/skia/include/c/*.h)                             │
-│  (externals/skia/src/c/*.cpp)                               │
-│  - sk_canvas_*, sk_paint_*, sk_image_*, etc.                │
-│  - C function interface                                     │
-│  - Type conversions & pointer management                    │
-└────────────────────┬────────────────────────────────────────┘
-                     │ Type casting (AsCanvas, AsPaint, etc.)
-┌────────────────────▼────────────────────────────────────────┐
-│                   C++ Skia Library                          │
-│  (externals/skia/include/core/*.h)                          │
-│  - SkCanvas, SkPaint, SkImage, etc.                         │
-│  - Native implementation                                    │
-│  - Original Skia C++ API                                    │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Layer1["C# Wrapper Layer<br/>(binding/SkiaSharp/*.cs)"]
+        L1A[SKCanvas, SKPaint, SKImage, etc.]
+        L1B[Object-oriented C# API]
+        L1C[Memory management & lifecycle]
+        L1D[Type safety & null checking]
+    end
+    
+    subgraph Layer2["C API Layer<br/>(externals/skia/include/c/*.h<br/>externals/skia/src/c/*.cpp)"]
+        L2A[sk_canvas_*, sk_paint_*, sk_image_*, etc.]
+        L2B[C functions with SK_C_API]
+        L2C[Exception firewall - catch all exceptions]
+        L2D[Return error codes bool/nullptr]
+    end
+    
+    subgraph Layer3["C++ Skia Layer<br/>(externals/skia/)"]
+        L3A[SkCanvas, SkPaint, SkImage, etc.]
+        L3B[Native Skia graphics library]
+        L3C[Full C++ API with exceptions]
+        L3D[sk_sp smart pointers]
+    end
+    
+    Layer1 -->|P/Invoke<br/>SkiaApi.cs| Layer2
+    Layer2 -->|Type conversion<br/>AsCanvas/ToCanvas| Layer3
+    
+    style Layer1 fill:#e1f5e1
+    style Layer2 fill:#fff4e1
+    style Layer3 fill:#e1e8f5
 ```
 
 ### Layer 1: C++ Skia Library (Native)

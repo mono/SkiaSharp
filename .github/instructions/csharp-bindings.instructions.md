@@ -6,6 +6,12 @@ applyTo: "binding/SkiaSharp/**/*.cs"
 
 You are working in the C# wrapper layer that provides .NET access to Skia via P/Invoke.
 
+> **📚 Documentation:**
+> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
+> - **Architecture:** [design/architecture-overview.md](../../design/architecture-overview.md)
+> - **Memory Management:** [design/memory-management.md](../../design/memory-management.md)
+> - **Adding APIs:** [design/adding-new-apis.md](../../design/adding-new-apis.md)
+
 ## Critical Rules
 
 - All `IDisposable` types MUST dispose native handles
@@ -15,6 +21,9 @@ You are working in the C# wrapper layer that provides .NET access to Skia via P/
 - Check return values from C API
 
 ## Pointer Type to C# Mapping
+
+> **💡 See [design/memory-management.md](../../design/memory-management.md) for pointer type concepts.**
+> Below are C#-specific patterns for each type.
 
 ### Raw Pointers (Non-Owning)
 ```csharp

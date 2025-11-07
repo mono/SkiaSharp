@@ -6,6 +6,11 @@ applyTo: "tests/**/*.cs,**/*Tests.cs,**/*Test.cs"
 
 You are working on test code for SkiaSharp.
 
+> **📚 Documentation:**
+> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
+> - **Memory Management:** [design/memory-management.md](../../design/memory-management.md)
+> - **Error Handling:** [design/error-handling.md](../../design/error-handling.md)
+
 ## Testing Focus Areas
 
 1. **Memory Management** - Verify no leaks, proper disposal, ref counting

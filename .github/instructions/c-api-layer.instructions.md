@@ -6,6 +6,12 @@ applyTo: "externals/skia/include/c/**/*.h,externals/skia/src/c/**/*.cpp"
 
 You are working in the C API layer that bridges Skia C++ to managed C#.
 
+> **📚 Documentation:**
+> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
+> - **Architecture:** [design/architecture-overview.md](../../design/architecture-overview.md)
+> - **Memory Management:** [design/memory-management.md](../../design/memory-management.md)
+> - **Error Handling:** [design/error-handling.md](../../design/error-handling.md)
+
 ## Critical Rules
 
 - **Never let C++ exceptions cross into C functions** (no throw across C boundary)
@@ -15,6 +21,9 @@ You are working in the C API layer that bridges Skia C++ to managed C#.
 - Always validate parameters before passing to C++ code
 
 ## Pointer Type Handling
+
+> **💡 See [design/memory-management.md](../../design/memory-management.md) for pointer type concepts.**
+> Below are C API-specific patterns for each type.
 
 ### Raw Pointers (Non-Owning)
 ```cpp

@@ -19,27 +19,34 @@ This guide shows you **how to add a new API** from start to finish. For comprehe
 
 SkiaSharp uses a three-layer architecture:
 
-```
-┌─────────────────────────────────────────────┐
-│  C# Layer (binding/SkiaSharp/)              │
-│  - Public .NET API                          │
-│  - SKCanvas, SKPaint, SKImage classes       │
-│  - Validates parameters, throws exceptions  │
-└────────────┬────────────────────────────────┘
-             │ P/Invoke
-┌────────────▼────────────────────────────────┐
-│  C API Layer (externals/skia/src/c/)        │
-│  - C functions: sk_canvas_draw_rect()       │
-│  - Exception firewall (no throws!)          │
-│  - Returns bool/null for errors             │
-└────────────┬────────────────────────────────┘
-             │ Type casting (AsCanvas/ToCanvas)
-┌────────────▼────────────────────────────────┐
-│  C++ Layer (externals/skia/)                │
-│  - Native Skia library                      │
-│  - SkCanvas::drawRect()                     │
-│  - Can throw exceptions                     │
-└─────────────────────────────────────────────┘
+> **📚 Deep Dive:** See [architecture-overview.md](architecture-overview.md) for complete architecture details.
+
+```mermaid
+graph TB
+    subgraph CSharp["C# Layer (binding/SkiaSharp/)"]
+        CS1[Public .NET API]
+        CS2[SKCanvas, SKPaint, SKImage classes]
+        CS3[Validates parameters, throws exceptions]
+    end
+    
+    subgraph CAPI["C API Layer (externals/skia/src/c/)"]
+        C1[C functions: sk_canvas_draw_rect]
+        C2[Exception firewall - no throws!]
+        C3[Returns bool/null for errors]
+    end
+    
+    subgraph CPP["C++ Layer (externals/skia/)"]
+        CPP1[Native Skia library]
+        CPP2[SkCanvas::drawRect]
+        CPP3[Can throw exceptions]
+    end
+    
+    CSharp -->|P/Invoke| CAPI
+    CAPI -->|Type casting<br/>AsCanvas/ToCanvas| CPP
+    
+    style CSharp fill:#e1f5e1
+    style CAPI fill:#fff4e1
+    style CPP fill:#e1e8f5
 ```
 
 **Key principle:** C++ exceptions **cannot cross** the C API boundary. The C API layer catches all exceptions.
@@ -52,30 +59,27 @@ SkiaSharp uses a three-layer architecture:
 
 ### Decision Flowchart
 
-```
-┌─────────────────────────────────────────────────────────┐
-│ Check C++ class declaration                            │
-└────────────┬────────────────────────────────────────────┘
-             │
-    ┌────────▼──────────┐
-    │ Inherits SkRefCnt │ YES → Virtual Ref-Counted
-    │ or SkRefCntBase?  │       (ISKReferenceCounted)
-    └────────┬──────────┘       Examples: SKImage, SKShader
-             │ NO
-    ┌────────▼──────────┐
-    │ Inherits          │ YES → Non-Virtual Ref-Counted
-    │ SkNVRefCnt<T>?    │       (ISKNonVirtualReferenceCounted)
-    └────────┬──────────┘       Examples: SKData, SKTextBlob
-             │ NO
-    ┌────────▼──────────┐
-    │ Mutable class     │ YES → Owned Pointer
-    │ (Canvas, Paint)?  │       (delete on dispose)
-    └────────┬──────────┘       Examples: SKCanvas, SKPaint
-             │ NO
-    ┌────────▼──────────┐
-    │ Parameter or      │ YES → Raw Pointer (Non-Owning)
-    │ getter return?    │       (owns: false)
-    └───────────────────┘       Examples: parameters, borrowed refs
+> **💡 Tip:** See [memory-management.md](memory-management.md) for comprehensive pointer type details.
+
+```mermaid
+graph TD
+    Start[Check C++ class declaration] --> Q1{Inherits SkRefCnt<br/>or SkRefCntBase?}
+    Q1 -->|Yes| VirtRC[Virtual Ref-Counted<br/>ISKReferenceCounted]
+    Q1 -->|No| Q2{Inherits<br/>SkNVRefCnt&lt;T&gt;?}
+    Q2 -->|Yes| NonVirtRC[Non-Virtual Ref-Counted<br/>ISKNonVirtualReferenceCounted]
+    Q2 -->|No| Q3{Mutable class?<br/>Canvas, Paint, etc.}
+    Q3 -->|Yes| Owned[Owned Pointer<br/>delete on dispose]
+    Q3 -->|No| Raw[Raw Pointer<br/>Non-Owning]
+    
+    VirtRC -.->|Examples| VirtEx[SKImage, SKShader,<br/>SKSurface, SKPicture]
+    NonVirtRC -.->|Examples| NonVirtEx[SKData, SKTextBlob,<br/>SKVertices]
+    Owned -.->|Examples| OwnedEx[SKCanvas, SKPaint,<br/>SKBitmap, SKPath]
+    Raw -.->|Examples| RawEx[Parameters,<br/>borrowed refs]
+    
+    style VirtRC fill:#e1f5e1
+    style NonVirtRC fill:#e1f5e1
+    style Owned fill:#fff4e1
+    style Raw fill:#e1e8f5
 ```
 
 ### Quick Reference
@@ -198,6 +202,8 @@ You've added a complete binding across all three layers.
 ---
 
 ## Error Handling Patterns
+
+> **📚 Deep Dive:** See [error-handling.md](error-handling.md) for comprehensive error handling patterns.
 
 ### Pattern 1: Boolean Return (Try Methods)
 
