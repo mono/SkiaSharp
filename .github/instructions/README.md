@@ -10,7 +10,7 @@ Path-specific instructions automatically apply based on the files being edited, 
 
 | File | Applies To | Key Focus |
 |------|-----------|-----------|
-| **[c-api-layer.instructions.md](c-api-layer.instructions.md)** | `externals/skia/include/c/`, `externals/skia/src/c/` | C API bridging layer - no exceptions, C types, error codes |
+| **[c-api-layer.instructions.md](c-api-layer.instructions.md)** | `externals/skia/include/c/`, `externals/skia/src/c/` | C API bridging layer - minimal wrapper, C types, trusts C# validation |
 | **[csharp-bindings.instructions.md](csharp-bindings.instructions.md)** | `binding/SkiaSharp/` | C# wrappers - IDisposable, P/Invoke, validation, exceptions |
 | **[generated-code.instructions.md](generated-code.instructions.md)** | `*.generated.cs` files | Generated code - don't edit manually, modify templates |
 | **[native-skia.instructions.md](native-skia.instructions.md)** | `externals/skia/` (excluding C API) | Upstream Skia C++ - understanding only, pointer types |
@@ -31,7 +31,7 @@ For example:
 
 ### 1. Layer-Specific Guidance
 Each layer has unique requirements:
-- **C API:** Never throw exceptions, use C types, handle errors with return codes
+- **C API:** Minimal wrapper, trusts C# validation, uses C types
 - **C# Bindings:** Always dispose, validate parameters, convert to C# exceptions
 - **Tests:** Focus on memory management, error cases, lifecycle
 
@@ -52,7 +52,7 @@ Ensures all AI-generated code follows the same patterns across the codebase.
 - **Reference-counted** - Shared ownership, ref/unref
 
 ### Error Handling (Per Layer)
-- **C API:** Catch all exceptions, return bool/null, defensive null checks
+- **C API:** Minimal wrapper, passes through bool/null from C++, trusts C# validation
 - **C#:** Validate parameters, check returns, throw typed exceptions
 - **Tests:** Verify proper exception handling
 
@@ -71,7 +71,7 @@ When working on different files:
 ```
 # Editing C API layer
 externals/skia/src/c/sk_canvas.cpp
-→ Applies: Never throw exceptions, use SK_C_API, handle errors
+→ Applies: Minimal wrapper, trusts C# validation, use SK_C_API
 
 # Editing C# wrapper
 binding/SkiaSharp/SKCanvas.cs
