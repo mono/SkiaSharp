@@ -13,8 +13,9 @@ if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
 Write-Host "Fetching PR #$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER information from GitHub..."
 
 # Get GitHub token from Azure DevOps service endpoint
-if (-not $GitHubServiceConnection) {
-    Write-Host "##vso[task.logissue type=error]GITHUB_SERVICE_CONNECTION variable is not configured."
+if (-not $GitHubServiceConnection -or $GitHubServiceConnection -eq '$(GITHUB_SERVICE_CONNECTION)') {
+    Write-Host "##vso[task.logissue type=error]GITHUB_SERVICE_CONNECTION variable is not configured in Azure Pipelines."
+    Write-Host "##vso[task.logissue type=error]Please add a pipeline variable named GITHUB_SERVICE_CONNECTION with the name of your GitHub service connection."
     Write-Host "##vso[task.complete result=Failed;]GitHub service connection not configured."
     exit 1
 }
