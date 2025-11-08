@@ -35,7 +35,7 @@ In many cases, you only need to fix bugs or add features in the managed C# code.
   - Individual components:
     - .NET Framework 4.6.2 SDK
     - .NET Framework 4.6.2 targeting pack
-- [.NET SDK 8.0+](https://dotnet.microsoft.com/download)
+- [.NET SDK 8.0](https://dotnet.microsoft.com/download) or later (8.0.304+ recommended)
 - Cake .NET Core Tool:
   ```bash
   dotnet tool install -g cake.tool
@@ -43,15 +43,15 @@ In many cases, you only need to fix bugs or add features in the managed C# code.
 
 **macOS:**
 - macOS 12.0 or later
-- [Xcode 14+](https://developer.apple.com/xcode/)
-- [.NET SDK 8.0+](https://dotnet.microsoft.com/download)
+- [Xcode 15.4](https://developer.apple.com/xcode/) or later
+- [.NET SDK 8.0](https://dotnet.microsoft.com/download) or later (8.0.304+ recommended)
 - Cake .NET Core Tool:
   ```bash
   dotnet tool install -g cake.tool
   ```
 
 **Linux:**
-- .NET SDK 8.0+
+- [.NET SDK 8.0](https://dotnet.microsoft.com/download) or later (8.0.304+ recommended)
 - Build essentials (gcc, g++, make)
 - Required development libraries:
   ```bash
@@ -143,7 +143,7 @@ To build the native `libSkiaSharp` libraries, you'll need additional dependencie
 
 **macOS:**
 - All [Managed-Only dependencies](#dependencies)
-- [Xcode 14+](https://developer.apple.com/xcode/) with command line tools
+- [Xcode 15.4](https://developer.apple.com/xcode/) or later with command line tools
 - [Python 3.x](https://www.python.org/downloads/)
 - [Android NDK r25+](https://developer.android.com/ndk/downloads)
   - Set `ANDROID_NDK_ROOT` environment variable
