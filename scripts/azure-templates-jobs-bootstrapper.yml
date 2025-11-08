@@ -95,11 +95,11 @@ jobs:
         condition: always()
 
       # checkout required skia PR
-      - pwsh: .\scripts\checkout-skia.ps1 -GitHubToken $(GITHUB_TOKEN)
+      - pwsh: .\scripts\checkout-skia.ps1 -GitHubServiceConnection "$(GITHUB_SERVICE_CONNECTION)" -SystemAccessToken "$(System.AccessToken)"
         displayName: Checkout required skia PR
         condition: eq(variables['Build.Reason'], 'PullRequest')
         env:
-          GITHUB_TOKEN: $(GITHUB_TOKEN)
+          SYSTEM_ACCESSTOKEN: $(System.AccessToken)
 
       # determine build type
       - pwsh: .\scripts\get-build-type.ps1 -ExternalsBuildId '${{ parameters.buildExternals }}'

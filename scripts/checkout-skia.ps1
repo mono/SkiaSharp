@@ -1,5 +1,6 @@
 Param(
-    [string] $GitHubToken = ''
+    [string] $GitHubServiceConnection = '',
+    [string] $SystemAccessToken = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,18 +12,60 @@ if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
 
 Write-Host "Fetching PR #$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER information from GitHub..."
 
-# Make request to the GitHub API with authentication
+# Get GitHub token from Azure DevOps service endpoint
+$gitHubToken = ""
+if ($GitHubServiceConnection -and $SystemAccessToken) {
+    try {
+        Write-Host "Retrieving GitHub token from service connection '$GitHubServiceConnection'..."
+        
+        # Create authorization header for Azure DevOps API
+        $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$SystemAccessToken"))
+        $headers = @{
+            Authorization = "Basic $base64AuthInfo"
+        }
+        
+        # Get the service endpoint ID
+        $serviceEndpointUrl = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECT)/_apis/serviceendpoint/endpoints?endpointNames=$GitHubServiceConnection&api-version=7.1-preview.4"
+        Write-Host "Fetching service endpoint from: $serviceEndpointUrl"
+        
+        $endpoints = Invoke-RestMethod -Uri $serviceEndpointUrl -Method Get -Headers $headers -ContentType "application/json"
+        
+        if ($endpoints.value -and $endpoints.value.Count -gt 0) {
+            $endpointId = $endpoints.value[0].id
+            Write-Host "Found service endpoint ID: $endpointId"
+            
+            # Get the endpoint details with credentials
+            $endpointUrl = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECT)/_apis/serviceendpoint/endpoints/$endpointId`?api-version=7.1-preview.4"
+            $endpoint = Invoke-RestMethod -Uri $endpointUrl -Method Get -Headers $headers -ContentType "application/json"
+            
+            # Extract token from the authorization parameters
+            if ($endpoint.authorization.scheme -eq "Token" -and $endpoint.authorization.parameters.accessToken) {
+                $gitHubToken = $endpoint.authorization.parameters.accessToken
+                Write-Host "Successfully retrieved GitHub token from service connection."
+            } else {
+                Write-Host "Warning: Service connection does not contain a token in the expected format."
+            }
+        } else {
+            Write-Host "Warning: Service connection '$GitHubServiceConnection' not found."
+        }
+    } catch {
+        Write-Host "Warning: Failed to retrieve GitHub token from service connection: $($_.Exception.Message)"
+        Write-Host "Continuing without authentication."
+    }
+}
+
+# Make request to the GitHub API
 try {
     $headers = @{
         "Accept" = "application/vnd.github.v3+json"
         "User-Agent" = "SkiaSharp-AzurePipelines"
     }
     
-    if ($GitHubToken) {
-        $headers["Authorization"] = "Bearer $GitHubToken"
+    if ($gitHubToken) {
+        $headers["Authorization"] = "token $gitHubToken"
         Write-Host "Using authenticated GitHub API request."
     } else {
-        Write-Host "Warning: No GitHub token provided. API request may fail or be rate limited."
+        Write-Host "Warning: No GitHub token available. API request may fail due to GitHub authentication requirements."
     }
     
     $json = Invoke-RestMethod `
@@ -32,7 +75,7 @@ try {
         -ErrorAction Stop
 } catch {
     Write-Host "Failed to fetch PR information from GitHub API: $($_.Exception.Message)"
-    Write-Host "This might be due to rate limiting or network issues."
+    Write-Host "This might be due to authentication requirements or network issues."
     Write-Host "Continuing without checking out a specific skia PR."
     exit 0
 }
