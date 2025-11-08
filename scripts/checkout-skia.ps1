@@ -13,6 +13,18 @@ if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
 Write-Host "Fetching PR #$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER information from GitHub..."
 
 # Get GitHub token from Azure DevOps service endpoint
+if (-not $GitHubServiceConnection) {
+    Write-Host "##vso[task.logissue type=error]GITHUB_SERVICE_CONNECTION variable is not configured."
+    Write-Host "##vso[task.complete result=Failed;]GitHub service connection not configured."
+    exit 1
+}
+
+if (-not $SystemAccessToken) {
+    Write-Host "##vso[task.logissue type=error]System.AccessToken is not available."
+    Write-Host "##vso[task.complete result=Failed;]System.AccessToken not available."
+    exit 1
+}
+
 $gitHubToken = ""
 if ($GitHubServiceConnection -and $SystemAccessToken) {
     try {
@@ -43,14 +55,19 @@ if ($GitHubServiceConnection -and $SystemAccessToken) {
                 $gitHubToken = $endpoint.authorization.parameters.accessToken
                 Write-Host "Successfully retrieved GitHub token from service connection."
             } else {
-                Write-Host "Warning: Service connection does not contain a token in the expected format."
+                Write-Host "##vso[task.logissue type=error]Service connection '$GitHubServiceConnection' does not contain a token in the expected format."
+                Write-Host "##vso[task.complete result=Failed;]Invalid service connection configuration."
+                exit 1
             }
         } else {
-            Write-Host "Warning: Service connection '$GitHubServiceConnection' not found."
+            Write-Host "##vso[task.logissue type=error]Service connection '$GitHubServiceConnection' not found."
+            Write-Host "##vso[task.complete result=Failed;]Service connection not found."
+            exit 1
         }
     } catch {
-        Write-Host "Warning: Failed to retrieve GitHub token from service connection: $($_.Exception.Message)"
-        Write-Host "Continuing without authentication."
+        Write-Host "##vso[task.logissue type=error]Failed to retrieve GitHub token from service connection: $($_.Exception.Message)"
+        Write-Host "##vso[task.complete result=Failed;]Failed to retrieve GitHub token from service connection."
+        exit 1
     }
 }
 
@@ -65,7 +82,9 @@ try {
         $headers["Authorization"] = "token $gitHubToken"
         Write-Host "Using authenticated GitHub API request."
     } else {
-        Write-Host "Warning: No GitHub token available. API request may fail due to GitHub authentication requirements."
+        Write-Host "##vso[task.logissue type=error]No GitHub token available. Cannot authenticate with GitHub API."
+        Write-Host "##vso[task.complete result=Failed;]GitHub authentication failed."
+        exit 1
     }
     
     $json = Invoke-RestMethod `
@@ -74,10 +93,9 @@ try {
         -Method Get `
         -ErrorAction Stop
 } catch {
-    Write-Host "Failed to fetch PR information from GitHub API: $($_.Exception.Message)"
-    Write-Host "This might be due to authentication requirements or network issues."
-    Write-Host "Continuing without checking out a specific skia PR."
-    exit 0
+    Write-Host "##vso[task.logissue type=error]Failed to fetch PR information from GitHub API: $($_.Exception.Message)"
+    Write-Host "##vso[task.complete result=Failed;]Failed to fetch PR information from GitHub."
+    exit 1
 }
 
 Write-Host "PR Title: $($json.title)"
@@ -112,10 +130,10 @@ try {
     $currentCommit = git rev-parse HEAD
     Write-Host "Current commit: $currentCommit"
 } catch {
-    Write-Host "Failed to checkout skia PR #${skiaPR}: $($_.Exception.Message)"
-    Write-Host "Continuing with the default skia submodule version."
     Pop-Location
-    exit 0
+    Write-Host "##vso[task.logissue type=error]Failed to checkout skia PR #${skiaPR}: $($_.Exception.Message)"
+    Write-Host "##vso[task.complete result=Failed;]Failed to checkout required skia PR."
+    exit 1
 } finally {
     Pop-Location
 }
