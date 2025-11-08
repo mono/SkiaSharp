@@ -652,9 +652,9 @@ SK_C_API sk_image_t* sk_image_new_from_encoded(const sk_data_t* data) {
 ### When a C# call fails:
 
 1. **Check C# validation** - Did parameter validation catch it?
-2. **Check return value** - Is C API returning error?
-3. **Check C API implementation** - Is it catching exceptions?
-4. **Check C++ behavior** - What does Skia return?
+2. **Check return value** - Is C API returning error (bool/null)?
+3. **Check C API implementation** - Is it a direct pass-through? (should be)
+4. **Check C++ behavior** - What does Skia return on failure?
 5. **Check documentation** - Is the operation supported?
 
 ### Common Failure Scenarios

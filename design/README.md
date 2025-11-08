@@ -122,7 +122,7 @@ C# Wrapper (binding/) → P/Invoke → C API (externals/skia/src/c/) → C++ Ski
 
 ### Error Handling
 
-C++ throws → C API catches (returns bool/null) → C# checks & throws
+C++ may throw → C API passes through (returns bool/null if factory fails) → C# validates inputs & checks returns
 
 **→ Full details:** [error-handling.md](error-handling.md)
 
