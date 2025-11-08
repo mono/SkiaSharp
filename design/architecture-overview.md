@@ -14,7 +14,7 @@
 
 2. **C API Layer** (`externals/skia/src/c/`)
    - C functions as P/Invoke targets
-   - **Exception firewall** - catches all C++ exceptions
+   - **Minimal wrapper** - trusts C# validation
    - Returns error codes (bool/null), never throws
 
 3. **C++ Skia Layer** (`externals/skia/`)
@@ -24,7 +24,8 @@
 **Call flow:** `SKCanvas.DrawRect()` → (P/Invoke) → `sk_canvas_draw_rect()` → (type cast) → `SkCanvas::drawRect()`
 
 **Key design principles:**
-- Exceptions don't cross C boundary
+- C# is the safety boundary - validates all inputs
+- C API is minimal wrapper - no validation needed
 - Each layer has distinct responsibilities
 - Type conversions happen at layer boundaries
 
@@ -52,7 +53,7 @@ graph TB
     subgraph Layer2["C API Layer<br/>(externals/skia/include/c/*.h<br/>externals/skia/src/c/*.cpp)"]
         L2A[sk_canvas_*, sk_paint_*, sk_image_*, etc.]
         L2B[C functions with SK_C_API]
-        L2C[Exception firewall - catch all exceptions]
+        L2C[Minimal wrapper - trusts C# validation]
         L2D[Return error codes bool/nullptr]
     end
     
@@ -103,7 +104,7 @@ The middle layer is a hand-written C API that wraps the C++ API. This layer is e
 - Opaque pointer types (`sk_canvas_t*`, `sk_paint_t*`, `sk_image_t*`)
 - Manual resource management (create/destroy functions)
 - Type conversion macros to cast between C and C++ types
-- Exception boundaries protected
+- **Minimal wrapper** - no validation, trusts C# layer
 
 **Naming convention:**
 - C API headers: `sk_<type>.h` (e.g., `sk_canvas.h`)
@@ -486,8 +487,8 @@ graph TB
 ### C# Wrapper Thread Safety
 
 **HandleDictionary:**
-- Uses `ConcurrentDictionary` for thread-safe lookups
-- Multiple threads can register/lookup handles safely
+- Backed by a `Dictionary<IntPtr, WeakReference>` protected by a reader/writer lock (`IPlatformLock`)
+- Uses `EnterReadLock` for lookups and `EnterUpgradeableReadLock` for add operations
 - Prevents duplicate wrappers for the same native handle
 
 **Reference Counting:**
@@ -630,7 +631,7 @@ private void AssertCorrectThread()
 - Developer responsibility to ensure thread safety
 
 **Thread-safe components:**
-- `HandleDictionary` uses `ConcurrentDictionary`
+- `HandleDictionary` serializes access with a reader/writer lock around a shared dictionary
 - Reference counting uses atomic operations
 - Disposal is thread-safe (but must not be in use)
 

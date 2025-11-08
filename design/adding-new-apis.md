@@ -383,12 +383,14 @@ public static SKImage FromBitmap(SKBitmap bitmap)
     
     var handle = SkiaApi.sk_image_new_from_bitmap(bitmap.Handle);
     
-    if (handle == IntPtr.Zero)
-        throw new InvalidOperationException("Failed to create image");
-    
-    // Returns ref-counted object (ref count = 1)
+    // Returns ref-counted object (ref count = 1), or null if failed
     return GetObject(handle);
 }
+
+// ✅ Usage - check for null
+var image = SKImage.FromBitmap(bitmap);
+if (image == null)
+    throw new InvalidOperationException("Failed to create image");
 ```
 
 #### Non-Owning Pointer Return

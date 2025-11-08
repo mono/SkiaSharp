@@ -5,35 +5,42 @@
 
 ## TL;DR
 
-**Safety enforced at C# layer:**
+**Safety boundary highlights:**
 
-- **C++ Layer:** Can throw exceptions normally
-- **C API Layer:** **Thin wrapper** - Does NOT catch exceptions or validate parameters
-- **C# Layer:** Validates all parameters, checks all returns, throws typed C# exceptions
+- **C++ Layer:** Native Skia code can throw; we do not try to surface those exceptions directly.
+- **C API Layer:** Thin pass-through functions. They rarely guard inputs and never wrap calls in `try/catch`; they simply forward Skia's return values (void/bool/pointer).
+- **C# Layer:** Performs targeted validation where it is required, but behaviour differs by API: constructors usually throw on failure, while many factory/utility methods return `null`, `false`, or default values instead of throwing.
 
-**C# error patterns:**
-1. **Parameter validation** - Throw `ArgumentNullException`, `ArgumentException`, etc.
-2. **Return value checking** - Null handles → throw `InvalidOperationException`
-3. **State checking** - Disposed objects → throw `ObjectDisposedException`
+**C# error patterns you will see:**
+1. **Null parameter guards** – most methods throw `ArgumentNullException` before calling into native code, e.g. `SKCanvas.DrawRect` checks `paint`.
+2. **Constructor validation** – constructors check if native handle creation succeeded and throw `InvalidOperationException` if Handle is IntPtr.Zero.
+3. **Return value propagation** – factory methods such as `SKImage.FromEncodedData` simply return `null` and expect the caller to inspect the result.
+4. **Try methods** – methods like `SKBitmap.TryAllocPixels` return `false` on failure rather than throwing.
 
-**Key principle:** C# layer is the safety boundary - it prevents invalid calls from reaching C API.
+**Key principle:** The managed layer is the safety boundary, but it mixes throwing and non-throwing patterns. Document both behaviours so callers know whether to check return values or catch exceptions.
 
-**Actual implementation:**
+**Representative code in the repo today:**
 ```csharp
-// C# MUST validate before P/Invoke
 public void DrawRect(SKRect rect, SKPaint paint)
 {
     if (paint == null)
         throw new ArgumentNullException(nameof(paint));
-    if (Handle == IntPtr.Zero)
-        throw new ObjectDisposedException(nameof(SKCanvas));
-    
+
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
+}
+
+public static SKImage FromEncodedData(SKData data)
+{
+    if (data == null)
+        throw new ArgumentNullException(nameof(data));
+
+    var handle = SkiaApi.sk_image_new_from_encoded(data.Handle);
+    return GetObject(handle); // Returns null when decode fails
 }
 ```
 
 ```cpp
-// C API trusts C# validation - minimal wrapper
+// C API forwards directly to Skia – no exception handling and minimal validation.
 SK_C_API void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint) {
     AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
@@ -52,21 +59,18 @@ The fundamental challenge in SkiaSharp error handling is preventing invalid oper
 ### Safety Strategy: Validate in C#
 
 **SkiaSharp's approach:**
-- **C# layer validates ALL parameters** before calling P/Invoke
-- **C API is a minimal wrapper** - no exception handling, no null checks
-- **Performance optimization** - single validation point instead of double-checking
+- **C# layer performs the critical validation** where the native API would crash or misbehave, but many high-volume helpers skip extra checks and simply propagate native return values.
+- **C API is a minimal wrapper** - no exception handling, no broad input validation.
+- **Performance optimization** - most validation happens once (in managed code) when it is needed.
 
 ```csharp
-// ✅ CORRECT - C# validates everything
+// Representative guard: managed code blocks obvious misuse, but not every failure path throws.
 public void DrawRect(SKRect rect, SKPaint paint)
 {
     // Validation happens here
     if (paint == null)
         throw new ArgumentNullException(nameof(paint));
-    if (Handle == IntPtr.Zero)
-        throw new ObjectDisposedException(nameof(SKCanvas));
-    
-    // At this point, all parameters are valid
+
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
 ```
@@ -79,30 +83,28 @@ SK_C_API void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, co
 ```
 
 **Why this works:**
-1. C# wrapper is the only caller of C API (users never call C API directly)
-2. Single validation point is more efficient than validating in both C# and C
-3. C# exceptions provide better error messages than C error codes
-4. Simplifies C API implementation
+1. C# wrappers are the only supported entry point into the C API.
+2. The code paths that *must* guard inputs (for example null pointers) do so before invoking native code.
+3. Remaining failures are surfaced through native return values (`false`, `nullptr`, default structs) which managed callers can observe.
+4. Keeping the C API thin avoids redundant checks and simplifies maintenance.
 
 ## Error Handling Strategy by Layer
 
 ```mermaid
 graph TB
     subgraph CSharp["C# Layer - Safety Boundary"]
-        CS1[Validate ALL parameters]
-        CS2[Check object state]
-        CS3[Call P/Invoke]
-        CS4[Check return value]
-        CS5{Error?}
-        CS6[Throw C# Exception]
-        CS7[Return result]
+        CS1[Validate critical inputs]
+        CS2[Call P/Invoke]
+        CS3[Process native result]
+        CS4{Failure?}
+        CS5[Throw or propagate]
+        CS6[Return success value]
         
         CS1 --> CS2
         CS2 --> CS3
         CS3 --> CS4
-        CS4 --> CS5
-        CS5 -->|Yes| CS6
-        CS5 -->|No| CS7
+        CS4 -->|Yes| CS5
+        CS4 -->|No| CS6
     end
     
     subgraph CAPI["C API Layer - Minimal Wrapper"]
@@ -143,11 +145,10 @@ graph TB
 ```
 ┌─────────────────────────────────────────────────┐
 │ C# Layer - SAFETY BOUNDARY                      │
-│ ✓ Validates ALL parameters before P/Invoke      │
-│ ✓ Checks ALL return values from C API           │
-│ ✓ Checks object state (disposed, etc.)          │
-│ ✓ Throws typed C# exceptions                    │
-│ → Ensures only valid calls reach C API          │
+│ ✓ Guards inputs that would crash native code    │
+│ ✓ Interprets native return values               │
+│ ✓ Throws when APIs guarantee exceptions         │
+│ → Defines managed-facing error semantics        │
 └─────────────────┬───────────────────────────────┘
                   │
 ┌─────────────────▼───────────────────────────────┐
@@ -200,32 +201,40 @@ public class SKCanvas : SKObject
 ```
 
 **Common validations:**
-- Null checks for reference parameters
-- Range checks for numeric values
-- State checks (disposed objects)
-- Array bounds checks
+- Null checks for reference parameters (most common)
+- Handle != IntPtr.Zero checks in constructors after native creation
+- Range checks for numeric values (less common)
+- Array bounds checks (where applicable)
 
-### Pattern 2: Return Value Checking
+### Pattern 2: Factory Method Null Returns
 
-Check return values from C API and throw exceptions for errors.
+**Important:** Static factory methods return `null` on failure, they do NOT throw exceptions.
 
 ```csharp
 public class SKImage : SKObject, ISKReferenceCounted
 {
+    // Factory method returns null on failure
     public static SKImage FromEncodedData(SKData data)
     {
         if (data == null)
             throw new ArgumentNullException(nameof(data));
         
         var handle = SkiaApi.sk_image_new_from_encoded(data.Handle);
-        
-        // Check for null handle = failure
-        if (handle == IntPtr.Zero)
-            throw new InvalidOperationException("Failed to create image from encoded data");
-        
-        return GetObject(handle);
+        return GetObject(handle);  // Returns null if handle is IntPtr.Zero
     }
     
+    // ✅ CORRECT usage - always check for null
+    public static void Example()
+    {
+        var image = SKImage.FromEncodedData(data);
+        if (image == null)
+            throw new InvalidOperationException("Failed to decode image");
+        
+        // Safe to use image
+        canvas.DrawImage(image, 0, 0);
+    }
+    
+    // Boolean return methods let caller decide
     public bool ReadPixels(SKImageInfo dstInfo, IntPtr dstPixels, int dstRowBytes, int srcX, int srcY)
     {
         // Boolean return indicates success/failure
@@ -233,19 +242,17 @@ public class SKImage : SKObject, ISKReferenceCounted
             Handle, &dstInfo, dstPixels, dstRowBytes, srcX, srcY, 
             SKImageCachingHint.Allow);
         
-        if (!success)
-        {
-            // Option 1: Return false (let caller handle)
-            return false;
-            
-            // Option 2: Throw exception (for critical failures)
-            // throw new InvalidOperationException("Failed to read pixels");
-        }
-        
-        return true;
+        return success;  // Caller can check and decide what to do
     }
 }
 ```
+
+**Affected Methods:** All static factory methods follow this pattern:
+- `SKImage.FromEncodedData()` - Returns null on decode failure
+- `SKImage.FromBitmap()` - Returns null on failure
+- `SKSurface.Create()` - Returns null on allocation failure
+- `SKShader.CreateLinearGradient()` - Returns null on failure
+- And many more...
 
 ### Pattern 3: Constructor Failures
 
@@ -556,39 +563,53 @@ bool SkBitmap::tryAllocPixels(const SkImageInfo& info) {
 ### For C# Layer
 
 ✅ **DO:**
-- Validate ALL parameters before P/Invoke
-- Check object state (disposed, valid handle)
-- Check ALL return values from C API
-- Throw appropriate exception types
-- Use meaningful error messages
+- Validate reference parameters (null checks) before P/Invoke
+- Check Handle != IntPtr.Zero in **constructors** after native creation
+- Inspect native return values and choose whether to propagate them or throw, matching existing patterns
+- Throw appropriate exception types matching existing API patterns
+- Use meaningful error messages when throwing
 - Provide context in exception messages
 
 ❌ **DON'T:**
-- Skip parameter validation (C API won't check)
-- Ignore return values
+- Skip null checks for reference parameters (C API won't check)
+- Ignore return values from factory/try methods
 - Throw from Dispose/finalizer
 - Use generic exceptions without context
-- Assume C API will handle errors
+- Assume C API will validate anything
 
-**Example of good C# error handling:**
+**Actual code patterns:**
+
 ```csharp
+// Pattern 1: Validate reference parameters (most common)
 public void DrawRect(SKRect rect, SKPaint paint)
 {
-    // Validate ALL parameters
     if (paint == null)
         throw new ArgumentNullException(nameof(paint));
     
-    // Check object state
-    if (Handle == IntPtr.Zero)
-        throw new ObjectDisposedException(nameof(SKCanvas));
-    
-    if (paint.Handle == IntPtr.Zero)
-        throw new ObjectDisposedException(nameof(paint), "Paint has been disposed");
-    
-    // Safe to call C API
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
+    // Note: Does NOT check if Handle is disposed - assumes valid object
+}
+
+// Pattern 2: Check Handle in constructors
+public SKPaint()
+    : this(SkiaApi.sk_compatpaint_new(), true)
+{
+    if (Handle == IntPtr.Zero)
+        throw new InvalidOperationException("Unable to create a new SKPaint instance.");
+}
+
+// Pattern 3: Factory methods return null (don't throw)
+public static SKImage FromEncodedData(SKData data)
+{
+    if (data == null)
+        throw new ArgumentNullException(nameof(data));
+    
+    var handle = SkiaApi.sk_image_new_from_encoded(data.Handle);
+    return GetObject(handle);  // Returns null if handle is IntPtr.Zero
 }
 ```
+
+**Note:** Most instance methods do NOT check if the object is disposed (Handle == IntPtr.Zero). They assume the object is valid if it exists. The primary validation is null-checking reference parameters.
 
 ### For C API Layer
 
@@ -683,32 +704,30 @@ public static GRContext CreateGl()
 
 ## Summary
 
-Error handling in SkiaSharp uses a **single safety boundary** approach:
+Error handling in SkiaSharp still relies on the managed layer as the safety boundary, but each layer has clearly defined responsibilities:
 
 1. **C# Layer (Safety Boundary)**: 
-   - Validates ALL parameters
-   - Checks ALL return values
-   - Throws typed exceptions
-   - Only layer that performs validation
+    - Guards reference parameters with null checks before calling native code
+    - Validates Handle creation in constructors (throws if Handle == IntPtr.Zero after native creation)
+    - Inspects native return values and translates them into either propagated results (`null`/`false`) or managed exceptions, depending on the API contract
+    - Establishes the public behavior (throwing vs. returning status)
 
 2. **C API Layer (Minimal Wrapper)**: 
-   - Direct pass-through to C++
-   - No validation (trusts C#)
-   - No exception handling (usually not needed)
-   - Simple type conversion
+    - Calls directly into the C++ API with almost no additional logic
+    - Avoids catching exceptions or duplicating validation
+    - Performs only the type conversions needed for P/Invoke
 
 3. **C++ Skia Layer**: 
-   - Normal C++ error handling
-   - Only receives valid inputs (via C#)
-   - May return null/false on failures
+    - Executes the actual work, optionally returning `nullptr`/`false` on failure
+    - Relies on upstream layers to pass valid arguments; assertions fire if they do not
 
 Key principles:
-- **C# is the safety boundary** - all validation happens here
-- **C API trusts C#** - no duplicate validation
-- **Fail fast** - validate before P/Invoke, not after
-- **Check all returns** - null/false indicates failure
-- **Clear error messages** - include context in exceptions
-- **Never throw from Dispose** - swallow exceptions in cleanup
+- **C# defines the managed contract** – check similar APIs to see whether they throw or return status
+- **C API stays thin** – no redundant validation or exception handling
+- **Prefer fail-fast guards** for inputs we know will crash native code
+- **Propagate native status codes** when the existing API surface expects nullable/bool results
+- **Provide clear exception messages** when throwing
+- **Do not throw from Dispose/finalizers** – follow current suppression pattern
 
 ## Next Steps
 

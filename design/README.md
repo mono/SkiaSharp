@@ -48,10 +48,9 @@ Continue reading below for the complete documentation index.
    - Thread safety considerations
 
 3. **[error-handling.md](error-handling.md)** - Understanding error flow
-   - Why C++ exceptions can't cross C API boundary
    - Error handling strategy by layer
    - Validation patterns in C#
-   - Exception firewall in C API
+   - Factory methods return null (not throw)
    - Complete error flow examples
    - Best practices and debugging tips
 
@@ -239,6 +238,6 @@ Improvements welcome! When contributing:
 **Remember:** The three most important concepts are:
 1. **Three-layer architecture** (C++ → C API → C#)
 2. **Three pointer types** (raw, owned, reference-counted)
-3. **Exception firewall** (C API never throws)
+3. **C# is safety boundary** (validates all, factory methods return null)
 
 Master these, and you'll understand SkiaSharp's design.

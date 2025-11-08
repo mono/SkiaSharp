@@ -37,9 +37,10 @@ Three pointer types with different ownership rules:
 
 ### Error Handling
 
-- **C++ exceptions cannot cross C API boundary**
-- C API returns error codes/null, never throws
-- C# validates parameters and throws exceptions
+- **C# validates all parameters** before calling C API
+- **C API is minimal wrapper** - no validation, trusts C#
+- **Factory methods return null** on failure (do NOT throw)
+- **Constructors throw** on failure
 
 👉 **Full details:** [design/error-handling.md](design/error-handling.md)
 
@@ -66,7 +67,7 @@ Pattern: SkType → sk_type_t* → SKType
 
 1. Find C++ API in Skia
 2. Identify pointer type (raw/owned/ref-counted)
-3. Add C API wrapper (exception firewall)
+3. Add C API wrapper (minimal, no validation)
 4. Add C API header
 5. Add P/Invoke declaration
 6. Add C# wrapper with validation
@@ -78,8 +79,8 @@ Pattern: SkType → sk_type_t* → SKType
 ❌ Wrong pointer type → memory leaks/crashes  
 ❌ Missing ref count increment when C++ expects `sk_sp<T>`  
 ❌ Disposing borrowed objects  
-❌ Exception crossing C boundary  
-❌ Missing parameter validation  
+❌ Not checking factory method null returns  
+❌ Missing parameter validation in C#  
 
 👉 **Full list with solutions:** [design/memory-management.md#common-pitfalls](design/memory-management.md#common-pitfalls) and [design/error-handling.md#common-mistakes](design/error-handling.md#common-mistakes)
 
@@ -159,8 +160,8 @@ Owned → `SKObject` with `DisposeNative()`
 Raw → `owns: false` in handle  
 
 **"How to handle errors?"**  
-C API → Catch exceptions, return bool/null  
-C# → Validate params, check returns, throw exceptions  
+C API → Minimal pass-through; no extra exception handling, returns whatever Skia returns (bool/null/void)  
+C# → Validate where needed, but some APIs propagate null/bool/default results instead of throwing  
 
 👉 **See also:** [design/adding-new-apis.md#decision-flowcharts](design/adding-new-apis.md#decision-flowcharts)
 
@@ -178,4 +179,4 @@ See [design/adding-new-apis.md](design/adding-new-apis.md) for complete examples
 
 ---
 
-**Remember:** Three layers, three pointer types, exception firewall at C API.
+**Remember:** Three layers, three pointer types, C# is the safety boundary.

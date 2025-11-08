@@ -874,8 +874,8 @@ surface.Dispose();     // Destroys surface AND canvas
 - Using the same object from multiple threads is NOT safe
 
 ### Handle Dictionary
-- Uses `ConcurrentDictionary` for thread-safe lookups
-- Multiple threads can safely create wrappers
+- Backed by a shared `Dictionary<IntPtr, WeakReference>` protected by a reader/writer lock
+- Multiple threads can safely request wrappers, but calls run inside the lock to keep state consistent
 - Don't access disposed objects from any thread
 
 ### Best Practices

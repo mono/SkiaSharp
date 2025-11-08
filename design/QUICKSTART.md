@@ -31,7 +31,7 @@ graph TB
     
     subgraph CAPI["C API Layer (externals/skia/src/c/)"]
         C1[C functions: sk_canvas_draw_rect]
-        C2[Exception firewall - no throws!]
+        C2[Minimal wrapper - trusts C#]
         C3[Returns bool/null for errors]
     end
     
@@ -126,18 +126,14 @@ void sk_canvas_draw_circle(
     float radius,
     const sk_paint_t* paint)
 {
-    // Defensive null checks
-    if (!canvas || !paint)
-        return;
-    
-    // Call C++ method
+    // Call C++ method directly - C# ensures valid parameters
     AsCanvas(canvas)->drawCircle(cx, cy, radius, *AsPaint(paint));
 }
 ```
 
 **Key points:**
 - Function name: `sk_<type>_<action>` pattern
-- Defensive null checks (C API must be safe)
+- **No validation needed** - C API trusts C# to pass valid parameters
 - `AsCanvas()` and `AsPaint()` convert opaque pointers to C++ types
 - Dereference with `*` to convert pointer to reference
 
@@ -249,7 +245,7 @@ sk_image_t* sk_image_new_from_encoded(const sk_data_t* data) {
 }
 ```
 
-**C# (throw on null):**
+**C# (returns null, does NOT throw):**
 ```csharp
 public static SKImage FromEncodedData(SKData data)
 {
@@ -257,25 +253,27 @@ public static SKImage FromEncodedData(SKData data)
         throw new ArgumentNullException(nameof(data));
     
     var handle = SkiaApi.sk_image_new_from_encoded(data.Handle);
-    if (handle == IntPtr.Zero)
-        throw new InvalidOperationException("Failed to decode image");
-    
-    return GetObject(handle);
+    return GetObject(handle);  // Returns null if handle is IntPtr.Zero
 }
+
+// ✅ CORRECT usage - check for null
+var image = SKImage.FromEncodedData(data);
+if (image == null)
+    throw new InvalidOperationException("Failed to decode image");
 ```
 
-### Pattern 3: Void Methods (Defensive Checks)
+**Note:** Factory methods return `null` on failure, they do NOT throw exceptions. Always check the return value.
 
-**C API:**
+### Pattern 3: Void Methods (Minimal C API)
+
+**C API (no validation):**
 ```cpp
 void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint) {
-    if (!canvas || !rect || !paint)
-        return;  // Defensive: fail silently
     AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
 ```
 
-**C#:**
+**C# (validates before calling):**
 ```csharp
 public void DrawRect(SKRect rect, SKPaint paint)
 {
@@ -284,6 +282,8 @@ public void DrawRect(SKRect rect, SKPaint paint)
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
 ```
+
+**Design:** C API is a minimal wrapper with no validation. C# validates all parameters before P/Invoke.
 
 ---
 
@@ -338,18 +338,20 @@ public void DrawRect(SKRect rect, SKPaint paint)
 }
 ```
 
-### 4. ❌ Ignoring Return Values
+### 4. ❌ Not Checking for Null Returns
 ```csharp
-// WRONG: Ignoring potential failure
-var image = SkiaApi.sk_image_new_from_encoded(data.Handle);
-return new SKImage(image);  // image could be IntPtr.Zero!
+// WRONG: Factory methods can return null
+var image = SKImage.FromEncodedData(data);
+canvas.DrawImage(image, 0, 0);  // NullReferenceException if decode failed!
 
-// CORRECT: Check return value
-var image = SkiaApi.sk_image_new_from_encoded(data.Handle);
-if (image == IntPtr.Zero)
-    throw new InvalidOperationException("Failed to decode");
-return GetObject(image);
+// CORRECT: Check for null
+var image = SKImage.FromEncodedData(data);
+if (image == null)
+    throw new InvalidOperationException("Failed to decode image");
+canvas.DrawImage(image, 0, 0);
 ```
+
+**Important:** Static factory methods return `null` on failure, they do NOT throw exceptions!
 
 ### 5. ❌ Missing sk_ref_sp for Ref-Counted Parameters
 ```cpp
@@ -532,10 +534,10 @@ dotnet cake --target=tests
 
 **Remember:**
 1. **Three layers:** C# → C API → C++
-2. **Exception firewall:** C API catches all exceptions
+2. **C# validates everything:** Parameters checked before P/Invoke
 3. **Three pointer types:** Raw, Owned, Ref-counted
-4. **Always validate:** Check parameters in C# and C API
-5. **Check returns:** Handle null and false returns
+4. **Factory methods return null:** Always check for null returns
+5. **Constructors throw:** On allocation/creation failures
 
 **When in doubt:**
 - Check similar existing APIs
