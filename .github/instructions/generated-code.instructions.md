@@ -22,8 +22,8 @@ Located in: `utils/SkiaSharpGenerator/`
 
 ### Step 2: Modify Template or Config
 ```bash
-# Regenerate after changes
-dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate
+# Regenerate after changes (requires config and source paths)
+dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config <path-to-config> --root <path-to-skia>
 ```
 
 ### Step 3: Verify Output

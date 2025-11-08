@@ -279,10 +279,10 @@ internal static partial class SkiaApi
 
 ### Generated Declaration
 
-For bulk additions, update generator config and regenerate:
+For bulk additions, update generator config and regenerate (requires config and source paths):
 
 ```bash
-dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate
+dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config <path-to-config> --root <path-to-skia>
 ```
 
 The generator creates `SkiaApi.generated.cs` with P/Invoke declarations.

@@ -65,8 +65,8 @@ dotnet cake --target=libs
 # Run tests
 dotnet cake --target=tests
 
-# Download pre-built native libraries
-dotnet cake --target=externals-download
+# Download/build native libraries
+dotnet cake --target=externals
 ```
 
 ## When In Doubt

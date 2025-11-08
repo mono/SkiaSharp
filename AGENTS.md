@@ -90,9 +90,9 @@ Pattern: SkType → sk_type_t* → SKType
 - **Generated:** Some P/Invoke declarations (`SkiaApi.generated.cs`)
 - **Tool:** `utils/SkiaSharpGenerator/`
 
-To regenerate:
+To regenerate (requires config and source paths):
 ```bash
-dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate
+dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config <path-to-config> --root <path-to-skia>
 ```
 
 ## Testing Checklist
@@ -127,8 +127,8 @@ dotnet cake --target=libs
 # Run tests
 dotnet cake --target=tests
 
-# Download pre-built native libraries
-dotnet cake --target=externals-download
+# Download/build native libraries
+dotnet cake --target=externals
 ```
 
 ## Documentation

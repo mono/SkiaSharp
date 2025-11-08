@@ -295,7 +295,7 @@ The generator parses C header files and creates:
 
 **To regenerate code:**
 ```bash
-dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config <config-path>
+dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config <path-to-config> --root <path-to-skia>
 ```
 
 ## Key Design Principles
