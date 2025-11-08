@@ -46,22 +46,30 @@ SkiaSharp is available as a convenient NuGet package, to use install the package
 nuget install SkiaSharp
 ```
 
-_Because there are multiple distros of Linux, and we cannot possibly support them all, we have a separate NuGet package that will contain the supported binaries for a few distros: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). ([distros](https://github.com/mono/SkiaSharp/issues/453)) ([more info](https://github.com/mono/SkiaSharp/issues/312))_
+_Because there are multiple distros of Linux, we provide a separate NuGet package with supported binaries: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). See [Linux Native Assets](docs/user-guide/linux-native-assets.md) for more information._
 
-There is also a early access feed that you can use to get the latest and greatest, before it goes out to the public:
+There is also an early access feed for the latest previews:
 
 ```
 https://aka.ms/skiasharp-eap/index.json
 ```
 
+## Documentation
+
+- **[Documentation Hub](docs/)** - Complete documentation
+- **[User Guide](docs/user-guide/)** - Using SkiaSharp
+- **[Building Guide](docs/building/)** - Building from source
+- **[Contributing Guide](docs/contributing/)** - How to contribute
+- **[Design Docs](design/)** - Architecture and design
+- **[API Documentation](https://docs.microsoft.com/dotnet/api/SkiaSharp)** - Online API reference
+
 ## Building SkiaSharp
 
-Building SkiaSharp is mostly straight forward. The main issue is the multiple dependencies for each platform.
+Building SkiaSharp is straightforward. The main challenge is the platform-specific dependencies, but these are well documented:
 
-However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there mays to skip all the native builds.
-
- - To get started building, [go here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp).
- - If you are just wanting a custom Linux build, [go here](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux)
+- **[Building SkiaSharp](docs/building/building-skiasharp.md)** - Complete build guide
+- **[Building on Linux](docs/building/building-on-linux.md)** - Linux-specific instructions
+- **[Quick Start](design/QUICKSTART.md)** - 10-minute developer tutorial
 
 ## Contributors
 
