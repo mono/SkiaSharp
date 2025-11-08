@@ -1,3 +1,7 @@
+Param(
+    [string] $GitHubToken = ''
+)
+
 $ErrorActionPreference = 'Stop'
 
 if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
@@ -7,16 +11,23 @@ if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
 
 Write-Host "Fetching PR #$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER information from GitHub..."
 
-# Make an unauthenticated request to the GitHub API
-# GitHub allows 60 requests per hour for unauthenticated requests to public repositories
-# This is sufficient for PR builds
+# Make request to the GitHub API with authentication
 try {
+    $headers = @{
+        "Accept" = "application/vnd.github.v3+json"
+        "User-Agent" = "SkiaSharp-AzurePipelines"
+    }
+    
+    if ($GitHubToken) {
+        $headers["Authorization"] = "Bearer $GitHubToken"
+        Write-Host "Using authenticated GitHub API request."
+    } else {
+        Write-Host "Warning: No GitHub token provided. API request may fail or be rate limited."
+    }
+    
     $json = Invoke-RestMethod `
         -Uri "https://api.github.com/repos/mono/SkiaSharp/pulls/$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER" `
-        -Headers @{
-            "Accept" = "application/vnd.github.v3+json"
-            "User-Agent" = "SkiaSharp-AzurePipelines"
-        } `
+        -Headers $headers `
         -Method Get `
         -ErrorAction Stop
 } catch {
