@@ -123,11 +123,11 @@ void sk_canvas_draw_circle(
     sk_canvas_t* canvas,
     float cx,
     float cy, 
-    float radius,
+    float rad,
     const sk_paint_t* paint)
 {
     // Call C++ method directly - C# ensures valid parameters
-    AsCanvas(canvas)->drawCircle(cx, cy, radius, *AsPaint(paint));
+    AsCanvas(canvas)->drawCircle(cx, cy, rad, *AsPaint(paint));
 }
 ```
 
@@ -146,7 +146,7 @@ SK_C_API void sk_canvas_draw_circle(
     sk_canvas_t* canvas,
     float cx,
     float cy,
-    float radius,
+    float rad,
     const sk_paint_t* paint);
 ```
 
@@ -160,7 +160,7 @@ public static extern void sk_canvas_draw_circle(
     sk_canvas_t canvas,
     float cx,
     float cy,
-    float radius,
+    float rad,
     sk_paint_t paint);
 ```
 
@@ -180,7 +180,7 @@ public void DrawCircle(float cx, float cy, float radius, SKPaint paint)
     if (paint == null)
         throw new ArgumentNullException(nameof(paint));
     
-    // Call P/Invoke
+    // Call P/Invoke (parameter positions match, names can differ)
     SkiaApi.sk_canvas_draw_circle(Handle, cx, cy, radius, paint.Handle);
 }
 ```
@@ -190,6 +190,7 @@ public void DrawCircle(float cx, float cy, float radius, SKPaint paint)
 - Validate parameters before P/Invoke
 - Use `Handle` property to get native pointer
 - No need to check return value (void function)
+- Parameter names in C# can be more descriptive than P/Invoke layer (which matches C API)
 
 ### Done! ✅
 
