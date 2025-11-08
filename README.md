@@ -46,7 +46,7 @@ SkiaSharp is available as a convenient NuGet package, to use install the package
 nuget install SkiaSharp
 ```
 
-_Because there are multiple distros of Linux, we provide a separate NuGet package with supported binaries: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). See [Linux Native Assets](docs/user-guide/linux-native-assets.md) for more information._
+_Because there are multiple distros of Linux, we provide a separate NuGet package with supported binaries: [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux). See [Linux Native Assets](documentation/user-guide/linux-native-assets.md) for more information._
 
 There is also an early access feed for the latest previews:
 
@@ -56,10 +56,10 @@ https://aka.ms/skiasharp-eap/index.json
 
 ## Documentation
 
-- **[Documentation Hub](docs/)** - Complete documentation
-- **[User Guide](docs/user-guide/)** - Using SkiaSharp
-- **[Building Guide](docs/building/)** - Building from source
-- **[Contributing Guide](docs/contributing/)** - How to contribute
+- **[Documentation Hub](documentation/)** - Complete documentation
+- **[User Guide](documentation/user-guide/)** - Using SkiaSharp
+- **[Building Guide](documentation/building/)** - Building from source
+- **[Contributing Guide](documentation/contributing/)** - How to contribute
 - **[Design Docs](design/)** - Architecture and design
 - **[API Documentation](https://docs.microsoft.com/dotnet/api/SkiaSharp)** - Online API reference
 
@@ -67,8 +67,8 @@ https://aka.ms/skiasharp-eap/index.json
 
 Building SkiaSharp is straightforward. The main challenge is the platform-specific dependencies, but these are well documented:
 
-- **[Building SkiaSharp](docs/building/building-skiasharp.md)** - Complete build guide
-- **[Building on Linux](docs/building/building-on-linux.md)** - Linux-specific instructions
+- **[Building SkiaSharp](documentation/building/building-skiasharp.md)** - Complete build guide
+- **[Building on Linux](documentation/building/building-on-linux.md)** - Linux-specific instructions
 - **[Quick Start](design/QUICKSTART.md)** - 10-minute developer tutorial
 
 ## Contributors
