@@ -49,7 +49,7 @@ graph TB
     style CPP fill:#e1e8f5
 ```
 
-**Key principle:** C++ exceptions **cannot cross** the C API boundary. The C API layer catches all exceptions.
+**Key principle:** C++ exceptions **cannot safely cross** the C API boundary. The C API is a minimal wrapper with no exception handling - C# prevents invalid inputs that would cause exceptions.
 
 ---
 

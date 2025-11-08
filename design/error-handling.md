@@ -423,55 +423,44 @@ bool SkBitmap::tryAllocPixels(const SkImageInfo& info) {
 
 ## Complete Error Flow Examples
 
-### Example 1: Drawing with Invalid Paint (Null Check)
+> **Note:** The examples below show hypothetical defensive patterns. The actual SkiaSharp implementation uses minimal C API wrappers without exception handling or null checks (see "Actual Pattern: Direct Pass-Through" section above).
+
+### Example 1: Drawing with Invalid Paint (Actual Implementation)
 
 ```csharp
 // C# Layer - Validation
 public void DrawRect(SKRect rect, SKPaint paint)
 {
     if (paint == null)
-        throw new ArgumentNullException(nameof(paint));  // ✓ Caught here
+        throw new ArgumentNullException(nameof(paint));  // ✓ C# validates
     
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
 
-// If validation was missing:
-// P/Invoke would pass IntPtr.Zero
-// ↓
-// C API Layer - Defensive Check
+// C API Layer - Actual implementation (no validation)
 SK_C_API void sk_canvas_draw_rect(sk_canvas_t* canvas, const sk_rect_t* rect, const sk_paint_t* paint) {
-    if (!canvas || !rect || !paint)
-        return;  // ✓ Silently ignore - prevent crash
-    
+    // Direct pass-through - trusts C# validated parameters
     AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
 }
 ```
 
-### Example 2: Image Creation Failure
+### Example 2: Image Creation Failure (Actual Implementation)
 
 ```csharp
-// C# Layer
+// C# Layer - Actual implementation
 public static SKImage FromEncodedData(SKData data)
 {
     if (data == null)
         throw new ArgumentNullException(nameof(data));  // ✓ Validate input
     
     var handle = SkiaApi.sk_image_new_from_encoded(data.Handle);
-    
-    if (handle == IntPtr.Zero)
-        throw new InvalidOperationException("Failed to decode image");  // ✓ Check result
-    
-    return GetObject(handle);
+    return GetObject(handle);  // Returns null if handle is IntPtr.Zero
 }
 
-// C API Layer
+// C API Layer - Actual implementation (no try-catch)
 SK_C_API sk_image_t* sk_image_new_from_encoded(const sk_data_t* data) {
-    try {
-        auto image = SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(data)));
-        return ToImage(image.release());  // Returns nullptr if failed
-    } catch (...) {
-        return nullptr;  // ✓ Catch exceptions, return null
-    }
+    // Direct pass-through - returns nullptr if Skia factory fails
+    return ToImage(SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(data))).release());
 }
 
 // C++ Layer
