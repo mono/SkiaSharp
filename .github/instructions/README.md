@@ -52,7 +52,7 @@ Ensures all AI-generated code follows the same patterns across the codebase.
 - **Reference-counted** - Shared ownership, ref/unref
 
 ### Error Handling (Per Layer)
-- **C API:** Catch all exceptions, return bool/null, defensive null checks
+- **C API:** Minimal wrapper, no exception handling, no validation, trusts C#
 - **C#:** Validate parameters, check returns, throw typed exceptions
 - **Tests:** Verify proper exception handling
 

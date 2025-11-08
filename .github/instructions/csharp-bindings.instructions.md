@@ -93,7 +93,7 @@ public void DrawRect(SKRect rect, SKPaint paint)
 
 ## Error Handling
 
-Convert C API errors to exceptions:
+Factory methods return null on failure:
 ```csharp
 public static SKImage FromEncodedData(SKData data)
 {
@@ -101,11 +101,24 @@ public static SKImage FromEncodedData(SKData data)
         throw new ArgumentNullException(nameof(data));
     
     var handle = SkiaApi.sk_image_new_from_encoded(data.Handle);
+    return GetObject(handle);  // Returns null if handle is IntPtr.Zero
+}
+
+// Callers should check for null:
+var image = SKImage.FromEncodedData(data);
+if (image == null)
+    throw new InvalidOperationException("Failed to decode image");
+```
+
+Constructors throw on failure:
+```csharp
+public SKBitmap(SKImageInfo info) : base(IntPtr.Zero, true)
+{
+    var nInfo = SKImageInfoNative.FromManaged(ref info);
+    Handle = SkiaApi.sk_bitmap_new();
     
-    if (handle == IntPtr.Zero)
-        throw new InvalidOperationException("Failed to decode image");
-    
-    return GetObject(handle);
+    if (Handle == IntPtr.Zero)
+        throw new InvalidOperationException("Failed to create bitmap");
 }
 ```
 
