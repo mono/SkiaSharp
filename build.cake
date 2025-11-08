@@ -14,6 +14,8 @@
 #tool nuget:?package=xunit.runner.console&version=2.4.2
 #tool nuget:?package=vswhere&version=2.8.4
 
+ERROR
+
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.InteropServices;
