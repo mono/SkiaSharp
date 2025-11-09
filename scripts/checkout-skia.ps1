@@ -1,8 +1,3 @@
-Param(
-    [string] $GitHubServiceConnection = '',
-    [string] $SystemAccessToken = ''
-)
-
 $ErrorActionPreference = 'Stop'
 
 if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
@@ -10,102 +5,102 @@ if (-not $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER) {
     exit 0
 }
 
-Write-Host "Fetching PR #$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER information from GitHub..."
+Write-Host "Fetching PR #$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER information..."
 
-# Get GitHub token from Azure DevOps service endpoint
-if (-not $GitHubServiceConnection -or $GitHubServiceConnection -eq '$(GITHUB_SERVICE_CONNECTION)') {
-    Write-Host "##vso[task.logissue type=error]GITHUB_SERVICE_CONNECTION variable is not configured in Azure Pipelines."
-    Write-Host "##vso[task.logissue type=error]Please add a pipeline variable named GITHUB_SERVICE_CONNECTION with the name of your GitHub service connection."
-    Write-Host "##vso[task.complete result=Failed;]GitHub service connection not configured."
-    exit 1
-}
-
-if (-not $SystemAccessToken) {
-    Write-Host "##vso[task.logissue type=error]System.AccessToken is not available."
-    Write-Host "##vso[task.complete result=Failed;]System.AccessToken not available."
-    exit 1
-}
-
-$gitHubToken = ""
-if ($GitHubServiceConnection -and $SystemAccessToken) {
-    try {
-        Write-Host "Retrieving GitHub token from service connection '$GitHubServiceConnection'..."
-        
-        # Create authorization header for Azure DevOps API
-        $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$SystemAccessToken"))
-        $headers = @{
-            Authorization = "Basic $base64AuthInfo"
+# Use Azure DevOps REST API to get PR information
+# This uses System.AccessToken which is automatically available
+try {
+    # Get System.AccessToken from environment
+    $accessToken = $env:SYSTEM_ACCESSTOKEN
+    if (-not $accessToken) {
+        Write-Host "##vso[task.logissue type=error]System.AccessToken is not available."
+        Write-Host "##vso[task.logissue type=error]Make sure the pipeline has access to OAuth token (usually automatic)."
+        Write-Host "##vso[task.complete result=Failed;]System.AccessToken not available."
+        exit 1
+    }
+    
+    # Create authorization header for Azure DevOps API
+    $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes(":$accessToken"))
+    $headers = @{
+        Authorization = "Basic $base64AuthInfo"
+        "Content-Type" = "application/json"
+    }
+    
+    # Get the repository ID from the source repository URI
+    # Format: https://github.com/mono/SkiaSharp
+    $repoUrl = $env:BUILD_REPOSITORY_URI
+    if ($repoUrl -match 'github\.com/([^/]+)/([^/]+?)(?:\.git)?$') {
+        $repoOwner = $matches[1]
+        $repoName = $matches[2]
+        Write-Host "Repository: $repoOwner/$repoName"
+    } else {
+        Write-Host "##vso[task.logissue type=error]Unable to parse repository information from BUILD_REPOSITORY_URI: $repoUrl"
+        Write-Host "##vso[task.complete result=Failed;]Invalid repository URI."
+        exit 1
+    }
+    
+    # Get the Azure Repos PR information which contains the GitHub PR data
+    # When a GitHub PR triggers an Azure Pipeline, Azure DevOps stores the PR information
+    $prUrl = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECT)/_apis/git/repositories/$($env:BUILD_REPOSITORY_ID)/pullRequests?searchCriteria.status=all&api-version=7.0"
+    Write-Host "Fetching PR information from Azure DevOps..."
+    
+    $prs = Invoke-RestMethod -Uri $prUrl -Method Get -Headers $headers
+    
+    # Find the PR that matches our PR number
+    # For GitHub PRs in Azure Pipelines, the sourceRefName contains the PR number
+    $prInfo = $null
+    foreach ($pr in $prs.value) {
+        # Check if this PR's description or title contains our GitHub PR number
+        if ($pr.title -match "#$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER" -or 
+            $pr.description -match "#$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER") {
+            $prInfo = $pr
+            break
         }
-        
-        # Get the service endpoint ID
-        $serviceEndpointUrl = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECT)/_apis/serviceendpoint/endpoints?endpointNames=$GitHubServiceConnection&api-version=7.1-preview.4"
-        Write-Host "Fetching service endpoint from: $serviceEndpointUrl"
-        
-        $endpoints = Invoke-RestMethod -Uri $serviceEndpointUrl -Method Get -Headers $headers -ContentType "application/json"
-        
-        if ($endpoints.value -and $endpoints.value.Count -gt 0) {
-            $endpointId = $endpoints.value[0].id
-            Write-Host "Found service endpoint ID: $endpointId"
-            
-            # Get the endpoint details with credentials
-            $endpointUrl = "$($env:SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$($env:SYSTEM_TEAMPROJECT)/_apis/serviceendpoint/endpoints/$endpointId`?api-version=7.1-preview.4"
-            $endpoint = Invoke-RestMethod -Uri $endpointUrl -Method Get -Headers $headers -ContentType "application/json"
-            
-            # Extract token from the authorization parameters
-            if ($endpoint.authorization.scheme -eq "Token" -and $endpoint.authorization.parameters.accessToken) {
-                $gitHubToken = $endpoint.authorization.parameters.accessToken
-                Write-Host "Successfully retrieved GitHub token from service connection."
-            } else {
-                Write-Host "##vso[task.logissue type=error]Service connection '$GitHubServiceConnection' does not contain a token in the expected format."
-                Write-Host "##vso[task.complete result=Failed;]Invalid service connection configuration."
-                exit 1
+    }
+    
+    # If we couldn't find it in Azure Repos, we need to get it from GitHub directly
+    # Try unauthenticated request (may work if not rate-limited)
+    if (-not $prInfo -or -not $prInfo.description) {
+        Write-Host "Attempting to fetch PR description directly from GitHub..."
+        try {
+            $githubHeaders = @{
+                "Accept" = "application/vnd.github.v3+json"
+                "User-Agent" = "SkiaSharp-AzurePipelines"
             }
-        } else {
-            Write-Host "##vso[task.logissue type=error]Service connection '$GitHubServiceConnection' not found."
-            Write-Host "##vso[task.complete result=Failed;]Service connection not found."
+            
+            $json = Invoke-RestMethod `
+                -Uri "https://api.github.com/repos/$repoOwner/$repoName/pulls/$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER" `
+                -Headers $githubHeaders `
+                -Method Get `
+                -ErrorAction Stop
+                
+            $prBody = $json.body
+            $prTitle = $json.title
+        } catch {
+            Write-Host "##vso[task.logissue type=error]Failed to fetch PR information: $($_.Exception.Message)"
+            Write-Host "##vso[task.logissue type=error]GitHub may be blocking unauthenticated requests."
+            Write-Host "##vso[task.logissue type=error]This feature requires GitHub API access which is not currently available."
+            Write-Host "##vso[task.complete result=Failed;]Failed to fetch PR information."
             exit 1
         }
-    } catch {
-        Write-Host "##vso[task.logissue type=error]Failed to retrieve GitHub token from service connection: $($_.Exception.Message)"
-        Write-Host "##vso[task.complete result=Failed;]Failed to retrieve GitHub token from service connection."
-        exit 1
-    }
-}
-
-# Make request to the GitHub API
-try {
-    $headers = @{
-        "Accept" = "application/vnd.github.v3+json"
-        "User-Agent" = "SkiaSharp-AzurePipelines"
-    }
-    
-    if ($gitHubToken) {
-        $headers["Authorization"] = "token $gitHubToken"
-        Write-Host "Using authenticated GitHub API request."
     } else {
-        Write-Host "##vso[task.logissue type=error]No GitHub token available. Cannot authenticate with GitHub API."
-        Write-Host "##vso[task.complete result=Failed;]GitHub authentication failed."
-        exit 1
+        $prBody = $prInfo.description
+        $prTitle = $prInfo.title
     }
     
-    $json = Invoke-RestMethod `
-        -Uri "https://api.github.com/repos/mono/SkiaSharp/pulls/$env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER" `
-        -Headers $headers `
-        -Method Get `
-        -ErrorAction Stop
 } catch {
-    Write-Host "##vso[task.logissue type=error]Failed to fetch PR information from GitHub API: $($_.Exception.Message)"
-    Write-Host "##vso[task.complete result=Failed;]Failed to fetch PR information from GitHub."
+    Write-Host "##vso[task.logissue type=error]Failed to fetch PR information: $($_.Exception.Message)"
+    Write-Host "##vso[task.complete result=Failed;]Failed to fetch PR information."
     exit 1
 }
 
-Write-Host "PR Title: $($json.title)"
+Write-Host "PR Title: $prTitle"
 Write-Host "Searching for required skia PR in the description..."
 
 # Look for the pattern: **Required skia PR** followed by a GitHub PR URL
 $regex = '\*\*Required\ skia\ PR\*\*[\\rn\s-]+https?\://github\.com/mono/skia/pull/(\d+)'
 
-$match = [regex]::Match($json.body, $regex, [System.Text.RegularExpressions.RegexOptions]::Singleline)
+$match = [regex]::Match($prBody, $regex, [System.Text.RegularExpressions.RegexOptions]::Singleline)
 
 if ((-not $match.Success) -or ($match.Groups.Count -ne 2)) {
     Write-Host "No required skia PR specified in the PR description."
