@@ -82,9 +82,22 @@ void GnNinja(DirectoryPath outDir, string target, string skiaArgs)
         skiaArgs += $" win_vc='{win_vc}' ";
     }
 
+    // Determine if this is an optimized build
+    // is_official_build=true enables:
+    //   - Compiler optimizations (-O3 on GCC/Clang, /O2 on MSVC)
+    //   - NDEBUG preprocessor define (disables assertions)
+    //   - SK_RELEASE (Skia's release mode, disables SK_DEBUG checks)
+    // is_official_build=false (is_debug=true) keeps:
+    //   - Debug assertions and validation code
+    //   - SK_DEBUG preprocessor define
+    //   - Slower but more diagnostic-friendly code
+    var isOfficialBuild = CONFIGURATION.ToLower() == "release";
+    
     skiaArgs += 
         $" skia_enable_tools=false " +
-        $" is_official_build={CONFIGURATION.ToLower() == "release"} ".ToLower();
+        $" is_official_build={isOfficialBuild.ToString().ToLower()} ";
+
+    Information("Building with is_official_build={0} (Configuration={1})", isOfficialBuild, CONFIGURATION);
 
     // generate native skia build files
     RunGn(SKIA_PATH, $"out/{outDir}", skiaArgs);

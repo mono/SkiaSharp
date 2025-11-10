@@ -5,6 +5,14 @@ var TARGET = Argument("t", Argument("target", "Default"));
 var VERBOSITY = Context.Log.Verbosity;
 var CONFIGURATION = Argument("c", Argument("configuration", "Release"));
 
+// Validate configuration to prevent performance issues
+if (!CONFIGURATION.Equals("Release", StringComparison.OrdinalIgnoreCase) && 
+    !CONFIGURATION.Equals("Debug", StringComparison.OrdinalIgnoreCase))
+{
+    Warning($"Configuration '{CONFIGURATION}' is not standard. Expected 'Release' or 'Debug'.");
+    Warning("Native builds may not be optimized correctly with non-standard configurations.");
+}
+
 var VS_INSTALL = Argument("vsinstall", EnvironmentVariable("VS_INSTALL"));
 var MSBUILD_EXE = Argument("msbuild", EnvironmentVariable("MSBUILD_EXE"));
 
