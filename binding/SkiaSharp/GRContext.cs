@@ -150,6 +150,13 @@ namespace SkiaSharp
 		public void Submit (bool synchronous = false) =>
 			SkiaApi.gr_direct_context_submit (Handle, synchronous);
 
+		public void Flush (SKSurface surface)
+		{
+			if (surface == null)
+				throw new ArgumentNullException(nameof(surface));
+			SkiaApi.gr_direct_context_flush_surface(Handle, surface.Handle);
+		}
+
 		public new int GetMaxSurfaceSampleCount (SKColorType colorType) =>
 			base.GetMaxSurfaceSampleCount (colorType);
 

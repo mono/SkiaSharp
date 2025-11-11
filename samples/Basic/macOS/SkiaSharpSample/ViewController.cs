@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using AppKit;
-using CoreGraphics;
 using Foundation;
 
 using SkiaSharp;
@@ -16,7 +15,6 @@ namespace SkiaSharpSample
 		private double _lastTime;
 		private int _frameCount;
 		private double _accumulatedTime;
-		private NSTimer? _timer;
 
 		public ViewController(IntPtr handle)
 			: base(handle)
@@ -32,13 +30,6 @@ namespace SkiaSharpSample
 
 			skiaView.PaintSurface += OnPaintSurface;
 
-			// Start render loop
-			_timer = NSTimer.CreateRepeatingScheduledTimer(TimeSpan.FromSeconds(1.0 / 240.0), _ =>
-			{
-				if (skiaView != null)
-					skiaView.NeedsDisplay = true;
-			});
-
 			_lastTime = _stopwatch.Elapsed.TotalSeconds;
 		}
 
@@ -46,15 +37,27 @@ namespace SkiaSharpSample
 		{
 			if (disposing)
 			{
-				_timer?.Invalidate();
-				_timer = null;
 				_scene?.Dispose();
 			}
 			base.Dispose(disposing);
 		}
 
+		public void RenderFrame()
+		{
+			if (skiaView == null)
+				return;
+
+			// Direct render call (like C++ Window::onPaint)
+			// This forces SKGLView to render immediately without display queue
+			skiaView.NeedsDisplay = true;
+			skiaView.DisplayIfNeeded();
+		}
+
 		private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
 		{
+			if (e.Surface == null || e.Surface.Canvas == null)
+				return;
+
 			var canvas = e.Surface.Canvas;
 			var width = e.BackendRenderTarget.Width;
 			var height = e.BackendRenderTarget.Height;
@@ -76,14 +79,11 @@ namespace SkiaSharpSample
 				var elementCount = _scene.ElementCount;
 				
 				// Update window title with FPS
-				BeginInvokeOnMainThread(() =>
+				var window = View?.Window;
+				if (window != null)
 				{
-					var window = View.Window;
-					if (window != null)
-					{
-						window.Title = $"MotionMark SkiaSharp (OpenGL) | {fps:F1} FPS | Complexity {complexity} | Elements {elementCount}";
-					}
-				});
+					window.Title = $"MotionMark SkiaSharp (OpenGL) | {fps:F1} FPS | Complexity {complexity} | Elements {elementCount}";
+				}
 
 				_accumulatedTime = 0.0;
 				_frameCount = 0;

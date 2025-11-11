@@ -34,7 +34,7 @@ internal sealed class MotionMarkScene : IDisposable
     private readonly SKPaint _strokePaint = new()
     {
         IsAntialias = true,
-        Style = SKPaintStyle.Fill,
+        Style = SKPaintStyle.Stroke,
         StrokeCap = SKStrokeCap.Round,
         StrokeJoin = SKStrokeJoin.Round,
     };

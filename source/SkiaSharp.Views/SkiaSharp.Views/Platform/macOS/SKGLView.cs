@@ -63,19 +63,18 @@ namespace SkiaSharp.Views.Mac
 		{
 			WantsBestResolutionOpenGLSurface = true;
 
+			// Match C++ sk_app pixel format attributes exactly
 			var attrs = new NSOpenGLPixelFormatAttribute[]
 			{
-				//NSOpenGLPixelFormatAttribute.OpenGLProfile, (NSOpenGLPixelFormatAttribute)NSOpenGLProfile.VersionLegacy,
 				NSOpenGLPixelFormatAttribute.Accelerated,
+				NSOpenGLPixelFormatAttribute.ClosestPolicy,
 				NSOpenGLPixelFormatAttribute.DoubleBuffer,
-				NSOpenGLPixelFormatAttribute.Multisample,
-
-				NSOpenGLPixelFormatAttribute.ColorSize, (NSOpenGLPixelFormatAttribute)32,
+				NSOpenGLPixelFormatAttribute.OpenGLProfile, (NSOpenGLPixelFormatAttribute)NSOpenGLProfile.Version3_2Core,
+				NSOpenGLPixelFormatAttribute.ColorSize, (NSOpenGLPixelFormatAttribute)24,
 				NSOpenGLPixelFormatAttribute.AlphaSize, (NSOpenGLPixelFormatAttribute)8,
-				NSOpenGLPixelFormatAttribute.DepthSize, (NSOpenGLPixelFormatAttribute)24,
+				NSOpenGLPixelFormatAttribute.DepthSize, (NSOpenGLPixelFormatAttribute)0,
 				NSOpenGLPixelFormatAttribute.StencilSize, (NSOpenGLPixelFormatAttribute)8,
-				NSOpenGLPixelFormatAttribute.SampleBuffers, (NSOpenGLPixelFormatAttribute)1,
-				NSOpenGLPixelFormatAttribute.Samples, (NSOpenGLPixelFormatAttribute)4,
+				NSOpenGLPixelFormatAttribute.SampleBuffers, (NSOpenGLPixelFormatAttribute)0,
 				(NSOpenGLPixelFormatAttribute)0,
 			};
 			PixelFormat = new NSOpenGLPixelFormat(attrs);
@@ -88,6 +87,10 @@ namespace SkiaSharp.Views.Mac
 		public override void PrepareOpenGL()
 		{
 			base.PrepareOpenGL();
+
+			// Disable VSync to match C++ behavior (allows 200+ FPS)
+			var swapInterval = 0;
+			OpenGLContext.SetValues(swapInterval, NSOpenGLContextParameter.SwapInterval);
 
 			// create the context
 			var glInterface = GRGlInterface.Create();
@@ -104,6 +107,74 @@ namespace SkiaSharp.Views.Mac
 		}
 
 		private nfloat lastBackingScaleFactor = 0;
+
+		// Direct render method for tight loops (matches C++ onPaint pattern)
+		public void RenderDirect()
+		{
+			if (OpenGLContext == null || context == null)
+				return;
+
+			// Make GL context current
+			OpenGLContext.MakeCurrentContext();
+
+			// Track scale changes
+			if (Window != null && lastBackingScaleFactor != Window.BackingScaleFactor)
+			{
+				lastBackingScaleFactor = Window.BackingScaleFactor;
+				Reshape();
+			}
+
+			RenderFrame();
+		}
+
+		private void RenderFrame()
+		{
+			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
+
+			// create the render target - only recreate on size change (match C++ getBackbufferSurface)
+			if (renderTarget == null || lastSize != newSize)
+			{
+				// create or update the dimensions
+				lastSize = newSize;
+
+				// read the info from the buffer
+				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
+				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
+				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
+				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
+				if (samples > maxSamples)
+					samples = maxSamples;
+				glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
+
+				// destroy the old surface
+				surface?.Dispose();
+				surface = null;
+				canvas = null;
+
+				// re-create the render target
+				renderTarget?.Dispose();
+				renderTarget = new GRBackendRenderTarget(newSize.Width, newSize.Height, samples, stencil, glInfo);
+				
+				// create the surface immediately (match C++ getBackbufferSurface pattern)
+				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
+				canvas = surface.Canvas;
+			}
+
+			if (canvas == null)
+				return;
+
+			using (new SKAutoCanvasRestore(canvas, true))
+			{
+				// start drawing
+				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
+				OnPaintSurface(e);
+			}
+
+			// flush the SkiaSharp contents to GL (match C++ onSwapBuffers)
+			canvas.Flush();
+			context.Flush(surface);
+			OpenGLContext.FlushBuffer();
+		}
 
 		public override void DrawRect(CGRect dirtyRect)
 		{
@@ -126,53 +197,7 @@ namespace SkiaSharp.Views.Mac
 			}
 
 			base.DrawRect(dirtyRect);
-
-			Gles.glClear(Gles.GL_COLOR_BUFFER_BIT | Gles.GL_DEPTH_BUFFER_BIT | Gles.GL_STENCIL_BUFFER_BIT);
-
-			// create the render target
-			if (renderTarget == null || lastSize != newSize || !renderTarget.IsValid)
-			{
-				// create or update the dimensions
-				lastSize = newSize;
-
-				// read the info from the buffer
-				Gles.glGetIntegerv(Gles.GL_FRAMEBUFFER_BINDING, out var framebuffer);
-				Gles.glGetIntegerv(Gles.GL_STENCIL_BITS, out var stencil);
-				Gles.glGetIntegerv(Gles.GL_SAMPLES, out var samples);
-				var maxSamples = context.GetMaxSurfaceSampleCount(colorType);
-				if (samples > maxSamples)
-					samples = maxSamples;
-				glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());
-
-				// destroy the old surface
-				surface?.Dispose();
-				surface = null;
-				canvas = null;
-
-				// re-create the render target
-				renderTarget?.Dispose();
-				renderTarget = new GRBackendRenderTarget(newSize.Width, newSize.Height, samples, stencil, glInfo);
-			}
-
-			// create the surface
-			if (surface == null)
-			{
-				surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);
-				canvas = surface.Canvas;
-			}
-
-			using (new SKAutoCanvasRestore(canvas, true))
-			{
-				// start drawing
-				var e = new SKPaintGLSurfaceEventArgs(surface, renderTarget, surfaceOrigin, colorType);
-				OnPaintSurface(e);
-			}
-
-			// flush the SkiaSharp contents to GL
-			canvas.Flush();
-			context.Flush();
-
-			OpenGLContext.FlushBuffer();
+			RenderFrame();
 		}
 
 		public event EventHandler<SKPaintGLSurfaceEventArgs> PaintSurface;
