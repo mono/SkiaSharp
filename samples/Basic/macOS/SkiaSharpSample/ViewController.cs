@@ -93,11 +93,14 @@ namespace SkiaSharpSample
 				var complexity = _scene.Complexity;
 				var elementCount = _scene.ElementCount;
 				
-				// Update window title with FPS
+				// Update window title with FPS (on main thread to avoid crash)
 				var window = View?.Window;
 				if (window != null)
 				{
-					window.Title = $"MotionMark SkiaSharp (OpenGL) | {fps:F1} FPS | Complexity {complexity} | Elements {elementCount}";
+					var title = $"MotionMark SkiaSharp (OpenGL) | {fps:F1} FPS | Complexity {complexity} | Elements {elementCount}";
+					NSApplication.SharedApplication.InvokeOnMainThread(() => {
+						window.Title = title;
+					});
 				}
 
 				_accumulatedTime = 0.0;

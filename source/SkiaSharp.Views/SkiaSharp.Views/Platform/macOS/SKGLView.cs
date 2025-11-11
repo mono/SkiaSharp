@@ -171,7 +171,7 @@ namespace SkiaSharp.Views.Mac
 			}
 
 			// flush the SkiaSharp contents to GL (match C++ onSwapBuffers)
-			canvas.Flush();
+			// Flush surface and submit immediately (matches C++ context->flush + flushBuffer pattern)
 			context.Flush(surface);
 			OpenGLContext.FlushBuffer();
 		}
