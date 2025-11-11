@@ -2,7 +2,6 @@
 using Microsoft.Maui.Hosting;
 using Microsoft.Maui.Controls.Hosting;
 using SkiaSharp.Views.Maui.Controls.Hosting;
-using Microsoft.Maui.Controls.Compatibility.Hosting;
 
 namespace SkiaSharpSample
 {
