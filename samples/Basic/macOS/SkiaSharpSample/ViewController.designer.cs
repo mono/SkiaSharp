@@ -5,6 +5,7 @@
 // Manual changes to this file may not be handled correctly.
 //
 using Foundation;
+using AppKit;
 using System.CodeDom.Compiler;
 
 namespace SkiaSharpSample
@@ -13,7 +14,10 @@ namespace SkiaSharpSample
 	partial class ViewController
 	{
 		[Outlet]
-		SkiaSharp.Views.Mac.SKCanvasView skiaView { get; set; }
+		SkiaSharp.Views.Mac.SKGLView skiaView { get; set; }
+
+		[Action("OnComplexityChanged:")]
+		partial void OnComplexityChanged(NSSlider sender);
 		
 		void ReleaseDesignerOutlets ()
 		{
