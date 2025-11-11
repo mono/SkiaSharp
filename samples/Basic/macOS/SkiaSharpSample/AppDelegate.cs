@@ -15,15 +15,15 @@ namespace SkiaSharpSample
 
 		public override bool ApplicationShouldTerminateAfterLastWindowClosed(NSApplication sender) => true;
 
-		public void RunRenderLoop(NSWindowController? windowController)
+		public void RunRenderLoop(NSWindow? window, ViewController? viewController)
 		{
-			if (windowController == null)
+			if (window == null || viewController == null)
 				return;
 
 			var app = NSApplication.SharedApplication;
 			
 			// Tight render loop matching C++ implementation
-			while (!_shouldTerminate && windowController.Window != null && windowController.Window.IsVisible)
+			while (!_shouldTerminate && window.IsVisible)
 			{
 				// 1. Process all pending events (non-blocking)
 				NSEvent? ev;
@@ -38,8 +38,7 @@ namespace SkiaSharpSample
 				} while (ev != null);
 				
 				// 2. Paint windows directly (like C++ PaintWindows())
-				var viewController = windowController.ContentViewController as ViewController;
-				viewController?.RenderFrame();
+				viewController.RenderFrame();
 				
 				// Small yield to prevent 100% CPU (can be removed for max FPS)
 				System.Threading.Thread.Yield();

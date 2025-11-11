@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using AppKit;
+using CoreGraphics;
 using Foundation;
 
 using SkiaSharp;
@@ -8,27 +9,41 @@ using SkiaSharp.Views.Mac;
 
 namespace SkiaSharpSample
 {
-	public partial class ViewController : NSViewController
+	public class ViewController : NSViewController
 	{
+		private SKGLView? _skiaView;
 		private readonly MotionMarkScene _scene = new();
 		private readonly Stopwatch _stopwatch = Stopwatch.StartNew();
 		private double _lastTime;
 		private int _frameCount;
 		private double _accumulatedTime;
 
-		public ViewController(IntPtr handle)
-			: base(handle)
+		public ViewController()
 		{
+		}
+
+		public override void LoadView()
+		{
+			// Create the view programmatically (no storyboard)
+			View = new NSView(new CGRect(0, 0, 1280, 720));
 		}
 
 		public override void ViewDidLoad()
 		{
 			base.ViewDidLoad();
 
+			// Create SKGLView programmatically
+			_skiaView = new SKGLView(View.Bounds)
+			{
+				AutoresizingMask = NSViewResizingMask.WidthSizable | NSViewResizingMask.HeightSizable
+			};
+
+			View.AddSubview(_skiaView);
+
 			// Set initial complexity (matching C++ default)
 			_scene.SetComplexity(8);
 
-			skiaView.PaintSurface += OnPaintSurface;
+			_skiaView.PaintSurface += OnPaintSurface;
 
 			_lastTime = _stopwatch.Elapsed.TotalSeconds;
 		}
@@ -44,13 +59,13 @@ namespace SkiaSharpSample
 
 		public void RenderFrame()
 		{
-			if (skiaView == null)
+			if (_skiaView == null)
 				return;
 
 			// Direct render call (like C++ Window::onPaint)
 			// This forces SKGLView to render immediately without display queue
-			skiaView.NeedsDisplay = true;
-			skiaView.DisplayIfNeeded();
+			_skiaView.NeedsDisplay = true;
+			_skiaView.DisplayIfNeeded();
 		}
 
 		private void OnPaintSurface(object? sender, SKPaintGLSurfaceEventArgs e)
@@ -88,11 +103,6 @@ namespace SkiaSharpSample
 				_accumulatedTime = 0.0;
 				_frameCount = 0;
 			}
-		}
-
-		partial void OnComplexityChanged(NSSlider sender)
-		{
-			_scene.SetComplexity((int)sender.IntValue);
 		}
 	}
 }
