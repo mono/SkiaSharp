@@ -489,22 +489,27 @@ sk_sp<SkImage> SkImages::DeferredFromEncodedData(sk_sp<SkData> data) {
 }
 ```
 
-### Example 3: Operation on Disposed Object
+### Example 3: Parameter Validation Pattern
 
 ```csharp
-// C# Layer
+// C# Layer - Typical pattern (most methods)
 public void DrawRect(SKRect rect, SKPaint paint)
 {
-    if (Handle == IntPtr.Zero)
-        throw new ObjectDisposedException("SKCanvas");  // ✓ Check state
-    
+    // Validates ONLY null reference parameters
     if (paint == null)
         throw new ArgumentNullException(nameof(paint));
     
-    if (paint.Handle == IntPtr.Zero)
-        throw new ObjectDisposedException("SKPaint");  // ✓ Check parameter state
-    
+    // Note: Does NOT check if Handle is disposed (IntPtr.Zero)
+    // Assumes object is valid if wrapper exists
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
+}
+
+// Rare pattern - only critical methods check disposal
+public int Save()
+{
+    if (Handle == IntPtr.Zero)
+        throw new ObjectDisposedException("SKCanvas");
+    return SkiaApi.sk_canvas_save(Handle);
 }
 ```
 

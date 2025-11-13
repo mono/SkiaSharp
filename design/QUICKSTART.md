@@ -401,27 +401,25 @@ internal IntPtr Handle { get; }
 ### 9. ❌ Missing Validation in C# (not C API)
 
 ```csharp
-// WRONG: Assuming disposed object check isn't needed
+// WRONG: No null parameter validation
 public void DrawRect(SKRect rect, SKPaint paint)
 {
-    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
+    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);  // Crash if paint is null!
 }
 
-// CORRECT: Check object state before calling C API
+// CORRECT: Validate null reference parameters before calling C API
 public void DrawRect(SKRect rect, SKPaint paint)
 {
     if (paint == null)
         throw new ArgumentNullException(nameof(paint));
-    if (Handle == IntPtr.Zero)
-        throw new ObjectDisposedException(nameof(SKCanvas));
-    if (paint.Handle == IntPtr.Zero)
-        throw new ObjectDisposedException(nameof(paint));
     
     SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
 }
 ```
 
-**Remember:** C# is the safety boundary - validate everything before P/Invoke!
+**Note:** Most instance methods do NOT check if the object is disposed (Handle == IntPtr.Zero). They assume the object is valid if the wrapper exists. The primary validation is null-checking reference parameters that would crash native code.
+
+**Remember:** C# is the safety boundary - validate parameters that would crash native code before P/Invoke!
 
 ### 10. ❌ Forgetting .release() on sk_sp
 ```cpp
