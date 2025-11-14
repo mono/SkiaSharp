@@ -2,6 +2,9 @@
 
 namespace SkiaSharp.Views.Android
 {
+	/// <summary>
+	/// A container for a locked canvas for a <see cref="SKSurfaceView" />.
+	/// </summary>
 	public class SKLockedSurface
 	{
 		private readonly Canvas canvas;
@@ -17,10 +20,19 @@ namespace SkiaSharp.Views.Android
 			ImageInfo = info;
 		}
 
+		/// <summary>
+		/// Gets information about the locked surface.
+		/// </summary>
 		public SKImageInfo ImageInfo { get; }
 
+		/// <summary>
+		/// Gets the locked surface.
+		/// </summary>
 		public SKSurface Surface { get; }
 
+		/// <summary>
+		/// Gets the canvas from the locked surface.
+		/// </summary>
 		public SKCanvas Canvas => Surface.Canvas;
 
 		internal Canvas Post()

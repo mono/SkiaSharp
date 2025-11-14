@@ -32,6 +32,7 @@ namespace SkiaSharp
 		internal static string NativeString =>
 			Marshal.PtrToStringAnsi ((IntPtr)SkiaApi.sk_version_get_string ());
 
+		/// <param name="throwIfIncompatible"></param>
 		public static bool CheckNativeLibraryCompatible (bool throwIfIncompatible = false) =>
 			CheckNativeLibraryCompatible (NativeMinimum, Native, throwIfIncompatible);
 
