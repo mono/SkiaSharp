@@ -21,15 +21,20 @@ The excluded dependencies are:
     <PackageFile Include="..\..\output\native\linuxnodeps\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-x86\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\linuxnodeps\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-arm64\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\linuxnodeps\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-arm\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linuxnodeps\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-riscv64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\linuxnodeps\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-loongarch64\native\%(Filename)%(Extension)" />
     <!-- Musl -->
     <PackageFile Include="..\..\output\native\alpinenodeps\x64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x64\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\alpinenodeps\x86\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-x86\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\alpinenodeps\arm64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm64\native\%(Filename)%(Extension)" />
     <PackageFile Include="..\..\output\native\alpinenodeps\arm\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-arm\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpinenodeps\riscv64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-riscv64\native\%(Filename)%(Extension)" />
+    <PackageFile Include="..\..\output\native\alpinenodeps\loongarch64\libSkiaSharp*.so" PackagePath="runtimes\linux-musl-loongarch64\native\%(Filename)%(Extension)" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup Condition="$(TargetFramework.StartsWith('net4'))">
       <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="buildTransitive\$(NuGetShortFolderName)\$(PackageId).targets" />
+      <TfmSpecificPackageFile Include="buildTransitive\net4\SkiaSharp.targets" PackagePath="build\$(NuGetShortFolderName)\$(PackageId).targets" />
     </ItemGroup>
   </Target>
 </Project>

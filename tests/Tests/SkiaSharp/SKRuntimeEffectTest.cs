@@ -785,7 +785,7 @@ namespace SkiaSharp.Tests
 
 				builder.Children["child"] = null;
 
-				Test(builder, 0xFF00FFFF, (c, p) => p.ColorF = new SKColorF(1.0f, 1.0f, 0.0f, 1.0f));
+				Test(builder, 0x00000000, (c, p) => p.ColorF = new SKColorF(1.0f, 1.0f, 0.0f, 1.0f));
 			}
 
 			[SkippableFact]

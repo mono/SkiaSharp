@@ -330,16 +330,16 @@ namespace SkiaSharp
 		// create a new image from a picture
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions) =>
-			FromPicture (picture, dimensions, null, null, false, null, null);
+			FromPicture (picture, dimensions, null, null, false, SKColorSpace.CreateSrgb (), null);
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix matrix) =>
-			FromPicture (picture, dimensions, &matrix, null, false, null, null);
+			FromPicture (picture, dimensions, &matrix, null, false, SKColorSpace.CreateSrgb (), null);
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKPaint paint) =>
-			FromPicture (picture, dimensions, null, paint, false, null, null);
+			FromPicture (picture, dimensions, null, paint, false, SKColorSpace.CreateSrgb (), null);
 
 		public static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix matrix, SKPaint paint) =>
-			FromPicture (picture, dimensions, &matrix, paint, false, null, null);
+			FromPicture (picture, dimensions, &matrix, paint, false, SKColorSpace.CreateSrgb (), null);
 
 		private static SKImage FromPicture (SKPicture picture, SKSizeI dimensions, SKMatrix* matrix, SKPaint paint, bool useFloatingPointBitDepth, SKColorSpace colorspace, SKSurfaceProperties props)
 		{
@@ -347,7 +347,9 @@ namespace SkiaSharp
 				throw new ArgumentNullException (nameof (picture));
 
 			var p = paint?.Handle ?? IntPtr.Zero;
-			return GetObject (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, matrix, p, useFloatingPointBitDepth, colorspace?.Handle ?? IntPtr.Zero, props?.Handle ?? IntPtr.Zero));
+			var cs = colorspace?.Handle ?? IntPtr.Zero;
+			var prps = props?.Handle ?? IntPtr.Zero;
+			return GetObject (SkiaApi.sk_image_new_from_picture (picture.Handle, &dimensions, matrix, p, useFloatingPointBitDepth, cs, prps));
 		}
 
 		public SKData Encode ()

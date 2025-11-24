@@ -9,7 +9,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-20.04
+        vmImage: ubuntu-22.04
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
@@ -47,33 +47,24 @@ parameters:
         installXcode: false
 
 variables:
-  - template: /scripts/azure-pipelines-variables.yml@self
+  - template: /scripts/azure-templates-variables.yml@self
 
 resources:
-  repositories:
-    - repository: xamarin-templates
-      type: github
-      name: xamarin/yaml-templates
-      endpoint: xamarin
-      ref: refs/heads/main
   pipelines:
     - pipeline: SkiaSharp
       source: SkiaSharp
       trigger: true
 
 extends:
-  template: /scripts/azure-template.yml@self
+  template: /scripts/azure-template-fake-1es.yml@self
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
-          buildPipelineType: 'tests'
+          buildPipelineType: 'test'
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
-          buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}
           buildAgentMac: ${{ parameters.buildAgentMac }}
-          buildAgentMacNative: ${{ parameters.buildAgentMac }}
           buildAgentLinux: ${{ parameters.buildAgentLinux }}
-          buildAgentLinuxNative: ${{ parameters.buildAgentLinux }}
           buildAgentAndroidTests: ${{ parameters.buildAgentAndroidTests }}

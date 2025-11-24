@@ -1,0 +1,150 @@
+parameters:
+  - name: buildAgentHost
+    type: object
+
+stages:
+
+  - stage: native
+    displayName: Native
+    dependsOn:
+      - native_windows
+      - native_macos
+      - native_linux
+      - native_wasm
+    jobs:
+
+      - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Artifacts
+        parameters:
+          name: native
+          displayName: Merge Native Artifacts
+          buildAgent: ${{ parameters.buildAgentHost }}
+          requiredArtifacts:
+            # Android
+            - name: native_android_x86_windows
+            - name: native_android_x64_windows
+            - name: native_android_arm_windows
+            - name: native_android_arm64_windows
+            # Tizen
+            - name: native_tizen_windows
+            # Win32
+            - name: native_win32_x86_windows
+            - name: native_win32_x64_windows
+            - name: native_win32_arm64_windows
+            # WinUI
+            - name: native_winui_x86_windows
+            - name: native_winui_x64_windows
+            - name: native_winui_arm64_windows
+            - name: native_winui_angle_x86_windows
+            - name: native_winui_angle_x64_windows
+            - name: native_winui_angle_arm64_windows
+            # Nano Server
+            - name: native_win32_x64_nanoserver_windows
+            # iOS
+            - name: native_ios_macos
+            # Mac Catalyst
+            - name: native_maccatalyst_macos
+            # macOS
+            - name: native_macos_macos
+            # tvOS
+            - name: native_tvos_macos
+            # Linux
+            - name: native_linux_arm_alpine_linux
+            - name: native_linux_arm_alpine_nodeps_linux
+            - name: native_linux_arm_linux
+            - name: native_linux_arm_nodeps_linux
+            - name: native_linux_arm64_alpine_linux
+            - name: native_linux_arm64_alpine_nodeps_linux
+            - name: native_linux_arm64_linux
+            - name: native_linux_arm64_nodeps_linux
+            - name: native_linux_loongarch64_alpine_linux
+            - name: native_linux_loongarch64_alpine_nodeps_linux
+            - name: native_linux_loongarch64_linux
+            - name: native_linux_loongarch64_nodeps_linux
+            - name: native_linux_riscv64_alpine_linux
+            - name: native_linux_riscv64_alpine_nodeps_linux
+            - name: native_linux_riscv64_linux
+            - name: native_linux_riscv64_nodeps_linux
+            - name: native_linux_x64_alpine_linux
+            - name: native_linux_x64_alpine_nodeps_linux
+            - name: native_linux_x64_linux
+            - name: native_linux_x64_nodeps_linux
+            - name: native_linux_x86_linux
+            - name: native_linux_x86_nodeps_linux
+            # WASM
+            - name: native_wasm_2_0_23_linux
+            - name: native_wasm_2_0_6_linux
+            - name: native_wasm_3_1_12_linux
+            - name: native_wasm_3_1_12_SIMD_linux
+            - name: native_wasm_3_1_12_Threading_linux
+            - name: native_wasm_3_1_12_Threading_SIMD_linux
+            - name: native_wasm_3_1_34_linux
+            - name: native_wasm_3_1_34_SIMD_linux
+            - name: native_wasm_3_1_34_SIMD_Threading_linux
+            - name: native_wasm_3_1_34_Threading_linux
+            - name: native_wasm_3_1_56_linux
+            - name: native_wasm_3_1_56_SIMD_linux
+            - name: native_wasm_3_1_56_SIMD_Threading_linux
+            - name: native_wasm_3_1_56_Threading_linux
+            - name: native_wasm_3_1_7_linux
+
+      - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native Linux Artifacts
+        parameters:
+          name: native_linux
+          displayName: Merge Native Linux Artifacts
+          buildAgent: ${{ parameters.buildAgentHost }}
+          requiredArtifacts:
+            - name: native_linux_arm_alpine_linux
+            - name: native_linux_arm_alpine_nodeps_linux
+            - name: native_linux_arm_linux
+            - name: native_linux_arm_nodeps_linux
+            - name: native_linux_arm64_alpine_linux
+            - name: native_linux_arm64_alpine_nodeps_linux
+            - name: native_linux_arm64_linux
+            - name: native_linux_arm64_nodeps_linux
+            - name: native_linux_loongarch64_alpine_linux
+            - name: native_linux_loongarch64_alpine_nodeps_linux
+            - name: native_linux_loongarch64_linux
+            - name: native_linux_loongarch64_nodeps_linux
+            - name: native_linux_riscv64_alpine_linux
+            - name: native_linux_riscv64_alpine_nodeps_linux
+            - name: native_linux_riscv64_linux
+            - name: native_linux_riscv64_nodeps_linux
+            - name: native_linux_x64_alpine_linux
+            - name: native_linux_x64_alpine_nodeps_linux
+            - name: native_linux_x64_linux
+            - name: native_linux_x64_nodeps_linux
+            - name: native_linux_x86_linux
+            - name: native_linux_x86_nodeps_linux
+
+      - template: /scripts/azure-templates-jobs-merger.yml@self   # Merge Native WASM Artifacts
+        parameters:
+          name: native_wasm
+          displayName: Merge Native WASM Artifacts
+          buildAgent: ${{ parameters.buildAgentHost }}
+          requiredArtifacts:
+            - name: native_wasm_2_0_23_linux
+            - name: native_wasm_2_0_6_linux
+            - name: native_wasm_3_1_12_linux
+            - name: native_wasm_3_1_12_SIMD_linux
+            - name: native_wasm_3_1_12_Threading_linux
+            - name: native_wasm_3_1_12_Threading_SIMD_linux
+            - name: native_wasm_3_1_34_linux
+            - name: native_wasm_3_1_34_SIMD_linux
+            - name: native_wasm_3_1_34_SIMD_Threading_linux
+            - name: native_wasm_3_1_34_Threading_linux
+            - name: native_wasm_3_1_56_linux
+            - name: native_wasm_3_1_56_SIMD_linux
+            - name: native_wasm_3_1_56_SIMD_Threading_linux
+            - name: native_wasm_3_1_56_Threading_linux
+            - name: native_wasm_3_1_7_linux
+
+      - ${{ if eq(variables['System.TeamProject'], 'devdiv') }}:
+        - template: /scripts/azure-templates-jobs-merger.yml@self # Merge Native MSVC Artifacts
+          parameters:
+            name: native_msvc
+            displayName: Merge Native MSVC Artifacts
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native_win32_x86_msvc_windows
+              - name: native_win32_x64_msvc_windows
+              - name: native_win32_arm64_msvc_windows

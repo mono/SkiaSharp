@@ -1,0 +1,148 @@
+trigger: none
+
+pr: none
+
+schedules:
+  - cron: "0 0 * * *"
+    displayName: Daily midnight build for main
+    branches:
+      include:
+        - main
+    always: true
+
+parameters:
+  - name: buildAgentHost
+    displayName: 'The generic host build agent configuration:'
+    type: object
+    default:
+      pool:
+        name: Maui-1ESPT
+        image: 1ESPT-Windows2022
+        os: windows
+  - name: buildAgentWindows
+    displayName: 'The Windows build agent configuration:'
+    type: object
+    default:
+      pool:
+        name: Maui-1ESPT
+        image: 1ESPT-Windows2022
+        os: windows
+  - name: buildAgentMac
+    displayName: 'The macOS build agent configuration:'
+    type: object
+    default:
+      pool:
+        name: Azure Pipelines
+        vmImage: macos-14
+        os: macos
+  - name: buildAgentLinux
+    displayName: 'The Linux build agent configuration:'
+    type: object
+    default:
+      pool:
+        name: Maui-1ESPT
+        image: 1ESPT-Ubuntu22.04
+        os: linux
+  - name: runApiScan
+    displayName: 'Run API Scan'
+    type: boolean
+    default: false
+  - name: forceRealSigning
+    displayName: 'Ignore all logic and force Real signing on binaries'
+    type: boolean
+    default: false
+
+variables:
+  - template: /scripts/azure-templates-variables.yml@self
+
+resources:
+  repositories:
+    - repository: yaml-templates
+      type: git
+      name: DevDiv/Xamarin.yaml-templates
+      ref: refs/heads/main
+    - repository: 1ESTemplates
+      type: git
+      name: 1ESPipelineTemplates/MicroBuildTemplate
+  pipelines:
+    - pipeline: SkiaSharp
+      source: SkiaSharp-Native
+      trigger: true
+
+extends:
+  template: azure-pipelines/MicroBuild.1ES.Official.yml@1ESTemplates
+  parameters:
+    pool: ${{ parameters.buildAgentHost.pool }}
+    customBuildTags:
+      - ES365AIMigrationTooling
+    sdl:
+      sourceRepositoriesToScan:
+        exclude:
+        - repository: yaml-templates
+      binskim:
+        enabled: true
+        break: false
+      codeInspector:
+        enabled: true
+      credscan:
+        enabled: true
+        # suppressionsFile: $(Build.SourcesDirectory)/scripts/guardian/CredScanSuppressions.json
+      policheck:
+        enabled: true
+        exclusionsFile: $(Build.SourcesDirectory)/scripts/guardian/PoliCheckExclusions.xml
+      spotBugs:
+        enabled: false
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+      tsa:
+        enabled: true
+        configFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
+    stages:
+      - template: /scripts/azure-templates-stages.yml@self
+        parameters:
+          buildPipelineType: 'package'
+          ${{ if and(eq(variables['System.TeamProject'], 'devdiv'), ne(variables['System.PullRequest.IsFork'], 'true')) }}:
+            enableSigning: true
+            forceRealSigning: ${{ parameters.forceRealSigning }}
+          use1ESPipelineTemplates: true
+          buildAgentHost: ${{ parameters.buildAgentHost }}
+          buildAgentWindows: ${{ parameters.buildAgentWindows }}
+          buildAgentMac: ${{ parameters.buildAgentMac }}
+          buildAgentLinux: ${{ parameters.buildAgentLinux }}
+      - ${{ if or(eq(parameters.runApiScan, 'true'), and(eq(variables['Build.Reason'], 'Schedule'), or(eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')))) }}:
+        - template: security/apiscan/v0.yml@yaml-templates
+          parameters:
+            windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
+            windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
+            timeoutInMinutes: 480
+            stageDependsOn:
+              - package
+            scanArtifacts:
+              - nuget
+              - nuget_symbols
+              - native_msvc
+            sourceGdnSuppressionFile: $(Build.SourcesDirectory)/scripts/guardian/source.gdnsuppress
+            tsaConfigFile: $(Build.SourcesDirectory)/scripts/guardian/tsaoptions-v2.json
+            tsaUploadEnabled: true
+            apiScanSoftwareName: 'SkiaSharp'
+            apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
+            apiScanPreserveLogsFolder: true
+            apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
+            apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
+            preScanSteps:
+              - pwsh: |
+                  $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
+                  $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
+                  $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
+                  $destFile = "$destFolder\APIScanSurrogates.xml"
+                  New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
+                  $surrogateContents = (Get-Content $surrogateFile)
+                  $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
+                  $surrogateContents | Set-Content $destFile
+                displayName: Generate the surrogate files
+              - pwsh: |
+                  ./scripts/extract-nupkg-files.ps1 `
+                    -SourcePath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg" `
+                    -DestinationPath "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted" `
+                    -RemoveOriginal
+                displayName: Extract all the .nupkg files

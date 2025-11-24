@@ -20,7 +20,7 @@ namespace SkiaSharp.Views.UWP
 		public SKXamlCanvas()
 		{
 			Initialize();			
-#if IOS
+#if __IOS__
 			Opaque = false;
 #endif
 		}

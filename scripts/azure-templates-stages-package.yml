@@ -1,0 +1,143 @@
+parameters:
+  - name: isSplitPipeline
+    type: boolean
+    default: false
+  - name: buildAgentHost
+    type: object
+  - name: buildAgentWindows
+    type: object
+  - name: use1ESPipelineTemplates
+    type: boolean
+  - name: enableSigning
+    type: boolean
+  - name: forceRealSigning
+    type: boolean
+
+stages:
+
+  - ${{ if eq(parameters.isSplitPipeline, 'true') }}:
+    - stage: native
+      displayName: Native
+      dependsOn: prepare
+      jobs:
+        - template: /scripts/azure-templates-jobs-merger.yml@self
+          parameters:
+            name: native
+            displayName: Re-upload Native Artifacts
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native
+        - template: /scripts/azure-templates-jobs-merger.yml@self
+          parameters:
+            name: native_msvc
+            displayName: Re-upload Native MSVC Artifacts
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native_msvc
+
+  - stage: package
+    displayName: Package NuGets
+    dependsOn: native
+    jobs:
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package NuGets
+        parameters:
+          name: package_normal_windows
+          displayName: Package NuGets
+          buildAgent: ${{ parameters.buildAgentWindows}}
+          target: nuget-normal
+          additionalArgs: --skipExternals="all"
+          shouldPublish: false
+          requiredArtifacts:
+            - name: native
+          postBuildSteps:
+            - pwsh: |
+                Remove-Item ./output/native/ -Recurse -Force -ErrorAction Continue
+                Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                New-Item '.\output\' -Type Directory -Force | Out-Null
+              displayName: Re-organize the output folder for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets\' -Destination '.\output\'
+                Copy-Item -Path '.\scripts\SignList.xml' -Destination '.\output\nugets\'
+              displayName: Prepare the nugets artifact for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-symbols\' -Destination '.\output\'
+              displayName: Prepare the nugets-symbols artifact for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
+              displayName: Prepare the build artifact for publishing
+          publishArtifacts:
+            - name: package_normal_windows
+              path: '.\output\output\'
+            - name: nuget
+              path: '.\output\nugets'
+            - name: nuget_symbols
+              path: '.\output\nugets-symbols'
+      - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
+        parameters:
+          name: scan_normal_windows
+          displayName: Scan NuGet Artifacts
+          buildAgent: ${{ parameters.buildAgentWindows}}
+          dependsOn: package_normal_windows
+          shouldPublish: false
+          requiredArtifacts:
+            - name: nuget
+              dir: nugets
+              currentRun: true
+            - name: nuget_symbols
+              dir: nugets-symbols
+              currentRun: true
+          postBuildSteps:
+            - pwsh: |
+                .\scripts\extract-nupkg-files.ps1 `
+                  -SourcePath ".\output\nugets*\*.*nupkg" `
+                  -DestinationPath ".\output\extracted_nugets"
+              displayName: Extract all the .nupkg files for scanning
+      - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package Special NuGets
+        parameters:
+          name: package_special_windows
+          displayName: Package Special NuGets
+          buildAgent: ${{ parameters.buildAgentWindows}}
+          dependsOn: package_normal_windows
+          target: nuget-special
+          additionalArgs: --skipExternals="all" --exclusive
+          shouldPublish: false
+          requiredArtifacts:
+            - name: native
+            - name: nuget
+              dir: nugets
+              currentRun: true
+            - name: nuget_symbols
+              dir: nugets-symbols
+              currentRun: true
+          postBuildSteps:
+            - pwsh: |
+                Remove-Item ./output/nugets/ -Recurse -Force -ErrorAction Continue
+                Remove-Item ./output/nugets-symbols/ -Recurse -Force -ErrorAction Continue
+                Move-Item -Path '.\output\' -Destination '$(Build.ArtifactStagingDirectory)\output\'
+                New-Item '.\output\' -Type Directory -Force | Out-Null
+              displayName: Re-organize the output folder for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\nugets-special\' -Destination '.\output\'
+              displayName: Prepare the nugets-special artifact for publishing
+            - pwsh: |
+                Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
+              displayName: Prepare the build artifact for publishing
+          publishArtifacts:
+            - name: package_special_windows
+              path: '.\output\output\'
+            - name: nuget_special
+              path: '.\output\nugets-special'
+
+  - ${{ if eq(parameters.enableSigning, 'true') }}:
+    - stage: signing
+      displayName: Sign NuGets
+      dependsOn: package
+      jobs:
+        - template: sign-artifacts/jobs/v4.yml@yaml-templates
+          parameters:
+            ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
+              signType: 'Real'
+            ${{ else }}:
+              signType: 'Test'
+            usePipelineArtifactTasks: true
+            checkoutType: 'self'
