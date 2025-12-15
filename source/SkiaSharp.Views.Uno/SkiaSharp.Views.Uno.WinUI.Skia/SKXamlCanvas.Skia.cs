@@ -86,11 +86,6 @@ namespace SkiaSharp.Views.UWP
 			var size = CreateSize(out unscaledSize, out dpi);
 			var info = new SKImageInfo(size.Width, size.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
 
-			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
-			{
-				FreeBitmap();
-			}
-
 			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
 			{
 				FreePixels();
@@ -100,6 +95,11 @@ namespace SkiaSharp.Views.UWP
 
 				pixelWidth = info.Width;
 				pixelHeight = info.Height;
+			}
+
+			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
+			{
+				FreeBitmap();
 			}
 
 			if (bitmap == null && info.Width > 0 && info.Height > 0)
