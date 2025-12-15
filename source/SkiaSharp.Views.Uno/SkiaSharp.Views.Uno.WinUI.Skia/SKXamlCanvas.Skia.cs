@@ -31,8 +31,11 @@ namespace SkiaSharp.Views.UWP
 			Initialize();
 		}
 
-		partial void DoUnloaded() =>
+		partial void DoUnloaded()
+		{
 			FreeBitmap();
+			FreePixels();
+		}
 
 		private void DoInvalidate()
 		{
@@ -84,7 +87,20 @@ namespace SkiaSharp.Views.UWP
 			var info = new SKImageInfo(size.Width, size.Height, SKColorType.Bgra8888, SKAlphaType.Premul);
 
 			if (bitmap?.PixelWidth != info.Width || bitmap?.PixelHeight != info.Height)
+			{
 				FreeBitmap();
+			}
+
+			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
+			{
+				FreePixels();
+
+				pixels = new byte[info.BytesSize];
+				pixelsHandle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
+
+				pixelWidth = info.Width;
+				pixelHeight = info.Height;
+			}
 
 			if (bitmap == null && info.Width > 0 && info.Height > 0)
 			{
@@ -101,28 +117,18 @@ namespace SkiaSharp.Views.UWP
 				Background = brush;
 			}
 
-			if (pixels == null || pixelWidth != info.Width || pixelHeight != info.Height)
-			{
-				FreeBitmap();
-
-				pixels = new byte[info.BytesSize];
-				pixelsHandle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
-
-				pixelWidth = info.Width;
-				pixelHeight = info.Height;
-			}
-
 			return info;
 		}
 
-		private void FreeBitmap()
+		private void FreePixels()
 		{
 			if (pixels != null)
 			{
 				pixelsHandle.Free();
 				pixels = null;
-				bitmap = null;
 			}
 		}
+
+		private void FreeBitmap() => _bitmap = null;
 	}
 }
