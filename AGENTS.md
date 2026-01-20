@@ -137,6 +137,8 @@ dotnet cake --target=externals-download
 
 **Practical tutorial:** [design/QUICKSTART.md](design/QUICKSTART.md) - 10-minute walkthrough
 
+**Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) - How to submit issues and PRs
+
 **Detailed guides** in `design/` folder:
 - `QUICKSTART.md` - **Start here!** Practical end-to-end tutorial
 - `architecture-overview.md` - Three-layer architecture, design principles
@@ -144,6 +146,13 @@ dotnet cake --target=externals-download
 - `error-handling.md` - Error propagation patterns through layers
 - `adding-new-apis.md` - Complete step-by-step guide with examples
 - `layer-mapping.md` - Type mappings and naming conventions
+
+**Build & maintainer guides** in `wiki/` folder:
+- `Building-SkiaSharp.md` - Build instructions for Windows & macOS
+- `Building-on-Linux.md` - Build instructions for Linux
+- `Being-a-Maintainer.md` - Maintainer responsibilities
+- `Release-Checklist.md` - Release verification process
+- See [wiki/README.md](wiki/README.md) for complete index
 
 **AI assistant context:** `.github/copilot-instructions.md`
 
