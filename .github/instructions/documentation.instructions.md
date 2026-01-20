@@ -7,8 +7,7 @@ applyTo: "design/**/*.md,*.md,!node_modules/**,!externals/**"
 You are working on project documentation.
 
 > **📚 Reference:**
-> - **Documentation Index:** [design/README.md](../../design/README.md)
-> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
+> - **Documentation Index:** [documentation/README.md](../../documentation/README.md)
 
 ## Documentation Standards
 

@@ -1,9 +1,10 @@
-# Creating New Libraries in SkiaSharp
+# Adding Libraries
 
-> **Related:** [Adding New APIs](adding-new-apis.md)  
-> **Architecture:** [Architecture Overview](architecture-overview.md)
+This guide covers adding new projects and NuGet packages to SkiaSharp.
 
-This guide covers adding new projects and NuGet packages to SkiaSharp. The repo has a non-standard structure due to multi-platform packaging requirements.
+The repo has a non-standard structure due to multi-platform packaging requirements.
+
+> **Related:** [Adding APIs](adding-apis.md) | [Architecture](architecture.md)
 
 ## TL;DR
 
@@ -148,6 +149,5 @@ To create a new library:
 
 ## Related Documentation
 
-- [Adding New APIs](adding-new-apis.md) - Adding APIs to existing libraries
-- [Architecture Overview](architecture-overview.md) - Understanding the three-layer architecture
-- [Layer Mapping](layer-mapping.md) - Type and naming conventions
+- [Adding New APIs](adding-apis.md) - Adding APIs to existing libraries
+- [Architecture Overview](architecture.md) - Understanding the three-layer architecture

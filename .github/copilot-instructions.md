@@ -6,9 +6,7 @@ This file provides context for AI coding assistants working on SkiaSharp.
 
 **For quick reference:** See **[AGENTS.md](../AGENTS.md)** - 2 minute overview
 
-**For practical guide:** See **[design/QUICKSTART.md](../design/QUICKSTART.md)** - 10 minute tutorial
-
-**For comprehensive docs:** See **[design/](../design/)** folder
+**For comprehensive docs:** See **[documentation/](../documentation/)** folder
 
 ## Path-Specific Instructions
 
@@ -28,22 +26,20 @@ See [instructions/README.md](instructions/README.md) for details.
 
 ### Essential Reading
 - **[AGENTS.md](../AGENTS.md)** - Quick reference (AI agents, quick lookup)
-- **[design/QUICKSTART.md](../design/QUICKSTART.md)** - Practical tutorial (new contributors)
-- **[design/README.md](../design/README.md)** - Documentation index
+- **[documentation/README.md](../documentation/README.md)** - Documentation index
 
 ### Architecture & Concepts
-- **[design/architecture-overview.md](../design/architecture-overview.md)** - Three-layer architecture, design principles
-- **[design/memory-management.md](../design/memory-management.md)** - **Critical:** Pointer types, ownership, lifecycle
-- **[design/error-handling.md](../design/error-handling.md)** - Error propagation through layers
+- **[documentation/architecture.md](../documentation/architecture.md)** - Three-layer architecture, design principles
+- **[documentation/memory-management.md](../documentation/memory-management.md)** - **Critical:** Pointer types, ownership, lifecycle
+- **[documentation/error-handling.md](../documentation/error-handling.md)** - Error propagation through layers
 
 ### Contributor Guides
-- **[design/adding-new-apis.md](../design/adding-new-apis.md)** - Complete step-by-step guide with examples
-- **[design/layer-mapping.md](../design/layer-mapping.md)** - Type mappings and naming conventions
+- **[documentation/adding-apis.md](../documentation/adding-apis.md)** - Complete step-by-step guide with examples
 
 ## Core Principles
 
 ### Memory Management
-Three pointer types (see [memory-management.md](../design/memory-management.md)):
+Three pointer types (see [memory-management.md](../documentation/memory-management.md)):
 1. **Raw (Non-Owning)** - Parameters, borrowed refs → No cleanup
 2. **Owned** - Canvas, Paint → Call delete on dispose
 3. **Ref-Counted** - Image, Shader, Data → Call unref on dispose
@@ -71,11 +67,10 @@ dotnet cake --target=externals-download
 
 ## When In Doubt
 
-1. Check [QUICKSTART.md](../design/QUICKSTART.md) for common patterns
-2. Find similar existing API and follow its pattern
-3. See [design/](../design/) for comprehensive details
-4. Verify pointer type carefully (most important!)
-5. Test memory management thoroughly
+1. Find similar existing API and follow its pattern
+2. See [documentation/](../documentation/) for comprehensive details
+3. Verify pointer type carefully (most important!)
+4. Test memory management thoroughly
 
 ---
 

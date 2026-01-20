@@ -7,10 +7,9 @@ applyTo: "externals/skia/include/c/**/*.h,externals/skia/src/c/**/*.cpp"
 You are working in the C API layer that bridges Skia C++ to managed C#.
 
 > **📚 Documentation:**
-> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
-> - **Architecture:** [design/architecture-overview.md](../../design/architecture-overview.md)
-> - **Memory Management:** [design/memory-management.md](../../design/memory-management.md)
-> - **Error Handling:** [design/error-handling.md](../../design/error-handling.md)
+> - **Architecture:** [documentation/architecture.md](../../documentation/architecture.md)
+> - **Memory Management:** [documentation/memory-management.md](../../documentation/memory-management.md)
+> - **Error Handling:** [documentation/error-handling.md](../../documentation/error-handling.md)
 
 ## Critical Rules
 
@@ -23,7 +22,7 @@ You are working in the C API layer that bridges Skia C++ to managed C#.
 
 ## Pointer Type Handling
 
-> **💡 See [design/memory-management.md](../../design/memory-management.md) for pointer type concepts.**
+> **💡 See [documentation/memory-management.md](../../documentation/memory-management.md) for pointer type concepts.**
 > Below are C API-specific patterns for each type.
 
 ### Raw Pointers (Non-Owning)

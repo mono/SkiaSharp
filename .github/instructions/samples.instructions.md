@@ -7,8 +7,8 @@ applyTo: "samples/**/*.cs"
 You are working on sample/example code.
 
 > **📚 Documentation:**
-> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md) - See best practices
-> - **API Guide:** [design/adding-new-apis.md](../../design/adding-new-apis.md)
+> - **Best Practices:** [documentation/README.md](../../documentation/README.md)
+> - **API Guide:** [documentation/adding-apis.md](../../documentation/adding-apis.md)
 
 ## Sample Code Standards
 

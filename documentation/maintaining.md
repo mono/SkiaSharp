@@ -1,3 +1,7 @@
+# Maintaining SkiaSharp
+
+This document outlines responsibilities and processes for SkiaSharp maintainers.
+
 > [!NOTE]
 > This document is still a draft.
 

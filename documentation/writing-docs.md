@@ -1,3 +1,7 @@
+# Writing Documentation
+
+This guide covers generating and updating SkiaSharp API documentation.
+
 SkiaSharp provides 2 types of documentation: concept and API.
 
 ## Concept Docs

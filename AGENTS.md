@@ -33,7 +33,7 @@ Three pointer types with different ownership rules:
 
 **Critical:** Wrong pointer type = memory leaks or crashes.
 
-👉 **Full details:** [design/memory-management.md](design/memory-management.md)
+👉 **Full details:** [documentation/memory-management.md](documentation/memory-management.md)
 
 ### Error Handling
 
@@ -42,7 +42,7 @@ Three pointer types with different ownership rules:
 - **Factory methods return null** on failure (do NOT throw)
 - **Constructors throw** on failure
 
-👉 **Full details:** [design/error-handling.md](design/error-handling.md)
+👉 **Full details:** [documentation/error-handling.md](documentation/error-handling.md)
 
 ## File Organization
 
@@ -61,7 +61,7 @@ Pattern: SkType → sk_type_t* → SKType
 - `externals/skia/include/c/` - C API headers
 - `externals/skia/src/c/` - C API implementation
 - `binding/SkiaSharp/` - C# wrappers and P/Invoke
-- `design/` - Architecture documentation (comprehensive guides)
+- `documentation/` - Architecture documentation (comprehensive guides)
 
 ## Adding New APIs - Quick Steps
 
@@ -69,10 +69,10 @@ Pattern: SkType → sk_type_t* → SKType
 2. Identify pointer type (raw/owned/ref-counted)
 3. Add C API wrapper (minimal, no validation)
 4. Add C API header
-5. Add P/Invoke declaration
+5. Regenerate P/Invoke declarations
 6. Add C# wrapper with validation
 
-👉 **Full step-by-step guide:** [design/adding-new-apis.md](design/adding-new-apis.md)
+👉 **Full step-by-step guide:** [documentation/adding-apis.md](documentation/adding-apis.md)
 
 ## Common Pitfalls
 
@@ -82,12 +82,12 @@ Pattern: SkType → sk_type_t* → SKType
 ❌ Not checking factory method null returns  
 ❌ Missing parameter validation in C#  
 
-👉 **Full list with solutions:** [design/memory-management.md#common-pitfalls](design/memory-management.md#common-pitfalls) and [design/error-handling.md#common-mistakes](design/error-handling.md#common-mistakes)
+👉 **Full list with solutions:** [documentation/memory-management.md#common-mistakes](documentation/memory-management.md#common-mistakes) and [documentation/error-handling.md#common-mistakes](documentation/error-handling.md#common-mistakes)
 
 ## Code Generation
 
 - **Hand-written:** C API layer (all `.cpp` in `externals/skia/src/c/`)
-- **Generated:** Some P/Invoke declarations (`SkiaApi.generated.cs`)
+- **Generated:** P/Invoke declarations (`SkiaApi.generated.cs`)
 - **Tool:** `utils/SkiaSharpGenerator/`
 
 To regenerate:
@@ -116,7 +116,7 @@ dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- gener
 
 *Immutable objects can be shared across threads.
 
-👉 **Full threading guide:** [design/architecture-overview.md#threading-model-and-concurrency](design/architecture-overview.md#threading-model-and-concurrency)
+👉 **Full threading guide:** [documentation/architecture.md#threading-model](documentation/architecture.md#threading-model)
 
 ## Build Commands
 
@@ -135,24 +135,20 @@ dotnet cake --target=externals-download
 
 **Quick reference:** This file + code comments
 
-**Practical tutorial:** [design/QUICKSTART.md](design/QUICKSTART.md) - 10-minute walkthrough
-
 **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) - How to submit issues and PRs
 
-**Detailed guides** in `design/` folder:
-- `QUICKSTART.md` - **Start here!** Practical end-to-end tutorial
-- `architecture-overview.md` - Three-layer architecture, design principles
+**Detailed guides** in `documentation/` folder:
+- `README.md` - Documentation index
+- `architecture.md` - Three-layer architecture, design principles
 - `memory-management.md` - **Critical**: Pointer types, ownership, lifecycle
 - `error-handling.md` - Error propagation patterns through layers
-- `adding-new-apis.md` - Complete step-by-step guide with examples
-- `layer-mapping.md` - Type mappings and naming conventions
+- `adding-apis.md` - Complete step-by-step guide with examples
 
-**Build & maintainer guides** in `wiki/` folder:
-- `Building-SkiaSharp.md` - Build instructions for Windows & macOS
-- `Building-on-Linux.md` - Build instructions for Linux
-- `Being-a-Maintainer.md` - Maintainer responsibilities
-- `Release-Checklist.md` - Release verification process
-- See [wiki/README.md](wiki/README.md) for complete index
+**Build & maintainer guides** also in `documentation/`:
+- `building.md` - Build instructions for Windows & macOS
+- `building-linux.md` - Build instructions for Linux
+- `maintaining.md` - Maintainer responsibilities
+- `releasing.md` - Release verification process
 
 **AI assistant context:** `.github/copilot-instructions.md`
 
@@ -172,16 +168,16 @@ Raw → `owns: false` in handle
 C API → Minimal pass-through; no extra exception handling, returns whatever Skia returns (bool/null/void)  
 C# → Validate where needed, but some APIs propagate null/bool/default results instead of throwing  
 
-👉 **See also:** [design/adding-new-apis.md#decision-flowcharts](design/adding-new-apis.md#decision-flowcharts)
+👉 **See also:** [documentation/adding-apis.md](documentation/adding-apis.md)
 
 ## Examples
 
-See [design/adding-new-apis.md](design/adding-new-apis.md) for complete examples with all three layers.
+See [documentation/adding-apis.md](documentation/adding-apis.md) for complete examples with all three layers.
 
 ## When In Doubt
 
 1. Find similar existing API and follow its pattern
-2. Check `design/` documentation for detailed guidance
+2. Check `documentation/` for detailed guidance
 3. Verify pointer type carefully (most important!)
 4. Test memory management thoroughly
 5. Ensure error handling at all layers

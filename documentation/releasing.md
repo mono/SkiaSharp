@@ -1,3 +1,7 @@
+# Release Checklist
+
+Verification steps to complete before publishing a SkiaSharp release.
+
 ## Before Publish
 
  - Native Assets

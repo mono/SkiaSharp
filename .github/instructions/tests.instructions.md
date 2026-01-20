@@ -7,9 +7,8 @@ applyTo: "tests/**/*.cs,**/*Tests.cs,**/*Test.cs"
 You are working on test code for SkiaSharp.
 
 > **📚 Documentation:**
-> - **Quick Start:** [design/QUICKSTART.md](../../design/QUICKSTART.md)
-> - **Memory Management:** [design/memory-management.md](../../design/memory-management.md)
-> - **Error Handling:** [design/error-handling.md](../../design/error-handling.md)
+> - **Memory Management:** [documentation/memory-management.md](../../documentation/memory-management.md)
+> - **Error Handling:** [documentation/error-handling.md](../../documentation/error-handling.md)
 
 ## Testing Focus Areas
 
