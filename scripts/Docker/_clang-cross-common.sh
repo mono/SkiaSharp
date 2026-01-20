@@ -15,11 +15,11 @@ DOCKER_DIR="$1"
 # the target architecture to build for
 ARCH="$2"
 
-# the docker image architecture to use
+# the docker platform to use
 MACHINE_ARCH="$(uname -m)"
 case $MACHINE_ARCH in
-  arm64) IMAGE_ARCH=arm64v8 ; MACHINE_ARCH=aarch64 ;;
-  *)     IMAGE_ARCH=amd64   ;;
+  arm64) PLATFORM=linux/arm64 ; MACHINE_ARCH=aarch64 ;;
+  *)     PLATFORM=linux/amd64 ;;
 esac
 
 # the ABI
@@ -30,8 +30,8 @@ VARIANT=$4
 
 (cd $DIR && 
   docker build --tag skiasharp-linux-$ABI-cross-$ARCH \
+    --platform=$PLATFORM                              \
     --build-arg BUILD_ARCH=$ARCH                      \
-    --build-arg IMAGE_ARCH=$IMAGE_ARCH                \
     --build-arg MACHINE_ARCH=$MACHINE_ARCH            \
     $DOCKER_DIR)
 
