@@ -28,6 +28,12 @@ ABI=$3
 # the variant
 VARIANT=$4
 
+# architecture-specific additional args (matching CI configuration)
+ADDITIONAL_ARGS=""
+case $ARCH in
+  loongarch64) ADDITIONAL_ARGS="--verifyGlibcMax=2.38" ;;
+esac
+
 (cd $DIR && 
   docker build --tag skiasharp-linux-$ABI-cross-$ARCH \
     --platform=$PLATFORM                              \
@@ -40,4 +46,4 @@ VARIANT=$4
 (cd $DIR/../.. && 
     docker run --rm --name skiasharp-linux-$ABI-cross-$ARCH --volume $(pwd):/work skiasharp-linux-$ABI-cross-$ARCH /bin/bash -c " \
         dotnet tool restore ; \
-        dotnet cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH $VARIANT ")
+        dotnet cake --target=externals-linux-clang-cross --configuration=Release --buildarch=$ARCH $VARIANT $ADDITIONAL_ARGS ")
