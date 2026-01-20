@@ -1,22 +1,101 @@
 # Adding New APIs to SkiaSharp
 
-> **Quick Start:** For a quick walkthrough, see [QUICKSTART.md](QUICKSTART.md)  
-> **Quick Reference:** For common patterns, see [AGENTS.md](../AGENTS.md)
+> **Hands-on tutorial:** [QUICKSTART.md](QUICKSTART.md)  
+> **Quick patterns:** [AGENTS.md](../AGENTS.md)
 
-## TL;DR
+---
 
-**5-step process to add a new API:**
+## Introduction
 
-1. **Find C++ API** - Locate in `externals/skia/include/core/`
-2. **Identify pointer type** - Check inheritance: `SkRefCnt`, `SkNVRefCnt<T>`, or owned
-3. **Add C API** - Create wrapper in `externals/skia/src/c/` with exception handling
-4. **Add P/Invoke** - Declare in `binding/SkiaSharp/SkiaApi.cs`
-5. **Add C# wrapper** - Implement in `binding/SkiaSharp/SK*.cs` with validation
+This guide walks through the complete process of adding a new Skia API to SkiaSharp, from identifying the C++ API to testing the final C# binding.
+
+SkiaSharp uses a **three-layer architecture** to bridge native C++ code with managed C#:
+
+```
+C++ Skia Library (externals/skia/)
+    ↓ Type casting
+C API Layer (externals/skia/include/c/, externals/skia/src/c/)
+    ↓ P/Invoke
+C# Wrapper Layer (binding/SkiaSharp/)
+```
+
+**Why this architecture?**
+- C++ exceptions cannot cross P/Invoke boundaries
+- C APIs are ABI-stable and easier to maintain
+- C# provides safety, validation, and idiomatic .NET patterns
+
+### Simple Example: SKPaint.IsAntialias
+
+Before diving into complex examples, here's a simple property to illustrate the pattern:
+
+**Layer 1: C++ API** (`externals/skia/include/core/SkPaint.h`)
+```cpp
+class SK_API SkPaint {
+public:
+  bool isAntiAlias() const;
+  void setAntiAlias(bool aa);
+};
+```
+
+**Layer 2: C API** (`externals/skia/src/c/sk_paint.cpp`)
+```cpp
+bool sk_paint_is_antialias(const sk_paint_t* cpaint) {
+  return AsPaint(cpaint)->isAntiAlias();
+}
+
+void sk_paint_set_antialias(sk_paint_t* cpaint, bool aa) {
+  AsPaint(cpaint)->setAntiAlias(aa);
+}
+```
+
+**Layer 3: P/Invoke** (`binding/SkiaSharp/SkiaApi.cs`)
+```csharp
+[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+public extern static bool sk_paint_is_antialias(sk_paint_t t);
+
+[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]
+public extern static void sk_paint_set_antialias(sk_paint_t t, bool aa);
+```
+
+**Layer 4: C# Wrapper** (`binding/SkiaSharp/SKPaint.cs`)
+```csharp
+public class SKPaint : SKObject
+{
+  public bool IsAntialias {
+    get { return SkiaApi.sk_paint_is_antialias(Handle); }
+    set { SkiaApi.sk_paint_set_antialias(Handle, value); }
+  }
+}
+```
+
+As a result, the C# API is idiomatic and appears similar to the C++ API.
+
+### The Mono/Skia Fork
+
+Since the C API is currently a work in progress of the Skia project, we maintain a fork at https://github.com/mono/skia that has our additions. We intend to upstream those changes to Google where appropriate.
+
+## Prerequisites
+
+Before adding a new API, you should understand:
+- [Architecture Overview](architecture-overview.md) - The three-layer structure
+- [Memory Management](memory-management.md) - **Critical:** Pointer types and ownership
+- [Error Handling](error-handling.md) - How errors propagate
+
+## The Process
+
+Adding a new API involves **four steps** through the three layers:
+
+```
+1. Analyze C++ API      →  Identify pointer type & error handling
+2. Add C API Layer      →  Create C wrapper functions  
+3. Add P/Invoke         →  Declare C# interop
+4. Add C# Wrapper       →  Create idiomatic C# API
+```
 
 **Critical decisions:**
-- Pointer type (determines disposal pattern)
-- Error handling (can it fail?)
-- Parameter types (ref-counted need `sk_ref_sp`)
+- **Pointer type** - Determines disposal pattern (see [memory-management.md](memory-management.md))
+- **Error handling** - Can it fail? Returns bool/null or throws?
+- **Parameter types** - Reference-counted parameters need `sk_ref_sp`
 
 **File locations:**
 ```
@@ -25,30 +104,6 @@ C API: externals/skia/src/c/sk_canvas.cpp
        externals/skia/include/c/sk_canvas.h  
 C#:    binding/SkiaSharp/SKCanvas.cs
        binding/SkiaSharp/SkiaApi.cs
-```
-
-See [QUICKSTART.md](QUICKSTART.md) for a complete example, or continue below for comprehensive details.
-
----
-
-## Introduction
-
-This guide walks through the complete process of adding a new Skia API to SkiaSharp, from identifying the C++ API to testing the final C# binding.
-
-## Prerequisites
-
-Before adding a new API, you should understand:
-- [Architecture Overview](architecture-overview.md) - The three-layer structure
-- [Memory Management](memory-management.md) - Pointer types and ownership
-- [Error Handling](error-handling.md) - How errors propagate
-
-## Overview: The Four-Step Process
-
-```
-1. Analyze C++ API      →  Identify pointer type & error handling
-2. Add C API Layer      →  Create C wrapper functions
-3. Add P/Invoke         →  Declare C# interop
-4. Add C# Wrapper       →  Create idiomatic C# API
 ```
 
 ## Step 1: Analyze the C++ API

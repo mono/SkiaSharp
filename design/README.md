@@ -63,7 +63,13 @@ Continue reading below for the complete documentation index.
    - Complete examples and patterns
    - Troubleshooting guide
 
-5. **[layer-mapping.md](layer-mapping.md)** - Quick reference
+5. **[creating-new-libraries.md](creating-new-libraries.md)** - Adding new projects
+   - Project structure and TFMs
+   - Versioning with VERSIONS.txt
+   - Strong naming
+   - NuGet packaging
+
+6. **[layer-mapping.md](layer-mapping.md)** - Quick reference
    - Type naming conventions across layers
    - Function naming patterns
    - File organization mapping
@@ -206,14 +212,16 @@ Improvements welcome! When contributing:
 
 - **Skia Website:** https://skia.org/
 - **Skia C++ API Reference:** https://api.skia.org/
-- **SkiaSharp Wiki:** https://github.com/mono/SkiaSharp/wiki
 - **SkiaSharp Samples:** https://github.com/mono/SkiaSharp/tree/main/samples
 
 ### Related Documentation
 
 - **Root README.md** - Project overview and getting started
-- **Wiki: Creating Bindings** - Original binding guide (less detailed)
-- **Wiki: Building SkiaSharp** - Build instructions
+- **CONTRIBUTING.md** - Contributing guidelines
+- **wiki/** - Build instructions and maintainer guides
+  - **wiki/Building-SkiaSharp.md** - Build instructions
+  - **wiki/Being-a-Maintainer.md** - Maintainer processes
+  - See [../wiki/README.md](../wiki/README.md) for complete index
 - **Source XML Comments** - API-level documentation
 
 ### Questions or Issues?

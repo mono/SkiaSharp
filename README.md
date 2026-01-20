@@ -58,10 +58,23 @@ https://aka.ms/skiasharp-eap/index.json
 
 Building SkiaSharp is mostly straight forward. The main issue is the multiple dependencies for each platform.
 
-However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there mays to skip all the native builds.
+However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there are ways to skip all the native builds.
 
- - To get started building, [go here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp).
- - If you are just wanting a custom Linux build, [go here](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux)
+- To get started building, see [wiki/Building-SkiaSharp.md](wiki/Building-SkiaSharp.md)
+- If you are just wanting a custom Linux build, see [wiki/Building-on-Linux.md](wiki/Building-on-Linux.md)
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+- Reporting issues
+- Submitting pull requests
+- Building from source
+- Adding new APIs
+
+For comprehensive documentation:
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
+- **[wiki/](wiki/)** - Build instructions and maintainer guides
+- **[design/](design/)** - Architecture and design documentation
 
 ## Contributors
 
