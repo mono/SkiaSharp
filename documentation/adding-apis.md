@@ -76,8 +76,8 @@ void sk_canvas_draw_circle(sk_canvas_t* canvas, float cx, float cy,
 
 Run the generator to create P/Invoke declarations from C API headers:
 
-```bash
-dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate
+```pwsh
+./utils/generate.ps1
 ```
 
 This generates in `SkiaApi.generated.cs`:
@@ -130,15 +130,15 @@ public static SKImage FromEncodedData(SKData data) {
 - [ ] Ref-counted returns use `.release()`
 
 **C#:**
-- [ ] Regenerated P/Invoke (`dotnet run --project utils/SkiaSharpGenerator/...`)
+- [ ] Regenerated P/Invoke (`./utils/generate.ps1`)
 - [ ] Validates null parameters
 - [ ] Checks return values (factory→null, constructor→throw)
 - [ ] Correct ownership (`owns: true/false`)
 
 ## Build & Test
 
-```bash
-dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate  # Regenerate P/Invoke
-dotnet cake --target=libs   # Build
-dotnet cake --target=tests  # Test
+```pwsh
+./utils/generate.ps1              # Regenerate P/Invoke
+dotnet cake --target=libs         # Build
+dotnet cake --target=tests        # Test
 ```

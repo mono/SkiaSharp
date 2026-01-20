@@ -1,3 +1,7 @@
+param(
+    [string]$Config
+)
+
 $ErrorActionPreference = "Stop"
 
 $projects = @(
@@ -7,6 +11,16 @@ $projects = @(
     @{ Json="libSkiaSharp.Resources.json";  Root="externals/skia";                                  Output="SkiaSharp.Resources/ResourcesApi.generated.cs"   },
     @{ Json="libHarfBuzzSharp.json";        Root="externals/skia/third_party/externals/harfbuzz";   Output="HarfBuzzSharp/HarfBuzzApi.generated.cs"          } # you may have to revert harfbuzz in Deps to 2.8.2 or 63e15eac4f443fa53565d1e4fb9611cdd7814f28
 )
+
+# Filter to specific config if provided
+if ($Config) {
+    $configName = Split-Path $Config -Leaf
+    $projects = $projects | Where-Object { $_.Json -eq $configName }
+    if ($projects.Count -eq 0) {
+        Write-Error "Config not found: $Config. Valid options: libSkiaSharp.json, libSkiaSharp.Skottie.json, libSkiaSharp.SceneGraph.json, libSkiaSharp.Resources.json, libHarfBuzzSharp.json"
+        exit 1
+    }
+}
 
 New-Item -ItemType Directory -Force -Path "output/generated/" | Out-Null
 

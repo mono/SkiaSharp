@@ -98,6 +98,7 @@ AsRect(sk_rect_t*)     → SkRect*
 - **P/Invoke:** Auto-generated from C headers (`SkiaApi.generated.cs`)
 - **C# wrappers:** Hand-written (`binding/SkiaSharp/SK*.cs`)
 
-```bash
-dotnet run --project utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate
+```pwsh
+./utils/generate.ps1                              # Regenerate all
+./utils/generate.ps1 -Config libSkiaSharp.json    # Regenerate specific config
 ```

@@ -8,18 +8,24 @@ This is a small set of tools that help with generating the p/invoke layer from t
 
 ### Generate
 
-This can be run with:
+Regenerate all P/Invoke bindings:
 
 ```pwsh
-.\utils\generate.ps1
+./utils/generate.ps1
 ```
 
-* `--config binding/libSkiaSharp.json`  
-  The path to the JSON file that help generate a useful set of p/invoke definions and structures.
-* `--skia externals/skia`  
-  The path to the root of the skia source.
-* `--output binding/Binding/SkiaApi.generated.cs`  
-  The path to the generated file.
+Regenerate a specific binding:
+
+```pwsh
+./utils/generate.ps1 -Config libSkiaSharp.json
+```
+
+Available configs:
+- `libSkiaSharp.json` - Core SkiaSharp
+- `libSkiaSharp.Skottie.json` - Skottie animation
+- `libSkiaSharp.SceneGraph.json` - Scene graph
+- `libSkiaSharp.Resources.json` - Resources
+- `libHarfBuzzSharp.json` - HarfBuzz text shaping
 
 ### Verify
 

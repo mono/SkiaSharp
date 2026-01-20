@@ -43,15 +43,6 @@ If you think you've found a bug, please check the [Issues](https://github.com/mo
   - Physical devices vs simulators/emulators
 - **Upload reproductions:** Attach reproduction projects directly to the issue (don't use external file sharing)
 
-### Platform-Specific Information
-
-#### Android
-- Note issues that may stem from different versions of support library packages (e.g., `Xamarin.Android.Support.v7.AppCompat`)
-- Sometimes bugs occur only with specific package versions
-
-#### UWP
-- Note if an issue appears hardware-specific (slower machines, multiple monitors, etc.)
-
 ## 🔧 Contributing Code
 
 We greatly welcome PRs with fixes and improvements from the community!
