@@ -1,3 +1,7 @@
+# Building on Linux
+
+This guide covers building libSkiaSharp.so for Linux distributions.
+
 Building libSkiaSharp.so for Linux is straightforward. It is best to clone the [**mono/SkiaSharp**](https://github.com/mono/SkiaSharp) repository as it pulls down additional tools used to build skia, namely [**depot_tools**](https://chromium.googlesource.com/chromium/tools/depot_tools.git).
 
 > **Note:** This guide applies to v1.60.1 and later. For much older versions (pre-v1.60.1), the build process was different.

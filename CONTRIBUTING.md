@@ -5,10 +5,9 @@ Thank you for your interest in contributing to SkiaSharp! This document provides
 ## 📖 Documentation
 
 Before contributing, please review:
-- **[AGENTS.md](AGENTS.md)** - Quick reference for AI agents
-- **[design/QUICKSTART.md](design/QUICKSTART.md)** - 10-minute practical tutorial
-- **[design/adding-new-apis.md](design/adding-new-apis.md)** - Complete guide for adding APIs
-- **[wiki/](wiki/)** - Build instructions, maintainer guides, and additional documentation
+- **[documentation/](documentation/)** - Architecture, memory management, and contributor guides
+- **[documentation/adding-apis.md](documentation/adding-apis.md)** - Complete guide for adding APIs
+- **[documentation/building.md](documentation/building.md)** - Build instructions
 
 ## 🐛 Reporting Issues
 
@@ -44,15 +43,6 @@ If you think you've found a bug, please check the [Issues](https://github.com/mo
   - Physical devices vs simulators/emulators
 - **Upload reproductions:** Attach reproduction projects directly to the issue (don't use external file sharing)
 
-### Platform-Specific Information
-
-#### Android
-- Note issues that may stem from different versions of support library packages (e.g., `Xamarin.Android.Support.v7.AppCompat`)
-- Sometimes bugs occur only with specific package versions
-
-#### UWP
-- Note if an issue appears hardware-specific (slower machines, multiple monitors, etc.)
-
 ## 🔧 Contributing Code
 
 We greatly welcome PRs with fixes and improvements from the community!
@@ -62,12 +52,12 @@ We greatly welcome PRs with fixes and improvements from the community!
 1. **Follow existing patterns** - Study similar APIs before adding new ones
 2. **Add tests** - All new features and bug fixes should include tests
 3. **Update documentation** - If you're changing public APIs
-4. **Memory management** - Ensure proper disposal and pointer type handling (see [design/memory-management.md](design/memory-management.md))
-5. **Error handling** - Validate parameters and handle errors appropriately (see [design/error-handling.md](design/error-handling.md))
+4. **Memory management** - Ensure proper disposal and pointer type handling (see [documentation/memory-management.md](documentation/memory-management.md))
+5. **Error handling** - Validate parameters and handle errors appropriately (see [documentation/error-handling.md](documentation/error-handling.md))
 
 ### Adding New APIs
 
-Follow the comprehensive guide in [design/adding-new-apis.md](design/adding-new-apis.md), which covers:
+Follow the comprehensive guide in [documentation/adding-apis.md](documentation/adding-apis.md), which covers:
 - Analyzing C++ APIs and identifying pointer types
 - Creating C API wrappers
 - Writing P/Invoke declarations
@@ -79,8 +69,8 @@ Follow the comprehensive guide in [design/adding-new-apis.md](design/adding-new-
 - **Dispose pattern:** Always use `using` statements in samples and tests
 - **Parameter validation:** Validate all parameters in C# before P/Invoke
 - **Error checking:** Check return values from C API calls
-- **Memory safety:** Understand pointer types (see [design/memory-management.md](design/memory-management.md))
-- **Naming conventions:** Follow existing naming patterns (see [design/layer-mapping.md](design/layer-mapping.md))
+- **Memory safety:** Understand pointer types (see [documentation/memory-management.md](documentation/memory-management.md))
+- **Naming conventions:** Follow existing naming patterns (see [documentation/architecture.md](documentation/architecture.md))
 
 ## 🏗️ Building SkiaSharp
 
@@ -99,25 +89,24 @@ dotnet cake --target=libs
 dotnet cake --target=tests
 ```
 
-See [wiki/Building-SkiaSharp.md](wiki/Building-SkiaSharp.md) for complete build instructions.
+See [documentation/building.md](documentation/building.md) for complete build instructions.
 
 ### Full Build (Including Native)
 
 For native code changes, see:
-- [wiki/Building-SkiaSharp.md](wiki/Building-SkiaSharp.md) - Windows & macOS
-- [wiki/Building-on-Linux.md](wiki/Building-on-Linux.md) - Linux
+- [documentation/building.md](documentation/building.md) - Windows & macOS
+- [documentation/building-linux.md](documentation/building-linux.md) - Linux
 
 ## 📚 Additional Resources
 
-- **[wiki/](wiki/)** - Complete collection of contributor documentation
-- **[design/](design/)** - Architecture and design documentation
-- **Maintainer guides** - See [wiki/Being-a-Maintainer.md](wiki/Being-a-Maintainer.md)
-- **Release process** - See [wiki/Release-Checklist.md](wiki/Release-Checklist.md)
+- **[documentation/](documentation/)** - Complete collection of contributor documentation
+- **Maintainer guides** - See [documentation/maintaining.md](documentation/maintaining.md)
+- **Release process** - See [documentation/releasing.md](documentation/releasing.md)
 
 ## 💡 Questions?
 
-- **Architecture questions:** Review [design/](design/) documentation
-- **Build issues:** Check [wiki/](wiki/) folder
+- **Architecture questions:** Review [documentation/](documentation/)
+- **Build issues:** Check [documentation/building.md](documentation/building.md)
 - **API usage:** Check the [API documentation](https://docs.microsoft.com/dotnet/api/skiasharp)
 - **Still stuck?** Open an issue with your question
 

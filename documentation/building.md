@@ -1,3 +1,7 @@
+# Building SkiaSharp
+
+This guide covers building SkiaSharp on Windows and macOS.
+
 ## Table of Contents
 
  * [Preparation](#preparation)

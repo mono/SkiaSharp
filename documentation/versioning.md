@@ -1,3 +1,7 @@
+# Versioning
+
+This document explains SkiaSharp's version numbering scheme.
+
 Versioning in SkiaSharp is mostly simple, but is slightly different because it is based on the version of the underlying skia library version.
 
 ## Stable Versions

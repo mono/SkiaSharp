@@ -1,3 +1,7 @@
+# Branching Strategy
+
+This document explains how SkiaSharp manages Git branches for parallel version development.
+
 With the introduction of the 3.x series, we need a way to properly build 2.x and 3.x versions of SkiaSharp.
 
 As we need a way to build for more than one "main", we will have multiple target branches for any new changes:
