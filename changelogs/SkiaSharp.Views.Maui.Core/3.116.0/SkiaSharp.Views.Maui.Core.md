@@ -48,7 +48,7 @@ public interface ISKGLView : Microsoft.Maui.IElement, Microsoft.Maui.ITransform,
 #### New Type: SkiaSharp.Views.Maui.Handlers.SKGLViewHandler
 
 ```csharp
-public class SKGLViewHandler : Microsoft.Maui.Handlers.ViewHandler`2[SkiaSharp.Views.Maui.ISKGLView,System.Object] {
+public class SKGLViewHandler : Microsoft.Maui.Handlers.ViewHandler`2[SkiaSharp.Views.Maui.ISKGLView,System.Object], Microsoft.Maui.IElementHandler, Microsoft.Maui.IViewHandler {
 	// constructors
 	public SKGLViewHandler ();
 	public SKGLViewHandler (Microsoft.Maui.PropertyMapper mapper, Microsoft.Maui.CommandMapper commands);

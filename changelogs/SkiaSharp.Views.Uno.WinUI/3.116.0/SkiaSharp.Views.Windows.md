@@ -11,7 +11,7 @@
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("This method is provided for binary backward compatibility. It will always return null.")]
 public static object FindResource (string name);
 ```
 
@@ -21,17 +21,17 @@ public static object FindResource (string name);
 Removed constructors:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 
-[Obsolete]
+[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 
 Removed property:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 ```
 

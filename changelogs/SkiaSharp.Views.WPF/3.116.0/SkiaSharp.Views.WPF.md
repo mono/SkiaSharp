@@ -9,7 +9,7 @@
 #### New Type: SkiaSharp.Views.WPF.SKGLElement
 
 ```csharp
-public class SKGLElement : OpenTK.Wpf.GLWpfControl, System.IDisposable {
+public class SKGLElement : OpenTK.Wpf.GLWpfControl, System.ComponentModel.ISupportInitialize, System.IDisposable, System.Windows.IFrameworkInputElement, System.Windows.IInputElement, System.Windows.Markup.IQueryAmbient, System.Windows.Media.Animation.IAnimatable {
 	// constructors
 	public SKGLElement ();
 	// properties

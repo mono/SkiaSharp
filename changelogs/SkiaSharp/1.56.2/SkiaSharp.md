@@ -82,13 +82,13 @@ public SKColor GetUnPreMultipliedColor (int index);
 Obsoleted constructors:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use SKData.Empty instead.")]
  public SKData ();
- [Obsolete ()]
+ [Obsolete ("Use SKData.CreateCopy(byte[]) instead.")]
  public SKData (byte[] bytes);
- [Obsolete ()]
+ [Obsolete ("Use SKData.CreateCopy(byte[], ulong) instead.")]
  public SKData (byte[] bytes, ulong length);
- [Obsolete ()]
+ [Obsolete ("Use SKData.CreateCopy(IntPtr, ulong) instead.")]
  public SKData (IntPtr bytes, ulong length);
 ```
 
@@ -130,9 +130,9 @@ public bool IsTextureBacked { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use FromEncodedData instead.")]
  public static SKImage FromData (SKData data);
- [Obsolete ()]
+ [Obsolete ("Use FromEncodedData instead.")]
  public static SKImage FromData (SKData data, SKRectI subset);
 ```
 
@@ -212,11 +212,11 @@ public long RowBytes64 { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use AddPath(SKPath, SKPathAddMode) instead.")]
  public void AddPath (SKPath other, SKPath.AddMode mode);
- [Obsolete ()]
+ [Obsolete ("Use AddPath(SKPath, ref SKMatrix, SKPathAddMode) instead.")]
  public void AddPath (SKPath other, ref SKMatrix matrix, SKPath.AddMode mode);
- [Obsolete ()]
+ [Obsolete ("Use AddPath(SKPath, float, float, SKPathAddMode) instead.")]
  public void AddPath (SKPath other, float dx, float dy, SKPath.AddMode mode);
 ```
 
@@ -274,7 +274,7 @@ public SKPathVerb Peek ();
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use GetMatrix(float, out SKMatrix, SKPathMeasureMatrixFlags) instead.")]
  public bool GetMatrix (float distance, out SKMatrix matrix, SKPathMeasure.MatrixFlags flags);
 ```
 

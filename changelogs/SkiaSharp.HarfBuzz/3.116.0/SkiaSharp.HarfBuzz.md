@@ -11,13 +11,13 @@
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use DrawShapedText(string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
  public static void DrawShapedText (this SkiaSharp.SKCanvas canvas, string text, SkiaSharp.SKPoint p, SkiaSharp.SKPaint paint);
- [Obsolete ()]
+ [Obsolete ("Use DrawShapedText(SKShaper shaper, string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
  public static void DrawShapedText (this SkiaSharp.SKCanvas canvas, SKShaper shaper, string text, SkiaSharp.SKPoint p, SkiaSharp.SKPaint paint);
- [Obsolete ()]
+ [Obsolete ("Use DrawShapedText(string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
  public static void DrawShapedText (this SkiaSharp.SKCanvas canvas, string text, float x, float y, SkiaSharp.SKPaint paint);
- [Obsolete ()]
+ [Obsolete ("Use DrawShapedText(SKShaper shaper, string text, float x, float y, SKTextAlign textAlign, SKFont font, SKPaint paint) instead.")]
  public static void DrawShapedText (this SkiaSharp.SKCanvas canvas, SKShaper shaper, string text, float x, float y, SkiaSharp.SKPaint paint);
 ```
 
@@ -40,13 +40,13 @@ public static void DrawShapedText (this SkiaSharp.SKCanvas canvas, SKShaper shap
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Shape(Buffer buffer, SKFont font) instead.")]
  public SKShaper.Result Shape (HarfBuzzSharp.Buffer buffer, SkiaSharp.SKPaint paint);
- [Obsolete ()]
+ [Obsolete ("Use Shape(string text, SKFont font) instead.")]
  public SKShaper.Result Shape (string text, SkiaSharp.SKPaint paint);
- [Obsolete ()]
+ [Obsolete ("Use Shape(Buffer buffer, float xOffset, float yOffset, SKFont font) instead.")]
  public SKShaper.Result Shape (HarfBuzzSharp.Buffer buffer, float xOffset, float yOffset, SkiaSharp.SKPaint paint);
- [Obsolete ()]
+ [Obsolete ("Use Shape(string text, float xOffset, float yOffset, SKFont font) instead.")]
  public SKShaper.Result Shape (string text, float xOffset, float yOffset, SkiaSharp.SKPaint paint);
 ```
 
