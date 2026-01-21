@@ -20,7 +20,7 @@ Unsupported = 5,
 Obsoleted constructors:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use GRBackendRenderTarget(int width, int height, GRVkImageInfo vkImageInfo) instead.")]
  public GRBackendRenderTarget (int width, int height, int sampleCount, GRVkImageInfo vkImageInfo);
 ```
 

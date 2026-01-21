@@ -1,30 +1,3 @@
-// # dependencies
-// mdoc                                            release     5.8.9
-// harfbuzz                                        release     8.3.1
-// skia                                            release     m119
-// xunit                                           release     2.4.2
-// xunit.runner.console                            release     2.4.2
-// OpenTK                                          release     3.1.0
-// OpenTK.GLControl                                release     3.1.0
-// GtkSharp                                        release     3.24.24.95
-// GdkSharp                                        release     3.24.24.95
-// GLibSharp                                       release     3.24.24.95
-// AtkSharp                                        release     3.24.24.95
-// System.Memory                                   release     4.5.5
-// SharpVk                                         release     0.4.2
-// Uno.WinUI                                       release     5.2.175
-// Microsoft.WindowsAppSDK                         release     1.4.230913002
-// Microsoft.Maui.Graphics                         release     7.0.92
-// Microsoft.Windows.SDK.NET.Ref                   release     10.0.19041.27
-// Microsoft.AspNetCore.Components.Web             release     6.0.0
-// ANGLE                                           release     chromium/6275
-// Microsoft.iOS.Ref.net8.0_17.0                   release     17.0.8523
-// Microsoft.MacCatalyst.Ref.net8.0_17.0           release     17.0.8523
-// Microsoft.tvOS.Ref.net8.0_17.0                  release     17.0.8523
-// Microsoft.macOS.Ref.net8.0_14.0                 release     14.0.8523
-// Samsung.Tizen.Ref                               release     10.0.109
-// Xamarin.VisualStudio.Apple.Sdk                  url         https://download.visualstudio.microsoft.com/download/pr/42786999-d45b-4428-b946-248bb9676505/d37d5503fe30287fb73facbc34321865fdced518ba9205ab5581c7487e4ed6d6/Xamarin.VisualStudio.Apple.Sdk.17.12.0.94.vsix
-// Xamarin.Android.Sdk                             url         https://download.visualstudio.microsoft.com/download/pr/a3846965-8f4c-42fa-b728-b6ea5f0a2a16/90d568134f0f5b472e5c085fc6573c76bd40231892a89eb7551940dcc055eb8a/Xamarin.Android.Sdk-13.2.2.0.vsix
 
 async Task<NuGetDiff> CreateNuGetDiffAsync()
 {
@@ -40,9 +13,17 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("GLibSharp", "netstandard2.0");
     await AddDep("AtkSharp", "netstandard2.0");
     await AddDep("System.Memory", "netstandard2.0");
-    await AddDep("Microsoft.WindowsAppSDK", "net5.0-windows10.0.18362.0");
+    await AddDep("Microsoft.WindowsAppSDK", "net6.0-windows10.0.18362.0");
     await AddDep("Microsoft.Maui.Graphics", "netstandard2.0");
     await AddDep("Microsoft.Windows.SDK.NET.Ref", "");
+    await AddDep("Microsoft.Windows.SDK.Contracts", "netstandard2.0");
+    await AddDep("System.Runtime.WindowsRuntime", "netstandard2.0");
+    await AddDep("System.Runtime.WindowsRuntime.UI.Xaml", "netstandard2.0");
+    await AddDep("Microsoft.WindowsDesktop.App.Ref", "net6.0");
+    await AddDep("Microsoft.AspNetCore.Components", "net6.0");
+    await AddDep("OpenTK.GLWpfControl", "netcoreapp3.1");
+    await AddDep("Microsoft.Maui.Core", "net8.0");
+    await AddDep("Microsoft.Maui.Controls.Core", "net8.0");
     await AddDep("Microsoft.iOS.Ref.net8.0_17.0", "net8.0");
     await AddDep("Microsoft.MacCatalyst.Ref.net8.0_17.0", "net8.0");
     await AddDep("Microsoft.tvOS.Ref.net8.0_17.0", "net8.0");
@@ -50,12 +31,21 @@ async Task<NuGetDiff> CreateNuGetDiffAsync()
     await AddDep("Samsung.Tizen.Ref", "net8.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.iOS/v1.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.TVOS/v1.0");
+    await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.WatchOS/v1.0");
     await AddVsixDep("Xamarin.VisualStudio.Apple.Sdk", "$ReferenceAssemblies/Microsoft/Framework/Xamarin.Mac/v2.0");
     await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v1.0");
     await AddVsixDep("Xamarin.Android.Sdk", "$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v13.0");
+    await AddDep("Uno.UI", "netstandard2.0");
+    await AddDep("Xamarin.Forms", "netstandard2.0");
+    await AddDep("Xamarin.Forms.Platform.WPF", "net461");
+    await AddDep("Xamarin.Forms.Platform.GTK", "net461");
 
     // some parts of SkiaSharp depend on other parts
     foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/skiasharp/*/lib/netstandard2.0"))
+        comparer.SearchPaths.Add(dir.FullPath);
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard2.0"))
+        comparer.SearchPaths.Add(dir.FullPath);
+    foreach (var dir in GetDirectories($"{PACKAGE_CACHE_PATH}/harfbuzzsharp/*/lib/netstandard1.3"))
         comparer.SearchPaths.Add(dir.FullPath);
 
     Verbose("Added search paths:");
@@ -182,7 +172,7 @@ Task ("docs-api-diff")
         IncludePrerelease = NUGET_DIFF_PRERELEASE
     };
 
-    foreach (var id in TRACKED_NUGETS.Keys) {
+    foreach (var id in SUPPORTED_NUGETS.Keys) {
         // skip doc generation for NativeAssets as that has nothing but a native binary
         if (id.Contains ("NativeAssets"))
             continue;
@@ -299,8 +289,8 @@ Task ("docs-update-frameworks")
     EnsureDirectoryExists (docsTempPathNuGets);
     EnsureDirectoryExists (docsTempPathFrameowrks);
 
-    // extract nugets that were built/downloaded
-    foreach (var id in TRACKED_NUGETS.Keys) {
+    // extract nugets that were built/downloaded (only supported, not obsolete)
+    foreach (var id in SUPPORTED_NUGETS.Keys) {
         var version = GetVersion (id);
         var localNugetVersion = PREVIEW_ONLY_NUGETS.Contains(id)
             ? $"{version}-{PREVIEW_NUGET_SUFFIX}"
@@ -319,7 +309,7 @@ Task ("docs-update-frameworks")
     var monikers = new List<string> ();
     foreach (var id in TRACKED_NUGETS.Keys) {
         // skip doc generation for Uno, this is the same as WinUI and it is not needed
-        if (id.StartsWith ("SkiaSharp.Views.Uno.WinUI") )
+        if (id.StartsWith ("SkiaSharp.Views.Uno"))
             continue;
         // skip doc generation for NativeAssets as that has nothing but a native binary
         if (id.Contains ("NativeAssets"))
@@ -331,9 +321,11 @@ Task ("docs-update-frameworks")
             MinimumVersion = new NuGetVersion (TRACKED_NUGETS [id])
         });
 
-        // add the current dev version to the mix
-        var dev = new NuGetVersion (GetVersion (id));
-        allVersions = allVersions.Union (new [] { dev }).ToArray ();
+        // add the current dev version to the mix (only for supported packages)
+        var isSupported = SUPPORTED_NUGETS.ContainsKey(id);
+        var dev = isSupported ? new NuGetVersion (GetVersion (id)) : null;
+        if (dev != null)
+            allVersions = allVersions.Union (new [] { dev }).ToArray ();
 
         // "merge" the patches so we only care about major.minor
         var merged = new Dictionary<string, NuGetVersion> ();
@@ -344,7 +336,7 @@ Task ("docs-update-frameworks")
         foreach (var version in merged) {
             Information ($"Downloading '{id}' version '{version}'...");
             // get the path to the nuget contents
-            var packagePath = version.Value == dev
+            var packagePath = (isSupported && version.Value == dev)
                 ? $"{docsTempPathNuGets}/{id}"
                 : await comparer.ExtractCachedPackageAsync (id, version.Value);
 
@@ -362,6 +354,10 @@ Task ("docs-update-frameworks")
                     moniker = $"skiasharp-views-maui-{version.Key}";
                 else if (id.StartsWith ("SkiaSharp.Views"))
                     moniker = $"skiasharp-views-{version.Key}";
+                else if (id.StartsWith ("SkiaSharp.Direct3D"))
+                    moniker = $"skiasharp-direct3d-{version.Key}";
+                else if (id.StartsWith ("SkiaSharp.Vulkan"))
+                    moniker = $"skiasharp-vulkan-{version.Key}";
                 else if (platform == null)
                     moniker = $"{id.ToLower ().Replace (".", "-")}-{version.Key}";
                 else
@@ -602,6 +598,73 @@ Task ("docs-format-docs")
 
         // empty line at the end
         System.IO.File.AppendAllText (file.ToString (), "\n");
+    }
+
+    // sync extension method docs from type files to index.xml
+    var indexPath = $"{DOCS_PATH}/index.xml";
+    if (FileExists (indexPath)) {
+        Information ("Syncing extension method documentation to index.xml...");
+        var indexDoc = XDocument.Load (indexPath);
+        var synced = 0;
+        
+        foreach (var extMethod in indexDoc.Descendants ("ExtensionMethod").ToArray ()) {
+            var link = extMethod.Element ("Member")?.Element ("Link");
+            if (link == null) continue;
+            
+            var typeName = link.Attribute ("Type")?.Value;
+            var memberDocId = link.Attribute ("Member")?.Value;
+            if (string.IsNullOrEmpty (typeName) || string.IsNullOrEmpty (memberDocId)) continue;
+            
+            // Find the source type file
+            var typeFileName = typeName.Split ('.').Last () + ".xml";
+            var typeFiles = GetFiles ($"{DOCS_PATH}/**/{typeFileName}");
+            var typeFile = typeFiles.FirstOrDefault (f => {
+                var doc = XDocument.Load (f.FullPath);
+                return doc.Root?.Attribute ("FullName")?.Value == typeName;
+            });
+            
+            if (typeFile == null) continue;
+            
+            var typeDoc = XDocument.Load (typeFile.FullPath);
+            var sourceMember = typeDoc.Descendants ("Member")
+                .FirstOrDefault (m => m.Elements ("MemberSignature")
+                    .Any (s => s.Attribute ("Language")?.Value == "DocId" 
+                            && s.Attribute ("Value")?.Value == memberDocId));
+            
+            if (sourceMember == null) continue;
+            
+            var sourceDocs = sourceMember.Element ("Docs");
+            var targetDocs = extMethod.Element ("Member")?.Element ("Docs");
+            
+            if (sourceDocs != null && targetDocs != null) {
+                // Check if target has "To be added." placeholders
+                var hasPlaceholder = targetDocs.Descendants ()
+                    .Any (e => e.Value?.Contains ("To be added.") == true);
+                
+                if (hasPlaceholder) {
+                    targetDocs.ReplaceNodes (sourceDocs.Nodes ());
+                    synced++;
+                    Debug ("  Synced docs for {0}", memberDocId);
+                }
+            }
+        }
+        
+        if (synced > 0) {
+            Information ("Synced {0} extension method(s).", synced);
+            
+            // Save index.xml with proper formatting
+            var settings = new XmlWriterSettings {
+                Encoding = new UTF8Encoding (),
+                Indent = true,
+                NewLineChars = "\n",
+                OmitXmlDeclaration = true,
+            };
+            using (var writer = XmlWriter.Create (indexPath, settings)) {
+                indexDoc.Save (writer);
+                writer.Flush ();
+            }
+            System.IO.File.AppendAllText (indexPath, "\n");
+        }
     }
 
     // log summary

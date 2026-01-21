@@ -22,5 +22,17 @@ public SKGLControl (OpenTK.Graphics.GraphicsMode mode);
 public SKGLControl (OpenTK.Graphics.GraphicsMode mode, int major, int minor, OpenTK.Graphics.GraphicsContextFlags flags);
 ```
 
+Removed interfaces:
+
+```csharp
+System.ComponentModel.IComponent
+System.ComponentModel.ISynchronizeInvoke
+System.IDisposable
+System.Windows.Forms.IBindableComponent
+System.Windows.Forms.IContainerControl
+System.Windows.Forms.IDropTarget
+System.Windows.Forms.IWin32Window
+```
+
 
 

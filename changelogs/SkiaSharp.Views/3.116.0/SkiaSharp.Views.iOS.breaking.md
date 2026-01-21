@@ -11,7 +11,7 @@
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
 ```
 
@@ -21,7 +21,7 @@ public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImag
 Removed method:
 
 ```csharp
-[Obsolete]
+[Obsolete ("Use OnPaintSurface(SKPaintSurfaceEventArgs) instead.")]
 public virtual void DrawInSurface (SkiaSharp.SKSurface surface, SkiaSharp.SKImageInfo info);
 ```
 
