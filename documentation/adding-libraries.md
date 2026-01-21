@@ -45,7 +45,7 @@ Then add a corresponding entry in `scripts/VERSIONS.txt`:
 
 ```
 # In scripts/VERSIONS.txt (under # nuget versions section)
-SkiaSharp.MyLibrary                             nuget       3.119.3
+SkiaSharp.MyLibrary                             nuget       3.119.2
 ```
 
 The format is: `PackageId  nuget  version` (whitespace separated).
