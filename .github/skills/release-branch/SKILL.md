@@ -90,7 +90,13 @@ After pushing, verify the branch appears on GitHub before proceeding to step 4.
 
 Edit these files:
 - `scripts/azure-templates-variables.yml` — set `SKIASHARP_VERSION: {next-version}`
-- `scripts/VERSIONS.txt` — update `SkiaSharp file` version and all `nuget` versions
+- `scripts/VERSIONS.txt` — update ALL version numbers:
+  - `SkiaSharp file` version (e.g., `3.119.3.0`)
+  - All SkiaSharp `nuget` versions (e.g., `3.119.3`)
+  - `HarfBuzzSharp file` version — increment 4th digit (e.g., `8.3.1.3` → `8.3.1.4`)
+  - All HarfBuzzSharp `nuget` versions — same as file version
+
+> **HarfBuzzSharp versioning note:** The first 3 digits (`8.3.1`) correspond to the native HarfBuzz version. The 4th digit is incremented with each SkiaSharp release to keep packages in sync, even if there are no HarfBuzz changes. When native HarfBuzz is upgraded, reset to 3-digit version (e.g., `8.4.0`).
 
 ```bash
 git checkout main
