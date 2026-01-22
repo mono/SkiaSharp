@@ -39,8 +39,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 ### Releasing
 | Document | Description |
 |----------|-------------|
-| [releasing.md](releasing.md) | Release verification steps |
-| [branching.md](branching.md) | Git branching strategy |
+| [releasing.md](releasing.md) | Complete release guide: branching, workflow, checklist |
 | [versioning.md](versioning.md) | Version numbering scheme |
 
 ### Reference
