@@ -35,7 +35,13 @@ How to release SkiaSharp: create branch → bump main → wait for CI/publish �
 
 Update these files via PR (merge immediately):
 - [`scripts/azure-templates-variables.yml`](../scripts/azure-templates-variables.yml) — change `SKIASHARP_VERSION`
-- [`scripts/VERSIONS.txt`](../scripts/VERSIONS.txt) — update all version numbers (file versions, nuget versions)
+- [`scripts/VERSIONS.txt`](../scripts/VERSIONS.txt) — update ALL version numbers:
+  - `SkiaSharp file` version (e.g., `3.119.3.0`)
+  - All SkiaSharp `nuget` versions (e.g., `3.119.3`)
+  - `HarfBuzzSharp file` version — increment 4th digit (e.g., `8.3.1.3` → `8.3.1.4`)
+  - All HarfBuzzSharp `nuget` versions — same as file version
+
+> **HarfBuzzSharp versioning:** The first 3 digits (`8.3.1`) correspond to the native HarfBuzz version. The 4th digit is incremented with each SkiaSharp release to keep packages in sync, even without HarfBuzz changes. When native HarfBuzz is upgraded, reset to 3-digit version (e.g., `8.4.0`).
 
 ### 4. Wait for CI and Verify Build
 
