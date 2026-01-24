@@ -1,3 +1,4 @@
+using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
 using Xunit.Abstractions;
@@ -46,4 +47,11 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
         Directory.GetFiles(
             Path.Combine(projectDir, "bin", BuildConfiguration, TargetFramework),
             "*.apk", SearchOption.AllDirectories).FirstOrDefault();
+
+    /// <summary>
+    /// On Android, MAUI's AutomationId maps to resource-id, not content-desc (accessibility id).
+    /// Use the "id" locator strategy with the full resource ID.
+    /// </summary>
+    protected override IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
+        driver.FindElement("id", $"{bundleId}:id/SkiaCanvas");
 }

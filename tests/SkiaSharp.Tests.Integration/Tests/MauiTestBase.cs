@@ -51,6 +51,12 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     protected abstract AppiumDriver CreateDriver(AppiumOptions options);
     
     /// <summary>
+    /// Find the canvas element in the app. Override for platform-specific locators.
+    /// </summary>
+    protected virtual IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
+        driver.FindElement("accessibility id", "SkiaCanvas");
+    
+    /// <summary>
     /// Find the built app artifact (apk, app bundle, exe, etc.)
     /// </summary>
     protected abstract string? FindAppArtifact(string projectDir, string projectName);
@@ -218,7 +224,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             
             // Now find the canvas element
             Output.WriteLine("Looking for canvas element...");
-            var canvasElement = driver.FindElement("accessibility id", "SkiaCanvas");
+            var canvasElement = FindCanvasElement(driver, bundleId);
             var canvasLocation = new SKPointI(canvasElement.Location.X, canvasElement.Location.Y);
             var canvasSize = new SKSizeI(canvasElement.Size.Width, canvasElement.Size.Height);
             Output.WriteLine($"Canvas element: {canvasLocation} {canvasSize}");
