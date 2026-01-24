@@ -107,7 +107,9 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         var projectName = $"Maui{PlatformName.Replace(" ", "")}{canvasView}";
         var projectDir = await CreateMauiProject(projectName, canvasView, eventArgsType);
         
-        await Run("dotnet", $"build {projectDir} -c {BuildConfiguration} -f {TargetFramework}", timeoutSeconds: 600);
+        // Always run from TestDir (which has global.json) using relative path
+        var relativeProjectDir = Path.GetRelativePath(TestDir, projectDir);
+        await Run("dotnet", $"build {relativeProjectDir} -c {BuildConfiguration} -f {TargetFramework}", timeoutSeconds: 600);
         
         var appPath = FindAppArtifact(projectDir, projectName);
         Assert.NotNull(appPath);
@@ -124,12 +126,13 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     private async Task<string> CreateMauiProject(string projectName, string canvasView, string eventArgsType)
     {
         var projectDir = Path.Combine(TestDir, projectName);
+        var relativeProjectDir = projectName;  // Relative to TestDir
         
-        // Create project
-        await Run("dotnet", $"new maui -n {projectName} -o {projectDir}");
+        // Create project (run from TestDir to pick up global.json)
+        await Run("dotnet", $"new maui -n {projectName} -o {relativeProjectDir}");
 
-        // Add SkiaSharp package
-        await Run("dotnet", $"add {projectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion}");
+        // Add SkiaSharp package (run from TestDir)
+        await Run("dotnet", $"add {relativeProjectDir} package SkiaSharp.Views.Maui.Controls --version {SkiaVersion}");
         
         // Update MauiProgram.cs
         var programPath = Path.Combine(projectDir, "MauiProgram.cs");

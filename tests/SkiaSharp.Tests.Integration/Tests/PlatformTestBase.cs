@@ -46,6 +46,16 @@ public abstract class PlatformTestBase : IDisposable
             </configuration>
             """);
         
+        // Write global.json to allow latest SDK (prevents inheriting repo's .NET 8 restriction)
+        File.WriteAllText(Path.Combine(TestDir, "global.json"), """
+            {
+              "sdk": {
+                "version": "8.0.0",
+                "rollForward": "latestMajor"
+              }
+            }
+            """);
+        
         SkiaVersion = AppContext.GetData("SkiaSharpVersion") as string 
             ?? throw new InvalidOperationException("SkiaSharpVersion not set");
 
@@ -177,6 +187,7 @@ public abstract class PlatformTestBase : IDisposable
     protected async Task<string> Run(string command, string args, string workingDirectory, int timeoutSeconds = 120)
     {
         Output.WriteLine($"$ {command} {args}");
+        Output.WriteLine($"  WorkingDirectory: {workingDirectory}");
         
         using var process = Process.Start(new ProcessStartInfo
         {

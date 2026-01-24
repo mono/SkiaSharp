@@ -13,10 +13,12 @@ public class ConsoleTests(ITestOutputHelper output) : PlatformTestBase(output)
     public async Task SkiaSharpConsoleAppRunsSuccessfully()
     {
         Output.WriteLine($"Testing SkiaSharp {SkiaVersion} in Console app");
-        var projectDir = Path.Combine(TestDir, "SkiaSharpConsoleTest");
+        var projectName = "SkiaSharpConsoleTest";
+        var projectDir = Path.Combine(TestDir, projectName);
         
-        await Run("dotnet", $"new console -n SkiaSharpConsoleTest -o {projectDir}");
-        await Run("dotnet", $"add {projectDir} package SkiaSharp --version {SkiaVersion}");
+        // Run from TestDir (which has global.json) using relative paths
+        await Run("dotnet", $"new console -n {projectName} -o {projectName}");
+        await Run("dotnet", $"add {projectName} package SkiaSharp --version {SkiaVersion}");
         
         var drawCode = TestImage.GetDrawCode();
         var outputPath = Path.Combine(projectDir, "output.png");
@@ -37,7 +39,7 @@ public class ConsoleTests(ITestOutputHelper output) : PlatformTestBase(output)
             Console.WriteLine("SUCCESS");
             """);
         
-        var result = await Run("dotnet", $"run --project {projectDir}", timeoutSeconds: 60);
+        var result = await Run("dotnet", $"run --project {projectName}", timeoutSeconds: 60);
         Assert.Contains("SUCCESS", result);
         Assert.True(File.Exists(outputPath), "Output PNG should exist");
         
@@ -49,11 +51,13 @@ public class ConsoleTests(ITestOutputHelper output) : PlatformTestBase(output)
     public async Task HarfBuzzSharpConsoleAppRunsSuccessfully()
     {
         Output.WriteLine($"Testing HarfBuzzSharp {HarfBuzzVersion} in Console app");
-        var projectDir = Path.Combine(TestDir, "HarfBuzzConsoleTest");
+        var projectName = "HarfBuzzConsoleTest";
+        var projectDir = Path.Combine(TestDir, projectName);
         
-        await Run("dotnet", $"new console -n HarfBuzzConsoleTest -o {projectDir}");
-        await Run("dotnet", $"add {projectDir} package SkiaSharp --version {SkiaVersion}");
-        await Run("dotnet", $"add {projectDir} package HarfBuzzSharp --version {HarfBuzzVersion}");
+        // Run from TestDir (which has global.json) using relative paths
+        await Run("dotnet", $"new console -n {projectName} -o {projectName}");
+        await Run("dotnet", $"add {projectName} package SkiaSharp --version {SkiaVersion}");
+        await Run("dotnet", $"add {projectName} package HarfBuzzSharp --version {HarfBuzzVersion}");
         
         var outputPath = Path.Combine(projectDir, "output.png");
         
@@ -83,7 +87,7 @@ public class ConsoleTests(ITestOutputHelper output) : PlatformTestBase(output)
             Console.WriteLine("SUCCESS");
             """);
         
-        var result = await Run("dotnet", $"run --project {projectDir}", timeoutSeconds: 60);
+        var result = await Run("dotnet", $"run --project {projectName}", timeoutSeconds: 60);
         Assert.Contains("SUCCESS", result);
         Assert.True(TestText.ValidateOutput(result), "HarfBuzz output validation failed");
         Assert.True(File.Exists(outputPath), "Output PNG should exist");

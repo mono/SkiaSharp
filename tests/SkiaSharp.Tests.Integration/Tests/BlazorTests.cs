@@ -20,10 +20,12 @@ public class BlazorTests(ITestOutputHelper output) : PlatformTestBase(output)
     private async Task TestBlazor(string canvasView, string eventArgsType)
     {
         Output.WriteLine($"Testing SkiaSharp {SkiaVersion} in Blazor WASM ({canvasView})");
-        var projectDir = Path.Combine(TestDir, $"Blazor{canvasView}");
+        var projectName = $"Blazor{canvasView}";
+        var projectDir = Path.Combine(TestDir, projectName);
         
-        await Run("dotnet", $"new blazorwasm -n Blazor{canvasView} -o {projectDir} --no-https");
-        await Run("dotnet", $"add {projectDir} package SkiaSharp.Views.Blazor --version {SkiaVersion}");
+        // Run from TestDir (which has global.json) using relative paths
+        await Run("dotnet", $"new blazorwasm -n {projectName} -o {projectName} --no-https");
+        await Run("dotnet", $"add {projectName} package SkiaSharp.Views.Blazor --version {SkiaVersion}");
         
         await File.WriteAllTextAsync(Path.Combine(projectDir, "Pages", "Home.razor"), $$"""
             @page "/"
@@ -48,15 +50,15 @@ public class BlazorTests(ITestOutputHelper output) : PlatformTestBase(output)
             }
             """);
         
-        await Run("dotnet", $"build {projectDir} -c Release -p:WasmBuildNative=true", timeoutSeconds: 300);
+        await Run("dotnet", $"build {projectName} -c Release -p:WasmBuildNative=true", timeoutSeconds: 300);
         
-        await VerifyWithPlaywright(projectDir, canvasView);
+        await VerifyWithPlaywright(projectName, canvasView);
     }
 
-    private async Task VerifyWithPlaywright(string projectDir, string canvasView)
+    private async Task VerifyWithPlaywright(string projectName, string canvasView)
     {
         var port = GetAvailablePort();
-        using var serverProcess = StartServer(projectDir, port);
+        using var serverProcess = StartServer(projectName, port);
         
         try
         {
@@ -82,12 +84,12 @@ public class BlazorTests(ITestOutputHelper output) : PlatformTestBase(output)
         }
     }
 
-    private Process StartServer(string projectDir, int port)
+    private Process StartServer(string projectName, int port)
     {
         var process = Process.Start(new ProcessStartInfo
         {
             FileName = "dotnet",
-            Arguments = $"run --project {projectDir} -c Release --urls http://localhost:{port}",
+            Arguments = $"run --project {projectName} -c Release --urls http://localhost:{port}",
             WorkingDirectory = TestDir,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
