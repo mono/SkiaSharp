@@ -2,295 +2,316 @@
 
 SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia library.
 
-## Architecture
+## Skills
+
+**Always check for applicable skills first.** Before starting work on a request, review available skills in `.github/skills/`. If a skill matches the task, invoke it.
+
+| Skill | When to Use |
+|-------|-------------|
+| `implement-issue` | Implementing GitHub issues (new APIs, bug fixes) |
+| `api-docs` | Writing or reviewing XML documentation |
+| `release-branch` | Creating release branches |
+| `release-testing` | Testing packages before publishing |
+| `release-publish` | Publishing packages and finalizing releases |
+
+**If uncertain:** Ask the user: *"I found the [skill-name] skill which handles [description]. Should I use it for this task?"*
+
+---
+
+## Quick Reference
+
+### Architecture
 
 ```
 C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c/)  →  C++ Skia
 ```
 
-**Key principle:** C# is the safety boundary. C API is minimal pass-through.
+**Key principle:** C# validates parameters, C API trusts and passes through.
 
-## Three Pointer Types
+### Directory Guide
 
-| Type | Examples | C# Pattern | Cleanup |
-|------|----------|------------|---------|
-| **Raw** | Parameters, getters | `owns: false` | None |
-| **Owned** | Canvas, Paint, Path | `DisposeNative()` | Delete |
-| **Ref-counted** | Image, Shader, Data | `ISKReferenceCounted` | Unref |
+| Directory | Purpose | Editable? |
+|-----------|---------|-----------|
+| `binding/SkiaSharp/` | C# wrappers | ✅ Yes |
+| `externals/skia/src/c/` | C API implementation | ✅ Yes |
+| `externals/skia/include/c/` | C API headers | ✅ Yes |
+| `externals/skia/**` (other) | Upstream Skia | ❌ No - never modify |
+| `*.generated.cs` | Auto-generated P/Invoke | ❌ No - regenerate with `./utils/generate.ps1` |
+| `docs/` | Auto-generated API docs | ❌ No |
+| `documentation/` | Architecture guides | ✅ Yes |
 
-**Identify:** Inherits `SkRefCnt`? → Ref-counted. Mutable? → Owned. Otherwise → Raw.
+### Commands
 
-## Quick Decision Trees
-
-**Pointer type?**
-- Inherits SkRefCnt/SkNVRefCnt → Ref-counted
-- Mutable (Canvas/Paint/Path) → Owned  
-- Parameter or getter → Raw
-
-**Error handling?**
-- C API → Pass through (bool/null/void)
-- C# → Validate params, check returns, throw exceptions
-- Factory methods → Return null on failure
-- Constructors → Throw on failure
-
-## Key Directories
-
-| Path | Purpose |
+| Task | Command |
 |------|---------|
-| `binding/SkiaSharp/` | C# wrappers |
-| `externals/skia/src/c/` | C API implementation |
-| `externals/skia/include/c/` | C API headers |
-| `documentation/` | Architecture & guides |
-| `docs/` | ⚠️ Auto-generated, don't edit |
+| Setup (one-time) | `dotnet cake --target=externals-download` |
+| Build | `dotnet build <project.csproj>` |
+| Test | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
+| Regenerate bindings | `./utils/generate.ps1` |
 
-## Build & Generate
-
-```bash
-dotnet cake --target=externals-download  # Get native libs
-dotnet cake --target=libs                # Build managed
-dotnet cake --target=tests               # Run tests
-```
-
-Regenerate P/Invoke:
-```pwsh
-./utils/generate.ps1                            # All bindings
-./utils/generate.ps1 -Config libSkiaSharp.json  # Specific config
-```
-
-## Threading
-
-⚠️ Skia is NOT thread-safe. Canvas/Paint/Path must be thread-local. Immutable objects (Image/Shader) can be shared.
+> **Check if externals exist:** `ls output/native/` - if empty/missing, run the download.
 
 ---
 
-## C API Layer
+## ⚠️ Critical Rules
 
-**Applies to:** `externals/skia/src/c/*.cpp`, `externals/skia/include/c/*.h`
+### 1. ABI Stability (Non-negotiable)
 
-### Style Rules
+SkiaSharp maintains stable ABI across versions. Breaking changes break downstream apps.
 
-- Use `SK_C_API` for all exported functions
-- Function naming: `sk_<type>_<action>` (e.g., `sk_canvas_draw_rect`)
-- Type naming: `sk_<type>_t` (e.g., `sk_canvas_t`)
-- Use C types only (no `std::string`, etc.)
+| ✅ Allowed | ❌ Never |
+|-----------|---------|
+| Add new overloads | Modify existing signatures |
+| Add new methods | Remove public APIs |
+| Add new classes | Change return types |
 
-### Type Conversion
+### 2. Same-Instance Returns
 
-```cpp
-// Use macros from sk_types_priv.h
-AsCanvas(sk_canvas_t*) → SkCanvas*
-ToCanvas(SkCanvas*)    → sk_canvas_t*
-
-// Dereference for references
-AsCanvas(canvas)->drawRect(*AsRect(rect), *AsPaint(paint));
-```
-
-### Memory Patterns
-
-```cpp
-// Owned: create/destroy pairs
-SK_C_API sk_paint_t* sk_paint_new(void);
-SK_C_API void sk_paint_delete(sk_paint_t* paint);
-
-// Ref-counted: use sk_ref_sp when C++ expects sk_sp<T>
-sk_ref_sp(AsImageFilter(filter))
-```
-
-### Rules
-
-- ✅ Pass through directly to C++
-- ✅ Document ownership in comments
-- ❌ Never throw exceptions
-- ❌ Don't validate params (C# does this)
-- ❌ Don't use C++ types in signatures
-
----
-
-## C# Bindings
-
-**Applies to:** `binding/SkiaSharp/*.cs`
-
-### Style Rules
-
-- Class naming: `SKType` (e.g., `SKCanvas`)
-- Inherit from `SKObject` for handle management
-- Implement `ISKReferenceCounted` for ref-counted types
-- Never expose `IntPtr` in public APIs
-
-### Validation Pattern
+Some Skia methods return the **same instance** as an optimization. Always check before disposing:
 
 ```csharp
-public void DrawRect(SKRect rect, SKPaint paint)
-{
-    if (paint == null)
-        throw new ArgumentNullException(nameof(paint));
-    
-    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
-}
+// ❌ WRONG - crashes if Subset returns same instance
+using var source = FromEncodedData(data);
+var result = source.Subset(subset);
+return result;  // source disposed, but result IS source!
+
+// ✅ CORRECT
+var source = FromEncodedData(data);
+var result = source.Subset(subset);
+if (result != source)
+    source.Dispose();
+return result;
 ```
 
-### Memory Patterns
+**Methods that may return same instance:** `Subset()`, `ToRasterImage()`, `ToRasterImage(false)`
 
-```csharp
-// Owned - explicit dispose
-protected override void DisposeNative()
-{
-    SkiaApi.sk_canvas_destroy(Handle);
-}
+### 3. Threading
 
-// Ref-counted
-public class SKImage : SKObject, ISKReferenceCounted { }
+Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immutable objects (Image/Shader/Data) can be shared across threads.
 
-// Non-owning
-return GetOrAddObject(handle, owns: false, (h, o) => new SKSurface(h, o));
-```
+### 4. Never Edit Generated Files
 
-### Factory vs Constructor
+Files matching `*.generated.cs` are auto-generated from C headers. After C API changes, regenerate with:
 
-```csharp
-// Factory: return null on failure
-public static SKImage? FromEncodedData(SKData data)
-{
-    var handle = SkiaApi.sk_image_new_from_encoded(data.Handle);
-    return GetObject(handle);  // null if IntPtr.Zero
-}
-
-// Constructor: throw on failure
-public SKBitmap(SKImageInfo info) : base(IntPtr.Zero, true)
-{
-    Handle = SkiaApi.sk_bitmap_new();
-    if (!SkiaApi.sk_bitmap_try_alloc_pixels(Handle, &info))
-        throw new InvalidOperationException("Failed to allocate");
-}
-```
-
-### Rules
-
-- ✅ Validate all parameters before P/Invoke
-- ✅ Check `IntPtr.Zero` returns
-- ✅ Follow existing patterns
-- ❌ Don't expose IntPtr publicly
-- ❌ Don't throw from Dispose
-
----
-
-## Generated Code
-
-**Applies to:** `*.generated.cs`
-
-⚠️ **DO NOT manually edit.** Changes will be lost.
-
-Regenerate after C API changes:
 ```pwsh
 ./utils/generate.ps1
 ```
 
-- ✅ Add wrappers in separate `.cs` files
-- ❌ Don't edit generated files directly
+---
+
+## Memory Management
+
+### Pointer Type Decision Tree
+
+```
+Is it wrapped in sk_sp<T>?
+├─ Yes → Is it SkRefCnt or SkNVRefCnt?
+│        ├─ SkRefCnt → ISKReferenceCounted (virtual ref counting)
+│        └─ SkNVRefCnt<T> → ISKNonVirtualReferenceCounted
+└─ No → Is it a parameter or getter return?
+         ├─ Yes → Raw pointer (owns: false)
+         └─ No → Owned (DisposeNative deletes)
+```
+
+### Pointer Types
+
+| Type | C++ Pattern | C# Pattern | Examples |
+|------|-------------|------------|----------|
+| **Raw** | `T*` parameter/getter | `owns: false` | Temporary refs |
+| **Owned** | Manual delete | `DisposeNative()` | Canvas, Paint, Path, Bitmap |
+| **Ref-counted (virtual)** | `sk_sp<T>`, inherits `SkRefCnt` | `ISKReferenceCounted` | Image, Shader, Surface, Picture |
+| **Ref-counted (non-virtual)** | `sk_sp<T>`, inherits `SkNVRefCnt<T>` | `ISKNonVirtualReferenceCounted` | Data, TextBlob, Vertices, ColorSpace |
+
+### Error Handling by Layer
+
+| Layer | Pattern | Example |
+|-------|---------|---------|
+| C API | Pass through (bool/null/void) | Return `nullptr` on failure |
+| C# Factory | Return `null` on failure | `SKImage.FromEncodedData()` |
+| C# Constructor | Throw on failure | `new SKBitmap()` |
 
 ---
 
-## Native Skia
+## API Design
 
-**Applies to:** `externals/skia/**` (excluding `src/c/`, `include/c/`)
+### Naming Conventions
 
-⚠️ **Upstream code - DO NOT modify** unless contributing to Google's Skia.
+| Type | Convention | Example |
+|------|------------|---------|
+| Classes/Structs | `SK` + PascalCase | `SKCanvas`, `SKRect` |
+| Enums | `SK` + PascalCase | `SKBlendMode` |
+| Methods | PascalCase verb | `DrawRect()`, `Create()` |
+| Parameters | camelCase | `sourceRect`, `filterMode` |
+| Private fields | camelCase | `handle`, `isDisposed` |
 
-Use for reference when identifying pointer types:
-- `sk_sp<T>` → Reference-counted
-- Inherits `SkRefCnt` → Reference-counted  
-- `const T*` → Non-owning
+### Factory Method Prefixes
 
-To create bindings, add C API in `externals/skia/src/c/`.
+| Prefix | Usage | On Failure |
+|--------|-------|------------|
+| `Create` | New instance | Returns `null` |
+| `From*` | Convert existing | Returns `null` |
+| `Decode` | Parse data | Returns `null` |
+| Constructor | New instance | Throws exception |
+
+### Overloads vs Defaults
+
+**Always use overloads**, not default parameters (ABI stability):
+
+```csharp
+// ✅ CORRECT - Overload chain
+public static SKData CreateCopy(byte[] bytes) =>
+    CreateCopy(bytes, (ulong)bytes.Length);
+
+public static SKData CreateCopy(byte[] bytes, ulong length)
+{
+    fixed (byte* b = bytes) {
+        return GetObject(SkiaApi.sk_data_new_with_copy(b, (IntPtr)length));
+    }
+}
+
+// ❌ AVOID - Default parameters break ABI
+public static SKData CreateCopy(byte[] bytes, ulong length = 0)
+```
+
+### Deprecation
+
+Never remove APIs. Use `[Obsolete]` with migration guidance:
+
+```csharp
+[Obsolete("Use ToShader(SKShaderTileMode, SKShaderTileMode, SKSamplingOptions) instead.")]
+public SKShader ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy) =>
+    ToShader(tmx, tmy, SKSamplingOptions.Default);
+```
 
 ---
 
-## Tests
+## Code Patterns
 
-**Applies to:** `tests/**/*.cs`
+### C# Bindings (`binding/SkiaSharp/*.cs`)
+
+```csharp
+// Naming: SKType (e.g., SKCanvas, SKPaint)
+// Inherit SKObject, add ISKReferenceCounted for ref-counted types
+
+// Factory method - return null on failure
+public static SKImage FromPixels(SKImageInfo info, SKData data, int rowBytes)
+{
+    if (data == null)
+        throw new ArgumentNullException(nameof(data));
+    var cinfo = SKImageInfoNative.FromManaged(ref info);
+    return GetObject(SkiaApi.sk_image_new_raster_data(&cinfo, data.Handle, (IntPtr)rowBytes));
+}
+
+// Instance method - validate then call
+public void DrawRect(SKRect rect, SKPaint paint)
+{
+    if (paint == null)
+        throw new ArgumentNullException(nameof(paint));
+    SkiaApi.sk_canvas_draw_rect(Handle, &rect, paint.Handle);
+}
+```
+
+### C API Layer (`externals/skia/src/c/*.cpp`)
+
+```cpp
+// Naming: sk_<type>_<action>, types: sk_<type>_t
+// Use SK_C_API, C types only, no exceptions
+
+sk_image_t* sk_image_new_from_encoded(const sk_data_t* cdata) {
+    return ToImage(SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(cdata))).release());
+}
+
+// Conversion macros from sk_types_priv.h:
+// AsCanvas(sk_canvas_t*) → SkCanvas*
+// ToCanvas(SkCanvas*)    → sk_canvas_t*
+```
+
+---
+
+## Testing
+
+### Test Projects
+
+| Project | Purpose | When to Use |
+|---------|---------|-------------|
+| `SkiaSharp.Tests.Console` | Core unit tests | **Default** - use for most development |
+| `SkiaSharp.Tests.Devices` | MAUI on-device tests | Platform-specific behavior |
+| `SkiaSharp.Direct3D.Tests.Console` | Direct3D GPU tests | Windows GPU backend |
+| `SkiaSharp.Vulkan.Tests.Console` | Vulkan GPU tests | Cross-platform GPU backend |
+
+### Running Tests
+
+```bash
+# Run all console tests
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+
+# Run specific test
+dotnet test --filter "FullyQualifiedName~SKImageTest.FromEncodedDataWorks"
+```
+
+### Writing Tests
+
+```csharp
+public class SKImageTest : BaseTest
+{
+    [SkippableFact]
+    public void FeatureWorks()
+    {
+        using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+        Assert.NotNull(data);
+        
+        using var image = SKImage.FromEncodedData(data);
+        Assert.NotNull(image);
+    }
+}
+```
+
+### BaseTest Helpers
+
+| Helper | Description |
+|--------|-------------|
+| `PathToImages` | Path to `tests/Content/images/` |
+| `PathToFonts` | Path to `tests/Content/fonts/` |
+| `IsWindows`, `IsMac`, `IsLinux` | Platform detection |
+| `CollectGarbage()` | Force GC (for memory tests) |
+
+### Test Guidelines
+
+- ✅ Always use `using` statements
+- ✅ Use `[SkippableFact]` for all tests
+- ✅ Test null/invalid inputs
+- ✅ Test disposal behavior
+- ❌ Don't leave objects undisposed
 
 ### Test Philosophy
 
 **Tests must FAIL when something is wrong, never skip.**
 
-- Missing dependencies → FAIL with helpful error message
+- Missing dependencies → FAIL with helpful error
 - Missing reference data → FAIL
-- Validation fails → FAIL
 - Environment not set up → FAIL
 
-The ONLY acceptable skip is for **hardware requirements** that physically cannot be met:
-- iOS tests on non-macOS (no iOS SDK available)
-- GPU/OpenGL tests on machines without GPU hardware
+The **ONLY** acceptable skip is for hardware that physically cannot be present:
+- iOS tests on non-macOS
+- GPU tests on machines without GPU
 
-Everything else must fail. A green test run means everything works.
-
-### Always Use `using`
-
-```csharp
-[Fact]
-public void DrawRectWorks()
-{
-    using var bitmap = new SKBitmap(100, 100);
-    using var canvas = new SKCanvas(bitmap);
-    using var paint = new SKPaint { Color = SKColors.Red };
-    
-    canvas.DrawRect(new SKRect(10, 10, 90, 90), paint);
-    Assert.NotEqual(SKColors.White, bitmap.GetPixel(50, 50));
-}
-```
-
-### Test Focus
-
-- ✅ Memory management (no leaks)
-- ✅ Disposal behavior
-- ✅ Null/error handling
-- ✅ Edge cases
-- ❌ Don't leave objects undisposed
+A green test run means everything works.
 
 ---
 
-## Samples
+## Further Reading
 
-**Applies to:** `samples/**/*.cs`
-
-### Always Use `using`
-
-```csharp
-using var surface = SKSurface.Create(info);
-using var canvas = surface.Canvas;
-using var paint = new SKPaint { Color = SKColors.Blue };
-
-canvas.Clear(SKColors.White);
-canvas.DrawRect(new SKRect(50, 50, 200, 200), paint);
-```
-
-- ✅ Complete, self-contained examples
-- ✅ Include all necessary usings
-- ❌ Don't skip disposal
+| Topic | Document |
+|-------|----------|
+| Architecture | [documentation/architecture.md](../documentation/architecture.md) |
+| Memory Management | [documentation/memory-management.md](../documentation/memory-management.md) |
+| Error Handling | [documentation/error-handling.md](../documentation/error-handling.md) |
+| API Design | [documentation/api-design.md](../documentation/api-design.md) |
+| Adding New APIs | [documentation/adding-apis.md](../documentation/adding-apis.md) |
+| Building | [documentation/building.md](../documentation/building.md) |
+| Releasing | [documentation/releasing.md](../documentation/releasing.md) |
+| Versioning | [documentation/versioning.md](../documentation/versioning.md) |
 
 ---
 
-## Documentation
-
-**Applies to:** `*.md` (excluding externals)
-
-- Clear, concise language
-- Title + 1-2 sentence summary at top
-- Show disposal in code examples
-- Use tables for comparisons
-
----
-
-## Documentation Links
-
-| Document | Content |
-|----------|---------|
-| [architecture.md](../documentation/architecture.md) | Three-layer design, threading |
-| [memory-management.md](../documentation/memory-management.md) | Pointer types, ownership |
-| [error-handling.md](../documentation/error-handling.md) | Error patterns |
-| [adding-apis.md](../documentation/adding-apis.md) | Step-by-step binding guide |
-| [building.md](../documentation/building.md) | Build instructions |
-
----
-
-**Remember:** Three layers, three pointer types, C# validates, C API trusts.
+**Remember:** Three layers (C# → C API → C++), three pointer types (raw/owned/ref-counted), C# validates, C API trusts.

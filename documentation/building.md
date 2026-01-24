@@ -4,6 +4,7 @@ This guide covers building SkiaSharp on Windows and macOS.
 
 ## Table of Contents
 
+ * [Prerequisites](#prerequisites)
  * [Preparation](#preparation)
  * [Managed-Only Building](#managed-only-building)
     * [Dependencies](#dependencies)
@@ -13,6 +14,20 @@ This guide covers building SkiaSharp on Windows and macOS.
  * [Native Building](#native-building)
     * [Dependencies](#dependencies-1)
  * [Generating Documentation](#generating-documentation)
+
+## Prerequisites
+
+Before building SkiaSharp, ensure you have:
+
+- **.NET 8 SDK** - The repository uses `global.json` to pin the SDK version
+- **MAUI workload** - Required for mobile platform targets:
+  ```bash
+  dotnet workload install maui
+  ```
+- **Cake .NET Tool** - For running build scripts:
+  ```bash
+  dotnet tool install -g cake.tool
+  ```
 
 ## Preparation
 
@@ -32,22 +47,23 @@ In many cases, you just want to fix a bug in the managed code. If this is the ca
 
 ### Dependencies
 
+**All Platforms:**
+- **.NET 8 SDK** - Pinned via `global.json`
+- **MAUI workload** - `dotnet workload install maui`
+- **Cake .NET Tool** - `dotnet tool install -g cake.tool`
+
 **Windows Dependencies:**
- - Windows 10 Fall Creators Update _(build 16299 / version 1709)_
- - [Visual Studio 2019+](https://visualstudio.microsoft.com/vs/)
-    - .NET desktop development
-    - Universal Windows Platform development
-       - Windows 10 SDK (10.0.16299)
-       - Windows 10 SDK (10.0.10240)
-    - Mobile development with .NET
-       - Android SDK platform for API level 19 _(KitKat / version 4.4)_
-    - .NET Core cross-platform development
-    - Individual components
-       - .NET Framework 4.6.2 SDK
-       - .NET Framework 4.6.2 targeting pack
- - [GTK# 2.12](https://xamarin.azureedge.net/GTKforWindows/Windows/gtk-sharp-2.12.45.msi)
- - Cake .NET Core Tool
-    - Run `dotnet tool install -g cake.tool`
+- Windows 10/11
+- [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
+   - .NET desktop development
+   - .NET Multi-platform App UI development (MAUI)
+   - Universal Windows Platform development
+- Windows 10 SDK (latest)
+
+**macOS Dependencies:**
+- macOS 12+ (Monterey or later)
+- [Xcode](https://developer.apple.com/xcode/) (latest stable)
+- Command Line Tools: `xcode-select --install`
 
 ### Preparation
 
@@ -92,40 +108,31 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
 
 **Windows Dependencies:**
  - [Managed-Only build dependencies](#dependencies)
- - [Python 2.7](https://www.python.org/downloads/)
-    - Make sure the path to `python` is in the `PATH` environment variable, or the full path to `python` is in the `PYTHON_EXE` environment variable.
- - [Visual Studio 2017+](https://visualstudio.microsoft.com/vs/)
+ - [Python 3](https://www.python.org/downloads/)
+    - Make sure the path to `python` is in the `PATH` environment variable
+ - [Visual Studio 2022+](https://visualstudio.microsoft.com/vs/)
     - Desktop development with C++
-       - Windows 10 SDK (10.0.16299)
-       - [Windows 10 SDK (10.0.10240)](https://go.microsoft.com/fwlink/p/?LinkId=619296)
-       - Windows 8.1 SDK and UCRT SDK
-       - VC++ 2015.3 v14.00 (v140) toolset for desktop
+       - Windows 10/11 SDK (latest)
+       - MSVC v143+ C++ build tools
     - Individual components
-       - Visual C++ compilers and libraries for ARM
-       - Visual C++ compilers and libraries for ARM64
-       - Visual C++ runtime for UWP
-       - Android NDK r15+ or [manually](https://developer.android.com/ndk/downloads)
-          - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables.
- - [OpenJDK 13.0.2+](http://jdk.java.net/archive/)
- - [Tizen Studio 3.6+ (either the IDE or the CLI)](https://developer.tizen.org/development/tizen-studio/download)
-    - Using CLI: Install the `MOBILE-4.0` and `MOBILE-4.0-NativeAppDevelopment` packages
-    - Using IDE: Install the `4.0 Mobile` | `Native app. development (IDE)`
-    - Make sure the root is in the `TIZEN_STUDIO_HOME` environment variable, or at `~/tizen-studio`.
-    - Tizen Studio requires Java 8/9/10 to be installed and available in the `PATH` environment variable.
- - Clang 9+
+       - C++ compilers and libraries for ARM64
+       - Android NDK (via Visual Studio Installer or [manually](https://developer.android.com/ndk/downloads))
+          - Make sure the path to the root is in the `ANDROID_NDK_ROOT` or `ANDROID_NDK_HOME` environment variables
+ - [OpenJDK 17+](https://adoptium.net/)
+ - Clang/LLVM
     - Run `.\scripts\install-llvm.ps1`
     - Set `LLVM_HOME` to the path of the install
- - nano-api-scan .NET Core Tool
-    - Run `dotnet tool install -g nano-api-scan`
 
-**Linux Dependencies**
- - Python 2
- - Clang 9+
- - Mono (completed)
- - MSBuild
+**macOS Dependencies:**
+ - [Managed-Only build dependencies](#dependencies)
+ - Xcode Command Line Tools
+ - Python 3
+
+**Linux Dependencies:**
+ - Python 3
+ - Clang 14+
  - Make
- - OpenJDK 13.0.2
- - Tizen Studio 3.6+
+ - OpenJDK 17+
 
 ## Generating Documentation
 

@@ -74,6 +74,14 @@ Follow the comprehensive guide in [documentation/adding-apis.md](documentation/a
 
 ## 🏗️ Building SkiaSharp
 
+### Prerequisites
+
+- **.NET 8 SDK** - The repo is pinned via `global.json`
+- **MAUI workload** - Required for mobile targets:
+  ```bash
+  dotnet workload install maui
+  ```
+
 ### Quick Build (Managed Only)
 
 If you're only making changes to managed code:
@@ -87,6 +95,15 @@ dotnet cake --target=libs
 
 # Run tests
 dotnet cake --target=tests
+```
+
+### Quick Validation (Console Tests)
+
+For faster iteration when working on binding code:
+
+```bash
+dotnet build tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
 See [documentation/building.md](documentation/building.md) for complete build instructions.
