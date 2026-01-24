@@ -86,7 +86,7 @@ public class BlazorTests(ITestOutputHelper output) : PlatformTestBase(output)
 
     private Process StartServer(string projectName, int port)
     {
-        var process = Process.Start(new ProcessStartInfo
+        var psi = new ProcessStartInfo
         {
             FileName = "dotnet",
             Arguments = $"run --project {projectName} -c Release --urls http://localhost:{port}",
@@ -95,7 +95,13 @@ public class BlazorTests(ITestOutputHelper output) : PlatformTestBase(output)
             RedirectStandardError = true,
             UseShellExecute = false,
             CreateNoWindow = true
-        })!;
+        };
+        
+        ClearDotNetEnvironmentVariables(psi);
+        
+        var process = Process.Start(psi)!;
+        process.OutputDataReceived += (s, e) => { if (e.Data != null) Output.WriteLine($"[server] {e.Data}"); };
+        process.ErrorDataReceived += (s, e) => { if (e.Data != null) Output.WriteLine($"[server-err] {e.Data}"); };
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
         return process;

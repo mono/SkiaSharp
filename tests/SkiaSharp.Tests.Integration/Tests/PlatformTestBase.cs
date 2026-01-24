@@ -199,13 +199,7 @@ public abstract class PlatformTestBase : IDisposable
             UseShellExecute = false
         };
         
-        // Clear all DOTNET_* and MSBUILD* env vars to prevent SDK pinning from parent process
-        var keysToRemove = psi.Environment.Keys
-            .Where(k => k.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase) ||
-                        k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-        foreach (var key in keysToRemove)
-            psi.Environment.Remove(key);
+        ClearDotNetEnvironmentVariables(psi);
         
         using var process = Process.Start(psi)!;
         
@@ -218,6 +212,8 @@ public abstract class PlatformTestBase : IDisposable
             throw new TimeoutException($"Command timed out after {timeoutSeconds}s");
         }
         
+        Output.WriteLine($"Process exited with code {process.ExitCode}");
+
         var combined = output + error;
         if (process.ExitCode != 0)
         {
@@ -226,5 +222,19 @@ public abstract class PlatformTestBase : IDisposable
         }
         
         return combined;
+    }
+    
+    /// <summary>
+    /// Clears DOTNET_* and MSBUILD* environment variables from a ProcessStartInfo
+    /// to prevent SDK pinning from the parent process.
+    /// </summary>
+    protected static void ClearDotNetEnvironmentVariables(ProcessStartInfo psi)
+    {
+        var keysToRemove = psi.Environment.Keys
+            .Where(k => k.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase) ||
+                        k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        foreach (var key in keysToRemove)
+            psi.Environment.Remove(key);
     }
 }
