@@ -196,14 +196,33 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
     var comparer = new NuGetDiff(PREVIEW_FEED_URL);
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
-    await Download(id, latestVersion);
+    // Track progress dynamically - queue grows as dependencies are discovered
+    var queue = new Queue<(string id, NuGetVersion version)>();
+    var discovered = new HashSet<string>();
+    var completed = new List<string>();
+    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+    
+    // Start with the root package
+    queue.Enqueue((id, latestVersion));
+    discovered.Add(id.ToLower());
 
-    async Task Download(string currentId, NuGetVersion currentVersion)
+    Information($"Starting download of native packages...");
+    Information($"");
+
+    while (queue.Count > 0)
     {
-        currentId = currentId.ToLower();
+        var pkg = queue.Dequeue();
+        var currentId = pkg.id.ToLower();
+        var currentVersion = pkg.version;
+        
+        var total = completed.Count + queue.Count + 1; // completed + remaining + current
+        var progress = (completed.Count * 100) / total;
+        var remaining = queue.Count;
+        
+        Information($"[{progress,3}%] ({completed.Count + 1}/{total}) Downloading: {currentId}" + 
+                   (remaining > 0 ? $"  ({remaining} more in queue)" : ""));
 
-        Information($"Downloading '{currentId}' version '{currentVersion}'...");
-
+        // Download and extract the package
         var root = await comparer.ExtractCachedPackageAsync(currentId, currentVersion);
         var toolsDir = $"{root}/tools/";
         if (DirectoryExists(toolsDir)) {
@@ -216,15 +235,37 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
             }
         }
 
+        // Discover dependencies and add to queue
         var nuspec = $"{root}/{currentId}.nuspec";
         var xdoc = XDocument.Load(nuspec);
         var xmlns = xdoc.Root.Name.Namespace;
         var dependencies = xdoc.Root.Descendants(xmlns + "dependency").ToArray();
 
-        foreach (var dep in dependencies) {
-            var depId = dep.Attribute("id").Value;
+        var newDeps = 0;
+        foreach (var dep in dependencies)
+        {
+            var depId = dep.Attribute("id").Value.ToLower();
             var depVersion = dep.Attribute("version").Value;
-            await Download(depId, NuGetVersion.Parse(depVersion));
+            
+            if (!discovered.Contains(depId))
+            {
+                discovered.Add(depId);
+                queue.Enqueue((depId, NuGetVersion.Parse(depVersion)));
+                newDeps++;
+            }
         }
+        
+        if (newDeps > 0)
+            Information($"         └─ Found {newDeps} new dependencies");
+        
+        completed.Add(currentId);
     }
+    
+    stopwatch.Stop();
+    Information($"");
+    Information($"========================================");
+    Information($"Download complete!");
+    Information($"  Packages: {completed.Count}");
+    Information($"  Duration: {stopwatch.Elapsed.TotalSeconds:F1}s");
+    Information($"========================================");
 }
