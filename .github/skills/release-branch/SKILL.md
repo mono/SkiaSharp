@@ -12,17 +12,21 @@ Create release branches for SkiaSharp versions with step-by-step confirmation.
 2. Ask user to confirm EACH step before executing
 3. Never proceed without explicit approval
 
+## Release Workflow Context
+
+This skill is step 1 of the release process:
+
+1. **release-branch** (this skill) → creates release branch, triggers CI build
+2. **CI builds packages** → 2-4 hours to complete
+3. **release-testing** → verify packages work on all platforms
+4. **release-publish** → publish to NuGet.org, tag, finalize
+
 ## Workflow Overview
 
 1. **Plan** — Analyze version, determine release type, show plan
 2. **Create branch** — Branch from correct base with proper naming
 3. **Update PREVIEW_LABEL** — Set on release branch, commit and push
 4. **Bump main** — (Preview from main only) Create PR to update version on main, merge immediately
-
-After this skill completes:
-- CI builds and publishes packages (2-4 hours)
-- Main branch is ready for continued development
-- Once packages are live and verified, use **release-tag** skill to finalize
 
 ## Confirmation Pattern
 
@@ -77,32 +81,20 @@ Edit `scripts/azure-templates-variables.yml`:
 ```bash
 git add scripts/azure-templates-variables.yml
 git commit -m "Bump the version to {version}"
-git push -u origin HEAD  # Pushes current branch (release/{version} or release/{version}-preview.{N})
+git push -u origin HEAD
 ```
 
-### Step 3: Wait for Push to Complete
-
-After pushing, verify the branch appears on GitHub before proceeding to step 4.
-
-### Step 4: Bump Version on Main (Preview from main only)
+### Step 3: Bump Version on Main (Preview from main only)
 
 **Skip this step for stable and hotfix releases** — only preview releases from main need version bumping.
 
-Edit these files:
-- `scripts/azure-templates-variables.yml` — set `SKIASHARP_VERSION: {next-version}`
-- `scripts/VERSIONS.txt` — update ALL version numbers:
-  - `SkiaSharp file` version (e.g., `3.119.3.0`)
-  - All SkiaSharp `nuget` versions (e.g., `3.119.3`)
-  - `HarfBuzzSharp file` version — increment 4th digit (e.g., `8.3.1.3` → `8.3.1.4`)
-  - All HarfBuzzSharp `nuget` versions — same as file version
-
-> **HarfBuzzSharp versioning note:** The first 3 digits (`8.3.1`) correspond to the native HarfBuzz version. The 4th digit is incremented with each SkiaSharp release to keep packages in sync, even if there are no HarfBuzz changes. When native HarfBuzz is upgraded, reset to 3-digit version (e.g., `8.4.0`).
+See [references/versioning.md](references/versioning.md) for detailed instructions on which files to edit and how.
 
 ```bash
 git checkout main
 git pull origin main
 git checkout -b bump-version-{next-version}
-# Make edits to both files
+# Edit scripts/azure-templates-variables.yml and scripts/VERSIONS.txt
 git add scripts/azure-templates-variables.yml scripts/VERSIONS.txt
 git commit -m "Bump to the next version ({next-version}) after release"
 git push -u origin bump-version-{next-version}
@@ -113,3 +105,4 @@ gh pr merge --merge --delete-branch
 ## Resources
 
 - [`/documentation/releasing.md`](../../../documentation/releasing.md) — Release checklist and reference
+- [references/versioning.md](references/versioning.md) — Version bumping details

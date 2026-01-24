@@ -209,6 +209,21 @@ To create bindings, add C API in `externals/skia/src/c/`.
 
 **Applies to:** `tests/**/*.cs`
 
+### Test Philosophy
+
+**Tests must FAIL when something is wrong, never skip.**
+
+- Missing dependencies → FAIL with helpful error message
+- Missing reference data → FAIL
+- Validation fails → FAIL
+- Environment not set up → FAIL
+
+The ONLY acceptable skip is for **hardware requirements** that physically cannot be met:
+- iOS tests on non-macOS (no iOS SDK available)
+- GPU/OpenGL tests on machines without GPU hardware
+
+Everything else must fail. A green test run means everything works.
+
 ### Always Use `using`
 
 ```csharp

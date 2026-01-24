@@ -1,0 +1,68 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>SkiaSharp.Tests.Integration</RootNamespace>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Version>1.0.0</Version>
+    
+    <!-- Package versions - set via command line or environment -->
+    <!-- dotnet test -p:SkiaSharpVersion=3.119.2-preview.2 -p:HarfBuzzSharpVersion=8.3.1.3-preview.2 -->
+    <SkiaSharpVersion Condition="'$(SkiaSharpVersion)' == ''"></SkiaSharpVersion>
+    <HarfBuzzSharpVersion Condition="'$(HarfBuzzSharpVersion)' == ''"></HarfBuzzSharpVersion>
+    
+    <!-- Device configuration - can be overridden via command line -->
+    <!-- dotnet test -p:iOSDevice="iPad Pro 13-inch (M4)" -p:iOSVersion="18.5" -->
+    <!-- dotnet test -p:AndroidDevice="Pixel 8" -p:AndroidVersion="14" -->
+    <iOSDevice Condition="'$(iOSDevice)' == ''"></iOSDevice>
+    <iOSVersion Condition="'$(iOSVersion)' == ''"></iOSVersion>
+    <AndroidDevice Condition="'$(AndroidDevice)' == ''"></AndroidDevice>
+    <AndroidVersion Condition="'$(AndroidVersion)' == ''"></AndroidVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Appium.WebDriver" Version="5.1.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.49.0" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
+    <PackageReference Include="Xunit.SkippableFact" Version="1.5.23" />
+    <PackageReference Include="coverlet.collector" Version="6.0.4" />
+    <PackageReference Include="SkiaSharp.Extended" Version="3.1.0-preview.3" />
+  </ItemGroup>
+
+  <!-- SkiaSharp packages - version must be specified -->
+  <ItemGroup Condition="'$(SkiaSharpVersion)' != ''">
+    <PackageReference Include="SkiaSharp" Version="$(SkiaSharpVersion)" />
+    <PackageReference Include="HarfBuzzSharp" Version="$(HarfBuzzSharpVersion)" />
+  </ItemGroup>
+
+  <!-- Test assets -->
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\*.png" />
+  </ItemGroup>
+
+  <!-- Pass configuration to test runtime via RuntimeHostConfigurationOption -->
+  <ItemGroup>
+    <RuntimeHostConfigurationOption Include="SkiaSharpVersion" Value="$(SkiaSharpVersion)" />
+    <RuntimeHostConfigurationOption Include="HarfBuzzSharpVersion" Value="$(HarfBuzzSharpVersion)" />
+    <RuntimeHostConfigurationOption Include="iOSDevice" Value="$(iOSDevice)" />
+    <RuntimeHostConfigurationOption Include="iOSVersion" Value="$(iOSVersion)" />
+    <RuntimeHostConfigurationOption Include="AndroidDevice" Value="$(AndroidDevice)" />
+    <RuntimeHostConfigurationOption Include="AndroidVersion" Value="$(AndroidVersion)" />
+  </ItemGroup>
+
+  <!-- Error if versions not specified -->
+  <Target Name="ValidateVersions" BeforeTargets="Restore;Build">
+    <Error Condition="'$(SkiaSharpVersion)' == ''" 
+           Text="SkiaSharpVersion must be specified. Use: dotnet test -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N" />
+    <Error Condition="'$(HarfBuzzSharpVersion)' == ''" 
+           Text="HarfBuzzSharpVersion must be specified. Use: dotnet test -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N" />
+    <Message Importance="High" Text="Testing SkiaSharp $(SkiaSharpVersion) with HarfBuzzSharp $(HarfBuzzSharpVersion)" />
+  </Target>
+
+</Project>
