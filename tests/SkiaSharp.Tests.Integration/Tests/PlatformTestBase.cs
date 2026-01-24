@@ -189,7 +189,7 @@ public abstract class PlatformTestBase : IDisposable
         Output.WriteLine($"$ {command} {args}");
         Output.WriteLine($"  WorkingDirectory: {workingDirectory}");
         
-        using var process = Process.Start(new ProcessStartInfo
+        var psi = new ProcessStartInfo
         {
             FileName = command,
             Arguments = args,
@@ -197,7 +197,17 @@ public abstract class PlatformTestBase : IDisposable
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             UseShellExecute = false
-        })!;
+        };
+        
+        // Clear all DOTNET_* and MSBUILD* env vars to prevent SDK pinning from parent process
+        var keysToRemove = psi.Environment.Keys
+            .Where(k => k.StartsWith("DOTNET_", StringComparison.OrdinalIgnoreCase) ||
+                        k.StartsWith("MSBUILD", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+        foreach (var key in keysToRemove)
+            psi.Environment.Remove(key);
+        
+        using var process = Process.Start(psi)!;
         
         var output = await process.StandardOutput.ReadToEndAsync();
         var error = await process.StandardError.ReadToEndAsync();
