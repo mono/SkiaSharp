@@ -49,10 +49,17 @@ The first 3 digits of HarfBuzzSharp match the native HarfBuzz version. The 4th d
 Preview packages auto-publish to the preview feed. Verify they're available:
 
 ```bash
-# Note: nuget list only shows latest, --AllVersions returns too many results
-# Use dotnet package search with --exact-match instead
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match | grep {version}
-dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match | grep {harfbuzz-version}
+# IMPORTANT: Use --format json to avoid line-break issues in table output
+# Table output wraps long version strings across multiple lines, breaking grep
+
+# Verify SkiaSharp version exists
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^{version}$"
+
+# Verify HarfBuzzSharp version exists
+dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^{harfbuzz-version}$"
+
+# Example for version 3.119.2-preview.2:
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^3.119.2-preview.2$"
 ```
 
 The test project's `nuget.config` already includes this feed—tests will use it automatically.
@@ -66,7 +73,8 @@ Stable packages are NOT published until after testing. Two options:
 CI publishes a prerelease version with `-stable.N` suffix (e.g., `3.119.0-stable.1`) to the preview feed:
 
 ```bash
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" | grep stable
+# Use --format json to avoid line-break issues
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep stable
 ```
 
 **Final validation (using local artifacts) — recommended**

@@ -62,8 +62,12 @@ Ask user to trigger the pipeline and wait for completion.
 Confirm the specific version is visible on NuGet.org:
 
 ```bash
+# IMPORTANT: Use --format json to avoid line-break issues in table output
+# Table output wraps long version strings across multiple lines, breaking grep
+
 # Check for specific version
-dotnet package search SkiaSharp --source https://api.nuget.org/v3/index.json | grep {version}
+dotnet package search SkiaSharp --source https://api.nuget.org/v3/index.json --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^{version}$"
+dotnet package search HarfBuzzSharp --source https://api.nuget.org/v3/index.json --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^{harfbuzz-version}$"
 ```
 
 Or check directly:
