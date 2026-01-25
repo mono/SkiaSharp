@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Appium;
 using OpenQA.Selenium.Appium.Android;
@@ -54,4 +55,71 @@ public class MauiAndroidTests(ITestOutputHelper output) : MauiTestBase(output)
     /// </summary>
     protected override IWebElement FindCanvasElement(AppiumDriver driver, string bundleId) =>
         driver.FindElement("id", $"{bundleId}:id/SkiaCanvas");
+
+    /// <summary>
+    /// Android-specific recovery: dismiss system dialogs and verify emulator is healthy.
+    /// </summary>
+    protected override async Task PerformRecoveryActions()
+    {
+        Output.WriteLine("Performing Android recovery actions...");
+        
+        try
+        {
+            // Find adb path
+            var androidHome = Environment.GetEnvironmentVariable("ANDROID_HOME") 
+                ?? Environment.GetEnvironmentVariable("ANDROID_SDK_ROOT")
+                ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Library/Android/sdk");
+            
+            var adbPath = Path.Combine(androidHome, "platform-tools", "adb");
+            
+            if (!File.Exists(adbPath))
+            {
+                Output.WriteLine($"adb not found at {adbPath}, skipping recovery");
+                return;
+            }
+            
+            // Check if emulator is connected
+            var devices = await RunAdbCommand(adbPath, "devices");
+            if (!devices.Contains("emulator") && !devices.Contains("device"))
+            {
+                Output.WriteLine("No Android device found. Emulator may need to be restarted manually.");
+                return;
+            }
+            
+            // Dismiss any system dialogs by pressing Back and Home
+            Output.WriteLine("Dismissing any system dialogs...");
+            await RunAdbCommand(adbPath, "shell input keyevent KEYCODE_BACK");
+            await Task.Delay(500);
+            await RunAdbCommand(adbPath, "shell input keyevent KEYCODE_HOME");
+            await Task.Delay(1000);
+            
+            // Clear any ANR dialogs with specific button clicks
+            // The "Wait" button in ANR dialogs typically has resource ID android:id/aerr_wait
+            await RunAdbCommand(adbPath, "shell am broadcast -a android.intent.action.CLOSE_SYSTEM_DIALOGS");
+            await Task.Delay(500);
+            
+            Output.WriteLine("Android recovery actions completed");
+        }
+        catch (Exception ex)
+        {
+            Output.WriteLine($"Recovery action failed (non-fatal): {ex.Message}");
+        }
+    }
+
+    private async Task<string> RunAdbCommand(string adbPath, string args)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = adbPath,
+            Arguments = args,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+        
+        using var process = Process.Start(psi)!;
+        var output = await process.StandardOutput.ReadToEndAsync();
+        await process.WaitForExitAsync();
+        return output;
+    }
 }

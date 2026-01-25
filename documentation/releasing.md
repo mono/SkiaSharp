@@ -1,143 +1,241 @@
 # Release Guide
 
-How to release SkiaSharp: create branch → bump main → wait for CI/publish → tag → finalize.
+How to release SkiaSharp: create branch → wait for CI → test → publish → tag.
+
+## ⚠️ NO UNDO WARNING
+
+**Tags and releases cannot be deleted.** Once a tag is pushed or a release is published, it's permanent. Each skill confirms before destructive operations - always review carefully before proceeding.
+
+- Wrong tag pushed → Cannot delete, must create new release
+- Wrong version published to NuGet.org → Cannot unpublish, must release new version
+- Branch deleted prematurely → May lose CI artifacts
+
+## Skills
+
+The release process is handled by three skills in order:
+
+| Step | Skill | Purpose | Trigger |
+|------|-------|---------|---------|
+| 1 | [release-branch](../.github/skills/release-branch/SKILL.md) | Create release branch, trigger CI | "release now", "release X.Y.Z" |
+| 2 | [release-testing](../.github/skills/release-testing/SKILL.md) | Test packages before publishing | "test the release", "continue" |
+| 3 | [release-publish](../.github/skills/release-publish/SKILL.md) | Publish to NuGet.org, tag, finalize | "publish X.Y.Z", "finalize" |
+
+Each skill confirms with `ask_user` before executing destructive operations.
 
 ---
 
-## Release Checklist
+## Reference Tables
 
-### 1. Create the Release Branch
+### Version Patterns
 
-| Type | Base Branch | New Branch | Example |
-|------|-------------|------------|---------|
-| Preview | `main` | `release/{version}-preview.{N}` | `release/3.116.0-preview.1` |
-| Stable | `release/{version}-preview.{N}` | `release/{version}` | `release/3.116.0` |
-| Hotfix | `v{version}` (tag) | `release/{version}.{fix}-preview.{N}` | `release/3.116.0.1-preview.1` |
+| Release Type | Version Format | Branch | NuGet Pattern | Tag |
+|--------------|----------------|--------|---------------|-----|
+| Preview | `X.Y.Z-preview.N` | `release/X.Y.Z-preview.N` | `X.Y.Z-preview.N.{build}` | `vX.Y.Z-preview.N.{build}` |
+| Stable | `X.Y.Z` | `release/X.Y.Z` | `X.Y.Z-stable.{build}` | `vX.Y.Z` |
+| Hotfix Preview | `X.Y.Z.F-preview.N` | `release/X.Y.Z.F-preview.N` | `X.Y.Z.F-preview.N.{build}` | `vX.Y.Z.F-preview.N.{build}` |
+| Hotfix Stable | `X.Y.Z.F` | `release/X.Y.Z.F` | `X.Y.Z.F-stable.{build}` | `vX.Y.Z.F` |
 
-> ⚠️ Hotfix releases should only be done for security issues or critical crashes.
+The `{build}` number is auto-assigned by CI.
 
+### Release Type → Base Branch
 
-### 2. Update Version on Release Branch
+| Type | Base | PREVIEW_LABEL |
+|------|------|---------------|
+| Preview | `main` | `preview.N` |
+| Stable | `release/X.Y.Z-preview.{latest}` | `stable` |
+| Hotfix Preview | tag `vX.Y.Z` | `preview.N` |
+| Hotfix Stable | `release/X.Y.Z.F-preview.{latest}` | `stable` |
 
-**On the release branch**, edit [`scripts/azure-templates-variables.yml`](../scripts/azure-templates-variables.yml) and set `PREVIEW_LABEL`:
+### HarfBuzzSharp Versioning
 
-| Type | PREVIEW_LABEL | Example |
-|------|---------------|---------|
-| Preview | `preview.{N}` | `preview.1` |
-| Stable | `stable` | `stable` |
-| Hotfix | `preview.1` | `preview.1` (always starts at 1 for hotfixes) |
+HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
-### 3. Bump Version on Main (Preview from main only)
-
-**On the main branch** — do this immediately after creating the release branch. Don't wait for CI.
-
-> ⚠️ Skip this step for stable and hotfix releases — only preview releases from main need version bumping.
-
-Update these files via PR (merge immediately):
-- [`scripts/azure-templates-variables.yml`](../scripts/azure-templates-variables.yml) — change `SKIASHARP_VERSION`
-- [`scripts/VERSIONS.txt`](../scripts/VERSIONS.txt) — update ALL version numbers:
-  - `SkiaSharp file` version (e.g., `3.119.3.0`)
-  - All SkiaSharp `nuget` versions (e.g., `3.119.3`)
-  - `HarfBuzzSharp file` version — increment 4th digit (e.g., `8.3.1.3` → `8.3.1.4`)
-  - All HarfBuzzSharp `nuget` versions — same as file version
-
-> **HarfBuzzSharp versioning:** The first 3 digits (`8.3.1`) correspond to the native HarfBuzz version. The 4th digit is incremented with each SkiaSharp release to keep packages in sync, even without HarfBuzz changes. When native HarfBuzz is upgraded, reset to 3-digit version (e.g., `8.4.0`).
-
-### 4. Wait for CI and Verify Build
-
-Wait for Azure Pipelines build to complete and pass.
-
-**For stable releases only:**
-- [ ] NuGet packages are produced in artifacts
-- [ ] Native assets are 4-6MB per binary
-- [ ] All assemblies are strong named
-- [ ] NuGet metadata is correct (tags, icons, licenses)
-- [ ] Samples build and deploy in Release mode
-- [ ] Documentation has no "To be added." placeholders
-
-### 5. Publish Packages
-
-| Release Type | Destination | Action |
-|--------------|-------------|--------|
-| Preview | Azure DevOps feed | Automatic after CI |
-| Preview | NuGet.org (optional) | Run [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) with preview flag |
-| Stable | NuGet.org | Run [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) with stable flag |
-
-### 6. Verify Packages are Live
-
-- [ ] Packages are accessible on the target feed
-- [ ] Version numbers are correct
-
-### 7. Tag the Release
-
-⚠️ **Only tag after packages are verified live** — tags cannot be deleted.
-
-| Type | Tag Format | Example |
-|------|------------|---------|
-| Preview | `v{version}-preview.{N}.{build}` | `v3.116.0-preview.1.23` |
-| Stable | `v{version}` | `v3.116.0` |
-| Hotfix Preview | `v{version}.{fix}-preview.{N}.{build}` | `v3.116.0.1-preview.1.5` |
-| Hotfix Stable | `v{version}.{fix}` | `v3.116.0.1` |
-
-### 8. Create GitHub Release
-
-1. Go to GitHub Releases → "Draft a new release"
-2. Select the tag
-3. Title: `Version {version}` (stable) or `Version {version} (Preview {N})` (preview)
-4. **Preview only:** Mark as pre-release
-5. **Stable only:** Attach `samples.zip`
-6. Add release notes
-7. Publish
-
-### 9. Close Milestone (Stable releases only)
-
-- [ ] Close the GitHub milestone with link to release notes
-
----
-
-## Reference
-
-### Main Branches
-
-| Branch | Purpose |
+| Digits | Meaning |
 |--------|---------|
-| `main` | Latest development (currently 3.x series) |
-| `release/2.x` | Maintenance for 2.x series |
+| X.Y.Z | Native HarfBuzz version (e.g., `8.3.1`) |
+| N | Incremented with each SkiaSharp release |
 
-### Key Files
+**Why 4 digits?** HarfBuzzSharp packages are released with SkiaSharp even when there are no HarfBuzz changes. The 4th digit keeps them in sync.
 
-| File | What to Change | When |
-|------|----------------|------|
-| [`scripts/azure-templates-variables.yml`](../scripts/azure-templates-variables.yml) | `PREVIEW_LABEL` | Every release branch |
-| [`scripts/azure-templates-variables.yml`](../scripts/azure-templates-variables.yml) | `SKIASHARP_VERSION` | Immediately after creating release branch (on main) |
-| [`scripts/VERSIONS.txt`](../scripts/VERSIONS.txt) | File versions, NuGet versions | Immediately after creating release branch (on main) |
+**When native HarfBuzz upgrades:** Reset to 3-digit version (e.g., `8.3.1.4` → `8.4.0`).
+
+### Feeds
+
+| Feed | URL | Purpose |
+|------|-----|---------|
+| Preview | `https://aka.ms/skiasharp-eap/index.json` | CI builds, testing |
+| Stable | NuGet.org | Public releases |
 
 ### Pipelines
 
 | Pipeline | Purpose |
 |----------|---------|
-| [Preview Feed Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=27373) | Builds + auto-publishes to preview feed |
-| [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org (manual) |
+| [Main Build](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=27373) | Builds + auto-publishes to preview feed |
+| [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org (manual trigger) |
 
-### Feeds
+---
 
-| Feed | URL |
-|------|-----|
-| Preview | `https://aka.ms/skiasharp-eap/index.json` |
-| Stable | NuGet.org |
+## Workflow Diagrams
 
-### Automatic Preview Builds
+### Stage 1: Preparation (release-branch skill)
 
-Preview packages are automatically published to the Azure DevOps feed on:
-- **Every push to `main`** — version: `{version}-preview.0.{build}`
-- **Nightly builds** (midnight UTC) — version: `{version}-nightly.{build}`
+```mermaid
+flowchart TB
+    START([User requests release]) --> PROVIDED{Version provided?}
+    
+    PROVIDED -->|Yes| PARSE
+    PROVIDED -->|No| AUTO
+    
+    AUTO["Auto-detect Version
+    ∙ Read SKIASHARP_VERSION from main
+    ∙ Check existing release branches
+    ∙ Calculate next preview number"]
+    
+    AUTO --> CONFIRM{User confirms?}
+    CONFIRM -->|No| ABORT([Abort])
+    CONFIRM -->|Yes| PARSE
+    
+    PARSE["Parse Version String"] --> TYPE{Release type?}
+    
+    TYPE -->|Preview| BASE_MAIN["Base: main"]
+    TYPE -->|Stable| BASE_PREVIEW["Base: preview branch"]
+    TYPE -->|Hotfix Preview| BASE_TAG["Base: tag"]
+    TYPE -->|Hotfix Stable| BASE_HOTFIX["Base: hotfix preview"]
+    
+    BASE_PREVIEW --> EXISTS{Base exists?}
+    BASE_TAG --> EXISTS
+    BASE_HOTFIX --> EXISTS
+    EXISTS -->|No| ERROR([Error])
+    
+    BASE_MAIN --> CREATE
+    EXISTS -->|Yes| CREATE
+    
+    CREATE["Create Branch
+    ∙ Checkout base
+    ∙ Create release branch
+    ∙ Set PREVIEW_LABEL
+    ∙ Commit and push"]
+    
+    CREATE --> CI([CI Build Started])
+    
+    CI --> IS_PREVIEW{Preview from main?}
+    IS_PREVIEW -->|No| DONE([Done - wait 2-4 hours])
+    IS_PREVIEW -->|Yes| BUMP
+    
+    BUMP["Bump Main Version
+    ∙ Edit SKIASHARP_VERSION
+    ∙ Edit VERSIONS.txt
+    ∙ Increment HarfBuzzSharp
+    ∙ Create and merge PR"]
+    
+    BUMP --> DONE
 
-To use preview builds, add the feed to your `nuget.config`:
-
-```xml
-<configuration>
-  <packageSources>
-    <add key="SkiaSharp Preview" value="https://aka.ms/skiasharp-eap/index.json" />
-  </packageSources>
-</configuration>
+    classDef error fill:#ffebee,stroke:#c62828
+    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
+    class ABORT,ERROR error
+    class START,CI,DONE endpoint
 ```
+
+### Stage 2: Testing (release-testing skill)
+
+```mermaid
+flowchart TB
+    START([CI Build Complete]) --> RESOLVE
+    
+    RESOLVE["Resolve Package Versions
+    ∙ Fetch release branch
+    ∙ Read VERSIONS.txt (both packages)
+    ∙ Search preview feed
+    ∙ Pick latest build"]
+    
+    RESOLVE --> FOUND{Packages found?}
+    FOUND -->|No| WAIT([Wait - CI not done])
+    FOUND -->|Yes| REPORT[Report versions to user]
+    
+    REPORT --> STABLE{Stable release?}
+    STABLE -->|No| TESTS
+    STABLE -->|Yes| SOURCE{Test source?}
+    
+    SOURCE -->|Preview feed| TESTS
+    SOURCE -->|Local artifacts| SETUP
+    
+    SETUP["Setup Local Testing
+    ∙ Create local nuget.config
+    ∙ Clear NuGet cache"]
+    
+    SETUP --> TESTS
+    
+    TESTS["Run Integration Tests
+    ∙ Console, Blazor, MAUI
+    ∙ iOS, Android, Mac, Windows"]
+    
+    TESTS --> RESULT{All pass?}
+    RESULT -->|No| FIX([Fix and retest])
+    RESULT -->|Yes| CHECK{Stable release?}
+    
+    CHECK -->|No| READY([Ready for publish])
+    CHECK -->|Yes| CHECKLIST
+    
+    CHECKLIST["Stable Checklist
+    ∙ Verify packages
+    ∙ Check native assets
+    ∙ Validate metadata"]
+    
+    CHECKLIST --> OK{Passes?}
+    OK -->|No| FIX2([Fix issues])
+    OK -->|Yes| READY
+
+    classDef error fill:#ffebee,stroke:#c62828
+    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
+    class WAIT,FIX,FIX2 error
+    class START,READY endpoint
+```
+
+### Stage 3: Publishing (release-publish skill)
+
+```mermaid
+flowchart TB
+    START([Tests Passed]) --> REQ{Publish to NuGet.org?}
+    
+    REQ -->|Stable - Required| PUBLISH
+    REQ -->|Preview| SKIP{Skip NuGet.org?}
+    SKIP -->|Yes| TAG
+    SKIP -->|No| PUBLISH
+    
+    PUBLISH["Publish to NuGet.org
+    ∙ Trigger publish pipeline
+    ∙ Wait for completion
+    ∙ Verify packages visible"]
+    
+    PUBLISH --> STATUS{Success?}
+    STATUS -->|No| FAILED([Fix and retry])
+    STATUS -->|Yes| TAG
+    
+    TAG["Create Git Tag
+    ∙ Preview: vX.Y.Z-preview.N.build
+    ∙ Stable: vX.Y.Z
+    ∙ Push tag to origin"]
+    
+    TAG --> RELEASE
+    
+    RELEASE["Create GitHub Release
+    ∙ Set title and notes
+    ∙ Mark pre-release if preview
+    ∙ Attach samples if stable"]
+    
+    RELEASE --> FINAL{Stable release?}
+    FINAL -->|No| DONE([Complete])
+    FINAL -->|Yes| MILESTONE[Close GitHub milestone]
+    MILESTONE --> DONE
+
+    classDef error fill:#ffebee,stroke:#c62828
+    classDef endpoint fill:#f3e5f5,stroke:#7b1fa2
+    class FAILED error
+    class START,DONE endpoint
+```
+
+---
+
+## Related Documentation
+
+- [Versioning](versioning.md) — Version numbering scheme explanation

@@ -2,206 +2,160 @@
 name: release-testing
 description: >
   Run integration tests to verify SkiaSharp NuGet packages work correctly before publishing.
-  Use when user asks to: (1) test/verify packages before release, (2) run integration tests,
-  (3) test on specific device (iPad, iPhone, Android emulator, Mac, Windows),
-  (4) verify SkiaSharp rendering works, (5) check if packages are ready for publishing,
-  (6) run smoke/console/blazor/maui tests. Triggers: "test the release", "verify packages",
-  "run tests on iPad", "check ios tests", "test mac catalyst", "run android tests".
+  
+  Use when user asks to:
+  - Test/verify packages before release
+  - Run integration tests
+  - Test on specific device (iPad, iPhone, Android emulator, Mac, Windows)
+  - Verify SkiaSharp rendering works
+  - Check if packages are ready for publishing
+  - Run smoke/console/blazor/maui tests
+  - Continue with release
+  - Test version X
+  
+  Triggers: "test the release", "verify packages", "run tests on iPad", "check ios tests",
+  "test mac catalyst", "run android tests", "continue", "test 3.119.2-preview.2".
 ---
 
 # Release Testing Skill
 
 Verify SkiaSharp packages work correctly before publishing.
 
-## ⚠️ CRITICAL: ANY FAIL IS TOTAL FAIL
+⚠️ **NO UNDO:** This is step 2 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
 
-**A test either PASSES or FAILS. Period.**
+## CRITICAL: ANY FAIL IS TOTAL FAIL
 
 - Test fails → Release FAILS
-- Test times out → Release FAILS  
+- Test times out → Release FAILS
 - Screenshot doesn't match → Release FAILS
-- "Feature works but test failed" → NO. Test failed. Release FAILS.
 
 **Never rationalize failures.** Fix the issue before proceeding.
 
-## Release Workflow Context
+---
 
-This skill is step 3 of the release process:
+## Step 1: Resolve Package Versions
 
-1. **release-branch** → creates release branch, triggers CI build
-2. **CI builds packages** → 2-4 hours to complete
-3. **release-testing** (this skill) → verify packages work on all platforms
-4. **release-publish** → publish to NuGet.org, tag, finalize
+**DO NOT ask user for exact NuGet versions.** Resolve automatically:
 
-## Step 1: Get Package Versions
+1. Fetch release branch and read `scripts/VERSIONS.txt`:
+   - `SkiaSharp nuget` line → base version (e.g., `3.119.2`)
+   - `HarfBuzzSharp nuget` line → base version (e.g., `8.3.1.4`)
 
-**IMPORTANT:** SkiaSharp and HarfBuzzSharp have DIFFERENT version numbers. You must ask the user for both.
+2. Read `PREVIEW_LABEL` from `scripts/azure-templates-variables.yml` (e.g., `preview.2` or `stable`)
 
-- **SkiaSharp** uses: `{major}.{minor}.{patch}[-preview.N.B]` (e.g., `3.119.2-preview.2.2`)
-- **HarfBuzzSharp** uses: `{harfbuzz-major}.{harfbuzz-minor}.{harfbuzz-patch}.{N}[-preview.N.B]` (e.g., `8.3.1.3-preview.2.2`)
+3. Search preview feed:
+   ```bash
+   dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json
+   ```
 
-The first 3 digits of HarfBuzzSharp match the native HarfBuzz version. The 4th digit increments with each SkiaSharp release. The preview/stable suffix matches SkiaSharp.
+4. Filter versions matching `{base}-{preview-label}.{build}`, pick latest
 
-**Always ask:** "What are the SkiaSharp and HarfBuzzSharp versions for this release?"
+5. Report to user:
+   ```
+   Resolved versions:
+     SkiaSharp:     3.119.2-preview.2.3
+     HarfBuzzSharp: 8.3.1.4-preview.2.3
+     Build number:  3
+   
+   Proceed with testing?
+   ```
 
-### Preview Releases
+**Note:** SkiaSharp and HarfBuzzSharp have different base versions but share the same preview label and build number.
 
-Preview packages auto-publish to the preview feed. Verify they're available:
+### No packages found?
 
-```bash
-# IMPORTANT: Use --format json to avoid line-break issues in table output
-# Table output wraps long version strings across multiple lines, breaking grep
+CI build hasn't completed. Check Azure Pipelines, wait 2-4 hours.
 
-# Verify SkiaSharp version exists
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^{version}$"
+### Stable releases
 
-# Verify HarfBuzzSharp version exists
-dotnet package search HarfBuzzSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^{harfbuzz-version}$"
+PREVIEW_LABEL = `stable`, packages appear as `X.Y.Z-stable.{build}`.
 
-# Example for version 3.119.2-preview.2:
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --prerelease --exact-match --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep "^3.119.2-preview.2$"
-```
-
-The test project's `nuget.config` already includes this feed—tests will use it automatically.
-
-### Stable Releases
-
-Stable packages are NOT published until after testing. Two options:
-
-**Quick validation (using "stable preview" packages)**
-
-CI publishes a prerelease version with `-stable.N` suffix (e.g., `3.119.0-stable.1`) to the preview feed:
-
-```bash
-# Use --format json to avoid line-break issues
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --format json 2>/dev/null | jq -r '.searchResult[].packages[].version' | grep stable
-```
-
-**Final validation (using local artifacts) — recommended**
-
-1. Ask user to download CI artifacts to a local folder (e.g., `/Users/username/skiasharp-artifacts/`)
-2. Clear NuGet cache or use isolated packages folder:
-
-```bash
-# Option 1: Clear specific packages from cache
-dotnet nuget locals all --list
-rm -rf ~/.nuget/packages/skiasharp*
-rm -rf ~/.nuget/packages/harfbuzzsharp*
-
-# Option 2: Use isolated packages folder (recommended)
-export NUGET_PACKAGES=$(pwd)/packages
-```
-
-3. Create nuget.config with local source (use absolute path, not ~):
-
-```bash
-# Ask user for the absolute path to artifacts folder
-cat > /tmp/nuget.config << EOF
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="LocalArtifacts" value="/Users/username/skiasharp-artifacts/" />
-    <add key="dotnet-public" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json" />
-  </packageSources>
-</configuration>
-EOF
-```
-
-4. Run tests with custom config:
-
-```bash
-dotnet test --configfile /tmp/nuget.config -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
-```
+---
 
 ## Step 2: Run Integration Tests
 
 ```bash
 cd tests/SkiaSharp.Tests.Integration
-
-# Run all tests
-dotnet test -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
-
-# Run specific platform
-dotnet test --filter "FullyQualifiedName~MauiiOSTests" -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
-dotnet test --filter "FullyQualifiedName~MauiMacCatalystTests" -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
-dotnet test --filter "FullyQualifiedName~BlazorTests" -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
-dotnet test --filter "FullyQualifiedName~ConsoleTests" -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
+dotnet test -p:SkiaSharpVersion={skia-version} -p:HarfBuzzSharpVersion={hb-version}
 ```
 
-## Device Selection
+**Specific platforms:**
+```bash
+dotnet test --filter "FullyQualifiedName~MauiiOSTests" ...
+dotnet test --filter "FullyQualifiedName~MauiMacCatalystTests" ...
+dotnet test --filter "FullyQualifiedName~BlazorTests" ...
+dotnet test --filter "FullyQualifiedName~ConsoleTests" ...
+```
 
-Discover and specify devices:
+### Device Selection
 
 ```bash
 # iOS simulators
 xcrun simctl list devices available | grep -i "iphone\|ipad"
-xcrun simctl list runtimes | grep -i ios
 
-# Android emulators
+# Android emulators  
 emulator -list-avds
 ```
 
-Run with device parameters:
+With device parameters:
 ```bash
-# iOS
-dotnet test --filter "MauiiOSTests" -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N \
-  -p:iOSDevice="iPad Pro 13-inch (M4)" -p:iOSVersion="18.5"
-
-# Android  
-dotnet test --filter "MauiAndroidTests" -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N \
-  -p:AndroidDevice="Pixel 8" -p:AndroidVersion="14"
+dotnet test --filter "MauiiOSTests" ... -p:iOSDevice="iPad Pro 13-inch (M4)" -p:iOSVersion="18.5"
+dotnet test --filter "MauiAndroidTests" ... -p:AndroidDevice="Pixel 8"
 ```
 
-**Defaults:** iOS=iPhone 16 Pro/18.5, Android=running emulator
+### Test Matrix
 
-## Test Matrix
+| Test | Platform | Time |
+|------|----------|------|
+| SmokeTests | All | ~2s |
+| ConsoleTests | All | ~20s |
+| BlazorTests | All | ~2min |
+| MauiiOSTests | macOS only | ~2min |
+| MauiMacCatalystTests | macOS only | ~2min |
+| MauiAndroidTests | All | ~2min |
+| MauiWindowsTests | Windows only | ~2min |
 
-| Test | Platform | Time | Notes |
-|------|----------|------|-------|
-| SmokeTests | All | ~2s | Native library loading |
-| ConsoleTests | All | ~20s | SkiaSharp + HarfBuzzSharp |
-| BlazorTests | All | ~2min | WASM with Playwright |
-| MauiiOSTests | macOS only | ~2min | iOS Simulator |
-| MauiMacCatalystTests | macOS only | ~2min | Mac Catalyst |
-| MauiAndroidTests | All | ~2min | Emulator required |
-| MauiWindowsTests | Windows only | ~2min | WinAppDriver |
-
-## Output Files
+### Output Files
 
 Screenshots saved to `output/logs/testlogs/integration/`:
+- `*-full.png` — Full screenshot
+- `*-region.png` — With crop rectangle
+- `*.png` — Cropped canvas
+- `*-diff.png` — Difference mask
 
-| File | Purpose |
-|------|---------|
-| `*-full.png` | Full screenshot before cropping |
-| `*-region.png` | Screenshot with red crop rectangle |
-| `*.png` | Cropped canvas screenshot |
-| `*-diff.png` | Difference mask (white=diff, black=match) |
-| `*-pagesource.xml` | UI tree for debugging |
+---
 
-## Release Criteria
+## Step 3: Testing with Local Artifacts (Stable releases)
+
+For final validation before stable release:
+
+1. Ask user for path to downloaded CI artifacts
+2. Clear NuGet cache: `rm -rf ~/.nuget/packages/skiasharp* ~/.nuget/packages/harfbuzzsharp*`
+3. Create nuget.config pointing to local folder
+4. Run tests with `--configfile /tmp/nuget.config`
+
+---
+
+## Step 4: Verify Release Criteria
 
 Proceed to **release-publish** ONLY when:
 
-1. ✅ ALL tests pass (no failures, no skips except hardware)
-2. ✅ Screenshots exist in output directory
-3. ✅ Image similarity ≥ 95% for all comparisons
+- ✅ ALL tests pass (no failures, no skips except hardware)
+- ✅ Screenshots exist in output directory
+- ✅ Image similarity ≥ 95%
 
-**Valid skips (hardware only):**
-- iOS/Mac tests on non-macOS
-- Windows tests on non-Windows
-- Android tests without running emulator
+**Valid skips:** iOS/Mac on non-macOS, Windows on non-Windows, Android without emulator.
 
-## Stable Release Checklist (Stable only)
+### Stable Release Checklist
 
-For stable releases, also verify in CI artifacts:
+- [ ] NuGet packages produced
+- [ ] Native assets 4-6MB per binary
+- [ ] Assemblies strong named
+- [ ] NuGet metadata correct
+- [ ] Samples build in Release mode
+- [ ] No "To be added." in docs
 
-- [ ] NuGet packages are produced
-- [ ] Native assets are 4-6MB per binary
-- [ ] All assemblies are strong named
-- [ ] NuGet metadata is correct (tags, icons, licenses)
-- [ ] Samples build and deploy in Release mode
-- [ ] Documentation has no "To be added." placeholders
+---
 
 ## References
 

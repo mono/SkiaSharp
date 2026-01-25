@@ -27,6 +27,7 @@ Quick reference for common errors and fixes.
 | `No Android devices found` | No emulator running | `emulator -avd <name>` |
 | `Simulator not found` | Wrong device name | Check `xcrun simctl list devices available` |
 | `iOS version not available` | Missing runtime | Install via Xcode → Platforms |
+| `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |
 
 ## Screenshot Errors
 
@@ -44,6 +45,7 @@ Quick reference for common errors and fixes.
 | `Executable doesn't exist` | Browsers not installed | `pwsh playwright.ps1 install chromium` |
 | `Target page, context or browser has been closed` | Server crashed | Check app build output |
 | `Timeout waiting for selector` | App didn't render | Check Blazor app console for errors |
+| `Blazor server failed to start` | Env vars from parent | Fixed in test code (ClearDotNetEnvironmentVariables) |
 
 ## Platform-Specific Notes
 
@@ -61,3 +63,30 @@ Scale factor calculated automatically from screenshot size vs window size:
 ### Mac Catalyst
 
 Mac Catalyst uses hardcoded 2x scale factor. Screenshot is full monitor size, element coordinates are app-relative.
+
+**"Timed out while enabling automation mode" error:**
+
+This is a macOS accessibility permissions issue. The WebDriverAgentMac process needs accessibility permissions to automate apps.
+
+**Fixes to try (in order):**
+1. Reset accessibility permissions: `tccutil reset Accessibility`
+2. System Settings → Privacy & Security → Accessibility → Add Terminal.app (or your IDE)
+3. Restart Terminal/IDE after granting permissions
+4. If still failing, try running test in isolation (not after other tests)
+
+The test includes retry logic (3 attempts) with recovery actions that reset TCC and kill stale processes. If it still fails after retries, it's likely a deeper macOS configuration issue.
+
+## Retry Logic
+
+Tests include automatic retry for transient failures:
+- **Android**: 3 retries, 10s delay, recovery includes dialog dismissal
+- **iOS**: 3 retries, 10s delay
+- **Mac Catalyst**: 3 retries, 30s delay, recovery includes TCC reset and process cleanup
+- **Blazor**: 3 retries for server startup
+
+Retryable errors include:
+- Device not found
+- Driver crashed
+- Connection refused
+- Session creation failed
+- Element not found (might be blocked by dialog)

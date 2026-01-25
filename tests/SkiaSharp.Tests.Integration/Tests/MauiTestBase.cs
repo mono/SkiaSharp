@@ -17,6 +17,10 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
 {
     protected int AppiumPort => AppiumFixture.Port;
     
+    // Retry configuration for transient failures
+    protected const int MaxRetryAttempts = 3;
+    protected virtual TimeSpan RetryDelay => TimeSpan.FromSeconds(10);
+    
     // Build configuration - set to "Debug" for faster iteration when debugging tests
     protected const string BuildConfiguration = "Release";
     
@@ -124,7 +128,7 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         Output.WriteLine($"App path: {appPath}");
         Output.WriteLine($"Bundle ID: {bundleId}");
         
-        await VerifyWithAppium(appPath, bundleId, $"maui-{PlatformName.ToLowerInvariant().Replace(" ", "")}-{canvasView}");
+        await VerifyWithAppiumAndRetry(appPath, bundleId, $"maui-{PlatformName.ToLowerInvariant().Replace(" ", "")}-{canvasView}");
         
         Output.WriteLine($"✅ MAUI {PlatformName} ({canvasView}) passed");
     }
@@ -186,6 +190,96 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
             """);
         
         return projectDir;
+    }
+
+    /// <summary>
+    /// Wrapper that retries VerifyWithAppium on transient failures.
+    /// Handles driver crashes, emulator disconnects, and other infrastructure issues.
+    /// </summary>
+    private async Task VerifyWithAppiumAndRetry(string appPath, string bundleId, string screenshotName)
+    {
+        Exception? lastException = null;
+        
+        for (int attempt = 1; attempt <= MaxRetryAttempts; attempt++)
+        {
+            try
+            {
+                Output.WriteLine($"=== Appium verification attempt {attempt}/{MaxRetryAttempts} ===");
+                await VerifyWithAppium(appPath, bundleId, screenshotName);
+                return; // Success!
+            }
+            catch (Exception ex) when (IsRetryableException(ex) && attempt < MaxRetryAttempts)
+            {
+                lastException = ex;
+                Output.WriteLine($"⚠️ Attempt {attempt} failed with retryable error: {ex.GetType().Name}");
+                Output.WriteLine($"   Message: {ex.Message}");
+                Output.WriteLine($"   Waiting {RetryDelay.TotalSeconds}s before retry...");
+                
+                // Give infrastructure time to recover
+                await Task.Delay(RetryDelay);
+                
+                // Platform-specific recovery actions
+                await PerformRecoveryActions();
+            }
+            // Non-retryable exceptions will propagate immediately
+        }
+        
+        // All retries exhausted
+        Output.WriteLine($"❌ All {MaxRetryAttempts} attempts failed");
+        throw new Exception($"Appium verification failed after {MaxRetryAttempts} attempts", lastException);
+    }
+
+    /// <summary>
+    /// Determines if an exception is likely transient and worth retrying.
+    /// </summary>
+    private static bool IsRetryableException(Exception ex)
+    {
+        var message = ex.Message.ToLowerInvariant();
+        
+        // Element not found - might be due to blocking dialog or slow app startup.
+        // Check this FIRST because NoSuchElementException inherits from WebDriverException.
+        // After MaxRetryAttempts, this WILL fail the test (not skip or force pass).
+        if (ex is NoSuchElementException)
+        {
+            return true;
+        }
+        
+        // Driver/connection issues
+        if (ex is WebDriverException)
+        {
+            return message.Contains("could not find") ||           // Device not found
+                   message.Contains("not running") ||              // Driver crashed
+                   message.Contains("connection refused") ||       // Server not ready
+                   message.Contains("session not created") ||      // Session creation failed
+                   message.Contains("unknown server-side error");  // Generic server error
+        }
+        
+        // Timeout exceptions - infrastructure may need time to recover.
+        // After MaxRetryAttempts, this WILL fail the test.
+        if (ex is TimeoutException || message.Contains("timeout"))
+        {
+            return true;
+        }
+        
+        // Image similarity failures - screen may not have fully rendered yet.
+        // This gives GPU-rendered content (SKGLView) extra time to complete.
+        // After MaxRetryAttempts, this WILL fail the test if rendering is broken.
+        if (message.Contains("similarity") && message.Contains("low"))
+        {
+            return true;
+        }
+        
+        return false;
+    }
+
+    /// <summary>
+    /// Override in platform tests to perform recovery actions between retries.
+    /// For example: dismiss system dialogs, restart emulator, etc.
+    /// </summary>
+    protected virtual Task PerformRecoveryActions()
+    {
+        Output.WriteLine("No platform-specific recovery actions defined");
+        return Task.CompletedTask;
     }
 
     private async Task VerifyWithAppium(string appPath, string bundleId, string screenshotName)
