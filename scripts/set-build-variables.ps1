@@ -63,7 +63,7 @@ Write-Host "`n# Checking for secondary build information..."
 if ($env:BUILD_REASON -eq "ResourceTrigger" -or $env:BUILD_REASON -eq "Manual") {
     Write-Host "Working with $env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME"
     if ($env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME) {
-        $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '.*\-(.+)\.(\d+)')
+        $match = [regex]::Match("$env:RESOURCES_PIPELINE_SKIASHARP_RUNNAME", '^[^+]*-([^+]+)\.(\d+)(?:\+|$)')
         $label = $match.Groups[1].Value
         Write-Host "Preview label: $label"
         $env:PREVIEW_LABEL = $label
