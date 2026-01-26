@@ -36,10 +36,7 @@ If the expected version is missing, STOP and ask user to verify testing was comp
 
 ## Step 2: Publish to NuGet.org
 
-| Type | Action |
-|------|--------|
-| Preview | Optional - trigger [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) |
-| Stable | Required - trigger [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) |
+Trigger the [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) to push packages to NuGet.org.
 
 ### Pipeline Steps
 
@@ -73,14 +70,12 @@ Ask user to follow these steps and wait for completion.
 
 ## Step 3: Verify Packages Published
 
-**If published to NuGet.org:**
+Verify the packages are available on NuGet.org:
 ```bash
 dotnet package search SkiaSharp --source https://api.nuget.org/v3/index.json --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-skia-version}"
 ```
 
 Or check: `https://www.nuget.org/packages/SkiaSharp/{skia-version}`
-
-**Preview skipping NuGet.org:** Verify packages still exist on preview feed before tagging.
 
 ---
 
