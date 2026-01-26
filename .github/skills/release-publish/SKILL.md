@@ -122,16 +122,39 @@ git push origin {tag}
 
 ## Step 5: Create GitHub Release
 
-```bash
-# Preview (tag = v3.119.2-preview.2.5)
-gh release create {tag} --generate-notes --prerelease --verify-tag
+### Title Format
 
-# Stable (tag = v3.119.2)
-gh release create {tag} --generate-notes --verify-tag
-gh release upload {tag} samples.zip  # if available
+| Release Type | Title Format | Example |
+|--------------|--------------|---------|
+| Preview | `Version X.Y.Z (Preview N)` | `Version 3.119.2 (Preview 2)` |
+| Stable | `Version X.Y.Z` | `Version 3.119.2` |
+| Hotfix Preview | `Version X.Y.Z.F (Preview N)` | `Version 3.119.2.1 (Preview 1)` |
+| Hotfix Stable | `Version X.Y.Z.F` | `Version 3.119.2.1` |
+
+### Commands
+
+```bash
+# Preview (e.g., v3.119.2-preview.2.3)
+gh release create {tag} \
+  --title "Version {X.Y.Z} (Preview {N})" \
+  --generate-notes \
+  --prerelease \
+  --verify-tag
+
+# Stable (e.g., v3.119.2)
+gh release create {tag} \
+  --title "Version {X.Y.Z}" \
+  --generate-notes \
+  --verify-tag
+
+# Upload samples for stable releases (if available)
+gh release upload {tag} samples.zip
 ```
 
-The `--generate-notes` flag auto-generates release notes from PRs/commits since last release. The `--verify-tag` ensures the tag exists before creating the release.
+- `--title` sets the release title (use format above)
+- `--generate-notes` auto-generates release notes from PRs/commits since last release
+- `--prerelease` marks as prerelease (preview only)
+- `--verify-tag` ensures the tag exists before creating the release
 
 ---
 
