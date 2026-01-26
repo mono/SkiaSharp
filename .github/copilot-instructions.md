@@ -8,131 +8,48 @@ SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia li
 
 | Skill | When to Use |
 |-------|-------------|
-| `implement-issue` | Implementing GitHub issues (new APIs, bug fixes) |
-| `api-docs` | Writing or reviewing XML documentation |
-| `release-branch` | Creating release branches |
-| `release-tag` | Tagging releases after packages are published |
+| `implement-issue` | User provides GitHub issue URL or says "implement #NNNN", "fix #NNNN". Gathers context and creates implementation plans for new APIs, bug fixes, enhancements. |
+| `api-docs` | Writing/reviewing XML documentation. Triggers: "document SKFoo", "add XML docs", "fill in missing docs", "remove To be added placeholders". |
+| `release-branch` | Creating release branches. Triggers: "release now", "start release X", "create release branch". Auto-detects next preview version, updates PREVIEW_LABEL, bumps main. |
+| `release-testing` | Testing packages before publishing. Triggers: "test the release", "verify packages", "run tests on iPad". Runs integration tests on Console, Blazor, iOS, Android, Mac Catalyst. |
+| `release-publish` | Publishing and finalizing releases. Triggers: "publish X", "push to nuget", "tag the release". Publishes to NuGet.org, creates tag, GitHub release, annotates notes with emojis. |
 
-**If uncertain:** If a skill seems related but you're not sure it applies, ask the user: *"I found the [skill-name] skill which handles [description]. Should I use it for this task? If the description doesn't match well, I can help improve it."*
+**If uncertain:** Ask the user: *"I found the [skill-name] skill which handles [description]. Should I use it for this task?"*
 
 ---
 
 ## Quick Reference
 
+### Architecture
+
 ```
 C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c/)  →  C++ Skia
 ```
+
+**Key principle:** C# validates parameters, C API trusts and passes through.
+
+### Directory Guide
 
 | Directory | Purpose | Editable? |
 |-----------|---------|-----------|
 | `binding/SkiaSharp/` | C# wrappers | ✅ Yes |
 | `externals/skia/src/c/` | C API implementation | ✅ Yes |
 | `externals/skia/include/c/` | C API headers | ✅ Yes |
-| `externals/skia/**` (other) | Upstream Skia | ❌ No |
-| `*.generated.cs` | Auto-generated P/Invoke | ❌ No (regenerate) |
-| `docs/` | Auto-generated docs | ❌ No |
+| `externals/skia/**` (other) | Upstream Skia | ❌ No - never modify |
+| `*.generated.cs` | Auto-generated P/Invoke | ❌ No - regenerate with `./utils/generate.ps1` |
+| `docs/` | Auto-generated API docs | ❌ No |
 | `documentation/` | Architecture guides | ✅ Yes |
 
-**Setup:** `dotnet cake --target=externals-download` (one-time, gets native libs)  
-**Build:** `dotnet build <project.csproj>` (builds project + dependencies)  
-**Test:** `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj`  
-**Regenerate bindings:** `./utils/generate.ps1`
+### Commands
+
+| Task | Command |
+|------|---------|
+| Setup (one-time) | `dotnet cake --target=externals-download` |
+| Build | `dotnet build <project.csproj>` |
+| Test | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
+| Regenerate bindings | `./utils/generate.ps1` |
 
 > **Check if externals exist:** `ls output/native/` - if empty/missing, run the download.
-
----
-
-## Testing
-
-### Test Projects
-
-| Project | Purpose | When to Use |
-|---------|---------|-------------|
-| `SkiaSharp.Tests.Console` | Core unit tests | **Default** - use for most development |
-| `SkiaSharp.Tests.Devices` | MAUI on-device tests | Platform-specific behavior (iOS/Android/Mac/Windows) |
-| `SkiaSharp.Direct3D.Tests.Console` | Direct3D GPU tests | Windows GPU backend testing |
-| `SkiaSharp.Vulkan.Tests.Console` | Vulkan GPU tests | Cross-platform GPU backend testing |
-| `SkiaSharp.Tests.Wasm` | WebAssembly tests | Browser/WASM testing |
-
-### Project Structure
-
-```
-tests/
-├── Tests/                   # Shared test code (used by multiple projects)
-│   ├── SkiaSharp/           # Core SkiaSharp tests
-│   ├── HarfBuzzSharp/       # HarfBuzz tests
-│   └── Resources/           # Test images and files
-├── SkiaSharp.Tests.Console/ # Console runner (references Tests/)
-├── SkiaSharp.Tests.Devices/ # MAUI device runner
-└── Content/                 # Test assets copied to output
-```
-
-### Running Tests
-
-```bash
-# Build and run console tests (most common)
-dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
-
-# Run specific test class
-dotnet test --filter "FullyQualifiedName~SKImageTest"
-
-# Run specific test method
-dotnet test --filter "FullyQualifiedName~SKImageTest.FromEncodedDataWorks"
-```
-
-### Writing Tests
-
-All test classes inherit from `BaseTest`, which provides helpers for accessing test content and platform detection:
-
-```csharp
-public class SKImageTest : BaseTest
-{
-    [SkippableFact]
-    public void FeatureWorks()
-    {
-        // Access test images via PathToImages helper
-        using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
-        Assert.NotNull(data);
-        
-        using var image = SKImage.FromEncodedData(data);
-        Assert.NotNull(image);
-        
-        Assert.True(image.IsLazyGenerated);
-    }
-    
-    [SkippableFact]
-    public void PlatformSpecificTest()
-    {
-        // Platform detection helpers
-        if (IsWindows)
-        {
-            // Windows-specific assertions
-        }
-    }
-}
-```
-
-### BaseTest Helpers
-
-| Helper | Description |
-|--------|-------------|
-| `PathToImages` | Path to `tests/Content/images/` (baboon.jpg, color-wheel.png, etc.) |
-| `PathToFonts` | Path to `tests/Content/fonts/` |
-| `PathRoot` | Root path for test content |
-| `IsWindows`, `IsMac`, `IsLinux`, `IsUnix` | Platform detection booleans |
-| `DefaultFontFamily` | Platform-appropriate default font |
-| `UnicodeFontFamilies` | Font families with Unicode support |
-| `CollectGarbage()` | Force GC collection (for memory tests) |
-
-### Test Guidelines
-
-- ✅ Always use `using` statements - test memory management
-- ✅ Test null/invalid inputs and edge cases
-- ✅ Test disposal behavior  
-- ✅ Use `[SkippableFact]` (standard for all tests in this repo)
-- ✅ Use `PathToImages` helper for test assets in `tests/Content/images/`
-- ❌ Don't leave objects undisposed
-- ❌ Don't skip disposal even in failure paths
 
 ---
 
@@ -172,9 +89,29 @@ return result;
 
 Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immutable objects (Image/Shader/Data) can be shared across threads.
 
+### 4. Never Edit Generated Files
+
+Files matching `*.generated.cs` are auto-generated from C headers. After C API changes, regenerate with:
+
+```pwsh
+./utils/generate.ps1
+```
+
 ---
 
 ## Memory Management
+
+### Pointer Type Decision Tree
+
+```
+Is it wrapped in sk_sp<T>?
+├─ Yes → Is it SkRefCnt or SkNVRefCnt?
+│        ├─ SkRefCnt → ISKReferenceCounted (virtual ref counting)
+│        └─ SkNVRefCnt<T> → ISKNonVirtualReferenceCounted
+└─ No → Is it a parameter or getter return?
+         ├─ Yes → Raw pointer (owns: false)
+         └─ No → Owned (DisposeNative deletes)
+```
 
 ### Pointer Types
 
@@ -185,19 +122,19 @@ Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immuta
 | **Ref-counted (virtual)** | `sk_sp<T>`, inherits `SkRefCnt` | `ISKReferenceCounted` | Image, Shader, Surface, Picture |
 | **Ref-counted (non-virtual)** | `sk_sp<T>`, inherits `SkNVRefCnt<T>` | `ISKNonVirtualReferenceCounted` | Data, TextBlob, Vertices, ColorSpace |
 
-### Error Handling
+### Error Handling by Layer
 
-| Layer | Pattern |
-|-------|---------|
-| C API | Pass through (return bool/null/void) |
-| C# Factory | Return `null` on failure |
-| C# Constructor | Throw on failure |
+| Layer | Pattern | Example |
+|-------|---------|---------|
+| C API | Pass through (bool/null/void) | Return `nullptr` on failure |
+| C# Factory | Return `null` on failure | `SKImage.FromEncodedData()` |
+| C# Constructor | Throw on failure | `new SKBitmap()` |
 
 ---
 
 ## API Design
 
-### Naming
+### Naming Conventions
 
 | Type | Convention | Example |
 |------|------------|---------|
@@ -207,7 +144,7 @@ Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immuta
 | Parameters | camelCase | `sourceRect`, `filterMode` |
 | Private fields | camelCase | `handle`, `isDisposed` |
 
-### Factory Methods
+### Factory Method Prefixes
 
 | Prefix | Usage | On Failure |
 |--------|-------|------------|
@@ -218,10 +155,10 @@ Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immuta
 
 ### Overloads vs Defaults
 
-**Always use overloads**, not default parameters:
+**Always use overloads**, not default parameters (ABI stability):
 
 ```csharp
-// ✅ CORRECT - Overload chain (from SKData.CreateCopy)
+// ✅ CORRECT - Overload chain
 public static SKData CreateCopy(byte[] bytes) =>
     CreateCopy(bytes, (ulong)bytes.Length);
 
@@ -232,21 +169,19 @@ public static SKData CreateCopy(byte[] bytes, ulong length)
     }
 }
 
-// ❌ AVOID - Default parameters break ABI when changed
+// ❌ AVOID - Default parameters break ABI
 public static SKData CreateCopy(byte[] bytes, ulong length = 0)
 ```
 
 ### Deprecation
 
-Never remove APIs. Use `[Obsolete]` with guidance:
+Never remove APIs. Use `[Obsolete]` with migration guidance:
 
 ```csharp
 [Obsolete("Use ToShader(SKShaderTileMode, SKShaderTileMode, SKSamplingOptions) instead.")]
 public SKShader ToShader(SKShaderTileMode tmx, SKShaderTileMode tmy) =>
     ToShader(tmx, tmy, SKSamplingOptions.Default);
 ```
-
-See [documentation/api-design.md](../documentation/api-design.md) for complete guidelines.
 
 ---
 
@@ -286,10 +221,81 @@ sk_image_t* sk_image_new_from_encoded(const sk_data_t* cdata) {
     return ToImage(SkImages::DeferredFromEncodedData(sk_ref_sp(AsData(cdata))).release());
 }
 
-// Conversion macros generated by DEF_CLASS_MAP in sk_types_priv.h:
+// Conversion macros from sk_types_priv.h:
 // AsCanvas(sk_canvas_t*) → SkCanvas*
 // ToCanvas(SkCanvas*)    → sk_canvas_t*
 ```
+
+---
+
+## Testing
+
+### Test Projects
+
+| Project | Purpose | When to Use |
+|---------|---------|-------------|
+| `SkiaSharp.Tests.Console` | Core unit tests | **Default** - use for most development |
+| `SkiaSharp.Tests.Devices` | MAUI on-device tests | Platform-specific behavior |
+| `SkiaSharp.Direct3D.Tests.Console` | Direct3D GPU tests | Windows GPU backend |
+| `SkiaSharp.Vulkan.Tests.Console` | Vulkan GPU tests | Cross-platform GPU backend |
+
+### Running Tests
+
+```bash
+# Run all console tests
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+
+# Run specific test
+dotnet test --filter "FullyQualifiedName~SKImageTest.FromEncodedDataWorks"
+```
+
+### Writing Tests
+
+```csharp
+public class SKImageTest : BaseTest
+{
+    [SkippableFact]
+    public void FeatureWorks()
+    {
+        using var data = SKData.Create(Path.Combine(PathToImages, "baboon.jpg"));
+        Assert.NotNull(data);
+        
+        using var image = SKImage.FromEncodedData(data);
+        Assert.NotNull(image);
+    }
+}
+```
+
+### BaseTest Helpers
+
+| Helper | Description |
+|--------|-------------|
+| `PathToImages` | Path to `tests/Content/images/` |
+| `PathToFonts` | Path to `tests/Content/fonts/` |
+| `IsWindows`, `IsMac`, `IsLinux` | Platform detection |
+| `CollectGarbage()` | Force GC (for memory tests) |
+
+### Test Guidelines
+
+- ✅ Always use `using` statements
+- ✅ Use `[SkippableFact]` for all tests
+- ✅ Test null/invalid inputs
+- ✅ Test disposal behavior
+- ❌ Don't leave objects undisposed
+
+### Test Philosophy
+
+**Tests must FAIL when something is wrong, never skip.**
+
+- Missing dependencies → FAIL with helpful error
+- Missing reference data → FAIL
+- Environment not set up → FAIL
+
+The **ONLY** acceptable skip is for hardware that physically cannot be present:
+- iOS tests on non-macOS
+- GPU tests on machines without GPU
+
+A green test run means everything works.
 
 ---
 
@@ -303,3 +309,9 @@ sk_image_t* sk_image_new_from_encoded(const sk_data_t* cdata) {
 | API Design | [documentation/api-design.md](../documentation/api-design.md) |
 | Adding New APIs | [documentation/adding-apis.md](../documentation/adding-apis.md) |
 | Building | [documentation/building.md](../documentation/building.md) |
+| Releasing | [documentation/releasing.md](../documentation/releasing.md) |
+| Versioning | [documentation/versioning.md](../documentation/versioning.md) |
+
+---
+
+**Remember:** Three layers (C# → C API → C++), three pointer types (raw/owned/ref-counted), C# validates, C API trusts.

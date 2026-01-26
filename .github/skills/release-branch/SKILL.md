@@ -1,115 +1,96 @@
 ---
 name: release-branch
-description: Create a release branch for SkiaSharp. Use when user says "release X", "start release X", or "create release branch for X". This is the FIRST step of releasing - creates branch and pushes to trigger CI. Uses confirmation workflow.
+description: >
+  Create a release branch for SkiaSharp.
+  Use when user says "release X", "start release X", "create release branch for X",
+  "I want to release", or "release now".
+  This is the FIRST step of releasing - creates branch and pushes to trigger CI.
+  Can auto-detect next preview version from main branch.
 ---
 
 # Release Branch Skill
 
-Create release branches for SkiaSharp versions with step-by-step confirmation.
+Create release branches for SkiaSharp versions.
 
-**CRITICAL**: This skill uses a confirmation-based workflow. ALWAYS:
-1. Create a detailed plan first
-2. Ask user to confirm EACH step before executing
-3. Never proceed without explicit approval
+⚠️ **NO UNDO:** This is step 1 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
 
-## Workflow Overview
+---
 
-1. **Plan** — Analyze version, determine release type, show plan
-2. **Create branch** — Branch from correct base with proper naming
-3. **Update PREVIEW_LABEL** — Set on release branch, commit and push
-4. **Bump main** — (Preview from main only) Create PR to update version on main, merge immediately
+## Step 1: Determine Version
 
-After this skill completes:
-- CI builds and publishes packages (2-4 hours)
-- Main branch is ready for continued development
-- Once packages are live and verified, use **release-tag** skill to finalize
+### Auto-detect (user says "release now")
 
-## Confirmation Pattern
+1. Fetch main and read `SKIASHARP_VERSION` from `scripts/azure-templates-variables.yml`
+2. List existing branches: `git branch -r | grep "release/{version}-preview"`
+3. Next preview = highest + 1 (or 1 if none)
+4. Confirm with user: "Next release will be `X.Y.Z-preview.N`. Proceed?"
 
-For EVERY step, use ask_user tool with choices: "Yes, proceed" / "Skip this step" / "Abort release"
+### User provides version
 
-## Determining Release Type
+Use the provided version directly.
 
-| User Says | Type | Base Branch | New Branch |
-|-----------|------|-------------|------------|
-| "X.Y.Z-preview.N" | Preview | `main` | `release/X.Y.Z-preview.N` |
-| "X.Y.Z" (stable) | Stable | `release/X.Y.Z-preview.N` | `release/X.Y.Z` |
-| "X.Y.Z.F-preview.N" | Hotfix | tag `vX.Y.Z` | `release/X.Y.Z.F-preview.N` |
+---
 
-## Commands
+## Step 2: Determine Release Type
 
-### Step 1: Create Release Branch
+| Version Format | Type | Base | PREVIEW_LABEL |
+|----------------|------|------|---------------|
+| `X.Y.Z-preview.N` | Preview | `main` | `preview.N` |
+| `X.Y.Z` | Stable | `release/X.Y.Z-preview.{latest}` | `stable` |
+| `X.Y.Z.F-preview.N` | Hotfix Preview | tag `vX.Y.Z` | `preview.N` |
+| `X.Y.Z.F` | Hotfix Stable | `release/X.Y.Z.F-preview.{latest}` | `stable` |
 
-```bash
-# For preview (from main)
-# Note: {N} is typically 1 for first preview, 2 for second, etc.
-git fetch origin
-git checkout main
-git pull origin main
-git checkout -b release/{version}-preview.{N}
-```
-```bash
-# For stable (from preview branch)
-git fetch origin
-git checkout release/{version}-preview.{N}
-git pull origin release/{version}-preview.{N}
-git checkout -b release/{version}
-```
-```bash
-# For hotfix (from tag)
-# Note: {fix} is typically 1 for first hotfix, 2 for second, etc.
-# Note: {N} is typically 1 for first preview of a hotfix
-git fetch origin --tags
-git checkout v{version}
-git checkout -b release/{version}.{fix}-preview.{N}
-```
+For stable releases, find latest preview: `git branch -r | grep "release/X.Y.Z-preview" | sort -V | tail -1`
 
-### Step 2: Update PREVIEW_LABEL and Push
+---
 
-Edit `scripts/azure-templates-variables.yml`:
+## Step 3: Create Branch and Update PREVIEW_LABEL
 
-| Type | PREVIEW_LABEL | Example |
-|------|---------------|---------|
-| Preview | `preview.{N}` | `preview.3` |
-| Stable | `stable` | `stable` |
-| Hotfix | `preview.{N}` | `preview.1` |
+1. Checkout the base (main, preview branch, or tag)
+2. Create branch `release/{version}`
+3. Edit `scripts/azure-templates-variables.yml`: set `PREVIEW_LABEL`
+4. Commit: `git commit -m "Bump the version to {version}"`
+5. Show diff summary to user and **confirm with `ask_user`** before pushing
+
+---
+
+## Step 4: Push Branch
 
 ```bash
-git add scripts/azure-templates-variables.yml
-git commit -m "Bump the version to {version}"
-git push -u origin HEAD  # Pushes current branch (release/{version} or release/{version}-preview.{N})
+git push -u origin release/{version}
 ```
 
-### Step 3: Wait for Push to Complete
+This triggers CI build (2-4 hours).
 
-After pushing, verify the branch appears on GitHub before proceeding to step 4.
+---
 
-### Step 4: Bump Version on Main (Preview from main only)
+## Step 5: Bump Version on Main (Preview from main only)
 
-**Skip this step for stable and hotfix releases** — only preview releases from main need version bumping.
+**Skip for stable and hotfix releases.**
 
-Edit these files:
-- `scripts/azure-templates-variables.yml` — set `SKIASHARP_VERSION: {next-version}`
-- `scripts/VERSIONS.txt` — update ALL version numbers:
-  - `SkiaSharp file` version (e.g., `3.119.3.0`)
-  - All SkiaSharp `nuget` versions (e.g., `3.119.3`)
-  - `HarfBuzzSharp file` version — increment 4th digit (e.g., `8.3.1.3` → `8.3.1.4`)
-  - All HarfBuzzSharp `nuget` versions — same as file version
+1. Create branch `bump-version-{next}` from main
 
-> **HarfBuzzSharp versioning note:** The first 3 digits (`8.3.1`) correspond to the native HarfBuzz version. The 4th digit is incremented with each SkiaSharp release to keep packages in sync, even if there are no HarfBuzz changes. When native HarfBuzz is upgraded, reset to 3-digit version (e.g., `8.4.0`).
+2. Edit `scripts/azure-templates-variables.yml`:
+   - Update `SKIASHARP_VERSION` to next version
+   - Reset `PREVIEW_LABEL` to `preview.0`
 
-```bash
-git checkout main
-git pull origin main
-git checkout -b bump-version-{next-version}
-# Make edits to both files
-git add scripts/azure-templates-variables.yml scripts/VERSIONS.txt
-git commit -m "Bump to the next version ({next-version}) after release"
-git push -u origin bump-version-{next-version}
-gh pr create --title "Bump to the next version ({next-version}) after release" --body ""
-gh pr merge --merge --delete-branch
-```
+3. Edit `scripts/VERSIONS.txt`:
+   - `SkiaSharp file` → `{next}.0`
+   - All `SkiaSharp ... nuget` lines → `{next}`
+   - `HarfBuzzSharp file` → increment 4th digit (e.g., `8.3.1.4` → `8.3.1.5`)
+   - All `HarfBuzzSharp ... nuget` lines → same as file version
+
+4. Commit: `git commit -m "Bump to the next version ({next}) after release"`
+
+5. Show diff to user, then:
+   ```bash
+   git push -u origin bump-version-{next}
+   gh pr create --title "Bump to the next version ({next}) after release" --body ""
+   gh pr merge --merge --delete-branch
+   ```
+
+---
 
 ## Resources
 
-- [`/documentation/releasing.md`](../../../documentation/releasing.md) — Release checklist and reference
+- [releasing.md](../../../documentation/releasing.md) — Version patterns, HarfBuzz versioning, workflow diagrams
