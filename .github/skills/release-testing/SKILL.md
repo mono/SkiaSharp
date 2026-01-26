@@ -33,7 +33,67 @@ Verify SkiaSharp packages work correctly before publishing.
 
 ---
 
-## Step 1: Resolve Package Versions
+## Step 1: Check CI Status
+
+Before testing, verify CI builds have completed. Check commit statuses on the release branch head:
+
+```bash
+gh api "repos/mono/SkiaSharp/commits/{sha}/statuses" --jq '.[] | "\(.context) | \(.state) | \(.description // "no desc") | \(.created_at)"'
+```
+
+### Required Pipelines
+
+| Pipeline | Required | Notes |
+|----------|----------|-------|
+| `SkiaSharp-Native` | ✅ Must pass | Builds native binaries |
+| `SkiaSharp` | ✅ Must pass | Builds managed code & publishes packages |
+| `SkiaSharp-Tests` | ⚠️ May fail | Sometimes flaky on release branches - warn user but don't block |
+
+**Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
+
+### Understanding Multiple Statuses
+
+The API returns ALL statuses chronologically. A pipeline may have multiple entries due to retries/rebuilds. Always use the **most recent** status (newest timestamp) for each pipeline.
+
+Example output showing a rebuild:
+```
+SkiaSharp-Native | pending | in progress | 2026-01-25T21:38:26Z    ← CURRENT (use this)
+SkiaSharp-Native | failure | #3.119.2-preview.2.3 failed | 2026-01-25T20:47:00Z  ← old, ignore
+SkiaSharp-Native | pending | queued | 2026-01-25T19:21:23Z         ← old, ignore
+```
+
+### Interpreting Status
+
+- `pending` with "in progress" → build is running, wait
+- `pending` with "queued" → build hasn't started, wait
+- `failure` → check if a newer `pending` status exists (rebuild triggered)
+- `success` → extract version from description
+
+### Extracting NuGet Version
+
+The build description contains the version in format: `#{version}-{label}.{build}+{branch}`
+
+Example: `#3.119.2-preview.2.3+3.119.2-preview.2 failed`
+- Version: `3.119.2-preview.2.3`
+- Label: `preview.2`
+- Build: `3`
+
+### Version Verification
+
+After extracting the version from CI status, verify it matches the NuGet feed:
+1. The version from status description should exist in the preview feed
+2. There should NOT be a later build number for the same base version
+
+**Stop and ask the user if:**
+- The version from CI status is missing from the feed
+- A later version exists on the feed than what CI reports
+- The CI status shows success but packages aren't found
+
+Something has gone wrong with the build/publish pipeline — do not proceed.
+
+---
+
+## Step 2: Resolve Package Versions
 
 **DO NOT ask user for exact NuGet versions.** Resolve automatically:
 
@@ -62,29 +122,31 @@ Verify SkiaSharp packages work correctly before publishing.
 
 **Note:** SkiaSharp and HarfBuzzSharp have different base versions but share the same preview label and build number.
 
-### No packages found?
+### No Packages Found?
 
-CI build hasn't completed. Check Azure Pipelines, wait 2-4 hours.
+CI build hasn't completed. Check CI status (Step 1), wait 2-4 hours.
 
-### Stable releases
+### Stable Releases
 
-PREVIEW_LABEL = `stable`, packages appear as `X.Y.Z-stable.{build}`.
+When `PREVIEW_LABEL = stable`, packages appear as `X.Y.Z-stable.{build}`.
 
 ---
 
-## Step 2: Run Integration Tests
+## Step 3: Run Integration Tests
 
 ```bash
 cd tests/SkiaSharp.Tests.Integration
 dotnet test -p:SkiaSharpVersion={skia-version} -p:HarfBuzzSharpVersion={hb-version}
 ```
 
-**Specific platforms:**
+### Platform-Specific Tests
+
 ```bash
+dotnet test --filter "FullyQualifiedName~ConsoleTests" ...
+dotnet test --filter "FullyQualifiedName~BlazorTests" ...
 dotnet test --filter "FullyQualifiedName~MauiiOSTests" ...
 dotnet test --filter "FullyQualifiedName~MauiMacCatalystTests" ...
-dotnet test --filter "FullyQualifiedName~BlazorTests" ...
-dotnet test --filter "FullyQualifiedName~ConsoleTests" ...
+dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ...
 ```
 
 ### Device Selection
@@ -97,7 +159,7 @@ xcrun simctl list devices available | grep -i "iphone\|ipad"
 emulator -list-avds
 ```
 
-With device parameters:
+Run with specific device:
 ```bash
 dotnet test --filter "MauiiOSTests" ... -p:iOSDevice="iPad Pro 13-inch (M4)" -p:iOSVersion="18.5"
 dotnet test --filter "MauiAndroidTests" ... -p:AndroidDevice="Pixel 8"
@@ -125,17 +187,6 @@ Screenshots saved to `output/logs/testlogs/integration/`:
 
 ---
 
-## Step 3: Testing with Local Artifacts (Stable releases)
-
-For final validation before stable release:
-
-1. Ask user for path to downloaded CI artifacts
-2. Clear NuGet cache: `rm -rf ~/.nuget/packages/skiasharp* ~/.nuget/packages/harfbuzzsharp*`
-3. Create nuget.config pointing to local folder
-4. Run tests with `--configfile /tmp/nuget.config`
-
----
-
 ## Step 4: Verify Release Criteria
 
 Proceed to **release-publish** ONLY when:
@@ -145,6 +196,15 @@ Proceed to **release-publish** ONLY when:
 - ✅ Image similarity ≥ 95%
 
 **Valid skips:** iOS/Mac on non-macOS, Windows on non-Windows, Android without emulator.
+
+### Testing with Local Artifacts (Stable releases)
+
+For final validation before stable release:
+
+1. Ask user for path to downloaded CI artifacts
+2. Clear NuGet cache: `rm -rf ~/.nuget/packages/skiasharp* ~/.nuget/packages/harfbuzzsharp*`
+3. Create nuget.config pointing to local folder
+4. Run tests with `--configfile /tmp/nuget.config`
 
 ### Stable Release Checklist
 

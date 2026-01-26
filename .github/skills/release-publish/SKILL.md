@@ -15,28 +15,22 @@ Publish packages to NuGet.org and finalize releases.
 
 ⚠️ **NO UNDO:** This is step 3 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
 
-**Prerequisite:** release-testing must have passed. Verify test results before proceeding.
+**Prerequisite:** release-testing must have passed. The versions should already be known from testing.
 
 ---
 
-## Step 1: Resolve Versions
+## Step 1: Confirm Versions
 
-**DO NOT ask user for exact NuGet versions.** Resolve automatically:
+The user should provide the versions from release-testing. If not, ask for them:
+- SkiaSharp version (e.g., `3.119.2-preview.2.3`)
+- HarfBuzzSharp version (e.g., `8.3.1.4-preview.2.3`)
 
-1. Fetch release branch and read `scripts/VERSIONS.txt`:
-   - `SkiaSharp nuget` → base version
-   - `HarfBuzzSharp nuget` → base version
+**Quick verification** - confirm packages exist on preview feed:
+```bash
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-skia-version}"
+```
 
-2. Read `PREVIEW_LABEL` from `scripts/azure-templates-variables.yml`
-
-3. Search preview feed:
-   ```bash
-   dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json
-   ```
-
-4. Filter versions matching `{base}-{preview-label}.{build}`, pick latest
-
-5. Report to user with resolved versions and build number
+If the expected version is missing, STOP and ask user to verify testing was completed.
 
 ---
 
@@ -55,10 +49,10 @@ Ask user to trigger pipeline and wait for completion.
 
 **If published to NuGet.org:**
 ```bash
-dotnet package search SkiaSharp --source https://api.nuget.org/v3/index.json --exact-match --format json
+dotnet package search SkiaSharp --source https://api.nuget.org/v3/index.json --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-skia-version}"
 ```
 
-Or check: `https://www.nuget.org/packages/SkiaSharp/{version}`
+Or check: `https://www.nuget.org/packages/SkiaSharp/{skia-version}`
 
 **Preview skipping NuGet.org:** Verify packages still exist on preview feed before tagging.
 
@@ -88,12 +82,14 @@ git push origin {tag}
 
 ```bash
 # Preview (tag = v3.119.2-preview.2.5)
-gh release create {tag} --title "SkiaSharp v3.119.2-preview.2" --prerelease --notes "Release notes"
+gh release create {tag} --generate-notes --prerelease --verify-tag
 
 # Stable (tag = v3.119.2)
-gh release create {tag} --title "SkiaSharp v3.119.2" --notes "Release notes"
+gh release create {tag} --generate-notes --verify-tag
 gh release upload {tag} samples.zip  # if available
 ```
+
+The `--generate-notes` flag auto-generates release notes from PRs/commits since last release. The `--verify-tag` ensures the tag exists before creating the release.
 
 ---
 
