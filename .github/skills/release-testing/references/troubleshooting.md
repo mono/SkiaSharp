@@ -24,10 +24,59 @@ Quick reference for common errors and fixes.
 
 | Error | Cause | Fix |
 |-------|-------|-----|
-| `No Android devices found` | No emulator running | `emulator -avd <name>` |
+| `No Android devices found` | No emulator running | Start emulator first |
 | `Simulator not found` | Wrong device name | Check `xcrun simctl list devices available` |
 | `iOS version not available` | Missing runtime | Install via Xcode → Platforms |
 | `System UI isn't responding` (Android) | Emulator unstable | Tests auto-retry with dialog dismissal |
+
+## Android Crash Diagnostics
+
+### Getting Crash Details
+
+```bash
+# Check if app crashed
+adb logcat -d | grep -E "(Force removing|app died)" | tail -5
+
+# Get stack trace
+adb logcat -d | grep -E "(AndroidRuntime|FATAL EXCEPTION)" -A15 | head -30
+```
+
+### Common Crash Causes
+
+| Log Message | Meaning | Action |
+|-------------|---------|--------|
+| `Force removing...app died` | App crashed | Get stack trace, investigate |
+| `Killing...stop <package>` | Normal force-stop | Expected after test completes |
+| `FATAL EXCEPTION` | Unhandled exception | **Bug - investigate** |
+| `Native crash` | Native library issue | **Bug - investigate** |
+
+### Old Android (API 21-23) Crashes
+
+Old Android may crash due to:
+- Missing APIs that MAUI expects
+- Different permission behavior
+- Slower startup causing timeouts
+
+If crash only on old Android: get full stack trace, check if known MAUI/SkiaSharp issue.
+
+## iOS Diagnostics
+
+### Simulator Logs
+
+```bash
+xcrun simctl list devices booted  # get UDID
+xcrun simctl spawn <UDID> log stream --predicate 'process == "YourApp"'
+```
+
+Or use Console.app → select simulator device.
+
+### Common iOS Issues
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Simulator won't boot | Corrupt state | `xcrun simctl erase <UDID>` |
+| App won't install | Code signing | Check Appium logs |
+| Black screen | App crashed | Check simulator logs |
 
 ## Screenshot Errors
 

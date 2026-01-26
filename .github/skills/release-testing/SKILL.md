@@ -146,12 +146,7 @@ dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ...
 
 ### Start Emulators First
 
-```bash
-# Android
-export PATH="$HOME/Library/Android/sdk/platform-tools:$HOME/Library/Android/sdk/emulator:$PATH"
-nohup emulator -avd Pixel_API_23 -no-snapshot -no-audio > /tmp/emu.log 2>&1 &
-while [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1" ]; do sleep 2; done
-```
+Start Android emulator before running tests. See [setup.md](references/setup.md) for SDK location and emulator commands.
 
 ### Test Execution Order
 
@@ -181,14 +176,24 @@ while [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" != "1
 
 Proceed to **release-publish** ONLY when:
 
-- ✅ ALL tests pass (no failures, no skips except hardware)
+- ✅ ALL tests pass (no failures)
 - ✅ iOS tests pass on BOTH oldest and newest runtime
 - ✅ Android tests pass on BOTH oldest (API 21-23) and newest (API 35-36)
 - ✅ Screenshots exist in `output/logs/testlogs/integration/`
 
-**Valid skips:** iOS/Mac on non-macOS, Windows on non-Windows.
+### Skip Policy
 
-**Invalid skips:** "No Android emulator" is NOT valid—create one.
+**Hardware skips only:**
+- iOS/Mac tests on non-macOS → Skip (hardware unavailable)
+- Windows tests on non-Windows → Skip (hardware unavailable)
+
+**NOT valid skips:**
+- "No Android emulator" → Create one
+- "Android SDK not found" → Ask user for path
+- "No iOS simulators" → Install via Xcode
+- "Tool X not installed" → Install it
+
+**If environment is broken, FIX IT. Do not skip tests.**
 
 ### Final Report Format
 
