@@ -161,12 +161,19 @@ Start Android emulator before running tests. See [setup.md](references/setup.md)
 
 **iOS and Android run TWICE:** once on oldest, once on newest.
 
-### Monitoring
+### Providing User Feedback
+
+**CRITICAL:** Long-running tests need continuous feedback. Users should never wait more than 30 seconds without knowing what's happening.
+
+- Update the TODO checklist at each phase transition
+- When waiting with `read_bash`, note elapsed time: "⏳ Still building (~60s elapsed)"
+- Tell users what's normal: "MAUI Release builds take 30-120s, silence is expected"
 
 👉 **See [monitoring.md](references/monitoring.md)** for:
-- Progress checking commands
-- Detecting hangs and crashes
-- When to intervene
+- Phase timing and expected durations
+- Output indicators to detect which phase is active
+- Feedback templates and example output
+- Troubleshooting hangs and crashes
 
 ---
 
