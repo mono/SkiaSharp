@@ -131,6 +131,22 @@ git push origin {tag}
 | Hotfix Preview | `Version X.Y.Z.F (Preview N)` | `Version 3.119.2.1 (Preview 1)` |
 | Hotfix Stable | `Version X.Y.Z.F` | `Version 3.119.2.1` |
 
+### Finding the Previous Release Tag
+
+**Always use `--notes-start-tag` to explicitly specify the previous release.** The auto-selection may pick the wrong tag.
+
+```bash
+# List recent tags to find the previous release
+git tag -l "v3.119*" --sort=-v:refname | head -10
+```
+
+| Current Release | Previous Tag (--notes-start-tag) |
+|-----------------|----------------------------------|
+| `v3.119.2-preview.2.3` | `v3.119.2-preview.1.2` (previous preview) |
+| `v3.119.2-preview.1.1` | `v3.119.1` (last stable) |
+| `v3.119.2` (stable) | `v3.119.2-preview.N.X` (last preview of this version) |
+| `v3.119.2.1-preview.1.1` (hotfix) | `v3.119.2` (stable being hotfixed) |
+
 ### Commands
 
 ```bash
@@ -138,6 +154,7 @@ git push origin {tag}
 gh release create {tag} \
   --title "Version {X.Y.Z} (Preview {N})" \
   --generate-notes \
+  --notes-start-tag {previous-tag} \
   --prerelease \
   --verify-tag
 
@@ -145,6 +162,7 @@ gh release create {tag} \
 gh release create {tag} \
   --title "Version {X.Y.Z}" \
   --generate-notes \
+  --notes-start-tag {previous-tag} \
   --verify-tag
 
 # Upload samples for stable releases (if available)
@@ -152,7 +170,8 @@ gh release upload {tag} samples.zip
 ```
 
 - `--title` sets the release title (use format above)
-- `--generate-notes` auto-generates release notes from PRs/commits since last release
+- `--generate-notes` auto-generates release notes from PRs/commits
+- `--notes-start-tag` specifies the previous release to diff from (required)
 - `--prerelease` marks as prerelease (preview only)
 - `--verify-tag` ensures the tag exists before creating the release
 
