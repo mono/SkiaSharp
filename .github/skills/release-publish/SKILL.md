@@ -7,6 +7,10 @@ description: >
   
   This is the FINAL step - after release-testing passes.
   Publishes to NuGet.org, creates tag, GitHub release, and closes milestone.
+  
+  Triggers: "publish the release", "push to nuget", "create github release",
+  "tag the release", "close the milestone", "annotate release notes",
+  "testing passed what's next", "finalize 3.119.2", "release is ready".
 ---
 
 # Release Publish Skill
@@ -15,22 +19,48 @@ Publish packages to NuGet.org and finalize releases.
 
 ⚠️ **NO UNDO:** This is step 3 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
 
-**Prerequisite:** release-testing must have passed. The versions should already be known from testing.
+---
+
+## Workflow Overview
+
+```
+┌────────────────────────────────────────────────────────────────────┐
+│  1. Confirm Versions     → Verify packages exist on preview feed   │
+│  2. Publish to NuGet.org → Trigger Azure pipeline (manual)         │
+│  3. Verify Published     → Poll NuGet.org until indexed            │
+│  4. Tag Release          → Push git tag (ask_user first!)          │
+│  5. Create GitHub Release→ Generate notes, set prerelease flag     │
+│  6. Annotate Notes       → Add platform/contributor emojis         │
+│  7. Close Milestone      → Stable releases only                    │
+└────────────────────────────────────────────────────────────────────┘
+```
+
+**Preview vs Stable differences:**
+| Step | Preview | Stable |
+|------|---------|--------|
+| 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
+| 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
+| 5. GitHub Release | `--prerelease` flag | No flag, attach samples |
+| 7. Milestone | Skip | Close milestone |
 
 ---
 
 ## Step 1: Confirm Versions
 
-The user should provide the versions from release-testing. If not, ask for them:
+**Prerequisite:** release-testing must have passed. Versions should be known from testing.
+
+The user should provide:
 - SkiaSharp version (e.g., `3.119.2-preview.2.3`)
 - HarfBuzzSharp version (e.g., `8.3.1.4-preview.2.3`)
 
-**Quick verification** - confirm packages exist on preview feed:
+If not provided, ask for them using `ask_user`.
+
+**Quick verification** — confirm packages exist on preview feed:
 ```bash
 dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-skia-version}"
 ```
 
-If the expected version is missing, STOP and ask user to verify testing was completed.
+If missing, STOP and ask user to verify testing was completed.
 
 ---
 
@@ -181,122 +211,17 @@ gh release upload {tag} samples.zip
 
 After creating the release, annotate each PR line with **platform** and **community** emojis.
 
-### Categories
+👉 **See [references/release-notes.md](references/release-notes.md)** for:
+- Complete emoji reference (platform + contributor)
+- Label-to-platform mapping
+- Title keyword detection
+- Full annotation process and examples
 
-| Section | When to Include |
-|---------|-----------------|
-| **Breaking Changes** | Only if there are breaking changes |
-| **New Features** | Only if there are new features |
-| **What's Changed** | Always (full list with all PRs) |
-
-### Emojis
-
-**Platform (required on all items):**
-| Emoji | Meaning |
-|-------|---------|
-| 🍎 | Apple (iOS/macOS/tvOS/Mac Catalyst) |
-| 🪟 | Windows |
-| 🐧 | Linux |
-| 🤖 | Android |
-| 🌐 | WebAssembly/Blazor |
-| 🎨 | Core API |
-| 🏗️ | Build system/CI |
-| 📦 | General (fallback - always use something!) |
-
-**Contributor:**
-| Emoji | Meaning |
-|-------|---------|
-| ❤️ | Community contribution (not @mattleibow) |
-
-### Release Note Structure
-
-```markdown
-## Breaking Changes
-* 🎨 Remove deprecated SKFoo API... by @mattleibow
-
-## New Features
-* 🍎❤️ Support SKMetalView on tvOS... by @MartinZikmund
-* 🐧❤️ Add riscv64 build support... by @kasperk81
-
-## What's Changed
-* 🎨 Remove deprecated SKFoo API... by @mattleibow
-* 🍎❤️ Support SKMetalView on tvOS... by @MartinZikmund
-* 🪟❤️ Enable Control Flow Guard... by @Aguilex
-* 📦 Adding the initial set of AI docs... by @mattleibow
-* 🏗️ Bump to the next version... by @mattleibow
-
-## New Contributors
-(Auto-generated)
-
-**Full Changelog**: (Auto-generated)
-```
-
-### Process
-
-1. Get the release body:
-   ```bash
-   gh release view {tag} --json body -q '.body' > /tmp/release-body.md
-   ```
-
-2. For each PR line (format: `* Description by @author in URL`):
-   - Fetch PR details: `gh pr view {number} --json labels,author`
-   - Determine **platform** from PR title/labels (required - use 📦 if none)
-   - Add ❤️ if author is not `mattleibow`
-   - Check if **breaking change** (title contains `BREAKING`, removes API)
-   - Check if **new feature** (title contains `Add`, `Support`, `Enable`, `Implement`, or bumps Skia/HarfBuzz)
-
-3. Build sections:
-   - **Breaking Changes** — only if there are breaking PRs (list them here AND in What's Changed)
-   - **New Features** — only if there are feature PRs (list them here AND in What's Changed)
-   - **What's Changed** — always include, contains ALL PRs
-
-4. Format all items: `* {platform}{❤️} Description...`
-
-5. Update the release:
-   ```bash
-   gh release edit {tag} --notes-file /tmp/release-body.md
-   ```
-
-### Label-to-Platform Mapping
-
-| Label Pattern | Platform Emoji |
-|---------------|----------------|
-| `os/Windows*` | 🪟 |
-| `os/macOS`, `os/iOS`, `os/tvOS` | 🍎 |
-| `os/Linux` | 🐧 |
-| `os/Android` | 🤖 |
-| `backend/SkiaSharp` | 🎨 |
-| `area/Build` | 🏗️ |
-| (no platform label) | 📦 |
-
-### Title Keywords-to-Platform Mapping
-
-| Title Contains | Platform Emoji |
-|----------------|----------------|
-| `iOS`, `macOS`, `tvOS`, `Apple`, `Metal`, `Catalyst` | 🍎 |
-| `Windows`, `Win`, `UWP`, `WinUI`, `Direct3D`, `D3D` | 🪟 |
-| `Linux`, `Alpine`, `riscv`, `LoongArch` | 🐧 |
-| `Android`, `NDK` | 🤖 |
-| `WebAssembly`, `Wasm`, `Blazor` | 🌐 |
-| `SK*` (API classes) | 🎨 |
-| `Build`, `CI`, `Pipeline` | 🏗️ |
-| (no platform keywords) | 📦 |
-
-### Example Transformation
-
-**Original (auto-generated):**
-```
-* Support SKMetalView on tvOS by @MartinZikmund in https://github.com/mono/SkiaSharp/pull/3114
-* Fix the incorrect call in SafeRef by @kkwpsv in https://github.com/mono/SkiaSharp/pull/3143
-* Adding the initial set of AI docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3406
-```
-
-**After annotation:**
-```
-* 🍎❤️ Support SKMetalView on tvOS by @MartinZikmund in https://github.com/mono/SkiaSharp/pull/3114
-* 🎨❤️ Fix the incorrect call in SafeRef by @kkwpsv in https://github.com/mono/SkiaSharp/pull/3143
-* 📦 Adding the initial set of AI docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3406
-```
+**Quick summary:**
+1. Get release body: `gh release view {tag} --json body -q '.body' > /tmp/release-body.md`
+2. For each PR: determine platform emoji, add ❤️ for non-mattleibow contributors
+3. Build sections: Breaking Changes (if any), New Features (if any), What's Changed (all)
+4. Update release: `gh release edit {tag} --notes-file /tmp/release-body.md`
 
 ---
 
@@ -311,6 +236,44 @@ gh api repos/:owner/:repo/milestones/{number} -X PATCH -f state=closed
 
 ---
 
+## Error Recovery
+
+### Pipeline Fails
+
+| Failure Point | Recovery |
+|---------------|----------|
+| Pipeline won't start | Verify branch name, check Azure DevOps permissions |
+| Build fails mid-run | Check logs, fix issue on release branch, re-run pipeline |
+| Approval rejected | Re-trigger pipeline with correct settings |
+| Push step fails | Check NuGet.org status, retry pipeline |
+
+### NuGet.org Issues
+
+| Issue | Recovery |
+|-------|----------|
+| Indexing takes >15 min | Normal for large packages. Keep polling. |
+| Package shows 404 after publish | Wait up to 30 min. NuGet CDN propagation delay. |
+| Wrong version published | **Cannot unpublish.** Release new corrected version. |
+
+### Git/GitHub Issues
+
+| Issue | Recovery |
+|-------|----------|
+| Tag push rejected | Check if tag exists: `git ls-remote --tags origin \| grep {tag}` |
+| Tag already exists | **Cannot delete.** Must use different tag or release new version. |
+| GitHub release fails | Re-run `gh release create` with `--verify-tag` |
+| Release notes wrong | Edit with `gh release edit {tag} --notes-file ...` |
+
+### General Recovery
+
+If you've partially completed and need to resume:
+1. Check what's done: `gh release view {tag}` (release exists?), `git ls-remote --tags origin` (tag exists?)
+2. Skip completed steps
+3. Continue from where you left off
+
+---
+
 ## Resources
 
 - [releasing.md](../../../documentation/releasing.md) — Version patterns, tag formats, workflow diagrams
+- [references/release-notes.md](references/release-notes.md) — Emoji annotation details
