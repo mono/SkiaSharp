@@ -241,12 +241,14 @@ After creating the release, annotate each PR line with **platform** and **commun
 2. For each PR line (format: `* Description by @author in URL`):
    - Fetch PR details: `gh pr view {number} --json labels,author`
    - Determine **platform** from PR title/labels (required - use 📦 if none)
-   - Determine if **breaking change** or **new feature** from title
    - Add ❤️ if author is not `mattleibow`
+   - Check if **breaking change** (title contains `BREAKING`, removes API)
+   - Check if **new feature** (title contains `Add`, `Support`, `Enable`, `Implement`, or bumps Skia/HarfBuzz)
 
-3. Categorize PRs:
-   - **Breaking Changes:** title contains `BREAKING`, `Remove` (API)
-   - **New Features:** title contains `Add`, `Support`, `Enable`, `Implement`, `Bump skia/harfbuzz`
+3. Build sections:
+   - **Breaking Changes** — only if there are breaking PRs (list them here AND in What's Changed)
+   - **New Features** — only if there are feature PRs (list them here AND in What's Changed)
+   - **What's Changed** — always include, contains ALL PRs
 
 4. Format all items: `* {platform}{❤️} Description...`
 
