@@ -8,11 +8,11 @@ SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia li
 
 | Skill | When to Use |
 |-------|-------------|
-| `implement-issue` | Implementing GitHub issues (new APIs, bug fixes) |
-| `api-docs` | Writing or reviewing XML documentation |
-| `release-branch` | Creating release branches |
-| `release-testing` | Testing packages before publishing |
-| `release-publish` | Publishing packages and finalizing releases |
+| `implement-issue` | User provides GitHub issue URL or says "implement #NNNN", "fix #NNNN". Gathers context and creates implementation plans for new APIs, bug fixes, enhancements. |
+| `api-docs` | Writing/reviewing XML documentation. Triggers: "document SKFoo", "add XML docs", "fill in missing docs", "remove To be added placeholders". |
+| `release-branch` | Creating release branches. Triggers: "release now", "start release X", "create release branch". Auto-detects next preview version, updates PREVIEW_LABEL, bumps main. |
+| `release-testing` | Testing packages before publishing. Triggers: "test the release", "verify packages", "run tests on iPad". Runs integration tests on Console, Blazor, iOS, Android, Mac Catalyst. |
+| `release-publish` | Publishing and finalizing releases. Triggers: "publish X", "push to nuget", "tag the release". Publishes to NuGet.org, creates tag, GitHub release, annotates notes with emojis. |
 
 **If uncertain:** Ask the user: *"I found the [skill-name] skill which handles [description]. Should I use it for this task?"*
 
