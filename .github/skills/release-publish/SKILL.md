@@ -177,7 +177,128 @@ gh release upload {tag} samples.zip
 
 ---
 
-## Step 6: Close Milestone (Stable only)
+## Step 6: Annotate Release Notes with Emojis
+
+After creating the release, annotate each PR line with **platform** and **community** emojis.
+
+### Categories
+
+| Section | When to Include |
+|---------|-----------------|
+| **Breaking Changes** | Only if there are breaking changes |
+| **New Features** | Only if there are new features |
+| **What's Changed** | Always (full list with all PRs) |
+
+### Emojis
+
+**Platform (required on all items):**
+| Emoji | Meaning |
+|-------|---------|
+| 🍎 | Apple (iOS/macOS/tvOS/Mac Catalyst) |
+| 🪟 | Windows |
+| 🐧 | Linux |
+| 🤖 | Android |
+| 🌐 | WebAssembly/Blazor |
+| 🎨 | Core API |
+| 🏗️ | Build system/CI |
+| 📦 | General (fallback - always use something!) |
+
+**Contributor:**
+| Emoji | Meaning |
+|-------|---------|
+| ❤️ | Community contribution (not @mattleibow) |
+
+### Release Note Structure
+
+```markdown
+## Breaking Changes
+* 🎨 Remove deprecated SKFoo API... by @mattleibow
+
+## New Features
+* 🍎❤️ Support SKMetalView on tvOS... by @MartinZikmund
+* 🐧❤️ Add riscv64 build support... by @kasperk81
+
+## What's Changed
+* 🎨 Remove deprecated SKFoo API... by @mattleibow
+* 🍎❤️ Support SKMetalView on tvOS... by @MartinZikmund
+* 🪟❤️ Enable Control Flow Guard... by @Aguilex
+* 📦 Adding the initial set of AI docs... by @mattleibow
+* 🏗️ Bump to the next version... by @mattleibow
+
+## New Contributors
+(Auto-generated)
+
+**Full Changelog**: (Auto-generated)
+```
+
+### Process
+
+1. Get the release body:
+   ```bash
+   gh release view {tag} --json body -q '.body' > /tmp/release-body.md
+   ```
+
+2. For each PR line (format: `* Description by @author in URL`):
+   - Fetch PR details: `gh pr view {number} --json labels,author`
+   - Determine **platform** from PR title/labels (required - use 📦 if none)
+   - Determine if **breaking change** or **new feature** from title
+   - Add ❤️ if author is not `mattleibow`
+
+3. Categorize PRs:
+   - **Breaking Changes:** title contains `BREAKING`, `Remove` (API)
+   - **New Features:** title contains `Add`, `Support`, `Enable`, `Implement`, `Bump skia/harfbuzz`
+
+4. Format all items: `* {platform}{❤️} Description...`
+
+5. Update the release:
+   ```bash
+   gh release edit {tag} --notes-file /tmp/release-body.md
+   ```
+
+### Label-to-Platform Mapping
+
+| Label Pattern | Platform Emoji |
+|---------------|----------------|
+| `os/Windows*` | 🪟 |
+| `os/macOS`, `os/iOS`, `os/tvOS` | 🍎 |
+| `os/Linux` | 🐧 |
+| `os/Android` | 🤖 |
+| `backend/SkiaSharp` | 🎨 |
+| `area/Build` | 🏗️ |
+| (no platform label) | 📦 |
+
+### Title Keywords-to-Platform Mapping
+
+| Title Contains | Platform Emoji |
+|----------------|----------------|
+| `iOS`, `macOS`, `tvOS`, `Apple`, `Metal`, `Catalyst` | 🍎 |
+| `Windows`, `Win`, `UWP`, `WinUI`, `Direct3D`, `D3D` | 🪟 |
+| `Linux`, `Alpine`, `riscv`, `LoongArch` | 🐧 |
+| `Android`, `NDK` | 🤖 |
+| `WebAssembly`, `Wasm`, `Blazor` | 🌐 |
+| `SK*` (API classes) | 🎨 |
+| `Build`, `CI`, `Pipeline` | 🏗️ |
+| (no platform keywords) | 📦 |
+
+### Example Transformation
+
+**Original (auto-generated):**
+```
+* Support SKMetalView on tvOS by @MartinZikmund in https://github.com/mono/SkiaSharp/pull/3114
+* Fix the incorrect call in SafeRef by @kkwpsv in https://github.com/mono/SkiaSharp/pull/3143
+* Adding the initial set of AI docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3406
+```
+
+**After annotation:**
+```
+* 🍎❤️ Support SKMetalView on tvOS by @MartinZikmund in https://github.com/mono/SkiaSharp/pull/3114
+* 🎨❤️ Fix the incorrect call in SafeRef by @kkwpsv in https://github.com/mono/SkiaSharp/pull/3143
+* 📦 Adding the initial set of AI docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3406
+```
+
+---
+
+## Step 7: Close Milestone (Stable only)
 
 **Skip for preview releases.**
 
