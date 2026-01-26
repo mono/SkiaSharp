@@ -46,8 +46,8 @@ gh api "repos/mono/SkiaSharp/commits/{sha}/statuses" --jq '.[] | "\(.context) | 
 | Pipeline | Required | Notes |
 |----------|----------|-------|
 | `SkiaSharp-Native` | ✅ Must pass | Builds native binaries |
-| `SkiaSharp` | ✅ Must pass | Builds managed code & publishes packages |
-| `SkiaSharp-Tests` | ⚠️ May fail | Sometimes flaky on release branches - warn user but don't block |
+| `SkiaSharp` | ⚠️ May not exist publically | Builds managed code & publishes packages |
+| `SkiaSharp-Tests` | ⚠️ May fail or not exist publically | Sometimes flaky on release branches - warn user but don't block |
 
 **Ignore:** `SkiaSharp (Public)` — public CI, not used for releases.
 
