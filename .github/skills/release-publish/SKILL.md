@@ -41,7 +41,33 @@ If the expected version is missing, STOP and ask user to verify testing was comp
 | Preview | Optional - trigger [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) |
 | Stable | Required - trigger [publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) |
 
-Ask user to trigger pipeline and wait for completion.
+### Pipeline Steps
+
+1. Open the [NuGet.org publish pipeline](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298)
+2. Click **"Run pipeline"**
+3. Select **"SkiaSharp"** from the radio buttons
+4. Check **"Confirm push to NuGet.org"** checkbox
+5. **For stable releases ONLY:** Check **"Push stable packages"** checkbox
+   - ⚠️ Do NOT check this for preview releases
+6. Click **"Next: Resources"**
+7. In **"Pipeline artifacts"**, click the **SkiaSharp** artifact selector
+8. From the **branch dropdown**, select `release/{version}` (the release branch)
+9. From the **pipeline runs list**, select the correct build by checking the build number
+10. Click **"Use selected run"**
+11. Click **"Run"**
+
+### Verification During Pipeline Run
+
+⚠️ **Before approving the push step, verify BOTH:**
+
+1. **Run name** — The pipeline run will rename itself to the version being released. Confirm this matches your expected version.
+2. **Push type** — The publish step will indicate **"Push Preview"** or **"Push Stable"**. Verify this matches your release type:
+   - Preview release → should show "Push Preview"
+   - Stable release → should show "Push Stable"
+
+**Only approve the push step when both are correct.** Wait for pipeline completion (typically 5-10 minutes after approval).
+
+Ask user to follow these steps and wait for completion.
 
 ---
 
