@@ -70,12 +70,33 @@ Ask user to follow these steps and wait for completion.
 
 ## Step 3: Verify Packages Published
 
-Verify the packages are available on NuGet.org:
+**Use curl to verify** (more reliable than `dotnet package search` which has version limits):
+
 ```bash
-dotnet package search SkiaSharp --source https://api.nuget.org/v3/index.json --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-skia-version}"
+# Check if packages exist - HTTP 200 = success
+curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec"
+curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec"
 ```
 
-Or check: `https://www.nuget.org/packages/SkiaSharp/{skia-version}`
+**If packages not yet indexed**, poll until available (NuGet.org can take 5-15 minutes):
+
+```bash
+# Poll every 30 seconds, max 10 minutes
+for i in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+  skia=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/skiasharp/{version}/skiasharp.nuspec")
+  hb=$(curl -s -o /dev/null -w "%{http_code}" "https://api.nuget.org/v3-flatcontainer/harfbuzzsharp/{version}/harfbuzzsharp.nuspec")
+  echo "$(date +%H:%M:%S) - SkiaSharp: $skia, HarfBuzzSharp: $hb"
+  if [ "$skia" = "200" ] && [ "$hb" = "200" ]; then
+    echo "✅ Both packages available on NuGet.org!"
+    break
+  fi
+  sleep 30
+done
+```
+
+> **Note:** Use explicit list `1 2 3...` instead of `{1..20}` brace expansion for better compatibility with async shell execution.
+
+Or manually check: `https://www.nuget.org/packages/SkiaSharp/{version}`
 
 ---
 
