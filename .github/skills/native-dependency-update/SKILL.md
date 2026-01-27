@@ -193,42 +193,15 @@ The `cgmanifest.json` file enables Microsoft Component Governance to detect secu
 
 **The problem:** Skia uses mirrors/forks (chromium.googlesource.com, skia.googlesource.com) but CVE databases track vulnerabilities against **upstream project names** (freetype, libpng, etc.). A `git` component pointing to a mirror URL won't match CVE databases.
 
-**The solution:** Use `type: "other"` with the **canonical upstream name and version** so CVE scanners can match:
+**The solution:** Use `type: "other"` with the **canonical upstream name and version** so CVE scanners can match.
 
-```json
-{
-  "component": {
-    "type": "other",
-    "other": {
-      "name": "libpng",
-      "version": "1.6.44",
-      "downloadUrl": "https://github.com/glennrp/libpng",
-      "hash": "git:abc123def456..."
-    }
-  }
-}
-```
-
-**When updating a dependency, find/update its entry:**
-
-| Dependency | `name` field | `downloadUrl` (upstream) |
-|------------|--------------|--------------------------|
-| freetype | `"freetype"` | `https://gitlab.freedesktop.org/freetype/freetype` |
-| libpng | `"libpng"` | `https://github.com/glennrp/libpng` |
-| zlib | `"zlib"` | `https://github.com/madler/zlib` |
-| harfbuzz | `"harfbuzz"` | `https://github.com/harfbuzz/harfbuzz` |
-| expat | `"expat"` | `https://github.com/libexpat/libexpat` |
-| libwebp | `"libwebp"` | `https://github.com/webmproject/libwebp` |
-| libjpeg-turbo | `"libjpeg-turbo"` | `https://github.com/libjpeg-turbo/libjpeg-turbo` |
-| brotli | `"brotli"` | `https://github.com/google/brotli` |
-| wuffs | `"wuffs"` | `https://github.com/nicowilliams/wuffs-mirror-release-c` |
-| dng_sdk | `"dng_sdk"` | `https://android.googlesource.com/platform/external/dng_sdk` |
+👉 **See [documentation/dependencies.md](../../../documentation/dependencies.md#cgmanifestjson-mapping)** for the complete lookup table of dependency names and upstream URLs.
 
 **Update checklist for cgmanifest.json:**
 1. Find the dependency's entry (search for its `name`)
 2. Update `version` to the new version (e.g., `"1.6.44"`)
 3. Update `hash` to the new commit hash (e.g., `"git:abc123..."`)
-4. If the entry doesn't exist, add it using the format above
+4. If the entry doesn't exist, add it using the format from the dependencies doc
 
 **Present changes to user:** Summary of files modified.
 
@@ -376,6 +349,12 @@ Confirm completion:
 ---
 
 ## Common Dependencies
+
+👉 **See [documentation/dependencies.md](../../../documentation/dependencies.md)** for the complete list of:
+- Security-relevant dependencies and their CVE database names
+- Unused dependencies (should be commented out in DEPS)
+- Platform-specific usage details
+- cgmanifest.json mapping table
 
 | Dependency | DEPS Key | Notes |
 |------------|----------|-------|
