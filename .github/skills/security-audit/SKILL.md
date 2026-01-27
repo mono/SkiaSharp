@@ -34,12 +34,9 @@ flowchart TD
 
     subgraph "2. Proactive Scan"
         C --> D[For each dependency:<br/>web search CVEs]
-        D --> E{Current version<br/>in affected range?}
-        E -->|Yes| V[⚠️ VERIFY fix commit<br/>against codebase]
+        D --> E{Current version<br/>affected?}
+        E -->|Yes| F[Note: CVE, severity, min fix version]
         E -->|No| G[Mark as clean]
-        V --> E2{Fix commit is<br/>ancestor of HEAD?}
-        E2 -->|Yes| G2[Mark as clean<br/>CVE db was wrong]
-        E2 -->|No| F[Note: CVE, severity, min fix version]
     end
 
     subgraph "3. Cross-Reference"
@@ -60,7 +57,7 @@ flowchart TD
     end
 
     subgraph "5. Report"
-        Q & R & G & G2 --> S[Generate report<br/>Priority: User-reported → Severity → Proactive]
+        Q & R --> S[Generate report<br/>Priority: User-reported → Severity → Proactive]
     end
 ```
 
@@ -140,46 +137,6 @@ Check:
 - What's the minimum fixed version?
 - What's the severity (CVSS score)?
 - Is it exploited in the wild?
-
-### Step 4b: Verify Fix Against Codebase (CRITICAL)
-
-> ⚠️ **Do NOT trust CVE database version ranges!** They are often inaccurate.
-> Always verify fix commits against the actual codebase before flagging a dependency.
-
-CVE databases (NVD, security news) frequently have **wrong version ranges**. For example:
-- NVD may claim "affects ≤2.13.3, fixed in 2.13.4"
-- But the fix commit was actually merged before 2.13.1
-
-**For each CVE that appears to affect a dependency:**
-
-1. **Find the fix commit** (from CVE advisory, security tracker, or upstream changelog)
-2. **Check if fix is in current version:**
-   ```bash
-   cd externals/skia/third_party/externals/{dependency}
-   
-   # Check if fix commit is ancestor of current HEAD
-   git merge-base --is-ancestor {fix_commit} HEAD && echo "FIXED" || echo "VULNERABLE"
-   
-   # Or check if fix is in a tag that's ancestor of HEAD
-   git merge-base --is-ancestor {fixed_version_tag} HEAD && echo "FIXED" || echo "VULNERABLE"
-   ```
-
-3. **Only flag if verification confirms vulnerability:**
-   - If fix commit IS ancestor of HEAD → Mark as ✅ Clean (already fixed)
-   - If fix commit is NOT ancestor → Mark as 🔴 Needs attention
-
-**Example verification:**
-```bash
-# CVE-2025-27363 claims FreeType ≤2.13.3 affected, fix in 2.13.4
-# But let's verify the actual fix commit:
-cd externals/skia/third_party/externals/freetype
-git merge-base --is-ancestor ef636696524b081f1b8819eb0c6a0b932d35757d HEAD
-# Returns 0 (success) = fix IS present, CVE database was WRONG
-```
-
-**Why this matters:** In January 2026, CVE-2025-27363 was incorrectly flagged for FreeType 2.13.3 
-because web sources claimed "fix in 2.13.4". Verification showed the fix commit was actually 
-included in 2.13.1, and SkiaSharp's 2.13.3 was already patched.
 
 ### Step 5: Cross-Reference
 
@@ -332,7 +289,6 @@ Some components bundled in dependencies are **NOT used** by SkiaSharp. CVEs in t
 
 ## Notes
 
-- **⚠️ ALWAYS verify fix commits** — CVE databases have inaccurate version ranges; verify against actual codebase
 - **Severity**: Focus on High/Critical CVEs first (CVSS ≥ 7.0)
 - **Exploitability**: Prioritize CVEs exploited in the wild
 - **User visibility**: User-reported issues get priority over proactive finds
