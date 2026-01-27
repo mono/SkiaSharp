@@ -56,6 +56,10 @@ Before starting, confirm you will:
 | Manually close issues | Breaks audit trail; PR merge auto-closes |
 | Skip `cgmanifest.json` update | Security compliance requires it |
 | Skip asking for approval at 🛑 points | User must approve visible/irreversible actions |
+| Revert/undo pushed commits | Breaks everyone who pulled; history is permanent |
+| Force push to shared branches | Breaks everyone who pulled; history is permanent |
+
+> ⚠️ **Pushed commits are permanent.** If you made a mistake, fix it forward with a new commit. Never revert or force push shared branches.
 
 ## Architecture
 
