@@ -160,7 +160,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			using var tf = SKTypeface.FromFile(fontFile);
 
 			int index;
-			var stream = tf.OpenStream(out index);
+			using var stream = tf.OpenStream(out index);
 			
 			// Verify stream is usable before creating blob
 			Assert.NotNull(stream);
@@ -179,9 +179,6 @@ namespace SkiaSharp.HarfBuzz.Tests
 			Assert.Equal(initialPosition, stream.Position);
 			Assert.True(stream.HasPosition);
 			Assert.True(stream.HasLength);
-
-			// Clean up the stream explicitly (caller's responsibility)
-			stream.Dispose();
 		}
 
 		[SkippableFact]
@@ -193,7 +190,7 @@ namespace SkiaSharp.HarfBuzz.Tests
 			using var tf = SKTypeface.FromFile(fontFile);
 
 			int index;
-			var stream = tf.OpenStream(out index);
+			using var stream = tf.OpenStream(out index);
 			var streamLength = stream.Length;
 
 			// Create and dispose blob
@@ -207,41 +204,30 @@ namespace SkiaSharp.HarfBuzz.Tests
 			// Stream should still be valid and usable after blob disposal
 			Assert.True(stream.HasLength);
 			Assert.Equal(streamLength, stream.Length);
-
-			// Caller must dispose stream
-			stream.Dispose();
 		}
 
 		[SkippableFact]
-		public void ToHarfBuzzBlobBlobCanBeUsedAfterStreamDisposal()
+		public void ToHarfBuzzBlobBlobCanBeUsedWithinStreamLifetime()
 		{
-			// Test that the blob can outlive the stream when using memory-mapped path
+			// Test that blob and stream can coexist and both be used
+			// The typical pattern is: using (stream) using (blob) { use blob }
 			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
 			using var tf = SKTypeface.FromFile(fontFile);
 
-			Blob blob;
-			int blobLength;
 			int index;
-
-			// Create blob from stream
 			using (var stream = tf.OpenStream(out index))
+			using (var blob = stream.ToHarfBuzzBlob())
 			{
-				blob = stream.ToHarfBuzzBlob();
-				blobLength = blob.Length;
 				Assert.NotNull(blob);
-				Assert.True(blobLength > 0);
-			}
-			// Stream is now disposed
-
-			// Blob should still be valid and usable
-			using (blob)
-			{
-				Assert.Equal(blobLength, blob.Length);
+				Assert.True(blob.Length > 0);
 				
-				// Verify we can create a face from the blob
+				// Verify we can create a face from the blob while stream is alive
 				using var face = new Face(blob, index);
 				Assert.NotNull(face);
 				Assert.Equal(index, face.Index);
+				
+				// Stream should still be valid
+				Assert.True(stream.HasLength);
 			}
 		}
 
@@ -271,20 +257,17 @@ namespace SkiaSharp.HarfBuzz.Tests
 			// Verify stream is still usable
 			Assert.True(skStream.HasLength);
 			Assert.Equal(fileBytes.Length, skStream.Length);
-
-			// Caller is responsible for disposing the stream
-			skStream.Dispose();
 		}
 
 		[SkippableFact]
-		public void SKShaperDisposesStreamCorrectly()
+		public void SKShaperConstructorSucceeds()
 		{
-			// Test that SKShaper properly disposes the stream when changed to use explicit using statement
-			// This verifies the fix in SKShaper constructor
+			// Test that SKShaper constructor works correctly with the behavioral change
+			// SKShaper must handle stream lifecycle properly after ToHarfBuzzBlob change
 			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
 			using var tf = SKTypeface.FromFile(fontFile);
 
-			// Create SKShaper - it should properly dispose the stream internally
+			// Create SKShaper
 			using var shaper = new SKShaper(tf);
 			
 			// Verify shaper was created successfully
@@ -336,9 +319,6 @@ namespace SkiaSharp.HarfBuzz.Tests
 				Assert.NotNull(face1);
 				Assert.NotNull(face2);
 			}
-
-			// Caller disposes the stream
-			stream.Dispose();
 		}
 	}
 }
