@@ -33,7 +33,37 @@ Look for:
 
 ### 2. Source File Changes
 
-Compare the current and target versions to identify file-level changes:
+Compare the current and target versions to identify file-level changes.
+
+#### Verification Procedure (MANDATORY)
+
+**Step 1: Get ALL added/deleted files (no path filter)**
+
+```bash
+cd externals/skia/third_party/externals/{dep}
+git diff {old_version}..{new_version} --diff-filter=AD --name-only
+```
+
+> ⚠️ **Do NOT filter by path.** Different libraries have different structures—some use `src/`, some have files in root, some use `lib/`. Get the full picture first.
+
+**Why this matters:** In the libwebp 1.3.2→1.6.0 update, checking only `src/dec`, `src/enc`, `src/dsp` missed the new `src/utils/palette.c` file, causing a link failure.
+
+**Step 2: Cross-reference against BUILD.gn**
+
+Open `externals/skia/third_party/{dep}/BUILD.gn` and examine the `sources` list. For each new `.c`/`.cpp` file:
+- Is the file's directory pattern already in BUILD.gn?
+- If yes → the new file likely needs to be added
+- If no → probably tests/examples/tools that Skia doesn't compile
+
+**Step 3: Check deleted files against BUILD.gn**
+
+For each deleted file, search BUILD.gn. If referenced, it must be removed.
+
+**Flags explained:**
+- `--diff-filter=AD` — shows only Added (A) and Deleted (D) files
+- `--name-only` — shows just filenames for easy scanning
+
+#### Interpreting Results
 
 **New source files** - May need to be added to BUILD.gn, especially if they're:
 - Core library files (not tests/examples)

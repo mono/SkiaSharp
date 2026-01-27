@@ -134,6 +134,38 @@ In addition to a few extra dependencies, the [Managed-Only build dependencies](#
  - Make
  - OpenJDK 17+
 
+### Building Native Libraries
+
+Build native libraries for specific platforms using Cake targets:
+
+```bash
+# macOS (Apple Silicon)
+dotnet cake --target=externals-macos --arch=arm64
+
+# macOS (Intel)
+dotnet cake --target=externals-macos --arch=x64
+
+# iOS (device)
+dotnet cake --target=externals-ios
+
+# iOS Simulator
+dotnet cake --target=externals-ios-simulator --arch=arm64
+
+# Android (ARM64)
+dotnet cake --target=externals-android --arch=arm64
+
+# Android (x86_64 for emulator)
+dotnet cake --target=externals-android --arch=x64
+
+# Windows (x64)
+dotnet cake --target=externals-windows --arch=x64
+
+# Linux (requires Docker)
+dotnet cake --target=externals-linux --arch=x64
+```
+
+> **Tip:** Native builds can take 10-30 minutes depending on your machine. Only build for platforms you need to test.
+
 ## Generating Documentation
 
 ```

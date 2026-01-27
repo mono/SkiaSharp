@@ -55,6 +55,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 ### Reference
 | Document | Description |
 |----------|-------------|
+| [dependencies.md](dependencies.md) | Native dependencies: security relevance, CVE tracking, cgmanifest.json |
 | [linux-assets.md](linux-assets.md) | Linux native package information |
 
 ## Quick Build
