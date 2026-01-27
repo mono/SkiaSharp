@@ -123,11 +123,45 @@ Get the commit hash for the target version using `git rev-parse {tag}^{commit}` 
 
 **Goal:** Assess risk and identify required changes.
 
+#### Step 1: Source File Verification (MANDATORY)
+
+> ⚠️ **Do not skip this step.** Build failures from missing source files waste time.
+
+**Step 1a: Get ALL added/deleted files (no path filter)**
+
+```bash
+cd externals/skia/third_party/externals/{dep}
+git diff {old_version}..{new_version} --diff-filter=AD --name-only
+```
+
+This shows every added/deleted file in the entire repo. Do NOT filter by path yet—different libraries have different structures (some use `src/`, some have files in root).
+
+**Step 1b: Cross-reference against BUILD.gn**
+
+Open `externals/skia/third_party/{dep}/BUILD.gn` and check the `sources` list. For each new `.c`/`.cpp` file from Step 1a:
+- Is the file's directory already referenced in BUILD.gn sources?
+- If yes → the new file likely needs to be added
+- If no → the file is probably tests/examples/tools that Skia doesn't compile
+
+**Example:** libwebp v1.6.0 added `src/utils/palette.c`. BUILD.gn already had other `src/utils/*.c` files listed, so `palette.c` needed to be added.
+
+**Step 1c: Check for deleted files**
+
+For each deleted `.c`/`.cpp` file:
+- Search BUILD.gn for that filename
+- If found → must be removed from BUILD.gn or build will fail
+
+**Flags explained:**
+- `--diff-filter=AD` shows only Added (A) and Deleted (D) files
+- `--name-only` shows just filenames, not content
+
+#### Step 2: Changelog Review
+
 Review changes between versions:
 - Check changelog/release notes for breaking changes or API modifications
-- Look for new source files that may need adding to BUILD.gn
-- Look for deleted source files that would break the build
 - Check header files for API changes
+
+#### Step 3: Risk Assessment
 
 **Risk assessment:**
 - Security-only releases → usually safe
@@ -137,7 +171,7 @@ Review changes between versions:
 
 👉 See [references/breaking-changes.md](references/breaking-changes.md) for detailed guidance.
 
-**Present analysis to user:** Risk level, any BUILD.gn changes needed, potential concerns.
+**Present analysis to user:** Risk level, source file changes found, any BUILD.gn changes needed, potential concerns.
 
 ### Phase 3: Local Changes
 
@@ -147,11 +181,52 @@ Review changes between versions:
 
 2. Update `externals/skia/third_party/{dep}/BUILD.gn` if new source files were added (rare)
 
-3. **Update `cgmanifest.json`** in the SkiaSharp root with the new commit hash (for security compliance)
+3. **Update `cgmanifest.json`** in the SkiaSharp root (required for security compliance)
 
 4. Checkout the new version in the dependency directory
 
 > ⚠️ **Do not skip step 3.** The `cgmanifest.json` file is required for security compliance and must be updated alongside DEPS.
+
+#### Updating cgmanifest.json for CVE Detection
+
+The `cgmanifest.json` file enables Microsoft Component Governance to detect security vulnerabilities. 
+
+**The problem:** Skia uses mirrors/forks (chromium.googlesource.com, skia.googlesource.com) but CVE databases track vulnerabilities against **upstream project names** (freetype, libpng, etc.). A `git` component pointing to a mirror URL won't match CVE databases.
+
+**The solution:** Use `type: "other"` with the **canonical upstream name and version** so CVE scanners can match:
+
+```json
+{
+  "component": {
+    "type": "other",
+    "other": {
+      "name": "libpng",
+      "version": "1.6.44",
+      "downloadUrl": "https://github.com/glennrp/libpng",
+      "hash": "git:abc123def456..."
+    }
+  }
+}
+```
+
+**When updating a dependency, find/update its entry:**
+
+| Dependency | `name` field | `downloadUrl` (upstream) |
+|------------|--------------|--------------------------|
+| freetype | `"freetype"` | `https://gitlab.freedesktop.org/freetype/freetype` |
+| libpng | `"libpng"` | `https://github.com/glennrp/libpng` |
+| zlib | `"zlib"` | `https://github.com/madler/zlib` |
+| harfbuzz | `"harfbuzz"` | `https://github.com/harfbuzz/harfbuzz` |
+| expat | `"expat"` | `https://github.com/libexpat/libexpat` |
+| libwebp | `"libwebp"` | `https://github.com/webmproject/libwebp` |
+| libjpeg-turbo | `"libjpeg-turbo"` | `https://github.com/libjpeg-turbo/libjpeg-turbo` |
+| brotli | `"brotli"` | `https://github.com/google/brotli` |
+
+**Update checklist for cgmanifest.json:**
+1. Find the dependency's entry (search for its `name`)
+2. Update `version` to the new version (e.g., `"1.6.44"`)
+3. Update `hash` to the new commit hash (e.g., `"git:abc123..."`)
+4. If the entry doesn't exist, add it using the format above
 
 **Present changes to user:** Summary of files modified.
 
