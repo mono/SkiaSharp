@@ -221,6 +221,8 @@ The `cgmanifest.json` file enables Microsoft Component Governance to detect secu
 | libwebp | `"libwebp"` | `https://github.com/webmproject/libwebp` |
 | libjpeg-turbo | `"libjpeg-turbo"` | `https://github.com/libjpeg-turbo/libjpeg-turbo` |
 | brotli | `"brotli"` | `https://github.com/google/brotli` |
+| wuffs | `"wuffs"` | `https://github.com/nicowilliams/wuffs-mirror-release-c` |
+| dng_sdk | `"dng_sdk"` | `https://android.googlesource.com/platform/external/dng_sdk` |
 
 **Update checklist for cgmanifest.json:**
 1. Find the dependency's entry (search for its `name`)

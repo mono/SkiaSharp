@@ -115,16 +115,27 @@ git describe --tags --abbrev=0 2>/dev/null || git log -1 --format='%H (no tag)'
 
 **Security-relevant dependencies:**
 
-| Dependency | DEPS Key | Typical CVE Types |
-|------------|----------|-------------------|
-| libpng | `third_party/externals/libpng` | Buffer overflows, DoS |
-| libexpat | `third_party/externals/expat` | XXE, memory corruption |
-| zlib | `third_party/externals/zlib` | Buffer overflows |
-| libwebp | `third_party/externals/libwebp` | Heap buffer overflow |
-| harfbuzz | `third_party/externals/harfbuzz` | Rare; shaping bugs |
-| freetype | `third_party/externals/freetype` | Font parsing vulnerabilities |
-| libjpeg-turbo | `third_party/externals/libjpeg-turbo` | Decoding vulnerabilities |
-| brotli | `third_party/externals/brotli` | Compression bugs |
+| Dependency | DEPS Key | Typical CVE Types | Notes |
+|------------|----------|-------------------|-------|
+| libpng | `third_party/externals/libpng` | Buffer overflows, DoS | PNG decoding |
+| libexpat | `third_party/externals/expat` | XXE, memory corruption | XML/SVG parsing |
+| zlib | `third_party/externals/zlib` | Buffer overflows | Compression |
+| libwebp | `third_party/externals/libwebp` | Heap buffer overflow | WebP decoding |
+| harfbuzz | `third_party/externals/harfbuzz` | Heap overflow, shaping bugs | Text shaping |
+| freetype | `third_party/externals/freetype` | Font parsing vulnerabilities | Font rendering |
+| libjpeg-turbo | `third_party/externals/libjpeg-turbo` | Decoding vulnerabilities | JPEG decoding |
+| brotli | `third_party/externals/brotli` | Decompression bombs, DoS | Compression |
+| wuffs | `third_party/externals/wuffs` | Decoder bugs (memory-safe by design) | GIF decoding |
+| dng_sdk | `third_party/externals/dng_sdk` | RAW parsing vulnerabilities | DNG/RAW (Windows only) |
+
+**Not security-relevant (disabled or unused):**
+
+| Dependency | Reason Not Audited |
+|------------|-------------------|
+| libavif | `skia_use_libavif=false` (disabled) |
+| libjxl | `skia_use_libjxl_decode=false` (disabled) |
+| libgav1 | Not connected to Skia build |
+| libyuv | Not connected to Skia build |
 
 ### Step 4: Proactive CVE Scan
 
