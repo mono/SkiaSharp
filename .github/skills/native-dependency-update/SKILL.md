@@ -95,6 +95,8 @@ See [documentation/building.md](../../../documentation/building.md#building-nati
 
 ```bash
 dotnet cake --target=externals-macos --arch=arm64  # Example
+
+dotnet cake --target=tests-netcore --skipExternals=all
 ```
 
 > ⚠️ **Never use `dotnet test` directly** — use Cake for proper skip trait handling.
@@ -105,11 +107,29 @@ dotnet cake --target=externals-macos --arch=arm64  # Example
 
 **Both PRs must be created together** — CI requires both.
 
-1. **mono/skia PR**: Branch `dev/update-{dep}` → target `skiasharp`
-2. **SkiaSharp PR**: Branch `dev/update-{dep}` → target `main`
-   - Update `externals/skia` submodule to point to mono/skia PR
-   - Update `cgmanifest.json`
-   - Link issues with "Fixes #NNNNN" in body
+#### Step 1: Create mono/skia PR first
+
+Branch `dev/update-{dep}` → target `skiasharp`
+
+Fill in the template:
+- **SkiaSharp Issue:** `Related to https://github.com/mono/SkiaSharp/issues/{number}`
+- **Required SkiaSharp PR:** Leave as placeholder initially
+
+#### Step 2: Create SkiaSharp PR
+
+Branch `dev/update-{dep}` → target `main`
+
+- Update `externals/skia` submodule to point to mono/skia PR branch
+- Update `cgmanifest.json`
+
+Fill in the template:
+- **Bugs Fixed:** `- Fixes #{number}` (auto-closes issue on merge)
+- **Required skia PR:** Full URL to mono/skia PR
+
+#### Step 3: Update mono/skia PR
+
+Go back and edit the mono/skia PR to add:
+- **Required SkiaSharp PR:** `Requires https://github.com/mono/SkiaSharp/pull/{number}`
 
 ### Phase 6: Monitor CI
 
