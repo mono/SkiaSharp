@@ -12,7 +12,9 @@ description: >
   - Analyze breaking changes between dependency versions
   
   Triggers: "bump libpng", "update zlib", "fix CVE in expat", "update native deps",
-  "what version of libpng", "check for breaking changes", "update DEPS".
+  "what version of libpng", "check for breaking changes".
+
+  For security audits (finding CVEs, checking PR coverage), use the `security-audit` skill instead.
 ---
 
 # Native Dependency Update Skill
@@ -20,8 +22,6 @@ description: >
 Update native dependencies in SkiaSharp's Skia fork (mono/skia).
 
 ## ⚠️ MANDATORY: Follow Every Phase
-
-**"Do everything" means "follow every step of this skill."**
 
 You MUST complete ALL phases in order. Do not skip phases to save time.
 Do not interpret user requests like "please do" or "do everything" as permission to take shortcuts.
@@ -76,26 +76,48 @@ SkiaSharp repo
 
 **Key insight:** Changes go to mono/skia first, then SkiaSharp updates its submodule.
 
+> 💡 **Need a security audit first?** Use the `security-audit` skill to get a report of open CVEs and PR coverage before deciding what to update.
+
 ---
 
 ## Workflow
 
 ### Phase 1: Discovery
 
-**Goal:** Understand current state and target version.
+**Goal:** Understand current state, check for existing work, and identify target version.
+
+#### Step 1: Check for existing PRs
+
+Before starting any work, search for open PRs in both mono/SkiaSharp and mono/skia that mention the dependency name or CVE number.
+
+**If a relevant PR exists:**
+- Report the PR to the user with its status
+- **Evaluate the PR's target version:**
+  - What version does the PR bump to?
+  - What's the latest available version?
+  - Does the PR version fix the CVE/issue being requested?
+  - Is the PR significantly outdated (e.g., 2+ minor versions behind latest)?
+- Recommend one of:
+  - **Use as-is:** PR version is sufficient and reasonably current
+  - **Update PR:** PR exists but should target a newer version
+  - **Create new:** PR is too outdated or doesn't fix the issue
+- Ask if they want to help push that PR forward instead of creating new work
+
+#### Step 2: Check current version
 
 1. Check `externals/skia/DEPS` for the dependency entry (format: `"third_party/externals/{name}": "{url}@{commit}"`)
 
 2. Navigate to the dependency checkout at `externals/skia/third_party/externals/{name}` and determine the current version from git tags or commit history
 
-3. Find the target version:
-   - For CVE fixes: Check the security advisory
-   - For bug fixes: Check upstream changelog
-   - For general updates: Use latest stable or match upstream Google Skia
+#### Step 3: Find target version
 
-4. Get the commit hash for the target version using `git rev-parse {tag}^{commit}` (handles annotated tags correctly)
+- For CVE fixes: Check the security advisory
+- For bug fixes: Check upstream changelog
+- For general updates: Use latest stable or match upstream Google Skia
 
-**Present findings to user:** Current version, target version, and reason for update.
+Get the commit hash for the target version using `git rev-parse {tag}^{commit}` (handles annotated tags correctly)
+
+**Present findings to user:** Existing PRs (if any), current version, target version, and reason for update.
 
 ### Phase 2: Analysis
 
@@ -188,8 +210,6 @@ In `externals/skia`:
 - Push branch and create PR targeting `skiasharp` branch
 - Fill template: link to SkiaSharp issue, leave SkiaSharp PR as placeholder
 
-> ❌ **Do NOT push directly to `skiasharp`.** Create a PR.
-
 #### Step 3: Create SkiaSharp PR
 
 In SkiaSharp root:
@@ -199,8 +219,6 @@ In SkiaSharp root:
 - Commit **BOTH** the submodule change AND cgmanifest.json
 - Push branch and create PR targeting `main` branch
 - Fill template: link to mono/skia PR, and list related issues as bullet points (see below)
-
-> ❌ **Do NOT push directly to `main`.** Create a PR.
 
 > ⚠️ **The submodule update is critical.** Without it, SkiaSharp will still use the old dependency version even though cgmanifest.json is updated. Always verify `git status` shows `modified: externals/skia` before committing.
 
@@ -228,22 +246,7 @@ Edit the mono/skia PR to add the SkiaSharp PR link.
 - **SkiaSharp** uses Azure DevOps for build/test
 - **mono/skia** has no CI - relies on SkiaSharp's CI
 
-Check both CI status and PR state (PRs may auto-merge when CI passes):
-
-```
-# Check CI status
-gh pr checks {pr-number} --repo mono/SkiaSharp
-
-# Check if PR was auto-merged
-gh pr view {pr-number} --repo mono/SkiaSharp --json state,merged
-```
-
-Status meanings:
-- `pending` - Build in progress
-- `success` - All checks passed  
-- `failure` - Build or tests failed
-
-**Note:** PRs may have auto-merge enabled. Always check the PR state, not just CI status—the PR may already be merged.
+Check the SkiaSharp PR's CI status and whether it has been auto-merged. PRs may have auto-merge enabled, so always verify the PR state before proceeding.
 
 **If CI fails:** Check Azure DevOps logs for details. Common issues:
 - Platform-specific build failures (BUILD.gn may need updates)
