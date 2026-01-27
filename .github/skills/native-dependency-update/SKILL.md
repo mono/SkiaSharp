@@ -52,7 +52,8 @@ Before starting, confirm you will:
 |----------|----------------|
 | Push directly to `skiasharp` branch | Bypasses PR review and CI |
 | Push directly to `main` branch | Bypasses PR review and CI |
-| Skip build/test phase | Broken code may be merged |
+| Skip native build phase | CI is too slow; must verify locally first |
+| Defer native build to CI | CI is too slow; must verify locally first |
 | Manually close issues | Breaks audit trail; PR merge auto-closes |
 | Skip `cgmanifest.json` update | Security compliance requires it |
 | Skip asking for approval at 🛑 points | User must approve visible/irreversible actions |
@@ -133,14 +134,20 @@ Review changes between versions:
 
 ### Phase 4: Build & Test
 
-> ⚠️ **Do not skip this phase.** Even "simple" version bumps can break builds.
+> 🛑 **MANDATORY: Always build native libraries locally.**
+> 
+> CI takes too long to be the first place you discover build failures.
+> Native builds MUST succeed locally before creating any PR.
+> Do not skip this phase or defer to CI.
 
-**Goal:** Verify the update works.
+**Goal:** Verify the update works by building native libraries locally.
 
 Build for one platform to verify:
 ```bash
 dotnet cake --target=externals-macos --arch=arm64
 ```
+
+If the build fails with error 137 (killed/OOM), retry or free up memory. Do not proceed until the build succeeds.
 
 Run tests (must use Cake for proper skip trait handling):
 ```bash
