@@ -6,101 +6,12 @@
 
 ### Namespace SkiaSharp.Views.Mac
 
-#### Type Changed: SkiaSharp.Views.Mac.SKCanvasLayer
-
-Added interfaces:
-
-```csharp
-CoreAnimation.ICAMediaTiming
-Foundation.INSCoding
-Foundation.INSObjectProtocol
-Foundation.INSSecureCoding
-ObjCRuntime.INativeObject
-System.IDisposable
-System.IEquatable<Foundation.NSObject>
-```
-
-
-#### Type Changed: SkiaSharp.Views.Mac.SKCanvasView
-
-Added interfaces:
-
-```csharp
-AppKit.INSAccessibility
-AppKit.INSAccessibilityElementProtocol
-AppKit.INSAppearanceCustomization
-AppKit.INSDraggingDestination
-AppKit.INSTouchBarProvider
-AppKit.INSUserActivityRestoring
-AppKit.INSUserInterfaceItemIdentification
-Foundation.INSCoding
-Foundation.INSObjectProtocol
-ObjCRuntime.INativeObject
-System.IDisposable
-System.IEquatable<Foundation.NSObject>
-```
-
-
-#### Type Changed: SkiaSharp.Views.Mac.SKGLLayer
-
-Added interfaces:
-
-```csharp
-CoreAnimation.ICAMediaTiming
-Foundation.INSCoding
-Foundation.INSObjectProtocol
-Foundation.INSSecureCoding
-ObjCRuntime.INativeObject
-System.IDisposable
-System.IEquatable<Foundation.NSObject>
-```
-
-
-#### Type Changed: SkiaSharp.Views.Mac.SKGLView
-
-Added interfaces:
-
-```csharp
-AppKit.INSAccessibility
-AppKit.INSAccessibilityElementProtocol
-AppKit.INSAppearanceCustomization
-AppKit.INSDraggingDestination
-AppKit.INSTouchBarProvider
-AppKit.INSUserActivityRestoring
-AppKit.INSUserInterfaceItemIdentification
-Foundation.INSCoding
-Foundation.INSObjectProtocol
-ObjCRuntime.INativeObject
-System.IDisposable
-System.IEquatable<Foundation.NSObject>
-```
-
-
-#### Type Changed: SkiaSharp.Views.Mac.SKMetalView
-
-Added interfaces:
-
-```csharp
-AppKit.INSAccessibility
-AppKit.INSAccessibilityElementProtocol
-AppKit.INSAppearanceCustomization
-AppKit.INSDraggingDestination
-AppKit.INSTouchBarProvider
-AppKit.INSUserActivityRestoring
-AppKit.INSUserInterfaceItemIdentification
-CoreAnimation.ICALayerDelegate
-Foundation.INSCoding
-Foundation.INSObjectProtocol
-System.IEquatable<Foundation.NSObject>
-```
-
-
 #### Type Changed: SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs
 
 Obsoleted constructors:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
  public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 ```
 

@@ -352,7 +352,7 @@ jobs:
                 dockerfile: ${{ parameters.docker }}/Dockerfile
                 context: ${{ parameters.docker }}
                 image: skiasharp:skiasharp
-                buildArguments: --tag skiasharp ${{ parameters.dockerArgs }}
+                buildArguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
                 enableNetwork: true
           - ${{ if ne(parameters.use1ESPipelineTemplates, 'true') }}:
             - task: Docker@2
@@ -367,7 +367,7 @@ jobs:
                 command: build
                 buildContext: ${{ parameters.docker }}
                 dockerfile: ${{ parameters.docker }}/Dockerfile
-                arguments: --tag skiasharp ${{ parameters.dockerArgs }}
+                arguments: --platform linux/amd64 --tag skiasharp ${{ parameters.dockerArgs }}
           - bash: |
               echo dotnet tool restore > cmd.sh
               echo dotnet cake --target=${{ parameters.target }} --verbosity=${{ parameters.verbosity }} --configuration=${{ coalesce(parameters.configuration, 'Release') }} ${{ parameters.additionalArgs }} >> cmd.sh

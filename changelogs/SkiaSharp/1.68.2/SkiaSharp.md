@@ -343,7 +343,7 @@ public static bool op_Inequality (SKHighContrastConfig left, SKHighContrastConfi
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use FromPixels (SKImageInfo, SKData, int) instead.")]
  public static SKImage FromPixelData (SKImageInfo info, SKData data, int rowBytes);
 ```
 
@@ -472,23 +472,23 @@ public bool IsInvertible { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use MapRect(SKRect) instead.")]
  public static void MapRect (ref SKMatrix matrix, out SKRect dest, ref SKRect source);
- [Obsolete ()]
+ [Obsolete ("Use PostConcat(SKMatrix) instead.")]
  public static void PostConcat (ref SKMatrix target, SKMatrix matrix);
- [Obsolete ()]
+ [Obsolete ("Use PostConcat(SKMatrix) instead.")]
  public static void PostConcat (ref SKMatrix target, ref SKMatrix matrix);
- [Obsolete ()]
+ [Obsolete ("Use PreConcat(SKMatrix) instead.")]
  public static void PreConcat (ref SKMatrix target, SKMatrix matrix);
- [Obsolete ()]
+ [Obsolete ("Use PreConcat(SKMatrix) instead.")]
  public static void PreConcat (ref SKMatrix target, ref SKMatrix matrix);
- [Obsolete ()]
+ [Obsolete ("Use CreateRotation(float) instead.")]
  public static void Rotate (ref SKMatrix matrix, float radians);
- [Obsolete ()]
+ [Obsolete ("Use CreateRotation(float, float, float) instead.")]
  public static void Rotate (ref SKMatrix matrix, float radians, float pivotx, float pivoty);
- [Obsolete ()]
+ [Obsolete ("Use CreateRotationDegrees(float) instead.")]
  public static void RotateDegrees (ref SKMatrix matrix, float degrees);
- [Obsolete ()]
+ [Obsolete ("Use CreateRotationDegrees(float, float, float) instead.")]
  public static void RotateDegrees (ref SKMatrix matrix, float degrees, float pivotx, float pivoty);
  [Obsolete ()]
  public void SetScaleTranslate (float sx, float sy, float tx, float ty);
@@ -601,15 +601,15 @@ public SKShader ToShader (SKShaderTileMode tmx, SKShaderTileMode tmy, SKMatrix l
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Encode(SKWStream, SKJpegEncoderOptions) instead.")]
  public static bool Encode (SKWStream dst, SKPixmap src, SKJpegEncoderOptions options);
- [Obsolete ()]
+ [Obsolete ("Use Encode(SKWStream, SKPngEncoderOptions) instead.")]
  public static bool Encode (SKWStream dst, SKPixmap src, SKPngEncoderOptions options);
- [Obsolete ()]
+ [Obsolete ("Use Encode(SKWStream, SKWebpEncoderOptions) instead.")]
  public static bool Encode (SKWStream dst, SKPixmap src, SKWebpEncoderOptions options);
- [Obsolete ()]
+ [Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
  public static bool Encode (SKWStream dst, SKBitmap src, SKEncodedImageFormat format, int quality);
- [Obsolete ()]
+ [Obsolete ("Use Encode(SKWStream, SKEncodedImageFormat, int) instead.")]
  public static bool Encode (SKWStream dst, SKPixmap src, SKEncodedImageFormat encoder, int quality);
 ```
 
@@ -865,7 +865,7 @@ public static bool op_Inequality (SKSurfaceProps left, SKSurfaceProps right);
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Create(SKRect, Stream) instead.")]
  public static SKCanvas Create (SKRect bounds, SKXmlWriter writer);
 ```
 
@@ -897,31 +897,31 @@ public int GlyphCount { get; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CountGlyphs(byte[], SKTextEncoding) instead.")]
  public int CountGlyphs (byte[] str, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use CountGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
  public int CountGlyphs (System.ReadOnlySpan<byte> str, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use CountGlyphs(string) instead.")]
  public int CountGlyphs (string str, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use CountGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
  public int CountGlyphs (IntPtr str, int strLen, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
  public ushort[] GetGlyphs (byte[] text, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
  public ushort[] GetGlyphs (System.ReadOnlySpan<byte> text, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(string) instead.")]
  public ushort[] GetGlyphs (string text, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(string) instead.")]
  public int GetGlyphs (string text, out ushort[] glyphs);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(byte[], SKTextEncoding) instead.")]
  public int GetGlyphs (byte[] text, SKEncoding encoding, out ushort[] glyphs);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(IntPtr, int, SKTextEncoding) instead.")]
  public ushort[] GetGlyphs (IntPtr text, int length, SKEncoding encoding);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(ReadOnlySpan<byte>, SKTextEncoding) instead.")]
  public int GetGlyphs (System.ReadOnlySpan<byte> text, SKEncoding encoding, out ushort[] glyphs);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(string) instead.")]
  public int GetGlyphs (string text, SKEncoding encoding, out ushort[] glyphs);
- [Obsolete ()]
+ [Obsolete ("Use GetGlyphs(IntPtr, int, SKTextEncoding) instead.")]
  public int GetGlyphs (IntPtr text, int length, SKEncoding encoding, out ushort[] glyphs);
 ```
 
@@ -978,7 +978,7 @@ public static SKTextEncoding ToTextEncoding (this SKEncoding encoding);
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use GetEncodedText(string, SKTextEncoding) instead.")]
  public static byte[] GetEncodedText (string text, SKEncoding encoding);
 ```
 

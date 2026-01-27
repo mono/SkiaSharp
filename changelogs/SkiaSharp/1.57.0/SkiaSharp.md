@@ -102,7 +102,7 @@ public SKImage ToTextureImage (GRContext context);
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use Encode(SKEncodedImageFormat, int) instead.")]
  public SKData Encode (SKImageEncodeFormat format, int quality);
 ```
 

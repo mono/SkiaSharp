@@ -28,6 +28,18 @@ Added constructor:
 public SKGLControl (OpenTK.GLControl.GLControlSettings settings);
 ```
 
+Removed interfaces:
+
+```csharp
+System.ComponentModel.IComponent
+System.ComponentModel.ISynchronizeInvoke
+System.IDisposable
+System.Windows.Forms.IBindableComponent
+System.Windows.Forms.IContainerControl
+System.Windows.Forms.IDropTarget
+System.Windows.Forms.IWin32Window
+```
+
 
 #### New Type: SkiaSharp.Views.Desktop.Extensions
 

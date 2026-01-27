@@ -77,7 +77,7 @@ public static class MacExtensions {
 #### New Type: SkiaSharp.Views.Mac.SKCanvasLayer
 
 ```csharp
-public class SKCanvasLayer : CoreAnimation.CALayer {
+public class SKCanvasLayer : CoreAnimation.CALayer, CoreAnimation.ICAMediaTiming, Foundation.INSCoding, Foundation.INSObjectProtocol, Foundation.INSSecureCoding, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKCanvasLayer ();
 	// properties
@@ -95,7 +95,7 @@ public class SKCanvasLayer : CoreAnimation.CALayer {
 #### New Type: SkiaSharp.Views.Mac.SKCanvasView
 
 ```csharp
-public class SKCanvasView : AppKit.NSView {
+public class SKCanvasView : AppKit.NSView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserActivityRestoring, AppKit.INSUserInterfaceItemIdentification, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKCanvasView ();
 	public SKCanvasView (CoreGraphics.CGRect frame);
@@ -115,7 +115,7 @@ public class SKCanvasView : AppKit.NSView {
 #### New Type: SkiaSharp.Views.Mac.SKGLLayer
 
 ```csharp
-public class SKGLLayer : CoreAnimation.CAOpenGLLayer {
+public class SKGLLayer : CoreAnimation.CAOpenGLLayer, CoreAnimation.ICAMediaTiming, Foundation.INSCoding, Foundation.INSObjectProtocol, Foundation.INSSecureCoding, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKGLLayer ();
 	// properties
@@ -133,7 +133,7 @@ public class SKGLLayer : CoreAnimation.CAOpenGLLayer {
 #### New Type: SkiaSharp.Views.Mac.SKGLView
 
 ```csharp
-public class SKGLView : AppKit.NSOpenGLView {
+public class SKGLView : AppKit.NSOpenGLView, AppKit.INSAccessibility, AppKit.INSAccessibilityElementProtocol, AppKit.INSAppearanceCustomization, AppKit.INSDraggingDestination, AppKit.INSTouchBarProvider, AppKit.INSUserActivityRestoring, AppKit.INSUserInterfaceItemIdentification, Foundation.INSCoding, Foundation.INSObjectProtocol, ObjCRuntime.INativeObject, System.IDisposable, System.IEquatable<Foundation.NSObject> {
 	// constructors
 	public SKGLView ();
 	public SKGLView (CoreGraphics.CGRect frame);

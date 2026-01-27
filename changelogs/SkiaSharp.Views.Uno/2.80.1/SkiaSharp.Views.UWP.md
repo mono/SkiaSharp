@@ -45,7 +45,7 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
 
-	[Obsolete]
+	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
@@ -54,7 +54,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 	public SkiaSharp.SKColorType ColorType { get; }
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
 
-	[Obsolete]
+	[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }
@@ -78,6 +78,7 @@ public class SKPaintSurfaceEventArgs : System.EventArgs {
 public class SKXamlCanvas : Windows.UI.Xaml.FrameworkElement, System.Collections.IEnumerable, Uno.UI.DataBinding.IWeakReferenceProvider, Windows.UI.Composition.IAnimationObject, Windows.UI.Composition.IVisualElement, Windows.UI.Xaml.DependencyObject, Windows.UI.Xaml.IDataContextProvider, Windows.UI.Xaml.IDependencyObjectParse, Windows.UI.Xaml.IDependencyObjectStoreProvider, Windows.UI.Xaml.ILayoutConstraints {
 	// constructors
 	public SKXamlCanvas ();
+	public SKXamlCanvas (IntPtr handle);
 	// properties
 	public SkiaSharp.SKSize CanvasSize { get; }
 	public double Dpi { get; }
@@ -85,7 +86,7 @@ public class SKXamlCanvas : Windows.UI.Xaml.FrameworkElement, System.Collections
 	// events
 	public event System.EventHandler<SKPaintSurfaceEventArgs> PaintSurface;
 	// methods
-	public override void DrawRect (CoreGraphics.CGRect dirtyRect);
+	public override void Draw (CoreGraphics.CGRect dirtyRect);
 	public void Invalidate ();
 	protected virtual void OnPaintSurface (SKPaintSurfaceEventArgs e);
 }
