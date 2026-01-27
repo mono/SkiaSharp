@@ -30,7 +30,7 @@ Do not interpret user requests like "please do" or "do everything" as permission
 
 Before starting, confirm you will:
 - [ ] Complete Phase 1-8 in order
-- [ ] Update BOTH `DEPS` AND `cgmanifest.json`
+- [ ] Update DEPS, `externals/skia` submodule, AND `cgmanifest.json`
 - [ ] Build and test locally before any PR
 - [ ] Create PRs (never push directly to `skiasharp` or `main`)
 - [ ] Use "Fixes #NNNNN" in PR body (never close issues manually)
@@ -56,6 +56,7 @@ Before starting, confirm you will:
 | Defer native build to CI | CI is too slow; must verify locally first |
 | Manually close issues | Breaks audit trail; PR merge auto-closes |
 | Skip `cgmanifest.json` update | Security compliance requires it |
+| Skip `externals/skia` submodule update | SkiaSharp won't use the new dependency version |
 | Skip asking for approval at 🛑 points | User must approve visible/irreversible actions |
 | Revert/undo pushed commits | Breaks everyone who pulled; history is permanent |
 | Force push to shared branches | Breaks everyone who pulled; history is permanent |
@@ -193,11 +194,15 @@ In `externals/skia`:
 
 In SkiaSharp root:
 - Create branch `dev/update-{dep}` (e.g., `dev/update-expat`)
-- Commit cgmanifest.json change
+- **Update the `externals/skia` submodule** to point to the mono/skia PR branch or commit
+- Update `cgmanifest.json` with the new commit hash
+- Commit **BOTH** the submodule change AND cgmanifest.json
 - Push branch and create PR targeting `main` branch
 - Fill template: link to mono/skia PR, and list related issues as bullet points (see below)
 
 > ❌ **Do NOT push directly to `main`.** Create a PR.
+
+> ⚠️ **The submodule update is critical.** Without it, SkiaSharp will still use the old dependency version even though cgmanifest.json is updated. Always verify `git status` shows `modified: externals/skia` before committing.
 
 **Linking issues:** Add a bullet point for each related issue using "Fixes #NNNNN" syntax.
 When the PR is merged, these issues will be **automatically closed** by GitHub.
