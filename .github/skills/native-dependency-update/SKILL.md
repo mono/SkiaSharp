@@ -19,6 +19,50 @@ description: >
 
 Update native dependencies in SkiaSharp's Skia fork (mono/skia).
 
+## ⚠️ MANDATORY: Follow Every Phase
+
+**"Do everything" means "follow every step of this skill."**
+
+You MUST complete ALL phases in order. Do not skip phases to save time.
+Do not interpret user requests like "please do" or "do everything" as permission to take shortcuts.
+
+### Pre-Flight Checklist
+
+Before starting, confirm you will:
+- [ ] Complete Phase 1-8 in order
+- [ ] Update DEPS, `externals/skia` submodule, AND `cgmanifest.json`
+- [ ] Build and test locally before any PR
+- [ ] Create PRs (never push directly to `skiasharp` or `main`)
+- [ ] Use "Fixes #NNNNN" in PR body (never close issues manually)
+- [ ] Stop and ask at every 🛑 checkpoint
+
+## Critical Rules
+
+> **🛑 STOP AND ASK** before any of these actions:
+> - Creating PRs (publicly visible, triggers CI)
+> - Merging PRs (irreversible)
+> - Force pushing branches
+> - Any destructive git operations
+>
+> Present a summary of what will happen and wait for explicit approval.
+
+### ❌ NEVER Do These
+
+| Shortcut | Why It's Wrong |
+|----------|----------------|
+| Push directly to `skiasharp` branch | Bypasses PR review and CI |
+| Push directly to `main` branch | Bypasses PR review and CI |
+| Skip native build phase | CI is too slow; must verify locally first |
+| Defer native build to CI | CI is too slow; must verify locally first |
+| Manually close issues | Breaks audit trail; PR merge auto-closes |
+| Skip `cgmanifest.json` update | Security compliance requires it |
+| Skip `externals/skia` submodule update | SkiaSharp won't use the new dependency version |
+| Skip asking for approval at 🛑 points | User must approve visible/irreversible actions |
+| Revert/undo pushed commits | Breaks everyone who pulled; history is permanent |
+| Force push to shared branches | Breaks everyone who pulled; history is permanent |
+
+> ⚠️ **Pushed commits are permanent.** If you made a mistake, fix it forward with a new commit. Never revert or force push shared branches.
+
 ## Architecture
 
 ```
@@ -32,125 +76,224 @@ SkiaSharp repo
 
 **Key insight:** Changes go to mono/skia first, then SkiaSharp updates its submodule.
 
+---
+
 ## Workflow
 
-### 1. Find Current Version
+### Phase 1: Discovery
 
-Check `externals/skia/DEPS` for the dependency. Format:
-```
-"third_party/externals/{name}": "{mirror_url}@{commit_hash}",
-```
+**Goal:** Understand current state and target version.
 
-Navigate to `externals/skia/third_party/externals/{name}` and inspect the commit to determine the current version. Each project has different tagging conventions—explore before assuming.
+1. Check `externals/skia/DEPS` for the dependency entry (format: `"third_party/externals/{name}": "{url}@{commit}"`)
 
-### 2. Find Target Version
+2. Navigate to the dependency checkout at `externals/skia/third_party/externals/{name}` and determine the current version from git tags or commit history
 
-- **For CVE fixes:** Check the advisory for the fixed version
-- **For bug fixes:** Check upstream changelog/releases
-- **For general updates:** Check what upstream Google Skia uses, or use latest stable
+3. Find the target version:
+   - For CVE fixes: Check the security advisory
+   - For bug fixes: Check upstream changelog
+   - For general updates: Use latest stable or match upstream Google Skia
 
-**Getting the commit hash:** Use `git rev-parse {tag}^{commit}` (not just `git rev-parse {tag}`) to handle annotated tags correctly. The DEPS file requires full 40-character commit hashes.
+4. Get the commit hash for the target version using `git rev-parse {tag}^{commit}` (handles annotated tags correctly)
 
-### 3. Analyze Breaking Changes
+**Present findings to user:** Current version, target version, and reason for update.
 
-Compare current and target versions for:
-- **Changelog entries** mentioning breaking changes or API changes
-- **New source files** that may need adding to BUILD.gn
-- **Deleted source files** that would break the build
-- **API changes** in headers (added/removed/changed functions)
+### Phase 2: Analysis
 
-Risk assessment:
-- Security-only releases → usually safe, no breaking changes
+**Goal:** Assess risk and identify required changes.
+
+Review changes between versions:
+- Check changelog/release notes for breaking changes or API modifications
+- Look for new source files that may need adding to BUILD.gn
+- Look for deleted source files that would break the build
+- Check header files for API changes
+
+**Risk assessment:**
+- Security-only releases → usually safe
 - Patch versions (1.2.3 → 1.2.4) → typically safe
-- Minor versions (1.2 → 1.3) → read changelog carefully
+- Minor versions (1.2 → 1.3) → review changelog carefully
 - Major versions (1.x → 2.x) → expect breaking changes
 
-👉 **See [references/breaking-changes.md](references/breaking-changes.md)** for detailed analysis guidance.
+👉 See [references/breaking-changes.md](references/breaking-changes.md) for detailed guidance.
 
-### 4. Update and Build
+**Present analysis to user:** Risk level, any BUILD.gn changes needed, potential concerns.
+
+### Phase 3: Local Changes
+
+**Goal:** Make and verify changes locally.
 
 1. Edit `externals/skia/DEPS` with the new commit hash
 
-2. If needed, update `externals/skia/third_party/{dep}/BUILD.gn` (rare—only when new source files are added to the library)
+2. Update `externals/skia/third_party/{dep}/BUILD.gn` if new source files were added (rare)
 
-3. Build one platform/arch to verify (from repo root):
-   ```bash
-   dotnet cake --target=externals-macos --arch=arm64   # or x64
-   dotnet cake --target=externals-windows --arch=x64  
-   dotnet cake --target=externals-linux --arch=x64
-   ```
+3. **Update `cgmanifest.json`** in the SkiaSharp root with the new commit hash (for security compliance)
 
-4. Run tests via Cake (handles platform-specific skip traits correctly):
-   ```bash
-   dotnet cake --target=tests-netcore --skipExternals=all
-   ```
+4. Checkout the new version in the dependency directory
 
-**Tip:** Use `--arch` to build only one architecture (arm64, x64, arm, x86). Always use `dotnet cake --target=tests-netcore` for testing—it properly filters tests that should be skipped on each platform. Running `dotnet test` directly will cause crashes from tests that throw exceptions expecting to be skipped.
+> ⚠️ **Do not skip step 3.** The `cgmanifest.json` file is required for security compliance and must be updated alongside DEPS.
 
-**If build fails:** Check compiler errors for missing symbols or files. Usually means BUILD.gn needs updating (new source files) or an API changed. See [references/breaking-changes.md](references/breaking-changes.md) for guidance.
+**Present changes to user:** Summary of files modified.
 
-### 5. Create PRs
+### Phase 4: Build & Test
 
-**Both PRs must be created together** - CI requires both to exist for validation. All three (issue + both PRs) should be cross-linked.
+> 🛑 **MANDATORY: Always build native libraries locally.**
+> 
+> CI takes too long to be the first place you discover build failures.
+> Native builds MUST succeed locally before creating any PR.
+> Do not skip this phase or defer to CI.
+
+**Goal:** Verify the update works by building native libraries locally.
+
+Build for one platform to verify:
+```bash
+dotnet cake --target=externals-macos --arch=arm64
+```
+
+If the build fails with error 137 (killed/OOM), retry or free up memory. Do not proceed until the build succeeds.
+
+Run tests (must use Cake for proper skip trait handling):
+```bash
+dotnet cake --target=tests-netcore --skipExternals=all
+```
+
+> ⚠️ **Never use `dotnet test` directly** - it will crash on tests that expect to be skipped on certain platforms.
+
+**If build fails:** Check for missing symbols or files. Usually means BUILD.gn needs updating.
+
+**Present results to user:** Build status, test results, any failures.
+
+### Phase 5: Create PRs
+
+> **🛑 STOP AND ASK FOR APPROVAL**
+> 
+> Before creating PRs, present:
+> - Summary of changes (dependency, old version → new version)
+> - Related issues found
+> - PR titles and descriptions that will be used
+>
+> Wait for user to confirm before proceeding.
+
+**Both PRs must be created together** - CI requires both to exist.
+
+> ❌ **NEVER push directly to `skiasharp` or `main` branches.** Always create a PR from a `dev/update-{dep}` branch.
 
 #### Step 1: Find related issues
 
-Search for existing issues in SkiaSharp related to the dependency update:
-```bash
-gh search issues --repo mono/SkiaSharp "{dependency name}"
-```
+Search SkiaSharp for related issues (e.g., CVE reports, update requests).
 
 #### Step 2: Create mono/skia PR
 
-Create branch and PR in `externals/skia`:
-```bash
-cd externals/skia
-git checkout -b dev/update-{dep}
-git add DEPS
-git commit -m "Update {dep} to {version}"
-git push origin dev/update-{dep}
-gh pr create --repo mono/skia --base skiasharp --head dev/update-{dep} \
-  --title "Update {dep} to {version}"
-```
+In `externals/skia`:
+- Create branch `dev/update-{dep}` (e.g., `dev/update-expat`)
+- Commit the DEPS change
+- Push branch and create PR targeting `skiasharp` branch
+- Fill template: link to SkiaSharp issue, leave SkiaSharp PR as placeholder
 
-Fill out the PR template:
-- **SkiaSharp Issue:** Link to the issue (e.g., `Related to https://github.com/mono/SkiaSharp/issues/NNNN`)
-- **Required SkiaSharp PR:** Leave as placeholder initially, update after creating SkiaSharp PR
+> ❌ **Do NOT push directly to `skiasharp`.** Create a PR.
 
 #### Step 3: Create SkiaSharp PR
 
-Create branch and PR in main repo:
-```bash
-cd ../..  # back to SkiaSharp root
-git checkout -b dev/update-{dep}
-git add cgmanifest.json
-git commit -m "Update {dep} to {version}"
-git push origin dev/update-{dep}
-gh pr create --repo mono/SkiaSharp --base main --head dev/update-{dep} \
-  --title "Update {dep} to {version}"
+In SkiaSharp root:
+- Create branch `dev/update-{dep}` (e.g., `dev/update-expat`)
+- **Update the `externals/skia` submodule** to point to the mono/skia PR branch or commit
+- Update `cgmanifest.json` with the new commit hash
+- Commit **BOTH** the submodule change AND cgmanifest.json
+- Push branch and create PR targeting `main` branch
+- Fill template: link to mono/skia PR, and list related issues as bullet points (see below)
+
+> ❌ **Do NOT push directly to `main`.** Create a PR.
+
+> ⚠️ **The submodule update is critical.** Without it, SkiaSharp will still use the old dependency version even though cgmanifest.json is updated. Always verify `git status` shows `modified: externals/skia` before committing.
+
+**Linking issues:** Add a bullet point for each related issue using "Fixes #NNNNN" syntax.
+When the PR is merged, these issues will be **automatically closed** by GitHub.
+
+```markdown
+- Fixes #3389
+- Fixes #3425
 ```
 
-Fill out the PR template:
-- **Bugs Fixed:** Link with "Fixes" to auto-close (e.g., `- Fixes https://github.com/mono/SkiaSharp/issues/NNNN`)
-- **Required skia PR:** Link to mono/skia PR (e.g., `https://github.com/mono/skia/pull/NNN`)
+> ⚠️ **Never close issues manually.** The PR merge will auto-close them.
 
-#### Step 4: Update mono/skia PR
+#### Step 4: Cross-link PRs
 
-Go back and edit the mono/skia PR to add the SkiaSharp PR link:
-```bash
-gh pr edit {skia-pr-number} --repo mono/skia --body "..."
+Edit the mono/skia PR to add the SkiaSharp PR link.
+
+**Present to user:** Links to both PRs and the issue.
+
+### Phase 6: Monitor CI
+
+**Goal:** Ensure CI passes before merge.
+
+**CI Systems:**
+- **SkiaSharp** uses Azure DevOps for build/test
+- **mono/skia** has no CI - relies on SkiaSharp's CI
+
+Check both CI status and PR state (PRs may auto-merge when CI passes):
+
+```
+# Check CI status
+gh pr checks {pr-number} --repo mono/SkiaSharp
+
+# Check if PR was auto-merged
+gh pr view {pr-number} --repo mono/SkiaSharp --json state,merged
 ```
 
-Update **Required SkiaSharp PR** to link to the SkiaSharp PR.
+Status meanings:
+- `pending` - Build in progress
+- `success` - All checks passed  
+- `failure` - Build or tests failed
 
-#### Result
+**Note:** PRs may have auto-merge enabled. Always check the PR state, not just CI status—the PR may already be merged.
 
-All three are now cross-linked:
-- Issue → closed by SkiaSharp PR on merge
-- mono/skia PR → links to issue and SkiaSharp PR
-- SkiaSharp PR → links to issue and mono/skia PR
+**If CI fails:** Check Azure DevOps logs for details. Common issues:
+- Platform-specific build failures (BUILD.gn may need updates)
+- Test failures (may indicate breaking changes)
 
-**Merge order:** Merge mono/skia PR first, then the SkiaSharp PR.
+**Present to user:** CI status, PR state (open/merged), any failures.
+
+### Phase 7: Merge
+
+> **🛑 STOP AND ASK FOR APPROVAL**
+>
+> Before each merge, confirm:
+> - CI status is green (or failures are unrelated)
+> - User wants to proceed
+> - PR hasn't already been auto-merged
+>
+> Merging is irreversible.
+
+#### Step 1: Merge mono/skia PR
+
+Squash merge the mono/skia PR to `skiasharp` branch.
+
+#### Step 2: Update SkiaSharp submodule
+
+After mono/skia merges:
+- Fetch the new commit in `externals/skia`
+- Checkout the merged commit (now on `skiasharp` branch)
+- Update the submodule reference in SkiaSharp
+- Commit and push (new commit, not amend)
+
+#### Step 3: Check for auto-merge
+
+The SkiaSharp PR may auto-merge once CI passes. Check the PR state before attempting manual merge.
+
+#### Step 4: Merge SkiaSharp PR (if not auto-merged)
+
+If the PR hasn't auto-merged, squash merge it to `main` once CI is green.
+
+### Phase 8: Verify
+
+Confirm completion:
+- Related issues were auto-closed (linked with "Fixes #NNNNN" in PR body)
+- Both PRs show as merged
+- No failures on main branch
+
+> ⚠️ **Never close issues manually.** If issues didn't auto-close, check that the "Fixes #NNNNN" syntax was correct in the PR body.
+
+**Present to user:** Final status and any follow-up needed.
+
+---
 
 ## Common Dependencies
 
@@ -164,22 +307,16 @@ All three are now cross-linked:
 | freetype | `third_party/externals/freetype` | Font rendering |
 | libjpeg-turbo | `third_party/externals/libjpeg-turbo` | JPEG images |
 
-Dependencies use Google-hosted mirrors (URLs visible in DEPS file).
+## Security Updates
 
-## Security Update Checklist
-
-- [ ] Identify CVE numbers and affected dependency
-- [ ] Find fixed version from advisory
-- [ ] Verify fix is in target commit
-- [ ] Check for additional CVEs fixed in newer versions
-- [ ] Analyze for breaking changes (usually none)
-- [ ] Update DEPS, build, test
-- [ ] Document CVEs in PR description
-- [ ] Update `cgmanifest.json` for compliance scanning
+For CVE/security fixes, also:
+- Identify all CVE numbers
+- Verify the fix is in the target commit
+- Check for additional CVEs fixed in newer versions
+- Decide whether to mention CVEs in PR (may prefer to keep quiet)
 
 ## References
 
-- [references/breaking-changes.md](references/breaking-changes.md) - Detailed breaking change analysis guidance
-- [documentation/building.md](../../../documentation/building.md) - Full build prerequisites and setup
-- [documentation/maintaining.md](../../../documentation/maintaining.md) - Maintainer processes and update cadence
-- [CONTRIBUTING.md](../../../CONTRIBUTING.md) - PR guidelines and code standards
+- [references/breaking-changes.md](references/breaking-changes.md) - Breaking change analysis
+- [documentation/building.md](../../../documentation/building.md) - Build setup
+- [CONTRIBUTING.md](../../../CONTRIBUTING.md) - PR guidelines
