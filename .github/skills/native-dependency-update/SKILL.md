@@ -91,9 +91,10 @@ Cross-reference against `externals/skia/third_party/{dep}/BUILD.gn` — new sour
 
 > 🛑 **MANDATORY: Build locally before creating PRs.**
 
+See [documentation/building.md](../../../documentation/building.md#building-native-libraries) for platform-specific build commands.
+
 ```bash
-dotnet cake --target=externals-macos --arch=arm64
-dotnet cake --target=tests-netcore --skipExternals=all
+dotnet cake --target=externals-macos --arch=arm64  # Example
 ```
 
 > ⚠️ **Never use `dotnet test` directly** — use Cake for proper skip trait handling.
