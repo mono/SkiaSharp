@@ -25,115 +25,85 @@ Investigate security status of SkiaSharp's native dependencies. Produces a repor
 
 ## Key References
 
-- **[documentation/dependencies.md](../../../documentation/dependencies.md)** — Complete list of dependencies, security relevance, CVE database names, known false positives, and verification procedures
+- **[documentation/dependencies.md](../../../documentation/dependencies.md)** — Which dependencies to audit, cgmanifest format, known false positives
 - **[references/report-template.md](references/report-template.md)** — Report format templates
 
-## Workflow Overview
+## Workflow
 
 ```mermaid
-flowchart TD
-    subgraph "1. Gather Data"
-        A[Search SkiaSharp issues<br/>CVE, security, vulnerability] --> B[Search PRs<br/>mono/SkiaSharp + mono/skia]
-        B --> C[Parse DEPS<br/>Get all dependency versions]
-    end
-
-    subgraph "2. Proactive Scan"
-        C --> D[For each dependency:<br/>web search CVEs]
-        D --> E{Current version<br/>in affected range?}
-        E -->|Yes| V[⚠️ VERIFY fix commit<br/>against codebase]
-        E -->|No| G[Mark as clean]
-        V --> E2{Fix commit is<br/>ancestor of HEAD?}
-        E2 -->|Yes| G2[Mark as clean<br/>CVE db was wrong]
-        E2 -->|No| F[Note: CVE, severity, min fix version]
-    end
-
-    subgraph "3. Cross-Reference"
-        F --> H[Match: Issues ↔ PRs ↔ CVEs]
-        H --> I{Has issue?}
-        I -->|Yes| J{Has PR?}
-        I -->|No| K[🆕 Undiscovered]
-        J -->|Yes| L{PR sufficient?}
-        J -->|No| M[🔴 Needs attention]
-        L -->|Yes| N[✅ Ready to merge]
-        L -->|No| O[🟡 In progress]
-    end
-
-    subgraph "4. Validate"
-        K & M & N & O --> P{Affects SkiaSharp?}
-        P -->|No| Q[⚪ False positive]
-        P -->|Yes| R[Keep status]
-    end
-
-    subgraph "5. Report"
-        Q & R & G & G2 --> S[Generate report<br/>Priority: User-reported → Severity → Proactive]
-    end
+flowchart LR
+    A[Search issues/PRs] --> B[Get versions from DEPS]
+    B --> C[Web search CVEs]
+    C --> D{CVE found?}
+    D -->|Yes| E[Verify fix commit]
+    E --> F{Fixed?}
+    F -->|No| G[Flag for action]
+    F -->|Yes| H[Mark clean]
+    D -->|No| H
+    G --> I[Generate report]
+    H --> I
 ```
 
-## Steps
+### Step 1: Search Issues & PRs
 
-### Step 1: Search User-Reported Issues
+Search mono/SkiaSharp open issues for:
+- CVE numbers (e.g., "CVE-2024")
+- Keywords: "security", "vulnerability"
+- Dependency names: libpng, expat, zlib, webp, harfbuzz, freetype
 
-Search mono/SkiaSharp open issues for CVE mentions, "security", "vulnerability", and dependency names.
+Search PRs in both mono/SkiaSharp and mono/skia for dependency updates.
 
-**Why first?** Users are waiting on these. Highest visibility and urgency.
+### Step 2: Get Dependency Versions
 
-### Step 2: Search PR Coverage
-
-Search for open PRs in both repos (mono/SkiaSharp and mono/skia) that may address security issues.
-
-### Step 3: Build Dependency Inventory
-
-Parse `externals/skia/DEPS` to get current versions. Check which dependencies are security-relevant.
-
-👉 See [documentation/dependencies.md](../../../documentation/dependencies.md#security-relevant-dependencies) for the list of dependencies to audit.
-
-### Step 4: Proactive CVE Scan
-
-For each security-relevant dependency, web search for CVEs:
-```
-"{dependency} CVE security vulnerabilities {current year}"
+```bash
+cd externals/skia/third_party/externals/{dep}
+git describe --tags --always
 ```
 
-### Step 5: Verify Fix Against Codebase (CRITICAL)
+Only audit **security-relevant** dependencies (see [dependencies.md](../../../documentation/dependencies.md#security-relevant-process-untrusted-input)).
 
-> ⚠️ **Do NOT trust CVE database version ranges!** Always verify fix commits.
+### Step 3: Web Search for CVEs
 
-👉 See [documentation/dependencies.md](../../../documentation/dependencies.md#cve-verification-process) for the verification procedure.
+```
+"{dependency} CVE {current year}"
+"{dependency} security vulnerability"
+```
+
+### Step 4: Verify Fix Commits (CRITICAL)
+
+> ⚠️ **CVE databases often have WRONG version ranges.** Always verify.
 
 ```bash
 cd externals/skia/third_party/externals/{dependency}
+
+# Check if fix commit is ancestor of current HEAD
 git merge-base --is-ancestor {fix_commit} HEAD && echo "FIXED" || echo "VULNERABLE"
 ```
 
-### Step 6: Cross-Reference
+**Example:** CVE-2025-27363 claimed FreeType ≤2.13.3 was affected, fix in 2.13.4. Verification showed the fix commit was in 2.13.1 — SkiaSharp's 2.13.3 was already patched.
 
-Build a matrix matching issues ↔ PRs ↔ CVEs.
+### Step 5: Check False Positives
 
-### Step 7: Check False Positives
+Before flagging, verify the CVE actually affects SkiaSharp:
+- **MiniZip** (in zlib) — Not compiled, not vulnerable
+- **FreeType's bundled zlib** — Separate from Skia's zlib
 
-Verify each CVE actually affects SkiaSharp.
+See [dependencies.md](../../../documentation/dependencies.md#known-false-positives) for details.
 
-👉 See [documentation/dependencies.md](../../../documentation/dependencies.md#known-false-positives) for known false positives (MiniZip, FreeType bundled zlib).
+### Step 6: Generate Report
 
-### Step 8: Generate Report
+Use [references/report-template.md](references/report-template.md).
 
-Use the template from [references/report-template.md](references/report-template.md).
-
-**Priority order for findings:**
+**Priority order:**
 1. 🔴 User-reported + no PR
-2. ✅ User-reported + PR ready
+2. ✅ User-reported + PR ready  
 3. 🟡 User-reported + PR needs work
 4. 🆕 Undiscovered CVEs
 5. ⚪ False positives
 
-## Handoff to Fixes
+## Handoff
 
-After completing the audit, the user can use the `native-dependency-update` skill to:
-- Merge ready PRs
-- Update outdated PRs
-- Create missing PRs
-
-Example handoffs:
+After audit, use `native-dependency-update` skill:
 - "Merge PR #3458"
 - "Update libwebp to 1.6.0"
 - "Bump libpng to fix CVE-2024-XXXXX"

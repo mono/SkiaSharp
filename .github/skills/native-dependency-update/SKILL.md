@@ -130,16 +130,16 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 
 ---
 
-## Quick Reference
+## Common Dependencies
 
-| Dependency | DEPS Key | Notes |
-|------------|----------|-------|
-| libpng | `third_party/externals/libpng` | PNG images |
-| libexpat | `third_party/externals/expat` | XML/SVG parsing |
-| zlib | `third_party/externals/zlib` | Compression |
-| libwebp | `third_party/externals/libwebp` | WebP images |
-| harfbuzz | `third_party/externals/harfbuzz` | Text shaping |
-| freetype | `third_party/externals/freetype` | Font rendering |
-| libjpeg-turbo | `third_party/externals/libjpeg-turbo` | JPEG images |
+| Dependency | DEPS Key |
+|------------|----------|
+| libpng | `third_party/externals/libpng` |
+| libexpat | `third_party/externals/expat` |
+| zlib | `third_party/externals/zlib` |
+| libwebp | `third_party/externals/libwebp` |
+| harfbuzz | `third_party/externals/harfbuzz` |
+| freetype | `third_party/externals/freetype` |
+| libjpeg-turbo | `third_party/externals/libjpeg-turbo` |
 
-👉 See [documentation/dependencies.md](../../../documentation/dependencies.md) for the complete list.
+For cgmanifest names and upstream URLs, see [documentation/dependencies.md](../../../documentation/dependencies.md#name-mapping).
