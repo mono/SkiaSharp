@@ -19,6 +19,23 @@ description: >
 
 Update native dependencies in SkiaSharp's Skia fork (mono/skia).
 
+## ⚠️ MANDATORY: Follow Every Phase
+
+**"Do everything" means "follow every step of this skill."**
+
+You MUST complete ALL phases in order. Do not skip phases to save time.
+Do not interpret user requests like "please do" or "do everything" as permission to take shortcuts.
+
+### Pre-Flight Checklist
+
+Before starting, confirm you will:
+- [ ] Complete Phase 1-8 in order
+- [ ] Update DEPS, `externals/skia` submodule, AND `cgmanifest.json`
+- [ ] Build and test locally before any PR
+- [ ] Create PRs (never push directly to `skiasharp` or `main`)
+- [ ] Use "Fixes #NNNNN" in PR body (never close issues manually)
+- [ ] Stop and ask at every 🛑 checkpoint
+
 ## Critical Rules
 
 > **🛑 STOP AND ASK** before any of these actions:
@@ -28,6 +45,23 @@ Update native dependencies in SkiaSharp's Skia fork (mono/skia).
 > - Any destructive git operations
 >
 > Present a summary of what will happen and wait for explicit approval.
+
+### ❌ NEVER Do These
+
+| Shortcut | Why It's Wrong |
+|----------|----------------|
+| Push directly to `skiasharp` branch | Bypasses PR review and CI |
+| Push directly to `main` branch | Bypasses PR review and CI |
+| Skip native build phase | CI is too slow; must verify locally first |
+| Defer native build to CI | CI is too slow; must verify locally first |
+| Manually close issues | Breaks audit trail; PR merge auto-closes |
+| Skip `cgmanifest.json` update | Security compliance requires it |
+| Skip `externals/skia` submodule update | SkiaSharp won't use the new dependency version |
+| Skip asking for approval at 🛑 points | User must approve visible/irreversible actions |
+| Revert/undo pushed commits | Breaks everyone who pulled; history is permanent |
+| Force push to shared branches | Breaks everyone who pulled; history is permanent |
+
+> ⚠️ **Pushed commits are permanent.** If you made a mistake, fix it forward with a new commit. Never revert or force push shared branches.
 
 ## Architecture
 
@@ -91,20 +125,30 @@ Review changes between versions:
 
 2. Update `externals/skia/third_party/{dep}/BUILD.gn` if new source files were added (rare)
 
-3. Update `cgmanifest.json` in the SkiaSharp root with the new commit hash (for security compliance)
+3. **Update `cgmanifest.json`** in the SkiaSharp root with the new commit hash (for security compliance)
 
 4. Checkout the new version in the dependency directory
+
+> ⚠️ **Do not skip step 3.** The `cgmanifest.json` file is required for security compliance and must be updated alongside DEPS.
 
 **Present changes to user:** Summary of files modified.
 
 ### Phase 4: Build & Test
 
-**Goal:** Verify the update works.
+> 🛑 **MANDATORY: Always build native libraries locally.**
+> 
+> CI takes too long to be the first place you discover build failures.
+> Native builds MUST succeed locally before creating any PR.
+> Do not skip this phase or defer to CI.
+
+**Goal:** Verify the update works by building native libraries locally.
 
 Build for one platform to verify:
 ```bash
 dotnet cake --target=externals-macos --arch=arm64
 ```
+
+If the build fails with error 137 (killed/OOM), retry or free up memory. Do not proceed until the build succeeds.
 
 Run tests (must use Cake for proper skip trait handling):
 ```bash
@@ -130,6 +174,8 @@ dotnet cake --target=tests-netcore --skipExternals=all
 
 **Both PRs must be created together** - CI requires both to exist.
 
+> ❌ **NEVER push directly to `skiasharp` or `main` branches.** Always create a PR from a `dev/update-{dep}` branch.
+
 #### Step 1: Find related issues
 
 Search SkiaSharp for related issues (e.g., CVE reports, update requests).
@@ -137,18 +183,36 @@ Search SkiaSharp for related issues (e.g., CVE reports, update requests).
 #### Step 2: Create mono/skia PR
 
 In `externals/skia`:
-- Create branch `dev/update-{dep}`
+- Create branch `dev/update-{dep}` (e.g., `dev/update-expat`)
 - Commit the DEPS change
-- Push and create PR to `skiasharp` branch
+- Push branch and create PR targeting `skiasharp` branch
 - Fill template: link to SkiaSharp issue, leave SkiaSharp PR as placeholder
+
+> ❌ **Do NOT push directly to `skiasharp`.** Create a PR.
 
 #### Step 3: Create SkiaSharp PR
 
 In SkiaSharp root:
-- Create branch `dev/update-{dep}`  
-- Commit cgmanifest.json change
-- Push and create PR to `main` branch
-- Fill template: "Fixes #issue" for auto-close, link to mono/skia PR
+- Create branch `dev/update-{dep}` (e.g., `dev/update-expat`)
+- **Update the `externals/skia` submodule** to point to the mono/skia PR branch or commit
+- Update `cgmanifest.json` with the new commit hash
+- Commit **BOTH** the submodule change AND cgmanifest.json
+- Push branch and create PR targeting `main` branch
+- Fill template: link to mono/skia PR, and list related issues as bullet points (see below)
+
+> ❌ **Do NOT push directly to `main`.** Create a PR.
+
+> ⚠️ **The submodule update is critical.** Without it, SkiaSharp will still use the old dependency version even though cgmanifest.json is updated. Always verify `git status` shows `modified: externals/skia` before committing.
+
+**Linking issues:** Add a bullet point for each related issue using "Fixes #NNNNN" syntax.
+When the PR is merged, these issues will be **automatically closed** by GitHub.
+
+```markdown
+- Fixes #3389
+- Fixes #3425
+```
+
+> ⚠️ **Never close issues manually.** The PR merge will auto-close them.
 
 #### Step 4: Cross-link PRs
 
@@ -221,9 +285,11 @@ If the PR hasn't auto-merged, squash merge it to `main` once CI is green.
 ### Phase 8: Verify
 
 Confirm completion:
-- Issue auto-closed (was linked with "Fixes")
+- Related issues were auto-closed (linked with "Fixes #NNNNN" in PR body)
 - Both PRs show as merged
 - No failures on main branch
+
+> ⚠️ **Never close issues manually.** If issues didn't auto-close, check that the "Fixes #NNNNN" syntax was correct in the PR body.
 
 **Present to user:** Final status and any follow-up needed.
 
