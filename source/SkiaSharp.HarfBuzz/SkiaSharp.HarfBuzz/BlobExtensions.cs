@@ -21,7 +21,7 @@ namespace SkiaSharp.HarfBuzz
 			var memoryBase = asset.GetMemoryBase();
 			if (memoryBase != IntPtr.Zero)
 			{
-				blob = new Blob(memoryBase, size, MemoryMode.ReadOnly, () => asset.Dispose());
+				blob = new Blob(memoryBase, size, MemoryMode.ReadOnly);
 			}
 			else
 			{
