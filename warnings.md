@@ -3,7 +3,7 @@
 This document catalogs compiler warnings in the DocsSamplesApp project after the migration to .NET 10 and SkiaSharp 3.119.1.
 
 **Last Updated**: January 2026  
-**Current Build**: 340 warnings, 0 errors (Android target framework)
+**Current Build**: 292 warnings, 0 errors (Android target framework)
 
 ---
 
@@ -112,6 +112,7 @@ Minor CS8600/CS8602/CS8625 warnings in:
 | Initial | 2226 | 0 | After XAML SourceGen enabled |
 | After TableView→CollectionView | 275 | 0 | 88% reduction |
 | After SKFont migration | 340 | 0 | Verified code/docs match |
+| After event handler fix | 292 | 0 | Fixed 12 remaining object sender |
 
 ---
 
