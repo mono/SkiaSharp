@@ -31,9 +31,8 @@ namespace DocsSamplesApp.Transforms
 
         void OnTouchModePickerSelectedIndexChanged(object? sender, EventArgs args)
         {
-            if (bitmap is not null)
+            if (bitmap is not null && sender is Picker picker)
             {
-                Picker picker = (Picker)sender;
                 bitmap.TouchManager.Mode = (TouchManipulationMode)picker.SelectedItem;
             }
         }

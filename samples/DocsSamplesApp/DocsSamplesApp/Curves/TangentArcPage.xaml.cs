@@ -46,6 +46,9 @@ namespace DocsSamplesApp.Curves
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+            
+            if (touchPoints is null)
+                return;
 
             // Draw the two lines that meet at an angle
             using (SKPath path = new SKPath())

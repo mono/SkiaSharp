@@ -41,7 +41,9 @@ namespace DocsSamplesApp.Effects
 
         void OnButtonClicked(object? sender, EventArgs args)
         {
-            Button btn = (Button)sender;
+            if (sender is not Button btn)
+                return;
+                
             step = (step + 1) % 5;
 
             switch (step)

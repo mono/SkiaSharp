@@ -32,14 +32,16 @@ namespace DocsSamplesApp.Transforms
 
         void OnPersp0SliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
-            Slider slider = (Slider)sender;
+            if (sender is not Slider slider)
+                return;
             persp0Label.Text = String.Format("Persp0 = {0:F4}", slider.Value / 100);
             canvasView.InvalidateSurface();
         }
 
         void OnPersp1SliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
-            Slider slider = (Slider)sender;
+            if (sender is not Slider slider)
+                return;
             persp1Label.Text = String.Format("Persp1 = {0:F4}", slider.Value / 100);
             canvasView.InvalidateSurface();
         }

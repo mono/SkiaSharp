@@ -16,7 +16,8 @@ namespace DocsSamplesApp.Bitmaps
         static readonly int NUM = 4;
 
         // Array of tiles, and empty row & column.
-        PhotoPuzzleTile[,] tiles = new PhotoPuzzleTile[NUM, NUM];
+        // One slot is always null (the empty slot for the puzzle)
+        PhotoPuzzleTile?[,] tiles = new PhotoPuzzleTile?[NUM, NUM];
         int emptyRow = NUM - 1;
         int emptyCol = NUM - 1;
 
@@ -58,7 +59,9 @@ namespace DocsSamplesApp.Bitmaps
 
         void OnContentViewSizeChanged(object? sender, EventArgs args)
         {
-            ContentView contentView = (ContentView)sender;
+            if (sender is not ContentView contentView)
+                return;
+                
             double width = contentView.Width;
             double height = contentView.Height;
 
@@ -128,7 +131,10 @@ namespace DocsSamplesApp.Bitmaps
         async Task AnimateTile(int row, int col, int newRow, int newCol, uint length)
         {
             // The tile to be animated.
-            PhotoPuzzleTile animaTile = tiles[row, col];
+            PhotoPuzzleTile? animaTile = tiles[row, col];
+            
+            if (animaTile is null)
+                return;
 
             // Calculate the translation needed
             double deltaX = (emptyCol - col) * tileSize;
@@ -158,7 +164,9 @@ namespace DocsSamplesApp.Bitmaps
 
         async void OnRandomizeButtonClicked(object? sender, EventArgs args)
         {
-            Button button = (Button)sender;
+            if (sender is not Button button)
+                return;
+                
             button.IsEnabled = false;
             Random rand = new Random();
 

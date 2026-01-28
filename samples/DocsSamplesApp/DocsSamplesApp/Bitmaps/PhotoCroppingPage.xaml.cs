@@ -51,7 +51,11 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
-            canvas.DrawBitmap(croppedBitmap, info.Rect, BitmapStretch.Uniform);
+            
+            if (croppedBitmap is not null)
+            {
+                canvas.DrawBitmap(croppedBitmap, info.Rect, BitmapStretch.Uniform);
+            }
         }
     }
 }

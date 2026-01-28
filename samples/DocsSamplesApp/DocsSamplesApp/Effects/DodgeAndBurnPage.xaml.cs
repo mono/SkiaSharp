@@ -30,7 +30,7 @@ namespace DocsSamplesApp.Effects
 
         void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
-            if ((Slider)sender == dodgeSlider)
+            if (sender == dodgeSlider)
             {
                 dodgeCanvasView.InvalidateSurface();
             }
@@ -65,7 +65,7 @@ namespace DocsSamplesApp.Effects
             // Display gray rectangle with blend mode
             using (SKPaint paint = new SKPaint())
             {
-                if ((SKCanvasView)sender == dodgeCanvasView)
+                if (sender == dodgeCanvasView)
                 {
                     byte value = (byte)(255 * dodgeSlider.Value);
                     paint.Color = new SKColor(value, value, value);

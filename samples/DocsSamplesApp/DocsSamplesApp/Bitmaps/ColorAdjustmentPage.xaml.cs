@@ -33,7 +33,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
+        void OnSliderValueChanged(object? sender, ValueChangedEventArgs? args)
         {
             if (srcBitmap is null || dstBitmap is null)
                 return;
@@ -53,6 +53,9 @@ namespace DocsSamplesApp.Bitmaps
 
         unsafe void TransferPixels(float hueAdjust, float saturationAdjust, float luminosityAdjust)
         {
+            if (srcBitmap is null || dstBitmap is null)
+                return;
+                
             byte* srcPtr = (byte*)srcBitmap.GetPixels().ToPointer();
             byte* dstPtr = (byte*)dstBitmap.GetPixels().ToPointer();
 

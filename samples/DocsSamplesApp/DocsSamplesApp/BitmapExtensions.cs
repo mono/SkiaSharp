@@ -56,7 +56,7 @@ namespace DocsSamplesApp
                                       BitmapStretch stretch, 
                                       BitmapAlignment horizontal = BitmapAlignment.Center, 
                                       BitmapAlignment vertical = BitmapAlignment.Center, 
-                                      SKPaint paint = null)
+                                      SKPaint? paint = null)
         {
             if (stretch == BitmapStretch.Fill)
             {
@@ -91,7 +91,7 @@ namespace DocsSamplesApp
                                       BitmapStretch stretch,
                                       BitmapAlignment horizontal = BitmapAlignment.Center,
                                       BitmapAlignment vertical = BitmapAlignment.Center,
-                                      SKPaint paint = null)
+                                      SKPaint? paint = null)
         {
             if (stretch == BitmapStretch.Fill)
             {

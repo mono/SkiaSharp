@@ -40,7 +40,10 @@ namespace DocsSamplesApp.Curves
         void OnCanvasViewTapped(object? sender, EventArgs args)
         {
             outlineThePath ^= true;
-            (sender as SKCanvasView).InvalidateSurface();
+            if (sender is SKCanvasView canvasView)
+            {
+                canvasView.InvalidateSurface();
+            }
         }
 
         void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)

@@ -22,7 +22,10 @@ namespace DocsSamplesApp.Basics
         void OnCanvasViewTapped(object? sender, EventArgs args)
         {
             showFill ^= true;
-            (sender as SKCanvasView).InvalidateSurface();
+            if (sender is SKCanvasView canvasView)
+            {
+                canvasView.InvalidateSurface();
+            }
         }
 
         void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)

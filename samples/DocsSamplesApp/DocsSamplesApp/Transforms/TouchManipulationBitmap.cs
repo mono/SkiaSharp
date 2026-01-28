@@ -32,7 +32,7 @@ namespace DocsSamplesApp.Transforms
         {
             canvas.Save();
             SKMatrix matrix = Matrix;
-            canvas.Concat(ref matrix);
+            canvas.Concat(in matrix);
             canvas.DrawBitmap(bitmap, 0, 0);
             canvas.Restore();
         }

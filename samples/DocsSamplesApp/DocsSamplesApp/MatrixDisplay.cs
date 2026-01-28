@@ -28,7 +28,7 @@ namespace DocsSamplesApp
             MeasureAndPaint(canvas, matrix, location, true);
         }
 
-        SKSize MeasureAndPaint(SKCanvas canvas, SKMatrix matrix, SKPoint location, bool doPaint)
+        SKSize MeasureAndPaint(SKCanvas? canvas, SKMatrix matrix, SKPoint location, bool doPaint)
         {
             float[] values = matrix.Values;
             string[] texts = new string[9];
@@ -64,7 +64,7 @@ namespace DocsSamplesApp
             float totalWidth = widths[0] + widths[1] + widths[2] + 2 * horzGap + 2 * horzMarg;
             float totalHeight = 3 * MatrixFont.Spacing + 2 * vertMarg;
 
-            if (doPaint)
+            if (doPaint && canvas is not null)
             {
                 SKPaintStyle saveStyle = MatrixPaint.Style;
 

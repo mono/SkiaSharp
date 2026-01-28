@@ -11,8 +11,8 @@ namespace DocsSamplesApp
 {
     public class InteractivePage : ContentPage
     {
-        protected SKCanvasView baseCanvasView;
-        protected TouchPoint[] touchPoints;
+        protected SKCanvasView? baseCanvasView;
+        protected TouchPoint[]? touchPoints;
 
         protected SKPaint strokePaint = new SKPaint
         {
@@ -40,18 +40,21 @@ namespace DocsSamplesApp
         {
             bool touchPointMoved = false;
 
-            foreach (TouchPoint touchPoint in touchPoints)
+            if (touchPoints is not null)
             {
-                // Location is already in pixels with built-in touch
-                touchPointMoved |= touchPoint.ProcessTouchEvent(e.Id, e.ActionType, e.Location);
+                foreach (TouchPoint touchPoint in touchPoints)
+                {
+                    // Location is already in pixels with built-in touch
+                    touchPointMoved |= touchPoint.ProcessTouchEvent(e.Id, e.ActionType, e.Location);
+                }
             }
 
             if (touchPointMoved)
             {
-                baseCanvasView.InvalidateSurface();
+                baseCanvasView?.InvalidateSurface();
             }
 
-            e.Handled = true;
+            e.Handled = touchPointMoved;
         }
     }
 }

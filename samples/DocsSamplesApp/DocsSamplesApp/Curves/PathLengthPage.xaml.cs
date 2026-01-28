@@ -46,6 +46,9 @@ namespace DocsSamplesApp.Curves
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+            
+            if (touchPoints is null)
+                return;
 
             // Draw path with cubic Bezier curve
             using (SKPath path = new SKPath())

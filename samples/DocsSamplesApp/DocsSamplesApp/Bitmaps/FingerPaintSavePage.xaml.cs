@@ -24,7 +24,7 @@ namespace DocsSamplesApp.Bitmaps
             StrokeJoin = SKStrokeJoin.Round
         };
 
-        SKBitmap saveBitmap;
+        SKBitmap? saveBitmap;
 
         public FingerPaintSavePage ()
         {

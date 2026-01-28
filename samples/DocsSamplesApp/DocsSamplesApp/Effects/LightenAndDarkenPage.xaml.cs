@@ -30,7 +30,7 @@ namespace DocsSamplesApp.Effects
 
         void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
-            if ((Slider)sender == lightenSlider)
+            if (sender == lightenSlider)
             {
                 lightenCanvasView.InvalidateSurface();
             }
@@ -65,7 +65,7 @@ namespace DocsSamplesApp.Effects
             // Display gray rectangle with blend mode
             using (SKPaint paint = new SKPaint())
             {
-                if ((SKCanvasView)sender == lightenCanvasView)
+                if (sender == lightenCanvasView)
                 {
                     byte value = (byte)(255 * lightenSlider.Value);
                     paint.Color = new SKColor(value, value, value);

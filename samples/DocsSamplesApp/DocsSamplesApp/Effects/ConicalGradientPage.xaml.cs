@@ -44,6 +44,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+            
+            if (touchPoints is null)
+                return;
 
             SKColor[] colors = { SKColors.Red, SKColors.Green, SKColors.Blue };
             SKShaderTileMode tileMode = 

@@ -48,6 +48,9 @@ namespace DocsSamplesApp.Curves
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+            
+            if (touchPoints is null)
+                return;
 
             using (SKPath path = new SKPath())
             {
