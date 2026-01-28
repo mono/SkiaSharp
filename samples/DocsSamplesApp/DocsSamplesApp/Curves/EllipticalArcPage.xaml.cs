@@ -33,7 +33,7 @@ namespace DocsSamplesApp.Curves
             yRadiusSlider.Value = 125;
         }
 
-        void sliderValueChanged(object sender, ValueChangedEventArgs args)
+        void sliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
             if (canvasView != null)
             {

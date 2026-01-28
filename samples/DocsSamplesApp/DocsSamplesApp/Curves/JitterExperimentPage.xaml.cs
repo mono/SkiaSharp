@@ -15,7 +15,7 @@ namespace DocsSamplesApp.Curves
             InitializeComponent();
         }
 
-        void sliderValueChanged(object sender, ValueChangedEventArgs args)
+        void sliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
             if (canvasView != null)
             {
