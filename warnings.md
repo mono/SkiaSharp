@@ -3,7 +3,7 @@
 This document catalogs compiler warnings in the DocsSamplesApp project after the migration to .NET 10 and SkiaSharp 3.119.1.
 
 **Last Updated**: January 2026  
-**Current Build**: 80 warnings, 0 errors (per target framework, ~240 total across 3 frameworks)
+**Current Build**: 68 warnings, 0 errors (per target framework, ~204 total across 3 frameworks)
 
 ---
 
@@ -24,7 +24,7 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 | CS0618 - Device.Idiom | ✅ FIXED | 0 | Changed to DeviceInfo.Idiom |
 | CS0618 - IPhotoLibrary | ✅ FIXED | 0 | Removed, using MAUI MediaPicker + MCT FileSaver |
 | CS0618 - TranslateTo | ✅ FIXED | 0 | Changed to TranslateToAsync |
-| CS0612 - Device.GetNamedSize | ⏳ PENDING | 12 | PhotoPuzzle pages (XAML SourceGen) |
+| CS0612 - Device.GetNamedSize | ✅ FIXED | 0 | Replaced FontSize="Large" with explicit values |
 | CS8600/CS8602 - Null dereference | ⏳ PENDING | 48 | Various pages |
 | CS8625 - Null literal conversion | ⏳ PENDING | 10 | Various pages |
 | CS8618 - Non-nullable field | ⏳ PENDING | 6 | Uninitialized fields |
@@ -106,19 +106,16 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 - Added `CommunityToolkit.Maui` v13.0.0 package
 - Updated `MauiProgram.cs` with `.UseMauiCommunityToolkit()`
 
+### 14. Device.GetNamedSize (CS0612)
+- Replaced `FontSize="Large"` with `FontSize="18"` in XAML
+- PhotoPuzzlePage2.xaml, PhotoPuzzlePage3.xaml
+- Named sizes like "Large", "Medium", etc. trigger deprecated `Device.GetNamedSize` in XAML SourceGen
+
 ---
 
-## ⏳ Remaining Warnings (86 per framework)
+## ⏳ Remaining Warnings (68 per framework)
 
-### CS0612: Device.GetNamedSize (12 warnings)
-
-PhotoPuzzle XAML pages use obsolete `Device.GetNamedSize` in FontSize markup:
-- PhotoPuzzlePage2.xaml - `{OnPlatform iOS={OnIdiom Phone=10...}}`
-- PhotoPuzzlePage3.xaml - `{OnPlatform iOS={OnIdiom Phone=10...}}`
-
-**Note:** These come from XAML SourceGen compilation. Need to replace with explicit font sizes.
-
-### CS8600/CS8602: Null Dereference (52 warnings)
+### CS8600/CS8602: Null Dereference (48 warnings)
 
 Possible null reference warnings in:
 - Transforms/TouchManipulationPage.xaml.cs
@@ -126,7 +123,6 @@ Possible null reference warnings in:
 - Bitmaps/PhotoPuzzlePage4.xaml.cs
 - Bitmaps/ColorAdjustmentPage.xaml.cs
 - Effects/LightenAndDarkenPage.xaml.cs
-- Platforms/Android/PhotoLibrary.cs
 
 ### CS8625: Null Literal Conversion (10 warnings)
 
@@ -161,9 +157,7 @@ Uninitialized non-nullable fields - need to add `= null!` or make nullable.
 | After LayoutOptions fix | 88 | 0 | Converted StackLayout to Grid |
 | After LayoutToAsync fix | 86 | 0 | Use TranslateToAsync instead |
 | After IPhotoLibrary removal | 80 | 0 | Use MAUI MediaPicker + MCT FileSaver |
-| After touch handling fix | 170 | 0 | Fixed e.Handled blocking back gesture |
-| After LayoutOptions fix | 88 | 0 | Converted StackLayout to Grid |
-| After LayoutToAsync fix | 86 | 0 | Use TranslateToAsync instead |
+| After NamedSize fix | 68 | 0 | Replaced FontSize="Large" with explicit values |
 
 ---
 
