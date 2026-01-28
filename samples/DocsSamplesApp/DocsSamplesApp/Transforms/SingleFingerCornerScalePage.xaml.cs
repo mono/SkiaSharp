@@ -17,7 +17,7 @@ namespace DocsSamplesApp.Transforms
     public partial class SingleFingerCornerScalePage : ContentPage
     {
         SKBitmap bitmap;
-        SKMatrix currentMatrix = SKMatrix.MakeIdentity();
+        SKMatrix currentMatrix = SKMatrix.Identity;
 
         // Information for translating and scaling
         long? touchId = null;
@@ -97,24 +97,24 @@ namespace DocsSamplesApp.Transforms
                     if (!touchId.HasValue || args.Id != touchId.Value)
                         return;
 
-                    SKMatrix matrix = SKMatrix.MakeIdentity();
+                    SKMatrix matrix = SKMatrix.Identity;
 
                     // Translating
                     if (!isScaling)
                     {
                         SKPoint delta = point - pressedLocation;
-                        matrix = SKMatrix.MakeTranslation(delta.X, delta.Y);
+                        matrix = SKMatrix.CreateTranslation(delta.X, delta.Y);
                     }
                     // Scaling
                     else
                     {
                         float scaleX = (point.X - pivotPoint.X) / (pressedLocation.X - pivotPoint.X);
                         float scaleY = (point.Y - pivotPoint.Y) / (pressedLocation.Y - pivotPoint.Y);
-                        matrix = SKMatrix.MakeScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y);
+                        matrix = SKMatrix.CreateScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y);
                     }
 
                     // Concatenate the matrices
-                    SKMatrix.PreConcat(ref matrix, pressedMatrix);
+                    matrix = matrix.PreConcat(pressedMatrix);
                     currentMatrix = matrix;
                     canvasView.InvalidateSurface();
                     break;

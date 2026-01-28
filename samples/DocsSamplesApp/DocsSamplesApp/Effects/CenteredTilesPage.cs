@@ -40,7 +40,7 @@ namespace DocsSamplesApp.Effects
             using (SKPaint paint = new SKPaint())
             {
                 // ... but use them to create a translate transform
-                SKMatrix matrix = SKMatrix.MakeTranslation(x, y);
+                SKMatrix matrix = SKMatrix.CreateTranslation(x, y);
                 paint.Shader = SKShader.CreateBitmap(bitmap, 
                                                      SKShaderTileMode.Repeat, 
                                                      SKShaderTileMode.Repeat, 

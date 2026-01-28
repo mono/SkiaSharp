@@ -14,8 +14,8 @@ namespace DocsSamplesApp.Curves
             SKPathEffect.CreateDash(new float[] { 30, 30 }, 0);
 
         static SKPathEffect hatchEffect = SKPathEffect.Create2DLine(20,
-            Multiply(SKMatrix.MakeScale(60, 60), 
-                     SKMatrix.MakeRotationDegrees(45)));
+            Multiply(SKMatrix.CreateScale(60, 60), 
+                     SKMatrix.CreateRotationDegrees(45)));
 
         SKPaint paint = new SKPaint()
         {
@@ -48,7 +48,7 @@ namespace DocsSamplesApp.Curves
 
         static SKMatrix Multiply(SKMatrix first, SKMatrix second)
         {
-            SKMatrix target = SKMatrix.MakeIdentity();
+            SKMatrix target = SKMatrix.Identity;
             SKMatrix.Concat(ref target, first, second);
             return target;
         }

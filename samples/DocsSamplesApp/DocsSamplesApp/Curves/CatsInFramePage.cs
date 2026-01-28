@@ -53,11 +53,11 @@ namespace DocsSamplesApp.Curves
             Content = canvasView;
 
             // Move (0, 0) point to center of cat path
-            catPath.Transform(SKMatrix.MakeTranslation(-240, -175));
+            catPath.Transform(SKMatrix.CreateTranslation(-240, -175));
 
             // Now catPath is 400 by 250
             // Scale it down to 160 by 100
-            catPath.Transform(SKMatrix.MakeScale(0.40f, 0.40f));
+            catPath.Transform(SKMatrix.CreateScale(0.40f, 0.40f));
 
             // Get the outlines of the contours of the cat path
             SKPath outlinedCatPath = new SKPath();

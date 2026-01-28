@@ -73,12 +73,12 @@ namespace DocsSamplesApp.Transforms
             float yCenter = info.Height / 2;
 
             // Translate center to origin
-            SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
+            SKMatrix matrix = SKMatrix.CreateTranslation(-xCenter, -yCenter);
 
             // Scale so text fits
             float scale = Math.Min(info.Width / textBounds.Width, 
                                    info.Height / textBounds.Height);
-            SKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(scale, scale));
+            matrix = matrix.PostConcat(SKMatrix.CreateScale(scale, scale));
 
             // Calculate composite 3D transforms
             float depth = 0.75f * scale * textBounds.Width;
@@ -93,11 +93,11 @@ namespace DocsSamplesApp.Transforms
             matrix44.PostConcat(perspectiveMatrix);
 
             // Concatenate with 2D matrix
-            SKMatrix.PostConcat(ref matrix, matrix44.Matrix);
+            matrix = matrix.PostConcat(matrix44.Matrix);
 
             // Translate back to center
-            SKMatrix.PostConcat(ref matrix,
-                SKMatrix.MakeTranslation(xCenter, yCenter));
+            matrix = matrix.PostConcat(
+                SKMatrix.CreateTranslation(xCenter, yCenter));
 
             // Set the matrix and display the text
             canvas.SetMatrix(matrix);

@@ -5,6 +5,7 @@ using System.Linq;
 using Android.Views;
 using Microsoft.Maui.Controls.Handlers.Compatibility;
 using Microsoft.Maui.Controls.Platform;
+using Microsoft.Maui.Platform;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
@@ -22,7 +23,7 @@ namespace TouchTracking.Droid
         Element formsElement;
         TouchTracking.TouchEffect libTouchEffect;
         bool capture;
-        Func<double, double> fromPixels;
+        float density = 1.0f;
         int[] twoIntArray = new int[2];
 
         static Dictionary<Android.Views.View, TouchEffect> viewDictionary = 
@@ -49,13 +50,15 @@ namespace TouchTracking.Droid
 
                 libTouchEffect = touchEffect;
 
-                // Save fromPixels function
-                fromPixels = view.Context.FromPixels;
+                // Get the display density for pixel conversion
+                density = view.Context?.Resources?.DisplayMetrics?.Density ?? 1.0f;
 
                 // Set event handler on View
                 view.Touch += OnTouch;
             }
         }
+
+        double FromPixels(double pixels) => pixels / density;
 
         protected override void OnDetached()
         {
@@ -204,7 +207,7 @@ namespace TouchTracking.Droid
             touchEffect.view.GetLocationOnScreen(twoIntArray);
             double x = pointerLocation.X - twoIntArray[0];
             double y = pointerLocation.Y - twoIntArray[1];
-            Point point = new Point(fromPixels(x), fromPixels(y));
+            Point point = new Point(touchEffect.FromPixels(x), touchEffect.FromPixels(y));
 
             // Call the method
             onTouchAction(touchEffect.formsElement,

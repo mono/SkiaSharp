@@ -78,9 +78,9 @@ namespace DocsSamplesApp.Transforms
             float x = (info.Width - bitmap.Width) / 2;
             float y = (info.Height - bitmap.Height) / 2;
 
-            SKMatrix matrix = SKMatrix.MakeTranslation(-x, -y);
-            SKMatrix.PostConcat(ref matrix, taperMatrix);
-            SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(x, y));
+            SKMatrix matrix = SKMatrix.CreateTranslation(-x, -y);
+            matrix = matrix.PostConcat(taperMatrix);
+            matrix = matrix.PostConcat(SKMatrix.CreateTranslation(x, y));
 
             canvas.SetMatrix(matrix);
             canvas.DrawBitmap(bitmap, x, y);

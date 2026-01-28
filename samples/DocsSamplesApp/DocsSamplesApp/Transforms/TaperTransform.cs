@@ -11,7 +11,7 @@ namespace DocsSamplesApp.Transforms
     {
         public static SKMatrix Make(SKSize size, TaperSide taperSide, TaperCorner taperCorner, float taperFraction)
         {
-            SKMatrix matrix = SKMatrix.MakeIdentity();
+            SKMatrix matrix = SKMatrix.Identity;
 
             switch (taperSide)
             {

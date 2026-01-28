@@ -36,7 +36,7 @@ namespace DocsSamplesApp.Effects
             using (SKPaint paint = new SKPaint())
             {
                 // Create scale transform
-                SKMatrix matrix = SKMatrix.MakeScale(0.5f, 0.5f);
+                SKMatrix matrix = SKMatrix.CreateScale(0.5f, 0.5f);
 
                 // Create bitmap tiling
                 paint.Shader = SKShader.CreateBitmap(bitmap,

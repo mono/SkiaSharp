@@ -110,7 +110,7 @@ namespace DocsSamplesApp.Effects
                 paint.Shader = SKShader.CreateBitmap(tileBitmap, 
                                                      SKShaderTileMode.Repeat,
                                                      SKShaderTileMode.Repeat,
-                                                     SKMatrix.MakeRotationDegrees(45));
+                                                     SKMatrix.CreateRotationDegrees(45));
                 canvas.DrawRect(info.Rect, paint);
             }
         }

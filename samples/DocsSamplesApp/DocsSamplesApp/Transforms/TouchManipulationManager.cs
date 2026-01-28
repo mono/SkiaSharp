@@ -11,10 +11,10 @@ namespace DocsSamplesApp.Transforms
         {
             if (Mode == TouchManipulationMode.None)
             {
-                return SKMatrix.MakeIdentity();
+                return SKMatrix.Identity;
             }
 
-            SKMatrix touchMatrix = SKMatrix.MakeIdentity();
+            SKMatrix touchMatrix = SKMatrix.Identity;
             SKPoint delta = newPoint - prevPoint;
 
             if (Mode == TouchManipulationMode.ScaleDualRotate)  // One-finger rotation
@@ -30,7 +30,7 @@ namespace DocsSamplesApp.Transforms
 
                     // Calculate rotation matrix
                     float angle = newAngle - prevAngle;
-                    touchMatrix = SKMatrix.MakeRotation(angle, pivotPoint.X, pivotPoint.Y);
+                    touchMatrix = SKMatrix.CreateRotation(angle, pivotPoint.X, pivotPoint.Y);
 
                     // Effectively rotate the old vector
                     float magnitudeRatio = Magnitude(oldVector) / Magnitude(newVector);
@@ -43,14 +43,14 @@ namespace DocsSamplesApp.Transforms
             }
 
             // Multiply the rotation matrix by a translation matrix
-            SKMatrix.PostConcat(ref touchMatrix, SKMatrix.MakeTranslation(delta.X, delta.Y));
+            touchMatrix = touchMatrix.PostConcat(SKMatrix.CreateTranslation(delta.X, delta.Y));
 
             return touchMatrix;
         }
 
         public SKMatrix TwoFingerManipulate(SKPoint prevPoint, SKPoint newPoint, SKPoint pivotPoint)
         {
-            SKMatrix touchMatrix = SKMatrix.MakeIdentity();
+            SKMatrix touchMatrix = SKMatrix.Identity;
             SKPoint oldVector = prevPoint - pivotPoint;
             SKPoint newVector = newPoint - pivotPoint;
 
@@ -63,7 +63,7 @@ namespace DocsSamplesApp.Transforms
 
                 // Calculate rotation matrix
                 float angle = newAngle - oldAngle;
-                touchMatrix = SKMatrix.MakeRotation(angle, pivotPoint.X, pivotPoint.Y);
+                touchMatrix = SKMatrix.CreateRotation(angle, pivotPoint.X, pivotPoint.Y);
 
                 // Effectively rotate the old vector
                 float magnitudeRatio = Magnitude(oldVector) / Magnitude(newVector);
@@ -90,8 +90,8 @@ namespace DocsSamplesApp.Transforms
             if (!float.IsNaN(scaleX) && !float.IsInfinity(scaleX) &&
                 !float.IsNaN(scaleY) && !float.IsInfinity(scaleY))
             {
-                SKMatrix.PostConcat(ref touchMatrix, 
-                    SKMatrix.MakeScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y));
+                touchMatrix = touchMatrix.PostConcat(
+                    SKMatrix.CreateScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y));
             }
 
             return touchMatrix;

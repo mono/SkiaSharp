@@ -101,8 +101,7 @@ namespace DocsSamplesApp.Bitmaps
             canvas.DrawBitmap(bitmap, bitmapRect);
 
             // Calculate a matrix transform for displaying the cropping rectangle
-            SKMatrix bitmapScaleMatrix = SKMatrix.MakeIdentity();
-            bitmapScaleMatrix.SetScaleTranslate(scale, scale, x, y);
+            SKMatrix bitmapScaleMatrix = SKMatrix.CreateScaleTranslation(scale, scale, x, y);
 
             // Display rectangle
             SKRect scaledCropRect = bitmapScaleMatrix.MapRect(croppingRect.Rect);

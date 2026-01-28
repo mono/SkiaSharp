@@ -100,7 +100,7 @@ namespace DocsSamplesApp.Effects
                     paint.Shader = SKShader.CreateBitmap(bitmap,
                                                          SKShaderTileMode.Repeat,
                                                          SKShaderTileMode.Repeat,
-                                                         SKMatrix.MakeTranslation(0, yAdjust));
+                                                         SKMatrix.CreateTranslation(0, yAdjust));
                     paint.BlendMode = SKBlendMode.DstOver;
                     canvas.DrawRect(info.Rect, paint);
                 }

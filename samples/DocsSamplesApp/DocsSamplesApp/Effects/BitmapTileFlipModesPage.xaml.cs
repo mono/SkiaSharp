@@ -30,7 +30,7 @@ namespace DocsSamplesApp.Effects
 
             // Resize to half the width and height
             SKImageInfo info = new SKImageInfo(cropRect.Width / 2, cropRect.Height / 2);
-            bitmap = croppedBitmap.Resize(info, SKBitmapResizeMethod.Box);
+            bitmap = croppedBitmap.Resize(info, SKSamplingOptions.Default);
 	    }
 
         void OnPickerSelectedIndexChanged(object sender, EventArgs args)

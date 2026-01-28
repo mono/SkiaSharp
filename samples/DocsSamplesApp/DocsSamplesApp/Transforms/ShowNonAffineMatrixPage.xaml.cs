@@ -72,7 +72,7 @@ namespace DocsSamplesApp.Transforms
         static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint ptLL, SKPoint ptLR)
         {
             // Scale transform
-            SKMatrix S = SKMatrix.MakeScale(1 / size.Width, 1 / size.Height);
+            SKMatrix S = SKMatrix.CreateScale(1 / size.Width, 1 / size.Height);
 
             // Affine transform
             SKMatrix A = new SKMatrix
@@ -106,10 +106,10 @@ namespace DocsSamplesApp.Transforms
             };
 
             // Multiply S * N * A
-            SKMatrix result = SKMatrix.MakeIdentity();
-            SKMatrix.PostConcat(ref result, S);
-            SKMatrix.PostConcat(ref result, N);
-            SKMatrix.PostConcat(ref result, A);
+            SKMatrix result = SKMatrix.Identity;
+            result = result.PostConcat(S);
+            result = result.PostConcat(N);
+            result = result.PostConcat(A);
 
             return result;
         }

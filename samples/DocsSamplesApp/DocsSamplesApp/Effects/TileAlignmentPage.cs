@@ -59,7 +59,7 @@ namespace DocsSamplesApp.Effects
                 }
                 else
                 {
-                    SKMatrix matrix = SKMatrix.MakeTranslation(rect.Left, rect.Top);
+                    SKMatrix matrix = SKMatrix.CreateTranslation(rect.Left, rect.Top);
 
                     paint.Shader = SKShader.CreateBitmap(bitmap,
                                                          SKShaderTileMode.Repeat,

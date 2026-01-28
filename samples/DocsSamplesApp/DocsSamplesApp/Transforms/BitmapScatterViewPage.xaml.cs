@@ -42,7 +42,7 @@ namespace DocsSamplesApp.Transforms
                         SKBitmap bitmap = SKBitmap.Decode(stream);
                         bitmapCollection.Add(new TouchManipulationBitmap(bitmap)
                         {
-                            Matrix = SKMatrix.MakeTranslation(position.X, position.Y),
+                            Matrix = SKMatrix.CreateTranslation(position.X, position.Y),
                         });
                         position.X += 100;
                         position.Y += 100;

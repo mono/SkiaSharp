@@ -71,7 +71,7 @@ namespace DocsSamplesApp.Effects
                                     new SKColor[] { SKColors.White, SKColors.Black },
                                     null,
                                     SKShaderTileMode.Mirror,
-                                    SKMatrix.MakeRotation((float)angle, info.Rect.MidX, info.Rect.MidY));
+                                    SKMatrix.CreateRotation((float)angle, info.Rect.MidX, info.Rect.MidY));
 
                 canvas.DrawRect(info.Rect, paint);
             }

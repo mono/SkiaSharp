@@ -17,7 +17,7 @@ namespace DocsSamplesApp.Transforms
         public TouchManipulationBitmap(SKBitmap bitmap)
         {
             this.bitmap = bitmap;
-            Matrix = SKMatrix.MakeIdentity();
+            Matrix = SKMatrix.Identity;
 
             TouchManager = new TouchManipulationManager
             {
@@ -90,7 +90,7 @@ namespace DocsSamplesApp.Transforms
         {
             TouchManipulationInfo[] infos = new TouchManipulationInfo[touchDictionary.Count];
             touchDictionary.Values.CopyTo(infos, 0);
-            SKMatrix touchMatrix = SKMatrix.MakeIdentity();
+            SKMatrix touchMatrix = SKMatrix.Identity;
 
             if (infos.Length == 1)
             {
@@ -111,7 +111,7 @@ namespace DocsSamplesApp.Transforms
             }
 
             SKMatrix matrix = Matrix;
-            SKMatrix.PostConcat(ref matrix, touchMatrix);
+            matrix = matrix.PostConcat(touchMatrix);
             Matrix = matrix;
         }
     }

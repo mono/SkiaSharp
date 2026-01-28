@@ -41,7 +41,7 @@ namespace DocsSamplesApp.Curves
 
             using (SKPaint paint = new SKPaint())
             {
-                paint.Typeface = SKTypeface.FromFamilyName(null, SKTypefaceStyle.Bold);
+                paint.Typeface = SKTypeface.FromFamilyName(null, SKFontStyle.Bold);
                 paint.TextSize = 10;
 
                 using (SKPath textPath = paint.GetTextPath("CODE", 0, 0))

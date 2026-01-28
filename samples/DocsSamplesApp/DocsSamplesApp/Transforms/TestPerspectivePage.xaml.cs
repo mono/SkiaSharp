@@ -51,7 +51,7 @@ namespace DocsSamplesApp.Transforms
             canvas.Clear();
 
             // Calculate perspective matrix
-            SKMatrix perspectiveMatrix = SKMatrix.MakeIdentity();
+            SKMatrix perspectiveMatrix = SKMatrix.Identity;
             perspectiveMatrix.Persp0 = (float)persp0Slider.Value / 100;
             perspectiveMatrix.Persp1 = (float)persp1Slider.Value / 100;
 
@@ -59,9 +59,9 @@ namespace DocsSamplesApp.Transforms
             float xCenter = info.Width / 2;
             float yCenter = info.Height / 2;
 
-            SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
-            SKMatrix.PostConcat(ref matrix, perspectiveMatrix);
-            SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(xCenter, yCenter));
+            SKMatrix matrix = SKMatrix.CreateTranslation(-xCenter, -yCenter);
+            matrix = matrix.PostConcat(perspectiveMatrix);
+            matrix = matrix.PostConcat(SKMatrix.CreateTranslation(xCenter, yCenter));
 
             // Coordinates to center bitmap on canvas
             float x = xCenter - bitmap.Width / 2;

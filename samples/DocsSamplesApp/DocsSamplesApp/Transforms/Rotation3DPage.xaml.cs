@@ -49,7 +49,7 @@ namespace DocsSamplesApp.Transforms
             float yCenter = info.Height / 2;
 
             // Translate center to origin
-            SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
+            SKMatrix matrix = SKMatrix.CreateTranslation(-xCenter, -yCenter);
 
             // Use 3D matrix for 3D rotations and perspective
             SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
@@ -62,11 +62,11 @@ namespace DocsSamplesApp.Transforms
             matrix44.PostConcat(perspectiveMatrix);
 
             // Concatenate with 2D matrix
-            SKMatrix.PostConcat(ref matrix, matrix44.Matrix);
+            matrix = matrix.PostConcat(matrix44.Matrix);
 
             // Translate back to center
-            SKMatrix.PostConcat(ref matrix, 
-                SKMatrix.MakeTranslation(xCenter, yCenter));
+            matrix = matrix.PostConcat(
+                SKMatrix.CreateTranslation(xCenter, yCenter));
 
             // Set the matrix and display the bitmap
             canvas.SetMatrix(matrix);

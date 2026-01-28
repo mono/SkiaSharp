@@ -12,13 +12,13 @@ namespace DocsSamplesApp.Curves
     {
         SKPaint fillPaint = new SKPaint();
 
-        SKPathEffect horzLinesPath = SKPathEffect.Create2DLine(3, SKMatrix.MakeScale(6, 6));
+        SKPathEffect horzLinesPath = SKPathEffect.Create2DLine(3, SKMatrix.CreateScale(6, 6));
 
         SKPathEffect vertLinesPath = SKPathEffect.Create2DLine(6, 
-            Multiply(SKMatrix.MakeRotationDegrees(90), SKMatrix.MakeScale(24, 24)));
+            Multiply(SKMatrix.CreateRotationDegrees(90), SKMatrix.CreateScale(24, 24)));
 
         SKPathEffect diagLinesPath = SKPathEffect.Create2DLine(12, 
-            Multiply(SKMatrix.MakeScale(36, 36), SKMatrix.MakeRotationDegrees(45)));
+            Multiply(SKMatrix.CreateScale(36, 36), SKMatrix.CreateRotationDegrees(45)));
 
         SKPaint strokePaint = new SKPaint
         {
@@ -47,7 +47,7 @@ namespace DocsSamplesApp.Curves
             using (SKPath roundRectPath = new SKPath())
             {
                 // Create a path 
-                roundRectPath.AddRoundedRect(
+                roundRectPath.AddRoundRect(
                     new SKRect(50, 50, info.Width - 50, info.Height - 50), 100, 100);
 
                 // Horizontal hatch marks
@@ -76,7 +76,7 @@ namespace DocsSamplesApp.Curves
 
         static SKMatrix Multiply(SKMatrix first, SKMatrix second)
         {
-            SKMatrix target = SKMatrix.MakeIdentity();
+            SKMatrix target = SKMatrix.Identity;
             SKMatrix.Concat(ref target, first, second);
             return target;
         }

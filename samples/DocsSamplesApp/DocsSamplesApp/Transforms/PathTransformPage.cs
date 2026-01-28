@@ -21,9 +21,9 @@ namespace DocsSamplesApp.Transforms
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
 
-            SKMatrix matrix = SKMatrix.MakeScale(3, 3);
-            SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(360f / 22));
-            SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(300, 300));
+            SKMatrix matrix = SKMatrix.CreateScale(3, 3);
+            matrix = matrix.PostConcat(SKMatrix.CreateRotationDegrees(360f / 22));
+            matrix = matrix.PostConcat(SKMatrix.CreateTranslation(300, 300));
 
             transformedPath.Transform(matrix);
         }

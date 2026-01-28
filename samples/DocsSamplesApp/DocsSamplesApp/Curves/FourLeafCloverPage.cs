@@ -47,22 +47,22 @@ namespace DocsSamplesApp.Curves
                         circlePath.AddCircle(xCenter, yCenter, radius);
 
                         // Left leaf
-                        circlePath.Transform(SKMatrix.MakeTranslation(-radius, 0));
+                        circlePath.Transform(SKMatrix.CreateTranslation(-radius, 0));
                         leftRegion.SetPath(circlePath);
 
                         // Right leaf
-                        circlePath.Transform(SKMatrix.MakeTranslation(2 * radius, 0));
+                        circlePath.Transform(SKMatrix.CreateTranslation(2 * radius, 0));
                         rightRegion.SetPath(circlePath);
 
                         // Make union of right with left
                         leftRegion.Op(rightRegion, SKRegionOperation.Union);
 
                         // Top leaf
-                        circlePath.Transform(SKMatrix.MakeTranslation(-radius, -radius));
+                        circlePath.Transform(SKMatrix.CreateTranslation(-radius, -radius));
                         topRegion.SetPath(circlePath);
 
                         // Combine with bottom leaf
-                        circlePath.Transform(SKMatrix.MakeTranslation(0, 2 * radius));
+                        circlePath.Transform(SKMatrix.CreateTranslation(0, 2 * radius));
                         bottomRegion.SetPath(circlePath);
 
                         // Make union of top with bottom

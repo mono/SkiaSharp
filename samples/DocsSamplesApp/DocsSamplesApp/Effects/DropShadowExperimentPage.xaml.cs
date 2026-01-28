@@ -47,8 +47,7 @@ namespace DocsSamplesApp.Effects
                                         dy,
                                         sigmaX,
                                         sigmaY,
-                                        SKColors.Red,
-                                        SKDropShadowImageFilterShadowMode.DrawShadowAndForeground); 
+                                        SKColors.Red); 
 
                 SKRect textBounds = new SKRect();
                 paint.MeasureText(TEXT, ref textBounds);

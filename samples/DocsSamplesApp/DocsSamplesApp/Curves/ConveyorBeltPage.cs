@@ -39,9 +39,9 @@ namespace DocsSamplesApp.Curves
             bucketPath.AddRect(new SKRect(-5, -3, 25, 3));
 
             // Sides
-            bucketPath.AddRoundedRect(new SKRect(25, -19, 27, 18), 10, 10, 
+            bucketPath.AddRoundRect(new SKRect(25, -19, 27, 18), 10, 10, 
                                       SKPathDirection.CounterClockwise);
-            bucketPath.AddRoundedRect(new SKRect(63, -19, 65, 18), 10, 10, 
+            bucketPath.AddRoundRect(new SKRect(63, -19, 65, 18), 10, 10, 
                                       SKPathDirection.CounterClockwise);
 
             // Five slats
@@ -67,8 +67,8 @@ namespace DocsSamplesApp.Curves
             bucketPath.Close();
 
             // Make it a little bigger and correct the orientation
-            bucketPath.Transform(SKMatrix.MakeScale(-2, 2));
-            bucketPath.Transform(SKMatrix.MakeRotationDegrees(90));
+            bucketPath.Transform(SKMatrix.CreateScale(-2, 2));
+            bucketPath.Transform(SKMatrix.CreateRotationDegrees(90));
         }
 
         protected override void OnAppearing()
