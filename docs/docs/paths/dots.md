@@ -183,7 +183,7 @@ public class AnimatedSpiralPage : ContentPage
         pageIsActive = true;
         stopwatch.Start();
 
-        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =>
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(33), () =>
         {
             double t = stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime;
             dashPhase = (float)(10 * t);

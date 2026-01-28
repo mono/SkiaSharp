@@ -169,7 +169,7 @@ public class ExpandingCirclesPage : ContentPage
 }
 ```
 
-This program uses a different approach to animation based on the .NET MAUI `Device.StartTimer` method. The `t` field is animated from 0 to 1 every `cycleTime` milliseconds:
+This program uses a different approach to animation based on the .NET MAUI `Dispatcher.StartTimer` method. The `t` field is animated from 0 to 1 every `cycleTime` milliseconds:
 
 ```csharp
 public class ExpandingCirclesPage : ContentPage
@@ -181,7 +181,7 @@ public class ExpandingCirclesPage : ContentPage
         pageIsActive = true;
         stopwatch.Start();
 
-        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =>
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(33), () =>
         {
             t = (float)(stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime);
             canvasView.InvalidateSurface();

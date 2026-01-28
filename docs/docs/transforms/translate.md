@@ -235,7 +235,7 @@ public class HendecagramAnimationPage : ContentPage
         pageIsActive = true;
         stopwatch.Start();
 
-        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =>
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(33), () =>
         {
             double t = stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime;
             angle = (float)(360 * t);

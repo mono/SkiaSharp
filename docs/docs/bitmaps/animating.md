@@ -360,7 +360,7 @@ public partial class MainPage : ContentPage
 
         // Now start the animation
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
     ···
 }
@@ -368,7 +368,7 @@ public partial class MainPage : ContentPage
 
 Notice that the program stores these bitmaps in local application storage rather than in the device's photo library. The .NET Standard 2.0 library allows using the familiar `File.OpenRead` and `File.WriteAllBytes` methods for this task.
 
-After all the bitmaps have been created or loaded into memory, the method starts a `Stopwatch` object and calls `Device.StartTimer`. The `OnTimerTick` method is called every 16 milliseconds.
+After all the bitmaps have been created or loaded into memory, the method starts a `Stopwatch` object and calls `Dispatcher.StartTimer`. The `OnTimerTick` method is called every 16 milliseconds.
 
 `OnTimerTick` calculates a `time` value in milliseconds that ranges from 0 to 6000 times `COUNT`, which apportions six seconds for the display of each bitmap. The `progress` value uses the `Math.Sin` value to create a sinusoidal animation that will be slower at the beginning of the cycle, and slower at the end as it reverses direction.
 
@@ -576,7 +576,7 @@ Despite the `IntPtr` value, no `unsafe` code is required because the `IntPtr` is
 
 After each frame has been extracted, the constructor totals up the durations of all the frames, and then initializes another array with the accumulated durations.
 
-The remainder of the code-behind file is dedicated to animation. The `Device.StartTimer` method is used to start a timer going, and the `OnTimerTick` callback uses a `Stopwatch` object to determine the elapsed time in milliseconds. Looping through the accumulated durations array is sufficient to find the current frame:
+The remainder of the code-behind file is dedicated to animation. The `Dispatcher.StartTimer` method is used to start a timer going, and the `OnTimerTick` callback uses a `Stopwatch` object to determine the elapsed time in milliseconds. Looping through the accumulated durations array is sufficient to find the current frame:
 
 ```csharp
 public partial class AnimatedGifPage : ContentPage
@@ -597,7 +597,7 @@ public partial class AnimatedGifPage : ContentPage
 
         isAnimating = true;
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
 
     protected override void OnDisappearing()

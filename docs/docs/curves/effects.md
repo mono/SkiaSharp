@@ -71,7 +71,7 @@ public class AnimatedDottedTextPage : ContentPage
         base.OnAppearing();
         pageIsActive = true;
 
-        Device.StartTimer(TimeSpan.FromSeconds(1f / 60), () =>
+        Dispatcher.StartTimer(TimeSpan.FromSeconds(1f / 60), () =>
         {
             canvasView.InvalidateSurface();
             return pageIsActive;

@@ -34,8 +34,8 @@ namespace DocsSamplesApp.Transforms
             pageIsActive = true;
             stopwatch.Start();
 
-            // TODO Xamarin.Forms.Device.StartTimer is no longer supported. Use Microsoft.Maui.Dispatching.DispatcherExtensions.StartTimer instead. For more details see https://learn.microsoft.com/en-us/dotnet/maui/migration/forms-projects#device-changes
-            Device.StartTimer(TimeSpan.FromMilliseconds(33), () =>
+            // TODO Xamarin.Forms.Dispatcher.StartTimer is no longer supported. Use Microsoft.Maui.Dispatching.DispatcherExtensions.StartTimer instead. For more details see https://learn.microsoft.com/en-us/dotnet/maui/migration/forms-projects#device-changes
+            Dispatcher.StartTimer(TimeSpan.FromMilliseconds(33), () =>
             {
                 double t = stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime;
                 angle = (float)(360 * t);
