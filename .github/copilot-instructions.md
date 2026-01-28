@@ -467,6 +467,71 @@ The build uses xrefmap files in `docs/xrefmaps/`:
 
 If xrefs don't resolve, verify the type exists in these maps.
 
+### Regenerating Xrefmap Files
+
+If xrefmap files need to be updated (e.g., new .NET version, new APIs), use Microsoft's buildapi endpoint:
+
+```
+https://buildapi.docs.microsoft.com/v1/xrefmap/dotnet?site_name=Docs&branch_name=live
+```
+
+> [!IMPORTANT]
+> The URLs in the response are **time-limited signed Azure blob URLs**. They expire after a few hours. Download immediately after fetching.
+
+#### How the current xrefmaps were obtained (January 2026):
+
+1. **Fetch the index** - The URL returns JSON with a `links` array containing ~116 xrefmap file URLs
+
+2. **Identify needed files** - Search through the links for files containing relevant types:
+   - File containing "SkiaSharp" → `xrefmap-skiasharp.zip`
+   - File containing "Microsoft.Maui" → `xrefmap-maui.zip`
+   - File containing "UIKit" or "CoreGraphics" → `xrefmap-ios.zip`
+   - File containing "Android." namespace → `xrefmap-android.zip`
+   - Main .NET file (largest, ~300MB uncompressed) → `xrefmap-dotnet.zip`
+
+3. **Download and inspect** - Files are gzip-compressed JSON. Decompress to verify contents:
+   ```bash
+   curl -o temp.json.gz "SIGNED_URL_HERE"
+   gunzip temp.json.gz
+   grep -l "SkiaSharp" temp.json  # Check if it has what you need
+   ```
+
+4. **Create DocFX-compatible zips** - DocFX requires a specific zip structure:
+   ```bash
+   # Convert JSON to zip format DocFX expects
+   dotnet docfx download xrefmap-skiasharp.zip --xref "file:///path/to/downloaded.json"
+   ```
+   
+   The zip must contain a file named `xrefmap.yml` (DocFX converts JSON to YAML internally).
+
+5. **Replace files** in `docs/xrefmaps/` and test build
+
+#### File positions in buildapi response (as of January 2026):
+
+These positions **will change** over time. Always search by content, not position:
+
+| Approx Position | Content | Notes |
+|-----------------|---------|-------|
+| ~68 | SkiaSharp, HarfBuzzSharp | Primary SkiaSharp xref |
+| ~91 | Microsoft.Maui.* | MAUI controls and types |
+| ~106 | Android.*, Java.* | ~150MB uncompressed |
+| ~116 | UIKit, CoreGraphics, AppKit | iOS/Mac types, ~102MB |
+| First/largest | System.*, Microsoft.* | .NET BCL, ~332MB |
+
+#### Verification
+
+After regenerating, run a build and check for xref warnings:
+
+```bash
+cd docs
+dotnet docfx docfx.json 2>&1 | grep -i "warning"
+```
+
+Common issues:
+- Type moved to different namespace → Update xref in docs
+- Type removed from API → Remove xref or use plain text
+- Wrong xrefmap file → Search all downloaded files for the type
+
 ---
 
 ## File Naming Rules
