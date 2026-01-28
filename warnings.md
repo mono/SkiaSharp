@@ -3,7 +3,7 @@
 This document catalogs compiler warnings in the DocsSamplesApp project after the migration to .NET 10 and SkiaSharp 3.119.1.
 
 **Last Updated**: January 2026  
-**Current Build**: 292 warnings, 0 errors (Android target framework)
+**Current Build**: 262 warnings, 0 errors (Android target framework)
 
 ---
 
@@ -16,8 +16,8 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 | CS0618 - Device.StartTimer | ✅ FIXED | 0 | Changed to `Dispatcher.StartTimer()` |
 | CS0618 - TableView/TextCell | ✅ FIXED | 0 | Migrated to CollectionView |
 | CS0618 - SKPaint text APIs | ✅ FIXED | 0 | Migrated to SKFont APIs in code and docs |
-| CS0618 - Frame in Styles.xaml | ⏳ PENDING | ~10 | Default MAUI template styles |
-| CS0618 - ListView in Styles.xaml | ⏳ PENDING | ~8 | Default MAUI template styles |
+| CS0618 - Frame in Styles.xaml | ✅ FIXED | 0 | Replaced with Border style |
+| CS0618 - ListView in Styles.xaml | ✅ FIXED | 0 | Replaced with CollectionView style |
 | CS0618 - LayoutOptions.*AndExpand | ⏳ PENDING | ~15 | Various XAML pages |
 | CS0618 - Device.GetNamedSize | ⏳ PENDING | ~3 | PhotoPuzzle pages |
 | CS0618 - LayoutTo obsolete | ⏳ PENDING | ~1 | PhotoPuzzlePage4.xaml.cs |
@@ -62,20 +62,15 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 | `canvas.DrawText(text, x, y, paint)` | `canvas.DrawText(text, x, y, align, font, paint)` |
 | `canvas.DrawTextOnPath(text, path, x, y, paint)` | `canvas.DrawTextOnPath(text, path, x, y, font, paint)` |
 
+### 7. Frame/ListView Styles
+- Replaced `TargetType="Frame"` style with `TargetType="Border"` style
+- Replaced `TargetType="ListView"` style with `TargetType="CollectionView"` style
+
 ---
 
-## ⏳ Remaining Warnings (~40 unique issues)
+## ⏳ Remaining Warnings (~25 unique issues)
 
-### Priority 1: Styles.xaml (~18 warnings)
-
-The default MAUI Styles.xaml contains styles for obsolete Frame and ListView controls. These are template styles that aren't actively used by our app.
-
-**Options:**
-1. Remove unused Frame/ListView styles
-2. Replace Frame style with Border style
-3. Replace ListView style with CollectionView style
-
-### Priority 2: LayoutOptions.*AndExpand (~15 warnings)
+### Priority 1: LayoutOptions.*AndExpand (~15 warnings)
 
 Several XAML pages use deprecated expansion options:
 - `FillAndExpand`
@@ -89,15 +84,19 @@ Several XAML pages use deprecated expansion options:
 - Bitmaps/BitmapRotatorPage.xaml
 - Bitmaps/ColorAdjustmentPage.xaml
 - Effects/DistanceLightExperimentPage.xaml
+- Effects/LightenAndDarkenPage.xaml
+- Effects/ImageBlurExperimentPage.xaml
+- Effects/GradientTransitionsPage.xaml
+- Effects/DropShadowExperimentPage.xaml
 
 **Fix:** Replace StackLayout with Grid for proper layout expansion.
 
-### Priority 3: PhotoPuzzle Pages (~4 warnings)
+### Priority 2: PhotoPuzzle Pages (~4 warnings)
 
 - `Device.GetNamedSize` / `NamedSize` obsolete (PhotoPuzzlePage2.xaml)
 - `LayoutTo` obsolete → use `LayoutToAsync` (PhotoPuzzlePage4.xaml.cs)
 
-### Priority 4: Null handling (~6 warnings)
+### Priority 3: Null handling (~6 warnings)
 
 Minor CS8600/CS8602/CS8625 warnings in:
 - ColorAdjustmentPage.xaml.cs
@@ -113,6 +112,7 @@ Minor CS8600/CS8602/CS8625 warnings in:
 | After TableView→CollectionView | 275 | 0 | 88% reduction |
 | After SKFont migration | 340 | 0 | Verified code/docs match |
 | After event handler fix | 292 | 0 | Fixed 12 remaining object sender |
+| After Frame/ListView removal | 262 | 0 | Replaced with Border/CollectionView styles |
 
 ---
 
