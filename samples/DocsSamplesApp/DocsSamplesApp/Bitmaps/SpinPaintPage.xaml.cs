@@ -43,7 +43,7 @@ namespace DocsSamplesApp.Bitmaps
         // Item to store in touch-tracking dictionary
         class FingerInfo
         {
-            public Point ThisPosition;
+            public SKPoint ThisPosition;
             public SKPoint LastPosition;
         }
 
@@ -54,56 +54,44 @@ namespace DocsSamplesApp.Bitmaps
         {
             InitializeComponent();
 
-            // Set up touch handling on the canvas view layout
-            var pointerGesture = new PointerGestureRecognizer();
-            pointerGesture.PointerPressed += OnPointerPressed;
-            pointerGesture.PointerMoved += OnPointerMoved;
-            pointerGesture.PointerReleased += OnPointerReleased;
-            canvasViewLayout.GestureRecognizers.Add(pointerGesture);
-
             // Start animation
             stopwatch.Start();
             Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
         }
 
-        void OnPointerPressed(object? sender, PointerEventArgs e)
+        // Handle touch events from SKCanvasView
+        void OnTouch(object? sender, SKTouchEventArgs e)
         {
-            var position = e.GetPosition(canvasViewLayout);
-            if (position.HasValue)
+            switch (e.ActionType)
             {
-                // Use a simple ID for single-touch scenarios
-                long id = 0;
-                if (!idDictionary.ContainsKey(id))
-                {
-                    idDictionary.Add(id, new FingerInfo
+                case SKTouchAction.Pressed:
+                    if (e.InContact)
                     {
-                        ThisPosition = position.Value,
-                        LastPosition = new SKPoint(float.PositiveInfinity, float.PositiveInfinity)
-                    });
-                }
-            }
-        }
+                        idDictionary[e.Id] = new FingerInfo
+                        {
+                            ThisPosition = e.Location,
+                            LastPosition = new SKPoint(float.PositiveInfinity, float.PositiveInfinity)
+                        };
+                    }
+                    break;
 
-        void OnPointerMoved(object? sender, PointerEventArgs e)
-        {
-            var position = e.GetPosition(canvasViewLayout);
-            if (position.HasValue)
-            {
-                long id = 0;
-                if (idDictionary.ContainsKey(id))
-                {
-                    idDictionary[id].ThisPosition = position.Value;
-                }
-            }
-        }
+                case SKTouchAction.Moved:
+                    if (idDictionary.ContainsKey(e.Id))
+                    {
+                        idDictionary[e.Id].ThisPosition = e.Location;
+                    }
+                    break;
 
-        void OnPointerReleased(object? sender, PointerEventArgs e)
-        {
-            long id = 0;
-            if (idDictionary.ContainsKey(id))
-            {
-                idDictionary.Remove(id);
+                case SKTouchAction.Released:
+                case SKTouchAction.Cancelled:
+                    if (idDictionary.ContainsKey(e.Id))
+                    {
+                        idDictionary.Remove(e.Id);
+                    }
+                    break;
             }
+
+            e.Handled = true;
         }
 
         // Every 1/60th second, update bitmap with user drawings
@@ -117,7 +105,7 @@ namespace DocsSamplesApp.Bitmaps
             // Determine the current color.
             float tColor = stopwatch.ElapsedMilliseconds % 10000 / 10000f;
             fingerPaint.Color = SKColor.FromHsl(360 * tColor, 100, 50);
-            titleLabel.TextColor = new Color(fingerPaint.Color.Red / 255f, fingerPaint.Color.Green / 255f, fingerPaint.Color.Blue / 255f);
+            titleLabel.TextColor = fingerPaint.Color.ToMauiColor();
 
             // Determine the rotation angle.
             float tAngle = stopwatch.ElapsedMilliseconds % 5000 / 5000f;
@@ -129,20 +117,8 @@ namespace DocsSamplesApp.Bitmaps
             {
                 FingerInfo fingerInfo = idDictionary[id];
 
-                // Get the canvas size in pixels. It's square so it's only one number.
-                float canvasSize = canvasView.CanvasSize.Width;
-
-                // Convert coordinates to pixels for drawing on the bitmap.
-                // Also, make an offset factor if there's been resizing and the bitmap
-                //      is now larger than the canvas. (It's never smaller.)
-                float factor = canvasSize / (float)canvasViewLayout.Width;    // scaling factor
-                float offset = (bitmapSize - canvasSize) / 2;           // bitmap always >= canvas
-
-                SKPoint convertedPoint = new SKPoint(factor * (float)fingerInfo.ThisPosition.X + offset,
-                                                     factor * (float)fingerInfo.ThisPosition.Y + offset);
-
-                // Now rotate the point based on the rotation angle
-                SKPoint pt0 = matrix.MapPoint(convertedPoint);
+                // Touch coordinates are already in pixels from SKTouchEventArgs
+                SKPoint pt0 = matrix.MapPoint(fingerInfo.ThisPosition);
 
                 if (!float.IsPositiveInfinity(fingerInfo.LastPosition.X))
                 {
