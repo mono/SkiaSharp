@@ -1,33 +1,31 @@
 ---
 title: "Drawing a Simple Circle in SkiaSharp"
-description: "This article explains the basics of SkiaSharp drawing, including canvases and paint objects, in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains the basics of SkiaSharp drawing, including canvases and paint objects, in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
 ms.assetid: E3A4E373-F65D-45C8-8E77-577A804AC3F8
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Drawing a Simple Circle in SkiaSharp
 
 _Learn the basics of SkiaSharp drawing, including canvases and paint objects_
 
-This article introduces the concepts of drawing graphics in Xamarin.Forms using SkiaSharp, including creating an `SKCanvasView` object to host the graphics, handling the `PaintSurface` event, and using a `SKPaint` object to specify color and other drawing attributes.
+This article introduces the concepts of drawing graphics in .NET MAUI using SkiaSharp, including creating an `SKCanvasView` object to host the graphics, handling the `PaintSurface` event, and using a `SKPaint` object to specify color and other drawing attributes.
 
-The sample program contains all the sample code for this series of SkiaSharp articles. The first page is entitled **Simple Circle** and invokes the page class [`SimpleCirclePage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs). This code shows how to draw a circle in the center of the page with a radius of 100 pixels. The outline of the circle is red, and the interior of the circle is blue.
+The sample program contains all the sample code for this series of SkiaSharp articles. The first page is entitled **Simple Circle** and invokes the page class [`SimpleCirclePage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs). This code shows how to draw a circle in the center of the page with a radius of 100 pixels. The outline of the circle is red, and the interior of the circle is blue.
 
 ![A blue circle outlined in red](circle-images/circleexample.png)
 
-The [`SimpleCircle`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs) page class derives from `ContentPage` and contains two `using` directives for the SkiaSharp namespaces:
+The [`SimpleCircle`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs) page class derives from `ContentPage` and contains two `using` directives for the SkiaSharp namespaces:
 
 ```csharp
 using SkiaSharp;
-using SkiaSharp.Views.Forms;
+using SkiaSharp.Views.Maui.Controls;
 ```
 
-The following constructor of the class creates an [`SKCanvasView`](xref:SkiaSharp.Views.Forms.SKCanvasView) object, attaches a handler for the [`PaintSurface`](xref:SkiaSharp.Views.Forms.SKCanvasView.PaintSurface) event, and sets the `SKCanvasView` object as the content of the page:
+The following constructor of the class creates an [`SKCanvasView`](xref:SkiaSharp.Views.Maui.Controls.SKCanvasView) object, attaches a handler for the [`PaintSurface`](xref:SkiaSharp.Views.Maui.Controls.SKCanvasView.PaintSurface) event, and sets the `SKCanvasView` object as the content of the page:
 
 ```csharp
 public SimpleCirclePage()
@@ -40,7 +38,7 @@ public SimpleCirclePage()
 }
 ```
 
-The `SKCanvasView` occupies the entire content area of the page. You can alternatively combine an `SKCanvasView` with other Xamarin.Forms `View` derivatives, as you'll see in other examples.
+The `SKCanvasView` occupies the entire content area of the page. You can alternatively combine an `SKCanvasView` with other .NET MAUI `View` derivatives, as you'll see in other examples.
 
 The `PaintSurface` event handler is where you do all your drawing. This method can be called multiple times while your program is running, so it should maintain all the information necessary to recreate the graphics display:
 
@@ -52,10 +50,10 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 
 ```
 
-The [`SKPaintSurfaceEventArgs`](xref:SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs) object that accompanies the event has two properties:
+The [`SKPaintSurfaceEventArgs`](xref:SkiaSharp.Views.Maui.Controls.SKPaintSurfaceEventArgs) object that accompanies the event has two properties:
 
-- [`Info`](xref:SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs.Info) of type [`SKImageInfo`](xref:SkiaSharp.SKImageInfo)
-- [`Surface`](xref:SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs.Surface) of type [`SKSurface`](xref:SkiaSharp.SKSurface)
+- [`Info`](xref:SkiaSharp.Views.Maui.Controls.SKPaintSurfaceEventArgs.Info) of type [`SKImageInfo`](xref:SkiaSharp.SKImageInfo)
+- [`Surface`](xref:SkiaSharp.Views.Maui.Controls.SKPaintSurfaceEventArgs.Surface) of type [`SKSurface`](xref:SkiaSharp.SKSurface)
 
 The `SKImageInfo` structure contains information about the drawing surface, most importantly, its width and height in pixels. The `SKSurface` object represents the drawing surface itself. In this program, the drawing surface is a video display, but in other programs an `SKSurface` object can also represent a bitmap that you use SkiaSharp to draw on.
 
@@ -102,7 +100,7 @@ The [`Style`](xref:SkiaSharp.SKPaint.Style) property indicates that you want to 
 
 The default is `Fill`. Use the third option to stroke the line and fill the interior with the same color.
 
-Set the [`Color`](xref:SkiaSharp.SKPaint.Color) property to a value of type [`SKColor`](xref:SkiaSharp.SKColor). One way to get an `SKColor` value is by converting a Xamarin.Forms `Color` value to an `SKColor` value using the extension method [`ToSKColor`](xref:SkiaSharp.Views.Forms.Extensions.ToSKColor*). The [`Extensions`](xref:SkiaSharp.Views.Forms.Extensions) class in the `SkiaSharp.Views.Forms` namespace includes other methods that convert between Xamarin.Forms values and SkiaSharp values.
+Set the [`Color`](xref:SkiaSharp.SKPaint.Color) property to a value of type [`SKColor`](xref:SkiaSharp.SKColor). One way to get an `SKColor` value is by converting a .NET MAUI `Color` value to an `SKColor` value using the extension method [`ToSKColor`](xref:SkiaSharp.Views.Maui.Controls.Extensions.ToSKColor*). The [`Extensions`](xref:SkiaSharp.Views.Maui.Controls.Extensions) class in the `SkiaSharp.Views.Maui.Controls` namespace includes other methods that convert between .NET MAUI values and SkiaSharp values.
 
 The [`StrokeWidth`](xref:SkiaSharp.SKPaint.StrokeWidth) property indicates the thickness of the line. Here it's set to 25 pixels.
 
@@ -150,7 +148,7 @@ An `SKPaint` object is little more than a collection of graphics drawing propert
 
 Although the width of the circle's outline is specified as 25 pixels &mdash; or one-quarter of the radius of the circle &mdash; it appears to be thinner, and there's a good reason for that: Half the width of the line is obscured by the blue circle. The arguments to the `DrawCircle` method define the abstract geometric coordinates of a circle. The blue interior is sized to that dimension to the nearest pixel, but the 25-pixel-wide outline straddles the geometric circle &mdash; half on the inside and half on the outside.
 
-The next sample in the [Integrating with Xamarin.Forms](~/xamarin-forms/user-interface/graphics/skiasharp/basics/integration.md) article demonstrates this visually.
+The next sample in the [Integrating with .NET MAUI](~/dotnet-maui/user-interface/graphics/skiasharp/basics/integration.md) article demonstrates this visually.
 
 ## Related Links
 

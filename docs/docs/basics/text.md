@@ -1,13 +1,11 @@
 ---
 title: "Integrating Text and Graphics"
-description: "This article explains how to determine the size of rendered text string to integrate text with SkiaSharp graphics into Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to determine the size of rendered text string to integrate text with SkiaSharp graphics into .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
 ms.assetid: A0B5AC82-7736-4AD8-AA16-FE43E18D203C
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Integrating Text and Graphics
@@ -20,7 +18,7 @@ This article demonstrates how to measure text, scale the text to a particular si
 
 That image also includes a rounded rectangle. The SkiaSharp `Canvas` class includes [`DrawRect`](xref:SkiaSharp.SKCanvas.DrawRect*) methods to draw a rectangle and [`DrawRoundRect`](xref:SkiaSharp.SKCanvas.DrawRoundRect*) methods to draw a rectangle with rounded corners. These methods allow the rectangle to be defined as an `SKRect` value or in other ways.
 
-The **Framed Text** page centers a short text string on the page and surrounds it with a frame composed of a pair of rounded rectangles. The [`FramedTextPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/FramedTextPage.cs) class shows how it's done.
+The **Framed Text** page centers a short text string on the page and surrounds it with a frame composed of a pair of rounded rectangles. The [`FramedTextPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/FramedTextPage.cs) class shows how it's done.
 
 In SkiaSharp, you use the `SKPaint` class to set text and font attributes, but you can also use it to obtain the rendered size of text. The beginning of the following `PaintSurface` event handler calls two different `MeasureText` methods. The first [`MeasureText`](xref:SkiaSharp.SKPaint.MeasureText(System.String)) call has a simple `string` argument and returns the pixel width of the text based on the current font attributes. The program then calculates a new `TextSize` property of the `SKPaint` object based on that rendered width, the current `TextSize` property, and the width of the display area. This calculation is intended to set `TextSize` so that the text string to be rendered at 90% of the width of the screen:
 

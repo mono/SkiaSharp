@@ -1,13 +1,11 @@
 ---
 title: "SkiaSharp mask filters"
 description: "Learn how to use the mask filter to create blurs and other alpha effects."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 940422A1-8BC0-4039-8AD7-26C61320F858
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/27/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # SkiaSharp mask filters
@@ -40,10 +38,10 @@ The effects of these styles are shown in the examples below. The `sigma` paramet
 The **Mask Blur Experiment** page in the sample allows you to experiment with the blur styles and sigma values. The XAML file instantiates a `Picker` with the four `SKBlurStyle` enumeration members and a `Slider` for specifying the sigma value:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.MaskBlurExperimentPage"
              Title="Mask Blur Experiment">
 

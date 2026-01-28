@@ -1,13 +1,11 @@
 ---
 title: "SkiaSharp effects"
 description: "Learn how to alter the normal display of graphics with gradients, bitmap tiling, blend modes, blur and other effects."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: B3E06572-8E2A-49FA-90D1-444C394CD516
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/22/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # SkiaSharp effects

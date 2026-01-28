@@ -1,13 +1,11 @@
 ---
 title: "The SkiaSharp linear gradient"
 description: "Discover how to stroke lines or fill areas with gradients composed of a gradual blend of two colors."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 20A2A8C4-FEB7-478D-BF57-C92E26117B6A
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/23/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # The SkiaSharp linear gradient
@@ -160,11 +158,11 @@ You can interactively experiment with linear gradients with the **Interactive Li
 The XAML file attaches the `TouchEffect` to a parent of the `SKCanvasView` and also includes a `Picker` that allows you to select one of the three members of the [`SKShaderTileMode`](xref:SkiaSharp.SKShaderTileMode) enumeration:
 
 ```xaml
-<local:InteractivePage xmlns="http://xamarin.com/schemas/2014/forms"
+<local:InteractivePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                        xmlns:local="clr-namespace:SkiaSharpFormsDemos"
                        xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-                       xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+                       xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
                        xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="SkiaSharpFormsDemos.Effects.InteractiveLinearGradientPage"
                        Title="Interactive Linear Gradient">

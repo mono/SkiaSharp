@@ -1,13 +1,11 @@
 ---
 title: "SkiaSharp image filters"
 description: "Learn how to use the image filter to create blurs and drop shadows."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 173E7B22-AEC8-4F12-B657-1C0CEE01AD63
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/27/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # SkiaSharp image filters
@@ -35,9 +33,9 @@ The method has two sigma values &mdash; the first for the blur extent in the hor
 The **Image Blur Experiment** page in the sample includes two `Slider` views that let you experiment with setting various levels of blur:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.ImageBlurExperimentPage"
              Title="Image Blur Experiment">
 
@@ -161,9 +159,9 @@ The final two parameters are optional.
 The **Drop Shadow Experiment** program lets you experiment with values of `dx`, `dy`, `sigmaX`, and `sigmaY` to display a text string with a drop shadow. The XAML file instantiates four `Slider` views to set these values:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.DropShadowExperimentPage"
              Title="Drop Shadow Experiment">
     <ContentPage.Resources>
@@ -314,9 +312,9 @@ The page doesn't use the last two optional parameters.
 Three `Slider` views in the XAML file let you select the `Z` coordinate of the `SKPoint3` value, the `surfaceScale` parameter, and the `kd` parameter, which is defined in the API documentation as the "diffuse lighting constant":
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaLightExperiment.MainPage"
              Title="Distant Light Experiment">
 

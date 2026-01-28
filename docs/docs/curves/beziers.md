@@ -1,13 +1,11 @@
 ---
 title: "Three Types of Bézier Curves"
-description: "This article explains how to use SkiaSharp to render cubic, quadratic, and conic Bézier curves in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to use SkiaSharp to render cubic, quadratic, and conic Bézier curves in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
 ms.assetid: 8FE0F6DC-16BC-435F-9626-DD1790C0145A
 author: davidbritch
 ms.author: dabritch
 ms.date: 05/25/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Three Types of Bézier Curves
@@ -45,7 +43,7 @@ The curve begins at the current point of the contour. The complete cubic Bezier 
 
 The resultant curve begins at the start point and ends at the end point. The curve generally does not pass through the two control points; instead the control points function much like magnets to pull the curve towards them.
 
-The best way to get a feel for the cubic Bézier curve is by experimentation. This is the purpose of the **Bezier Curve** page, which derives from `InteractivePage`. The [**BezierCurvePage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCurvePage.xaml) file instantiates the `SKCanvasView` and a `TouchEffect`. The [**BezierCurvePage.xaml.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCurvePage.xaml.cs) code-behind file creates four `TouchPoint` objects in its constructor. The `PaintSurface` event handler creates an `SKPath` to render a Bézier curve based on the four `TouchPoint` objects, and also draws dotted tangent lines from the control points to the end points:
+The best way to get a feel for the cubic Bézier curve is by experimentation. This is the purpose of the **Bezier Curve** page, which derives from `InteractivePage`. The [**BezierCurvePage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCurvePage.xaml) file instantiates the `SKCanvasView` and a `TouchEffect`. The [**BezierCurvePage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCurvePage.xaml.cs) code-behind file creates four `TouchPoint` objects in its constructor. The `PaintSurface` event handler creates an `SKPath` to render a Bézier curve based on the four `TouchPoint` objects, and also draws dotted tangent lines from the control points to the end points:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -127,7 +125,7 @@ L = 4 × tan(α / 4) / 3
 
 The illustration shows an angle of 45 degrees, so L equals 0.265. In code, that value would be multiplied by the desired radius of the circle.
 
-The **Bezier Circular Arc** page allows you to experiment with defining a Bézier curve to approximate a circular arc for angles ranging up to 180 degrees. The [**BezierCircularArcPage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCircularArcPage.xaml) file instantiates the `SKCanvasView` and a `Slider` for selecting the angle. The `PaintSurface` event handler in the [**BezierCircularArgPage.xaml.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCircularArcPage.xaml.cs) code-behind file uses a transform to set the point (0, 0) to the center of the canvas. It draws a circle centered on that point for comparison, and then calculates the two control points for the Bézier curve:
+The **Bezier Circular Arc** page allows you to experiment with defining a Bézier curve to approximate a circular arc for angles ranging up to 180 degrees. The [**BezierCircularArcPage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCircularArcPage.xaml) file instantiates the `SKCanvasView` and a `Slider` for selecting the angle. The `PaintSurface` event handler in the [**BezierCircularArgPage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierCircularArcPage.xaml.cs) code-behind file uses a transform to set the point (0, 0) to the center of the canvas. It draws a circle centered on that point for comparison, and then calculates the two control points for the Bézier curve:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -215,7 +213,7 @@ Calculating the coordinates of the two control points is quite easy when the qua
 
 If the radius of the circle is 100, then *L* is 55, and that's an easy number to remember.
 
-The **Squaring the Circle** page animates a figure between a circle and a square. The circle is approximated by four Bézier curves whose coordinates are shown in the first column of this array definition in the [`SquaringTheCirclePage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/SquaringTheCirclePage.cs) class:
+The **Squaring the Circle** page animates a figure between a circle and a square. The circle is approximated by four Bézier curves whose coordinates are shown in the first column of this array definition in the [`SquaringTheCirclePage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/SquaringTheCirclePage.cs) class:
 
 ```csharp
 public class SquaringTheCirclePage : ContentPage
@@ -291,7 +289,7 @@ The points are interpolated based on a sinusoidally oscillating value of `t`. Th
 
 Such an animation would be impossible without curves that are algorithmically flexible enough to be rendered as both circular arcs and straight lines.
 
-The **Bezier Infinity** page also takes advantage of the ability of a Bézier curve to approximate a circular arc. Here's the `PaintSurface` handler from the [`BezierInfinityPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierInfinityPage.cs) class:
+The **Bezier Infinity** page also takes advantage of the ability of a Bézier curve to approximate a circular arc. Here's the `PaintSurface` handler from the [`BezierInfinityPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/BezierInfinityPage.cs) class:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -358,7 +356,7 @@ public void QuadTo (Single x1, Single y1, Single x2, Single y2)
 
 The methods add a curve from the current position to `point2` with `point1` as the control point.
 
-You can experiment with quadratic Bézier curves with the **Quadratic Curve** page, which is very similar to the **Bezier Curve** page except it has only three touch points. Here's the `PaintSurface` handler in the [**QuadraticCurve.xaml.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/QuadraticCurvePage.xaml.cs) code-behind file:
+You can experiment with quadratic Bézier curves with the **Quadratic Curve** page, which is very similar to the **Bezier Curve** page except it has only three touch points. Here's the `PaintSurface` handler in the [**QuadraticCurve.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/QuadraticCurvePage.xaml.cs) code-behind file:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -435,7 +433,7 @@ public void ConicTo (Single x1, Single y1, Single x2, Single y2, Single weight)
 
 Notice the final `weight` parameter.
 
-The **Conic Curve** page allows you to experiment with these curves. The `ConicCurvePage` class derives from `InteractivePage`. The [**ConicCurvePage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCurvePage.xaml) file instantiates a `Slider` to select a weight value between –2 and 2. The [**ConicCurvePage.xaml.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCurvePage.xaml.cs) code-behind file creates three `TouchPoint` objects, and the `PaintSurface` handler simply renders the resultant curve with the tangent lines to the control points:
+The **Conic Curve** page allows you to experiment with these curves. The `ConicCurvePage` class derives from `InteractivePage`. The [**ConicCurvePage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCurvePage.xaml) file instantiates a `Slider` to select a weight value between –2 and 2. The [**ConicCurvePage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCurvePage.xaml.cs) code-behind file creates three `TouchPoint` objects, and the `PaintSurface` handler simply renders the resultant curve with the tangent lines to the control points:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -489,7 +487,7 @@ It is very easy to derive the control point and weight to use the `ConicTo` meth
 
 You can use trigonometry to determine the distance of the control point from the circle's center: It is the radius of the circle divided by the cosine of half the angle α. To draw a circular arc between the start and end points, set the weight to that same cosine of half the angle. Notice that if the angle is 180 degrees, then the tangent lines never meet and the weight is zero. But for angles less than 180 degrees, the math works fine.
 
-The **Conic Circular Arc** page demonstrates this. The [**ConicCircularArc.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCircularArcPage.xaml) file instantiates a `Slider` for selecting the angle. The `PaintSurface` handler in the  [**ConicCircularArc.xaml.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCircularArcPage.xaml.cs) code-behind file calculates the control point and the weight:
+The **Conic Circular Arc** page demonstrates this. The [**ConicCircularArc.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCircularArcPage.xaml) file instantiates a `Slider` for selecting the angle. The `PaintSurface` handler in the  [**ConicCircularArc.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ConicCircularArcPage.xaml.cs) code-behind file calculates the control point and the weight:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)

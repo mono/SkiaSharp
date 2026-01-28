@@ -1,13 +1,11 @@
 ---
 title: "The Rotate Transform"
 description: "This article explores the effects and animations possible with the SkiaSharp rotate transform, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: CBB3CD72-4377-4EA3-A768-0C4228229FC2
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/23/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # The Rotate Transform
@@ -36,7 +34,7 @@ x' = x•cos(α) – y•sin(α)
 
 y` = x•sin(α) + y•cos(α)
 
-The **Basic Rotate** page demonstrates the `RotateDegrees` method. The [**BasicRotate.xaml.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicRotatePage.xaml.cs) file displays some text with its baseline centered on the page and rotates it based on a `Slider` with a range of –360 to 360. Here's the relevant part of the `PaintSurface` handler:
+The **Basic Rotate** page demonstrates the `RotateDegrees` method. The [**BasicRotate.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicRotatePage.xaml.cs) file displays some text with its baseline centered on the page and rotates it based on a `Slider` with a range of –360 to 360. Here's the relevant part of the `PaintSurface` handler:
 
 ```csharp
 using (SKPaint textPaint = new SKPaint
@@ -138,7 +136,7 @@ There are usually several ways to combine rotation and translation. The **Rotate
 
 [![Triple screenshot of the Rotated Text page](rotate-images/rotatedtext-small.png)](rotate-images/rotatedtext-large.png#lightbox "Triple screenshot of the Rotated Text page")
 
-Here's the `PaintSurface` handler of the [`RotatedTextPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/RotatedTextPage.cs) class:
+Here's the `PaintSurface` handler of the [`RotatedTextPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/RotatedTextPage.cs) class:
 
 ```csharp
 static readonly string text = "    ROTATE";
@@ -249,7 +247,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 }
 ```
 
-The `revolveDegrees` and `rotateDegrees` fields are animated. This program uses a different animation technique based on the Xamarin.Forms [`Animation`](xref:Xamarin.Forms.Animation) class. (This class is described in Chapter 22 of [Free PDF download of *Creating Mobile Apps with Xamarin.Forms*](https://aka.ms/xamformsebook)) The `OnAppearing` override creates two `Animation` objects with callback methods and then calls `Commit` on them for an animation duration:
+The `revolveDegrees` and `rotateDegrees` fields are animated. This program uses a different animation technique based on the .NET MAUI [`Animation`](xref:Microsoft.Maui.Controls.Animation) class. The `OnAppearing` override creates two `Animation` objects with callback methods and then calls `Commit` on them for an animation duration:
 
 ```csharp
 protected override void OnAppearing()

@@ -1,33 +1,31 @@
 ---
-title: "Integrating with Xamarin.Forms"
-description: "This article explains how to create SkiaSharp graphics that respond to touch and Xamarin.Forms elements, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+title: "Integrating with .NET MAUI"
+description: "This article explains how to create SkiaSharp graphics that respond to touch and .NET MAUI elements, and demonstrates this with sample code."
+ms.service: dotnet-maui
 ms.assetid: 288224F1-7AEE-4148-A88D-A70C03F83D7A
 author: davidbritch
 ms.author: dabritch
 ms.date: 02/09/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
-# Integrating with Xamarin.Forms
+# Integrating with .NET MAUI
 
-_Create SkiaSharp graphics that respond to touch and Xamarin.Forms elements_
+_Create SkiaSharp graphics that respond to touch and .NET MAUI elements_
 
-SkiaSharp graphics can integrate with the rest of Xamarin.Forms in several ways. You can combine a SkiaSharp canvas and Xamarin.Forms elements on the same page, and even position Xamarin.Forms elements on top of a SkiaSharp canvas:
+SkiaSharp graphics can integrate with the rest of .NET MAUI in several ways. You can combine a SkiaSharp canvas and .NET MAUI elements on the same page, and even position .NET MAUI elements on top of a SkiaSharp canvas:
 
 ![Selecting a color with sliders](integration-images/integrationexample.png)
 
-Another approach to creating interactive SkiaSharp graphics in Xamarin.Forms is through touch.
+Another approach to creating interactive SkiaSharp graphics in .NET MAUI is through touch.
 
-The second page in the sample program is entitled **Tap Toggle Fill**. It draws a simple circle two ways &mdash; without a fill and with a fill &mdash; toggled by a tap. The [`TapToggleFillPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml.cs) class shows how you can alter SkiaSharp graphics in response to user input.
+The second page in the sample program is entitled **Tap Toggle Fill**. It draws a simple circle two ways &mdash; without a fill and with a fill &mdash; toggled by a tap. The [`TapToggleFillPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml.cs) class shows how you can alter SkiaSharp graphics in response to user input.
 
-For this page, the `SKCanvasView` class is instantiated in the [TapToggleFill.xaml](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml) file, which also sets a Xamarin.Forms [`TapGestureRecognizer`](xref:Xamarin.Forms.TapGestureRecognizer) on the view:
+For this page, the `SKCanvasView` class is instantiated in the [TapToggleFill.xaml](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml) file, which also sets a .NET MAUI [`TapGestureRecognizer`](xref:Microsoft.Maui.Controls.TapGestureRecognizer) on the view:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.TapToggleFillPage"
              Title="Tap Toggle Fill">
 
@@ -41,7 +39,7 @@ For this page, the `SKCanvasView` class is instantiated in the [TapToggleFill.xa
 
 Notice the `skia` XML namespace declaration.
 
-The `Tapped` handler for the `TapGestureRecognizer` object simply toggles the value of a Boolean field and calls the [`InvalidateSurface`](xref:SkiaSharp.Views.Forms.SKCanvasView.InvalidateSurface) method of `SKCanvasView`:
+The `Tapped` handler for the `TapGestureRecognizer` object simply toggles the value of a Boolean field and calls the [`InvalidateSurface`](xref:SkiaSharp.Views.Maui.Controls.SKCanvasView.InvalidateSurface) method of `SKCanvasView`:
 
 ```csharp
 bool showFill = true;
@@ -67,7 +65,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
     SKPaint paint = new SKPaint
     {
         Style = SKPaintStyle.Stroke,
-        Color = Color.Red.ToSKColor(),
+        Color = Colors.Red.ToSKColor(),
         StrokeWidth = 50
     };
     canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
@@ -83,7 +81,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 
 The `StrokeWidth` property has been set to 50 to accentuate the difference. You can also see the whole line width by drawing the interior first and then the outline. By default, graphics figures that are drawn later in the `PaintSurface` event handler obscure those drawn earlier in the handler.
 
-The **Color Explore** page demonstrates how you can also integrate SkiaSharp graphics with other Xamarin.Forms elements, and also demonstrates the difference between two alternative methods for defining colors in SkiaSharp. The static [`SKColor.FromHsl`](xref:SkiaSharp.SKColor.FromHsl(System.Single,System.Single,System.Single,System.Byte)) method creates an `SKColor` value based on the Hue-Saturation-Lightness model:
+The **Color Explore** page demonstrates how you can also integrate SkiaSharp graphics with other .NET MAUI elements, and also demonstrates the difference between two alternative methods for defining colors in SkiaSharp. The static [`SKColor.FromHsl`](xref:SkiaSharp.SKColor.FromHsl(System.Single,System.Single,System.Single,System.Byte)) method creates an `SKColor` value based on the Hue-Saturation-Lightness model:
 
 ```csharp
 public static SKColor FromHsl (Single h, Single s, Single l, Byte a)
@@ -97,12 +95,12 @@ public static SKColor FromHsv (Single h, Single s, Single v, Byte a)
 
 In both cases, the `h` argument ranges from 0 to 360. The `s`, `l`, and `v` arguments range from 0 to 100. The `a` (alpha or opacity) argument ranges from 0 to 255.
 
-The [**ColorExplorePage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml) file creates two `SKCanvasView` objects in a `StackLayout` side by side with `Slider` and `Label` views that allow the user to select HSL and HSV color values:
+The [**ColorExplorePage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml) file creates two `SKCanvasView` objects in a `StackLayout` side by side with `Slider` and `Label` views that allow the user to select HSL and HSV color values:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Basics.ColorExplorePage"
              Title="Color Explore">
     <StackLayout>
@@ -179,7 +177,7 @@ The [**ColorExplorePage.xaml**](https://github.com/xamarin/xamarin-forms-samples
 
 The two `SKCanvasView` elements are in a single-cell `Grid` with a `Label` sitting on top for displaying the resultant RGB color value.
 
-The [**ColorExplorePage.xaml.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml.cs) code-behind file is relatively simple. The shared `ValueChanged` handler for the three `Slider` elements simply invalidates both `SKCanvasView` elements. The `PaintSurface` handlers clear the canvas with the color indicated by the `Slider` elements, and also set the `Label` sitting on top of the `SKCanvasView` elements:
+The [**ColorExplorePage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml.cs) code-behind file is relatively simple. The shared `ValueChanged` handler for the three `Slider` elements simply invalidates both `SKCanvasView` elements. The `PaintSurface` handlers clear the canvas with the color indicated by the `Slider` elements, and also set the `Label` sitting on top of the `SKCanvasView` elements:
 
 ```csharp
 public partial class ColorExplorePage : ContentPage

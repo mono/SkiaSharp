@@ -1,13 +1,11 @@
 ---
 title: "Porter-Duff blend modes"
 description: "Use the Porter-Duff blend modes to compose scenes based on source and destination images."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 57F172F8-BA03-43EC-A215-ED6B78696BB5
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/23/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Porter-Duff blend modes
@@ -286,9 +284,9 @@ This is _not_ an expertly created matte. Optimally, the matte should include par
 The XAML file for the **Brick-Wall Compositing** page instantiates an `SKCanvasView` and a `Button` that guides the user through the process of composing the final image:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.BrickWallCompositingPage"
              Title="Brick-Wall Compositing">
 
@@ -529,10 +527,10 @@ For the `Modulate` mode, the RGB values must be converted to floating-point. The
 The **Porter-Duff Transparency** page allows you to examine how the Porter-Duff blend modes operate on graphical objects that are partially transparent. The XAML file includes a `Picker` with the Porter-Duff modes:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.PorterDuffTransparencyPage"
              Title="Porter-Duff Transparency">
 
@@ -734,9 +732,9 @@ All the transparent areas of the canvas are colored pink:
 You can also use Porter-Duff modes and partially transparent gradients for transitions from one image to another. The **Gradient Transitions** page includes a `Slider` to indicate a progress level in the transition from 0 to 1, and a `Picker` to choose the type of transition you want:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.GradientTransitionsPage"
              Title="Gradient Transitions">
 

@@ -1,13 +1,11 @@
 ---
 title: "Animating SkiaSharp bitmaps"
-description: "Learn how to perform bitmap animation by sequentially displaying a series of bitmaps, and rendering animated GIF files."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "Learn how to perform bitmap animation by sequentially displaying a series of bitmaps, and rendering animated GIF files in .NET MAUI applications."
+ms.service: dotnet-maui
 ms.assetid: 97142ADC-E2FD-418C-8A09-9C561AEE5BFD
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/12/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Animating SkiaSharp bitmaps
@@ -28,13 +26,13 @@ The second example shows how to use SkiaSharp to render an animated GIF file.
 
 ## Bitmap animation
 
-The Mandelbrot Set is visually fascinating but computionally lengthy. (For a discussion of the Mandelbrot Set and the mathematics used here, see [Chapter 20 of _Creating Mobile Apps with Xamarin.Forms_](/xamarin/xamarin-forms/creating-mobile-apps-xamarin-forms/summaries/chapter20) starting on page 666. The following description assumes that background knowledge.)
+The Mandelbrot Set is visually fascinating but computationally lengthy. The Mandelbrot Set is a famous fractal defined by iterating the formula z = z² + c for complex numbers. Points in the complex plane are colored based on how quickly the iteration escapes to infinity (or doesn't). The following description assumes some background knowledge of this concept.
 
 The sample uses bitmap animation to simulate a continuous zoom of a fixed point in the Mandelbrot Set. Zooming in is followed by zooming out, and then the cycle repeats forever or until you end the program.
 
 The program prepares for this animation by creating up to 50 bitmaps that it stores in application local storage. Each bitmap encompasses half the width and height of the complex plane as the previous bitmap. (In the program, these bitmaps are said to represent integral _zoom levels_.) The bitmaps are then displayed in sequence. The scaling of each bitmap is animated to provide a smooth progression from one bitmap to another.
 
-Like the final program described in Chapter 20 of _Creating Mobile Apps with Xamarin.Forms_, the calculation of the Mandelbrot Set in **Mandelbrot Animation** is an asynchronous method with eight parameters. The parameters include a complex center point, and a width and height of the complex plane surrounding that center point. The next three parameters are the pixel width and height of the bitmap to be created, and a maximum number of iterations for the recursive calculation. The `progress` parameter is used to display the progress of this calculation. The `cancelToken` parameter is not used in this program:
+The calculation of the Mandelbrot Set in **Mandelbrot Animation** is an asynchronous method with eight parameters. The parameters include a complex center point, and a width and height of the complex plane surrounding that center point. The next three parameters are the pixel width and height of the bitmap to be created, and a maximum number of iterations for the recursive calculation. The `progress` parameter is used to display the progress of this calculation. The `cancelToken` parameter is not used in this program:
 
 ```csharp
 static class Mandelbrot
@@ -124,9 +122,9 @@ class BitmapInfo
 The **Mandelbrot Animation** XAML file includes two `Label` views, a `ProgressBar`, and a `Button` as well as the `SKCanvasView`:
 
 ```csharp
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="MandelAnima.MainPage"
              Title="Mandelbrot Animation">
 
@@ -173,9 +171,9 @@ public partial class MainPage : ContentPage
 }
 ```
 
-At some point, you'll probably want to change the `COUNT` value to 50 to see the full range of the animation. Values above 50 are not useful. Around a zoom level of 48 or so, the resolution of double-precision floating-point numbers becomes insufficient for the Mandelbrot Set calculation. This problem is discussed on page 684 of _Creating Mobile Apps with Xamarin.Forms_.
+At some point, you'll probably want to change the `COUNT` value to 50 to see the full range of the animation. Values above 50 are not useful. Around a zoom level of 48 or so, the resolution of double-precision floating-point numbers becomes insufficient for the Mandelbrot Set calculation.
 
-The `center` value is very important. This is the focus of the animation zoom. The three values in the file are those used in the three final screenshots in Chapter 20 of _Creating Mobile Apps with Xamarin.Forms_ on page 684, but you can experiment with the program in that chapter to come up with one of your own values.
+The `center` value is very important. This is the focus of the animation zoom. You can experiment with different center values to discover interesting areas of the Mandelbrot Set.
 
 The **Mandelbrot Animation** sample stores these `COUNT` bitmaps in local application storage. Fifty bitmaps require over 20 megabytes of storage on your device, so you might want to know how much storage these bitmaps are occupying, and at some point you might want to delete them all. That's the purpose of these two methods at the bottom of the `MainPage` class:
 
@@ -466,9 +464,9 @@ The Graphics Interchange Format (GIF) specification includes a feature that allo
 The sample includes an animated GIF resource named **Newtons_cradle_animation_book_2.gif** created by DemonDeLuxe and downloaded from the [Newton's Cradle](https://en.wikipedia.org/wiki/Newton%27s_cradle) page in Wikipedia. The **Animated GIF** page includes a XAML file that provides that information and instantiates an `SKCanvasView`:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Bitmaps.AnimatedGifPage"
              Title="Animated GIF">
 

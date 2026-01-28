@@ -1,13 +1,11 @@
 ---
 title: "SkiaSharp Transforms"
-description: "This article explores transforms for displaying SkiaSharp graphics in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explores transforms for displaying SkiaSharp graphics in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
 ms.assetid: E9BE322E-ECB3-4395-AFE4-4474A0F25551
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # SkiaSharp Transforms
@@ -27,23 +25,23 @@ These are known as *affine* transforms. Affine transforms always preserve parall
 
 SkiaSharp also supports non-affine transforms (also called *projective* or *perspective* transforms) based on a standard 3-by-3 transform matrix. A non-affine transform allows a square to be transformed into any convex quadrilateral, which is a four-sided figure with all interior angles less than 180 degrees. Non-affine transforms can cause coordinates or sizes to become infinite, but they are vital for 3D effects.
 
-## Differences between SkiaSharp and Xamarin.Forms Transforms
+## Differences between SkiaSharp and .NET MAUI Transforms
 
-Xamarin.Forms also supports transforms that are similar to those in SkiaSharp. The Xamarin.Forms [`VisualElement`](xref:Xamarin.Forms.VisualElement) class defines the following transform properties:
+.NET MAUI also supports transforms that are similar to those in SkiaSharp. The .NET MAUI [`VisualElement`](xref:Microsoft.Maui.Controls.VisualElement) class defines the following transform properties:
 
-- [`TranslationX`](xref:Xamarin.Forms.VisualElement.TranslationX) and [`TranslationY`](xref:Xamarin.Forms.VisualElement.TranslationY)
-- [`Scale`](xref:Xamarin.Forms.VisualElement.Scale)
-- [`Rotation`](xref:Xamarin.Forms.VisualElement.Rotation), [`RotationX`](xref:Xamarin.Forms.VisualElement.RotationX), and [`RotationY`](xref:Xamarin.Forms.VisualElement.RotationY)
+- [`TranslationX`](xref:Microsoft.Maui.Controls.VisualElement.TranslationX) and [`TranslationY`](xref:Microsoft.Maui.Controls.VisualElement.TranslationY)
+- [`Scale`](xref:Microsoft.Maui.Controls.VisualElement.Scale)
+- [`Rotation`](xref:Microsoft.Maui.Controls.VisualElement.Rotation), [`RotationX`](xref:Microsoft.Maui.Controls.VisualElement.RotationX), and [`RotationY`](xref:Microsoft.Maui.Controls.VisualElement.RotationY)
 
 The `RotationX` and `RotationY` properties are perspective transforms that create quasi-3D effects.
 
-There are several crucial differences between SkiaSharp transforms and Xamarin.Forms transforms:
+There are several crucial differences between SkiaSharp transforms and .NET MAUI transforms:
 
-The first difference is that SkiaSharp transforms are applied to the entire `SKCanvas` object while the Xamarin.Forms transforms are applied to individual `VisualElement` derivatives. (You can apply the Xamarin.Forms transforms to the `SKCanvasView` object itself, because `SKCanvasView` derives from `VisualElement`, but within that `SKCanvasView`, the SkiaSkarp transforms apply.)
+The first difference is that SkiaSharp transforms are applied to the entire `SKCanvas` object while the .NET MAUI transforms are applied to individual `VisualElement` derivatives. (You can apply the .NET MAUI transforms to the `SKCanvasView` object itself, because `SKCanvasView` derives from `VisualElement`, but within that `SKCanvasView`, the SkiaSkarp transforms apply.)
 
-The SkiaSharp transforms are relative to the upper-left corner of the `SKCanvas` while Xamarin.Forms transforms are relative to the upper-left corner of the `VisualElement` to which they are applied. This difference is important when applying scaling and rotation transforms because these transforms are always relative to a particular point.
+The SkiaSharp transforms are relative to the upper-left corner of the `SKCanvas` while .NET MAUI transforms are relative to the upper-left corner of the `VisualElement` to which they are applied. This difference is important when applying scaling and rotation transforms because these transforms are always relative to a particular point.
 
-The really big difference is that SKiaSharp transforms are *methods* while the Xamarin.Forms transforms are *properties*. This is a semantic difference beyond the syntactical difference: SkiaSharp transforms perform an operation while Xamarin.Forms transforms set a state. SkiaSharp transforms apply to subsequently drawn graphics objects, but not to graphics objects that are drawn before the transform is applied. In contrast, a Xamarin.Forms transform applies to a previously rendered element as soon as the property is set. SkiaSharp transforms are cumulative as the methods are called; Xamarin.Forms transforms are replaced when the property is set with another value.
+The really big difference is that SKiaSharp transforms are *methods* while the .NET MAUI transforms are *properties*. This is a semantic difference beyond the syntactical difference: SkiaSharp transforms perform an operation while .NET MAUI transforms set a state. SkiaSharp transforms apply to subsequently drawn graphics objects, but not to graphics objects that are drawn before the transform is applied. In contrast, a .NET MAUI transform applies to a previously rendered element as soon as the property is set. SkiaSharp transforms are cumulative as the methods are called; .NET MAUI transforms are replaced when the property is set with another value.
 
 All the sample programs in this section appear in the **SkiaSharp Transforms** section of the sample program. Source code can be found in the [**Transforms**](https://github.com/xamarin/xamarin-forms-samples/tree/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms) folder of the solution.
 

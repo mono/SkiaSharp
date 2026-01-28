@@ -1,13 +1,11 @@
 ---
 title: "Creating and drawing on SkiaSharp bitmaps"
-description: "Learn how to create SkiaSharp bitmaps and then draw on these bitmaps by creating a canvas based on them."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "Learn how to create SkiaSharp bitmaps and then draw on these bitmaps by creating a canvas based on them in .NET MAUI applications."
+ms.service: dotnet-maui
 ms.assetid: 79BD3266-D457-4E50-BDDF-33450035FA0F
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/17/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Creating and drawing on SkiaSharp bitmaps
@@ -165,7 +163,7 @@ The two formats where each pixel is 32 pixels (4 bytes) are often called _full-c
 
 These days, programmers almost always use full-color bitmaps and don't bother with other formats. The exception is the `RgbaF16` format, which allows greater color resolution than even the full-color formats. However, this format is used for specialized purposes, such as medical imaging, and doesn't make much sense when used with standard full-color displays.
 
-This series of articles will restrict itself to the `SKBitmap` color formats used by default when no `SKColorType` member is specified. This default format is based on the underlying platform. For the platforms supported by Xamarin.Forms, the default color type is:
+This series of articles will restrict itself to the `SKBitmap` color formats used by default when no `SKColorType` member is specified. This default format is based on the underlying platform. For the platforms supported by .NET MAUI, the default color type is:
 
 - `Rgba8888` for iOS and Android
 - `Bgra8888` for the UWP
@@ -399,9 +397,9 @@ However, in the general case, this logic will crop off the corners of the rotate
 This trigonometry is shown in the **Bitmap Rotator** page. The XAML file instantiates an `SKCanvasView` and a `Slider` that can range from 0 through 360 degrees with a `Label` showing the current value:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Bitmaps.BitmapRotatorPage"
              Title="Bitmap Rotator">
     <StackLayout>
@@ -491,9 +489,9 @@ Another operation commonly performed on bitmaps is called _flipping_. Conceptual
 The **Bitmap Flipper** page in the sample application demonstrates these processes. The XAML file contains an `SKCanvasView` and two buttons for flipping vertically and horizontally:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Bitmaps.BitmapFlipperPage"
              Title="Bitmap Flipper">
     <Grid>

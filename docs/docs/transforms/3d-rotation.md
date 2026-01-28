@@ -1,13 +1,11 @@
 ---
 title: "3D Rotations in SkiaSharp"
 description: "This article explains how to use non-affine transforms to rotate 2D objects in 3D space, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: B5894EA0-C415-41F9-93A4-BBF6EC72AFB9
 author: davidbritch
 ms.author: dabritch
 ms.date: 04/14/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # 3D Rotations in SkiaSharp
@@ -218,12 +216,12 @@ When 2D objects are rotated with a positive angle around the Y axis, then positi
 
 When using `SKMatrix44`, perform all the 3D rotation and perspective operations by multiplying various `SKMatrix44` values. Then you can extract a two-dimensional 3-by-3 matrix from the 4-by-4 matrix using the [`Matrix`](xref:SkiaSharp.SKMatrix44.Matrix) property of the `SKMatrix44` class. This property returns a familiar `SKMatrix` value.
 
-The **Rotation 3D** page lets you experiment with 3D rotation. The [**Rotation3DPage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml) file instantiates four sliders to set rotation around the X, Y, and Z axes, and to set a depth value:
+The **Rotation 3D** page lets you experiment with 3D rotation. The [**Rotation3DPage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml) file instantiates four sliders to set rotation around the X, Y, and Z axes, and to set a depth value:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Transforms.Rotation3DPage"
              Title="Rotation 3D">
     <Grid>
@@ -299,7 +297,7 @@ The **Rotation 3D** page lets you experiment with 3D rotation. The [**Rotation3D
 
 Notice that the `depthSlider` is initialized with a `Minimum` value of 250. This implies that the 2D object being rotated here has X and Y coordinates restricted to a circle defined by a 250-pixel radius around the origin. Any rotation of this object in 3D space will always result in coordinate values less than 250.
 
-The [**Rotation3DPage.cs**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs) code-behind file loads in a bitmap that is 300 pixels square:
+The [**Rotation3DPage.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs) code-behind file loads in a bitmap that is 300 pixels square:
 
 ```csharp
 public partial class Rotation3DPage : ContentPage
@@ -437,7 +435,7 @@ public class AnimatedRotation3DPage : ContentPage
 }
 ```
 
-The `OnAppearing` override defines three Xamarin.Forms `Animation` objects to animate the `xRotationDegrees`, `yRotationDegrees`, and `zRotationDegrees` fields at different rates. Notice that the periods of these animations are set to prime numbers (5 seconds, 7 seconds, and 11 seconds) so the overall combination only repeats every 385 seconds, or more than 10 minutes:
+The `OnAppearing` override defines three .NET MAUI `Animation` objects to animate the `xRotationDegrees`, `yRotationDegrees`, and `zRotationDegrees` fields at different rates. Notice that the periods of these animations are set to prime numbers (5 seconds, 7 seconds, and 11 seconds) so the overall combination only repeats every 385 seconds, or more than 10 minutes:
 
 ```csharp
 public class AnimatedRotation3DPage : ContentPage

@@ -1,13 +1,11 @@
 ---
 title: "Clipping with Paths and Regions"
 description: "This article explains how to use SkiaSharp paths to clip graphics to specific areas, and to create regions, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 8022FBF9-2208-43DB-94D8-0A4E9A5DA07F
 author: davidbritch
 ms.author: dabritch
 ms.date: 06/16/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Clipping with Paths and Regions
@@ -20,7 +18,7 @@ It's sometimes necessary to restrict the rendering of graphics to a particular a
 
 The *clipping area* is the area of the screen in which graphics are rendered. Anything that is displayed outside of the clipping area is not rendered. The clipping area is usually defined by a rectangle or an [`SKPath`](xref:SkiaSharp.SKPath) object, but you can alternatively define a clipping area using an [`SKRegion`](xref:SkiaSharp.SKRegion) object. These two types of objects at first seem related because you can create a region from a path. However, you cannot create a path from a region, and they are very different internally: A path comprises a series of lines and curves, while a region is defined by a series of horizontal scan lines.
 
-The image above was created by the **Monkey through Keyhole** page. The  [`MonkeyThroughKeyholePage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/MonkeyThroughKeyholePage.cs) class defines a path using SVG data and uses the constructor to load a bitmap from program resources:
+The image above was created by the **Monkey through Keyhole** page. The  [`MonkeyThroughKeyholePage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/MonkeyThroughKeyholePage.cs) class defines a path using SVG data and uses the constructor to load a bitmap from program resources:
 
 ```csharp
 public class MonkeyThroughKeyholePage : ContentPage
@@ -107,7 +105,7 @@ Any call to `ClipPath` reduces the clipping area by combining the clipping area 
 public Void ClipRect(SKRect rect, SKClipOperation operation = SKClipOperation.Intersect, Boolean antialias = false);
 ```
 
-By default, the resultant clipping area is an intersection of the existing clipping area and the `SKPath` or `SKRect` that is specified in the `ClipPath` or `ClipRect` method. This is demonstrated in the **Four Circles Intersect Clip** page. The `PaintSurface` handler in the  [`FourCircleInteresectClipPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/FourCircleIntersectClipPage.cs) class reuses the same `SKPath` object to create four overlapping circles, each of which reduces the clipping area through successive calls to `ClipPath`:
+By default, the resultant clipping area is an intersection of the existing clipping area and the `SKPath` or `SKRect` that is specified in the `ClipPath` or `ClipRect` method. This is demonstrated in the **Four Circles Intersect Clip** page. The `PaintSurface` handler in the  [`FourCircleInteresectClipPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/FourCircleIntersectClipPage.cs) class reuses the same `SKPath` object to create four overlapping circles, each of which reduces the clipping area through successive calls to `ClipPath`:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -172,7 +170,7 @@ The **Clip Operations** page illustrates the difference between these two operat
 
 [![Triple screenshot of the Clip Operations page](clipping-images//clipoperations-small.png)](clipping-images/clipoperations-large.png#lightbox)
 
-The [`ClipOperationsPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ClipOperationsPage.cs) class defines two `SKPaint` objects as fields, and then divides the screen up into two rectangular areas. These areas are different depending on whether the phone is in portrait or landscape mode. The `DisplayClipOp` class then displays the text and calls `ClipPath` with the two circle paths to illustrate each clip operation:
+The [`ClipOperationsPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ClipOperationsPage.cs) class defines two `SKPaint` objects as fields, and then divides the screen up into two rectangular areas. These areas are different depending on whether the phone is in portrait or landscape mode. The `DisplayClipOp` class then displays the text and calls `ClipPath` with the two circle paths to illustrate each clip operation:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -273,7 +271,7 @@ The following screenshot shows clipping areas based on the six region operations
 
 Are these all the possibilities of combining these two circles? Consider the resultant image as a combination of three components, which by themselves are seen in the `Difference`, `Intersect`, and `ReverseDifference` operations. The total number of combinations is two to the third power, or eight. The two that are missing are the original region (which results from not calling `Op` at all) and an entirely empty region.
 
-It's harder to use regions for clipping because you need to first create a path, and then a region from that path, and then combine multiple regions. The overall structure of the **Region Operations** page is very similar to **Clip Operations** but the [`RegionOperationsPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionOperationsPage.cs) class divides the screen up into six areas and shows the extra work required to use regions for this job:
+It's harder to use regions for clipping because you need to first create a path, and then a region from that path, and then combine multiple regions. The overall structure of the **Region Operations** page is very similar to **Clip Operations** but the [`RegionOperationsPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionOperationsPage.cs) class divides the screen up into six areas and shows the extra work required to use regions for this job:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -357,7 +355,7 @@ This is what a region is: A series of horizontal scan lines that define an area.
 
 However, when an area is reduced to a series of scan lines, these scan lines are based on a particular pixel dimension. Strictly speaking, the region is not a vector graphics object. It is closer in nature to a compressed monochrome bitmap than to a path. Consequently, regions cannot be scaled or rotated without losing fidelity, and for this reason they are not transformed when used for clipping areas.
 
-However, you can apply transforms to regions for painting purposes. The **Region Paint** program vividly demonstrates the inner nature of regions. The [`RegionPaintPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionPaintPage.cs) class creates an `SKRegion` object based on an `SKPath` of a 10-unit radius circle. A transform then expands that circle to fill the page:
+However, you can apply transforms to regions for painting purposes. The **Region Paint** program vividly demonstrates the inner nature of regions. The [`RegionPaintPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionPaintPage.cs) class creates an `SKRegion` object based on an `SKPath` of a 10-unit radius circle. A transform then expands that circle to fill the page:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -414,7 +412,7 @@ The `DrawRegion` call fills the region in orange, while the `DrawPath` call stro
 
 The region is clearly a series of discrete coordinates.
 
-If you don't need to use transforms in connection with your clipping areas, you can use regions for clipping, as the **Four-Leaf Clover** page demonstrates. The [`FourLeafCloverPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/FourLeafCloverPage.cs) class constructs a composite region from four circular regions, sets that composite region as the clipping area, and then draws a series of 360 straight lines emanating from the center of the page:
+If you don't need to use transforms in connection with your clipping areas, you can use regions for clipping, as the **Four-Leaf Clover** page demonstrates. The [`FourLeafCloverPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/FourLeafCloverPage.cs) class constructs a composite region from four circular regions, sets that composite region as the clipping area, and then draws a series of 360 straight lines emanating from the center of the page:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)

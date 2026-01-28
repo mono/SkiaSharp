@@ -1,13 +1,11 @@
 ---
 title: "SkiaSharp bitmaps"
-description: "Learn how to load, save, display, create, draw on, animate, and access the bits of SkiaSharp bitmaps."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "Learn how to load, save, display, create, draw on, animate, and access the bits of SkiaSharp bitmaps in .NET MAUI applications."
+ms.service: dotnet-maui
 ms.assetid: 70C19370-157A-4B1B-9532-F77E32AC21BC
 author: davidbritch
 ms.author: dabritch
 ms.date: 07/17/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # SkiaSharp bitmaps

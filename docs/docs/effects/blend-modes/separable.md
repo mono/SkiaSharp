@@ -1,13 +1,11 @@
 ---
 title: "The separable blend modes"
 description: "Use the separable blend modes to alter red, green, and blue colors."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 66D1A537-A247-484E-B5B9-FBCB7838FBE9
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/23/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # The separable blend modes
@@ -23,9 +21,9 @@ It is common to have a bitmap that is somewhat too dark or too light. You can us
 These two modes are demonstrated in the **Lighten and Darken** page. The XAML file instantiates two `SKCanvasView` objects and two `Slider` views:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.LightenAndDarkenPage"
              Title="Lighten and Darken">
     <StackLayout>
@@ -181,10 +179,10 @@ The XAML file defines a `Picker` (to select the blend mode) and four sliders. Th
 
 ```xaml
 <?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.SeparableBlendModesPage"
              Title="Separable Blend Modes">
 

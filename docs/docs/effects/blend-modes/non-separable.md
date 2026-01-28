@@ -1,13 +1,11 @@
 ---
 title: "The non-separable blend modes"
 description: "Use the non-separable blend modes to alter hue, saturation, or luminosity."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 97FA2730-87C0-4914-8C9F-C64A02CF9EEF
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/23/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # The non-separable blend modes
@@ -20,7 +18,7 @@ As you saw in the article [**SkiaSharp separable blend modes**](separable.md), t
 
 To understand the non-separable blend modes, it is necessary to treat the destination and source pixels as colors in the Hue-Saturation-Luminosity model. (Luminosity is also referred to as Lightness.)
 
-The HSL color model was discussed in the article [**Integrating with Xamarin.Forms**](../../basics/integration.md) and a sample program in that article allows experimentation with HSL colors. You can create an `SKColor` value using Hue, Saturation, and Luminosity values with the static [`SKColor.FromHsl`](xref:SkiaSharp.SKColor.FromHsl*) method.
+The HSL color model was discussed in the article [**Integrating with .NET MAUI**](../../basics/integration.md) and a sample program in that article allows experimentation with HSL colors. You can create an `SKColor` value using Hue, Saturation, and Luminosity values with the static [`SKColor.FromHsl`](xref:SkiaSharp.SKColor.FromHsl*) method.
 
 The Hue represents the dominant wavelength of the color. Hue values range from 0 to 360 and cycle through the additive and subtractive primaries: Red is the value 0, yellow is 60, green is 120, cyan is 180, blue is 240, magenta is 300, and the cycle goes back to red at 360.
 
@@ -48,10 +46,10 @@ See the W3C [**Compositing and Blending Level 1**](https://www.w3.org/TR/composi
 The **Non-Separable Blend Modes** page contains a `Picker` to select one of these blend modes and three `Slider` views to select an HSL color:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skiaviews="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.NonSeparableBlendModesPage"
              Title="Non-Separable Blend Modes">
 

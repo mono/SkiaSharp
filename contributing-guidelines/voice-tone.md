@@ -1,6 +1,6 @@
 # Voice and tone guidelines
 
-Developers will be reading your documents to learn Xamarin, and to use it in their regular work.
+Developers will be reading your documents to learn SkiaSharp and .NET MAUI, and to use it in their regular work.
 Your goal is to create useful documentation that helps the reader on their journey. Our guidelines
 help with that. Our style guide contains four recommendations:
 
@@ -11,7 +11,7 @@ help with that. Our style guide contains four recommendations:
 
 You will see examples of each of these as you read this style guide. We've written this guide
 following our guidelines to provide examples for you to follow as you build documentation
-for Xamarin. We also provide contrasting samples so you can see what articles look like
+for SkiaSharp. We also provide contrasting samples so you can see what articles look like
 when you don't follow our guidelines.
 
 ## Details on each guideline

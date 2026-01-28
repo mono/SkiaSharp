@@ -1,29 +1,27 @@
 ---
 title: "Basic Animation in SkiaSharp"
-description: "This article explains how to animate your SkiaSharp graphics in Xamarin.Forms applications, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+description: "This article explains how to animate your SkiaSharp graphics in .NET MAUI applications, and demonstrates this with sample code."
+ms.service: dotnet-maui
 ms.assetid: 31C96FD6-07E4-4473-A551-24753A5118C3
 author: davidbritch
 ms.author: dabritch
 ms.date: 03/10/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # Basic Animation in SkiaSharp
 
 _Discover how to animate your SkiaSharp graphics_
 
-You can animate SkiaSharp graphics in Xamarin.Forms by causing the `PaintSurface` method to be called periodically, each time drawing the graphics a little differently. Here's an animation shown later in this article with concentric circles that seemingly expand from the center:
+You can animate SkiaSharp graphics in .NET MAUI by causing the `PaintSurface` method to be called periodically, each time drawing the graphics a little differently. Here's an animation shown later in this article with concentric circles that seemingly expand from the center:
 
 ![Several concentric circles seemingly expanding from the center](animation-images/animationexample.png)
 
-The **Pulsating Ellipse** page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The [**PulsatingEllipsePage.xaml**](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml) file instantiates a Xamarin.Forms `Slider` and a `Label` to display the current value of the slider. This is a common way to integrate an `SKCanvasView` with other Xamarin.Forms views:
+The **Pulsating Ellipse** page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The [**PulsatingEllipsePage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml) file instantiates a .NET MAUI `Slider` and a `Label` to display the current value of the slider. This is a common way to integrate an `SKCanvasView` with other .NET MAUI views:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.PulsatingEllipsePage"
              Title="Pulsating Ellipse">
     <Grid>
@@ -143,7 +141,7 @@ Notice that the `SKPaint` object is created in a `using` block. Like many SkiaSh
 
  A better solution in this particular case would be to create two `SKPaint` objects once and save them as fields.
 
-That's what the **Expanding Circles** animation does. The [`ExpandingCirclesPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ExpandingCirclesPage.cs) class begins by defining several fields, including an `SKPaint` object:
+That's what the **Expanding Circles** animation does. The [`ExpandingCirclesPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ExpandingCirclesPage.cs) class begins by defining several fields, including an `SKPaint` object:
 
 ```csharp
 public class ExpandingCirclesPage : ContentPage
@@ -171,7 +169,7 @@ public class ExpandingCirclesPage : ContentPage
 }
 ```
 
-This program uses a different approach to animation based on the Xamarin.Forms `Device.StartTimer` method. The `t` field is animated from 0 to 1 every `cycleTime` milliseconds:
+This program uses a different approach to animation based on the .NET MAUI `Device.StartTimer` method. The `t` field is animated from 0 to 1 every `cycleTime` milliseconds:
 
 ```csharp
 public class ExpandingCirclesPage : ContentPage

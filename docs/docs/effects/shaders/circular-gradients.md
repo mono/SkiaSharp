@@ -1,13 +1,11 @@
 ---
 title: "The SkiaSharp circular gradients"
 description: "Learn about the different types of gradients based on circles."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 400AE23A-6A0B-4FA8-BD6B-DE4146B04732
 author: davidbritch
 ms.author: dabritch
 ms.date: 08/23/2018
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # The SkiaSharp circular gradients
@@ -51,10 +49,10 @@ If you use `CreateRadialGradient` to fill a circle, you can set the center of th
 The effect of `SKShaderMode` is demonstrated in the **Radial Gradient** page in the sample. The XAML file for this page instantiates a `Picker` that allows you to select one of the three members of the `SKShaderTileMode` enumeration:
 
 ```xaml
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+             xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="SkiaSharpFormsDemos.Effects.RadialGradientPage"
              Title="Radial Gradient">
     <Grid>
@@ -442,11 +440,11 @@ The gradient begins at the start circle and ends at the end circle. The `SKShade
 It's likely you'll want to experiment with the two-point conical gradient, so the **Conical Gradient** page derives from `InteractivePage` to allow two touch points to be moved around for the two circle radii:
 
 ```xaml
-<local:InteractivePage xmlns="http://xamarin.com/schemas/2014/forms"
+<local:InteractivePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
                        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                        xmlns:local="clr-namespace:SkiaSharpFormsDemos"
                        xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
-                       xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
+                       xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
                        xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="SkiaSharpFormsDemos.Effects.ConicalGradientPage"
                        Title="Conical Gradient">

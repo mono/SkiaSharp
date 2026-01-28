@@ -1,13 +1,11 @@
 ---
 title: "SVG Path Data in SkiaSharp"
 description: "This article explains how to define SkiaSharp paths using text strings in the Scalable Vector Graphics format, and demonstrates this with sample code."
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
+ms.service: dotnet-maui
 ms.assetid: 1D53067B-3502-4D74-B89D-7EC496901AE2
 author: davidbritch
 ms.author: dabritch
 ms.date: 05/24/2017
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
 ---
 
 # SVG Path Data in SkiaSharp
@@ -144,7 +142,7 @@ The static [`SKPath.ParseSvgPathData`](xref:SkiaSharp.SKPath.ParseSvgPathData(Sy
 
 The [`ToSvgPathData`](xref:SkiaSharp.SKPath.ToSvgPathData) method is handy for obtaining SVG path data from an existing `SKPath` object to transfer  to another program, or to store in a text-based file format such as XML. (The `ToSvgPathData` method is not demonstrated in sample code in this article.) Do *not* expect `ToSvgPathData` to return a string corresponding exactly to the method calls that created the path. In particular, you'll discover that arcs are converted to multiple `QuadTo` commands, and that's how they appear in the path data returned from `ToSvgPathData`.
 
-The **Path Data Hello** page spells out the word "HELLO" using SVG path data. Both the `SKPath` and `SKPaint` objects are defined as fields in the [`PathDataHelloPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataHelloPage.cs) class:
+The **Path Data Hello** page spells out the word "HELLO" using SVG path data. Both the `SKPath` and `SKPaint` objects are defined as fields in the [`PathDataHelloPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataHelloPage.cs) class:
 
 ```csharp
 public class PathDataHelloPage : ContentPage
@@ -215,7 +213,7 @@ The path fills the canvas, which looks more reasonable when viewed in landscape 
 
 [![Triple screenshot of the Path Data Hello page](path-data-images/pathdatahello-small.png)](path-data-images/pathdatahello-large.png#lightbox "Triple screenshot of the Path Data Hello page")
 
-The **Path Data Cat** page is similar. The path and paint objects are both defined as fields in the [`PathDataCatPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs) class:
+The **Path Data Cat** page is similar. The path and paint objects are both defined as fields in the [`PathDataCatPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs) class:
 
 ```csharp
 public class PathDataCatPage : ContentPage
@@ -288,7 +286,7 @@ Here's the program running:
 
 Normally, when an `SKPath` object is defined as a field, the contours of the path must be defined in the constructor or another method. When using SVG path data, however, you've seen that the path can be specified entirely in the field definition.
 
-The earlier **Ugly Analog Clock** sample in the [**The Rotate Transform**](~/xamarin-forms/user-interface/graphics/skiasharp/transforms/rotate.md) article displayed the hands of the clock as simple lines. The **Pretty Analog Clock** program below replaces those lines with `SKPath` objects defined as fields in the [`PrettyAnalogClockPage`](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PrettyAnalogClockPage.cs) class along with `SKPaint` objects:
+The earlier **Ugly Analog Clock** sample in the [**The Rotate Transform**](~/xamarin-forms/user-interface/graphics/skiasharp/transforms/rotate.md) article displayed the hands of the clock as simple lines. The **Pretty Analog Clock** program below replaces those lines with `SKPath` objects defined as fields in the [`PrettyAnalogClockPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PrettyAnalogClockPage.cs) class along with `SKPaint` objects:
 
 ```csharp
 public class PrettyAnalogClockPage : ContentPage
@@ -419,7 +417,7 @@ public class PrettyAnalogClockPage : ContentPage
 }
 ```
 
-Something special is done with the second hand, however. Because the clock is updated every 16 milliseconds, the `Millisecond` property of the `DateTime` value can potentially be used to animate a sweep second hand instead of one that moves in discrete jumps from second to second. But this code does not allow the movement to be smooth. Instead, it uses the Xamarin.Forms [`SpringIn`](xref:Xamarin.Forms.Easing.SpringIn) and [`SpringOut`](xref:Xamarin.Forms.Easing.SpringOut) animation easing functions for a different kind of movement. These easing functions cause the second hand to move in a jerkier manner &mdash; pulling back a little before it moves, and then slightly over-shooting its destination, an effect that unfortunately can't be reproduced in these static screenshots:
+Something special is done with the second hand, however. Because the clock is updated every 16 milliseconds, the `Millisecond` property of the `DateTime` value can potentially be used to animate a sweep second hand instead of one that moves in discrete jumps from second to second. But this code does not allow the movement to be smooth. Instead, it uses the .NET MAUI [`SpringIn`](xref:Microsoft.Maui.Easing.SpringIn) and [`SpringOut`](xref:Microsoft.Maui.Easing.SpringOut) animation easing functions for a different kind of movement. These easing functions cause the second hand to move in a jerkier manner &mdash; pulling back a little before it moves, and then slightly over-shooting its destination, an effect that unfortunately can't be reproduced in these static screenshots:
 
 [![Triple screenshot of the Pretty Analog Clock page](path-data-images/prettyanalogclock-small.png)](path-data-images/prettyanalogclock-large.png#lightbox "Triple screenshot of the Pretty Analog Clock page")
 
