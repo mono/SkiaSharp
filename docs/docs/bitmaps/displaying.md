@@ -329,7 +329,7 @@ public enum BitmapStretch
 }
 ```
 
-The `None`, `Fill`, `Uniform`, and `UniformToFill` members are the same as those in the UWP [`Stretch`](/uwp/api/Windows.UI.Xaml.Media.Stretch) enumeration. The similar .NET MAUI [`Aspect`](xref:Microsoft.Maui.Controls.Aspect) enumeration defines members `Fill`, `AspectFit`, and `AspectFill`.
+The `None`, `Fill`, `Uniform`, and `UniformToFill` members are the same as those in the UWP [`Stretch`](/uwp/api/Windows.UI.Xaml.Media.Stretch) enumeration. The similar .NET MAUI [`Aspect`](xref:Microsoft.Maui.Aspect) enumeration defines members `Fill`, `AspectFit`, and `AspectFill`.
 
 The **Uniform Scaling** page shown above centers the bitmap within the rectangle, but you might want other options, such as positioning the bitmap at the left or right side of the rectangle, or the top or bottom. That's the purpose of the `BitmapAlignment` enumeration:
 

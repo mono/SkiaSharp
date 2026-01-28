@@ -119,7 +119,7 @@ The [`SKLattice`](xref:SkiaSharp.SKLattice) structure defines four properties:
 
 - [`XDivs`](xref:SkiaSharp.SKLattice.XDivs), an array of integers
 - [`YDivs`](xref:SkiaSharp.SKLattice.YDivs), an array of integers
-- [`Flags`](xref:SkiaSharp.SKLattice.Flags), an array of `SKLatticeFlags`, an enumeration type
+- `Flags`, an array of `SKLatticeFlags`, an enumeration type
 - [`Bounds`](xref:SkiaSharp.SKLattice.Bounds) of type `Nullable<SKRectI>` to specify an optional source rectangle within the bitmap
 
 The `XDivs` array divides the width of the bitmap into vertical strips. The first strip extends from pixel 0 at the left to `XDivs[0]`. This strip is rendered in its pixel width. The second strip extends from `XDivs[0]` to `XDivs[1]`, and is stretched. The third strip extends from `XDivs[1]` to `XDivs[2]` and is rendered in its pixel width. The last strip extends from the last element of the array to the right edge of the bitmap. If the array has an even number of elements, then it's displayed in its pixel width. Otherwise, it's stretched. The total number of vertical strips is one more than the number of elements in the array.
@@ -128,7 +128,7 @@ The `YDivs` array is similar. It divides the height of the array into horizontal
 
 Together, the `XDivs` and `YDivs` array divide the bitmap into rectangles. The number of rectangles is equal to the product of the number of horizontal strips and the number of vertical strips.
 
-According to Skia documentation, the `Flags` array contains one element for each rectangle, first the top row of rectangles, then the second row, and so forth. The `Flags` array is of type [`SKLatticeFlags`](xref:SkiaSharp.SKLatticeFlags), an enumeration with the following members:
+According to Skia documentation, the `Flags` array contains one element for each rectangle, first the top row of rectangles, then the second row, and so forth. The `Flags` array is of type `SKLatticeFlags`, an enumeration with the following members:
 
 - `Default` with value 0
 - `Transparent` with value 1
