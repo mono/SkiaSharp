@@ -3,7 +3,7 @@
 This document catalogs compiler warnings in the DocsSamplesApp project after the migration to .NET 10 and SkiaSharp 3.119.1.
 
 **Last Updated**: January 2026  
-**Current Build**: 181 warnings, 0 errors (Android target framework)
+**Current Build**: 262 warnings, 0 errors (Android target framework)
 
 ---
 
@@ -114,6 +114,7 @@ Minor CS8600/CS8602/CS8625 warnings in:
 | After event handler fix | 292 | 0 | Fixed 12 remaining object sender |
 | After Frame/ListView removal | 262 | 0 | Replaced with Border/CollectionView styles |
 | After gesture cleanup | 181 | 0 | Removed redundant TapGestureRecognizer |
+| After Shell routing | 262 | 0 | Migrated to URI-based Shell navigation |
 
 ---
 
