@@ -728,7 +728,7 @@ ImageSource[] imgSources = new ImageSource[15];
 imgSources[4 * row + col] = (SKBitmapImageSource)bitmap;
 ```
 
-This array of bitmaps is passed as a constructor to `PhotoPuzzlePage4`. That page is entirely .NET MAUI and doesn't use any SkiaSharp. It is very similar to [**XamagonXuzzle**](https://github.com/xamarin/xamarin-forms-book-samples/tree/master/Chapter22/XamagonXuzzle), so it won't be described here, but it displays your selected photo divided into 15 square tiles:
+This array of bitmaps is passed as a constructor to `PhotoPuzzlePage4`. That page is entirely .NET MAUI and doesn't use any SkiaSharp. It implements the classic 14-15 puzzle game, so it won't be described here, but it displays your selected photo divided into 15 square tiles:
 
 [![Photo Puzzle 1](cropping-images/PhotoPuzzle1.png "Photo Puzzle 1")](cropping-images/PhotoPuzzle1-Large.png#lightbox)
 

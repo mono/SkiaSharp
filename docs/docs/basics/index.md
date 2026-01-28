@@ -14,7 +14,7 @@ _Learn the basics of SkiaSharp graphics concepts and coordinates_
 
 After you have added the SkiaSharp NuGet package to your .NET MAUI application, you can begin using SkiaSharp graphics. The sample solution includes numerous pages that demonstrate SkiaSharp programming techniques in progressively more advanced lessons.
 
-All the sample programs in this section appear under the heading **SkiaSharp Drawing Basics** in the home page of the sample program, and in the [**Basics**](https://github.com/xamarin/xamarin-forms-samples/tree/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics) folder of the solution.
+All the sample programs in this section appear under the heading **SkiaSharp Drawing Basics** in the home page of the sample program, and in the [**Basics**](Basics) folder of the solution.
 
 ## [Drawing a Simple Circle](circle.md)
 

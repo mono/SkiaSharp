@@ -167,14 +167,14 @@ public partial class TestPerspectivePage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnPersp0SliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnPersp0SliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         Slider slider = (Slider)sender;
         persp0Label.Text = String.Format("Persp0 = {0:F4}", slider.Value / 100);
         canvasView.InvalidateSurface();
     }
 
-    void OnPersp1SliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnPersp1SliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         Slider slider = (Slider)sender;
         persp1Label.Text = String.Format("Persp1 = {0:F4}", slider.Value / 100);

@@ -328,7 +328,7 @@ public partial class TangentArcPage : InteractivePage
         radiusSlider.Value = 100;
     }
 
-    void sliderValueChanged(object sender, ValueChangedEventArgs args)
+    void sliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         if (canvasView != null)
         {

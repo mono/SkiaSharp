@@ -43,7 +43,7 @@ The SkiaSharp transforms are relative to the upper-left corner of the `SKCanvas`
 
 The really big difference is that SKiaSharp transforms are *methods* while the .NET MAUI transforms are *properties*. This is a semantic difference beyond the syntactical difference: SkiaSharp transforms perform an operation while .NET MAUI transforms set a state. SkiaSharp transforms apply to subsequently drawn graphics objects, but not to graphics objects that are drawn before the transform is applied. In contrast, a .NET MAUI transform applies to a previously rendered element as soon as the property is set. SkiaSharp transforms are cumulative as the methods are called; .NET MAUI transforms are replaced when the property is set with another value.
 
-All the sample programs in this section appear in the **SkiaSharp Transforms** section of the sample program. Source code can be found in the [**Transforms**](https://github.com/xamarin/xamarin-forms-samples/tree/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms) folder of the solution.
+All the sample programs in this section appear in the **SkiaSharp Transforms** section of the sample program. Source code can be found in the [**Transforms**](Transforms) folder of the solution.
 
 ## [The Translate Transform](translate.md)
 
