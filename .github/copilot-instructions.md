@@ -301,6 +301,22 @@ A green test run means everything works.
 
 ---
 
+## Debugging Complex Issues
+
+When debugging cross-platform build failures or complex issues:
+
+1. **Establish baseline first** - What's the known-good state? What changed?
+2. **Track changes and effects** - Log every change and its result in a table
+3. **Trace conditional code completely** - For preprocessor/config logic, evaluate for EACH platform before proposing changes
+4. **Use platform differences as diagnostic signals** - When X works and Y fails, the difference IS the answer
+5. **One change at a time** - Make a change, verify, then proceed. Batch changes obscure causation
+6. **Verify claims with evidence** - Don't state assumptions as facts
+7. **If a fix makes things worse, stop and revert** - Don't pile more fixes on top
+
+For full methodology, see [documentation/debugging-methodology.md](../documentation/debugging-methodology.md).
+
+---
+
 ## Further Reading
 
 | Topic | Document |
@@ -311,6 +327,7 @@ A green test run means everything works.
 | API Design | [documentation/api-design.md](../documentation/api-design.md) |
 | Adding New APIs | [documentation/adding-apis.md](../documentation/adding-apis.md) |
 | Building | [documentation/building.md](../documentation/building.md) |
+| Debugging Methodology | [documentation/debugging-methodology.md](../documentation/debugging-methodology.md) |
 | Releasing | [documentation/releasing.md](../documentation/releasing.md) |
 | Versioning | [documentation/versioning.md](../documentation/versioning.md) |
 
