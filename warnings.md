@@ -3,7 +3,7 @@
 This document catalogs compiler warnings in the DocsSamplesApp project after the migration to .NET 10 and SkiaSharp 3.119.1.
 
 **Last Updated**: January 2026  
-**Current Build**: 262 warnings, 0 errors (Android target framework)
+**Current Build**: 170 warnings, 0 errors (per target framework, ~510 total across 3 frameworks)
 
 ---
 
@@ -18,10 +18,14 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 | CS0618 - SKPaint text APIs | ✅ FIXED | 0 | Migrated to SKFont APIs in code and docs |
 | CS0618 - Frame in Styles.xaml | ✅ FIXED | 0 | Replaced with Border style |
 | CS0618 - ListView in Styles.xaml | ✅ FIXED | 0 | Replaced with CollectionView style |
-| CS0618 - LayoutOptions.*AndExpand | ⏳ PENDING | ~15 | Various XAML pages |
-| CS0618 - Device.GetNamedSize | ⏳ PENDING | ~3 | PhotoPuzzle pages |
-| CS0618 - LayoutTo obsolete | ⏳ PENDING | ~1 | PhotoPuzzlePage4.xaml.cs |
-| CS8600/CS8602/CS8625 - Null handling | ⏳ PENDING | ~6 | ColorAdjustment, PhotoPuzzle pages |
+| CS0618 - Touch handling | ✅ FIXED | 0 | Only mark handled when actually processing |
+| CS0618 - LayoutOptions.*AndExpand | ⏳ PENDING | ~82 | Various XAML pages (XAML SourceGen) |
+| CS0612 - Device.GetNamedSize | ⏳ PENDING | ~14 | PhotoPuzzle pages |
+| CS8600/CS8602 - Null dereference | ⏳ PENDING | ~52 | Various pages |
+| CS8625 - Null literal conversion | ⏳ PENDING | ~10 | Various pages |
+| CS8618 - Non-nullable field | ⏳ PENDING | ~6 | Uninitialized fields |
+| CS9191 - ref vs in parameter | ⏳ PENDING | ~2 | TouchManipulationBitmap.cs |
+| CS8603/CS8604 - Null reference | ⏳ PENDING | ~4 | PhotoLibrary.cs |
 
 ---
 
@@ -66,41 +70,56 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 - Replaced `TargetType="Frame"` style with `TargetType="Border"` style
 - Replaced `TargetType="ListView"` style with `TargetType="CollectionView"` style
 
+### 8. Shell URI-Based Navigation
+- Migrated from `Type PageType` to `string Route` in MenuItem
+- Routes use hierarchical kebab-case: `/basics/simple-circle`
+- Use `Shell.Current.GoToAsync()` instead of `Activator.CreateInstance`
+- Enables DI support and deep linking
+
 ---
 
-## ⏳ Remaining Warnings (~25 unique issues)
+## ⏳ Remaining Warnings (170 per framework)
 
-### Priority 1: LayoutOptions.*AndExpand (~15 warnings)
+### CS0618: LayoutOptions.*AndExpand (~82 warnings)
 
-Several XAML pages use deprecated expansion options:
-- `FillAndExpand`
-- `CenterAndExpand`
+XAML pages using deprecated expansion options (from XAML SourceGen):
+- `FillAndExpand`, `CenterAndExpand`
 
 **Files affected:**
-- Bitmaps/PhotoPuzzlePage2.xaml
-- Bitmaps/PhotoPuzzlePage4.xaml
-- Bitmaps/SaveFileFormatsPage.xaml
-- Bitmaps/FingerPaintSavePage.xaml
-- Bitmaps/BitmapRotatorPage.xaml
-- Bitmaps/ColorAdjustmentPage.xaml
-- Effects/DistanceLightExperimentPage.xaml
-- Effects/LightenAndDarkenPage.xaml
-- Effects/ImageBlurExperimentPage.xaml
-- Effects/GradientTransitionsPage.xaml
-- Effects/DropShadowExperimentPage.xaml
+- Bitmaps/: PhotoPuzzle*, SaveFileFormats, FingerPaintSave, BitmapRotator, ColorAdjustment, SpinPaint
+- Effects/: DistanceLight, LightenAndDarken, ImageBlur, GradientTransitions, DropShadow, MaskBlur, PerlinNoise, TiledPerlinNoise, ComposedPerlinNoise, BitmapTileFlipModes, BrickWallCompositing, SeparableBlendModes, NonSeparableBlendModes, PorterDuffTransparency, DodgeAndBurn
 
 **Fix:** Replace StackLayout with Grid for proper layout expansion.
 
-### Priority 2: PhotoPuzzle Pages (~4 warnings)
+### CS0612: Device.GetNamedSize (~14 warnings)
 
-- `Device.GetNamedSize` / `NamedSize` obsolete (PhotoPuzzlePage2.xaml)
-- `LayoutTo` obsolete → use `LayoutToAsync` (PhotoPuzzlePage4.xaml.cs)
+- PhotoPuzzlePage2.xaml, PhotoPuzzlePage3.xaml use obsolete `Device.GetNamedSize`
 
-### Priority 3: Null handling (~6 warnings)
+### CS8600/CS8602: Null Dereference (~52 warnings)
 
-Minor CS8600/CS8602/CS8625 warnings in:
-- ColorAdjustmentPage.xaml.cs
-- PhotoPuzzlePage4.xaml.cs
+Possible null reference warnings in:
+- Transforms/TouchManipulationPage.xaml.cs
+- Transforms/TestPerspectivePage.xaml.cs
+- Bitmaps/PhotoPuzzlePage4.xaml.cs
+- Bitmaps/ColorAdjustmentPage.xaml.cs
+- Effects/LightenAndDarkenPage.xaml.cs
+- Platforms/Android/PhotoLibrary.cs
+
+### CS8625: Null Literal Conversion (~10 warnings)
+
+Cannot convert null literal to non-nullable type in various pages.
+
+### CS8618: Non-nullable Field (~6 warnings)
+
+Uninitialized non-nullable fields - need to add `= null!` or make nullable.
+
+### CS9191: ref vs in Parameter (~2 warnings)
+
+- TouchManipulationBitmap.cs: `ref` should be `in` for readonly parameter
+
+### CS8603/CS8604: Null Reference Return (~4 warnings)
+
+- Platforms/Android/PhotoLibrary.cs: Possible null reference in return/argument
 
 ---
 
@@ -123,9 +142,12 @@ Minor CS8600/CS8602/CS8625 warnings in:
 ```bash
 # Force rebuild and count warnings
 cd samples/DocsSamplesApp
-touch DocsSamplesApp/DocsSamplesApp.csproj
-dotnet build DocsSamplesApp --no-restore -v q 2>&1 | tail -5
+dotnet clean DocsSamplesApp -v q
+dotnet build DocsSamplesApp -f net10.0-android -v q 2>&1 | tail -5
+
+# Count warnings by type
+dotnet build DocsSamplesApp -f net10.0-android -v q 2>&1 | grep "warning CS" | sed 's/.*warning \(CS[0-9]*\).*/\1/' | sort | uniq -c | sort -rn
 
 # Build with warnings as errors (goal)
-dotnet build -f net10.0-maccatalyst /p:TreatWarningsAsErrors=true
+dotnet build -f net10.0-android /p:TreatWarningsAsErrors=true
 ```
