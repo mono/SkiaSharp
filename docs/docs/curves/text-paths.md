@@ -181,12 +181,11 @@ public class TextPathEffectPage : ContentPage
 
         canvas.Clear();
 
-        // Set textPaint TextSize based on screen size
-        textPaint.TextSize = Math.Min(info.Width, info.Height);
+        // Set textFont Size based on screen size
+        textFont.Size = Math.Min(info.Width, info.Height);
 
         // Do not measure the text with PathEffect set!
-        SKRect textBounds = new SKRect();
-        textPaint.MeasureText(character, ref textBounds);
+        textFont.MeasureText(character, out SKRect textBounds);
 
         // Coordinates to center text on screen
         float xText = info.Width / 2 - textBounds.MidX;
@@ -194,7 +193,7 @@ public class TextPathEffectPage : ContentPage
 
         // Set the PathEffect property and display text
         textPaint.PathEffect = pathEffect;
-        canvas.DrawText(character, xText, yText, textPaint);
+        canvas.DrawText(character, xText, yText, SKTextAlign.Left, textFont, textPaint);
     }
 }
 ```
@@ -302,19 +301,19 @@ public class CircularTextPage : ContentPage
             circularPath.AddCircle(info.Width / 2, info.Height / 2, radius);
 
             using (SKPaint textPaint = new SKPaint())
+            using (SKFont textFont = new SKFont { Size = 100 })
             {
-                textPaint.TextSize = 100;
-                float textWidth = textPaint.MeasureText(text);
-                textPaint.TextSize *= 2 * 3.14f * radius / textWidth;
+                float textWidth = textFont.MeasureText(text);
+                textFont.Size *= 2 * 3.14f * radius / textWidth;
 
-                canvas.DrawTextOnPath(text, circularPath, 0, 0, textPaint);
+                canvas.DrawTextOnPath(text, circularPath, 0, 0, textFont, textPaint);
             }
         }
     }
 }
 ```
 
-The `TextSize` property of `textPaint` is then adjusted so that the text width matches the circumference of the circle:
+The `Size` property of `textFont` is then adjusted so that the text width matches the circumference of the circle:
 
 [![Triple screenshot of the Circular Text page](text-paths-images/circulartext-small.png)](text-paths-images/circulartext-large.png#lightbox "Triple screenshot of the Circular Text page")
 

@@ -55,15 +55,19 @@ public partial class PathLengthPage : InteractivePage
     {
         Style = SKPaintStyle.Fill,
         Color = SKColors.Black,
-        TextSize = 10,
     };
 
-    static readonly float baseTextWidth = textPaint.MeasureText(text);
+    static SKFont textFont = new SKFont
+    {
+        Size = 10,
+    };
+
+    static readonly float baseTextWidth = textFont.MeasureText(text);
     ...
 }
 ```
 
-The `baseTextWidth` field is the width of the text based on a `TextSize` setting of 10.
+The `baseTextWidth` field is the width of the text based on a `Size` setting of 10.
 
 The `PaintSurface` handler draws the Bézier curve and then sizes the text to fit along its full length:
 
@@ -90,16 +94,16 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         SKPathMeasure pathMeasure = new SKPathMeasure(path, false, 1);
 
         // Find new text size
-        textPaint.TextSize = pathMeasure.Length / baseTextWidth * 10;
+        textFont.Size = pathMeasure.Length / baseTextWidth * 10;
 
         // Draw text on path
-        canvas.DrawTextOnPath(text, path, 0, 0, textPaint);
+        canvas.DrawTextOnPath(text, path, 0, 0, textFont, textPaint);
     }
     ...
 }
 ```
 
-The `Length` property of the newly created `SKPathMeasure` object obtains the length of the path. The path length is divided by the `baseTextWidth` value (which is the width of the text based on a text size of 10) and then multiplied by the base text size of 10. The result is a new text size for displaying the text along that path:
+The `Length` property of the newly created `SKPathMeasure` object obtains the length of the path. The path length is divided by the `baseTextWidth` value (which is the width of the text based on a font size of 10) and then multiplied by the base font size of 10. The result is a new font size for displaying the text along that path:
 
 [![Triple screenshot of the Path Length page](information-images/pathlength-small.png)](information-images/pathlength-large.png#lightbox "Triple screenshot of the Path Length page")
 

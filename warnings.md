@@ -3,7 +3,7 @@
 This document catalogs compiler warnings in the DocsSamplesApp project after the migration to .NET 10 and SkiaSharp 3.119.1.
 
 **Last Updated**: January 2026  
-**Current Build**: 340 warnings, 0 errors (Android, one framework)
+**Current Build**: 340 warnings, 0 errors (Android target framework)
 
 ---
 
@@ -15,12 +15,13 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 | CS0618 - Application.MainPage | ✅ FIXED | 0 | Migrated to AppShell with CreateWindow |
 | CS0618 - Device.StartTimer | ✅ FIXED | 0 | Changed to `Dispatcher.StartTimer()` |
 | CS0618 - TableView/TextCell | ✅ FIXED | 0 | Migrated to CollectionView |
-| CS0618 - SKPaint text APIs | ✅ FIXED | 0 | Migrated to SKFont APIs |
-| CS0618 - Frame in Styles.xaml | ⏳ PENDING | ~30 | Default MAUI template styles |
-| CS0618 - ListView in Styles.xaml | ⏳ PENDING | ~10 | Default MAUI template styles |
+| CS0618 - SKPaint text APIs | ✅ FIXED | 0 | Migrated to SKFont APIs in code and docs |
+| CS0618 - Frame in Styles.xaml | ⏳ PENDING | ~10 | Default MAUI template styles |
+| CS0618 - ListView in Styles.xaml | ⏳ PENDING | ~8 | Default MAUI template styles |
+| CS0618 - LayoutOptions.*AndExpand | ⏳ PENDING | ~15 | Various XAML pages |
 | CS0618 - Device.GetNamedSize | ⏳ PENDING | ~3 | PhotoPuzzle pages |
-| CS0618 - LayoutTo/LayoutOptions | ⏳ PENDING | ~10 | PhotoPuzzle pages |
-| CS8600/CS8602/CS8625 - Null handling | ⏳ PENDING | ~6 | PhotoPuzzlePage4.xaml.cs |
+| CS0618 - LayoutTo obsolete | ⏳ PENDING | ~1 | PhotoPuzzlePage4.xaml.cs |
+| CS8600/CS8602/CS8625 - Null handling | ⏳ PENDING | ~6 | ColorAdjustment, PhotoPuzzle pages |
 
 ---
 
@@ -46,44 +47,60 @@ This document catalogs compiler warnings in the DocsSamplesApp project after the
 ### 5. XAML Source Generation
 - Enabled `MauiXamlInflator=SourceGen` for faster inflation
 
-### 6. SKPaint Text APIs
-- Migrated from `SKPaint` text properties to `SKFont` in ~40 files
-- Updated documentation to match code changes
+### 6. SKPaint Text APIs → SKFont
+- Migrated all code files from `SKPaint` text properties to `SKFont`
+- Updated all documentation to match code changes
+- Verified code and docs are in sync
 
-| Obsolete API | Replacement |
-|--------------|-------------|
+| Old API | New API |
+|---------|---------|
 | `SKPaint.TextSize` | `SKFont.Size` |
 | `SKPaint.Typeface` | `SKFont.Typeface` |
-| `SKPaint.MeasureText()` | `SKFont.MeasureText()` |
+| `SKPaint.MeasureText(str, ref bounds)` | `SKFont.MeasureText(str, out bounds)` |
 | `SKPaint.GetTextPath(s, x, y)` | `SKFont.GetTextPath(s, new SKPoint(x, y))` |
-| `SKPaint.TextAlign` | Pass `SKTextAlign` to DrawText |
-| `SKCanvas.DrawText(s, x, y, paint)` | `SKCanvas.DrawText(s, x, y, align, font, paint)` |
+| `SKPaint.TextAlign` | `SKTextAlign` parameter in DrawText |
+| `canvas.DrawText(text, x, y, paint)` | `canvas.DrawText(text, x, y, align, font, paint)` |
+| `canvas.DrawTextOnPath(text, path, x, y, paint)` | `canvas.DrawTextOnPath(text, path, x, y, font, paint)` |
 
 ---
 
-## ⏳ Remaining Warnings (~40)
+## ⏳ Remaining Warnings (~40 unique issues)
 
-### Priority 1: Styles.xaml (~40 warnings)
+### Priority 1: Styles.xaml (~18 warnings)
 
-The default MAUI Styles.xaml contains styles for obsolete Frame and ListView.
+The default MAUI Styles.xaml contains styles for obsolete Frame and ListView controls. These are template styles that aren't actively used by our app.
 
 **Options:**
 1. Remove unused Frame/ListView styles
-2. Suppress warnings for this file:
-   ```xml
-   <MauiXaml Update="Resources/Styles/Styles.xaml" Inflator="SourceGen" NoWarn="0618" />
-   ```
+2. Replace Frame style with Border style
+3. Replace ListView style with CollectionView style
 
-### Priority 2: PhotoPuzzle Pages (~20 warnings)
+### Priority 2: LayoutOptions.*AndExpand (~15 warnings)
 
-`Bitmaps/PhotoPuzzlePage2.xaml` and `PhotoPuzzlePage4.xaml.cs` have:
-- `Device.GetNamedSize` / `NamedSize` obsolete
-- `LayoutTo` obsolete (use `LayoutToAsync`)
-- `LayoutOptions.*AndExpand` obsolete (use Grid)
-- Null handling warnings
+Several XAML pages use deprecated expansion options:
+- `FillAndExpand`
+- `CenterAndExpand`
 
-**Files:**
-- PhotoPuzzlePage2.xaml
+**Files affected:**
+- Bitmaps/PhotoPuzzlePage2.xaml
+- Bitmaps/PhotoPuzzlePage4.xaml
+- Bitmaps/SaveFileFormatsPage.xaml
+- Bitmaps/FingerPaintSavePage.xaml
+- Bitmaps/BitmapRotatorPage.xaml
+- Bitmaps/ColorAdjustmentPage.xaml
+- Effects/DistanceLightExperimentPage.xaml
+
+**Fix:** Replace StackLayout with Grid for proper layout expansion.
+
+### Priority 3: PhotoPuzzle Pages (~4 warnings)
+
+- `Device.GetNamedSize` / `NamedSize` obsolete (PhotoPuzzlePage2.xaml)
+- `LayoutTo` obsolete → use `LayoutToAsync` (PhotoPuzzlePage4.xaml.cs)
+
+### Priority 4: Null handling (~6 warnings)
+
+Minor CS8600/CS8602/CS8625 warnings in:
+- ColorAdjustmentPage.xaml.cs
 - PhotoPuzzlePage4.xaml.cs
 
 ---
@@ -94,7 +111,7 @@ The default MAUI Styles.xaml contains styles for obsolete Frame and ListView.
 |------|----------|--------|-------|
 | Initial | 2226 | 0 | After XAML SourceGen enabled |
 | After TableView→CollectionView | 275 | 0 | 88% reduction |
-| After SKFont migration | 340 | 0 | Per-framework count may vary |
+| After SKFont migration | 340 | 0 | Verified code/docs match |
 
 ---
 
@@ -104,7 +121,7 @@ The default MAUI Styles.xaml contains styles for obsolete Frame and ListView.
 # Force rebuild and count warnings
 cd samples/DocsSamplesApp
 touch DocsSamplesApp/DocsSamplesApp.csproj
-dotnet build -f net10.0-maccatalyst 2>&1 | tail -5
+dotnet build DocsSamplesApp --no-restore -v q 2>&1 | tail -5
 
 # Build with warnings as errors (goal)
 dotnet build -f net10.0-maccatalyst /p:TreatWarningsAsErrors=true
