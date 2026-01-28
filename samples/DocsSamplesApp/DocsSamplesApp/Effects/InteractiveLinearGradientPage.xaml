@@ -4,7 +4,6 @@
                        xmlns:local="clr-namespace:DocsSamplesApp"
                        xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
                        xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-                       xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="DocsSamplesApp.Effects.InteractiveLinearGradientPage"
                        Title="Interactive Linear Gradient">
     <Grid>
@@ -16,11 +15,9 @@
         <Grid BackgroundColor="White"
               Grid.Row="0">
             <skiaforms:SKCanvasView x:Name="canvasView"
+                                    EnableTouchEvents="True"
+                                    Touch="OnTouch"
                                     PaintSurface="OnCanvasViewPaintSurface" />
-            <Grid.Effects>
-                <tt:TouchEffect Capture="True"
-                                TouchAction="OnTouchEffectAction" />
-            </Grid.Effects>
         </Grid>
 
         <Picker x:Name="tileModePicker" 

@@ -1,13 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 using SkiaSharp;
-
-using TouchTracking;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
-using Microsoft.Maui.Devices.Sensors;
-using Microsoft.Maui.Graphics;
 
 namespace DocsSamplesApp.Bitmaps
 {
@@ -21,14 +17,13 @@ namespace DocsSamplesApp.Bitmaps
         SKMatrix inverseBitmapMatrix;
 
         // Touch tracking 
-        TouchEffect touchEffect = new TouchEffect();
-        struct TouchPoint
+        struct TouchPointInfo
         {
             public int CornerIndex { set; get; }
             public SKPoint Offset { set; get; }
         }
 
-        Dictionary<long, TouchPoint> touchPoints = new Dictionary<long, TouchPoint>();
+        Dictionary<long, TouchPointInfo> touchPoints = new Dictionary<long, TouchPointInfo>();
 
         // Drawing objects
         SKPaint cornerStroke = new SKPaint
@@ -52,7 +47,9 @@ namespace DocsSamplesApp.Bitmaps
             SKRect bitmapRect = new SKRect(0, 0, bitmap.Width, bitmap.Height);
             croppingRect = new CroppingRectangle(bitmapRect, aspectRatio);
 
-            touchEffect.TouchAction += OnTouchEffectTouchAction;
+            // Enable built-in touch events
+            EnableTouchEvents = true;
+            Touch += OnTouch;
         }
 
         public SKBitmap CroppedBitmap
@@ -73,14 +70,6 @@ namespace DocsSamplesApp.Bitmaps
 
                 return croppedBitmap;
             }
-        }
-
-        protected override void OnParentSet()
-        {
-            base.OnParentSet();
-
-            // Attach TouchEffect to parent view
-            Parent.Effects.Add(touchEffect);
         }
 
         protected override void OnPaintSurface(SKPaintSurfaceEventArgs args)
@@ -133,56 +122,53 @@ namespace DocsSamplesApp.Bitmaps
             bitmapScaleMatrix.TryInvert(out inverseBitmapMatrix);
         }
 
-        void OnTouchEffectTouchAction(object sender, TouchActionEventArgs args)
+        void OnTouch(object sender, SKTouchEventArgs e)
         {
-            SKPoint pixelLocation = ConvertToPixel(args.Location);
+            // Location is already in pixels with built-in touch
+            SKPoint pixelLocation = e.Location;
             SKPoint bitmapLocation = inverseBitmapMatrix.MapPoint(pixelLocation);
 
-            switch (args.Type)
+            switch (e.ActionType)
             {
-                case TouchActionType.Pressed:
+                case SKTouchAction.Pressed:
                     // Convert radius to bitmap/cropping scale
                     float radius = inverseBitmapMatrix.ScaleX * RADIUS;
 
                     // Find corner that the finger is touching
                     int cornerIndex = croppingRect.HitTest(bitmapLocation, radius);
 
-                    if (cornerIndex != -1 && !touchPoints.ContainsKey(args.Id))
+                    if (cornerIndex != -1 && !touchPoints.ContainsKey(e.Id))
                     {
-                        TouchPoint touchPoint = new TouchPoint
+                        TouchPointInfo touchPoint = new TouchPointInfo
                         {
                             CornerIndex = cornerIndex,
                             Offset = bitmapLocation - croppingRect.Corners[cornerIndex]
                         };
 
-                        touchPoints.Add(args.Id, touchPoint);
+                        touchPoints.Add(e.Id, touchPoint);
                     }
                     break;
 
-                case TouchActionType.Moved:
-                    if (touchPoints.ContainsKey(args.Id))
+                case SKTouchAction.Moved:
+                    if (touchPoints.ContainsKey(e.Id))
                     {
-                        TouchPoint touchPoint = touchPoints[args.Id];
+                        TouchPointInfo touchPoint = touchPoints[e.Id];
                         croppingRect.MoveCorner(touchPoint.CornerIndex, 
                                                 bitmapLocation - touchPoint.Offset);
                         InvalidateSurface();
                     }
                     break;
 
-                case TouchActionType.Released:
-                case TouchActionType.Cancelled:
-                    if (touchPoints.ContainsKey(args.Id))
+                case SKTouchAction.Released:
+                case SKTouchAction.Cancelled:
+                    if (touchPoints.ContainsKey(e.Id))
                     {
-                        touchPoints.Remove(args.Id);
+                        touchPoints.Remove(e.Id);
                     }
                     break;
             }
-        }
 
-        SKPoint ConvertToPixel(Point pt)
-        {
-            return new SKPoint((float)(CanvasSize.Width * pt.X / Width),
-                                (float)(CanvasSize.Height * pt.Y / Height));
+            e.Handled = true;
         }
     }
 }

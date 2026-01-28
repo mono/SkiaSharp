@@ -1,106 +1,96 @@
-﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 
 using SkiaSharp;
-
-using TouchTracking;
-using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
-using Microsoft.Maui;
-using Microsoft.Maui.Devices.Sensors;
 
 namespace DocsSamplesApp.Transforms
 {
     public partial class TouchManipulationPage : ContentPage
     {
-        TouchManipulationBitmap bitmap;
+        TouchManipulationBitmap? bitmap;
         List<long> touchIds = new List<long>();
         MatrixDisplay matrixDisplay = new MatrixDisplay();
 
         public TouchManipulationPage()
         {
             InitializeComponent();
+            _ = LoadBitmapAsync();
+        }
 
-            string resourceID = "DocsSamplesApp.Media.MountainClimbers.jpg";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                SKBitmap bitmap = SKBitmap.Decode(stream);
-                this.bitmap = new TouchManipulationBitmap(bitmap);
-                this.bitmap.TouchManager.Mode = TouchManipulationMode.ScaleRotate;
-            }
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("MountainClimbers.jpg");
+            SKBitmap loadedBitmap = SKBitmap.Decode(stream);
+            bitmap = new TouchManipulationBitmap(loadedBitmap);
+            bitmap.TouchManager.Mode = TouchManipulationMode.ScaleRotate;
+            canvasView.InvalidateSurface();
         }
 
         void OnTouchModePickerSelectedIndexChanged(object sender, EventArgs args)
         {
-            if (bitmap != null)
+            if (bitmap is not null)
             {
                 Picker picker = (Picker)sender;
                 bitmap.TouchManager.Mode = (TouchManipulationMode)picker.SelectedItem;
             }
         }
 
-        void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+        void OnTouch(object sender, SKTouchEventArgs e)
         {
-            // Convert Xamarin.Forms point to pixels
-            Point pt = args.Location;
-            SKPoint point = 
-                new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                            (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+            if (bitmap is null)
+                return;
 
-            switch (args.Type)
+            SKPoint point = e.Location;
+
+            switch (e.ActionType)
             {
-                case TouchActionType.Pressed:
+                case SKTouchAction.Pressed:
                     if (bitmap.HitTest(point))
                     {
-                        touchIds.Add(args.Id);
-                        bitmap.ProcessTouchEvent(args.Id, args.Type, point);
-                        break;
+                        touchIds.Add(e.Id);
+                        bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                     }
                     break;
 
-                case TouchActionType.Moved:
-                    if (touchIds.Contains(args.Id))
+                case SKTouchAction.Moved:
+                    if (touchIds.Contains(e.Id))
                     {
-                        bitmap.ProcessTouchEvent(args.Id, args.Type, point);
+                        bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                         canvasView.InvalidateSurface();
                     }
                     break;
 
-                case TouchActionType.Released:
-                case TouchActionType.Cancelled:
-                    if (touchIds.Contains(args.Id))
+                case SKTouchAction.Released:
+                case SKTouchAction.Cancelled:
+                    if (touchIds.Contains(e.Id))
                     {
-                        bitmap.ProcessTouchEvent(args.Id, args.Type, point);
-                        touchIds.Remove(args.Id);
+                        bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
+                        touchIds.Remove(e.Id);
                         canvasView.InvalidateSurface();
                     }
                     break;
             }
+
+            e.Handled = true;
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
         {
-            SKImageInfo info = args.Info;
-            SKSurface surface = args.Surface;
-            SKCanvas canvas = surface.Canvas;
-
+            SKCanvas canvas = args.Surface.Canvas;
             canvas.Clear();
 
-            // Display the bitmap
+            if (bitmap is null)
+                return;
+
             bitmap.Paint(canvas);
 
-            // Display the matrix in the lower-right corner
             SKSize matrixSize = matrixDisplay.Measure(bitmap.Matrix);
-
             matrixDisplay.Paint(canvas, bitmap.Matrix,
-                new SKPoint(info.Width - matrixSize.Width,
-                            info.Height - matrixSize.Height));
+                new SKPoint(args.Info.Width - matrixSize.Width,
+                            args.Info.Height - matrixSize.Height));
         }
     }
 }

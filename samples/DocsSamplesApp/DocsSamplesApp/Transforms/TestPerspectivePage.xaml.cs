@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -8,24 +8,26 @@ using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Transforms
 {
     public partial class TestPerspectivePage : ContentPage
     {
-        SKBitmap bitmap;
+        SKBitmap? bitmap;
 
         public TestPerspectivePage()
         {
             InitializeComponent();
 
-            string resourceID = "DocsSamplesApp.Media.SeatedMonkey.jpg";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
+            _ = LoadBitmapAsync();
+        }
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                bitmap = SKBitmap.Decode(stream);
-            }
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnPersp0SliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -49,6 +51,9 @@ namespace DocsSamplesApp.Transforms
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Calculate perspective matrix
             SKMatrix perspectiveMatrix = SKMatrix.Identity;

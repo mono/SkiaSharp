@@ -3,16 +3,13 @@
                        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                        xmlns:local="clr-namespace:DocsSamplesApp"
                        xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-                       xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="DocsSamplesApp.Curves.BezierCurvePage"
                        Title="Bezier Curve">
     
     <Grid BackgroundColor="White">
         <skia:SKCanvasView x:Name="canvasView"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch"
                            PaintSurface="OnCanvasViewPaintSurface" />
-        <Grid.Effects>
-            <tt:TouchEffect Capture="True"
-                            TouchAction="OnTouchEffectAction" />
-        </Grid.Effects>
     </Grid>
 </local:InteractivePage>

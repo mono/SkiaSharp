@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -7,19 +9,31 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public partial class MonkeyMoustachePage : ContentPage
     {
-        SKBitmap monkeyBitmap;
+        SKBitmap? monkeyBitmap;
+        SKCanvasView canvasView;
 
         public MonkeyMoustachePage()
         {
             Title = "Monkey Moustache";
 
-            monkeyBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-                "DocsSamplesApp.Media.MonkeyFace.png");
+            // Create SKCanvasView to view result
+            canvasView = new SKCanvasView();
+            canvasView.PaintSurface += OnCanvasViewPaintSurface;
+            Content = canvasView;
+
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("MonkeyFace.png");
+            monkeyBitmap = SKBitmap.Decode(stream);
 
             // Create canvas based on bitmap
             using (SKCanvas canvas = new SKCanvas(monkeyBitmap))
@@ -44,10 +58,7 @@ namespace DocsSamplesApp.Bitmaps
                 }
             }
 
-            // Create SKCanvasView to view result
-            SKCanvasView canvasView = new SKCanvasView();
-            canvasView.PaintSurface += OnCanvasViewPaintSurface;
-            Content = canvasView;
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -57,6 +68,10 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (monkeyBitmap is null)
+                return;
+
             canvas.DrawBitmap(monkeyBitmap, info.Rect, BitmapStretch.Uniform);
         }
     }

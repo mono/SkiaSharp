@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -12,19 +13,30 @@ namespace DocsSamplesApp.Effects
 {
     public partial class BrickWallCompositingPage : ContentPage
     {
-        SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmapResource(
-            typeof(BrickWallCompositingPage),
-            "DocsSamplesApp.Media.SeatedMonkey.jpg");
-
-        SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
-            typeof(BrickWallCompositingPage),
-            "DocsSamplesApp.Media.SeatedMonkeyMatte.png");
+        SKBitmap? monkeyBitmap;
+        SKBitmap? matteBitmap;
 
         int step = 0;
 
         public BrickWallCompositingPage()
         {
             InitializeComponent();
+            _ = LoadMonkeyBitmapAsync();
+            _ = LoadMatteBitmapAsync();
+        }
+
+        async Task LoadMonkeyBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            monkeyBitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
+
+        async Task LoadMatteBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkeyMatte.png");
+            matteBitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnButtonClicked(object sender, EventArgs args)
@@ -51,6 +63,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (monkeyBitmap is null || matteBitmap is null)
+                return;
 
             float x = (info.Width - monkeyBitmap.Width) / 2;
             float y = info.Height - monkeyBitmap.Height;

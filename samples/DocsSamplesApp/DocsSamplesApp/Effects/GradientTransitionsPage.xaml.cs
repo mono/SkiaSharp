@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -11,13 +12,8 @@ namespace DocsSamplesApp.Effects
 {
 	public partial class GradientTransitionsPage : ContentPage
 	{
-        SKBitmap bitmap1 = BitmapExtensions.LoadBitmapResource(
-            typeof(GradientTransitionsPage),
-            "DocsSamplesApp.Media.SeatedMonkey.jpg");
-
-        SKBitmap bitmap2 = BitmapExtensions.LoadBitmapResource(
-            typeof(GradientTransitionsPage),
-            "DocsSamplesApp.Media.FacePalm.jpg");
+        SKBitmap? bitmap1;
+        SKBitmap? bitmap2;
 
         enum TransitionMode
         {
@@ -36,7 +32,24 @@ namespace DocsSamplesApp.Effects
             }
 
             transitionPicker.SelectedIndex = 0;
+
+            _ = LoadBitmap1Async();
+            _ = LoadBitmap2Async();
 		}
+
+        async Task LoadBitmap1Async()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap1 = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
+
+        async Task LoadBitmap2Async()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("FacePalm.jpg");
+            bitmap2 = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
 
         void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
         {
@@ -55,6 +68,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap1 is null || bitmap2 is null)
+                return;
 
             // Assume both bitmaps are square for display rectangle
             float size = Math.Min(info.Width, info.Height);

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -12,14 +13,19 @@ namespace DocsSamplesApp.Effects
 {
     public partial class BitmapTileFlipModesPage : ContentPage
     {
-        SKBitmap bitmap;
+        SKBitmap? bitmap;
 
 	    public BitmapTileFlipModesPage ()
 	    {
 		    InitializeComponent ();
 
-            SKBitmap origBitmap = BitmapExtensions.LoadBitmapResource(
-                GetType(), "DocsSamplesApp.Media.SeatedMonkey.jpg");
+            _ = LoadOrigBitmapAsync();
+	    }
+
+        async Task LoadOrigBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            SKBitmap origBitmap = SKBitmap.Decode(stream);
 
             // Define cropping rect
             SKRectI cropRect = new SKRectI(5, 27, 296, 260);
@@ -31,7 +37,9 @@ namespace DocsSamplesApp.Effects
             // Resize to half the width and height
             SKImageInfo info = new SKImageInfo(cropRect.Width / 2, cropRect.Height / 2);
             bitmap = croppedBitmap.Resize(info, SKSamplingOptions.Default);
-	    }
+
+            canvasView.InvalidateSurface();
+        }
 
         void OnPickerSelectedIndexChanged(object sender, EventArgs args)
         {
@@ -45,6 +53,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Get tile modes from Pickers
             SKShaderTileMode xTileMode =

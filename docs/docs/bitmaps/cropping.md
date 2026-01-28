@@ -308,7 +308,7 @@ The code in the `CroppingRectangle` class bases the cropping rectangle on the pi
 
 The last line of the `OnPaintSurface` override takes the inverse of the `bitmapScaleMatrix` and saves it as the `inverseBitmapMatrix` field. This is used for touch processing.
 
-A `TouchEffect` object is instantiated as a field, and the constructor attaches a handler to the `TouchAction` event, but the `TouchEffect` needs to be added to the `Effects` collection of the _parent_ of the `SKCanvasView` derivative, so that's done in the `OnParentSet` override:
+The `SKCanvasView` has built-in touch support. Touch events are enabled in the constructor by setting `EnableTouchEvents` to `true` and attaching a handler to the `Touch` event:
 
 ```csharp
 class PhotoCropperCanvasView : SKCanvasView
@@ -320,7 +320,6 @@ class PhotoCropperCanvasView : SKCanvasView
     SKMatrix inverseBitmapMatrix;
 
     // Touch tracking
-    TouchEffect touchEffect = new TouchEffect();
     struct TouchPoint
     {
         public int CornerIndex { set; get; }
@@ -332,32 +331,24 @@ class PhotoCropperCanvasView : SKCanvasView
     public PhotoCropperCanvasView(SKBitmap bitmap, float? aspectRatio = null)
     {
         ···
-        touchEffect.TouchAction += OnTouchEffectTouchAction;
+        EnableTouchEvents = true;
+        Touch += OnTouch;
     }
     ···
-    protected override void OnParentSet()
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        base.OnParentSet();
+        SKPoint bitmapLocation = inverseBitmapMatrix.MapPoint(e.Location);
 
-        // Attach TouchEffect to parent view
-        Parent.Effects.Add(touchEffect);
-    }
-    ···
-    void OnTouchEffectTouchAction(object sender, TouchActionEventArgs args)
-    {
-        SKPoint pixelLocation = ConvertToPixel(args.Location);
-        SKPoint bitmapLocation = inverseBitmapMatrix.MapPoint(pixelLocation);
-
-        switch (args.Type)
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 // Convert radius to bitmap/cropping scale
                 float radius = inverseBitmapMatrix.ScaleX * RADIUS;
 
                 // Find corner that the finger is touching
                 int cornerIndex = croppingRect.HitTest(bitmapLocation, radius);
 
-                if (cornerIndex != -1 && !touchPoints.ContainsKey(args.Id))
+                if (cornerIndex != -1 && !touchPoints.ContainsKey(e.Id))
                 {
                     TouchPoint touchPoint = new TouchPoint
                     {
@@ -365,39 +356,35 @@ class PhotoCropperCanvasView : SKCanvasView
                         Offset = bitmapLocation - croppingRect.Corners[cornerIndex]
                     };
 
-                    touchPoints.Add(args.Id, touchPoint);
+                    touchPoints.Add(e.Id, touchPoint);
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (touchPoints.ContainsKey(args.Id))
+            case SKTouchAction.Moved:
+                if (touchPoints.ContainsKey(e.Id))
                 {
-                    TouchPoint touchPoint = touchPoints[args.Id];
+                    TouchPoint touchPoint = touchPoints[e.Id];
                     croppingRect.MoveCorner(touchPoint.CornerIndex,
                                             bitmapLocation - touchPoint.Offset);
                     InvalidateSurface();
                 }
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
-                if (touchPoints.ContainsKey(args.Id))
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
+                if (touchPoints.ContainsKey(e.Id))
                 {
-                    touchPoints.Remove(args.Id);
+                    touchPoints.Remove(e.Id);
                 }
                 break;
         }
-    }
 
-    SKPoint ConvertToPixel(Microsoft.Maui.Graphics.Point pt)
-    {
-        return new SKPoint((float)(CanvasSize.Width * pt.X / Width),
-                           (float)(CanvasSize.Height * pt.Y / Height));
+        e.Handled = true;
     }
 }
 ```
 
-The touch events processed by the `TouchAction` handler are in device-independent units. These first need to be converted to pixels using the `ConvertToPixel` method at the bottom of the class, and then converted to `CroppingRectangle` units using `inverseBitmapMatrix`.
+The `Touch` event handler receives `SKTouchEventArgs` where `e.Location` is already in pixel coordinates. The location is converted to `CroppingRectangle` units using `inverseBitmapMatrix`. Setting `e.Handled = true` at the end of the handler ensures the view continues to receive touch events.
 
 For `Pressed` events, the `TouchAction` handler calls the `HitTest` method of `CroppingRectangle`. If this returns an index other than &ndash;1, then one of the corners of the cropping rectangle is being manipulated. That index and an offset of the actual touch point from the corner is stored in a `TouchPoint` object and added to the `touchPoints` dictionary.
 
@@ -478,8 +465,7 @@ public partial class PhotoCroppingPage : ContentPage
     {
         InitializeComponent ();
 
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-            "SkiaSharpFormsDemos.Media.MountainClimbers.jpg");
+        SKBitmap bitmap = BitmapExtensions.LoadBitmap("MountainClimbers.jpg");
 
         photoCropper = new PhotoCropperCanvasView(bitmap);
         canvasViewHost.Children.Add(photoCropper);

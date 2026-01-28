@@ -1,22 +1,19 @@
-﻿using System;
+using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
-
-using TouchTracking;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
-using Microsoft.Maui;
-using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Transforms
 {
     public partial class SingleFingerCornerScalePage : ContentPage
     {
-        SKBitmap bitmap;
+        SKBitmap? bitmap;
         SKMatrix currentMatrix = SKMatrix.Identity;
 
         // Information for translating and scaling
@@ -32,13 +29,14 @@ namespace DocsSamplesApp.Transforms
         {
             InitializeComponent();
 
-            string resourceID = "DocsSamplesApp.Media.SeatedMonkey.jpg";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
+            _ = LoadBitmapAsync();
+        }
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                bitmap = SKBitmap.Decode(stream);
-            }
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -49,21 +47,24 @@ namespace DocsSamplesApp.Transforms
 
             canvas.Clear();
 
+            if (bitmap is null)
+                return;
+
             canvas.SetMatrix(currentMatrix);
             canvas.DrawBitmap(bitmap, 0, 0);
         }
 
-        void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+        void OnTouch(object sender, SKTouchEventArgs e)
         {
-            // Convert Xamarin.Forms point to pixels
-            Point pt = args.Location;
-            SKPoint point =
-                new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                            (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+            if (bitmap is null)
+                return;
 
-            switch (args.Type)
+            // Location is already in pixels with built-in touch
+            SKPoint point = e.Location;
+
+            switch (e.ActionType)
             {
-                case TouchActionType.Pressed:
+                case SKTouchAction.Pressed:
                     // Track only one finger
                     if (touchId.HasValue)
                         return;
@@ -88,13 +89,13 @@ namespace DocsSamplesApp.Transforms
                     }
 
                     // Common for either pan or scale
-                    touchId = args.Id;
+                    touchId = e.Id;
                     pressedLocation = point;
                     pressedMatrix = currentMatrix;
                     break;
 
-                case TouchActionType.Moved:
-                    if (!touchId.HasValue || args.Id != touchId.Value)
+                case SKTouchAction.Moved:
+                    if (!touchId.HasValue || e.Id != touchId.Value)
                         return;
 
                     SKMatrix matrix = SKMatrix.Identity;
@@ -119,11 +120,13 @@ namespace DocsSamplesApp.Transforms
                     canvasView.InvalidateSurface();
                     break;
 
-                case TouchActionType.Released:
-                case TouchActionType.Cancelled:
+                case SKTouchAction.Released:
+                case SKTouchAction.Cancelled:
                     touchId = null;
                     break;
             }
+
+            e.Handled = true;
         }
     }
 }

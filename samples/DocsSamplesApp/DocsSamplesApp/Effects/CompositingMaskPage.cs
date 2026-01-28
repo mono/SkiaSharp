@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -11,9 +12,8 @@ namespace DocsSamplesApp.Effects
 {
 	public class CompositingMaskPage : ContentPage
 	{
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-            typeof(CompositingMaskPage),
-            "DocsSamplesApp.Media.MountainClimbers.jpg");
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
 
         static readonly SKPoint CENTER = new SKPoint(180, 300);
         static readonly float RADIUS = 120;
@@ -22,9 +22,18 @@ namespace DocsSamplesApp.Effects
 		{
             Title = "Compositing Mask";
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
+
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("MountainClimbers.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -34,6 +43,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Find rectangle to display bitmap
             float scale = Math.Min((float)info.Width / bitmap.Width,

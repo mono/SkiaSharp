@@ -16,34 +16,29 @@ An `SKPath` object can be continually updated and displayed. This feature allows
 
 ![An exercise in finger painting](finger-paint-images/fingerpaintsample.png)
 
-The touch support in .NET MAUI does not allow tracking individual fingers on the screen, so a .NET MAUI touch-tracking effect has been developed to provide additional touch support. This effect is described in the article touch-tracking implementations. The sample program includes two pages that use SkiaSharp, including a finger-painting program.
-
-The sample solution includes this touch-tracking event. The .NET Standard library project includes the `TouchEffect` class, the `TouchActionType` enumeration, the `TouchActionEventHandler` delegate, and the `TouchActionEventArgs` class. Each of the platform projects includes a `TouchEffect` class for that platform; the iOS project also contains a `TouchRecognizer` class.
+The `SKCanvasView` has built-in touch support that allows tracking individual fingers on the screen. By setting `EnableTouchEvents="True"` and handling the `Touch` event, you can easily implement multi-touch drawing scenarios.
 
 The **Finger Paint** page in **SkiaSharpFormsDemos** is a simplified implementation of finger painting. It does not allow selecting color or stroke width, it has no way to clear the canvas, and of course you can't save your artwork.
 
-The [**FingerPaintPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FingerPaintPage.xaml) file puts the `SKCanvasView` in a single-cell `Grid` and attaches the `TouchEffect` to that `Grid`:
+The [**FingerPaintPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FingerPaintPage.xaml) file defines the `SKCanvasView` with touch events enabled:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-             xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Paths.FingerPaintPage"
              Title="Finger Paint">
 
     <Grid BackgroundColor="White">
         <skia:SKCanvasView x:Name="canvasView"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch"
                            PaintSurface="OnCanvasViewPaintSurface" />
-        <Grid.Effects>
-            <tt:TouchEffect Capture="True"
-                            TouchAction="OnTouchEffectAction" />
-        </Grid.Effects>
     </Grid>
 </ContentPage>
 ```
 
-Attaching the `TouchEffect` directly to the `SKCanvasView` does not work under all platforms.
+The `EnableTouchEvents` property enables touch tracking, and the `Touch` event is raised for each touch action.
 
 The  [**FingerPaintPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FingerPaintPage.xaml.cs) code-behind file defines two collections for storing the `SKPath` objects, as well as an `SKPaint` object for rendering these paths:
 
@@ -72,63 +67,59 @@ public partial class FingerPaintPage : ContentPage
 
 As the name suggests, the `inProgressPaths` dictionary stores the paths that are currently being drawn by one or more fingers. The dictionary key is the touch ID that accompanies the touch events. The `completedPaths` field is a collection of paths that were finished when a finger that was drawing the path lifted from the screen.
 
-The `TouchAction` handler manages these two collections. When a finger first touches the screen, a new `SKPath` is added to `inProgressPaths`. As that finger moves, additional points are added to the path. When the finger is released, the path is transferred to the `completedPaths` collection. You can paint with multiple fingers simultaneously. After each change to one of the paths or collections, the `SKCanvasView` is invalidated:
+The `Touch` handler manages these two collections. When a finger first touches the screen, a new `SKPath` is added to `inProgressPaths`. As that finger moves, additional points are added to the path. When the finger is released, the path is transferred to the `completedPaths` collection. You can paint with multiple fingers simultaneously. After each change to one of the paths or collections, the `SKCanvasView` is invalidated:
 
 ```csharp
 public partial class FingerPaintPage : ContentPage
 {
     ...
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        switch (args.Type)
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
-                if (!inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Pressed:
+                if (!inProgressPaths.ContainsKey(e.Id))
                 {
                     SKPath path = new SKPath();
-                    path.MoveTo(ConvertToPixel(args.Location));
-                    inProgressPaths.Add(args.Id, path);
+                    path.MoveTo(e.Location);
+                    inProgressPaths.Add(e.Id, path);
                     canvasView.InvalidateSurface();
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Moved:
+                if (inProgressPaths.ContainsKey(e.Id))
                 {
-                    SKPath path = inProgressPaths[args.Id];
-                    path.LineTo(ConvertToPixel(args.Location));
+                    SKPath path = inProgressPaths[e.Id];
+                    path.LineTo(e.Location);
                     canvasView.InvalidateSurface();
                 }
                 break;
 
-            case TouchActionType.Released:
-                if (inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Released:
+                if (inProgressPaths.ContainsKey(e.Id))
                 {
-                    completedPaths.Add(inProgressPaths[args.Id]);
-                    inProgressPaths.Remove(args.Id);
+                    completedPaths.Add(inProgressPaths[e.Id]);
+                    inProgressPaths.Remove(e.Id);
                     canvasView.InvalidateSurface();
                 }
                 break;
 
-            case TouchActionType.Cancelled:
-                if (inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Cancelled:
+                if (inProgressPaths.ContainsKey(e.Id))
                 {
-                    inProgressPaths.Remove(args.Id);
+                    inProgressPaths.Remove(e.Id);
                     canvasView.InvalidateSurface();
                 }
                 break;
         }
+        e.Handled = true;
     }
     ...
-    SKPoint ConvertToPixel(Point pt)
-    {
-        return new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                           (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
-    }
 }
 ```
 
-The points accompanying the touch-tracking events are .NET MAUI coordinates; these must be converted to SkiaSharp coordinates, which are pixels. That's the purpose of the `ConvertToPixel` method.
+The `e.Location` property provides the touch location already in pixel coordinates, so no conversion is necessary. Setting `e.Handled = true` ensures that the view continues to receive touch events for the same finger.
 
 The `PaintSurface` handler then simply renders both collections of paths. The earlier completed paths appear underneath the paths in progress:
 
@@ -164,4 +155,3 @@ You've now seen how to draw lines and to define curves using parametric equation
 ## Related Links
 
 - [SkiaSharp APIs](/dotnet/api/skiasharp)
-- touch-tracking implementations

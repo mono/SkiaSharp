@@ -309,13 +309,9 @@ The code-behind file loads the two bitmaps that it needs and handles the `Clicke
 ```csharp
 public partial class BrickWallCompositingPage : ContentPage
 {
-    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(BrickWallCompositingPage),
-        "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg");
+    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmap("SeatedMonkey.jpg");
 
-    SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(BrickWallCompositingPage),
-        "SkiaSharpFormsDemos.Media.SeatedMonkeyMatte.png");
+    SKBitmap matteBitmap = BitmapExtensions.LoadBitmap("SeatedMonkeyMatte.png");
 
     int step = 0;
 
@@ -654,9 +650,7 @@ You can use transparent gradients for some different effects. One possibility is
 ```csharp
 public class CompositingMaskPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(CompositingMaskPage),
-        "SkiaSharpFormsDemos.Media.MountainClimbers.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("MountainClimbers.jpg");
 
     static readonly SKPoint CENTER = new SKPoint(180, 300);
     static readonly float RADIUS = 120;
@@ -766,13 +760,9 @@ The code-behind file loads two bitmap resources to demonstrate the transition. T
 ```csharp
 public partial class GradientTransitionsPage : ContentPage
 {
-    SKBitmap bitmap1 = BitmapExtensions.LoadBitmapResource(
-        typeof(GradientTransitionsPage),
-        "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg");
+    SKBitmap bitmap1 = BitmapExtensions.LoadBitmap("SeatedMonkey.jpg");
 
-    SKBitmap bitmap2 = BitmapExtensions.LoadBitmapResource(
-        typeof(GradientTransitionsPage),
-        "SkiaSharpFormsDemos.Media.FacePalm.jpg");
+    SKBitmap bitmap2 = BitmapExtensions.LoadBitmap("FacePalm.jpg");
 
     enum TransitionMode
     {

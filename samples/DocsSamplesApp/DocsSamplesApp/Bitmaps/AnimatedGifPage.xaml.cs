@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -10,14 +10,15 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public partial class AnimatedGifPage : ContentPage
     {
-        SKBitmap[] bitmaps;
-        int[] durations;
-        int[] accumulatedDurations;
+        SKBitmap[]? bitmaps;
+        int[]? durations;
+        int[]? accumulatedDurations;
         int totalDuration;
 
         Stopwatch stopwatch = new Stopwatch();
@@ -29,54 +30,58 @@ namespace DocsSamplesApp.Bitmaps
         {
             InitializeComponent();
 
-            string resourceID = "DocsSamplesApp.Media.Newtons_cradle_animation_book_2.gif";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
+            _ = LoadGifAsync();
+        }
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            using (SKManagedStream skStream = new SKManagedStream(stream))
-            using (SKCodec codec = SKCodec.Create(skStream))
+        async Task LoadGifAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Newtons_cradle_animation_book_2.gif");
+            using SKManagedStream skStream = new SKManagedStream(stream);
+            using SKCodec codec = SKCodec.Create(skStream);
+
+            // Get frame count and allocate bitmaps
+            int frameCount = codec.FrameCount;
+            bitmaps = new SKBitmap[frameCount];
+            durations = new int[frameCount];
+            accumulatedDurations = new int[frameCount];
+            totalDuration = 0;
+
+            // Note: There's also a RepetitionCount property of SKCodec not used here
+
+            // Loop through the frames
+            for (int frame = 0; frame < frameCount; frame++)
             {
-                // Get frame count and allocate bitmaps
-                int frameCount = codec.FrameCount;
-                bitmaps = new SKBitmap[frameCount];
-                durations = new int[frameCount];
-                accumulatedDurations = new int[frameCount];
+                // From the FrameInfo collection, get the duration of each frame
+                durations[frame] = codec.FrameInfo[frame].Duration;
 
-                // Note: There's also a RepetitionCount property of SKCodec not used here
+                // Create a full-color bitmap for each frame
+                SKImageInfo imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height);
+                bitmaps[frame] = new SKBitmap(imageInfo);
 
-                // Loop through the frames
-                for (int frame = 0; frame < frameCount; frame++)
-                {
-                    // From the FrameInfo collection, get the duration of each frame
-                    durations[frame] = codec.FrameInfo[frame].Duration;
+                // Get the address of the pixels in that bitmap
+                IntPtr pointer = bitmaps[frame].GetPixels();
 
-                    // Create a full-color bitmap for each frame
-                    SKImageInfo imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height);
-                    bitmaps[frame] = new SKBitmap(imageInfo);
+                // Create an SKCodecOptions value to specify the frame
+                SKCodecOptions codecOptions = new SKCodecOptions(frame);
 
-                    // Get the address of the pixels in that bitmap
-                    IntPtr pointer = bitmaps[frame].GetPixels();
-
-                    // Create an SKCodecOptions value to specify the frame
-                    SKCodecOptions codecOptions = new SKCodecOptions(frame);
-
-                    // Copy pixels from the frame into the bitmap
-                    codec.GetPixels(imageInfo, pointer, codecOptions);
-                }
-
-                // Sum up the total duration
-                for (int frame = 0; frame < durations.Length; frame++)
-                {
-                    totalDuration += durations[frame];
-                }
-
-                // Calculate the accumulated durations 
-                for (int frame = 0; frame < durations.Length; frame++)
-                {
-                    accumulatedDurations[frame] = durations[frame] +
-                        (frame == 0 ? 0 : accumulatedDurations[frame - 1]);
-                }
+                // Copy pixels from the frame into the bitmap
+                codec.GetPixels(imageInfo, pointer, codecOptions);
             }
+
+            // Sum up the total duration
+            for (int frame = 0; frame < durations.Length; frame++)
+            {
+                totalDuration += durations[frame];
+            }
+
+            // Calculate the accumulated durations 
+            for (int frame = 0; frame < durations.Length; frame++)
+            {
+                accumulatedDurations[frame] = durations[frame] +
+                    (frame == 0 ? 0 : accumulatedDurations[frame - 1]);
+            }
+
+            canvasView.InvalidateSurface();
         }
 
         protected override void OnAppearing()
@@ -99,6 +104,8 @@ namespace DocsSamplesApp.Bitmaps
 
         bool OnTimerTick()
         {
+            if (bitmaps is null || accumulatedDurations is null || totalDuration == 0)
+                return isAnimating;
             int msec = (int)(stopwatch.ElapsedMilliseconds % totalDuration);
             int frame = 0;
 
@@ -128,6 +135,9 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear(SKColors.Black);
+
+            if (bitmaps is null)
+                return;
 
             // Get the bitmap and center it
             SKBitmap bitmap = bitmaps[currentFrame];

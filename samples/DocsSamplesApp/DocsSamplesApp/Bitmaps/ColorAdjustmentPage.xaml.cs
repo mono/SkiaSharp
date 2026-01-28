@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -7,26 +9,35 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public partial class ColorAdjustmentPage : ContentPage
     {
-        SKBitmap srcBitmap =
-            BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
-                                                "DocsSamplesApp.Media.Banana.jpg");
-        SKBitmap dstBitmap;
+        SKBitmap? srcBitmap;
+        SKBitmap? dstBitmap;
 
         public ColorAdjustmentPage()
         {
             InitializeComponent();
+            _ = LoadBitmapAsync();
+        }
 
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+            srcBitmap = SKBitmap.Decode(stream);
             dstBitmap = new SKBitmap(srcBitmap.Width, srcBitmap.Height);
             OnSliderValueChanged(null, null);
+            canvasView.InvalidateSurface();
         }
 
         void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
         {
+            if (srcBitmap is null || dstBitmap is null)
+                return;
+
             float hueAdjust = (float)hueSlider.Value;
             hueLabel.Text = $"Hue Adjustment: {hueAdjust:F0}";
 
@@ -109,6 +120,10 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (dstBitmap is null)
+                return;
+
             canvas.DrawBitmap(dstBitmap, info.Rect, BitmapStretch.Uniform);
         }
     }

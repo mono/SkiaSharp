@@ -434,7 +434,7 @@ If you use that last method, keep in mind that the `SKRect` structure is not cap
 
 One way to get a feel for the affine transform is by interactively moving three corners of a bitmap around the screen and seeing what transform results. This is the idea behind the **Show Affine Matrix** page. This page requires two other classes that are also used in other demonstrations:
 
-The [`TouchPoint`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/TouchPoint.cs) class displays a translucent circle that can be dragged around the screen. `TouchPoint` requires that an `SKCanvasView` or an element that is a parent of an `SKCanvasView` have the [`TouchEffect`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/TouchEffect.cs) attached. Set the `Capture` property to `true`. In the `TouchAction` event handler, the program must call the `ProcessTouchEvent` method in `TouchPoint` for each `TouchPoint` instance. The method returns `true` if the touch event resulted in the touch point moving. Also, the `PaintSurface` handler must call the `Paint` method in each `TouchPoint` instance, passing to it the `SKCanvas` object.
+The [`TouchPoint`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/TouchPoint.cs) class displays a translucent circle that can be dragged around the screen. `TouchPoint` requires that an `SKCanvasView` have touch events enabled via the `EnableTouchEvents` property set to `True`. In the `Touch` event handler, the program must call the `ProcessTouchEvent` method in `TouchPoint` for each `TouchPoint` instance. The method returns `true` if the touch event resulted in the touch point moving. Also, the `PaintSurface` handler must call the `Paint` method in each `TouchPoint` instance, passing to it the `SKCanvas` object.
 
 `TouchPoint` demonstrates a common way that a SkiaSharp visual can be encapsulated in a separate class. The class can define properties for specifying characteristics of the visual, and a method named `Paint` with an `SKCanvas` argument can render it.
 
@@ -442,13 +442,13 @@ The `Center` property of `TouchPoint` indicates the location of the object. This
 
 The **Show Affine Matrix Page** also requires the [`MatrixDisplay`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/MatrixDisplay.cs) class. This class displays the cells of an `SKMatrix` object. It has two public methods: `Measure` to obtain the dimensions of the rendered matrix, and `Paint` to display it. The class contains a `MatrixPaint` property of type `SKPaint` that can be replaced for a different font size or color.
 
-The [**ShowAffineMatrixPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml) file instantiates the `SKCanvasView` and attaches a `TouchEffect`. The [**ShowAffineMatrixPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml.cs) code-behind file creates three `TouchPoint` objects and then sets them to positions corresponding to three corners of a bitmap that it loads from an embedded resource:
+The [**ShowAffineMatrixPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml) file instantiates the `SKCanvasView` with touch events enabled. The [**ShowAffineMatrixPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml.cs) code-behind file creates three `TouchPoint` objects and then sets them to positions corresponding to three corners of a bitmap that it loads from the Resources/Raw folder:
 
 ```csharp
 public partial class ShowAffineMatrixPage : ContentPage
 {
     SKMatrix matrix;
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
     SKSize bitmapSize;
 
     TouchPoint[] touchPoints = new TouchPoint[3];
@@ -459,15 +459,15 @@ public partial class ShowAffineMatrixPage : ContentPage
     {
         InitializeComponent();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap = SKBitmap.Decode(stream);
 
-        touchPoints[0] = new TouchPoint(100, 100);                  // upper-left corner
+        touchPoints[0] = new TouchPoint(100, 100);                        // upper-left corner
         touchPoints[1] = new TouchPoint(bitmap.Width + 100, 100);   // upper-right corner
         touchPoints[2] = new TouchPoint(100, bitmap.Height + 100);  // lower-left corner
 
@@ -475,6 +475,8 @@ public partial class ShowAffineMatrixPage : ContentPage
         matrix = ComputeMatrix(bitmapSize, touchPoints[0].Center,
                                            touchPoints[1].Center,
                                            touchPoints[2].Center);
+
+        canvasView.InvalidateSurface();
     }
     ...
 }
@@ -482,22 +484,19 @@ public partial class ShowAffineMatrixPage : ContentPage
 
 An affine matrix is uniquely defined by three points. The three `TouchPoint` objects correspond to the upper-left, upper-right, and lower-left corners of the bitmap. Because an affine matrix is only capable of transforming a rectangle into a parallelogram, the fourth point is implied by the other three. The constructor concludes with a call to `ComputeMatrix`, which calculates the cells of an `SKMatrix` object from these three points.
 
-The `TouchAction` handler calls the `ProcessTouchEvent` method of each `TouchPoint`. The `scale` value converts from .NET MAUI coordinates to pixels:
+The `Touch` handler calls the `ProcessTouchEvent` method of each `TouchPoint`. The touch location is already in pixel coordinates:
 
 ```csharp
 public partial class ShowAffineMatrixPage : ContentPage
 {
     ...
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
         bool touchPointMoved = false;
 
         foreach (TouchPoint touchPoint in touchPoints)
         {
-            float scale = canvasView.CanvasSize.Width / (float)canvasView.Width;
-            SKPoint point = new SKPoint(scale * (float)args.Location.X,
-                                        scale * (float)args.Location.Y);
-            touchPointMoved |= touchPoint.ProcessTouchEvent(args.Id, args.Type, point);
+            touchPointMoved |= touchPoint.ProcessTouchEvent(e.Id, e.ActionType, e.Location);
         }
 
         if (touchPointMoved)
@@ -507,6 +506,8 @@ public partial class ShowAffineMatrixPage : ContentPage
                                                touchPoints[2].Center);
             canvasView.InvalidateSurface();
         }
+
+        e.Handled = true;
     }
     ...
 }
@@ -558,6 +559,9 @@ public partial class ShowAffineMatrixPage : ContentPage
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear();
+
+        if (bitmap is null)
+            return;
 
         // Display the bitmap using the matrix
         canvas.Save();

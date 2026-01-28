@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -7,18 +9,25 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public partial class BitmapFlipperPage : ContentPage
     {
-        SKBitmap bitmap =
-            BitmapExtensions.LoadBitmapResource(typeof(BitmapRotatorPage),
-                "DocsSamplesApp.Media.SeatedMonkey.jpg");
+        SKBitmap? bitmap;
 
         public BitmapFlipperPage()
         {
             InitializeComponent();
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -28,11 +37,18 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
+
             canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
         }
 
         void OnFlipVerticalClicked(object sender, EventArgs args)
         {
+            if (bitmap is null)
+                return;
+
             SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
 
             using (SKCanvas canvas = new SKCanvas(flippedBitmap))
@@ -48,6 +64,9 @@ namespace DocsSamplesApp.Bitmaps
 
         void OnFlipHorizontalClicked(object sender, EventArgs args)
         {
+            if (bitmap is null)
+                return;
+
             SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
 
             using (SKCanvas canvas = new SKCanvas(flippedBitmap))

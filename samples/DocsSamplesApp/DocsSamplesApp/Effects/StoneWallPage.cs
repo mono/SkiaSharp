@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -12,17 +13,25 @@ namespace DocsSamplesApp.Effects
 {
     public class StoneWallPage : ContentPage
     {
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                            typeof(StoneWallPage),
-                            "DocsSamplesApp.Media.StoneWallTile.jpg");
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
 
         public StoneWallPage()
         {
             Title = "Stone Wall";
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
+
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("StoneWallTile.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -32,6 +41,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             using (SKPaint paint = new SKPaint())
             {

@@ -492,9 +492,9 @@ The code-behind file is not generalized to play any animated GIF file. It ignore
 
 The use of SkisSharp to extract the frames of an animated GIF file does not seem to be documented anywhere, so the description of the code that follows is more detailed than usual:
 
-The decoding of the animated GIF file occurs in the page's constructor, and requires that the `Stream` object referencing the bitmap be used to create an `SKManagedStream` object and then an [`SKCodec`](xref:SkiaSharp.SKCodec) object. The [`FrameCount`](xref:SkiaSharp.SKCodec.FrameCount) property indicates the number of frames that make up the animation.
+The decoding of the animated GIF file occurs in the `LoadAnimatedGifAsync` method, and requires that the `Stream` object referencing the bitmap be used to create an `SKManagedStream` object and then an [`SKCodec`](xref:SkiaSharp.SKCodec) object. The [`FrameCount`](xref:SkiaSharp.SKCodec.FrameCount) property indicates the number of frames that make up the animation.
 
-These frames are eventually saved as individual bitmaps, so the constructor uses `FrameCount` to allocate an array of type `SKBitmap` as well as two `int` arrays for the duration of each frame and (to ease the animation logic) the accumulated durations.
+These frames are eventually saved as individual bitmaps, so the method uses `FrameCount` to allocate an array of type `SKBitmap` as well as two `int` arrays for the duration of each frame and (to ease the animation logic) the accumulated durations.
 
 The [`FrameInfo`](xref:SkiaSharp.SKCodec.FrameInfo) property of `SKCodec` class is an array of [`SKCodecFrameInfo`](xref:SkiaSharp.SKCodecFrameInfo) values, one for each frame, but the only thing this program takes from that structure is the [`Duration`](xref:SkiaSharp.SKCodecFrameInfo.Duration) of the frame in milliseconds.
 
@@ -505,7 +505,7 @@ The `GetPixels` method of `SKBitmap` returns an `IntPtr` referencing the pixel b
 ```csharp
 public partial class AnimatedGifPage : ContentPage
 {
-    SKBitmap[] bitmaps;
+    SKBitmap[]? bitmaps;
     int[] durations;
     int[] accumulatedDurations;
     int totalDuration;
@@ -515,54 +515,58 @@ public partial class AnimatedGifPage : ContentPage
     {
         InitializeComponent ();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.Newtons_cradle_animation_book_2.gif";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadAnimatedGifAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        using (SKManagedStream skStream = new SKManagedStream(stream))
-        using (SKCodec codec = SKCodec.Create(skStream))
+    async Task LoadAnimatedGifAsync()
+    {
+        // Load the animated GIF from Resources/Raw folder
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("Newtons_cradle_animation_book_2.gif");
+        using SKManagedStream skStream = new SKManagedStream(stream);
+        using SKCodec codec = SKCodec.Create(skStream);
+
+        // Get frame count and allocate bitmaps
+        int frameCount = codec.FrameCount;
+        bitmaps = new SKBitmap[frameCount];
+        durations = new int[frameCount];
+        accumulatedDurations = new int[frameCount];
+
+        // Note: There's also a RepetitionCount property of SKCodec not used here
+
+        // Loop through the frames
+        for (int frame = 0; frame < frameCount; frame++)
         {
-            // Get frame count and allocate bitmaps
-            int frameCount = codec.FrameCount;
-            bitmaps = new SKBitmap[frameCount];
-            durations = new int[frameCount];
-            accumulatedDurations = new int[frameCount];
+            // From the FrameInfo collection, get the duration of each frame
+            durations[frame] = codec.FrameInfo[frame].Duration;
 
-            // Note: There's also a RepetitionCount property of SKCodec not used here
+            // Create a full-color bitmap for each frame
+            SKImageInfo imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height);
+            bitmaps[frame] = new SKBitmap(imageInfo);
 
-            // Loop through the frames
-            for (int frame = 0; frame < frameCount; frame++)
-            {
-                // From the FrameInfo collection, get the duration of each frame
-                durations[frame] = codec.FrameInfo[frame].Duration;
+            // Get the address of the pixels in that bitmap
+            IntPtr pointer = bitmaps[frame].GetPixels();
 
-                // Create a full-color bitmap for each frame
-                SKImageInfo imageInfo = code.new SKImageInfo(codec.Info.Width, codec.Info.Height);
-                bitmaps[frame] = new SKBitmap(imageInfo);
+            // Create an SKCodecOptions value to specify the frame
+            SKCodecOptions codecOptions = new SKCodecOptions(frame, false);
 
-                // Get the address of the pixels in that bitmap
-                IntPtr pointer = bitmaps[frame].GetPixels();
-
-                // Create an SKCodecOptions value to specify the frame
-                SKCodecOptions codecOptions = new SKCodecOptions(frame, false);
-
-                // Copy pixels from the frame into the bitmap
-                codec.GetPixels(imageInfo, pointer, codecOptions);
-            }
-
-            // Sum up the total duration
-            for (int frame = 0; frame < durations.Length; frame++)
-            {
-                totalDuration += durations[frame];
-            }
-
-            // Calculate the accumulated durations
-            for (int frame = 0; frame < durations.Length; frame++)
-            {
-                accumulatedDurations[frame] = durations[frame] +
-                    (frame == 0 ? 0 : accumulatedDurations[frame - 1]);
-            }
+            // Copy pixels from the frame into the bitmap
+            codec.GetPixels(imageInfo, pointer, codecOptions);
         }
+
+        // Sum up the total duration
+        for (int frame = 0; frame < durations.Length; frame++)
+        {
+            totalDuration += durations[frame];
+        }
+
+        // Calculate the accumulated durations
+        for (int frame = 0; frame < durations.Length; frame++)
+        {
+            accumulatedDurations[frame] = durations[frame] +
+                (frame == 0 ? 0 : accumulatedDurations[frame - 1]);
+        }
+
+        canvasView.InvalidateSurface();
     }
     ···
 }
@@ -577,7 +581,7 @@ The remainder of the code-behind file is dedicated to animation. The `Device.Sta
 ```csharp
 public partial class AnimatedGifPage : ContentPage
 {
-    SKBitmap[] bitmaps;
+    SKBitmap[]? bitmaps;
     int[] durations;
     int[] accumulatedDurations;
     int totalDuration;
@@ -635,6 +639,9 @@ public partial class AnimatedGifPage : ContentPage
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear(SKColors.Black);
+
+        if (bitmaps is null)
+            return;
 
         // Get the bitmap and center it
         SKBitmap bitmap = bitmaps[currentFrame];

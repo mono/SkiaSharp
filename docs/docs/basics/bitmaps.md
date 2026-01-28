@@ -23,18 +23,18 @@ A SkiaSharp bitmap is an object of type [`SKBitmap`](xref:SkiaSharp.SKBitmap). T
 The **Basic Bitmaps** page in the **SkiaSharpFormsDemos** program demonstrates how to load bitmaps from three different sources:
 
 - From over the Internet
-- From a resource embedded in the executable
+- From a raw asset in the app package
 - From the user's photo library
 
-Three `SKBitmap` objects for these three sources are defined as fields in the [`BasicBitmapsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/BasicBitmapsPage.cs) class:
+Three nullable `SKBitmap?` fields for these three sources are defined in the [`BasicBitmapsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/BasicBitmapsPage.cs) class. This pattern allows bitmaps to load asynchronously without blocking the UI thread:
 
 ```csharp
 public class BasicBitmapsPage : ContentPage
 {
     SKCanvasView canvasView;
-    SKBitmap webBitmap;
-    SKBitmap resourceBitmap;
-    SKBitmap libraryBitmap;
+    SKBitmap? webBitmap;
+    SKBitmap? resourceBitmap;
+    SKBitmap? libraryBitmap;
 
     public BasicBitmapsPage()
     {
@@ -49,6 +49,13 @@ public class BasicBitmapsPage : ContentPage
 }
 ```
 
+The key advantages of using nullable `SKBitmap?` fields:
+
+1. **Loading happens asynchronously** without blocking the UI thread
+2. **Simple null check** in the `PaintSurface` handler before drawing
+3. **Fire-and-forget the async load** with `_ = LoadBitmapAsync()`
+4. **Call `InvalidateSurface()`** when loading completes to trigger a repaint
+
 ## Loading a Bitmap from the Web
 
 To load a bitmap based on a URL, you can use the [`HttpClient`](/dotnet/api/system.net.http.httpclient?view=netstandard-2.0&preserve-view=true) class. You should instantiate only one instance of `HttpClient` and reuse it, so store it as a field:
@@ -59,14 +66,17 @@ HttpClient httpClient = new HttpClient();
 
 When using `HttpClient` with iOS and Android applications, you'll want to set project properties as described in the documents on **Transport Layer Security (TLS) 1.2**.
 
-Because it's most convenient to use the `await` operator with `HttpClient`, the code can't be executed in the `BasicBitmapsPage` constructor. Instead, it's part of the `OnAppearing` override. The URL here points to a web resource with sample bitmaps. A package on the web site allows appending a specification for resizing the bitmap to a particular width:
+Because it's most convenient to use the `await` operator with `HttpClient`, the code can't be executed in the `BasicBitmapsPage` constructor. Instead, fire-and-forget the async load from the constructor. The URL here points to a web resource with sample bitmaps. A package on the web site allows appending a specification for resizing the bitmap to a particular width:
 
 ```csharp
-protected override async void OnAppearing()
+public BasicBitmapsPage()
 {
-    base.OnAppearing();
+    // ... setup code ...
+    _ = LoadWebBitmapAsync();
+}
 
-    // Load web bitmap.
+async Task LoadWebBitmapAsync()
+{
     string url = "https://developer.xamarin.com/demo/IMG_3256.JPG?width=480";
 
     try
@@ -83,6 +93,7 @@ protected override async void OnAppearing()
     }
     catch
     {
+        // Handle error silently
     }
 }
 ```
@@ -91,31 +102,34 @@ The Android operating system raises an exception when using the `Stream` returne
 
 The static `SKBitmap.Decode` method is responsible for decoding bitmap files. It works with JPEG, PNG, and GIF bitmap formats, and stores the results in an internal SkiaSharp format. At this point, the `SKCanvasView` needs to be invalidated to allow the `PaintSurface` handler to update the display.
 
-## Loading a Bitmap Resource
+## Loading a Bitmap from a Raw Asset
 
-In terms of code, the easiest approach to loading bitmaps is including a bitmap resource directly in your application. The **SkiaSharpFormsDemos** program includes a folder named **Media** containing several bitmap files, including one named **monkey.png**. For bitmaps stored as program resources, you must use the **Properties** dialog to give the file a **Build Action** of **Embedded Resource**!
+In terms of code, the easiest approach to loading bitmaps is including a bitmap as a raw asset in your application. In .NET MAUI, place image files in the `Resources/Raw` folder with a build action of `MauiAsset`.
 
-Each embedded resource has a *resource ID* that consists of the project name, the folder, and the filename, all connected by periods: **SkiaSharpFormsDemos.Media.monkey.png**. You can get access to this resource by specifying that resource ID as an argument to the [`GetManifestResourceStream`](xref:System.Reflection.Assembly.GetManifestResourceStream(System.String)) method of the [`Assembly`](xref:System.Reflection.Assembly) class:
+You can load raw assets using the `FileSystem.OpenAppPackageFileAsync` method, which only requires the filename. Fire-and-forget the async load from the constructor:
 
 ```csharp
-string resourceID = "SkiaSharpFormsDemos.Media.monkey.png";
-Assembly assembly = GetType().GetTypeInfo().Assembly;
-
-using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+public BasicBitmapsPage()
 {
+    // ... setup code ...
+    _ = LoadResourceBitmapAsync();
+}
+
+async Task LoadResourceBitmapAsync()
+{
+    using Stream stream = await FileSystem.OpenAppPackageFileAsync("monkey.png");
     resourceBitmap = SKBitmap.Decode(stream);
+    canvasView.InvalidateSurface();
 }
 ```
 
-This `Stream` object can be passed directly to the `SKBitmap.Decode` method.
+The `FileSystem` class is in the `Microsoft.Maui.Storage` namespace, which is available by default in .NET MAUI applications. This `Stream` object can be passed directly to the `SKBitmap.Decode` method.
 
 ## Loading a Bitmap from the Photo Library
 
-It's also possible for the user to load a photo from the device's picture library. This facility is not provided by .NET MAUI itself. The job requires a dependency service, such as the one described in the article platform-specific photo picker APIs or MAUI Essentials MediaPicker.
+It's also possible for the user to load a photo from the device's picture library. This facility is not provided by .NET MAUI itself. The job requires using MAUI Essentials MediaPicker.
 
-The **IPhotoLibrary.cs** file in the **SkiaSharpFormsDemos** project and the three **PhotoLibrary.cs** files in the platform projects have been adapted from that article. In addition, the Android **MainActivity.cs** file has been modified as described in the article, and the iOS project has been given permission to access the photo library with two lines towards the bottom of the **info.plist** file.
-
-The `BasicBitmapsPage` constructor adds a `TapGestureRecognizer` to the `SKCanvasView` to be notified of taps. On receipt of a tap, the `Tapped` handler gets access to the picture-picker dependency service and calls `PickPhotoAsync`. If a `Stream` object is returned, then it is passed to the `SKBitmap.Decode` method:
+The `BasicBitmapsPage` constructor adds a `TapGestureRecognizer` to the `SKCanvasView` to be notified of taps. On receipt of a tap, the `Tapped` handler uses MediaPicker to pick a photo and fires off the async load:
 
 ```csharp
 // Add tap gesture recognizer
@@ -123,21 +137,24 @@ TapGestureRecognizer tapRecognizer = new TapGestureRecognizer();
 tapRecognizer.Tapped += async (sender, args) =>
 {
     // Load bitmap from photo library
-    IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
+    var photo = await MediaPicker.PickPhotoAsync();
 
-    using (Stream stream = await photoLibrary.PickPhotoAsync())
+    if (photo != null)
     {
-        if (stream != null)
-        {
-            libraryBitmap = SKBitmap.Decode(stream);
-            canvasView.InvalidateSurface();
-        }
+        _ = LoadLibraryBitmapAsync(photo);
     }
 };
 canvasView.GestureRecognizers.Add(tapRecognizer);
+
+async Task LoadLibraryBitmapAsync(FileResult photo)
+{
+    using Stream stream = await photo.OpenReadAsync();
+    libraryBitmap = SKBitmap.Decode(stream);
+    canvasView.InvalidateSurface();
+}
 ```
 
-Notice that the `Tapped` handler also calls the `InvalidateSurface` method of the `SKCanvasView` object. This generates a new call to the `PaintSurface` handler.
+Notice that the loading method calls `InvalidateSurface()` after decoding the bitmap. This triggers a new call to the `PaintSurface` handler to display the loaded bitmap.
 
 ## Displaying the Bitmaps
 
@@ -151,7 +168,7 @@ public void DrawBitmap (SKBitmap bitmap, Single x, Single y, SKPaint paint = nul
 
 Although an `SKPaint` parameter is defined, it has a default value of `null` and you can ignore it. The pixels of the bitmap are simply transferred to the pixels of the display surface with a one-to-one mapping. You'll see an application for this `SKPaint` argument in the next section on [**SkiaSharp Transparency**](transparency.md).
 
-A program can obtain the pixel dimensions of a bitmap with the [`Width`](xref:SkiaSharp.SKBitmap.Width) and [`Height`](xref:SkiaSharp.SKBitmap.Height) properties. These properties allow the program to calculate coordinates to position the bitmap in the center of the upper-third of the canvas:
+A program can obtain the pixel dimensions of a bitmap with the [`Width`](xref:SkiaSharp.SKBitmap.Width) and [`Height`](xref:SkiaSharp.SKBitmap.Height) properties. These properties allow the program to calculate coordinates to position the bitmap in the center of the upper-third of the canvas. The handler performs a simple null check before drawing:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -162,7 +179,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 
     canvas.Clear();
 
-    if (webBitmap != null)
+    if (webBitmap is not null)
     {
         float x = (info.Width - webBitmap.Width) / 2;
         float y = (info.Height / 3 - webBitmap.Height) / 2;
@@ -172,6 +189,8 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 }
 ```
 
+The simple `is not null` check ensures the bitmap is loaded before attempting to draw it.
+
 The other two bitmaps are displayed with a version of [`DrawBitmap`](xref:SkiaSharp.SKCanvas.DrawBitmap(SkiaSharp.SKBitmap,SkiaSharp.SKRect,SkiaSharp.SKPaint)) with an `SKRect` parameter:
 
 ```csharp
@@ -180,13 +199,13 @@ public void DrawBitmap (SKBitmap bitmap, SKRect dest, SKPaint paint = null)
 
 A third version of [`DrawBitmap`](xref:SkiaSharp.SKCanvas.DrawBitmap(SkiaSharp.SKBitmap,SkiaSharp.SKRect,SkiaSharp.SKRect,SkiaSharp.SKPaint)) has two `SKRect` arguments for specifying a rectangular subset of the bitmap to display, but that version isn't used in this article.
 
-Here's the code to display the bitmap loaded from an embedded resource bitmap:
+Here's the code to display the bitmap loaded from a raw asset, using the same null check:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 {
     ...
-    if (resourceBitmap != null)
+    if (resourceBitmap is not null)
     {
         canvas.DrawBitmap(resourceBitmap,
             new SKRect(0, info.Height / 3, info.Width, 2 * info.Height / 3));
@@ -205,7 +224,7 @@ The third image &mdash; which you can only see if you run the program and load a
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 {
     ...
-    if (libraryBitmap != null)
+    if (libraryBitmap is not null)
     {
         float scale = Math.Min((float)info.Width / libraryBitmap.Width,
                                info.Height / 3f / libraryBitmap.Height);
@@ -241,4 +260,4 @@ You can display bitmaps with various degrees of transparency, and the next artic
 ## Related Links
 
 - [SkiaSharp APIs](/dotnet/api/skiasharp)
-- platform-specific photo picker APIs or MAUI Essentials MediaPicker
+- [MAUI Essentials MediaPicker](/dotnet/maui/platform-integration/device-media/picker)

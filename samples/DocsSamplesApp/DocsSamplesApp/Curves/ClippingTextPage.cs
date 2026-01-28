@@ -1,34 +1,38 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
+
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Curves
 {
     public class ClippingTextPage : ContentPage
     {
-        SKBitmap bitmap;
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
 
         public ClippingTextPage()
         {
             Title = "Clipping Text";
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
 
-            string resourceID = "DocsSamplesApp.Media.PageOfCode.png";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
+            _ = LoadBitmapAsync();
+        }
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                bitmap = SKBitmap.Decode(stream);
-            }
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("PageOfCode.png");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -61,6 +65,9 @@ namespace DocsSamplesApp.Curves
 
             // Reset transforms
             canvas.ResetMatrix();
+
+            if (bitmap is null)
+                return;
 
             // Display bitmap to fill window but maintain aspect ratio
             SKRect rect = new SKRect(0, 0, info.Width, info.Height);

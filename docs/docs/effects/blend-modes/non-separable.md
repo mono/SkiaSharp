@@ -110,9 +110,7 @@ The code-behind file loads one of the bitmap resources, displays that as large a
 ```csharp
 public partial class NonSeparableBlendModesPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(NonSeparableBlendModesPage),
-                        "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("Banana.jpg");
     SKColor color;
 
     public NonSeparableBlendModesPage()
@@ -217,9 +215,7 @@ In the following `BlueBananaPage` class, the **Banana.jpg** bitmap is loaded as 
 ```csharp
 public class BlueBananaPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(BlueBananaPage),
-        "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("Banana.jpg");
 
     SKBitmap blueBananaBitmap;
 
@@ -228,9 +224,7 @@ public class BlueBananaPage : ContentPage
         Title = "Blue Banana";
 
         // Load banana matte bitmap (black on transparent)
-        SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
-            typeof(BlueBananaPage),
-            "SkiaSharpFormsDemos.Media.BananaMatte.png");
+        SKBitmap matteBitmap = BitmapExtensions.LoadBitmap("BananaMatte.png");
 
         // Create a bitmap with a solid blue banana and transparent otherwise
         blueBananaBitmap = new SKBitmap(matteBitmap.Width, matteBitmap.Height);

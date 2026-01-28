@@ -621,8 +621,7 @@ Here's the program except for the crucial `TransferPixels` method that transfers
 public partial class ColorAdjustmentPage : ContentPage
 {
     SKBitmap srcBitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
-                                            "SkiaSharpFormsDemos.Media.Banana.jpg");
+        BitmapExtensions.LoadBitmap("Banana.jpg");
     SKBitmap dstBitmap;
 
     public ColorAdjustmentPage()
@@ -745,8 +744,7 @@ The **Posterize** page performs this process on one of the monkey images:
 public class PosterizePage : ContentPage
 {
     SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
-                                            "SkiaSharpFormsDemos.Media.Banana.jpg");
+        BitmapExtensions.LoadBitmap("Banana.jpg");
     public PosterizePage()
     {
         Title = "Posterize";

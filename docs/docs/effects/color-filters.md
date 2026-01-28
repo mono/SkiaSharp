@@ -117,9 +117,7 @@ where `matrix` is an array of the 20 `float` values. When creating the array in 
 ```csharp
 public class GrayScaleMatrixPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(CenteredTilesPage),
-                        "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("Banana.jpg");
 
     public GrayScaleMatrixPage()
     {
@@ -172,9 +170,7 @@ The **Pastel Matrix** calculates the destination red pixel by attenuating the so
 ```csharp
 public class PastelMatrixPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(PastelMatrixPage),
-                        "SkiaSharpFormsDemos.Media.MountainClimbers.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("MountainClimbers.jpg");
 
     public PastelMatrixPage()
     {
@@ -243,9 +239,7 @@ You can also posterize a bitmap with a color table. The constructor of the **Pos
 ```csharp
 public class PosterizeTablePage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(PosterizeTablePage),
-                        "SkiaSharpFormsDemos.Media.MonkeyFace.png");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("MonkeyFace.png");
 
     byte[] colorTable = new byte[256];
 

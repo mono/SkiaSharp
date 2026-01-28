@@ -3,7 +3,6 @@
                        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                        xmlns:local="clr-namespace:DocsSamplesApp"
                        xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-                       xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="DocsSamplesApp.Curves.EllipticalArcPage"
                        Title="Elliptical Arc">
     <Grid>
@@ -62,13 +61,10 @@
 
         <Grid BackgroundColor="White"
               Grid.Row="6">
-
             <skia:SKCanvasView x:Name="canvasView"
-                           PaintSurface="OnCanvasViewPaintSurface" />
-            <Grid.Effects>
-                <tt:TouchEffect Capture="True"
-                            TouchAction="OnTouchEffectAction" />
-            </Grid.Effects>
+                               EnableTouchEvents="True"
+                               Touch="OnTouch"
+                               PaintSurface="OnCanvasViewPaintSurface" />
         </Grid>
     </Grid>
 </local:InteractivePage>

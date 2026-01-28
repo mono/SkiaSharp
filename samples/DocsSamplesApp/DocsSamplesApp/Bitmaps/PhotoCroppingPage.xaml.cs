@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -7,27 +9,34 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public partial class PhotoCroppingPage : ContentPage
     {
-        PhotoCropperCanvasView photoCropper;
-        SKBitmap croppedBitmap;
+        PhotoCropperCanvasView? photoCropper;
+        SKBitmap? croppedBitmap;
 
         public PhotoCroppingPage ()
         {
             InitializeComponent ();
+            _ = LoadBitmapAsync();
+        }
 
-            SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-                "DocsSamplesApp.Media.MountainClimbers.jpg");
-
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("MountainClimbers.jpg");
+            var bitmap = SKBitmap.Decode(stream);
             photoCropper = new PhotoCropperCanvasView(bitmap);
             canvasViewHost.Children.Add(photoCropper);
         }
 
         void OnDoneButtonClicked(object sender, EventArgs args)
         {
+            if (photoCropper is null)
+                return;
+
             croppedBitmap = photoCropper.CroppedBitmap;
 
             SKCanvasView canvasView = new SKCanvasView();

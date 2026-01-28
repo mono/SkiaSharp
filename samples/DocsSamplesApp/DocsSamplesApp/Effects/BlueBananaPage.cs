@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -12,20 +13,34 @@ namespace DocsSamplesApp.Effects
 {
     public class BlueBananaPage : ContentPage
     {
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-            typeof(BlueBananaPage),
-            "DocsSamplesApp.Media.Banana.jpg");
-
-        SKBitmap blueBananaBitmap;
+        SKBitmap? bitmap;
+        SKBitmap? blueBananaBitmap;
+        SKCanvasView canvasView;
 
         public BlueBananaPage()
         {
             Title = "Blue Banana";
 
+            canvasView = new SKCanvasView();
+            canvasView.PaintSurface += OnCanvasViewPaintSurface;
+            Content = canvasView;
+
+            _ = LoadBitmapAsync();
+            _ = LoadMatteBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
+
+        async Task LoadMatteBitmapAsync()
+        {
             // Load banana matte bitmap (black on transparent)
-            SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
-                typeof(BlueBananaPage),
-                "DocsSamplesApp.Media.BananaMatte.png");
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("BananaMatte.png");
+            SKBitmap matteBitmap = SKBitmap.Decode(stream);
 
             // Create a bitmap with a solid blue banana and transparent otherwise
             blueBananaBitmap = new SKBitmap(matteBitmap.Width, matteBitmap.Height);
@@ -43,9 +58,7 @@ namespace DocsSamplesApp.Effects
                 }
             }
 
-            SKCanvasView canvasView = new SKCanvasView();
-            canvasView.PaintSurface += OnCanvasViewPaintSurface;
-            Content = canvasView;
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -55,6 +68,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null || blueBananaBitmap is null)
+                return;
 
             canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
 

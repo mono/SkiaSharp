@@ -16,42 +16,37 @@ In multi-touch environments such as those on mobile devices, users often use the
 
 ![A bitmap subjected to translation, scaling, and rotation](touch-images/touchmanipulationsexample.png)
 
-All the samples shown here use the .NET MAUI touch-tracking effect presented in the article touch-tracking implementations.
+All the samples shown here use the built-in touch support in `SKCanvasView`. To enable touch events, set `EnableTouchEvents="True"` on the `SKCanvasView` and handle the `Touch` event. The event provides `SKTouchEventArgs` which includes the touch `Location` already in pixel coordinates and an `ActionType` property indicating the type of touch action.
 
 ## Dragging and Translation
 
 One of the most important applications of matrix transforms is touch processing. A single [`SKMatrix`](xref:SkiaSharp.SKMatrix) value can consolidate a series of touch operations. 
 
-For single-finger dragging, the `SKMatrix` value performs translation. This is demonstrated in the **Bitmap Dragging** page. The XAML file instantiates an `SKCanvasView` in a .NET MAUI `Grid`. A `TouchEffect` object has been added to the `Effects` collection of that `Grid`:
+For single-finger dragging, the `SKMatrix` value performs translation. This is demonstrated in the **Bitmap Dragging** page. The XAML file instantiates an `SKCanvasView` with touch events enabled:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-             xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Transforms.BitmapDraggingPage"
              Title="Bitmap Dragging">
     
     <Grid BackgroundColor="White">
         <skia:SKCanvasView x:Name="canvasView"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch"
                            PaintSurface="OnCanvasViewPaintSurface" />
-        <Grid.Effects>
-            <tt:TouchEffect Capture="True"
-                            TouchAction="OnTouchEffectAction" />
-        </Grid.Effects>
     </Grid>
 </ContentPage>
 ```
 
-In theory, the `TouchEffect` object could be added directly to the `Effects` collection of the `SKCanvasView`, but that doesn't work on all platforms. Because the `SKCanvasView` is the same size as the `Grid` in this configuration, attaching it to the `Grid` works just as well.
-
-The code-behind file loads in a bitmap resource in its constructor and displays it in the `PaintSurface` handler:
+The code-behind file loads in a bitmap from the Resources/Raw folder in its constructor and displays it in the `PaintSurface` handler:
 
 ```csharp
 public partial class BitmapDraggingPage : ContentPage
 {
     // Bitmap and matrix for display
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
     SKMatrix matrix = SKMatrix.MakeIdentity();
     ···
 
@@ -59,13 +54,14 @@ public partial class BitmapDraggingPage : ContentPage
     {
         InitializeComponent();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap = SKBitmap.Decode(stream);
+        canvasView.InvalidateSurface();
     }
     ···
     void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -76,6 +72,9 @@ public partial class BitmapDraggingPage : ContentPage
 
         canvas.Clear();
 
+        if (bitmap is null)
+            return;
+
         // Display the bitmap
         canvas.SetMatrix(matrix);
         canvas.DrawBitmap(bitmap, new SKPoint());
@@ -83,9 +82,9 @@ public partial class BitmapDraggingPage : ContentPage
 }
 ```
 
-Without any further code, the `SKMatrix` value is always the identify matrix, and it would have no effect on the display of the bitmap. The goal of the `OnTouchEffectAction` handler set in the XAML file is to alter the matrix value to reflect touch manipulations.
+Without any further code, the `SKMatrix` value is always the identify matrix, and it would have no effect on the display of the bitmap. The goal of the `OnTouch` handler set in the XAML file is to alter the matrix value to reflect touch manipulations.
 
-The `OnTouchEffectAction` handler begins by converting the .NET MAUI `Point` value into a SkiaSharp `SKPoint` value. This is a simple matter of scaling based on the `Width` and `Height` properties of `SKCanvasView` (which are device-independent units) and the `CanvasSize` property, which is in units of pixels:
+The `OnTouch` handler receives touch events with the location already in pixel coordinates via `SKTouchEventArgs`:
 
 ```csharp
 public partial class BitmapDraggingPage : ContentPage
@@ -95,17 +94,16 @@ public partial class BitmapDraggingPage : ContentPage
     long touchId = -1;
     SKPoint previousPoint;
     ···
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        // Convert .NET MAUI point to pixels
-        Point pt = args.Location;
-        SKPoint point = 
-            new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                        (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+        if (bitmap is null)
+            return;
 
-        switch (args.Type)
+        SKPoint point = e.Location;
+
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 // Find transformed bitmap rectangle
                 SKRect rect = new SKRect(0, 0, bitmap.Width, bitmap.Height);
                 rect = matrix.MapRect(rect);
@@ -113,13 +111,13 @@ public partial class BitmapDraggingPage : ContentPage
                 // Determine if the touch was within that rectangle
                 if (rect.Contains(point))
                 {
-                    touchId = args.Id;
+                    touchId = e.Id;
                     previousPoint = point;
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (touchId == args.Id)
+            case SKTouchAction.Moved:
+                if (touchId == e.Id)
                 {
                     // Adjust the matrix for the new position
                     matrix.TransX += point.X - previousPoint.X;
@@ -129,21 +127,23 @@ public partial class BitmapDraggingPage : ContentPage
                 }
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
                 touchId = -1;
                 break;
         }
+
+        e.Handled = true;
     }
     ···
 }
 ```
 
-When a finger first touches the screen, an event of type `TouchActionType.Pressed` is fired. The first task is to determine if the finger is touching the bitmap. Such a task is often called _hit-testing_. In this case, hit-testing can be accomplished by creating an `SKRect` value corresponding to the bitmap, applying the matrix transform to it with `MapRect`, and then determining if the touch point is inside the transformed rectangle.
+When a finger first touches the screen, an event of type `SKTouchAction.Pressed` is fired. The first task is to determine if the finger is touching the bitmap. Such a task is often called _hit-testing_. In this case, hit-testing can be accomplished by creating an `SKRect` value corresponding to the bitmap, applying the matrix transform to it with `MapRect`, and then determining if the touch point is inside the transformed rectangle.
 
 If that is the case, then the `touchId` field is set to the touch ID, and the finger position is saved.
 
-For the `TouchActionType.Moved` event, the translation factors of the `SKMatrix` value are adjusted based on the current position of the finger, and the new position of the finger. That new position is saved for the next time through, and the `SKCanvasView` is invalidated.
+For the `SKTouchAction.Moved` event, the translation factors of the `SKMatrix` value are adjusted based on the current position of the finger, and the new position of the finger. That new position is saved for the next time through, and the `SKCanvasView` is invalidated.
 
 As you experiment with this program, take note that you can only drag the bitmap when your finger touches an area where the bitmap is displayed. Although that restriction is not very important for this program, it becomes crucial when manipulating multiple bitmaps.
 
@@ -151,7 +151,7 @@ As you experiment with this program, take note that you can only drag the bitmap
 
 What do you want to happen when two fingers touch the bitmap? If the two fingers move in parallel, then you probably want the bitmap to move along with the fingers. If the two fingers perform a pinch or stretch operation, then you might want the bitmap to be rotated (to be discussed in the next section) or scaled. When scaling a bitmap, it makes most sense for the two fingers to remain in the same positions relative to the bitmap, and for the bitmap to be scaled accordingly.
 
-Handling two fingers at once seems complicated, but keep in mind that the `TouchAction` handler only receives information about one finger at a time. If two fingers are manipulating the bitmap, then for each event, one finger has changed position but the other has not changed. In the **Bitmap Scaling** page code below, the finger that has not changed position is called the _pivot_ point because the transform is relative to that point.
+Handling two fingers at once seems complicated, but keep in mind that the `Touch` handler only receives information about one finger at a time. If two fingers are manipulating the bitmap, then for each event, one finger has changed position but the other has not changed. In the **Bitmap Scaling** page code below, the finger that has not changed position is called the _pivot_ point because the transform is relative to that point.
 
 One difference between this program and the previous program is that multiple touch IDs must be saved. A dictionary is used for this purpose, where the touch ID is the dictionary key and the dictionary value is the current position of that finger:
 
@@ -162,35 +162,31 @@ public partial class BitmapScalingPage : ContentPage
     // Touch information
     Dictionary<long, SKPoint> touchDictionary = new Dictionary<long, SKPoint>();
     ···
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        // Convert .NET MAUI point to pixels
-        Point pt = args.Location;
-        SKPoint point =
-            new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                        (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+        SKPoint point = e.Location;
 
-        switch (args.Type)
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 // Find transformed bitmap rectangle
                 SKRect rect = new SKRect(0, 0, bitmap.Width, bitmap.Height);
                 rect = matrix.MapRect(rect);
 
                 // Determine if the touch was within that rectangle
-                if (rect.Contains(point) && !touchDictionary.ContainsKey(args.Id))
+                if (rect.Contains(point) && !touchDictionary.ContainsKey(e.Id))
                 {
-                    touchDictionary.Add(args.Id, point);
+                    touchDictionary.Add(e.Id, point);
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (touchDictionary.ContainsKey(args.Id))
+            case SKTouchAction.Moved:
+                if (touchDictionary.ContainsKey(e.Id))
                 {
                     // Single-finger drag
                     if (touchDictionary.Count == 1)
                     {
-                        SKPoint prevPoint = touchDictionary[args.Id];
+                        SKPoint prevPoint = touchDictionary[e.Id];
 
                         // Adjust the matrix for the new position
                         matrix.TransX += point.X - prevPoint.X;
@@ -205,11 +201,11 @@ public partial class BitmapScalingPage : ContentPage
                         touchDictionary.Keys.CopyTo(keys, 0);
 
                         // Find index of non-moving (pivot) finger
-                        int pivotIndex = (keys[0] == args.Id) ? 1 : 0;
+                        int pivotIndex = (keys[0] == e.Id) ? 1 : 0;
 
                         // Get the three points involved in the transform
                         SKPoint pivotPoint = touchDictionary[keys[pivotIndex]];
-                        SKPoint prevPoint = touchDictionary[args.Id];
+                        SKPoint prevPoint = touchDictionary[e.Id];
                         SKPoint newPoint = point;
 
                         // Calculate two vectors
@@ -233,19 +229,21 @@ public partial class BitmapScalingPage : ContentPage
                     }
 
                     // Store the new point in the dictionary
-                    touchDictionary[args.Id] = point;
+                    touchDictionary[e.Id] = point;
                 }
 
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
-                if (touchDictionary.ContainsKey(args.Id))
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
+                if (touchDictionary.ContainsKey(e.Id))
                 {
-                    touchDictionary.Remove(args.Id);
+                    touchDictionary.Remove(e.Id);
                 }
                 break;
         }
+
+        e.Handled = true;
     }
     ···
 }
@@ -274,18 +272,14 @@ public partial class BitmapRotationPage : ContentPage
     // Touch information
     Dictionary<long, SKPoint> touchDictionary = new Dictionary<long, SKPoint>();
     ···
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        // Convert .NET MAUI point to pixels
-        Point pt = args.Location;
-        SKPoint point =
-            new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                        (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+        SKPoint point = e.Location;
 
-        switch (args.Type)
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
-                if (!touchDictionary.ContainsKey(args.Id))
+            case SKTouchAction.Pressed:
+                if (!touchDictionary.ContainsKey(e.Id))
                 {
                     // Invert the matrix
                     if (matrix.TryInvert(out SKMatrix inverseMatrix))
@@ -298,19 +292,19 @@ public partial class BitmapRotationPage : ContentPage
 
                         if (rect.Contains(transformedPoint))
                         {
-                            touchDictionary.Add(args.Id, point);
+                            touchDictionary.Add(e.Id, point);
                         }
                     }
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (touchDictionary.ContainsKey(args.Id))
+            case SKTouchAction.Moved:
+                if (touchDictionary.ContainsKey(e.Id))
                 {
                     // Single-finger drag
                     if (touchDictionary.Count == 1)
                     {
-                        SKPoint prevPoint = touchDictionary[args.Id];
+                        SKPoint prevPoint = touchDictionary[e.Id];
 
                         // Adjust the matrix for the new position
                         matrix.TransX += point.X - prevPoint.X;
@@ -325,11 +319,11 @@ public partial class BitmapRotationPage : ContentPage
                         touchDictionary.Keys.CopyTo(keys, 0);
 
                         // Find index non-moving (pivot) finger
-                        int pivotIndex = (keys[0] == args.Id) ? 1 : 0;
+                        int pivotIndex = (keys[0] == e.Id) ? 1 : 0;
 
                         // Get the three points in the transform
                         SKPoint pivotPoint = touchDictionary[keys[pivotIndex]];
-                        SKPoint prevPoint = touchDictionary[args.Id];
+                        SKPoint prevPoint = touchDictionary[e.Id];
                         SKPoint newPoint = point;
 
                         // Calculate two vectors
@@ -363,19 +357,21 @@ public partial class BitmapRotationPage : ContentPage
                     }
 
                     // Store the new point in the dictionary
-                    touchDictionary[args.Id] = point;
+                    touchDictionary[e.Id] = point;
                 }
 
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
-                if (touchDictionary.ContainsKey(args.Id))
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
+                if (touchDictionary.ContainsKey(e.Id))
                 {
-                    touchDictionary.Remove(args.Id);
+                    touchDictionary.Remove(e.Id);
                 }
                 break;
         }
+
+        e.Handled = true;
     }
 
     float Magnitude(SKPoint point)
@@ -421,7 +417,6 @@ The [**TouchManipulationPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-             xmlns:tt="clr-namespace:TouchTracking"
              xmlns:local="clr-namespace:SkiaSharpFormsDemos.Transforms"
              x:Class="SkiaSharpFormsDemos.Transforms.TouchManipulationPage"
              Title="Touch Manipulation">
@@ -453,45 +448,44 @@ The [**TouchManipulationPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs
               Grid.Row="1">
             
             <skia:SKCanvasView x:Name="canvasView"
+                               EnableTouchEvents="True"
+                               Touch="OnTouch"
                                PaintSurface="OnCanvasViewPaintSurface" />
-            <Grid.Effects>
-                <tt:TouchEffect Capture="True"
-                                TouchAction="OnTouchEffectAction" />
-            </Grid.Effects>
         </Grid>
     </Grid>
 </ContentPage>
 ```
 
-Towards the bottom is an `SKCanvasView` and a `TouchEffect` attached to the single-cell `Grid` that encloses it.
+The `SKCanvasView` has touch events enabled and handles them directly.
 
 The [**TouchManipulationPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationPage.xaml.cs) code-behind file has a `bitmap` field but it is not of type `SKBitmap`. The type is `TouchManipulationBitmap` (a class you'll see shortly):
 
 ```csharp
 public partial class TouchManipulationPage : ContentPage
 {
-    TouchManipulationBitmap bitmap;
+    TouchManipulationBitmap? bitmap;
     ...
 
     public TouchManipulationPage()
     {
         InitializeComponent();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.MountainClimbers.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            SKBitmap bitmap = SKBitmap.Decode(stream);
-            this.bitmap = new TouchManipulationBitmap(bitmap);
-            this.bitmap.TouchManager.Mode = TouchManipulationMode.ScaleRotate;
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("MountainClimbers.jpg");
+        var loadedBitmap = SKBitmap.Decode(stream);
+        bitmap = new TouchManipulationBitmap(loadedBitmap);
+        bitmap.TouchManager.Mode = TouchManipulationMode.ScaleRotate;
+        canvasView.InvalidateSurface();
     }
     ...
 }
 ```
 
-The constructor instantiates a `TouchManipulationBitmap` object, passing to the constructor an `SKBitmap` obtained from an embedded resource. The constructor concludes by setting the `Mode` property of the `TouchManager` property of the `TouchManipulationBitmap` object to a member of the `TouchManipulationMode` enumeration.
+The constructor instantiates a `TouchManipulationBitmap` object, passing to the constructor an `SKBitmap` obtained from the Resources/Raw folder. The constructor concludes by setting the `Mode` property of the `TouchManager` property of the `TouchManipulationBitmap` object to a member of the `TouchManipulationMode` enumeration.
 
 The `SelectedIndexChanged` handler for the `Picker` also sets this `Mode` property:
 
@@ -501,7 +495,7 @@ public partial class TouchManipulationPage : ContentPage
     ...
     void OnTouchModePickerSelectedIndexChanged(object sender, EventArgs args)
     {
-        if (bitmap != null)
+        if (bitmap is not null)
         {
             Picker picker = (Picker)sender;
             bitmap.TouchManager.Mode = (TouchManipulationMode)picker.SelectedItem;
@@ -511,7 +505,7 @@ public partial class TouchManipulationPage : ContentPage
 }
 ```
 
-The `TouchAction` handler of the `TouchEffect` instantiated in the XAML file calls two methods in `TouchManipulationBitmap` named `HitTest` and `ProcessTouchEvent`:
+The `Touch` handler of the `SKCanvasView` instantiated in the XAML file calls two methods in `TouchManipulationBitmap` named `HitTest` and `ProcessTouchEvent`:
 
 ```csharp
 public partial class TouchManipulationPage : ContentPage
@@ -519,43 +513,44 @@ public partial class TouchManipulationPage : ContentPage
     ...
     List<long> touchIds = new List<long>();
     ...
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        // Convert .NET MAUI point to pixels
-        Point pt = args.Location;
-        SKPoint point =
-            new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                        (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+        if (bitmap is null)
+            return;
 
-        switch (args.Type)
+        SKPoint point = e.Location;
+
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 if (bitmap.HitTest(point))
                 {
-                    touchIds.Add(args.Id);
-                    bitmap.ProcessTouchEvent(args.Id, args.Type, point);
+                    touchIds.Add(e.Id);
+                    bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                     break;
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (touchIds.Contains(args.Id))
+            case SKTouchAction.Moved:
+                if (touchIds.Contains(e.Id))
                 {
-                    bitmap.ProcessTouchEvent(args.Id, args.Type, point);
+                    bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                     canvasView.InvalidateSurface();
                 }
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
-                if (touchIds.Contains(args.Id))
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
+                if (touchIds.Contains(e.Id))
                 {
-                    bitmap.ProcessTouchEvent(args.Id, args.Type, point);
-                    touchIds.Remove(args.Id);
+                    bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
+                    touchIds.Remove(e.Id);
                     canvasView.InvalidateSurface();
                 }
                 break;
         }
+
+        e.Handled = true;
     }
     ...
 }
@@ -563,7 +558,7 @@ public partial class TouchManipulationPage : ContentPage
 
 If the `HitTest` method returns `true` &mdash; meaning that a finger has touched the screen within the area occupied by the bitmap &mdash; then the touch ID is added to the `TouchIds` collection. This ID represents the sequence of touch events for that finger until the finger lifts from the screen. If multiple fingers touch the bitmap, then the `touchIds` collection contains a touch ID for each finger.
 
-The `TouchAction` handler also calls the `ProcessTouchEvent` class in `TouchManipulationBitmap`. This is where some (but not all) of the real touch processing occurs.
+The `Touch` handler also calls the `ProcessTouchEvent` class in `TouchManipulationBitmap`. This is where some (but not all) of the real touch processing occurs.
 
 The [`TouchManipulationBitmap`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationBitmap.cs) class is a wrapper class for `SKBitmap` that contains code to render the bitmap and process touch events. It works in conjunction with more generalized code in a `TouchManipulationManager` class (which you'll see shortly).
 
@@ -659,11 +654,11 @@ class TouchManipulationBitmap
     Dictionary<long, TouchManipulationInfo> touchDictionary =
         new Dictionary<long, TouchManipulationInfo>();
     ...
-    public void ProcessTouchEvent(long id, TouchActionType type, SKPoint location)
+    public void ProcessTouchEvent(long id, SKTouchAction type, SKPoint location)
     {
         switch (type)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 touchDictionary.Add(id, new TouchManipulationInfo
                 {
                     PreviousPoint = location,
@@ -671,20 +666,20 @@ class TouchManipulationBitmap
                 });
                 break;
 
-            case TouchActionType.Moved:
+            case SKTouchAction.Moved:
                 TouchManipulationInfo info = touchDictionary[id];
                 info.NewPoint = location;
                 Manipulate();
                 info.PreviousPoint = info.NewPoint;
                 break;
 
-            case TouchActionType.Released:
+            case SKTouchAction.Released:
                 touchDictionary[id].NewPoint = location;
                 Manipulate();
                 touchDictionary.Remove(id);
                 break;
 
-            case TouchActionType.Cancelled:
+            case SKTouchAction.Cancelled:
                 touchDictionary.Remove(id);
                 break;
         }
@@ -894,6 +889,9 @@ public partial class TouchManipulationPage : ContentPage
 
         canvas.Clear();
 
+        if (bitmap is null)
+            return;
+
         // Display the bitmap
         bitmap.Paint(canvas);
 
@@ -922,39 +920,40 @@ public partial class BitmapScatterViewPage : ContentPage
 {
     List<TouchManipulationBitmap> bitmapCollection =
         new List<TouchManipulationBitmap>();
+    bool bitmapsLoaded;
     ...
     public BitmapScatterViewPage()
     {
         InitializeComponent();
 
+        LoadBitmapsAsync();
+    }
+
+    async void LoadBitmapsAsync()
+    {
         // Load in all the available bitmaps
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
-        string[] resourceIDs = assembly.GetManifestResourceNames();
+        string[] filenames = { "SeatedMonkey.jpg", "MountainClimbers.jpg", "Banana.jpg" };
         SKPoint position = new SKPoint();
 
-        foreach (string resourceID in resourceIDs)
+        foreach (string filename in filenames)
         {
-            if (resourceID.EndsWith(".png") ||
-                resourceID.EndsWith(".jpg"))
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync(filename);
+            var bitmap = SKBitmap.Decode(stream);
+            bitmapCollection.Add(new TouchManipulationBitmap(bitmap)
             {
-                using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-                {
-                    SKBitmap bitmap = SKBitmap.Decode(stream);
-                    bitmapCollection.Add(new TouchManipulationBitmap(bitmap)
-                    {
-                        Matrix = SKMatrix.MakeTranslation(position.X, position.Y),
-                    });
-                    position.X += 100;
-                    position.Y += 100;
-                }
-            }
+                Matrix = SKMatrix.MakeTranslation(position.X, position.Y),
+            });
+            position.X += 100;
+            position.Y += 100;
         }
+        bitmapsLoaded = true;
+        canvasView.InvalidateSurface();
     }
     ...
 }
 ```
 
-The constructor loads in all of the bitmaps available as embedded resources, and adds them to the `bitmapCollection`. Notice that the `Matrix` property is initialized on each `TouchManipulationBitmap` object, so the upper-left corners of each bitmap are offset by 100 pixels.
+The constructor loads in all of the bitmaps available in the Resources/Raw folder, and adds them to the `bitmapCollection`. Notice that the `Matrix` property is initialized on each `TouchManipulationBitmap` object, so the upper-left corners of each bitmap are offset by 100 pixels.
 
 The `BitmapScatterView` page also needs to handle touch events for multiple bitmaps. Rather than defining a `List` of touch IDs of currently manipulated `TouchManipulationBitmap` objects, this program requires a dictionary:
 
@@ -965,17 +964,16 @@ public partial class BitmapScatterViewPage : ContentPage
     Dictionary<long, TouchManipulationBitmap> bitmapDictionary =
        new Dictionary<long, TouchManipulationBitmap>();
     ...
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        // Convert .NET MAUI point to pixels
-        Point pt = args.Location;
-        SKPoint point =
-            new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                        (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+        if (!bitmapsLoaded)
+            return;
 
-        switch (args.Type)
+        SKPoint point = e.Location;
+
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 for (int i = bitmapCollection.Count - 1; i >= 0; i--)
                 {
                     TouchManipulationBitmap bitmap = bitmapCollection[i];
@@ -987,34 +985,36 @@ public partial class BitmapScatterViewPage : ContentPage
                         bitmapCollection.Add(bitmap);
 
                         // Do the touch processing
-                        bitmapDictionary.Add(args.Id, bitmap);
-                        bitmap.ProcessTouchEvent(args.Id, args.Type, point);
+                        bitmapDictionary.Add(e.Id, bitmap);
+                        bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                         canvasView.InvalidateSurface();
                         break;
                     }
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (bitmapDictionary.ContainsKey(args.Id))
+            case SKTouchAction.Moved:
+                if (bitmapDictionary.ContainsKey(e.Id))
                 {
-                    TouchManipulationBitmap bitmap = bitmapDictionary[args.Id];
-                    bitmap.ProcessTouchEvent(args.Id, args.Type, point);
+                    TouchManipulationBitmap bitmap = bitmapDictionary[e.Id];
+                    bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                     canvasView.InvalidateSurface();
                 }
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
-                if (bitmapDictionary.ContainsKey(args.Id))
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
+                if (bitmapDictionary.ContainsKey(e.Id))
                 {
-                    TouchManipulationBitmap bitmap = bitmapDictionary[args.Id];
-                    bitmap.ProcessTouchEvent(args.Id, args.Type, point);
-                    bitmapDictionary.Remove(args.Id);
+                    TouchManipulationBitmap bitmap = bitmapDictionary[e.Id];
+                    bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
+                    bitmapDictionary.Remove(e.Id);
                     canvasView.InvalidateSurface();
                 }
                 break;
         }
+
+        e.Handled = true;
     }
     ...
 }
@@ -1024,7 +1024,7 @@ Notice how the `Pressed` logic loops through the `bitmapCollection` in reverse. 
 
 Also notice that the `Pressed` logic moves that bitmap to the end of the collection so that it visually moves to the top of the pile of other bitmaps.
 
-In the `Moved` and `Released` events, the `TouchAction` handler calls the `ProcessingTouchEvent` method in `TouchManipulationBitmap` just like the earlier program.
+In the `Moved` and `Released` events, the `Touch` handler calls the `ProcessingTouchEvent` method in `TouchManipulationBitmap` just like the earlier program.
 
 Finally, the `PaintSurface` handler calls the `Paint` method of each `TouchManipulationBitmap` object:
 
@@ -1036,6 +1036,9 @@ public partial class BitmapScatterViewPage : ContentPage
     {
         SKCanvas canvas = args.Surface.Canvas;
         canvas.Clear();
+
+        if (!bitmapsLoaded)
+            return;
 
         foreach (TouchManipulationBitmap bitmap in bitmapCollection)
         {
@@ -1055,13 +1058,12 @@ A scaling operation generally requires a pinch gesture using two fingers. Howeve
 
 This is demonstrated in the **Single Finger Corner Scale** page. Because this sample uses a somewhat different type of scaling than that implemented in the `TouchManipulationManager` class, it does not use that class or the `TouchManipulationBitmap` class. Instead, all the touch logic is in the code-behind file. This is somewhat simpler logic than usual because it tracks only one finger at a time, and simply ignores any secondary fingers that might be touching the screen.
 
-The [**SingleFingerCornerScale.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SingleFingerCornerScalePage.xaml) page instantiates the `SKCanvasView` class and creates a `TouchEffect` object for tracking touch events:
+The [**SingleFingerCornerScale.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SingleFingerCornerScalePage.xaml) page instantiates the `SKCanvasView` class with touch events enabled:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-             xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Transforms.SingleFingerCornerScalePage"
              Title="Single Finger Corner Scale">
 
@@ -1069,21 +1071,19 @@ The [**SingleFingerCornerScale.xaml**](https://github.com/mono/SkiaSharp/blob/do
           Grid.Row="1">
 
         <skia:SKCanvasView x:Name="canvasView"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch"
                            PaintSurface="OnCanvasViewPaintSurface" />
-        <Grid.Effects>
-            <tt:TouchEffect Capture="True"
-                            TouchAction="OnTouchEffectAction"   />
-        </Grid.Effects>
     </Grid>
 </ContentPage>
 ```
 
-The [**SingleFingerCornerScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SingleFingerCornerScalePage.xaml.cs) file loads a bitmap resource from the **Media** directory and displays it using an `SKMatrix` object defined as a field:
+The [**SingleFingerCornerScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SingleFingerCornerScalePage.xaml.cs) file loads a bitmap from the Resources/Raw folder and displays it using an `SKMatrix` object defined as a field:
 
 ```csharp
 public partial class SingleFingerCornerScalePage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
     SKMatrix currentMatrix = SKMatrix.MakeIdentity();
     ···
 
@@ -1091,13 +1091,14 @@ public partial class SingleFingerCornerScalePage : ContentPage
     {
         InitializeComponent();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap = SKBitmap.Decode(stream);
+        canvasView.InvalidateSurface();
     }
 
     void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -1108,6 +1109,9 @@ public partial class SingleFingerCornerScalePage : ContentPage
 
         canvas.Clear();
 
+        if (bitmap is null)
+            return;
+
         canvas.SetMatrix(currentMatrix);
         canvas.DrawBitmap(bitmap, 0, 0);
     }
@@ -1117,14 +1121,14 @@ public partial class SingleFingerCornerScalePage : ContentPage
 
 This `SKMatrix` object is modified by the touch logic shown below.
 
-The remainder of the code-behind file is the `TouchEffect` event handler. It begins by converting the current location of the finger to an `SKPoint` value. For the `Pressed` action type, the handler checks that no other finger is touching the screen, and that the finger is within the bounds of the bitmap.
+The remainder of the code-behind file is the `Touch` event handler. It begins by getting the current location of the finger as an `SKPoint` value directly from the event args. For the `Pressed` action type, the handler checks that no other finger is touching the screen, and that the finger is within the bounds of the bitmap.
 
 The crucial part of the code is an `if` statement involving two calls to the `Math.Pow` method. This math checks if the finger location is outside of an ellipse that fills the bitmap. If so, then that's a scaling operation. The finger is near one of the corners of the bitmap, and a pivot point is determined that is the opposite corner. If the finger is within this ellipse, it's a regular panning operation:
 
 ```csharp
 public partial class SingleFingerCornerScalePage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
     SKMatrix currentMatrix = SKMatrix.MakeIdentity();
 
     // Information for translating and scaling
@@ -1137,17 +1141,16 @@ public partial class SingleFingerCornerScalePage : ContentPage
     SKPoint pivotPoint;
     ···
 
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        // Convert .NET MAUI point to pixels
-        Point pt = args.Location;
-        SKPoint point =
-            new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                        (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+        if (bitmap is null)
+            return;
 
-        switch (args.Type)
+        SKPoint point = e.Location;
+
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 // Track only one finger
                 if (touchId.HasValue)
                     return;
@@ -1172,13 +1175,13 @@ public partial class SingleFingerCornerScalePage : ContentPage
                 }
 
                 // Common for either pan or scale
-                touchId = args.Id;
+                touchId = e.Id;
                 pressedLocation = point;
                 pressedMatrix = currentMatrix;
                 break;
 
-            case TouchActionType.Moved:
-                if (!touchId.HasValue || args.Id != touchId.Value)
+            case SKTouchAction.Moved:
+                if (!touchId.HasValue || e.Id != touchId.Value)
                     return;
 
                 SKMatrix matrix = SKMatrix.MakeIdentity();
@@ -1203,11 +1206,13 @@ public partial class SingleFingerCornerScalePage : ContentPage
                 canvasView.InvalidateSurface();
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
                 touchId = null;
                 break;
         }
+
+        e.Handled = true;
     }
 }
 ```
@@ -1263,4 +1268,3 @@ This code effectively divides the area of the bitmap into an interior diamond sh
 ## Related Links
 
 - [SkiaSharp APIs](/dotnet/api/skiasharp)
-- touch-tracking implementations

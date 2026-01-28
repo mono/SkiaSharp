@@ -1,24 +1,19 @@
-﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
-
-using TouchTracking;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
-using Microsoft.Maui;
-using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Transforms
 {
     public partial class BitmapScatterViewPage : ContentPage
     {
-        List<TouchManipulationBitmap> bitmapCollection =
-            new List<TouchManipulationBitmap>();
+        List<TouchManipulationBitmap>? bitmapCollection;
 
         Dictionary<long, TouchManipulationBitmap> bitmapDictionary =
             new Dictionary<long, TouchManipulationBitmap>();
@@ -27,41 +22,40 @@ namespace DocsSamplesApp.Transforms
         {
             InitializeComponent();
 
-            // Load in all the available bitmaps
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
-            string[] resourceIDs = assembly.GetManifestResourceNames();
-            SKPoint position = new SKPoint();
-
-            foreach (string resourceID in resourceIDs)
-            {
-                if (resourceID.EndsWith(".png") ||
-                    resourceID.EndsWith(".jpg"))
-                {
-                    using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-                    {
-                        SKBitmap bitmap = SKBitmap.Decode(stream);
-                        bitmapCollection.Add(new TouchManipulationBitmap(bitmap)
-                        {
-                            Matrix = SKMatrix.CreateTranslation(position.X, position.Y),
-                        });
-                        position.X += 100;
-                        position.Y += 100;
-                    }
-                }
-            }
+            _ = LoadBitmapsAsync();
         }
 
-        void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+        async Task LoadBitmapsAsync()
         {
-            // Convert Xamarin.Forms point to pixels
-            Point pt = args.Location;
-            SKPoint point =
-                new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                            (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+            bitmapCollection = new List<TouchManipulationBitmap>();
+            string[] imageFiles = BitmapExtensions.GetImageFileNames();
+            SKPoint position = new SKPoint();
 
-            switch (args.Type)
+            foreach (string fileName in imageFiles)
             {
-                case TouchActionType.Pressed:
+                using Stream stream = await FileSystem.OpenAppPackageFileAsync(fileName);
+                SKBitmap bitmap = SKBitmap.Decode(stream);
+                bitmapCollection.Add(new TouchManipulationBitmap(bitmap)
+                {
+                    Matrix = SKMatrix.CreateTranslation(position.X, position.Y),
+                });
+                position.X += 100;
+                position.Y += 100;
+            }
+            canvasView.InvalidateSurface();
+        }
+
+        void OnTouch(object sender, SKTouchEventArgs e)
+        {
+            if (bitmapCollection is null)
+                return;
+
+            // Location is already in pixels with built-in touch
+            SKPoint point = e.Location;
+
+            switch (e.ActionType)
+            {
+                case SKTouchAction.Pressed:
                     for (int i = bitmapCollection.Count - 1; i >= 0; i--)
                     {
                         TouchManipulationBitmap bitmap = bitmapCollection[i];
@@ -73,40 +67,45 @@ namespace DocsSamplesApp.Transforms
                             bitmapCollection.Add(bitmap);
 
                             // Do the touch processing
-                            bitmapDictionary.Add(args.Id, bitmap);
-                            bitmap.ProcessTouchEvent(args.Id, args.Type, point);
+                            bitmapDictionary.Add(e.Id, bitmap);
+                            bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                             canvasView.InvalidateSurface();
                             break;
                         }
                     }
                     break;
 
-                case TouchActionType.Moved:
-                    if (bitmapDictionary.ContainsKey(args.Id))
+                case SKTouchAction.Moved:
+                    if (bitmapDictionary.ContainsKey(e.Id))
                     {
-                        TouchManipulationBitmap bitmap = bitmapDictionary[args.Id];
-                        bitmap.ProcessTouchEvent(args.Id, args.Type, point);
+                        TouchManipulationBitmap bitmap = bitmapDictionary[e.Id];
+                        bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
                         canvasView.InvalidateSurface();
                     }
                     break;
 
-                case TouchActionType.Released:
-                case TouchActionType.Cancelled:
-                    if (bitmapDictionary.ContainsKey(args.Id))
+                case SKTouchAction.Released:
+                case SKTouchAction.Cancelled:
+                    if (bitmapDictionary.ContainsKey(e.Id))
                     {
-                        TouchManipulationBitmap bitmap = bitmapDictionary[args.Id];
-                        bitmap.ProcessTouchEvent(args.Id, args.Type, point);
-                        bitmapDictionary.Remove(args.Id);
+                        TouchManipulationBitmap bitmap = bitmapDictionary[e.Id];
+                        bitmap.ProcessTouchEvent(e.Id, e.ActionType, point);
+                        bitmapDictionary.Remove(e.Id);
                         canvasView.InvalidateSurface();
                     }
                     break;
             }
+
+            e.Handled = true;
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
         {
             SKCanvas canvas = args.Surface.Canvas;
             canvas.Clear();
+
+            if (bitmapCollection is null)
+                return;
 
             foreach (TouchManipulationBitmap bitmap in bitmapCollection)
             {

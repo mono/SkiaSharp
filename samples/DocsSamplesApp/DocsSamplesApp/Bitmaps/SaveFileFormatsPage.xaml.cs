@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -8,21 +9,32 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public partial class SaveFileFormatsPage : ContentPage
     {
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(typeof(SaveFileFormatsPage),
-            "DocsSamplesApp.Media.MonkeyFace.png");
+        SKBitmap? bitmap;
 
 	    public SaveFileFormatsPage ()
 	    {
 		    InitializeComponent ();
+            _ = LoadBitmapAsync();
 	    }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("MonkeyFace.png");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
         {
+            if (bitmap is null)
+                return;
+
             args.Surface.Canvas.DrawBitmap(bitmap, args.Info.Rect, BitmapStretch.Uniform);
         }
 
@@ -38,6 +50,8 @@ namespace DocsSamplesApp.Bitmaps
 
         async void OnButtonClicked(object sender, EventArgs args)
         {
+            if (bitmap is null)
+                return;
             SKEncodedImageFormat imageFormat = (SKEncodedImageFormat)formatPicker.SelectedItem;
             int quality = (int)qualitySlider.Value;
 

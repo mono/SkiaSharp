@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -11,13 +12,19 @@ namespace DocsSamplesApp.Effects
 {
     public partial class SeparableBlendModesPage : ContentPage
     {
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                            typeof(SeparableBlendModesPage),
-                            "DocsSamplesApp.Media.Banana.jpg"); 
+        SKBitmap? bitmap;
 
         public SeparableBlendModesPage()
         {
             InitializeComponent();
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnPickerSelectedIndexChanged(object sender, EventArgs args)
@@ -47,6 +54,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Draw bitmap in top half
             SKRect rect = new SKRect(0, 0, info.Width, info.Height / 2);

@@ -1,13 +1,7 @@
-﻿using System;
-
 using SkiaSharp;
-
-using TouchTracking;
-using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
-using Microsoft.Maui;
 
 namespace DocsSamplesApp.Curves
 {

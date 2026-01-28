@@ -40,12 +40,12 @@ One of these tasks is clipping. The **Clipping Text** page creates a clipping pa
 
 [![Triple screenshot of the Clipping Text page](text-paths-images/clippingtext-small.png)](text-paths-images/clippingtext-large.png#lightbox "Triple screenshot of the Clipping Text page")
 
-The [`ClippingTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ClippingTextPage.cs) class constructor loads the bitmap that is stored as an embedded resource in the **Media** folder of the solution:
+The [`ClippingTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ClippingTextPage.cs) class constructor loads the bitmap from the app's `Resources/Raw` folder using .NET MAUI's `FileSystem` API:
 
 ```csharp
 public class ClippingTextPage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
 
     public ClippingTextPage()
     {
@@ -55,13 +55,13 @@ public class ClippingTextPage : ContentPage
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
 
-        string resourceID = "SkiaSharpFormsDemos.Media.PageOfCode.png";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("PageOfCode.png");
+        bitmap = SKBitmap.Decode(stream);
     }
     ...
 }

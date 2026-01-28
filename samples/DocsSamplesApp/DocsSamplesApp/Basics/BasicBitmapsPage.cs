@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -18,9 +18,9 @@ namespace DocsSamplesApp.Basics
 
         HttpClient httpClient = new HttpClient();
 
-        SKBitmap webBitmap;
-        SKBitmap resourceBitmap;
-        SKBitmap libraryBitmap;
+        SKBitmap? webBitmap;
+        SKBitmap? resourceBitmap;
+        SKBitmap? libraryBitmap;
 
         public BasicBitmapsPage()
         {
@@ -31,13 +31,7 @@ namespace DocsSamplesApp.Basics
             Content = canvasView;
 
             // Load resource bitmap
-            string resourceID = "DocsSamplesApp.Media.monkey.png";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                resourceBitmap = SKBitmap.Decode(stream);
-            }
+            _ = LoadResourceBitmapAsync();
 
             // Add tap gesture recognizer
             TapGestureRecognizer tapRecognizer = new TapGestureRecognizer();
@@ -56,6 +50,13 @@ namespace DocsSamplesApp.Basics
                 }
             };
             canvasView.GestureRecognizers.Add(tapRecognizer);
+        }
+
+        async Task LoadResourceBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("monkey.png");
+            resourceBitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         protected override async void OnAppearing()
@@ -96,7 +97,7 @@ namespace DocsSamplesApp.Basics
                 canvas.DrawBitmap(webBitmap, x, y);
             }
 
-            if (resourceBitmap != null)
+            if (resourceBitmap is not null)
             {
                 canvas.DrawBitmap(resourceBitmap, 
                     new SKRect(0, info.Height / 3, info.Width, 2 * info.Height / 3));

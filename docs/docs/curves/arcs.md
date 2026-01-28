@@ -254,7 +254,7 @@ Here's the final straight line and arc that is added to the contour:
 
 The contour can be continued from the second tangent point.
 
-The **Tangent Arc** page allows you to experiment with the tangent arc. This is the first of several pages that derive from [`InteractivePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/InteractivePage.cs), which defines a few handy `SKPaint` objects and performs `TouchPoint` processing:
+The **Tangent Arc** page allows you to experiment with the tangent arc. This is the first of several pages that derive from [`InteractivePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/InteractivePage.cs), which defines a few handy `SKPaint` objects and performs `TouchPoint` processing using `SKCanvasView`'s built-in touch support:
 
 ```csharp
 public class InteractivePage : ContentPage
@@ -284,22 +284,21 @@ public class InteractivePage : ContentPage
         PathEffect = SKPathEffect.CreateDash(new float[] { 7, 7 }, 0)
     };
 
-    protected void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    protected void OnTouch(object sender, SKTouchEventArgs e)
     {
         bool touchPointMoved = false;
 
         foreach (TouchPoint touchPoint in touchPoints)
         {
-            float scale = baseCanvasView.CanvasSize.Width / (float)baseCanvasView.Width;
-            SKPoint point = new SKPoint(scale * (float)args.Location.X,
-                                        scale * (float)args.Location.Y);
-            touchPointMoved |= touchPoint.ProcessTouchEvent(args.Id, args.Type, point);
+            touchPointMoved |= touchPoint.ProcessTouchEvent(e.Id, e.ActionType, e.Location);
         }
 
         if (touchPointMoved)
         {
             baseCanvasView.InvalidateSurface();
         }
+
+        e.Handled = true;
     }
 }
 ```

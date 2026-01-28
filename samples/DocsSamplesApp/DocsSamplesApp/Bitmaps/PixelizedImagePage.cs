@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -10,19 +9,31 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public class PixelizedImagePage : ContentPage
     {
-        SKBitmap pixelizedBitmap;
+        SKBitmap? pixelizedBitmap;
+        SKCanvasView canvasView;
 
         public PixelizedImagePage ()
         {
             Title = "Pixelize Image";
 
-            SKBitmap originalBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-                "DocsSamplesApp.Media.MountainClimbers.jpg");
+            // Create SKCanvasView to view result
+            canvasView = new SKCanvasView();
+            canvasView.PaintSurface += OnCanvasViewPaintSurface;
+            Content = canvasView;
+
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("MountainClimbers.jpg");
+            SKBitmap originalBitmap = SKBitmap.Decode(stream);
 
             // Create tiny bitmap for pixelized face
             SKBitmap faceBitmap = new SKBitmap(9, 9);
@@ -52,10 +63,7 @@ namespace DocsSamplesApp.Bitmaps
                                   new SKRect(112, 238, 184, 310));  // destination
             }
 
-            // Create SKCanvasView to view result
-            SKCanvasView canvasView = new SKCanvasView();
-            canvasView.PaintSurface += OnCanvasViewPaintSurface;
-            Content = canvasView;
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -65,6 +73,10 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (pixelizedBitmap is null)
+                return;
+
             canvas.DrawBitmap(pixelizedBitmap, info.Rect, BitmapStretch.Uniform);
         }
     }

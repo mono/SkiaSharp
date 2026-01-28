@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -12,18 +13,26 @@ namespace DocsSamplesApp.Effects
 {
 	public class CenteredTilesPage : ContentPage
 	{
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                            typeof(CenteredTilesPage),
-                            "DocsSamplesApp.Media.monkey.png");
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
 
 		public CenteredTilesPage ()
 		{
             Title = "Centered Tiles";
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
+
+            _ = LoadBitmapAsync();
 		}
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("monkey.png");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
         {
@@ -32,6 +41,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Find coordinates to center bitmap in canvas...
             float x = (info.Width - bitmap.Width) / 2f;

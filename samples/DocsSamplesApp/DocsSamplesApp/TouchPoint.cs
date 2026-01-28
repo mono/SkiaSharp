@@ -1,6 +1,6 @@
-﻿using System;
+using System;
 using SkiaSharp;
-using TouchTracking;
+using SkiaSharp.Views.Maui;
 
 namespace DocsSamplesApp
 {
@@ -38,14 +38,14 @@ namespace DocsSamplesApp
             canvas.DrawCircle(Center.X, Center.Y, Radius, paint);
         }
 
-        public bool ProcessTouchEvent(long id, TouchActionType type, SKPoint location)
+        public bool ProcessTouchEvent(long id, SKTouchAction type, SKPoint location)
         {
             bool centerMoved = false;
 
-            // Assumes Capture property of TouchEffect is true!
+            // Assumes Handled is set to true for capture behavior
             switch (type)
             {
-                case TouchActionType.Pressed:
+                case SKTouchAction.Pressed:
                     if (!isBeingDragged && PointInCircle(location))
                     {
                         isBeingDragged = true;
@@ -55,7 +55,7 @@ namespace DocsSamplesApp
                     }
                     break;
 
-                case TouchActionType.Moved:
+                case SKTouchAction.Moved:
                     if (isBeingDragged && touchId == id)
                     {
                         Center += location - previousPoint;
@@ -64,7 +64,7 @@ namespace DocsSamplesApp
                     }
                     break;
 
-                case TouchActionType.Released:
+                case SKTouchAction.Released:
                     if (isBeingDragged && touchId == id)
                     {
                         Center += location - previousPoint;
@@ -73,7 +73,7 @@ namespace DocsSamplesApp
                     }
                     break;
 
-                case TouchActionType.Cancelled:
+                case SKTouchAction.Cancelled:
                     isBeingDragged = false;
                     break;
             }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -11,13 +12,20 @@ namespace DocsSamplesApp.Effects
 {
     public partial class DodgeAndBurnPage : ContentPage
     {
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                    typeof(DodgeAndBurnPage),
-                    "DocsSamplesApp.Media.Banana.jpg");
+        SKBitmap? bitmap;
 
         public DodgeAndBurnPage()
         {
             InitializeComponent();
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            dodgeCanvasView.InvalidateSurface();
+            burnCanvasView.InvalidateSurface();
         }
 
         void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -39,6 +47,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Find largest size rectangle in canvas
             float scale = Math.Min((float)info.Width / bitmap.Width,

@@ -202,8 +202,7 @@ public partial class MonkeyMoustachePage : ContentPage
     {
         Title = "Monkey Moustache";
 
-        monkeyBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-            "SkiaSharpFormsDemos.Media.MonkeyFace.png");
+        monkeyBitmap = BitmapExtensions.LoadBitmap("MonkeyFace.png");
 
         // Create canvas based on bitmap
         using (SKCanvas canvas = new SKCanvas(monkeyBitmap))
@@ -277,8 +276,7 @@ public class PixelizedImagePage : ContentPage
     {
         Title = "Pixelize Image";
 
-        SKBitmap originalBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-            "SkiaSharpFormsDemos.Media.MountainClimbers.jpg");
+        SKBitmap originalBitmap = BitmapExtensions.LoadBitmap("MountainClimbers.jpg");
 
         // Create tiny bitmap for pixelized face
         SKBitmap faceBitmap = new SKBitmap(9, 9);
@@ -427,8 +425,7 @@ The code-behind file loads a bitmap resource and saves it as a static read-only 
 public partial class BitmapRotatorPage : ContentPage
 {
     static readonly SKBitmap originalBitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(BitmapRotatorPage),
-            "SkiaSharpFormsDemos.Media.Banana.jpg");
+        BitmapExtensions.LoadBitmap("Banana.jpg");
 
     SKBitmap rotatedBitmap = originalBitmap;
 
@@ -528,8 +525,7 @@ The code-behind file implements these two operations in the `Clicked` handlers f
 public partial class BitmapFlipperPage : ContentPage
 {
     SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(BitmapRotatorPage),
-            "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg");
+        BitmapExtensions.LoadBitmap("SeatedMonkey.jpg");
 
     public BitmapFlipperPage()
     {

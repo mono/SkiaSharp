@@ -23,16 +23,18 @@ Samples on this page are from the sample application. From the home page of that
 A bitmap used by a SkiaSharp application generally comes from one of three different sources:
 
 - From over the Internet
-- From a resource embedded in the executable
+- From a raw asset in the app package
 - From the user's photo library
 
 It is also possible for a SkiaSharp application to create a new bitmap, and then draw on it or set the bitmap bits algorithmically. Those techniques are discussed in the articles **[Creating and Drawing on SkiaSharp Bitmaps](drawing.md)** and **[Accessing SkiaSharp Bitmap Pixels](pixel-bits.md)**.
 
-In the following three code examples of loading a bitmap, the class is assumed to contain a field of type `SKBitmap`:
+In the following three code examples of loading a bitmap, the class uses a nullable `SKBitmap?` field to store the loaded bitmap:
 
 ```csharp
-SKBitmap bitmap;
+SKBitmap? bitmap;
 ```
+
+This pattern allows the bitmap to load asynchronously without blocking the UI thread. The `PaintSurface` handler performs a simple null check before drawing the bitmap.
 
 As the article **[Bitmap Basics in SkiaSharp](../basics/bitmaps.md)** stated, the best way to load a bitmap over the Internet is with the [`HttpClient`](xref:System.Net.Http.HttpClient) class. A single instance of the class can be defined as a field:
 
@@ -42,24 +44,51 @@ HttpClient httpClient = new HttpClient();
 
 When using `HttpClient` with iOS and Android applications, you'll want to set project properties as described in the documents on **Transport Layer Security (TLS) 1.2**.
 
-Code that uses `HttpClient` often involves the `await` operator, so it must reside in an `async` method:
+Code that uses `HttpClient` often involves the `await` operator, so it must reside in an `async` method. Fire-and-forget the async load from the constructor using `_ =`, and store the loaded bitmap in a nullable field:
 
 ```csharp
-try
+public partial class MyPage : ContentPage
 {
-    using (Stream stream = await httpClient.GetStreamAsync("https:// ··· "))
-    using (MemoryStream memStream = new MemoryStream())
-    {
-        await stream.CopyToAsync(memStream);
-        memStream.Seek(0, SeekOrigin.Begin);
+    HttpClient httpClient = new HttpClient();
+    SKBitmap? bitmap;
 
-        bitmap = SKBitmap.Decode(memStream);
-        ···
-    };
-}
-catch
-{
-    ···
+    public MyPage()
+    {
+        InitializeComponent();
+        _ = LoadBitmapFromWebAsync();
+    }
+
+    async Task LoadBitmapFromWebAsync()
+    {
+        try
+        {
+            using (Stream stream = await httpClient.GetStreamAsync("https:// ··· "))
+            using (MemoryStream memStream = new MemoryStream())
+            {
+                await stream.CopyToAsync(memStream);
+                memStream.Seek(0, SeekOrigin.Begin);
+
+                bitmap = SKBitmap.Decode(memStream);
+                canvasView.InvalidateSurface();
+            };
+        }
+        catch
+        {
+            // Handle error silently
+        }
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKCanvas canvas = args.Surface.Canvas;
+        canvas.Clear();
+
+        // Check if bitmap is loaded before drawing
+        if (bitmap is null)
+            return;
+
+        canvas.DrawBitmap(bitmap, 0, 0);
+    }
 }
 ```
 
@@ -69,37 +98,64 @@ The [`SKBitmap.Decode`](xref:SkiaSharp.SKBitmap.Decode(System.IO.Stream)) does a
 
 After your code calls `SKBitmap.Decode`, it will probably invalidate the `CanvasView` so that the `PaintSurface` handler can display the newly loaded bitmap.
 
-The second way to load a bitmap is by including the bitmap as an embedded resource in the .NET Standard library referenced by the individual platform projects. A resource ID is passed to the [`GetManifestResourceStream`](xref:System.Reflection.Assembly.GetManifestResourceStream(System.String)) method. This resource ID consists of the assembly name, folder name, and filename of the resource separated by periods:
+The second way to load a bitmap is by including the bitmap as a raw asset in your .NET MAUI application. Place image files in the `Resources/Raw` folder with a build action of `MauiAsset`. You can then load them using the `FileSystem.OpenAppPackageFileAsync` method, which only requires the filename:
 
 ```csharp
-string resourceID = "assemblyName.folderName.fileName";
-Assembly assembly = GetType().GetTypeInfo().Assembly;
-
-using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+public partial class MyPage : ContentPage
 {
-    bitmap = SKBitmap.Decode(stream);
-    ···
-}
-```
+    SKBitmap? bitmap;
 
-Bitmap files can also be stored as resources in the individual platform project for iOS, Android, and the Universal Windows Platform (UWP). However, loading those bitmaps requires code that is located in the platform project.
-
-A third approach to obtaining a bitmap is from the user's picture library. The following code uses a dependency service that is included in the sample application. The **SkiaSharpFormsDemo** .NET Standard Library includes the `IPhotoLibrary` interface, while each of the platform projects contains a `PhotoLibrary` class that implements that interface.
-
-```csharp
-IPhotoicturePicker picturePicker = DependencyService.Get<IPhotoLibrary>();
-
-using (Stream stream = await picturePicker.GetImageStreamAsync())
-{
-    if (stream != null)
+    public MyPage()
     {
+        InitializeComponent();
+        _ = LoadBitmapAsync();
+    }
+
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
         bitmap = SKBitmap.Decode(stream);
-        ···
+        canvasView.InvalidateSurface();
+    }
+
+    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    {
+        SKCanvas canvas = args.Surface.Canvas;
+        canvas.Clear();
+
+        // Check if bitmap is loaded before drawing
+        if (bitmap is null)
+            return;
+
+        canvas.DrawBitmap(bitmap, 0, 0);
     }
 }
 ```
 
-Generally, such code also invalidates the `CanvasView` so that the `PaintSurface` handler can display the new bitmap.
+The `FileSystem` class is in the `Microsoft.Maui.Storage` namespace, which is available by default in .NET MAUI applications.
+
+A third approach to obtaining a bitmap is from the user's picture library using the MAUI Essentials MediaPicker. Since this is user-initiated, you can load the bitmap when the user picks a photo:
+
+```csharp
+async Task PickPhotoAsync()
+{
+    var photo = await MediaPicker.PickPhotoAsync();
+
+    if (photo != null)
+    {
+        _ = LoadFromPhotoAsync(photo);
+    }
+}
+
+async Task LoadFromPhotoAsync(FileResult photo)
+{
+    using Stream stream = await photo.OpenReadAsync();
+    bitmap = SKBitmap.Decode(stream);
+    canvasView.InvalidateSurface();
+}
+```
+
+The `InvalidateSurface()` call triggers a repaint, and the `PaintSurface` handler performs a null check before drawing the bitmap.
 
 The `SKBitmap` class defines several useful properties, including [`Width`](xref:SkiaSharp.SKBitmap.Width) and [`Height`](xref:SkiaSharp.SKBitmap.Height), that reveal the pixel dimensions of the bitmap, as well as many methods, including methods to create bitmaps, to copy them, and to expose the pixel bits.
 
@@ -136,30 +192,32 @@ However, the color itself is irrelevant. Only the alpha channel is examined when
 
 The `SKPaint` object also plays a role when displaying bitmaps using blend modes or filter effects. These are demonstrated in the articles [SkiaSharp compositing and blend modes](../effects/blend-modes/index.md) and [SkiaSharp image filters](../effects/image-filters.md).
 
-The **Pixel Dimensions** page in the sample program displays a bitmap resource that is 320 pixels wide by 240 pixels high:
+The **Pixel Dimensions** page in the sample program displays a bitmap raw asset that is 320 pixels wide by 240 pixels high. It uses a nullable `SKBitmap?` field to store the loaded bitmap:
 
 ```csharp
 public class PixelDimensionsPage : ContentPage
 {
-    SKBitmap bitmap;
+    SKCanvasView canvasView;
+    SKBitmap? bitmap;
 
     public PixelDimensionsPage()
     {
         Title = "Pixel Dimensions";
 
-        // Load the bitmap from a resource
-        string resourceID = "SkiaSharpFormsDemos.Media.Banana.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
-
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
-
         // Create the SKCanvasView and set the PaintSurface handler
-        SKCanvasView canvasView = new SKCanvasView();
+        canvasView = new SKCanvasView();
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
+
+        // Start loading the bitmap asynchronously
+        _ = LoadBitmapAsync();
+    }
+
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+        bitmap = SKBitmap.Decode(stream);
+        canvasView.InvalidateSurface();
     }
 
     void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -170,6 +228,10 @@ public class PixelDimensionsPage : ContentPage
 
         canvas.Clear();
 
+        // Check if bitmap is loaded before drawing
+        if (bitmap is null)
+            return;
+
         float x = (info.Width - bitmap.Width) / 2;
         float y = (info.Height - bitmap.Height) / 2;
 
@@ -178,35 +240,38 @@ public class PixelDimensionsPage : ContentPage
 }
 ```
 
+The key points of this pattern are:
+
+1. **Store a nullable `SKBitmap?`** instead of a Task - this simplifies the code
+2. **Fire-and-forget the async load** with `_ = LoadBitmapAsync()`
+3. **Simple null check** in the `PaintSurface` handler before drawing
+4. **Call `InvalidateSurface()`** when loading completes - this triggers a repaint to show the loaded bitmap
+
 The `PaintSurface` handler centers the bitmap by calculating `x` and `y` values based on the pixel dimensions of the display surface and the pixel dimensions of the bitmap:
 
 [![Pixel Dimensions](displaying-images/PixelDimensions.png "Pixel Dimensions")](displaying-images/PixelDimensions-Large.png#lightbox)
 
 If the application wishes to display the bitmap in its upper-left corner, it would simply pass coordinates of (0, 0).
 
-## A method for loading resource bitmaps
+## A method for loading raw asset bitmaps
 
-Many of the samples coming up will need to load bitmap resources. The static `BitmapExtensions` class in the sample solution contains a method to help out:
+Many of the samples coming up will need to load bitmap raw assets. The static `BitmapExtensions` class in the sample solution contains a method to help out:
 
 ```csharp
 static class BitmapExtensions
 {
-    public static SKBitmap LoadBitmapResource(Type type, string resourceID)
+    public static async Task<SKBitmap> LoadBitmapAssetAsync(string filename)
     {
-        Assembly assembly = type.GetTypeInfo().Assembly;
-
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            return SKBitmap.Decode(stream);
-        }
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync(filename);
+        return SKBitmap.Decode(stream);
     }
     ···
 }
 ```
 
-Notice the `Type` parameter. This can be the `Type` object associated with any type in the assembly that stores the bitmap resource.
+This method takes just the filename of the asset (e.g., `"Banana.jpg"`) and loads it from the `Resources/Raw` folder.
 
-This `LoadBitmapResource` method will be used in all subsequent samples that require bitmap resources.
+This `LoadBitmapAssetAsync` method will be used in all subsequent samples that require bitmap raw assets.
 
 ## Stretching to fill a rectangle
 
@@ -225,16 +290,24 @@ The **Fill Rectangle** page demonstrates the first of these two methods by displ
 ```csharp
 public class FillRectanglePage : ContentPage
 {
-    SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
-                                            "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKCanvasView canvasView;
+    SKBitmap? bitmap;
+
     public FillRectanglePage ()
     {
         Title = "Fill Rectangle";
 
-        SKCanvasView canvasView = new SKCanvasView();
+        canvasView = new SKCanvasView();
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
+
+        _ = LoadBitmapAsync();
+    }
+
+    async Task LoadBitmapAsync()
+    {
+        bitmap = await BitmapExtensions.LoadBitmapAssetAsync("Banana.jpg");
+        canvasView.InvalidateSurface();
     }
 
     void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -245,12 +318,16 @@ public class FillRectanglePage : ContentPage
 
         canvas.Clear();
 
+        // Check if bitmap is loaded before drawing
+        if (bitmap is null)
+            return;
+
         canvas.DrawBitmap(bitmap, info.Rect);
     }
 }
 ```
 
-Notice the use of the new `BitmapExtensions.LoadBitmapResource` method to set the `SKBitmap` field. The destination rectangle is obtained from the [`Rect`](xref:SkiaSharp.SKImageInfo.Rect) property of `SKImageInfo`, which desribes the size of the display surface:
+Notice the use of the nullable `SKBitmap?` pattern and the `BitmapExtensions.LoadBitmapAssetAsync` method. The `PaintSurface` handler performs a simple null check before drawing the bitmap. The destination rectangle is obtained from the [`Rect`](xref:SkiaSharp.SKImageInfo.Rect) property of `SKImageInfo`, which desribes the size of the display surface:
 
 [![Fill Rectangle](displaying-images/FillRectangle.png "Fill Rectangle")](displaying-images/FillRectangle-Large.png#lightbox)
 
@@ -263,16 +340,24 @@ Stretching a bitmap while preserving the aspect ratio is a process also known as
 ```csharp
 public class UniformScalingPage : ContentPage
 {
-    SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(UniformScalingPage),
-                                            "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKCanvasView canvasView;
+    SKBitmap? bitmap;
+
     public UniformScalingPage()
     {
         Title = "Uniform Scaling";
 
-        SKCanvasView canvasView = new SKCanvasView();
+        canvasView = new SKCanvasView();
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
+
+        _ = LoadBitmapAsync();
+    }
+
+    async Task LoadBitmapAsync()
+    {
+        bitmap = await BitmapExtensions.LoadBitmapAssetAsync("Banana.jpg");
+        canvasView.InvalidateSurface();
     }
 
     void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -282,6 +367,10 @@ public class UniformScalingPage : ContentPage
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear();
+
+        // Check if bitmap is loaded before drawing
+        if (bitmap is null)
+            return;
 
         float scale = Math.Min((float)info.Width / bitmap.Width,
                                (float)info.Height / bitmap.Height);
@@ -295,7 +384,7 @@ public class UniformScalingPage : ContentPage
 }
 ```
 
-The `PaintSurface` handler calculates a `scale` factor that is the minimum of the ratio of the display width and height to the bitmap width and height. The `x` and `y` values can then be calculated for centering the scaled bitmap within the display width and height. The destination rectangle has an upper-left corner of `x` and `y` and a lower-right corner of those values plus the scaled width and height of the bitmap:
+The `PaintSurface` handler first checks that the bitmap task has completed successfully before accessing the result. It then calculates a `scale` factor that is the minimum of the ratio of the display width and height to the bitmap width and height. The `x` and `y` values can then be calculated for centering the scaled bitmap within the display width and height. The destination rectangle has an upper-left corner of `x` and `y` and a lower-right corner of those values plus the scaled width and height of the bitmap:
 
 [![Uniform Scaling](displaying-images/UniformScaling.png "Uniform Scaling")](displaying-images/UniformScaling-Large.png#lightbox)
 
@@ -572,17 +661,23 @@ The first of these two new `DrawBitmap` methods is demonstrated in the **Scaling
 </ContentPage>
 ```
 
-The code-behind file simply invalidates the `CanvasView` when any `Picker` item has changed. The `PaintSurface` handler accesses the three `Picker` views for calling the `DrawBitmap` extension method:
+The code-behind file simply invalidates the `CanvasView` when any `Picker` item has changed. The `PaintSurface` handler checks if the bitmap is loaded before accessing the three `Picker` views for calling the `DrawBitmap` extension method:
 
 ```csharp
 public partial class ScalingModesPage : ContentPage
 {
-    SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(ScalingModesPage),
-                                            "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKBitmap? bitmap;
+
     public ScalingModesPage()
     {
         InitializeComponent();
+        _ = LoadBitmapAsync();
+    }
+
+    async Task LoadBitmapAsync()
+    {
+        bitmap = await BitmapExtensions.LoadBitmapAssetAsync("Banana.jpg");
+        canvasView.InvalidateSurface();
     }
 
     private void OnPickerSelectedIndexChanged(object sender, EventArgs args)
@@ -597,6 +692,10 @@ public partial class ScalingModesPage : ContentPage
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear();
+
+        // Check if bitmap is loaded before drawing
+        if (bitmap is null)
+            return;
 
         SKRect dest = new SKRect(0, 0, info.Width, info.Height);
 
@@ -616,17 +715,22 @@ Here are some combinations of options:
 The **Rectangle Subset** page has virtually the same XAML file as **Scaling Modes**, but the code-behind file defines a rectangular subset of the bitmap given by the `SOURCE` field:
 
 ```csharp
-public partial class ScalingModesPage : ContentPage
+public partial class RectangleSubsetPage : ContentPage
 {
-    SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(ScalingModesPage),
-                                            "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKBitmap? bitmap;
 
     static readonly SKRect SOURCE = new SKRect(94, 12, 212, 118);
 
     public RectangleSubsetPage()
     {
         InitializeComponent();
+        _ = LoadBitmapAsync();
+    }
+
+    async Task LoadBitmapAsync()
+    {
+        bitmap = await BitmapExtensions.LoadBitmapAssetAsync("Banana.jpg");
+        canvasView.InvalidateSurface();
     }
 
     private void OnPickerSelectedIndexChanged(object sender, EventArgs args)
@@ -641,6 +745,10 @@ public partial class ScalingModesPage : ContentPage
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear();
+
+        // Check if bitmap is loaded before drawing
+        if (bitmap is null)
+            return;
 
         SKRect dest = new SKRect(0, 0, info.Width, info.Height);
 

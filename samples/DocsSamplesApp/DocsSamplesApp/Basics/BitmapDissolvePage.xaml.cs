@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -13,26 +13,30 @@ namespace DocsSamplesApp.Basics
 {
     public partial class BitmapDissolvePage : ContentPage
     {
-        SKBitmap bitmap1;
-        SKBitmap bitmap2;
+        SKBitmap? bitmap1;
+        SKBitmap? bitmap2;
 
         public BitmapDissolvePage()
         {
             InitializeComponent();
 
             // Load two bitmaps
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
+            _ = LoadBitmap1Async();
+            _ = LoadBitmap2Async();
+        }
 
-            using (Stream stream = assembly.GetManifestResourceStream(
-                                    "DocsSamplesApp.Media.SeatedMonkey.jpg"))
-            {
-                bitmap1 = SKBitmap.Decode(stream);
-            }
-            using (Stream stream = assembly.GetManifestResourceStream(
-                                    "DocsSamplesApp.Media.FacePalm.jpg"))
-            {
-                bitmap2 = SKBitmap.Decode(stream);
-            }
+        async Task LoadBitmap1Async()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap1 = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
+
+        async Task LoadBitmap2Async()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("FacePalm.jpg");
+            bitmap2 = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -47,6 +51,9 @@ namespace DocsSamplesApp.Basics
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap1 is null || bitmap2 is null)
+                return;
 
             // Find rectangle to fit bitmap
             float scale = Math.Min((float)info.Width / bitmap1.Width,

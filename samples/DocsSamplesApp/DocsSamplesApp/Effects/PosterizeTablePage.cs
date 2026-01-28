@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -12,9 +13,8 @@ namespace DocsSamplesApp.Effects
 {
     public class PosterizeTablePage : ContentPage
     {
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                            typeof(PosterizeTablePage),
-                            "DocsSamplesApp.Media.MonkeyFace.png");
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
 
         byte[] colorTable = new byte[256];
 
@@ -28,9 +28,18 @@ namespace DocsSamplesApp.Effects
                 colorTable[i] = (byte)(0xC0 & i);
             }
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
+
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("MonkeyFace.png");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -40,6 +49,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             using (SKPaint paint = new SKPaint())
             {

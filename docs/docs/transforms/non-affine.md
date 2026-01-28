@@ -146,24 +146,25 @@ The **Test Perspective** page allows you to experiment with values of `Persp0` a
 </ContentPage>
 ```
 
-The event handlers for the sliders in the [`TestPerspectivePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TestPerspectivePage.xaml.cs) code-behind file divide the values by 100 so that they range between –0.01 and 0.01. In addition, the constructor loads in a bitmap:
+The event handlers for the sliders in the [`TestPerspectivePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TestPerspectivePage.xaml.cs) code-behind file divide the values by 100 so that they range between –0.01 and 0.01. In addition, the constructor loads in a bitmap from the Resources/Raw folder:
 
 ```csharp
 public partial class TestPerspectivePage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
 
     public TestPerspectivePage()
     {
         InitializeComponent();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap = SKBitmap.Decode(stream);
+        canvasView.InvalidateSurface();
     }
 
     void OnPersp0SliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -196,6 +197,9 @@ public partial class TestPerspectivePage : ContentPage
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear();
+
+        if (bitmap is null)
+            return;
 
         // Calculate perspective matrix
         SKMatrix perspectiveMatrix = SKMatrix.MakeIdentity();

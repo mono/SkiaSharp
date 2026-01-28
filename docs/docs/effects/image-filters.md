@@ -74,9 +74,7 @@ public partial class ImageBlurExperimentPage : ContentPage
 {
     const string TEXT = "Blur My Text";
 
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                            typeof(MaskBlurExperimentPage),
-                            "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("SeatedMonkey.jpg");
 
     public ImageBlurExperimentPage ()
     {

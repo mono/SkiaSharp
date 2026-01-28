@@ -156,31 +156,31 @@ Bitmap transparency is demonstrated in the **Bitmap Dissolve** page. The XAML fi
 </ContentPage>
 ```
 
-The code-behind file loads two bitmap resources. These bitmaps are not the same size, but they are the same aspect ratio:
+The code-behind file loads two bitmaps from the Resources/Raw folder using .NET MAUI's FileSystem API. These bitmaps are not the same size, but they are the same aspect ratio:
 
 ```csharp
 public partial class BitmapDissolvePage : ContentPage
 {
-    SKBitmap bitmap1;
-    SKBitmap bitmap2;
+    SKBitmap? bitmap1;
+    SKBitmap? bitmap2;
 
     public BitmapDissolvePage()
     {
         InitializeComponent();
 
-        // Load two bitmaps
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapsAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(
-                                "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg"))
-        {
-            bitmap1 = SKBitmap.Decode(stream);
-        }
-        using (Stream stream = assembly.GetManifestResourceStream(
-                                "SkiaSharpFormsDemos.Media.FacePalm.jpg"))
-        {
-            bitmap2 = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapsAsync()
+    {
+        // Load two bitmaps from Resources/Raw folder
+        using Stream stream1 = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap1 = SKBitmap.Decode(stream1);
+
+        using Stream stream2 = await FileSystem.OpenAppPackageFileAsync("FacePalm.jpg");
+        bitmap2 = SKBitmap.Decode(stream2);
+
+        canvasView.InvalidateSurface();
     }
 
     void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -195,6 +195,9 @@ public partial class BitmapDissolvePage : ContentPage
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear();
+
+        if (bitmap1 is null || bitmap2 is null)
+            return;
 
         // Find rectangle to fit bitmap
         float scale = Math.Min((float)info.Width / bitmap1.Width,

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -8,21 +8,31 @@ using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public class UniformScalingPage : ContentPage
     {
-        SKBitmap bitmap =
-            BitmapExtensions.LoadBitmapResource(typeof(UniformScalingPage),
-                                                "DocsSamplesApp.Media.Banana.jpg");
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
+
         public UniformScalingPage()
         {
             Title = "Uniform Scaling";
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
+
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -32,6 +42,9 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             float scale = Math.Min((float)info.Width / bitmap.Width, 
                                    (float)info.Height / bitmap.Height);

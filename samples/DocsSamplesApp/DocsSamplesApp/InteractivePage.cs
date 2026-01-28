@@ -1,14 +1,11 @@
-﻿using System;
+using System;
 
 using SkiaSharp;
-
-using TouchTracking;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
-using Microsoft.Maui.Devices.Sensors;
 
 namespace DocsSamplesApp
 {
@@ -39,22 +36,22 @@ namespace DocsSamplesApp
             PathEffect = SKPathEffect.CreateDash(new float[] { 7, 7 }, 0)
         };
 
-        protected void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+        protected void OnTouch(object sender, SKTouchEventArgs e)
         {
             bool touchPointMoved = false;
 
             foreach (TouchPoint touchPoint in touchPoints)
             {
-                float scale = baseCanvasView.CanvasSize.Width / (float)baseCanvasView.Width;
-                SKPoint point = new SKPoint(scale * (float)args.Location.X,
-                                            scale * (float)args.Location.Y);
-                touchPointMoved |= touchPoint.ProcessTouchEvent(args.Id, args.Type, point);
+                // Location is already in pixels with built-in touch
+                touchPointMoved |= touchPoint.ProcessTouchEvent(e.Id, e.ActionType, e.Location);
             }
 
             if (touchPointMoved)
             {
                 baseCanvasView.InvalidateSurface();
             }
+
+            e.Handled = true;
         }
     }
 }

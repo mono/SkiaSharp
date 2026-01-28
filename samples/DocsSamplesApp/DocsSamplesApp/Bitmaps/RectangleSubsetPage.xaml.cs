@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading.Tasks;
 
 using SkiaSharp;
@@ -10,20 +8,27 @@ using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public partial class RectangleSubsetPage : ContentPage
     {
-        SKBitmap bitmap =
-            BitmapExtensions.LoadBitmapResource(typeof(RectangleSubsetPage),
-                                                "DocsSamplesApp.Media.Banana.jpg");
+        SKBitmap? bitmap;
 
         static readonly SKRect SOURCE = new SKRect(94, 12, 212, 118);
 
         public RectangleSubsetPage()
         {
             InitializeComponent();
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         private void OnPickerSelectedIndexChanged(object sender, EventArgs args)
@@ -38,6 +43,9 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             SKRect dest = new SKRect(0, 0, info.Width, info.Height);
 

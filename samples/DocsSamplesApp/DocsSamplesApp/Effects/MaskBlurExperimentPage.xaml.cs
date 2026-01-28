@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -13,14 +14,20 @@ namespace DocsSamplesApp.Effects
 	{
         const string TEXT = "Blur My Text";
 
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                                typeof(MaskBlurExperimentPage), 
-                                "DocsSamplesApp.Media.SeatedMonkey.jpg");
+        SKBitmap? bitmap;
 
 		public MaskBlurExperimentPage ()
 		{
 			InitializeComponent ();
+            _ = LoadBitmapAsync();
 		}
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
 
         void OnPickerSelectedIndexChanged(object sender, EventArgs args)
         {
@@ -39,6 +46,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear(SKColors.Pink);
+
+            if (bitmap is null)
+                return;
 
             // Get values from XAML controls
             SKBlurStyle blurStyle =

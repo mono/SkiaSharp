@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -8,12 +8,14 @@ using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Curves
 {
     public class MonkeyThroughKeyholePage : ContentPage
     {
-        SKBitmap bitmap;
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
         SKPath keyholePath = SKPath.ParseSvgPathData(
             "M 300 130 L 250 350 L 450 350 L 400 130 A 70 70 0 1 0 300 130 Z");
 
@@ -21,17 +23,18 @@ namespace DocsSamplesApp.Curves
         {
             Title = "Monkey through Keyhole";
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
 
-            string resourceID = "DocsSamplesApp.Media.SeatedMonkey.jpg";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
+            _ = LoadBitmapAsync();
+        }
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                bitmap = SKBitmap.Decode(stream);
-            }
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -41,6 +44,9 @@ namespace DocsSamplesApp.Curves
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Set transform to center and enlarge clip path to window height
             SKRect bounds;

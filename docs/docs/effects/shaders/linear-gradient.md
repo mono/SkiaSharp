@@ -153,9 +153,9 @@ Also notice that the points that you use to specify the gradient line aren't uni
 
 ## Interactively experiment
 
-You can interactively experiment with linear gradients with the **Interactive Linear Gradient** page. This page uses the `InteractivePage` class introduced in the article [**Three ways to draw an arc**](../../curves/arcs.md). `InteractivePage` handles touch-tracking events to maintain a collection of `TouchPoint` objects that you can move with your fingers or the mouse.
+You can interactively experiment with linear gradients with the **Interactive Linear Gradient** page. This page uses the `InteractivePage` class introduced in the article [**Three ways to draw an arc**](../../curves/arcs.md). `InteractivePage` uses `SKCanvasView`'s built-in touch support to maintain a collection of `TouchPoint` objects that you can move with your fingers or the mouse.
 
-The XAML file attaches the `TouchEffect` to a parent of the `SKCanvasView` and also includes a `Picker` that allows you to select one of the three members of the [`SKShaderTileMode`](xref:SkiaSharp.SKShaderTileMode) enumeration:
+The XAML file enables touch events on the `SKCanvasView` and also includes a `Picker` that allows you to select one of the three members of the [`SKShaderTileMode`](xref:SkiaSharp.SKShaderTileMode) enumeration:
 
 ```xaml
 <local:InteractivePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -163,7 +163,6 @@ The XAML file attaches the `TouchEffect` to a parent of the `SKCanvasView` and a
                        xmlns:local="clr-namespace:SkiaSharpFormsDemos"
                        xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
                        xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-                       xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="SkiaSharpFormsDemos.Effects.InteractiveLinearGradientPage"
                        Title="Interactive Linear Gradient">
     <Grid>
@@ -175,11 +174,9 @@ The XAML file attaches the `TouchEffect` to a parent of the `SKCanvasView` and a
         <Grid BackgroundColor="White"
               Grid.Row="0">
             <skiaforms:SKCanvasView x:Name="canvasView"
-                                    PaintSurface="OnCanvasViewPaintSurface" />
-            <Grid.Effects>
-                <tt:TouchEffect Capture="True"
-                                TouchAction="OnTouchEffectAction" />
-            </Grid.Effects>
+                                    PaintSurface="OnCanvasViewPaintSurface"
+                                    EnableTouchEvents="True"
+                                    Touch="OnTouch" />
         </Grid>
 
         <Picker x:Name="tileModePicker"

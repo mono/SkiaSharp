@@ -118,7 +118,7 @@ The fourth column of the 4-by-4 is for perspective. The `SKMatrix44` has no meth
 
 ```csharp
 SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
-perspectiveMatrix[3, 2] = -1 / depth;
+perspectiveMatrix[2, 3] = -1 / depth;
 ```
 
 The reason for the argument name `depth` will be evident shortly. That code creates the matrix:
@@ -297,24 +297,25 @@ The **Rotation 3D** page lets you experiment with 3D rotation. The [**Rotation3D
 
 Notice that the `depthSlider` is initialized with a `Minimum` value of 250. This implies that the 2D object being rotated here has X and Y coordinates restricted to a circle defined by a 250-pixel radius around the origin. Any rotation of this object in 3D space will always result in coordinate values less than 250.
 
-The [**Rotation3DPage.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs) code-behind file loads in a bitmap that is 300 pixels square:
+The [**Rotation3DPage.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs) code-behind file loads in a bitmap that is 300 pixels square from the Resources/Raw folder:
 
 ```csharp
 public partial class Rotation3DPage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
 
     public Rotation3DPage()
     {
         InitializeComponent();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap = SKBitmap.Decode(stream);
+        canvasView.InvalidateSurface();
     }
 
     void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -335,19 +336,20 @@ The `PaintSurface` handler creates `SKMatrix44` objects based on the sliders and
 ```csharp
 public partial class Rotation3DPage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
 
     public Rotation3DPage()
     {
         InitializeComponent();
 
-        string resourceID = "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap = SKBitmap.Decode(stream);
+        canvasView.InvalidateSurface();
     }
 
     void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -366,29 +368,32 @@ public partial class Rotation3DPage : ContentPage
 
         canvas.Clear();
 
+        if (bitmap is null)
+            return;
+
         // Find center of canvas
         float xCenter = info.Width / 2;
         float yCenter = info.Height / 2;
 
         // Translate center to origin
-        SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
+        SKMatrix matrix = SKMatrix.CreateTranslation(-xCenter, -yCenter);
 
         // Use 3D matrix for 3D rotations and perspective
+        // Note: PostConcat returns a new matrix, use *= operator
         SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
-        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(1, 0, 0, (float)xRotateSlider.Value));
-        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 1, 0, (float)yRotateSlider.Value));
-        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 0, 1, (float)zRotateSlider.Value));
+        matrix44 *= SKMatrix44.CreateRotationDegrees(1, 0, 0, (float)xRotateSlider.Value);
+        matrix44 *= SKMatrix44.CreateRotationDegrees(0, 1, 0, (float)yRotateSlider.Value);
+        matrix44 *= SKMatrix44.CreateRotationDegrees(0, 0, 1, (float)zRotateSlider.Value);
 
         SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
-        perspectiveMatrix[3, 2] = -1 / (float)depthSlider.Value;
-        matrix44.PostConcat(perspectiveMatrix);
+        perspectiveMatrix[2, 3] = -1 / (float)depthSlider.Value;
+        matrix44 *= perspectiveMatrix;
 
         // Concatenate with 2D matrix
-        SKMatrix.PostConcat(ref matrix, matrix44.Matrix);
+        matrix = matrix.PostConcat(matrix44.Matrix);
 
         // Translate back to center
-        SKMatrix.PostConcat(ref matrix,
-            SKMatrix.MakeTranslation(xCenter, yCenter));
+        matrix = matrix.PostConcat(SKMatrix.CreateTranslation(xCenter, yCenter));
 
         // Set the matrix and display the bitmap
         canvas.SetMatrix(matrix);
@@ -488,31 +493,30 @@ public class AnimatedRotation3DPage : ContentPage
         float yCenter = info.Height / 2;
 
         // Translate center to origin
-        SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
+        SKMatrix matrix = SKMatrix.CreateTranslation(-xCenter, -yCenter);
 
         // Scale so text fits
         float scale = Math.Min(info.Width / textBounds.Width,
                                info.Height / textBounds.Height);
-        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(scale, scale));
+        matrix = matrix.PostConcat(SKMatrix.CreateScale(scale, scale));
 
         // Calculate composite 3D transforms
         float depth = 0.75f * scale * textBounds.Width;
 
         SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
-        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(1, 0, 0, xRotationDegrees));
-        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 1, 0, yRotationDegrees));
-        matrix44.PostConcat(SKMatrix44.CreateRotationDegrees(0, 0, 1, zRotationDegrees));
+        matrix44 *= SKMatrix44.CreateRotationDegrees(1, 0, 0, xRotationDegrees);
+        matrix44 *= SKMatrix44.CreateRotationDegrees(0, 1, 0, yRotationDegrees);
+        matrix44 *= SKMatrix44.CreateRotationDegrees(0, 0, 1, zRotationDegrees);
 
         SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
-        perspectiveMatrix[3, 2] = -1 / depth;
-        matrix44.PostConcat(perspectiveMatrix);
+        perspectiveMatrix[2, 3] = -1 / depth;
+        matrix44 *= perspectiveMatrix;
 
         // Concatenate with 2D matrix
-        SKMatrix.PostConcat(ref matrix, matrix44.Matrix);
+        matrix = matrix.PostConcat(matrix44.Matrix);
 
         // Translate back to center
-        SKMatrix.PostConcat(ref matrix,
-            SKMatrix.MakeTranslation(xCenter, yCenter));
+        matrix = matrix.PostConcat(SKMatrix.CreateTranslation(xCenter, yCenter));
 
         // Set the matrix and display the text
         canvas.SetMatrix(matrix);

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -8,12 +8,13 @@ using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Transforms
 {
     public partial class TaperTransformPage : ContentPage
     {
-        SKBitmap bitmap;
+        SKBitmap? bitmap;
 
         MatrixDisplay matrixDisplay = new MatrixDisplay
         {
@@ -24,15 +25,16 @@ namespace DocsSamplesApp.Transforms
         {
             InitializeComponent();
 
-            string resourceID = "DocsSamplesApp.Media.FacePalm.jpg";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                bitmap = SKBitmap.Decode(stream);
-            }
+            _ = LoadBitmapAsync();
 
             taperFractionSlider.Value = 1;
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("FacePalm.jpg");
+            bitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
         }
 
         void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
@@ -58,6 +60,9 @@ namespace DocsSamplesApp.Transforms
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             TaperSide taperSide = (TaperSide)taperSidePicker.SelectedItem;
             TaperCorner taperCorner = (TaperCorner)taperCornerPicker.SelectedItem;

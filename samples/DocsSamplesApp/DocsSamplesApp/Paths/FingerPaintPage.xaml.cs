@@ -1,15 +1,10 @@
-﻿using System;
 using System.Collections.Generic;
-
-using TouchTracking;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
-using Microsoft.Maui;
-using Microsoft.Maui.Devices.Sensors;
 
 namespace DocsSamplesApp.Paths
 {
@@ -32,46 +27,48 @@ namespace DocsSamplesApp.Paths
             InitializeComponent();
         }
 
-        void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+        void OnTouch(object sender, SKTouchEventArgs e)
         {
-            switch (args.Type)
+            switch (e.ActionType)
             {
-                case TouchActionType.Pressed:
-                    if (!inProgressPaths.ContainsKey(args.Id))
+                case SKTouchAction.Pressed:
+                    if (!inProgressPaths.ContainsKey(e.Id))
                     {
                         SKPath path = new SKPath();
-                        path.MoveTo(ConvertToPixel(args.Location));
-                        inProgressPaths.Add(args.Id, path);
+                        path.MoveTo(e.Location);
+                        inProgressPaths.Add(e.Id, path);
                         canvasView.InvalidateSurface();
                     }
                     break;
 
-                case TouchActionType.Moved:
-                    if (inProgressPaths.ContainsKey(args.Id))
+                case SKTouchAction.Moved:
+                    if (inProgressPaths.ContainsKey(e.Id))
                     {
-                        SKPath path = inProgressPaths[args.Id];
-                        path.LineTo(ConvertToPixel(args.Location));
+                        SKPath path = inProgressPaths[e.Id];
+                        path.LineTo(e.Location);
                         canvasView.InvalidateSurface();
                     }
                     break;
 
-                case TouchActionType.Released:
-                    if (inProgressPaths.ContainsKey(args.Id))
+                case SKTouchAction.Released:
+                    if (inProgressPaths.ContainsKey(e.Id))
                     {
-                        completedPaths.Add(inProgressPaths[args.Id]);
-                        inProgressPaths.Remove(args.Id);
+                        completedPaths.Add(inProgressPaths[e.Id]);
+                        inProgressPaths.Remove(e.Id);
                         canvasView.InvalidateSurface();
                     }
                     break;
 
-                case TouchActionType.Cancelled:
-                    if (inProgressPaths.ContainsKey(args.Id))
+                case SKTouchAction.Cancelled:
+                    if (inProgressPaths.ContainsKey(e.Id))
                     {
-                        inProgressPaths.Remove(args.Id);
+                        inProgressPaths.Remove(e.Id);
                         canvasView.InvalidateSurface();
                     }
                     break;
             }
+
+            e.Handled = true;
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -88,12 +85,6 @@ namespace DocsSamplesApp.Paths
             {
                 canvas.DrawPath(path, paint);
             }
-        }
-
-        SKPoint ConvertToPixel(Point pt)
-        {
-            return new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                               (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
         }
     }
 }

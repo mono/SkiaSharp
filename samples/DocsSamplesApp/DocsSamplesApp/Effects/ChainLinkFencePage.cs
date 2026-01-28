@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -12,10 +13,10 @@ namespace DocsSamplesApp.Effects
 {
 	public class ChainLinkFencePage : ContentPage
 	{
-        SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmapResource(
-            typeof(ChainLinkFencePage), "DocsSamplesApp.Media.SeatedMonkey.jpg");
+        SKBitmap? monkeyBitmap;
 
         SKBitmap tileBitmap;
+        SKCanvasView canvasView;
 
 		public ChainLinkFencePage ()
 		{
@@ -25,10 +26,19 @@ namespace DocsSamplesApp.Effects
             int tileSize = Device.Idiom == TargetIdiom.Desktop ? 64 : 128;
             tileBitmap = CreateChainLinkTile(tileSize);
 
-            SKCanvasView canvasView = new SKCanvasView();
+            canvasView = new SKCanvasView();
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
+
+            _ = LoadBitmapAsync();
 		}
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            monkeyBitmap = SKBitmap.Decode(stream);
+            canvasView.InvalidateSurface();
+        }
 
         SKBitmap CreateChainLinkTile(int tileSize)
         {
@@ -101,6 +111,9 @@ namespace DocsSamplesApp.Effects
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (monkeyBitmap is null)
+                return;
 
             canvas.DrawBitmap(monkeyBitmap, info.Rect, BitmapStretch.UniformToFill, 
                               BitmapAlignment.Center, BitmapAlignment.Start);

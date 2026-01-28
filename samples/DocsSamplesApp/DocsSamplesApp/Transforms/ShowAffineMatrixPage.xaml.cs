@@ -1,23 +1,19 @@
-﻿using System;
 using System.IO;
-using System.Reflection;
+using System.Threading.Tasks;
 
 using SkiaSharp;
-
-using TouchTracking;
 using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
-using Microsoft.Maui;
-using Microsoft.Maui.Devices.Sensors;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Transforms
 {
     public partial class ShowAffineMatrixPage : ContentPage
     {
         SKMatrix matrix;
-        SKBitmap bitmap;
+        SKBitmap? bitmap;
         SKSize bitmapSize;
 
         TouchPoint[] touchPoints = new TouchPoint[3];
@@ -28,13 +24,13 @@ namespace DocsSamplesApp.Transforms
         {
             InitializeComponent();
 
-            string resourceID = "DocsSamplesApp.Media.SeatedMonkey.jpg";
-            Assembly assembly = GetType().GetTypeInfo().Assembly;
+            _ = LoadBitmapAsync();
+        }
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-            {
-                bitmap = SKBitmap.Decode(stream);
-            }
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+            bitmap = SKBitmap.Decode(stream);
 
             touchPoints[0] = new TouchPoint(100, 100);                  // upper-left corner
             touchPoints[1] = new TouchPoint(bitmap.Width + 100, 100);   // upper-right corner
@@ -44,18 +40,20 @@ namespace DocsSamplesApp.Transforms
             matrix = ComputeMatrix(bitmapSize, touchPoints[0].Center, 
                                                touchPoints[1].Center, 
                                                touchPoints[2].Center);
+            canvasView.InvalidateSurface();
         }
 
-        void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+        void OnTouch(object sender, SKTouchEventArgs e)
         {
+            if (bitmap is null)
+                return;
+
             bool touchPointMoved = false;
 
             foreach (TouchPoint touchPoint in touchPoints)
             {
-                float scale = canvasView.CanvasSize.Width / (float)canvasView.Width;
-                SKPoint point = new SKPoint(scale * (float)args.Location.X,
-                                            scale * (float)args.Location.Y);
-                touchPointMoved |= touchPoint.ProcessTouchEvent(args.Id, args.Type, point);
+                // Location is already in pixels with built-in touch
+                touchPointMoved |= touchPoint.ProcessTouchEvent(e.Id, e.ActionType, e.Location);
             }
 
             if (touchPointMoved)
@@ -65,6 +63,8 @@ namespace DocsSamplesApp.Transforms
                                                    touchPoints[2].Center);
                 canvasView.InvalidateSurface();
             }
+
+            e.Handled = true;
         }
 
         static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint ptLL)
@@ -96,6 +96,9 @@ namespace DocsSamplesApp.Transforms
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
 
             // Display the bitmap using the matrix
             canvas.Save();

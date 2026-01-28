@@ -33,16 +33,13 @@ This class is demonstrated in the **Path Length** sample, which is based on the 
                        xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                        xmlns:local="clr-namespace:SkiaSharpFormsDemos"
                        xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-                       xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="SkiaSharpFormsDemos.Curves.PathLengthPage"
                        Title="Path Length">
     <Grid BackgroundColor="White">
         <skia:SKCanvasView x:Name="canvasView"
-                           PaintSurface="OnCanvasViewPaintSurface" />
-        <Grid.Effects>
-            <tt:TouchEffect Capture="True"
-                            TouchAction="OnTouchEffectAction" />
-        </Grid.Effects>
+                           PaintSurface="OnCanvasViewPaintSurface"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch" />
     </Grid>
 </local:InteractivePage>
 ```

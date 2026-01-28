@@ -18,12 +18,12 @@ It's sometimes necessary to restrict the rendering of graphics to a particular a
 
 The *clipping area* is the area of the screen in which graphics are rendered. Anything that is displayed outside of the clipping area is not rendered. The clipping area is usually defined by a rectangle or an [`SKPath`](xref:SkiaSharp.SKPath) object, but you can alternatively define a clipping area using an [`SKRegion`](xref:SkiaSharp.SKRegion) object. These two types of objects at first seem related because you can create a region from a path. However, you cannot create a path from a region, and they are very different internally: A path comprises a series of lines and curves, while a region is defined by a series of horizontal scan lines.
 
-The image above was created by the **Monkey through Keyhole** page. The  [`MonkeyThroughKeyholePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/MonkeyThroughKeyholePage.cs) class defines a path using SVG data and uses the constructor to load a bitmap from program resources:
+The image above was created by the **Monkey through Keyhole** page. The  [`MonkeyThroughKeyholePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/MonkeyThroughKeyholePage.cs) class defines a path using SVG data and loads a bitmap from the app's `Resources/Raw` folder using .NET MAUI's `FileSystem` API:
 
 ```csharp
 public class MonkeyThroughKeyholePage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
     SKPath keyholePath = SKPath.ParseSvgPathData(
         "M 300 130 L 250 350 L 450 350 L 400 130 A 70 70 0 1 0 300 130 Z");
 
@@ -35,13 +35,13 @@ public class MonkeyThroughKeyholePage : ContentPage
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
 
-        string resourceID = "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg";
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("SeatedMonkey.jpg");
+        bitmap = SKBitmap.Decode(stream);
     }
     ...
 }

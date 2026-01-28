@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
 using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
@@ -7,17 +9,30 @@ using SkiaSharp.Views.Maui;
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
+using Microsoft.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
     public class PosterizePage : ContentPage
     {
-        SKBitmap bitmap =
-            BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
-                                                "DocsSamplesApp.Media.Banana.jpg");
+        SKBitmap? bitmap;
+        SKCanvasView canvasView;
+
         public PosterizePage()
         {
             Title = "Posterize";
+
+            canvasView = new SKCanvasView();
+            canvasView.PaintSurface += OnCanvasViewPaintSurface;
+            Content = canvasView;
+
+            _ = LoadBitmapAsync();
+        }
+
+        async Task LoadBitmapAsync()
+        {
+            using Stream stream = await FileSystem.OpenAppPackageFileAsync("Banana.jpg");
+            bitmap = SKBitmap.Decode(stream);
 
             unsafe
             {
@@ -30,9 +45,7 @@ namespace DocsSamplesApp.Bitmaps
                 }
             }
 
-            SKCanvasView canvasView = new SKCanvasView();
-            canvasView.PaintSurface += OnCanvasViewPaintSurface;
-            Content = canvasView;
+            canvasView.InvalidateSurface();
         }
 
         void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -42,6 +55,10 @@ namespace DocsSamplesApp.Bitmaps
             SKCanvas canvas = surface.Canvas;
 
             canvas.Clear();
+
+            if (bitmap is null)
+                return;
+
             canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
         }
     }

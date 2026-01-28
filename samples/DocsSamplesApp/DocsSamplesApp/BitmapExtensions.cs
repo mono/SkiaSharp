@@ -1,20 +1,29 @@
 ﻿using System;
-using System.IO;
-using System.Reflection;
 using SkiaSharp;
 
 namespace DocsSamplesApp
 {
     static class BitmapExtensions
     {
-        public static SKBitmap LoadBitmapResource(Type type, string resourceID)
+        /// <summary>
+        /// Gets the list of available image filenames in Resources/Raw.
+        /// </summary>
+        public static string[] GetImageFileNames()
         {
-            Assembly assembly = type.GetTypeInfo().Assembly;
-
-            using (Stream stream = assembly.GetManifestResourceStream(resourceID))
+            return new[]
             {
-                return SKBitmap.Decode(stream);
-            }
+                "Banana.jpg",
+                "BananaMatte.png",
+                "BrickWallTile.jpg",
+                "FacePalm.jpg",
+                "monkey.png",
+                "MonkeyFace.png",
+                "MountainClimbers.jpg",
+                "PageOfCode.png",
+                "SeatedMonkey.jpg",
+                "SeatedMonkeyMatte.png",
+                "StoneWallTile.jpg"
+            };
         }
 
         public static uint RgbaMakePixel(byte red, byte green, byte blue, byte alpha = 255)

@@ -51,9 +51,7 @@ The first `SKCanvasView` and `Slider` demonstrate `SKBlendMode.Lighten` and the 
 ```csharp
 public partial class LightenAndDarkenPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                typeof(SeparableBlendModesPage),
-                "SkiaSharpFormsDemos.Media.Banana.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("Banana.jpg");
 
     public LightenAndDarkenPage ()
     {
@@ -254,9 +252,7 @@ The code-behind file loads one of the bitmap resources and draws it twice, once 
 ```csharp
 public partial class SeparableBlendModesPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(SeparableBlendModesPage),
-                        "SkiaSharpFormsDemos.Media.Banana.jpg"); 
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("Banana.jpg"); 
 
     public SeparableBlendModesPage()
     {

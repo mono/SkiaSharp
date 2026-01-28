@@ -366,8 +366,7 @@ The code-behind file loads a bitmap resource and uses the `SKCanvasView` to disp
 ```csharp
 public partial class SaveFileFormatsPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(typeof(SaveFileFormatsPage),
-        "SkiaSharpFormsDemos.Media.MonkeyFace.png");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("MonkeyFace.png");
 
     public SaveFileFormatsPage ()
     {
@@ -472,7 +471,6 @@ Much of this program is similar to the original **Finger Paint** program. One en
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-             xmlns:tt="clr-namespace:TouchTracking"
              x:Class="SkiaSharpFormsDemos.Bitmaps.FingerPaintSavePage"
              Title="Finger Paint Save">
 
@@ -480,11 +478,9 @@ Much of this program is similar to the original **Finger Paint** program. One en
         <Grid BackgroundColor="White"
               VerticalOptions="FillAndExpand">
             <skia:SKCanvasView x:Name="canvasView"
-                               PaintSurface="OnCanvasViewPaintSurface" />
-            <Grid.Effects>
-                <tt:TouchEffect Capture="True"
-                                TouchAction="OnTouchEffectAction" />
-            </Grid.Effects>
+                               PaintSurface="OnCanvasViewPaintSurface"
+                               EnableTouchEvents="True"
+                               Touch="OnTouch" />
         </Grid>
 
         <Grid>
@@ -557,7 +553,7 @@ public partial class FingerPaintSavePage : ContentPage
 
 The drawing done by the `PaintSurface` handler occurs at the very end, and consists solely of rendering the bitmap.
 
-The touch processing is similar to the earlier program. The program maintains two collections, `inProgressPaths` and `completedPaths`, that contain everything the user has drawn since the last time the display was cleared. For each touch event, the `OnTouchEffectAction` handler calls `UpdateBitmap`:
+The touch processing is similar to the earlier program. The program maintains two collections, `inProgressPaths` and `completedPaths`, that contain everything the user has drawn since the last time the display was cleared. For each touch event, the `OnTouch` handler calls `UpdateBitmap`:
 
 ```csharp
 public partial class FingerPaintSavePage : ContentPage
@@ -574,52 +570,48 @@ public partial class FingerPaintSavePage : ContentPage
         StrokeJoin = SKStrokeJoin.Round
     };
     ···
-    void OnTouchEffectAction(object sender, TouchActionEventArgs args)
+    void OnTouch(object sender, SKTouchEventArgs e)
     {
-        switch (args.Type)
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
-                if (!inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Pressed:
+                if (!inProgressPaths.ContainsKey(e.Id))
                 {
                     SKPath path = new SKPath();
-                    path.MoveTo(ConvertToPixel(args.Location));
-                    inProgressPaths.Add(args.Id, path);
+                    path.MoveTo(e.Location);
+                    inProgressPaths.Add(e.Id, path);
                     UpdateBitmap();
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Moved:
+                if (inProgressPaths.ContainsKey(e.Id))
                 {
-                    SKPath path = inProgressPaths[args.Id];
-                    path.LineTo(ConvertToPixel(args.Location));
+                    SKPath path = inProgressPaths[e.Id];
+                    path.LineTo(e.Location);
                     UpdateBitmap();
                 }
                 break;
 
-            case TouchActionType.Released:
-                if (inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Released:
+                if (inProgressPaths.ContainsKey(e.Id))
                 {
-                    completedPaths.Add(inProgressPaths[args.Id]);
-                    inProgressPaths.Remove(args.Id);
+                    completedPaths.Add(inProgressPaths[e.Id]);
+                    inProgressPaths.Remove(e.Id);
                     UpdateBitmap();
                 }
                 break;
 
-            case TouchActionType.Cancelled:
-                if (inProgressPaths.ContainsKey(args.Id))
+            case SKTouchAction.Cancelled:
+                if (inProgressPaths.ContainsKey(e.Id))
                 {
-                    inProgressPaths.Remove(args.Id);
+                    inProgressPaths.Remove(e.Id);
                     UpdateBitmap();
                 }
                 break;
         }
-    }
 
-    SKPoint ConvertToPixel(Point pt)
-    {
-        return new SKPoint((float)(canvasView.CanvasSize.Width * pt.X / canvasView.Width),
-                            (float)(canvasView.CanvasSize.Height * pt.Y / canvasView.Height));
+        e.Handled = true;
     }
 
     void UpdateBitmap()

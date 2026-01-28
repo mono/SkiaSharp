@@ -86,8 +86,7 @@ public partial class BitmapTileFlipModesPage : ContentPage
     {
         InitializeComponent ();
 
-        SKBitmap origBitmap = BitmapExtensions.LoadBitmapResource(
-            GetType(), "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg");
+        SKBitmap origBitmap = BitmapExtensions.LoadBitmap("SeatedMonkey.jpg");
 
         // Define cropping rect
         SKRectI cropRect = new SKRectI(5, 27, 296, 260);
@@ -250,9 +249,7 @@ This bitmap is used in the **Photographic Brick Wall** page:
 ```csharp
 public class PhotographicBrickWallPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(PhotographicBrickWallPage),
-                        "SkiaSharpFormsDemos.Media.BrickWallTile.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("BrickWallTile.jpg");
 
     public PhotographicBrickWallPage()
     {
@@ -299,9 +296,7 @@ However, the original bitmap is a little too large for a tile. It could be resiz
 ```csharp
 public class StoneWallPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(StoneWallPage),
-                        "SkiaSharpFormsDemos.Media.StoneWallTile.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("StoneWallTile.jpg");
 
     public StoneWallPage()
     {
@@ -449,9 +444,7 @@ You can also use this technique to ensure that the tiled bitmap pattern is cente
 ```csharp
 public class CenteredTilesPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(CenteredTilesPage),
-                        "SkiaSharpFormsDemos.Media.monkey.png");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("monkey.png");
 
     public CenteredTilesPage ()
     {
@@ -613,8 +606,7 @@ Except for the wires, the tile is transparent, which means that you can display 
 ```csharp
 public class ChainLinkFencePage : ContentPage
 {
-    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(ChainLinkFencePage), "SkiaSharpFormsDemos.Media.SeatedMonkey.jpg");
+    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmap("SeatedMonkey.jpg");
     ···
 
     void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)

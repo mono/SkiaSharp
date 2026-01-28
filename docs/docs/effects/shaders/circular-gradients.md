@@ -211,9 +211,7 @@ The **Radial Gradient Mask** page shows an example. The program loads one of the
 ```csharp
 public class RadialGradientMaskPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(RadialGradientMaskPage),
-        "SkiaSharpFormsDemos.Media.MountainClimbers.jpg");
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap("MountainClimbers.jpg");
 
     static readonly SKPoint CENTER = new SKPoint(180, 300);
     static readonly float RADIUS = 120;
@@ -445,7 +443,6 @@ It's likely you'll want to experiment with the two-point conical gradient, so th
                        xmlns:local="clr-namespace:SkiaSharpFormsDemos"
                        xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
                        xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-                       xmlns:tt="clr-namespace:TouchTracking"
                        x:Class="SkiaSharpFormsDemos.Effects.ConicalGradientPage"
                        Title="Conical Gradient">
     <Grid>
@@ -457,11 +454,9 @@ It's likely you'll want to experiment with the two-point conical gradient, so th
         <Grid BackgroundColor="White"
               Grid.Row="0">
             <skiaforms:SKCanvasView x:Name="canvasView"
-                                    PaintSurface="OnCanvasViewPaintSurface" />
-            <Grid.Effects>
-                <tt:TouchEffect Capture="True"
-                                TouchAction="OnTouchEffectAction" />
-            </Grid.Effects>
+                                    PaintSurface="OnCanvasViewPaintSurface"
+                                    EnableTouchEvents="True"
+                                    Touch="OnTouch" />
         </Grid>
 
         <Picker x:Name="tileModePicker"
