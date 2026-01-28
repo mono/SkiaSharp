@@ -6,12 +6,12 @@
              x:Class="DocsSamplesApp.Effects.SeparableBlendModesPage"
              Title="Separable Blend Modes">
 
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto">
         <skiaviews:SKCanvasView x:Name="canvasView"
-                                VerticalOptions="FillAndExpand"
                                 PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Picker x:Name="blendModePicker"
+        <Picker Grid.Row="1"
+                x:Name="blendModePicker"
                 Title="Blend Mode"
                 Margin="10, 0"
                 SelectedIndexChanged="OnPickerSelectedIndexChanged">
@@ -38,32 +38,37 @@
             </Picker.SelectedIndex>
         </Picker>
 
-        <Slider x:Name="redSlider"
+        <Slider Grid.Row="2"
+                x:Name="redSlider"
                 MinimumTrackColor="Red"
                 MaximumTrackColor="Red"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Slider x:Name="greenSlider"
+        <Slider Grid.Row="3"
+                x:Name="greenSlider"
                 MinimumTrackColor="Green"
                 MaximumTrackColor="Green"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Slider x:Name="blueSlider"
+        <Slider Grid.Row="4"
+                x:Name="blueSlider"
                 MinimumTrackColor="Blue"
                 MaximumTrackColor="Blue"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Slider x:Name="graySlider"
+        <Slider Grid.Row="5"
+                x:Name="graySlider"
                 MinimumTrackColor="Gray"
                 MaximumTrackColor="Gray"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label x:Name="colorLabel"
+        <Label Grid.Row="6"
+               x:Name="colorLabel"
                HorizontalTextAlignment="Center" />
 
-    </StackLayout>
+    </Grid>
 </ContentPage>

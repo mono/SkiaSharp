@@ -6,12 +6,12 @@
              x:Class="DocsSamplesApp.Bitmaps.SaveFileFormatsPage"
              Title="Save File Formats">
 
-    <StackLayout Margin="10">
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto" Margin="10">
         <skiaforms:SKCanvasView x:Name="canvasView"
-                                PaintSurface="OnCanvasViewPaintSurface"
-                                VerticalOptions="FillAndExpand" />
+                                PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Picker x:Name="formatPicker"
+        <Picker Grid.Row="1"
+                x:Name="formatPicker"
                 Title="image format"
                 SelectedIndexChanged="OnFormatPickerChanged">
             <Picker.ItemsSource>
@@ -31,34 +31,37 @@
             </Picker.ItemsSource>
         </Picker>
 
-        <Slider x:Name="qualitySlider"
+        <Slider Grid.Row="2"
+                x:Name="qualitySlider"
                 Maximum="100"
                 Value="50" />
 
-        <Label Text="{Binding Source={x:Reference qualitySlider},
+        <Label Grid.Row="3"
+               Text="{Binding Source={x:Reference qualitySlider},
                               Path=Value,
                               StringFormat='Quality = {0:F0}'}"
                HorizontalTextAlignment="Center" />
 
-        <StackLayout Orientation="Horizontal">
+        <Grid Grid.Row="4" ColumnDefinitions="Auto,*">
             <Label Text="Folder Name: "
                    VerticalOptions="Center" />
 
-            <Entry x:Name="folderNameEntry"
-                   Text="SaveFileFormats"
-                   HorizontalOptions="FillAndExpand" />
-        </StackLayout>
+            <Entry Grid.Column="1"
+                   x:Name="folderNameEntry"
+                   Text="SaveFileFormats" />
+        </Grid>
 
-        <StackLayout Orientation="Horizontal">
+        <Grid Grid.Row="5" ColumnDefinitions="Auto,*">
             <Label Text="File Name: "
                    VerticalOptions="Center" />
 
-            <Entry x:Name="fileNameEntry"
-                   Text="Sample.xxx"
-                   HorizontalOptions="FillAndExpand" />
-        </StackLayout>
+            <Entry Grid.Column="1"
+                   x:Name="fileNameEntry"
+                   Text="Sample.xxx" />
+        </Grid>
 
-        <Button Text="Save" 
+        <Button Grid.Row="6"
+                Text="Save" 
                 Clicked="OnButtonClicked">
             <Button.Triggers>
                 <DataTrigger TargetType="Button"
@@ -77,8 +80,9 @@
             </Button.Triggers>
         </Button>
 
-        <Label x:Name="statusLabel"
+        <Label Grid.Row="7"
+               x:Name="statusLabel"
                Text="OK"
                Margin="10, 0" />
-    </StackLayout>
+    </Grid>
 </ContentPage>

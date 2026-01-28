@@ -4,42 +4,47 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="DocsSamplesApp.Basics.ColorExplorePage"
              Title="Color Explore">
-    <StackLayout>
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,*,Auto,Auto,*">
         <!-- Hue slider -->
         <Slider x:Name="hueSlider"
                 Maximum="360"
                 Margin="20, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label HorizontalTextAlignment="Center" 
+        <Label Grid.Row="1"
+               HorizontalTextAlignment="Center" 
                Text="{Binding Source={x:Reference hueSlider}, 
                               Path=Value,
                               StringFormat='Hue = {0:F0}'}" />
 
         <!-- Saturation slider -->
-        <Slider x:Name="saturationSlider"
+        <Slider Grid.Row="2"
+                x:Name="saturationSlider"
                 Maximum="100"
                 Margin="20, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label HorizontalTextAlignment="Center" 
+        <Label Grid.Row="3"
+               HorizontalTextAlignment="Center" 
                Text="{Binding Source={x:Reference saturationSlider}, 
                               Path=Value,
                               StringFormat='Saturation = {0:F0}'}" />
 
         <!-- Lightness slider -->
-        <Slider x:Name="lightnessSlider"
+        <Slider Grid.Row="4"
+                x:Name="lightnessSlider"
                 Maximum="100"
                 Margin="20, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label HorizontalTextAlignment="Center" 
+        <Label Grid.Row="5"
+               HorizontalTextAlignment="Center" 
                Text="{Binding Source={x:Reference lightnessSlider}, 
                               Path=Value,
                               StringFormat='Lightness = {0:F0}'}" />
 
         <!-- HSL canvas view -->
-        <Grid VerticalOptions="FillAndExpand">
+        <Grid Grid.Row="6">
             <skia:SKCanvasView x:Name="hslCanvasView"
                                PaintSurface="OnHslCanvasViewPaintSurface" />
 
@@ -51,18 +56,20 @@
         </Grid>
 
         <!-- Value slider -->
-        <Slider x:Name="valueSlider"
+        <Slider Grid.Row="7"
+                x:Name="valueSlider"
                 Maximum="100"
                 Margin="20, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label HorizontalTextAlignment="Center" 
+        <Label Grid.Row="8"
+               HorizontalTextAlignment="Center" 
                Text="{Binding Source={x:Reference valueSlider}, 
                               Path=Value,
                               StringFormat='Value = {0:F0}'}" />
 
         <!-- HSV canvas view -->
-        <Grid VerticalOptions="FillAndExpand">
+        <Grid Grid.Row="9">
             <skia:SKCanvasView x:Name="hsvCanvasView"
                                PaintSurface="OnHsvCanvasViewPaintSurface" />
 
@@ -72,5 +79,5 @@
                    BackgroundColor="Black"
                    TextColor="White" />
         </Grid>
-    </StackLayout>
+    </Grid>
 </ContentPage>

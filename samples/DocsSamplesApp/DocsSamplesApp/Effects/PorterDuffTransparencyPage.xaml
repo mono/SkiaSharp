@@ -6,12 +6,12 @@
              x:Class="DocsSamplesApp.Effects.PorterDuffTransparencyPage"
              Title="Porter-Duff Transparency">
 
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto">
         <skiaviews:SKCanvasView x:Name="canvasView"
-                                VerticalOptions="FillAndExpand"
                                 PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Picker x:Name="blendModePicker"
+        <Picker Grid.Row="1"
+                x:Name="blendModePicker"
                 Title="Blend Mode"
                 Margin="10"
                 SelectedIndexChanged="OnPickerSelectedIndexChanged">
@@ -38,5 +38,5 @@
                 3
             </Picker.SelectedIndex>
         </Picker>
-    </StackLayout>
+    </Grid>
 </ContentPage>

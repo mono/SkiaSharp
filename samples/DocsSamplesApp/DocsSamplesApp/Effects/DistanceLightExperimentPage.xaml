@@ -5,43 +5,48 @@
              x:Class="DocsSamplesApp.Effects.DistantLightExperimentPage"
              Title="Distant Light Experiment">
 
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto">
 
         <skia:SKCanvasView x:Name="canvasView"
-                           PaintSurface="OnCanvasViewPaintSurface"
-                           VerticalOptions="FillAndExpand" />
+                           PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="zSlider" 
+        <Slider Grid.Row="1"
+                x:Name="zSlider" 
                 Minimum="-10"
                 Maximum="10"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label Text="{Binding Source={x:Reference zSlider},
+        <Label Grid.Row="2"
+               Text="{Binding Source={x:Reference zSlider},
                               Path=Value,
                               StringFormat='Z = {0:F0}'}"
                HorizontalTextAlignment="Center" />
 
-        <Slider x:Name="surfaceScaleSlider" 
+        <Slider Grid.Row="3"
+                x:Name="surfaceScaleSlider" 
                 Minimum="-1"
                 Maximum="1"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label Text="{Binding Source={x:Reference surfaceScaleSlider},
+        <Label Grid.Row="4"
+               Text="{Binding Source={x:Reference surfaceScaleSlider},
                               Path=Value,
                               StringFormat='Surface Scale = {0:F1}'}"
                HorizontalTextAlignment="Center" />
 
-        <Slider x:Name="lightConstantSlider" 
+        <Slider Grid.Row="5"
+                x:Name="lightConstantSlider" 
                 Minimum="-1"
                 Maximum="1"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label Text="{Binding Source={x:Reference lightConstantSlider},
+        <Label Grid.Row="6"
+               Text="{Binding Source={x:Reference lightConstantSlider},
                               Path=Value,
                               StringFormat='Light Constant = {0:F1}'}"
                HorizontalTextAlignment="Center" />
-    </StackLayout>
+    </Grid>
 </ContentPage>

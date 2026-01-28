@@ -5,12 +5,12 @@
              x:Class="DocsSamplesApp.Effects.TiledPerlinNoisePage"
              Title="Tiled Perlin Noise">
              
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto">
         <skia:SKCanvasView x:Name="canvasView"
-                           VerticalOptions="FillAndExpand"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <StackLayout Orientation="Horizontal"
+        <StackLayout Grid.Row="1"
+                     Orientation="Horizontal"
                      HorizontalOptions="Center"
                      Margin="10">
 
@@ -24,5 +24,5 @@
                      ValueChanged="OnStepperValueChanged" />
 
         </StackLayout>
-    </StackLayout>
+    </Grid>
 </ContentPage>

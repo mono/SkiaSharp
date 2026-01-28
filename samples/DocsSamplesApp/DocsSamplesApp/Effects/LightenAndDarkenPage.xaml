@@ -4,21 +4,22 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="DocsSamplesApp.Effects.LightenAndDarkenPage"
              Title="Lighten and Darken">
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,*,Auto">
         <skia:SKCanvasView x:Name="lightenCanvasView"
-                           VerticalOptions="FillAndExpand"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="lightenSlider"
+        <Slider Grid.Row="1"
+                x:Name="lightenSlider"
                 Margin="10"
                 ValueChanged="OnSliderValueChanged" />
 
-        <skia:SKCanvasView x:Name="darkenCanvasView"
-                           VerticalOptions="FillAndExpand"
+        <skia:SKCanvasView Grid.Row="2"
+                           x:Name="darkenCanvasView"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="darkenSlider"
+        <Slider Grid.Row="3"
+                x:Name="darkenSlider"
                 Margin="10"
                 ValueChanged="OnSliderValueChanged" />
-    </StackLayout>
+    </Grid>
 </ContentPage>

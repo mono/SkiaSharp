@@ -4,35 +4,40 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="DocsSamplesApp.Bitmaps.ColorAdjustmentPage"
              Title="Color Adjustment">
-    <StackLayout Padding="10">
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" Padding="10">
 
         <skia:SKCanvasView x:Name="canvasView"
-                           VerticalOptions="FillAndExpand"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="hueSlider"
+        <Slider Grid.Row="1"
+                x:Name="hueSlider"
                 Maximum="360"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label x:Name="hueLabel"
+        <Label Grid.Row="2"
+               x:Name="hueLabel"
                HorizontalTextAlignment="Center" />
 
-        <Slider x:Name="saturationSlider"
+        <Slider Grid.Row="3"
+                x:Name="saturationSlider"
                 Minimum="-1"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label x:Name="saturationLabel"
+        <Label Grid.Row="4"
+               x:Name="saturationLabel"
                HorizontalTextAlignment="Center" />
 
-        <Slider x:Name="luminositySlider"
+        <Slider Grid.Row="5"
+                x:Name="luminositySlider"
                 Minimum="-1"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label x:Name="luminosityLabel"
+        <Label Grid.Row="6"
+               x:Name="luminosityLabel"
                HorizontalTextAlignment="Center" />
 
-    </StackLayout>
+    </Grid>
 </ContentPage>

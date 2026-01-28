@@ -5,31 +5,23 @@
              x:Class="DocsSamplesApp.Bitmaps.FingerPaintSavePage"
              Title="Finger Paint Save">
 
-    <StackLayout>
-        <Grid BackgroundColor="White"
-              VerticalOptions="FillAndExpand">
+    <Grid RowDefinitions="*,Auto,Auto">
+        <Grid BackgroundColor="White">
             <skia:SKCanvasView x:Name="canvasView"
                                EnableTouchEvents="True"
                                Touch="OnTouch"
                                PaintSurface="OnCanvasViewPaintSurface" />
         </Grid>
 
-        <Grid>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-        </Grid>
-
-        <Button Text="Clear"
-                Grid.Row="0"
+        <Button Grid.Row="1"
+                Text="Clear"
                 Margin="50, 5"
                 Clicked="OnClearButtonClicked" />
 
-        <Button Text="Save"
-                Grid.Row="1"
+        <Button Grid.Row="2"
+                Text="Save"
                 Margin="50, 5"
                 Clicked="OnSaveButtonClicked" />
 
-    </StackLayout>
+    </Grid>
 </ContentPage>

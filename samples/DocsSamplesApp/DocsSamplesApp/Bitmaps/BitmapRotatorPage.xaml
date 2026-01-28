@@ -4,20 +4,21 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="DocsSamplesApp.Bitmaps.BitmapRotatorPage"
              Title="Bitmap Rotator">
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,Auto">
         <skia:SKCanvasView x:Name="canvasView"
-                           VerticalOptions="FillAndExpand"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="slider"
+        <Slider Grid.Row="1"
+                x:Name="slider"
                 Maximum="360"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label Text="{Binding Source={x:Reference slider},
+        <Label Grid.Row="2"
+               Text="{Binding Source={x:Reference slider},
                               Path=Value,
                               StringFormat='Rotate by {0:F0}&#x00B0;'}"
                HorizontalTextAlignment="Center" />
 
-    </StackLayout>
+    </Grid>
 </ContentPage>

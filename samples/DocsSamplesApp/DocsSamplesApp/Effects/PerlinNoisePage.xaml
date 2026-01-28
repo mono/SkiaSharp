@@ -5,28 +5,32 @@
              x:Class="DocsSamplesApp.Effects.PerlinNoisePage"
              Title="Perlin Noise">
     
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto,Auto">
         <skia:SKCanvasView x:Name="canvasView"
-                           VerticalOptions="FillAndExpand"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="baseFrequencyXSlider"
+        <Slider Grid.Row="1"
+                x:Name="baseFrequencyXSlider"
                 Maximum="4"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label x:Name="baseFrequencyXText"
+        <Label Grid.Row="2"
+               x:Name="baseFrequencyXText"
                HorizontalTextAlignment="Center" />
         
-        <Slider x:Name="baseFrequencyYSlider"
+        <Slider Grid.Row="3"
+                x:Name="baseFrequencyYSlider"
                 Maximum="4"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label x:Name="baseFrequencyYText"
+        <Label Grid.Row="4"
+               x:Name="baseFrequencyYText"
                HorizontalTextAlignment="Center" />
         
-        <StackLayout Orientation="Horizontal"
+        <StackLayout Grid.Row="5"
+                     Orientation="Horizontal"
                      HorizontalOptions="Center"
                      Margin="10">
 
@@ -39,5 +43,5 @@
                      Minimum="1"
                      ValueChanged="OnStepperValueChanged" />
         </StackLayout>
-    </StackLayout>
+    </Grid>
 </ContentPage>

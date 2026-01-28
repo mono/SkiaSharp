@@ -6,12 +6,12 @@
              x:Class="DocsSamplesApp.Effects.NonSeparableBlendModesPage"
              Title="Non-Separable Blend Modes">
 
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto,Auto">
         <skiaviews:SKCanvasView x:Name="canvasView"
-                                VerticalOptions="FillAndExpand"
                                 PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Picker x:Name="blendModePicker"
+        <Picker Grid.Row="1"
+                x:Name="blendModePicker"
                 Title="Blend Mode"
                 Margin="10, 0"
                 SelectedIndexChanged="OnPickerSelectedIndexChanged">
@@ -29,28 +29,32 @@
             </Picker.SelectedIndex>
         </Picker>
 
-        <Slider x:Name="hueSlider"
+        <Slider Grid.Row="2"
+                x:Name="hueSlider"
                 Maximum="360"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Slider x:Name="satSlider"
+        <Slider Grid.Row="3"
+                x:Name="satSlider"
                 Maximum="100"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Slider x:Name="lumSlider"
+        <Slider Grid.Row="4"
+                x:Name="lumSlider"
                 Maximum="100"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <StackLayout Orientation="Horizontal">
+        <Grid Grid.Row="5" ColumnDefinitions="*,*">
             <Label x:Name="hslLabel"
-                   HorizontalOptions="CenterAndExpand" />
+                   HorizontalOptions="Center" />
 
-            <Label x:Name="rgbLabel"
-                   HorizontalOptions="CenterAndExpand" />
+            <Label Grid.Column="1"
+                   x:Name="rgbLabel"
+                   HorizontalOptions="Center" />
 
-        </StackLayout>
-    </StackLayout>
+        </Grid>
+    </Grid>
 </ContentPage>

@@ -4,13 +4,13 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="DocsSamplesApp.Basics.BitmapDissolvePage"
              Title="Bitmap Dissolve">
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto">
         <skia:SKCanvasView x:Name="canvasView"
-                           VerticalOptions="FillAndExpand"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="progressSlider"
+        <Slider Grid.Row="1"
+                x:Name="progressSlider"
                 Margin="10"
                 ValueChanged="OnSliderValueChanged" />
-    </StackLayout>
+    </Grid>
 </ContentPage>

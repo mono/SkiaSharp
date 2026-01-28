@@ -6,12 +6,12 @@
              x:Class="DocsSamplesApp.Effects.MaskBlurExperimentPage"
              Title="Mask Blur Experiment">
     
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,Auto,Auto">
         <skiaforms:SKCanvasView x:Name="canvasView"
-                                VerticalOptions="FillAndExpand"
                                 PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Picker x:Name="blurStylePicker" 
+        <Picker Grid.Row="1"
+                x:Name="blurStylePicker" 
                 Title="Filter Blur Style" 
                 Margin="10, 0"
                 SelectedIndexChanged="OnPickerSelectedIndexChanged">
@@ -29,14 +29,16 @@
             </Picker.SelectedIndex>
         </Picker>
 
-        <Slider x:Name="sigmaSlider"
+        <Slider Grid.Row="2"
+                x:Name="sigmaSlider"
                 Maximum="10"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label Text="{Binding Source={x:Reference sigmaSlider},
+        <Label Grid.Row="3"
+               Text="{Binding Source={x:Reference sigmaSlider},
                               Path=Value,
                               StringFormat='Sigma = {0:F1}'}"
                HorizontalTextAlignment="Center" />
-    </StackLayout>
+    </Grid>
 </ContentPage>

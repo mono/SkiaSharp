@@ -5,24 +5,26 @@
              x:Class="DocsSamplesApp.Effects.GradientTransitionsPage"
              Title="Gradient Transitions">
     
-    <StackLayout>
+    <Grid RowDefinitions="*,Auto,Auto,Auto">
         <skia:SKCanvasView x:Name="canvasView"
-                           VerticalOptions="FillAndExpand"
                            PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Slider x:Name="progressSlider"
+        <Slider Grid.Row="1"
+                x:Name="progressSlider"
                 Margin="10, 0"
                 ValueChanged="OnSliderValueChanged" />
 
-        <Label Text="{Binding Source={x:Reference progressSlider},
+        <Label Grid.Row="2"
+               Text="{Binding Source={x:Reference progressSlider},
                               Path=Value,
                               StringFormat='Progress = {0:F2}'}"
                HorizontalTextAlignment="Center" />
 
-        <Picker x:Name="transitionPicker" 
+        <Picker Grid.Row="3"
+                x:Name="transitionPicker" 
                 Title="Transition" 
                 Margin="10"
                 SelectedIndexChanged="OnPickerSelectedIndexChanged" />
         
-    </StackLayout>
+    </Grid>
 </ContentPage>
