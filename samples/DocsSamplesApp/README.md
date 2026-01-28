@@ -1,18 +1,18 @@
 ---
-name: Xamarin.Forms - SkiaSharp and Xamarin.Forms
-description: 'The SkiaSharpFormsDemos program demonstrates the use of #skiasharp in a Xamarin.Forms application.'
+name: SkiaSharp with .NET MAUI
+description: 'The DocsSamplesApp demonstrates the use of SkiaSharp in a .NET MAUI application.'
 page_type: sample
 languages:
 - csharp
 products:
-- xamarin
-urlFragment: skiasharpforms-demos
+- dotnet-maui
+urlFragment: skiasharp-maui-demos
 ---
-# SkiaSharp and Xamarin.Forms
+# SkiaSharp with .NET MAUI
 
-The SkiaSharpFormsDemos program demonstrates the use of SkiaSharp in a Xamarin.Forms application.
+The DocsSamplesApp demonstrates the use of SkiaSharp in a .NET MAUI application.
 
-For more information about this sample, see [Using SkiaSharp in Xamarin.Forms](https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/).
+For more information about this sample, see the [SkiaSharp documentation](../../docs/index.md).
 
-![SkiaSharp and Xamarin.Forms application screenshot](Screenshots/Image0.png "SkiaSharp and Xamarin.Forms application screenshot")
+![SkiaSharp with .NET MAUI application screenshot](Screenshots/Image0.png "SkiaSharp with .NET MAUI application screenshot")
 

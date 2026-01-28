@@ -5,7 +5,7 @@
 This project uses GitHub Issues to track content bugs and requests. Please search the existing issues before filing new issues to avoid duplicates. For new issues, file your bug or
 feature request as a new Issue.
 
-For help and questions about using this product, please ask a question at [Microsoft Q&A](/answers/topics/dotnet-xamarin.html).
+For help and questions about using SkiaSharp, please ask a question at [Microsoft Q&A](https://learn.microsoft.com/answers/tags/247/dotnet-maui) or open an issue on the [SkiaSharp GitHub repository](https://github.com/mono/SkiaSharp/issues).
 
 ## Microsoft Support Policy  
 
