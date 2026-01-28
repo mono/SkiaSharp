@@ -20,10 +20,21 @@ namespace HarfBuzzSharp.Tests
 		[SkippableFact]
 		public void ShouldCreateFromStream()
 		{
-			using (var blob = Blob.FromStream(File.Open(Path.Combine(PathToFonts, "Funkster.ttf"), FileMode.Open, FileAccess.Read)))
-			{
-				Assert.Equal(236808, blob.Length);
-			}
+			using var stream = File.Open(Path.Combine(PathToFonts, "Funkster.ttf"), FileMode.Open, FileAccess.Read);
+			using var blob = Blob.FromStream(stream);
+			Assert.Equal(236808, blob.Length);
+		}
+
+		[SkippableFact]
+		public void CreateFromStreamIsGCSafe()
+		{
+			using var stream = File.Open(Path.Combine(PathToFonts, "Funkster.ttf"), FileMode.Open, FileAccess.Read);
+			using var blob = Blob.FromStream(stream);
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			GC.Collect();
+			var data = new byte[blob.Length];
+			blob.AsSpan().CopyTo(data);
 		}
 
 		[SkippableFact]

@@ -2,6 +2,7 @@
 
 using System;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace HarfBuzzSharp
 {
@@ -70,15 +71,14 @@ namespace HarfBuzzSharp
 
 		public static unsafe Blob FromStream (Stream stream)
 		{
-			// TODO: check to see if we can avoid the second copy (the ToArray)
+			var length = (int)(stream.Length - stream.Position);
 
-			using var ms = new MemoryStream ();
-			stream.CopyTo (ms);
-			var data = ms.ToArray ();
+			var dataPtr = Marshal.AllocCoTaskMem (length);
 
-			fixed (byte* dataPtr = data) {
-				return new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () => ms.Dispose ());
-			}
+			using var ums = new UnmanagedMemoryStream ((byte*)dataPtr, length, length, FileAccess.ReadWrite);
+			stream.CopyTo (ums);
+
+			return new Blob (dataPtr, length, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem (dataPtr));
 		}
 
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
