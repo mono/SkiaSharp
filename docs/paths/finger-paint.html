@@ -92,7 +92,7 @@
 <p><img src="finger-paint-images/fingerpaintsample.png" alt="An exercise in finger painting"></p>
 <p>The <code>SKCanvasView</code> has built-in touch support that allows tracking individual fingers on the screen. By setting <code>EnableTouchEvents=&quot;True&quot;</code> and handling the <code>Touch</code> event, you can easily implement multi-touch drawing scenarios.</p>
 <p>The <strong>Finger Paint</strong> page in <strong>SkiaSharpFormsDemos</strong> is a simplified implementation of finger painting. It does not allow selecting color or stroke width, it has no way to clear the canvas, and of course you can't save your artwork.</p>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FingerPaintPage.xaml"><strong>FingerPaintPage.xaml</strong></a> file defines the <code>SKCanvasView</code> with touch events enabled:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FingerPaintPage.xaml"><strong>FingerPaintPage.xaml</strong></a> file defines the <code>SKCanvasView</code> with touch events enabled:</p>
 <pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
@@ -108,7 +108,7 @@
 &lt;/ContentPage&gt;
 </code></pre>
 <p>The <code>EnableTouchEvents</code> property enables touch tracking, and the <code>Touch</code> event is raised for each touch action.</p>
-<p>The  <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FingerPaintPage.xaml.cs"><strong>FingerPaintPage.xaml.cs</strong></a> code-behind file defines two collections for storing the <code>SKPath</code> objects, as well as an <code>SKPaint</code> object for rendering these paths:</p>
+<p>The  <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FingerPaintPage.xaml.cs"><strong>FingerPaintPage.xaml.cs</strong></a> code-behind file defines two collections for storing the <code>SKPath</code> objects, as well as an <code>SKPaint</code> object for rendering these paths:</p>
 <pre><code class="lang-csharp">public partial class FingerPaintPage : ContentPage
 {
     Dictionary&lt;long, SKPath&gt; inProgressPaths = new Dictionary&lt;long, SKPath&gt;();

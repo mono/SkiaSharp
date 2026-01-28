@@ -117,7 +117,7 @@ public void ArcTo (SKRect oval, Single startAngle, Single sweepAngle, Boolean fo
 <pre><code class="lang-csharp">path.ArcTo (oval, startAngle, sweepAngle, false);
 </code></pre>
 <p>This version of <code>ArcTo</code> draws a line from the current position to the beginning of the arc. This means that the arc can be somewhere in the middle of a larger contour.</p>
-<p>The <strong>Angle Arc</strong> page lets you use two sliders to specify the start and sweep angles. The XAML file instantiates two <code>Slider</code> elements and an <code>SKCanvasView</code>. The <code>PaintCanvas</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/AngleArcPage.xaml.cs"><strong>AngleArcPage.xaml.cs</strong></a> file draws both the oval and the arc using two <code>SKPaint</code> objects defined as fields:</p>
+<p>The <strong>Angle Arc</strong> page lets you use two sliders to specify the start and sweep angles. The XAML file instantiates two <code>Slider</code> elements and an <code>SKCanvasView</code>. The <code>PaintCanvas</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/AngleArcPage.xaml.cs"><strong>AngleArcPage.xaml.cs</strong></a> file draws both the oval and the arc using two <code>SKPaint</code> objects defined as fields:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -145,7 +145,7 @@ public void ArcTo (SKRect oval, Single startAngle, Single sweepAngle, Boolean fo
 <p><code>x = oval.MidX + (oval.Width / 2) * cos(angle)</code></p>
 <p><code>y = oval.MidY + (oval.Height / 2) * sin(angle)</code></p>
 <p>The <code>angle</code> value is either <code>startAngle</code> or <code>startAngle + sweepAngle</code>.</p>
-<p>The use of two angles to define an arc is best for cases where you know the angular length of the arc that you want to draw, for example, to make a pie chart. The <strong>Exploded Pie Chart</strong> page demonstrates this. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ExplodedPieChartPage.cs"><code>ExplodedPieChartPage</code></a> class uses an internal class to define some fabricated data and colors:</p>
+<p>The use of two angles to define an arc is best for cases where you know the angular length of the arc that you want to draw, for example, to make a pie chart. The <strong>Exploded Pie Chart</strong> page demonstrates this. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/ExplodedPieChartPage.cs"><code>ExplodedPieChartPage</code></a> class uses an internal class to define some fabricated data and colors:</p>
 <pre><code class="lang-csharp">class ChartData
 {
     public ChartData(int value, SKColor color)
@@ -264,7 +264,7 @@ public void ArcTo (Single x1, Single y1, Single x2, Single y2, Single radius)
 <p>Here's the final straight line and arc that is added to the contour:</p>
 <p><img src="arcs-images/tangentarc.png" alt="The highlighted tangent arc between the two lines"></p>
 <p>The contour can be continued from the second tangent point.</p>
-<p>The <strong>Tangent Arc</strong> page allows you to experiment with the tangent arc. This is the first of several pages that derive from <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/InteractivePage.cs"><code>InteractivePage</code></a>, which defines a few handy <code>SKPaint</code> objects and performs <code>TouchPoint</code> processing using <code>SKCanvasView</code>'s built-in touch support:</p>
+<p>The <strong>Tangent Arc</strong> page allows you to experiment with the tangent arc. This is the first of several pages that derive from <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/InteractivePage.cs"><code>InteractivePage</code></a>, which defines a few handy <code>SKPaint</code> objects and performs <code>TouchPoint</code> processing using <code>SKCanvasView</code>'s built-in touch support:</p>
 <pre><code class="lang-csharp">public class InteractivePage : ContentPage
 {
     protected SKCanvasView baseCanvasView;
@@ -310,7 +310,7 @@ public void ArcTo (Single x1, Single y1, Single x2, Single y2, Single radius)
     }
 }
 </code></pre>
-<p>The <code>TangentArcPage</code> class derives from <code>InteractivePage</code>. The constructor in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/TangentArcPage.xaml.cs"><strong>TangentArcPage.xaml.cs</strong></a> file is responsible for instantiating and initializing the <code>touchPoints</code> array, and setting <code>baseCanvasView</code> (in <code>InteractivePage</code>) to the <code>SKCanvasView</code> object instantiated in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/TangentArcPage.xaml"><strong>TangentArcPage.xaml</strong></a> file:</p>
+<p>The <code>TangentArcPage</code> class derives from <code>InteractivePage</code>. The constructor in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/TangentArcPage.xaml.cs"><strong>TangentArcPage.xaml.cs</strong></a> file is responsible for instantiating and initializing the <code>touchPoints</code> array, and setting <code>baseCanvasView</code> (in <code>InteractivePage</code>) to the <code>SKCanvasView</code> object instantiated in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/TangentArcPage.xaml"><strong>TangentArcPage.xaml</strong></a> file:</p>
 <pre><code class="lang-csharp">public partial class TangentArcPage : InteractivePage
 {
     public TangentArcPage()
@@ -409,7 +409,7 @@ public void ArcTo (Single x1, Single y1, Single x2, Single y2, Single radius)
 <p>Here's the <strong>Tangent Arc</strong> page running:</p>
 <p><a href="arcs-images/tangentarc-large.png#lightbox"><img src="arcs-images/tangentarc-small.png" alt="Triple screenshot of the Tangent Arc page"></a></p>
 <p>The tangent arc is ideal for creating rounded corners, such as a rounded rectangle. Because <code>SKPath</code> already includes an <code>AddRoundedRect</code> method, the <strong>Rounded Heptagon</strong> page demonstrates how to use <code>ArcTo</code> for rounding the corners of a seven-sided polygon. (The code is generalized for any regular polygon.)</p>
-<p>The <code>PaintSurface</code> handler of the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/RoundedHeptagonPage.cs"><code>RoundedHeptagonPage</code></a> class contains one <code>for</code> loop to calculate the coordinates of the seven vertices of the heptagon, and a second to calculate the midpoints of the seven sides from these vertices. These midpoints are then used to construct the path:</p>
+<p>The <code>PaintSurface</code> handler of the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/RoundedHeptagonPage.cs"><code>RoundedHeptagonPage</code></a> class contains one <code>for</code> loop to calculate the coordinates of the seven vertices of the heptagon, and a second to calculate the midpoints of the seven sides from these vertices. These midpoints are then used to construct the path:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -507,7 +507,7 @@ public void ArcTo (Single rx, Single ry, Single xAxisRotate, SKPathArcSize large
 </ul>
 <p>If the tilted ellipse is not large enough to fit between the two points, then it is uniformly scaled until it is large enough. Only two unique arcs connect the two points in that case. These can be distinguished with the <code>SKPathDirection</code> parameter.</p>
 <p>Although this approach to defining an arc sounds complex on first encounter, it is the only approach that allows defining an arc with a rotated ellipse, and it is often the easiest approach when you need to integrate arcs with other parts of the contour.</p>
-<p>The <strong>Elliptical Arc</strong> page allows you to interactively set the two points, and the size and rotation of the ellipse. The <code>EllipticalArcPage</code> class derives from <code>InteractivePage</code>, and the <code>PaintSurface</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/EllipticalArcPage.xaml.cs"><strong>EllipticalArcPage.xaml.cs</strong></a> code-behind file draws the four arcs:</p>
+<p>The <strong>Elliptical Arc</strong> page allows you to interactively set the two points, and the size and rotation of the ellipse. The <code>EllipticalArcPage</code> class derives from <code>InteractivePage</code>, and the <code>PaintSurface</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/EllipticalArcPage.xaml.cs"><strong>EllipticalArcPage.xaml.cs</strong></a> code-behind file draws the four arcs:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -559,7 +559,7 @@ public void ArcTo (Single rx, Single ry, Single xAxisRotate, SKPathArcSize large
 <p><code>y = 112·sin(41.8) = 75</code></p>
 <p>The four tangent points are all that's necessary to draw an infinity sign centered on the point (0, 0) with circle radii of 100:</p>
 <p><img src="arcs-images/infinitycoordinates.png" alt="Two circles with tangent lines and coordinates"></p>
-<p>The <code>PaintSurface</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ArcInfinityPage.cs"><code>ArcInfinityPage</code></a> class positions the infinity sign so that the (0, 0) point is positioned in the center of the page, and scales the path to the screen size:</p>
+<p>The <code>PaintSurface</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/ArcInfinityPage.cs"><code>ArcInfinityPage</code></a> class positions the infinity sign so that the (0, 0) point is positioned in the center of the page, and scales the path to the screen size:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;

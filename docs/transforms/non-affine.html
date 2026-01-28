@@ -132,7 +132,7 @@
 <p>When x is 100, then the z' denominator is 2, so the x and y coordinates are effectively halved. The right side of the box becomes shorter than the left side:</p>
 <p><img src="non-affine-images/nonaffinetransform.png" alt="A box subjected to a non-affine transform"></p>
 <p>The <code>Persp</code> part of these cell names refers to &quot;perspective&quot; because the foreshortening suggests that the box is now tilted with the right side further from the viewer.</p>
-<p>The <strong>Test Perspective</strong> page allows you to experiment with values of <code>Persp0</code> and <code>Pers1</code> to get a feel for how they work. Reasonable values of these matrix cells are so small that the <code>Slider</code> in the Universal Windows Platform can't properly handle them. To accommodate the UWP problem, the two <code>Slider</code> elements in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TestPerspectivePage.xaml"><strong>TestPerspective.xaml</strong></a> need to be initialized to range from –1 to 1:</p>
+<p>The <strong>Test Perspective</strong> page allows you to experiment with values of <code>Persp0</code> and <code>Pers1</code> to get a feel for how they work. Reasonable values of these matrix cells are so small that the <code>Slider</code> in the Universal Windows Platform can't properly handle them. To accommodate the UWP problem, the two <code>Slider</code> elements in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TestPerspectivePage.xaml"><strong>TestPerspective.xaml</strong></a> need to be initialized to range from –1 to 1:</p>
 <pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
@@ -183,7 +183,7 @@
     &lt;/Grid&gt;
 &lt;/ContentPage&gt;
 </code></pre>
-<p>The event handlers for the sliders in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TestPerspectivePage.xaml.cs"><code>TestPerspectivePage</code></a> code-behind file divide the values by 100 so that they range between –0.01 and 0.01. In addition, the constructor loads in a bitmap from the Resources/Raw folder:</p>
+<p>The event handlers for the sliders in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TestPerspectivePage.xaml.cs"><code>TestPerspectivePage</code></a> code-behind file divide the values by 100 so that they range between –0.01 and 0.01. In addition, the constructor loads in a bitmap from the Resources/Raw folder:</p>
 <pre><code class="lang-csharp">public partial class TestPerspectivePage : ContentPage
 {
     SKBitmap? bitmap;
@@ -265,7 +265,7 @@
 <p>Generally, you won't be setting <code>Persp0</code> and <code>Persp1</code> in isolation. It's also often necessary to set other cells in the matrix to achieve certain types of non-affine transforms.</p>
 <p>One such non-affine transform is a <em>taper transform</em>. This type of non-affine transform retains the overall dimensions of a rectangle but tapers one side:</p>
 <p><img src="non-affine-images/tapertransform.png" alt="A box subjected to a taper transform"></p>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TaperTransform.cs"><code>TaperTransform</code></a> class performs a generalized calculation of a non-affine transform based on these parameters:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TaperTransform.cs"><code>TaperTransform</code></a> class performs a generalized calculation of a non-affine transform based on these parameters:</p>
 <ul>
 <li>the rectangular size of the image being transformed,</li>
 <li>an enumeration that indicates the side of the rectangle that tapers,</li>
@@ -371,7 +371,7 @@ static class TaperTransform
     }
 }
 </code></pre>
-<p>This class is used in the <strong>Taper Transform</strong> page. The XAML file instantiates two <code>Picker</code> elements to select the enumeration values, and a <code>Slider</code> for choosing the taper fraction. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TaperTransformPage.xaml.cs#L55"><code>PaintSurface</code></a> handler combines the taper transform with two translate transforms to make the transform relative to the upper-left corner of the bitmap:</p>
+<p>This class is used in the <strong>Taper Transform</strong> page. The XAML file instantiates two <code>Picker</code> elements to select the enumeration values, and a <code>Slider</code> for choosing the taper fraction. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TaperTransformPage.xaml.cs#L55"><code>PaintSurface</code></a> handler combines the taper transform with two translate transforms to make the transform relative to the upper-left corner of the bitmap:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -412,7 +412,7 @@ static class TaperTransform
 <p>Another type of generalized non-affine transforms is 3D rotation, which is demonstrated in the next article, <a href="3d-rotation.html"><strong>3D Rotations</strong></a>.</p>
 <p>The non-affine transform can transform a rectangle into any convex quadrilateral. This is demonstrated by the <strong>Show Non-Affine Matrix</strong> page. It is very similar to the <strong>Show Affine Matrix</strong> page from the <a href="matrix.html"><strong>Matrix Transforms</strong></a> article except that it has a fourth <code>TouchPoint</code> object to manipulate the fourth corner of the bitmap:</p>
 <p><a href="non-affine-images/shownonaffinematrix-large.png#lightbox" title="Triple screenshot of the Show Non-Affine Matrix page"><img src="non-affine-images/shownonaffinematrix-small.png" alt="Triple screenshot of the Show Non-Affine Matrix page"></a></p>
-<p>As long as you don't attempt to make an interior angle of one of the corners of the bitmap greater than 180 degrees, or make two sides cross each other, the program successfully calculates the transform using this method from the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowNonAffineMatrixPage.xaml.cs"><code>ShowNonAffineMatrixPage</code></a> class:</p>
+<p>As long as you don't attempt to make an interior angle of one of the corners of the bitmap greater than 180 degrees, or make two sides cross each other, the program successfully calculates the transform using this method from the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/ShowNonAffineMatrixPage.xaml.cs"><code>ShowNonAffineMatrixPage</code></a> class:</p>
 <pre><code class="lang-csharp">static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint ptLL, SKPoint ptLR)
 {
     // Scale transform
@@ -464,7 +464,7 @@ static class TaperTransform
 <p>(W, 0) → (1, 0) → (1, 0) → (x2, y2) (upper-right)</p>
 <p>(W, H) → (1, 1) → (a, b) → (x3, y3) (lower-right)</p>
 <p>The final coordinates at the right are the four points associated with the four touch points. These are the final coordinates of the corners of the bitmap.</p>
-<p>W and H represent the width and height of the bitmap. The first transform <code>S</code> simply scales the bitmap to a 1-pixel square. The second transform is the non-affine transform <code>N</code>, and the third is the affine transform <code>A</code>. That affine transform is based on three points, so it's just like the earlier affine <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml.cs#L68"><code>ComputeMatrix</code></a> method and doesn't involve the fourth row with the (a, b) point.</p>
+<p>W and H represent the width and height of the bitmap. The first transform <code>S</code> simply scales the bitmap to a 1-pixel square. The second transform is the non-affine transform <code>N</code>, and the third is the affine transform <code>A</code>. That affine transform is based on three points, so it's just like the earlier affine <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/ShowAffineMatrixPage.xaml.cs#L68"><code>ComputeMatrix</code></a> method and doesn't involve the fourth row with the (a, b) point.</p>
 <p>The <code>a</code> and <code>b</code> values are calculated so that the third transform is affine. The code obtains the inverse of the affine transform and then uses that to map the lower-right corner. That's the point (a, b).</p>
 <p>Another use of non-affine transforms is to mimic three-dimensional graphics. In the next article, <a href="3d-rotation.html"><strong>3D Rotations</strong></a> you see how to rotate a two-dimensional graphic in 3D space.</p>
 <h2 id="related-links">Related Links</h2>

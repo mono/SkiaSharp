@@ -100,7 +100,7 @@ public Void RotateRadians (Single radians)
 <p>The transform formulas for rotation are more complex than those for translate and scale. For an angle of α, the transform formulas are:</p>
 <p>x' = x•cos(α) – y•sin(α)</p>
 <p>y` = x•sin(α) + y•cos(α)</p>
-<p>The <strong>Basic Rotate</strong> page demonstrates the <code>RotateDegrees</code> method. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicRotatePage.xaml.cs"><strong>BasicRotate.xaml.cs</strong></a> file displays some text with its baseline centered on the page and rotates it based on a <code>Slider</code> with a range of –360 to 360. Here's the relevant part of the <code>PaintSurface</code> handler:</p>
+<p>The <strong>Basic Rotate</strong> page demonstrates the <code>RotateDegrees</code> method. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/BasicRotatePage.xaml.cs"><strong>BasicRotate.xaml.cs</strong></a> file displays some text with its baseline centered on the page and rotates it based on a <code>Slider</code> with a range of –360 to 360. Here's the relevant part of the <code>PaintSurface</code> handler:</p>
 <pre><code class="lang-csharp">using (SKPaint textPaint = new SKPaint
 {
     Style = SKPaintStyle.Fill,
@@ -172,7 +172,7 @@ canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
 <p>Conceptually, the two transforms are applied in the order opposite to how they appear in the code. The <code>DrawText</code> call displays the text in the upper-left corner of the canvas. The <code>RotateDegrees</code> call rotates that text relative to the upper-left corner. Then the <code>Translate</code> call moves the text to the center of the canvas.</p>
 <p>There are usually several ways to combine rotation and translation. The <strong>Rotated Text</strong> page creates the following display:</p>
 <p><a href="rotate-images/rotatedtext-large.png#lightbox" title="Triple screenshot of the Rotated Text page"><img src="rotate-images/rotatedtext-small.png" alt="Triple screenshot of the Rotated Text page"></a></p>
-<p>Here's the <code>PaintSurface</code> handler of the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/RotatedTextPage.cs"><code>RotatedTextPage</code></a> class:</p>
+<p>Here's the <code>PaintSurface</code> handler of the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/RotatedTextPage.cs"><code>RotatedTextPage</code></a> class:</p>
 <pre><code class="lang-csharp">static readonly string text = &quot;    ROTATE&quot;;
 ...
 void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)

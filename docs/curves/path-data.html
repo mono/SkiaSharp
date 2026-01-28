@@ -154,7 +154,7 @@ public string ToSvgPathData()
 <p>This is the extent of the SVG path-data definition. There is no facility for repeating groups of commands or for performing any type of calculation. Commands for <code>ConicTo</code> or the other types of arc specifications are not available.</p>
 <p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.parsesvgpathdata#skiasharp-skpath-parsesvgpathdata(system-string)"><code>SKPath.ParseSvgPathData</code></a> method expects a valid string of SVG commands. If any syntax error is detected, the method returns <code>null</code>. That is the only error indication.</p>
 <p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.tosvgpathdata#skiasharp-skpath-tosvgpathdata"><code>ToSvgPathData</code></a> method is handy for obtaining SVG path data from an existing <code>SKPath</code> object to transfer  to another program, or to store in a text-based file format such as XML. (The <code>ToSvgPathData</code> method is not demonstrated in sample code in this article.) Do <em>not</em> expect <code>ToSvgPathData</code> to return a string corresponding exactly to the method calls that created the path. In particular, you'll discover that arcs are converted to multiple <code>QuadTo</code> commands, and that's how they appear in the path data returned from <code>ToSvgPathData</code>.</p>
-<p>The <strong>Path Data Hello</strong> page spells out the word &quot;HELLO&quot; using SVG path data. Both the <code>SKPath</code> and <code>SKPaint</code> objects are defined as fields in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataHelloPage.cs"><code>PathDataHelloPage</code></a> class:</p>
+<p>The <strong>Path Data Hello</strong> page spells out the word &quot;HELLO&quot; using SVG path data. Both the <code>SKPath</code> and <code>SKPaint</code> objects are defined as fields in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PathDataHelloPage.cs"><code>PathDataHelloPage</code></a> class:</p>
 <pre><code class="lang-csharp">public class PathDataHelloPage : ContentPage
 {
     SKPath helloPath = SKPath.ParseSvgPathData(
@@ -210,7 +210,7 @@ public string ToSvgPathData()
 </code></pre>
 <p>The path fills the canvas, which looks more reasonable when viewed in landscape mode:</p>
 <p><a href="path-data-images/pathdatahello-large.png#lightbox" title="Triple screenshot of the Path Data Hello page"><img src="path-data-images/pathdatahello-small.png" alt="Triple screenshot of the Path Data Hello page"></a></p>
-<p>The <strong>Path Data Cat</strong> page is similar. The path and paint objects are both defined as fields in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs"><code>PathDataCatPage</code></a> class:</p>
+<p>The <strong>Path Data Cat</strong> page is similar. The path and paint objects are both defined as fields in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PathDataCatPage.cs"><code>PathDataCatPage</code></a> class:</p>
 <pre><code class="lang-csharp">public class PathDataCatPage : ContentPage
 {
     SKPath catPath = SKPath.ParseSvgPathData(
@@ -272,7 +272,7 @@ public string ToSvgPathData()
 <p>Here's the program running:</p>
 <p><a href="path-data-images/pathdatacat-large.png#lightbox" title="Triple screenshot of the Path Data Cat page"><img src="path-data-images/pathdatacat-small.png" alt="Triple screenshot of the Path Data Cat page"></a></p>
 <p>Normally, when an <code>SKPath</code> object is defined as a field, the contours of the path must be defined in the constructor or another method. When using SVG path data, however, you've seen that the path can be specified entirely in the field definition.</p>
-<p>The earlier <strong>Ugly Analog Clock</strong> sample in the <a href="../transforms/rotate.html"><strong>The Rotate Transform</strong></a> article displayed the hands of the clock as simple lines. The <strong>Pretty Analog Clock</strong> program below replaces those lines with <code>SKPath</code> objects defined as fields in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PrettyAnalogClockPage.cs"><code>PrettyAnalogClockPage</code></a> class along with <code>SKPaint</code> objects:</p>
+<p>The earlier <strong>Ugly Analog Clock</strong> sample in the <a href="../transforms/rotate.html"><strong>The Rotate Transform</strong></a> article displayed the hands of the clock as simple lines. The <strong>Pretty Analog Clock</strong> program below replaces those lines with <code>SKPath</code> objects defined as fields in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PrettyAnalogClockPage.cs"><code>PrettyAnalogClockPage</code></a> class along with <code>SKPaint</code> objects:</p>
 <pre><code class="lang-csharp">public class PrettyAnalogClockPage : ContentPage
 {
     ...

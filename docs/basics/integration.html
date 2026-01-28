@@ -91,8 +91,8 @@
 <p>SkiaSharp graphics can integrate with the rest of .NET MAUI in several ways. You can combine a SkiaSharp canvas and .NET MAUI elements on the same page, and even position .NET MAUI elements on top of a SkiaSharp canvas:</p>
 <p><img src="integration-images/integrationexample.png" alt="Selecting a color with sliders"></p>
 <p>Another approach to creating interactive SkiaSharp graphics in .NET MAUI is through touch.</p>
-<p>The second page in the sample program is entitled <strong>Tap Toggle Fill</strong>. It draws a simple circle two ways — without a fill and with a fill — toggled by a tap. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml.cs"><code>TapToggleFillPage</code></a> class shows how you can alter SkiaSharp graphics in response to user input.</p>
-<p>For this page, the <code>SKCanvasView</code> class is instantiated in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml">TapToggleFill.xaml</a> file, which also sets a .NET MAUI <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.tapgesturerecognizer"><code>TapGestureRecognizer</code></a> on the view:</p>
+<p>The second page in the sample program is entitled <strong>Tap Toggle Fill</strong>. It draws a simple circle two ways — without a fill and with a fill — toggled by a tap. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/TapToggleFillPage.xaml.cs"><code>TapToggleFillPage</code></a> class shows how you can alter SkiaSharp graphics in response to user input.</p>
+<p>For this page, the <code>SKCanvasView</code> class is instantiated in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/TapToggleFillPage.xaml">TapToggleFill.xaml</a> file, which also sets a .NET MAUI <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.tapgesturerecognizer"><code>TapGestureRecognizer</code></a> on the view:</p>
 <pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
@@ -152,7 +152,7 @@ void OnCanvasViewTapped(object? sender, EventArgs args)
 <pre><code class="lang-csharp">public static SKColor FromHsv (Single h, Single s, Single v, Byte a)
 </code></pre>
 <p>In both cases, the <code>h</code> argument ranges from 0 to 360. The <code>s</code>, <code>l</code>, and <code>v</code> arguments range from 0 to 100. The <code>a</code> (alpha or opacity) argument ranges from 0 to 255.</p>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml"><strong>ColorExplorePage.xaml</strong></a> file creates two <code>SKCanvasView</code> objects in a <code>StackLayout</code> side by side with <code>Slider</code> and <code>Label</code> views that allow the user to select HSL and HSV color values:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/ColorExplorePage.xaml"><strong>ColorExplorePage.xaml</strong></a> file creates two <code>SKCanvasView</code> objects in a <code>StackLayout</code> side by side with <code>Slider</code> and <code>Label</code> views that allow the user to select HSL and HSV color values:</p>
 <pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
@@ -230,7 +230,7 @@ void OnCanvasViewTapped(object? sender, EventArgs args)
 &lt;/ContentPage&gt;
 </code></pre>
 <p>The two <code>SKCanvasView</code> elements are in a single-cell <code>Grid</code> with a <code>Label</code> sitting on top for displaying the resultant RGB color value.</p>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml.cs"><strong>ColorExplorePage.xaml.cs</strong></a> code-behind file is relatively simple. The shared <code>ValueChanged</code> handler for the three <code>Slider</code> elements simply invalidates both <code>SKCanvasView</code> elements. The <code>PaintSurface</code> handlers clear the canvas with the color indicated by the <code>Slider</code> elements, and also set the <code>Label</code> sitting on top of the <code>SKCanvasView</code> elements:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/ColorExplorePage.xaml.cs"><strong>ColorExplorePage.xaml.cs</strong></a> code-behind file is relatively simple. The shared <code>ValueChanged</code> handler for the three <code>Slider</code> elements simply invalidates both <code>SKCanvasView</code> elements. The <code>PaintSurface</code> handlers clear the canvas with the color indicated by the <code>Slider</code> elements, and also set the <code>Label</code> sitting on top of the <code>SKCanvasView</code> elements:</p>
 <pre><code class="lang-csharp">public partial class ColorExplorePage : ContentPage
 {
     public ColorExplorePage()

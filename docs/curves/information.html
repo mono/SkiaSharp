@@ -95,7 +95,7 @@
 <h2 id="getting-the-path-length">Getting the Path Length</h2>
 <p>In the article <a href="text-paths.html"><strong>Paths and Text</strong></a> you saw how to use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawtextonpath#skiasharp-skcanvas-drawtextonpath(system-string-skiasharp-skpath-system-single-system-single-skiasharp-skpaint)"><code>DrawTextOnPath</code></a> method to draw a text string whose baseline follows the course of a path. But what if you want to size the text so that it fits the path precisely? Drawing text around a circle is easy because the circumference of a circle is simple to calculate. But the circumference of an ellipse or the length of a Bézier curve is not so simple.</p>
 <p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathmeasure"><code>SKPathMeasure</code></a> class can help. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathmeasure.-ctor#skiasharp-skpathmeasure-ctor(skiasharp-skpath-system-boolean-system-single)">constructor</a> accepts an <code>SKPath</code> argument, and the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathmeasure.length#skiasharp-skpathmeasure-length"><code>Length</code></a> property reveals its length.</p>
-<p>This class is demonstrated in the <strong>Path Length</strong> sample, which is based on the <strong>Bezier Curve</strong> page. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml"><strong>PathLengthPage.xaml</strong></a> file derives from <code>InteractivePage</code> and includes a touch interface:</p>
+<p>This class is demonstrated in the <strong>Path Length</strong> sample, which is based on the <strong>Bezier Curve</strong> page. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PathLengthPage.xaml"><strong>PathLengthPage.xaml</strong></a> file derives from <code>InteractivePage</code> and includes a touch interface:</p>
 <pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
                        xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
                        xmlns:local=&quot;clr-namespace:SkiaSharpFormsDemos&quot;
@@ -110,7 +110,7 @@
     &lt;/Grid&gt;
 &lt;/local:InteractivePage&gt;
 </code></pre>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml.cs"><strong>PathLengthPage.xaml.cs</strong></a> code-behind file allows you to move four touch points to define the end points and control points of a cubic Bézier curve. Three fields define a text string, an <code>SKPaint</code> object, and a calculated width of the text:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PathLengthPage.xaml.cs"><strong>PathLengthPage.xaml.cs</strong></a> code-behind file allows you to move four touch points to define the end points and control points of a cubic Bézier curve. Three fields define a text string, an <code>SKPaint</code> object, and a calculated width of the text:</p>
 <pre><code class="lang-csharp">public partial class PathLengthPage : InteractivePage
 {
     const string text = &quot;Compute length of path&quot;;
@@ -276,7 +276,7 @@ SKPathVerb pathVerb = rawIterator.Next(points);
 <p><img src="information-images/pathenumerationsample.png" alt="Text wrapped on a hemisphere"></p>
 <p>Most of these letters consist of straight lines, yet these straight lines have apparently been twisted into curves. How is this possible?</p>
 <p>The key is that the original straight lines are broken into a series of smaller straight lines. These individual smaller straight lines can then be manipulated in different ways to form a curve.</p>
-<p>To help with this process, the sample contains a static <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathExtensions.cs"><code>PathExtensions</code></a> class with an <code>Interpolate</code> method that breaks down a straight line into numerous short lines that are only one unit in length. In addition, the class contains several methods that convert the three types of Bézier curves into a series of tiny straight lines that approximate the curve. (The parametric formulas were presented in the article <a href="beziers.html"><strong>Three Types of Bézier Curves</strong></a>.) This process is called <em>flattening</em> the curve:</p>
+<p>To help with this process, the sample contains a static <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PathExtensions.cs"><code>PathExtensions</code></a> class with an <code>Interpolate</code> method that breaks down a straight line into numerous short lines that are only one unit in length. In addition, the class contains several methods that convert the three types of Bézier curves into a series of tiny straight lines that approximate the curve. (The parametric formulas were presented in the article <a href="beziers.html"><strong>Three Types of Bézier Curves</strong></a>.) This process is called <em>flattening</em> the curve:</p>
 <pre><code class="lang-csharp">static class PathExtensions
 {
     ...
@@ -450,7 +450,7 @@ SKPathVerb pathVerb = rawIterator.Next(points);
 <p>Notice that the method retains the first point of each contour in the variable called <code>firstPoint</code> and the current position after each drawing command in the variable <code>lastPoint</code>. These variables are necessary to construct the final closing line when a <code>Close</code> verb is encountered.</p>
 <p>The <strong>GlobularText</strong> sample uses this extension method to seemingly wrap text around a hemisphere in a 3D effect:</p>
 <p><a href="information-images/globulartext-large.png#lightbox" title="Triple screenshot of the Globular Text page"><img src="information-images/globulartext-small.png" alt="Triple screenshot of the Globular Text page"></a></p>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/GlobularTextPage.cs"><code>GlobularTextPage</code></a> class constructor performs this transform. It creates an <code>SKFont</code> object for the text, and then obtains an <code>SKPath</code> object from the <code>GetTextPath</code> method. This is the path passed to the <code>CloneWithTransform</code> extension method along with a transform function:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/GlobularTextPage.cs"><code>GlobularTextPage</code></a> class constructor performs this transform. It creates an <code>SKFont</code> object for the text, and then obtains an <code>SKPath</code> object from the <code>GetTextPath</code> method. This is the path passed to the <code>CloneWithTransform</code> extension method along with a transform function:</p>
 <pre><code class="lang-csharp">public class GlobularTextPage : ContentPage
 {
     SKPath globePath;

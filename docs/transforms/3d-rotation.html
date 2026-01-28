@@ -217,7 +217,7 @@ perspectiveMatrix[2, 3] = -1 / depth;
 <p><code>y&quot; = y / ((sin(α)/depth)·x + 1)</code></p>
 <p>When 2D objects are rotated with a positive angle around the Y axis, then positive X values recede to the background while negative X values come to the foreground. The X values seem to move closer to the Y axis (which is governed by the cosine value) as coordinates furthest from the Y axis becomes smaller or larger as they move further from the viewer or closer to the viewer.</p>
 <p>When using <code>SKMatrix44</code>, perform all the 3D rotation and perspective operations by multiplying various <code>SKMatrix44</code> values. Then you can extract a two-dimensional 3-by-3 matrix from the 4-by-4 matrix using the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmatrix44.matrix#skiasharp-skmatrix44-matrix"><code>Matrix</code></a> property of the <code>SKMatrix44</code> class. This property returns a familiar <code>SKMatrix</code> value.</p>
-<p>The <strong>Rotation 3D</strong> page lets you experiment with 3D rotation. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml"><strong>Rotation3DPage.xaml</strong></a> file instantiates four sliders to set rotation around the X, Y, and Z axes, and to set a depth value:</p>
+<p>The <strong>Rotation 3D</strong> page lets you experiment with 3D rotation. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/Rotation3DPage.xaml"><strong>Rotation3DPage.xaml</strong></a> file instantiates four sliders to set rotation around the X, Y, and Z axes, and to set a depth value:</p>
 <pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
@@ -294,7 +294,7 @@ perspectiveMatrix[2, 3] = -1 / depth;
 &lt;/ContentPage&gt;
 </code></pre>
 <p>Notice that the <code>depthSlider</code> is initialized with a <code>Minimum</code> value of 250. This implies that the 2D object being rotated here has X and Y coordinates restricted to a circle defined by a 250-pixel radius around the origin. Any rotation of this object in 3D space will always result in coordinate values less than 250.</p>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs"><strong>Rotation3DPage.cs</strong></a> code-behind file loads in a bitmap that is 300 pixels square from the Resources/Raw folder:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/Rotation3DPage.xaml.cs"><strong>Rotation3DPage.cs</strong></a> code-behind file loads in a bitmap that is 300 pixels square from the Resources/Raw folder:</p>
 <pre><code class="lang-csharp">public partial class Rotation3DPage : ContentPage
 {
     SKBitmap? bitmap;

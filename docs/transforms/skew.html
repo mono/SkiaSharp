@@ -99,7 +99,7 @@
 <pre><code class="lang-csharp">public void Skew (SKPoint skew)
 </code></pre>
 <p>However, it's unlikely that you'll be using either of these two methods in isolation.</p>
-<p>The <strong>Skew Experiment</strong> page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two <code>Slider</code> elements. Here is the <code>PaintSurface</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewExperimentPage.xaml.cs"><code>SkewExperimentPage</code></a> class:</p>
+<p>The <strong>Skew Experiment</strong> page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two <code>Slider</code> elements. Here is the <code>PaintSurface</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/SkewExperimentPage.xaml.cs"><code>SkewExperimentPage</code></a> class:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -149,7 +149,7 @@ canvas.Translate(-px, -py);
 <p>You might feel more comfortable specifying skew as an angle of tilt, such as the angle α in this diagram:</p>
 <p><img src="skew-images/skewangleeffect.png" alt="The effect of the skew transform on a rectangle with a skewing angle indicated"></p>
 <p>The ratio of the 150-pixel shift to the 100-pixel vertical is the tangent of that angle, in this example 56.3 degrees.</p>
-<p>The XAML file of the <strong>Skew Angle Experiment</strong> page is similar to the <strong>Skew Angle</strong> page except that the <code>Slider</code> elements range from –90 degrees to 90 degrees. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewAngleExperimentPage.xaml.cs"><code>SkewAngleExperiment</code></a> code-behind file centers the text on the page and uses <code>Translate</code> to set a center of skewing to the center of the page. A short <code>SkewDegrees</code> method at the bottom of the code converts angles to skew values:</p>
+<p>The XAML file of the <strong>Skew Angle Experiment</strong> page is similar to the <strong>Skew Angle</strong> page except that the <code>Slider</code> elements range from –90 degrees to 90 degrees. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/SkewAngleExperimentPage.xaml.cs"><code>SkewAngleExperiment</code></a> code-behind file centers the text on the page and uses <code>Translate</code> to set a center of skewing to the center of the page. A short <code>SkewDegrees</code> method at the bottom of the code converts angles to skew values:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -192,7 +192,7 @@ void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
 </code></pre>
 <p>As an angle approaches positive or negative 90 degrees, the tangent approaches infinity, but angles up to about 80 degrees or so are usable:</p>
 <p><a href="skew-images/skewangleexperiment-large.png#lightbox" title="Triple screenshot of the Skew Angle Experiment page"><img src="skew-images/skewangleexperiment-small.png" alt="Triple screenshot of the Skew Angle Experiment page"></a></p>
-<p>A small negative horizontal skew can mimic oblique or italic text, as the <strong>Oblique Text</strong> page demonstrates. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ObliqueTextPage.cs"><code>ObliqueTextPage</code></a> class shows how it's done:</p>
+<p>A small negative horizontal skew can mimic oblique or italic text, as the <strong>Oblique Text</strong> page demonstrates. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/ObliqueTextPage.cs"><code>ObliqueTextPage</code></a> class shows how it's done:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;

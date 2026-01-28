@@ -110,7 +110,7 @@ The third <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp
 <pre><code class="lang-csharp">public void Scale (SKPoint size)
 </code></pre>
 <p>The fourth <code>Scale</code> method will be described shortly.</p>
-<p>The <strong>Basic Scale</strong> page demonstrates the <code>Scale</code> method. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml"><strong>BasicScalePage.xaml</strong></a> file contains two <code>Slider</code> elements that let you select horizontal and vertical scaling factors between 0 and 10. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml.cs"><strong>BasicScalePage.xaml.cs</strong></a> code-behind file uses those values to call <code>Scale</code> before displaying a rounded rectangle stroked with a dashed line and sized to fit some text in the upper-left corner of the canvas:</p>
+<p>The <strong>Basic Scale</strong> page demonstrates the <code>Scale</code> method. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/BasicScalePage.xaml"><strong>BasicScalePage.xaml</strong></a> file contains two <code>Slider</code> elements that let you select horizontal and vertical scaling factors between 0 and 10. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/BasicScalePage.xaml.cs"><strong>BasicScalePage.xaml.cs</strong></a> code-behind file uses those values to call <code>Scale</code> before displaying a rounded rectangle stroked with a dashed line and sized to fit some text in the upper-left corner of the canvas:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -162,7 +162,7 @@ The third <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp
 <pre><code class="lang-csharp">public void Scale (Single sx, Single sy, Single px, Single py)
 </code></pre>
 <p>The <code>px</code> and <code>py</code> parameters define a point that is sometimes called the <em>scaling center</em> but in the SkiaSharp documentation is referred to as a <em>pivot point</em>. This is a point relative to the upper-left corner of the canvas that is not affected by the scaling. All scaling occurs relative to that center.</p>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/CenteredScalePage.xaml.cs"><strong>Centered Scale</strong></a> page shows how this works. The <code>PaintSurface</code> handler is similar to the <strong>Basic Scale</strong> program except that the <code>margin</code> value is calculated to center the text horizontally, which implies that the program works best in portrait mode:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/CenteredScalePage.xaml.cs"><strong>Centered Scale</strong></a> page shows how this works. The <code>PaintSurface</code> handler is similar to the <strong>Basic Scale</strong> program except that the <code>margin</code> value is calculated to center the text horizontally, which implies that the program works best in portrait mode:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
@@ -234,7 +234,7 @@ canvas.Translate(–px, –py);
 <p>Keep in mind that the default values of <code>sx</code> and <code>sy</code> are 1. It's easy to convince yourself that the pivot point (px, py) is not transformed by these formulas. It remains in the same location relative to the canvas.</p>
 <p>When you combine <code>Translate</code> and <code>Scale</code> calls, the order matters. If the <code>Translate</code> comes after the <code>Scale</code>, the translation factors are effectively scaled by the scaling factors. If the <code>Translate</code> comes before the <code>Scale</code>, the translation factors are not scaled. This process becomes somewhat clearer (albeit more mathematical) when the subject of transform matrices is introduced.</p>
 <p>The <code>SKPath</code> class defines a read-only <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.bounds#skiasharp-skpath-bounds"><code>Bounds</code></a> property that returns an <code>SKRect</code> defining the extent of the coordinates in the path. For example, when the <code>Bounds</code> property is obtained from the hendecagram path created earlier, the <code>Left</code> and <code>Top</code> properties of the rectangle are approximately –100, the <code>Right</code> and <code>Bottom</code> properties are approximately 100, and the <code>Width</code> and <code>Height</code> properties are approximately 200. (Most of the actual values are a little less because the points of the stars are defined by a circle with a radius of 100 but only the top point is parallel with the horizontal or vertical axes.)</p>
-<p>The availability of this information implies that it should be possible to derive scale and translate factors suitable for scaling a path to the size of the canvas. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicScalingPage.cs"><strong>Anisotropic Scaling</strong></a> page demonstrates this with the 11-pointed star. An <em>anisotropic</em> scale means that it's unequal in the horizontal and vertical directions, which means that the star won't retain its original aspect ratio. Here's the relevant code in the <code>PaintSurface</code> handler:</p>
+<p>The availability of this information implies that it should be possible to derive scale and translate factors suitable for scaling a path to the size of the canvas. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/AnisotropicScalingPage.cs"><strong>Anisotropic Scaling</strong></a> page demonstrates this with the 11-pointed star. An <em>anisotropic</em> scale means that it's unequal in the horizontal and vertical directions, which means that the star won't retain its original aspect ratio. Here's the relevant code in the <code>PaintSurface</code> handler:</p>
 <pre><code class="lang-csharp">SKPath path = HendecagramPage.HendecagramPath;
 SKRect pathBounds = path.Bounds;
 
@@ -268,7 +268,7 @@ using (SKPaint strokePaint = new SKPaint
                    strokePaint.StrokeWidth / 2);
 </code></pre>
 <p>This increases the <code>pathBounds</code> rectangle by 1.5 units on all four sides. This is a reasonable solution only when the stroke join is rounded. A miter join can be longer and is difficult to calculate.</p>
-<p>You can also use a similar technique with text, as the <strong>Anisotropic Text</strong> page demonstrates. Here's the relevant part of the <code>PaintSurface</code> handler from the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicTextPage.cs"><code>AnisotropicTextPage</code></a> class:</p>
+<p>You can also use a similar technique with text, as the <strong>Anisotropic Text</strong> page demonstrates. Here's the relevant part of the <code>PaintSurface</code> handler from the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/AnisotropicTextPage.cs"><code>AnisotropicTextPage</code></a> class:</p>
 <pre><code class="lang-csharp">using (SKPaint textPaint = new SKPaint
 {
     Style = SKPaintStyle.Stroke,
@@ -300,7 +300,7 @@ using (SKFont font = new SKFont())
 <li>Scale the object based on the minimum of the horizontal and vertical page dimensions divided by the graphical object dimensions.</li>
 <li>Translate the center of the scaled object to the center of the page.</li>
 </ul>
-<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/IsotropicScalingPage.cs"><code>IsotropicScalingPage</code></a> performs these steps in reverse order before displaying the star:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/IsotropicScalingPage.cs"><code>IsotropicScalingPage</code></a> performs these steps in reverse order before displaying the star:</p>
 <pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
