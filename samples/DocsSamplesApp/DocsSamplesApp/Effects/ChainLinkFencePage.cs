@@ -23,7 +23,7 @@ namespace DocsSamplesApp.Effects
             Title = "Chain-Link Fence";
 
             // Create bitmap for chain-link tiling
-            int tileSize = Device.Idiom == TargetIdiom.Desktop ? 64 : 128;
+            int tileSize = DeviceInfo.Idiom == DeviceIdiom.Desktop ? 64 : 128;
             tileBitmap = CreateChainLinkTile(tileSize);
 
             canvasView = new SKCanvasView();

@@ -52,182 +52,67 @@ In addition, the [`SKImage`](xref:SkiaSharp.SKImage) and [`SKPixmap`](xref:SkiaS
 
 One of the [`Encode`](xref:SkiaSharp.SKImage.Encode) methods defined by `SKImage` has no parameters and automatically saves to a PNG format. That parameterless method is very easy to use.
 
-## Platform-specific code for saving bitmap files
+## Saving bitmap files with Community Toolkit
 
 When you encode an `SKBitmap` object into a particular file format, generally you'll be left with a stream object of some sort, or an array of data. Some of the `Encode` methods (including the one with no parameters defined by `SKImage`) return an [`SKData`](xref:SkiaSharp.SKData) object, which can be converted to an array of bytes using the [`ToArray`](xref:SkiaSharp.SKData.ToArray) method. This data must then be saved to a file.
 
 Saving to a file in application local storage is quite easy because you can use standard `System.IO` classes and methods for this task. This technique is demonstrated in the article [**Animating SkiaSharp Bitmaps**](animating.md#bitmap-animation) in connection with animating a series of bitmaps of the Mandelbrot set.
 
-If you want the file to be shared by other applications, it must be saved to the user's photo library. This task requires platform-specific code and the use of the .NET MAUI [`DependencyService`](xref:Microsoft.Maui.Controls.DependencyService).
+If you want to let the user save a file to a location of their choice, .NET MAUI provides a cross-platform solution through the [Community Toolkit FileSaver](https://learn.microsoft.com/dotnet/communitytoolkit/maui/essentials/file-saver). This eliminates the need for platform-specific code.
 
-The **SkiaSharpFormsDemo** project in the sample application defines an `IPhotoLibrary` interface used with the `DependencyService` class. This defines the syntax of a `SavePhotoAsync` method:
+### Setting up the Community Toolkit
 
-```csharp
-public interface IPhotoLibrary
-{
-    Task<Stream> PickPhotoAsync();
-
-    Task<bool> SavePhotoAsync(byte[] data, string folder, string filename);
-}
-```
-
-This interface also defines the `PickPhotoAsync` method, which is used to open the platform-specific file-picker for the device's photo library.
-
-For `SavePhotoAsync`, the first argument is an array of bytes that contains the bitmap already encoded into a particular file format, such as JPEG or PNG. It's possible that an application might want to isolate all the bitmaps it creates into a particular folder, which is specified in the next parameter, followed by the file name. The method returns a Boolean indicating success or not.
-
-The following sections discuss how `SavePhotoAsync` is implemented on each platform.
-
-### The iOS implementation
-
-The iOS implementation of `SavePhotoAsync` uses the [`SaveToPhotosAlbum`](xref:UIKit.UIImage.SaveToPhotosAlbum*) method of `UIImage`:
-
-```csharp
-public class PhotoLibrary : IPhotoLibrary
-{
-    ···
-    public Task<bool> SavePhotoAsync(byte[] data, string folder, string filename)
-    {
-        NSData nsData = NSData.FromArray(data);
-        UIImage image = new UIImage(nsData);
-        TaskCompletionSource<bool> taskCompletionSource = new TaskCompletionSource<bool>();
-
-        image.SaveToPhotosAlbum((UIImage img, NSError error) =>
-        {
-            taskCompletionSource.SetResult(error == null);
-        });
-
-        return taskCompletionSource.Task;
-    }
-}
-```
-
-Unfortunately, there is no way to specify a file name or folder for the image.
-
-The **Info.plist** file in the iOS project requires a key indicating that it adds images to the photo library:
+First, add the Community Toolkit NuGet package to your project:
 
 ```xml
-<key>NSPhotoLibraryAddUsageDescription</key>
-<string>SkiaSharp Forms Demos adds images to your photo library</string>
+<PackageReference Include="CommunityToolkit.Maui" Version="13.0.0" />
 ```
 
-Watch out! The permission key for simply accessing the photo library is very similar but not the same:
-
-```xml
-<key>NSPhotoLibraryUsageDescription</key>
-<string>SkiaSharp Forms Demos accesses your photo library</string>
-```
-
-### The Android implementation
-
-The Android implementation of `SavePhotoAsync` first checks if the `folder` argument is `null` or an empty string. If so, then the bitmap is saved in the root directory of the photo library. Otherwise, the folder is obtained, and if it doesn't exist, it is created:
+Then register it in your `MauiProgram.cs`:
 
 ```csharp
-public class PhotoLibrary : IPhotoLibrary
+using CommunityToolkit.Maui;
+
+public static MauiApp CreateMauiApp()
 {
-    ···
-    public async Task<bool> SavePhotoAsync(byte[] data, string folder, string filename)
-    {
-        try
-        {
-            File picturesDirectory = Environment.GetExternalStoragePublicDirectory(Environment.DirectoryPictures);
-            File folderDirectory = picturesDirectory;
-
-            if (!string.IsNullOrEmpty(folder))
-            {
-                folderDirectory = new File(picturesDirectory, folder);
-                folderDirectory.Mkdirs();
-            }
-
-            using (File bitmapFile = new File(folderDirectory, filename))
-            {
-                bitmapFile.CreateNewFile();
-
-                using (FileOutputStream outputStream = new FileOutputStream(bitmapFile))
-                {
-                    await outputStream.WriteAsync(data);
-                }
-
-                // Make sure it shows up in the Photos gallery promptly.
-                MediaScannerConnection.ScanFile(MainActivity.Instance,
-                                                new string[] { bitmapFile.Path },
-                                                new string[] { "image/png", "image/jpeg" }, null);
-            }
-        }
-        catch
-        {
-            return false;
-        }
-
-        return true;
-    }
+    var builder = MauiApp.CreateBuilder();
+    builder
+        .UseMauiApp<App>()
+        .UseMauiCommunityToolkit()
+        // ... other configuration
+    return builder.Build();
 }
 ```
 
-The call to `MediaScannerConnection.ScanFile` isn't strictly required, but if you're testing your program by immediately checking the photo library, it helps a lot by updating the library gallery view.
+### Using FileSaver to save images
 
-The **AndroidManifest.xml** file requires the following permission tag:
-
-```xml
-<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-```
-
-### The UWP implementation
-
-The UWP implementation of `SavePhotoAsync` is very similar in structure to the Android implementation:
+The `FileSaver` opens a native file picker dialog that lets the user choose where to save the file. Here's how to save an encoded bitmap:
 
 ```csharp
-public class PhotoLibrary : IPhotoLibrary
+using CommunityToolkit.Maui.Storage;
+
+// Encode the bitmap
+using SKImage image = SKImage.FromBitmap(bitmap);
+SKData data = image.Encode(SKEncodedImageFormat.Png, 100);
+
+// Save using FileSaver (opens a file picker dialog)
+using var stream = new MemoryStream(data.ToArray());
+var result = await FileSaver.Default.SaveAsync("MyImage.png", stream, CancellationToken.None);
+
+if (result.IsSuccessful)
 {
-    ···
-    public async Task<bool> SavePhotoAsync(byte[] data, string folder, string filename)
-    {
-        StorageFolder picturesDirectory = KnownFolders.PicturesLibrary;
-        StorageFolder folderDirectory = picturesDirectory;
-
-        // Get the folder or create it if necessary
-        if (!string.IsNullOrEmpty(folder))
-        {
-            try
-            {
-                folderDirectory = await picturesDirectory.GetFolderAsync(folder);
-            }
-            catch
-            { }
-
-            if (folderDirectory == null)
-            {
-                try
-                {
-                    folderDirectory = await picturesDirectory.CreateFolderAsync(folder);
-                }
-                catch
-                {
-                    return false;
-                }
-            }
-        }
-
-        try
-        {
-            // Create the file.
-            StorageFile storageFile = await folderDirectory.CreateFileAsync(filename,
-                                                CreationCollisionOption.GenerateUniqueName);
-
-            // Convert byte[] to Windows buffer and write it out.
-            IBuffer buffer = WindowsRuntimeBuffer.Create(data, 0, data.Length, data.Length);
-            await FileIO.WriteBufferAsync(storageFile, buffer);
-        }
-        catch
-        {
-            return false;
-        }
-
-        return true;
-    }
+    // File was saved to: result.FilePath
+}
+else
+{
+    // Handle the error: result.Exception
 }
 ```
 
-The **Capabilities** section of the **Package.appxmanifest** file requires **Pictures Library**.
+This approach offers several advantages over the old platform-specific approach:
+- **Cross-platform**: Works on Android, iOS, macOS, and Windows with no platform-specific code
+- **User control**: The user chooses where to save the file
+- **Testable**: The `IFileSaver` interface can be mocked for unit testing
 
 ## Exploring the image formats
 
@@ -253,9 +138,11 @@ public Boolean Encode (SKWStream dst, SKEncodedImageFormat format, Int32 quality
 
 As you'll see shortly, only three of these file formats (`Jpeg`, `Png`, and `Webp`) are actually supported by SkiaSharp.
 
-To save an `SKBitmap` object named `bitmap` to the user's photo library, you also need a member of the `SKEncodedImageFormat` enumeration named `imageFormat` and (for lossy formats) an integer `quality` variable. You can use the following code to save that bitmap to a file with the name `filename` in the `folder` folder:
+To save an `SKBitmap` object named `bitmap` to a user-selected location, you need a member of the `SKEncodedImageFormat` enumeration named `imageFormat` and (for lossy formats) an integer `quality` variable. You can use the following code to encode the bitmap and let the user choose where to save it:
 
 ```csharp
+using CommunityToolkit.Maui.Storage;
+
 using (MemoryStream memStream = new MemoryStream())
 using (SKManagedWStream wstream = new SKManagedWStream(memStream))
 {
@@ -263,32 +150,39 @@ using (SKManagedWStream wstream = new SKManagedWStream(memStream))
     byte[] data = memStream.ToArray();
 
     // Check the data array for content!
-
-    bool success = await DependencyService.Get<IPhotoLibrary>().SavePhotoAsync(data, folder, filename);
-
-    // Check return value for success!
+    if (data != null && data.Length > 0)
+    {
+        using var stream = new MemoryStream(data);
+        var result = await FileSaver.Default.SaveAsync(filename, stream, CancellationToken.None);
+        
+        if (!result.IsSuccessful)
+        {
+            // Handle the error
+        }
+    }
 }
 ```
 
-The `SKManagedWStream` class derives from `SKWStream` (which stands for "writable stream"). The `Encode` method writes the encoded bitmap file into that stream. The comments in that code refer to some error checking you might need to perform.
+The `SKManagedWStream` class derives from `SKWStream` (which stands for "writable stream"). The `Encode` method writes the encoded bitmap file into that stream.
 
 The **Save File Formats** page in the sample application uses similar code to allow you to experiment with saving a bitmap in the various formats.
 
-The XAML file contains an `SKCanvasView` that displays a bitmap, while the rest of the page contains everything the application needs to call the `Encode` method of `SKBitmap`. It has a `Picker` for a member of the `SKEncodedImageFormat` enumeration, a `Slider` for the quality argument for lossy bitmap formats, two `Entry` views for a filename and folder name, and a `Button` for saving the file.
+The XAML file contains an `SKCanvasView` that displays a bitmap, while the rest of the page contains everything the application needs to call the `Encode` method of `SKBitmap`. It has a `Picker` for a member of the `SKEncodedImageFormat` enumeration, a `Slider` for the quality argument for lossy bitmap formats, an `Entry` view for a filename, and a `Button` for saving the file.
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp;assembly=SkiaSharp"
              xmlns:skiaforms="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
-             x:Class="SkiaSharpFormsDemos.Bitmaps.SaveFileFormatsPage"
-             Title="Save Bitmap Formats">
+             x:Class="DocsSamplesApp.Bitmaps.SaveFileFormatsPage"
+             Title="Save File Formats">
 
-    <StackLayout Margin="10">
-        <skiaforms:SKCanvasView PaintSurface="OnCanvasViewPaintSurface"
-                                VerticalOptions="FillAndExpand" />
+    <Grid RowDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto" Margin="10">
+        <skiaforms:SKCanvasView x:Name="canvasView"
+                                PaintSurface="OnCanvasViewPaintSurface" />
 
-        <Picker x:Name="formatPicker"
+        <Picker Grid.Row="1"
+                x:Name="formatPicker"
                 Title="image format"
                 SelectedIndexChanged="OnFormatPickerChanged">
             <Picker.ItemsSource>
@@ -308,34 +202,28 @@ The XAML file contains an `SKCanvasView` that displays a bitmap, while the rest 
             </Picker.ItemsSource>
         </Picker>
 
-        <Slider x:Name="qualitySlider"
+        <Slider Grid.Row="2"
+                x:Name="qualitySlider"
                 Maximum="100"
                 Value="50" />
 
-        <Label Text="{Binding Source={x:Reference qualitySlider},
+        <Label Grid.Row="3"
+               Text="{Binding Source={x:Reference qualitySlider},
                               Path=Value,
                               StringFormat='Quality = {0:F0}'}"
                HorizontalTextAlignment="Center" />
 
-        <StackLayout Orientation="Horizontal">
-            <Label Text="Folder Name: "
-                   VerticalOptions="Center" />
-
-            <Entry x:Name="folderNameEntry"
-                   Text="SaveFileFormats"
-                   HorizontalOptions="FillAndExpand" />
-        </StackLayout>
-
-        <StackLayout Orientation="Horizontal">
+        <Grid Grid.Row="4" ColumnDefinitions="Auto,*">
             <Label Text="File Name: "
                    VerticalOptions="Center" />
 
-            <Entry x:Name="fileNameEntry"
-                   Text="Sample.xxx"
-                   HorizontalOptions="FillAndExpand" />
-        </StackLayout>
+            <Entry Grid.Column="1"
+                   x:Name="fileNameEntry"
+                   Text="Sample.xxx" />
+        </Grid>
 
-        <Button Text="Save"
+        <Button Grid.Row="5"
+                Text="Save" 
                 Clicked="OnButtonClicked">
             <Button.Triggers>
                 <DataTrigger TargetType="Button"
@@ -354,27 +242,40 @@ The XAML file contains an `SKCanvasView` that displays a bitmap, while the rest 
             </Button.Triggers>
         </Button>
 
-        <Label x:Name="statusLabel"
+        <Label Grid.Row="6"
+               x:Name="statusLabel"
                Text="OK"
                Margin="10, 0" />
-    </StackLayout>
+    </Grid>
 </ContentPage>
 ```
 
 The code-behind file loads a bitmap resource and uses the `SKCanvasView` to display it. That bitmap never changes. The `SelectedIndexChanged` handler for the `Picker` modifies the filename with an extension that is the same as the enumeration member:
 
 ```csharp
+using CommunityToolkit.Maui.Storage;
+
 public partial class SaveFileFormatsPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmap("MonkeyFace.png");
+    SKBitmap? bitmap;
 
     public SaveFileFormatsPage ()
     {
         InitializeComponent ();
+        _ = LoadBitmapAsync();
+    }
+
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync("MonkeyFace.png");
+        bitmap = SKBitmap.Decode(stream);
+        canvasView.InvalidateSurface();
     }
 
     void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
+        if (bitmap is null)
+            return;
         args.Surface.Canvas.DrawBitmap(bitmap, args.Info.Rect, BitmapStretch.Uniform);
     }
 
@@ -390,6 +291,8 @@ public partial class SaveFileFormatsPage : ContentPage
 
     async void OnButtonClicked(object? sender, EventArgs args)
     {
+        if (bitmap is null)
+            return;
         SKEncodedImageFormat imageFormat = (SKEncodedImageFormat)formatPicker.SelectedItem;
         int quality = (int)qualitySlider.Value;
 
@@ -409,16 +312,16 @@ public partial class SaveFileFormatsPage : ContentPage
             }
             else
             {
-                bool success = await DependencyService.Get<IPhotoLibrary>().
-                    SavePhotoAsync(data, folderNameEntry.Text, fileNameEntry.Text);
+                using var stream = new MemoryStream(data);
+                var result = await FileSaver.Default.SaveAsync(fileNameEntry.Text, stream, CancellationToken.None);
 
-                if (!success)
+                if (!result.IsSuccessful)
                 {
-                    statusLabel.Text = "SavePhotoAsync return false";
+                    statusLabel.Text = "Save failed: " + result.Exception?.Message;
                 }
                 else
                 {
-                    statusLabel.Text = "Success!";
+                    statusLabel.Text = "Success! Saved to: " + result.FilePath;
                 }
             }
         }
@@ -426,9 +329,9 @@ public partial class SaveFileFormatsPage : ContentPage
 }
 ```
 
-The `Clicked` handler for the `Button` does all the real work. It obtains two arguments for `Encode` from the `Picker` and `Slider`, and then uses the code shown earlier to create an `SKManagedWStream` for the `Encode` method. The two `Entry` views furnish folder and file names for the `SavePhotoAsync` method.
+The `Clicked` handler for the `Button` does all the real work. It obtains two arguments for `Encode` from the `Picker` and `Slider`, and then uses the code shown earlier to create an `SKManagedWStream` for the `Encode` method. The `FileSaver` from the Community Toolkit opens a native file picker dialog so the user can choose where to save the file.
 
-Most of this method is devoted to handling problems or errors. If `Encode` creates an empty array, it means that the particular file format isn't supported. If `SavePhotoAsync` returns `false`, then the file wasn't successfully saved.
+Most of this method is devoted to handling problems or errors. If `Encode` creates an empty array, it means that the particular file format isn't supported. If the `FileSaverResult.IsSuccessful` property is `false`, then the file wasn't successfully saved.
 
 Here is the program running:
 
@@ -662,12 +565,12 @@ public partial class FingerPaintSavePage : ContentPage
             string filename = String.Format("FingerPaint-{0:D4}{1:D2}{2:D2}-{3:D2}{4:D2}{5:D2}{6:D3}.png",
                                             dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
 
-            IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
-            bool result = await photoLibrary.SavePhotoAsync(data.ToArray(), "FingerPaint", filename);
+            using var stream = new MemoryStream(data.ToArray());
+            var result = await FileSaver.Default.SaveAsync(filename, stream, CancellationToken.None);
 
-            if (!result)
+            if (!result.IsSuccessful)
             {
-                await DisplayAlert("FingerPaint", "Artwork could not be saved. Sorry!", "OK");
+                await DisplayAlertAsync("FingerPaint", "Artwork could not be saved. Sorry!", "OK");
             }
         }
     }
@@ -676,7 +579,7 @@ public partial class FingerPaintSavePage : ContentPage
 
 The **Save** button handler uses the simplified [`Encode`](xref:SkiaSharp.SKImage.Encode) method from `SKImage`. This method encodes using the PNG format. The `SKImage` object is created based on `saveBitmap`, and the `SKData` object contains the encoded PNG file.
 
-The `ToArray` method of `SKData` obtains an array of bytes. This is what is passed to the `SavePhotoAsync` method, along with a fixed folder name, and a unique filename constructed from the current date and time.
+The `ToArray` method of `SKData` obtains an array of bytes. This data is passed to the `FileSaver` from the Community Toolkit, which opens a native file picker dialog so the user can choose where to save their artwork.
 
 Here's the program in action:
 
@@ -686,7 +589,7 @@ A very similar technique is used in the sample. This is also a finger-painting p
 
 [![Spin Paint](saving-images/SpinPaint.png "Spin Paint")](saving-images/SpinPaint-Large.png#lightbox)
 
-The **Save** button of `SpinPaint` class is similar to **Finger Paint** in that it saves the image to a fixed folder name (**SpainPaint**) and a filename constructed from the date and time.
+The **Save** button of `SpinPaint` class is similar to **Finger Paint** in that it uses the Community Toolkit's `FileSaver` to let the user choose where to save their artwork.
 
 ## Related links
 

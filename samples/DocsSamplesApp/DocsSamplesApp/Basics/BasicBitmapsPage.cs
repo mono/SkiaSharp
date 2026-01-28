@@ -9,6 +9,7 @@ using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Media;
 
 namespace DocsSamplesApp.Basics
 {
@@ -37,16 +38,19 @@ namespace DocsSamplesApp.Basics
             TapGestureRecognizer tapRecognizer = new TapGestureRecognizer();
             tapRecognizer.Tapped += async (sender, args) =>
             {
-                // Load bitmap from photo library
-                IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
-
-                using (Stream stream = await photoLibrary.PickPhotoAsync())
+                // Load bitmap from photo library using MAUI MediaPicker
+                var results = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
                 {
-                    if (stream != null)
-                    {
-                        libraryBitmap = SKBitmap.Decode(stream);
-                        canvasView.InvalidateSurface();
-                    }
+                    SelectionLimit = 1,
+                    Title = "Select a photo"
+                });
+                
+                var photo = results.FirstOrDefault();
+                if (photo != null)
+                {
+                    using Stream stream = await photo.OpenReadAsync();
+                    libraryBitmap = SKBitmap.Decode(stream);
+                    canvasView.InvalidateSurface();
                 }
             };
             canvasView.GestureRecognizers.Add(tapRecognizer);

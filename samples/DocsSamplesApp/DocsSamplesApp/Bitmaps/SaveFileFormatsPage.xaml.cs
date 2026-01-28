@@ -10,6 +10,7 @@ using Microsoft.Maui.Controls;
 using Microsoft.Maui;
 using Microsoft.Maui.Graphics;
 using Microsoft.Maui.Storage;
+using CommunityToolkit.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
@@ -71,16 +72,16 @@ namespace DocsSamplesApp.Bitmaps
                 }
                 else
                 {
-                    bool success = await DependencyService.Get<IPhotoLibrary>().
-                        SavePhotoAsync(data, folderNameEntry.Text, fileNameEntry.Text);
+                    using var stream = new MemoryStream(data);
+                    var result = await FileSaver.Default.SaveAsync(fileNameEntry.Text, stream, CancellationToken.None);
 
-                    if (!success)
+                    if (!result.IsSuccessful)
                     {
-                        statusLabel.Text = "SavePhotoAsync return false";
+                        statusLabel.Text = "Save failed: " + result.Exception?.Message;
                     }
                     else
                     {
-                        statusLabel.Text = "Success!";
+                        statusLabel.Text = "Success! Saved to: " + result.FilePath;
                     }
                 }
             }

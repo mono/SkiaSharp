@@ -6,6 +6,7 @@ using SkiaSharp.Views.Maui.Controls;
 using SkiaSharp.Views.Maui;
 
 using Microsoft.Maui.Controls;
+using CommunityToolkit.Maui.Storage;
 
 namespace DocsSamplesApp.Bitmaps
 {
@@ -142,12 +143,12 @@ namespace DocsSamplesApp.Bitmaps
                 string filename = String.Format("FingerPaint-{0:D4}{1:D2}{2:D2}-{3:D2}{4:D2}{5:D2}{6:D3}.png",
                                                 dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);
 
-                IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
-                bool result = await photoLibrary.SavePhotoAsync(data.ToArray(), "FingerPaint", filename);
+                using var stream = new MemoryStream(data.ToArray());
+                var result = await FileSaver.Default.SaveAsync(filename, stream, CancellationToken.None);
 
-                if (!result)
+                if (!result.IsSuccessful)
                 {
-                    await DisplayAlert("FingerPaint", "Artwork could not be saved. Sorry!", "OK");
+                    await DisplayAlertAsync("FingerPaint", "Artwork could not be saved. Sorry!", "OK");
                 }
             }
         }

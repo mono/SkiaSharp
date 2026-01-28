@@ -5,6 +5,7 @@ using SkiaSharp;
 
 using Microsoft.Maui.Controls;
 using Microsoft.Maui;
+using Microsoft.Maui.Media;
 
 namespace DocsSamplesApp.Bitmaps
 {
@@ -17,15 +18,18 @@ namespace DocsSamplesApp.Bitmaps
 
         async void OnPickButtonClicked(object? sender, EventArgs args)
         {
-            IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
-            using (Stream stream = await photoLibrary.PickPhotoAsync())
+            var results = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
             {
-                if (stream != null)
-                {
-                    SKBitmap bitmap = SKBitmap.Decode(stream);
-
-                    await Navigation.PushAsync(new PhotoPuzzlePage2(bitmap));
-                }
+                SelectionLimit = 1,
+                Title = "Select a photo for the puzzle"
+            });
+            
+            var photo = results.FirstOrDefault();
+            if (photo != null)
+            {
+                using Stream stream = await photo.OpenReadAsync();
+                SKBitmap bitmap = SKBitmap.Decode(stream);
+                await Navigation.PushAsync(new PhotoPuzzlePage2(bitmap));
             }
         }
     }

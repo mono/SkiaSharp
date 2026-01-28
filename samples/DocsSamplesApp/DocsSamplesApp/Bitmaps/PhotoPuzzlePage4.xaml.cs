@@ -130,16 +130,21 @@ namespace DocsSamplesApp.Bitmaps
             // The tile to be animated.
             PhotoPuzzleTile animaTile = tiles[row, col];
 
-            // The destination rectangle.
+            // Calculate the translation needed
+            double deltaX = (emptyCol - col) * tileSize;
+            double deltaY = (emptyRow - row) * tileSize;
+
+            // Animate using translation
+            await animaTile.TranslateToAsync(deltaX, deltaY, length);
+
+            // Reset translation and set new layout bounds
+            animaTile.TranslationX = 0;
+            animaTile.TranslationY = 0;
+            
             Rect rect = new Rect(emptyCol * tileSize,
                                            emptyRow * tileSize,
                                            tileSize,
                                            tileSize);
-
-            // Animate it!
-            await animaTile.LayoutTo(rect, length);
-
-            // Set layout bounds to same Rectangle.
             AbsoluteLayout.SetLayoutBounds(animaTile, rect);
 
             // Set several variables and properties for new layout.

@@ -530,9 +530,11 @@ The **PhotoPuzzlePage1.xaml** file consists of a `Button`:
 </ContentPage>
 ```
 
-The code-behind file implements a `Clicked` handler that uses the `IPhotoLibrary` dependency service to let the user pick a photo from the photo library:
+The code-behind file implements a `Clicked` handler that uses MAUI's `MediaPicker` to let the user pick a photo from the photo library:
 
 ```csharp
+using Microsoft.Maui.Media;
+
 public partial class PhotoPuzzlePage1 : ContentPage
 {
     public PhotoPuzzlePage1 ()
@@ -542,15 +544,18 @@ public partial class PhotoPuzzlePage1 : ContentPage
 
     async void OnPickButtonClicked(object? sender, EventArgs args)
     {
-        IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
-        using (Stream stream = await photoLibrary.PickPhotoAsync())
+        var results = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
         {
-            if (stream != null)
-            {
-                SKBitmap bitmap = SKBitmap.Decode(stream);
-
-                await Navigation.PushAsync(new PhotoPuzzlePage2(bitmap));
-            }
+            SelectionLimit = 1,
+            Title = "Select a photo for the puzzle"
+        });
+        
+        var photo = results.FirstOrDefault();
+        if (photo != null)
+        {
+            using Stream stream = await photo.OpenReadAsync();
+            SKBitmap bitmap = SKBitmap.Decode(stream);
+            await Navigation.PushAsync(new PhotoPuzzlePage2(bitmap));
         }
     }
 }
