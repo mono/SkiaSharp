@@ -1,11 +1,42 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             xmlns:local="clr-namespace:DocsSamplesApp.Bitmaps"
              x:Class="DocsSamplesApp.Bitmaps.SpinPaintPage"
              Title="SpinPaint">
+    <Grid RowDefinitions="Auto,*,Auto">
 
-    <Label Text="SpinPaint is available as a separate sample in the samples folder."
-           VerticalOptions="Center" 
-           HorizontalTextAlignment="Center" />
-    
+        <Label x:Name="titleLabel"
+               Text="SpinPaint"
+               Grid.Row="0"
+               Margin="0, 20"
+               FontSize="48"
+               FontAttributes="Italic"
+               VerticalOptions="Center"
+               HorizontalOptions="Center" />
+
+        <local:AspectRatioLayout x:Name="canvasViewLayout"
+                                 Grid.Row="1"
+                                 BackgroundColor="White"
+                                 HorizontalOptions="Center"
+                                 VerticalOptions="Center">
+
+            <skia:SKCanvasView x:Name="canvasView"
+                               PaintSurface="OnCanvasViewPaintSurface" />
+
+        </local:AspectRatioLayout>
+
+        <HorizontalStackLayout Grid.Row="2"
+                               HorizontalOptions="Center"
+                               Spacing="20"
+                               Margin="0, 20">
+
+            <Button Text="Clear"
+                    Clicked="OnClearButtonClicked" />
+
+            <Button Text="Save"
+                    Clicked="OnSaveButtonClicked" />
+        </HorizontalStackLayout>
+    </Grid>
 </ContentPage>
