@@ -524,7 +524,7 @@ public class GradientAnimationPage : ContentPage
                                 new SKColor[] { SKColors.White, SKColors.Black },
                                 new float[] { 0, 1 },
                                 SKShaderTileMode.Mirror,
-                                SKMatrix.MakeRotation((float)angle, info.Rect.MidX, info.Rect.MidY));
+                                SKMatrix.CreateRotation((float)angle, info.Rect.MidX, info.Rect.MidY));
 
             canvas.DrawRect(info.Rect, paint);
         }
@@ -800,7 +800,7 @@ public class InfinityColorsPage : ContentPage
                                 colors,
                                 null,
                                 SKShaderTileMode.Repeat,
-                                SKMatrix.MakeTranslation(offset, 0));
+                                SKMatrix.CreateTranslation(offset, 0));
 
             canvas.DrawPath(infinityPath, paint);
         }

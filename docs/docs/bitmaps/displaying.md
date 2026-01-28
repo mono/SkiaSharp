@@ -443,7 +443,7 @@ static class BitmapExtensions
                                   BitmapStretch stretch,
                                   BitmapAlignment horizontal = BitmapAlignment.Center,
                                   BitmapAlignment vertical = BitmapAlignment.Center,
-                                  SKPaint paint = null)
+                                  SKPaint? paint = null)
     {
         if (stretch == BitmapStretch.Fill)
         {
@@ -535,7 +535,7 @@ static class BitmapExtensions
                                   BitmapStretch stretch,
                                   BitmapAlignment horizontal = BitmapAlignment.Center,
                                   BitmapAlignment vertical = BitmapAlignment.Center,
-                                  SKPaint paint = null)
+                                  SKPaint? paint = null)
     {
         if (stretch == BitmapStretch.Fill)
         {

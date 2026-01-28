@@ -322,7 +322,9 @@ public partial class BrickWallCompositingPage : ContentPage
 
     void OnButtonClicked(object? sender, EventArgs args)
     {
-        Button btn = (Button)sender;
+        if (sender is not Button btn)
+            return;
+            
         step = (step + 1) % 5;
 
         switch (step)
@@ -463,7 +465,7 @@ public partial class BrickWallCompositingPage : ContentPage
                 paint.Shader = SKShader.CreateBitmap(bitmap,
                                                      SKShaderTileMode.Repeat,
                                                      SKShaderTileMode.Repeat,
-                                                     SKMatrix.MakeTranslation(0, yAdjust));
+                                                     SKMatrix.CreateTranslation(0, yAdjust));
                 paint.BlendMode = SKBlendMode.DstOver;
                 canvas.DrawRect(info.Rect, paint);
             }

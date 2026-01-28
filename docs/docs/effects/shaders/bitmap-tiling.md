@@ -318,7 +318,7 @@ public class StoneWallPage : ContentPage
         using (SKPaint paint = new SKPaint())
         {
             // Create scale transform
-            SKMatrix matrix = SKMatrix.MakeScale(0.5f, 0.5f);
+            SKMatrix matrix = SKMatrix.CreateScale(0.5f, 0.5f);
 
             // Create bitmap tiling
             paint.Shader = SKShader.CreateBitmap(bitmap,
@@ -341,8 +341,8 @@ Does the transform operate on the original bitmap used in the `CreateBitmap` met
 An easy way to answer this question is to include a rotation as part of the transform:
 
 ```csharp
-SKMatrix matrix = SKMatrix.MakeScale(0.5f, 0.5f);
-SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
+SKMatrix matrix = SKMatrix.CreateScale(0.5f, 0.5f);
+matrix = matrix.PostConcat(SKMatrix.CreateRotationDegrees(15));
 ```
 
 If the transform is applied to the individual tile, then each repeated image of the tile should be rotated, and the result would contain many discontinuities. But it's obvious from this screenshot that the composite array of tiles is transformed:
@@ -420,7 +420,7 @@ public class TileAlignmentPage : ContentPage
             }
             else
             {
-                SKMatrix matrix = SKMatrix.MakeTranslation(rect.Left, rect.Top);
+                SKMatrix matrix = SKMatrix.CreateTranslation(rect.Left, rect.Top);
 
                 paint.Shader = SKShader.CreateBitmap(bitmap,
                                                      SKShaderTileMode.Repeat,
@@ -470,7 +470,7 @@ public class CenteredTilesPage : ContentPage
         using (SKPaint paint = new SKPaint())
         {
             // ... but use them to create a translate transform
-            SKMatrix matrix = SKMatrix.MakeTranslation(x, y);
+            SKMatrix matrix = SKMatrix.CreateTranslation(x, y);
             paint.Shader = SKShader.CreateBitmap(bitmap,
                                                  SKShaderTileMode.Repeat,
                                                  SKShaderTileMode.Repeat,
@@ -489,10 +489,10 @@ The `PaintSurface` handler concludes by drawing a circle in the center of the ca
 
 [![Centered Tiles](bitmap-tiling-images/CenteredTiles.png "Centered Tiles")](bitmap-tiling-images/CenteredTiles-Large.png#lightbox)
 
-Another centering approach is actually a bit easier. Rather than construct a translate transform that puts a tile in the center, you can center a corner of the tiled pattern. In the `SKMatrix.MakeTranslation` call, use arguments for the center of the canvas:
+Another centering approach is actually a bit easier. Rather than construct a translate transform that puts a tile in the center, you can center a corner of the tiled pattern. In the `SKMatrix.CreateTranslation` call, use arguments for the center of the canvas:
 
 ```csharp
-SKMatrix matrix = SKMatrix.MakeTranslation(info.Rect.MidX, info.Rect.MidY);
+SKMatrix matrix = SKMatrix.CreateTranslation(info.Rect.MidX, info.Rect.MidY);
 ```
 
 The pattern is still centered and symmetrical, but no tile is in the center:
@@ -625,7 +625,7 @@ public class ChainLinkFencePage : ContentPage
             paint.Shader = SKShader.CreateBitmap(tileBitmap,
                                                  SKShaderTileMode.Repeat,
                                                  SKShaderTileMode.Repeat,
-                                                 SKMatrix.MakeRotationDegrees(45));
+                                                 SKMatrix.CreateRotationDegrees(45));
             canvas.DrawRect(info.Rect, paint);
         }
     }

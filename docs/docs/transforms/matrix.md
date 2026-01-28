@@ -30,10 +30,10 @@ The default transform matrix is the identity matrix and consists of 1's in the d
 | 0  0  1 |
 </pre>
 
-You can create an identity matrix using the static  [`SKMatrix.MakeIdentity`](xref:SkiaSharp.SKMatrix.MakeIdentity) method:
+You can create an identity matrix using the static  [`SKMatrix.CreateIdentity`](xref:SkiaSharp.SKMatrix.CreateIdentity) method:
 
 ```csharp
-SKMatrix matrix = SKMatrix.MakeIdentity();
+SKMatrix matrix = SKMatrix.CreateIdentity();
 ```
 
 The `SKMatrix` default constructor does *not* return an identity matrix. It returns a matrix with all of the cells set to zero. Do not use the `SKMatrix` constructor unless you plan to set those cells manually.
@@ -231,59 +231,52 @@ This is the complete two-dimensional affine transform. The affine transform pres
 
 The `SKMatrix` structure defines several static methods to create `SKMatrix` values. These all return `SKMatrix` values:
 
-- [`MakeTranslation`](xref:SkiaSharp.SKMatrix.MakeTranslation(System.Single,System.Single))
-- [`MakeScale`](xref:SkiaSharp.SKMatrix.MakeScale(System.Single,System.Single))
-- [`MakeScale`](xref:SkiaSharp.SKMatrix.MakeScale(System.Single,System.Single,System.Single,System.Single)) with a pivot point
-- [`MakeRotation`](xref:SkiaSharp.SKMatrix.MakeRotation(System.Single)) for an angle in radians
-- [`MakeRotation`](xref:SkiaSharp.SKMatrix.MakeRotation(System.Single,System.Single,System.Single)) for an angle in radians with a pivot point
-- [`MakeRotationDegrees`](xref:SkiaSharp.SKMatrix.MakeRotationDegrees(System.Single))
-- [`MakeRotationDegrees`](xref:SkiaSharp.SKMatrix.MakeRotationDegrees(System.Single,System.Single,System.Single)) with a pivot point
-- [`MakeSkew`](xref:SkiaSharp.SKMatrix.MakeSkew(System.Single,System.Single))
+- [`CreateTranslation`](xref:SkiaSharp.SKMatrix.CreateTranslation(System.Single,System.Single))
+- [`CreateScale`](xref:SkiaSharp.SKMatrix.CreateScale(System.Single,System.Single))
+- [`CreateScale`](xref:SkiaSharp.SKMatrix.CreateScale(System.Single,System.Single,System.Single,System.Single)) with a pivot point
+- [`CreateRotation`](xref:SkiaSharp.SKMatrix.CreateRotation(System.Single)) for an angle in radians
+- [`CreateRotation`](xref:SkiaSharp.SKMatrix.CreateRotation(System.Single,System.Single,System.Single)) for an angle in radians with a pivot point
+- [`CreateRotationDegrees`](xref:SkiaSharp.SKMatrix.CreateRotationDegrees(System.Single))
+- [`CreateRotationDegrees`](xref:SkiaSharp.SKMatrix.CreateRotationDegrees(System.Single,System.Single,System.Single)) with a pivot point
+- [`CreateSkew`](xref:SkiaSharp.SKMatrix.CreateSkew(System.Single,System.Single))
 
-`SKMatrix` also defines several static methods that concatenate two matrices, which means to multiply them. These methods are named [`Concat`](xref:SkiaSharp.SKMatrix.Concat*), [`PostConcat`](xref:SkiaSharp.SKMatrix.PostConcat*), and [`PreConcat`](xref:SkiaSharp.SKMatrix.PreConcat*), and there are two versions of each. These methods have no return values; instead, they reference existing `SKMatrix` values through `ref` arguments. In the following example, `A`, `B`, and `R` (for "result") are all `SKMatrix` values.
+`SKMatrix` also defines methods for concatenating matrices, which means to multiply them. The static [`Concat`](xref:SkiaSharp.SKMatrix.Concat*) method takes two matrices and returns a new concatenated matrix. The instance methods [`PostConcat`](xref:SkiaSharp.SKMatrix.PostConcat*) and [`PreConcat`](xref:SkiaSharp.SKMatrix.PreConcat*) return a new matrix that is the result of concatenating the current matrix with another.
 
-The two `Concat` methods are called like this:
+The `Concat` method is called like this:
 
 ```csharp
-SKMatrix.Concat(ref R, A, B);
-
-SKMatrix.Concat(ref R, ref A, ref B);
+SKMatrix R = SKMatrix.Concat(A, B);
 ```
 
-These perform the following multiplication:
+This performs the following multiplication:
 
 `R = B × A`
 
-The other methods have only two parameters. The first parameter is modified, and on return from the method call, contains the product of the two matrices. The two `PostConcat` methods are called like this:
+The `PostConcat` instance method concatenates another matrix after the current matrix:
 
 ```csharp
-SKMatrix.PostConcat(ref A, B);
-
-SKMatrix.PostConcat(ref A, ref B);
+SKMatrix result = matrix.PostConcat(other);
 ```
 
-These calls perform the following operation:
+This call performs the following operation:
 
-`A = A × B`
+`result = matrix × other`
 
-The two `PreConcat` methods are similar:
+The `PreConcat` instance method concatenates another matrix before the current matrix:
 
 ```csharp
-SKMatrix.PreConcat(ref A, B);
-
-SKMatrix.PreConcat(ref A, ref B);
+SKMatrix result = matrix.PreConcat(other);
 ```
 
-These calls perform the following operation:
+This call performs the following operation:
 
-`A = B × A`
+`result = other × matrix`
 
-The versions of these methods with all `ref` arguments are slightly more efficient in calling the underlying implementations, but it might be confusing to someone reading your code and assuming that anything with a `ref` argument is modified by the method. Moreover, it's often convenient to pass an argument that is a result of one of the `Make` methods, for example:
+It's often convenient to chain these calls or pass results of the `Create` methods directly, for example:
 
 ```csharp
-SKMatrix result;
-SKMatrix.Concat(result, SKMatrix.MakeTranslation(100, 100),
-                        SKMatrix.MakeScale(3, 3));
+SKMatrix result = SKMatrix.Concat(SKMatrix.CreateTranslation(100, 100),
+                                   SKMatrix.CreateScale(3, 3));
 ```
 
 This creates the following matrix:
@@ -315,7 +308,7 @@ SKMatrix.RotateDegrees(ref R, degrees);
 SKMatrix.RotateDegrees(ref R, degrees, px, py);
 ```
 
-These methods do *not* concatenate a rotate transform to an existing transform. The methods set all the cells of the matrix. They are functionally identical to the `MakeRotation` and `MakeRotationDegrees` methods except that they don't instantiate the `SKMatrix` value.
+These methods do *not* concatenate a rotate transform to an existing transform. The methods set all the cells of the matrix. They are functionally identical to the `CreateRotation` and `CreateRotationDegrees` methods except that they don't instantiate the `SKMatrix` value.
 
 Suppose you have an `SKPath` object that you want to display, but you would prefer that it have a somewhat different orientation, or a different center point. You can modify all the coordinates of that path by calling the [`Transform`](xref:SkiaSharp.SKPath.Transform(SkiaSharp.SKMatrix)) method of `SKPath` with an `SKMatrix` argument. The **Path Transform** page demonstrates how to do this. The [`PathTransform`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/PathTransformPage.cs) class references the `HendecagramPath` object in a field but uses its constructor to apply a transform to that path:
 
@@ -332,9 +325,9 @@ public class PathTransformPage : ContentPage
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
 
-        SKMatrix matrix = SKMatrix.MakeScale(3, 3);
-        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(360f / 22));
-        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(300, 300));
+        SKMatrix matrix = SKMatrix.CreateScale(3, 3);
+        matrix = matrix.PostConcat(SKMatrix.CreateRotationDegrees(360f / 22));
+        matrix = matrix.PostConcat(SKMatrix.CreateTranslation(300, 300));
 
         transformedPath.Transform(matrix);
     }
@@ -348,8 +341,8 @@ The constructor builds an `SKMatrix` object from three separate transforms using
 
 ```csharp
 SKMatrix matrix = A;
-SKMatrix.PostConcat(ref A, B);
-SKMatrix.PostConcat(ref A, C);
+matrix = matrix.PostConcat(B);
+matrix = matrix.PostConcat(C);
 ```
 
 This is a series of successive multiplications, so the result is as follows:
@@ -361,9 +354,9 @@ The consecutive multiplications aid in understanding what each transform does. T
 There are other sequences that produce the same matrix. Here's another one:
 
 ```csharp
-SKMatrix matrix = SKMatrix.MakeRotationDegrees(360f / 22);
-SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(100, 100));
-SKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(3, 3));
+SKMatrix matrix = SKMatrix.CreateRotationDegrees(360f / 22);
+matrix = matrix.PostConcat(SKMatrix.CreateTranslation(100, 100));
+matrix = matrix.PostConcat(SKMatrix.CreateScale(3, 3));
 ```
 
 This rotates the path around its center first, and then translates it 100 pixels to the right and down so all the coordinates are positive. The star is then increased in size relative to its new upper-left corner, which is the point (0, 0).
@@ -524,7 +517,7 @@ public partial class ShowAffineMatrixPage : ContentPage
     static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint ptLL)
     {
         // Scale transform
-        SKMatrix S = SKMatrix.MakeScale(1 / size.Width, 1 / size.Height);
+        SKMatrix S = SKMatrix.CreateScale(1 / size.Width, 1 / size.Height);
 
         // Affine transform
         SKMatrix A = new SKMatrix
@@ -538,9 +531,7 @@ public partial class ShowAffineMatrixPage : ContentPage
             Persp2 = 1
         };
 
-        SKMatrix result = SKMatrix.MakeIdentity();
-        SKMatrix.Concat(ref result, A, S);
-        return result;
+        return SKMatrix.Concat(A, S);
     }
     ...
 }

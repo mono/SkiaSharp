@@ -608,8 +608,8 @@ public class ConveyorBeltPage : ContentPage
         bucketPath.Close();
 
         // Make it a little bigger and correct the orientation
-        bucketPath.Transform(SKMatrix.MakeScale(-2, 2));
-        bucketPath.Transform(SKMatrix.MakeRotationDegrees(90));
+        bucketPath.Transform(SKMatrix.CreateScale(-2, 2));
+        bucketPath.Transform(SKMatrix.CreateRotationDegrees(90));
     }
     ...
 ```
@@ -714,13 +714,13 @@ public class HatchFillPage : ContentPage
 {
     SKPaint fillPaint = new SKPaint();
 
-    SKPathEffect horzLinesPath = SKPathEffect.Create2DLine(3, SKMatrix.MakeScale(6, 6));
+    SKPathEffect horzLinesPath = SKPathEffect.Create2DLine(3, SKMatrix.CreateScale(6, 6));
 
     SKPathEffect vertLinesPath = SKPathEffect.Create2DLine(6,
-        Multiply(SKMatrix.MakeRotationDegrees(90), SKMatrix.MakeScale(24, 24)));
+        Multiply(SKMatrix.CreateRotationDegrees(90), SKMatrix.CreateScale(24, 24)));
 
     SKPathEffect diagLinesPath = SKPathEffect.Create2DLine(12,
-        Multiply(SKMatrix.MakeScale(36, 36), SKMatrix.MakeRotationDegrees(45)));
+        Multiply(SKMatrix.CreateScale(36, 36), SKMatrix.CreateRotationDegrees(45)));
 
     SKPaint strokePaint = new SKPaint
     {
@@ -731,9 +731,7 @@ public class HatchFillPage : ContentPage
     ...
     static SKMatrix Multiply(SKMatrix first, SKMatrix second)
     {
-        SKMatrix target = SKMatrix.MakeIdentity();
-        SKMatrix.Concat(ref target, first, second);
-        return target;
+        return SKMatrix.Concat(first, second);
     }
 }
 ```
@@ -830,7 +828,7 @@ public class PathTileFillPage : ContentPage
             paint.Color = SKColors.Red;
 
             using (SKPathEffect pathEffect =
-                   SKPathEffect.Create2DPath(SKMatrix.MakeScale(64, 64), tilePath))
+                   SKPathEffect.Create2DPath(SKMatrix.CreateScale(64, 64), tilePath))
             {
                 paint.PathEffect = pathEffect;
 
@@ -1118,7 +1116,10 @@ public partial class TapToOutlineThePathPage : ContentPage
     void OnCanvasViewTapped(object? sender, EventArgs args)
     {
         outlineThePath ^= true;
-        (sender as SKCanvasView).InvalidateSurface();
+        if (sender is SKCanvasView canvasView)
+        {
+            canvasView.InvalidateSurface();
+        }
     }
     ...
 }
@@ -1295,11 +1296,11 @@ public class CatsInFramePage : ContentPage
         Content = canvasView;
 
         // Move (0, 0) point to center of cat path
-        catPath.Transform(SKMatrix.MakeTranslation(-240, -175));
+        catPath.Transform(SKMatrix.CreateTranslation(-240, -175));
 
         // Now catPath is 400 by 250
         // Scale it down to 160 by 100
-        catPath.Transform(SKMatrix.MakeScale(0.40f, 0.40f));
+        catPath.Transform(SKMatrix.CreateScale(0.40f, 0.40f));
 
         // Get the outlines of the contours of the cat path
         SKPath outlinedCatPath = new SKPath();
@@ -1359,8 +1360,8 @@ public class DashedHatchLinesPage : ContentPage
         SKPathEffect.CreateDash(new float[] { 30, 30 }, 0);
 
     static SKPathEffect hatchEffect = SKPathEffect.Create2DLine(20,
-        Multiply(SKMatrix.MakeScale(60, 60),
-                 SKMatrix.MakeRotationDegrees(45)));
+        Multiply(SKMatrix.CreateScale(60, 60),
+                 SKMatrix.CreateRotationDegrees(45)));
 
     SKPaint paint = new SKPaint()
     {
@@ -1371,9 +1372,7 @@ public class DashedHatchLinesPage : ContentPage
     ...
     static SKMatrix Multiply(SKMatrix first, SKMatrix second)
     {
-        SKMatrix target = SKMatrix.MakeIdentity();
-        SKMatrix.Concat(ref target, first, second);
-        return target;
+        return SKMatrix.Concat(first, second);
     }
 }
 ```

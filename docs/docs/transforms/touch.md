@@ -47,7 +47,7 @@ public partial class BitmapDraggingPage : ContentPage
 {
     // Bitmap and matrix for display
     SKBitmap? bitmap;
-    SKMatrix matrix = SKMatrix.MakeIdentity();
+    SKMatrix matrix = SKMatrix.CreateIdentity();
     ···
 
     public BitmapDraggingPage()
@@ -221,9 +221,9 @@ public partial class BitmapScalingPage : ContentPage
                         {
                             // If something bad hasn't happened, calculate a scale and translation matrix
                             SKMatrix scaleMatrix = 
-                                SKMatrix.MakeScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y);
+                                SKMatrix.CreateScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y);
 
-                            SKMatrix.PostConcat(ref matrix, scaleMatrix);
+                            matrix = matrix.PostConcat(scaleMatrix);
                             canvasView.InvalidateSurface();
                         }
                     }
@@ -336,7 +336,7 @@ public partial class BitmapRotationPage : ContentPage
 
                         // Calculate rotation matrix
                         float angle = newAngle - oldAngle;
-                        SKMatrix touchMatrix = SKMatrix.MakeRotation(angle, pivotPoint.X, pivotPoint.Y);
+                        SKMatrix touchMatrix = SKMatrix.CreateRotation(angle, pivotPoint.X, pivotPoint.Y);
 
                         // Effectively rotate the old vector
                         float magnitudeRatio = Magnitude(oldVector) / Magnitude(newVector);
@@ -348,10 +348,10 @@ public partial class BitmapRotationPage : ContentPage
 
                         if (!float.IsNaN(scale) && !float.IsInfinity(scale))
                         {
-                            SKMatrix.PostConcat(ref touchMatrix,
-                                SKMatrix.MakeScale(scale, scale, pivotPoint.X, pivotPoint.Y));
+                            touchMatrix = touchMatrix.PostConcat(
+                                SKMatrix.CreateScale(scale, scale, pivotPoint.X, pivotPoint.Y));
 
-                            SKMatrix.PostConcat(ref matrix, touchMatrix);
+                            matrix = matrix.PostConcat(touchMatrix);
                             canvasView.InvalidateSurface();
                         }
                     }
@@ -573,7 +573,7 @@ class TouchManipulationBitmap
     public TouchManipulationBitmap(SKBitmap bitmap)
     {
         this.bitmap = bitmap;
-        Matrix = SKMatrix.MakeIdentity();
+        Matrix = SKMatrix.CreateIdentity();
 
         TouchManager = new TouchManipulationManager
         {
@@ -702,7 +702,7 @@ class TouchManipulationBitmap
     {
         TouchManipulationInfo[] infos = new TouchManipulationInfo[touchDictionary.Count];
         touchDictionary.Values.CopyTo(infos, 0);
-        SKMatrix touchMatrix = SKMatrix.MakeIdentity();
+        SKMatrix touchMatrix = SKMatrix.CreateIdentity();
 
         if (infos.Length == 1)
         {
@@ -723,7 +723,7 @@ class TouchManipulationBitmap
         }
 
         SKMatrix matrix = Matrix;
-        SKMatrix.PostConcat(ref matrix, touchMatrix);
+        matrix = matrix.PostConcat(touchMatrix);
         Matrix = matrix;
     }
 }
@@ -773,10 +773,10 @@ class TouchManipulationManager
     {
         if (Mode == TouchManipulationMode.None)
         {
-            return SKMatrix.MakeIdentity();
+            return SKMatrix.CreateIdentity();
         }
 
-        SKMatrix touchMatrix = SKMatrix.MakeIdentity();
+        SKMatrix touchMatrix = SKMatrix.CreateIdentity();
         SKPoint delta = newPoint - prevPoint;
 
         if (Mode == TouchManipulationMode.ScaleDualRotate)  // One-finger rotation
@@ -792,7 +792,7 @@ class TouchManipulationManager
 
                 // Calculate rotation matrix
                 float angle = newAngle - prevAngle;
-                touchMatrix = SKMatrix.MakeRotation(angle, pivotPoint.X, pivotPoint.Y);
+                touchMatrix = SKMatrix.CreateRotation(angle, pivotPoint.X, pivotPoint.Y);
 
                 // Effectively rotate the old vector
                 float magnitudeRatio = Magnitude(oldVector) / Magnitude(newVector);
@@ -805,7 +805,7 @@ class TouchManipulationManager
         }
 
         // Multiply the rotation matrix by a translation matrix
-        SKMatrix.PostConcat(ref touchMatrix, SKMatrix.MakeTranslation(delta.X, delta.Y));
+        touchMatrix = touchMatrix.PostConcat(SKMatrix.CreateTranslation(delta.X, delta.Y));
 
         return touchMatrix;
     }
@@ -821,7 +821,7 @@ class TouchManipulationManager
     ...
     public SKMatrix TwoFingerManipulate(SKPoint prevPoint, SKPoint newPoint, SKPoint pivotPoint)
     {
-        SKMatrix touchMatrix = SKMatrix.MakeIdentity();
+        SKMatrix touchMatrix = SKMatrix.CreateIdentity();
         SKPoint oldVector = prevPoint - pivotPoint;
         SKPoint newVector = newPoint - pivotPoint;
 
@@ -834,7 +834,7 @@ class TouchManipulationManager
 
             // Calculate rotation matrix
             float angle = newAngle - oldAngle;
-            touchMatrix = SKMatrix.MakeRotation(angle, pivotPoint.X, pivotPoint.Y);
+            touchMatrix = SKMatrix.CreateRotation(angle, pivotPoint.X, pivotPoint.Y);
 
             // Effectively rotate the old vector
             float magnitudeRatio = Magnitude(oldVector) / Magnitude(newVector);
@@ -861,8 +861,8 @@ class TouchManipulationManager
         if (!float.IsNaN(scaleX) && !float.IsInfinity(scaleX) &&
             !float.IsNaN(scaleY) && !float.IsInfinity(scaleY))
         {
-            SKMatrix.PostConcat(ref touchMatrix,
-                SKMatrix.MakeScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y));
+            touchMatrix = touchMatrix.PostConcat(
+                SKMatrix.CreateScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y));
         }
 
         return touchMatrix;
@@ -871,7 +871,7 @@ class TouchManipulationManager
 }
 ```
 
-You'll notice there is no explicit translation in this method. However, both the `MakeRotation` and `MakeScale` methods are based on the pivot point, and that includes implicit translation. If you're using two fingers on the bitmap and dragging them in the same direction, `TouchManipulation` will get a series of touch events alternating between the two fingers. As each finger moves relative to the other, scaling or rotation results, but it's negated by the other finger's movement, and the result is translation.
+You'll notice there is no explicit translation in this method. However, both the `CreateRotation` and `CreateScale` methods are based on the pivot point, and that includes implicit translation. If you're using two fingers on the bitmap and dragging them in the same direction, `TouchManipulation` will get a series of touch events alternating between the two fingers. As each finger moves relative to the other, scaling or rotation results, but it's negated by the other finger's movement, and the result is translation.
 
 The only remaining part of the **Touch Manipulation** page is the `PaintSurface` handler in the `TouchManipulationPage` code-behind file. This calls the `Paint` method of the `TouchManipulationBitmap`, which applies the matrix representing the accumulated touch activity:
 
@@ -941,7 +941,7 @@ public partial class BitmapScatterViewPage : ContentPage
             var bitmap = SKBitmap.Decode(stream);
             bitmapCollection.Add(new TouchManipulationBitmap(bitmap)
             {
-                Matrix = SKMatrix.MakeTranslation(position.X, position.Y),
+                Matrix = SKMatrix.CreateTranslation(position.X, position.Y),
             });
             position.X += 100;
             position.Y += 100;
@@ -1084,7 +1084,7 @@ The [**SingleFingerCornerScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/
 public partial class SingleFingerCornerScalePage : ContentPage
 {
     SKBitmap? bitmap;
-    SKMatrix currentMatrix = SKMatrix.MakeIdentity();
+    SKMatrix currentMatrix = SKMatrix.CreateIdentity();
     ···
 
     public SingleFingerCornerScalePage()
@@ -1129,7 +1129,7 @@ The crucial part of the code is an `if` statement involving two calls to the `Ma
 public partial class SingleFingerCornerScalePage : ContentPage
 {
     SKBitmap? bitmap;
-    SKMatrix currentMatrix = SKMatrix.MakeIdentity();
+    SKMatrix currentMatrix = SKMatrix.CreateIdentity();
 
     // Information for translating and scaling
     long? touchId = null;
@@ -1184,24 +1184,24 @@ public partial class SingleFingerCornerScalePage : ContentPage
                 if (!touchId.HasValue || e.Id != touchId.Value)
                     return;
 
-                SKMatrix matrix = SKMatrix.MakeIdentity();
+                SKMatrix matrix = SKMatrix.CreateIdentity();
 
                 // Translating
                 if (!isScaling)
                 {
                     SKPoint delta = point - pressedLocation;
-                    matrix = SKMatrix.MakeTranslation(delta.X, delta.Y);
+                    matrix = SKMatrix.CreateTranslation(delta.X, delta.Y);
                 }
                 // Scaling
                 else
                 {
                     float scaleX = (point.X - pivotPoint.X) / (pressedLocation.X - pivotPoint.X);
                     float scaleY = (point.Y - pivotPoint.Y) / (pressedLocation.Y - pivotPoint.Y);
-                    matrix = SKMatrix.MakeScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y);
+                    matrix = SKMatrix.CreateScale(scaleX, scaleY, pivotPoint.X, pivotPoint.Y);
                 }
 
                 // Concatenate the matrices
-                SKMatrix.PreConcat(ref matrix, pressedMatrix);
+                matrix = matrix.PreConcat(pressedMatrix);
                 currentMatrix = matrix;
                 canvasView.InvalidateSurface();
                 break;

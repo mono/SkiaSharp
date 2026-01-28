@@ -169,14 +169,16 @@ public partial class TestPerspectivePage : ContentPage
 
     void OnPersp0SliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
-        Slider slider = (Slider)sender;
+        if (sender is not Slider slider)
+            return;
         persp0Label.Text = String.Format("Persp0 = {0:F4}", slider.Value / 100);
         canvasView.InvalidateSurface();
     }
 
     void OnPersp1SliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
-        Slider slider = (Slider)sender;
+        if (sender is not Slider slider)
+            return;
         persp1Label.Text = String.Format("Persp1 = {0:F4}", slider.Value / 100);
         canvasView.InvalidateSurface();
     }
@@ -202,7 +204,7 @@ public partial class TestPerspectivePage : ContentPage
             return;
 
         // Calculate perspective matrix
-        SKMatrix perspectiveMatrix = SKMatrix.MakeIdentity();
+        SKMatrix perspectiveMatrix = SKMatrix.CreateIdentity();
         perspectiveMatrix.Persp0 = (float)persp0Slider.Value / 100;
         perspectiveMatrix.Persp1 = (float)persp1Slider.Value / 100;
 
@@ -210,9 +212,9 @@ public partial class TestPerspectivePage : ContentPage
         float xCenter = info.Width / 2;
         float yCenter = info.Height / 2;
 
-        SKMatrix matrix = SKMatrix.MakeTranslation(-xCenter, -yCenter);
-        SKMatrix.PostConcat(ref matrix, perspectiveMatrix);
-        SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(xCenter, yCenter));
+        SKMatrix matrix = SKMatrix.CreateTranslation(-xCenter, -yCenter);
+        matrix = matrix.PostConcat(perspectiveMatrix);
+        matrix = matrix.PostConcat(SKMatrix.CreateTranslation(xCenter, yCenter));
 
         // Coordinates to center bitmap on canvas
         float x = xCenter - bitmap.Width / 2;
@@ -258,7 +260,7 @@ static class TaperTransform
 {
     public static SKMatrix Make(SKSize size, TaperSide taperSide, TaperCorner taperCorner, float taperFraction)
     {
-        SKMatrix matrix = SKMatrix.MakeIdentity();
+        SKMatrix matrix = SKMatrix.CreateIdentity();
 
         switch (taperSide)
         {
@@ -379,9 +381,9 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     float x = (info.Width - bitmap.Width) / 2;
     float y = (info.Height - bitmap.Height) / 2;
 
-    SKMatrix matrix = SKMatrix.MakeTranslation(-x, -y);
-    SKMatrix.PostConcat(ref matrix, taperMatrix);
-    SKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(x, y));
+    SKMatrix matrix = SKMatrix.CreateTranslation(-x, -y);
+    matrix = matrix.PostConcat(taperMatrix);
+    matrix = matrix.PostConcat(SKMatrix.CreateTranslation(x, y));
 
     canvas.SetMatrix(matrix);
     canvas.DrawBitmap(bitmap, x, y);
@@ -404,7 +406,7 @@ As long as you don't attempt to make an interior angle of one of the corners of 
 static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint ptLL, SKPoint ptLR)
 {
     // Scale transform
-    SKMatrix S = SKMatrix.MakeScale(1 / size.Width, 1 / size.Height);
+    SKMatrix S = SKMatrix.CreateScale(1 / size.Width, 1 / size.Height);
 
     // Affine transform
     SKMatrix A = new SKMatrix
@@ -438,10 +440,10 @@ static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint p
     };
 
     // Multiply S * N * A
-    SKMatrix result = SKMatrix.MakeIdentity();
-    SKMatrix.PostConcat(ref result, S);
-    SKMatrix.PostConcat(ref result, N);
-    SKMatrix.PostConcat(ref result, A);
+    SKMatrix result = SKMatrix.CreateIdentity();
+    result = result.PostConcat(S);
+    result = result.PostConcat(N);
+    result = result.PostConcat(A);
 
     return result;
 }
