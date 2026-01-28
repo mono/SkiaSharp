@@ -2,11 +2,11 @@
 <html>
   <head>
     <meta charset="utf-8">
-      <title>Integrating with Xamarin.Forms | SkiaSharp </title>
+      <title>Integrating with .NET MAUI | SkiaSharp </title>
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta name="title" content="Integrating with Xamarin.Forms | SkiaSharp ">
+      <meta name="title" content="Integrating with .NET MAUI | SkiaSharp ">
       
-      <meta name="description" content="This article explains how to create SkiaSharp graphics that respond to touch and Xamarin.Forms elements, and demonstrates this with sample code.">
+      <meta name="description" content="This article explains how to create SkiaSharp graphics that respond to touch and .NET MAUI elements, and demonstrates this with sample code.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -85,17 +85,17 @@
         </div>
 
         <article data-uid="">
-<h1 id="integrating-with-xamarinforms">Integrating with Xamarin.Forms</h1>
+<h1 id="integrating-with-net-maui">Integrating with .NET MAUI</h1>
 
-<p><em>Create SkiaSharp graphics that respond to touch and Xamarin.Forms elements</em></p>
-<p>SkiaSharp graphics can integrate with the rest of Xamarin.Forms in several ways. You can combine a SkiaSharp canvas and Xamarin.Forms elements on the same page, and even position Xamarin.Forms elements on top of a SkiaSharp canvas:</p>
+<p><em>Create SkiaSharp graphics that respond to touch and .NET MAUI elements</em></p>
+<p>SkiaSharp graphics can integrate with the rest of .NET MAUI in several ways. You can combine a SkiaSharp canvas and .NET MAUI elements on the same page, and even position .NET MAUI elements on top of a SkiaSharp canvas:</p>
 <p><img src="integration-images/integrationexample.png" alt="Selecting a color with sliders"></p>
-<p>Another approach to creating interactive SkiaSharp graphics in Xamarin.Forms is through touch.</p>
-<p>The second page in the sample program is entitled <strong>Tap Toggle Fill</strong>. It draws a simple circle two ways — without a fill and with a fill — toggled by a tap. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml.cs"><code>TapToggleFillPage</code></a> class shows how you can alter SkiaSharp graphics in response to user input.</p>
-<p>For this page, the <code>SKCanvasView</code> class is instantiated in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml">TapToggleFill.xaml</a> file, which also sets a Xamarin.Forms <a href="xref:Xamarin.Forms.TapGestureRecognizer"><code>TapGestureRecognizer</code></a> on the view:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>Another approach to creating interactive SkiaSharp graphics in .NET MAUI is through touch.</p>
+<p>The second page in the sample program is entitled <strong>Tap Toggle Fill</strong>. It draws a simple circle two ways — without a fill and with a fill — toggled by a tap. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml.cs"><code>TapToggleFillPage</code></a> class shows how you can alter SkiaSharp graphics in response to user input.</p>
+<p>For this page, the <code>SKCanvasView</code> class is instantiated in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/TapToggleFillPage.xaml">TapToggleFill.xaml</a> file, which also sets a .NET MAUI <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.tapgesturerecognizer"><code>TapGestureRecognizer</code></a> on the view:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.TapToggleFillPage&quot;
              Title=&quot;Tap Toggle Fill&quot;&gt;
 
@@ -107,17 +107,20 @@
 &lt;/ContentPage&gt;
 </code></pre>
 <p>Notice the <code>skia</code> XML namespace declaration.</p>
-<p>The <code>Tapped</code> handler for the <code>TapGestureRecognizer</code> object simply toggles the value of a Boolean field and calls the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview.invalidatesurface#skiasharp-views-forms-skcanvasview-invalidatesurface"><code>InvalidateSurface</code></a> method of <code>SKCanvasView</code>:</p>
+<p>The <code>Tapped</code> handler for the <code>TapGestureRecognizer</code> object simply toggles the value of a Boolean field and calls the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls.skcanvasview.invalidatesurface#skiasharp-views-maui-controls-skcanvasview-invalidatesurface"><code>InvalidateSurface</code></a> method of <code>SKCanvasView</code>:</p>
 <pre><code class="lang-csharp">bool showFill = true;
 ...
-void OnCanvasViewTapped(object sender, EventArgs args)
+void OnCanvasViewTapped(object? sender, EventArgs args)
 {
     showFill ^= true;
-    (sender as SKCanvasView).InvalidateSurface();
+    if (sender is SKCanvasView canvasView)
+    {
+        canvasView.InvalidateSurface();
+    }
 }
 </code></pre>
 <p>The call to <code>InvalidateSurface</code> effectively generates a call to the <code>PaintSurface</code> handler, which uses the <code>showFill</code> field to fill or not fill the circle:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -128,7 +131,7 @@ void OnCanvasViewTapped(object sender, EventArgs args)
     SKPaint paint = new SKPaint
     {
         Style = SKPaintStyle.Stroke,
-        Color = Color.Red.ToSKColor(),
+        Color = Colors.Red.ToSKColor(),
         StrokeWidth = 50
     };
     canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
@@ -142,17 +145,17 @@ void OnCanvasViewTapped(object sender, EventArgs args)
 }
 </code></pre>
 <p>The <code>StrokeWidth</code> property has been set to 50 to accentuate the difference. You can also see the whole line width by drawing the interior first and then the outline. By default, graphics figures that are drawn later in the <code>PaintSurface</code> event handler obscure those drawn earlier in the handler.</p>
-<p>The <strong>Color Explore</strong> page demonstrates how you can also integrate SkiaSharp graphics with other Xamarin.Forms elements, and also demonstrates the difference between two alternative methods for defining colors in SkiaSharp. The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsl#skiasharp-skcolor-fromhsl(system-single-system-single-system-single-system-byte)"><code>SKColor.FromHsl</code></a> method creates an <code>SKColor</code> value based on the Hue-Saturation-Lightness model:</p>
+<p>The <strong>Color Explore</strong> page demonstrates how you can also integrate SkiaSharp graphics with other .NET MAUI elements, and also demonstrates the difference between two alternative methods for defining colors in SkiaSharp. The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsl#skiasharp-skcolor-fromhsl(system-single-system-single-system-single-system-byte)"><code>SKColor.FromHsl</code></a> method creates an <code>SKColor</code> value based on the Hue-Saturation-Lightness model:</p>
 <pre><code class="lang-csharp">public static SKColor FromHsl (Single h, Single s, Single l, Byte a)
 </code></pre>
 <p>The static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsv#skiasharp-skcolor-fromhsv(system-single-system-single-system-single-system-byte)"><code>SKColor.FromHsv</code></a> method creates an <code>SKColor</code> value based on the similar Hue-Saturation-Value model:</p>
 <pre><code class="lang-csharp">public static SKColor FromHsv (Single h, Single s, Single v, Byte a)
 </code></pre>
 <p>In both cases, the <code>h</code> argument ranges from 0 to 360. The <code>s</code>, <code>l</code>, and <code>v</code> arguments range from 0 to 100. The <code>a</code> (alpha or opacity) argument ranges from 0 to 255.</p>
-<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml"><strong>ColorExplorePage.xaml</strong></a> file creates two <code>SKCanvasView</code> objects in a <code>StackLayout</code> side by side with <code>Slider</code> and <code>Label</code> views that allow the user to select HSL and HSV color values:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml"><strong>ColorExplorePage.xaml</strong></a> file creates two <code>SKCanvasView</code> objects in a <code>StackLayout</code> side by side with <code>Slider</code> and <code>Label</code> views that allow the user to select HSL and HSV color values:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Basics.ColorExplorePage&quot;
              Title=&quot;Color Explore&quot;&gt;
     &lt;StackLayout&gt;
@@ -227,7 +230,7 @@ void OnCanvasViewTapped(object sender, EventArgs args)
 &lt;/ContentPage&gt;
 </code></pre>
 <p>The two <code>SKCanvasView</code> elements are in a single-cell <code>Grid</code> with a <code>Label</code> sitting on top for displaying the resultant RGB color value.</p>
-<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml.cs"><strong>ColorExplorePage.xaml.cs</strong></a> code-behind file is relatively simple. The shared <code>ValueChanged</code> handler for the three <code>Slider</code> elements simply invalidates both <code>SKCanvasView</code> elements. The <code>PaintSurface</code> handlers clear the canvas with the color indicated by the <code>Slider</code> elements, and also set the <code>Label</code> sitting on top of the <code>SKCanvasView</code> elements:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ColorExplorePage.xaml.cs"><strong>ColorExplorePage.xaml.cs</strong></a> code-behind file is relatively simple. The shared <code>ValueChanged</code> handler for the three <code>Slider</code> elements simply invalidates both <code>SKCanvasView</code> elements. The <code>PaintSurface</code> handlers clear the canvas with the color indicated by the <code>Slider</code> elements, and also set the <code>Label</code> sitting on top of the <code>SKCanvasView</code> elements:</p>
 <pre><code class="lang-csharp">public partial class ColorExplorePage : ContentPage
 {
     public ColorExplorePage()
@@ -240,13 +243,13 @@ void OnCanvasViewTapped(object sender, EventArgs args)
         valueSlider.Value = 100;
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         hslCanvasView.InvalidateSurface();
         hsvCanvasView.InvalidateSurface();
     }
 
-    void OnHslCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnHslCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKColor color = SKColor.FromHsl((float)hueSlider.Value,
                                         (float)saturationSlider.Value,
@@ -257,7 +260,7 @@ void OnCanvasViewTapped(object sender, EventArgs args)
                                       color.Red, color.Green, color.Blue);
     }
 
-    void OnHsvCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnHsvCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKColor color = SKColor.FromHsv((float)hueSlider.Value,
                                         (float)saturationSlider.Value,

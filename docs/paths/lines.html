@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Lines and Stroke Caps | SkiaSharp ">
       
-      <meta name="description" content="This article explains how to use SkiaSharp to draw lines with different stroke caps in Xamarin.Forms applications, and demonstrates this with sample code.">
+      <meta name="description" content="This article explains how to use SkiaSharp to draw lines with different stroke caps in .NET MAUI applications, and demonstrates this with sample code.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -100,8 +100,8 @@
 <li><code>Square</code></li>
 <li><code>Round</code></li>
 </ul>
-<p>These are best illustrated with a sample program. The <strong>SkiaSharp Lines and Paths</strong> section of the sample program begins with a page titled <strong>Stroke Caps</strong> based on the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/StrokeCapsPage.cs"><code>StrokeCapsPage</code></a> class. This page defines a <code>PaintSurface</code> event handler that loops through the three members of the <code>SKStrokeCap</code> enumeration, displaying both the name of the enumeration member and drawing a line using that stroke cap:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<p>These are best illustrated with a sample program. The <strong>SkiaSharp Lines and Paths</strong> section of the sample program begins with a page titled <strong>Stroke Caps</strong> based on the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/StrokeCapsPage.cs"><code>StrokeCapsPage</code></a> class. This page defines a <code>PaintSurface</code> event handler that loops through the three members of the <code>SKStrokeCap</code> enumeration, displaying both the name of the enumeration member and drawing a line using that stroke cap:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -111,9 +111,12 @@
 
     SKPaint textPaint = new SKPaint
     {
-        Color = SKColors.Black,
-        TextSize = 75,
-        TextAlign = SKTextAlign.Center
+        Color = SKColors.Black
+    };
+
+    SKFont font = new SKFont
+    {
+        Size = 75
     };
 
     SKPaint thickLinePaint = new SKPaint
@@ -133,13 +136,13 @@
     float xText = info.Width / 2;
     float xLine1 = 100;
     float xLine2 = info.Width - xLine1;
-    float y = textPaint.FontSpacing;
+    float y = font.Spacing;
 
     foreach (SKStrokeCap strokeCap in Enum.GetValues(typeof(SKStrokeCap)))
     {
         // Display text
-        canvas.DrawText(strokeCap.ToString(), xText, y, textPaint);
-        y += textPaint.FontSpacing;
+        canvas.DrawText(strokeCap.ToString(), xText, y, SKTextAlign.Center, font, textPaint);
+        y += font.Spacing;
 
         // Display thick line
         thickLinePaint.StrokeCap = strokeCap;
@@ -147,7 +150,7 @@
 
         // Display thin line
         canvas.DrawLine(xLine1, y, xLine2, y, thinLinePaint);
-        y += 2 * textPaint.FontSpacing;
+        y += 2 * font.Spacing;
     }
 }
 </code></pre>
@@ -163,11 +166,11 @@
 <li><code>Lines</code> to connect each pair of points</li>
 <li><code>Polygon</code> to connect all consecutive points</li>
 </ul>
-<p>The <strong>Multiple Lines</strong> page demonstrates this method. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/MultipleLinesPage.xaml"><strong>MultipleLinesPage.xaml</strong></a> file instantiates two <code>Picker</code> views that let you select a member of the <code>SKPointMode</code> enumeration and a member of the <code>SKStrokeCap</code> enumeration:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>The <strong>Multiple Lines</strong> page demonstrates this method. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/MultipleLinesPage.xaml"><strong>MultipleLinesPage.xaml</strong></a> file instantiates two <code>Picker</code> views that let you select a member of the <code>SKPointMode</code> enumeration and a member of the <code>SKStrokeCap</code> enumeration:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Paths.MultipleLinesPage&quot;
              Title=&quot;Multiple Lines&quot;&gt;
     &lt;Grid&gt;
@@ -224,7 +227,7 @@
 &lt;/ContentPage&gt;
 </code></pre>
 <p>Notice that the SkiaSharp namespace declarations are a little different because the <code>SkiaSharp</code> namespace is needed to reference the members of the <code>SKPointMode</code> and <code>SKStrokeCap</code> enumerations. The <code>SelectedIndexChanged</code> handler for both <code>Picker</code> views simply invalidates the <code>SKCanvasView</code> object:</p>
-<pre><code class="lang-csharp">void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+<pre><code class="lang-csharp">void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
 {
     if (canvasView != null)
     {
@@ -234,7 +237,7 @@
 </code></pre>
 <p>This handler needs to check for the existence of the <code>SKCanvasView</code> object because the event handler is first called when the <code>SelectedIndex</code> property of the <code>Picker</code> is set to 0 in the XAML file, and that occurs before the <code>SKCanvasView</code> has been instantiated.</p>
 <p>The <code>PaintSurface</code> handler obtains the two enumeration values from the <code>Picker</code> views:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

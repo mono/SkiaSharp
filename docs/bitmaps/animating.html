@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Animating SkiaSharp bitmaps | SkiaSharp ">
       
-      <meta name="description" content="Learn how to perform bitmap animation by sequentially displaying a series of bitmaps, and rendering animated GIF files.">
+      <meta name="description" content="Learn how to perform bitmap animation by sequentially displaying a series of bitmaps, and rendering animated GIF files in .NET MAUI applications.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -95,10 +95,10 @@
 <p><img src="animating-images/AnimatingSample.png" alt="Animating Sample" title="Animating Sample"></p>
 <p>The second example shows how to use SkiaSharp to render an animated GIF file.</p>
 <h2 id="bitmap-animation">Bitmap animation</h2>
-<p>The Mandelbrot Set is visually fascinating but computionally lengthy. (For a discussion of the Mandelbrot Set and the mathematics used here, see <a href="/xamarin/xamarin-forms/creating-mobile-apps-xamarin-forms/summaries/chapter20">Chapter 20 of <em>Creating Mobile Apps with Xamarin.Forms</em></a> starting on page 666. The following description assumes that background knowledge.)</p>
+<p>The Mandelbrot Set is visually fascinating but computationally lengthy. The Mandelbrot Set is a famous fractal defined by iterating the formula z = z² + c for complex numbers. Points in the complex plane are colored based on how quickly the iteration escapes to infinity (or doesn't). The following description assumes some background knowledge of this concept.</p>
 <p>The sample uses bitmap animation to simulate a continuous zoom of a fixed point in the Mandelbrot Set. Zooming in is followed by zooming out, and then the cycle repeats forever or until you end the program.</p>
 <p>The program prepares for this animation by creating up to 50 bitmaps that it stores in application local storage. Each bitmap encompasses half the width and height of the complex plane as the previous bitmap. (In the program, these bitmaps are said to represent integral <em>zoom levels</em>.) The bitmaps are then displayed in sequence. The scaling of each bitmap is animated to provide a smooth progression from one bitmap to another.</p>
-<p>Like the final program described in Chapter 20 of <em>Creating Mobile Apps with Xamarin.Forms</em>, the calculation of the Mandelbrot Set in <strong>Mandelbrot Animation</strong> is an asynchronous method with eight parameters. The parameters include a complex center point, and a width and height of the complex plane surrounding that center point. The next three parameters are the pixel width and height of the bitmap to be created, and a maximum number of iterations for the recursive calculation. The <code>progress</code> parameter is used to display the progress of this calculation. The <code>cancelToken</code> parameter is not used in this program:</p>
+<p>The calculation of the Mandelbrot Set in <strong>Mandelbrot Animation</strong> is an asynchronous method with eight parameters. The parameters include a complex center point, and a width and height of the complex plane surrounding that center point. The next three parameters are the pixel width and height of the bitmap to be created, and a maximum number of iterations for the recursive calculation. The <code>progress</code> parameter is used to display the progress of this calculation. The <code>cancelToken</code> parameter is not used in this program:</p>
 <pre><code class="lang-csharp">static class Mandelbrot
 {
     public static Task&lt;BitmapInfo&gt; CalculateAsync(Complex center,
@@ -180,9 +180,9 @@
 }
 </code></pre>
 <p>The <strong>Mandelbrot Animation</strong> XAML file includes two <code>Label</code> views, a <code>ProgressBar</code>, and a <code>Button</code> as well as the <code>SKCanvasView</code>:</p>
-<pre><code class="lang-csharp">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-csharp">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;MandelAnima.MainPage&quot;
              Title=&quot;Mandelbrot Animation&quot;&gt;
 
@@ -225,8 +225,8 @@
     ···
 }
 </code></pre>
-<p>At some point, you'll probably want to change the <code>COUNT</code> value to 50 to see the full range of the animation. Values above 50 are not useful. Around a zoom level of 48 or so, the resolution of double-precision floating-point numbers becomes insufficient for the Mandelbrot Set calculation. This problem is discussed on page 684 of <em>Creating Mobile Apps with Xamarin.Forms</em>.</p>
-<p>The <code>center</code> value is very important. This is the focus of the animation zoom. The three values in the file are those used in the three final screenshots in Chapter 20 of <em>Creating Mobile Apps with Xamarin.Forms</em> on page 684, but you can experiment with the program in that chapter to come up with one of your own values.</p>
+<p>At some point, you'll probably want to change the <code>COUNT</code> value to 50 to see the full range of the animation. Values above 50 are not useful. Around a zoom level of 48 or so, the resolution of double-precision floating-point numbers becomes insufficient for the Mandelbrot Set calculation.</p>
+<p>The <code>center</code> value is very important. This is the focus of the animation zoom. You can experiment with different center values to discover interesting areas of the Mandelbrot Set.</p>
 <p>The <strong>Mandelbrot Animation</strong> sample stores these <code>COUNT</code> bitmaps in local application storage. Fifty bitmaps require over 20 megabytes of storage on your device, so you might want to know how much storage these bitmaps are occupying, and at some point you might want to delete them all. That's the purpose of these two methods at the bottom of the <code>MainPage</code> class:</p>
 <pre><code class="lang-csharp">public partial class MainPage : ContentPage
 {
@@ -243,7 +243,7 @@
         storageLabel.Text = $&quot;Total storage: {fileSize:N0} bytes&quot;;
     }
 
-    void OnDeleteButtonClicked(object sender, EventArgs args)
+    void OnDeleteButtonClicked(object? sender, EventArgs args)
     {
         foreach (string filepath in Directory.EnumerateFiles(FolderPath()))
         {
@@ -398,13 +398,13 @@
 
         // Now start the animation
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
     ···
 }
 </code></pre>
 <p>Notice that the program stores these bitmaps in local application storage rather than in the device's photo library. The .NET Standard 2.0 library allows using the familiar <code>File.OpenRead</code> and <code>File.WriteAllBytes</code> methods for this task.</p>
-<p>After all the bitmaps have been created or loaded into memory, the method starts a <code>Stopwatch</code> object and calls <code>Device.StartTimer</code>. The <code>OnTimerTick</code> method is called every 16 milliseconds.</p>
+<p>After all the bitmaps have been created or loaded into memory, the method starts a <code>Stopwatch</code> object and calls <code>Dispatcher.StartTimer</code>. The <code>OnTimerTick</code> method is called every 16 milliseconds.</p>
 <p><code>OnTimerTick</code> calculates a <code>time</code> value in milliseconds that ranges from 0 to 6000 times <code>COUNT</code>, which apportions six seconds for the display of each bitmap. The <code>progress</code> value uses the <code>Math.Sin</code> value to create a sinusoidal animation that will be slower at the beginning of the cycle, and slower at the end as it reverses direction.</p>
 <p>The <code>progress</code> value ranges from 0 to <code>COUNT</code>. This means that the integer part of <code>progress</code> is an index into the <code>bitmaps</code> array, while the fractional part of <code>progress</code> indicates a zoom level for that particular bitmap. These values are stored in the <code>bitmapIndex</code> and <code>bitmapProgress</code> fields, and are displayed by the <code>Label</code> and <code>Slider</code> in the XAML file. The <code>SKCanvasView</code> is invalidated to update the bitmap display:</p>
 <pre><code class="lang-csharp">public partial class MainPage : ContentPage
@@ -448,7 +448,7 @@
 <pre><code class="lang-csharp">public partial class MainPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -486,9 +486,9 @@
 <h2 id="gif-animation">GIF animation</h2>
 <p>The Graphics Interchange Format (GIF) specification includes a feature that allows a single GIF file to contain multiple sequential frames of a scene that can be displayed in succession, often in a loop. These files are known as <em>animated GIFs</em>. Web browsers can play animated GIFs, and SkiaSharp allows an application to extract the frames from an animated GIF file and to display them sequentially.</p>
 <p>The sample includes an animated GIF resource named <strong>Newtons_cradle_animation_book_2.gif</strong> created by DemonDeLuxe and downloaded from the <a href="https://en.wikipedia.org/wiki/Newton%27s_cradle">Newton's Cradle</a> page in Wikipedia. The <strong>Animated GIF</strong> page includes a XAML file that provides that information and instantiates an <code>SKCanvasView</code>:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.AnimatedGifPage&quot;
              Title=&quot;Animated GIF&quot;&gt;
 
@@ -511,14 +511,14 @@
 </code></pre>
 <p>The code-behind file is not generalized to play any animated GIF file. It ignores some of the information that is available, in particular a repetition count, and simply plays the animated GIF in a loop.</p>
 <p>The use of SkisSharp to extract the frames of an animated GIF file does not seem to be documented anywhere, so the description of the code that follows is more detailed than usual:</p>
-<p>The decoding of the animated GIF file occurs in the page's constructor, and requires that the <code>Stream</code> object referencing the bitmap be used to create an <code>SKManagedStream</code> object and then an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec"><code>SKCodec</code></a> object. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.framecount#skiasharp-skcodec-framecount"><code>FrameCount</code></a> property indicates the number of frames that make up the animation.</p>
-<p>These frames are eventually saved as individual bitmaps, so the constructor uses <code>FrameCount</code> to allocate an array of type <code>SKBitmap</code> as well as two <code>int</code> arrays for the duration of each frame and (to ease the animation logic) the accumulated durations.</p>
+<p>The decoding of the animated GIF file occurs in the <code>LoadAnimatedGifAsync</code> method, and requires that the <code>Stream</code> object referencing the bitmap be used to create an <code>SKManagedStream</code> object and then an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec"><code>SKCodec</code></a> object. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.framecount#skiasharp-skcodec-framecount"><code>FrameCount</code></a> property indicates the number of frames that make up the animation.</p>
+<p>These frames are eventually saved as individual bitmaps, so the method uses <code>FrameCount</code> to allocate an array of type <code>SKBitmap</code> as well as two <code>int</code> arrays for the duration of each frame and (to ease the animation logic) the accumulated durations.</p>
 <p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.frameinfo#skiasharp-skcodec-frameinfo"><code>FrameInfo</code></a> property of <code>SKCodec</code> class is an array of <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodecframeinfo"><code>SKCodecFrameInfo</code></a> values, one for each frame, but the only thing this program takes from that structure is the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodecframeinfo.duration#skiasharp-skcodecframeinfo-duration"><code>Duration</code></a> of the frame in milliseconds.</p>
 <p><code>SKCodec</code> defines a property named <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.info#skiasharp-skcodec-info"><code>Info</code></a> of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo"><code>SKImageInfo</code></a>, but that <code>SKImageInfo</code> value indicates (at least for this image) that the color type is <code>SKColorType.Index8</code>, which means that each pixel is an index into a color type. To avoid bothering with color tables, the program uses the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo.width#skiasharp-skimageinfo-width"><code>Width</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimageinfo.height#skiasharp-skimageinfo-height"><code>Height</code></a> information from that structure to construct it's own full-color <code>ImageInfo</code> value. Each <code>SKBitmap</code> is created from that.</p>
 <p>The <code>GetPixels</code> method of <code>SKBitmap</code> returns an <code>IntPtr</code> referencing the pixel bits of that bitmap. These pixel bits have not been set yet. That <code>IntPtr</code> is passed to one of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodec.getpixels#skiasharp-skcodec-getpixels(skiasharp-skimageinfo-system-intptr-skiasharp-skcodecoptions)"><code>GetPixels</code></a> methods of <code>SKCodec</code>. That method copies the frame from the GIF file into the memory space referenced by the <code>IntPtr</code>. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcodecoptions"><code>SKCodecOptions</code></a> constructor indicates the frame number:</p>
 <pre><code class="lang-csharp">public partial class AnimatedGifPage : ContentPage
 {
-    SKBitmap[] bitmaps;
+    SKBitmap[]? bitmaps;
     int[] durations;
     int[] accumulatedDurations;
     int totalDuration;
@@ -528,64 +528,68 @@
     {
         InitializeComponent ();
 
-        string resourceID = &quot;SkiaSharpFormsDemos.Media.Newtons_cradle_animation_book_2.gif&quot;;
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadAnimatedGifAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        using (SKManagedStream skStream = new SKManagedStream(stream))
-        using (SKCodec codec = SKCodec.Create(skStream))
+    async Task LoadAnimatedGifAsync()
+    {
+        // Load the animated GIF from Resources/Raw folder
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync(&quot;Newtons_cradle_animation_book_2.gif&quot;);
+        using SKManagedStream skStream = new SKManagedStream(stream);
+        using SKCodec codec = SKCodec.Create(skStream);
+
+        // Get frame count and allocate bitmaps
+        int frameCount = codec.FrameCount;
+        bitmaps = new SKBitmap[frameCount];
+        durations = new int[frameCount];
+        accumulatedDurations = new int[frameCount];
+
+        // Note: There's also a RepetitionCount property of SKCodec not used here
+
+        // Loop through the frames
+        for (int frame = 0; frame &lt; frameCount; frame++)
         {
-            // Get frame count and allocate bitmaps
-            int frameCount = codec.FrameCount;
-            bitmaps = new SKBitmap[frameCount];
-            durations = new int[frameCount];
-            accumulatedDurations = new int[frameCount];
+            // From the FrameInfo collection, get the duration of each frame
+            durations[frame] = codec.FrameInfo[frame].Duration;
 
-            // Note: There's also a RepetitionCount property of SKCodec not used here
+            // Create a full-color bitmap for each frame
+            SKImageInfo imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height);
+            bitmaps[frame] = new SKBitmap(imageInfo);
 
-            // Loop through the frames
-            for (int frame = 0; frame &lt; frameCount; frame++)
-            {
-                // From the FrameInfo collection, get the duration of each frame
-                durations[frame] = codec.FrameInfo[frame].Duration;
+            // Get the address of the pixels in that bitmap
+            IntPtr pointer = bitmaps[frame].GetPixels();
 
-                // Create a full-color bitmap for each frame
-                SKImageInfo imageInfo = code.new SKImageInfo(codec.Info.Width, codec.Info.Height);
-                bitmaps[frame] = new SKBitmap(imageInfo);
+            // Create an SKCodecOptions value to specify the frame
+            SKCodecOptions codecOptions = new SKCodecOptions(frame, false);
 
-                // Get the address of the pixels in that bitmap
-                IntPtr pointer = bitmaps[frame].GetPixels();
-
-                // Create an SKCodecOptions value to specify the frame
-                SKCodecOptions codecOptions = new SKCodecOptions(frame, false);
-
-                // Copy pixels from the frame into the bitmap
-                codec.GetPixels(imageInfo, pointer, codecOptions);
-            }
-
-            // Sum up the total duration
-            for (int frame = 0; frame &lt; durations.Length; frame++)
-            {
-                totalDuration += durations[frame];
-            }
-
-            // Calculate the accumulated durations
-            for (int frame = 0; frame &lt; durations.Length; frame++)
-            {
-                accumulatedDurations[frame] = durations[frame] +
-                    (frame == 0 ? 0 : accumulatedDurations[frame - 1]);
-            }
+            // Copy pixels from the frame into the bitmap
+            codec.GetPixels(imageInfo, pointer, codecOptions);
         }
+
+        // Sum up the total duration
+        for (int frame = 0; frame &lt; durations.Length; frame++)
+        {
+            totalDuration += durations[frame];
+        }
+
+        // Calculate the accumulated durations
+        for (int frame = 0; frame &lt; durations.Length; frame++)
+        {
+            accumulatedDurations[frame] = durations[frame] +
+                (frame == 0 ? 0 : accumulatedDurations[frame - 1]);
+        }
+
+        canvasView.InvalidateSurface();
     }
     ···
 }
 </code></pre>
 <p>Despite the <code>IntPtr</code> value, no <code>unsafe</code> code is required because the <code>IntPtr</code> is never converted to a C# pointer value.</p>
 <p>After each frame has been extracted, the constructor totals up the durations of all the frames, and then initializes another array with the accumulated durations.</p>
-<p>The remainder of the code-behind file is dedicated to animation. The <code>Device.StartTimer</code> method is used to start a timer going, and the <code>OnTimerTick</code> callback uses a <code>Stopwatch</code> object to determine the elapsed time in milliseconds. Looping through the accumulated durations array is sufficient to find the current frame:</p>
+<p>The remainder of the code-behind file is dedicated to animation. The <code>Dispatcher.StartTimer</code> method is used to start a timer going, and the <code>OnTimerTick</code> callback uses a <code>Stopwatch</code> object to determine the elapsed time in milliseconds. Looping through the accumulated durations array is sufficient to find the current frame:</p>
 <pre><code class="lang-csharp">public partial class AnimatedGifPage : ContentPage
 {
-    SKBitmap[] bitmaps;
+    SKBitmap[]? bitmaps;
     int[] durations;
     int[] accumulatedDurations;
     int totalDuration;
@@ -601,7 +605,7 @@
 
         isAnimating = true;
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
 
     protected override void OnDisappearing()
@@ -636,13 +640,16 @@
         return isAnimating;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear(SKColors.Black);
+
+        if (bitmaps is null)
+            return;
 
         // Get the bitmap and center it
         SKBitmap bitmap = bitmaps[currentFrame];

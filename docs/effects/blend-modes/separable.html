@@ -92,9 +92,9 @@
 <h2 id="lighten-and-darken-two-ways">Lighten and darken two ways</h2>
 <p>It is common to have a bitmap that is somewhat too dark or too light. You can use separable blend modes to lighten or darken the image.  Indeed, two of the separable blend modes in the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skblendmode"><code>SKBlendMode</code></a> enumeration are named <code>Lighten</code> and <code>Darken</code>.</p>
 <p>These two modes are demonstrated in the <strong>Lighten and Darken</strong> page. The XAML file instantiates two <code>SKCanvasView</code> objects and two <code>Slider</code> views:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.LightenAndDarkenPage&quot;
              Title=&quot;Lighten and Darken&quot;&gt;
     &lt;StackLayout&gt;
@@ -119,18 +119,16 @@
 <p>The first <code>SKCanvasView</code> and <code>Slider</code> demonstrate <code>SKBlendMode.Lighten</code> and the second pair demonstrates <code>SKBlendMode.Darken</code>. The two <code>Slider</code> views share the same <code>ValueChanged</code> handler, and the two <code>SKCanvasView</code> share the same <code>PaintSurface</code> handler. Both event handlers check which object is firing the event:</p>
 <pre><code class="lang-csharp">public partial class LightenAndDarkenPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                typeof(SeparableBlendModesPage),
-                &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;);
 
     public LightenAndDarkenPage ()
     {
         InitializeComponent ();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
-        if ((Slider)sender == lightenSlider)
+        if (sender == lightenSlider)
         {
             lightenCanvasView.InvalidateSurface();
         }
@@ -140,7 +138,7 @@
         }
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -162,7 +160,7 @@
         // Display gray rectangle with blend mode
         using (SKPaint paint = new SKPaint())
         {
-            if ((SKCanvasView)sender == lightenCanvasView)
+            if (sender == lightenCanvasView)
             {
                 byte value = (byte)(255 * lightenSlider.Value);
                 paint.Color = new SKColor(value, value, value);
@@ -283,10 +281,10 @@
 <p>The <strong>Separable Blend Modes</strong> page allows you to examine all the separable blend modes. It displays a bitmap destination and a colored rectangle source using one of the blend modes.</p>
 <p>The XAML file defines a <code>Picker</code> (to select the blend mode) and four sliders. The first three sliders let you set the red, green, and blue components of the source. The fourth slider is intended to override those values by setting a gray shade. The individual sliders are not identified, but colors indicate their function:</p>
 <pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
-&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.SeparableBlendModesPage&quot;
              Title=&quot;Separable Blend Modes&quot;&gt;
 
@@ -355,21 +353,19 @@
 <p>The code-behind file loads one of the bitmap resources and draws it twice, once in the top half of the canvas and again in the bottom half of the canvas:</p>
 <pre><code class="lang-csharp">public partial class SeparableBlendModesPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(SeparableBlendModesPage),
-                        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;); 
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;); 
 
     public SeparableBlendModesPage()
     {
         InitializeComponent();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs e)
     {
         if (sender == graySlider)
         {
@@ -384,7 +380,7 @@
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -449,7 +445,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

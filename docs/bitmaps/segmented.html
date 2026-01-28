@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Segmented display of SkiaSharp bitmaps | SkiaSharp ">
       
-      <meta name="description" content="Display a SkiaSharp bitmap so that some area are stretched and some areas are not.">
+      <meta name="description" content="Display a SkiaSharp bitmap so that some area are stretched and some areas are not in .NET MAUI applications.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -140,7 +140,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -166,13 +166,13 @@
 <ul>
 <li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.xdivs#skiasharp-sklattice-xdivs"><code>XDivs</code></a>, an array of integers</li>
 <li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.ydivs#skiasharp-sklattice-ydivs"><code>YDivs</code></a>, an array of integers</li>
-<li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.flags#skiasharp-sklattice-flags"><code>Flags</code></a>, an array of <code>SKLatticeFlags</code>, an enumeration type</li>
+<li><code>Flags</code>, an array of <code>SKLatticeFlags</code>, an enumeration type</li>
 <li><a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklattice.bounds#skiasharp-sklattice-bounds"><code>Bounds</code></a> of type <code>Nullable&lt;SKRectI&gt;</code> to specify an optional source rectangle within the bitmap</li>
 </ul>
 <p>The <code>XDivs</code> array divides the width of the bitmap into vertical strips. The first strip extends from pixel 0 at the left to <code>XDivs[0]</code>. This strip is rendered in its pixel width. The second strip extends from <code>XDivs[0]</code> to <code>XDivs[1]</code>, and is stretched. The third strip extends from <code>XDivs[1]</code> to <code>XDivs[2]</code> and is rendered in its pixel width. The last strip extends from the last element of the array to the right edge of the bitmap. If the array has an even number of elements, then it's displayed in its pixel width. Otherwise, it's stretched. The total number of vertical strips is one more than the number of elements in the array.</p>
 <p>The <code>YDivs</code> array is similar. It divides the height of the array into horizontal strips.</p>
 <p>Together, the <code>XDivs</code> and <code>YDivs</code> array divide the bitmap into rectangles. The number of rectangles is equal to the product of the number of horizontal strips and the number of vertical strips.</p>
-<p>According to Skia documentation, the <code>Flags</code> array contains one element for each rectangle, first the top row of rectangles, then the second row, and so forth. The <code>Flags</code> array is of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sklatticeflags"><code>SKLatticeFlags</code></a>, an enumeration with the following members:</p>
+<p>According to Skia documentation, the <code>Flags</code> array contains one element for each rectangle, first the top row of rectangles, then the second row, and so forth. The <code>Flags</code> array is of type <code>SKLatticeFlags</code>, an enumeration with the following members:</p>
 <ul>
 <li><code>Default</code> with value 0</li>
 <li><code>Transparent</code> with value 1</li>
@@ -192,7 +192,7 @@
         Content = canvasView;
     }
     `
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -224,7 +224,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

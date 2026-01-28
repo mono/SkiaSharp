@@ -108,10 +108,10 @@
 <p>The first two arguments specify the center of a circle and a radius. The gradient begins at that center and extends outward for <code>radius</code> pixels. What happens beyond <code>radius</code> depends on the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshadertilemode"><code>SKShaderTileMode</code></a> argument. The <code>colors</code> parameter is an array of two or more colors (just as in the linear gradient methods), and <code>colorPos</code> is an array of integers in the range of 0 to 1. These integers indicate the relative positions of the colors along that <code>radius</code> line. You can set that argument to <code>null</code> to equally space the colors.</p>
 <p>If you use <code>CreateRadialGradient</code> to fill a circle, you can set the center of the gradient to the center of the circle, and the radius of the gradient to the radius of the circle. In that case, the <code>SKShaderTileMode</code> argument has no effect on the rendering of the gradient. But if the area filled by the gradient is larger than the circle defined by the gradient, then the <code>SKShaderTileMode</code> argument has a profound effect on what happens outside the circle.</p>
 <p>The effect of <code>SKShaderMode</code> is demonstrated in the <strong>Radial Gradient</strong> page in the sample. The XAML file for this page instantiates a <code>Picker</code> that allows you to select one of the three members of the <code>SKShaderTileMode</code> enumeration:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.RadialGradientPage&quot;
              Title=&quot;Radial Gradient&quot;&gt;
     &lt;Grid&gt;
@@ -152,12 +152,12 @@
         InitializeComponent ();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -199,7 +199,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -252,9 +252,7 @@
 <p>The <strong>Radial Gradient Mask</strong> page shows an example. The program loads one of the resource bitmaps. The <code>CENTER</code> and <code>RADIUS</code> fields were determined from an examination of the bitmap and reference an area that should be highlighted. The <code>PaintSurface</code> handler begins by calculating a rectangle to display the bitmap and then displays it in that rectangle:</p>
 <pre><code class="lang-csharp">public class RadialGradientMaskPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(RadialGradientMaskPage),
-        &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;MountainClimbers.jpg&quot;);
 
     static readonly SKPoint CENTER = new SKPoint(180, 300);
     static readonly float RADIUS = 120;
@@ -268,7 +266,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -328,7 +326,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -389,7 +387,7 @@
         canvasView.GestureRecognizers.Add(tap);
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -446,12 +444,11 @@
 <p>The parameters begin with center points and radii for two circles, referred to as the <em>start</em> circle and <em>end</em> circle. The remaining three parameters are the same as for <code>CreateLinearGradient</code> and <code>CreateRadialGradient</code>. A <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshader.createtwopointconicalgradient#skiasharp-skshader-createtwopointconicalgradient(skiasharp-skpoint-system-single-skiasharp-skpoint-system-single-skiasharp-skcolor()-system-single()-skiasharp-skshadertilemode-skiasharp-skmatrix)"><code>CreateTwoPointConicalGradient</code></a> overload includes a matrix transform.</p>
 <p>The gradient begins at the start circle and ends at the end circle. The <code>SKShaderTileMode</code> parameter governs what happens beyond the two circles. The two-point conical gradient is the only gradient that doesn't entirely fill an area. If the two circles have the same radius, the gradient is restricted to a rectangle with a width that is the same as the diameter of the circles. If the two circles have different radii, the gradient forms a cone.</p>
 <p>It's likely you'll want to experiment with the two-point conical gradient, so the <strong>Conical Gradient</strong> page derives from <code>InteractivePage</code> to allow two touch points to be moved around for the two circle radii:</p>
-<pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
                        xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
                        xmlns:local=&quot;clr-namespace:SkiaSharpFormsDemos&quot;
                        xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-                       xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
-                       xmlns:tt=&quot;clr-namespace:TouchTracking&quot;
+                       xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
                        x:Class=&quot;SkiaSharpFormsDemos.Effects.ConicalGradientPage&quot;
                        Title=&quot;Conical Gradient&quot;&gt;
     &lt;Grid&gt;
@@ -463,11 +460,9 @@
         &lt;Grid BackgroundColor=&quot;White&quot;
               Grid.Row=&quot;0&quot;&gt;
             &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
-                                    PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
-            &lt;Grid.Effects&gt;
-                &lt;tt:TouchEffect Capture=&quot;True&quot;
-                                TouchAction=&quot;OnTouchEffectAction&quot; /&gt;
-            &lt;/Grid.Effects&gt;
+                                    PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                                    EnableTouchEvents=&quot;True&quot;
+                                    Touch=&quot;OnTouch&quot; /&gt;
         &lt;/Grid&gt;
 
         &lt;Picker x:Name=&quot;tileModePicker&quot;
@@ -516,12 +511,12 @@
         baseCanvasView = canvasView;
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -576,7 +571,7 @@
 <pre><code class="lang-csharp">public class ConicalSpecularHighlightPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         using (SKPaint paint = new SKPaint())

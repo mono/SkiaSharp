@@ -94,11 +94,11 @@
 <p>To draw dotted or dashed lines, you use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpatheffect.createdash#skiasharp-skpatheffect-createdash(system-single()-system-single)"><code>SKPathEffect.CreateDash</code></a> static method. There are two arguments: This first is an array of <code>float</code> values that indicate the lengths of the dots and dashes and the length of the spaces between them. This array must have an even number of elements, and there should be at least two elements. (There can be zero elements in the array but that results in a solid line.) If there are two elements, the first is the length of a dot or dash, and the second is the length of the gap before the next dot or dash. If there are more than two elements, then they are in this order: dash length, gap length, dash length, gap length, and so on.</p>
 <p>Generally, you'll want to make the dash and gap lengths a multiple of the stroke width. If the stroke width is 10 pixels, for example, then the array { 10, 10 } will draw a dotted line where the dots and gaps are the same length as the stroke thickness.</p>
 <p>However, the <code>StrokeCap</code> setting of the <code>SKPaint</code> object also affects these dots and dashes. As you'll see shortly, that has an impact on the elements of this array.</p>
-<p>Dotted and dashed lines are demonstrated on the <strong>Dots and Dashes</strong> page. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/DotsAndDashesPage.xaml"><strong>DotsAndDashesPage.xaml</strong></a> file instantiates two <code>Picker</code> views, one for letting you select a stroke cap and the second to select a dash array:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>Dotted and dashed lines are demonstrated on the <strong>Dots and Dashes</strong> page. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/DotsAndDashesPage.xaml"><strong>DotsAndDashesPage.xaml</strong></a> file instantiates two <code>Picker</code> views, one for letting you select a stroke cap and the second to select a dash array:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Paths.DotsAndDashesPage&quot;
              Title=&quot;Dots and Dashes&quot;&gt;
     &lt;Grid&gt;
@@ -158,8 +158,8 @@
 &lt;/ContentPage&gt;
 </code></pre>
 <p>The first three items in the <code>dashArrayPicker</code> assume that the stroke width is 10 pixels. The { 10, 10 } array is for a dotted line, { 30, 10 } is for a dashed line, and { 10, 10, 30, 10 } is for a dot-and-dash line. (The other three will be discussed shortly.)</p>
-<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/DotsAndDashesPage.xaml.cs"><code>DotsAndDashesPage</code></a> code-behind file contains the <code>PaintSurface</code> event handler and a couple of helper routines for accessing the <code>Picker</code> views:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/DotsAndDashesPage.xaml.cs"><code>DotsAndDashesPage</code></a> code-behind file contains the <code>PaintSurface</code> event handler and a couple of helper routines for accessing the <code>Picker</code> views:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -214,7 +214,7 @@ float[] GetPickerArray(Picker picker)
 </ul>
 <p>The UWP screen shows that dotted and dashed line for a stroke cap of <code>Round</code>. The <code>Round</code> stroke cap often gives the best appearance of dots and dashes in thick lines.</p>
 <p>So far no mention has been made of the second parameter to the <code>SKPathEffect.CreateDash</code> method. This parameter is named <code>phase</code> and it refers to an offset within the dot-and-dash pattern for the beginning of the line. For example, if the dash array is { 10, 10 } and the <code>phase</code> is 10, then the line begins with a gap rather than a dot.</p>
-<p>One interesting application of the <code>phase</code> parameter is in an animation. The <strong>Animated Spiral</strong> page is similar to the <strong>Archimedean Spiral</strong> page, except that the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/AnimatedSpiralPage.cs"><code>AnimatedSpiralPage</code></a> class animates the <code>phase</code> parameter using the Xamarin.Forms <code>Device.Timer</code> method:</p>
+<p>One interesting application of the <code>phase</code> parameter is in an animation. The <strong>Animated Spiral</strong> page is similar to the <strong>Archimedean Spiral</strong> page, except that the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/AnimatedSpiralPage.cs"><code>AnimatedSpiralPage</code></a> class animates the <code>phase</code> parameter using the .NET MAUI <code>Dispatcher.CreateTimer</code> method:</p>
 <pre><code class="lang-csharp">public class AnimatedSpiralPage : ContentPage
 {
     const double cycleTime = 250;       // in milliseconds
@@ -239,7 +239,7 @@ float[] GetPickerArray(Picker picker)
         pageIsActive = true;
         stopwatch.Start();
 
-        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =&gt;
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(33), () =&gt;
         {
             double t = stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime;
             dashPhase = (float)(10 * t);

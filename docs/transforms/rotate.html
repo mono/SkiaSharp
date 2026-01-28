@@ -100,17 +100,19 @@ public Void RotateRadians (Single radians)
 <p>The transform formulas for rotation are more complex than those for translate and scale. For an angle of α, the transform formulas are:</p>
 <p>x' = x•cos(α) – y•sin(α)</p>
 <p>y` = x•sin(α) + y•cos(α)</p>
-<p>The <strong>Basic Rotate</strong> page demonstrates the <code>RotateDegrees</code> method. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicRotatePage.xaml.cs"><strong>BasicRotate.xaml.cs</strong></a> file displays some text with its baseline centered on the page and rotates it based on a <code>Slider</code> with a range of –360 to 360. Here's the relevant part of the <code>PaintSurface</code> handler:</p>
+<p>The <strong>Basic Rotate</strong> page demonstrates the <code>RotateDegrees</code> method. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicRotatePage.xaml.cs"><strong>BasicRotate.xaml.cs</strong></a> file displays some text with its baseline centered on the page and rotates it based on a <code>Slider</code> with a range of –360 to 360. Here's the relevant part of the <code>PaintSurface</code> handler:</p>
 <pre><code class="lang-csharp">using (SKPaint textPaint = new SKPaint
 {
     Style = SKPaintStyle.Fill,
-    Color = SKColors.Blue,
-    TextAlign = SKTextAlign.Center,
-    TextSize = 100
+    Color = SKColors.Blue
+})
+using (SKFont font = new SKFont
+{
+    Size = 100
 })
 {
     canvas.RotateDegrees((float)rotateSlider.Value);
-    canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+    canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 }
 </code></pre>
 <p>Because rotation is centered around the upper-left corner of the canvas, for most angles set in this program, the text is rotated off the screen:</p>
@@ -124,13 +126,15 @@ public void RotateRadians (Single radians, Single px, Single py)
 <pre><code class="lang-csharp">using (SKPaint textPaint = new SKPaint
 {
     Style = SKPaintStyle.Fill,
-    Color = SKColors.Blue,
-    TextAlign = SKTextAlign.Center,
-    TextSize = 100
+    Color = SKColors.Blue
+})
+using (SKFont font = new SKFont
+{
+    Size = 100
 })
 {
     canvas.RotateDegrees((float)rotateSlider.Value, info.Width / 2, info.Height / 2);
-    canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+    canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 }
 </code></pre>
 <p>Now the text rotates around the point used to position the text, which is the horizontal center of the text's baseline:</p>
@@ -145,33 +149,33 @@ canvas.Translate(-px, -py);
 </code></pre>
 <p>You'll discover that you can sometimes combine <code>Translate</code> calls with <code>Rotate</code> calls. For example, here are the <code>RotateDegrees</code> and <code>DrawText</code> calls in the <strong>Centered Rotate</strong> page;</p>
 <pre><code class="lang-csharp">canvas.RotateDegrees((float)rotateSlider.Value, info.Width / 2, info.Height / 2);
-canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 </code></pre>
 <p>The <code>RotateDegrees</code> call is equivalent to two <code>Translate</code> calls and a non-centered <code>RotateDegrees</code>:</p>
 <pre><code class="lang-csharp">canvas.Translate(info.Width / 2, info.Height / 2);
 canvas.RotateDegrees((float)rotateSlider.Value);
 canvas.Translate(-info.Width / 2, -info.Height / 2);
-canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 </code></pre>
 <p>The <code>DrawText</code> call to display text at a particular location is equivalent to a <code>Translate</code> call for that location followed by <code>DrawText</code> at the point (0, 0):</p>
 <pre><code class="lang-csharp">canvas.Translate(info.Width / 2, info.Height / 2);
 canvas.RotateDegrees((float)rotateSlider.Value);
 canvas.Translate(-info.Width / 2, -info.Height / 2);
 canvas.Translate(info.Width / 2, info.Height / 2);
-canvas.DrawText(Title, 0, 0, textPaint);
+canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
 </code></pre>
 <p>The two consecutive <code>Translate</code> calls cancel each other out:</p>
 <pre><code class="lang-csharp">canvas.Translate(info.Width / 2, info.Height / 2);
 canvas.RotateDegrees((float)rotateSlider.Value);
-canvas.DrawText(Title, 0, 0, textPaint);
+canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
 </code></pre>
 <p>Conceptually, the two transforms are applied in the order opposite to how they appear in the code. The <code>DrawText</code> call displays the text in the upper-left corner of the canvas. The <code>RotateDegrees</code> call rotates that text relative to the upper-left corner. Then the <code>Translate</code> call moves the text to the center of the canvas.</p>
 <p>There are usually several ways to combine rotation and translation. The <strong>Rotated Text</strong> page creates the following display:</p>
 <p><a href="rotate-images/rotatedtext-large.png#lightbox" title="Triple screenshot of the Rotated Text page"><img src="rotate-images/rotatedtext-small.png" alt="Triple screenshot of the Rotated Text page"></a></p>
-<p>Here's the <code>PaintSurface</code> handler of the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/RotatedTextPage.cs"><code>RotatedTextPage</code></a> class:</p>
+<p>Here's the <code>PaintSurface</code> handler of the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/RotatedTextPage.cs"><code>RotatedTextPage</code></a> class:</p>
 <pre><code class="lang-csharp">static readonly string text = &quot;    ROTATE&quot;;
 ...
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -181,22 +185,25 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 
     using (SKPaint textPaint = new SKPaint
     {
-        Color = SKColors.Black,
-        TextSize = 72
+        Color = SKColors.Black
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 72
     })
     {
         float xCenter = info.Width / 2;
         float yCenter = info.Height / 2;
 
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
         float yText = yCenter - textBounds.Height / 2 - textBounds.Top;
 
         for (int degrees = 0; degrees &lt; 360; degrees += 30)
         {
             canvas.Save();
             canvas.RotateDegrees(degrees, xCenter, yCenter);
-            canvas.DrawText(text, xCenter, yText, textPaint);
+            canvas.DrawText(text, xCenter, yText, SKTextAlign.Center, font, textPaint);
             canvas.Restore();
         }
     }
@@ -207,7 +214,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 <p>One way to simplify this code is to increment the rotation angle by 30 degrees each time through the loop after the <code>DrawText</code> call. This eliminates the need for calls to <code>Save</code> and <code>Restore</code>. Notice that the <code>degrees</code> variable is no longer used within the body of the <code>for</code> block:</p>
 <pre><code class="lang-csharp">for (int degrees = 0; degrees &lt; 360; degrees += 30)
 {
-    canvas.DrawText(text, xCenter, yText, textPaint);
+    canvas.DrawText(text, xCenter, yText, SKTextAlign.Center, font, textPaint);
     canvas.RotateDegrees(30, xCenter, yCenter);
 }
 
@@ -219,7 +226,7 @@ canvas.Translate(xCenter, yCenter);
 
 for (int degrees = 0; degrees &lt; 360; degrees += 30)
 {
-    canvas.DrawText(text, 0, yText, textPaint);
+    canvas.DrawText(text, 0, yText, SKTextAlign.Center, font, textPaint);
     canvas.RotateDegrees(30);
 }
 </code></pre>
@@ -230,7 +237,7 @@ for (int degrees = 0; degrees &lt; 360; degrees += 30)
 <p>Here's the <code>PaintSurface</code> handler that contains these transform calls in reverse order:</p>
 <pre><code class="lang-csharp">float revolveDegrees, rotateDegrees;
 ...
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -262,7 +269,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
     }
 }
 </code></pre>
-<p>The <code>revolveDegrees</code> and <code>rotateDegrees</code> fields are animated. This program uses a different animation technique based on the Xamarin.Forms <a href="xref:Xamarin.Forms.Animation"><code>Animation</code></a> class. (This class is described in Chapter 22 of <a href="https://aka.ms/xamformsebook">Free PDF download of <em>Creating Mobile Apps with Xamarin.Forms</em></a>) The <code>OnAppearing</code> override creates two <code>Animation</code> objects with callback methods and then calls <code>Commit</code> on them for an animation duration:</p>
+<p>The <code>revolveDegrees</code> and <code>rotateDegrees</code> fields are animated. This program uses a different animation technique based on the .NET MAUI <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.animation"><code>Animation</code></a> class. The <code>OnAppearing</code> override creates two <code>Animation</code> objects with callback methods and then calls <code>Commit</code> on them for an animation duration:</p>
 <pre><code class="lang-csharp">protected override void OnAppearing()
 {
     base.OnAppearing();
@@ -287,7 +294,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 </code></pre>
 <p>The <strong>Ugly Analog Clock</strong> program (so called because a more attractive analog clock will be described in a later article) uses rotation to draw the minute and hour marks of the clock and to rotate the hands. The program draws the clock using an arbitrary coordinate system based on a circle that is centered at the point (0, 0) with a radius of 100. It uses translation and scaling to expand and center that circle on the page.</p>
 <p>The <code>Translate</code> and <code>Scale</code> calls apply globally to the clock, so those are the first ones to be called following the initialization of the <code>SKPaint</code> objects:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -313,7 +320,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 }
 </code></pre>
 <p>There are 60 marks of two different sizes that must be drawn in a circle around the clock. The <code>DrawCircle</code> call draws that circle at the point (0, –90), which relative to the center of the clock corresponds to 12:00. The <code>RotateDegrees</code> call increments the rotation angle by 6 degrees after every tick mark. The <code>angle</code> variable is used solely to determine if a large circle or a small circle is drawn:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
         // Hour and minute marks
@@ -327,7 +334,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 }
 </code></pre>
 <p>Finally, the <code>PaintSurface</code> handler obtains the current time and calculates rotation degrees for the hour, minute, and second hands. Each hand is drawn in the 12:00 position so that the rotation angle is relative to that:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
         DateTime dateTime = DateTime.Now;

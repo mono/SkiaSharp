@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Overview | SkiaSharp ">
       
-      <meta name="description" content="SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. This guide explains how to use SkiaSharp for 2D graphics in your Xamarin.Forms applications.">
+      <meta name="description" content="SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. This guide explains how to use SkiaSharp for 2D graphics in your .NET MAUI applications.">
       <link rel="icon" href="images/logo.ico">
       <link rel="stylesheet" href="public/docfx.min.css">
       <link rel="stylesheet" href="public/main.css">
@@ -85,18 +85,21 @@
         </div>
 
         <article data-uid="">
-<h1 id="skiasharp-graphics-in-xamarinforms">SkiaSharp Graphics in Xamarin.Forms</h1>
+<h1 id="skiasharp-graphics-in-net-maui">SkiaSharp Graphics in .NET MAUI</h1>
 
-<p><em>Use SkiaSharp for 2D graphics in your Xamarin.Forms applications</em></p>
-<p>SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. You can use SkiaSharp in your Xamarin.Forms applications to draw 2D vector graphics, bitmaps, and text.</p>
-<p>This guide assumes that you are familiar with Xamarin.Forms programming.</p>
-<h2 id="skiasharp-preliminaries">SkiaSharp Preliminaries</h2>
-<p>SkiaSharp for Xamarin.Forms is packaged as a NuGet package. After you've created a Xamarin.Forms solution in Visual Studio or Visual Studio for Mac, you can use the NuGet package manager to search for the <strong>SkiaSharp.Views.Forms</strong> package and add it to your solution. If you check the <strong>References</strong> section of each project after adding SkiaSharp, you can see that various <strong>SkiaSharp</strong> libraries have been added to each of the projects in the solution.</p>
-<p>If your Xamarin.Forms application targets iOS, edit its <strong>Info.plist</strong> file to change the minimum deployment target to iOS 8.0.</p>
-<p>In any C# page that uses SkiaSharp you'll want to include a <code>using</code> directive for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp"><code>SkiaSharp</code></a> namespace, which encompasses all the SkiaSharp classes, structures, and enumerations that you'll use in your graphics programming. You'll also want a <code>using</code> directive for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms"><code>SkiaSharp.Views.Forms</code></a> namespace for the classes specific to Xamarin.Forms. This is a much smaller namespace, with the most important class being <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview"><code>SKCanvasView</code></a>. This class derives from the Xamarin.Forms <code>View</code> class and hosts your SkiaSharp graphics output.</p>
+<p><em>Use SkiaSharp for 2D graphics in your .NET MAUI applications</em></p>
+<p>SkiaSharp is a 2D graphics system for .NET and C# powered by the open-source Skia graphics engine that is used extensively in Google products. You can use SkiaSharp in your .NET MAUI applications to draw 2D vector graphics, bitmaps, and text.</p>
 <div class="IMPORTANT">
 <h5>Important</h5>
-<p>The <code>SkiaSharp.Views.Forms</code> namespace also contains an <code>SKGLView</code> class that derives from <code>View</code> but uses OpenGL for rendering graphics. For purposes of simplicity, this guide restricts itself to <code>SKCanvasView</code>, but using <code>SKGLView</code> instead is quite similar.</p>
+<p>In .NET MAUI, you must initialize SkiaSharp by calling <code>UseSkiaSharp()</code> on the <code>MauiAppBuilder</code> in your <code>MauiProgram.cs</code> file. This requires adding a <code>using</code> directive for the <code>SkiaSharp.Views.Maui.Controls.Hosting</code> namespace.</p>
+</div>
+<p>This guide assumes that you are familiar with .NET MAUI programming.</p>
+<h2 id="skiasharp-preliminaries">SkiaSharp Preliminaries</h2>
+<p>SkiaSharp for .NET MAUI is packaged as a NuGet package. After you've created a .NET MAUI solution in Visual Studio or Visual Studio for Mac, you can use the NuGet package manager to search for the <strong>SkiaSharp.Views.Maui.Controls</strong> package and add it to your solution. If you check the <strong>References</strong> section of each project after adding SkiaSharp, you can see that various <strong>SkiaSharp</strong> libraries have been added to each of the projects in the solution.</p>
+<p>In any C# page that uses SkiaSharp you'll want to include a <code>using</code> directive for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp"><code>SkiaSharp</code></a> namespace, which encompasses all the SkiaSharp classes, structures, and enumerations that you'll use in your graphics programming. You'll also want a <code>using</code> directive for the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls"><code>SkiaSharp.Views.Maui.Controls</code></a> namespace for the classes specific to .NET MAUI. This is a much smaller namespace, with the most important class being <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls.skcanvasview"><code>SKCanvasView</code></a>. This class derives from the .NET MAUI <code>View</code> class and hosts your SkiaSharp graphics output.</p>
+<div class="IMPORTANT">
+<h5>Important</h5>
+<p>The <code>SkiaSharp.Views.Maui.Controls</code> namespace also contains an <code>SKGLView</code> class that derives from <code>View</code> but uses OpenGL for rendering graphics. For purposes of simplicity, this guide restricts itself to <code>SKCanvasView</code>, but using <code>SKGLView</code> instead is quite similar.</p>
 </div>
 <h2 id="skiasharp-drawing-basics"><a href="docs/basics/index.html">SkiaSharp Drawing Basics</a></h2>
 <p>Some of the simplest graphics figures you can draw with SkiaSharp are circles, ovals, and rectangles. In displaying these figures, you will learn about SkiaSharp coordinates, sizes, and colors. The display of text and bitmaps is more complex, but these articles also introduce those techniques.</p>

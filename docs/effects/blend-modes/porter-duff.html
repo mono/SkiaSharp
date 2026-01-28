@@ -379,9 +379,9 @@
 <p><img src="porter-duff-images/SeatedMonkeyMatte.png" alt="Seated Monkey Matte" title="Seated Monkey Matte"></p>
 <p>This is <em>not</em> an expertly created matte. Optimally, the matte should include partially transparent pixels around the edge of the black pixels, and this matte does not.</p>
 <p>The XAML file for the <strong>Brick-Wall Compositing</strong> page instantiates an <code>SKCanvasView</code> and a <code>Button</code> that guides the user through the process of composing the final image:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.BrickWallCompositingPage&quot;
              Title=&quot;Brick-Wall Compositing&quot;&gt;
 
@@ -401,13 +401,9 @@
 <p>The code-behind file loads the two bitmaps that it needs and handles the <code>Clicked</code> event of the <code>Button</code>. For every <code>Button</code> click, the <code>step</code> field is incremented and a new <code>Text</code> property is set for the <code>Button</code>. When <code>step</code> reaches 5, it is set back to 0:</p>
 <pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
 {
-    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(BrickWallCompositingPage),
-        &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmap(&quot;SeatedMonkey.jpg&quot;);
 
-    SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(BrickWallCompositingPage),
-        &quot;SkiaSharpFormsDemos.Media.SeatedMonkeyMatte.png&quot;);
+    SKBitmap matteBitmap = BitmapExtensions.LoadBitmap(&quot;SeatedMonkeyMatte.png&quot;);
 
     int step = 0;
 
@@ -416,9 +412,11 @@
         InitializeComponent ();
     }
 
-    void OnButtonClicked(object sender, EventArgs args)
+    void OnButtonClicked(object? sender, EventArgs args)
     {
-        Button btn = (Button)sender;
+        if (sender is not Button btn)
+            return;
+            
         step = (step + 1) % 5;
 
         switch (step)
@@ -433,7 +431,7 @@
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -450,7 +448,7 @@
 <pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         float x = (info.Width - monkeyBitmap.Width) / 2;
@@ -471,7 +469,7 @@
 <pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         // Draw matte to exclude monkey's surroundings
@@ -494,7 +492,7 @@
 <pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         const float sidewalkHeight = 80;
@@ -524,7 +522,7 @@
 <pre><code class="lang-csharp">public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         // Draw bitmap tiled brick wall behind monkey
@@ -538,7 +536,7 @@
                 paint.Shader = SKShader.CreateBitmap(bitmap,
                                                      SKShaderTileMode.Repeat,
                                                      SKShaderTileMode.Repeat,
-                                                     SKMatrix.MakeTranslation(0, yAdjust));
+                                                     SKMatrix.CreateTranslation(0, yAdjust));
                 paint.BlendMode = SKBlendMode.DstOver;
                 canvas.DrawRect(info.Rect, paint);
             }
@@ -632,10 +630,10 @@
 <p>The <code>Plus</code> and <code>Modulate</code> modes are a little different from the others in that new colors can result from the combination of the source and the destination. The <code>Plus</code> mode can be interpreted either with byte components or floating-point components. In the <strong>Porter-Duff Grid</strong> page shown earlier, the destination color is <strong>(0xC0, 0x80, 0x00)</strong> and the source color is <strong>(0x00, 0x80, 0xC0)</strong>. Each pair of components is added but the sum is clamped at 0xFF. The result is the color <strong>(0xC0, 0xFF, 0xC0)</strong>. That's the color shown in the intersection.</p>
 <p>For the <code>Modulate</code> mode, the RGB values must be converted to floating-point. The destination color is <strong>(0.75, 0.5, 0)</strong> and the source is <strong>(0, 0.5, 0.75)</strong>. The RGB components are each multiplied together, and the result is <strong>(0, 0.25, 0)</strong>. That's the color shown in the intersection in the <strong>Porter-Duff Grid</strong> page for this mode.</p>
 <p>The <strong>Porter-Duff Transparency</strong> page allows you to examine how the Porter-Duff blend modes operate on graphical objects that are partially transparent. The XAML file includes a <code>Picker</code> with the Porter-Duff modes:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.PorterDuffTransparencyPage&quot;
              Title=&quot;Porter-Duff Transparency&quot;&gt;
 
@@ -683,12 +681,12 @@
         InitializeComponent();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -748,9 +746,7 @@
 <p>You can use transparent gradients for some different effects. One possibility is masking, which is similar to the technique shown in the <a href="../shaders/circular-gradients.html#radial-gradients-for-masking"><strong>Radial gradients for masking</strong></a> section of the <strong>SkiaSharp circular gradients page</strong>. Much of the <strong>Compositing Mask</strong> page is similar to that earlier program. It loads a bitmap resource and determines a rectangle in which to display it. A radial gradient is created based on a pre-determined center and radius:</p>
 <pre><code class="lang-csharp">public class CompositingMaskPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(CompositingMaskPage),
-        &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;MountainClimbers.jpg&quot;);
 
     static readonly SKPoint CENTER = new SKPoint(180, 300);
     static readonly float RADIUS = 120;
@@ -764,7 +760,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -817,9 +813,9 @@
 <p>All the transparent areas of the canvas are colored pink:</p>
 <p><a href="porter-duff-images/CompositingMask-Large.png#lightbox"><img src="porter-duff-images/CompositingMask.png" alt="Compositing Mask" title="Compositing Mask"></a></p>
 <p>You can also use Porter-Duff modes and partially transparent gradients for transitions from one image to another. The <strong>Gradient Transitions</strong> page includes a <code>Slider</code> to indicate a progress level in the transition from 0 to 1, and a <code>Picker</code> to choose the type of transition you want:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.GradientTransitionsPage&quot;
              Title=&quot;Gradient Transitions&quot;&gt;
 
@@ -848,13 +844,9 @@
 <p>The code-behind file loads two bitmap resources to demonstrate the transition. These are the same two images used in the <strong>Bitmap Dissolve</strong> page earlier in this article. The code also defines an enumeration with three members corresponding to three types of gradients — linear, radial, and sweep. These values are loaded into the <code>Picker</code>:</p>
 <pre><code class="lang-csharp">public partial class GradientTransitionsPage : ContentPage
 {
-    SKBitmap bitmap1 = BitmapExtensions.LoadBitmapResource(
-        typeof(GradientTransitionsPage),
-        &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+    SKBitmap bitmap1 = BitmapExtensions.LoadBitmap(&quot;SeatedMonkey.jpg&quot;);
 
-    SKBitmap bitmap2 = BitmapExtensions.LoadBitmapResource(
-        typeof(GradientTransitionsPage),
-        &quot;SkiaSharpFormsDemos.Media.FacePalm.jpg&quot;);
+    SKBitmap bitmap2 = BitmapExtensions.LoadBitmap(&quot;FacePalm.jpg&quot;);
 
     enum TransitionMode
     {
@@ -875,12 +867,12 @@
         transitionPicker.SelectedIndex = 0;
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
@@ -893,7 +885,7 @@
 <pre><code class="lang-csharp">public partial class GradientTransitionsPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

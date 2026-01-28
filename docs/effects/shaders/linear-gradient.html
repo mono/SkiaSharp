@@ -116,7 +116,7 @@
         ···
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -180,7 +180,7 @@
         canvasView.GestureRecognizers.Add(tap);
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         using (SKPaint paint = new SKPaint())
@@ -206,14 +206,13 @@
 <p>Notice that the gradient repeats itself in the same pattern beyond the points defining the gradient line. This repetition occurs because the last argument to <code>CreateLinearGradient</code> is <code>SKShaderTileMode.Repeat</code>. (You'll see the other options shortly.)</p>
 <p>Also notice that the points that you use to specify the gradient line aren't unique. Lines that are perpendicular to the gradient line have the same color, so there are an infinite number of gradient lines that you can specify for the same effect. For example, when filling a rectangle with a horizontal gradient, you can specify the upper-left and upper-right corners, or the lower-left and lower-right corners, or any two points that are even with and parallel to those lines.</p>
 <h2 id="interactively-experiment">Interactively experiment</h2>
-<p>You can interactively experiment with linear gradients with the <strong>Interactive Linear Gradient</strong> page. This page uses the <code>InteractivePage</code> class introduced in the article <a href="../../curves/arcs.html"><strong>Three ways to draw an arc</strong></a>. <code>InteractivePage</code> handles <a href="../../../xamarin-forms/app-fundamentals/effects/touch-tracking.md"><code>TouchEffect</code></a> events to maintain a collection of <code>TouchPoint</code> objects that you can move with your fingers or the mouse.</p>
-<p>The XAML file attaches the <code>TouchEffect</code> to a parent of the <code>SKCanvasView</code> and also includes a <code>Picker</code> that allows you to select one of the three members of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshadertilemode"><code>SKShaderTileMode</code></a> enumeration:</p>
-<pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>You can interactively experiment with linear gradients with the <strong>Interactive Linear Gradient</strong> page. This page uses the <code>InteractivePage</code> class introduced in the article <a href="../../curves/arcs.html"><strong>Three ways to draw an arc</strong></a>. <code>InteractivePage</code> uses <code>SKCanvasView</code>'s built-in touch support to maintain a collection of <code>TouchPoint</code> objects that you can move with your fingers or the mouse.</p>
+<p>The XAML file enables touch events on the <code>SKCanvasView</code> and also includes a <code>Picker</code> that allows you to select one of the three members of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skshadertilemode"><code>SKShaderTileMode</code></a> enumeration:</p>
+<pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
                        xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
                        xmlns:local=&quot;clr-namespace:SkiaSharpFormsDemos&quot;
                        xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-                       xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
-                       xmlns:tt=&quot;clr-namespace:TouchTracking&quot;
+                       xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
                        x:Class=&quot;SkiaSharpFormsDemos.Effects.InteractiveLinearGradientPage&quot;
                        Title=&quot;Interactive Linear Gradient&quot;&gt;
     &lt;Grid&gt;
@@ -225,11 +224,9 @@
         &lt;Grid BackgroundColor=&quot;White&quot;
               Grid.Row=&quot;0&quot;&gt;
             &lt;skiaforms:SKCanvasView x:Name=&quot;canvasView&quot;
-                                    PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
-            &lt;Grid.Effects&gt;
-                &lt;tt:TouchEffect Capture=&quot;True&quot;
-                                TouchAction=&quot;OnTouchEffectAction&quot; /&gt;
-            &lt;/Grid.Effects&gt;
+                                    PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                                    EnableTouchEvents=&quot;True&quot;
+                                    Touch=&quot;OnTouch&quot; /&gt;
         &lt;/Grid&gt;
 
         &lt;Picker x:Name=&quot;tileModePicker&quot;
@@ -273,12 +270,12 @@
         baseCanvasView = canvasView;
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -309,7 +306,7 @@
 <pre><code class="lang-csharp">public partial class InteractiveLinearGradientPage : InteractivePage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         // Display the touch points here rather than by TouchPoint
@@ -378,7 +375,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -387,6 +384,7 @@
         canvas.Clear();
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             // Create gradient for background
             paint.Shader = SKShader.CreateLinearGradient(
@@ -401,14 +399,14 @@
             canvas.DrawRect(info.Rect, paint);
 
             // Set TextSize to fill 90% of width
-            paint.TextSize = 100;
-            float width = paint.MeasureText(TEXT);
+            font.Size = 100;
+            float width = font.MeasureText(TEXT);
             float scale = 0.9f * info.Width / width;
-            paint.TextSize *= scale;
+            font.Size *= scale;
 
             // Get text bounds
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Calculate offsets to center the text on the screen
             float xText = info.Width / 2 - textBounds.MidX;
@@ -427,13 +425,13 @@
                                 SKShaderTileMode.Clamp);
 
             // Draw text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }
 </code></pre>
 <p>The <code>Shader</code> property of the <code>SKPaint</code> object is set first to display a gradient to cover the background. The gradient points are set to the upper-left and lower-right corners of the canvas.</p>
-<p>The code sets the <code>TextSize</code> property of the <code>SKPaint</code> object so that the text is displayed at 90% of the width of the canvas. The text bounds are used to calculate <code>xText</code> and <code>yText</code> values to pass to the <code>DrawText</code> method to center the text.</p>
+<p>The code sets the <code>Size</code> property of the <code>SKFont</code> object so that the text is displayed at 90% of the width of the canvas. The text bounds are used to calculate <code>xText</code> and <code>yText</code> values to pass to the <code>DrawText</code> method to center the text.</p>
 <p>However, the gradient points for the second <code>CreateLinearGradient</code> call must refer to the upper-left and lower-right corner of the text relative to the canvas when it's displayed. This is accomplished by shifting the <code>textBounds</code> rectangle by the same <code>xText</code> and <code>yText</code> values:</p>
 <pre><code class="lang-csharp">textBounds.Offset(xText, yText);
 </code></pre>
@@ -464,7 +462,7 @@
 
         isAnimating = true;
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
 
     protected override void OnDisappearing()
@@ -491,7 +489,7 @@
 <pre><code class="lang-csharp">public class GradientAnimationPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -522,7 +520,7 @@
 <pre><code class="lang-csharp">public class GradientAnimationPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -539,7 +537,7 @@
                                 new SKColor[] { SKColors.White, SKColors.Black },
                                 new float[] { 0, 1 },
                                 SKShaderTileMode.Mirror,
-                                SKMatrix.MakeRotation((float)angle, info.Rect.MidX, info.Rect.MidY));
+                                SKMatrix.CreateRotation((float)angle, info.Rect.MidX, info.Rect.MidY));
 
             canvas.DrawRect(info.Rect, paint);
         }
@@ -569,7 +567,7 @@ for (int i = 0; i &lt; colors.Length; i++)
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -619,7 +617,7 @@ for (int i = 0; i &lt; colors.Length; i++)
 <pre><code class="lang-csharp">public class RainbowGradientPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         using (SKPath path = new SKPath())
@@ -732,7 +730,7 @@ for (int i = 0; i &lt; colors.Length; i++)
 
         isAnimating = true;
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
 
     protected override void OnDisappearing()
@@ -761,7 +759,7 @@ for (int i = 0; i &lt; colors.Length; i++)
 {
     const int STROKE_WIDTH = 50;
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -785,7 +783,7 @@ for (int i = 0; i &lt; colors.Length; i++)
                                 colors,
                                 null,
                                 SKShaderTileMode.Repeat,
-                                SKMatrix.MakeTranslation(offset, 0));
+                                SKMatrix.CreateTranslation(offset, 0));
 
             canvas.DrawPath(infinityPath, paint);
         }
@@ -815,7 +813,7 @@ for (int i = 0; i &lt; colors.Length; i++)
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -824,26 +822,27 @@ for (int i = 0; i &lt; colors.Length; i++)
         canvas.Clear();
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             // Set text color to blue
             paint.Color = SKColors.Blue;
 
             // Set text size to fill 90% of width
-            paint.TextSize = 100;
-            float width = paint.MeasureText(TEXT);
+            font.Size = 100;
+            float width = font.MeasureText(TEXT);
             float scale = 0.9f * info.Width / width;
-            paint.TextSize *= scale;
+            font.Size *= scale;
 
             // Get text bounds
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Calculate offsets to position text above center
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2;
 
             // Draw unreflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Shift textBounds to match displayed text
             textBounds.Offset(xText, yText);
@@ -861,7 +860,7 @@ for (int i = 0; i &lt; colors.Length; i++)
             canvas.Scale(1, -1, 0, yText);
 
             // Draw reflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }

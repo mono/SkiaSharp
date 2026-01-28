@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Accessing SkiaSharp bitmap pixel bits | SkiaSharp ">
       
-      <meta name="description" content="Discover the various techniques for accessing and modifying the pixel bits of SkiaSharp bitmaps.">
+      <meta name="description" content="Discover the various techniques for accessing and modifying the pixel bits of SkiaSharp bitmaps in .NET MAUI applications.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -424,7 +424,7 @@ bitmap.Pixels = pixels;
 <pre><code class="lang-csharp">public class GradientBitmapPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -453,12 +453,12 @@ bitmap.Pixels = pixels;
         SKRect bounds = new SKRect();
 
         using (SKPaint textPaint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            textPaint.TextSize = (float)(12 * canvasView.CanvasSize.Width / canvasView.Width);
-            textPaint.TextAlign = SKTextAlign.Center;
-            textPaint.MeasureText(&quot;Tly&quot;, ref bounds);
+            font.Size = (float)(12 * canvasView.CanvasSize.Width / canvasView.Width);
+            font.MeasureText(&quot;Tly&quot;, out bounds);
 
-            canvas.DrawText(text, new SKPoint(rect.MidX, rect.Bottom - bounds.Bottom), textPaint);
+            canvas.DrawText(text, new SKPoint(rect.MidX, rect.Bottom - bounds.Bottom), SKTextAlign.Center, font, textPaint);
             rect.Bottom -= bounds.Height;
             canvas.DrawBitmap(bitmaps[index], rect, BitmapStretch.Uniform);
         }
@@ -594,7 +594,7 @@ bitmap.Pixels = pixels;
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -630,8 +630,7 @@ bitmap.Pixels = pixels;
 <pre><code class="lang-csharp">public partial class ColorAdjustmentPage : ContentPage
 {
     SKBitmap srcBitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
-                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+        BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;);
     SKBitmap dstBitmap;
 
     public ColorAdjustmentPage()
@@ -642,7 +641,7 @@ bitmap.Pixels = pixels;
         OnSliderValueChanged(null, null);
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         float hueAdjust = (float)hueSlider.Value;
         hueLabel.Text = $&quot;Hue Adjustment: {hueAdjust:F0}&quot;;
@@ -657,7 +656,7 @@ bitmap.Pixels = pixels;
         canvasView.InvalidateSurface();
     }
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -744,8 +743,7 @@ bitmap.Pixels = pixels;
 <pre><code class="lang-csharp">public class PosterizePage : ContentPage
 {
     SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(FillRectanglePage),
-                                            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+        BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;);
     public PosterizePage()
     {
         Title = &quot;Posterize&quot;;
@@ -766,7 +764,7 @@ bitmap.Pixels = pixels;
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

@@ -100,10 +100,10 @@
 <h2 id="exploring-the-tile-modes">Exploring the tile modes</h2>
 <p>The first program in the <strong>Bitmap Tiling</strong> section of the <strong>Shaders and other Effects</strong> page of the sample demonstrates the effects of the two <code>SKShaderTileMode</code> arguments. The <strong>Bitmap Tile Flip Modes</strong> XAML file instantiates an <code>SKCanvasView</code> and two <code>Picker</code> views that allow you to select an <code>SKShaderTilerMode</code> value for horizontal and vertical tiling. Notice that an array of the <code>SKShaderTileMode</code> members is defined in the <code>Resources</code> section:</p>
 <pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
-&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.BitmapTileFlipModesPage&quot;
              Title=&quot;Bitmap Tile Flip Modes&quot;&gt;
 
@@ -147,8 +147,7 @@
     {
         InitializeComponent ();
 
-        SKBitmap origBitmap = BitmapExtensions.LoadBitmapResource(
-            GetType(), &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+        SKBitmap origBitmap = BitmapExtensions.LoadBitmap(&quot;SeatedMonkey.jpg&quot;);
 
         // Define cropping rect
         SKRectI cropRect = new SKRectI(5, 27, 296, 260);
@@ -162,12 +161,12 @@
         bitmap = croppedBitmap.Resize(info, SKBitmapResizeMethod.Box);
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -262,7 +261,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -289,9 +288,7 @@
 <p>This bitmap is used in the <strong>Photographic Brick Wall</strong> page:</p>
 <pre><code class="lang-csharp">public class PhotographicBrickWallPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(PhotographicBrickWallPage),
-                        &quot;SkiaSharpFormsDemos.Media.BrickWallTile.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;BrickWallTile.jpg&quot;);
 
     public PhotographicBrickWallPage()
     {
@@ -302,7 +299,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -330,9 +327,7 @@
 <p>However, the original bitmap is a little too large for a tile. It could be resized, but the <code>SKShader.CreateBitmap</code> method can also resize the tile by applying a transform to it. This option is demonstrated in the <strong>Stone Wall</strong> page:</p>
 <pre><code class="lang-csharp">public class StoneWallPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(StoneWallPage),
-                        &quot;SkiaSharpFormsDemos.Media.StoneWallTile.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;StoneWallTile.jpg&quot;);
 
     public StoneWallPage()
     {
@@ -343,7 +338,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -354,7 +349,7 @@
         using (SKPaint paint = new SKPaint())
         {
             // Create scale transform
-            SKMatrix matrix = SKMatrix.MakeScale(0.5f, 0.5f);
+            SKMatrix matrix = SKMatrix.CreateScale(0.5f, 0.5f);
 
             // Create bitmap tiling
             paint.Shader = SKShader.CreateBitmap(bitmap,
@@ -371,8 +366,8 @@
 <p><a href="bitmap-tiling-images/StoneWall-Large.png#lightbox"><img src="bitmap-tiling-images/StoneWall.png" alt="Stone Wall" title="Stone Wall"></a></p>
 <p>Does the transform operate on the original bitmap used in the <code>CreateBitmap</code> method? Or does it transform the resultant array of tiles?</p>
 <p>An easy way to answer this question is to include a rotation as part of the transform:</p>
-<pre><code class="lang-csharp">SKMatrix matrix = SKMatrix.MakeScale(0.5f, 0.5f);
-SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
+<pre><code class="lang-csharp">SKMatrix matrix = SKMatrix.CreateScale(0.5f, 0.5f);
+matrix = matrix.PostConcat(SKMatrix.CreateRotationDegrees(15));
 </code></pre>
 <p>If the transform is applied to the individual tile, then each repeated image of the tile should be rotated, and the result would contain many discontinuities. But it's obvious from this screenshot that the composite array of tiles is transformed:</p>
 <p><a href="bitmap-tiling-images/StoneWallRotated-Large.png#lightbox"><img src="bitmap-tiling-images/StoneWallRotated.png" alt="Stone Wall Rotated" title="Stone Wall Rotated"></a></p>
@@ -409,7 +404,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -436,7 +431,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
             }
             else
             {
-                SKMatrix matrix = SKMatrix.MakeTranslation(rect.Left, rect.Top);
+                SKMatrix matrix = SKMatrix.CreateTranslation(rect.Left, rect.Top);
 
                 paint.Shader = SKShader.CreateBitmap(bitmap,
                                                      SKShaderTileMode.Repeat,
@@ -455,9 +450,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
 <p>You can also use this technique to ensure that the tiled bitmap pattern is centered within the area that it paints. In the <strong>Centered Tiles</strong> page, the <code>PaintSurface</code> handler first calculates coordinates as if it's going to display the single bitmap in the center of the canvas. It then uses those coordinates to create a translate transform for <code>SKShader.CreateBitmap</code>. This transform shifts the entire pattern so that a tile is centered:</p>
 <pre><code class="lang-csharp">public class CenteredTilesPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(CenteredTilesPage),
-                        &quot;SkiaSharpFormsDemos.Media.monkey.png&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;monkey.png&quot;);
 
     public CenteredTilesPage ()
     {
@@ -468,7 +461,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -483,7 +476,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
         using (SKPaint paint = new SKPaint())
         {
             // ... but use them to create a translate transform
-            SKMatrix matrix = SKMatrix.MakeTranslation(x, y);
+            SKMatrix matrix = SKMatrix.CreateTranslation(x, y);
             paint.Shader = SKShader.CreateBitmap(bitmap,
                                                  SKShaderTileMode.Repeat,
                                                  SKShaderTileMode.Repeat,
@@ -499,8 +492,8 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
 </code></pre>
 <p>The <code>PaintSurface</code> handler concludes by drawing a circle in the center of the canvas. Sure enough, one of the tiles is exactly in the center of the circle, and the others are arranged in a symmetric pattern:</p>
 <p><a href="bitmap-tiling-images/CenteredTiles-Large.png#lightbox"><img src="bitmap-tiling-images/CenteredTiles.png" alt="Centered Tiles" title="Centered Tiles"></a></p>
-<p>Another centering approach is actually a bit easier. Rather than construct a translate transform that puts a tile in the center, you can center a corner of the tiled pattern. In the <code>SKMatrix.MakeTranslation</code> call, use arguments for the center of the canvas:</p>
-<pre><code class="lang-csharp">SKMatrix matrix = SKMatrix.MakeTranslation(info.Rect.MidX, info.Rect.MidY);
+<p>Another centering approach is actually a bit easier. Rather than construct a translate transform that puts a tile in the center, you can center a corner of the tiled pattern. In the <code>SKMatrix.CreateTranslation</code> call, use arguments for the center of the canvas:</p>
+<pre><code class="lang-csharp">SKMatrix matrix = SKMatrix.CreateTranslation(info.Rect.MidX, info.Rect.MidY);
 </code></pre>
 <p>The pattern is still centered and symmetrical, but no tile is in the center:</p>
 <p><a href="bitmap-tiling-images/CenteredTilesAlternate-Large.png#lightbox"><img src="bitmap-tiling-images/CenteredTilesAlternate.png" alt="Centered Tiles Alternate" title="Centered Tiles Alternate"></a></p>
@@ -599,11 +592,10 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
 <p>Except for the wires, the tile is transparent, which means that you can display it on top of something else. The program loads in one of the bitmap resources, displays it to fill the canvas, and then draws the shader on top:</p>
 <pre><code class="lang-csharp">public class ChainLinkFencePage : ContentPage
 {
-    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(ChainLinkFencePage), &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+    SKBitmap monkeyBitmap = BitmapExtensions.LoadBitmap(&quot;SeatedMonkey.jpg&quot;);
     ···
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -619,7 +611,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
             paint.Shader = SKShader.CreateBitmap(tileBitmap,
                                                  SKShaderTileMode.Repeat,
                                                  SKShaderTileMode.Repeat,
-                                                 SKMatrix.MakeRotationDegrees(45));
+                                                 SKMatrix.CreateRotationDegrees(45));
             canvas.DrawRect(info.Rect, paint);
         }
     }
@@ -687,7 +679,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
 
         isAnimating = true;
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
 
     protected override void OnDisappearing()
@@ -715,7 +707,7 @@ SKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(15));
 <pre><code class="lang-csharp">public class AnimatedBitmapTilePage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

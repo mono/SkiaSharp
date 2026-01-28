@@ -119,7 +119,7 @@
 
         isAnimating = true;
         stopwatch.Start();
-        Device.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
     }
 
     protected override void OnDisappearing()
@@ -140,7 +140,7 @@
         return isAnimating;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -152,31 +152,32 @@
         const string TEXT2 = &quot;MORE&quot;;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             // Set text width to fit in width of canvas
-            paint.TextSize = 100;
-            float textWidth = paint.MeasureText(TEXT1);
-            paint.TextSize *= 0.9f * info.Width / textWidth;
+            font.Size = 100;
+            float textWidth = font.MeasureText(TEXT1);
+            font.Size *= 0.9f * info.Width / textWidth;
 
             // Center first text string
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT1, ref textBounds);
+            font.MeasureText(TEXT1, out textBounds);
 
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2 - textBounds.MidY;
 
             paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * (1 - transparency)));
-            canvas.DrawText(TEXT1, xText, yText, paint);
+            canvas.DrawText(TEXT1, xText, yText, SKTextAlign.Left, font, paint);
 
             // Center second text string
             textBounds = new SKRect();
-            paint.MeasureText(TEXT2, ref textBounds);
+            font.MeasureText(TEXT2, out textBounds);
 
             xText = info.Width / 2 - textBounds.MidX;
             yText = info.Height / 2 - textBounds.MidY;
 
             paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * transparency));
-            canvas.DrawText(TEXT2, xText, yText, paint);
+            canvas.DrawText(TEXT2, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }
@@ -192,9 +193,9 @@
 <p>In the previous article on <a href="bitmaps.html"><strong>Bitmap Basics in SkiaSharp</strong></a>, you saw how to display bitmaps using one of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawbitmap"><code>DrawBitmap</code></a> methods of <code>SKCanvas</code>. All the <code>DrawBitmap</code> methods include an <code>SKPaint</code> object as the last parameter. By default, this parameter is set to <code>null</code> and you can ignore it.</p>
 <p>Alternatively, you can set the <code>Color</code> property of this <code>SKPaint</code> object to display a bitmap with some level of transparency. Setting a level of transparency in the <code>Color</code> property of <code>SKPaint</code> allows you to fade bitmaps in and out, or to dissolve one bitmap into another.</p>
 <p>Bitmap transparency is demonstrated in the <strong>Bitmap Dissolve</strong> page. The XAML file instantiates an <code>SKCanvasView</code> and a <code>Slider</code>:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.BitmapDissolvePage&quot;
              Title=&quot;Bitmap Dissolve&quot;&gt;
     &lt;StackLayout&gt;
@@ -208,43 +209,46 @@
     &lt;/StackLayout&gt;
 &lt;/ContentPage&gt;
 </code></pre>
-<p>The code-behind file loads two bitmap resources. These bitmaps are not the same size, but they are the same aspect ratio:</p>
+<p>The code-behind file loads two bitmaps from the Resources/Raw folder using .NET MAUI's FileSystem API. These bitmaps are not the same size, but they are the same aspect ratio:</p>
 <pre><code class="lang-csharp">public partial class BitmapDissolvePage : ContentPage
 {
-    SKBitmap bitmap1;
-    SKBitmap bitmap2;
+    SKBitmap? bitmap1;
+    SKBitmap? bitmap2;
 
     public BitmapDissolvePage()
     {
         InitializeComponent();
 
-        // Load two bitmaps
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
-
-        using (Stream stream = assembly.GetManifestResourceStream(
-                                &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;))
-        {
-            bitmap1 = SKBitmap.Decode(stream);
-        }
-        using (Stream stream = assembly.GetManifestResourceStream(
-                                &quot;SkiaSharpFormsDemos.Media.FacePalm.jpg&quot;))
-        {
-            bitmap2 = SKBitmap.Decode(stream);
-        }
+        _ = LoadBitmapsAsync();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    async Task LoadBitmapsAsync()
+    {
+        // Load two bitmaps from Resources/Raw folder
+        using Stream stream1 = await FileSystem.OpenAppPackageFileAsync(&quot;SeatedMonkey.jpg&quot;);
+        bitmap1 = SKBitmap.Decode(stream1);
+
+        using Stream stream2 = await FileSystem.OpenAppPackageFileAsync(&quot;FacePalm.jpg&quot;);
+        bitmap2 = SKBitmap.Decode(stream2);
+
+        canvasView.InvalidateSurface();
+    }
+
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
         SKCanvas canvas = surface.Canvas;
 
         canvas.Clear();
+
+        if (bitmap1 is null || bitmap2 is null)
+            return;
 
         // Find rectangle to fit bitmap
         float scale = Math.Min((float)info.Width / bitmap1.Width,

@@ -95,17 +95,17 @@
 <p>In the previous article on <a href="effects.html"><strong>Path Effects</strong></a>, you saw how the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.getfillpath#skiasharp-skpaint-getfillpath(skiasharp-skpath-skiasharp-skpath-skiasharp-skrect-system-single)"><code>GetFillPath</code></a> method of <code>SKPaint</code> can obtain an outline of a stroked path. You can also use this method with paths derived from character outlines.</p>
 <p>Finally, this article demonstrates another intersection of paths and text: The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawtextonpath#skiasharp-skcanvas-drawtextonpath(system-string-skiasharp-skpath-system-single-system-single-skiasharp-skpaint)"><code>DrawTextOnPath</code></a> method of <code>SKCanvas</code> allows you to display a text string so that the baseline of the text follows a curved path.</p>
 <h2 id="text-to-path-conversion">Text to Path Conversion</h2>
-<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.gettextpath#skiasharp-skpaint-gettextpath(system-string-system-single-system-single)"><code>GetTextPath</code></a> method of <code>SKPaint</code> converts a character string to an <code>SKPath</code> object:</p>
-<pre><code class="lang-csharp">public SKPath GetTextPath (String text, Single x, Single y)
+<p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skfont.gettextpath#skiasharp-skfont-gettextpath(system-string-skiasharp-skpoint)"><code>GetTextPath</code></a> method of <code>SKFont</code> converts a character string to an <code>SKPath</code> object:</p>
+<pre><code class="lang-csharp">public SKPath GetTextPath (String text, SKPoint origin)
 </code></pre>
-<p>The <code>x</code> and <code>y</code> arguments indicate the starting point of the baseline of the left side of the text. They play the same role here as in the <code>DrawText</code> method of <code>SKCanvas</code>. Within the path, the baseline of the left side of the text will have the coordinates (x, y).</p>
+<p>The <code>origin</code> argument indicates the starting point of the baseline of the left side of the text. It plays the same role here as the position in the <code>DrawText</code> method of <code>SKCanvas</code>. Within the path, the baseline of the left side of the text will have the coordinates specified by the origin.</p>
 <p>The <code>GetTextPath</code> method is overkill if you merely want to fill or stroke the resultant path. The normal <code>DrawText</code> method allows you to do that. The <code>GetTextPath</code> method is more useful for other tasks involving paths.</p>
 <p>One of these tasks is clipping. The <strong>Clipping Text</strong> page creates a clipping path based on the character outlines of the word &quot;CODE.&quot; This path is stretched to the size of the page to clip a bitmap that contains an image of the <strong>Clipping Text</strong> source code:</p>
 <p><a href="text-paths-images/clippingtext-large.png#lightbox" title="Triple screenshot of the Clipping Text page"><img src="text-paths-images/clippingtext-small.png" alt="Triple screenshot of the Clipping Text page"></a></p>
-<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/ClippingTextPage.cs"><code>ClippingTextPage</code></a> class constructor loads the bitmap that is stored as an embedded resource in the <strong>Media</strong> folder of the solution:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ClippingTextPage.cs"><code>ClippingTextPage</code></a> class constructor loads the bitmap from the app's <code>Resources/Raw</code> folder using .NET MAUI's <code>FileSystem</code> API:</p>
 <pre><code class="lang-csharp">public class ClippingTextPage : ContentPage
 {
-    SKBitmap bitmap;
+    SKBitmap? bitmap;
 
     public ClippingTextPage()
     {
@@ -115,23 +115,23 @@
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
 
-        string resourceID = &quot;SkiaSharpFormsDemos.Media.PageOfCode.png&quot;;
-        Assembly assembly = GetType().GetTypeInfo().Assembly;
+        _ = LoadBitmapAsync();
+    }
 
-        using (Stream stream = assembly.GetManifestResourceStream(resourceID))
-        {
-            bitmap = SKBitmap.Decode(stream);
-        }
+    async Task LoadBitmapAsync()
+    {
+        using Stream stream = await FileSystem.OpenAppPackageFileAsync(&quot;PageOfCode.png&quot;);
+        bitmap = SKBitmap.Decode(stream);
     }
     ...
 }
 </code></pre>
-<p>The <code>PaintSurface</code> handler begins by creating an <code>SKPaint</code> object suitable for text. The <code>Typeface</code> property is set as well as the <code>TextSize</code>, although for this particular application the <code>TextSize</code> property is purely arbitrary. Also notice there is no <code>Style</code> setting.</p>
-<p>The <code>TextSize</code> and <code>Style</code> property settings are not necessary because this <code>SKPaint</code> object is used solely for the <code>GetTextPath</code> call using the text string &quot;CODE&quot;. The handler then measures the resultant <code>SKPath</code> object and applies three transforms to center it and scale it to the size of the page. The path can then be set as the clipping path:</p>
+<p>The <code>PaintSurface</code> handler begins by creating an <code>SKFont</code> object suitable for text. The <code>Typeface</code> property is set as well as the <code>Size</code>, although for this particular application the <code>Size</code> property is purely arbitrary.</p>
+<p>The <code>Size</code> property is not critical because this <code>SKFont</code> object is used solely for the <code>GetTextPath</code> call using the text string &quot;CODE&quot;. The handler then measures the resultant <code>SKPath</code> object and applies three transforms to center it and scale it to the size of the page. The path can then be set as the clipping path:</p>
 <pre><code class="lang-csharp">public class ClippingTextPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -139,12 +139,12 @@
 
         canvas.Clear(SKColors.Blue);
 
-        using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            paint.Typeface = SKTypeface.FromFamilyName(null, SKTypefaceStyle.Bold);
-            paint.TextSize = 10;
+            font.Typeface = SKTypeface.FromFamilyName(null, SKFontStyle.Bold);
+            font.Size = 10;
 
-            using (SKPath textPath = paint.GetTextPath(&quot;CODE&quot;, 0, 0))
+            using (SKPath textPath = font.GetTextPath(&quot;CODE&quot;, new SKPoint(0, 0)))
             {
                 // Set transform to center and enlarge clip path to window height
                 SKRect bounds;
@@ -172,18 +172,20 @@
 <p>Once the clipping path is set, the bitmap can be displayed, and it will be clipped to the character outlines. Notice the use of the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skrect.aspectfill#skiasharp-skrect-aspectfill(skiasharp-sksize)"><code>AspectFill</code></a> method of <code>SKRect</code> that calculates a rectangle for filling the page while preserving the aspect ratio.</p>
 <p>The <strong>Text Path Effect</strong> page converts a single ampersand character to a path to create a 1D path effect. A paint object with this path effect is then used to stroke the outline of a larger version of that same character:</p>
 <p><a href="text-paths-images/textpatheffect-large.png#lightbox" title="Triple screenshot of the Text Path Effect page"><img src="text-paths-images/textpatheffect-small.png" alt="Triple screenshot of the Text Path Effect page"></a></p>
-<p>Much of the work in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/TextPathEffectPage.cs"><code>TextPathEffectPath</code></a> class occurs in the fields and constructor. The two <code>SKPaint</code> objects defined as fields are used for two different purposes: The first (named <code>textPathPaint</code>) is used to convert the ampersand with a <code>TextSize</code> of 50 to a path for the 1D path effect. The second (<code>textPaint</code>) is used to display the larger version of the ampersand with that path effect. For that reason, the <code>Style</code> of this second paint object is set to <code>Stroke</code>, but the <code>StrokeWidth</code> property is not set because that property isn't necessary when using a 1D path effect:</p>
+<p>Much of the work in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/TextPathEffectPage.cs"><code>TextPathEffectPath</code></a> class occurs in the fields and constructor. The <code>SKFont</code> and two <code>SKPaint</code> objects defined as fields are used for different purposes: The font (named <code>textPathFont</code>) with a <code>Size</code> of 50 is used to convert the ampersand to a path for the 1D path effect. The first paint (<code>textPathPaint</code>) is used for measuring text. The second (<code>textPaint</code>) is used to display the larger version of the ampersand with that path effect. For that reason, the <code>Style</code> of this second paint object is set to <code>Stroke</code>, but the <code>StrokeWidth</code> property is not set because that property isn't necessary when using a 1D path effect:</p>
 <pre><code class="lang-csharp">public class TextPathEffectPage : ContentPage
 {
     const string character = &quot;@&quot;;
     const float littleSize = 50;
 
-    SKPathEffect pathEffect;
+    SKPathEffect? pathEffect;
 
-    SKPaint textPathPaint = new SKPaint
+    SKFont textPathFont = new SKFont
     {
-        TextSize = littleSize
+        Size = littleSize
     };
+
+    SKPaint textPathPaint = new SKPaint();
 
     SKPaint textPaint = new SKPaint
     {
@@ -199,14 +201,12 @@
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
 
-        // Get the bounds of textPathPaint
-        SKRect textPathPaintBounds = new SKRect();
-        textPathPaint.MeasureText(character, ref textPathPaintBounds);
+        // Get the bounds of textPathFont
+        textPathFont.MeasureText(character, out SKRect textPathPaintBounds);
 
         // Create textPath centered around (0, 0)
-        SKPath textPath = textPathPaint.GetTextPath(character,
-                                                    -textPathPaintBounds.MidX,
-                                                    -textPathPaintBounds.MidY);
+        SKPath textPath = textPathFont.GetTextPath(character,
+                                                    new SKPoint(-textPathPaintBounds.MidX, -textPathPaintBounds.MidY));
         // Create the path effect
         pathEffect = SKPathEffect.Create1DPath(textPath, littleSize, 0,
                                                SKPath1DPathEffectStyle.Translate);
@@ -214,12 +214,12 @@
     ...
 }
 </code></pre>
-<p>The constructor first uses the <code>textPathPaint</code> object to measure the ampersand with a <code>TextSize</code> of 50. The negatives of the center coordinates of that rectangle are then passed to the <code>GetTextPath</code> method to convert the text to a path. The resultant path has the (0, 0) point in the center of the character, which is ideal for a 1D path effect.</p>
+<p>The constructor first uses the <code>textPathFont</code> object to measure the ampersand with a <code>Size</code> of 50. The negatives of the center coordinates of that rectangle are then passed to the <code>GetTextPath</code> method as an <code>SKPoint</code> to convert the text to a path. The resultant path has the (0, 0) point in the center of the character, which is ideal for a 1D path effect.</p>
 <p>You might think that the <code>SKPathEffect</code> object created at the end of the constructor could be set to the <code>PathEffect</code> property of <code>textPaint</code> rather than saved as a field. But this turned out not to work very well because it distorted the results of the <code>MeasureText</code> call in the <code>PaintSurface</code> handler:</p>
 <pre><code class="lang-csharp">public class TextPathEffectPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -227,12 +227,11 @@
 
         canvas.Clear();
 
-        // Set textPaint TextSize based on screen size
-        textPaint.TextSize = Math.Min(info.Width, info.Height);
+        // Set textFont Size based on screen size
+        textFont.Size = Math.Min(info.Width, info.Height);
 
         // Do not measure the text with PathEffect set!
-        SKRect textBounds = new SKRect();
-        textPaint.MeasureText(character, ref textBounds);
+        textFont.MeasureText(character, out SKRect textBounds);
 
         // Coordinates to center text on screen
         float xText = info.Width / 2 - textBounds.MidX;
@@ -240,17 +239,17 @@
 
         // Set the PathEffect property and display text
         textPaint.PathEffect = pathEffect;
-        canvas.DrawText(character, xText, yText, textPaint);
+        canvas.DrawText(character, xText, yText, SKTextAlign.Left, textFont, textPaint);
     }
 }
 </code></pre>
 <p>That <code>MeasureText</code> call is used to center the character on the page. To avoid problems, the <code>PathEffect</code> property is set to the paint object after the text has been measured but before it is displayed.</p>
 <h2 id="outlines-of-character-outlines">Outlines of Character Outlines</h2>
-<p>Normally the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.getfillpath#skiasharp-skpaint-getfillpath(skiasharp-skpath-skiasharp-skpath-skiasharp-skrect-system-single)"><code>GetFillPath</code></a> method of <code>SKPaint</code> converts one path to another by applying  paint properties, most notably the stroke width and path effect. When used without path effects, <code>GetFillPath</code> effectively creates a path that outlines another path. This was demonstrated in the <strong>Tap to Outline the Path</strong> page in the <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/effects.md"><strong>Path Effects</strong></a> article.</p>
+<p>Normally the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.getfillpath#skiasharp-skpaint-getfillpath(skiasharp-skpath-skiasharp-skpath-skiasharp-skrect-system-single)"><code>GetFillPath</code></a> method of <code>SKPaint</code> converts one path to another by applying  paint properties, most notably the stroke width and path effect. When used without path effects, <code>GetFillPath</code> effectively creates a path that outlines another path. This was demonstrated in the <strong>Tap to Outline the Path</strong> page in the <a href="effects.html"><strong>Path Effects</strong></a> article.</p>
 <p>You can also call <code>GetFillPath</code> on the path returned from <code>GetTextPath</code> but at first you might not be entirely sure what that would look like.</p>
-<p>The <strong>Character Outline Outlines</strong> page demonstrates the technique. All the relevant code is in the <code>PaintSurface</code> handler of the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/CharacterOutlineOutlinesPage.cs"><code>CharacterOutlineOutlinesPage</code></a> class.</p>
-<p>The constructor begins by creating an <code>SKPaint</code> object named <code>textPaint</code> with a <code>TextSize</code> property based on the size of the page. This is converted to a path using the <code>GetTextPath</code> method. The coordinate arguments to <code>GetTextPath</code> effectively center the path on the screen:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<p>The <strong>Character Outline Outlines</strong> page demonstrates the technique. All the relevant code is in the <code>PaintSurface</code> handler of the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/CharacterOutlineOutlinesPage.cs"><code>CharacterOutlineOutlinesPage</code></a> class.</p>
+<p>The code begins by creating an <code>SKFont</code> object with a <code>Size</code> property based on the size of the page. This is converted to a path using the <code>GetTextPath</code> method. The <code>SKPoint</code> argument to <code>GetTextPath</code> effectively centers the path on the screen:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -259,23 +258,23 @@
     canvas.Clear();
 
     using (SKPaint textPaint = new SKPaint())
+    using (SKFont textFont = new SKFont())
     {
         // Set Style for the character outlines
         textPaint.Style = SKPaintStyle.Stroke;
 
-        // Set TextSize based on screen size
-        textPaint.TextSize = Math.Min(info.Width, info.Height);
+        // Set Size based on screen size
+        textFont.Size = Math.Min(info.Width, info.Height);
 
         // Measure the text
-        SKRect textBounds = new SKRect();
-        textPaint.MeasureText(&quot;@&quot;, ref textBounds);
+        textFont.MeasureText(&quot;@&quot;, out SKRect textBounds);
 
         // Coordinates to center text on screen
         float xText = info.Width / 2 - textBounds.MidX;
         float yText = info.Height / 2 - textBounds.MidY;
 
         // Get the path for the character outlines
-        using (SKPath textPath = textPaint.GetTextPath(&quot;@&quot;, xText, yText))
+        using (SKPath textPath = textFont.GetTextPath(&quot;@&quot;, new SKPoint(xText, yText)))
         {
             // Create a new path for the outlines of the path
             using (SKPath outlinePath = new SKPath())
@@ -308,12 +307,12 @@
 </code></pre>
 <p>The text specified in the first argument is made to run along the path specified as the second argument. You can begin the text at an offset from the beginning of the path with the <code>hOffset</code> argument. Normally the path forms the baseline of the text: Text ascenders are on one side of the path, and text descenders are on the other. But you can offset the text baseline from the path with the <code>vOffset</code> argument.</p>
 <p>This method has no facility to provide guidance on setting the <code>TextSize</code> property of <code>SKPaint</code> to make the text sized perfectly to run from the beginning of the path to the end. Sometimes you can figure out that text size on your own. Other times you'll need to use path-measuring functions to be described in the next article on <a href="information.html"><strong>Path Information and Enumeration</strong></a>.</p>
-<p>The <strong>Circular Text</strong> program wraps text around a circle. It's easy to determine the circumference of a circle, so it's easy to size the text to fit exactly. The <code>PaintSurface</code> handler of the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/CircularTextPage.cs"><code>CircularTextPage</code></a> class calculates a radius of a circle based on the size of the page. That circle becomes <code>circularPath</code>:</p>
+<p>The <strong>Circular Text</strong> program wraps text around a circle. It's easy to determine the circumference of a circle, so it's easy to size the text to fit exactly. The <code>PaintSurface</code> handler of the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/CircularTextPage.cs"><code>CircularTextPage</code></a> class calculates a radius of a circle based on the size of the page. That circle becomes <code>circularPath</code>:</p>
 <pre><code class="lang-csharp">public class CircularTextPage : ContentPage
 {
     const string text = &quot;xt in a circle that shapes the te&quot;;
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -327,18 +326,18 @@
             circularPath.AddCircle(info.Width / 2, info.Height / 2, radius);
 
             using (SKPaint textPaint = new SKPaint())
+            using (SKFont textFont = new SKFont { Size = 100 })
             {
-                textPaint.TextSize = 100;
-                float textWidth = textPaint.MeasureText(text);
-                textPaint.TextSize *= 2 * 3.14f * radius / textWidth;
+                float textWidth = textFont.MeasureText(text);
+                textFont.Size *= 2 * 3.14f * radius / textWidth;
 
-                canvas.DrawTextOnPath(text, circularPath, 0, 0, textPaint);
+                canvas.DrawTextOnPath(text, circularPath, 0, 0, textFont, textPaint);
             }
         }
     }
 }
 </code></pre>
-<p>The <code>TextSize</code> property of <code>textPaint</code> is then adjusted so that the text width matches the circumference of the circle:</p>
+<p>The <code>Size</code> property of <code>textFont</code> is then adjusted so that the text width matches the circumference of the circle:</p>
 <p><a href="text-paths-images/circulartext-large.png#lightbox" title="Triple screenshot of the Circular Text page"><img src="text-paths-images/circulartext-small.png" alt="Triple screenshot of the Circular Text page"></a></p>
 <p>The text itself was chosen to be somewhat circular as well: The word &quot;circle&quot; is both the subject of the sentence and the object of a prepositional phrase.</p>
 <h2 id="related-links">Related Links</h2>

@@ -99,11 +99,11 @@
 </ul>
 <p>Both the winding and even-odd algorithms determine if any enclosed area is filled or not filled based on a hypothetical line drawn from that area to infinity. That line crosses one or more boundary lines that make up the path. With the winding mode, if the number of boundary lines drawn in one direction balance out the number of lines drawn in the other direction, then the area is not filled. Otherwise the area is filled. The even-odd algorithm fills an area if the number of boundary lines is odd.</p>
 <p>With many routine paths, the winding algorithm often fills all the enclosed areas of a path. The even-odd algorithm generally produces more interesting results.</p>
-<p>The classic example is a five-pointed star, as demonstrated in the <strong>Five-Pointed Star</strong> page. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Paths/FivePointedStarPage.xaml"><strong>FivePointedStarPage.xaml</strong></a> file instantiates two <code>Picker</code> views to select the path fill type and whether the path is stroked or filled or both, and in what order:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>The classic example is a five-pointed star, as demonstrated in the <strong>Five-Pointed Star</strong> page. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FivePointedStarPage.xaml"><strong>FivePointedStarPage.xaml</strong></a> file instantiates two <code>Picker</code> views to select the path fill type and whether the path is stroked or filled or both, and in what order:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Paths.FivePointedStarPage&quot;
              Title=&quot;Five-Pointed Star&quot;&gt;
     &lt;Grid&gt;
@@ -164,7 +164,7 @@
 &lt;/ContentPage&gt;
 </code></pre>
 <p>The code-behind file uses both <code>Picker</code> values to draw a five-pointed star:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -236,7 +236,7 @@
 </ul>
 <p>The methods in <code>SKPath</code> that include an <code>SKPathDirection</code> parameter give it a default value of <code>Clockwise</code>.</p>
 <p>The <strong>Overlapping Circles</strong> page creates a path with four overlapping circles with an even-odd path fill type:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

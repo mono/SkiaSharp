@@ -91,7 +91,7 @@
 <p><img src="non-separable-images/NonSeparableSample.png" alt="Non-Separable Sample" title="Non-Separable Sample"></p>
 <h2 id="the-hue-saturation-luminosity-model">The Hue-Saturation-Luminosity model</h2>
 <p>To understand the non-separable blend modes, it is necessary to treat the destination and source pixels as colors in the Hue-Saturation-Luminosity model. (Luminosity is also referred to as Lightness.)</p>
-<p>The HSL color model was discussed in the article <a href="../../basics/integration.html"><strong>Integrating with Xamarin.Forms</strong></a> and a sample program in that article allows experimentation with HSL colors. You can create an <code>SKColor</code> value using Hue, Saturation, and Luminosity values with the static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsl"><code>SKColor.FromHsl</code></a> method.</p>
+<p>The HSL color model was discussed in the article <a href="../../basics/integration.html"><strong>Integrating with .NET MAUI</strong></a> and a sample program in that article allows experimentation with HSL colors. You can create an <code>SKColor</code> value using Hue, Saturation, and Luminosity values with the static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcolor.fromhsl"><code>SKColor.FromHsl</code></a> method.</p>
 <p>The Hue represents the dominant wavelength of the color. Hue values range from 0 to 360 and cycle through the additive and subtractive primaries: Red is the value 0, yellow is 60, green is 120, cyan is 180, blue is 240, magenta is 300, and the cycle goes back to red at 360.</p>
 <p>If there is no dominant color — for example, the color is white or black or a gray shade — then the Hue is undefined and usually set to 0.</p>
 <p>The Saturation values can range from 0 to 100 and indicate the purity of the color. A Saturation value of 100 is the purest color while values lower than 100 cause the color to become more grayish. A Saturation value of 0 results in a shade of gray.</p>
@@ -132,10 +132,10 @@
 </table>
 <p>See the W3C <a href="https://www.w3.org/TR/compositing-1/"><strong>Compositing and Blending Level 1</strong></a> specification for the algorithms.</p>
 <p>The <strong>Non-Separable Blend Modes</strong> page contains a <code>Picker</code> to select one of these blend modes and three <code>Slider</code> views to select an HSL color:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaviews=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.NonSeparableBlendModesPage&quot;
              Title=&quot;Non-Separable Blend Modes&quot;&gt;
 
@@ -192,9 +192,7 @@
 <p>The code-behind file loads one of the bitmap resources, displays that as large as possible on the canvas, and then covers the canvas with a rectangle. The rectangle color is based on the three <code>Slider</code> views and the blend mode is the one selected in the <code>Picker</code>:</p>
 <pre><code class="lang-csharp">public partial class NonSeparableBlendModesPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(NonSeparableBlendModesPage),
-                        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;);
     SKColor color;
 
     public NonSeparableBlendModesPage()
@@ -202,12 +200,12 @@
         InitializeComponent();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs e)
     {
         // Calculate new color based on sliders
         color = SKColor.FromHsl((float)hueSlider.Value,
@@ -226,7 +224,7 @@
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -274,9 +272,7 @@
 <p>In the following <code>BlueBananaPage</code> class, the <strong>Banana.jpg</strong> bitmap is loaded as a field. The constructor loads the <strong>BananaMatte.png</strong> bitmap as the <code>matteBitmap</code> object, but it does not retain that object beyond the constructor. Instead, a third bitmap named <code>blueBananaBitmap</code> is created. The <code>matteBitmap</code> is drawn on <code>blueBananaBitmap</code> followed by an <code>SKPaint</code> with its <code>Color</code> set to blue and its <code>BlendMode</code> set to <code>SKBlendMode.SrcIn</code>. The <code>blueBananaBitmap</code> remains mostly transparent but with a solid pure blue image of the banana:</p>
 <pre><code class="lang-csharp">public class BlueBananaPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-        typeof(BlueBananaPage),
-        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;);
 
     SKBitmap blueBananaBitmap;
 
@@ -285,9 +281,7 @@
         Title = &quot;Blue Banana&quot;;
 
         // Load banana matte bitmap (black on transparent)
-        SKBitmap matteBitmap = BitmapExtensions.LoadBitmapResource(
-            typeof(BlueBananaPage),
-            &quot;SkiaSharpFormsDemos.Media.BananaMatte.png&quot;);
+        SKBitmap matteBitmap = BitmapExtensions.LoadBitmap(&quot;BananaMatte.png&quot;);
 
         // Create a bitmap with a solid blue banana and transparent otherwise
         blueBananaBitmap = new SKBitmap(matteBitmap.Width, matteBitmap.Height);
@@ -310,7 +304,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

@@ -104,10 +104,10 @@
 </ul>
 <p>The effects of these styles are shown in the examples below. The <code>sigma</code> parameter specifies the extent of the blur. In older versions of Skia, the extent of the blur was indicated with a radius value. If a radius value is preferable for your application, there is a static <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skmaskfilter.convertradiustosigma"><code>SKMaskFilter.ConvertRadiusToSigma</code></a> method that can convert from one to the other. The method multiplies the radius by 0.57735 and adds 0.5.</p>
 <p>The <strong>Mask Blur Experiment</strong> page in the sample allows you to experiment with the blur styles and sigma values. The XAML file instantiates a <code>Picker</code> with the four <code>SKBlurStyle</code> enumeration members and a <code>Slider</code> for specifying the sigma value:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp;assembly=SkiaSharp&quot;
-             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skiaforms=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.MaskBlurExperimentPage&quot;
              Title=&quot;Mask Blur Experiment&quot;&gt;
 
@@ -151,26 +151,24 @@
 {
     const string TEXT = &quot;Blur My Text&quot;;
 
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                            typeof(MaskBlurExperimentPage),
-                            &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;SeatedMonkey.jpg&quot;);
 
     public MaskBlurExperimentPage ()
     {
         InitializeComponent ();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -186,21 +184,22 @@
         float sigma = (float)sigmaSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            // Set SKPaint properties
-            paint.TextSize = (info.Width - 100) / (TEXT.Length / 2);
+            // Set SKPaint and SKFont properties
+            font.Size = (info.Width - 100) / (TEXT.Length / 2);
             paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
 
             // Get text bounds and calculate display rectangle
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
             SKRect textRect = new SKRect(0, 0, info.Width, textBounds.Height + 50);
 
             // Center the text in the display rectangle
             float xText = textRect.Width / 2 - textBounds.MidX;
             float yText = textRect.Height / 2 - textBounds.MidY;
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Calculate rectangle for bitmap
             SKRect bitmapRect = new SKRect(0, textRect.Bottom, info.Width, info.Height);
@@ -216,7 +215,7 @@
 <p>You'll notice that only the edges of the bitmap are affected by the blur. The <code>SKMaskFilter</code> class is not the correct effect to use if you want to blur an entire bitmap image. For that you'll want to use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skimagefilter"><code>SKImageFilter</code></a> class as described in the next article on <a href="image-filters.html"><strong>SkiaSharp image filters</strong></a>.</p>
 <p>The text is blurred more with increasing values of the <code>sigma</code> argument. In experimenting with this program, you'll notice that for a particular <code>sigma</code> value, the blur is more extreme on the Windows 10 desktop. This difference occurs because the pixel density is lower on a desktop monitor than on mobile devices, and hence the text height in pixels is lower. The <code>sigma</code> value is proportional to a blur extent in pixels, so for a given <code>sigma</code> value, the effect is more extreme on lower resolution displays. In a production application, you'll probably want to calculate a <code>sigma</code> value that is proportional to the size of the graphic.</p>
 <p>Try several values before settling on a blur level that looks the best for your application. For example, in the <strong>Mask Blur Experiment</strong> page, try setting <code>sigma</code> like this:</p>
-<pre><code class="lang-csharp">sigma = paint.TextSize / 18;
+<pre><code class="lang-csharp">sigma = font.Size / 18;
 paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
 </code></pre>
 <p>Now the <code>Slider</code> has no effect, but the degree of blur is consistent among the platforms:</p>
@@ -242,7 +241,7 @@ paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -251,26 +250,27 @@ paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
         canvas.Clear();
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             // Set text color to blue
             paint.Color = SKColors.Blue;
 
             // Set text size to fill 90% of width
-            paint.TextSize = 100;
-            float width = paint.MeasureText(TEXT);
+            font.Size = 100;
+            float width = font.MeasureText(TEXT);
             float scale = 0.9f * info.Width / width;
-            paint.TextSize *= scale;
+            font.Size *= scale;
 
             // Get text bounds
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Calculate offsets to position text above center
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2;
 
             // Draw unreflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Shift textBounds to match displayed text
             textBounds.Offset(xText, yText);
@@ -285,19 +285,19 @@ paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
                                 SKShaderTileMode.Clamp);
 
             // Create a blur mask filter
-            paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, paint.TextSize / 36);
+            paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, font.Size / 36);
 
             // Scale the canvas to flip upside-down around the vertical center
             canvas.Scale(1, -1, 0, yText);
 
             // Draw reflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }
 </code></pre>
 <p>The new statement adds a blur filter for the reflected text that is based on the text size:</p>
-<pre><code class="lang-csharp">paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, paint.TextSize / 36);
+<pre><code class="lang-csharp">paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, font.Size / 36);
 </code></pre>
 <p>This blur filter causes the reflection to seem much more realistic:</p>
 <p><a href="mask-filters-images/BlurryReflection-Large.png#lightbox"><img src="mask-filters-images/BlurryReflection.png" alt="Blurry Reflection" title="Blurry Reflection"></a></p>

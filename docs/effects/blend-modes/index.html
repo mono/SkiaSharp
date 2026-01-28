@@ -177,11 +177,11 @@
 <pre><code class="lang-csharp">canvas.Clear();
 </code></pre>
 <p>This method replaces all the pixels of the canvas with transparent black pixels, equivalent to <code>new SKColor(0, 0, 0, 0)</code> or the integer 0x00000000. All the bytes of all the pixels are initialized to zero.</p>
-<p>The drawing surface of an <code>SKCanvas</code> that is obtained in a <code>PaintSurface</code> handler might appear to have a white background, but that's only because the <code>SKCanvasView</code> itself has a transparent background, and the page has a white background. You can demonstrate this fact to yourself by setting the Xamarin.Forms <code>BackgroundColor</code> property of <code>SKCanvasView</code> to a Xamarin.Forms color:</p>
-<pre><code class="lang-csharp">canvasView.BackgroundColor = Color.Red;
+<p>The drawing surface of an <code>SKCanvas</code> that is obtained in a <code>PaintSurface</code> handler might appear to have a white background, but that's only because the <code>SKCanvasView</code> itself has a transparent background, and the page has a white background. You can demonstrate this fact to yourself by setting the .NET MAUI <code>BackgroundColor</code> property of <code>SKCanvasView</code> to a .NET MAUI color:</p>
+<pre><code class="lang-csharp">canvasView.BackgroundColor = Colors.Red;
 </code></pre>
 <p>Or, in a class that derives from <code>ContentPage</code>, you can set the page background color:</p>
-<pre><code class="lang-csharp">BackgroundColor = Color.Red;
+<pre><code class="lang-csharp">BackgroundColor = Colors.Red;
 </code></pre>
 <p>You'll see this red background behind your SkiaSharp graphics because the SkiaSharp canvas itself is transparent.</p>
 <p>The article <a href="../../basics/transparency.html"><strong>SkiaSharp Transparency</strong></a> showed some basic techniques in using transparency to arrange multiple graphics in a composite image. The blend modes go beyond that, but transparency remains crucial to the blend modes.</p>

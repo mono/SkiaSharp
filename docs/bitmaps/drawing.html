@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Creating and drawing on SkiaSharp bitmaps | SkiaSharp ">
       
-      <meta name="description" content="Learn how to create SkiaSharp bitmaps and then draw on these bitmaps by creating a canvas based on them.">
+      <meta name="description" content="Learn how to create SkiaSharp bitmaps and then draw on these bitmaps by creating a canvas based on them in .NET MAUI applications.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -123,10 +123,11 @@
         Title = TEXT;
 
         // Create bitmap and draw on it
-        using (SKPaint textPaint = new SKPaint { TextSize = 48 })
+        using (SKPaint textPaint = new SKPaint())
+        using (SKFont font = new SKFont { Size = 48 })
         {
             SKRect bounds = new SKRect();
-            textPaint.MeasureText(TEXT, ref bounds);
+            font.MeasureText(TEXT, out bounds);
 
             helloBitmap = new SKBitmap((int)bounds.Right,
                                        (int)bounds.Height);
@@ -134,7 +135,7 @@
             using (SKCanvas bitmapCanvas = new SKCanvas(helloBitmap))
             {
                 bitmapCanvas.Clear();
-                bitmapCanvas.DrawText(TEXT, 0, -bounds.Top, textPaint);
+                bitmapCanvas.DrawText(TEXT, 0, -bounds.Top, SKTextAlign.Left, font, textPaint);
             }
         }
 
@@ -144,7 +145,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -200,7 +201,7 @@
 </ul>
 <p>The two formats where each pixel is 32 pixels (4 bytes) are often called <em>full-color</em> formats. Many of the other formats date from a time when video displays themselves were not capable of full color. Bitmaps of limited color were adequate for these displays and allowed bitmaps to occupy less space in memory.</p>
 <p>These days, programmers almost always use full-color bitmaps and don't bother with other formats. The exception is the <code>RgbaF16</code> format, which allows greater color resolution than even the full-color formats. However, this format is used for specialized purposes, such as medical imaging, and doesn't make much sense when used with standard full-color displays.</p>
-<p>This series of articles will restrict itself to the <code>SKBitmap</code> color formats used by default when no <code>SKColorType</code> member is specified. This default format is based on the underlying platform. For the platforms supported by Xamarin.Forms, the default color type is:</p>
+<p>This series of articles will restrict itself to the <code>SKBitmap</code> color formats used by default when no <code>SKColorType</code> member is specified. This default format is based on the underlying platform. For the platforms supported by .NET MAUI, the default color type is:</p>
 <ul>
 <li><code>Rgba8888</code> for iOS and Android</li>
 <li><code>Bgra8888</code> for the UWP</li>
@@ -229,8 +230,7 @@
     {
         Title = &quot;Monkey Moustache&quot;;
 
-        monkeyBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-            &quot;SkiaSharpFormsDemos.Media.MonkeyFace.png&quot;);
+        monkeyBitmap = BitmapExtensions.LoadBitmap(&quot;MonkeyFace.png&quot;);
 
         // Create canvas based on bitmap
         using (SKCanvas canvas = new SKCanvas(monkeyBitmap))
@@ -261,7 +261,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -291,8 +291,7 @@
     {
         Title = &quot;Pixelize Image&quot;;
 
-        SKBitmap originalBitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-            &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+        SKBitmap originalBitmap = BitmapExtensions.LoadBitmap(&quot;MountainClimbers.jpg&quot;);
 
         // Create tiny bitmap for pixelized face
         SKBitmap faceBitmap = new SKBitmap(9, 9);
@@ -328,7 +327,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -389,9 +388,9 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
 </code></pre>
 <p>However, in the general case, this logic will crop off the corners of the rotated bitmap. A better approach is to calculate the size of the rotated bitmap using trigonometry to include those corners.</p>
 <p>This trigonometry is shown in the <strong>Bitmap Rotator</strong> page. The XAML file instantiates an <code>SKCanvasView</code> and a <code>Slider</code> that can range from 0 through 360 degrees with a <code>Label</code> showing the current value:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.BitmapRotatorPage&quot;
              Title=&quot;Bitmap Rotator&quot;&gt;
     &lt;StackLayout&gt;
@@ -416,8 +415,7 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
 <pre><code class="lang-csharp">public partial class BitmapRotatorPage : ContentPage
 {
     static readonly SKBitmap originalBitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(BitmapRotatorPage),
-            &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+        BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;);
 
     SKBitmap rotatedBitmap = originalBitmap;
 
@@ -426,7 +424,7 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
         InitializeComponent ();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -436,7 +434,7 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
         canvas.DrawBitmap(rotatedBitmap, info.Rect, BitmapStretch.Uniform);
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         double angle = args.NewValue;
         double radians = Math.PI * angle / 180;
@@ -469,9 +467,9 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
 <h2 id="flipping-bitmaps">Flipping bitmaps</h2>
 <p>Another operation commonly performed on bitmaps is called <em>flipping</em>. Conceptually, the bitmap is rotated in three dimensions around a vertical axis or horizontal axis through the center of the bitmap. Vertical flipping creates a mirror image.</p>
 <p>The <strong>Bitmap Flipper</strong> page in the sample application demonstrates these processes. The XAML file contains an <code>SKCanvasView</code> and two buttons for flipping vertically and horizontally:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.BitmapFlipperPage&quot;
              Title=&quot;Bitmap Flipper&quot;&gt;
     &lt;Grid&gt;
@@ -505,15 +503,14 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
 <pre><code class="lang-csharp">public partial class BitmapFlipperPage : ContentPage
 {
     SKBitmap bitmap =
-        BitmapExtensions.LoadBitmapResource(typeof(BitmapRotatorPage),
-            &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+        BitmapExtensions.LoadBitmap(&quot;SeatedMonkey.jpg&quot;);
 
     public BitmapFlipperPage()
     {
         InitializeComponent();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -523,7 +520,7 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
         canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
     }
 
-    void OnFlipVerticalClicked(object sender, ValueChangedEventArgs args)
+    void OnFlipVerticalClicked(object? sender, ValueChangedEventArgs args)
     {
         SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
 
@@ -538,7 +535,7 @@ using (SKCanvas canvas = new SKCanvas(rotatedBitmap))
         canvasView.InvalidateSurface();
     }
 
-    void OnFlipHorizontalClicked(object sender, ValueChangedEventArgs args)
+    void OnFlipHorizontalClicked(object? sender, ValueChangedEventArgs args)
     {
         SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
 

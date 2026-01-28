@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Cropping SkiaSharp bitmaps | SkiaSharp ">
       
-      <meta name="description" content="Learn how to use SkiaSharp to design a user interface for interactively desribing a cropping rectangle.">
+      <meta name="description" content="Learn how to use SkiaSharp to design a user interface for interactively desribing a cropping rectangle in .NET MAUI applications.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -315,7 +315,7 @@
         canvas.DrawBitmap(bitmap, bitmapRect);
 
         // Calculate a matrix transform for displaying the cropping rectangle
-        SKMatrix bitmapScaleMatrix = SKMatrix.MakeIdentity();
+        SKMatrix bitmapScaleMatrix = SKMatrix.Identity;
         bitmapScaleMatrix.SetScaleTranslate(scale, scale, x, y);
 
         // Display rectangle
@@ -352,7 +352,7 @@
 </code></pre>
 <p>The code in the <code>CroppingRectangle</code> class bases the cropping rectangle on the pixel size of the bitmap. However, the display of the bitmap by the <code>PhotoCropperCanvasView</code> class is scaled based on the size of the display area. The <code>bitmapScaleMatrix</code> calculated in the <code>OnPaintSurface</code> override maps from the bitmap pixels to the size and position of the bitmap as it is displayed. This matrix is then used to transform the cropping rectangle so that it can be displayed relative to the bitmap.</p>
 <p>The last line of the <code>OnPaintSurface</code> override takes the inverse of the <code>bitmapScaleMatrix</code> and saves it as the <code>inverseBitmapMatrix</code> field. This is used for touch processing.</p>
-<p>A <code>TouchEffect</code> object is instantiated as a field, and the constructor attaches a handler to the <code>TouchAction</code> event, but the <code>TouchEffect</code> needs to be added to the <code>Effects</code> collection of the <em>parent</em> of the <code>SKCanvasView</code> derivative, so that's done in the <code>OnParentSet</code> override:</p>
+<p>The <code>SKCanvasView</code> has built-in touch support. Touch events are enabled in the constructor by setting <code>EnableTouchEvents</code> to <code>true</code> and attaching a handler to the <code>Touch</code> event:</p>
 <pre><code class="lang-csharp">class PhotoCropperCanvasView : SKCanvasView
 {
     ···
@@ -362,7 +362,6 @@
     SKMatrix inverseBitmapMatrix;
 
     // Touch tracking
-    TouchEffect touchEffect = new TouchEffect();
     struct TouchPoint
     {
         public int CornerIndex { set; get; }
@@ -374,32 +373,24 @@
     public PhotoCropperCanvasView(SKBitmap bitmap, float? aspectRatio = null)
     {
         ···
-        touchEffect.TouchAction += OnTouchEffectTouchAction;
+        EnableTouchEvents = true;
+        Touch += OnTouch;
     }
     ···
-    protected override void OnParentSet()
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
-        base.OnParentSet();
+        SKPoint bitmapLocation = inverseBitmapMatrix.MapPoint(e.Location);
 
-        // Attach TouchEffect to parent view
-        Parent.Effects.Add(touchEffect);
-    }
-    ···
-    void OnTouchEffectTouchAction(object sender, TouchActionEventArgs args)
-    {
-        SKPoint pixelLocation = ConvertToPixel(args.Location);
-        SKPoint bitmapLocation = inverseBitmapMatrix.MapPoint(pixelLocation);
-
-        switch (args.Type)
+        switch (e.ActionType)
         {
-            case TouchActionType.Pressed:
+            case SKTouchAction.Pressed:
                 // Convert radius to bitmap/cropping scale
                 float radius = inverseBitmapMatrix.ScaleX * RADIUS;
 
                 // Find corner that the finger is touching
                 int cornerIndex = croppingRect.HitTest(bitmapLocation, radius);
 
-                if (cornerIndex != -1 &amp;&amp; !touchPoints.ContainsKey(args.Id))
+                if (cornerIndex != -1 &amp;&amp; !touchPoints.ContainsKey(e.Id))
                 {
                     TouchPoint touchPoint = new TouchPoint
                     {
@@ -407,38 +398,34 @@
                         Offset = bitmapLocation - croppingRect.Corners[cornerIndex]
                     };
 
-                    touchPoints.Add(args.Id, touchPoint);
+                    touchPoints.Add(e.Id, touchPoint);
                 }
                 break;
 
-            case TouchActionType.Moved:
-                if (touchPoints.ContainsKey(args.Id))
+            case SKTouchAction.Moved:
+                if (touchPoints.ContainsKey(e.Id))
                 {
-                    TouchPoint touchPoint = touchPoints[args.Id];
+                    TouchPoint touchPoint = touchPoints[e.Id];
                     croppingRect.MoveCorner(touchPoint.CornerIndex,
                                             bitmapLocation - touchPoint.Offset);
                     InvalidateSurface();
                 }
                 break;
 
-            case TouchActionType.Released:
-            case TouchActionType.Cancelled:
-                if (touchPoints.ContainsKey(args.Id))
+            case SKTouchAction.Released:
+            case SKTouchAction.Cancelled:
+                if (touchPoints.ContainsKey(e.Id))
                 {
-                    touchPoints.Remove(args.Id);
+                    touchPoints.Remove(e.Id);
                 }
                 break;
         }
-    }
 
-    SKPoint ConvertToPixel(Xamarin.Forms.Point pt)
-    {
-        return new SKPoint((float)(CanvasSize.Width * pt.X / Width),
-                           (float)(CanvasSize.Height * pt.Y / Height));
+        e.Handled = true;
     }
 }
 </code></pre>
-<p>The touch events processed by the <code>TouchAction</code> handler are in device-independent units. These first need to be converted to pixels using the <code>ConvertToPixel</code> method at the bottom of the class, and then converted to <code>CroppingRectangle</code> units using <code>inverseBitmapMatrix</code>.</p>
+<p>The <code>Touch</code> event handler receives <code>SKTouchEventArgs</code> where <code>e.Location</code> is already in pixel coordinates. The location is converted to <code>CroppingRectangle</code> units using <code>inverseBitmapMatrix</code>. Setting <code>e.Handled = true</code> at the end of the handler ensures the view continues to receive touch events.</p>
 <p>For <code>Pressed</code> events, the <code>TouchAction</code> handler calls the <code>HitTest</code> method of <code>CroppingRectangle</code>. If this returns an index other than –1, then one of the corners of the cropping rectangle is being manipulated. That index and an offset of the actual touch point from the corner is stored in a <code>TouchPoint</code> object and added to the <code>touchPoints</code> dictionary.</p>
 <p>For the <code>Moved</code> event, the <code>MoveCorner</code> method of <code>CroppingRectangle</code> is called to move the corner, with possible adjustments for the aspect ratio.</p>
 <p>At any time, a program using <code>PhotoCropperCanvasView</code> can access the <code>CroppedBitmap</code> property. This property uses the <code>Rect</code> property of the <code>CroppingRectangle</code> to create a new bitmap of the cropped size. The version of <code>DrawBitmap</code> with destination and source rectangles then extracts a subset of the original bitmap:</p>
@@ -472,7 +459,7 @@
 </code></pre>
 <h2 id="hosting-the-photo-cropper-canvas-view">Hosting the photo cropper canvas view</h2>
 <p>With those two classes handling the cropping logic, the <strong>Photo Cropping</strong> page in the sample application has very little work to do. The XAML file instantiates a <code>Grid</code> to host the <code>PhotoCropperCanvasView</code> and a <strong>Done</strong> button:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.PhotoCroppingPage&quot;
              Title=&quot;Photo Cropping&quot;&gt;
@@ -506,14 +493,13 @@
     {
         InitializeComponent ();
 
-        SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(GetType(),
-            &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+        SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;MountainClimbers.jpg&quot;);
 
         photoCropper = new PhotoCropperCanvasView(bitmap);
         canvasViewHost.Children.Add(photoCropper);
     }
 
-    void OnDoneButtonClicked(object sender, EventArgs args)
+    void OnDoneButtonClicked(object? sender, EventArgs args)
     {
         croppedBitmap = photoCropper.CroppedBitmap;
 
@@ -522,7 +508,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -542,10 +528,10 @@
 </code></pre>
 <p>You'll see the cropping rectangle restricted to a 16-to-9 aspect ratio characteristic of high-definition television.</p>
 <h2 id="dividing-a-bitmap-into-tiles">Dividing a bitmap into tiles</h2>
-<p>A Xamarin.Forms version of the famous 14-15 puzzle appeared in Chapter 22 of the book <a href="../../xamarin-forms/creating-mobile-apps-xamarin-forms/index.md"><em>Creating Mobile Apps with Xamarin.Forms</em></a> and can be downloaded as <a href="https://github.com/xamarin/xamarin-forms-book-samples/tree/master/Chapter22/XamagonXuzzle"><strong>XamagonXuzzle</strong></a>. However, the puzzle becomes more fun (and often more challenging) when it is based on an image from your own photo library.</p>
+<p>A .NET MAUI version of the famous 14-15 puzzle can be implemented using SkiaSharp. The puzzle becomes more fun (and often more challenging) when it is based on an image from your own photo library.</p>
 <p>This version of the 14-15 puzzle is part of the sample application, and consists of a series of pages titled <strong>Photo Puzzle</strong>.</p>
 <p>The <strong>PhotoPuzzlePage1.xaml</strong> file consists of a <code>Button</code>:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.PhotoPuzzlePage1&quot;
              Title=&quot;Photo Puzzle&quot;&gt;
@@ -557,25 +543,30 @@
 
 &lt;/ContentPage&gt;
 </code></pre>
-<p>The code-behind file implements a <code>Clicked</code> handler that uses the <code>IPhotoLibrary</code> dependency service to let the user pick a photo from the photo library:</p>
-<pre><code class="lang-csharp">public partial class PhotoPuzzlePage1 : ContentPage
+<p>The code-behind file implements a <code>Clicked</code> handler that uses MAUI's <code>MediaPicker</code> to let the user pick a photo from the photo library:</p>
+<pre><code class="lang-csharp">using Microsoft.Maui.Media;
+
+public partial class PhotoPuzzlePage1 : ContentPage
 {
     public PhotoPuzzlePage1 ()
     {
         InitializeComponent ();
     }
 
-    async void OnPickButtonClicked(object sender, EventArgs args)
+    async void OnPickButtonClicked(object? sender, EventArgs args)
     {
-        IPhotoLibrary photoLibrary = DependencyService.Get&lt;IPhotoLibrary&gt;();
-        using (Stream stream = await photoLibrary.PickPhotoAsync())
+        var results = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions
         {
-            if (stream != null)
-            {
-                SKBitmap bitmap = SKBitmap.Decode(stream);
-
-                await Navigation.PushAsync(new PhotoPuzzlePage2(bitmap));
-            }
+            SelectionLimit = 1,
+            Title = &quot;Select a photo for the puzzle&quot;
+        });
+        
+        var photo = results.FirstOrDefault();
+        if (photo != null)
+        {
+            using Stream stream = await photo.OpenReadAsync();
+            SKBitmap bitmap = SKBitmap.Decode(stream);
+            await Navigation.PushAsync(new PhotoPuzzlePage2(bitmap));
         }
     }
 }
@@ -594,7 +585,7 @@
         InitializeComponent ();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -604,7 +595,7 @@
         canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
     }
 
-    void OnRotateRightButtonClicked(object sender, EventArgs args)
+    void OnRotateRightButtonClicked(object? sender, EventArgs args)
     {
         SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
 
@@ -620,7 +611,7 @@
         canvasView.InvalidateSurface();
     }
 
-    void OnRotateLeftButtonClicked(object sender, EventArgs args)
+    void OnRotateLeftButtonClicked(object? sender, EventArgs args)
     {
         SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
 
@@ -636,7 +627,7 @@
         canvasView.InvalidateSurface();
     }
 
-    async void OnDoneButtonClicked(object sender, EventArgs args)
+    async void OnDoneButtonClicked(object? sender, EventArgs args)
     {
         await Navigation.PushAsync(new PhotoPuzzlePage3(bitmap));
     }
@@ -645,7 +636,7 @@
 <p>When the user clicks the <strong>Done</strong> button, the <code>Clicked</code> handler navigates to <code>PhotoPuzzlePage3</code>, passing the final rotated bitmap in the page's constructor.</p>
 <p><code>PhotoPuzzlePage3</code> allows the photo to be cropped. The program requires a square bitmap to divide into a 4-by-4 grid of tiles.</p>
 <p>The <strong>PhotoPuzzlePage3.xaml</strong> file contains a <code>Label</code>, a <code>Grid</code> to host the <code>PhotoCropperCanvasView</code>, and another <strong>Done</strong> button:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Bitmaps.PhotoPuzzlePage3&quot;
              Title=&quot;Photo Puzzle&quot;&gt;
@@ -688,7 +679,7 @@
         canvasViewHost.Children.Add(photoCropper);
     }
 
-    async void OnDoneButtonClicked(object sender, EventArgs args)
+    async void OnDoneButtonClicked(object? sender, EventArgs args)
     {
         SKBitmap croppedBitmap = photoCropper.CroppedBitmap;
         int width = croppedBitmap.Width / 4;
@@ -724,14 +715,14 @@
 }
 </code></pre>
 <p>The <strong>Done</strong> button handler obtains the width and height of the cropped bitmap (these two values should be the same) and then divides it into 15 separate bitmaps, each of which is 1/4 the width and height of the original. (The last of the possible 16 bitmaps is not created.) The <code>DrawBitmap</code> method with source and destination rectangle allows a bitmap to be created based on subset of a larger bitmap.</p>
-<h2 id="converting-to-xamarinforms-bitmaps">Converting to Xamarin.Forms bitmaps</h2>
-<p>In the <code>OnDoneButtonClicked</code> method, the array created for the 15 bitmaps is of type <a href="xref:Xamarin.Forms.ImageSource"><code>ImageSource</code></a>:</p>
+<h2 id="converting-to-net-maui-bitmaps">Converting to .NET MAUI bitmaps</h2>
+<p>In the <code>OnDoneButtonClicked</code> method, the array created for the 15 bitmaps is of type <a class="xref" href="https://learn.microsoft.com/dotnet/api/microsoft.maui.controls.imagesource"><code>ImageSource</code></a>:</p>
 <pre><code class="lang-csharp">ImageSource[] imgSources = new ImageSource[15];
 </code></pre>
-<p><code>ImageSource</code> is the Xamarin.Forms base type that encapsulates a bitmap. Fortunately, SkiaSharp allows converting from SkiaSharp bitmaps to Xamarin.Forms bitmaps. The <strong>SkiaSharp.Views.Forms</strong> assembly defines an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.forms.skbitmapimagesource"><code>SKBitmapImageSource</code></a> class that derives from <code>ImageSource</code> but can be created based on a SkiaSharp <code>SKBitmap</code> object. <code>SKBitmapImageSource</code> even defines conversions between <code>SKBitmapImageSource</code> and <code>SKBitmap</code>, and that's how <code>SKBitmap</code> objects are stored in an array as Xamarin.Forms bitmaps:</p>
+<p><code>ImageSource</code> is the .NET MAUI base type that encapsulates a bitmap. Fortunately, SkiaSharp allows converting from SkiaSharp bitmaps to .NET MAUI bitmaps. The <strong>SkiaSharp.Views.Maui.Controls</strong> assembly defines an <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.views.maui.controls.skbitmapimagesource"><code>SKBitmapImageSource</code></a> class that derives from <code>ImageSource</code> but can be created based on a SkiaSharp <code>SKBitmap</code> object. <code>SKBitmapImageSource</code> even defines conversions between <code>SKBitmapImageSource</code> and <code>SKBitmap</code>, and that's how <code>SKBitmap</code> objects are stored in an array as .NET MAUI bitmaps:</p>
 <pre><code class="lang-csharp">imgSources[4 * row + col] = (SKBitmapImageSource)bitmap;
 </code></pre>
-<p>This array of bitmaps is passed as a constructor to <code>PhotoPuzzlePage4</code>. That page is entirely Xamarin.Forms and doesn't use any SkiaSharp. It is very similar to <a href="https://github.com/xamarin/xamarin-forms-book-samples/tree/master/Chapter22/XamagonXuzzle"><strong>XamagonXuzzle</strong></a>, so it won't be described here, but it displays your selected photo divided into 15 square tiles:</p>
+<p>This array of bitmaps is passed as a constructor to <code>PhotoPuzzlePage4</code>. That page is entirely .NET MAUI and doesn't use any SkiaSharp. It implements the classic 14-15 puzzle game, so it won't be described here, but it displays your selected photo divided into 15 square tiles:</p>
 <p><a href="cropping-images/PhotoPuzzle1-Large.png#lightbox"><img src="cropping-images/PhotoPuzzle1.png" alt="Photo Puzzle 1" title="Photo Puzzle 1"></a></p>
 <p>Pressing the <strong>Randomize</strong> button mixes up all the tiles:</p>
 <p><a href="cropping-images/PhotoPuzzle2-Large.png#lightbox"><img src="cropping-images/PhotoPuzzle2.png" alt="Photo Puzzle 2" title="Photo Puzzle 2"></a></p>

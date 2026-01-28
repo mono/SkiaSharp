@@ -99,9 +99,9 @@
 </code></pre>
 <p>The method has two sigma values — the first for the blur extent in the horizontal direction and the second for the vertical direction. You can cascade image filters by specifying another image filter as the optional third argument. A cropping rectangle can also be specified.</p>
 <p>The <strong>Image Blur Experiment</strong> page in the sample includes two <code>Slider</code> views that let you experiment with setting various levels of blur:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.ImageBlurExperimentPage&quot;
              Title=&quot;Image Blur Experiment&quot;&gt;
 
@@ -137,21 +137,19 @@
 {
     const string TEXT = &quot;Blur My Text&quot;;
 
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                            typeof(MaskBlurExperimentPage),
-                            &quot;SkiaSharpFormsDemos.Media.SeatedMonkey.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;SeatedMonkey.jpg&quot;);
 
     public ImageBlurExperimentPage ()
     {
         InitializeComponent ();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -164,21 +162,22 @@
         float sigmaY = (float)sigmaYSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            // Set SKPaint properties
-            paint.TextSize = (info.Width - 100) / (TEXT.Length / 2);
+            // Set SKPaint and SKFont properties
+            font.Size = (info.Width - 100) / (TEXT.Length / 2);
             paint.ImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
 
             // Get text bounds and calculate display rectangle
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
             SKRect textRect = new SKRect(0, 0, info.Width, textBounds.Height + 50);
 
             // Center the text in the display rectangle
             float xText = textRect.Width / 2 - textBounds.MidX;
             float yText = textRect.Height / 2 - textBounds.MidY;
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Calculate rectangle for bitmap
             SKRect bitmapRect = new SKRect(0, textRect.Bottom, info.Width, info.Height);
@@ -207,9 +206,9 @@
 <p>The <code>color</code> parameter is the color of the drop shadow. This <code>SKColor</code> value can include transparency. One possibility is the color value <code>SKColors.Black.WithAlpha(0x80)</code> to darken any color background.</p>
 <p>The final two parameters are optional.</p>
 <p>The <strong>Drop Shadow Experiment</strong> program lets you experiment with values of <code>dx</code>, <code>dy</code>, <code>sigmaX</code>, and <code>sigmaY</code> to display a text string with a drop shadow. The XAML file instantiates four <code>Slider</code> views to set these values:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.DropShadowExperimentPage&quot;
              Title=&quot;Drop Shadow Experiment&quot;&gt;
     &lt;ContentPage.Resources&gt;
@@ -273,12 +272,12 @@
         InitializeComponent ();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -293,9 +292,10 @@
         float sigmaY = (float)sigmaYSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            // Set SKPaint properties
-            paint.TextSize = info.Width / 7;
+            // Set SKPaint and SKFont properties
+            font.Size = info.Width / 7;
             paint.Color = SKColors.Blue;
             paint.ImageFilter = SKImageFilter.CreateDropShadow(
                                     dx,
@@ -306,13 +306,13 @@
                                     SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
 
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Center the text in the display rectangle
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2 - textBounds.MidY;
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }
@@ -343,9 +343,9 @@
 </code></pre>
 <p>The page doesn't use the last two optional parameters.</p>
 <p>Three <code>Slider</code> views in the XAML file let you select the <code>Z</code> coordinate of the <code>SKPoint3</code> value, the <code>surfaceScale</code> parameter, and the <code>kd</code> parameter, which is defined in the API documentation as the &quot;diffuse lighting constant&quot;:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaLightExperiment.MainPage&quot;
              Title=&quot;Distant Light Experiment&quot;&gt;
 
@@ -400,12 +400,12 @@
         InitializeComponent();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -418,17 +418,18 @@
         float lightConstant = (float)lightConstantSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             paint.IsAntialias = true;
 
             // Size text to 90% of canvas width
-            paint.TextSize = 100;
-            float textWidth = paint.MeasureText(TEXT);
-            paint.TextSize *= 0.9f * info.Width / textWidth;
+            font.Size = 100;
+            float textWidth = font.MeasureText(TEXT);
+            font.Size *= 0.9f * info.Width / textWidth;
 
             // Find coordinates to center text
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             float xText = info.Rect.MidX - textBounds.MidX;
             float yText = info.Rect.MidY - textBounds.MidY;
@@ -440,7 +441,7 @@
                                     surfaceScale,
                                     lightConstant);
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }

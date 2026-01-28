@@ -91,7 +91,7 @@
 <p>In SkiaSharp, the skew transform tilts graphical objects, such as the shadow in this image:</p>
 <p><img src="skew-images/skewexample.png" alt="An example of skewing from the Skew Shadow Text program"></p>
 <p>The skew turns a rectangle into a parallelogram, but a skewed ellipse is still an ellipse.</p>
-<p>Although Xamarin.Forms defines properties for translation, scaling, and rotations, there is no corresponding property in Xamarin.Forms for skew.</p>
+<p>Although .NET MAUI defines properties for translation, scaling, and rotations, there is no corresponding property in .NET MAUI for skew.</p>
 <p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.skew#skiasharp-skcanvas-skew(system-single-system-single)"><code>Skew</code></a> method of <code>SKCanvas</code> accepts two arguments for horizontal skew and vertical skew:</p>
 <pre><code class="lang-csharp">public void Skew (Single xSkew, Single ySkew)
 </code></pre>
@@ -99,8 +99,8 @@
 <pre><code class="lang-csharp">public void Skew (SKPoint skew)
 </code></pre>
 <p>However, it's unlikely that you'll be using either of these two methods in isolation.</p>
-<p>The <strong>Skew Experiment</strong> page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two <code>Slider</code> elements. Here is the <code>PaintSurface</code> handler in the <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewExperimentPage.xaml.cs"><code>SkewExperimentPage</code></a> class:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<p>The <strong>Skew Experiment</strong> page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two <code>Slider</code> elements. Here is the <code>PaintSurface</code> handler in the <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewExperimentPage.xaml.cs"><code>SkewExperimentPage</code></a> class:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -111,16 +111,19 @@
     using (SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Blue,
-        TextSize = 200
+        Color = SKColors.Blue
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 200
     })
     {
         string text = &quot;SKEW&quot;;
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
 
         canvas.Skew((float)xSkewSlider.Value, (float)ySkewSlider.Value);
-        canvas.DrawText(text, 0, -textBounds.Top, textPaint);
+        canvas.DrawText(text, 0, -textBounds.Top, SKTextAlign.Left, font, textPaint);
     }
 }
 </code></pre>
@@ -146,8 +149,8 @@ canvas.Translate(-px, -py);
 <p>You might feel more comfortable specifying skew as an angle of tilt, such as the angle α in this diagram:</p>
 <p><img src="skew-images/skewangleeffect.png" alt="The effect of the skew transform on a rectangle with a skewing angle indicated"></p>
 <p>The ratio of the 150-pixel shift to the 100-pixel vertical is the tangent of that angle, in this example 56.3 degrees.</p>
-<p>The XAML file of the <strong>Skew Angle Experiment</strong> page is similar to the <strong>Skew Angle</strong> page except that the <code>Slider</code> elements range from –90 degrees to 90 degrees. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewAngleExperimentPage.xaml.cs"><code>SkewAngleExperiment</code></a> code-behind file centers the text on the page and uses <code>Translate</code> to set a center of skewing to the center of the page. A short <code>SkewDegrees</code> method at the bottom of the code converts angles to skew values:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<p>The XAML file of the <strong>Skew Angle Experiment</strong> page is similar to the <strong>Skew Angle</strong> page except that the <code>Slider</code> elements range from –90 degrees to 90 degrees. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewAngleExperimentPage.xaml.cs"><code>SkewAngleExperiment</code></a> code-behind file centers the text on the page and uses <code>Translate</code> to set a center of skewing to the center of the page. A short <code>SkewDegrees</code> method at the bottom of the code converts angles to skew values:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -158,8 +161,11 @@ canvas.Translate(-px, -py);
     using (SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Blue,
-        TextSize = 200
+        Color = SKColors.Blue
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 200
     })
     {
         float xCenter = info.Width / 2;
@@ -167,14 +173,14 @@ canvas.Translate(-px, -py);
 
         string text = &quot;SKEW&quot;;
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
         float xText = xCenter - textBounds.MidX;
         float yText = yCenter - textBounds.MidY;
 
         canvas.Translate(xCenter, yCenter);
         SkewDegrees(canvas, xSkewSlider.Value, ySkewSlider.Value);
         canvas.Translate(-xCenter, -yCenter);
-        canvas.DrawText(text, xText, yText, textPaint);
+        canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
     }
 }
 
@@ -186,8 +192,8 @@ void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
 </code></pre>
 <p>As an angle approaches positive or negative 90 degrees, the tangent approaches infinity, but angles up to about 80 degrees or so are usable:</p>
 <p><a href="skew-images/skewangleexperiment-large.png#lightbox" title="Triple screenshot of the Skew Angle Experiment page"><img src="skew-images/skewangleexperiment-small.png" alt="Triple screenshot of the Skew Angle Experiment page"></a></p>
-<p>A small negative horizontal skew can mimic oblique or italic text, as the <strong>Oblique Text</strong> page demonstrates. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/ObliqueTextPage.cs"><code>ObliqueTextPage</code></a> class shows how it's done:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<p>A small negative horizontal skew can mimic oblique or italic text, as the <strong>Oblique Text</strong> page demonstrates. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ObliqueTextPage.cs"><code>ObliqueTextPage</code></a> class shows how it's done:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -198,14 +204,16 @@ void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
     using (SKPaint textPaint = new SKPaint()
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Maroon,
-        TextAlign = SKTextAlign.Center,
-        TextSize = info.Width / 8       // empirically determined
+        Color = SKColors.Maroon
+    })
+    using (SKFont font = new SKFont()
+    {
+        Size = info.Width / 8       // empirically determined
     })
     {
         canvas.Translate(info.Width / 2, info.Height / 2);
         SkewDegrees(canvas, -20, 0);
-        canvas.DrawText(Title, 0, 0, textPaint);
+        canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
     }
 }
 
@@ -215,13 +223,14 @@ void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
                 (float)Math.Tan(Math.PI * yDegrees / 180));
 }
 </code></pre>
-<p>The <code>TextAlign</code> property of <code>SKPaint</code> is set to <code>Center</code>. Without any transforms, the <code>DrawText</code> call with coordinates of (0, 0) would position the text with the horizontal center of the baseline at the upper-left corner. The <code>SkewDegrees</code> skews the text horizontally 20 degrees relative to the baseline. The <code>Translate</code> call moves the horizontal center of the text's baseline to the center of the canvas:</p>
+<p>The <code>SKTextAlign.Center</code> parameter passed to <code>DrawText</code> positions the text with the horizontal center of the baseline at the specified location. The <code>SkewDegrees</code> skews the text horizontally 20 degrees relative to the baseline. The <code>Translate</code> call moves the horizontal center of the text's baseline to the center of the canvas:</p>
 <p><a href="skew-images/obliquetext-large.png#lightbox" title="Triple screenshot of the Oblique Text page"><img src="skew-images/obliquetext-small.png" alt="Triple screenshot of the Oblique Text page"></a></p>
 <p>The <strong>Skew Shadow Text</strong> page demonstrates how to use a combination of a 45-degree skew and vertical scale to make a text shadow that tilts away from the text. Here's the pertinent part of the <code>PaintSurface</code> handler:</p>
 <pre><code class="lang-csharp">using (SKPaint textPaint = new SKPaint())
+using (SKFont font = new SKFont())
 {
     textPaint.Style = SKPaintStyle.Fill;
-    textPaint.TextSize = info.Width / 6;   // empirically determined
+    font.Size = info.Width / 6;   // empirically determined
 
     // Common to shadow and text
     string text = &quot;Shadow&quot;;
@@ -235,12 +244,12 @@ void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
     canvas.Skew((float)Math.Tan(-Math.PI / 4), 0);
     canvas.Scale(1, 3);
     canvas.Translate(-xText, -yText);
-    canvas.DrawText(text, xText, yText, textPaint);
+    canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
     canvas.Restore();
 
     // Text
     textPaint.Color = SKColors.Blue;
-    canvas.DrawText(text, xText, yText, textPaint);
+    canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
 }
 </code></pre>
 <p>The shadow is displayed first and then the text:</p>
@@ -249,7 +258,7 @@ void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
 <p><a href="skew-images/skewshadowtext2-large.png#lightbox" title="Triple screenshot of the Skew Shadow Text page with an alternative word with descenders"><img src="skew-images/skewshadowtext2-small.png" alt="Triple screenshot of the Skew Shadow Text page with an alternative word with descenders"></a></p>
 <p>The shadow and text are still aligned at the baseline, but the effect just looks wrong. To fix it, you need to obtain the text bounds:</p>
 <pre><code class="lang-csharp">SKRect textBounds = new SKRect();
-textPaint.MeasureText(text, ref textBounds);
+font.MeasureText(text, out textBounds);
 </code></pre>
 <p>The <code>Translate</code> calls need to be adjusted by the height of the descenders:</p>
 <pre><code class="lang-csharp">canvas.Translate(xText, yText + textBounds.Bottom);

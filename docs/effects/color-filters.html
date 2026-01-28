@@ -157,9 +157,7 @@
 <p>where <code>matrix</code> is an array of the 20 <code>float</code> values. When creating the array in C#, it is easy to format the numbers so they resemble the 4×5 matrix. This is demonstrated in the <strong>Gray-Scale Matrix</strong> page in the sample:</p>
 <pre><code class="lang-csharp">public class GrayScaleMatrixPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(CenteredTilesPage),
-                        &quot;SkiaSharpFormsDemos.Media.Banana.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;Banana.jpg&quot;);
 
     public GrayScaleMatrixPage()
     {
@@ -170,7 +168,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -203,9 +201,7 @@
 <p>The <strong>Pastel Matrix</strong> calculates the destination red pixel by attenuating the source red pixel and slightly emphasizing the red and green pixels. This process occurs similarly for the green and blue pixels:</p>
 <pre><code class="lang-csharp">public class PastelMatrixPage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(PastelMatrixPage),
-                        &quot;SkiaSharpFormsDemos.Media.MountainClimbers.jpg&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;MountainClimbers.jpg&quot;);
 
     public PastelMatrixPage()
     {
@@ -216,7 +212,7 @@
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -258,9 +254,7 @@ public static SKColorFilter CreateTable (byte[] tableA, byte[] tableR, byte[] ta
 <p>You can also posterize a bitmap with a color table. The constructor of the <strong>Posterize Table</strong> page creates a color table that maps its index to a byte with the bottom 6 bits set to zero:</p>
 <pre><code class="lang-csharp">public class PosterizeTablePage : ContentPage
 {
-    SKBitmap bitmap = BitmapExtensions.LoadBitmapResource(
-                        typeof(PosterizeTablePage),
-                        &quot;SkiaSharpFormsDemos.Media.MonkeyFace.png&quot;);
+    SKBitmap bitmap = BitmapExtensions.LoadBitmap(&quot;MonkeyFace.png&quot;);
 
     byte[] colorTable = new byte[256];
 
@@ -279,7 +273,7 @@ public static SKColorFilter CreateTable (byte[] tableA, byte[] tableR, byte[] ta
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

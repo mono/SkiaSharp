@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Basic Animation in SkiaSharp | SkiaSharp ">
       
-      <meta name="description" content="This article explains how to animate your SkiaSharp graphics in Xamarin.Forms applications, and demonstrates this with sample code.">
+      <meta name="description" content="This article explains how to animate your SkiaSharp graphics in .NET MAUI applications, and demonstrates this with sample code.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -88,12 +88,12 @@
 <h1 id="basic-animation-in-skiasharp">Basic Animation in SkiaSharp</h1>
 
 <p><em>Discover how to animate your SkiaSharp graphics</em></p>
-<p>You can animate SkiaSharp graphics in Xamarin.Forms by causing the <code>PaintSurface</code> method to be called periodically, each time drawing the graphics a little differently. Here's an animation shown later in this article with concentric circles that seemingly expand from the center:</p>
+<p>You can animate SkiaSharp graphics in .NET MAUI by causing the <code>PaintSurface</code> method to be called periodically, each time drawing the graphics a little differently. Here's an animation shown later in this article with concentric circles that seemingly expand from the center:</p>
 <p><img src="animation-images/animationexample.png" alt="Several concentric circles seemingly expanding from the center"></p>
-<p>The <strong>Pulsating Ellipse</strong> page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml"><strong>PulsatingEllipsePage.xaml</strong></a> file instantiates a Xamarin.Forms <code>Slider</code> and a <code>Label</code> to display the current value of the slider. This is a common way to integrate an <code>SKCanvasView</code> with other Xamarin.Forms views:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>The <strong>Pulsating Ellipse</strong> page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml"><strong>PulsatingEllipsePage.xaml</strong></a> file instantiates a .NET MAUI <code>Slider</code> and a <code>Label</code> to display the current value of the slider. This is a common way to integrate an <code>SKCanvasView</code> with other .NET MAUI views:</p>
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.PulsatingEllipsePage&quot;
              Title=&quot;Pulsating Ellipse&quot;&gt;
     &lt;Grid&gt;
@@ -165,7 +165,7 @@ protected override void OnDisappearing()
 </code></pre>
 <p>The <code>while</code> loop begins by obtaining a cycle time from the <code>Slider</code>. This is a time in seconds, for example, 5. The second statement calculates a value of <code>t</code> for <em>time</em>. For a <code>cycleTime</code> of 5, <code>t</code> increases from 0 to 1 every 5 seconds. The argument to the <code>Math.Sin</code> function in the second statement ranges from 0 to 2π every 5 seconds. The <code>Math.Sin</code> function returns a value ranging from 0 to 1 back to 0 and then to –1 and 0 every 5 seconds, but with values that change more slowly when the value is near 1 or –1. The value 1 is added so the values are always positive, and then it's divided by 2, so the values range from ½ to 1 to ½ to 0 to ½, but slower when the value is around 1 and 0. This is stored in the <code>scale</code> field, and the <code>SKCanvasView</code> is invalidated.</p>
 <p>The <code>PaintSurface</code> method uses this <code>scale</code> value to calculate the two axes of the ellipse:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -197,7 +197,7 @@ protected override void OnDisappearing()
 <p>Notice that the <code>SKPaint</code> object is created in a <code>using</code> block. Like many SkiaSharp classes <code>SKPaint</code> derives from <code>SKObject</code>, which derives from <code>SKNativeObject</code>, which implements the <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.idisposable"><code>IDisposable</code></a> interface. <code>SKPaint</code> overrides the <code>Dispose</code> method to release unmanaged resources.</p>
 <p>Putting <code>SKPaint</code> in a <code>using</code> block ensures that <code>Dispose</code> is called at the end of the block to free these unmanaged resources. This happens anyway when memory used by the <code>SKPaint</code> object is freed by the .NET garbage collector, but in animation code, it's best to be proactive in freeing memory in a more orderly way.</p>
 <p>A better solution in this particular case would be to create two <code>SKPaint</code> objects once and save them as fields.</p>
-<p>That's what the <strong>Expanding Circles</strong> animation does. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/ExpandingCirclesPage.cs"><code>ExpandingCirclesPage</code></a> class begins by defining several fields, including an <code>SKPaint</code> object:</p>
+<p>That's what the <strong>Expanding Circles</strong> animation does. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ExpandingCirclesPage.cs"><code>ExpandingCirclesPage</code></a> class begins by defining several fields, including an <code>SKPaint</code> object:</p>
 <pre><code class="lang-csharp">public class ExpandingCirclesPage : ContentPage
 {
     const double cycleTime = 1000;       // in milliseconds
@@ -222,7 +222,7 @@ protected override void OnDisappearing()
     ...
 }
 </code></pre>
-<p>This program uses a different approach to animation based on the Xamarin.Forms <code>Device.StartTimer</code> method. The <code>t</code> field is animated from 0 to 1 every <code>cycleTime</code> milliseconds:</p>
+<p>This program uses a different approach to animation based on the .NET MAUI <code>Dispatcher.StartTimer</code> method. The <code>t</code> field is animated from 0 to 1 every <code>cycleTime</code> milliseconds:</p>
 <pre><code class="lang-csharp">public class ExpandingCirclesPage : ContentPage
 {
     ...
@@ -232,7 +232,7 @@ protected override void OnDisappearing()
         pageIsActive = true;
         stopwatch.Start();
 
-        Device.StartTimer(TimeSpan.FromMilliseconds(33), () =&gt;
+        Dispatcher.StartTimer(TimeSpan.FromMilliseconds(33), () =&gt;
         {
             t = (float)(stopwatch.Elapsed.TotalMilliseconds % cycleTime / cycleTime);
             canvasView.InvalidateSurface();
@@ -257,7 +257,7 @@ protected override void OnDisappearing()
 <pre><code class="lang-csharp">public class ExpandingCirclesPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

@@ -6,7 +6,7 @@
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <meta name="title" content="Integrating Text and Graphics | SkiaSharp ">
       
-      <meta name="description" content="This article explains how to determine the size of rendered text string to integrate text with SkiaSharp graphics into Xamarin.Forms applications, and demonstrates this with sample code.">
+      <meta name="description" content="This article explains how to determine the size of rendered text string to integrate text with SkiaSharp graphics into .NET MAUI applications, and demonstrates this with sample code.">
       <link rel="icon" href="../../images/logo.ico">
       <link rel="stylesheet" href="../../public/docfx.min.css">
       <link rel="stylesheet" href="../../public/main.css">
@@ -91,9 +91,9 @@
 <p>This article demonstrates how to measure text, scale the text to a particular size, and integrate text with other graphics:</p>
 <p><img src="text-images/textandgraphicsexample.png" alt="Text surrounded by rectangles"></p>
 <p>That image also includes a rounded rectangle. The SkiaSharp <code>Canvas</code> class includes <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawrect"><code>DrawRect</code></a> methods to draw a rectangle and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawroundrect"><code>DrawRoundRect</code></a> methods to draw a rectangle with rounded corners. These methods allow the rectangle to be defined as an <code>SKRect</code> value or in other ways.</p>
-<p>The <strong>Framed Text</strong> page centers a short text string on the page and surrounds it with a frame composed of a pair of rounded rectangles. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Basics/FramedTextPage.cs"><code>FramedTextPage</code></a> class shows how it's done.</p>
-<p>In SkiaSharp, you use the <code>SKPaint</code> class to set text and font attributes, but you can also use it to obtain the rendered size of text. The beginning of the following <code>PaintSurface</code> event handler calls two different <code>MeasureText</code> methods. The first <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.measuretext#skiasharp-skpaint-measuretext(system-string)"><code>MeasureText</code></a> call has a simple <code>string</code> argument and returns the pixel width of the text based on the current font attributes. The program then calculates a new <code>TextSize</code> property of the <code>SKPaint</code> object based on that rendered width, the current <code>TextSize</code> property, and the width of the display area. This calculation is intended to set <code>TextSize</code> so that the text string to be rendered at 90% of the width of the screen:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<p>The <strong>Framed Text</strong> page centers a short text string on the page and surrounds it with a frame composed of a pair of rounded rectangles. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/FramedTextPage.cs"><code>FramedTextPage</code></a> class shows how it's done.</p>
+<p>In SkiaSharp, you use the <code>SKFont</code> class to set font attributes and measure text, while <code>SKPaint</code> is used for colors and other rendering properties. The beginning of the following <code>PaintSurface</code> event handler calls two different <code>MeasureText</code> methods. The first <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skfont.measuretext#skiasharp-skfont-measuretext(system-string-skiasharp-skpaint)"><code>MeasureText</code></a> call has a simple <code>string</code> argument and returns the pixel width of the text based on the current font attributes. The program then calculates a new <code>Size</code> property of the <code>SKFont</code> object based on that rendered width, the current <code>Size</code> property, and the width of the display area. This calculation is intended to set <code>Size</code> so that the text string to be rendered at 90% of the width of the screen:</p>
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -103,23 +103,25 @@
 
     string str = &quot;Hello SkiaSharp!&quot;;
 
-    // Create an SKPaint object to display the text
+    // Create an SKPaint object for text color and an SKFont for text attributes
     SKPaint textPaint = new SKPaint
     {
         Color = SKColors.Chocolate
     };
 
-    // Adjust TextSize property so text is 90% of screen width
-    float textWidth = textPaint.MeasureText(str);
-    textPaint.TextSize = 0.9f * info.Width * textPaint.TextSize / textWidth;
+    SKFont font = new SKFont();
+
+    // Adjust Size property so text is 90% of screen width
+    float textWidth = font.MeasureText(str);
+    font.Size = 0.9f * info.Width * font.Size / textWidth;
 
     // Find the text bounds
     SKRect textBounds = new SKRect();
-    textPaint.MeasureText(str, ref textBounds);
+    font.MeasureText(str, out textBounds);
     ...
 }
 </code></pre>
-<p>The second <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.measuretext#skiasharp-skpaint-measuretext(system-string-skiasharp-skrect@)"><code>MeasureText</code></a> call has an <code>SKRect</code> argument, so it obtains both a width and height of the rendered text. The <code>Height</code> property of this <code>SKRect</code> value depends on the presence of capital letters, ascenders, and descenders in the text string. Different <code>Height</code> values are reported for the text strings &quot;mom&quot;, &quot;cat&quot;, and &quot;dog&quot;, for example.</p>
+<p>The second <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skfont.measuretext#skiasharp-skfont-measuretext(system-string-skiasharp-skrect@-skiasharp-skpaint)"><code>MeasureText</code></a> call has an <code>out SKRect</code> argument, so it obtains both a width and height of the rendered text. The <code>Height</code> property of this <code>SKRect</code> value depends on the presence of capital letters, ascenders, and descenders in the text string. Different <code>Height</code> values are reported for the text strings &quot;mom&quot;, &quot;cat&quot;, and &quot;dog&quot;, for example.</p>
 <p>The <code>Left</code> and <code>Top</code> properties of the <code>SKRect</code> structure indicate the coordinates of the upper-left corner of the rendered text if the text is displayed by a <code>DrawText</code> call with X and Y positions of 0. For example, when this program is running on an iPhone 7 simulator, <code>TextSize</code> is assigned the value 90.6254 as a result of the calculation following the first call to <code>MeasureText</code>. The <code>SKRect</code> value obtained from the second call to <code>MeasureText</code> has the following property values:</p>
 <ul>
 <li><code>Left</code> = 6</li>
@@ -127,9 +129,9 @@
 <li><code>Width</code> = 664.8214</li>
 <li><code>Height</code> = 88;</li>
 </ul>
-<p>Keep in mind that the X and Y coordinates you pass to the <code>DrawText</code> method specify the left side of the text at the baseline. The <code>Top</code> value indicates that the text extends 68 pixels above that baseline and (subtracting 68 it from 88) 20 pixels below the baseline. The <code>Left</code> value of 6 indicates that the text begins six pixels to the right of the X value in the <code>DrawText</code> call. This allows for normal inter-character spacing. If you want to display the text snugly in the upper-left corner of the display, pass the negatives of these <code>Left</code> and <code>Top</code> values as the X and Y coordinates of <code>DrawText</code>, in this example, –6 and 68.</p>
+<p>Keep in mind that the X and Y coordinates you pass to the <code>DrawText</code> method specify the position of the text at the baseline. The <code>Top</code> value indicates that the text extends 68 pixels above that baseline and (subtracting 68 it from 88) 20 pixels below the baseline. The <code>Left</code> value of 6 indicates that the text begins six pixels to the right of the X value in the <code>DrawText</code> call. This allows for normal inter-character spacing. If you want to display the text snugly in the upper-left corner of the display, pass the negatives of these <code>Left</code> and <code>Top</code> values as the X and Y coordinates of <code>DrawText</code>, in this example, –6 and 68.</p>
 <p>The <code>SKRect</code> structure defines several handy properties and methods, some of which are used in the remainder of the <code>PaintSurface</code> handler. The <code>MidX</code> and <code>MidY</code> values indicate the coordinates of the center of the rectangle. (In the iPhone 7 example, those values are 338.4107 and –24.) The following code uses these values for the easiest calculation of coordinates to center text on the display:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     // Calculate offsets to center the text on the screen
@@ -137,7 +139,7 @@
     float yText = info.Height / 2 - textBounds.MidY;
 
     // And draw the text
-    canvas.DrawText(str, xText, yText, textPaint);
+    canvas.DrawText(str, xText, yText, SKTextAlign.Left, font, textPaint);
     ...
 }
 </code></pre>
@@ -146,7 +148,7 @@
 float yText = info.Rect.MidY - textBounds.MidY;
 </code></pre>
 <p>The <code>PaintSurface</code> handler concludes with two calls to <code>DrawRoundRect</code>, both of which require arguments of <code>SKRect</code>. This <code>SKRect</code> value is based on the <code>SKRect</code> value obtained from the <code>MeasureText</code> method, but it can't be the same. First, it needs to be a little larger so that the rounded rectangle doesn't draw over edges of the text. Secondly, it needs to be shifted in space so that the <code>Left</code> and <code>Top</code> values correspond to the upper-left corner where the rectangle is to be positioned. These two jobs are accomplished by the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skrect.offset"><code>Offset</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skrect.inflate"><code>Inflate</code></a> methods defined by <code>SKRect</code>:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     // Create a new SKRect object for the frame around the text
@@ -174,11 +176,11 @@ float yText = info.Rect.MidY - textBounds.MidY;
 <p>Following that, the remainder of the method is straight-forward. It creates another <code>SKPaint</code> object for the borders and calls <code>DrawRoundRect</code> twice. The second call uses a rectangle inflated by another 10 pixels. The first call specifies a corner radius of 20 pixels. The second has a corner radius of 30 pixels, so they seem to be parallel:</p>
 <p><a href="text-images/framedtext-large.png#lightbox" title="Triple screenshot of the Framed Text page"><img src="text-images/framedtext-small.png" alt="Triple screenshot of the Framed Text page"></a></p>
 <p>You can turn your phone or simulator sideways to see the text and frame increase in size.</p>
-<p>If you only need to center some text on the screen, you can do it approximately without measuring the text. Instead, set the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpaint.textalign#skiasharp-skpaint-textalign"><code>TextAlign</code></a> property of <code>SKPaint</code> to the enumeration member <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sktextalign"><code>SKTextAlign.Center</code></a>. The X coordinate you specify in the <code>DrawText</code> method then indicates where the horizontal center of the text is positioned. If you pass the midpoint of the screen to the <code>DrawText</code> method, the text will be horizontally centered and <em>nearly</em> vertically centered because the baseline will be vertically centered.</p>
+<p>If you only need to center some text on the screen, you can do it approximately without measuring the text. Instead, pass <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.sktextalign"><code>SKTextAlign.Center</code></a> as the alignment parameter to the <code>DrawText</code> method. The X coordinate you specify in the <code>DrawText</code> method then indicates where the horizontal center of the text is positioned. If you pass the midpoint of the screen to the <code>DrawText</code> method, the text will be horizontally centered and <em>nearly</em> vertically centered because the baseline will be vertically centered.</p>
 <p>Text can be treated much like any other graphical object. One simple option is to display the outline of the text characters:</p>
 <p><a href="text-images/outlinedtext-large.png#lightbox" title="Triple screenshot of the Outlined Text page"><img src="text-images/outlinedtext-small.png" alt="Triple screen shot of the Outlined Text page"></a></p>
 <p>This is accomplished simply by changing the normal <code>Style</code> property of the <code>SKPaint</code> object from its default setting of <code>SKPaintStyle.Fill</code> to <code>SKPaintStyle.Stroke</code>, and by specifying a stroke width. The <code>PaintSurface</code> handler of the <strong>Outlined Text</strong> page shows how it's done:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -188,29 +190,33 @@ float yText = info.Rect.MidY - textBounds.MidY;
 
     string text = &quot;OUTLINE&quot;;
 
-    // Create an SKPaint object to display the text
+    // Create an SKPaint object for styling and an SKFont for text attributes
     SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Stroke,
         StrokeWidth = 1,
-        FakeBoldText = true,
         Color = SKColors.Blue
     };
 
-    // Adjust TextSize property so text is 95% of screen width
-    float textWidth = textPaint.MeasureText(text);
-    textPaint.TextSize = 0.95f * info.Width * textPaint.TextSize / textWidth;
+    SKFont font = new SKFont
+    {
+        Embolden = true
+    };
+
+    // Adjust Size property so text is 95% of screen width
+    float textWidth = font.MeasureText(text);
+    font.Size = 0.95f * info.Width * font.Size / textWidth;
 
     // Find the text bounds
     SKRect textBounds = new SKRect();
-    textPaint.MeasureText(text, ref textBounds);
+    font.MeasureText(text, out textBounds);
 
     // Calculate offsets to center the text on the screen
     float xText = info.Width / 2 - textBounds.MidX;
     float yText = info.Height / 2 - textBounds.MidY;
 
     // And draw the text
-    canvas.DrawText(text, xText, yText, textPaint);
+    canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
 }
 </code></pre>
 <p>Another common graphical object is the bitmap. That's a large topic covered in depth in the section <a href="../bitmaps/index.html"><strong>SkiaSharp Bitmaps</strong></a>, but the next article, <a href="bitmaps.html"><strong>Bitmap Basics in SkiaSharp</strong></a>, provides a briefer introduction.</p>

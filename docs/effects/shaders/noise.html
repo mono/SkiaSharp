@@ -103,9 +103,9 @@ public static SkiaSharp.SKShader CreatePerlinNoiseTurbulence (float baseFrequenc
 <p>The <code>seed</code> parameter is the starting point for the random-number generator. Although specified as a floating-point value, the fraction is truncated before it's used, and 0 is the same as 1.</p>
 <p>The <strong>Perlin Noise</strong> page in the sample allows you experiment with various values of the <code>baseFrequency</code> and <code>numOctaves</code> arguments. Here's the XAML file:</p>
 <pre><code class="lang-xaml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
-&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.PerlinNoisePage&quot;
              Title=&quot;Perlin Noise&quot;&gt;
 
@@ -162,17 +162,17 @@ baseFrequencyYText.Text = String.Format(&quot;Base Frequency Y = {0:F4}&quot;, b
         InitializeComponent();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    void OnStepperValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -225,9 +225,9 @@ public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float 
 </code></pre>
 <p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpointi"><code>SKPointI</code></a> structure is the integer version of the familiar <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpoint"><code>SKPoint</code></a> structure. <code>SKPointI</code> defines <code>X</code> and <code>Y</code> properties of type <code>int</code> rather than <code>float</code>.</p>
 <p>These methods create a repeating pattern of the specified size. In each tile, the right edge is the same as the left edge, and the top edge is the same as the bottom edge. This characteristic is demonstrated in the <strong>Tiled Perlin Noise</strong> page. The XAML file is similar to the previous sample, but it only has a <code>Stepper</code> view for changing the <code>seed</code> argument:</p>
-<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<pre><code class="lang-xaml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
-             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
+             xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
              x:Class=&quot;SkiaSharpFormsDemos.Effects.TiledPerlinNoisePage&quot;
              Title=&quot;Tiled Perlin Noise&quot;&gt;
 
@@ -263,12 +263,12 @@ public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float 
         InitializeComponent();
     }
 
-    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    void OnStepperValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -344,17 +344,17 @@ public static SKShader CreatePerlinNoiseTurbulence (float baseFrequencyX, float 
         InitializeComponent();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    void OnStepperValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

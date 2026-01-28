@@ -90,30 +90,27 @@
 <p><em>Get information about paths and enumerate the contents</em></p>
 <p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath"><code>SKPath</code></a> class defines several properties and methods that allow you to obtain information about the path. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.bounds#skiasharp-skpath-bounds"><code>Bounds</code></a> and <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.tightbounds#skiasharp-skpath-tightbounds"><code>TightBounds</code></a> properties (and related methods) obtain the metrical dimensions of a path. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpath.contains#skiasharp-skpath-contains(system-single-system-single)"><code>Contains</code></a> method lets you determine if a particular point is within a path.</p>
 <p>It is sometimes useful to determine the total length of all the lines and curves that make up a path. Calculating this length is not an algorithmically simple task, so an entire class named <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathmeasure"><code>PathMeasure</code></a> is devoted to it.</p>
-<p>It is also sometimes useful to obtain all the drawing operations and points that make up a path. At first, this facility might seem unnecessary: If your program has created the path, the program already knows the contents. However, you've seen that paths can also be created by <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/effects.md">path effects</a> and by converting <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/text-paths.md">text strings into paths</a>. You can also obtain all the drawing operations and points that make up these paths. One possibility is to apply an algorithmic transform to all the points, for example, to wrap text around a hemisphere:</p>
+<p>It is also sometimes useful to obtain all the drawing operations and points that make up a path. At first, this facility might seem unnecessary: If your program has created the path, the program already knows the contents. However, you've seen that paths can also be created by <a href="effects.html">path effects</a> and by converting <a href="text-paths.html">text strings into paths</a>. You can also obtain all the drawing operations and points that make up these paths. One possibility is to apply an algorithmic transform to all the points, for example, to wrap text around a hemisphere:</p>
 <p><img src="information-images/pathenumerationsample.png" alt="Text wrapped on a hemisphere"></p>
 <h2 id="getting-the-path-length">Getting the Path Length</h2>
-<p>In the article <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/text-paths.md"><strong>Paths and Text</strong></a> you saw how to use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawtextonpath#skiasharp-skcanvas-drawtextonpath(system-string-skiasharp-skpath-system-single-system-single-skiasharp-skpaint)"><code>DrawTextOnPath</code></a> method to draw a text string whose baseline follows the course of a path. But what if you want to size the text so that it fits the path precisely? Drawing text around a circle is easy because the circumference of a circle is simple to calculate. But the circumference of an ellipse or the length of a Bézier curve is not so simple.</p>
+<p>In the article <a href="text-paths.html"><strong>Paths and Text</strong></a> you saw how to use the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawtextonpath#skiasharp-skcanvas-drawtextonpath(system-string-skiasharp-skpath-system-single-system-single-skiasharp-skpaint)"><code>DrawTextOnPath</code></a> method to draw a text string whose baseline follows the course of a path. But what if you want to size the text so that it fits the path precisely? Drawing text around a circle is easy because the circumference of a circle is simple to calculate. But the circumference of an ellipse or the length of a Bézier curve is not so simple.</p>
 <p>The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathmeasure"><code>SKPathMeasure</code></a> class can help. The <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathmeasure.-ctor#skiasharp-skpathmeasure-ctor(skiasharp-skpath-system-boolean-system-single)">constructor</a> accepts an <code>SKPath</code> argument, and the <a class="xref" href="https://learn.microsoft.com/dotnet/api/skiasharp.skpathmeasure.length#skiasharp-skpathmeasure-length"><code>Length</code></a> property reveals its length.</p>
-<p>This class is demonstrated in the <strong>Path Length</strong> sample, which is based on the <strong>Bezier Curve</strong> page. The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml"><strong>PathLengthPage.xaml</strong></a> file derives from <code>InteractivePage</code> and includes a touch interface:</p>
-<pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://xamarin.com/schemas/2014/forms&quot;
+<p>This class is demonstrated in the <strong>Path Length</strong> sample, which is based on the <strong>Bezier Curve</strong> page. The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml"><strong>PathLengthPage.xaml</strong></a> file derives from <code>InteractivePage</code> and includes a touch interface:</p>
+<pre><code class="lang-xaml">&lt;local:InteractivePage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
                        xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
                        xmlns:local=&quot;clr-namespace:SkiaSharpFormsDemos&quot;
-                       xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms&quot;
-                       xmlns:tt=&quot;clr-namespace:TouchTracking&quot;
+                       xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
                        x:Class=&quot;SkiaSharpFormsDemos.Curves.PathLengthPage&quot;
                        Title=&quot;Path Length&quot;&gt;
     &lt;Grid BackgroundColor=&quot;White&quot;&gt;
         &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
-                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
-        &lt;Grid.Effects&gt;
-            &lt;tt:TouchEffect Capture=&quot;True&quot;
-                            TouchAction=&quot;OnTouchEffectAction&quot; /&gt;
-        &lt;/Grid.Effects&gt;
+                           PaintSurface=&quot;OnCanvasViewPaintSurface&quot;
+                           EnableTouchEvents=&quot;True&quot;
+                           Touch=&quot;OnTouch&quot; /&gt;
     &lt;/Grid&gt;
 &lt;/local:InteractivePage&gt;
 </code></pre>
-<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml.cs"><strong>PathLengthPage.xaml.cs</strong></a> code-behind file allows you to move four touch points to define the end points and control points of a cubic Bézier curve. Three fields define a text string, an <code>SKPaint</code> object, and a calculated width of the text:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml.cs"><strong>PathLengthPage.xaml.cs</strong></a> code-behind file allows you to move four touch points to define the end points and control points of a cubic Bézier curve. Three fields define a text string, an <code>SKPaint</code> object, and a calculated width of the text:</p>
 <pre><code class="lang-csharp">public partial class PathLengthPage : InteractivePage
 {
     const string text = &quot;Compute length of path&quot;;
@@ -122,16 +119,20 @@
     {
         Style = SKPaintStyle.Fill,
         Color = SKColors.Black,
-        TextSize = 10,
     };
 
-    static readonly float baseTextWidth = textPaint.MeasureText(text);
+    static SKFont textFont = new SKFont
+    {
+        Size = 10,
+    };
+
+    static readonly float baseTextWidth = textFont.MeasureText(text);
     ...
 }
 </code></pre>
-<p>The <code>baseTextWidth</code> field is the width of the text based on a <code>TextSize</code> setting of 10.</p>
+<p>The <code>baseTextWidth</code> field is the width of the text based on a <code>Size</code> setting of 10.</p>
 <p>The <code>PaintSurface</code> handler draws the Bézier curve and then sizes the text to fit along its full length:</p>
-<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+<pre><code class="lang-csharp">void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -153,15 +154,15 @@
         SKPathMeasure pathMeasure = new SKPathMeasure(path, false, 1);
 
         // Find new text size
-        textPaint.TextSize = pathMeasure.Length / baseTextWidth * 10;
+        textFont.Size = pathMeasure.Length / baseTextWidth * 10;
 
         // Draw text on path
-        canvas.DrawTextOnPath(text, path, 0, 0, textPaint);
+        canvas.DrawTextOnPath(text, path, 0, 0, textFont, textPaint);
     }
     ...
 }
 </code></pre>
-<p>The <code>Length</code> property of the newly created <code>SKPathMeasure</code> object obtains the length of the path. The path length is divided by the <code>baseTextWidth</code> value (which is the width of the text based on a text size of 10) and then multiplied by the base text size of 10. The result is a new text size for displaying the text along that path:</p>
+<p>The <code>Length</code> property of the newly created <code>SKPathMeasure</code> object obtains the length of the path. The path length is divided by the <code>baseTextWidth</code> value (which is the width of the text based on a font size of 10) and then multiplied by the base font size of 10. The result is a new font size for displaying the text along that path:</p>
 <p><a href="information-images/pathlength-large.png#lightbox" title="Triple screenshot of the Path Length page"><img src="information-images/pathlength-small.png" alt="Triple screenshot of the Path Length page"></a></p>
 <p>As the Bézier curve gets longer or shorter, you can see the text size change.</p>
 <h2 id="traversing-the-path">Traversing the Path</h2>
@@ -208,7 +209,7 @@ Boolean GetMatrix (Single distance, out SKMatrix matrix, SKPathMeasureMatrixFlag
 <pre><code class="lang-csharp">public class UnicycleHalfPipePage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -275,7 +276,7 @@ SKPathVerb pathVerb = rawIterator.Next(points);
 <p><img src="information-images/pathenumerationsample.png" alt="Text wrapped on a hemisphere"></p>
 <p>Most of these letters consist of straight lines, yet these straight lines have apparently been twisted into curves. How is this possible?</p>
 <p>The key is that the original straight lines are broken into a series of smaller straight lines. These individual smaller straight lines can then be manipulated in different ways to form a curve.</p>
-<p>To help with this process, the sample contains a static <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/PathExtensions.cs"><code>PathExtensions</code></a> class with an <code>Interpolate</code> method that breaks down a straight line into numerous short lines that are only one unit in length. In addition, the class contains several methods that convert the three types of Bézier curves into a series of tiny straight lines that approximate the curve. (The parametric formulas were presented in the article <a href="../../xamarin-forms/user-interface/graphics/skiasharp/curves/beziers.md"><strong>Three Types of Bézier Curves</strong></a>.) This process is called <em>flattening</em> the curve:</p>
+<p>To help with this process, the sample contains a static <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathExtensions.cs"><code>PathExtensions</code></a> class with an <code>Interpolate</code> method that breaks down a straight line into numerous short lines that are only one unit in length. In addition, the class contains several methods that convert the three types of Bézier curves into a series of tiny straight lines that approximate the curve. (The parametric formulas were presented in the article <a href="beziers.html"><strong>Three Types of Bézier Curves</strong></a>.) This process is called <em>flattening</em> the curve:</p>
 <pre><code class="lang-csharp">static class PathExtensions
 {
     ...
@@ -449,7 +450,7 @@ SKPathVerb pathVerb = rawIterator.Next(points);
 <p>Notice that the method retains the first point of each contour in the variable called <code>firstPoint</code> and the current position after each drawing command in the variable <code>lastPoint</code>. These variables are necessary to construct the final closing line when a <code>Close</code> verb is encountered.</p>
 <p>The <strong>GlobularText</strong> sample uses this extension method to seemingly wrap text around a hemisphere in a 3D effect:</p>
 <p><a href="information-images/globulartext-large.png#lightbox" title="Triple screenshot of the Globular Text page"><img src="information-images/globulartext-small.png" alt="Triple screenshot of the Globular Text page"></a></p>
-<p>The <a href="https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Curves/GlobularTextPage.cs"><code>GlobularTextPage</code></a> class constructor performs this transform. It creates an <code>SKPaint</code> object for the text, and then obtains an <code>SKPath</code> object from the <code>GetTextPath</code> method. This is the path passed to the <code>CloneWithTransform</code> extension method along with a transform function:</p>
+<p>The <a href="https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/GlobularTextPage.cs"><code>GlobularTextPage</code></a> class constructor performs this transform. It creates an <code>SKFont</code> object for the text, and then obtains an <code>SKPath</code> object from the <code>GetTextPath</code> method. This is the path passed to the <code>CloneWithTransform</code> extension method along with a transform function:</p>
 <pre><code class="lang-csharp">public class GlobularTextPage : ContentPage
 {
     SKPath globePath;
@@ -462,12 +463,12 @@ SKPathVerb pathVerb = rawIterator.Next(points);
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
 
-        using (SKPaint textPaint = new SKPaint())
+        using (SKFont textFont = new SKFont())
         {
-            textPaint.Typeface = SKTypeface.FromFamilyName(&quot;Times New Roman&quot;);
-            textPaint.TextSize = 100;
+            textFont.Typeface = SKTypeface.FromFamilyName(&quot;Times New Roman&quot;);
+            textFont.Size = 100;
 
-            using (SKPath textPath = textPaint.GetTextPath(&quot;HELLO&quot;, 0, 0))
+            using (SKPath textPath = textFont.GetTextPath(&quot;HELLO&quot;, new SKPoint(0, 0)))
             {
                 SKRect textPathBounds;
                 textPath.GetBounds(out textPathBounds);
@@ -499,7 +500,7 @@ SKPathVerb pathVerb = rawIterator.Next(points);
 {
     SKPath globePath;
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
