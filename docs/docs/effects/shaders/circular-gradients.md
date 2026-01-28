@@ -96,12 +96,12 @@ public partial class RadialGradientPage : ContentPage
         InitializeComponent ();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -150,7 +150,7 @@ public class RainbowArcGradientPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -225,7 +225,7 @@ public class RadialGradientMaskPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -294,7 +294,7 @@ public class RadialSpecularHighlightPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -369,7 +369,7 @@ public class SweepGradientPage : ContentPage
         canvasView.GestureRecognizers.Add(tap);
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -508,12 +508,12 @@ public partial class ConicalGradientPage : InteractivePage
         baseCanvasView = canvasView;
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -582,7 +582,7 @@ The drawing code in the **Conical Specular Highlight** page is the same as the *
 public class ConicalSpecularHighlightPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         using (SKPaint paint = new SKPaint())

@@ -44,7 +44,7 @@ The `Tapped` handler for the `TapGestureRecognizer` object simply toggles the va
 ```csharp
 bool showFill = true;
 ...
-void OnCanvasViewTapped(object sender, EventArgs args)
+void OnCanvasViewTapped(object? sender, EventArgs args)
 {
     showFill ^= true;
     (sender as SKCanvasView).InvalidateSurface();
@@ -54,7 +54,7 @@ void OnCanvasViewTapped(object sender, EventArgs args)
 The call to `InvalidateSurface` effectively generates a call to the `PaintSurface` handler, which uses the `showFill` field to fill or not fill the circle:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -192,13 +192,13 @@ public partial class ColorExplorePage : ContentPage
         valueSlider.Value = 100;
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         hslCanvasView.InvalidateSurface();
         hsvCanvasView.InvalidateSurface();
     }
 
-    void OnHslCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnHslCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKColor color = SKColor.FromHsl((float)hueSlider.Value,
                                         (float)saturationSlider.Value,
@@ -209,7 +209,7 @@ public partial class ColorExplorePage : ContentPage
                                       color.Red, color.Green, color.Blue);
     }
 
-    void OnHsvCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnHsvCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKColor color = SKColor.FromHsv((float)hueSlider.Value,
                                         (float)saturationSlider.Value,

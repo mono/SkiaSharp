@@ -86,7 +86,7 @@ public partial class HelloBitmapPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -233,7 +233,7 @@ public partial class MonkeyMoustachePage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -312,7 +312,7 @@ public class PixelizedImagePage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -434,7 +434,7 @@ public partial class BitmapRotatorPage : ContentPage
         InitializeComponent ();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -444,7 +444,7 @@ public partial class BitmapRotatorPage : ContentPage
         canvas.DrawBitmap(rotatedBitmap, info.Rect, BitmapStretch.Uniform);
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         double angle = args.NewValue;
         double radians = Math.PI * angle / 180;
@@ -532,7 +532,7 @@ public partial class BitmapFlipperPage : ContentPage
         InitializeComponent();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -542,7 +542,7 @@ public partial class BitmapFlipperPage : ContentPage
         canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
     }
 
-    void OnFlipVerticalClicked(object sender, ValueChangedEventArgs args)
+    void OnFlipVerticalClicked(object? sender, ValueChangedEventArgs args)
     {
         SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
 
@@ -557,7 +557,7 @@ public partial class BitmapFlipperPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnFlipHorizontalClicked(object sender, ValueChangedEventArgs args)
+    void OnFlipHorizontalClicked(object? sender, ValueChangedEventArgs args)
     {
         SKBitmap flippedBitmap = new SKBitmap(bitmap.Width, bitmap.Height);
 

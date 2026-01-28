@@ -256,7 +256,7 @@ namespace DocsSamplesApp.Bitmaps
         uint MakePixel(byte red, byte green, byte blue, byte alpha) =>
                 (uint)((alpha << 24) | (blue << 16) | (green << 8) | red);
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;

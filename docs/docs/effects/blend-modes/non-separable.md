@@ -118,12 +118,12 @@ public partial class NonSeparableBlendModesPage : ContentPage
         InitializeComponent();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs e)
     {
         // Calculate new color based on sliders
         color = SKColor.FromHsl((float)hueSlider.Value,
@@ -142,7 +142,7 @@ public partial class NonSeparableBlendModesPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -247,7 +247,7 @@ public class BlueBananaPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

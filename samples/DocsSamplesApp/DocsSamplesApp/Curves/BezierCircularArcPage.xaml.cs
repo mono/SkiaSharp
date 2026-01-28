@@ -46,12 +46,12 @@ namespace DocsSamplesApp.Curves
             angleSlider.Value = 90;
         }
 
-        void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+        void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
             canvasView.InvalidateSurface();
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;

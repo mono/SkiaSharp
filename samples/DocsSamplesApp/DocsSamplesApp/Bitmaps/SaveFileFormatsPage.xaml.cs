@@ -30,7 +30,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             if (bitmap is null)
                 return;
@@ -38,7 +38,7 @@ namespace DocsSamplesApp.Bitmaps
             args.Surface.Canvas.DrawBitmap(bitmap, args.Info.Rect, BitmapStretch.Uniform);
         }
 
-        void OnFormatPickerChanged(object sender, EventArgs args)
+        void OnFormatPickerChanged(object? sender, EventArgs args)
         {
             if (formatPicker.SelectedIndex != -1)
             {
@@ -48,7 +48,7 @@ namespace DocsSamplesApp.Bitmaps
             }
         }
 
-        async void OnButtonClicked(object sender, EventArgs args)
+        async void OnButtonClicked(object? sender, EventArgs args)
         {
             if (bitmap is null)
                 return;

@@ -81,12 +81,12 @@ public partial class ImageBlurExperimentPage : ContentPage
         InitializeComponent ();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -226,12 +226,12 @@ public partial class DropShadowExperimentPage : ContentPage
         InitializeComponent ();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -370,12 +370,12 @@ public partial class DistantLightExperimentPage : ContentPage
         InitializeComponent();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

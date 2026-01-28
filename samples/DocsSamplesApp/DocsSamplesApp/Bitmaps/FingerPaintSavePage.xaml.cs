@@ -30,7 +30,7 @@ namespace DocsSamplesApp.Bitmaps
             InitializeComponent ();
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;
@@ -61,7 +61,7 @@ namespace DocsSamplesApp.Bitmaps
             canvas.DrawBitmap(saveBitmap, 0, 0);
         }
 
-        void OnTouch(object sender, SKTouchEventArgs e)
+        void OnTouch(object? sender, SKTouchEventArgs e)
         {
             switch (e.ActionType)
             {
@@ -125,7 +125,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        void OnClearButtonClicked(object sender, EventArgs args)
+        void OnClearButtonClicked(object? sender, EventArgs args)
         {
             completedPaths.Clear();
             inProgressPaths.Clear();
@@ -133,7 +133,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        async void OnSaveButtonClicked(object sender, EventArgs args)
+        async void OnSaveButtonClicked(object? sender, EventArgs args)
         {
             using (SKImage image = SKImage.FromBitmap(saveBitmap))
             {

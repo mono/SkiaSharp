@@ -78,7 +78,7 @@ public partial class MyPage : ContentPage
         }
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKCanvas canvas = args.Surface.Canvas;
         canvas.Clear();
@@ -118,7 +118,7 @@ public partial class MyPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKCanvas canvas = args.Surface.Canvas;
         canvas.Clear();
@@ -220,7 +220,7 @@ public class PixelDimensionsPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -310,7 +310,7 @@ public class FillRectanglePage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -360,7 +360,7 @@ public class UniformScalingPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -680,12 +680,12 @@ public partial class ScalingModesPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    private void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    private void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -733,12 +733,12 @@ public partial class RectangleSubsetPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    private void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    private void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

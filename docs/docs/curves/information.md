@@ -68,7 +68,7 @@ The `baseTextWidth` field is the width of the text based on a `TextSize` setting
 The `PaintSurface` handler draws the Bézier curve and then sizes the text to fit along its full length:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -160,7 +160,7 @@ The class contains the standard overrides of the `OnAppearing` and `OnDisappeari
 public class UnicycleHalfPipePage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -485,7 +485,7 @@ public class GlobularTextPage : ContentPage
 {
     SKPath globePath;
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

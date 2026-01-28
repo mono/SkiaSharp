@@ -93,7 +93,7 @@ The `PaintSurface` handler begins by creating an `SKPaint` object to display the
 public class AnimatedDottedTextPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -172,7 +172,7 @@ public class DotDashMorphPage : ContentPage
         Color = SKColors.Blue
     };
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -344,7 +344,7 @@ public partial class OneDimensionalPathEffectPage : ContentPage
         InitializeComponent();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         if (canvasView != null)
         {
@@ -352,7 +352,7 @@ public partial class OneDimensionalPathEffectPage : ContentPage
         }
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -499,7 +499,7 @@ The main job  of the `PaintSurface` handler is to create a path for the catenary
 public class LinkedChainPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -621,7 +621,7 @@ The `PaintSurface` handler begins by defining a path for the conveyor belt itsel
 public class ConveyorBeltPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -745,7 +745,7 @@ The `PaintSurface` handler uses these three path effects with three different co
 public class HatchFillPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -816,7 +816,7 @@ public class PathTileFillPage : ContentPage
         "40 -12, 20 -12, 20 12, 40 12, 40 40, 22 40, 22 20, " +
         "-2 20, -2 40, -20 40, -20 8, -40 8, -40 -8, -20 -8 Z");
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -867,7 +867,7 @@ Although the single argument is named `radius`, you must set it to half the desi
 Here's the `PaintSurface` handler in the [`AnotherRoundedHeptagonPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/AnotherRoundedHeptagonPage.cs) class:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -998,7 +998,7 @@ The program is straightforward. The [**JitterExperimentPage.xaml**](https://gith
 The `PaintSurface` handler in the [**JitterExperimentPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterExperimentPage.xaml.cs) code-behind file is called whenever a `Slider` value changes. It calls `SKPathEffect.CreateDiscrete` using the two `Slider` values and uses that to stroke a rectangle:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -1029,7 +1029,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 You can use this effect for filling as well, in which case the outline of the filled area is subject to these random deviations. The **Jitter Text** page demonstrates using this path effect to display text. Most of the code in the `PaintSurface` handler of the [`JitterTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterTextPage.cs) class is devoted to sizing and centering the text:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -1113,7 +1113,7 @@ public partial class TapToOutlineThePathPage : ContentPage
         InitializeComponent();
     }
 
-    void OnCanvasViewTapped(object sender, EventArgs args)
+    void OnCanvasViewTapped(object? sender, EventArgs args)
     {
         outlineThePath ^= true;
         (sender as SKCanvasView).InvalidateSurface();
@@ -1128,7 +1128,7 @@ If the screen has not been tapped, the `PaintSurface` handler uses the `blueFill
 public partial class TapToOutlineThePathPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -1329,7 +1329,7 @@ All this work allows the `PaintSurface` handler to be quite simple. It only need
 public class CatsInFramePage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -1382,7 +1382,7 @@ The `PaintSurface` handler needs to contain only the standard overhead plus one 
 public class DashedHatchLinesPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

@@ -97,7 +97,7 @@ The classic example is a five-pointed star, as demonstrated in the **Five-Pointe
 The code-behind file uses both `Picker` values to draw a five-pointed star:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -176,7 +176,7 @@ The methods in `SKPath` that include an `SKPathDirection` parameter give it a de
 The **Overlapping Circles** page creates a path with four overlapping circles with an even-odd path fill type:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

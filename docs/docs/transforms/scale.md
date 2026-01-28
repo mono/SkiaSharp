@@ -58,7 +58,7 @@ The fourth `Scale` method will be described shortly.
 The **Basic Scale** page demonstrates the `Scale` method. The [**BasicScalePage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml) file contains two `Slider` elements that let you select horizontal and vertical scaling factors between 0 and 10. The [**BasicScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml.cs) code-behind file uses those values to call `Scale` before displaying a rounded rectangle stroked with a dashed line and sized to fit some text in the upper-left corner of the canvas:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -118,7 +118,7 @@ The `px` and `py` parameters define a point that is sometimes called the *scalin
 The [**Centered Scale**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/CenteredScalePage.xaml.cs) page shows how this works. The `PaintSurface` handler is similar to the **Basic Scale** program except that the `margin` value is calculated to center the text horizontally, which implies that the program works best in portrait mode:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -296,7 +296,7 @@ If you need to preserve the aspect ratio of the graphical objects, you'll want t
 The [`IsotropicScalingPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/IsotropicScalingPage.cs) performs these steps in reverse order before displaying the star:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

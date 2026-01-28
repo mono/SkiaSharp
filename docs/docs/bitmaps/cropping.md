@@ -335,7 +335,7 @@ class PhotoCropperCanvasView : SKCanvasView
         Touch += OnTouch;
     }
     ···
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         SKPoint bitmapLocation = inverseBitmapMatrix.MapPoint(e.Location);
 
@@ -471,7 +471,7 @@ public partial class PhotoCroppingPage : ContentPage
         canvasViewHost.Children.Add(photoCropper);
     }
 
-    void OnDoneButtonClicked(object sender, EventArgs args)
+    void OnDoneButtonClicked(object? sender, EventArgs args)
     {
         croppedBitmap = photoCropper.CroppedBitmap;
 
@@ -480,7 +480,7 @@ public partial class PhotoCroppingPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -540,7 +540,7 @@ public partial class PhotoPuzzlePage1 : ContentPage
         InitializeComponent ();
     }
 
-    async void OnPickButtonClicked(object sender, EventArgs args)
+    async void OnPickButtonClicked(object? sender, EventArgs args)
     {
         IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
         using (Stream stream = await photoLibrary.PickPhotoAsync())
@@ -574,7 +574,7 @@ public partial class PhotoPuzzlePage2 : ContentPage
         InitializeComponent ();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -584,7 +584,7 @@ public partial class PhotoPuzzlePage2 : ContentPage
         canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
     }
 
-    void OnRotateRightButtonClicked(object sender, EventArgs args)
+    void OnRotateRightButtonClicked(object? sender, EventArgs args)
     {
         SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
 
@@ -600,7 +600,7 @@ public partial class PhotoPuzzlePage2 : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnRotateLeftButtonClicked(object sender, EventArgs args)
+    void OnRotateLeftButtonClicked(object? sender, EventArgs args)
     {
         SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
 
@@ -616,7 +616,7 @@ public partial class PhotoPuzzlePage2 : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    async void OnDoneButtonClicked(object sender, EventArgs args)
+    async void OnDoneButtonClicked(object? sender, EventArgs args)
     {
         await Navigation.PushAsync(new PhotoPuzzlePage3(bitmap));
     }
@@ -676,7 +676,7 @@ public partial class PhotoPuzzlePage3 : ContentPage
         canvasViewHost.Children.Add(photoCropper);
     }
 
-    async void OnDoneButtonClicked(object sender, EventArgs args)
+    async void OnDoneButtonClicked(object? sender, EventArgs args)
     {
         SKBitmap croppedBitmap = photoCropper.CroppedBitmap;
         int width = croppedBitmap.Width / 4;

@@ -122,7 +122,7 @@ namespace DocsSamplesApp.Bitmaps
             bitmapScaleMatrix.TryInvert(out inverseBitmapMatrix);
         }
 
-        void OnTouch(object sender, SKTouchEventArgs e)
+        void OnTouch(object? sender, SKTouchEventArgs e)
         {
             // Location is already in pixels with built-in touch
             SKPoint pixelLocation = e.Location;

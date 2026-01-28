@@ -27,7 +27,7 @@ namespace DocsSamplesApp.Paths
             InitializeComponent();
         }
 
-        void OnTouch(object sender, SKTouchEventArgs e)
+        void OnTouch(object? sender, SKTouchEventArgs e)
         {
             switch (e.ActionType)
             {
@@ -71,7 +71,7 @@ namespace DocsSamplesApp.Paths
             e.Handled = true;
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKCanvas canvas = args.Surface.Canvas;
             canvas.Clear();

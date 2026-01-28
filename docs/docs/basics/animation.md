@@ -103,7 +103,7 @@ The `while` loop begins by obtaining a cycle time from the `Slider`. This is a t
 The `PaintSurface` method uses this `scale` value to calculate the two axes of the ellipse:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -209,7 +209,7 @@ The `PaintSurface` handler draws five concentric circles with animated radii. If
 public class ExpandingCirclesPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

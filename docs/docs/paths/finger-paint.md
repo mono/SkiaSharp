@@ -73,7 +73,7 @@ The `Touch` handler manages these two collections. When a finger first touches t
 public partial class FingerPaintPage : ContentPage
 {
     ...
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         switch (e.ActionType)
         {
@@ -127,7 +127,7 @@ The `PaintSurface` handler then simply renders both collections of paths. The ea
 public partial class FingerPaintPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKCanvas canvas = args.Surface.Canvas;
         canvas.Clear();

@@ -54,7 +54,7 @@ The `SKPaint` object allows you to specify the color of the text, the font famil
 The following `PaintSurface` handler creates an `SKPaint` object for a `TextSize` of 40 pixels, which is the desired vertical height of the text from the top of ascenders to the bottom of descenders. The `FontSpacing` value that the `SKPaint` object returns is a little larger than that, about 47 pixels.
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -112,7 +112,7 @@ public void DrawOval (Single cx, Single cy, Single rx, Single ry, SKPaint paint)
 Is it possible to draw an ellipse that fills the display surface? The **Ellipse Fill** page demonstrates how. The `PaintSurface` event handler in the [**EllipseFillPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/EllipseFillPage.xaml.cs) class subtracts half the stroke width from the `xRadius` and `yRadius` values to fit the whole ellipse and its outline within the display surface:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

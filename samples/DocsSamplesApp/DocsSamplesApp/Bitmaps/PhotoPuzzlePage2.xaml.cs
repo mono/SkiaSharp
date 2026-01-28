@@ -21,7 +21,7 @@ namespace DocsSamplesApp.Bitmaps
             InitializeComponent ();
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;
@@ -31,7 +31,7 @@ namespace DocsSamplesApp.Bitmaps
             canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
         }
 
-        void OnRotateRightButtonClicked(object sender, EventArgs args)
+        void OnRotateRightButtonClicked(object? sender, EventArgs args)
         {
             SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
 
@@ -47,7 +47,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        void OnRotateLeftButtonClicked(object sender, EventArgs args)
+        void OnRotateLeftButtonClicked(object? sender, EventArgs args)
         {
             SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);
 
@@ -63,7 +63,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        async void OnDoneButtonClicked(object sender, EventArgs args)
+        async void OnDoneButtonClicked(object? sender, EventArgs args)
         {
             await Navigation.PushAsync(new PhotoPuzzlePage3(bitmap));
         }

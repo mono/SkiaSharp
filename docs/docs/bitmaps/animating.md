@@ -193,7 +193,7 @@ public partial class MainPage : ContentPage
         storageLabel.Text = $"Total storage: {fileSize:N0} bytes";
     }
 
-    void OnDeleteButtonClicked(object sender, EventArgs args)
+    void OnDeleteButtonClicked(object? sender, EventArgs args)
     {
         foreach (string filepath in Directory.EnumerateFiles(FolderPath()))
         {
@@ -419,7 +419,7 @@ Finally, the `PaintSurface` handler of the `SKCanvasView` calculates a destinati
 public partial class MainPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -632,7 +632,7 @@ public partial class AnimatedGifPage : ContentPage
         return isAnimating;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

@@ -106,17 +106,17 @@ public partial class PerlinNoisePage : ContentPage
         InitializeComponent();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    void OnStepperValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -223,12 +223,12 @@ public partial class TiledPerlinNoisePage : ContentPage
         InitializeComponent();
     }
 
-    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    void OnStepperValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -321,17 +321,17 @@ public partial class ComposedPerlinNoisePage : ContentPage
         InitializeComponent();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnStepperValueChanged(object sender, ValueChangedEventArgs args)
+    void OnStepperValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

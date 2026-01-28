@@ -37,7 +37,7 @@ namespace DocsSamplesApp.Transforms
             canvasView.InvalidateSurface();
         }
 
-        void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+        void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
             if (canvasView != null)
             {
@@ -45,7 +45,7 @@ namespace DocsSamplesApp.Transforms
             }
         }
 
-        void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+        void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
         {
             if (canvasView != null)
             {
@@ -53,7 +53,7 @@ namespace DocsSamplesApp.Transforms
             }
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;

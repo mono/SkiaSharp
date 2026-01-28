@@ -64,7 +64,7 @@ public partial class BitmapDraggingPage : ContentPage
         canvasView.InvalidateSurface();
     }
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -94,7 +94,7 @@ public partial class BitmapDraggingPage : ContentPage
     long touchId = -1;
     SKPoint previousPoint;
     ···
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         if (bitmap is null)
             return;
@@ -162,7 +162,7 @@ public partial class BitmapScalingPage : ContentPage
     // Touch information
     Dictionary<long, SKPoint> touchDictionary = new Dictionary<long, SKPoint>();
     ···
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         SKPoint point = e.Location;
 
@@ -272,7 +272,7 @@ public partial class BitmapRotationPage : ContentPage
     // Touch information
     Dictionary<long, SKPoint> touchDictionary = new Dictionary<long, SKPoint>();
     ···
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         SKPoint point = e.Location;
 
@@ -493,7 +493,7 @@ The `SelectedIndexChanged` handler for the `Picker` also sets this `Mode` proper
 public partial class TouchManipulationPage : ContentPage
 {
     ...
-    void OnTouchModePickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnTouchModePickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         if (bitmap is not null)
         {
@@ -513,7 +513,7 @@ public partial class TouchManipulationPage : ContentPage
     ...
     List<long> touchIds = new List<long>();
     ...
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         if (bitmap is null)
             return;
@@ -881,7 +881,7 @@ public partial class TouchManipulationPage : ContentPage
     ...
     MatrixDisplay matrixDisplay = new MatrixDisplay();
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -964,7 +964,7 @@ public partial class BitmapScatterViewPage : ContentPage
     Dictionary<long, TouchManipulationBitmap> bitmapDictionary =
        new Dictionary<long, TouchManipulationBitmap>();
     ...
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         if (!bitmapsLoaded)
             return;
@@ -1032,7 +1032,7 @@ Finally, the `PaintSurface` handler calls the `Paint` method of each `TouchManip
 public partial class BitmapScatterViewPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKCanvas canvas = args.Surface.Canvas;
         canvas.Clear();
@@ -1101,7 +1101,7 @@ public partial class SingleFingerCornerScalePage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -1141,7 +1141,7 @@ public partial class SingleFingerCornerScalePage : ContentPage
     SKPoint pivotPoint;
     ···
 
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         if (bitmap is null)
             return;

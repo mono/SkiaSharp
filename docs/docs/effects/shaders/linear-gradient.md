@@ -45,7 +45,7 @@ public class CornerToCornerGradientPage : ContentPage
         ···
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -121,7 +121,7 @@ public class CornerToCornerGradientPage : ContentPage
         canvasView.GestureRecognizers.Add(tap);
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         using (SKPaint paint = new SKPaint())
@@ -223,12 +223,12 @@ public partial class InteractiveLinearGradientPage : InteractivePage
         baseCanvasView = canvasView;
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -263,7 +263,7 @@ The bulk of the `PaintSurface` handler is devoted to displaying several objects:
 public partial class InteractiveLinearGradientPage : InteractivePage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         // Display the touch points here rather than by TouchPoint
@@ -343,7 +343,7 @@ public class GradientTextPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -472,7 +472,7 @@ Here's one way to calculate the two gradient points. An `SKPoint` value named `v
 public class GradientAnimationPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -506,7 +506,7 @@ A somewhat different approach requires less code. This approach makes use of the
 public class GradientAnimationPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -562,7 +562,7 @@ public class RainbowGradientPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -618,7 +618,7 @@ To create a proper rainbow gradient, the gradient line must be perpendicular to 
 public class RainbowGradientPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         using (SKPath path = new SKPath())
@@ -775,7 +775,7 @@ public class InfinityColorsPage : ContentPage
 {
     const int STROKE_WIDTH = 50;
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -841,7 +841,7 @@ public class ReflectionGradientPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

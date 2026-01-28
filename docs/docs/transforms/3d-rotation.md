@@ -318,7 +318,7 @@ public partial class Rotation3DPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         if (canvasView != null)
         {
@@ -352,7 +352,7 @@ public partial class Rotation3DPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         if (canvasView != null)
         {
@@ -360,7 +360,7 @@ public partial class Rotation3DPage : ContentPage
         }
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -480,7 +480,7 @@ As in the previous program, the `PaintCanvas` handler creates `SKMatrix44` value
 public class AnimatedRotation3DPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

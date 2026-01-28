@@ -21,7 +21,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasViewHost.Children.Add(photoCropper);
         }
 
-        async void OnDoneButtonClicked(object sender, EventArgs args)
+        async void OnDoneButtonClicked(object? sender, EventArgs args)
         {
             SKBitmap croppedBitmap = photoCropper.CroppedBitmap;
             int width = croppedBitmap.Width / 4;

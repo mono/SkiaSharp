@@ -64,7 +64,7 @@ Of course, you don't need to create an ellipse using a polyline because `SKPath`
 The **Archimedean Spiral** page has code that similar to the ellipse code but with a crucial difference. It loops around the 360 degrees of the circle 10 times, continuously adjusting the radius:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

@@ -46,7 +46,7 @@ namespace DocsSamplesApp.Transforms
             canvasView.InvalidateSurface();
         }
 
-        void OnTouch(object sender, SKTouchEventArgs e)
+        void OnTouch(object? sender, SKTouchEventArgs e)
         {
             if (bitmap is null)
                 return;
@@ -114,7 +114,7 @@ namespace DocsSamplesApp.Transforms
             return result;
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;

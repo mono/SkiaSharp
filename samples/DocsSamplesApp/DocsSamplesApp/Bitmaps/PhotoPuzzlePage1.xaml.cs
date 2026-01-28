@@ -15,7 +15,7 @@ namespace DocsSamplesApp.Bitmaps
             InitializeComponent ();
         }
 
-        async void OnPickButtonClicked(object sender, EventArgs args)
+        async void OnPickButtonClicked(object? sender, EventArgs args)
         {
             IPhotoLibrary photoLibrary = DependencyService.Get<IPhotoLibrary>();
             using (Stream stream = await photoLibrary.PickPhotoAsync())

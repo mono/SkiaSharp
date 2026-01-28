@@ -29,7 +29,7 @@ namespace DocsSamplesApp.Transforms
             canvasView.InvalidateSurface();
         }
 
-        void OnTouchModePickerSelectedIndexChanged(object sender, EventArgs args)
+        void OnTouchModePickerSelectedIndexChanged(object? sender, EventArgs args)
         {
             if (bitmap is not null)
             {
@@ -38,7 +38,7 @@ namespace DocsSamplesApp.Transforms
             }
         }
 
-        void OnTouch(object sender, SKTouchEventArgs e)
+        void OnTouch(object? sender, SKTouchEventArgs e)
         {
             if (bitmap is null)
                 return;
@@ -77,7 +77,7 @@ namespace DocsSamplesApp.Transforms
             e.Handled = true;
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKCanvas canvas = args.Surface.Canvas;
             canvas.Clear();

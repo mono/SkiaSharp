@@ -33,7 +33,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+        void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
             if (srcBitmap is null || dstBitmap is null)
                 return;
@@ -113,7 +113,7 @@ namespace DocsSamplesApp.Bitmaps
             }
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;

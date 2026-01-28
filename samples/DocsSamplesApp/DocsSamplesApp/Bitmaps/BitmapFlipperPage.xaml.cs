@@ -30,7 +30,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;
@@ -44,7 +44,7 @@ namespace DocsSamplesApp.Bitmaps
             canvas.DrawBitmap(bitmap, info.Rect, BitmapStretch.Uniform);
         }
 
-        void OnFlipVerticalClicked(object sender, EventArgs args)
+        void OnFlipVerticalClicked(object? sender, EventArgs args)
         {
             if (bitmap is null)
                 return;
@@ -62,7 +62,7 @@ namespace DocsSamplesApp.Bitmaps
             canvasView.InvalidateSurface();
         }
 
-        void OnFlipHorizontalClicked(object sender, EventArgs args)
+        void OnFlipHorizontalClicked(object? sender, EventArgs args)
         {
             if (bitmap is null)
                 return;

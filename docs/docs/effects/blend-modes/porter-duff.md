@@ -320,7 +320,7 @@ public partial class BrickWallCompositingPage : ContentPage
         InitializeComponent ();
     }
 
-    void OnButtonClicked(object sender, EventArgs args)
+    void OnButtonClicked(object? sender, EventArgs args)
     {
         Button btn = (Button)sender;
         step = (step + 1) % 5;
@@ -337,7 +337,7 @@ public partial class BrickWallCompositingPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -359,7 +359,7 @@ Pressing the `Button` once causes `step` to increment to 1, and the `PaintSurfac
 public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         float x = (info.Width - monkeyBitmap.Width) / 2;
@@ -385,7 +385,7 @@ Press the `Button` again and `step` increments to 2. This is the crucial step of
 public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         // Draw matte to exclude monkey's surroundings
@@ -414,7 +414,7 @@ The next step is to draw a rectangle that resembles a sidewalk that the monkey i
 public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         const float sidewalkHeight = 80;
@@ -449,7 +449,7 @@ The final step is adding a brick wall. The program uses the brick-wall bitmap ti
 public partial class BrickWallCompositingPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         ···
         // Draw bitmap tiled brick wall behind monkey
@@ -578,12 +578,12 @@ public partial class PorterDuffTransparencyPage : ContentPage
         InitializeComponent();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -664,7 +664,7 @@ public class CompositingMaskPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -783,12 +783,12 @@ public partial class GradientTransitionsPage : ContentPage
         transitionPicker.SelectedIndex = 0;
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
@@ -806,7 +806,7 @@ The `colors` and `position` arrays are both used in the three methods of `SKShad
 public partial class GradientTransitionsPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

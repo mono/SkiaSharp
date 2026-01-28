@@ -190,7 +190,7 @@ The `PaintSurface` handler calculates an `SKMatrix` value named `perspectiveMatr
 public partial class TestPerspectivePage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -352,7 +352,7 @@ static class TaperTransform
 This class is used in the **Taper Transform** page. The XAML file instantiates two `Picker` elements to select the enumeration values, and a `Slider` for choosing the taper fraction. The [`PaintSurface`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TaperTransformPage.xaml.cs#L55) handler combines the taper transform with two translate transforms to make the transform relative to the upper-left corner of the bitmap:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

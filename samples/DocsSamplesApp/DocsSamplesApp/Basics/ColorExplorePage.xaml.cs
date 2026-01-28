@@ -21,13 +21,13 @@ namespace DocsSamplesApp.Basics
             valueSlider.Value = 100;
         }
 
-        void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+        void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
             hslCanvasView.InvalidateSurface();
             hsvCanvasView.InvalidateSurface();
         }
 
-        void OnHslCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnHslCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKColor color = SKColor.FromHsl((float)hueSlider.Value, 
                                             (float)saturationSlider.Value, 
@@ -38,7 +38,7 @@ namespace DocsSamplesApp.Basics
                                           color.Red, color.Green, color.Blue);
         }
 
-        void OnHsvCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnHsvCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKColor color = SKColor.FromHsv((float)hueSlider.Value, 
                                             (float)saturationSlider.Value,

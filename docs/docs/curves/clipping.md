@@ -53,7 +53,7 @@ Although the `keyholePath` object describes the outline of a keyhole, the coordi
 public class MonkeyThroughKeyholePage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -108,7 +108,7 @@ public Void ClipRect(SKRect rect, SKClipOperation operation = SKClipOperation.In
 By default, the resultant clipping area is an intersection of the existing clipping area and the `SKPath` or `SKRect` that is specified in the `ClipPath` or `ClipRect` method. This is demonstrated in the **Four Circles Intersect Clip** page. The `PaintSurface` handler in the  [`FourCircleInteresectClipPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/FourCircleIntersectClipPage.cs) class reuses the same `SKPath` object to create four overlapping circles, each of which reduces the clipping area through successive calls to `ClipPath`:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -173,7 +173,7 @@ The **Clip Operations** page illustrates the difference between these two operat
 The [`ClipOperationsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ClipOperationsPage.cs) class defines two `SKPaint` objects as fields, and then divides the screen up into two rectangular areas. These areas are different depending on whether the phone is in portrait or landscape mode. The `DisplayClipOp` class then displays the text and calls `ClipPath` with the two circle paths to illustrate each clip operation:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -274,7 +274,7 @@ Are these all the possibilities of combining these two circles? Consider the res
 It's harder to use regions for clipping because you need to first create a path, and then a region from that path, and then combine multiple regions. The overall structure of the **Region Operations** page is very similar to **Clip Operations** but the [`RegionOperationsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionOperationsPage.cs) class divides the screen up into six areas and shows the extra work required to use regions for this job:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -358,7 +358,7 @@ However, when an area is reduced to a series of scan lines, these scan lines are
 However, you can apply transforms to regions for painting purposes. The **Region Paint** program vividly demonstrates the inner nature of regions. The [`RegionPaintPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/RegionPaintPage.cs) class creates an `SKRegion` object based on an `SKPath` of a 10-unit radius circle. A transform then expands that circle to fill the page:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -415,7 +415,7 @@ The region is clearly a series of discrete coordinates.
 If you don't need to use transforms in connection with your clipping areas, you can use regions for clipping, as the **Four-Leaf Clover** page demonstrates. The [`FourLeafCloverPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/FourLeafCloverPage.cs) class constructs a composite region from four circular regions, sets that composite region as the clipping area, and then draws a series of 360 straight lines emanating from the center of the page:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

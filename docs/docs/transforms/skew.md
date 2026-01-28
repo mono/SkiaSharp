@@ -37,7 +37,7 @@ However, it's unlikely that you'll be using either of these two methods in isola
 The **Skew Experiment** page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two `Slider` elements. Here is the `PaintSurface` handler in the [`SkewExperimentPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewExperimentPage.xaml.cs) class:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -107,7 +107,7 @@ The ratio of the 150-pixel shift to the 100-pixel vertical is the tangent of tha
 The XAML file of the **Skew Angle Experiment** page is similar to the **Skew Angle** page except that the `Slider` elements range from –90 degrees to 90 degrees. The [`SkewAngleExperiment`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewAngleExperimentPage.xaml.cs) code-behind file centers the text on the page and uses `Translate` to set a center of skewing to the center of the page. A short `SkewDegrees` method at the bottom of the code converts angles to skew values:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -152,7 +152,7 @@ As an angle approaches positive or negative 90 degrees, the tangent approaches i
 A small negative horizontal skew can mimic oblique or italic text, as the **Oblique Text** page demonstrates. The [`ObliqueTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ObliqueTextPage.cs) class shows how it's done:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

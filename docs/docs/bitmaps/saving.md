@@ -373,12 +373,12 @@ public partial class SaveFileFormatsPage : ContentPage
         InitializeComponent ();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         args.Surface.Canvas.DrawBitmap(bitmap, args.Info.Rect, BitmapStretch.Uniform);
     }
 
-    void OnFormatPickerChanged(object sender, EventArgs args)
+    void OnFormatPickerChanged(object? sender, EventArgs args)
     {
         if (formatPicker.SelectedIndex != -1)
         {
@@ -388,7 +388,7 @@ public partial class SaveFileFormatsPage : ContentPage
         }
     }
 
-    async void OnButtonClicked(object sender, EventArgs args)
+    async void OnButtonClicked(object? sender, EventArgs args)
     {
         SKEncodedImageFormat imageFormat = (SKEncodedImageFormat)formatPicker.SelectedItem;
         int quality = (int)qualitySlider.Value;
@@ -517,7 +517,7 @@ public partial class FingerPaintSavePage : ContentPage
         InitializeComponent ();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -570,7 +570,7 @@ public partial class FingerPaintSavePage : ContentPage
         StrokeJoin = SKStrokeJoin.Round
     };
     ···
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         switch (e.ActionType)
         {
@@ -645,7 +645,7 @@ Here are the handlers for the two buttons. The **Clear** button clears both path
 public partial class FingerPaintSavePage : ContentPage
 {
     ···
-    void OnClearButtonClicked(object sender, EventArgs args)
+    void OnClearButtonClicked(object? sender, EventArgs args)
     {
         completedPaths.Clear();
         inProgressPaths.Clear();
@@ -653,7 +653,7 @@ public partial class FingerPaintSavePage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    async void OnSaveButtonClicked(object sender, EventArgs args)
+    async void OnSaveButtonClicked(object? sender, EventArgs args)
     {
         using (SKImage image = SKImage.FromBitmap(saveBitmap))
         {

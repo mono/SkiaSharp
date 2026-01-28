@@ -56,7 +56,7 @@ namespace DocsSamplesApp.Bitmaps
             }
         }
 
-        void OnContentViewSizeChanged(object sender, EventArgs args)
+        void OnContentViewSizeChanged(object? sender, EventArgs args)
         {
             ContentView contentView = (ContentView)sender;
             double width = contentView.Width;
@@ -151,7 +151,7 @@ namespace DocsSamplesApp.Bitmaps
             emptyCol = col;
         }
 
-        async void OnRandomizeButtonClicked(object sender, EventArgs args)
+        async void OnRandomizeButtonClicked(object? sender, EventArgs args)
         {
             Button button = (Button)sender;
             button.IsEnabled = false;

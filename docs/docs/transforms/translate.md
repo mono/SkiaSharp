@@ -33,7 +33,7 @@ public void Translate (SKPoint point)
 The **Accumulated Translate** page of the sample program demonstrates that multiple calls of the `Translate` method are cumulative. The [`AccumulatedTranslatePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AccumulatedTranslatePage.cs) class displays 20 versions of the same rectangle, each one offset from the previous rectangle just enough so they stretch along the diagonal. Here's the `PaintSurface` event handler:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -174,7 +174,7 @@ public class HendecagramArrayPage : ContentPage
 {
     Random random = new Random();
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -265,7 +265,7 @@ The `angle` field is animated from 0 degrees to 360 degrees every 5 seconds. The
 public class HendecagramAnimationPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

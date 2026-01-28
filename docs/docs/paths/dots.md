@@ -95,7 +95,7 @@ Dotted and dashed lines are demonstrated on the **Dots and Dashes** page. The [*
 The [`DotsAndDashesPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/DotsAndDashesPage.xaml.cs) code-behind file contains the `PaintSurface` event handler and a couple of helper routines for accessing the `Picker` views:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

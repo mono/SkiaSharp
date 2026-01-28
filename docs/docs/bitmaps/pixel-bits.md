@@ -430,7 +430,7 @@ The constructor concludes by creating an `SKCanvasView` to display the resultant
 public class GradientBitmapPage : ContentPage
 {
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -561,7 +561,7 @@ public class RainbowSinePage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -632,7 +632,7 @@ public partial class ColorAdjustmentPage : ContentPage
         OnSliderValueChanged(null, null);
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         float hueAdjust = (float)hueSlider.Value;
         hueLabel.Text = $"Hue Adjustment: {hueAdjust:F0}";
@@ -647,7 +647,7 @@ public partial class ColorAdjustmentPage : ContentPage
         canvasView.InvalidateSurface();
     }
     ···
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -765,7 +765,7 @@ public class PosterizePage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

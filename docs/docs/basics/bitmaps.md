@@ -171,7 +171,7 @@ Although an `SKPaint` parameter is defined, it has a default value of `null` and
 A program can obtain the pixel dimensions of a bitmap with the [`Width`](xref:SkiaSharp.SKBitmap.Width) and [`Height`](xref:SkiaSharp.SKBitmap.Height) properties. These properties allow the program to calculate coordinates to position the bitmap in the center of the upper-third of the canvas. The handler performs a simple null check before drawing:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -202,7 +202,7 @@ A third version of [`DrawBitmap`](xref:SkiaSharp.SKCanvas.DrawBitmap(SkiaSharp.S
 Here's the code to display the bitmap loaded from a raw asset, using the same null check:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     if (resourceBitmap is not null)
@@ -221,7 +221,7 @@ The bitmap is stretched to the dimensions of the rectangle, which is why the mon
 The third image &mdash; which you can only see if you run the program and load a photo from your own picture library &mdash; is also displayed within a rectangle, but the rectangle's position and size are adjusted to maintain the bitmap's aspect ratio. This calculation is a little more involved because it requires calculating a scaling factor based on the size of the bitmap and the destination rectangle, and centering the rectangle in that area:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     if (libraryBitmap is not null)

@@ -58,7 +58,7 @@ public partial class LightenAndDarkenPage : ContentPage
         InitializeComponent ();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
     {
         if ((Slider)sender == lightenSlider)
         {
@@ -70,7 +70,7 @@ public partial class LightenAndDarkenPage : ContentPage
         }
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -259,12 +259,12 @@ public partial class SeparableBlendModesPage : ContentPage
         InitializeComponent();
     }
 
-    void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+    void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
     {
         canvasView.InvalidateSurface();
     }
 
-    void OnSliderValueChanged(object sender, ValueChangedEventArgs e)
+    void OnSliderValueChanged(object? sender, ValueChangedEventArgs e)
     {
         if (sender == graySlider)
         {
@@ -279,7 +279,7 @@ public partial class SeparableBlendModesPage : ContentPage
         canvasView.InvalidateSurface();
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -353,7 +353,7 @@ public class PrimaryColorsPage : ContentPage
         Content = canvasView;
     }
 
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

@@ -43,7 +43,7 @@ The `SKCanvasView` occupies the entire content area of the page. You can alterna
 The `PaintSurface` event handler is where you do all your drawing. This method can be called multiple times while your program is running, so it should maintain all the information necessary to recreate the graphics display:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
 }
@@ -62,7 +62,7 @@ The most important property of `SKSurface` is [`Canvas`](xref:SkiaSharp.SKSurfac
 Here's a typical start of a `PaintSurface` event handler:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -79,7 +79,7 @@ The [`Clear`](xref:SkiaSharp.SKCanvas.Clear) method clears the canvas with a tra
 The goal here is to draw a red circle filled with blue. Because this particular graphic image contains two different colors, the job needs to be done in two steps. The first step is to draw the outline of the circle. To specify the color and other characteristic of the line, you create and initialize an [`SKPaint`](xref:SkiaSharp.SKPaint) object:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     SKPaint paint = new SKPaint
@@ -107,7 +107,7 @@ The [`StrokeWidth`](xref:SkiaSharp.SKPaint.StrokeWidth) property indicates the t
 You use that `SKPaint` object to draw the circle:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);
@@ -122,7 +122,7 @@ The first two arguments of `DrawCircle` indicate the X and Y coordinates of the 
 To fill the interior of the circle, you can alter two properties of the `SKPaint` object and call `DrawCircle` again. This code also shows an alternative way to get an `SKColor` value from one of the many fields of the [`SKColors`](xref:SkiaSharp.SKColors) structure:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     paint.Style = SKPaintStyle.Fill;

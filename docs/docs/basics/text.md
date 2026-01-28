@@ -23,7 +23,7 @@ The **Framed Text** page centers a short text string on the page and surrounds i
 In SkiaSharp, you use the `SKPaint` class to set text and font attributes, but you can also use it to obtain the rendered size of text. The beginning of the following `PaintSurface` event handler calls two different `MeasureText` methods. The first [`MeasureText`](xref:SkiaSharp.SKPaint.MeasureText(System.String)) call has a simple `string` argument and returns the pixel width of the text based on the current font attributes. The program then calculates a new `TextSize` property of the `SKPaint` object based on that rendered width, the current `TextSize` property, and the width of the display area. This calculation is intended to set `TextSize` so that the text string to be rendered at 90% of the width of the screen:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -64,7 +64,7 @@ Keep in mind that the X and Y coordinates you pass to the `DrawText` method spec
 The `SKRect` structure defines several handy properties and methods, some of which are used in the remainder of the `PaintSurface` handler. The `MidX` and `MidY` values indicate the coordinates of the center of the rectangle. (In the iPhone 7 example, those values are 338.4107 and &ndash;24.) The following code uses these values for the easiest calculation of coordinates to center text on the display:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     // Calculate offsets to center the text on the screen
@@ -87,7 +87,7 @@ float yText = info.Rect.MidY - textBounds.MidY;
 The `PaintSurface` handler concludes with two calls to `DrawRoundRect`, both of which require arguments of `SKRect`. This `SKRect` value is based on the `SKRect` value obtained from the `MeasureText` method, but it can't be the same. First, it needs to be a little larger so that the rounded rectangle doesn't draw over edges of the text. Secondly, it needs to be shifted in space so that the `Left` and `Top` values correspond to the upper-left corner where the rectangle is to be positioned. These two jobs are accomplished by the [`Offset`](xref:SkiaSharp.SKRect.Offset*) and [`Inflate`](xref:SkiaSharp.SKRect.Inflate*) methods defined by `SKRect`:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
     // Create a new SKRect object for the frame around the text
@@ -128,7 +128,7 @@ Text can be treated much like any other graphical object. One simple option is t
 This is accomplished simply by changing the normal `Style` property of the `SKPaint` object from its default setting of `SKPaintStyle.Fill` to `SKPaintStyle.Stroke`, and by specifying a stroke width. The `PaintSurface` handler of the **Outlined Text** page shows how it's done:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

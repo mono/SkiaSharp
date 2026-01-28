@@ -75,7 +75,7 @@ The `TextSize` and `Style` property settings are not necessary because this `SKP
 public class ClippingTextPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -173,7 +173,7 @@ You might think that the `SKPathEffect` object created at the end of the constru
 public class TextPathEffectPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -212,7 +212,7 @@ The **Character Outline Outlines** page demonstrates the technique. All the rele
 The constructor begins by creating an `SKPaint` object named `textPaint` with a `TextSize` property based on the size of the page. This is converted to a path using the `GetTextPath` method. The coordinate arguments to `GetTextPath` effectively center the path on the screen:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -288,7 +288,7 @@ public class CircularTextPage : ContentPage
 {
     const string text = "xt in a circle that shapes the te";
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

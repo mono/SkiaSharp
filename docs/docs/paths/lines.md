@@ -33,7 +33,7 @@ The appearance of the starts and ends of lines is called a *line cap* or, in Ski
 These are best illustrated with a sample program. The **SkiaSharp Lines and Paths** section of the sample program begins with a page titled **Stroke Caps** based on the [`StrokeCapsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/StrokeCapsPage.cs) class. This page defines a `PaintSurface` event handler that loops through the three members of the `SKStrokeCap` enumeration, displaying both the name of the enumeration member and drawing a line using that stroke cap:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -168,7 +168,7 @@ The **Multiple Lines** page demonstrates this method. The [**MultipleLinesPage.x
 Notice that the SkiaSharp namespace declarations are a little different because the `SkiaSharp` namespace is needed to reference the members of the `SKPointMode` and `SKStrokeCap` enumerations. The `SelectedIndexChanged` handler for both `Picker` views simply invalidates the `SKCanvasView` object:
 
 ```csharp
-void OnPickerSelectedIndexChanged(object sender, EventArgs args)
+void OnPickerSelectedIndexChanged(object? sender, EventArgs args)
 {
     if (canvasView != null)
     {
@@ -182,7 +182,7 @@ This handler needs to check for the existence of the `SKCanvasView` object becau
 The `PaintSurface` handler obtains the two enumeration values from the `Picker` views:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

@@ -36,7 +36,7 @@ namespace DocsSamplesApp
             PathEffect = SKPathEffect.CreateDash(new float[] { 7, 7 }, 0)
         };
 
-        protected void OnTouch(object sender, SKTouchEventArgs e)
+        protected void OnTouch(object? sender, SKTouchEventArgs e)
         {
             bool touchPointMoved = false;
 

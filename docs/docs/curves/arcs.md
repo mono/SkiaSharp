@@ -71,7 +71,7 @@ This version of `ArcTo` draws a line from the current position to the beginning 
 The **Angle Arc** page lets you use two sliders to specify the start and sweep angles. The XAML file instantiates two `Slider` elements and an `SKCanvasView`. The `PaintCanvas` handler in the [**AngleArcPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/AngleArcPage.xaml.cs) file draws both the oval and the arc using two `SKPaint` objects defined as fields:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -137,7 +137,7 @@ ChartData[] chartData =
 The `PaintSurface` handler first loops through the items to calculate a `totalValues` number. From that, it can determine each item's size as the fraction of the total, and convert that to an angle:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -284,7 +284,7 @@ public class InteractivePage : ContentPage
         PathEffect = SKPathEffect.CreateDash(new float[] { 7, 7 }, 0)
     };
 
-    protected void OnTouch(object sender, SKTouchEventArgs e)
+    protected void OnTouch(object? sender, SKTouchEventArgs e)
     {
         bool touchPointMoved = false;
 
@@ -345,7 +345,7 @@ The `PaintSurface` handler uses the `ArcTo` method to draw the arc based on the 
 public partial class TangentArcPage : InteractivePage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -414,7 +414,7 @@ The tangent arc is ideal for creating rounded corners, such as a rounded rectang
 The `PaintSurface` handler of the [`RoundedHeptagonPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/RoundedHeptagonPage.cs) class contains one `for` loop to calculate the coordinates of the seven vertices of the heptagon, and a second to calculate the midpoints of the seven sides from these vertices. These midpoints are then used to construct the path:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -538,7 +538,7 @@ Although this approach to defining an arc sounds complex on first encounter, it 
 The **Elliptical Arc** page allows you to interactively set the two points, and the size and rotation of the ellipse. The `EllipticalArcPage` class derives from `InteractivePage`, and the `PaintSurface` handler in the [**EllipticalArcPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/EllipticalArcPage.xaml.cs) code-behind file draws the four arcs:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -608,7 +608,7 @@ The four tangent points are all that's necessary to draw an infinity sign center
 The `PaintSurface` handler in the [`ArcInfinityPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ArcInfinityPage.cs) class positions the infinity sign so that the (0, 0) point is positioned in the center of the page, and scales the path to the screen size:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

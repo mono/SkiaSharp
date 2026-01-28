@@ -42,7 +42,7 @@ namespace DocsSamplesApp.iOS
             return taskCompletionSource.Task;
         }
 
-        void OnImagePickerFinishedPickingMedia(object sender, UIImagePickerMediaPickedEventArgs args)
+        void OnImagePickerFinishedPickingMedia(object? sender, UIImagePickerMediaPickedEventArgs args)
         {
             UIImage image = args.EditedImage ?? args.OriginalImage;
 
@@ -62,7 +62,7 @@ namespace DocsSamplesApp.iOS
             imagePicker.DismissModalViewController(true);
         }
 
-        void OnImagePickerCancelled(object sender, EventArgs args)
+        void OnImagePickerCancelled(object? sender, EventArgs args)
         {
             taskCompletionSource.SetResult(null);
             imagePicker.DismissModalViewController(true);

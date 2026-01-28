@@ -37,13 +37,13 @@ namespace DocsSamplesApp.Curves
             InitializeComponent();
         }
 
-        void OnCanvasViewTapped(object sender, EventArgs args)
+        void OnCanvasViewTapped(object? sender, EventArgs args)
         {
             outlineThePath ^= true;
             (sender as SKCanvasView).InvalidateSurface();
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;

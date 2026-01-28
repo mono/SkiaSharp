@@ -374,7 +374,7 @@ The `PaintSurface` handler can simply render this path:
 public class PathTransformPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;
@@ -490,7 +490,7 @@ The `Touch` handler calls the `ProcessTouchEvent` method of each `TouchPoint`. T
 public partial class ShowAffineMatrixPage : ContentPage
 {
     ...
-    void OnTouch(object sender, SKTouchEventArgs e)
+    void OnTouch(object? sender, SKTouchEventArgs e)
     {
         bool touchPointMoved = false;
 
@@ -552,7 +552,7 @@ Finally, the `PaintSurface` method renders the bitmap based on that matrix, disp
 public partial class ShowAffineMatrixPage : ContentPage
 {
     ...
-    void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+    void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     {
         SKImageInfo info = args.Info;
         SKSurface surface = args.Surface;

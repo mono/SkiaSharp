@@ -48,7 +48,7 @@ A contour ends with another call to `MoveTo` or `RMoveTo`, which begins a new co
 The difference between open and closed contours is illustrated in the **Two Triangle Contours** page, which uses an `SKPath` object with two contours to render two triangles. The first contour is open and the second is closed. Here's the [`TwoTriangleContoursPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/TwoTriangleContoursPage.cs) class:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -120,7 +120,7 @@ Just as the appearance of the start and end of a line is defined by a stroke cap
 The **Stroke Joins** page shows these three stroke joins with code similar to the **Stroke Caps** page. This is the `PaintSurface` event handler in the [`StrokeJoinsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/StrokeJoinsPage.cs) class:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;

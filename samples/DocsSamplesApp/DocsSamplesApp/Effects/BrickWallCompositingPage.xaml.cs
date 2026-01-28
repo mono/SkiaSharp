@@ -39,7 +39,7 @@ namespace DocsSamplesApp.Effects
             canvasView.InvalidateSurface();
         }
 
-        void OnButtonClicked(object sender, EventArgs args)
+        void OnButtonClicked(object? sender, EventArgs args)
         {
             Button btn = (Button)sender;
             step = (step + 1) % 5;
@@ -56,7 +56,7 @@ namespace DocsSamplesApp.Effects
             canvasView.InvalidateSurface();
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;

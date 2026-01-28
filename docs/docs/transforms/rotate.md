@@ -141,7 +141,7 @@ Here's the `PaintSurface` handler of the [`RotatedTextPage`](https://github.com/
 ```csharp
 static readonly string text = "    ROTATE";
 ...
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -214,7 +214,7 @@ Here's the `PaintSurface` handler that contains these transform calls in reverse
 ```csharp
 float revolveDegrees, rotateDegrees;
 ...
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -281,7 +281,7 @@ The **Ugly Analog Clock** program (so called because a more attractive analog cl
 The `Translate` and `Scale` calls apply globally to the clock, so those are the first ones to be called following the initialization of the `SKPaint` objects:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     SKImageInfo info = args.Info;
     SKSurface surface = args.Surface;
@@ -310,7 +310,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 There are 60 marks of two different sizes that must be drawn in a circle around the clock. The `DrawCircle` call draws that circle at the point (0, –90), which relative to the center of the clock corresponds to 12:00. The `RotateDegrees` call increments the rotation angle by 6 degrees after every tick mark. The `angle` variable is used solely to determine if a large circle or a small circle is drawn:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
         // Hour and minute marks
@@ -327,7 +327,7 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 Finally, the `PaintSurface` handler obtains the current time and calculates rotation degrees for the hour, minute, and second hands. Each hand is drawn in the 12:00 position so that the rotation angle is relative to that:
 
 ```csharp
-void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 {
     ...
         DateTime dateTime = DateTime.Now;

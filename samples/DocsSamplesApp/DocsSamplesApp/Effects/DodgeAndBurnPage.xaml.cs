@@ -28,7 +28,7 @@ namespace DocsSamplesApp.Effects
             burnCanvasView.InvalidateSurface();
         }
 
-        void OnSliderValueChanged(object sender, ValueChangedEventArgs args)
+        void OnSliderValueChanged(object? sender, ValueChangedEventArgs args)
         {
             if ((Slider)sender == dodgeSlider)
             {
@@ -40,7 +40,7 @@ namespace DocsSamplesApp.Effects
             }
         }
 
-        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
+        void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
         {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;
