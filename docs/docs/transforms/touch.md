@@ -16,7 +16,7 @@ In multi-touch environments such as those on mobile devices, users often use the
 
 ![A bitmap subjected to translation, scaling, and rotation](touch-images/touchmanipulationsexample.png)
 
-All the samples shown here use the .NET MAUI touch-tracking effect presented in the article [**Invoking Events from Effects**](~/xamarin-forms/app-fundamentals/effects/touch-tracking.md).
+All the samples shown here use the .NET MAUI touch-tracking effect presented in the article touch-tracking implementations.
 
 ## Dragging and Translation
 
@@ -1263,4 +1263,4 @@ This code effectively divides the area of the bitmap into an interior diamond sh
 ## Related Links
 
 - [SkiaSharp APIs](/dotnet/api/skiasharp)
-- [Invoking Events from Effects](~/xamarin-forms/app-fundamentals/effects/touch-tracking.md)
+- touch-tracking implementations

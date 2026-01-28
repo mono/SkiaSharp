@@ -40,7 +40,7 @@ As the article **[Bitmap Basics in SkiaSharp](../basics/bitmaps.md)** stated, th
 HttpClient httpClient = new HttpClient();
 ```
 
-When using `HttpClient` with iOS and Android applications, you'll want to set project properties as described in the documents on **[Transport Layer Security (TLS) 1.2](~/cross-platform/app-fundamentals/transport-layer-security.md)**.
+When using `HttpClient` with iOS and Android applications, you'll want to set project properties as described in the documents on **Transport Layer Security (TLS) 1.2**.
 
 Code that uses `HttpClient` often involves the `await` operator, so it must reside in an `async` method:
 

@@ -50,10 +50,10 @@ void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 
 ```
 
-The [`SKPaintSurfaceEventArgs`](xref:SkiaSharp.Views.Maui.Controls.SKPaintSurfaceEventArgs) object that accompanies the event has two properties:
+The [`SKPaintSurfaceEventArgs`](xref:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs) object that accompanies the event has two properties:
 
-- [`Info`](xref:SkiaSharp.Views.Maui.Controls.SKPaintSurfaceEventArgs.Info) of type [`SKImageInfo`](xref:SkiaSharp.SKImageInfo)
-- [`Surface`](xref:SkiaSharp.Views.Maui.Controls.SKPaintSurfaceEventArgs.Surface) of type [`SKSurface`](xref:SkiaSharp.SKSurface)
+- [`Info`](xref:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs.Info) of type [`SKImageInfo`](xref:SkiaSharp.SKImageInfo)
+- [`Surface`](xref:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs.Surface) of type [`SKSurface`](xref:SkiaSharp.SKSurface)
 
 The `SKImageInfo` structure contains information about the drawing surface, most importantly, its width and height in pixels. The `SKSurface` object represents the drawing surface itself. In this program, the drawing surface is a video display, but in other programs an `SKSurface` object can also represent a bitmap that you use SkiaSharp to draw on.
 
@@ -100,7 +100,7 @@ The [`Style`](xref:SkiaSharp.SKPaint.Style) property indicates that you want to 
 
 The default is `Fill`. Use the third option to stroke the line and fill the interior with the same color.
 
-Set the [`Color`](xref:SkiaSharp.SKPaint.Color) property to a value of type [`SKColor`](xref:SkiaSharp.SKColor). One way to get an `SKColor` value is by converting a .NET MAUI `Color` value to an `SKColor` value using the extension method [`ToSKColor`](xref:SkiaSharp.Views.Maui.Controls.Extensions.ToSKColor*). The [`Extensions`](xref:SkiaSharp.Views.Maui.Controls.Extensions) class in the `SkiaSharp.Views.Maui.Controls` namespace includes other methods that convert between .NET MAUI values and SkiaSharp values.
+Set the [`Color`](xref:SkiaSharp.SKPaint.Color) property to a value of type [`SKColor`](xref:SkiaSharp.SKColor). One way to get an `SKColor` value is by converting a .NET MAUI `Color` value to an `SKColor` value using the extension method [`ToSKColor`](xref:SkiaSharp.Views.Maui.Extensions.ToSKColor*). The [`Extensions`](xref:SkiaSharp.Views.Maui.Extensions) class in the `SkiaSharp.Views.Maui.Controls` namespace includes other methods that convert between .NET MAUI values and SkiaSharp values.
 
 The [`StrokeWidth`](xref:SkiaSharp.SKPaint.StrokeWidth) property indicates the thickness of the line. Here it's set to 25 pixels.
 
@@ -148,7 +148,7 @@ An `SKPaint` object is little more than a collection of graphics drawing propert
 
 Although the width of the circle's outline is specified as 25 pixels &mdash; or one-quarter of the radius of the circle &mdash; it appears to be thinner, and there's a good reason for that: Half the width of the line is obscured by the blue circle. The arguments to the `DrawCircle` method define the abstract geometric coordinates of a circle. The blue interior is sized to that dimension to the nearest pixel, but the 25-pixel-wide outline straddles the geometric circle &mdash; half on the inside and half on the outside.
 
-The next sample in the [Integrating with .NET MAUI](~/dotnet-maui/user-interface/graphics/skiasharp/basics/integration.md) article demonstrates this visually.
+The next sample in the [Integrating with .NET MAUI](integration.md) article demonstrates this visually.
 
 ## Related Links
 
