@@ -69,6 +69,29 @@ Follow [Microsoft Learn style guidelines](https://learn.microsoft.com/contribute
 - Make content easy to scan
 - Show empathy
 
+### Content Scope and Depth
+
+- **Target length**: 500-1500 words for concept articles, 1000-2500 for tutorials
+- **Code examples**: 2-4 complete examples per article, progressive complexity
+- **One concept per article**: If explaining multiple transforms, split into separate files
+- **Focus on SkiaSharp**: Do not re-explain standard .NET MAUI concepts (like `ContentPage`); link to MAUI docs instead
+- **Technical accuracy over simplicity**: For math-heavy topics (matrices, Beziers), use precise language; don't oversimplify
+
+### Version Targeting
+
+| Component | Target Version |
+|-----------|----------------|
+| SkiaSharp | 2.88.x or later |
+| .NET MAUI | .NET 8+ |
+| .NET | .NET 8+ |
+
+- Avoid APIs marked `[Obsolete]` unless documenting migration
+- If a feature requires a specific version, note it with an alert:
+  ```markdown
+  > [!NOTE]
+  > The `RuntimeEffect` API requires SkiaSharp 2.88.0 or later.
+  ```
+
 ---
 
 ## Markdown Conventions
@@ -95,24 +118,35 @@ ms.date: MM/DD/YYYY
 | `description` | Yes | Search snippet (60-160 chars) |
 | `ms.service` | Yes | Always `dotnet-maui` for this repo |
 | `ms.assetid` | Yes | Unique GUID for BI tracking |
-| `author` | Yes | GitHub username |
-| `ms.author` | Yes | Microsoft alias |
+| `author` | Yes | GitHub username of article author |
+| `ms.author` | Yes | Microsoft alias (use `dabritch` for existing docs) |
 | `ms.date` | Yes | Last significant update (MM/DD/YYYY) |
 
 > [!TIP]
 > Generate GUIDs at https://www.guidgenerator.com/ or use PowerShell: `[guid]::NewGuid().ToString().ToUpper()`
 
+> [!NOTE]
+> **For AI-generated content**: Use placeholder values and mark with TODO comments:
+> ```yaml
+> author: <github-username>      # TODO: set to PR author before merge
+> ms.author: dabritch            # Use existing author for updates
+> ms.date: 01/28/2026            # Use today's date
+> ```
+
 ### Lead Paragraph
 
-After the H1, include an italicized summary paragraph:
+After the H1, include an italicized summary paragraph that describes what the reader will *do*:
 
 ```markdown
-# Drawing a Simple Circle in SkiaSharp
+# Drawing a simple circle in SkiaSharp
 
-_Learn the basics of SkiaSharp drawing, including canvases and paint objects_
+_In this article, you'll draw your first shape using SkiaSharp and display it in a .NET MAUI app._
 ```
 
-This provides a scannable summary distinct from the `description` in frontmatter.
+The lead paragraph should be:
+- **Distinct from `description`** - Description is for search engines; lead paragraph is for readers
+- **Action-oriented** - What the reader will accomplish
+- **1-2 sentences maximum**
 
 ### Headings
 
@@ -120,6 +154,9 @@ This provides a scannable summary distinct from the `description` in frontmatter
 - **Sentence case** - "Drawing a simple circle" not "Drawing a Simple Circle"
 - **No trailing punctuation** - Except "?" for questions
 - Use H2 (`##`) for main sections, H3 (`###`) for subsections
+
+> [!NOTE]
+> **Filename vs Title**: Use base verbs for filenames (`draw.md`) but gerunds are acceptable in titles ("Drawing a circle").
 
 ### Code Blocks
 
@@ -210,6 +247,25 @@ Use DocFX alert syntax for callouts:
 | Color | `xref:Microsoft.Maui.Graphics.Color` |
 | Aspect | `xref:Microsoft.Maui.Aspect` |
 
+### Xref Linking Strategy
+
+- **First mention**: Always xref the first occurrence of a type in an article
+- **Repeated mentions**: Use code font without xref if <2 paragraphs apart: `` `SKCanvas` ``
+- **Always xref**: Types in headings, key API methods
+- **Never xref**: Built-in C# types (`int`, `string`, `bool`), obvious .NET types (`List<T>`, `Task`)
+
+### Xref Fallback (when link fails)
+
+If an xref doesn't resolve during build, use this fallback pattern:
+
+```markdown
+<!-- Instead of broken xref -->
+Use `SKCanvas.DrawCircle` to draw a circle.
+
+<!-- Or link to API browser -->
+Use [`SKCanvas.DrawCircle`](https://learn.microsoft.com/dotnet/api/skiasharp.skcanvas.drawcircle) to draw a circle.
+```
+
 ---
 
 ## Images
@@ -246,6 +302,23 @@ docs/basics/
 
 - Use descriptive alt text
 - Relative paths from the article file
+
+### Alt Text Best Practices
+
+Write alt text that describes the **purpose** and **content**, not just the filename:
+
+| Image Type | Example Alt Text |
+|------------|------------------|
+| Simple screenshot | `![Three circles in red, green, and blue](colors.png)` |
+| Triple-platform | `![App running on Android, iOS, and Windows showing rotated text](rotate-small.png)` |
+| Diagram | `![Diagram showing how matrix translation moves a point from (x,y) to (x+dx, y+dy)](matrix.png)` |
+| Code result | `![Output showing a gradient from blue to red](gradient-result.png)` |
+
+**Accessibility rules:**
+- Don't rely on color alone to convey information
+- If image contains text, duplicate key text in the article
+- Alt text should be 5-15 words (concise but descriptive)
+- Empty alt `![]()` only for purely decorative images
 
 ### Responsive Screenshots (Triple-Platform)
 
@@ -287,7 +360,9 @@ Always use relative paths with `.md` extension.
 
 ## Sample Code Links
 
-Link to samples in the `samples/` directory using GitHub URLs:
+### Linking to Samples
+
+Link to samples in the `samples/` directory using GitHub URLs with the `docs` branch:
 
 ```markdown
 [`SimpleCirclePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs)
@@ -297,6 +372,16 @@ Sample structure mirrors doc sections:
 - `samples/Demos/Demos/SkiaSharpFormsDemos/Basics/` → `docs/basics/`
 - `samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/` → `docs/transforms/`
 - etc.
+
+> [!NOTE]
+> The samples use `SkiaSharpFormsDemos` naming (legacy from Xamarin.Forms era) but demonstrate .NET MAUI patterns. The code has been updated for MAUI compatibility.
+
+### Sample Code Policy
+
+- **Reference existing samples**: Link to samples in the `mono/SkiaSharp` repository
+- **Verify paths exist**: Before linking, confirm the file exists in the `docs` branch
+- **Inline code limits**: Keep inline examples to <30 lines; link to samples for longer code
+- **Do not create samples**: New samples require a separate PR to the SkiaSharp repository
 
 ---
 
@@ -377,12 +462,12 @@ canvas.DrawCircle(100, 100, 50, paint);
 
 ## Article Structure
 
-### Standard Article Template
+### Tutorial Template (basics/, getting started)
 
 ```markdown
 ---
-title: "Topic Title"
-description: "What readers will learn (60-160 chars)"
+title: "Drawing a simple circle"
+description: "Learn to draw your first shape with SkiaSharp in .NET MAUI"
 ms.service: dotnet-maui
 ms.assetid: GUID-HERE
 author: username
@@ -390,25 +475,114 @@ ms.author: alias
 ms.date: MM/DD/YYYY
 ---
 
-# Topic Title
+# Drawing a simple circle
 
-_Brief summary of what this article covers_
+_In this tutorial, you'll create a SkiaSharp canvas and draw a circle._
 
-Introduction paragraph explaining the concept...
+## Prerequisites
 
-## First Major Section
+- .NET 8 SDK
+- SkiaSharp.Views.Maui.Controls NuGet package
 
-Content...
+## Step 1: Create the canvas
 
-### Subsection (if needed)
+Content with code example...
 
-More content...
+## Step 2: Handle the paint event
+
+Content with code example...
+
+## Step 3: Draw the circle
+
+Content with code example...
+
+## Summary
+
+Brief recap of what was accomplished.
 
 ## Related Links
 
 - [SkiaSharp APIs](https://learn.microsoft.com/dotnet/api/skiasharp)
-- [Next Related Topic](next-topic.md)
+- [Next tutorial](next-topic.md)
 ```
+
+### Concept Template (transforms/, effects/)
+
+```markdown
+---
+title: "Understanding scale transforms"
+description: "Learn how scale transforms work in SkiaSharp"
+ms.service: dotnet-maui
+ms.assetid: GUID-HERE
+author: username
+ms.author: alias
+ms.date: MM/DD/YYYY
+---
+
+# Understanding scale transforms
+
+_This article explains how to scale graphics objects in SkiaSharp._
+
+## What is a scale transform?
+
+Explanation of the concept...
+
+## How scaling works
+
+Technical details with diagrams/math if needed...
+
+## Basic scaling example
+
+Code example...
+
+## Advanced scenarios
+
+Additional examples with progressive complexity...
+
+## Performance considerations
+
+Tips and disposal notes...
+
+## Related Links
+
+- [SkiaSharp APIs](https://learn.microsoft.com/dotnet/api/skiasharp)
+- [Related concept](related-topic.md)
+```
+
+### Index Page Template (section landing pages)
+
+```markdown
+---
+title: "SkiaSharp transforms"
+description: "Overview of transform operations in SkiaSharp"
+ms.service: dotnet-maui
+ms.assetid: GUID-HERE
+author: username
+ms.author: alias
+ms.date: MM/DD/YYYY
+---
+
+# SkiaSharp transforms
+
+_Learn how to translate, scale, rotate, and skew graphics._
+
+Brief introduction to this section (2-3 paragraphs)...
+
+## [Translate transform](translate.md)
+
+One-sentence description of this article.
+
+## [Scale transform](scale.md)
+
+One-sentence description of this article.
+
+## [Rotate transform](rotate.md)
+
+One-sentence description of this article.
+```
+
+> [!NOTE]
+> Index pages link to child articles but typically don't have a "Related Links" section.
 
 ### Adding Articles to Navigation
 
@@ -584,16 +758,58 @@ From `contributing-guidelines/template.md`:
 
 Before submitting changes:
 
-- [ ] YAML frontmatter is complete and valid
-- [ ] Title uses sentence case
-- [ ] Only one H1 heading in the file
-- [ ] Code blocks have language identifiers
-- [ ] Images have descriptive alt text
-- [ ] Links are relative (not absolute) where possible
-- [ ] xref links use correct namespace
-- [ ] No trailing whitespace
-- [ ] File passes markdownlint
-- [ ] Article ends with "Related Links" section
+### Frontmatter
+- [ ] Title ≤60 characters
+- [ ] Description 60-160 characters
+- [ ] `ms.service` is `dotnet-maui`
+- [ ] GUID is unique (not copied from another article)
+- [ ] `ms.date` is today's date (for new/updated content)
+
+### Content
+- [ ] Title uses sentence case (capitalize only first word + proper nouns)
+- [ ] Only one H1 heading (`#`) in the file
+- [ ] Lead paragraph (italicized) after H1
+- [ ] Article ends with "Related Links" section (except index pages)
+
+### Code
+- [ ] All code blocks have language identifiers (`csharp`, `xaml`, `bash`)
+- [ ] Code uses .NET MAUI namespaces (not Xamarin.Forms)
+- [ ] NuGet package matches APIs shown (`SkiaSharp.Views.Maui.Controls`)
+
+### Links & Images
+- [ ] Internal links use relative paths ending in `.md`
+- [ ] Sample links use `blob/docs` branch (not `blob/main`)
+- [ ] Images have alt text (5-15 words describing content)
+- [ ] At least one xref to a SkiaSharp type per article
+
+### Validation
+- [ ] Build completes with zero warnings
+- [ ] Local preview displays correctly
+
+---
+
+## Verification Commands
+
+Run these commands to verify your changes:
+
+```bash
+# Check for build warnings (xref failures, broken links)
+cd docs
+dotnet docfx docfx.json 2>&1 | grep -i "warning"
+
+# Preview the site locally
+dotnet docfx serve _site
+# Then open http://localhost:8080
+
+# Run markdown linter (if installed)
+markdownlint docs/**/*.md
+```
+
+**What to check in preview:**
+- xref links show tooltips on hover
+- Images load correctly
+- Lightbox zoom works on triple-platform screenshots
+- Page renders well at mobile width
 
 ---
 
