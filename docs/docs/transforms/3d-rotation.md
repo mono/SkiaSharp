@@ -117,7 +117,7 @@ For rotation around the X axis, set the first three arguments to 1, 0, 0. For ro
 The fourth column of the 4-by-4 is for perspective. The `SKMatrix44` has no methods for creating perspective transforms, but you can create one yourself using the following code:
 
 ```csharp
-SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+SKMatrix44 perspectiveMatrix = SKMatrix44.Identity;
 perspectiveMatrix[2, 3] = -1 / depth;
 ```
 
@@ -380,12 +380,12 @@ public partial class Rotation3DPage : ContentPage
 
         // Use 3D matrix for 3D rotations and perspective
         // Note: PostConcat returns a new matrix, use *= operator
-        SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
+        SKMatrix44 matrix44 = SKMatrix44.Identity;
         matrix44 *= SKMatrix44.CreateRotationDegrees(1, 0, 0, (float)xRotateSlider.Value);
         matrix44 *= SKMatrix44.CreateRotationDegrees(0, 1, 0, (float)yRotateSlider.Value);
         matrix44 *= SKMatrix44.CreateRotationDegrees(0, 0, 1, (float)zRotateSlider.Value);
 
-        SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+        SKMatrix44 perspectiveMatrix = SKMatrix44.Identity;
         perspectiveMatrix[2, 3] = -1 / (float)depthSlider.Value;
         matrix44 *= perspectiveMatrix;
 
@@ -506,12 +506,12 @@ public class AnimatedRotation3DPage : ContentPage
         // Calculate composite 3D transforms
         float depth = 0.75f * scale * textBounds.Width;
 
-        SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
+        SKMatrix44 matrix44 = SKMatrix44.Identity;
         matrix44 *= SKMatrix44.CreateRotationDegrees(1, 0, 0, xRotationDegrees);
         matrix44 *= SKMatrix44.CreateRotationDegrees(0, 1, 0, yRotationDegrees);
         matrix44 *= SKMatrix44.CreateRotationDegrees(0, 0, 1, zRotationDegrees);
 
-        SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+        SKMatrix44 perspectiveMatrix = SKMatrix44.Identity;
         perspectiveMatrix[2, 3] = -1 / depth;
         matrix44 *= perspectiveMatrix;
 

@@ -204,7 +204,7 @@ public partial class TestPerspectivePage : ContentPage
             return;
 
         // Calculate perspective matrix
-        SKMatrix perspectiveMatrix = SKMatrix.CreateIdentity();
+        SKMatrix perspectiveMatrix = SKMatrix.Identity;
         perspectiveMatrix.Persp0 = (float)persp0Slider.Value / 100;
         perspectiveMatrix.Persp1 = (float)persp1Slider.Value / 100;
 
@@ -260,7 +260,7 @@ static class TaperTransform
 {
     public static SKMatrix Make(SKSize size, TaperSide taperSide, TaperCorner taperCorner, float taperFraction)
     {
-        SKMatrix matrix = SKMatrix.CreateIdentity();
+        SKMatrix matrix = SKMatrix.Identity;
 
         switch (taperSide)
         {
@@ -440,7 +440,7 @@ static SKMatrix ComputeMatrix(SKSize size, SKPoint ptUL, SKPoint ptUR, SKPoint p
     };
 
     // Multiply S * N * A
-    SKMatrix result = SKMatrix.CreateIdentity();
+    SKMatrix result = SKMatrix.Identity;
     result = result.PostConcat(S);
     result = result.PostConcat(N);
     result = result.PostConcat(A);

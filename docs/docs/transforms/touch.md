@@ -47,7 +47,7 @@ public partial class BitmapDraggingPage : ContentPage
 {
     // Bitmap and matrix for display
     SKBitmap? bitmap;
-    SKMatrix matrix = SKMatrix.CreateIdentity();
+    SKMatrix matrix = SKMatrix.Identity;
     ···
 
     public BitmapDraggingPage()
@@ -573,7 +573,7 @@ class TouchManipulationBitmap
     public TouchManipulationBitmap(SKBitmap bitmap)
     {
         this.bitmap = bitmap;
-        Matrix = SKMatrix.CreateIdentity();
+        Matrix = SKMatrix.Identity;
 
         TouchManager = new TouchManipulationManager
         {
@@ -702,7 +702,7 @@ class TouchManipulationBitmap
     {
         TouchManipulationInfo[] infos = new TouchManipulationInfo[touchDictionary.Count];
         touchDictionary.Values.CopyTo(infos, 0);
-        SKMatrix touchMatrix = SKMatrix.CreateIdentity();
+        SKMatrix touchMatrix = SKMatrix.Identity;
 
         if (infos.Length == 1)
         {
@@ -773,10 +773,10 @@ class TouchManipulationManager
     {
         if (Mode == TouchManipulationMode.None)
         {
-            return SKMatrix.CreateIdentity();
+            return SKMatrix.Identity;
         }
 
-        SKMatrix touchMatrix = SKMatrix.CreateIdentity();
+        SKMatrix touchMatrix = SKMatrix.Identity;
         SKPoint delta = newPoint - prevPoint;
 
         if (Mode == TouchManipulationMode.ScaleDualRotate)  // One-finger rotation
@@ -821,7 +821,7 @@ class TouchManipulationManager
     ...
     public SKMatrix TwoFingerManipulate(SKPoint prevPoint, SKPoint newPoint, SKPoint pivotPoint)
     {
-        SKMatrix touchMatrix = SKMatrix.CreateIdentity();
+        SKMatrix touchMatrix = SKMatrix.Identity;
         SKPoint oldVector = prevPoint - pivotPoint;
         SKPoint newVector = newPoint - pivotPoint;
 
@@ -1084,7 +1084,7 @@ The [**SingleFingerCornerScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/
 public partial class SingleFingerCornerScalePage : ContentPage
 {
     SKBitmap? bitmap;
-    SKMatrix currentMatrix = SKMatrix.CreateIdentity();
+    SKMatrix currentMatrix = SKMatrix.Identity;
     ···
 
     public SingleFingerCornerScalePage()
@@ -1129,7 +1129,7 @@ The crucial part of the code is an `if` statement involving two calls to the `Ma
 public partial class SingleFingerCornerScalePage : ContentPage
 {
     SKBitmap? bitmap;
-    SKMatrix currentMatrix = SKMatrix.CreateIdentity();
+    SKMatrix currentMatrix = SKMatrix.Identity;
 
     // Information for translating and scaling
     long? touchId = null;
@@ -1184,7 +1184,7 @@ public partial class SingleFingerCornerScalePage : ContentPage
                 if (!touchId.HasValue || e.Id != touchId.Value)
                     return;
 
-                SKMatrix matrix = SKMatrix.CreateIdentity();
+                SKMatrix matrix = SKMatrix.Identity;
 
                 // Translating
                 if (!isScaling)

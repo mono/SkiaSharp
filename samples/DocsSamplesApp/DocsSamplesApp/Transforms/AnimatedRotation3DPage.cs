@@ -83,12 +83,12 @@ namespace DocsSamplesApp.Transforms
             // Calculate composite 3D transforms
             float depth = 0.75f * scale * textBounds.Width;
 
-            SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
+            SKMatrix44 matrix44 = SKMatrix44.Identity;
             matrix44 *= SKMatrix44.CreateRotationDegrees(1, 0, 0, xRotationDegrees);
             matrix44 *= SKMatrix44.CreateRotationDegrees(0, 1, 0, yRotationDegrees);
             matrix44 *= SKMatrix44.CreateRotationDegrees(0, 0, 1, zRotationDegrees);
 
-            SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+            SKMatrix44 perspectiveMatrix = SKMatrix44.Identity;
             perspectiveMatrix[2, 3] = -1 / depth;
             matrix44 *= perspectiveMatrix;
 

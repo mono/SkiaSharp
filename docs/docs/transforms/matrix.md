@@ -30,10 +30,10 @@ The default transform matrix is the identity matrix and consists of 1's in the d
 | 0  0  1 |
 </pre>
 
-You can create an identity matrix using the static  [`SKMatrix.CreateIdentity`](xref:SkiaSharp.SKMatrix.CreateIdentity) method:
+You can get an identity matrix using the static [`SKMatrix.Identity`](xref:SkiaSharp.SKMatrix.Identity) field:
 
 ```csharp
-SKMatrix matrix = SKMatrix.CreateIdentity();
+SKMatrix matrix = SKMatrix.Identity;
 ```
 
 The `SKMatrix` default constructor does *not* return an identity matrix. It returns a matrix with all of the cells set to zero. Do not use the `SKMatrix` constructor unless you plan to set those cells manually.

@@ -268,7 +268,7 @@ class PhotoCropperCanvasView : SKCanvasView
         canvas.DrawBitmap(bitmap, bitmapRect);
 
         // Calculate a matrix transform for displaying the cropping rectangle
-        SKMatrix bitmapScaleMatrix = SKMatrix.CreateIdentity();
+        SKMatrix bitmapScaleMatrix = SKMatrix.Identity;
         bitmapScaleMatrix.SetScaleTranslate(scale, scale, x, y);
 
         // Display rectangle

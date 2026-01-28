@@ -51,7 +51,7 @@ namespace DocsSamplesApp.Transforms
             SKMatrix matrix = SKMatrix.CreateTranslation(-xCenter, -yCenter);
 
             // Build 3D rotation matrix using *= operator
-            SKMatrix44 matrix44 = SKMatrix44.CreateIdentity();
+            SKMatrix44 matrix44 = SKMatrix44.Identity;
             matrix44 *= SKMatrix44.CreateRotationDegrees(1, 0, 0, (float)xRotateSlider.Value);
             matrix44 *= SKMatrix44.CreateRotationDegrees(0, 1, 0, (float)yRotateSlider.Value);
             matrix44 *= SKMatrix44.CreateRotationDegrees(0, 0, 1, (float)zRotateSlider.Value);
@@ -59,7 +59,7 @@ namespace DocsSamplesApp.Transforms
             // Apply perspective: set element [2,3] which affects the w-divide
             // In SKMatrix44, perspective is achieved by modifying how z affects w
             float depth = (float)depthSlider.Value;
-            SKMatrix44 perspectiveMatrix = SKMatrix44.CreateIdentity();
+            SKMatrix44 perspectiveMatrix = SKMatrix44.Identity;
             perspectiveMatrix[2, 3] = -1 / depth;
             matrix44 *= perspectiveMatrix;
 
