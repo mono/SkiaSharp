@@ -33,7 +33,6 @@ namespace DocsSamplesApp.Effects
 
             isAnimating = true;
             stopwatch.Start();
-            // TODO Xamarin.Forms.Dispatcher.StartTimer is no longer supported. Use Microsoft.Maui.Dispatching.DispatcherExtensions.StartTimer instead. For more details see https://learn.microsoft.com/en-us/dotnet/maui/migration/forms-projects#device-changes
             Dispatcher.StartTimer(TimeSpan.FromMilliseconds(16), OnTimerTick);
         }
 

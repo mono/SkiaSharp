@@ -369,12 +369,9 @@ Link to samples in the `samples/` directory using GitHub URLs with the `docs` br
 ```
 
 Sample structure mirrors doc sections:
-- `samples/Demos/Demos/SkiaSharpFormsDemos/Basics/` → `docs/basics/`
-- `samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/` → `docs/transforms/`
+- `samples/DocsSamplesApp/DocsSamplesApp/Basics/` → `docs/basics/`
+- `samples/DocsSamplesApp/DocsSamplesApp/Transforms/` → `docs/transforms/`
 - etc.
-
-> [!NOTE]
-> The samples use `SkiaSharpFormsDemos` naming (legacy from Xamarin.Forms era) but demonstrate .NET MAUI patterns. The code has been updated for MAUI compatibility.
 
 ### Sample Code Policy
 
@@ -773,7 +770,7 @@ Before submitting changes:
 
 ### Code
 - [ ] All code blocks have language identifiers (`csharp`, `xaml`, `bash`)
-- [ ] Code uses .NET MAUI namespaces (not Xamarin.Forms)
+- [ ] Code uses .NET MAUI namespaces
 - [ ] NuGet package matches APIs shown (`SkiaSharp.Views.Maui.Controls`)
 
 ### Links & Images

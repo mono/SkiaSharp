@@ -11,7 +11,7 @@ The main sample application for the SkiaSharp documentation. This is a .NET MAUI
 
 ## Other Samples
 
-Other sample folders may contain legacy Xamarin.Forms samples that have not been migrated to .NET MAUI.
+Other sample folders contain additional standalone samples that may require separate migration to .NET MAUI.
 
 ## License
 

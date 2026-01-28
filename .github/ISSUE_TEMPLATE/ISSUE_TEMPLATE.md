@@ -1,6 +1,6 @@
 ---
-name: Xamarin doc issue
-about: Report a problem in the Xamarin documentation
+name: SkiaSharp doc issue
+about: Report a problem in the SkiaSharp documentation
 ---
 
 <!-- Before you open an issue

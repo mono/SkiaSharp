@@ -28,7 +28,6 @@ namespace DocsSamplesApp.Transforms
             base.OnAppearing();
             pageIsActive = true;
 
-            // TODO Xamarin.Forms.Dispatcher.StartTimer is no longer supported. Use Microsoft.Maui.Dispatching.DispatcherExtensions.StartTimer instead. For more details see https://learn.microsoft.com/en-us/dotnet/maui/migration/forms-projects#device-changes
             Dispatcher.StartTimer(TimeSpan.FromSeconds(1), () =>
             {
                 canvasView.InvalidateSurface();
