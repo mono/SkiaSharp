@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="DocsSamplesApp.Basics.PulsatingEllipsePage"
+             Title="Pulsating Ellipse">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Slider x:Name="slider"
+                Grid.Row="0"
+                Maximum="10"
+                Minimum="0.1"
+                Value="5"
+                Margin="20, 0" />
+
+        <Label Grid.Row="1"
+               Text="{Binding Source={x:Reference slider},
+                              Path=Value,
+                              StringFormat='Cycle time = {0:F1} seconds'}"
+               HorizontalTextAlignment="Center" />
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="2"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+    </Grid>
+</ContentPage>
