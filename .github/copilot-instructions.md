@@ -1,298 +1,612 @@
-# SkiaSharp Documentation Migration: Xamarin.Forms to .NET MAUI
+# SkiaSharp Documentation - Copilot Instructions
 
-## Migration Status Dashboard
-
-**Total Markdown Files**: 54
-**Migration Status**: ✅ COMPLETE (2026-01-28)
-
-### Progress Tracking
-
-| Section | Files | Status |
-|---------|-------|--------|
-| Root docs | 1 (index.md) | ✅ Complete |
-| basics/ | 7 files | ✅ Complete |
-| paths/ | 7 files | ✅ Complete |
-| transforms/ | 10 files | ✅ Complete |
-| curves/ | 9 files | ✅ Complete |
-| bitmaps/ | 9 files | ✅ Complete |
-| effects/ | 11 files | ✅ Complete |
-
-### Remaining "Xamarin.Forms" References
-✅ **None** - All Xamarin references have been removed or updated.
-
-### Sample Links Migration (Completed 2026-01-28)
-All links pointing to `https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/...` have been updated to use local relative paths (`../../../samples/...`).
-
-Book references to "Creating Mobile Apps with Xamarin.Forms" have been removed, with conceptual content preserved.
+This repository contains the conceptual documentation for **SkiaSharp**, a cross-platform 2D graphics library for .NET. These docs help developers integrate SkiaSharp with **.NET MAUI** applications.
 
 ---
 
-## Key Migration Patterns
+## Repository Overview
 
-### 1. YAML Frontmatter Changes
+### Structure
 
-**Change `ms.service`:**
+```
+docs/
+├── index.md                    # Main entry point
+├── docfx.json                  # DocFX build configuration
+├── TOC.yml                     # Top-level navigation
+├── xrefmaps/                   # Cross-reference maps for API linking
+├── images/                     # Site-wide assets (logo, favicon)
+└── docs/
+    ├── basics/                 # Drawing fundamentals (8 files)
+    ├── paths/                  # Lines and paths (7 files)
+    ├── transforms/             # Geometric transforms (9 files)
+    ├── curves/                 # Beziers, arcs, path effects (8 files)
+    ├── bitmaps/                # Image handling (8 files)
+    └── effects/                # Visual effects (13 files)
+        ├── blend-modes/        # Compositing modes
+        └── shaders/            # Gradients and patterns
+
+contributing-guidelines/
+├── voice-tone.md               # Writing style guide
+└── template.md                 # Markdown conventions
+
+samples/                        # Sample code (separate from docs)
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `docs/docfx.json` | Build configuration, xref sources, templates |
+| `docs/TOC.yml` | Navigation structure |
+| `.markdownlint.json` | Markdown linting rules |
+
+---
+
+## Writing Guidelines
+
+### Voice and Tone
+
+Follow the guidelines in `contributing-guidelines/voice-tone.md`:
+
+1. **Conversational tone** - Write as if explaining to a colleague
+2. **Second person** - Use "you" to address the reader directly
+3. **Active voice** - Subject performs the action ("SkiaSharp draws the circle")
+4. **5th grade reading level** - Simple sentences, international audience
+
+**Example (Good):**
+> You can draw a circle by calling the `DrawCircle` method on the canvas.
+
+**Example (Avoid):**
+> The DrawCircle method may be invoked on the canvas object when circle rendering is required by the application.
+
+### Microsoft Learn Style
+
+Follow [Microsoft Learn style guidelines](https://learn.microsoft.com/contribute/content/style-quick-start):
+
+- Focus on the reader's intent
+- Use everyday words
+- Write concisely
+- Make content easy to scan
+- Show empathy
+
+---
+
+## Markdown Conventions
+
+### YAML Frontmatter (Required)
+
+Every article must have this frontmatter:
+
 ```yaml
-# FROM:
-ms.service: xamarin
-ms.subservice: xamarin-skiasharp
-
-# TO:
+---
+title: "Article Title"
+description: "A clear description of what readers will learn (60-160 chars)"
 ms.service: dotnet-maui
-ms.subservice: skiasharp
+ms.assetid: 00000000-0000-0000-0000-000000000000  # Unique GUID
+author: authorname
+ms.author: alias
+ms.date: MM/DD/YYYY
+---
 ```
 
-**Remove `no-loc` directive:**
-```yaml
-# REMOVE this line:
-no-loc: [Xamarin.Forms, Xamarin.Essentials]
+| Field | Required | Description |
+|-------|----------|-------------|
+| `title` | Yes | Browser tab/search result title (≤60 chars) |
+| `description` | Yes | Search snippet (60-160 chars) |
+| `ms.service` | Yes | Always `dotnet-maui` for this repo |
+| `ms.assetid` | Yes | Unique GUID for BI tracking |
+| `author` | Yes | GitHub username |
+| `ms.author` | Yes | Microsoft alias |
+| `ms.date` | Yes | Last significant update (MM/DD/YYYY) |
+
+> [!TIP]
+> Generate GUIDs at https://www.guidgenerator.com/ or use PowerShell: `[guid]::NewGuid().ToString().ToUpper()`
+
+### Lead Paragraph
+
+After the H1, include an italicized summary paragraph:
+
+```markdown
+# Drawing a Simple Circle in SkiaSharp
+
+_Learn the basics of SkiaSharp drawing, including canvases and paint objects_
 ```
 
-**Update descriptions (title, description fields) - replace "Xamarin.Forms" with ".NET MAUI"**
+This provides a scannable summary distinct from the `description` in frontmatter.
 
-### 2. C# Namespace Changes
+### Headings
+
+- **One H1 per file** - Matches or relates to the `title` in frontmatter
+- **Sentence case** - "Drawing a simple circle" not "Drawing a Simple Circle"
+- **No trailing punctuation** - Except "?" for questions
+- Use H2 (`##`) for main sections, H3 (`###`) for subsections
+
+### Code Blocks
+
+Always specify the language:
 
 ```csharp
-// FROM:
-using SkiaSharp.Views.Forms;
-
-// TO:
-using SkiaSharp.Views.Maui;
+// C# code
+using SkiaSharp;
 using SkiaSharp.Views.Maui.Controls;
+
+SKCanvas canvas = surface.Canvas;
+canvas.Clear(SKColors.White);
 ```
 
-### 3. XAML Namespace Changes
-
-```xml
-<!-- FROM: -->
-xmlns="http://xamarin.com/schemas/2014/forms"
-xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
-
-<!-- TO: -->
-xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+```xaml
+<!-- XAML markup -->
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls">
+    <skia:SKCanvasView PaintSurface="OnPaintSurface" />
+</ContentPage>
 ```
 
-### 4. NuGet Package References
+### Alerts
 
-```text
-FROM: SkiaSharp.Views.Forms
-TO:   SkiaSharp.Views.Maui.Controls
+Use DocFX alert syntax for callouts:
+
+```markdown
+> [!NOTE]
+> Additional information that's helpful but not critical.
+
+> [!TIP]
+> Suggestions that can improve the reader's experience.
+
+> [!IMPORTANT]
+> Critical information required for success.
+
+> [!WARNING]
+> Information about potential problems or breaking changes.
 ```
 
-### 5. Color API Changes (in code examples)
+---
+
+## API Cross-References (xref)
+
+### Syntax Options
+
+```markdown
+<!-- Standard link -->
+[SKCanvas](xref:SkiaSharp.SKCanvas)
+
+<!-- Auto-link (displays full type name) -->
+<xref:SkiaSharp.SKCanvas>
+
+<!-- Method with overloads -->
+[DrawCircle](xref:SkiaSharp.SKCanvas.DrawCircle*)
+```
+
+### Common SkiaSharp Types
+
+| Type | xref |
+|------|------|
+| Canvas | `xref:SkiaSharp.SKCanvas` |
+| Paint | `xref:SkiaSharp.SKPaint` |
+| Path | `xref:SkiaSharp.SKPath` |
+| Bitmap | `xref:SkiaSharp.SKBitmap` |
+| Image | `xref:SkiaSharp.SKImage` |
+| Surface | `xref:SkiaSharp.SKSurface` |
+| Color | `xref:SkiaSharp.SKColor` |
+| ImageInfo | `xref:SkiaSharp.SKImageInfo` |
+
+### MAUI Integration Types
+
+| Type | xref |
+|------|------|
+| SKCanvasView | `xref:SkiaSharp.Views.Maui.Controls.SKCanvasView` |
+| SKGLView | `xref:SkiaSharp.Views.Maui.Controls.SKGLView` |
+| SKPaintSurfaceEventArgs | `xref:SkiaSharp.Views.Maui.SKPaintSurfaceEventArgs` |
+| SKTouchEventArgs | `xref:SkiaSharp.Views.Maui.SKTouchEventArgs` |
+
+### .NET MAUI Types
+
+| Type | xref |
+|------|------|
+| View | `xref:Microsoft.Maui.Controls.View` |
+| ContentPage | `xref:Microsoft.Maui.Controls.ContentPage` |
+| TapGestureRecognizer | `xref:Microsoft.Maui.Controls.TapGestureRecognizer` |
+| VisualElement | `xref:Microsoft.Maui.Controls.VisualElement` |
+| Color | `xref:Microsoft.Maui.Graphics.Color` |
+| Aspect | `xref:Microsoft.Maui.Aspect` |
+
+---
+
+## Images
+
+### Directory Structure
+
+Images live alongside articles in `*-images/` folders:
+
+```
+docs/basics/
+├── circle.md
+└── circle-images/
+    ├── circleexample.png         # Main screenshot
+    ├── simplecircle-large.png    # Full-size composite
+    ├── simplecircle-small.png    # Thumbnail composite
+    ├── simplecircle.a.png        # Android screenshot
+    ├── simplecircle.i.png        # iOS screenshot
+    └── simplecircle.u.png        # UWP/Windows screenshot
+```
+
+### Naming Convention
+
+- `{name}.png` - Single screenshot
+- `{name}-large.png` / `{name}-small.png` - Composite images
+- `{name}.a.png` - Android
+- `{name}.i.png` - iOS  
+- `{name}.u.png` - Windows/UWP
+
+### Markdown Syntax
+
+```markdown
+![A blue circle outlined in red](circle-images/circleexample.png)
+```
+
+- Use descriptive alt text
+- Relative paths from the article file
+
+### Responsive Screenshots (Triple-Platform)
+
+For platform comparison images, use thumbnail linking to full-size:
+
+```markdown
+[![Triple screenshot of Basic Rotate](rotate-images/basicrotate-small.png)](rotate-images/basicrotate-large.png#lightbox "Triple screenshot of Basic Rotate")
+```
+
+- `#lightbox` suffix enables zoom on click
+- Alt text should describe what's shown
+
+---
+
+## Links
+
+### Internal Links
+
+```markdown
+<!-- Same folder -->
+[next topic](integration.md)
+
+<!-- Different folder -->
+[shaders section](../effects/shaders/index.md)
+
+<!-- Anchor link within same file -->
+[transform section](#the-rotate-transform)
+```
+
+Always use relative paths with `.md` extension.
+
+### External Links
+
+```markdown
+[SkiaSharp API Reference](https://learn.microsoft.com/dotnet/api/skiasharp)
+```
+
+---
+
+## Sample Code Links
+
+Link to samples in the `samples/` directory using GitHub URLs:
+
+```markdown
+[`SimpleCirclePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/SimpleCirclePage.cs)
+```
+
+Sample structure mirrors doc sections:
+- `samples/Demos/Demos/SkiaSharpFormsDemos/Basics/` → `docs/basics/`
+- `samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/` → `docs/transforms/`
+- etc.
+
+---
+
+## Code Patterns
+
+### Standard Paint Surface Handler
 
 ```csharp
-// FROM (Xamarin.Forms Colors):
-Color.Red.ToSKColor()
-
-// TO (.NET MAUI Colors):
-Colors.Red.ToSKColor()
-```
-
-Note: `SKColors.Red` (SkiaSharp native) remains unchanged.
-
-### 6. Initialization (for intro docs)
-
-```csharp
-// .NET MAUI requires explicit initialization in MauiProgram.cs:
-using SkiaSharp.Views.Maui.Controls.Hosting;
-
-public static MauiApp CreateMauiApp()
+void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
 {
-    var builder = MauiApp.CreateBuilder();
-    builder
-        .UseMauiApp<App>()
-        .UseSkiaSharp()  // <-- Required for .NET MAUI
-        ...
+    SKImageInfo info = args.Info;
+    SKSurface surface = args.Surface;
+    SKCanvas canvas = surface.Canvas;
+
+    canvas.Clear();
+    
+    // Drawing code here
 }
 ```
 
-### 7. Text/Prose Replacements
+### MAUI Initialization (MauiProgram.cs)
 
-| From | To |
-|------|-----|
-| Xamarin.Forms | .NET MAUI |
-| Xamarin.Forms application(s) | .NET MAUI application(s) |
-| Xamarin.Forms app(s) | .NET MAUI app(s) |
-| Xamarin.Forms solution | .NET MAUI solution |
-| Visual Studio for Mac | Visual Studio (Mac support dropped in .NET MAUI 8+) |
-| Xamarin.Essentials | (integrated into .NET MAUI, remove reference) |
+```csharp
+using SkiaSharp.Views.Maui.Controls.Hosting;
 
-### 8. Link/URL Updates
-
-```markdown
-<!-- FROM: -->
-[xamarin-forms-samples](https://github.com/xamarin/xamarin-forms-samples/...)
-
-<!-- TO: -->
-[maui-samples](https://github.com/dotnet/maui-samples/...)
+public static class MauiProgram
+{
+    public static MauiApp CreateMauiApp()
+    {
+        var builder = MauiApp.CreateBuilder();
+        builder
+            .UseMauiApp<App>()
+            .UseSkiaSharp();  // Required!
+        return builder.Build();
+    }
+}
 ```
 
-**Note**: Sample links may need verification - samples may not exist yet in MAUI format.
+### XAML Page Structure
 
-### 9. Cross-Reference (xref) Updates
+```xaml
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+             x:Class="MyApp.MyPage">
+    <skia:SKCanvasView PaintSurface="OnCanvasViewPaintSurface" />
+</ContentPage>
+```
 
-```markdown
-<!-- FROM: -->
-xref:Xamarin.Forms.View
-xref:Xamarin.Forms.TapGestureRecognizer
-xref:SkiaSharp.Views.Forms.SKCanvasView
+### Color Conversion (MAUI → SkiaSharp)
 
-<!-- TO: -->
-xref:Microsoft.Maui.Controls.View
-xref:Microsoft.Maui.Controls.TapGestureRecognizer
-xref:SkiaSharp.Views.Maui.Controls.SKCanvasView
+```csharp
+// Convert .NET MAUI Colors to SkiaSharp
+SKColor skColor = Colors.Red.ToSKColor();
+SKColor skColor = Colors.FromRgba(255, 128, 0, 255).ToSKColor();
+
+// Use SkiaSharp's built-in colors
+SKColor skColor = SKColors.CornflowerBlue;
+```
+
+### Disposable Objects
+
+Wrap `SKPaint`, `SKPath`, `SKImage` in `using` statements:
+
+```csharp
+// Preferred: using statement for proper disposal
+using (SKPaint paint = new SKPaint { Style = SKPaintStyle.Fill })
+{
+    canvas.DrawCircle(100, 100, 50, paint);
+}
+
+// Or C# 8+ using declaration:
+using SKPaint paint = new SKPaint { Style = SKPaintStyle.Fill };
+canvas.DrawCircle(100, 100, 50, paint);
 ```
 
 ---
 
-## Files By Section
+## Article Structure
 
-### Root (docs/)
-- [ ] `index.md` - Main overview, heavy Xamarin.Forms references
+### Standard Article Template
 
-### basics/ (7 files)
-- [ ] `index.md` - Section index
-- [ ] `circle.md` - Drawing basics, has XAML/C# examples
-- [ ] `integration.md` - **CRITICAL** - Heavy Xamarin.Forms integration content
-- [ ] `pixels.md` - Coordinate systems
-- [ ] `animation.md` - Animation patterns
-- [ ] `text.md` - Text rendering
-- [ ] `bitmaps.md` - Bitmap basics
-- [ ] `transparency.md` - Alpha/transparency
+```markdown
+---
+title: "Topic Title"
+description: "What readers will learn (60-160 chars)"
+ms.service: dotnet-maui
+ms.assetid: GUID-HERE
+author: username
+ms.author: alias
+ms.date: MM/DD/YYYY
+---
 
-### paths/ (7 files)
-- [ ] `index.md` - Section index
-- [ ] `paths.md` - Path fundamentals
-- [ ] `lines.md` - Line drawing
-- [ ] `polylines.md` - Polyline patterns
-- [ ] `dots.md` - Dotted lines
-- [ ] `fill-types.md` - Fill rules
-- [ ] `finger-paint.md` - Touch painting example
+# Topic Title
 
-### transforms/ (10 files)
-- [ ] `index.md` - Section index (**heavy Xamarin.Forms references**)
-- [ ] `translate.md` - Translation transforms
-- [ ] `scale.md` - Scale transforms
-- [ ] `rotate.md` - Rotation transforms
-- [ ] `skew.md` - Skew transforms
-- [ ] `matrix.md` - Matrix transforms
-- [ ] `3d-rotation.md` - 3D rotation
-- [ ] `non-affine.md` - Non-affine transforms
-- [ ] `touch.md` - **CRITICAL** - Touch manipulation (**heavy Xamarin.Forms**)
+_Brief summary of what this article covers_
 
-### curves/ (9 files)
-- [ ] `index.md` - Section index
-- [ ] `arcs.md` - Arc drawing
-- [ ] `beziers.md` - Bezier curves
-- [ ] `path-data.md` - SVG path data
-- [ ] `clipping.md` - Clipping paths
-- [ ] `effects.md` - Path effects
-- [ ] `information.md` - Path information
-- [ ] `text-paths.md` - Text on paths
+Introduction paragraph explaining the concept...
 
-### bitmaps/ (9 files)
-- [ ] `index.md` - Section index
-- [ ] `displaying.md` - Display bitmaps
-- [ ] `drawing.md` - Draw on bitmaps
-- [ ] `cropping.md` - Crop bitmaps (**heavy Xamarin.Forms**)
-- [ ] `animating.md` - Animate bitmaps
-- [ ] `pixel-bits.md` - Pixel manipulation
-- [ ] `saving.md` - Save bitmaps
-- [ ] `segmented.md` - Nine-patch/segmented display
+## First Major Section
 
-### effects/ (11 files)
-- [ ] `index.md` - Section index
-- [ ] `color-filters.md` - Color filters
-- [ ] `mask-filters.md` - Mask/blur filters
-- [ ] `image-filters.md` - Image filters (**multiple XAML examples**)
-- [ ] `blend-modes/index.md` - Blend modes overview
-- [ ] `blend-modes/porter-duff.md` - Porter-Duff modes
-- [ ] `blend-modes/separable.md` - Separable blend modes
-- [ ] `blend-modes/non-separable.md` - Non-separable blend modes
-- [ ] `shaders/index.md` - Shaders overview
-- [ ] `shaders/linear-gradient.md` - Linear gradients
-- [ ] `shaders/circular-gradients.md` - Radial gradients
-- [ ] `shaders/bitmap-tiling.md` - Bitmap tiling
-- [ ] `shaders/noise.md` - Perlin noise
+Content...
+
+### Subsection (if needed)
+
+More content...
+
+## Related Links
+
+- [SkiaSharp APIs](https://learn.microsoft.com/dotnet/api/skiasharp)
+- [Next Related Topic](next-topic.md)
+```
+
+### Adding Articles to Navigation
+
+Edit the appropriate `TOC.yml`:
+
+```yaml
+# docs/docs/basics/TOC.yml
+- name: Drawing a Simple Circle
+  href: circle.md
+- name: Integrating with .NET MAUI
+  href: integration.md
+```
+
+Nested sections use `items:`:
+
+```yaml
+- name: Shaders
+  href: index.md
+  items:
+    - name: Linear Gradients
+      href: linear-gradient.md
+```
 
 ---
 
-## Migration Strategy
+## Building the Docs
 
-### Phase 1: Research & Preparation (CURRENT)
-- [x] Inventory all files
-- [x] Document patterns to change
-- [x] Research .NET MAUI equivalents via mslearn
-- [ ] Create migration script/checklist per file
+### Prerequisites
 
-### Phase 2: Migrate High-Impact Files First
-1. `docs/index.md` - Sets the tone for entire docs
-2. `docs/docs/basics/index.md` - Entry point for users
-3. `docs/docs/basics/integration.md` - Critical Xamarin.Forms content
+```bash
+dotnet tool install -g docfx
+```
 
-### Phase 3: Section-by-Section Migration
-Order by complexity (simplest first):
-1. basics/ - Foundation content
-2. paths/ - Core drawing
-3. transforms/ - Transform operations
-4. curves/ - Curve operations  
-5. bitmaps/ - Bitmap handling
-6. effects/ - Advanced effects
+### Build Command
 
-### Phase 4: Verification & Cleanup
-- [ ] Verify all links work
-- [ ] Check code samples compile conceptually
-- [ ] Update TOC.yml if needed
-- [ ] Update contributing-guidelines if needed
+```bash
+cd docs
+dotnet docfx docfx.json
+```
 
----
+### Output
 
-## Agent Task Distribution Strategy
+Built site appears in `_site/` directory (gitignored).
 
-For managing context window limits:
+### Cross-Reference Resolution
 
-### Use `task` agents with `agent_type: "general-purpose"` for:
-- Files with >500 lines of complex content
-- Files requiring deep understanding of both old and new APIs
+The build uses xrefmap files in `docs/xrefmaps/`:
 
-### Use batch processing:
-- Process 3-5 simple files per task agent
-- Each agent gets clear instructions + migration patterns
+| File | Contents |
+|------|----------|
+| `xrefmap-dotnet.zip` | .NET BCL types (System.*, etc.) |
+| `xrefmap-maui.zip` | Microsoft.Maui.* types |
+| `xrefmap-skiasharp.zip` | SkiaSharp & HarfBuzzSharp APIs |
+| `xrefmap-ios.zip` | UIKit, CoreGraphics, AppKit |
+| `xrefmap-android.zip` | Android.*, Java.* |
 
-### Model Selection:
-- **claude-sonnet-4** (default): Good balance for most migration tasks
-- **claude-opus-4.5**: Complex files with nuanced content decisions
-- **claude-haiku-4.5**: Simple metadata-only changes
+If xrefs don't resolve, verify the type exists in these maps.
 
 ---
 
-## Quality Checklist Per File
+## File Naming Rules
 
-- [ ] YAML frontmatter updated (ms.service, description, etc.)
-- [ ] C# `using` statements updated
-- [ ] XAML namespaces updated  
-- [ ] Color API calls updated (Color.X → Colors.X)
-- [ ] All "Xamarin.Forms" text → ".NET MAUI"
-- [ ] Sample repository links updated or marked for update
-- [ ] xref links updated
-- [ ] No broken internal links
-- [ ] Code examples are syntactically correct
+From `contributing-guidelines/template.md`:
+
+- **Lowercase only**
+- **Hyphens for spaces** - `drawing-basics.md` not `drawing basics.md`
+- **No small words** - Omit "a", "the", "and", "or"
+- **Action verbs** - `displaying.md` → `display.md` (no -ing)
+- **Keep short** - File names appear in URLs
 
 ---
 
-## Notes & Decisions Log
+## Common Patterns by Section
 
-*Record important decisions and findings here during migration*
+### basics/
+- Simple "hello world" style tutorials
+- One concept per article
+- Heavy use of step-by-step instructions
 
-- **2024-XX-XX**: Migration plan created
-- Sample links: Many point to xamarin-forms-samples which may not have MAUI equivalents. Decision: Update URL pattern but may need to note "samples being migrated" if not available.
+### paths/
+- Focus on `SKPath` class methods
+- Progressive complexity (lines → polylines → fill rules)
+- Touch interaction examples
+
+### transforms/
+- Mathematical concepts with visual examples
+- Comparison between SkiaSharp and MAUI transforms
+- Matrix math explanations
+
+### curves/
+- Bezier math with diagrams
+- SVG path data syntax
+- Path effects and text-on-path
+
+### bitmaps/
+- Loading from resources and URLs
+- Pixel manipulation
+- Platform-specific saving
+
+### effects/
+- Color filters, blur, image effects
+- Blend modes with visual samples
+- Gradient shaders
 
 ---
 
-## Reference Links
+## Quality Checklist
 
-- [.NET MAUI SkiaSharp Migration Guide](https://learn.microsoft.com/en-us/dotnet/maui/migration/skiasharp)
-- [Xamarin.Forms to .NET MAUI Migration](https://learn.microsoft.com/en-us/dotnet/maui/migration/)
-- [SkiaSharp.Views.Maui.Controls NuGet](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls/)
+Before submitting changes:
+
+- [ ] YAML frontmatter is complete and valid
+- [ ] Title uses sentence case
+- [ ] Only one H1 heading in the file
+- [ ] Code blocks have language identifiers
+- [ ] Images have descriptive alt text
+- [ ] Links are relative (not absolute) where possible
+- [ ] xref links use correct namespace
+- [ ] No trailing whitespace
+- [ ] File passes markdownlint
+- [ ] Article ends with "Related Links" section
+
+---
+
+## Common Mistakes to Avoid
+
+### ❌ Generic code blocks
+
+```
+canvas.Clear();
+```
+
+### ✅ Always specify language
+
+```csharp
+canvas.Clear();
+```
+
+### ❌ Wrong GitHub branch
+
+```markdown
+[sample](https://github.com/mono/SkiaSharp/blob/main/samples/...)
+```
+
+### ✅ Use the docs branch
+
+```markdown
+[sample](https://github.com/mono/SkiaSharp/blob/docs/samples/...)
+```
+
+### ❌ Absolute paths for internal links
+
+```markdown
+[topic](/Users/matthew/Documents/SkiaSharp/docs/basics/circle.md)
+```
+
+### ✅ Relative paths
+
+```markdown
+[topic](circle.md)
+```
+
+### ❌ Missing alt text
+
+```markdown
+![](circle-images/example.png)
+```
+
+### ✅ Descriptive alt text
+
+```markdown
+![A blue circle with red outline](circle-images/example.png)
+```
+
+---
+
+## Quick Reference
+
+### Namespaces
+
+```csharp
+// Core SkiaSharp
+using SkiaSharp;
+
+// MAUI integration
+using SkiaSharp.Views.Maui;
+using SkiaSharp.Views.Maui.Controls;
+using SkiaSharp.Views.Maui.Controls.Hosting;
+```
+
+### Key NuGet Package
+
+```
+SkiaSharp.Views.Maui.Controls
+```
+
+### External Resources
+
+- [SkiaSharp API Reference](https://learn.microsoft.com/dotnet/api/skiasharp)
+- [.NET MAUI Documentation](https://learn.microsoft.com/dotnet/maui/)
+- [Skia Graphics Library](https://skia.org/)
+- [DocFX Documentation](https://dotnet.github.io/docfx/)
