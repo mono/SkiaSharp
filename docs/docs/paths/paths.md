@@ -130,9 +130,12 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
     SKPaint textPaint = new SKPaint
     {
-        Color = SKColors.Black,
-        TextSize = 75,
-        TextAlign = SKTextAlign.Right
+        Color = SKColors.Black
+    };
+
+    SKFont font = new SKFont
+    {
+        Size = 75
     };
 
     SKPaint thickLinePaint = new SKPaint
@@ -152,13 +155,13 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     float xText = info.Width - 100;
     float xLine1 = 100;
     float xLine2 = info.Width - xLine1;
-    float y = 2 * textPaint.FontSpacing;
+    float y = 2 * font.Spacing;
     string[] strStrokeJoins = { "Miter", "Round", "Bevel" };
 
     foreach (string strStrokeJoin in strStrokeJoins)
     {
         // Display text
-        canvas.DrawText(strStrokeJoin, xText, y, textPaint);
+        canvas.DrawText(strStrokeJoin, xText, y, SKTextAlign.Right, font, textPaint);
 
         // Get stroke-join value
         SKStrokeJoin strokeJoin;
@@ -176,7 +179,7 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
         // Display thin line
         canvas.DrawPath(path, thinLinePaint);
-        y += 3 * textPaint.FontSpacing;
+        y += 3 * font.Spacing;
     }
 }
 ```

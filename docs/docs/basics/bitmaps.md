@@ -241,13 +241,13 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     else
     {
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             paint.Color = SKColors.Blue;
-            paint.TextAlign = SKTextAlign.Center;
-            paint.TextSize = 48;
+            font.Size = 48;
 
             canvas.DrawText("Tap to load bitmap",
-                info.Width / 2, 5 * info.Height / 6, paint);
+                info.Width / 2, 5 * info.Height / 6, SKTextAlign.Center, font, paint);
         }
     }
 }

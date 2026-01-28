@@ -203,8 +203,8 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
 void DisplayClipOp(SKCanvas canvas, SKRect rect, SKClipOperation clipOp)
 {
-    float textSize = textPaint.TextSize;
-    canvas.DrawText(clipOp.ToString(), rect.MidX, rect.Top + textSize, textPaint);
+    float textSize = font.Size;
+    canvas.DrawText(clipOp.ToString(), rect.MidX, rect.Top + textSize, SKTextAlign.Center, font, textPaint);
     rect.Top += textSize;
 
     float radius = 0.9f * Math.Min(rect.Width / 3, rect.Height / 2);
@@ -301,8 +301,8 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
 void DisplayClipOp(SKCanvas canvas, SKRect rect, SKRegionOperation regionOp)
 {
-    float textSize = textPaint.TextSize;
-    canvas.DrawText(regionOp.ToString(), rect.MidX, rect.Top + textSize, textPaint);
+    float textSize = font.Size;
+    canvas.DrawText(regionOp.ToString(), rect.MidX, rect.Top + textSize, SKTextAlign.Center, font, textPaint);
     rect.Top += textSize;
 
     float radius = 0.9f * Math.Min(rect.Width / 3, rect.Height / 2);

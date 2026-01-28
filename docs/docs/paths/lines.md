@@ -43,9 +43,12 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
     SKPaint textPaint = new SKPaint
     {
-        Color = SKColors.Black,
-        TextSize = 75,
-        TextAlign = SKTextAlign.Center
+        Color = SKColors.Black
+    };
+
+    SKFont font = new SKFont
+    {
+        Size = 75
     };
 
     SKPaint thickLinePaint = new SKPaint
@@ -65,13 +68,13 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     float xText = info.Width / 2;
     float xLine1 = 100;
     float xLine2 = info.Width - xLine1;
-    float y = textPaint.FontSpacing;
+    float y = font.Spacing;
 
     foreach (SKStrokeCap strokeCap in Enum.GetValues(typeof(SKStrokeCap)))
     {
         // Display text
-        canvas.DrawText(strokeCap.ToString(), xText, y, textPaint);
-        y += textPaint.FontSpacing;
+        canvas.DrawText(strokeCap.ToString(), xText, y, SKTextAlign.Center, font, textPaint);
+        y += font.Spacing;
 
         // Display thick line
         thickLinePaint.StrokeCap = strokeCap;
@@ -79,7 +82,7 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
         // Display thin line
         canvas.DrawLine(xLine1, y, xLine2, y, thinLinePaint);
-        y += 2 * textPaint.FontSpacing;
+        y += 2 * font.Spacing;
     }
 }
 ```

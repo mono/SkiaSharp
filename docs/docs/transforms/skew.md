@@ -48,16 +48,19 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     using (SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Blue,
-        TextSize = 200
+        Color = SKColors.Blue
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 200
     })
     {
         string text = "SKEW";
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
 
         canvas.Skew((float)xSkewSlider.Value, (float)ySkewSlider.Value);
-        canvas.DrawText(text, 0, -textBounds.Top, textPaint);
+        canvas.DrawText(text, 0, -textBounds.Top, SKTextAlign.Left, font, textPaint);
     }
 }
 ```
@@ -118,8 +121,11 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     using (SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Blue,
-        TextSize = 200
+        Color = SKColors.Blue
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 200
     })
     {
         float xCenter = info.Width / 2;
@@ -127,14 +133,14 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
         string text = "SKEW";
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
         float xText = xCenter - textBounds.MidX;
         float yText = yCenter - textBounds.MidY;
 
         canvas.Translate(xCenter, yCenter);
         SkewDegrees(canvas, xSkewSlider.Value, ySkewSlider.Value);
         canvas.Translate(-xCenter, -yCenter);
-        canvas.DrawText(text, xText, yText, textPaint);
+        canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
     }
 }
 
@@ -163,14 +169,16 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     using (SKPaint textPaint = new SKPaint()
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Maroon,
-        TextAlign = SKTextAlign.Center,
-        TextSize = info.Width / 8       // empirically determined
+        Color = SKColors.Maroon
+    })
+    using (SKFont font = new SKFont()
+    {
+        Size = info.Width / 8       // empirically determined
     })
     {
         canvas.Translate(info.Width / 2, info.Height / 2);
         SkewDegrees(canvas, -20, 0);
-        canvas.DrawText(Title, 0, 0, textPaint);
+        canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
     }
 }
 
@@ -181,7 +189,7 @@ void SkewDegrees(SKCanvas canvas, double xDegrees, double yDegrees)
 }
 ```
 
-The `TextAlign` property of `SKPaint` is set to `Center`. Without any transforms, the `DrawText` call with coordinates of (0, 0) would position the text with the horizontal center of the baseline at the upper-left corner. The `SkewDegrees` skews the text horizontally 20 degrees relative to the baseline. The `Translate` call moves the horizontal center of the text's baseline to the center of the canvas:
+The `SKTextAlign.Center` parameter passed to `DrawText` positions the text with the horizontal center of the baseline at the specified location. The `SkewDegrees` skews the text horizontally 20 degrees relative to the baseline. The `Translate` call moves the horizontal center of the text's baseline to the center of the canvas:
 
 [![Triple screenshot of the Oblique Text page](skew-images/obliquetext-small.png)](skew-images/obliquetext-large.png#lightbox "Triple screenshot of the Oblique Text page")
 
@@ -189,9 +197,10 @@ The **Skew Shadow Text** page demonstrates how to use a combination of a 45-degr
 
 ```csharp
 using (SKPaint textPaint = new SKPaint())
+using (SKFont font = new SKFont())
 {
     textPaint.Style = SKPaintStyle.Fill;
-    textPaint.TextSize = info.Width / 6;   // empirically determined
+    font.Size = info.Width / 6;   // empirically determined
 
     // Common to shadow and text
     string text = "Shadow";
@@ -205,12 +214,12 @@ using (SKPaint textPaint = new SKPaint())
     canvas.Skew((float)Math.Tan(-Math.PI / 4), 0);
     canvas.Scale(1, 3);
     canvas.Translate(-xText, -yText);
-    canvas.DrawText(text, xText, yText, textPaint);
+    canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
     canvas.Restore();
 
     // Text
     textPaint.Color = SKColors.Blue;
-    canvas.DrawText(text, xText, yText, textPaint);
+    canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
 }
 ```
 
@@ -226,7 +235,7 @@ The shadow and text are still aligned at the baseline, but the effect just looks
 
 ```csharp
 SKRect textBounds = new SKRect();
-textPaint.MeasureText(text, ref textBounds);
+font.MeasureText(text, out textBounds);
 ```
 
 The `Translate` calls need to be adjusted by the height of the descenders:

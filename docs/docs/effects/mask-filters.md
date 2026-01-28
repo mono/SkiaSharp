@@ -121,21 +121,22 @@ public partial class MaskBlurExperimentPage : ContentPage
         float sigma = (float)sigmaSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            // Set SKPaint properties
-            paint.TextSize = (info.Width - 100) / (TEXT.Length / 2);
+            // Set SKPaint and SKFont properties
+            font.Size = (info.Width - 100) / (TEXT.Length / 2);
             paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
 
             // Get text bounds and calculate display rectangle
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
             SKRect textRect = new SKRect(0, 0, info.Width, textBounds.Height + 50);
 
             // Center the text in the display rectangle
             float xText = textRect.Width / 2 - textBounds.MidX;
             float yText = textRect.Height / 2 - textBounds.MidY;
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Calculate rectangle for bitmap
             SKRect bitmapRect = new SKRect(0, textRect.Bottom, info.Width, info.Height);
@@ -158,7 +159,7 @@ The text is blurred more with increasing values of the `sigma` argument. In expe
 Try several values before settling on a blur level that looks the best for your application. For example, in the **Mask Blur Experiment** page, try setting `sigma` like this:
 
 ```csharp
-sigma = paint.TextSize / 18;
+sigma = font.Size / 18;
 paint.MaskFilter = SKMaskFilter.CreateBlur(blurStyle, sigma);
 ```
 
@@ -205,26 +206,27 @@ public class BlurryReflectionPage : ContentPage
         canvas.Clear();
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             // Set text color to blue
             paint.Color = SKColors.Blue;
 
             // Set text size to fill 90% of width
-            paint.TextSize = 100;
-            float width = paint.MeasureText(TEXT);
+            font.Size = 100;
+            float width = font.MeasureText(TEXT);
             float scale = 0.9f * info.Width / width;
-            paint.TextSize *= scale;
+            font.Size *= scale;
 
             // Get text bounds
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Calculate offsets to position text above center
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2;
 
             // Draw unreflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Shift textBounds to match displayed text
             textBounds.Offset(xText, yText);
@@ -239,13 +241,13 @@ public class BlurryReflectionPage : ContentPage
                                 SKShaderTileMode.Clamp);
 
             // Create a blur mask filter
-            paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, paint.TextSize / 36);
+            paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, font.Size / 36);
 
             // Scale the canvas to flip upside-down around the vertical center
             canvas.Scale(1, -1, 0, yText);
 
             // Draw reflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }
@@ -254,7 +256,7 @@ public class BlurryReflectionPage : ContentPage
 The new statement adds a blur filter for the reflected text that is based on the text size:
 
 ```csharp
-paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, paint.TextSize / 36);
+paint.MaskFilter = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, font.Size / 36);
 ```
 
 This blur filter causes the reflection to seem much more realistic:

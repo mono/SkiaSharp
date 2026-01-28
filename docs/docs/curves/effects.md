@@ -101,7 +101,7 @@ public class AnimatedDottedTextPage : ContentPage
 
         canvas.Clear();
 
-        // Create an SKPaint object to display the text
+        // Create an SKPaint object for styling and an SKFont for text attributes
         using (SKPaint textPaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke,
@@ -109,14 +109,15 @@ public class AnimatedDottedTextPage : ContentPage
                 StrokeCap = SKStrokeCap.Round,
                 Color = SKColors.Blue,
             })
+        using (SKFont font = new SKFont())
         {
-            // Adjust TextSize property so text is 95% of screen width
-            float textWidth = textPaint.MeasureText(text);
-            textPaint.TextSize *= 0.95f * info.Width / textWidth;
+            // Adjust Size property so text is 95% of screen width
+            float textWidth = font.MeasureText(text);
+            font.Size *= 0.95f * info.Width / textWidth;
 
             // Find the text bounds
             SKRect textBounds = new SKRect();
-            textPaint.MeasureText(text, ref textBounds);
+            font.MeasureText(text, out textBounds);
 
             // Calculate offsets to center the text on the screen
             float xText = info.Width / 2 - textBounds.MidX;
@@ -134,7 +135,7 @@ public class AnimatedDottedTextPage : ContentPage
                 textPaint.PathEffect = dashEffect;
 
                 // And draw the text
-                canvas.DrawText(text, xText, yText, textPaint);
+                canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
             }
         }
     }
@@ -1040,23 +1041,24 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     string text = "FUZZY";
 
     using (SKPaint textPaint = new SKPaint())
+    using (SKFont font = new SKFont())
     {
         textPaint.Color = SKColors.Purple;
         textPaint.PathEffect = SKPathEffect.CreateDiscrete(3f, 10f);
 
-        // Adjust TextSize property so text is 95% of screen width
-        float textWidth = textPaint.MeasureText(text);
-        textPaint.TextSize *= 0.95f * info.Width / textWidth;
+        // Adjust Size property so text is 95% of screen width
+        float textWidth = font.MeasureText(text);
+        font.Size *= 0.95f * info.Width / textWidth;
 
         // Find the text bounds
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
 
         // Calculate offsets to center the text on the screen
         float xText = info.Width / 2 - textBounds.MidX;
         float yText = info.Height / 2 - textBounds.MidY;
 
-        canvas.DrawText(text, xText, yText, textPaint);
+        canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
     }
 }
 ```

@@ -79,10 +79,11 @@ It is common to use the translate transform for shadow effects and similar techn
 float textSize = 150;
 
 using (SKPaint textPaint = new SKPaint())
+using (SKFont font = new SKFont())
 {
     textPaint.Style = SKPaintStyle.Fill;
-    textPaint.TextSize = textSize;
-    textPaint.FakeBoldText = true;
+    font.Size = textSize;
+    font.Embolden = true;
 
     float x = 10;
     float y = textSize;
@@ -90,20 +91,20 @@ using (SKPaint textPaint = new SKPaint())
     // Shadow
     canvas.Translate(10, 10);
     textPaint.Color = SKColors.Black;
-    canvas.DrawText("SHADOW", x, y, textPaint);
+    canvas.DrawText("SHADOW", x, y, SKTextAlign.Left, font, textPaint);
     canvas.Translate(-10, -10);
     textPaint.Color = SKColors.Pink;
-    canvas.DrawText("SHADOW", x, y, textPaint);
+    canvas.DrawText("SHADOW", x, y, SKTextAlign.Left, font, textPaint);
 
     y += 2 * textSize;
 
     // Engrave
     canvas.Translate(-5, -5);
     textPaint.Color = SKColors.Black;
-    canvas.DrawText("ENGRAVE", x, y, textPaint);
+    canvas.DrawText("ENGRAVE", x, y, SKTextAlign.Left, font, textPaint);
     canvas.ResetMatrix();
     textPaint.Color = SKColors.White;
-    canvas.DrawText("ENGRAVE", x, y, textPaint);
+    canvas.DrawText("ENGRAVE", x, y, SKTextAlign.Left, font, textPaint);
 
     y += 2 * textSize;
 
@@ -111,10 +112,10 @@ using (SKPaint textPaint = new SKPaint())
     canvas.Save();
     canvas.Translate(5, 5);
     textPaint.Color = SKColors.Black;
-    canvas.DrawText("EMBOSS", x, y, textPaint);
+    canvas.DrawText("EMBOSS", x, y, SKTextAlign.Left, font, textPaint);
     canvas.Restore();
     textPaint.Color = SKColors.White;
-    canvas.DrawText("EMBOSS", x, y, textPaint);
+    canvas.DrawText("EMBOSS", x, y, SKTextAlign.Left, font, textPaint);
 }
 ```
 

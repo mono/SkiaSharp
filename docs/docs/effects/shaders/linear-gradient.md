@@ -352,6 +352,7 @@ public class GradientTextPage : ContentPage
         canvas.Clear();
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             // Create gradient for background
             paint.Shader = SKShader.CreateLinearGradient(
@@ -366,14 +367,14 @@ public class GradientTextPage : ContentPage
             canvas.DrawRect(info.Rect, paint);
 
             // Set TextSize to fill 90% of width
-            paint.TextSize = 100;
-            float width = paint.MeasureText(TEXT);
+            font.Size = 100;
+            float width = font.MeasureText(TEXT);
             float scale = 0.9f * info.Width / width;
-            paint.TextSize *= scale;
+            font.Size *= scale;
 
             // Get text bounds
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Calculate offsets to center the text on the screen
             float xText = info.Width / 2 - textBounds.MidX;
@@ -392,7 +393,7 @@ public class GradientTextPage : ContentPage
                                 SKShaderTileMode.Clamp);
 
             // Draw text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }
@@ -400,7 +401,7 @@ public class GradientTextPage : ContentPage
 
 The `Shader` property of the `SKPaint` object is set first to display a gradient to cover the background. The gradient points are set to the upper-left and lower-right corners of the canvas.
 
-The code sets the `TextSize` property of the `SKPaint` object so that the text is displayed at 90% of the width of the canvas. The text bounds are used to calculate `xText` and `yText` values to pass to the `DrawText` method to center the text.
+The code sets the `Size` property of the `SKFont` object so that the text is displayed at 90% of the width of the canvas. The text bounds are used to calculate `xText` and `yText` values to pass to the `DrawText` method to center the text.
 
 However, the gradient points for the second `CreateLinearGradient` call must refer to the upper-left and lower-right corner of the text relative to the canvas when it's displayed. This is accomplished by shifting the `textBounds` rectangle by the same `xText` and `yText` values:
 
@@ -850,26 +851,27 @@ public class ReflectionGradientPage : ContentPage
         canvas.Clear();
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             // Set text color to blue
             paint.Color = SKColors.Blue;
 
             // Set text size to fill 90% of width
-            paint.TextSize = 100;
-            float width = paint.MeasureText(TEXT);
+            font.Size = 100;
+            float width = font.MeasureText(TEXT);
             float scale = 0.9f * info.Width / width;
-            paint.TextSize *= scale;
+            font.Size *= scale;
 
             // Get text bounds
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Calculate offsets to position text above center
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2;
 
             // Draw unreflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Shift textBounds to match displayed text
             textBounds.Offset(xText, yText);
@@ -887,7 +889,7 @@ public class ReflectionGradientPage : ContentPage
             canvas.Scale(1, -1, 0, yText);
 
             // Draw reflected text
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }

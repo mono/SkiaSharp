@@ -459,12 +459,12 @@ public class GradientBitmapPage : ContentPage
         SKRect bounds = new SKRect();
 
         using (SKPaint textPaint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            textPaint.TextSize = (float)(12 * canvasView.CanvasSize.Width / canvasView.Width);
-            textPaint.TextAlign = SKTextAlign.Center;
-            textPaint.MeasureText("Tly", ref bounds);
+            font.Size = (float)(12 * canvasView.CanvasSize.Width / canvasView.Width);
+            font.MeasureText("Tly", out bounds);
 
-            canvas.DrawText(text, new SKPoint(rect.MidX, rect.Bottom - bounds.Bottom), textPaint);
+            canvas.DrawText(text, new SKPoint(rect.MidX, rect.Bottom - bounds.Bottom), SKTextAlign.Center, font, textPaint);
             rect.Bottom -= bounds.Height;
             canvas.DrawBitmap(bitmaps[index], rect, BitmapStretch.Uniform);
         }

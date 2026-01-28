@@ -420,8 +420,11 @@ public class AnimatedRotation3DPage : ContentPage
     {
         Style = SKPaintStyle.Stroke,
         Color = SKColors.Black,
-        TextSize = 100,
         StrokeWidth = 3,
+    };
+    SKFont font = new SKFont
+    {
+        Size = 100
     };
     SKRect textBounds;
 
@@ -434,7 +437,7 @@ public class AnimatedRotation3DPage : ContentPage
         Content = canvasView;
 
         // Measure the text
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
     }
     ...
 }
@@ -522,7 +525,7 @@ public class AnimatedRotation3DPage : ContentPage
         canvas.SetMatrix(matrix);
         float xText = xCenter - textBounds.MidX;
         float yText = yCenter - textBounds.MidY;
-        canvas.DrawText(text, xText, yText, textPaint);
+        canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
     }
 }
 ```

@@ -65,10 +65,11 @@ public partial class HelloBitmapPage : ContentPage
         Title = TEXT;
 
         // Create bitmap and draw on it
-        using (SKPaint textPaint = new SKPaint { TextSize = 48 })
+        using (SKPaint textPaint = new SKPaint())
+        using (SKFont font = new SKFont { Size = 48 })
         {
             SKRect bounds = new SKRect();
-            textPaint.MeasureText(TEXT, ref bounds);
+            font.MeasureText(TEXT, out bounds);
 
             helloBitmap = new SKBitmap((int)bounds.Right,
                                        (int)bounds.Height);
@@ -76,7 +77,7 @@ public partial class HelloBitmapPage : ContentPage
             using (SKCanvas bitmapCanvas = new SKCanvas(helloBitmap))
             {
                 bitmapCanvas.Clear();
-                bitmapCanvas.DrawText(TEXT, 0, -bounds.Top, textPaint);
+                bitmapCanvas.DrawText(TEXT, 0, -bounds.Top, SKTextAlign.Left, font, textPaint);
             }
         }
 

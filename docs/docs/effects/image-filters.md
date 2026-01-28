@@ -99,21 +99,22 @@ public partial class ImageBlurExperimentPage : ContentPage
         float sigmaY = (float)sigmaYSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            // Set SKPaint properties
-            paint.TextSize = (info.Width - 100) / (TEXT.Length / 2);
+            // Set SKPaint and SKFont properties
+            font.Size = (info.Width - 100) / (TEXT.Length / 2);
             paint.ImageFilter = SKImageFilter.CreateBlur(sigmaX, sigmaY);
 
             // Get text bounds and calculate display rectangle
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
             SKRect textRect = new SKRect(0, 0, info.Width, textBounds.Height + 50);
 
             // Center the text in the display rectangle
             float xText = textRect.Width / 2 - textBounds.MidX;
             float yText = textRect.Height / 2 - textBounds.MidY;
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
             // Calculate rectangle for bitmap
             SKRect bitmapRect = new SKRect(0, textRect.Bottom, info.Width, info.Height);
@@ -246,9 +247,10 @@ public partial class DropShadowExperimentPage : ContentPage
         float sigmaY = (float)sigmaYSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
-            // Set SKPaint properties
-            paint.TextSize = info.Width / 7;
+            // Set SKPaint and SKFont properties
+            font.Size = info.Width / 7;
             paint.Color = SKColors.Blue;
             paint.ImageFilter = SKImageFilter.CreateDropShadow(
                                     dx,
@@ -259,13 +261,13 @@ public partial class DropShadowExperimentPage : ContentPage
                                     SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
 
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             // Center the text in the display rectangle
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2 - textBounds.MidY;
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }
@@ -388,17 +390,18 @@ public partial class DistantLightExperimentPage : ContentPage
         float lightConstant = (float)lightConstantSlider.Value;
 
         using (SKPaint paint = new SKPaint())
+        using (SKFont font = new SKFont())
         {
             paint.IsAntialias = true;
 
             // Size text to 90% of canvas width
-            paint.TextSize = 100;
-            float textWidth = paint.MeasureText(TEXT);
-            paint.TextSize *= 0.9f * info.Width / textWidth;
+            font.Size = 100;
+            float textWidth = font.MeasureText(TEXT);
+            font.Size *= 0.9f * info.Width / textWidth;
 
             // Find coordinates to center text
             SKRect textBounds = new SKRect();
-            paint.MeasureText(TEXT, ref textBounds);
+            font.MeasureText(TEXT, out textBounds);
 
             float xText = info.Rect.MidX - textBounds.MidX;
             float yText = info.Rect.MidY - textBounds.MidY;
@@ -410,7 +413,7 @@ public partial class DistantLightExperimentPage : ContentPage
                                     surfaceScale,
                                     lightConstant);
 
-            canvas.DrawText(TEXT, xText, yText, paint);
+            canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
         }
     }
 }

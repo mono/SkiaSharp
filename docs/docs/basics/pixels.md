@@ -41,17 +41,17 @@ public SurfaceSizePage()
 }
 ```
 
-`SKCanvas` includes six different `DrawText` methods, but this [`DrawText`](xref:SkiaSharp.SKCanvas.DrawText(System.String,System.Single,System.Single,SkiaSharp.SKPaint)) method is the simplest:
+`SKCanvas` includes several `DrawText` methods. The main method for drawing text uses both `SKFont` for text metrics and `SKPaint` for styling:
 
 ```csharp
-public void DrawText (String text, Single x, Single y, SKPaint paint)
+public void DrawText (String text, Single x, Single y, SKTextAlign textAlign, SKFont font, SKPaint paint)
 ```
 
-You specify the text string, the X and Y coordinates where the text is to begin, and an `SKPaint` object. The X coordinate specifies where the left side of the text is positioned, but watch out: The Y coordinate specifies the position of the *baseline* of the text. If you've ever written by hand on lined paper, the baseline is the line on which characters sit, and below which descenders (such as those on the letters g, p, q, and y) descend.
+You specify the text string, the X and Y coordinates where the text is to begin, the text alignment, an `SKFont` object for font attributes, and an `SKPaint` object for color and styling. The X coordinate specifies where the text is positioned based on the alignment, and the Y coordinate specifies the position of the *baseline* of the text. If you've ever written by hand on lined paper, the baseline is the line on which characters sit, and below which descenders (such as those on the letters g, p, q, and y) descend.
 
-The `SKPaint` object allows you to specify the color of the text, the font family, and the text size. By default, the [`TextSize`](xref:SkiaSharp.SKPaint.TextSize) property has a value of 12, which results in tiny text on high-resolution devices such as phones. In anything but the simplest applications, you'll also need some information on the size of the text you're displaying. The `SKPaint` class defines a [`FontMetrics`](xref:SkiaSharp.SKPaint.FontMetrics) property and several [`MeasureText`](xref:SkiaSharp.SKPaint.MeasureText(System.String)) methods, but for less fancy needs, the [`FontSpacing`](xref:SkiaSharp.SKPaint.FontSpacing) property provides a recommended value for spacing successive lines of text.
+The `SKPaint` class allows you to specify the color of the text, while `SKFont` controls the font family and text size. By default, the [`Size`](xref:SkiaSharp.SKFont.Size) property has a value of 12, which results in tiny text on high-resolution devices such as phones. In anything but the simplest applications, you'll also need some information on the size of the text you're displaying. The `SKFont` class defines a [`Metrics`](xref:SkiaSharp.SKFont.Metrics) property and several [`MeasureText`](xref:SkiaSharp.SKFont.MeasureText(System.String,SkiaSharp.SKPaint)) methods, but for less fancy needs, the [`Spacing`](xref:SkiaSharp.SKFont.Spacing) property provides a recommended value for spacing successive lines of text.
 
-The following `PaintSurface` handler creates an `SKPaint` object for a `TextSize` of 40 pixels, which is the desired vertical height of the text from the top of ascenders to the bottom of descenders. The `FontSpacing` value that the `SKPaint` object returns is a little larger than that, about 47 pixels.
+The following `PaintSurface` handler creates an `SKFont` object with a `Size` of 40 pixels, which is the desired vertical height of the text from the top of ascenders to the bottom of descenders. The `Spacing` value that the `SKFont` object returns is a little larger than that, about 47 pixels.
 
 ```csharp
 void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
@@ -64,28 +64,32 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
     SKPaint paint = new SKPaint
     {
-        Color = SKColors.Black,
-        TextSize = 40
+        Color = SKColors.Black
     };
 
-    float fontSpacing = paint.FontSpacing;
+    SKFont font = new SKFont
+    {
+        Size = 40
+    };
+
+    float fontSpacing = font.Spacing;
     float x = 20;               // left margin
     float y = fontSpacing;      // first baseline
     float indent = 100;
 
-    canvas.DrawText("SKCanvasView Height and Width:", x, y, paint);
+    canvas.DrawText("SKCanvasView Height and Width:", x, y, SKTextAlign.Left, font, paint);
     y += fontSpacing;
     canvas.DrawText(String.Format("{0:F2} x {1:F2}",
                                   canvasView.Width, canvasView.Height),
-                    x + indent, y, paint);
+                    x + indent, y, SKTextAlign.Left, font, paint);
     y += fontSpacing * 2;
-    canvas.DrawText("SKCanvasView CanvasSize:", x, y, paint);
+    canvas.DrawText("SKCanvasView CanvasSize:", x, y, SKTextAlign.Left, font, paint);
     y += fontSpacing;
-    canvas.DrawText(canvasView.CanvasSize.ToString(), x + indent, y, paint);
+    canvas.DrawText(canvasView.CanvasSize.ToString(), x + indent, y, SKTextAlign.Left, font, paint);
     y += fontSpacing * 2;
-    canvas.DrawText("SKImageInfo Size:", x, y, paint);
+    canvas.DrawText("SKImageInfo Size:", x, y, SKTextAlign.Left, font, paint);
     y += fontSpacing;
-    canvas.DrawText(info.Size.ToString(), x + indent, y, paint);
+    canvas.DrawText(info.Size.ToString(), x + indent, y, SKTextAlign.Left, font, paint);
 }
 ```
 

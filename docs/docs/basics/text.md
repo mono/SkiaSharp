@@ -20,7 +20,7 @@ That image also includes a rounded rectangle. The SkiaSharp `Canvas` class inclu
 
 The **Framed Text** page centers a short text string on the page and surrounds it with a frame composed of a pair of rounded rectangles. The [`FramedTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/FramedTextPage.cs) class shows how it's done.
 
-In SkiaSharp, you use the `SKPaint` class to set text and font attributes, but you can also use it to obtain the rendered size of text. The beginning of the following `PaintSurface` event handler calls two different `MeasureText` methods. The first [`MeasureText`](xref:SkiaSharp.SKPaint.MeasureText(System.String)) call has a simple `string` argument and returns the pixel width of the text based on the current font attributes. The program then calculates a new `TextSize` property of the `SKPaint` object based on that rendered width, the current `TextSize` property, and the width of the display area. This calculation is intended to set `TextSize` so that the text string to be rendered at 90% of the width of the screen:
+In SkiaSharp, you use the `SKFont` class to set font attributes and measure text, while `SKPaint` is used for colors and other rendering properties. The beginning of the following `PaintSurface` event handler calls two different `MeasureText` methods. The first [`MeasureText`](xref:SkiaSharp.SKFont.MeasureText(System.String,SkiaSharp.SKPaint)) call has a simple `string` argument and returns the pixel width of the text based on the current font attributes. The program then calculates a new `Size` property of the `SKFont` object based on that rendered width, the current `Size` property, and the width of the display area. This calculation is intended to set `Size` so that the text string to be rendered at 90% of the width of the screen:
 
 ```csharp
 void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
@@ -33,24 +33,26 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
     string str = "Hello SkiaSharp!";
 
-    // Create an SKPaint object to display the text
+    // Create an SKPaint object for text color and an SKFont for text attributes
     SKPaint textPaint = new SKPaint
     {
         Color = SKColors.Chocolate
     };
 
-    // Adjust TextSize property so text is 90% of screen width
-    float textWidth = textPaint.MeasureText(str);
-    textPaint.TextSize = 0.9f * info.Width * textPaint.TextSize / textWidth;
+    SKFont font = new SKFont();
+
+    // Adjust Size property so text is 90% of screen width
+    float textWidth = font.MeasureText(str);
+    font.Size = 0.9f * info.Width * font.Size / textWidth;
 
     // Find the text bounds
     SKRect textBounds = new SKRect();
-    textPaint.MeasureText(str, ref textBounds);
+    font.MeasureText(str, out textBounds);
     ...
 }
 ```
 
-The second [`MeasureText`](xref:SkiaSharp.SKPaint.MeasureText(System.String,SkiaSharp.SKRect@)) call has an `SKRect` argument, so it obtains both a width and height of the rendered text. The `Height` property of this `SKRect` value depends on the presence of capital letters, ascenders, and descenders in the text string. Different `Height` values are reported for the text strings "mom", "cat", and "dog", for example.
+The second [`MeasureText`](xref:SkiaSharp.SKFont.MeasureText(System.String,SkiaSharp.SKRect@,SkiaSharp.SKPaint)) call has an `out SKRect` argument, so it obtains both a width and height of the rendered text. The `Height` property of this `SKRect` value depends on the presence of capital letters, ascenders, and descenders in the text string. Different `Height` values are reported for the text strings "mom", "cat", and "dog", for example.
 
 The `Left` and `Top` properties of the `SKRect` structure indicate the coordinates of the upper-left corner of the rendered text if the text is displayed by a `DrawText` call with X and Y positions of 0. For example, when this program is running on an iPhone 7 simulator, `TextSize` is assigned the value 90.6254 as a result of the calculation following the first call to `MeasureText`. The `SKRect` value obtained from the second call to `MeasureText` has the following property values:
 
@@ -59,7 +61,7 @@ The `Left` and `Top` properties of the `SKRect` structure indicate the coordinat
 - `Width` = 664.8214
 - `Height` = 88;
 
-Keep in mind that the X and Y coordinates you pass to the `DrawText` method specify the left side of the text at the baseline. The `Top` value indicates that the text extends 68 pixels above that baseline and (subtracting 68 it from 88) 20 pixels below the baseline. The `Left` value of 6 indicates that the text begins six pixels to the right of the X value in the `DrawText` call. This allows for normal inter-character spacing. If you want to display the text snugly in the upper-left corner of the display, pass the negatives of these `Left` and `Top` values as the X and Y coordinates of `DrawText`, in this example, &ndash;6 and 68.
+Keep in mind that the X and Y coordinates you pass to the `DrawText` method specify the position of the text at the baseline. The `Top` value indicates that the text extends 68 pixels above that baseline and (subtracting 68 it from 88) 20 pixels below the baseline. The `Left` value of 6 indicates that the text begins six pixels to the right of the X value in the `DrawText` call. This allows for normal inter-character spacing. If you want to display the text snugly in the upper-left corner of the display, pass the negatives of these `Left` and `Top` values as the X and Y coordinates of `DrawText`, in this example, &ndash;6 and 68.
 
 The `SKRect` structure defines several handy properties and methods, some of which are used in the remainder of the `PaintSurface` handler. The `MidX` and `MidY` values indicate the coordinates of the center of the rectangle. (In the iPhone 7 example, those values are 338.4107 and &ndash;24.) The following code uses these values for the easiest calculation of coordinates to center text on the display:
 
@@ -72,7 +74,7 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     float yText = info.Height / 2 - textBounds.MidY;
 
     // And draw the text
-    canvas.DrawText(str, xText, yText, textPaint);
+    canvas.DrawText(str, xText, yText, SKTextAlign.Left, font, textPaint);
     ...
 }
 ```
@@ -119,7 +121,7 @@ Following that, the remainder of the method is straight-forward. It creates anot
 
 You can turn your phone or simulator sideways to see the text and frame increase in size.
 
-If you only need to center some text on the screen, you can do it approximately without measuring the text. Instead, set the [`TextAlign`](xref:SkiaSharp.SKPaint.TextAlign) property of `SKPaint` to the enumeration member [`SKTextAlign.Center`](xref:SkiaSharp.SKTextAlign). The X coordinate you specify in the `DrawText` method then indicates where the horizontal center of the text is positioned. If you pass the midpoint of the screen to the `DrawText` method, the text will be horizontally centered and *nearly* vertically centered because the baseline will be vertically centered.
+If you only need to center some text on the screen, you can do it approximately without measuring the text. Instead, pass [`SKTextAlign.Center`](xref:SkiaSharp.SKTextAlign) as the alignment parameter to the `DrawText` method. The X coordinate you specify in the `DrawText` method then indicates where the horizontal center of the text is positioned. If you pass the midpoint of the screen to the `DrawText` method, the text will be horizontally centered and *nearly* vertically centered because the baseline will be vertically centered.
 
 Text can be treated much like any other graphical object. One simple option is to display the outline of the text characters:
 
@@ -138,29 +140,33 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
     string text = "OUTLINE";
 
-    // Create an SKPaint object to display the text
+    // Create an SKPaint object for styling and an SKFont for text attributes
     SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Stroke,
         StrokeWidth = 1,
-        FakeBoldText = true,
         Color = SKColors.Blue
     };
 
-    // Adjust TextSize property so text is 95% of screen width
-    float textWidth = textPaint.MeasureText(text);
-    textPaint.TextSize = 0.95f * info.Width * textPaint.TextSize / textWidth;
+    SKFont font = new SKFont
+    {
+        Embolden = true
+    };
+
+    // Adjust Size property so text is 95% of screen width
+    float textWidth = font.MeasureText(text);
+    font.Size = 0.95f * info.Width * font.Size / textWidth;
 
     // Find the text bounds
     SKRect textBounds = new SKRect();
-    textPaint.MeasureText(text, ref textBounds);
+    font.MeasureText(text, out textBounds);
 
     // Calculate offsets to center the text on the screen
     float xText = info.Width / 2 - textBounds.MidX;
     float yText = info.Height / 2 - textBounds.MidY;
 
     // And draw the text
-    canvas.DrawText(text, xText, yText, textPaint);
+    canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
 }
 ```
 

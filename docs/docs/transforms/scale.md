@@ -76,25 +76,28 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     using (SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Blue,
-        TextSize = 50
+        Color = SKColors.Blue
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 50
     })
     {
         canvas.Scale((float)xScaleSlider.Value,
                      (float)yScaleSlider.Value);
 
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(Title, ref textBounds);
+        font.MeasureText(Title, out textBounds);
 
         float margin = 10;
         SKRect borderRect = SKRect.Create(new SKPoint(margin, margin), textBounds.Size);
         canvas.DrawRoundRect(borderRect, 20, 20, strokePaint);
-        canvas.DrawText(Title, margin, -textBounds.Top + margin, textPaint);
+        canvas.DrawText(Title, margin, -textBounds.Top + margin, SKTextAlign.Left, font, textPaint);
     }
 }
 ```
 
-You might wonder: How do the scaling factors affect the value returned from the `MeasureText` method of `SKPaint`? The answer is: Not at all. `Scale` is a method of `SKCanvas`. It does not affect anything you do with an `SKPaint` object until you use that object to render something on the canvas.
+You might wonder: How do the scaling factors affect the value returned from the `MeasureText` method of `SKFont`? The answer is: Not at all. `Scale` is a method of `SKCanvas`. It does not affect anything you do with an `SKFont` object until you use that object to render something on the canvas.
 
 As you can see, everything drawn after the `Scale` call increases proportionally:
 
@@ -136,12 +139,15 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
     using (SKPaint textPaint = new SKPaint
     {
         Style = SKPaintStyle.Fill,
-        Color = SKColors.Blue,
-        TextSize = 50
+        Color = SKColors.Blue
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 50
     })
     {
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(Title, ref textBounds);
+        font.MeasureText(Title, out textBounds);
         float margin = (info.Width - textBounds.Width) / 2;
 
         float sx = (float)xScaleSlider.Value;
@@ -153,7 +159,7 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
         SKRect borderRect = SKRect.Create(new SKPoint(margin, margin), textBounds.Size);
         canvas.DrawRoundRect(borderRect, 20, 20, strokePaint);
-        canvas.DrawText(Title, margin, -textBounds.Top + margin, textPaint);
+        canvas.DrawText(Title, margin, -textBounds.Top + margin, SKTextAlign.Left, font, textPaint);
     }
 }
 ```
@@ -267,9 +273,10 @@ using (SKPaint textPaint = new SKPaint
     StrokeWidth = 0.1f,
     StrokeJoin = SKStrokeJoin.Round
 })
+using (SKFont font = new SKFont())
 {
     SKRect textBounds = new SKRect();
-    textPaint.MeasureText("HELLO", ref textBounds);
+    font.MeasureText("HELLO", out textBounds);
 
     // Inflate bounds by the stroke width
     textBounds.Inflate(textPaint.StrokeWidth / 2,
@@ -279,7 +286,7 @@ using (SKPaint textPaint = new SKPaint
                  info.Height / textBounds.Height);
     canvas.Translate(-textBounds.Left, -textBounds.Top);
 
-    canvas.DrawText("HELLO", 0, 0, textPaint);
+    canvas.DrawText("HELLO", 0, 0, SKTextAlign.Left, font, textPaint);
 }
 ```
 

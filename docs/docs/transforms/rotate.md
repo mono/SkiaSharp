@@ -40,13 +40,15 @@ The **Basic Rotate** page demonstrates the `RotateDegrees` method. The [**BasicR
 using (SKPaint textPaint = new SKPaint
 {
     Style = SKPaintStyle.Fill,
-    Color = SKColors.Blue,
-    TextAlign = SKTextAlign.Center,
-    TextSize = 100
+    Color = SKColors.Blue
+})
+using (SKFont font = new SKFont
+{
+    Size = 100
 })
 {
     canvas.RotateDegrees((float)rotateSlider.Value);
-    canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+    canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 }
 ```
 
@@ -68,13 +70,15 @@ The **Centered Rotate** page is just like the **Basic Rotate** except that the e
 using (SKPaint textPaint = new SKPaint
 {
     Style = SKPaintStyle.Fill,
-    Color = SKColors.Blue,
-    TextAlign = SKTextAlign.Center,
-    TextSize = 100
+    Color = SKColors.Blue
+})
+using (SKFont font = new SKFont
+{
+    Size = 100
 })
 {
     canvas.RotateDegrees((float)rotateSlider.Value, info.Width / 2, info.Height / 2);
-    canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+    canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 }
 ```
 
@@ -100,7 +104,7 @@ You'll discover that you can sometimes combine `Translate` calls with `Rotate` c
 
 ```csharp
 canvas.RotateDegrees((float)rotateSlider.Value, info.Width / 2, info.Height / 2);
-canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 ```
 
 The `RotateDegrees` call is equivalent to two `Translate` calls and a non-centered `RotateDegrees`:
@@ -109,7 +113,7 @@ The `RotateDegrees` call is equivalent to two `Translate` calls and a non-center
 canvas.Translate(info.Width / 2, info.Height / 2);
 canvas.RotateDegrees((float)rotateSlider.Value);
 canvas.Translate(-info.Width / 2, -info.Height / 2);
-canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
 ```
 
 The `DrawText` call to display text at a particular location is equivalent to a `Translate` call for that location followed by `DrawText` at the point (0, 0):
@@ -119,7 +123,7 @@ canvas.Translate(info.Width / 2, info.Height / 2);
 canvas.RotateDegrees((float)rotateSlider.Value);
 canvas.Translate(-info.Width / 2, -info.Height / 2);
 canvas.Translate(info.Width / 2, info.Height / 2);
-canvas.DrawText(Title, 0, 0, textPaint);
+canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
 ```
 
 The two consecutive `Translate` calls cancel each other out:
@@ -127,7 +131,7 @@ The two consecutive `Translate` calls cancel each other out:
 ```csharp
 canvas.Translate(info.Width / 2, info.Height / 2);
 canvas.RotateDegrees((float)rotateSlider.Value);
-canvas.DrawText(Title, 0, 0, textPaint);
+canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
 ```
 
 Conceptually, the two transforms are applied in the order opposite to how they appear in the code. The `DrawText` call displays the text in the upper-left corner of the canvas. The `RotateDegrees` call rotates that text relative to the upper-left corner. Then the `Translate` call moves the text to the center of the canvas.
@@ -151,22 +155,25 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 
     using (SKPaint textPaint = new SKPaint
     {
-        Color = SKColors.Black,
-        TextSize = 72
+        Color = SKColors.Black
+    })
+    using (SKFont font = new SKFont
+    {
+        Size = 72
     })
     {
         float xCenter = info.Width / 2;
         float yCenter = info.Height / 2;
 
         SKRect textBounds = new SKRect();
-        textPaint.MeasureText(text, ref textBounds);
+        font.MeasureText(text, out textBounds);
         float yText = yCenter - textBounds.Height / 2 - textBounds.Top;
 
         for (int degrees = 0; degrees < 360; degrees += 30)
         {
             canvas.Save();
             canvas.RotateDegrees(degrees, xCenter, yCenter);
-            canvas.DrawText(text, xCenter, yText, textPaint);
+            canvas.DrawText(text, xCenter, yText, SKTextAlign.Center, font, textPaint);
             canvas.Restore();
         }
     }
@@ -181,7 +188,7 @@ One way to simplify this code is to increment the rotation angle by 30 degrees e
 ```csharp
 for (int degrees = 0; degrees < 360; degrees += 30)
 {
-    canvas.DrawText(text, xCenter, yText, textPaint);
+    canvas.DrawText(text, xCenter, yText, SKTextAlign.Center, font, textPaint);
     canvas.RotateDegrees(30, xCenter, yCenter);
 }
 
@@ -196,7 +203,7 @@ canvas.Translate(xCenter, yCenter);
 
 for (int degrees = 0; degrees < 360; degrees += 30)
 {
-    canvas.DrawText(text, 0, yText, textPaint);
+    canvas.DrawText(text, 0, yText, SKTextAlign.Center, font, textPaint);
     canvas.RotateDegrees(30);
 }
 ```
