@@ -29,9 +29,9 @@ namespace DocsSamplesApp.Transforms
             canvas.Clear();
 
             using (SKPaint textPaint = new SKPaint())
+            using (SKFont font = new SKFont { Size = info.Width / 6 })   // empirically determined
             {
                 textPaint.Style = SKPaintStyle.Fill;
-                textPaint.TextSize = info.Width / 6;   // empirically determined
 
                 // Common to shadow and text
                 string text = "shadow";
@@ -45,12 +45,12 @@ namespace DocsSamplesApp.Transforms
                 canvas.Skew((float)Math.Tan(-Math.PI / 4), 0);
                 canvas.Scale(1, 3);
                 canvas.Translate(-xText, -yText);
-                canvas.DrawText(text, xText, yText, textPaint);
+                canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
                 canvas.Restore();
 
                 // Text
                 textPaint.Color = SKColors.Blue;
-                canvas.DrawText(text, xText, yText, textPaint);
+                canvas.DrawText(text, xText, yText, SKTextAlign.Left, font, textPaint);
             }
         }
     }

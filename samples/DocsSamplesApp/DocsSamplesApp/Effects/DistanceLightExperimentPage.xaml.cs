@@ -37,17 +37,18 @@ namespace DocsSamplesApp.Effects
             float lightConstant = (float)lightConstantSlider.Value;
 
             using (SKPaint paint = new SKPaint())
+            using (SKFont font = new SKFont())
             {
                 paint.IsAntialias = true;
 
                 // Size text to 90% of canvas width
-                paint.TextSize = 100;
-                float textWidth = paint.MeasureText(TEXT);
-                paint.TextSize *= 0.9f * info.Width / textWidth;
+                font.Size = 100;
+                float textWidth = font.MeasureText(TEXT);
+                font.Size *= 0.9f * info.Width / textWidth;
 
                 // Find coordinates to center text
                 SKRect textBounds = new SKRect();
-                paint.MeasureText(TEXT, ref textBounds);
+                font.MeasureText(TEXT, out textBounds);
 
                 float xText = info.Rect.MidX - textBounds.MidX;
                 float yText = info.Rect.MidY - textBounds.MidY;
@@ -59,7 +60,7 @@ namespace DocsSamplesApp.Effects
                                         surfaceScale,
                                         lightConstant);
 
-                canvas.DrawText(TEXT, xText, yText, paint);
+                canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
             }
         }
     }

@@ -35,13 +35,12 @@ namespace DocsSamplesApp.Transforms
             using (SKPaint textPaint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
-                Color = SKColors.Blue,
-                TextAlign = SKTextAlign.Center,
-                TextSize = 100
+                Color = SKColors.Blue
             })
+            using (SKFont font = new SKFont { Size = 100 })
             {
                 canvas.RotateDegrees((float)rotateSlider.Value);
-                canvas.DrawText(Title, info.Width / 2, info.Height / 2, textPaint);
+                canvas.DrawText(Title, info.Width / 2, info.Height / 2, SKTextAlign.Center, font, textPaint);
             }
         }
     }

@@ -31,14 +31,13 @@ namespace DocsSamplesApp.Transforms
             using (SKPaint textPaint = new SKPaint()
             {
                 Style = SKPaintStyle.Fill,
-                Color = SKColors.Maroon,
-                TextAlign = SKTextAlign.Center,
-                TextSize = info.Width / 8   // empirically determined
+                Color = SKColors.Maroon
             })
+            using (SKFont font = new SKFont { Size = info.Width / 8 })   // empirically determined
             {
                 canvas.Translate(info.Width / 2, info.Height / 2);
                 SkewDegrees(canvas, -20, 0);
-                canvas.DrawText(Title, 0, 0, textPaint);
+                canvas.DrawText(Title, 0, 0, SKTextAlign.Center, font, textPaint);
             }
         }
 

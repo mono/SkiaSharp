@@ -35,9 +35,9 @@ namespace DocsSamplesApp.Transforms
                 StrokeWidth = 0.1f,
                 StrokeJoin = SKStrokeJoin.Round
             })
+            using (SKFont font = new SKFont())
             {
-                SKRect textBounds = new SKRect();
-                textPaint.MeasureText("HELLO", ref textBounds);
+                font.MeasureText("HELLO", out SKRect textBounds);
 
                 // Inflate bounds by the stroke width
                 textBounds.Inflate(textPaint.StrokeWidth / 2, 
@@ -47,7 +47,7 @@ namespace DocsSamplesApp.Transforms
                              info.Height / textBounds.Height);
                 canvas.Translate(-textBounds.Left, -textBounds.Top);
 
-                canvas.DrawText("HELLO", 0, 0, textPaint);
+                canvas.DrawText("HELLO", 0, 0, SKTextAlign.Left, font, textPaint);
             }
         }
     }

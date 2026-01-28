@@ -30,23 +30,23 @@ namespace DocsSamplesApp.Curves
             string text = "FUZZY";
 
             using (SKPaint textPaint = new SKPaint())
+            using (SKFont textFont = new SKFont())
             {
                 textPaint.Color = SKColors.Purple;
                 textPaint.PathEffect = SKPathEffect.CreateDiscrete(3f, 10f);
 
                 // Adjust TextSize property so text is 95% of screen width
-                float textWidth = textPaint.MeasureText(text);
-                textPaint.TextSize *= 0.95f * info.Width / textWidth;
+                float textWidth = textFont.MeasureText(text);
+                textFont.Size *= 0.95f * info.Width / textWidth;
 
                 // Find the text bounds
-                SKRect textBounds = new SKRect();
-                textPaint.MeasureText(text, ref textBounds);
+                textFont.MeasureText(text, out SKRect textBounds);
 
                 // Calculate offsets to center the text on the screen
                 float xText = info.Width / 2 - textBounds.MidX;
                 float yText = info.Height / 2 - textBounds.MidY;
 
-                canvas.DrawText(text, xText, yText, textPaint);
+                canvas.DrawText(text, xText, yText, SKTextAlign.Left, textFont, textPaint);
             }
         }
     }

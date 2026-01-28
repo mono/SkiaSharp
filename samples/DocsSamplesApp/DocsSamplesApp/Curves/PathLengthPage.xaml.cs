@@ -12,10 +12,14 @@ namespace DocsSamplesApp.Curves
         {
             Style = SKPaintStyle.Fill,
             Color = SKColors.Black,
-            TextSize = 10,
         };
 
-        static readonly float baseTextWidth = textPaint.MeasureText(text);
+        static SKFont textFont = new SKFont
+        {
+            Size = 10,
+        };
+
+        static readonly float baseTextWidth = textFont.MeasureText(text);
 
         public PathLengthPage()
         {
@@ -57,10 +61,10 @@ namespace DocsSamplesApp.Curves
                 SKPathMeasure pathMeasure = new SKPathMeasure(path, false, 1);
 
                 // Find new text size
-                textPaint.TextSize = pathMeasure.Length / baseTextWidth * 10;
+                textFont.Size = pathMeasure.Length / baseTextWidth * 10;
 
                 // Draw text on path
-                canvas.DrawTextOnPath(text, path, 0, 0, textPaint);
+                canvas.DrawTextOnPath(text, path, 0, 0, textFont, textPaint);
             }
 
             foreach (TouchPoint touchPoint in touchPoints)

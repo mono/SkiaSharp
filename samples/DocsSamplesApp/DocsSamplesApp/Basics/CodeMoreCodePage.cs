@@ -66,31 +66,30 @@ namespace DocsSamplesApp.Basics
             const string TEXT2 = "MORE";
 
             using (SKPaint paint = new SKPaint())
+            using (SKFont font = new SKFont())
             {
                 // Set text width to fit in width of canvas
-                paint.TextSize = 100;
-                float textWidth = paint.MeasureText(TEXT1);
-                paint.TextSize *= 0.9f * info.Width / textWidth;
+                font.Size = 100;
+                float textWidth = font.MeasureText(TEXT1);
+                font.Size *= 0.9f * info.Width / textWidth;
 
                 // Center first text string
-                SKRect textBounds = new SKRect();
-                paint.MeasureText(TEXT1, ref textBounds);
+                font.MeasureText(TEXT1, out SKRect textBounds);
 
                 float xText = info.Width / 2 - textBounds.MidX;
                 float yText = info.Height / 2 - textBounds.MidY;
 
                 paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * (1 - transparency)));
-                canvas.DrawText(TEXT1, xText, yText, paint);
+                canvas.DrawText(TEXT1, xText, yText, SKTextAlign.Left, font, paint);
 
                 // Center second text string
-                textBounds = new SKRect();
-                paint.MeasureText(TEXT2, ref textBounds);
+                font.MeasureText(TEXT2, out textBounds);
 
                 xText = info.Width / 2 - textBounds.MidX;
                 yText = info.Height / 2 - textBounds.MidY;
 
                 paint.Color = SKColors.Blue.WithAlpha((byte)(0xFF * transparency));
-                canvas.DrawText(TEXT2, xText, yText, paint);
+                canvas.DrawText(TEXT2, xText, yText, SKTextAlign.Left, font, paint);
             }
         }
     }

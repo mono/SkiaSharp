@@ -429,7 +429,7 @@ The **GlobularText** sample uses this extension method to seemingly wrap text ar
 
 [![Triple screenshot of the Globular Text page](information-images/globulartext-small.png)](information-images/globulartext-large.png#lightbox "Triple screenshot of the Globular Text page")
 
-The [`GlobularTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/GlobularTextPage.cs) class constructor performs this transform. It creates an `SKPaint` object for the text, and then obtains an `SKPath` object from the `GetTextPath` method. This is the path passed to the `CloneWithTransform` extension method along with a transform function:
+The [`GlobularTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/GlobularTextPage.cs) class constructor performs this transform. It creates an `SKFont` object for the text, and then obtains an `SKPath` object from the `GetTextPath` method. This is the path passed to the `CloneWithTransform` extension method along with a transform function:
 
 ```csharp
 public class GlobularTextPage : ContentPage
@@ -444,12 +444,12 @@ public class GlobularTextPage : ContentPage
         canvasView.PaintSurface += OnCanvasViewPaintSurface;
         Content = canvasView;
 
-        using (SKPaint textPaint = new SKPaint())
+        using (SKFont textFont = new SKFont())
         {
-            textPaint.Typeface = SKTypeface.FromFamilyName("Times New Roman");
-            textPaint.TextSize = 100;
+            textFont.Typeface = SKTypeface.FromFamilyName("Times New Roman");
+            textFont.Size = 100;
 
-            using (SKPath textPath = textPaint.GetTextPath("HELLO", 0, 0))
+            using (SKPath textPath = textFont.GetTextPath("HELLO", new SKPoint(0, 0)))
             {
                 SKRect textPathBounds;
                 textPath.GetBounds(out textPathBounds);

@@ -43,12 +43,12 @@ namespace DocsSamplesApp.Curves
 
             canvas.Clear(SKColors.Blue);
 
-            using (SKPaint paint = new SKPaint())
+            using (SKFont font = new SKFont())
             {
-                paint.Typeface = SKTypeface.FromFamilyName(null, SKFontStyle.Bold);
-                paint.TextSize = 10;
+                font.Typeface = SKTypeface.FromFamilyName(null, SKFontStyle.Bold);
+                font.Size = 10;
 
-                using (SKPath textPath = paint.GetTextPath("CODE", 0, 0))
+                using (SKPath textPath = font.GetTextPath("CODE", new SKPoint(0, 0)))
                 {
                     // Set transform to center and enlarge clip path to window height
                     SKRect bounds;

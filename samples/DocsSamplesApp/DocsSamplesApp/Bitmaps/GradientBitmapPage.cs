@@ -285,12 +285,12 @@ namespace DocsSamplesApp.Bitmaps
             SKRect bounds = new SKRect();
 
             using (SKPaint textPaint = new SKPaint())
+            using (SKFont textFont = new SKFont())
             {
-                textPaint.TextSize = (float)(12 * canvasView.CanvasSize.Width / canvasView.Width);
-                textPaint.TextAlign = SKTextAlign.Center;
-                textPaint.MeasureText("Tly", ref bounds);
+                textFont.Size = (float)(12 * canvasView.CanvasSize.Width / canvasView.Width);
+                textFont.MeasureText("Tly", out bounds);
 
-                canvas.DrawText(text, new SKPoint(rect.MidX, rect.Bottom - bounds.Bottom), textPaint);
+                canvas.DrawText(text, rect.MidX, rect.Bottom - bounds.Bottom, SKTextAlign.Center, textFont, textPaint);
                 rect.Bottom -= bounds.Height;
                 canvas.DrawBitmap(bitmaps[index], rect, BitmapStretch.Uniform);
             }

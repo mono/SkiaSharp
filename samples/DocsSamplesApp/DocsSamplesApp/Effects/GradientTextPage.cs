@@ -32,6 +32,7 @@ namespace DocsSamplesApp.Effects
             canvas.Clear();
 
             using (SKPaint paint = new SKPaint())
+            using (SKFont font = new SKFont())
             {
                 // Create gradient for background
                 paint.Shader = SKShader.CreateLinearGradient(
@@ -46,14 +47,14 @@ namespace DocsSamplesApp.Effects
                 canvas.DrawRect(info.Rect, paint);
 
                 // Set TextSize to fill 90% of width
-                paint.TextSize = 100;
-                float width = paint.MeasureText(TEXT);
+                font.Size = 100;
+                float width = font.MeasureText(TEXT);
                 float scale = 0.9f * info.Width / width;
-                paint.TextSize *= scale;
+                font.Size *= scale;
 
                 // Get text bounds
                 SKRect textBounds = new SKRect();
-                paint.MeasureText(TEXT, ref textBounds);
+                font.MeasureText(TEXT, out textBounds);
 
                 // Calculate offsets to center the text on the screen
                 float xText = info.Width / 2 - textBounds.MidX;
@@ -72,7 +73,7 @@ namespace DocsSamplesApp.Effects
                                     SKShaderTileMode.Clamp);
 
                 // Draw text
-                canvas.DrawText(TEXT, xText, yText, paint);
+                canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
             }
         }
     }

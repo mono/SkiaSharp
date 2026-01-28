@@ -8,8 +8,12 @@ namespace DocsSamplesApp
         public SKPaint MatrixPaint { set; get; } = new SKPaint
                                                    {
                                                        Color = SKColors.Black,
-                                                       TextSize = 48,
                                                        StrokeWidth = 2
+                                                   };
+
+        public SKFont MatrixFont { set; get; } = new SKFont
+                                                   {
+                                                       Size = 48
                                                    };
 
         public string PerspectiveFormat { set; get; } = "F0";
@@ -42,23 +46,23 @@ namespace DocsSamplesApp
                 // Measure string with a '-' even if one is not present
                 bool isNegative = texts[i][0] == '-';
                 string text = (isNegative ? "" : "-") + texts[i];
-                MatrixPaint.MeasureText(text, ref bounds[i]);
+                MatrixFont.MeasureText(text, out bounds[i]);
 
                 // Get maximum width for each column
                 widths[col] = Math.Max(widths[col], bounds[i].Width);
 
                 // Measure the text again without the '-' in front
-                MatrixPaint.MeasureText(texts[i], ref bounds[i]);
+                MatrixFont.MeasureText(texts[i], out bounds[i]);
             }
 
             // Some formatting constants 
-            float horzGap = MatrixPaint.TextSize;
-            float horzMarg = MatrixPaint.TextSize;
-            float vertMarg = MatrixPaint.FontSpacing / 4;
+            float horzGap = MatrixFont.Size;
+            float horzMarg = MatrixFont.Size;
+            float vertMarg = MatrixFont.Spacing / 4;
 
             // Calculate the total width and height of the matrix display
             float totalWidth = widths[0] + widths[1] + widths[2] + 2 * horzGap + 2 * horzMarg;
-            float totalHeight = 3 * MatrixPaint.FontSpacing + 2 * vertMarg;
+            float totalHeight = 3 * MatrixFont.Spacing + 2 * vertMarg;
 
             if (doPaint)
             {
@@ -77,15 +81,15 @@ namespace DocsSamplesApp
                         x += widths[c] + horzGap;
                     }
 
-                    float y = location.Y + vertMarg + row * MatrixPaint.FontSpacing;
+                    float y = location.Y + vertMarg + row * MatrixFont.Spacing;
 
                     // Adjust for right-justified text
                     x += widths[col] - bounds[i].Width;
-                    y += (MatrixPaint.FontSpacing - bounds[i].Height) / 2 - bounds[i].Top;
+                    y += (MatrixFont.Spacing - bounds[i].Height) / 2 - bounds[i].Top;
 
                     // Draw the text
                     MatrixPaint.Style = SKPaintStyle.Fill;
-                    canvas.DrawText(texts[i], x, y, MatrixPaint);
+                    canvas.DrawText(texts[i], x, y, SKTextAlign.Left, MatrixFont, MatrixPaint);
                 }
 
                 // Display vertical lines at the sides of the matrix

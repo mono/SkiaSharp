@@ -61,14 +61,14 @@ namespace DocsSamplesApp.Curves
                     StrokeCap = SKStrokeCap.Round,
                     Color = SKColors.Blue,
                 })
+            using (SKFont textFont = new SKFont())
             {
                 // Adjust TextSize property so text is 95% of screen width
-                float textWidth = textPaint.MeasureText(text);
-                textPaint.TextSize *= 0.95f * info.Width / textWidth;
+                float textWidth = textFont.MeasureText(text);
+                textFont.Size *= 0.95f * info.Width / textWidth;
 
                 // Find the text bounds
-                SKRect textBounds = new SKRect();
-                textPaint.MeasureText(text, ref textBounds);
+                textFont.MeasureText(text, out SKRect textBounds);
 
                 // Calculate offsets to center the text on the screen
                 float xText = info.Width / 2 - textBounds.MidX;
@@ -86,7 +86,7 @@ namespace DocsSamplesApp.Curves
                     textPaint.PathEffect = dashEffect;
 
                     // And draw the text
-                    canvas.DrawText(text, xText, yText, textPaint);
+                    canvas.DrawText(text, xText, yText, SKTextAlign.Left, textFont, textPaint);
                 }
             }
         }

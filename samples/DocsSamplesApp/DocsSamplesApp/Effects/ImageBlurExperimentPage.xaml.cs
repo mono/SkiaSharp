@@ -50,21 +50,22 @@ namespace DocsSamplesApp.Effects
             float sigmaY = (float)sigmaYSlider.Value;
 
             using (SKPaint paint = new SKPaint())
+            using (SKFont font = new SKFont())
             {
-                // Set SKPaint properties
-                paint.TextSize = (info.Width - 100) / (TEXT.Length / 2);
+                // Set SKFont properties
+                font.Size = (info.Width - 100) / (TEXT.Length / 2);
                 paint.ImageFilter = SKImageFilter.CreateDilate((int)(sigmaX), (int)(sigmaY)); // .CreateBlur(sigmaX, sigmaY);
 
                 // Get text bounds and calculate display rectangle
                 SKRect textBounds = new SKRect();
-                paint.MeasureText(TEXT, ref textBounds);
+                font.MeasureText(TEXT, out textBounds);
                 SKRect textRect = new SKRect(0, 0, info.Width, textBounds.Height + 50);
 
                 // Center the text in the display rectangle
                 float xText = textRect.Width / 2 - textBounds.MidX;
                 float yText = textRect.Height / 2 - textBounds.MidY;
 
-                canvas.DrawText(TEXT, xText, yText, paint);
+                canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
 
                 // Calculate rectangle for bitmap
                 SKRect bitmapRect = new SKRect(0, textRect.Bottom, info.Width, info.Height);

@@ -38,9 +38,10 @@ namespace DocsSamplesApp.Effects
             float sigmaY = (float)sigmaYSlider.Value;
 
             using (SKPaint paint = new SKPaint())
+            using (SKFont font = new SKFont())
             {
-                // Set SKPaint properties
-                paint.TextSize = info.Width / 7;
+                // Set SKFont properties
+                font.Size = info.Width / 7;
                 paint.Color = SKColors.Blue;
                 paint.ImageFilter = SKImageFilter.CreateDropShadow(
                                         dx,
@@ -50,13 +51,13 @@ namespace DocsSamplesApp.Effects
                                         SKColors.Red); 
 
                 SKRect textBounds = new SKRect();
-                paint.MeasureText(TEXT, ref textBounds);
+                font.MeasureText(TEXT, out textBounds);
 
                 // Center the text in the display rectangle
                 float xText = info.Width / 2 - textBounds.MidX;
                 float yText = info.Height / 2 - textBounds.MidY;
 
-                canvas.DrawText(TEXT, xText, yText, paint);
+                canvas.DrawText(TEXT, xText, yText, SKTextAlign.Left, font, paint);
             }
         }
     }

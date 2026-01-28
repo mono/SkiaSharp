@@ -36,20 +36,22 @@ namespace DocsSamplesApp.Basics
                 Color = SKColors.Chocolate
             };
 
+            // Create an SKFont object for text measurement and rendering
+            using SKFont font = new SKFont();
+
             // Adjust TextSize property so text is 90% of screen width
-            float textWidth = textPaint.MeasureText(str);
-            textPaint.TextSize = 0.9f * info.Width * textPaint.TextSize / textWidth;
+            float textWidth = font.MeasureText(str);
+            font.Size = 0.9f * info.Width * font.Size / textWidth;
 
             // Find the text bounds
-            SKRect textBounds = new SKRect();
-            textPaint.MeasureText(str, ref textBounds);
+            font.MeasureText(str, out SKRect textBounds);
 
             // Calculate offsets to center the text on the screen
             float xText = info.Width / 2 - textBounds.MidX;
             float yText = info.Height / 2 - textBounds.MidY;
 
             // And draw the text
-            canvas.DrawText(str, xText, yText, textPaint);
+            canvas.DrawText(str, xText, yText, SKTextAlign.Left, font, textPaint);
 
             // Create a new SKRect object for the frame around the text
             SKRect frameRect = textBounds;

@@ -21,12 +21,12 @@ namespace DocsSamplesApp.Curves
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
 
-            using (SKPaint textPaint = new SKPaint())
+            using (SKFont textFont = new SKFont())
             {
-                textPaint.Typeface = SKTypeface.FromFamilyName("Times New Roman");
-                textPaint.TextSize = 100;
+                textFont.Typeface = SKTypeface.FromFamilyName("Times New Roman");
+                textFont.Size = 100;
 
-                using (SKPath textPath = textPaint.GetTextPath("HELLO", 0, 0))
+                using (SKPath textPath = textFont.GetTextPath("HELLO", new SKPoint(0, 0)))
                 {
                     SKRect textPathBounds;
                     textPath.GetBounds(out textPathBounds);

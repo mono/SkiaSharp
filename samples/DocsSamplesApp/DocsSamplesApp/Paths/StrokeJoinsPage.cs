@@ -28,21 +28,24 @@ namespace DocsSamplesApp.Paths
 
             canvas.Clear();
 
-            SKPaint textPaint = new SKPaint
+            using SKPaint textPaint = new SKPaint
             {
-                Color = SKColors.Black,
-                TextSize = 75,
-                TextAlign = SKTextAlign.Right
+                Color = SKColors.Black
             };
 
-            SKPaint thickLinePaint = new SKPaint
+            using SKFont textFont = new SKFont
+            {
+                Size = 75
+            };
+
+            using SKPaint thickLinePaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke,
                 Color = SKColors.Orange,
                 StrokeWidth = 50
             };
 
-            SKPaint thinLinePaint = new SKPaint
+            using SKPaint thinLinePaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke,
                 Color = SKColors.Black,
@@ -52,13 +55,13 @@ namespace DocsSamplesApp.Paths
             float xText = info.Width - 100;
             float xLine1 = 100;
             float xLine2 = info.Width - xLine1;
-            float y = 2 * textPaint.FontSpacing;
+            float y = 2 * textFont.Spacing;
             string[] strStrokeJoins = { "Miter", "Round", "Bevel" };
 
             foreach (string strStrokeJoin in strStrokeJoins)
             {
                 // Display text
-                canvas.DrawText(strStrokeJoin, xText, y, textPaint);
+                canvas.DrawText(strStrokeJoin, xText, y, SKTextAlign.Right, textFont, textPaint);
 
                 // Get stroke-join value
                 SKStrokeJoin strokeJoin;
@@ -76,7 +79,7 @@ namespace DocsSamplesApp.Paths
 
                 // Display thin line
                 canvas.DrawPath(path, thinLinePaint);
-                y += 3 * textPaint.FontSpacing;
+                y += 3 * textFont.Spacing;
             }
         }
     }

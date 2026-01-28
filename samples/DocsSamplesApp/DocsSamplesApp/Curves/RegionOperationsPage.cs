@@ -15,8 +15,11 @@ namespace DocsSamplesApp.Curves
         {
             Style = SKPaintStyle.Fill,
             Color = SKColors.Black,
-            TextSize = 40,
-            TextAlign = SKTextAlign.Center
+        };
+
+        SKFont textFont = new SKFont
+        {
+            Size = 40,
         };
 
         SKPaint fillPaint = new SKPaint
@@ -61,8 +64,8 @@ namespace DocsSamplesApp.Curves
 
         void DisplayClipOp(SKCanvas canvas, SKRect rect, SKRegionOperation regionOp)
         {
-            float textSize = textPaint.TextSize;
-            canvas.DrawText(regionOp.ToString(), rect.MidX, rect.Top + textSize, textPaint);
+            float textSize = textFont.Size;
+            canvas.DrawText(regionOp.ToString(), rect.MidX, rect.Top + textSize, SKTextAlign.Center, textFont, textPaint);
             rect.Top += textSize;
 
             float radius = 0.9f * Math.Min(rect.Width / 3, rect.Height / 2);

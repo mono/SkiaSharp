@@ -45,12 +45,11 @@ namespace DocsSamplesApp.Transforms
             using (SKPaint textPaint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
-                Color = SKColors.Blue,
-                TextSize = 50
+                Color = SKColors.Blue
             })
+            using (SKFont font = new SKFont { Size = 50 })
             {
-                SKRect textBounds = new SKRect();
-                textPaint.MeasureText(Title, ref textBounds);
+                font.MeasureText(Title, out SKRect textBounds);
                 float margin = (info.Width - textBounds.Width) / 2;
 
                 float sx = (float)xScaleSlider.Value;
@@ -62,7 +61,7 @@ namespace DocsSamplesApp.Transforms
 
                 SKRect borderRect = SKRect.Create(new SKPoint(margin, margin), textBounds.Size);
                 canvas.DrawRoundRect(borderRect, 20, 20, strokePaint);
-                canvas.DrawText(Title, margin, -textBounds.Top + margin, textPaint);
+                canvas.DrawText(Title, margin, -textBounds.Top + margin, SKTextAlign.Left, font, textPaint);
             }
         }
     }

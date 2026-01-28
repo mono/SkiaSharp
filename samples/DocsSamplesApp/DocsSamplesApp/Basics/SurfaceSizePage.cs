@@ -33,28 +33,32 @@ namespace DocsSamplesApp.Basics
 
             SKPaint paint = new SKPaint
             {
-                Color = SKColors.Black,
-                TextSize = 40
+                Color = SKColors.Black
             };
 
-            float fontSpacing = paint.FontSpacing;
+            using SKFont font = new SKFont
+            {
+                Size = 40
+            };
+
+            float fontSpacing = font.Spacing;
             float x = 20;               // left margin
             float y = fontSpacing;      // first baseline
             float indent = 100;
 
-            canvas.DrawText("SKCanvasView Height and Width:", x, y, paint);
+            canvas.DrawText("SKCanvasView Height and Width:", x, y, SKTextAlign.Left, font, paint);
             y += fontSpacing;
             canvas.DrawText(String.Format("{0:F2} x {1:F2}", 
                                           canvasView.Width, canvasView.Height), 
-                            x + indent, y, paint);
+                            x + indent, y, SKTextAlign.Left, font, paint);
             y += fontSpacing * 2;
-            canvas.DrawText("SKCanvasView CanvasSize:", x, y, paint);
+            canvas.DrawText("SKCanvasView CanvasSize:", x, y, SKTextAlign.Left, font, paint);
             y += fontSpacing;
-            canvas.DrawText(canvasView.CanvasSize.ToString(), x + indent, y, paint);
+            canvas.DrawText(canvasView.CanvasSize.ToString(), x + indent, y, SKTextAlign.Left, font, paint);
             y += fontSpacing * 2;
-            canvas.DrawText("SKImageInfo Size:", x, y, paint);
+            canvas.DrawText("SKImageInfo Size:", x, y, SKTextAlign.Left, font, paint);
             y += fontSpacing;
-            canvas.DrawText(info.Size.ToString(), x + indent, y, paint);
+            canvas.DrawText(info.Size.ToString(), x + indent, y, SKTextAlign.Left, font, paint);
         }
     }
 }

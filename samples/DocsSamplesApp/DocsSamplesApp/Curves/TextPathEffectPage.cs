@@ -15,9 +15,9 @@ namespace DocsSamplesApp.Curves
 
         SKPathEffect pathEffect;
 
-        SKPaint textPathPaint = new SKPaint
+        SKFont textPathFont = new SKFont
         {
-            TextSize = littleSize
+            Size = littleSize
         };
 
         SKPaint textPaint = new SKPaint
@@ -25,6 +25,8 @@ namespace DocsSamplesApp.Curves
             Style = SKPaintStyle.Stroke,
             Color = SKColors.Black
         };
+
+        SKFont textFont = new SKFont();
 
         public TextPathEffectPage()
         {
@@ -34,14 +36,12 @@ namespace DocsSamplesApp.Curves
             canvasView.PaintSurface += OnCanvasViewPaintSurface;
             Content = canvasView;
 
-            // Get the bounds of textPathPaint
-            SKRect textPathPaintBounds = new SKRect();
-            textPathPaint.MeasureText(character, ref textPathPaintBounds);
+            // Get the bounds of textPathFont
+            textPathFont.MeasureText(character, out SKRect textPathPaintBounds);
 
             // Create textPath centered around (0, 0)
-            SKPath textPath = textPathPaint.GetTextPath(character, 
-                                                        -textPathPaintBounds.MidX,
-                                                        -textPathPaintBounds.MidY);
+            SKPath textPath = textPathFont.GetTextPath(character, 
+                                                        new SKPoint(-textPathPaintBounds.MidX, -textPathPaintBounds.MidY));
             // Create the path effect
             pathEffect = SKPathEffect.Create1DPath(textPath, littleSize, 0,
                                                    SKPath1DPathEffectStyle.Translate);
@@ -55,12 +55,11 @@ namespace DocsSamplesApp.Curves
 
             canvas.Clear();
 
-            // Set textPaint TextSize based on screen size
-            textPaint.TextSize = Math.Min(info.Width, info.Height);
+            // Set textFont Size based on screen size
+            textFont.Size = Math.Min(info.Width, info.Height);
 
             // Do not measure the text with PathEffect set!
-            SKRect textBounds = new SKRect();
-            textPaint.MeasureText(character, ref textBounds);
+            textFont.MeasureText(character, out SKRect textBounds);
 
             // Coordinates to center text on screen
             float xText = info.Width / 2 - textBounds.MidX;
@@ -68,7 +67,7 @@ namespace DocsSamplesApp.Curves
 
             // Set the PathEffect property and display text
             textPaint.PathEffect = pathEffect;
-            canvas.DrawText(character, xText, yText, textPaint);
+            canvas.DrawText(character, xText, yText, SKTextAlign.Left, textFont, textPaint);
         }
     }
 }

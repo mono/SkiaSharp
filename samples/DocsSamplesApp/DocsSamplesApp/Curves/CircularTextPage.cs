@@ -35,12 +35,12 @@ namespace DocsSamplesApp.Curves
                 circularPath.AddCircle(info.Width / 2, info.Height / 2, radius);
 
                 using (SKPaint textPaint = new SKPaint())
+                using (SKFont textFont = new SKFont { Size = 100 })
                 {
-                    textPaint.TextSize = 100;
-                    float textWidth = textPaint.MeasureText(text);
-                    textPaint.TextSize *= 2 * 3.14f * radius / textWidth;
+                    float textWidth = textFont.MeasureText(text);
+                    textFont.Size *= 2 * 3.14f * radius / textWidth;
 
-                    canvas.DrawTextOnPath(text, circularPath, 0, 0, textPaint);
+                    canvas.DrawTextOnPath(text, circularPath, 0, 0, textFont, textPaint);
                 }
             }
         }

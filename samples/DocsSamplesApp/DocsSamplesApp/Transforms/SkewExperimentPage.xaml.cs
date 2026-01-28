@@ -35,16 +35,15 @@ namespace DocsSamplesApp.Transforms
             using (SKPaint textPaint = new SKPaint
             {
                 Style = SKPaintStyle.Fill,
-                Color = SKColors.Blue,
-                TextSize = 200
+                Color = SKColors.Blue
             })
+            using (SKFont font = new SKFont { Size = 200 })
             {
                 string text = "SKEW";
-                SKRect textBounds = new SKRect();
-                textPaint.MeasureText(text, ref textBounds);
+                font.MeasureText(text, out SKRect textBounds);
 
                 canvas.Skew((float)xSkewSlider.Value, (float)ySkewSlider.Value);
-                canvas.DrawText(text, 0, -textBounds.Top, textPaint);
+                canvas.DrawText(text, 0, -textBounds.Top, SKTextAlign.Left, font, textPaint);
             }
         }
     }

@@ -28,21 +28,24 @@ namespace DocsSamplesApp.Paths
 
             canvas.Clear();
 
-            SKPaint textPaint = new SKPaint
+            using SKPaint textPaint = new SKPaint
             {
-                Color = SKColors.Black,
-                TextSize = 75, 
-                TextAlign = SKTextAlign.Center
+                Color = SKColors.Black
             };
 
-            SKPaint thickLinePaint = new SKPaint
+            using SKFont textFont = new SKFont
+            {
+                Size = 75
+            };
+
+            using SKPaint thickLinePaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke,
                 Color = SKColors.Orange,
                 StrokeWidth = 50
             };
 
-            SKPaint thinLinePaint = new SKPaint
+            using SKPaint thinLinePaint = new SKPaint
             {
                 Style = SKPaintStyle.Stroke,
                 Color = SKColors.Black,
@@ -52,13 +55,13 @@ namespace DocsSamplesApp.Paths
             float xText = info.Width / 2;
             float xLine1 = 100;
             float xLine2 = info.Width - xLine1;
-            float y = textPaint.FontSpacing;
+            float y = textFont.Spacing;
 
             foreach (SKStrokeCap strokeCap in Enum.GetValues(typeof(SKStrokeCap)))
             {
                 // Display text
-                canvas.DrawText(strokeCap.ToString(), xText, y, textPaint);
-                y += textPaint.FontSpacing;
+                canvas.DrawText(strokeCap.ToString(), xText, y, SKTextAlign.Center, textFont, textPaint);
+                y += textFont.Spacing;
 
                 // Display thick line
                 thickLinePaint.StrokeCap = strokeCap;
@@ -66,7 +69,7 @@ namespace DocsSamplesApp.Paths
 
                 // Display thin line
                 canvas.DrawLine(xLine1, y, xLine2, y, thinLinePaint);
-                y += 2 * textPaint.FontSpacing;
+                y += 2 * textFont.Spacing;
             }
         }
     }

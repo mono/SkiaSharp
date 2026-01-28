@@ -18,9 +18,9 @@ namespace DocsSamplesApp.Transforms
         {
             Style = SKPaintStyle.Stroke,
             Color = SKColors.Black,
-            TextSize = 100,
             StrokeWidth = 3,
         };
+        SKFont textFont = new SKFont { Size = 100 };
         SKRect textBounds;
 
         public AnimatedRotation3DPage()
@@ -32,7 +32,7 @@ namespace DocsSamplesApp.Transforms
             Content = canvasView;
 
             // Measure the text
-            textPaint.MeasureText(text, ref textBounds);
+            textFont.MeasureText(text, out textBounds);
         }
 
         protected override void OnAppearing()
@@ -103,7 +103,7 @@ namespace DocsSamplesApp.Transforms
             canvas.SetMatrix(matrix);
             float xText = xCenter - textBounds.MidX;
             float yText = yCenter - textBounds.MidY;
-            canvas.DrawText(text, xText, yText, textPaint);
+            canvas.DrawText(text, xText, yText, SKTextAlign.Left, textFont, textPaint);
         }
     }
 }

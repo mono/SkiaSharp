@@ -28,23 +28,23 @@ namespace DocsSamplesApp.Curves
             canvas.Clear();
 
             using (SKPaint textPaint = new SKPaint())
+            using (SKFont textFont = new SKFont())
             {
                 // Set Style for the character outlines
                 textPaint.Style = SKPaintStyle.Stroke;
 
                 // Set TextSize based on screen size
-                textPaint.TextSize = Math.Min(info.Width, info.Height);
+                textFont.Size = Math.Min(info.Width, info.Height);
 
                 // Measure the text
-                SKRect textBounds = new SKRect();
-                textPaint.MeasureText("@", ref textBounds);
+                textFont.MeasureText("@", out SKRect textBounds);
 
                 // Coordinates to center text on screen
                 float xText = info.Width / 2 - textBounds.MidX;
                 float yText = info.Height / 2 - textBounds.MidY;
 
                 // Get the path for the character outlines
-                using (SKPath textPath = textPaint.GetTextPath("@", xText, yText))
+                using (SKPath textPath = textFont.GetTextPath("@", new SKPoint(xText, yText)))
                 {
                     // Create a new path for the outlines of the path
                     using (SKPath outlinePath = new SKPath())
