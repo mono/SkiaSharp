@@ -18,7 +18,7 @@ The sample program contains all the sample code for this series of SkiaSharp art
 
 ![A blue circle outlined in red](circle-images/circleexample.png)
 
-The [`SimpleCircle`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/SimpleCirclePage.cs) page class derives from `ContentPage` and contains two `using` directives for the SkiaSharp namespaces:
+The [`SimpleCirclePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/SimpleCirclePage.cs) page class derives from `ContentPage` and contains two `using` directives for the SkiaSharp namespaces:
 
 ```csharp
 using SkiaSharp;

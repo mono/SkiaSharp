@@ -1,15 +1,30 @@
-# Xamarin Documentation
+# SkiaSharp Documentation
 
-The documentation in this repo is hosted at [Xamarin documentation](https://learn.microsoft.com/previous-versions/xamarin). Support for Xamarin ended on the 1st May 2024 and so this documentation won't be updated. For more information, see [Xamarin Support Policy](https://dotnet.microsoft.com/platform/support/policy/xamarin).
+This branch (`docs`) contains the conceptual documentation for **SkiaSharp** with **.NET MAUI**. The documentation covers 2D graphics programming using SkiaSharp in cross-platform .NET MAUI applications.
+
+## Structure
+
+- `docs/` - DocFX documentation source files
+- `samples/DocsSamplesApp/` - Sample .NET MAUI application demonstrating SkiaSharp concepts
+- `contributing-guidelines/` - Writing style and conventions
+
+## Building the Documentation
+
+```bash
+cd docs
+dotnet tool install -g docfx
+docfx build
+docfx serve _site --open-browser
+```
 
 ## Microsoft Open Source Code of Conduct
 
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/).
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-## Contribute to Xamarin documentation
+## Contribute to SkiaSharp Documentation
 
-This project welcomes contributions and suggestions.  Most contributions require you to agree to a
+This project welcomes contributions and suggestions. Most contributions require you to agree to a
 Contributor License Agreement (CLA) declaring that you have the right to, and actually do, grant us
 the rights to use your contribution. For details, visit https://cla.microsoft.com.
 
@@ -17,13 +32,7 @@ When you submit a pull request, a CLA-bot will automatically determine whether y
 a CLA and decorate the PR appropriately (e.g., label, comment). Simply follow the instructions
 provided by the bot. You will only need to do this once across all repos using our CLA.
 
-Read about the [**contribution process**](CONTRIBUTING.md), and identify which of these best fits your situation:
-
-* **Community - minor updates**: If you are contributing minor updates out of the goodness of your heart, you can find the article in this repository, or visit the article in [Xamarin documentation](https://learn.microsoft.com/xamarin) and click the **Edit** link in the article that goes to the GitHub source. Then, just use the GitHub website to make your updates. Or, you are welcome to [fork the repository](CONTRIBUTING.md) and submit updates from your fork.
-
-* **Community - new articles**: If you're part of the Xamarin community and you want to create a new article, you need to work with an employee to help bring that new content in through a combination of work in the public and private repository. Start by raising a [GitHub issue](https://github.com/MicrosoftDocs/xamarin-docs/issues) in this repository that outlines your proposed content.
-
-* **Employees**: If you are a technical writer, program manager or developer from the product team for a Xamarin product and it's your job to contribute to or author technical articles, you should use the private repository (https://github.com/MicrosoftDocs/xamarin-docs-pr). If you are making substantial changes to an existing article, adding or changing images, or contributing a new article, you need to fork this repository, install Git, a markdown editor, and learn some git commands. See the [internal Docs contributor guide](https://review.learn.microsoft.com/help/contribute/?branch=main) for more information.
+Read about the [**contribution process**](CONTRIBUTING.md) for more details.
 
 ## Legal Notices
 
