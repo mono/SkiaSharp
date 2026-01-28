@@ -45,7 +45,7 @@ The **Animated Dotted Text** page is similar to the **Outlined Text** page descr
 
 [![Triple screenshot of the Animated Dotted Text page](effects-images/animateddottedtext-small.png)](effects-images/animateddottedtext-large.png#lightbox)
 
-The [`AnimatedDottedTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/DotDashMorphPage.cs) class begins by defining some constants, and also overrides the `OnAppearing` and `OnDisappearing` methods for the animation:
+The [`AnimatedDottedTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/DotDashMorphPage.cs) class begins by defining some constants, and also overrides the `OnAppearing` and `OnDisappearing` methods for the animation:
 
 ```csharp
 public class AnimatedDottedTextPage : ContentPage
@@ -154,7 +154,7 @@ The **Dot / Dash Morph** program animates the dash pattern itself so that dashes
 
 [![Triple screenshot of the Dot Dash Morph page](effects-images/dotdashmorph-small.png)](effects-images/dotdashmorph-large.png#lightbox)
 
-The [`DotDashMorphPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/DotDashMorphPage.cs) class overrides the `OnAppearing` and `OnDisappearing` methods just as the previous program did, but the class defines the `SKPaint` object as a field:
+The [`DotDashMorphPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/DotDashMorphPage.cs) class overrides the `OnAppearing` and `OnDisappearing` methods just as the previous program did, but the class defines the `SKPaint` object as a field:
 
 ```csharp
 public class DotDashMorphPage : ContentPage
@@ -280,7 +280,7 @@ The [`SKPath1DPathEffectStyle`](xref:SkiaSharp.SKPath1DPathEffectStyle) has thre
 
 The `Translate` member causes the path to remain in the same orientation as it is replicated along a line or curve. For `Rotate`, the path is rotated based on a tangent to the curve. The path has its normal orientation for horizontal lines. `Morph` is similar to `Rotate` except that the path itself is also curved to match the curvature of the line being stroked.
 
-The **1D Path Effect** page demonstrates these three options. The [**OneDimensionalPathEffectPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/OneDimensionalPathEffectPage.xaml) file defines a picker containing three items corresponding to the three members of the enumeration:
+The **1D Path Effect** page demonstrates these three options. The [**OneDimensionalPathEffectPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/OneDimensionalPathEffectPage.xaml) file defines a picker containing three items corresponding to the three members of the enumeration:
 
 ```xaml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -318,7 +318,7 @@ The **1D Path Effect** page demonstrates these three options. The [**OneDimensio
 </ContentPage>
 ```
 
-The [**OneDimensionalPathEffectPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/OneDimensionalPathEffectPage.xaml.cs) code-behind file defines three `SKPathEffect` objects as fields. These are all created using `SKPathEffect.Create1DPath` with `SKPath` objects created using `SKPath.ParseSvgPathData`. The first is a simple box, the second is a diamond shape, and the third is a rectangle. These are used to demonstrate the three effect styles:
+The [**OneDimensionalPathEffectPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/OneDimensionalPathEffectPage.xaml.cs) code-behind file defines three `SKPathEffect` objects as fields. These are all created using `SKPathEffect.Create1DPath` with `SKPath` objects created using `SKPath.ParseSvgPathData`. The first is a simple box, the second is a diamond shape, and the third is a rectangle. These are used to demonstrate the three effect styles:
 
 ```csharp
 public partial class OneDimensionalPathEffectPage : ContentPage
@@ -417,7 +417,7 @@ Finding the proper value of *a* to fit the catenary to the dimensions of the pho
 
 `cosh(w / 2 / a) = 1 + h / a`
 
-The following method in the [`LinkedChainPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/LinkedChainPage.cs) class incorporates that equality by referring to the two expressions on the left and right of the equal sign as `left` and `right`. For small values of *a*, `left` is greater than `right`; for large values of *a*, `left` is less than `right`. The `while` loop narrows in on an optimum value of *a*:
+The following method in the [`LinkedChainPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/LinkedChainPage.cs) class incorporates that equality by referring to the two expressions on the left and right of the equal sign as `left` and `right`. For small values of *a*, `left` is greater than `right`; for large values of *a*, `left` is less than `right`. The `while` loop narrows in on an optimum value of *a*:
 
 ```csharp
 float FindOptimumA(float width, float height)
@@ -546,7 +546,7 @@ The **Conveyor Belt** page creates a path resembling an oblong conveyor belt wit
 
 The (0, 0) point of the bucket path is the handle, so when the `phase` argument is animated, the buckets seem to revolve around the conveyor belt, perhaps scooping up water at the bottom and dumping it out at the top.
 
-The [`ConveyorBeltPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ConveyorBeltPage.cs) class implements animation with overrides of the `OnAppearing` and `OnDisappearing` methods. The path for the bucket is defined in the page's constructor:
+The [`ConveyorBeltPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/ConveyorBeltPage.cs) class implements animation with overrides of the `OnAppearing` and `OnDisappearing` methods. The path for the bucket is defined in the page's constructor:
 
 ```csharp
 public class ConveyorBeltPage : ContentPage
@@ -707,7 +707,7 @@ The `width` argument specifies the stroke width of the hatch lines. The `matrix`
 
 By default, hatch lines are horizontal. If the `matrix` parameter contains rotation, the hatch lines are rotated clockwise.
 
-The **Hatch Fill** page demonstrates this path effect. The [`HatchFillPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/HatchFillPage.cs) class defines three path effects as fields, the first for horizontal hatch lines with a width of 3 pixels with a scaling factor indicating that they are spaced 6 pixels apart. The separation between the lines is therefore three pixels. The second path effect is for vertical hatch lines with a width of six pixels spaced 24 pixels apart (so the separation is 18 pixels), and the third is for diagonal hatch lines 12 pixels wide spaced 36 pixels apart.
+The **Hatch Fill** page demonstrates this path effect. The [`HatchFillPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/HatchFillPage.cs) class defines three path effects as fields, the first for horizontal hatch lines with a width of 3 pixels with a scaling factor indicating that they are spaced 6 pixels apart. The separation between the lines is therefore three pixels. The second path effect is for vertical hatch lines with a width of six pixels spaced 24 pixels apart (so the separation is 18 pixels), and the third is for diagonal hatch lines 12 pixels wide spaced 36 pixels apart.
 
 ```csharp
 public class HatchFillPage : ContentPage
@@ -805,7 +805,7 @@ The `SKMatrix` scaling factors indicate the horizontal and vertical spacing of t
 
 The replicated path is normally aligned with the left and top edges of the screen rather than the area being filled. You can override this behavior by providing translation factors between 0 and the scaling factors to specify horizontal and vertical offsets from the left and top sides.
 
-The **Path Tile Fill** page demonstrates this path effect. The path used for tiling the area is defined as a field in the [`PathTileFillPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathTileFillPage.cs) class. The horizontal and vertical coordinates range from –40 to 40, which means that this path is 80 pixels square:
+The **Path Tile Fill** page demonstrates this path effect. The path used for tiling the area is defined as a field in the [`PathTileFillPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PathTileFillPage.cs) class. The horizontal and vertical coordinates range from –40 to 40, which means that this path is 80 pixels square:
 
 ```csharp
 public class PathTileFillPage : ContentPage
@@ -863,7 +863,7 @@ public static SKPathEffect CreateCorner (Single radius)
 
 Although the single argument is named `radius`, you must set it to half the desired corner radius. (This is a characteristic of the underlying Skia code.)
 
-Here's the `PaintSurface` handler in the [`AnotherRoundedHeptagonPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/AnotherRoundedHeptagonPage.cs) class:
+Here's the `PaintSurface` handler in the [`AnotherRoundedHeptagonPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/AnotherRoundedHeptagonPage.cs) class:
 
 ```csharp
 void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
@@ -938,7 +938,7 @@ The **Jitter Experiment** page allows you to experiment with different values in
 
 [![Triple screenshot of the JitterExperiment page](effects-images/jitterexperiment-small.png)](effects-images/jitterexperiment-large.png#lightbox)
 
-The program is straightforward. The [**JitterExperimentPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterExperimentPage.xaml) file instantiates two `Slider` elements and an `SKCanvasView`:
+The program is straightforward. The [**JitterExperimentPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/JitterExperimentPage.xaml) file instantiates two `Slider` elements and an `SKCanvasView`:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -994,7 +994,7 @@ The program is straightforward. The [**JitterExperimentPage.xaml**](https://gith
 </ContentPage>
 ```
 
-The `PaintSurface` handler in the [**JitterExperimentPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterExperimentPage.xaml.cs) code-behind file is called whenever a `Slider` value changes. It calls `SKPathEffect.CreateDiscrete` using the two `Slider` values and uses that to stroke a rectangle:
+The `PaintSurface` handler in the [**JitterExperimentPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/JitterExperimentPage.xaml.cs) code-behind file is called whenever a `Slider` value changes. It calls `SKPathEffect.CreateDiscrete` using the two `Slider` values and uses that to stroke a rectangle:
 
 ```csharp
 void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
@@ -1025,7 +1025,7 @@ void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
 }
 ```
 
-You can use this effect for filling as well, in which case the outline of the filled area is subject to these random deviations. The **Jitter Text** page demonstrates using this path effect to display text. Most of the code in the `PaintSurface` handler of the [`JitterTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/JitterTextPage.cs) class is devoted to sizing and centering the text:
+You can use this effect for filling as well, in which case the outline of the filled area is subject to these random deviations. The **Jitter Text** page demonstrates using this path effect to display text. Most of the code in the `PaintSurface` handler of the [`JitterTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/JitterTextPage.cs) class is devoted to sizing and centering the text:
 
 ```csharp
 void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
@@ -1081,7 +1081,7 @@ One basic use of this method does not involve path effects at all: If the `SKPai
 
 For example, if the `src` path is a simple circle of radius 500, and the `SKPaint` object specifies a stroke width of 100, then the `dst` path becomes two concentric circles, one with a radius of 450 and the other with a radius of 550. The method is called `GetFillPath` because filling this `dst` path is the same as stroking the `src` path. But you can also stroke the `dst` path to see the path outlines.
 
-The **Tap to Outline the Path** demonstrates this. The `SKCanvasView` and `TapGestureRecognizer` are instantiated in the [**TapToOutlineThePathPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/TapToOutlineThePathPage.xaml) file. The [**TapToOutlineThePathPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/TapToOutlineThePathPage.xaml.cs) code-behind file defines three `SKPaint` objects as fields, two for stroking with stroke widths of 100 and 20, and the third for filling:
+The **Tap to Outline the Path** demonstrates this. The `SKCanvasView` and `TapGestureRecognizer` are instantiated in the [**TapToOutlineThePathPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/TapToOutlineThePathPage.xaml) file. The [**TapToOutlineThePathPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/TapToOutlineThePathPage.xaml.cs) code-behind file defines three `SKPaint` objects as fields, two for stroking with stroke widths of 100 and 20, and the third for filling:
 
 ```csharp
 public partial class TapToOutlineThePathPage : ContentPage
@@ -1237,7 +1237,7 @@ One obvious use of `CreateSum` is to define an `SKPaint` object that fills a pat
 
 [![Triple screenshot of the Cats In Frame page](effects-images/catsinframe-small.png)](effects-images/catsinframe-large.png#lightbox)
 
-The [`CatsInFramePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/CatsInFramePage.cs) class begins by defining several fields. You might recognize the first field from the [`PathDataCatPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs) class from the [**SVG Path Data**](path-data.md) article. The second path is based on a line and arc for the scallop pattern of the frame:
+The [`CatsInFramePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/CatsInFramePage.cs) class begins by defining several fields. You might recognize the first field from the [`PathDataCatPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/PathDataCatPage.cs) class from the [**SVG Path Data**](path-data.md) article. The second path is based on a line and arc for the scallop pattern of the frame:
 
 ```csharp
 public class CatsInFramePage : ContentPage
@@ -1351,7 +1351,7 @@ The algorithms behind the path effects always cause the whole path used for stro
 
 It is common to use `SKPathEffect.CreateCompose` to add some jitter to another path effect. You can certainly experiment on your own, but here's a somewhat different example:
 
-The **Dashed Hatch Lines** fills an ellipse with hatch lines that are dashed. Most of the work in the [`DashedHatchLinesPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/DashedHatchLinesPage.cs) class is performed right in the field definitions. These fields define a dash effect and a hatch effect. They are defined as `static` because they are then referenced in an `SKPathEffect.CreateCompose` call in the `SKPaint` definition:
+The **Dashed Hatch Lines** fills an ellipse with hatch lines that are dashed. Most of the work in the [`DashedHatchLinesPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/DashedHatchLinesPage.cs) class is performed right in the field definitions. These fields define a dash effect and a hatch effect. They are defined as `static` because they are then referenced in an `SKPathEffect.CreateCompose` call in the `SKPaint` definition:
 
 ```csharp
 public class DashedHatchLinesPage : ContentPage

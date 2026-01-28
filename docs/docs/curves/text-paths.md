@@ -40,7 +40,7 @@ One of these tasks is clipping. The **Clipping Text** page creates a clipping pa
 
 [![Triple screenshot of the Clipping Text page](text-paths-images/clippingtext-small.png)](text-paths-images/clippingtext-large.png#lightbox "Triple screenshot of the Clipping Text page")
 
-The [`ClippingTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/ClippingTextPage.cs) class constructor loads the bitmap from the app's `Resources/Raw` folder using .NET MAUI's `FileSystem` API:
+The [`ClippingTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/ClippingTextPage.cs) class constructor loads the bitmap from the app's `Resources/Raw` folder using .NET MAUI's `FileSystem` API:
 
 ```csharp
 public class ClippingTextPage : ContentPage
@@ -120,7 +120,7 @@ The **Text Path Effect** page converts a single ampersand character to a path to
 
 [![Triple screenshot of the Text Path Effect page](text-paths-images/textpatheffect-small.png)](text-paths-images/textpatheffect-large.png#lightbox "Triple screenshot of the Text Path Effect page")
 
-Much of the work in the [`TextPathEffectPath`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/TextPathEffectPage.cs) class occurs in the fields and constructor. The `SKFont` and two `SKPaint` objects defined as fields are used for different purposes: The font (named `textPathFont`) with a `Size` of 50 is used to convert the ampersand to a path for the 1D path effect. The first paint (`textPathPaint`) is used for measuring text. The second (`textPaint`) is used to display the larger version of the ampersand with that path effect. For that reason, the `Style` of this second paint object is set to `Stroke`, but the `StrokeWidth` property is not set because that property isn't necessary when using a 1D path effect:
+Much of the work in the [`TextPathEffectPath`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/TextPathEffectPage.cs) class occurs in the fields and constructor. The `SKFont` and two `SKPaint` objects defined as fields are used for different purposes: The font (named `textPathFont`) with a `Size` of 50 is used to convert the ampersand to a path for the 1D path effect. The first paint (`textPathPaint`) is used for measuring text. The second (`textPaint`) is used to display the larger version of the ampersand with that path effect. For that reason, the `Style` of this second paint object is set to `Stroke`, but the `StrokeWidth` property is not set because that property isn't necessary when using a 1D path effect:
 
 ```csharp
 public class TextPathEffectPage : ContentPage
@@ -206,7 +206,7 @@ Normally the [`GetFillPath`](xref:SkiaSharp.SKPaint.GetFillPath(SkiaSharp.SKPath
 
 You can also call `GetFillPath` on the path returned from `GetTextPath` but at first you might not be entirely sure what that would look like.
 
-The **Character Outline Outlines** page demonstrates the technique. All the relevant code is in the `PaintSurface` handler of the [`CharacterOutlineOutlinesPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/CharacterOutlineOutlinesPage.cs) class.
+The **Character Outline Outlines** page demonstrates the technique. All the relevant code is in the `PaintSurface` handler of the [`CharacterOutlineOutlinesPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/CharacterOutlineOutlinesPage.cs) class.
 
 The code begins by creating an `SKFont` object with a `Size` property based on the size of the page. This is converted to a path using the `GetTextPath` method. The `SKPoint` argument to `GetTextPath` effectively centers the path on the screen:
 
@@ -280,7 +280,7 @@ The text specified in the first argument is made to run along the path specified
 
 This method has no facility to provide guidance on setting the `TextSize` property of `SKPaint` to make the text sized perfectly to run from the beginning of the path to the end. Sometimes you can figure out that text size on your own. Other times you'll need to use path-measuring functions to be described in the next article on [**Path Information and Enumeration**](information.md).
 
-The **Circular Text** program wraps text around a circle. It's easy to determine the circumference of a circle, so it's easy to size the text to fit exactly. The `PaintSurface` handler of the [`CircularTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/CircularTextPage.cs) class calculates a radius of a circle based on the size of the page. That circle becomes `circularPath`:
+The **Circular Text** program wraps text around a circle. It's easy to determine the circumference of a circle, so it's easy to size the text to fit exactly. The `PaintSurface` handler of the [`CircularTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Curves/CircularTextPage.cs) class calculates a radius of a circle based on the size of the page. That circle becomes `circularPath`:
 
 ```csharp
 public class CircularTextPage : ContentPage

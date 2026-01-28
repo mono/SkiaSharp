@@ -390,7 +390,7 @@ If your application needs to implement touch processing for a single bitmap (or 
 
 ## Encapsulating the Touch Operations
 
-The **Touch Manipulation** page demonstrates the touch manipulation of a single bitmap, but using several other files that encapsulate much of the logic shown above. The first of these files is the [`TouchManipulationMode`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationMode.cs) enumeration, which indicates the different types of touch manipulation implemented by the code you'll be seeing:
+The **Touch Manipulation** page demonstrates the touch manipulation of a single bitmap, but using several other files that encapsulate much of the logic shown above. The first of these files is the [`TouchManipulationMode`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TouchManipulationMode.cs) enumeration, which indicates the different types of touch manipulation implemented by the code you'll be seeing:
 
 ```csharp
 enum TouchManipulationMode
@@ -410,7 +410,7 @@ The `ScaleRotate` option is for two-finger scaling and rotation. Scaling is isot
 
 The `ScaleDualRotate` option adds one-finger rotation. When a single finger drags the object, the dragged object is first rotated around its center so that the center of the object lines up with the dragging vector.
 
-The [**TouchManipulationPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationPage.xaml) file includes a `Picker` with the members of the `TouchManipulationMode` enumeration:
+The [**TouchManipulationPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TouchManipulationPage.xaml) file includes a `Picker` with the members of the `TouchManipulationMode` enumeration:
 
 ```xaml
 <?xml version="1.0" encoding="utf-8" ?>
@@ -458,7 +458,7 @@ The [**TouchManipulationPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs
 
 The `SKCanvasView` has touch events enabled and handles them directly.
 
-The [**TouchManipulationPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationPage.xaml.cs) code-behind file has a `bitmap` field but it is not of type `SKBitmap`. The type is `TouchManipulationBitmap` (a class you'll see shortly):
+The [**TouchManipulationPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TouchManipulationPage.xaml.cs) code-behind file has a `bitmap` field but it is not of type `SKBitmap`. The type is `TouchManipulationBitmap` (a class you'll see shortly):
 
 ```csharp
 public partial class TouchManipulationPage : ContentPage
@@ -560,7 +560,7 @@ If the `HitTest` method returns `true` &mdash; meaning that a finger has touched
 
 The `Touch` handler also calls the `ProcessTouchEvent` class in `TouchManipulationBitmap`. This is where some (but not all) of the real touch processing occurs.
 
-The [`TouchManipulationBitmap`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationBitmap.cs) class is a wrapper class for `SKBitmap` that contains code to render the bitmap and process touch events. It works in conjunction with more generalized code in a `TouchManipulationManager` class (which you'll see shortly).
+The [`TouchManipulationBitmap`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TouchManipulationBitmap.cs) class is a wrapper class for `SKBitmap` that contains code to render the bitmap and process touch events. It works in conjunction with more generalized code in a `TouchManipulationManager` class (which you'll see shortly).
 
 The `TouchManipulationBitmap` constructor saves the `SKBitmap` and instantiates two properties, the `TouchManager` property of type `TouchManipulationManager` and the `Matrix` property of type `SKMatrix`:
 
@@ -634,7 +634,7 @@ class TouchManipulationBitmap
 }
 ```
 
-The second public method in `TouchManipulationBitmap` is `ProcessTouchEvent`. When this method is called, it has already been established that the touch event belongs to this particular bitmap. The method maintains a dictionary of [`TouchManipulationInfo`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationInfo.cs) objects, which is simply the previous point and the new point of each finger:
+The second public method in `TouchManipulationBitmap` is `ProcessTouchEvent`. When this method is called, it has already been established that the touch event belongs to this particular bitmap. The method maintains a dictionary of [`TouchManipulationInfo`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/TouchManipulationInfo.cs) objects, which is simply the previous point and the new point of each finger:
 
 ```csharp
 class TouchManipulationInfo
@@ -913,7 +913,7 @@ The `PaintSurface` handler concludes by displaying a `MatrixDisplay` object show
 
 One of the advantages of isolating touch-processing code in classes such as `TouchManipulationBitmap` and `TouchManipulationManager` is the ability to reuse these classes in a program that allows the user to manipulate multiple bitmaps.
 
-The **Bitmap Scatter View** page demonstrates how this is done. Rather than defining a field of type `TouchManipulationBitmap`, the [`BitmapScatterPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BitmapScatterViewPage.xaml.cs) class defines a `List` of bitmap objects:
+The **Bitmap Scatter View** page demonstrates how this is done. Rather than defining a field of type `TouchManipulationBitmap`, the [`BitmapScatterPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/BitmapScatterViewPage.xaml.cs) class defines a `List` of bitmap objects:
 
 ```csharp
 public partial class BitmapScatterViewPage : ContentPage
@@ -1058,7 +1058,7 @@ A scaling operation generally requires a pinch gesture using two fingers. Howeve
 
 This is demonstrated in the **Single Finger Corner Scale** page. Because this sample uses a somewhat different type of scaling than that implemented in the `TouchManipulationManager` class, it does not use that class or the `TouchManipulationBitmap` class. Instead, all the touch logic is in the code-behind file. This is somewhat simpler logic than usual because it tracks only one finger at a time, and simply ignores any secondary fingers that might be touching the screen.
 
-The [**SingleFingerCornerScale.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SingleFingerCornerScalePage.xaml) page instantiates the `SKCanvasView` class with touch events enabled:
+The [**SingleFingerCornerScale.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/SingleFingerCornerScalePage.xaml) page instantiates the `SKCanvasView` class with touch events enabled:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -1078,7 +1078,7 @@ The [**SingleFingerCornerScale.xaml**](https://github.com/mono/SkiaSharp/blob/do
 </ContentPage>
 ```
 
-The [**SingleFingerCornerScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SingleFingerCornerScalePage.xaml.cs) file loads a bitmap from the Resources/Raw folder and displays it using an `SKMatrix` object defined as a field:
+The [**SingleFingerCornerScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Transforms/SingleFingerCornerScalePage.xaml.cs) file loads a bitmap from the Resources/Raw folder and displays it using an `SKMatrix` object defined as a field:
 
 ```csharp
 public partial class SingleFingerCornerScalePage : ContentPage

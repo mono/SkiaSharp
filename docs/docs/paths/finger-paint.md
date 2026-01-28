@@ -20,7 +20,7 @@ The `SKCanvasView` has built-in touch support that allows tracking individual fi
 
 The **Finger Paint** page in **SkiaSharpFormsDemos** is a simplified implementation of finger painting. It does not allow selecting color or stroke width, it has no way to clear the canvas, and of course you can't save your artwork.
 
-The [**FingerPaintPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FingerPaintPage.xaml) file defines the `SKCanvasView` with touch events enabled:
+The [**FingerPaintPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FingerPaintPage.xaml) file defines the `SKCanvasView` with touch events enabled:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -40,7 +40,7 @@ The [**FingerPaintPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/sampl
 
 The `EnableTouchEvents` property enables touch tracking, and the `Touch` event is raised for each touch action.
 
-The  [**FingerPaintPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FingerPaintPage.xaml.cs) code-behind file defines two collections for storing the `SKPath` objects, as well as an `SKPaint` object for rendering these paths:
+The  [**FingerPaintPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FingerPaintPage.xaml.cs) code-behind file defines two collections for storing the `SKPath` objects, as well as an `SKPaint` object for rendering these paths:
 
 ```csharp
 public partial class FingerPaintPage : ContentPage

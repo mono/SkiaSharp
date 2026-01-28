@@ -26,7 +26,7 @@ The **Basic Bitmaps** page in the **SkiaSharpFormsDemos** program demonstrates h
 - From a raw asset in the app package
 - From the user's photo library
 
-Three nullable `SKBitmap?` fields for these three sources are defined in the [`BasicBitmapsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/BasicBitmapsPage.cs) class. This pattern allows bitmaps to load asynchronously without blocking the UI thread:
+Three nullable `SKBitmap?` fields for these three sources are defined in the [`BasicBitmapsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Basics/BasicBitmapsPage.cs) class. This pattern allows bitmaps to load asynchronously without blocking the UI thread:
 
 ```csharp
 public class BasicBitmapsPage : ContentPage

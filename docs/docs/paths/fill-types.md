@@ -27,7 +27,7 @@ Both the winding and even-odd algorithms determine if any enclosed area is fille
 
 With many routine paths, the winding algorithm often fills all the enclosed areas of a path. The even-odd algorithm generally produces more interesting results.
 
-The classic example is a five-pointed star, as demonstrated in the **Five-Pointed Star** page. The [**FivePointedStarPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Paths/FivePointedStarPage.xaml) file instantiates two `Picker` views to select the path fill type and whether the path is stroked or filled or both, and in what order:
+The classic example is a five-pointed star, as demonstrated in the **Five-Pointed Star** page. The [**FivePointedStarPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/DocsSamplesApp/DocsSamplesApp/Paths/FivePointedStarPage.xaml) file instantiates two `Picker` views to select the path fill type and whether the path is stroked or filled or both, and in what order:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
