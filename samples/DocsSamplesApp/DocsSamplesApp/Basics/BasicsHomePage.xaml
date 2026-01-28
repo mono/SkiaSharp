@@ -3,83 +3,71 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                     xmlns:local="clr-namespace:DocsSamplesApp"
                     x:Class="DocsSamplesApp.Basics.BasicsHomePage"
-                    Title="SkiaSharp Drawing Basics"
-                    Padding="10">
-    <TableView Intent="Menu">
-        <TableRoot>
-            <TableSection Title="Drawing a Simple Circle">
-                <TextCell Text="Simple Circle"
-                          Detail="Outline and fill a circle with SkiaSharp"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.SimpleCirclePage}" />
-            </TableSection>
-            
-            <TableSection Title="Integrating with Xamarin.Forms">
-                <TextCell Text="Tap Toggle Fill"
-                          Detail="Tap the screen to toggle the circle fill"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.TapToggleFillPage}" />
+                    Title="SkiaSharp Drawing Basics">
+    <CollectionView IsGrouped="True"
+                    SelectionMode="Single"
+                    SelectionChanged="OnSelectionChanged"
+                    ItemTemplate="{StaticResource MenuItemTemplate}"
+                    GroupHeaderTemplate="{StaticResource MenuSectionHeaderTemplate}">
+        <CollectionView.ItemsSource>
+            <x:Array Type="{x:Type local:MenuSection}">
+                <local:MenuSection Name="Drawing a Simple Circle">
+                    <local:MenuItem Title="Simple Circle"
+                                    Detail="Outline and fill a circle with SkiaSharp"
+                                    PageType="{x:Type local:Basics.SimpleCirclePage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Color Explore"
-                          Detail="Use sliders to select color"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.ColorExplorePage}" />
-            </TableSection>
+                <local:MenuSection Name="Integrating with .NET MAUI">
+                    <local:MenuItem Title="Tap Toggle Fill"
+                                    Detail="Tap the screen to toggle the circle fill"
+                                    PageType="{x:Type local:Basics.TapToggleFillPage}" />
+                    <local:MenuItem Title="Color Explore"
+                                    Detail="Use sliders to select color"
+                                    PageType="{x:Type local:Basics.ColorExplorePage}" />
+                </local:MenuSection>
 
-            <TableSection Title="Pixels and Device-Independent Units">
-                <TextCell Text="Surface Size"
-                          Detail="Display the surface size three different ways"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.SurfaceSizePage}" />
+                <local:MenuSection Name="Pixels and Device-Independent Units">
+                    <local:MenuItem Title="Surface Size"
+                                    Detail="Display the surface size three different ways"
+                                    PageType="{x:Type local:Basics.SurfaceSizePage}" />
+                    <local:MenuItem Title="Ellipse Fill"
+                                    Detail="Fill the surface with an ellipse"
+                                    PageType="{x:Type local:Basics.EllipseFillPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Ellipse Fill"
-                          Detail="Fill the surface with an ellipse"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.EllipseFillPage}" />
-            </TableSection>
+                <local:MenuSection Name="Basic Animation">
+                    <local:MenuItem Title="Pulsating Ellipse"
+                                    Detail="Animate the axes of an ellipse"
+                                    PageType="{x:Type local:Basics.PulsatingEllipsePage}" />
+                    <local:MenuItem Title="Expanding Circles"
+                                    Detail="Animate circles to expand forever"
+                                    PageType="{x:Type local:Basics.ExpandingCirclesPage}" />
+                </local:MenuSection>
 
-            <TableSection Title="Basic Animation">
-                <TextCell Text="Pulsating Ellipse"
-                          Detail="Animate the axes of an ellipse"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.PulsatingEllipsePage}" />
+                <local:MenuSection Name="Integrating Text and Graphics">
+                    <local:MenuItem Title="Framed Text"
+                                    Detail="Draw a rounded rectangle around a text string"
+                                    PageType="{x:Type local:Basics.FramedTextPage}" />
+                    <local:MenuItem Title="Outlined Text"
+                                    Detail="Outline text characters"
+                                    PageType="{x:Type local:Basics.OutlinedTextPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Expanding Circles"
-                          Detail="Animate circles to expand forever"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.ExpandingCirclesPage}" />
-            </TableSection>
+                <local:MenuSection Name="Bitmap Basics">
+                    <local:MenuItem Title="Basic Bitmaps"
+                                    Detail="Load and display bitmaps"
+                                    PageType="{x:Type local:Basics.BasicBitmapsPage}" />
+                </local:MenuSection>
 
-            <TableSection Title="Integrating Text and Graphics">
-                <TextCell Text="Framed Text"
-                          Detail="Draw a rounded rectangle around a text string"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.FramedTextPage}" />
-
-                <TextCell Text="Outlined Text"
-                          Detail="Outline text characters"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.OutlinedTextPage}" />
-            </TableSection>
-
-            <TableSection Title="Bitmap Basics">
-                <TextCell Text="Basic Bitmaps"
-                          Detail="Load and display bitmaps"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.BasicBitmapsPage}" />
-            </TableSection>
-
-            <TableSection Title="Transparency">
-                <TextCell Text="Code More Code"
-                          Detail="Animate the alpha channel to fade between text strings"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.CodeMoreCodePage}" />
-
-                <TextCell Text="Bitmap Dissolve"
-                          Detail="Use a transparency to dissolve between one bitmap and another"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.BitmapDissolvePage}" />
-            </TableSection>
-        </TableRoot>
-    </TableView>
+                <local:MenuSection Name="Transparency">
+                    <local:MenuItem Title="Code More Code"
+                                    Detail="Animate the alpha channel to fade between text strings"
+                                    PageType="{x:Type local:Basics.CodeMoreCodePage}" />
+                    <local:MenuItem Title="Bitmap Dissolve"
+                                    Detail="Use a transparency to dissolve between one bitmap and another"
+                                    PageType="{x:Type local:Basics.BitmapDissolvePage}" />
+                </local:MenuSection>
+            </x:Array>
+        </CollectionView.ItemsSource>
+    </CollectionView>
 </local:HomeBasePage>

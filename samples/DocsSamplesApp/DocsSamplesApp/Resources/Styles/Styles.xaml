@@ -2,7 +2,36 @@
 <?xaml-comp compile="true" ?>
 <ResourceDictionary 
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:DocsSamplesApp">
+
+    <!-- Menu Navigation Styles -->
+    <Style x:Key="MenuSectionHeader" TargetType="Label">
+        <Setter Property="FontAttributes" Value="Bold" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="TextColor" Value="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray300}}" />
+        <Setter Property="Padding" Value="15,20,15,5" />
+        <Setter Property="TextTransform" Value="Uppercase" />
+    </Style>
+
+    <DataTemplate x:Key="MenuItemTemplate" x:DataType="local:MenuItem">
+        <Grid Padding="15,12" ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" BackgroundColor="Transparent">
+            <Grid.GestureRecognizers>
+                <TapGestureRecognizer 
+                    Command="{Binding NavigateCommand, Source={RelativeSource AncestorType={x:Type local:HomeBasePage}}}"
+                    CommandParameter="{Binding PageType}" />
+            </Grid.GestureRecognizers>
+            <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="16" />
+            <Label Grid.Row="1" Text="{Binding Detail}" TextColor="{AppThemeBinding Light={StaticResource Gray600}, Dark={StaticResource Gray400}}" FontSize="13" />
+            <Label Grid.Column="1" Grid.RowSpan="2" Text="›" FontSize="20" TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}" VerticalOptions="Center" />
+        </Grid>
+    </DataTemplate>
+
+    <DataTemplate x:Key="MenuSectionHeaderTemplate" x:DataType="local:MenuSection">
+        <Label Text="{Binding Name}" Style="{StaticResource MenuSectionHeader}" />
+    </DataTemplate>
+
+    <!-- End Menu Navigation Styles -->
 
     <Style TargetType="ActivityIndicator">
         <Setter Property="Color" Value="{AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource White}}" />

@@ -3,71 +3,62 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                     xmlns:local="clr-namespace:DocsSamplesApp"
                     x:Class="DocsSamplesApp.Paths.PathsHomePage"
-                    Title="SkiaSharp Lines and Paths"
-                    Padding="10">
-    <TableView Intent="Menu">
-        <TableRoot>
-            <TableSection Title="Lines and Stroke Caps">
-                <TextCell Text="Stroke Caps"
-                          Detail="List and show the three stroke cap options"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.StrokeCapsPage}" />
+                    Title="SkiaSharp Lines and Paths">
+    <CollectionView IsGrouped="True"
+                    SelectionMode="Single"
+                    SelectionChanged="OnSelectionChanged"
+                    ItemTemplate="{StaticResource MenuItemTemplate}"
+                    GroupHeaderTemplate="{StaticResource MenuSectionHeaderTemplate}">
+        <CollectionView.ItemsSource>
+            <x:Array Type="{x:Type local:MenuSection}">
+                <local:MenuSection Name="Lines and Stroke Caps">
+                    <local:MenuItem Title="Stroke Caps"
+                                    Detail="List and show the three stroke cap options"
+                                    PageType="{x:Type local:Paths.StrokeCapsPage}" />
+                    <local:MenuItem Title="Multiple Lines"
+                                    Detail="Draw multiple lines using DrawPoints"
+                                    PageType="{x:Type local:Paths.MultipleLinesPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Multiple Lines"
-                          Detail="Draw multiple lines using DrawPoints"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.MultipleLinesPage}" />
-            </TableSection>
+                <local:MenuSection Name="Path Basics">
+                    <local:MenuItem Title="Two Triangle Contours"
+                                    Detail="Use a graphics path to draw open and closed triangles"
+                                    PageType="{x:Type local:Paths.TwoTriangleContoursPage}" />
+                    <local:MenuItem Title="Stroke Joins"
+                                    Detail="List and show the three stroke join options"
+                                    PageType="{x:Type local:Paths.StrokeJoinsPage}" />
+                </local:MenuSection>
 
-            <TableSection Title="Path Basics">
-                <TextCell Text="Two Triangle Contours"
-                          Detail="Use a graphics path to draw open and closed triangles"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.TwoTriangleContoursPage}" />
+                <local:MenuSection Name="The Path Fill Types">
+                    <local:MenuItem Title="Five-Pointed Star"
+                                    Detail="Demonstrate path fill types"
+                                    PageType="{x:Type local:Paths.FivePointedStarPage}" />
+                    <local:MenuItem Title="Overlapping Circles"
+                                    Detail="Draw overlapping circles"
+                                    PageType="{x:Type local:Paths.OverlappingCirclesPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Stroke Joins"
-                          Detail="List and show the three stroke join options"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.StrokeJoinsPage}" />
-            </TableSection>
+                <local:MenuSection Name="Polylines and Parametric Equations">
+                    <local:MenuItem Title="Archimedean Spiral"
+                                    Detail="Use a graphics path to draw a spiral"
+                                    PageType="{x:Type local:Paths.ArchimedeanSpiralPage}" />
+                </local:MenuSection>
 
-            <TableSection Title="The Path Fill Types">
-                <TextCell Text="Five-Pointed Star"
-                          Detail="Demonstrate path fill types"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.FivePointedStarPage}" />
+                <local:MenuSection Name="Dots and Dashes">
+                    <local:MenuItem Title="Dots and Dashes"
+                                    Detail="Render a line with dots and dashes"
+                                    PageType="{x:Type local:Paths.DotsAndDashesPage}" />
+                    <local:MenuItem Title="Animated Spiral"
+                                    Detail="Animate an Archimedean Spiral"
+                                    PageType="{x:Type local:Paths.AnimatedSpiralPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Overlapping Circles"
-                          Detail="Draw overlapping circles"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.OverlappingCirclesPage}" />
-            </TableSection>
-
-            <TableSection Title="Polylines and Parametric Equations">
-                <TextCell Text="Archimedean Spiral"
-                          Detail="Use a graphics path to draw a spiral"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.ArchimedeanSpiralPage}" />
-            </TableSection>
-
-            <TableSection Title="Dots and Dashes">
-                <TextCell Text="Dots and Dashes"
-                          Detail="Render a line with dots and dashes"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.DotsAndDashesPage}" />
-
-                <TextCell Text="Animated Spiral"
-                          Detail="Animate an Archimedean Spiral"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.AnimatedSpiralPage}" />
-            </TableSection>
-
-            <TableSection Title="Finger Painting">
-                <TextCell Text="Finger Paint"
-                          Detail="Draw Lines with Your Fingers"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.FingerPaintPage}" />
-            </TableSection>
-        </TableRoot>
-    </TableView>
+                <local:MenuSection Name="Finger Painting">
+                    <local:MenuItem Title="Finger Paint"
+                                    Detail="Draw Lines with Your Fingers"
+                                    PageType="{x:Type local:Paths.FingerPaintPage}" />
+                </local:MenuSection>
+            </x:Array>
+        </CollectionView.ItemsSource>
+    </CollectionView>
 </local:HomeBasePage>

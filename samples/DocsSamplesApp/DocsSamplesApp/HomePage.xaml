@@ -3,42 +3,36 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                     xmlns:local="clr-namespace:DocsSamplesApp"
                     x:Class="DocsSamplesApp.HomePage"
-                    Title="SkiaSharp Forms Demos"
-                    Padding="10">
-    <TableView Intent="Menu">
-        <TableRoot>
-            <TableSection>
-                <TextCell Text="SkiaSharp Drawing Basics"
-                          Detail="Learn basic graphics concepts and coordinates"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Basics.BasicsHomePage}" />
+                    Title="SkiaSharp Demos">
+    <CollectionView SelectionMode="Single"
+                    SelectionChanged="OnSelectionChanged"
+                    ItemTemplate="{StaticResource MenuItemTemplate}">
+        <CollectionView.ItemsSource>
+            <x:Array Type="{x:Type local:MenuItem}">
+                <local:MenuItem Title="SkiaSharp Drawing Basics"
+                                Detail="Learn basic graphics concepts and coordinates"
+                                PageType="{x:Type local:Basics.BasicsHomePage}" />
 
-                <TextCell Text="SkiaSharp Lines and Path"
-                          Detail="Use SkiaSharp to draw lines and graphics paths"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Paths.PathsHomePage}" />
+                <local:MenuItem Title="SkiaSharp Lines and Paths"
+                                Detail="Use SkiaSharp to draw lines and graphics paths"
+                                PageType="{x:Type local:Paths.PathsHomePage}" />
 
-                <TextCell Text="SkiaSharp Transforms"
-                          Detail="Learn about transforms for modifying graphics"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Transforms.TransformsHomePage}" />
+                <local:MenuItem Title="SkiaSharp Transforms"
+                                Detail="Learn about transforms for modifying graphics"
+                                PageType="{x:Type local:Transforms.TransformsHomePage}" />
 
-                <TextCell Text="SkiaSharp Curves and Paths"
-                          Detail="Discover how to draw curves and use path features"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.CurvesHomePage}" />
+                <local:MenuItem Title="SkiaSharp Curves and Paths"
+                                Detail="Discover how to draw curves and use path features"
+                                PageType="{x:Type local:Curves.CurvesHomePage}" />
 
-                <TextCell Text="SkiaSharp Bitmaps"
-                          Detail="Create, draw on, save, and animate bitmaps"                          
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Bitmaps.BitmapsHomePage}" />
+                <local:MenuItem Title="SkiaSharp Bitmaps"
+                                Detail="Create, draw on, save, and animate bitmaps"
+                                PageType="{x:Type local:Bitmaps.BitmapsHomePage}" />
 
-                <TextCell Text="SkiaSharp Effects"
-                          Detail="Use gradients, bitmap tiling, blur, and drop shadow"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Effects.EffectsHomePage}" />
-
-            </TableSection>
-        </TableRoot>
-    </TableView>
+                <local:MenuItem Title="SkiaSharp Effects"
+                                Detail="Use gradients, bitmap tiling, blur, and drop shadow"
+                                PageType="{x:Type local:Effects.EffectsHomePage}" />
+            </x:Array>
+        </CollectionView.ItemsSource>
+    </CollectionView>
 </local:HomeBasePage>

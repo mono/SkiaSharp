@@ -3,233 +3,161 @@
                     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
                     xmlns:local="clr-namespace:DocsSamplesApp"
                     x:Class="DocsSamplesApp.Curves.CurvesHomePage"
-                    Title="SkiaSharp Curves and Paths"
-                    Padding="10">
-    <TableView Intent="Menu">
-        <TableRoot>
-            <TableSection Title="Three Ways to Draw an Arc">
-                <TextCell Text="Angle Arc"
-                          Detail="Experiment with creating an angle arc"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.AngleArcPage}" />
+                    Title="SkiaSharp Curves and Paths">
+    <CollectionView IsGrouped="True"
+                    SelectionMode="Single"
+                    SelectionChanged="OnSelectionChanged"
+                    ItemTemplate="{StaticResource MenuItemTemplate}"
+                    GroupHeaderTemplate="{StaticResource MenuSectionHeaderTemplate}">
+        <CollectionView.ItemsSource>
+            <x:Array Type="{x:Type local:MenuSection}">
+                <local:MenuSection Name="Three Ways to Draw an Arc">
+                    <local:MenuItem Title="Angle Arc"
+                                    Detail="Experiment with creating an angle arc"
+                                    PageType="{x:Type local:Curves.AngleArcPage}" />
+                    <local:MenuItem Title="Exploded Pie Chart"
+                                    Detail="Display a pie chart using the angle arc"
+                                    PageType="{x:Type local:Curves.ExplodedPieChartPage}" />
+                    <local:MenuItem Title="Tangent Arc"
+                                    Detail="Experiment with creating a tangent arc"
+                                    PageType="{x:Type local:Curves.TangentArcPage}" />
+                    <local:MenuItem Title="Rounded Heptagon"
+                                    Detail="Draw a heptagon with rounded corners"
+                                    PageType="{x:Type local:Curves.RoundedHeptagonPage}" />
+                    <local:MenuItem Title="Elliptical Arc"
+                                    Detail="Experiment with creating an elliptical arc"
+                                    PageType="{x:Type local:Curves.EllipticalArcPage}" />
+                    <local:MenuItem Title="Arc Infinity"
+                                    Detail="Draw an infinity sign with an elliptical arc"
+                                    PageType="{x:Type local:Curves.ArcInfinityPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Exploded Pie Chart"
-                          Detail="Display a pie chart using the angle arc"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.ExplodedPieChartPage}" />
+                <local:MenuSection Name="Three Types of Bézier Curves">
+                    <local:MenuItem Title="Bézier Curve"
+                                    Detail="Interactively draw a cubic Bézier curve"
+                                    PageType="{x:Type local:Curves.BezierCurvePage}" />
+                    <local:MenuItem Title="Bézier Circular Arc"
+                                    Detail="Draw a circular arc using a Bézier curve"
+                                    PageType="{x:Type local:Curves.BezierCircularArcPage}" />
+                    <local:MenuItem Title="Squaring the Circle"
+                                    Detail="Animate between a square and a circle"
+                                    PageType="{x:Type local:Curves.SquaringTheCirclePage}" />
+                    <local:MenuItem Title="Bézier Infinity"
+                                    Detail="Draw an infinity sign using cubic Bézier curves"
+                                    PageType="{x:Type local:Curves.BezierInfinityPage}" />
+                    <local:MenuItem Title="Quadratic Curve"
+                                    Detail="Interactively draw a quadratic Bézier curve"
+                                    PageType="{x:Type local:Curves.QuadraticCurvePage}" />
+                    <local:MenuItem Title="Conic Curve"
+                                    Detail="Interactively draw a conic curve"
+                                    PageType="{x:Type local:Curves.ConicCurvePage}" />
+                    <local:MenuItem Title="Conic Circular Arc"
+                                    Detail="Draw a circular arc using a conic curve"
+                                    PageType="{x:Type local:Curves.ConicCircularArcPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Tangent Arc"
-                          Detail="Experiment with creating a tangent arc"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.TangentArcPage}" />
+                <local:MenuSection Name="SVG Path Data">
+                    <local:MenuItem Title="Path Data Hello"
+                                    Detail="Say &quot;HELLO&quot; using SVG path-drawing commands"
+                                    PageType="{x:Type local:Curves.PathDataHelloPage}" />
+                    <local:MenuItem Title="Path Data Cat"
+                                    Detail="Draw a cat using SVG path-drawing commands"
+                                    PageType="{x:Type local:Curves.PathDataCatPage}" />
+                    <local:MenuItem Title="Pretty Analog Clock"
+                                    Detail="Display an analog clock using Bézier curves"
+                                    PageType="{x:Type local:Curves.PrettyAnalogClockPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Rounded Heptagon"
-                          Detail="Draw a heptagon with rounded corners"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.RoundedHeptagonPage}" />
+                <local:MenuSection Name="Clipping with Paths and Regions">
+                    <local:MenuItem Title="Monkey through Keyhole"
+                                    Detail="Clip a bitmap to a path"
+                                    PageType="{x:Type local:Curves.MonkeyThroughKeyholePage}" />
+                    <local:MenuItem Title="Four Circle Intersect Clip"
+                                    Detail="Combine paths for a more complex clip"
+                                    PageType="{x:Type local:Curves.FourCircleIntersectClipPage}" />
+                    <local:MenuItem Title="Clip Operations"
+                                    Detail="Illustrate the two clip operations"
+                                    PageType="{x:Type local:Curves.ClipOperationsPage}" />
+                    <local:MenuItem Title="Region Operations"
+                                    Detail="Illustrate the six region operations"
+                                    PageType="{x:Type local:Curves.RegionOperationsPage}" />
+                    <local:MenuItem Title="Region Paint"
+                                    Detail="Paint a region to see what happens"
+                                    PageType="{x:Type local:Curves.RegionPaintPage}" />
+                    <local:MenuItem Title="Four-Leaf Clover"
+                                    Detail="Draw a four-leaf clover with overlapping circles"
+                                    PageType="{x:Type local:Curves.FourLeafCloverPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Elliptical Arc"
-                          Detail="Experiment with creating an elliptical arc"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.EllipticalArcPage}" />
+                <local:MenuSection Name="Path Effects">
+                    <local:MenuItem Title="Animated Dotted Text"
+                                    Detail="Animate dots around outlined text"
+                                    PageType="{x:Type local:Curves.AnimatedDottedTextPage}" />
+                    <local:MenuItem Title="Dot / Dash Morph"
+                                    Detail="Morph between dots and dashes"
+                                    PageType="{x:Type local:Curves.DotDashMorphPage}" />
+                    <local:MenuItem Title="1D Path Effect"
+                                    Detail="Explore the one-dimensional path effect"
+                                    PageType="{x:Type local:Curves.OneDimensionalPathEffectPage}" />
+                    <local:MenuItem Title="Linked Chain"
+                                    Detail="Use 1D path effect to create a chain"
+                                    PageType="{x:Type local:Curves.LinkedChainPage}" />
+                    <local:MenuItem Title="Conveyor Belt"
+                                    Detail="Rotate a path around another path"
+                                    PageType="{x:Type local:Curves.ConveyorBeltPage}" />
+                    <local:MenuItem Title="Hatch Fill"
+                                    Detail="Use 2D line effect to fill an area"
+                                    PageType="{x:Type local:Curves.HatchFillPage}" />
+                    <local:MenuItem Title="Path Tile Fill"
+                                    Detail="Use 2D path effect to fill an area"
+                                    PageType="{x:Type local:Curves.PathTileFillPage}" />
+                    <local:MenuItem Title="Another Rounded Heptagon"
+                                    Detail="Round corners using a path effect"
+                                    PageType="{x:Type local:Curves.AnotherRoundedHeptagonPage}" />
+                    <local:MenuItem Title="Jitter Experiment"
+                                    Detail="Experiment with the discrete path effect"
+                                    PageType="{x:Type local:Curves.JitterExperimentPage}" />
+                    <local:MenuItem Title="Jitter Text"
+                                    Detail="Display text with the discrete path effect"
+                                    PageType="{x:Type local:Curves.JitterTextPage}" />
+                    <local:MenuItem Title="Tap to Outline the Path"
+                                    Detail="Demonstrate GetFillPath"
+                                    PageType="{x:Type local:Curves.TapToOutlineThePathPage}" />
+                    <local:MenuItem Title="Cats in Frame"
+                                    Detail="Sum two path effects"
+                                    PageType="{x:Type local:Curves.CatsInFramePage}" />
+                    <local:MenuItem Title="Dashed Hatch Lines"
+                                    Detail="Compose two path effects"
+                                    PageType="{x:Type local:Curves.DashedHatchLinesPage}" />
+                </local:MenuSection>
 
-                <TextCell Text="Arc Infinity"
-                          Detail="Draw an infinity sign with an elliptical arc"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.ArcInfinityPage}" />
-            </TableSection>
+                <local:MenuSection Name="Paths and Text">
+                    <local:MenuItem Title="Clipping Text"
+                                    Detail="Use text to clip a bitmap"
+                                    PageType="{x:Type local:Curves.ClippingTextPage}" />
+                    <local:MenuItem Title="Text Path Effect"
+                                    Detail="Use text path for a 1D path effect"
+                                    PageType="{x:Type local:Curves.TextPathEffectPage}" />
+                    <local:MenuItem Title="Character Outline Outlines"
+                                    Detail="Show the outline of a character outline"
+                                    PageType="{x:Type local:Curves.CharacterOutlineOutlinesPage}" />
+                    <local:MenuItem Title="Circular Text"
+                                    Detail="Draw text along a circular path"
+                                    PageType="{x:Type local:Curves.CircularTextPage}" />
+                </local:MenuSection>
 
-            <TableSection Title="Three Types of Bézier Curves">
-                <TextCell Text="Bézier Curve"
-                          Detail="Interactively draw a cubic Bézier curve"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.BezierCurvePage}" />
-
-                <TextCell Text="Bézier Circular Arc"
-                          Detail="Draw a circular arc using a Bézier curve"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.BezierCircularArcPage}" />
-
-                <TextCell Text="Squaring the Circle"
-                          Detail="Animate between a square and a circle"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.SquaringTheCirclePage}" />
-
-                <TextCell Text="Bézier Infinity"
-                          Detail="Draw an infinity sign using cubic Bézier curves"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.BezierInfinityPage}" />
-
-                <TextCell Text="Quadratic Curve"
-                          Detail="Interactively draw a quadratic Bézier curve"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.QuadraticCurvePage}" />
-
-                <TextCell Text="Conic Curve"
-                          Detail="Interactively draw a conic curve"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.ConicCurvePage}" />
-
-                <TextCell Text="Conic Circular Arc"
-                          Detail="Draw a circular arc using a conic curve"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.ConicCircularArcPage}" />
-            </TableSection>
-
-            <TableSection Title="SVG Path Data">
-                <TextCell Text="Path Data Hello"
-                          Detail="Say &#x201C;HELLO&#x201D; using SVG path-drawing commands"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.PathDataHelloPage}" />
-
-                <TextCell Text="Path Data Cat"
-                          Detail="Draw a cat using SVG path-drawing commands"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.PathDataCatPage}" />
-
-                <TextCell Text="Pretty Analog Clock"
-                          Detail="Display an analog clock using Bézier curves"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.PrettyAnalogClockPage}" />
-            </TableSection>
-
-            <TableSection Title="Clipping with Paths and Regions">
-                <TextCell Text="Monkey through Keyhole"
-                          Detail="Clip a bitmap to a path"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.MonkeyThroughKeyholePage}" />
-
-                <TextCell Text="Four Circle Intersect Clip"
-                          Detail="Combine paths for a more complex clip"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.FourCircleIntersectClipPage}" />
-
-                <TextCell Text="Clip Operations"
-                          Detail="Illustrate the two clip operations"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.ClipOperationsPage}" />
-
-                <TextCell Text="Region Operations"
-                          Detail="Illustrate the six region operations"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.RegionOperationsPage}" />
-
-                <TextCell Text="Region Paint"
-                          Detail="Paint a region to see what happens"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.RegionPaintPage}" />
-
-                <TextCell Text="Four-Leaf Clover"
-                          Detail="Draw a four-leaf clover with overlapping circles"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.FourLeafCloverPage}" />
-            </TableSection>
-
-            <TableSection Title="Path Effects">
-                <TextCell Text="Animated Dotted Text"
-                          Detail="Animate dots around outlined text"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.AnimatedDottedTextPage}" />
-
-                <TextCell Text="Dot / Dash Morph"
-                          Detail="Morph between dots and dashes"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.DotDashMorphPage}" />
-
-                <TextCell Text="1D Path Effect"
-                          Detail="Explore the one-dimensional path effect"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.OneDimensionalPathEffectPage}" />
-
-                <TextCell Text="Linked Chain"
-                          Detail="Use 1D path effect to create a chain"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.LinkedChainPage}" />
-
-                <TextCell Text="Conveyor Belt"
-                          Detail="Rotate a path around another path"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.ConveyorBeltPage}" />
-
-                <TextCell Text="Hatch Fill"
-                          Detail="Use 2D line effect to fill an area"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.HatchFillPage}" />
-
-                <TextCell Text="Path Tile Fill"
-                          Detail="Use 2D path effect to file an area"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.PathTileFillPage}" />
-                
-                <TextCell Text="Another Rounded Heptagon"
-                          Detail="Round corners using a path effect"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.AnotherRoundedHeptagonPage}" />
-
-                <TextCell Text="Jitter Experiment"
-                          Detail="Experiment with the discrete path effect"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.JitterExperimentPage}" />
-                
-                <TextCell Text="Jitter Text"
-                          Detail="Display text with the discrete path effect"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.JitterTextPage}" />
-
-                <TextCell Text="Tap to Outline the Path"
-                          Detail="Demonstrate GetFillPath"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.TapToOutlineThePathPage}" />
-
-                <TextCell Text="Cats in Frame"
-                          Detail="Sum two path effects"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.CatsInFramePage}" />
-
-                <TextCell Text="Dashed Hatch Lines"
-                          Detail="Compose two path effects"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.DashedHatchLinesPage}" />
-            </TableSection>
-
-            <TableSection Title="Paths and Text">
-                <TextCell Text="Clipping Text"
-                          Detail="Use text to clip a bitmap"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.ClippingTextPage}" />
-
-                <TextCell Text="Text Path Effect"
-                          Detail="Use text path for a 1D path effect"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.TextPathEffectPage}" />
-
-                <TextCell Text="CharacterOutlineOutlines"
-                          Detail="Show the outline of a character outline"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.CharacterOutlineOutlinesPage}" />
-
-                <TextCell Text="Circular Text"
-                          Detail="Draw text along a circular path"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.CircularTextPage}" />
-            </TableSection>
-
-            <TableSection Title="Information &amp; Enumeration">
-                <TextCell Text="Path Length"
-                          Detail="Compute the length of a path"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.PathLengthPage}" />
-
-                <TextCell Text="Unicycle Half-Pipe"
-                          Detail="Animate an object along a path"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.UnicycleHalfPipePage}" />
-
-                <TextCell Text="Globular Text"
-                          Detail="Transform text in 3D space"
-                          Command="{Binding NavigateCommand}"
-                          CommandParameter="{x:Type local:Curves.GlobularTextPage}" />
-            </TableSection>
-        </TableRoot>
-    </TableView>
+                <local:MenuSection Name="Information and Enumeration">
+                    <local:MenuItem Title="Path Length"
+                                    Detail="Compute the length of a path"
+                                    PageType="{x:Type local:Curves.PathLengthPage}" />
+                    <local:MenuItem Title="Unicycle Half-Pipe"
+                                    Detail="Animate an object along a path"
+                                    PageType="{x:Type local:Curves.UnicycleHalfPipePage}" />
+                    <local:MenuItem Title="Globular Text"
+                                    Detail="Transform text in 3D space"
+                                    PageType="{x:Type local:Curves.GlobularTextPage}" />
+                </local:MenuSection>
+            </x:Array>
+        </CollectionView.ItemsSource>
+    </CollectionView>
 </local:HomeBasePage>
