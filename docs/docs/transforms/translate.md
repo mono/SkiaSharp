@@ -30,7 +30,7 @@ These arguments may be negative. A second [`Translate`](xref:SkiaSharp.SKCanvas.
 public void Translate (SKPoint point)
 ```
 
-The **Accumulated Translate** page of the sample program demonstrates that multiple calls of the `Translate` method are cumulative. The [`AccumulatedTranslatePage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AccumulatedTranslatePage.cs) class displays 20 versions of the same rectangle, each one offset from the previous rectangle just enough so they stretch along the diagonal. Here's the `PaintSurface` event handler:
+The **Accumulated Translate** page of the sample program demonstrates that multiple calls of the `Translate` method are cumulative. The [`AccumulatedTranslatePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AccumulatedTranslatePage.cs) class displays 20 versions of the same rectangle, each one offset from the previous rectangle just enough so they stretch along the diagonal. Here's the `PaintSurface` event handler:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -73,7 +73,7 @@ y' = y + dy
 
 These are known as the *transform formulas* for translation. The default values of `dx` and `dy` for a new `SKCanvas` are 0.
 
-It is common to use the translate transform for shadow effects and similar techniques, as the **Translate Text Effects** page demonstrates. Here's the relevant part of the `PaintSurface` handler in the [`TranslateTextEffectsPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TranslateTextEffectsPage.cs) class:
+It is common to use the translate transform for shadow effects and similar techniques, as the **Translate Text Effects** page demonstrates. Here's the relevant part of the `PaintSurface` handler in the [`TranslateTextEffectsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/TranslateTextEffectsPage.cs) class:
 
 ```csharp
 float textSize = 150;
@@ -134,7 +134,7 @@ You can also use the [`SKAutoCanvasRestore`](xref:SkiaSharp.SKAutoCanvasRestore)
 
 However, you don't have to worry about transforms carrying over from one call of the `PaintSurface` handler to the next. Each new call to `PaintSurface` delivers a fresh `SKCanvas` object with default transforms.
 
-Another common use of the `Translate` transform is for rendering a visual object that has been originally created using coordinates that are convenient for drawing. For example, you might want to specify coordinates for an analog clock with a center at the point (0, 0). You can then use transforms to display the clock where you want it. This technique is demonstrated in the [**Hendecagram Array**] page. The [`HendecagramArrayPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramArrayPage.cs) class begins by creating an `SKPath` object for an 11-pointed star. The `HendecagramPath` object is defined as public, static, and read-only so that it can be accessed from other demonstration programs. It is created in a static constructor:
+Another common use of the `Translate` transform is for rendering a visual object that has been originally created using coordinates that are convenient for drawing. For example, you might want to specify coordinates for an analog clock with a center at the point (0, 0). You can then use transforms to display the clock where you want it. This technique is demonstrated in the [**Hendecagram Array**] page. The [`HendecagramArrayPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramArrayPage.cs) class begins by creating an `SKPath` object for an 11-pointed star. The `HendecagramPath` object is defined as public, static, and read-only so that it can be accessed from other demonstration programs. It is created in a static constructor:
 
 ```csharp
 public class HendecagramArrayPage : ContentPage
@@ -208,7 +208,7 @@ Here's the result:
 
 [![Triple screenshot of the Hendecagram Array page](translate-images/hendecagramarray-small.png)](translate-images/hendecagramarray-large.png#lightbox "Triple screenshot of the Hendecagram Array page")
 
-Animations often involve transforms. The **Hendecagram Animation** page moves the 11-pointed star around in a circle. The [`HendecagramAnimationPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramAnimationPage.cs) class begins with some fields and overrides of the `OnAppearing` and `OnDisappearing` methods to start and stop a .NET MAUI timer:
+Animations often involve transforms. The **Hendecagram Animation** page moves the 11-pointed star around in a circle. The [`HendecagramAnimationPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/HendecagramAnimationPage.cs) class begins with some fields and overrides of the `OnAppearing` and `OnDisappearing` methods to start and stop a .NET MAUI timer:
 
 ```csharp
 public class HendecagramAnimationPage : ContentPage

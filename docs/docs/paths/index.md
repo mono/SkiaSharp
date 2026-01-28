@@ -12,7 +12,7 @@ ms.date: 03/10/2017
 
 _Use SkiaSharp to draw lines and graphics paths_
 
-The [previous section](~/xamarin-forms/user-interface/graphics/skiasharp/basics/index.md) demonstrated that the SkiaSharp `SKCanvas` class includes several methods to draw circles, ovals, rectangles, rounded rectangles, text, and bitmaps. This section and later sections cover the various classes connected with creating and rendering *graphics paths*.
+The [previous section](../basics/index.md) demonstrated that the SkiaSharp `SKCanvas` class includes several methods to draw circles, ovals, rectangles, rounded rectangles, text, and bitmaps. This section and later sections cover the various classes connected with creating and rendering *graphics paths*.
 
 The graphics path is the most generalized approach to drawing lines and curves in SkiaSharp. This section covers using an [`SKPath`](xref:SkiaSharp.SKPath) object to draw straight lines, and to use a collection of tiny straight lines (called a *polyline*) to draw curves that you can define algorithmically. A later section on [**SkiaSharp Curves and Paths**](../curves/index.md) discusses the various sorts of curves supported by `SKPath`.
 

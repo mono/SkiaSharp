@@ -26,7 +26,7 @@ The **Basic Bitmaps** page in the **SkiaSharpFormsDemos** program demonstrates h
 - From a resource embedded in the executable
 - From the user's photo library
 
-Three `SKBitmap` objects for these three sources are defined as fields in the [`BasicBitmapsPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/BasicBitmapsPage.cs) class:
+Three `SKBitmap` objects for these three sources are defined as fields in the [`BasicBitmapsPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/BasicBitmapsPage.cs) class:
 
 ```csharp
 public class BasicBitmapsPage : ContentPage

@@ -16,7 +16,7 @@ You can animate SkiaSharp graphics in .NET MAUI by causing the `PaintSurface` me
 
 ![Several concentric circles seemingly expanding from the center](animation-images/animationexample.png)
 
-The **Pulsating Ellipse** page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The [**PulsatingEllipsePage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml) file instantiates a .NET MAUI `Slider` and a `Label` to display the current value of the slider. This is a common way to integrate an `SKCanvasView` with other .NET MAUI views:
+The **Pulsating Ellipse** page in the sample program animates the two axes of an ellipse so that it appears to be pulsating, and you can even control the rate of this pulsation. The [**PulsatingEllipsePage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/PulsatingEllipsePage.xaml) file instantiates a .NET MAUI `Slider` and a `Label` to display the current value of the slider. This is a common way to integrate an `SKCanvasView` with other .NET MAUI views:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -141,7 +141,7 @@ Notice that the `SKPaint` object is created in a `using` block. Like many SkiaSh
 
  A better solution in this particular case would be to create two `SKPaint` objects once and save them as fields.
 
-That's what the **Expanding Circles** animation does. The [`ExpandingCirclesPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ExpandingCirclesPage.cs) class begins by defining several fields, including an `SKPaint` object:
+That's what the **Expanding Circles** animation does. The [`ExpandingCirclesPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/ExpandingCirclesPage.cs) class begins by defining several fields, including an `SKPaint` object:
 
 ```csharp
 public class ExpandingCirclesPage : ContentPage

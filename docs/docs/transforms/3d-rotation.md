@@ -216,7 +216,7 @@ When 2D objects are rotated with a positive angle around the Y axis, then positi
 
 When using `SKMatrix44`, perform all the 3D rotation and perspective operations by multiplying various `SKMatrix44` values. Then you can extract a two-dimensional 3-by-3 matrix from the 4-by-4 matrix using the [`Matrix`](xref:SkiaSharp.SKMatrix44.Matrix) property of the `SKMatrix44` class. This property returns a familiar `SKMatrix` value.
 
-The **Rotation 3D** page lets you experiment with 3D rotation. The [**Rotation3DPage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml) file instantiates four sliders to set rotation around the X, Y, and Z axes, and to set a depth value:
+The **Rotation 3D** page lets you experiment with 3D rotation. The [**Rotation3DPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml) file instantiates four sliders to set rotation around the X, Y, and Z axes, and to set a depth value:
 
 ```xaml
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -297,7 +297,7 @@ The **Rotation 3D** page lets you experiment with 3D rotation. The [**Rotation3D
 
 Notice that the `depthSlider` is initialized with a `Minimum` value of 250. This implies that the 2D object being rotated here has X and Y coordinates restricted to a circle defined by a 250-pixel radius around the origin. Any rotation of this object in 3D space will always result in coordinate values less than 250.
 
-The [**Rotation3DPage.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs) code-behind file loads in a bitmap that is 300 pixels square:
+The [**Rotation3DPage.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/Rotation3DPage.xaml.cs) code-behind file loads in a bitmap that is 300 pixels square:
 
 ```csharp
 public partial class Rotation3DPage : ContentPage

@@ -213,7 +213,7 @@ The `SKMatrix` structure defines nine read/write properties of type `float` corr
 
 `SKMatrix` also defines a property named [`Values`](xref:SkiaSharp.SKMatrix.Values) of type `float[]`. This property can be used to set or obtain the nine values in one shot in the order `ScaleX`, `SkewX`, `TransX`, `SkewY`, `ScaleY`, `TransY`, `Persp0`, `Persp1`, and `Persp2`.
 
-The `Persp0`, `Persp1`, and `Persp2` cells are discussed in the article [**Non-Affine Transforms**](~/xamarin-forms/user-interface/graphics/skiasharp/transforms/non-affine.md). If these cells have their default values of 0, 0, and 1, then the transform is multiplied by a coordinate point like this:
+The `Persp0`, `Persp1`, and `Persp2` cells are discussed in the article [**Non-Affine Transforms**](non-affine.md). If these cells have their default values of 0, 0, and 1, then the transform is multiplied by a coordinate point like this:
 
 <pre>
               │ ScaleX  SkewY   0 │
@@ -317,7 +317,7 @@ SKMatrix.RotateDegrees(ref R, degrees, px, py);
 
 These methods do *not* concatenate a rotate transform to an existing transform. The methods set all the cells of the matrix. They are functionally identical to the `MakeRotation` and `MakeRotationDegrees` methods except that they don't instantiate the `SKMatrix` value.
 
-Suppose you have an `SKPath` object that you want to display, but you would prefer that it have a somewhat different orientation, or a different center point. You can modify all the coordinates of that path by calling the [`Transform`](xref:SkiaSharp.SKPath.Transform(SkiaSharp.SKMatrix)) method of `SKPath` with an `SKMatrix` argument. The **Path Transform** page demonstrates how to do this. The [`PathTransform`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/PathTransformPage.cs) class references the `HendecagramPath` object in a field but uses its constructor to apply a transform to that path:
+Suppose you have an `SKPath` object that you want to display, but you would prefer that it have a somewhat different orientation, or a different center point. You can modify all the coordinates of that path by calling the [`Transform`](xref:SkiaSharp.SKPath.Transform(SkiaSharp.SKMatrix)) method of `SKPath` with an `SKMatrix` argument. The **Path Transform** page demonstrates how to do this. The [`PathTransform`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/PathTransformPage.cs) class references the `HendecagramPath` object in a field but uses its constructor to apply a transform to that path:
 
 ```csharp
 public class PathTransformPage : ContentPage
@@ -434,15 +434,15 @@ If you use that last method, keep in mind that the `SKRect` structure is not cap
 
 One way to get a feel for the affine transform is by interactively moving three corners of a bitmap around the screen and seeing what transform results. This is the idea behind the **Show Affine Matrix** page. This page requires two other classes that are also used in other demonstrations:
 
-The [`TouchPoint`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/TouchPoint.cs) class displays a translucent circle that can be dragged around the screen. `TouchPoint` requires that an `SKCanvasView` or an element that is a parent of an `SKCanvasView` have the [`TouchEffect`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/TouchEffect.cs) attached. Set the `Capture` property to `true`. In the `TouchAction` event handler, the program must call the `ProcessTouchEvent` method in `TouchPoint` for each `TouchPoint` instance. The method returns `true` if the touch event resulted in the touch point moving. Also, the `PaintSurface` handler must call the `Paint` method in each `TouchPoint` instance, passing to it the `SKCanvas` object.
+The [`TouchPoint`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/TouchPoint.cs) class displays a translucent circle that can be dragged around the screen. `TouchPoint` requires that an `SKCanvasView` or an element that is a parent of an `SKCanvasView` have the [`TouchEffect`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/TouchEffect.cs) attached. Set the `Capture` property to `true`. In the `TouchAction` event handler, the program must call the `ProcessTouchEvent` method in `TouchPoint` for each `TouchPoint` instance. The method returns `true` if the touch event resulted in the touch point moving. Also, the `PaintSurface` handler must call the `Paint` method in each `TouchPoint` instance, passing to it the `SKCanvas` object.
 
 `TouchPoint` demonstrates a common way that a SkiaSharp visual can be encapsulated in a separate class. The class can define properties for specifying characteristics of the visual, and a method named `Paint` with an `SKCanvas` argument can render it.
 
 The `Center` property of `TouchPoint` indicates the location of the object. This property can be set to initialize the location; the property changes when the user drags the circle around the canvas.
 
-The **Show Affine Matrix Page** also requires the [`MatrixDisplay`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/MatrixDisplay.cs) class. This class displays the cells of an `SKMatrix` object. It has two public methods: `Measure` to obtain the dimensions of the rendered matrix, and `Paint` to display it. The class contains a `MatrixPaint` property of type `SKPaint` that can be replaced for a different font size or color.
+The **Show Affine Matrix Page** also requires the [`MatrixDisplay`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/MatrixDisplay.cs) class. This class displays the cells of an `SKMatrix` object. It has two public methods: `Measure` to obtain the dimensions of the rendered matrix, and `Paint` to display it. The class contains a `MatrixPaint` property of type `SKPaint` that can be replaced for a different font size or color.
 
-The [**ShowAffineMatrixPage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml) file instantiates the `SKCanvasView` and attaches a `TouchEffect`. The [**ShowAffineMatrixPage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml.cs) code-behind file creates three `TouchPoint` objects and then sets them to positions corresponding to three corners of a bitmap that it loads from an embedded resource:
+The [**ShowAffineMatrixPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml) file instantiates the `SKCanvasView` and attaches a `TouchEffect`. The [**ShowAffineMatrixPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ShowAffineMatrixPage.xaml.cs) code-behind file creates three `TouchPoint` objects and then sets them to positions corresponding to three corners of a bitmap that it loads from an embedded resource:
 
 ```csharp
 public partial class ShowAffineMatrixPage : ContentPage
@@ -587,7 +587,7 @@ The iOS screen below shows the bitmap when the page is first loaded, while the t
 
 Although it seems as if the touch points drag the corners of the bitmap, that's only an illusion. The matrix calculated from the touch points transforms the bitmap so that the corners coincide with the touch points.
 
-It is more natural for users to move, resize, and rotate bitmaps not by dragging the corners, but by using one or two fingers directly on the object to drag, pinch, and rotate. This is covered in the next article [**Touch Manipulation**](~/xamarin-forms/user-interface/graphics/skiasharp/transforms/touch.md).
+It is more natural for users to move, resize, and rotate bitmaps not by dragging the corners, but by using one or two fingers directly on the object to drag, pinch, and rotate. This is covered in the next article [**Touch Manipulation**](touch.md).
 
 ## The Reason for the 3-by-3 Matrix
 
@@ -641,7 +641,7 @@ The `SKMatrix` structure in SkiaSharp defines properties for that third row:
               │ TransX  TransY  Persp2 │
 </pre>
 
-Non-zero values of `Persp0` and `Persp1` result in transforms that move objects off the two-dimensional plane where Z equals 1. What happens when those objects are moved back to that plane is covered in the article on [**Non-Affine Transforms**](~/xamarin-forms/user-interface/graphics/skiasharp/transforms/non-affine.md).
+Non-zero values of `Persp0` and `Persp1` result in transforms that move objects off the two-dimensional plane where Z equals 1. What happens when those objects are moved back to that plane is covered in the article on [**Non-Affine Transforms**](non-affine.md).
 
 ## Related Links
 

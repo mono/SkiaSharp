@@ -142,7 +142,7 @@ The static [`SKPath.ParseSvgPathData`](xref:SkiaSharp.SKPath.ParseSvgPathData(Sy
 
 The [`ToSvgPathData`](xref:SkiaSharp.SKPath.ToSvgPathData) method is handy for obtaining SVG path data from an existing `SKPath` object to transfer  to another program, or to store in a text-based file format such as XML. (The `ToSvgPathData` method is not demonstrated in sample code in this article.) Do *not* expect `ToSvgPathData` to return a string corresponding exactly to the method calls that created the path. In particular, you'll discover that arcs are converted to multiple `QuadTo` commands, and that's how they appear in the path data returned from `ToSvgPathData`.
 
-The **Path Data Hello** page spells out the word "HELLO" using SVG path data. Both the `SKPath` and `SKPaint` objects are defined as fields in the [`PathDataHelloPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataHelloPage.cs) class:
+The **Path Data Hello** page spells out the word "HELLO" using SVG path data. Both the `SKPath` and `SKPaint` objects are defined as fields in the [`PathDataHelloPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataHelloPage.cs) class:
 
 ```csharp
 public class PathDataHelloPage : ContentPage
@@ -213,7 +213,7 @@ The path fills the canvas, which looks more reasonable when viewed in landscape 
 
 [![Triple screenshot of the Path Data Hello page](path-data-images/pathdatahello-small.png)](path-data-images/pathdatahello-large.png#lightbox "Triple screenshot of the Path Data Hello page")
 
-The **Path Data Cat** page is similar. The path and paint objects are both defined as fields in the [`PathDataCatPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs) class:
+The **Path Data Cat** page is similar. The path and paint objects are both defined as fields in the [`PathDataCatPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathDataCatPage.cs) class:
 
 ```csharp
 public class PathDataCatPage : ContentPage
@@ -286,7 +286,7 @@ Here's the program running:
 
 Normally, when an `SKPath` object is defined as a field, the contours of the path must be defined in the constructor or another method. When using SVG path data, however, you've seen that the path can be specified entirely in the field definition.
 
-The earlier **Ugly Analog Clock** sample in the [**The Rotate Transform**](~/xamarin-forms/user-interface/graphics/skiasharp/transforms/rotate.md) article displayed the hands of the clock as simple lines. The **Pretty Analog Clock** program below replaces those lines with `SKPath` objects defined as fields in the [`PrettyAnalogClockPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PrettyAnalogClockPage.cs) class along with `SKPaint` objects:
+The earlier **Ugly Analog Clock** sample in the [**The Rotate Transform**](../transforms/rotate.md) article displayed the hands of the clock as simple lines. The **Pretty Analog Clock** program below replaces those lines with `SKPath` objects defined as fields in the [`PrettyAnalogClockPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PrettyAnalogClockPage.cs) class along with `SKPaint` objects:
 
 ```csharp
 public class PrettyAnalogClockPage : ContentPage
@@ -353,7 +353,7 @@ public class PrettyAnalogClockPage : ContentPage
 }
 ```
 
-The [**Dots and Dashes**](~/xamarin-forms/user-interface/graphics/skiasharp/paths/dots.md) article discussed how you can use the [`SKPathEffect.CreateDash`](xref:SkiaSharp.SKPathEffect.CreateDash*) method to create a dashed line. The first argument is a `float` array that generally has two elements: The first element is the length of the dashes, and the second element is the gap between the dashes. When the `StrokeCap` property is set to `SKStrokeCap.Round`, then the rounded ends of the dash effectively lengthen the dash length by the stroke width on both sides of the dash. Thus, setting the first array element to 0 creates a dotted line.
+The [**Dots and Dashes**](../paths/dots.md) article discussed how you can use the [`SKPathEffect.CreateDash`](xref:SkiaSharp.SKPathEffect.CreateDash*) method to create a dashed line. The first argument is a `float` array that generally has two elements: The first element is the length of the dashes, and the second element is the gap between the dashes. When the `StrokeCap` property is set to `SKStrokeCap.Round`, then the rounded ends of the dash effectively lengthen the dash length by the stroke width on both sides of the dash. Thus, setting the first array element to 0 creates a dotted line.
 
 The distance between these dots is governed by the second array element. As you'll see shortly, these two `SKPaint` objects are used to draw circles with a radius of 90 units. The circumference of this circle is therefore 180π, which means that the 60 minute marks must appear every 3π units, which is the second value in the `float` array in `minuteMarkPaint`. The 12 hour marks must appear every 15π units, which is the value in the second `float` array.
 

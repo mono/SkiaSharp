@@ -16,17 +16,17 @@ The [`SKPath`](xref:SkiaSharp.SKPath) class defines several properties and metho
 
 It is sometimes useful to determine the total length of all the lines and curves that make up a path. Calculating this length is not an algorithmically simple task, so an entire class named [`PathMeasure`](xref:SkiaSharp.SKPathMeasure) is devoted to it.
 
-It is also sometimes useful to obtain all the drawing operations and points that make up a path. At first, this facility might seem unnecessary: If your program has created the path, the program already knows the contents. However, you've seen that paths can also be created by [path effects](~/xamarin-forms/user-interface/graphics/skiasharp/curves/effects.md) and by converting [text strings into paths](~/xamarin-forms/user-interface/graphics/skiasharp/curves/text-paths.md). You can also obtain all the drawing operations and points that make up these paths. One possibility is to apply an algorithmic transform to all the points, for example, to wrap text around a hemisphere:
+It is also sometimes useful to obtain all the drawing operations and points that make up a path. At first, this facility might seem unnecessary: If your program has created the path, the program already knows the contents. However, you've seen that paths can also be created by [path effects](effects.md) and by converting [text strings into paths](text-paths.md). You can also obtain all the drawing operations and points that make up these paths. One possibility is to apply an algorithmic transform to all the points, for example, to wrap text around a hemisphere:
 
 ![Text wrapped on a hemisphere](information-images/pathenumerationsample.png)
 
 ## Getting the Path Length
 
-In the article [**Paths and Text**](~/xamarin-forms/user-interface/graphics/skiasharp/curves/text-paths.md) you saw how to use the [`DrawTextOnPath`](xref:SkiaSharp.SKCanvas.DrawTextOnPath(System.String,SkiaSharp.SKPath,System.Single,System.Single,SkiaSharp.SKPaint)) method to draw a text string whose baseline follows the course of a path. But what if you want to size the text so that it fits the path precisely? Drawing text around a circle is easy because the circumference of a circle is simple to calculate. But the circumference of an ellipse or the length of a Bézier curve is not so simple.
+In the article [**Paths and Text**](text-paths.md) you saw how to use the [`DrawTextOnPath`](xref:SkiaSharp.SKCanvas.DrawTextOnPath(System.String,SkiaSharp.SKPath,System.Single,System.Single,SkiaSharp.SKPaint)) method to draw a text string whose baseline follows the course of a path. But what if you want to size the text so that it fits the path precisely? Drawing text around a circle is easy because the circumference of a circle is simple to calculate. But the circumference of an ellipse or the length of a Bézier curve is not so simple.
 
 The [`SKPathMeasure`](xref:SkiaSharp.SKPathMeasure) class can help. The [constructor](xref:SkiaSharp.SKPathMeasure.%23ctor(SkiaSharp.SKPath,System.Boolean,System.Single)) accepts an `SKPath` argument, and the [`Length`](xref:SkiaSharp.SKPathMeasure.Length) property reveals its length.
 
-This class is demonstrated in the **Path Length** sample, which is based on the **Bezier Curve** page. The [**PathLengthPage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml) file derives from `InteractivePage` and includes a touch interface:
+This class is demonstrated in the **Path Length** sample, which is based on the **Bezier Curve** page. The [**PathLengthPage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml) file derives from `InteractivePage` and includes a touch interface:
 
 ```xaml
 <local:InteractivePage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
@@ -47,7 +47,7 @@ This class is demonstrated in the **Path Length** sample, which is based on the 
 </local:InteractivePage>
 ```
 
-The [**PathLengthPage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml.cs) code-behind file allows you to move four touch points to define the end points and control points of a cubic Bézier curve. Three fields define a text string, an `SKPaint` object, and a calculated width of the text:
+The [**PathLengthPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathLengthPage.xaml.cs) code-behind file allows you to move four touch points to define the end points and control points of a cubic Bézier curve. Three fields define a text string, an `SKPaint` object, and a calculated width of the text:
 
 ```csharp
 public partial class PathLengthPage : InteractivePage
@@ -247,7 +247,7 @@ Most of these letters consist of straight lines, yet these straight lines have a
 
 The key is that the original straight lines are broken into a series of smaller straight lines. These individual smaller straight lines can then be manipulated in different ways to form a curve.
 
-To help with this process, the sample contains a static [`PathExtensions`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathExtensions.cs) class with an `Interpolate` method that breaks down a straight line into numerous short lines that are only one unit in length. In addition, the class contains several methods that convert the three types of Bézier curves into a series of tiny straight lines that approximate the curve. (The parametric formulas were presented in the article [**Three Types of Bézier Curves**](~/xamarin-forms/user-interface/graphics/skiasharp/curves/beziers.md).) This process is called _flattening_ the curve:
+To help with this process, the sample contains a static [`PathExtensions`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/PathExtensions.cs) class with an `Interpolate` method that breaks down a straight line into numerous short lines that are only one unit in length. In addition, the class contains several methods that convert the three types of Bézier curves into a series of tiny straight lines that approximate the curve. (The parametric formulas were presented in the article [**Three Types of Bézier Curves**](beziers.md).) This process is called _flattening_ the curve:
 
 ```csharp
 static class PathExtensions
@@ -432,7 +432,7 @@ The **GlobularText** sample uses this extension method to seemingly wrap text ar
 
 [![Triple screenshot of the Globular Text page](information-images/globulartext-small.png)](information-images/globulartext-large.png#lightbox "Triple screenshot of the Globular Text page")
 
-The [`GlobularTextPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Curves/GlobularTextPage.cs) class constructor performs this transform. It creates an `SKPaint` object for the text, and then obtains an `SKPath` object from the `GetTextPath` method. This is the path passed to the `CloneWithTransform` extension method along with a transform function:
+The [`GlobularTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Curves/GlobularTextPage.cs) class constructor performs this transform. It creates an `SKPaint` object for the text, and then obtains an `SKPath` object from the `GetTextPath` method. This is the path passed to the `CloneWithTransform` extension method along with a transform function:
 
 ```csharp
 public class GlobularTextPage : ContentPage

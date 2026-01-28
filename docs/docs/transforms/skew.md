@@ -34,7 +34,7 @@ public void Skew (SKPoint skew)
 
 However, it's unlikely that you'll be using either of these two methods in isolation.
 
-The **Skew Experiment** page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two `Slider` elements. Here is the `PaintSurface` handler in the [`SkewExperimentPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewExperimentPage.xaml.cs) class:
+The **Skew Experiment** page lets you experiment with skew values that range between –10 and 10. A text string is positioned in the upper-left corner of the page, with skew values obtained from two `Slider` elements. Here is the `PaintSurface` handler in the [`SkewExperimentPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewExperimentPage.xaml.cs) class:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -104,7 +104,7 @@ You might feel more comfortable specifying skew as an angle of tilt, such as the
 
 The ratio of the 150-pixel shift to the 100-pixel vertical is the tangent of that angle, in this example 56.3 degrees.
 
-The XAML file of the **Skew Angle Experiment** page is similar to the **Skew Angle** page except that the `Slider` elements range from –90 degrees to 90 degrees. The [`SkewAngleExperiment`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewAngleExperimentPage.xaml.cs) code-behind file centers the text on the page and uses `Translate` to set a center of skewing to the center of the page. A short `SkewDegrees` method at the bottom of the code converts angles to skew values:
+The XAML file of the **Skew Angle Experiment** page is similar to the **Skew Angle** page except that the `Slider` elements range from –90 degrees to 90 degrees. The [`SkewAngleExperiment`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/SkewAngleExperimentPage.xaml.cs) code-behind file centers the text on the page and uses `Translate` to set a center of skewing to the center of the page. A short `SkewDegrees` method at the bottom of the code converts angles to skew values:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -149,7 +149,7 @@ As an angle approaches positive or negative 90 degrees, the tangent approaches i
 
 [![Triple screenshot of the Skew Angle Experiment page](skew-images/skewangleexperiment-small.png)](skew-images/skewangleexperiment-large.png#lightbox "Triple screenshot of the Skew Angle Experiment page")
 
-A small negative horizontal skew can mimic oblique or italic text, as the **Oblique Text** page demonstrates. The [`ObliqueTextPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ObliqueTextPage.cs) class shows how it's done:
+A small negative horizontal skew can mimic oblique or italic text, as the **Oblique Text** page demonstrates. The [`ObliqueTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/ObliqueTextPage.cs) class shows how it's done:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)

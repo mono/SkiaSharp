@@ -55,7 +55,7 @@ public void Scale (SKPoint size)
 
 The fourth `Scale` method will be described shortly.
 
-The **Basic Scale** page demonstrates the `Scale` method. The [**BasicScalePage.xaml**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml) file contains two `Slider` elements that let you select horizontal and vertical scaling factors between 0 and 10. The [**BasicScalePage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml.cs) code-behind file uses those values to call `Scale` before displaying a rounded rectangle stroked with a dashed line and sized to fit some text in the upper-left corner of the canvas:
+The **Basic Scale** page demonstrates the `Scale` method. The [**BasicScalePage.xaml**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml) file contains two `Slider` elements that let you select horizontal and vertical scaling factors between 0 and 10. The [**BasicScalePage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/BasicScalePage.xaml.cs) code-behind file uses those values to call `Scale` before displaying a rounded rectangle stroked with a dashed line and sized to fit some text in the upper-left corner of the canvas:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -115,7 +115,7 @@ public void Scale (Single sx, Single sy, Single px, Single py)
 
 The `px` and `py` parameters define a point that is sometimes called the *scaling center* but in the SkiaSharp documentation is referred to as a *pivot point*. This is a point relative to the upper-left corner of the canvas that is not affected by the scaling. All scaling occurs relative to that center.
 
-The [**Centered Scale**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/CenteredScalePage.xaml.cs) page shows how this works. The `PaintSurface` handler is similar to the **Basic Scale** program except that the `margin` value is calculated to center the text horizontally, which implies that the program works best in portrait mode:
+The [**Centered Scale**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/CenteredScalePage.xaml.cs) page shows how this works. The `PaintSurface` handler is similar to the **Basic Scale** program except that the `margin` value is calculated to center the text horizontally, which implies that the program works best in portrait mode:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
@@ -212,7 +212,7 @@ When you combine `Translate` and `Scale` calls, the order matters. If the `Trans
 
 The `SKPath` class defines a read-only [`Bounds`](xref:SkiaSharp.SKPath.Bounds) property that returns an `SKRect` defining the extent of the coordinates in the path. For example, when the `Bounds` property is obtained from the hendecagram path created earlier, the `Left` and `Top` properties of the rectangle are approximately –100, the `Right` and `Bottom` properties are approximately 100, and the `Width` and `Height` properties are approximately 200. (Most of the actual values are a little less because the points of the stars are defined by a circle with a radius of 100 but only the top point is parallel with the horizontal or vertical axes.)
 
-The availability of this information implies that it should be possible to derive scale and translate factors suitable for scaling a path to the size of the canvas. The [**Anisotropic Scaling**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicScalingPage.cs) page demonstrates this with the 11-pointed star. An *anisotropic* scale means that it's unequal in the horizontal and vertical directions, which means that the star won't retain its original aspect ratio. Here's the relevant code in the `PaintSurface` handler:
+The availability of this information implies that it should be possible to derive scale and translate factors suitable for scaling a path to the size of the canvas. The [**Anisotropic Scaling**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicScalingPage.cs) page demonstrates this with the 11-pointed star. An *anisotropic* scale means that it's unequal in the horizontal and vertical directions, which means that the star won't retain its original aspect ratio. Here's the relevant code in the `PaintSurface` handler:
 
 ```csharp
 SKPath path = HendecagramPage.HendecagramPath;
@@ -257,7 +257,7 @@ pathBounds.Inflate(strokePaint.StrokeWidth / 2,
 
 This increases the `pathBounds` rectangle by 1.5 units on all four sides. This is a reasonable solution only when the stroke join is rounded. A miter join can be longer and is difficult to calculate.
 
-You can also use a similar technique with text, as the **Anisotropic Text** page demonstrates. Here's the relevant part of the `PaintSurface` handler from the [`AnisotropicTextPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicTextPage.cs) class:
+You can also use a similar technique with text, as the **Anisotropic Text** page demonstrates. Here's the relevant part of the `PaintSurface` handler from the [`AnisotropicTextPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/AnisotropicTextPage.cs) class:
 
 ```csharp
 using (SKPaint textPaint = new SKPaint
@@ -293,7 +293,7 @@ If you need to preserve the aspect ratio of the graphical objects, you'll want t
 - Scale the object based on the minimum of the horizontal and vertical page dimensions divided by the graphical object dimensions.
 - Translate the center of the scaled object to the center of the page.
 
-The [`IsotropicScalingPage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/IsotropicScalingPage.cs) performs these steps in reverse order before displaying the star:
+The [`IsotropicScalingPage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Transforms/IsotropicScalingPage.cs) performs these steps in reverse order before displaying the star:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)

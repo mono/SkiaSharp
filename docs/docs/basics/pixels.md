@@ -26,7 +26,7 @@ The page in the sample program entitled **Surface Size** uses SkiaSharp text out
 - The [`CanvasSize`](xref:SkiaSharp.Views.Maui.Controls.SKCanvasView.CanvasSize) property of the `SKCanvasView` object.
 - The [`Size`](xref:SkiaSharp.SKImageInfo.Size) property of the `SKImageInfo` value, which is consistent with the `Width` and `Height` properties used in the two previous pages.
 
-The [`SurfaceSizePage`](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/SurfaceSizePage.cs) class shows how to display these values. The constructor saves the `SKCanvasView` object as a field, so it can be accessed in the `PaintSurface` event handler:
+The [`SurfaceSizePage`](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/SurfaceSizePage.cs) class shows how to display these values. The constructor saves the `SKCanvasView` object as a field, so it can be accessed in the `PaintSurface` event handler:
 
 ```csharp
 SKCanvasView canvasView;
@@ -109,7 +109,7 @@ In addition to the `DrawCircle` method, `SKCanvas` also defines two `DrawOval` m
 public void DrawOval (Single cx, Single cy, Single rx, Single ry, SKPaint paint)
 ```
 
-Is it possible to draw an ellipse that fills the display surface? The **Ellipse Fill** page demonstrates how. The `PaintSurface` event handler in the [**EllipseFillPage.xaml.cs**](../../../samples/Demos/Demos/SkiaSharpFormsDemos/Basics/EllipseFillPage.xaml.cs) class subtracts half the stroke width from the `xRadius` and `yRadius` values to fit the whole ellipse and its outline within the display surface:
+Is it possible to draw an ellipse that fills the display surface? The **Ellipse Fill** page demonstrates how. The `PaintSurface` event handler in the [**EllipseFillPage.xaml.cs**](https://github.com/mono/SkiaSharp/blob/docs/samples/Demos/Demos/SkiaSharpFormsDemos/Basics/EllipseFillPage.xaml.cs) class subtracts half the stroke width from the `xRadius` and `yRadius` values to fit the whole ellipse and its outline within the display surface:
 
 ```csharp
 void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)
