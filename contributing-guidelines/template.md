@@ -7,7 +7,7 @@ ms.author: crdun
 ms.date: 02/26/2018
 ms.topic: conceptual
 ms.assetid: 11111111-2222-3333-4444-555555555555
-ms.service: xamarin
+ms.service: dotnet-maui
 ---
 
 # Metadata and Markdown Template
@@ -30,7 +30,7 @@ ms.author: crdun (your Microsoft Alias)
 ms.date: 02/26/2018 (creation date, in US format: mm/dd/yyyy)
 ms.topic: conceptual (one only of the following: conceptual, quickstart, tutorial, overview)
 ms.assetid: b39854a6-c523-4a66-bef6-9b5da03bafff (a unique number representing the asset - just use a GUID, you can generate one at https://www.guidgenerator.com/)
-ms.service: xamarin (no reason to change this)
+ms.service: dotnet-maui (service identifier for SkiaSharp/.NET MAUI docs)
 ms.custom: Analytics data, a field that gets imported into SkyEye so you can use it in custom reports
 ---
 ```

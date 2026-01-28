@@ -12,9 +12,9 @@ This branch (`docs`) contains the conceptual documentation for **SkiaSharp** wit
 
 ```bash
 cd docs
-dotnet tool install -g docfx
-docfx build
-docfx serve _site --open-browser
+dotnet tool restore
+dotnet docfx build docs/docfx.json
+dotnet docfx serve _site --open-browser
 ```
 
 ## Microsoft Open Source Code of Conduct
