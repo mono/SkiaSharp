@@ -1,11 +1,30 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
              x:Class="DocsSamplesApp.Bitmaps.MandelbrotAnimationPage"
              Title="Mandelbrot Animation">
-    
-    <Label Text="Mandelbrot Animation is available as a separate sample in the samples folder."
-           VerticalOptions="Center" 
-           HorizontalTextAlignment="Center" />
-    
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto">
+        <Label x:Name="statusLabel"
+               HorizontalTextAlignment="Center" />
+        <ProgressBar x:Name="progressBar" 
+                     Grid.Row="1" />
+
+        <skia:SKCanvasView x:Name="canvasView"
+                           Grid.Row="2"
+                           PaintSurface="OnCanvasViewPaintSurface" />
+
+        <Grid Grid.Row="3" 
+              ColumnDefinitions="*,Auto"
+              Padding="5">
+            <Label x:Name="storageLabel"
+                   VerticalOptions="Center" />
+
+            <Button x:Name="deleteButton"
+                    Grid.Column="1"
+                    Text="Delete All"
+                    Clicked="OnDeleteButtonClicked" />
+        </Grid>
+    </Grid>
 </ContentPage>

@@ -1,4 +1,4 @@
-﻿namespace MandelAnima
+namespace DocsSamplesApp.Bitmaps
 {
     class BitmapInfo
     {

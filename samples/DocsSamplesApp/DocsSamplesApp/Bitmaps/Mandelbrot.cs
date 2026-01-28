@@ -1,9 +1,6 @@
-﻿using System;
 using System.Numerics;
-using System.Threading;
-using System.Threading.Tasks;
 
-namespace MandelAnima
+namespace DocsSamplesApp.Bitmaps
 {
     static class Mandelbrot
     {
