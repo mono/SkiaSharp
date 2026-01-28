@@ -81,9 +81,9 @@ Follow [Microsoft Learn style guidelines](https://learn.microsoft.com/contribute
 
 | Component | Target Version |
 |-----------|----------------|
-| SkiaSharp | 2.88.x or later |
-| .NET MAUI | .NET 8+ |
-| .NET | .NET 8+ |
+| SkiaSharp | 3.119.x or later |
+| .NET MAUI | .NET 10+ |
+| .NET | .NET 10+ |
 
 - Avoid APIs marked `[Obsolete]` unless documenting migration
 - If a feature requires a specific version, note it with an alert:
@@ -481,7 +481,7 @@ _In this tutorial, you'll create a SkiaSharp canvas and draw a circle._
 
 ## Prerequisites
 
-- .NET 8 SDK
+- .NET 10 SDK
 - SkiaSharp.Views.Maui.Controls NuGet package
 
 ## Step 1: Create the canvas
