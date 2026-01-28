@@ -5,6 +5,9 @@
         public AppShell()
         {
             InitializeComponent();
+
+            // Register all demo pages as routes for Shell navigation
+            RouteRegistration.RegisterRoutes();
         }
     }
 }
