@@ -77,7 +77,7 @@ public BasicBitmapsPage()
 
 async Task LoadWebBitmapAsync()
 {
-    string url = "https://developer.xamarin.com/demo/IMG_3256.JPG?width=480";
+    string url = "https://raw.githubusercontent.com/mono/SkiaSharp/refs/heads/docs/samples/DocsSamplesApp/DocsSamplesApp/Resources/Images/dotnet_bot.png";
 
     try
     {
