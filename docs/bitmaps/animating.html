@@ -180,36 +180,38 @@
 }
 </code></pre>
 <p>The <strong>Mandelbrot Animation</strong> XAML file includes two <code>Label</code> views, a <code>ProgressBar</code>, and a <code>Button</code> as well as the <code>SKCanvasView</code>:</p>
-<pre><code class="lang-csharp">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
+<pre><code class="lang-xml">&lt;ContentPage xmlns=&quot;http://schemas.microsoft.com/dotnet/2021/maui&quot;
              xmlns:x=&quot;http://schemas.microsoft.com/winfx/2009/xaml&quot;
              xmlns:skia=&quot;clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls&quot;
-             x:Class=&quot;MandelAnima.MainPage&quot;
+             x:Class=&quot;DocsSamplesApp.Bitmaps.MandelbrotAnimationPage&quot;
              Title=&quot;Mandelbrot Animation&quot;&gt;
 
-    &lt;StackLayout&gt;
+    &lt;Grid RowDefinitions=&quot;Auto,Auto,*,Auto&quot;&gt;
         &lt;Label x:Name=&quot;statusLabel&quot;
                HorizontalTextAlignment=&quot;Center&quot; /&gt;
-        &lt;ProgressBar x:Name=&quot;progressBar&quot; /&gt;
+        &lt;ProgressBar x:Name=&quot;progressBar&quot; 
+                     Grid.Row=&quot;1&quot; /&gt;
 
         &lt;skia:SKCanvasView x:Name=&quot;canvasView&quot;
-                           VerticalOptions=&quot;FillAndExpand&quot;
+                           Grid.Row=&quot;2&quot;
                            PaintSurface=&quot;OnCanvasViewPaintSurface&quot; /&gt;
 
-        &lt;StackLayout Orientation=&quot;Horizontal&quot;
-                     Padding=&quot;5&quot;&gt;
+        &lt;Grid Grid.Row=&quot;3&quot; 
+              ColumnDefinitions=&quot;*,Auto&quot;
+              Padding=&quot;5&quot;&gt;
             &lt;Label x:Name=&quot;storageLabel&quot;
                    VerticalOptions=&quot;Center&quot; /&gt;
 
             &lt;Button x:Name=&quot;deleteButton&quot;
+                    Grid.Column=&quot;1&quot;
                     Text=&quot;Delete All&quot;
-                    HorizontalOptions=&quot;EndAndExpand&quot;
                     Clicked=&quot;OnDeleteButtonClicked&quot; /&gt;
-        &lt;/StackLayout&gt;
-    &lt;/StackLayout&gt;
+        &lt;/Grid&gt;
+    &lt;/Grid&gt;
 &lt;/ContentPage&gt;
 </code></pre>
 <p>The code-behind file begins by defining three crucial constants and an array of bitmaps:</p>
-<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+<pre><code class="lang-csharp">public partial class MandelbrotAnimationPage : ContentPage
 {
     const int COUNT = 10;           // The number of bitmaps in the animation.
                                     // This can go up to 50!
@@ -227,8 +229,8 @@
 </code></pre>
 <p>At some point, you'll probably want to change the <code>COUNT</code> value to 50 to see the full range of the animation. Values above 50 are not useful. Around a zoom level of 48 or so, the resolution of double-precision floating-point numbers becomes insufficient for the Mandelbrot Set calculation.</p>
 <p>The <code>center</code> value is very important. This is the focus of the animation zoom. You can experiment with different center values to discover interesting areas of the Mandelbrot Set.</p>
-<p>The <strong>Mandelbrot Animation</strong> sample stores these <code>COUNT</code> bitmaps in local application storage. Fifty bitmaps require over 20 megabytes of storage on your device, so you might want to know how much storage these bitmaps are occupying, and at some point you might want to delete them all. That's the purpose of these two methods at the bottom of the <code>MainPage</code> class:</p>
-<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+<p>The <strong>Mandelbrot Animation</strong> sample stores these <code>COUNT</code> bitmaps in local application storage. Fifty bitmaps require over 20 megabytes of storage on your device, so you might want to know how much storage these bitmaps are occupying, and at some point you might want to delete them all. That's the purpose of these two methods at the bottom of the <code>MandelbrotAnimationPage</code> class:</p>
+<pre><code class="lang-csharp">public partial class MandelbrotAnimationPage : ContentPage
 {
     ···
     void TallyBitmapSizes()
@@ -256,8 +258,8 @@
 </code></pre>
 <p>You can delete the bitmaps in local storage while the program is animating those same bitmaps because the program retains them in memory. But the next time you run the program, it will need to recreate the bitmaps.</p>
 <p>The bitmaps stored in local application storage incorporate the <code>center</code> value in their filenames, so if you change the <code>center</code> setting, the existing bitmaps will not be replaced in storage, and will continue to occupy space.</p>
-<p>Here are the methods that <code>MainPage</code> uses for constructing the filenames, as well as a <code>MakePixel</code> method for defining a pixel value based on color components:</p>
-<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+<p>Here are the methods that <code>MandelbrotAnimationPage</code> uses for constructing the filenames, as well as a <code>MakePixel</code> method for defining a pixel value based on color components:</p>
+<pre><code class="lang-csharp">public partial class MandelbrotAnimationPage : ContentPage
 {
     ···
     // File path for storing each bitmap in local storage
@@ -275,11 +277,11 @@
 }
 </code></pre>
 <p>The <code>zoomLevel</code> parameter to <code>FilePath</code> ranges from 0 to the <code>COUNT</code> constant minus 1.</p>
-<p>The <code>MainPage</code> constructor calls the <code>LoadAndStartAnimation</code> method:</p>
-<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+<p>The <code>MandelbrotAnimationPage</code> constructor calls the <code>LoadAndStartAnimation</code> method:</p>
+<pre><code class="lang-csharp">public partial class MandelbrotAnimationPage : ContentPage
 {
     ···
-    public MainPage()
+    public MandelbrotAnimationPage()
     {
         InitializeComponent();
 
@@ -289,7 +291,7 @@
 }
 </code></pre>
 <p>The <code>LoadAndStartAnimation</code> method is responsible for accessing application local storage to load any bitmaps that might have been created when the program was run previously. It loops through <code>zoomLevel</code> values from 0 to <code>COUNT</code>. If the file exists, it loads it into the <code>bitmaps</code> array. Otherwise, it needs to create a bitmap for the particular <code>center</code> and <code>zoomLevel</code> values by calling <code>Mandelbrot.CalculateAsync</code>. That method obtains the iteration counts for each pixel, which this method converts into colors:</p>
-<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+<pre><code class="lang-csharp">public partial class MandelbrotAnimationPage : ContentPage
 {
     ···
     async void LoadAndStartAnimation()
@@ -407,7 +409,7 @@
 <p>After all the bitmaps have been created or loaded into memory, the method starts a <code>Stopwatch</code> object and calls <code>Dispatcher.StartTimer</code>. The <code>OnTimerTick</code> method is called every 16 milliseconds.</p>
 <p><code>OnTimerTick</code> calculates a <code>time</code> value in milliseconds that ranges from 0 to 6000 times <code>COUNT</code>, which apportions six seconds for the display of each bitmap. The <code>progress</code> value uses the <code>Math.Sin</code> value to create a sinusoidal animation that will be slower at the beginning of the cycle, and slower at the end as it reverses direction.</p>
 <p>The <code>progress</code> value ranges from 0 to <code>COUNT</code>. This means that the integer part of <code>progress</code> is an index into the <code>bitmaps</code> array, while the fractional part of <code>progress</code> indicates a zoom level for that particular bitmap. These values are stored in the <code>bitmapIndex</code> and <code>bitmapProgress</code> fields, and are displayed by the <code>Label</code> and <code>Slider</code> in the XAML file. The <code>SKCanvasView</code> is invalidated to update the bitmap display:</p>
-<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+<pre><code class="lang-csharp">public partial class MandelbrotAnimationPage : ContentPage
 {
     ···
     Stopwatch stopwatch = new Stopwatch();      // for the animation
@@ -445,7 +447,7 @@
 }
 </code></pre>
 <p>Finally, the <code>PaintSurface</code> handler of the <code>SKCanvasView</code> calculates a destination rectangle to display the bitmap as large as possible while maintaining the aspect ratio. A source rectangle is based on the <code>bitmapProgress</code> value. The <code>fraction</code> value calculated here ranges from 0 when <code>bitmapProgress</code> is 0 to display the entire bitmap, to 0.25 when <code>bitmapProgress</code> is 1 to display half the width and height of the bitmap, effectively zooming in:</p>
-<pre><code class="lang-csharp">public partial class MainPage : ContentPage
+<pre><code class="lang-csharp">public partial class MandelbrotAnimationPage : ContentPage
 {
     ···
     void OnCanvasViewPaintSurface(object? sender, SKPaintSurfaceEventArgs args)
