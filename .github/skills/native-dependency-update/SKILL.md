@@ -54,6 +54,7 @@ Before starting, confirm you will:
 | Skip `cgmanifest.json` update | Security compliance requires it |
 | Skip `externals/skia` submodule update | SkiaSharp won't use the new dependency version |
 | Revert/undo pushed commits | Fix forward with new commit instead |
+| **Merge both PRs without updating submodule in between** | **Squash-merge creates new SHA; submodule points to orphaned commit; BREAKS USERS** |
 
 ---
 
@@ -139,15 +140,35 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 
 > **🛑 STOP AND ASK FOR APPROVAL** before each merge.
 
-1. Merge mono/skia PR first
-2. Update SkiaSharp submodule to merged commit
-3. SkiaSharp PR may auto-merge; check state first
+> **🚨 CRITICAL: SQUASH MERGE CREATES NEW COMMITS**
+>
+> When you squash-merge mono/skia PR, GitHub creates a **NEW commit SHA** on the `skiasharp` branch.
+> The original commits on `dev/update-{dep}` become **orphaned** when the branch is deleted.
+> 
+> **If SkiaSharp's submodule still points to the old (orphaned) commit, it will BREAK:**
+> - New clones will fail
+> - Submodule updates will fail
+> - Users cannot build SkiaSharp
+>
+> **YOU MUST UPDATE THE SUBMODULE BEFORE MERGING SKIASHARP PR.**
+
+#### Merge Sequence (MANDATORY)
+
+1. **Merge mono/skia PR first** — This creates a new squashed commit on the `skiasharp` branch
+2. **Fetch the updated skiasharp branch** and note the new commit SHA
+3. **Update the SkiaSharp submodule** to point to the new squashed commit (not the old branch commit)
+4. **Push the updated submodule reference** to the SkiaSharp PR branch
+5. **Only then merge the SkiaSharp PR**
+
+> ❌ **NEVER** merge both PRs in quick succession without updating the submodule in between.
+> ❌ **NEVER** assume the submodule reference is correct after squash-merging mono/skia.
 
 ### Phase 8: Verify
 
 - Related issues auto-closed
 - Both PRs merged
 - No failures on main
+- **Submodule points to a commit on `skiasharp` branch** — fetch main, check that `externals/skia` commit exists on `origin/skiasharp` (not orphaned)
 
 ---
 
