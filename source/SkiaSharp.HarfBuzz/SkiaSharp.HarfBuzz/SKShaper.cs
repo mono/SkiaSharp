@@ -17,7 +17,8 @@ namespace SkiaSharp.HarfBuzz
 			Typeface = typeface ?? throw new ArgumentNullException(nameof(typeface));
 
 			int index;
-			using (var blob = Typeface.OpenStream(out index).ToHarfBuzzBlob())
+			using (var stream = Typeface.OpenStream(out index))
+			using (var blob = stream.ToHarfBuzzBlob())
 			using (var face = new Face(blob, index))
 			{
 				face.Index = index;
