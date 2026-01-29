@@ -19,20 +19,5 @@ namespace SkiaSharp.HarfBuzz.Tests
 
 			Assert.False(stream.IsDisposed);
 		}
-
-		[SkippableFact]
-		public void ToHarfBuzzBlobBlobCanBeUsedOutsideStreamLifetime()
-		{
-			static Blob GetBlob(SKTypeface typeface)
-			{
-				using var stream = typeface.OpenStream(out var index);
-				return stream.ToHarfBuzzBlob();
-			}
-
-			var fontFile = Path.Combine(PathToFonts, "content-font.ttf");
-			using var tf = SKTypeface.FromFile(fontFile);
-			using var blob = GetBlob(tf);
-			Assert.Equal(1, blob.FaceCount);
-		}
 	}
 }

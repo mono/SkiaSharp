@@ -26,8 +26,16 @@ namespace SkiaSharp.HarfBuzz
 			else
 			{
 				var ptr = Marshal.AllocCoTaskMem(size);
-				asset.Read(ptr, size);
-				blob = new Blob(ptr, size, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem(ptr));
+				try
+				{
+					asset.Read(ptr, size);
+					blob = new Blob(ptr, size, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem(ptr));
+				}
+				catch
+				{
+					Marshal.FreeCoTaskMem(ptr);
+					throw;
+				}
 			}
 
 			blob.MakeImmutable();
