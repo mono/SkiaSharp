@@ -108,29 +108,45 @@ dotnet cake --target=tests-netcore --skipExternals=all
 
 **Both PRs must be created together** — CI requires both.
 
-#### Step 1: Create mono/skia PR first
+#### Branch Naming Convention
 
-Branch `dev/update-{dep}` → target `skiasharp`
+| Repository | Branch Name | Target Branch |
+|------------|-------------|---------------|
+| mono/skia | `dev/update-{dep}` | `skiasharp` |
+| mono/SkiaSharp | `dev/update-{dep}` | `main` |
 
-Fill in the template:
-- **SkiaSharp Issue:** `Related to https://github.com/mono/SkiaSharp/issues/{number}`
-- **Required SkiaSharp PR:** Leave as placeholder initially
+Example: For libfoo, use `dev/update-libwebp` in both repos.
+
+#### Step 1: Create mono/skia PR
+
+In the `externals/skia` directory, create a branch named `dev/update-{dep}`, commit the DEPS and BUILD.gn changes, push, and create a PR targeting the `skiasharp` branch.
 
 #### Step 2: Create SkiaSharp PR
 
-Branch `dev/update-{dep}` → target `main`
+> **⚠️ CRITICAL: You MUST update the submodule reference, not just cgmanifest.json**
 
-- Update `externals/skia` submodule to point to mono/skia PR branch
-- Update `cgmanifest.json`
+In the SkiaSharp root, create a branch named `dev/update-{dep}`. Then:
 
-Fill in the template:
-- **Bugs Fixed:** `- Fixes #{number}` (auto-closes issue on merge)
-- **Required skia PR:** Full URL to mono/skia PR
+1. **Update the submodule** — In `externals/skia`, fetch and checkout the branch you just pushed in Step 1
+2. **Stage both changes** — `git add externals/skia cgmanifest.json` (the submodule AND the manifest)
+3. Commit, push, and create a PR targeting `main`
 
-#### Step 3: Update mono/skia PR
+#### Step 3: Cross-link the PRs
 
-Go back and edit the mono/skia PR to add:
-- **Required SkiaSharp PR:** `Requires https://github.com/mono/SkiaSharp/pull/{number}`
+Edit **both** PRs to reference each other:
+- mono/skia PR → Add: `Required SkiaSharp PR: https://github.com/mono/SkiaSharp/pull/{number}`
+- mono/SkiaSharp PR → Add: `Required skia PR: https://github.com/mono/skia/pull/{number}`
+
+#### Phase 5 Completion Checklist
+
+Before proceeding, verify ALL of these:
+
+- [ ] Branch names follow `dev/update-{dep}` convention
+- [ ] mono/skia PR targets `skiasharp` branch
+- [ ] mono/SkiaSharp PR targets `main` branch
+- [ ] **SkiaSharp's `externals/skia` submodule points to the mono/skia PR branch** (check with `git submodule status`)
+- [ ] `cgmanifest.json` updated with new version
+- [ ] Both PRs cross-reference each other
 
 ### Phase 6: Monitor CI
 
