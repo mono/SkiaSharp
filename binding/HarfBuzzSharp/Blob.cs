@@ -71,14 +71,30 @@ namespace HarfBuzzSharp
 
 		public static unsafe Blob FromStream (Stream stream)
 		{
+			if (stream == null)
+				throw new ArgumentNullException (nameof (stream));
+
+			// For non-seekable streams, buffer into memory first
+			if (!stream.CanSeek) {
+				using var ms = new MemoryStream ();
+				stream.CopyTo (ms);
+				ms.Position = 0;
+				return FromStream (ms);
+			}
+
 			var length = (int)(stream.Length - stream.Position);
+			if (length == 0)
+				return Empty;
 
 			var dataPtr = Marshal.AllocCoTaskMem (length);
-
-			using var ums = new UnmanagedMemoryStream ((byte*)dataPtr, length, length, FileAccess.ReadWrite);
-			stream.CopyTo (ums);
-
-			return new Blob (dataPtr, length, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem (dataPtr));
+			try {
+				using var ums = new UnmanagedMemoryStream ((byte*)dataPtr, length, length, FileAccess.ReadWrite);
+				stream.CopyTo (ums);
+				return new Blob (dataPtr, length, MemoryMode.ReadOnly, () => Marshal.FreeCoTaskMem (dataPtr));
+			} catch {
+				Marshal.FreeCoTaskMem (dataPtr);
+				throw;
+			}
 		}
 
 		private static IntPtr Create (IntPtr data, int length, MemoryMode mode, ReleaseDelegate releaseProc)
