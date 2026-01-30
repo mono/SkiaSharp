@@ -58,10 +58,22 @@ https://aka.ms/skiasharp-eap/index.json
 
 Building SkiaSharp is mostly straight forward. The main issue is the multiple dependencies for each platform.
 
-However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there mays to skip all the native builds.
+However, these are easy to install as they are found on the various websites. If you are just working on managed code, it is even easier as there are ways to skip all the native builds.
 
- - To get started building, [go here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp).
- - If you are just wanting a custom Linux build, [go here](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux)
+- To get started building, see [documentation/building.md](documentation/building.md)
+- If you are just wanting a custom Linux build, see [documentation/building-linux.md](documentation/building-linux.md)
+
+## Contributing
+
+We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on:
+- Reporting issues
+- Submitting pull requests
+- Building from source
+- Adding new APIs
+
+For comprehensive documentation:
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contributing guidelines
+- **[documentation/](documentation/)** - Architecture, build instructions, and maintainer guides
 
 ## Contributors
 
@@ -76,6 +88,6 @@ Made with [contrib.rocks](https://contrib.rocks).
 
 Here are some links to show the differences in our code as compared to Google's code.
 
-What version are we on? [**m118**](https://github.com/google/skia/tree/chrome/m118)  
-Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m118)  
-What have we added? [Compare](https://github.com/google/skia/compare/chrome/m118...mono:skiasharp)  
+What version are we on? [**m119**](https://github.com/google/skia/tree/chrome/m119)  
+Are we up-to-date with Google? [Compare](https://github.com/mono/skia/compare/skiasharp...google:chrome/m119)  
+What have we added? [Compare](https://github.com/google/skia/compare/chrome/m119...mono:skiasharp)  

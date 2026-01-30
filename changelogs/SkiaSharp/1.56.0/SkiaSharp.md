@@ -59,7 +59,7 @@ public bool HasPriorFrame { get; set; }
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
  public static SKColorFilter CreateXferMode (SKColor c, SKXferMode mode);
 ```
 
@@ -67,7 +67,7 @@ Added method:
 
 ```csharp
 
-[Obsolete]
+[Obsolete ("Use CreateBlendMode(SKColor, SKBlendMode) instead.")]
 public static SKColorFilter CreateBlendMode (SKColor c, SKXferMode mode);
 ```
 
@@ -102,7 +102,7 @@ public static SKMaskFilter CreateShadow (float occluderHeight, SKPoint3 lightPos
 Obsoleted properties:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CullRect instead.")]
  public SKRect Bounds { get; }
 ```
 
@@ -128,7 +128,7 @@ Modified methods:
 Obsoleted methods:
 
 ```diff
- [Obsolete ()]
+ [Obsolete ("Use CreateCompose(SKShader, SKShader, SKBlendMode) instead.")]
  public static SKShader CreateCompose (SKShader shaderA, SKShader shaderB, SKXferMode mode);
 ```
 

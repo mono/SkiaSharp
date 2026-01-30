@@ -13,7 +13,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-20.04
+        vmImage: ubuntu-22.04
         os: windows
   - name: buildAgentWindows
     displayName: 'The Windows build agent configuration:'
@@ -61,7 +61,7 @@ parameters:
     default:
       pool:
         name: Azure Pipelines
-        vmImage: ubuntu-20.04
+        vmImage: ubuntu-22.04
         os: linux
   - name: buildAgentAndroidTests
     displayName: 'The build agent configuration for building the Android tests:'
@@ -73,70 +73,25 @@ parameters:
         os: macos
       parameters:
         installXcode: false
-  - name: enableSigning
-    displayName: 'Enable package signing (Test signing)'
-    type: boolean
-    default: false
-  - name: runCompliance
-    displayName: 'Run post-build compliance tasks (such as API Scan and PoliCheck)'
-    type: boolean
-    default: false
-  - name: use1ESPipelineTemplates
-    displayName: 'Run the build using the internal 1ES Pipeline Templates'
-    type: boolean
-    default: false
 
 variables:
   - template: /scripts/azure-templates-variables.yml@self
 
 resources:
   repositories:
-    - repository: xamarin-templates
-      type: github
-      name: xamarin/yaml-templates
-      endpoint: xamarin
-      ref: refs/heads/main
-    - repository: 1ESPipelineTemplates
+    - repository: 1ESTemplates
       type: git
-      name: 1ESPipelineTemplates/1ESPipelineTemplates
-      ref: refs/tags/release
+      name: 1ESPipelineTemplates/MicroBuildTemplate
 
 extends:
-  ${{ if eq('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
-    template: v1/1ES.Unofficial.PipelineTemplate.yml@1ESPipelineTemplates
-  ${{ if ne('${{ parameters.use1ESPipelineTemplates }}', 'true') }}:
-    template: /scripts/azure-template-fake-1es.yml@self
+  template: /scripts/azure-template-fake-1es.yml@self
   parameters:
     pool: ${{ parameters.buildAgentHost.pool }}
-    customBuildTags:
-      - ES365AIMigrationTooling
     stages:
       - template: /scripts/azure-templates-stages.yml@self
         parameters:
           buildPipelineType: 'complete'
           buildExternals: ${{ parameters.buildExternals }}
-          enableSigning: ${{ parameters.enableSigning }}
-          ${{ if eq(parameters.runCompliance, 'true') }}:
-            sdl:
-              apiscan:
-                enabled: true
-              binskim:
-                break: false
-              codeInspector:
-                enabled: true
-              credscan:
-                suppressionsFile: $(Build.SourcesDirectory)\scripts\guardian\CredScanSuppressions.json
-              policheck:
-                enabled: true
-                exclusionsFile: $(Build.SourcesDirectory)\scripts\guardian\PoliCheckExclusions.xml
-              spotBugs:
-                enabled: false
-              suppression:
-                suppressionFile: $(Build.SourcesDirectory)\scripts\guardian\source.gdnsuppress
-              tsa:
-                enabled: true
-                configFile: $(Build.SourcesDirectory)\scripts\guardian\tsaoptions-v2.json
-          use1ESPipelineTemplates: ${{ parameters.use1ESPipelineTemplates }}
           buildAgentHost: ${{ parameters.buildAgentHost }}
           buildAgentWindows: ${{ parameters.buildAgentWindows }}
           buildAgentWindowsNative: ${{ parameters.buildAgentWindows }}

@@ -185,7 +185,7 @@ public class SKTouchEventArgs : System.EventArgs {
 #### New Type: SkiaSharp.Views.Maui.Handlers.SKCanvasViewHandler
 
 ```csharp
-public class SKCanvasViewHandler : Microsoft.Maui.Handlers.ViewHandler`2[SkiaSharp.Views.Maui.ISKCanvasView,System.Object] {
+public class SKCanvasViewHandler : Microsoft.Maui.Handlers.ViewHandler`2[SkiaSharp.Views.Maui.ISKCanvasView,System.Object], Microsoft.Maui.IElementHandler, Microsoft.Maui.IViewHandler {
 	// constructors
 	public SKCanvasViewHandler ();
 	public SKCanvasViewHandler (Microsoft.Maui.PropertyMapper mapper, Microsoft.Maui.CommandMapper commands);

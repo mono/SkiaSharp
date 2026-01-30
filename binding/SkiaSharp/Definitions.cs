@@ -360,7 +360,7 @@ namespace SkiaSharp
 	{
 		public static SKTimeDateTimeInternal Create (DateTime datetime)
 		{
-			var zone = datetime.Hour - datetime.ToUniversalTime ().Hour;
+			var zone = datetime.ToLocalTime ().Hour - datetime.ToUniversalTime ().Hour;
 			return new SKTimeDateTimeInternal {
 				fTimeZoneMinutes = (Int16)(zone * 60),
 				fYear = (UInt16)datetime.Year,

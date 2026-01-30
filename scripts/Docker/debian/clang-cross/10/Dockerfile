@@ -1,13 +1,16 @@
 # Arguments:
-#   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 #   LLVM_VERSION         - the version of the LLVM compiler                 [ 13 | * ]
-#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 9 | * ]
+#   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 8 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 ]
 
-ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:10
+# Use --platform flag when building to select architecture
+FROM debian:10
+
+# Switch to archives
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list && \
+    sed -i s/security.debian.org/archive.debian.org/g /etc/apt/sources.list
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
@@ -52,10 +55,12 @@ RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
-         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ;; \
-         *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ;; \
+         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ; APT_REPO=http://deb.debian.org/debian     ;; \
+         *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ; APT_REPO=http://archive.debian.org/debian ;; \
        esac \
-    && curl http://deb.debian.org/debian/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
+    && FC_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && echo "Downloading fontconfig from $FC_URL" \
+    && curl $FC_URL -L -o libfontconfig-dev.deb \
     && ar vx libfontconfig-dev.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig-dev.deb \

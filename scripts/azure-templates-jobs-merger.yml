@@ -3,15 +3,19 @@ parameters:
   displayName: ''                               # the human name
   buildAgent: ''                                # the configuration for the build agent
   requiredArtifacts: []                         # the artifacts that this build needs to download
-  sdl: []                                       # the SDL properties to use for this job
+  dependsOn: []                                 # the dependiencies
+  postBuildSteps: []                            # any additional steps to run after the build
+  shouldPublish: true                           # whether or not to publish the artifacts
 
 jobs:
   - template: /scripts/azure-templates-jobs-bootstrapper.yml@self
     parameters:
       name: ${{ parameters.name }}
       displayName: ${{ parameters.displayName }}
-      sdl: ${{ parameters.sdl }}
       buildAgent: ${{ parameters.buildAgent }}
+      dependsOn: ${{ parameters.dependsOn }}
       skipInstall: true
       skipSteps: true
       requiredArtifacts: ${{ parameters.requiredArtifacts }}
+      postBuildSteps: ${{ parameters.postBuildSteps }}
+      shouldPublish: ${{ parameters.shouldPublish }}

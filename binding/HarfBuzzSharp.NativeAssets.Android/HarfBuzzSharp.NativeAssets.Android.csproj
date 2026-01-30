@@ -4,12 +4,13 @@
     <TargetFrameworks Condition="'$(TFMNext)' != ''">$(TargetFrameworks);$(TFMNext)-android$(TPVAndroidNext)</TargetFrameworks>
     <PackagingGroup>HarfBuzzSharp</PackagingGroup>
     <Title>$(PackagingGroup) - Native Assets for Android</Title>
+    <IsNativeAssetsProject>true</IsNativeAssetsProject>
   </PropertyGroup>
   <ItemGroup>
-    <PackageFile Include="..\..\output\native\android\x86\libHarfBuzzSharp*" PackagePath="runtimes\android-x86\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\android\x86_64\libHarfBuzzSharp*" PackagePath="runtimes\android-x64\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\android\armeabi-v7a\libHarfBuzzSharp*" PackagePath="runtimes\android-arm\native\%(Filename)%(Extension)" />
-    <PackageFile Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp*" PackagePath="runtimes\android-arm64\native\%(Filename)%(Extension)" />
+    <NativeAssetPackageFile Include="..\..\output\native\android\x86\libHarfBuzzSharp*" RuntimeIdentifier="android-x86" />
+    <NativeAssetPackageFile Include="..\..\output\native\android\x86_64\libHarfBuzzSharp*" RuntimeIdentifier="android-x64" />
+    <NativeAssetPackageFile Include="..\..\output\native\android\armeabi-v7a\libHarfBuzzSharp*" RuntimeIdentifier="android-arm" />
+    <NativeAssetPackageFile Include="..\..\output\native\android\arm64-v8a\libHarfBuzzSharp*" RuntimeIdentifier="android-arm64" />
   </ItemGroup>
   <Target Name="IncludeAdditionalTfmSpecificPackageFiles">
     <ItemGroup>

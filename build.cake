@@ -94,47 +94,68 @@ if (IsRunningOnWindows ()) {
 
 var PREVIEW_FEED_URL = Argument ("previewFeed", "https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json");
 
-var TRACKED_NUGETS = new Dictionary<string, Version> {
-    { "SkiaSharp",                                     new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.Linux",                  new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.NanoServer",             new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.Android",                new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.iOS",                    new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.macOS",                  new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.Tizen",                  new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.tvOS",                   new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.Win32",                  new Version (1, 60, 0) },
-    { "SkiaSharp.NativeAssets.WinUI",                  new Version (1, 60, 0) },
-    { "SkiaSharp.Views",                               new Version (1, 60, 0) },
-    { "SkiaSharp.Views.Desktop.Common",                new Version (1, 60, 0) },
-    { "SkiaSharp.Views.Gtk3",                          new Version (1, 60, 0) },
-    { "SkiaSharp.Views.WindowsForms",                  new Version (1, 60, 0) },
-    { "SkiaSharp.Views.WPF",                           new Version (1, 60, 0) },
-    { "SkiaSharp.Views.Uno.WinUI",                     new Version (1, 60, 0) },
-    { "SkiaSharp.Views.WinUI",                         new Version (1, 60, 0) },
-    { "SkiaSharp.Views.Maui.Core",                     new Version (1, 60, 0) },
-    { "SkiaSharp.Views.Maui.Controls",                 new Version (1, 60, 0) },
-    { "SkiaSharp.Views.Blazor",                        new Version (1, 60, 0) },
-    { "HarfBuzzSharp",                                 new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.Android",            new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.iOS",                new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.Linux",              new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.MacCatalyst",        new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.macOS",              new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.Tizen",              new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.tvOS",               new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (1, 0, 0) },
-    { "HarfBuzzSharp.NativeAssets.Win32",              new Version (1, 0, 0) },
-    { "SkiaSharp.HarfBuzz",                            new Version (1, 60, 0) },
-    { "SkiaSharp.Skottie",                             new Version (1, 60, 0) },
-    { "SkiaSharp.SceneGraph",                          new Version (1, 60, 0) },
-    { "SkiaSharp.Resources",                           new Version (1, 60, 0) },
-    { "SkiaSharp.Vulkan.SharpVk",                      new Version (1, 60, 0) },
-    { "SkiaSharp.Direct3D.Vortice",                    new Version (1, 60, 0) },
+var SUPPORTED_NUGETS = new Dictionary<string, Version> {
+    // SkiaSharp core
+    { "SkiaSharp",                                     new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Linux",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Linux.NoDependencies",   new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.NanoServer",             new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.WebAssembly",            new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Android",                new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.iOS",                    new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.MacCatalyst",            new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.macOS",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Tizen",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.tvOS",                   new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.Win32",                  new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.WinUI",                  new Version (2, 80, 0) },
+    { "SkiaSharp.Views",                               new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Desktop.Common",                new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Gtk3",                          new Version (2, 80, 0) },
+    { "SkiaSharp.Views.WindowsForms",                  new Version (2, 80, 0) },
+    { "SkiaSharp.Views.WPF",                           new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Uno.WinUI",                     new Version (2, 80, 0) },
+    { "SkiaSharp.Views.WinUI",                         new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Maui.Core",                     new Version (2, 88, 0) },
+    { "SkiaSharp.Views.Maui.Controls",                 new Version (2, 88, 0) },
+    { "SkiaSharp.Views.Blazor",                        new Version (2, 80, 0) },
+    // HarfBuzzSharp core
+    { "HarfBuzzSharp",                                 new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Android",            new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.iOS",                new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Linux",              new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.MacCatalyst",        new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.macOS",              new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Tizen",              new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.tvOS",               new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.WebAssembly",        new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.Win32",              new Version (2, 6, 1) },
+    // Extras
+    { "SkiaSharp.HarfBuzz",                            new Version (2, 80, 0) },
+    { "SkiaSharp.Skottie",                             new Version (2, 88, 0) },
+    { "SkiaSharp.SceneGraph",                          new Version (2, 88, 0) },
+    { "SkiaSharp.Resources",                           new Version (2, 88, 0) },
+    { "SkiaSharp.Vulkan.SharpVk",                      new Version (2, 80, 0) },
+    { "SkiaSharp.Direct3D.Vortice",                    new Version (2, 88, 0) },
 };
+
+var OBSOLETED_NUGETS = new Dictionary<string, Version> {
+    // Obsolete packages no longer built but still tracked for documentation
+    { "SkiaSharp.NativeAssets.UWP",                    new Version (2, 80, 0) },
+    { "SkiaSharp.NativeAssets.watchOS",                new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Gtk2",                          new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Maui.Controls.Compatibility",   new Version (2, 88, 0) },
+    { "SkiaSharp.Views.Forms",                         new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Forms.WPF",                     new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Forms.GTK",                     new Version (2, 80, 0) },
+    { "SkiaSharp.Views.Uno",                           new Version (2, 80, 0) },
+    { "HarfBuzzSharp.NativeAssets.UWP",                new Version (2, 6, 1) },
+    { "HarfBuzzSharp.NativeAssets.watchOS",            new Version (2, 6, 1) },
+};
+
+var TRACKED_NUGETS = SUPPORTED_NUGETS
+    .Concat(OBSOLETED_NUGETS)
+    .ToDictionary(x => x.Key, x => x.Value);
 
 var PREVIEW_ONLY_NUGETS = new List<string> {
 };

@@ -1,13 +1,12 @@
 # Arguments:
-#   IMAGE_ARCH           - the architecture of the image                    [ amd64 | arm64v8 | riscv64 | loongarch64 ]
 #   DOTNET_SDK_VERSION   - the version of dotnet for the Cake script        [ 8.0 | * ]
 #   LLVM_VERSION         - the version of the LLVM compiler                 [ 19 | * ]
 #   TOOLCHAIN_VERSION    - the version of the GCC toolchain                 [ 14 | * ]
 #   TOOLCHAIN_ARCH       - the architecture of the GCC toolchain            [ arm-linux-gnueabihf | aarch64-linux-gnu | riscv64-linux-gnu | loongarch64-linux-gnu ]
 #   TOOLCHAIN_ARCH_SHORT - the short form architecture of the GCC toolchain [ armhf | arm64 | riscv64 | loong64 ]
 
-ARG IMAGE_ARCH=amd64
-FROM ${IMAGE_ARCH}/debian:trixie
+# Use --platform flag when building to select architecture
+FROM debian:13
 
 # Set the architecture-specific variables based on the value of the BUILD_ARCH argument
 ARG BUILD_ARCH=arm64
@@ -51,17 +50,17 @@ RUN . /etc/skia-env \
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
-# In order to compat Loongnix 25, LoongArch APT_REPO use loongnix 25 mirrors.
 RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
-    && APT_REPO=http://deb.debian.org/debian \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
-         loong64) FC_VERSION=2.15.0-1.1 ; FC_PKG=libfontconfig-dev  ; APT_REPO=https://pkg.loongnix.cn/loongnix/25  ;; \
-         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ;; \
-         *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ;; \
+         loong64) FC_VERSION=2.17.1-3   ; FC_PKG=libfontconfig-dev  ; APT_REPO=http://deb.debian.org/debian         ;; \
+         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ; APT_REPO=http://deb.debian.org/debian         ;; \
+         *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ; APT_REPO=http://deb.debian.org/debian         ;; \
        esac \
-    && curl ${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb -L -o libfontconfig-dev.deb \
+    && FC_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && echo "Downloading fontconfig from $FC_URL" \
+    && curl $FC_URL -L -o libfontconfig-dev.deb \
     && ar vx libfontconfig-dev.deb \
     && tar -xJvf data.tar.xz \
     && rm libfontconfig-dev.deb \

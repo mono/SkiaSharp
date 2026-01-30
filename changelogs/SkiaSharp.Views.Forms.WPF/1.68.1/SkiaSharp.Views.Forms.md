@@ -171,7 +171,7 @@ public abstract class SKGLViewRendererBase`2 : Xamarin.Forms.Platform.WPF.ViewRe
 #### New Type: SkiaSharp.Views.Forms.SKHostedGLControl
 
 ```csharp
-public class SKHostedGLControl : System.Windows.Forms.Integration.WindowsFormsHost, System.ComponentModel.ISupportInitialize, System.IDisposable, System.Windows.IFrameworkInputElement, System.Windows.IInputElement, System.Windows.Interop.IWin32Window, System.Windows.Markup.IQueryAmbient, System.Windows.Media.Animation.IAnimatable {
+public class SKHostedGLControl : System.Windows.Forms.Integration.WindowsFormsHost, System.ComponentModel.ISupportInitialize, System.IDisposable, System.Windows.IFrameworkInputElement, System.Windows.IInputElement, System.Windows.Interop.IKeyboardInputSink, System.Windows.Interop.IWin32Window, System.Windows.Markup.IQueryAmbient, System.Windows.Media.Animation.IAnimatable {
 	// constructors
 	public SKHostedGLControl ();
 	public SKHostedGLControl (OpenTK.Graphics.GraphicsMode mode);
@@ -236,7 +236,7 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
 
-	[Obsolete]
+	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
 	// properties
@@ -244,7 +244,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 	public SkiaSharp.SKColorType ColorType { get; }
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
 
-	[Obsolete]
+	[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }

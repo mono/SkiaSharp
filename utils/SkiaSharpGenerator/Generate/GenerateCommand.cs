@@ -63,10 +63,14 @@ namespace SkiaSharpGenerator
 			if (!Directory.Exists(dir))
 				Directory.CreateDirectory(dir);
 
+			var docStore = OutputPath is not null && File.Exists(OutputPath)
+				? new DocumentationStore(OutputPath)
+				: null;
+
 			using var file = File.Create(OutputPath);
 			using var writer = new StreamWriter(file);
 
-			var generator = new Generator(SourceRoot!, ConfigPath!, writer);
+			var generator = new Generator(SourceRoot!, ConfigPath!, writer, docStore);
 			generator.Log = Program.Log;
 
 			try

@@ -34,7 +34,7 @@ public sealed class GlobalStaticResources {
 	public GlobalStaticResources ();
 	// methods
 
-	[Obsolete]
+	[Obsolete ("This method is provided for binary backward compatibility. It will always return null.")]
 public static object FindResource (string name);
 	public static void Initialize ();
 	public static void RegisterDefaultStyles ();
@@ -49,12 +49,12 @@ public class SKPaintGLSurfaceEventArgs : System.EventArgs {
 	// constructors
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget);
 
-	[Obsolete]
+	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, SKColorType, GRSurfaceOrigin) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTargetDesc renderTarget);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info);
 
-	[Obsolete]
+	[Obsolete ("Use SKPaintGLSurfaceEventArgs(SKSurface, GRBackendRenderTarget, GRSurfaceOrigin, SKColorType) instead.")]
 public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKColorType colorType, SkiaSharp.GRGlFramebufferInfo glInfo);
 	public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBackendRenderTarget renderTarget, SkiaSharp.GRSurfaceOrigin origin, SkiaSharp.SKImageInfo info, SkiaSharp.SKImageInfo rawInfo);
 	// properties
@@ -64,7 +64,7 @@ public SKPaintGLSurfaceEventArgs (SkiaSharp.SKSurface surface, SkiaSharp.GRBacke
 	public SkiaSharp.GRSurfaceOrigin Origin { get; }
 	public SkiaSharp.SKImageInfo RawInfo { get; }
 
-	[Obsolete]
+	[Obsolete ("Use BackendRenderTarget instead.")]
 public SkiaSharp.GRBackendRenderTargetDesc RenderTarget { get; }
 	public SkiaSharp.SKSurface Surface { get; }
 }

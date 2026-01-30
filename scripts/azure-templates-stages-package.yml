@@ -6,8 +6,6 @@ parameters:
     type: object
   - name: buildAgentWindows
     type: object
-  - name: sdl
-    type: object
   - name: use1ESPipelineTemplates
     type: boolean
   - name: enableSigning
@@ -26,10 +24,16 @@ stages:
           parameters:
             name: native
             displayName: Re-upload Native Artifacts
-            sdl: ${{ parameters.sdl }}
             buildAgent: ${{ parameters.buildAgentHost }}
             requiredArtifacts:
               - name: native
+        - template: /scripts/azure-templates-jobs-merger.yml@self
+          parameters:
+            name: native_msvc
+            displayName: Re-upload Native MSVC Artifacts
+            buildAgent: ${{ parameters.buildAgentHost }}
+            requiredArtifacts:
+              - name: native_msvc
 
   - stage: package
     displayName: Package NuGets
@@ -39,7 +43,6 @@ stages:
         parameters:
           name: package_normal_windows
           displayName: Package NuGets
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentWindows}}
           target: nuget-normal
           additionalArgs: --skipExternals="all"
@@ -62,15 +65,6 @@ stages:
             - pwsh: |
                 Move-Item -Path '$(Build.ArtifactStagingDirectory)\output\' -Destination '.\output\'
               displayName: Prepare the build artifact for publishing
-            - pwsh: |
-                $nupkgs = (Get-ChildItem ".\output\nugets*\*.*nupkg")
-                foreach ($nupkg in $nupkgs) {
-                  $filename = $nupkg.Name.TrimEnd('.nupkg')
-                  $dest = ".\output\extracted_nugets\$filename"
-                  Write-Host "Extracting '$nupkg' to '$dest'..."
-                  Expand-Archive $nupkg $dest
-                }
-              displayName: Extract all the .nupkg files for scanning
           publishArtifacts:
             - name: package_normal_windows
               path: '.\output\output\'
@@ -78,11 +72,30 @@ stages:
               path: '.\output\nugets'
             - name: nuget_symbols
               path: '.\output\nugets-symbols'
+      - template: /scripts/azure-templates-jobs-merger.yml@self # Scan NuGet Artifacts
+        parameters:
+          name: scan_normal_windows
+          displayName: Scan NuGet Artifacts
+          buildAgent: ${{ parameters.buildAgentWindows}}
+          dependsOn: package_normal_windows
+          shouldPublish: false
+          requiredArtifacts:
+            - name: nuget
+              dir: nugets
+              currentRun: true
+            - name: nuget_symbols
+              dir: nugets-symbols
+              currentRun: true
+          postBuildSteps:
+            - pwsh: |
+                .\scripts\extract-nupkg-files.ps1 `
+                  -SourcePath ".\output\nugets*\*.*nupkg" `
+                  -DestinationPath ".\output\extracted_nugets"
+              displayName: Extract all the .nupkg files for scanning
       - template: /scripts/azure-templates-jobs-bootstrapper.yml@self # Package Special NuGets
         parameters:
           name: package_special_windows
           displayName: Package Special NuGets
-          sdl: ${{ parameters.sdl }}
           buildAgent: ${{ parameters.buildAgentWindows}}
           dependsOn: package_normal_windows
           target: nuget-special
@@ -120,50 +133,11 @@ stages:
       displayName: Sign NuGets
       dependsOn: package
       jobs:
-        - template: sign-artifacts/jobs/v3.yml@xamarin-templates
+        - template: sign-artifacts/jobs/v4.yml@yaml-templates
           parameters:
             ${{ if or(eq(parameters.forceRealSigning, 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'), startsWith(variables['Build.SourceBranch'], 'refs/heads/release/')) }}:
               signType: 'Real'
             ${{ else }}:
               signType: 'Test'
-            use1ESTemplate: ${{ parameters.use1ESPipelineTemplates }}
             usePipelineArtifactTasks: true
-
-  - ${{ if eq(parameters.sdl.apiscan.enabled, 'true') }}:
-    - template: security/apiscan/v0.yml@xamarin-templates
-      parameters:
-        windowsPoolName: ${{ parameters.buildAgentHost.pool.name }}
-        windowsImageOverride: ${{ parameters.buildAgentHost.pool.image }}
-        timeoutInMinutes: 480
-        stageDependsOn:
-          - package
-        scanArtifacts:
-          - nuget
-          - nuget_symbols
-          - native_msvc
-        apiScanSoftwareName: 'SkiaSharp'
-        apiScanSoftwareVersionNum: $(SKIASHARP_MAJOR_VERSION)
-        apiScanPreserveLogsFolder: true
-        apiScanAuthConnectionString: 'runAs=App;AppId=$(ApiScanClientId)'
-        apiScanSurrogateConfigurationFolder: $(Build.ArtifactStagingDirectory)\APIScanSurrogates
-        preScanSteps:
-          - pwsh: |
-              $softwareFolder = "$(Build.ArtifactStagingDirectory)\binaries-to-scan"
-              $surrogateFile = "$(Build.SourcesDirectory)\scripts\guardian\APIScanSurrogates.in.xml"
-              $destFolder = "$(Build.ArtifactStagingDirectory)\APIScanSurrogates"
-              $destFile = "$destFolder\APIScanSurrogates.xml"
-              New-Item -ItemType Directory -Force -Path $destFolder | Out-Null
-              $surrogateContents = (Get-Content $surrogateFile)
-              $surrogateContents = $surrogateContents.Replace("{SOFTWARE_FOLDER}", $softwareFolder)
-              $surrogateContents | Set-Content $destFile
-            displayName: Generate the surrogate files
-          - pwsh: |
-              $nupkgs = (Get-ChildItem "$(Build.ArtifactStagingDirectory)\binaries-to-scan\*\*.*nupkg")
-              foreach ($nupkg in $nupkgs) {
-                $filename = $nupkg.Name.TrimEnd('.nupkg')
-                $dest = "$(Build.ArtifactStagingDirectory)\binaries-to-scan\nuget_symbols-extracted\$filename"
-                Write-Host "Extracting '$nupkg' to '$dest'..."
-                Expand-Archive $nupkg $dest
-                Remove-Item $nupkg
-              }
-            displayName: Extract all the .nupkg files
+            checkoutType: 'self'
