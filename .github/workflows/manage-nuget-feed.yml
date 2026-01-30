@@ -96,11 +96,11 @@ jobs:
 
           $movePhase = "${{ inputs.move_phase }}"
           $params.MovePhase = if ($movePhase) { $movePhase } else { "CopyOnly" }
+          $params.Execute = $true  # Always execute in CI
 
           if ("${{ inputs.skip_move_operations }}" -eq "true") { $params.SkipMoveOperations = $true }
           if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
           if ("${{ inputs.verify_before_delete }}" -eq "true") { $params.VerifyBeforeDelete = $true }
-          if ("${{ inputs.dry_run }}" -eq "false") { $params.Execute = $true }
 
           Write-Host "Running ${{ matrix.package.name }} with parameters:"
           $params | Format-Table -AutoSize
@@ -164,7 +164,7 @@ jobs:
           }
 
           if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
-          if ("${{ inputs.dry_run }}" -eq "false") { $params.Execute = $true }
+          $params.Execute = $true  # Always execute in CI
 
           Write-Host "Running ${{ matrix.package.name }} with parameters:"
           $params | Format-Table -AutoSize
