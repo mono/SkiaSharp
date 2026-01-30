@@ -187,13 +187,13 @@ async Task DownloadPackageAsync(string id, DirectoryPath outputDirectory)
 
     var filter = new NuGetVersions.Filter {
         IncludePrerelease = true,
-        SourceUrl = PREVIEW_FEED_URL,
+        SourceUrl = CI_ARTIFACTS_FEED_URL,
         VersionRange = VersionRange.Parse(version),
     };
 
     var latestVersion = await NuGetVersions.GetLatestAsync(id, filter);
 
-    var comparer = new NuGetDiff(PREVIEW_FEED_URL);
+    var comparer = new NuGetDiff(CI_ARTIFACTS_FEED_URL);
     comparer.PackageCache = PACKAGE_CACHE_PATH.FullPath;
 
     // Track progress dynamically - queue grows as dependencies are discovered
