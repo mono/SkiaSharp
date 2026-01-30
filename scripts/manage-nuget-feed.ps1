@@ -25,9 +25,6 @@
 .PARAMETER PAT
     Personal Access Token with Packaging read/write/manage permissions
 
-.PARAMETER CacheDir
-    Local directory for caching downloaded packages (default: ./nuget-cache)
-
 .PARAMETER StateFile
     File to track progress for resumability (default: ./feed-management-state.json)
 
@@ -102,9 +99,6 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$PAT = $env:AZURE_DEVOPS_PAT,
-
-    [Parameter(Mandatory = $false)]
-    [string]$CacheDir = "./nuget-cache",
 
     [Parameter(Mandatory = $false)]
     [string]$StateFile = "./feed-management-state.json",
@@ -422,65 +416,27 @@ function Get-AllPackages {
     return $allPackages
 }
 
-function Get-CachePath {
+function Download-Package {
     param(
-        [string]$CacheDir,
-        [string]$PackageId,
-        [string]$Version
-    )
-
-    $safeName = $PackageId -replace '[^\w\-\.]', '_'
-    $safeVersion = $Version -replace '[^\w\-\.]', '_'
-    return Join-Path $CacheDir $safeName $safeVersion
-}
-
-function Get-CachedPackagePath {
-    param(
-        [string]$CacheDir,
-        [string]$PackageId,
-        [string]$Version
-    )
-
-    $cachePath = Get-CachePath -CacheDir $CacheDir -PackageId $PackageId -Version $Version
-    $nupkgPath = Join-Path $cachePath "${PackageId}.${Version}.nupkg"
-    
-    if (Test-Path $nupkgPath) {
-        return $nupkgPath
-    }
-    
-    return $null
-}
-
-function Save-PackageToCache {
-    param(
-        [string]$CacheDir,
         [string]$PackageId,
         [string]$Version,
         [string]$DownloadUrl,
         [hashtable]$Headers
     )
 
-    $cachePath = Get-CachePath -CacheDir $CacheDir -PackageId $PackageId -Version $Version
-    $nupkgPath = Join-Path $cachePath "${PackageId}.${Version}.nupkg"
-    $tempPath = Join-Path $cachePath "${PackageId}.${Version}.nupkg.downloading"
-
-    # Check if already cached
-    if (Test-Path $nupkgPath) {
-        Write-Host "    Package already cached: $nupkgPath" -ForegroundColor Gray
-        return $nupkgPath
+    $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) "skiasharp-feed-mgmt"
+    if (-not (Test-Path $tempDir)) {
+        New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
     }
+    
+    $nupkgPath = Join-Path $tempDir "${PackageId}.${Version}.nupkg"
+    $tempPath = "${nupkgPath}.downloading"
 
-    # Clean up any partial downloads
-    if (Test-Path $tempPath) {
-        Remove-Item $tempPath -Force
-    }
+    # Clean up any existing files
+    if (Test-Path $nupkgPath) { Remove-Item $nupkgPath -Force }
+    if (Test-Path $tempPath) { Remove-Item $tempPath -Force }
 
-    # Create cache directory
-    if (-not (Test-Path $cachePath)) {
-        New-Item -ItemType Directory -Path $cachePath -Force | Out-Null
-    }
-
-    Write-Host "    Downloading to cache..." -ForegroundColor Gray
+    Write-Host "    Downloading..." -ForegroundColor Gray
     
     # Use HttpWebRequest to handle 303 redirects properly
     # Azure DevOps returns 303 redirect to blob storage
@@ -525,9 +481,7 @@ function Save-PackageToCache {
     }
     catch {
         Write-Warning "    Failed to download package: $_"
-        if (Test-Path $tempPath) {
-            Remove-Item $tempPath -Force
-        }
+        if (Test-Path $tempPath) { Remove-Item $tempPath -Force }
         throw
     }
 }
@@ -719,8 +673,7 @@ $headers = @{
 $feedsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "feeds"
 $pkgsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "pkgs"
 
-# Resolve to absolute paths
-$CacheDir = [System.IO.Path]::GetFullPath($CacheDir)
+# Resolve to absolute path
 $StateFile = [System.IO.Path]::GetFullPath($StateFile)
 
 Write-Host "Configuration:" -ForegroundColor Cyan
@@ -728,69 +681,14 @@ Write-Host "  Organization: $Organization" -ForegroundColor Gray
 Write-Host "  Project: $(if ($Project) { $Project } else { '(org-scoped)' })" -ForegroundColor Gray
 Write-Host "  Source Feed: $SourceFeed" -ForegroundColor Gray
 Write-Host "  Destination Feed: $DestinationFeed" -ForegroundColor Gray
-Write-Host "  Cache Directory: $CacheDir" -ForegroundColor Gray
 Write-Host "  State File: $StateFile" -ForegroundColor Gray
 if ($PackageFilter) {
     Write-Host "  Package Filter: $PackageFilter" -ForegroundColor Yellow
 }
 Write-Host ""
 
-# Create cache directory
-if (-not (Test-Path $CacheDir)) {
-    New-Item -ItemType Directory -Path $CacheDir -Force | Out-Null
-}
-
 # Load state
 $state = Get-State -StateFile $StateFile
-
-# Validate cache integrity
-Write-Host "Validating cache..." -ForegroundColor Cyan
-$cacheFiles = @(Get-ChildItem -Path $CacheDir -Filter "*.nupkg" -Recurse -ErrorAction SilentlyContinue)
-$cacheValid = 0
-$cacheInvalid = 0
-$cacheRemoved = 0
-
-if ($cacheFiles.Count -gt 0) {
-    $cacheIndex = 0
-    foreach ($file in $cacheFiles) {
-        $cacheIndex++
-        Write-Progress -Activity "Validating cache" -Status $file.Name -PercentComplete (($cacheIndex / $cacheFiles.Count) * 100)
-        
-        try {
-            # Quick ZIP validation - try to open it
-            Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
-            $zip = [System.IO.Compression.ZipFile]::OpenRead($file.FullName)
-            $hasNuspec = ($zip.Entries | Where-Object { $_.Name -like "*.nuspec" } | Measure-Object).Count -gt 0
-            $zip.Dispose()
-            
-            if ($hasNuspec) {
-                $cacheValid++
-            }
-            else {
-                throw "No nuspec found"
-            }
-        }
-        catch {
-            $cacheInvalid++
-            Write-Host "  Removing invalid cache file: $($file.Name)" -ForegroundColor Yellow
-            Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
-            $cacheRemoved++
-        }
-    }
-    Write-Progress -Activity "Validating cache" -Completed
-    
-    Write-Host "  Valid: $cacheValid, Invalid/Removed: $cacheRemoved" -ForegroundColor $(if ($cacheRemoved -gt 0) { "Yellow" } else { "Green" })
-}
-else {
-    Write-Host "  Cache is empty" -ForegroundColor Gray
-}
-
-# Also clean up any partial downloads (.downloading files)
-$partialFiles = @(Get-ChildItem -Path $CacheDir -Filter "*.downloading" -Recurse -ErrorAction SilentlyContinue)
-if ($partialFiles.Count -gt 0) {
-    Write-Host "  Removing $($partialFiles.Count) partial downloads..." -ForegroundColor Yellow
-    $partialFiles | Remove-Item -Force -ErrorAction SilentlyContinue
-}
 
 Write-Host ""
 
@@ -1051,42 +949,49 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                         # Download URL
                         $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1-preview.1"
 
-                        # Download to cache (or use existing cached file)
-                        $cachedPath = Save-PackageToCache -CacheDir $CacheDir -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
+                        # Download to temp location
+                        $downloadedPath = Download-Package -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
 
-                        # Verify package integrity
-                        Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
-                        $integrity = Test-NupkgIntegrity -NupkgPath $cachedPath
-                        if (-not $integrity.Valid) {
-                            throw "Package integrity check failed: $($integrity.Error)"
-                        }
+                        try {
+                            # Verify package integrity
+                            Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
+                            $integrity = Test-NupkgIntegrity -NupkgPath $downloadedPath
+                            if (-not $integrity.Valid) {
+                                throw "Package integrity check failed: $($integrity.Error)"
+                            }
 
-                        # Store hash for later verification
-                        if (-not $state.PackageHashes) { $state.PackageHashes = @{} }
-                        $state.PackageHashes[$stateKey] = @{
-                            SHA256 = $integrity.SHA256
-                            FileSize = $integrity.FileSize
-                            CachedPath = $cachedPath
-                            DownloadTime = (Get-Date).ToString("o")
-                        }
+                            # Store hash for later verification
+                            if (-not $state.PackageHashes) { $state.PackageHashes = @{} }
+                            $state.PackageHashes[$stateKey] = @{
+                                SHA256 = $integrity.SHA256
+                                FileSize = $integrity.FileSize
+                                DownloadTime = (Get-Date).ToString("o")
+                            }
 
-                        # Push to destination feed
-                        Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
-                        if ($sourceConfigured) {
-                            Push-PackageToFeed -NupkgPath $cachedPath -FeedUrl $destFeedUrl -PAT $PAT
-                        }
-                        else {
-                            throw "Cannot push without NuGet source configured"
-                        }
+                            # Push to destination feed
+                            Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
+                            if ($sourceConfigured) {
+                                Push-PackageToFeed -NupkgPath $downloadedPath -FeedUrl $destFeedUrl -PAT $PAT
+                            }
+                            else {
+                                throw "Cannot push without NuGet source configured"
+                            }
 
-                        $copyCount++
-                        
-                        # Track as copied (separate from moved, for phased migration)
-                        if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
-                        $state.CopiedPackages += $stateKey
-                        Save-State -StateFile $StateFile -State $state
-                        
-                        Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
+                            $copyCount++
+                            
+                            # Track as copied (separate from moved, for phased migration)
+                            if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
+                            $state.CopiedPackages += $stateKey
+                            Save-State -StateFile $StateFile -State $state
+                            
+                            Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
+                        }
+                        finally {
+                            # Clean up downloaded file immediately after push
+                            if (Test-Path $downloadedPath) {
+                                Remove-Item $downloadedPath -Force -ErrorAction SilentlyContinue
+                            }
+                        }
                     }
                 }
             }
@@ -1242,7 +1147,6 @@ Write-Host "  Packages moved:   $moveCount" -ForegroundColor Yellow
 Write-Host "  Errors:           $errorCount" -ForegroundColor $(if ($errorCount -gt 0) { "Red" } else { "Green" })
 Write-Host ""
 Write-Host "State saved to: $StateFile" -ForegroundColor Gray
-Write-Host "Cache directory: $CacheDir" -ForegroundColor Gray
 Write-Host ""
 
 if ($errorCount -gt 0) {

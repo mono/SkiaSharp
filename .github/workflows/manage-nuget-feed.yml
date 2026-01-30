@@ -73,14 +73,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: ./nuget-cache/${{ matrix.package.name }}
-          key: nuget-cache-${{ matrix.package.name }}-${{ github.run_id }}
-          restore-keys: |
-            nuget-cache-${{ matrix.package.name }}-
-
       - name: Run feed management
         shell: pwsh
         env:
@@ -93,7 +85,6 @@ jobs:
             DestinationFeed = "SkiaSharp-CI"
             PackageFilter = "${{ matrix.package.filter }}"
             StateFile = "./feed-management-state-${{ matrix.package.name }}.json"
-            CacheDir = "./nuget-cache/${{ matrix.package.name }}"
           }
 
           $movePhase = "${{ inputs.move_phase }}"
@@ -141,14 +132,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: ./nuget-cache/${{ matrix.package.name }}
-          key: nuget-cache-${{ matrix.package.name }}-${{ github.run_id }}
-          restore-keys: |
-            nuget-cache-${{ matrix.package.name }}-
-
       - name: Run feed management
         shell: pwsh
         env:
@@ -161,7 +144,6 @@ jobs:
             DestinationFeed = "SkiaSharp-CI"
             PackageFilter = "${{ matrix.package.filter }}"
             StateFile = "./feed-management-state-${{ matrix.package.name }}.json"
-            CacheDir = "./nuget-cache/${{ matrix.package.name }}"
             SkipMoveOperations = $true  # Regular packages don't move
           }
 
@@ -189,21 +171,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup PowerShell
-        shell: bash
-        run: |
-          # PowerShell is pre-installed on ubuntu-latest
-
-      - name: Restore cache state
-        uses: actions/cache@v4
-        with:
-          path: |
-            ./nuget-cache
-            ./feed-management-state*.json
-          key: nuget-feed-management-${{ github.run_id }}
-          restore-keys: |
-            nuget-feed-management-
 
       - name: Run feed management script
         shell: pwsh
@@ -251,15 +218,6 @@ jobs:
           $params | Format-Table -AutoSize
 
           ./scripts/manage-nuget-feed.ps1 @params
-
-      - name: Save cache state
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: |
-            ./nuget-cache
-            ./feed-management-state*.json
-          key: nuget-feed-management-${{ github.run_id }}
 
       - name: Upload state files
         uses: actions/upload-artifact@v4
