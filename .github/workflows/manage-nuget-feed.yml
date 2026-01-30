@@ -77,15 +77,21 @@ jobs:
             DestinationFeed = "SkiaSharp-CI"
           }
 
-          # Add optional parameters
-          if ("${{ inputs.package_filter }}") {
-            $params.PackageFilter = "${{ inputs.package_filter }}"
+          # Add optional parameters (with defaults for PR triggers where inputs are empty)
+          $packageFilter = "${{ inputs.package_filter }}"
+          if ($packageFilter) {
+            $params.PackageFilter = $packageFilter
             # Use filter-specific state file
-            $filterName = "${{ inputs.package_filter }}" -replace '[^a-zA-Z0-9]', '_'
+            $filterName = $packageFilter -replace '[^a-zA-Z0-9]', '_'
             $params.StateFile = "./feed-management-state-${filterName}.json"
           }
 
-          $params.MovePhase = "${{ inputs.move_phase }}"
+          $movePhase = "${{ inputs.move_phase }}"
+          if ($movePhase) {
+            $params.MovePhase = $movePhase
+          } else {
+            $params.MovePhase = "CopyOnly"  # Default for PR triggers
+          }
 
           if ("${{ inputs.skip_move_operations }}" -eq "true") {
             $params.SkipMoveOperations = $true
@@ -99,9 +105,12 @@ jobs:
             $params.VerifyBeforeDelete = $true
           }
 
-          if ("${{ inputs.dry_run }}" -ne "true") {
+          # Default to dry-run for PR triggers (inputs.dry_run is empty string on PR)
+          $dryRun = "${{ inputs.dry_run }}"
+          if ($dryRun -eq "false") {
             $params.Execute = $true
           }
+          # else: dry-run mode (no -Execute flag)
 
           Write-Host "Running with parameters:"
           $params | Format-Table -AutoSize
