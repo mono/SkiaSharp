@@ -200,8 +200,9 @@ function Write-Status {
         [string]$Message,
         [string]$ForegroundColor = "White"
     )
-    # Overwrite current line
-    $width = [Math]::Min([Console]::WindowWidth - 1, 120)
+    # Overwrite current line (handle CI where WindowWidth may be 0)
+    $consoleWidth = try { [Console]::WindowWidth } catch { 0 }
+    $width = [Math]::Max(80, [Math]::Min($consoleWidth - 1, 120))
     $paddedMsg = $Message.PadRight($width).Substring(0, $width)
     Write-Host "`r$paddedMsg" -NoNewline -ForegroundColor $ForegroundColor
 }
