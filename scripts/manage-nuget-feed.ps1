@@ -52,9 +52,26 @@
 .PARAMETER VerifyBeforeDelete
     When using DeleteOnly phase, verify each package exists in destination before deleting from source
 
+.PARAMETER PackageFilter
+    Regex pattern to filter which packages to process. Useful for parallel runs.
+    Examples: "^_NativeAssets$", "^[A-M]", "^SkiaSharp"
+
+.PARAMETER ParallelJobs
+    Number of parallel operations (default: 1 = sequential)
+
 .EXAMPLE
     # Dry run - see what would happen
     ./manage-nuget-feed.ps1 -Organization "myorg" -SourceFeed "myfeed" -DestinationFeed "archive" -PAT $pat
+
+.EXAMPLE
+    # Process only _NativeAssets package
+    ./manage-nuget-feed.ps1 ... -Execute -PackageFilter "^_NativeAssets$"
+
+.EXAMPLE
+    # Run parallel instances (in separate terminals):
+    # Terminal 1: ./manage-nuget-feed.ps1 ... -PackageFilter "^_" -StateFile ./state-underscore.json
+    # Terminal 2: ./manage-nuget-feed.ps1 ... -PackageFilter "^[A-M]" -StateFile ./state-am.json
+    # Terminal 3: ./manage-nuget-feed.ps1 ... -PackageFilter "^[N-Z]" -StateFile ./state-nz.json
 
 .EXAMPLE
     # Phase 1: Copy packages to destination (no delete)
@@ -84,7 +101,7 @@ param(
     [string]$DestinationFeed = "SkiaSharp-CI",
 
     [Parameter(Mandatory = $false)]
-    [string]$PAT = "PAT",
+    [string]$PAT = $env:AZURE_DEVOPS_PAT,
 
     [Parameter(Mandatory = $false)]
     [string]$CacheDir = "./nuget-cache",
@@ -109,7 +126,13 @@ param(
     [string]$MovePhase = "All",
 
     [Parameter(Mandatory = $false)]
-    [switch]$VerifyBeforeDelete
+    [switch]$VerifyBeforeDelete,
+
+    [Parameter(Mandatory = $false)]
+    [string]$PackageFilter = "",  # Regex to filter package IDs (e.g., "^_NativeAssets$" or "^[A-M]")
+
+    [Parameter(Mandatory = $false)]
+    [int]$ParallelJobs = 1  # Number of parallel operations (1 = sequential)
 )
 
 Set-StrictMode -Version Latest
@@ -147,6 +170,53 @@ $AllKnownPatterns = @($StableVersionRegex) + $AllowedPrereleaseRegex + $DeletePr
 #endregion
 
 #region Helper Functions
+
+# Global cancel flag
+$script:CancelRequested = $false
+
+function Test-CancelRequested {
+    # Check if user pressed 'Q' or 'q' to request cancel
+    if ([Console]::KeyAvailable) {
+        $key = [Console]::ReadKey($true)
+        if ($key.Key -eq 'Q') {
+            $script:CancelRequested = $true
+            Write-Host ""
+            Write-Host "Cancel requested - finishing current operation..." -ForegroundColor Yellow
+            return $true
+        }
+    }
+    return $script:CancelRequested
+}
+
+function Write-Status {
+    param(
+        [string]$Message,
+        [string]$ForegroundColor = "White"
+    )
+    # Overwrite current line
+    $width = [Math]::Min([Console]::WindowWidth - 1, 120)
+    $paddedMsg = $Message.PadRight($width).Substring(0, $width)
+    Write-Host "`r$paddedMsg" -NoNewline -ForegroundColor $ForegroundColor
+}
+
+function Write-ProgressSummary {
+    param(
+        [int]$Current,
+        [int]$Total,
+        [string]$CurrentPackage,
+        [string]$Operation,
+        [int]$PackageVersionCurrent = 0,
+        [int]$PackageVersionTotal = 0
+    )
+    
+    # Overall progress
+    Write-Progress -Id 0 -Activity "Overall Progress" -Status "$Current of $Total packages" -PercentComplete (($Current / [Math]::Max($Total, 1)) * 100)
+    
+    # Current package progress (if applicable)
+    if ($PackageVersionTotal -gt 0) {
+        Write-Progress -Id 1 -ParentId 0 -Activity $CurrentPackage -Status "$Operation ($PackageVersionCurrent / $PackageVersionTotal)" -PercentComplete (($PackageVersionCurrent / [Math]::Max($PackageVersionTotal, 1)) * 100)
+    }
+}
 
 function Get-Base64Auth {
     param([string]$Pat)
@@ -384,6 +454,7 @@ function Save-PackageToCache {
 
     $cachePath = Get-CachePath -CacheDir $CacheDir -PackageId $PackageId -Version $Version
     $nupkgPath = Join-Path $cachePath "${PackageId}.${Version}.nupkg"
+    $tempPath = Join-Path $cachePath "${PackageId}.${Version}.nupkg.downloading"
 
     # Check if already cached
     if (Test-Path $nupkgPath) {
@@ -391,30 +462,65 @@ function Save-PackageToCache {
         return $nupkgPath
     }
 
+    # Clean up any partial downloads
+    if (Test-Path $tempPath) {
+        Remove-Item $tempPath -Force
+    }
+
     # Create cache directory
     if (-not (Test-Path $cachePath)) {
         New-Item -ItemType Directory -Path $cachePath -Force | Out-Null
     }
 
-    Write-Host "    Downloading to cache: $nupkgPath" -ForegroundColor Gray
+    Write-Host "    Downloading to cache..." -ForegroundColor Gray
     
-    # Download the package
-    $webClient = New-Object System.Net.WebClient
-    $webClient.Headers.Add("Authorization", $Headers.Authorization)
-    
+    # Use HttpWebRequest to handle 303 redirects properly
+    # Azure DevOps returns 303 redirect to blob storage
     try {
-        $webClient.DownloadFile($DownloadUrl, $nupkgPath)
+        $request = [System.Net.HttpWebRequest]::Create($DownloadUrl)
+        $request.Method = "GET"
+        $request.Headers.Add("Authorization", $Headers.Authorization)
+        $request.AllowAutoRedirect = $true  # Follow 303 redirects
+        $request.MaximumAutomaticRedirections = 5
+        $request.Timeout = 600000  # 10 minute timeout for large files
+        
+        $response = $request.GetResponse()
+        $responseStream = $response.GetResponseStream()
+        
+        $fileStream = [System.IO.File]::Create($tempPath)
+        try {
+            $buffer = New-Object byte[] 65536  # 64KB buffer
+            $bytesRead = 0
+            while (($bytesRead = $responseStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                $fileStream.Write($buffer, 0, $bytesRead)
+            }
+        }
+        finally {
+            $fileStream.Close()
+            $responseStream.Close()
+            $response.Close()
+        }
+        
+        # Verify it's a valid ZIP before renaming
+        try {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($tempPath)
+            $zip.Dispose()
+        }
+        catch {
+            throw "Downloaded file is not a valid package (ZIP verification failed)"
+        }
+        
+        # Rename temp to final
+        Move-Item $tempPath $nupkgPath -Force
         return $nupkgPath
     }
     catch {
         Write-Warning "    Failed to download package: $_"
-        if (Test-Path $nupkgPath) {
-            Remove-Item $nupkgPath -Force
+        if (Test-Path $tempPath) {
+            Remove-Item $tempPath -Force
         }
         throw
-    }
-    finally {
-        $webClient.Dispose()
     }
 }
 
@@ -428,9 +534,7 @@ function Push-PackageToFeed {
     # Use dotnet nuget push
     $pushUrl = "${FeedUrl}/nuget/v3/index.json"
     
-    Write-Host "    Pushing package to: $pushUrl" -ForegroundColor Gray
-    
-    $result = & dotnet nuget push $NupkgPath --source $pushUrl --api-key "az" 2>&1
+    $result = & dotnet nuget push $NupkgPath --source $pushUrl --api-key "az" 2>&1 | Out-String
     
     if ($LASTEXITCODE -ne 0) {
         # Check if it's a "package already exists" error - that's OK
@@ -455,9 +559,7 @@ function Remove-PackageVersion {
 
     $uri = "${PkgsBaseUrl}/_apis/packaging/feeds/${FeedId}/nuget/packages/${PackageId}/versions/${Version}?api-version=7.1"
     
-    Write-Host "    Deleting: $PackageId@$Version" -ForegroundColor Red
-    
-    Invoke-AzDoApi -Uri $uri -Method "DELETE" -Headers $Headers
+    $null = Invoke-AzDoApi -Uri $uri -Method "DELETE" -Headers $Headers
 }
 
 function Test-PackageExistsInFeed {
@@ -609,6 +711,10 @@ $headers = @{
 $feedsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "feeds"
 $pkgsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "pkgs"
 
+# Resolve to absolute paths
+$CacheDir = [System.IO.Path]::GetFullPath($CacheDir)
+$StateFile = [System.IO.Path]::GetFullPath($StateFile)
+
 Write-Host "Configuration:" -ForegroundColor Cyan
 Write-Host "  Organization: $Organization" -ForegroundColor Gray
 Write-Host "  Project: $(if ($Project) { $Project } else { '(org-scoped)' })" -ForegroundColor Gray
@@ -616,6 +722,9 @@ Write-Host "  Source Feed: $SourceFeed" -ForegroundColor Gray
 Write-Host "  Destination Feed: $DestinationFeed" -ForegroundColor Gray
 Write-Host "  Cache Directory: $CacheDir" -ForegroundColor Gray
 Write-Host "  State File: $StateFile" -ForegroundColor Gray
+if ($PackageFilter) {
+    Write-Host "  Package Filter: $PackageFilter" -ForegroundColor Yellow
+}
 Write-Host ""
 
 # Create cache directory
@@ -626,8 +735,66 @@ if (-not (Test-Path $CacheDir)) {
 # Load state
 $state = Get-State -StateFile $StateFile
 
+# Validate cache integrity
+Write-Host "Validating cache..." -ForegroundColor Cyan
+$cacheFiles = @(Get-ChildItem -Path $CacheDir -Filter "*.nupkg" -Recurse -ErrorAction SilentlyContinue)
+$cacheValid = 0
+$cacheInvalid = 0
+$cacheRemoved = 0
+
+if ($cacheFiles.Count -gt 0) {
+    $cacheIndex = 0
+    foreach ($file in $cacheFiles) {
+        $cacheIndex++
+        Write-Progress -Activity "Validating cache" -Status $file.Name -PercentComplete (($cacheIndex / $cacheFiles.Count) * 100)
+        
+        try {
+            # Quick ZIP validation - try to open it
+            Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+            $zip = [System.IO.Compression.ZipFile]::OpenRead($file.FullName)
+            $hasNuspec = ($zip.Entries | Where-Object { $_.Name -like "*.nuspec" } | Measure-Object).Count -gt 0
+            $zip.Dispose()
+            
+            if ($hasNuspec) {
+                $cacheValid++
+            }
+            else {
+                throw "No nuspec found"
+            }
+        }
+        catch {
+            $cacheInvalid++
+            Write-Host "  Removing invalid cache file: $($file.Name)" -ForegroundColor Yellow
+            Remove-Item $file.FullName -Force -ErrorAction SilentlyContinue
+            $cacheRemoved++
+        }
+    }
+    Write-Progress -Activity "Validating cache" -Completed
+    
+    Write-Host "  Valid: $cacheValid, Invalid/Removed: $cacheRemoved" -ForegroundColor $(if ($cacheRemoved -gt 0) { "Yellow" } else { "Green" })
+}
+else {
+    Write-Host "  Cache is empty" -ForegroundColor Gray
+}
+
+# Also clean up any partial downloads (.downloading files)
+$partialFiles = @(Get-ChildItem -Path $CacheDir -Filter "*.downloading" -Recurse -ErrorAction SilentlyContinue)
+if ($partialFiles.Count -gt 0) {
+    Write-Host "  Removing $($partialFiles.Count) partial downloads..." -ForegroundColor Yellow
+    $partialFiles | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+
+Write-Host ""
+
 # Get all packages
 $packages = Get-AllPackages -FeedsBaseUrl $feedsBaseUrl -FeedId $SourceFeed -Headers $headers -BatchSize $BatchSize
+
+# Apply package filter if specified
+if ($PackageFilter) {
+    $originalCount = $packages.Count
+    $packages = @($packages | Where-Object { $_.name -match $PackageFilter })
+    Write-Host "Package filter '$PackageFilter': $($packages.Count) of $originalCount packages match" -ForegroundColor Cyan
+}
 
 # Analyze packages
 Write-Host ""
@@ -802,7 +969,8 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
     }
     Write-Host ""
     
-    $destFeedUrl = "${feedsBaseUrl}/_packaging/${DestinationFeed}"
+    # NuGet push requires pkgs.dev.azure.com, not feeds.dev.azure.com
+    $destFeedUrl = "${pkgsBaseUrl}/_packaging/${DestinationFeed}"
     
     # Configure NuGet source for destination feed (only if uploading)
     $sourceConfigured = $false
@@ -814,6 +982,7 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
             # Add the source
             & dotnet nuget add source $destFeedUrl/nuget/v3/index.json --name "AzDoDestFeed" --username "az" --password $PAT --store-password-in-clear-text
             $sourceConfigured = $true
+            Write-Host "  Configured NuGet source: $destFeedUrl/nuget/v3/index.json" -ForegroundColor Gray
         }
         catch {
             Write-Warning "Could not configure NuGet source: $_"
@@ -823,35 +992,52 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
     $copyCount = 0
     $copySkipped = 0
     $deleteFromSourceCount = 0
+    $moveIndex = 0
+    $totalMoves = $packagesToMove.Count
+    
+    Write-Host ""
+    Write-Host "Press 'Q' at any time to cancel after current operation completes" -ForegroundColor Cyan
+    Write-Host ""
     
     foreach ($item in $packagesToMove) {
+        $moveIndex++
         $packageId = $item.PackageId
         $version = $item.Version
         $stateKey = "${packageId}@${version}"
+
+        # Check for cancel request
+        if (Test-CancelRequested) {
+            Write-Host ""
+            Write-Host "Cancelled by user after $moveIndex items" -ForegroundColor Yellow
+            break
+        }
+
+        # Update progress
+        Write-Progress -Id 0 -Activity "Moving packages" -Status "$packageId@$version" -PercentComplete (($moveIndex / $totalMoves) * 100) -CurrentOperation "$moveIndex of $totalMoves"
 
         try {
             # PHASE: Download and Upload
             if ($doDownloadAndUpload) {
                 # Check if already copied (in state as "CopiedPackages")
                 if ($state.CopiedPackages -contains $stateKey) {
-                    Write-Host "  Skipping copy (already copied): $stateKey" -ForegroundColor Gray
+                    Write-Status "  [$moveIndex/$totalMoves] Skipped (cached): $stateKey" -ForegroundColor Gray
                     $copySkipped++
                 }
                 else {
-                    Write-Host "  Copying: $packageId@$version" -ForegroundColor Yellow
+                    Write-Status "  [$moveIndex/$totalMoves] Downloading: $packageId@$version" -ForegroundColor Yellow
 
                     # Download URL
-                    $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1"
+                    $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1-preview.1"
 
                     # Download to cache (or use existing cached file)
                     $cachedPath = Save-PackageToCache -CacheDir $CacheDir -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
 
                     # Verify package integrity
+                    Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
                     $integrity = Test-NupkgIntegrity -NupkgPath $cachedPath
                     if (-not $integrity.Valid) {
                         throw "Package integrity check failed: $($integrity.Error)"
                     }
-                    Write-Host "    Integrity OK: $($integrity.PackageId) v$($integrity.Version) [SHA256: $($integrity.SHA256.Substring(0,16))...]" -ForegroundColor Gray
 
                     # Store hash for later verification
                     if (-not $state.PackageHashes) { $state.PackageHashes = @{} }
@@ -863,11 +1049,11 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                     }
 
                     # Push to destination feed
+                    Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
                     if ($sourceConfigured) {
                         Push-PackageToFeed -NupkgPath $cachedPath -FeedUrl $destFeedUrl -PAT $PAT
                     }
                     else {
-                        Write-Warning "    NuGet source not configured - please ensure dotnet CLI is available"
                         throw "Cannot push without NuGet source configured"
                     }
 
@@ -877,6 +1063,8 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                     if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
                     $state.CopiedPackages += $stateKey
                     Save-State -StateFile $StateFile -State $state
+                    
+                    Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
                 }
             }
 
@@ -884,16 +1072,17 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
             if ($doDeleteFromSource) {
                 # Skip if already fully moved
                 if ($state.MovedPackages -contains $stateKey) {
-                    Write-Host "  Skipping delete (already moved): $stateKey" -ForegroundColor Gray
+                    Write-Status "  [$moveIndex/$totalMoves] Skipped (moved): $stateKey" -ForegroundColor Gray
                     continue
                 }
 
                 # Verify exists in destination before deleting (if requested)
                 if ($VerifyBeforeDelete) {
-                    Write-Host "    Verifying exists in destination..." -ForegroundColor Gray
+                    Write-Status "  [$moveIndex/$totalMoves] Verifying in dest: $packageId@$version" -ForegroundColor Yellow
                     $existsInDest = Test-PackageExistsInFeed -PkgsBaseUrl $pkgsBaseUrl -FeedId $DestinationFeed -PackageId $packageId -Version $version -Headers $headers
                     
                     if (-not $existsInDest) {
+                        Write-Host ""
                         Write-Warning "    Package NOT found in destination feed - SKIPPING DELETE: $stateKey"
                         $state.Errors += @{
                             Time    = (Get-Date).ToString("o")
@@ -905,10 +1094,10 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                         Save-State -StateFile $StateFile -State $state
                         continue
                     }
-                    Write-Host "    Verified: exists in destination" -ForegroundColor Green
                 }
 
                 # Delete from source
+                Write-Status "  [$moveIndex/$totalMoves] Deleting from source: $packageId@$version" -ForegroundColor Red
                 Remove-PackageVersion -PkgsBaseUrl $pkgsBaseUrl -FeedId $SourceFeed -PackageId $packageId -Version $version -Headers $headers
                 
                 $deleteFromSourceCount++
@@ -916,11 +1105,13 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                 $state.MovedPackages += $stateKey
                 Save-State -StateFile $StateFile -State $state
             }
+            
+            Write-Host ""  # New line after each package
         }
         catch {
             $errorCount++
-            $errorMsg = "Failed to process ${packageId}@${version}: $_"
-            Write-Warning $errorMsg
+            Write-Host ""
+            Write-Warning "Failed to process ${packageId}@${version}: $_"
             $state.Errors += @{
                 Time    = (Get-Date).ToString("o")
                 Package = $packageId
@@ -951,24 +1142,36 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
 }
 
 # Process deletes
-if (-not $SkipDeleteOperations -and $versionsToDelete.Count -gt 0) {
+if (-not $SkipDeleteOperations -and $versionsToDelete.Count -gt 0 -and -not $script:CancelRequested) {
     Write-Host ""
     Write-Host "Deleting package versions..." -ForegroundColor Red
+    Write-Host "Press 'Q' at any time to cancel after current operation completes" -ForegroundColor Cyan
+    Write-Host ""
     
     $deleteIndex = 0
+    $totalDeletes = $versionsToDelete.Count
+    
     foreach ($item in $versionsToDelete) {
         $deleteIndex++
         $packageId = $item.PackageId
         $version = $item.Version
 
+        # Check for cancel request
+        if (Test-CancelRequested) {
+            Write-Host ""
+            Write-Host "Cancelled by user after $deleteIndex items" -ForegroundColor Yellow
+            break
+        }
+
         # Skip if already processed
         $stateKey = "${packageId}@${version}"
         if ($state.DeletedVersions -contains $stateKey) {
-            Write-Host "  Skipping (already deleted): $stateKey" -ForegroundColor Gray
+            Write-Status "  [$deleteIndex/$totalDeletes] Skipped (deleted): $stateKey" -ForegroundColor Gray
             continue
         }
 
-        Write-Progress -Activity "Deleting versions" -Status "$packageId@$version" -PercentComplete (($deleteIndex / $versionsToDelete.Count) * 100)
+        Write-Progress -Id 0 -Activity "Deleting versions" -Status "$packageId@$version" -PercentComplete (($deleteIndex / $totalDeletes) * 100) -CurrentOperation "$deleteIndex of $totalDeletes"
+        Write-Status "  [$deleteIndex/$totalDeletes] Deleting: $packageId@$version" -ForegroundColor Red
 
         try {
             Remove-PackageVersion -PkgsBaseUrl $pkgsBaseUrl -FeedId $SourceFeed -PackageId $packageId -Version $version -Headers $headers
@@ -983,8 +1186,8 @@ if (-not $SkipDeleteOperations -and $versionsToDelete.Count -gt 0) {
         }
         catch {
             $errorCount++
-            $errorMsg = "Failed to delete ${packageId}@${version}: $_"
-            Write-Warning $errorMsg
+            Write-Host ""
+            Write-Warning "Failed to delete ${packageId}@${version}: $_"
             $state.Errors += @{
                 Time    = (Get-Date).ToString("o")
                 Package = $packageId

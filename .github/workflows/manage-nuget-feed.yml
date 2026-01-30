@@ -1,0 +1,122 @@
+name: Manage NuGet Feed
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_filter:
+        description: 'Regex to filter packages (e.g., "^_NativeAssets$", "^SkiaSharp", leave empty for all)'
+        required: false
+        default: ''
+      move_phase:
+        description: 'Move phase for underscore packages'
+        required: true
+        default: 'CopyOnly'
+        type: choice
+        options:
+          - CopyOnly
+          - DeleteOnly
+          - All
+      skip_move_operations:
+        description: 'Skip move operations (only delete bad versions)'
+        required: false
+        type: boolean
+        default: false
+      skip_delete_operations:
+        description: 'Skip delete operations (only move packages)'
+        required: false
+        type: boolean
+        default: false
+      verify_before_delete:
+        description: 'Verify package exists in destination before deleting from source'
+        required: false
+        type: boolean
+        default: true
+      dry_run:
+        description: 'Dry run (no changes made)'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  manage-feed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360  # 6 hours max
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell
+        shell: bash
+        run: |
+          # PowerShell is pre-installed on ubuntu-latest
+
+      - name: Restore cache state
+        uses: actions/cache@v4
+        with:
+          path: |
+            ./nuget-cache
+            ./feed-management-state*.json
+          key: nuget-feed-management-${{ github.run_id }}
+          restore-keys: |
+            nuget-feed-management-
+
+      - name: Run feed management script
+        shell: pwsh
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          $params = @{
+            Organization = "xamarin"
+            Project = "public"
+            SourceFeed = "SkiaSharp"
+            DestinationFeed = "SkiaSharp-CI"
+          }
+
+          # Add optional parameters
+          if ("${{ inputs.package_filter }}") {
+            $params.PackageFilter = "${{ inputs.package_filter }}"
+            # Use filter-specific state file
+            $filterName = "${{ inputs.package_filter }}" -replace '[^a-zA-Z0-9]', '_'
+            $params.StateFile = "./feed-management-state-${filterName}.json"
+          }
+
+          $params.MovePhase = "${{ inputs.move_phase }}"
+
+          if ("${{ inputs.skip_move_operations }}" -eq "true") {
+            $params.SkipMoveOperations = $true
+          }
+
+          if ("${{ inputs.skip_delete_operations }}" -eq "true") {
+            $params.SkipDeleteOperations = $true
+          }
+
+          if ("${{ inputs.verify_before_delete }}" -eq "true") {
+            $params.VerifyBeforeDelete = $true
+          }
+
+          if ("${{ inputs.dry_run }}" -ne "true") {
+            $params.Execute = $true
+          }
+
+          Write-Host "Running with parameters:"
+          $params | Format-Table -AutoSize
+
+          ./scripts/manage-nuget-feed.ps1 @params
+
+      - name: Save cache state
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: |
+            ./nuget-cache
+            ./feed-management-state*.json
+          key: nuget-feed-management-${{ github.run_id }}
+
+      - name: Upload state files
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: feed-management-state
+          path: ./feed-management-state*.json
+          retention-days: 30
