@@ -1032,47 +1032,62 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                     $copySkipped++
                 }
                 else {
-                    Write-Status "  [$moveIndex/$totalMoves] Downloading: $packageId@$version" -ForegroundColor Yellow
-
-                    # Download URL
-                    $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1-preview.1"
-
-                    # Download to cache (or use existing cached file)
-                    $cachedPath = Save-PackageToCache -CacheDir $CacheDir -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
-
-                    # Verify package integrity
-                    Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
-                    $integrity = Test-NupkgIntegrity -NupkgPath $cachedPath
-                    if (-not $integrity.Valid) {
-                        throw "Package integrity check failed: $($integrity.Error)"
-                    }
-
-                    # Store hash for later verification
-                    if (-not $state.PackageHashes) { $state.PackageHashes = @{} }
-                    $state.PackageHashes[$stateKey] = @{
-                        SHA256 = $integrity.SHA256
-                        FileSize = $integrity.FileSize
-                        CachedPath = $cachedPath
-                        DownloadTime = (Get-Date).ToString("o")
-                    }
-
-                    # Push to destination feed
-                    Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
-                    if ($sourceConfigured) {
-                        Push-PackageToFeed -NupkgPath $cachedPath -FeedUrl $destFeedUrl -PAT $PAT
+                    # Check if package already exists in destination feed (skip download if so)
+                    Write-Status "  [$moveIndex/$totalMoves] Checking destination: $packageId@$version" -ForegroundColor Gray
+                    $existsInDest = Test-PackageExistsInFeed -PkgsBaseUrl $pkgsBaseUrl -FeedId $DestinationFeed -PackageId $packageId -Version $version -Headers $headers
+                    
+                    if ($existsInDest) {
+                        Write-Status "  [$moveIndex/$totalMoves] Already in destination: $packageId@$version" -ForegroundColor Green
+                        $copySkipped++
+                        
+                        # Track as copied so we don't check again
+                        if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
+                        $state.CopiedPackages += $stateKey
+                        Save-State -StateFile $StateFile -State $state
                     }
                     else {
-                        throw "Cannot push without NuGet source configured"
-                    }
+                        Write-Status "  [$moveIndex/$totalMoves] Downloading: $packageId@$version" -ForegroundColor Yellow
 
-                    $copyCount++
-                    
-                    # Track as copied (separate from moved, for phased migration)
-                    if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
-                    $state.CopiedPackages += $stateKey
-                    Save-State -StateFile $StateFile -State $state
-                    
-                    Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
+                        # Download URL
+                        $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1-preview.1"
+
+                        # Download to cache (or use existing cached file)
+                        $cachedPath = Save-PackageToCache -CacheDir $CacheDir -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
+
+                        # Verify package integrity
+                        Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
+                        $integrity = Test-NupkgIntegrity -NupkgPath $cachedPath
+                        if (-not $integrity.Valid) {
+                            throw "Package integrity check failed: $($integrity.Error)"
+                        }
+
+                        # Store hash for later verification
+                        if (-not $state.PackageHashes) { $state.PackageHashes = @{} }
+                        $state.PackageHashes[$stateKey] = @{
+                            SHA256 = $integrity.SHA256
+                            FileSize = $integrity.FileSize
+                            CachedPath = $cachedPath
+                            DownloadTime = (Get-Date).ToString("o")
+                        }
+
+                        # Push to destination feed
+                        Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
+                        if ($sourceConfigured) {
+                            Push-PackageToFeed -NupkgPath $cachedPath -FeedUrl $destFeedUrl -PAT $PAT
+                        }
+                        else {
+                            throw "Cannot push without NuGet source configured"
+                        }
+
+                        $copyCount++
+                        
+                        # Track as copied (separate from moved, for phased migration)
+                        if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
+                        $state.CopiedPackages += $stateKey
+                        Save-State -StateFile $StateFile -State $state
+                        
+                        Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
+                    }
                 }
             }
 
