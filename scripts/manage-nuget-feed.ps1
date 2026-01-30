@@ -173,16 +173,23 @@ $AllKnownPatterns = @($StableVersionRegex) + $AllowedPrereleaseRegex + $DeletePr
 
 # Global cancel flag
 $script:CancelRequested = $false
+$script:IsInteractive = [Environment]::UserInteractive -and -not [Console]::IsInputRedirected
 
 function Test-CancelRequested {
-    # Check if user pressed 'Q' or 'q' to request cancel
-    if ([Console]::KeyAvailable) {
-        $key = [Console]::ReadKey($true)
-        if ($key.Key -eq 'Q') {
-            $script:CancelRequested = $true
-            Write-Host ""
-            Write-Host "Cancel requested - finishing current operation..." -ForegroundColor Yellow
-            return $true
+    # Check if user pressed 'Q' or 'q' to request cancel (only in interactive mode)
+    if ($script:IsInteractive) {
+        try {
+            if ([Console]::KeyAvailable) {
+                $key = [Console]::ReadKey($true)
+                if ($key.Key -eq 'Q') {
+                    $script:CancelRequested = $true
+                    Write-Host ""
+                    Write-Host "Cancel requested - finishing current operation..." -ForegroundColor Yellow
+                    return $true
+                }
+            }
+        } catch {
+            # Ignore console errors in non-interactive environments
         }
     }
     return $script:CancelRequested
