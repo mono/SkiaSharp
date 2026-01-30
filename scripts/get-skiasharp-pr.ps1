@@ -145,29 +145,54 @@ function Find-BuildForPR {
         [int]$PRNumber
     )
 
-    Write-Message "Finding latest successful build for PR #$PRNumber..." -Level Info
+    Write-Message "Finding latest build for PR #$PRNumber..." -Level Info
 
-    # Query builds for the SkiaSharp pipeline filtered by PR
     $sourceBranch = "refs/pull/$PRNumber/merge"
-    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=completed&resultFilter=succeeded&`$top=50"
     
+    # First try: successful builds
+    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=completed&resultFilter=succeeded&`$top=20"
     $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
-
-    # Filter to builds for this specific PR
     $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
 
-    if (-not $prBuilds -or $prBuilds.Count -eq 0) {
-        throw "No successful builds found for PR #$PRNumber. Check if the PR exists and has a successful build at: https://dev.azure.com/xamarin/public/_build?definitionId=$($Script:PipelineId)"
+    if ($prBuilds -and $prBuilds.Count -gt 0) {
+        $latestBuild = $prBuilds | Sort-Object -Property finishTime -Descending | Select-Object -First 1
+        Write-Message "Found successful build: $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Success
+        Write-Message "  Finished: $($latestBuild.finishTime)" -Level Info
+        Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
+        return $latestBuild
     }
 
-    # Get the most recent build
-    $latestBuild = $prBuilds | Sort-Object -Property finishTime -Descending | Select-Object -First 1
+    # Second try: any completed build (may have failed tests but artifacts could be fine)
+    Write-Message "No successful builds found, checking for completed builds..." -Level Warning
+    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=completed&`$top=20"
+    $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
+    $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
 
-    Write-Message "Found build: $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Success
-    Write-Message "  Finished: $($latestBuild.finishTime)" -Level Info
-    Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
+    if ($prBuilds -and $prBuilds.Count -gt 0) {
+        $latestBuild = $prBuilds | Sort-Object -Property finishTime -Descending | Select-Object -First 1
+        Write-Message "Found completed build (result: $($latestBuild.result)): $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Warning
+        Write-Message "  Finished: $($latestBuild.finishTime)" -Level Info
+        Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
+        Write-Message "  Note: Build did not succeed - artifacts may be incomplete" -Level Warning
+        return $latestBuild
+    }
 
-    return $latestBuild
+    # Third try: in-progress builds (artifacts may already be published)
+    Write-Message "No completed builds found, checking for in-progress builds..." -Level Warning
+    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=inProgress&`$top=20"
+    $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
+    $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
+
+    if ($prBuilds -and $prBuilds.Count -gt 0) {
+        $latestBuild = $prBuilds | Sort-Object -Property startTime -Descending | Select-Object -First 1
+        Write-Message "Found in-progress build: $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Warning
+        Write-Message "  Started: $($latestBuild.startTime)" -Level Info
+        Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
+        Write-Message "  Note: Build still running - artifacts may not be available yet" -Level Warning
+        return $latestBuild
+    }
+
+    throw "No builds found for PR #$PRNumber. Check if the PR exists at: https://dev.azure.com/xamarin/public/_build?definitionId=$($Script:PipelineId)"
 }
 
 function Get-BuildArtifacts {
