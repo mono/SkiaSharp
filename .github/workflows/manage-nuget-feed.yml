@@ -1,6 +1,10 @@
 name: Manage NuGet Feed
 
 on:
+  pull_request:
+    paths:
+      - 'scripts/manage-nuget-feed.ps1'
+      - '.github/workflows/manage-nuget-feed.yml'
   workflow_dispatch:
     inputs:
       package_filter:
