@@ -5,7 +5,7 @@
     Download SkiaSharp NuGet packages from a specific PR's build artifacts
 
 .DESCRIPTION
-    Downloads SkiaSharp NuGet packages from a specific pull request's latest successful build.
+    Downloads SkiaSharp NuGet packages from a specific pull request's latest build.
     Uses the Azure DevOps REST API to find the build and download the nuget artifact.
 
     Packages are installed to ~/.skiasharp/hives/pr-{PRNumber}/packages/ by default.
@@ -14,14 +14,14 @@
     Pull request number (required)
 
 .PARAMETER BuildId
-    Build ID to download from (optional - if not specified, finds latest successful build for PR)
+    Build ID to download from (optional - if not specified, finds latest build for PR)
 
 .PARAMETER InstallPath
     Directory prefix to install (default: $HOME/.skiasharp on Unix, $env:USERPROFILE\.skiasharp on Windows)
     Packages will be installed to InstallPath/hives/pr-{PRNumber}/packages/
 
-.PARAMETER Filter
-    Filter pattern for packages to extract (default: "*-pr.*" to only get PR packages)
+.PARAMETER SuccessfulOnly
+    Only consider successful builds. Use this if the latest build's artifacts are incomplete.
 
 .PARAMETER Force
     Overwrite existing packages in the hive
@@ -39,10 +39,10 @@
     .\get-skiasharp-pr.ps1 1234 -BuildId 12345678
 
 .EXAMPLE
-    .\get-skiasharp-pr.ps1 1234 -InstallPath "C:\my-skiasharp"
+    .\get-skiasharp-pr.ps1 1234 -SuccessfulOnly
 
 .EXAMPLE
-    .\get-skiasharp-pr.ps1 1234 -Filter "*" -Verbose
+    .\get-skiasharp-pr.ps1 1234 -InstallPath "C:\my-skiasharp"
 
 .EXAMPLE
     .\get-skiasharp-pr.ps1 1234 -List
@@ -71,8 +71,8 @@ param(
     [Parameter(HelpMessage = "Directory prefix to install")]
     [string]$InstallPath = "",
 
-    [Parameter(HelpMessage = "Filter pattern for packages to extract")]
-    [string]$Filter = "*-pr.*",
+    [Parameter(HelpMessage = "Only consider successful builds")]
+    [switch]$SuccessfulOnly,
 
     [Parameter(HelpMessage = "Overwrite existing packages")]
     [switch]$Force,
@@ -142,57 +142,65 @@ function Invoke-AzDoApi {
 
 function Find-BuildForPR {
     param(
-        [int]$PRNumber
+        [int]$PRNumber,
+        [switch]$SuccessfulOnly
     )
 
+    $sourceBranch = "refs/pull/$PRNumber/merge"
+
+    if ($SuccessfulOnly) {
+        Write-Message "Finding latest successful build for PR #$PRNumber..." -Level Info
+        
+        $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=completed&resultFilter=succeeded&`$top=20"
+        $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
+        $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
+
+        if ($prBuilds -and $prBuilds.Count -gt 0) {
+            $latestBuild = $prBuilds | Sort-Object -Property finishTime -Descending | Select-Object -First 1
+            Write-Message "Found successful build: $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Success
+            Write-Message "  Finished: $($latestBuild.finishTime)" -Level Info
+            Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
+            return $latestBuild
+        }
+
+        throw "No successful builds found for PR #$PRNumber. Check: https://dev.azure.com/xamarin/public/_build?definitionId=$($Script:PipelineId)"
+    }
+
+    # Default: find latest build regardless of status
     Write-Message "Finding latest build for PR #$PRNumber..." -Level Info
 
-    $sourceBranch = "refs/pull/$PRNumber/merge"
-    
-    # First try: successful builds
-    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=completed&resultFilter=succeeded&`$top=20"
+    # Query all builds (completed + in-progress) and pick the latest
+    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&`$top=50"
     $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
     $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
 
-    if ($prBuilds -and $prBuilds.Count -gt 0) {
-        $latestBuild = $prBuilds | Sort-Object -Property finishTime -Descending | Select-Object -First 1
+    if (-not $prBuilds -or $prBuilds.Count -eq 0) {
+        throw "No builds found for PR #$PRNumber. Check if the PR exists at: https://dev.azure.com/xamarin/public/_build?definitionId=$($Script:PipelineId)"
+    }
+
+    # Sort by queueTime to get truly latest (handles in-progress builds that have no finishTime)
+    $latestBuild = $prBuilds | Sort-Object -Property queueTime -Descending | Select-Object -First 1
+    
+    $status = $latestBuild.status
+    $result = $latestBuild.result
+
+    if ($status -eq "completed" -and $result -eq "succeeded") {
         Write-Message "Found successful build: $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Success
         Write-Message "  Finished: $($latestBuild.finishTime)" -Level Info
-        Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
-        return $latestBuild
     }
-
-    # Second try: any completed build (may have failed tests but artifacts could be fine)
-    Write-Message "No successful builds found, checking for completed builds..." -Level Warning
-    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=completed&`$top=20"
-    $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
-    $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
-
-    if ($prBuilds -and $prBuilds.Count -gt 0) {
-        $latestBuild = $prBuilds | Sort-Object -Property finishTime -Descending | Select-Object -First 1
-        Write-Message "Found completed build (result: $($latestBuild.result)): $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Warning
+    elseif ($status -eq "completed") {
+        Write-Message "Found completed build (result: $result): $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Warning
         Write-Message "  Finished: $($latestBuild.finishTime)" -Level Info
-        Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
         Write-Message "  Note: Build did not succeed - artifacts may be incomplete" -Level Warning
-        return $latestBuild
     }
-
-    # Third try: in-progress builds (artifacts may already be published)
-    Write-Message "No completed builds found, checking for in-progress builds..." -Level Warning
-    $endpoint = "build/builds?api-version=7.1&definitions=$($Script:PipelineId)&reasonFilter=pullRequest&statusFilter=inProgress&`$top=20"
-    $builds = Invoke-AzDoApi -Endpoint $endpoint -ErrorMessage "Failed to query builds"
-    $prBuilds = $builds.value | Where-Object { $_.sourceBranch -eq $sourceBranch }
-
-    if ($prBuilds -and $prBuilds.Count -gt 0) {
-        $latestBuild = $prBuilds | Sort-Object -Property startTime -Descending | Select-Object -First 1
+    else {
         Write-Message "Found in-progress build: $($latestBuild.buildNumber) (ID: $($latestBuild.id))" -Level Warning
         Write-Message "  Started: $($latestBuild.startTime)" -Level Info
-        Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
         Write-Message "  Note: Build still running - artifacts may not be available yet" -Level Warning
-        return $latestBuild
     }
 
-    throw "No builds found for PR #$PRNumber. Check if the PR exists at: https://dev.azure.com/xamarin/public/_build?definitionId=$($Script:PipelineId)"
+    Write-Message "  URL: $($latestBuild._links.web.href)" -Level Info
+    return $latestBuild
 }
 
 function Get-BuildArtifacts {
@@ -361,13 +369,16 @@ try {
         $build = @{ id = $BuildId }
     }
     else {
-        $build = Find-BuildForPR -PRNumber $PRNumber
+        $build = Find-BuildForPR -PRNumber $PRNumber -SuccessfulOnly:$SuccessfulOnly
     }
 
     # Get artifacts
     $artifacts = Get-BuildArtifacts -BuildId $build.id
 
     if (-not $artifacts -or $artifacts.Count -eq 0) {
+        if (-not $SuccessfulOnly) {
+            throw "No artifacts found for build $($build.id). The build may still be creating artifacts. Try again later, or use -SuccessfulOnly to get the last successful build."
+        }
         throw "No artifacts found for build $($build.id)"
     }
 
@@ -396,7 +407,10 @@ try {
         foreach ($artifact in $artifacts) {
             Write-Message "  - $($artifact.name)" -Level Info
         }
-        throw "Neither '$($Script:PreferredArtifact)' nor '$($Script:FallbackArtifact)' artifact found. The build may still be in progress."
+        if (-not $SuccessfulOnly) {
+            throw "Neither '$($Script:PreferredArtifact)' nor '$($Script:FallbackArtifact)' artifact found. The build may still be in progress. Try -SuccessfulOnly to get the last successful build."
+        }
+        throw "Neither '$($Script:PreferredArtifact)' nor '$($Script:FallbackArtifact)' artifact found."
     }
 
     $artifactName = $nugetArtifact.name
@@ -415,8 +429,8 @@ try {
     $zipPath = Download-Artifact -Artifact $nugetArtifact -DownloadPath $tempPath
 
     if ($zipPath) {
-        # Extract packages (if using nuget_preview, all packages match; otherwise filter)
-        $effectiveFilter = if ($usingPreview) { "*.nupkg" } else { $Filter }
+        # Extract packages - nuget_preview already contains only prerelease; for full nuget, filter to prerelease only
+        $effectiveFilter = if ($usingPreview) { "*.nupkg" } else { "*-*.nupkg" }
         $extractedPackages = Extract-Packages -ZipPath $zipPath -DestinationPath $packagesPath -Filter $effectiveFilter -Force:$Force
 
         # Cleanup zip
