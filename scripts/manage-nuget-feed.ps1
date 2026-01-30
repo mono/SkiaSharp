@@ -25,9 +25,6 @@
 .PARAMETER PAT
     Personal Access Token with Packaging read/write/manage permissions
 
-.PARAMETER StateFile
-    File to track progress for resumability (default: ./feed-management-state.json)
-
 .PARAMETER BatchSize
     Number of packages to fetch per API call (default: 100, max: 1000)
 
@@ -65,12 +62,6 @@
     ./manage-nuget-feed.ps1 ... -Execute -PackageFilter "^_NativeAssets$"
 
 .EXAMPLE
-    # Run parallel instances (in separate terminals):
-    # Terminal 1: ./manage-nuget-feed.ps1 ... -PackageFilter "^_" -StateFile ./state-underscore.json
-    # Terminal 2: ./manage-nuget-feed.ps1 ... -PackageFilter "^[A-M]" -StateFile ./state-am.json
-    # Terminal 3: ./manage-nuget-feed.ps1 ... -PackageFilter "^[N-Z]" -StateFile ./state-nz.json
-
-.EXAMPLE
     # Phase 1: Copy packages to destination (no delete)
     ./manage-nuget-feed.ps1 -Organization "myorg" -SourceFeed "myfeed" -DestinationFeed "archive" -PAT $pat -Execute -MovePhase CopyOnly
 
@@ -99,9 +90,6 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$PAT = $env:AZURE_DEVOPS_PAT,
-
-    [Parameter(Mandatory = $false)]
-    [string]$StateFile = "./feed-management-state.json",
 
     [Parameter(Mandatory = $false)]
     [int]$BatchSize = 100,
@@ -598,33 +586,6 @@ function Test-NupkgIntegrity {
     }
 }
 
-function Save-State {
-    param(
-        [string]$StateFile,
-        [hashtable]$State
-    )
-
-    $State | ConvertTo-Json -Depth 10 | Set-Content $StateFile -Encoding UTF8
-}
-
-function Get-State {
-    param([string]$StateFile)
-
-    if (Test-Path $StateFile) {
-        return Get-Content $StateFile -Raw | ConvertFrom-Json -AsHashtable
-    }
-
-    return @{
-        ProcessedPackages = @{}
-        DeletedVersions   = @()
-        MovedPackages     = @()
-        CopiedPackages    = @()  # Tracks packages copied to dest but not yet deleted from source
-        PackageHashes     = @{}  # Stores SHA256 hashes: "PackageId@Version" -> hash
-        Errors            = @()
-        StartTime         = (Get-Date).ToString("o")
-    }
-}
-
 #endregion
 
 #region Main Script
@@ -673,23 +634,14 @@ $headers = @{
 $feedsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "feeds"
 $pkgsBaseUrl = Get-FeedBaseUrl -Org $Organization -Proj $Project -UrlType "pkgs"
 
-# Resolve to absolute path
-$StateFile = [System.IO.Path]::GetFullPath($StateFile)
-
 Write-Host "Configuration:" -ForegroundColor Cyan
 Write-Host "  Organization: $Organization" -ForegroundColor Gray
 Write-Host "  Project: $(if ($Project) { $Project } else { '(org-scoped)' })" -ForegroundColor Gray
 Write-Host "  Source Feed: $SourceFeed" -ForegroundColor Gray
 Write-Host "  Destination Feed: $DestinationFeed" -ForegroundColor Gray
-Write-Host "  State File: $StateFile" -ForegroundColor Gray
 if ($PackageFilter) {
     Write-Host "  Package Filter: $PackageFilter" -ForegroundColor Yellow
 }
-Write-Host ""
-
-# Load state
-$state = Get-State -StateFile $StateFile
-
 Write-Host ""
 
 # Get all packages
@@ -924,73 +876,48 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
         try {
             # PHASE: Download and Upload
             if ($doDownloadAndUpload) {
-                # Check if already copied (in state as "CopiedPackages")
-                if ($state.CopiedPackages -contains $stateKey) {
-                    Write-Status "  [$moveIndex/$totalMoves] Skipped (cached): $stateKey" -ForegroundColor Gray
+                # Check if package already exists in destination feed (skip download if so)
+                Write-Status "  [$moveIndex/$totalMoves] Checking destination: $packageId@$version" -ForegroundColor Gray
+                $existsInDest = Test-PackageExistsInFeed -PkgsBaseUrl $pkgsBaseUrl -FeedId $DestinationFeed -PackageId $packageId -Version $version -Headers $headers
+                
+                if ($existsInDest) {
+                    Write-Status "  [$moveIndex/$totalMoves] Already in destination: $packageId@$version" -ForegroundColor Green
                     $copySkipped++
                 }
                 else {
-                    # Check if package already exists in destination feed (skip download if so)
-                    Write-Status "  [$moveIndex/$totalMoves] Checking destination: $packageId@$version" -ForegroundColor Gray
-                    $existsInDest = Test-PackageExistsInFeed -PkgsBaseUrl $pkgsBaseUrl -FeedId $DestinationFeed -PackageId $packageId -Version $version -Headers $headers
-                    
-                    if ($existsInDest) {
-                        Write-Status "  [$moveIndex/$totalMoves] Already in destination: $packageId@$version" -ForegroundColor Green
-                        $copySkipped++
-                        
-                        # Track as copied so we don't check again
-                        if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
-                        $state.CopiedPackages += $stateKey
-                        Save-State -StateFile $StateFile -State $state
-                    }
-                    else {
-                        Write-Status "  [$moveIndex/$totalMoves] Downloading: $packageId@$version" -ForegroundColor Yellow
+                    Write-Status "  [$moveIndex/$totalMoves] Downloading: $packageId@$version" -ForegroundColor Yellow
 
-                        # Download URL
-                        $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1-preview.1"
+                    # Download URL
+                    $downloadUrl = "${pkgsBaseUrl}/_apis/packaging/feeds/${SourceFeed}/nuget/packages/${packageId}/versions/${version}/content?api-version=7.1-preview.1"
 
-                        # Download to temp location
-                        $downloadedPath = Download-Package -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
+                    # Download to temp location
+                    $downloadedPath = Download-Package -PackageId $packageId -Version $version -DownloadUrl $downloadUrl -Headers $headers
 
-                        try {
-                            # Verify package integrity
-                            Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
-                            $integrity = Test-NupkgIntegrity -NupkgPath $downloadedPath
-                            if (-not $integrity.Valid) {
-                                throw "Package integrity check failed: $($integrity.Error)"
-                            }
-
-                            # Store hash for later verification
-                            if (-not $state.PackageHashes) { $state.PackageHashes = @{} }
-                            $state.PackageHashes[$stateKey] = @{
-                                SHA256 = $integrity.SHA256
-                                FileSize = $integrity.FileSize
-                                DownloadTime = (Get-Date).ToString("o")
-                            }
-
-                            # Push to destination feed
-                            Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
-                            if ($sourceConfigured) {
-                                Push-PackageToFeed -NupkgPath $downloadedPath -FeedUrl $destFeedUrl -PAT $PAT
-                            }
-                            else {
-                                throw "Cannot push without NuGet source configured"
-                            }
-
-                            $copyCount++
-                            
-                            # Track as copied (separate from moved, for phased migration)
-                            if (-not $state.CopiedPackages) { $state.CopiedPackages = @() }
-                            $state.CopiedPackages += $stateKey
-                            Save-State -StateFile $StateFile -State $state
-                            
-                            Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
+                    try {
+                        # Verify package integrity
+                        Write-Status "  [$moveIndex/$totalMoves] Verifying: $packageId@$version" -ForegroundColor Yellow
+                        $integrity = Test-NupkgIntegrity -NupkgPath $downloadedPath
+                        if (-not $integrity.Valid) {
+                            throw "Package integrity check failed: $($integrity.Error)"
                         }
-                        finally {
-                            # Clean up downloaded file immediately after push
-                            if (Test-Path $downloadedPath) {
-                                Remove-Item $downloadedPath -Force -ErrorAction SilentlyContinue
-                            }
+
+                        # Push to destination feed
+                        Write-Status "  [$moveIndex/$totalMoves] Pushing: $packageId@$version" -ForegroundColor Yellow
+                        if ($sourceConfigured) {
+                            Push-PackageToFeed -NupkgPath $downloadedPath -FeedUrl $destFeedUrl -PAT $PAT
+                        }
+                        else {
+                            throw "Cannot push without NuGet source configured"
+                        }
+
+                        $copyCount++
+                        
+                        Write-Status "  [$moveIndex/$totalMoves] Copied: $packageId@$version [SHA256: $($integrity.SHA256.Substring(0,12))...]" -ForegroundColor Green
+                    }
+                    finally {
+                        # Clean up downloaded file immediately after push
+                        if (Test-Path $downloadedPath) {
+                            Remove-Item $downloadedPath -Force -ErrorAction SilentlyContinue
                         }
                     }
                 }
@@ -998,12 +925,6 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
 
             # PHASE: Delete from source
             if ($doDeleteFromSource) {
-                # Skip if already fully moved
-                if ($state.MovedPackages -contains $stateKey) {
-                    Write-Status "  [$moveIndex/$totalMoves] Skipped (moved): $stateKey" -ForegroundColor Gray
-                    continue
-                }
-
                 # Verify exists in destination before deleting (if requested)
                 if ($VerifyBeforeDelete) {
                     Write-Status "  [$moveIndex/$totalMoves] Verifying in dest: $packageId@$version" -ForegroundColor Yellow
@@ -1012,14 +933,7 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                     if (-not $existsInDest) {
                         Write-Host ""
                         Write-Warning "    Package NOT found in destination feed - SKIPPING DELETE: $stateKey"
-                        $state.Errors += @{
-                            Time    = (Get-Date).ToString("o")
-                            Package = $packageId
-                            Version = $version
-                            Action  = "VERIFY_BEFORE_DELETE"
-                            Error   = "Package not found in destination feed"
-                        }
-                        Save-State -StateFile $StateFile -State $state
+                        $errorCount++
                         continue
                     }
                 }
@@ -1030,8 +944,6 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
                 
                 $deleteFromSourceCount++
                 $moveCount++
-                $state.MovedPackages += $stateKey
-                Save-State -StateFile $StateFile -State $state
             }
             
             Write-Host ""  # New line after each package
@@ -1040,14 +952,6 @@ if (-not $SkipMoveOperations -and $packagesToMove.Count -gt 0) {
             $errorCount++
             Write-Host ""
             Write-Warning "Failed to process ${packageId}@${version}: $_"
-            $state.Errors += @{
-                Time    = (Get-Date).ToString("o")
-                Package = $packageId
-                Version = $version
-                Action  = "MOVE_$MovePhase"
-                Error   = $_.ToString()
-            }
-            Save-State -StateFile $StateFile -State $state
         }
 
         # Rate limiting
@@ -1091,38 +995,17 @@ if (-not $SkipDeleteOperations -and $versionsToDelete.Count -gt 0 -and -not $scr
             break
         }
 
-        # Skip if already processed
-        $stateKey = "${packageId}@${version}"
-        if ($state.DeletedVersions -contains $stateKey) {
-            Write-Status "  [$deleteIndex/$totalDeletes] Skipped (deleted): $stateKey" -ForegroundColor Gray
-            continue
-        }
-
         Write-Progress -Id 0 -Activity "Deleting versions" -Status "$packageId@$version" -PercentComplete (($deleteIndex / $totalDeletes) * 100) -CurrentOperation "$deleteIndex of $totalDeletes"
         Write-Status "  [$deleteIndex/$totalDeletes] Deleting: $packageId@$version" -ForegroundColor Red
 
         try {
             Remove-PackageVersion -PkgsBaseUrl $pkgsBaseUrl -FeedId $SourceFeed -PackageId $packageId -Version $version -Headers $headers
-            
             $deleteCount++
-            $state.DeletedVersions += $stateKey
-            
-            # Save state every 10 deletes
-            if ($deleteCount % 10 -eq 0) {
-                Save-State -StateFile $StateFile -State $state
-            }
         }
         catch {
             $errorCount++
             Write-Host ""
             Write-Warning "Failed to delete ${packageId}@${version}: $_"
-            $state.Errors += @{
-                Time    = (Get-Date).ToString("o")
-                Package = $packageId
-                Version = $version
-                Action  = "DELETE"
-                Error   = $_.ToString()
-            }
         }
 
         # Rate limiting
@@ -1131,10 +1014,6 @@ if (-not $SkipDeleteOperations -and $versionsToDelete.Count -gt 0 -and -not $scr
 
     Write-Progress -Activity "Deleting versions" -Completed
 }
-
-# Final state save
-$state.EndTime = (Get-Date).ToString("o")
-Save-State -StateFile $StateFile -State $state
 
 # Summary
 Write-Host ""
@@ -1146,12 +1025,9 @@ Write-Host "  Versions deleted: $deleteCount" -ForegroundColor Red
 Write-Host "  Packages moved:   $moveCount" -ForegroundColor Yellow
 Write-Host "  Errors:           $errorCount" -ForegroundColor $(if ($errorCount -gt 0) { "Red" } else { "Green" })
 Write-Host ""
-Write-Host "State saved to: $StateFile" -ForegroundColor Gray
-Write-Host ""
 
 if ($errorCount -gt 0) {
-    Write-Host "Some operations failed. Review the state file for details." -ForegroundColor Yellow
-    Write-Host "Re-run the script to retry failed operations." -ForegroundColor Yellow
+    Write-Host "Some operations failed. Re-run the script to retry." -ForegroundColor Yellow
 }
 
 #endregion

@@ -84,7 +84,6 @@ jobs:
             SourceFeed = "SkiaSharp"
             DestinationFeed = "SkiaSharp-CI"
             PackageFilter = "${{ matrix.package.filter }}"
-            StateFile = "./feed-management-state-${{ matrix.package.name }}.json"
           }
 
           $movePhase = "${{ inputs.move_phase }}"
@@ -98,14 +97,6 @@ jobs:
           Write-Host "Running ${{ matrix.package.name }} with parameters:"
           $params | Format-Table -AutoSize
           ./scripts/manage-nuget-feed.ps1 @params
-
-      - name: Upload state
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: state-${{ matrix.package.name }}
-          path: ./feed-management-state-${{ matrix.package.name }}.json
-          retention-days: 30
 
   # Parallel jobs for regular packages (delete bad versions only, no move)
   manage-regular-packages:
@@ -143,7 +134,6 @@ jobs:
             SourceFeed = "SkiaSharp"
             DestinationFeed = "SkiaSharp-CI"
             PackageFilter = "${{ matrix.package.filter }}"
-            StateFile = "./feed-management-state-${{ matrix.package.name }}.json"
             SkipMoveOperations = $true  # Regular packages don't move
           }
 
@@ -153,14 +143,6 @@ jobs:
           Write-Host "Running ${{ matrix.package.name }} with parameters:"
           $params | Format-Table -AutoSize
           ./scripts/manage-nuget-feed.ps1 @params
-
-      - name: Upload state
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: state-${{ matrix.package.name }}
-          path: ./feed-management-state-${{ matrix.package.name }}.json
-          retention-days: 30
 
   # Single package mode (manual filter)
   manage-single:
@@ -188,9 +170,6 @@ jobs:
           $packageFilter = "${{ inputs.package_filter }}"
           if ($packageFilter) {
             $params.PackageFilter = $packageFilter
-            # Use filter-specific state file
-            $filterName = $packageFilter -replace '[^a-zA-Z0-9]', '_'
-            $params.StateFile = "./feed-management-state-${filterName}.json"
           }
 
           $movePhase = "${{ inputs.move_phase }}"
@@ -218,11 +197,3 @@ jobs:
           $params | Format-Table -AutoSize
 
           ./scripts/manage-nuget-feed.ps1 @params
-
-      - name: Upload state files
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: feed-management-state
-          path: ./feed-management-state*.json
-          retention-days: 30
