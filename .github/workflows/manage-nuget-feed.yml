@@ -7,8 +7,17 @@ on:
       - '.github/workflows/manage-nuget-feed.yml'
   workflow_dispatch:
     inputs:
+      mode:
+        description: 'Run mode'
+        required: true
+        default: 'parallel-underscore'
+        type: choice
+        options:
+          - parallel-underscore    # Run all _* packages in parallel
+          - parallel-all           # Run all packages (underscore + regular) in parallel
+          - single                 # Run single filter (use package_filter)
       package_filter:
-        description: 'Regex to filter packages (e.g., "^_NativeAssets$", "^SkiaSharp", leave empty for all)'
+        description: 'Regex filter (only for "single" mode, e.g., "^SkiaSharp$")'
         required: false
         default: ''
       move_phase:
@@ -42,9 +51,143 @@ on:
         default: true
 
 jobs:
-  manage-feed:
+  # Parallel jobs for underscore packages (move to archive feed)
+  manage-underscore-packages:
+    if: inputs.mode == 'parallel-underscore' || inputs.mode == 'parallel-all' || github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 hours max
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: _NativeAssets
+            filter: "^_NativeAssets$"
+          - name: _NuGets
+            filter: "^_NuGets$"
+          - name: _NuGetsPreview
+            filter: "^_NuGetsPreview$"
+          - name: _Symbols
+            filter: "^_Symbols$"
+          - name: _SymbolsPreview
+            filter: "^_SymbolsPreview$"
+
+    name: "${{ matrix.package.name }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: ./nuget-cache/${{ matrix.package.name }}
+          key: nuget-cache-${{ matrix.package.name }}-${{ github.run_id }}
+          restore-keys: |
+            nuget-cache-${{ matrix.package.name }}-
+
+      - name: Run feed management
+        shell: pwsh
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          $params = @{
+            Organization = "xamarin"
+            Project = "public"
+            SourceFeed = "SkiaSharp"
+            DestinationFeed = "SkiaSharp-CI"
+            PackageFilter = "${{ matrix.package.filter }}"
+            StateFile = "./feed-management-state-${{ matrix.package.name }}.json"
+            CacheDir = "./nuget-cache/${{ matrix.package.name }}"
+          }
+
+          $movePhase = "${{ inputs.move_phase }}"
+          $params.MovePhase = if ($movePhase) { $movePhase } else { "CopyOnly" }
+
+          if ("${{ inputs.skip_move_operations }}" -eq "true") { $params.SkipMoveOperations = $true }
+          if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
+          if ("${{ inputs.verify_before_delete }}" -eq "true") { $params.VerifyBeforeDelete = $true }
+          if ("${{ inputs.dry_run }}" -eq "false") { $params.Execute = $true }
+
+          Write-Host "Running ${{ matrix.package.name }} with parameters:"
+          $params | Format-Table -AutoSize
+          ./scripts/manage-nuget-feed.ps1 @params
+
+      - name: Upload state
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: state-${{ matrix.package.name }}
+          path: ./feed-management-state-${{ matrix.package.name }}.json
+          retention-days: 30
+
+  # Parallel jobs for regular packages (delete bad versions only, no move)
+  manage-regular-packages:
+    if: inputs.mode == 'parallel-all'
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - name: SkiaSharp
+            filter: "^SkiaSharp$"
+          - name: SkiaSharp-NativeAssets
+            filter: "^SkiaSharp\\.NativeAssets\\."
+          - name: SkiaSharp-Views
+            filter: "^SkiaSharp\\.Views\\."
+          - name: SkiaSharp-Other
+            filter: "^SkiaSharp\\.(?!NativeAssets|Views)"
+          - name: HarfBuzzSharp
+            filter: "^HarfBuzzSharp"
+
+    name: "${{ matrix.package.name }}"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Restore cache
+        uses: actions/cache@v4
+        with:
+          path: ./nuget-cache/${{ matrix.package.name }}
+          key: nuget-cache-${{ matrix.package.name }}-${{ github.run_id }}
+          restore-keys: |
+            nuget-cache-${{ matrix.package.name }}-
+
+      - name: Run feed management
+        shell: pwsh
+        env:
+          AZURE_DEVOPS_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          $params = @{
+            Organization = "xamarin"
+            Project = "public"
+            SourceFeed = "SkiaSharp"
+            DestinationFeed = "SkiaSharp-CI"
+            PackageFilter = "${{ matrix.package.filter }}"
+            StateFile = "./feed-management-state-${{ matrix.package.name }}.json"
+            CacheDir = "./nuget-cache/${{ matrix.package.name }}"
+            SkipMoveOperations = $true  # Regular packages don't move
+          }
+
+          if ("${{ inputs.skip_delete_operations }}" -eq "true") { $params.SkipDeleteOperations = $true }
+          if ("${{ inputs.dry_run }}" -eq "false") { $params.Execute = $true }
+
+          Write-Host "Running ${{ matrix.package.name }} with parameters:"
+          $params | Format-Table -AutoSize
+          ./scripts/manage-nuget-feed.ps1 @params
+
+      - name: Upload state
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: state-${{ matrix.package.name }}
+          path: ./feed-management-state-${{ matrix.package.name }}.json
+          retention-days: 30
+
+  # Single package mode (manual filter)
+  manage-single:
+    if: inputs.mode == 'single' && inputs.package_filter != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
 
     steps:
       - name: Checkout
