@@ -8,18 +8,18 @@
 
 ## Executive Summary
 
-This comprehensive security audit examined all native dependencies in SkiaSharp for known CVEs from 2025-2026. The audit reviewed 10 security-relevant dependencies, identified **7 critical vulnerabilities**, and found **2 dependencies require immediate updates**.
+This comprehensive security audit examined all native dependencies in SkiaSharp for known CVEs from 2025-2026. The audit reviewed 10 security-relevant dependencies, identified **6 vulnerabilities requiring attention**, and found **1 dependency successfully updated during the audit**.
 
 ### Summary
 
 | Status | Count | Dependencies |
 |--------|-------|--------------|
-| 🔴 Critical - Needs immediate update | 2 | libpng, freetype |
-| 🟡 Medium - Update recommended | 2 | expat, harfbuzz |
-| ✅ Already updated | 2 | libwebp, brotli |
+| 🔴 Critical - Needs immediate update | 1 | libpng |
+| 🟡 Medium - Update recommended | 3 | freetype (verify), expat, harfbuzz |
+| ✅ Recently updated/resolved | 2 | libwebp ✅, brotli |
 | 🟢 Low/No known issues | 2 | libjpeg-turbo, dng_sdk |
 | ⚪ False positive / Low risk | 1 | zlib (MiniZip not used) |
-| 🆕 Pending PR | 2 | libwebp (#3465), harfbuzz (#3232) |
+| 🆕 Pending PR | 1 | harfbuzz (#3232) |
 
 ---
 
@@ -52,17 +52,18 @@ HIGH - Multiple buffer overflow vulnerabilities that could lead to code executio
 
 ---
 
-### 2. 🔴 **CRITICAL: freetype** — Actively Exploited Vulnerability
+### 2. 🟡 **freetype** — Vulnerability Status UNCLEAR (Needs Verification)
 
 | Field | Value |
 |-------|-------|
 | Issues | None reported by users yet |
-| CVEs | CVE-2025-27363 (ACTIVELY EXPLOITED) |
+| CVEs | CVE-2025-27363 (ACTIVELY EXPLOITED in ≤2.13.0) |
 | Current | 2.13.3 |
-| Minimum fix | 2.13.4 |
+| Vulnerable versions | ≤ 2.13.0 (per NVD, Red Hat, OpenCVE) |
+| Minimum fix | 2.13.4 (confirmed fix) |
 | Latest | 2.13.4+ |
 | PR | None |
-| Severity | **CRITICAL** (CVSS 8.1-8.8, active exploitation) |
+| Severity | **HIGH** (CVSS 8.1-8.8, active exploitation **IF vulnerable**) |
 
 **CVE Details:**
 
@@ -70,12 +71,23 @@ HIGH - Multiple buffer overflow vulnerabilities that could lead to code executio
   - Signed short from font file incorrectly assigned to unsigned long buffer size
   - Up to six 'long' values written outside allocated heap space
   - **Active exploitation reported by Meta (Facebook) in early 2025**
-  - Affects ALL systems rendering untrusted fonts: Linux, Android, embedded systems, browsers
+  - Affects systems rendering untrusted fonts: Linux, Android, embedded systems, browsers
+
+**IMPORTANT CLARIFICATION:**
+
+Most authoritative sources (NVD, Red Hat, OpenCVE, Tenable) state that **CVE-2025-27363 affects FreeType ≤ 2.13.0 ONLY**. The official fix is confirmed in FreeType 2.13.4. 
+
+**SkiaSharp currently uses FreeType 2.13.3**, which is newer than the vulnerable 2.13.0. However:
+- Some secondary sources mention possible vulnerability up to 2.13.3
+- Versions 2.13.1-2.13.3 may contain backported security patches
+- **Verification needed**: Check if 2.13.3 includes the security fix commit (ef636696524b081f1b8819eb0c6a0b932d35757d)
 
 **Risk Assessment:**  
-CRITICAL - This is an actively exploited vulnerability in the wild. Any application that renders untrusted fonts via FreeType is at risk of remote code execution. FreeType is used on Android, Linux, and WASM builds in SkiaSharp.
+MEDIUM-HIGH - **Uncertainty exists** about 2.13.3's vulnerability status. Most reliable sources indicate it's NOT vulnerable (only ≤2.13.0 affected), but prudent security practice suggests verifying the fix commit or updating to 2.13.4 for certainty.
 
-**Action:** 🚨 **URGENT** - Create PR to update freetype to 2.13.4 or higher immediately
+**Action:** 
+1. 🔍 **VERIFY** if FreeType 2.13.3 contains CVE-2025-27363 fix commit
+2. 🟡 **UPDATE** to 2.13.4 for certainty (recommended as defense in depth)
 
 ---
 
@@ -125,21 +137,28 @@ MEDIUM-HIGH - While DoS vulnerabilities are serious, these primarily affect Perl
 
 ---
 
-### 5. ✅ **libwebp** — Update in Progress
+### 5. ✅ **libwebp** — RESOLVED (Updated to 1.6.0)
 
 | Field | Value |
 |-------|-------|
-| Issues | #3465 (user-reported, Black Duck flagged) |
+| Issues | #3465 (user-reported, Black Duck flagged) - **CLOSED 2026-01-31** |
 | CVEs | CVE-2023-4863 (historical, patched in 1.3.2) |
-| Current | 1.3.2 (per cgmanifest.json shows 1.6.0) |
-| Target | 1.6.0 |
-| PR | Mentioned in #3465, awaiting PR number |
-| Severity | Historical high, current version safe |
+| Previous | 1.3.2 |
+| Current | **1.6.0** |
+| PR | #3478 **MERGED 2026-01-30** (also #3461, #3476) |
+| Severity | Historical high, **NOW RESOLVED** |
 
 **Status:**  
-Issue #3465 tracks update to 1.6.0. cgmanifest.json already shows 1.6.0 suggesting recent update or pending merge. No new CVEs for 2025/2026 found.
+✅ **COMPLETE** - Issue #3465 was closed on January 31, 2026 after PR #3478 was successfully merged on January 30, 2026. libwebp has been updated from 1.3.2 to 1.6.0. No new CVEs for 2025/2026 found.
 
-**Action:** ✅ Verify PR status and merge if not already complete
+**Changes in 1.4.0 - 1.6.0:**
+- Security hardening and increased fuzzing coverage
+- Additional AVX2, SSE2 optimizations
+- Fix heap overflow in webpmux
+- Lossless encoder improvements
+- Various bug and warning fixes
+
+**Action:** ✅ **COMPLETE** - No further action needed
 
 ---
 
@@ -230,31 +249,35 @@ No significant CVEs found for libjpeg-turbo 2.1.5 in 2025/2026. Version is accep
 
 ### Immediate Action (This Week)
 
-1. **🔴 CRITICAL: Update freetype to 2.13.4** — Actively exploited CVE-2025-27363
-   - Command: Use `native-dependency-update` skill with "bump freetype to 2.13.4"
-   - Platforms affected: Android, Linux, WASM
-
-2. **🔴 CRITICAL: Update libpng to 1.6.54** — Multiple high-severity buffer overflows
+1. **🔴 CRITICAL: Update libpng to 1.6.54** — Multiple high-severity buffer overflows
    - Command: Use `native-dependency-update` skill with "bump libpng to 1.6.54"
    - Affects all platforms
 
 ### High Priority (This Month)
 
-3. **🟡 Verify and merge libwebp update** — Issue #3465 tracks this
-   - Check if cgmanifest.json version 1.6.0 is already in DEPS
-   - If not, create/merge PR
+2. **🔍 VERIFY freetype 2.13.3 vulnerability status** — CVE-2025-27363
+   - **Most authoritative sources (NVD, Red Hat) indicate only ≤2.13.0 is vulnerable**
+   - Current version 2.13.3 is likely NOT vulnerable, but verification recommended
+   - If uncertain, update to 2.13.4 for peace of mind
+   - Command: Use `native-dependency-update` skill with "bump freetype to 2.13.4"
+   - Platforms affected: Android, Linux, WASM
 
-4. **🟡 Review harfbuzz PR #3232** — Update from 8.3.1 to 8.4.0 (or preferably 12.3.0)
+3. **🟡 Review harfbuzz PR #3232** — Update from 8.3.1 to 8.4.0 (or preferably 12.3.0)
    - Fixes CVE-2026-22693 and CVE-2026-0943
    - Verify mono/skia PR #157 is merged first
 
 ### Medium Priority (Next Quarter)
 
-5. **Monitor expat** for 2.7.4+ release addressing CVE-2025-66382 (low severity DoS)
+4. **Monitor expat** for 2.7.4+ release addressing CVE-2025-66382 (low severity DoS)
+
+### Completed ✅
+
+5. **✅ libwebp updated** — Issue #3465 closed, PR #3478 merged on 2026-01-30
+   - Successfully updated from 1.3.2 to 1.6.0
 
 ### Low Priority / No Action
 
-6. **brotli** — Verify DEPS shows 1.2.0 (appears correct in cgmanifest.json)
+6. **brotli** — Already at 1.2.0 (includes CVE-2025-6176 fix)
 7. **zlib** — Document false positive for CVE-2023-45853 (MiniZip not used)
 8. **libjpeg-turbo** — Current version is clean
 
@@ -303,8 +326,9 @@ The following dependencies process **untrusted input** and require security moni
 
 ## Related Issues & PRs
 
-- **Issue #3465**: Update libwebp to latest version (1.6.0)
-- **PR #3232**: Update harfbuzz to 8.4.0
+- **Issue #3465**: Update libwebp to latest version (1.6.0) - ✅ **CLOSED 2026-01-31**
+- **PR #3478**: Update libwebp to 1.6.0 - ✅ **MERGED 2026-01-30**
+- **PR #3232**: Update harfbuzz to 8.4.0 - 🟡 Status unclear
 - **mono/skia PR #157**: Required for harfbuzz update
 
 ---
@@ -325,18 +349,24 @@ This audit used the following process:
 
 ## Next Steps for Development Team
 
-1. **Create PRs** for libpng and freetype updates (CRITICAL)
-2. **Verify libwebp** status from Issue #3465
-3. **Review harfbuzz PR #3232** for merge readiness
-4. **Document false positives** in security scanning tools
-5. **Schedule quarterly audits** to maintain security posture
+1. **Create PR** for libpng update to 1.6.54 (CRITICAL)
+2. **Verify freetype 2.13.3** vulnerability status via git commit check
+3. **Consider updating freetype** to 2.13.4 as defense in depth (recommended)
+4. **Review harfbuzz PR #3232** for merge readiness
+5. **Document false positives** in security scanning tools
+6. **Schedule quarterly audits** to maintain security posture
 
 ---
 
 **Report prepared by:** GitHub Copilot Security Audit Skill  
-**Report date:** 2026-01-31  
+**Report date:** 2026-01-31 (Updated 2026-01-31 15:48 UTC)  
 **Valid as of:** January 2026
+
+**Updates in this revision:**
+- ✅ Verified libwebp successfully updated to 1.6.0 (Issue #3465 closed, PR #3478 merged)
+- 🔍 Corrected CVE-2025-27363 affected versions: Most authoritative sources indicate only FreeType ≤2.13.0 vulnerable, not 2.13.3
+- 📊 Updated priority levels based on verification
 
 For questions or to execute updates, use the `native-dependency-update` skill with commands like:
 - "bump libpng to 1.6.54"
-- "bump freetype to 2.13.4"
+- "bump freetype to 2.13.4" (if verification warrants update)
