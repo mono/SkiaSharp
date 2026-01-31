@@ -58,7 +58,7 @@ Task("libSkiaSharp")
             $"skia_use_direct3d={SUPPORT_DIRECT3D} ".ToLower () +
             clang +
             win_vcvars_version +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '/Qspectre', '-D_HAS_AUTO_PTR_ETC=1' ] " +
             $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf' ] " +
             ADDITIONAL_GN_ARGS);
 
