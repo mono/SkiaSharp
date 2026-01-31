@@ -47,22 +47,9 @@ flowchart LR
 
 ### Step 1: Search Issues & PRs
 
-**Search BOTH open AND recently closed issues/PRs** to avoid missing completed work:
+Search mono/SkiaSharp for CVEs, security keywords, and dependency names. Check BOTH open AND recently closed items (last 30 days).
 
-Search mono/SkiaSharp for:
-- CVE numbers (e.g., "CVE-2024", "CVE-2025")
-- Keywords: "security", "vulnerability"
-- Dependency names: libpng, expat, zlib, webp, harfbuzz, freetype
-
-**IMPORTANT:** Check PR status and merge dates:
-```bash
-# Use GitHub API to check recent PRs (last 30 days)
-# Look for merged PRs that may have resolved issues during audit
-```
-
-Search PRs in both mono/SkiaSharp and mono/skia for dependency updates.
-
-**Example:** During Jan 2026 audit, libwebp PR #3478 was merged on 2026-01-30 but initial search only found open issues. Always check closed items from the last 7-30 days.
+> See [best-practices-checklist.md](references/best-practices-checklist.md) Step 1 for detailed execution steps and examples.
 
 ### Step 2: Get Dependency Versions
 
@@ -75,49 +62,22 @@ Only audit **security-relevant** dependencies (see [dependencies.md](../../../do
 
 ### Step 3: Web Search for CVEs
 
-**IMPORTANT: Always prioritize authoritative sources in this order:**
+**Source Hierarchy (ALWAYS follow this order):**
 
-1. **Primary Sources (MOST RELIABLE):**
-   - NVD (nvd.nist.gov) - National Vulnerability Database
-   - Red Hat Security Advisory (access.redhat.com/security)
-   - OpenCVE (app.opencve.io)
-   - Vendor security pages (e.g., freetype.org, github.com/advisories)
+1. **Primary Sources (Most Reliable):** NVD, Red Hat Security Advisory, OpenCVE
+2. **Secondary Sources (Use with caution):** Security blogs, news sites
 
-2. **Secondary Sources (USE WITH CAUTION):**
-   - Security blogs (markaicode.com, vulert.com, etc.)
-   - General security news sites
-   - Stack Overflow or forum posts
+**Critical Rule:** If sources conflict, trust NVD/Red Hat.
 
-**Search queries:**
-```
-site:nvd.nist.gov "{dependency}" CVE-{year}
-site:access.redhat.com/security "{dependency}" CVE-{year}
-"{dependency} CVE {current year}" site:nvd.nist.gov
-```
+> See [best-practices-checklist.md](references/best-practices-checklist.md) Step 2 for search queries and examples.
 
-**Verification Rule:** If secondary sources conflict with NVD/Red Hat, **always trust NVD/Red Hat**.
+### Step 4: Verify Fix Commits
 
-### Step 4: Verify Fix Commits (CRITICAL)
+> ⚠️ **CRITICAL:** Always verify version ranges from authoritative sources (NVD, Red Hat, OpenCVE). Secondary sources often have incorrect information.
 
-> ⚠️ **ALWAYS verify version ranges from authoritative sources (NVD, Red Hat, OpenCVE).** Secondary sources often have incorrect information.
+**Process:** Check NVD/Red Hat FIRST for affected version range, then verify fix commit if mentioned.
 
-**Process:**
-1. **Check NVD/Red Hat FIRST** for affected version range
-2. **Verify fix commit exists** (if mentioned in CVE)
-3. **Cross-check with vendor release notes**
-
-```bash
-cd externals/skia/third_party/externals/{dependency}
-
-# Check if fix commit is ancestor of current HEAD
-git merge-base --is-ancestor {fix_commit} HEAD && echo "FIXED" || echo "VULNERABLE"
-```
-
-**Example (CVE-2025-27363):** 
-- **Secondary sources claimed:** FreeType ≤2.13.3 affected
-- **NVD/Red Hat confirmed:** Only ≤2.13.0 affected, fix in 2.13.4
-- **Result:** SkiaSharp's 2.13.3 was NOT vulnerable despite blog posts claiming otherwise
-- **Lesson:** Always verify with NVD/Red Hat before reporting CRITICAL status
+> See [best-practices-checklist.md](references/best-practices-checklist.md) Step 3 for verification process, example tables, and the CVE-2025-27363 case study.
 
 ### Step 5: Check False Positives
 
@@ -149,22 +109,13 @@ After audit, use `native-dependency-update` skill:
 
 ## Lessons Learned from Past Audits
 
-### January 2026 Audit - Key Mistakes and Corrections
+### January 2026 Audit - Key Mistakes
 
-**Mistake 1: Trusted Secondary Sources**
-- **What happened:** Initially reported freetype CVE-2025-27363 as CRITICAL affecting 2.13.3 based on blog posts
-- **Reality:** NVD and Red Hat confirmed only ≤2.13.0 vulnerable
-- **Fix:** Always check NVD/Red Hat FIRST before trusting security blogs
+1. **Trusted secondary sources** → NVD showed only ≤2.13.0 vulnerable, blogs claimed ≤2.13.3
+2. **Missed recent activity** → libwebp PR merged during audit but not detected
+3. **Premature classification** → Reported CRITICAL before NVD verification
 
-**Mistake 2: Missed Recently Completed Work**
-- **What happened:** Reported libwebp as "in progress" when PR was actually merged
-- **Reality:** PR #3478 merged during audit, issue #3465 closed
-- **Fix:** Check recently closed PRs (last 7-30 days) and issue status via API
-
-**Mistake 3: Conservative Reporting Without Verification**
-- **What happened:** Reported CRITICAL status based on incomplete information
-- **Reality:** Could have verified with git commit checks or NVD first
-- **Fix:** Complete verification BEFORE classification, not after
+> For detailed examples and prevention steps, see [best-practices-checklist.md](references/best-practices-checklist.md) "Common Mistakes" section.
 
 ### Best Practices Summary
 
