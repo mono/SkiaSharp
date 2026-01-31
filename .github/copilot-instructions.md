@@ -50,6 +50,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | Build | `dotnet build <project.csproj>` |
 | Test | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate bindings** | `./utils/generate.ps1` — **MANDATORY after C API changes** |
+| **Add new API** | See [Adding New APIs](#adding-new-apis) section below |
 
 > **Check if externals exist:** `ls output/native/` - if empty/missing, run the download.
 
@@ -146,6 +147,51 @@ When adding or modifying C API functions in `externals/skia/`, you **MUST** foll
 **If you skip step 1:** Your C API changes disappear when the submodule is reset.
 
 **If you skip step 2:** SkiaSharp won't use your updated C API.
+
+---
+
+## Adding New APIs
+
+When exposing new Skia C++ functionality in C#, follow this workflow:
+
+### High-Level Process
+
+```
+1. Find C++ API     →  Identify in upstream Skia headers
+2. Add C API        →  Write C wrapper (header + implementation in externals/skia)
+3. Commit & Regen   →  Follow submodule workflow (above) + run ./utils/generate.ps1
+4. Add C# Wrapper   →  Validate inputs, call P/Invoke, add tests
+```
+
+### Complete Workflow
+
+1. **Analyze C++ API** — Determine pointer type (raw/owned/ref-counted), error handling
+2. **Add C API in submodule** — Follow [Working with Native Skia Submodule](#working-with-native-skia-submodule) workflow above
+3. **Regenerate bindings** — Run `./utils/generate.ps1` to create P/Invoke (never edit `*.generated.cs` manually)
+4. **Add C# wrapper** — Validate parameters, handle errors, add tests
+5. **Test** — Run `dotnet test` to verify (mandatory, not optional)
+
+### Quick Example
+
+```csharp
+// C API (externals/skia/src/c/sk_paint.cpp)
+void sk_paint_set_color(sk_paint_t* paint, sk_color_t color) {
+    AsPaint(paint)->setColor(color);
+}
+
+// C# wrapper (binding/SkiaSharp/SKPaint.cs)
+public void SetColor(SKColor color) {
+    SkiaApi.sk_paint_set_color(Handle, (uint)color);
+}
+```
+
+### Full Documentation
+
+👉 **See [documentation/adding-apis.md](../documentation/adding-apis.md)** for:
+- Complete examples with ref-counted objects
+- Pointer type identification guide
+- Error handling patterns
+- Full checklist for all phases
 
 ---
 
