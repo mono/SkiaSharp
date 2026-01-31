@@ -43,20 +43,30 @@ PR builds (`-pr.xxxx.yy` versions) are **not** published to any NuGet feed. Thes
 
 **Download with a single command (no repo clone needed):**
 
-```powershell
-# Download PR #1234 packages
-iex "& { $(irm https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/get-skiasharp-pr.ps1) } 1234"
+```bash
+# Bash/Linux/macOS
+curl -fsSL https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/get-skiasharp-pr.sh | bash -s -- 1234
+```
 
-# Then add as NuGet source
+```powershell
+# PowerShell/Windows
+iex "& { $(irm https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/get-skiasharp-pr.ps1) } 1234"
+```
+
+Then add as a NuGet source:
+```bash
 dotnet nuget add source ~/.skiasharp/hives/pr-1234/packages --name skiasharp-pr-1234
 ```
 
 Packages are installed to `~/.skiasharp/hives/pr-{number}/packages/`.
 
 **Options:**
-- `-SuccessfulOnly` - Only use successful builds (if latest build failed but you want last good one)
-- `-Force` - Overwrite existing packages
-- `-List` - Show available artifacts without downloading
+| Bash | PowerShell | Description |
+|------|------------|-------------|
+| `-s, --successful-only` | `-SuccessfulOnly` | Only use successful builds |
+| `-f, --force` | `-Force` | Overwrite existing packages |
+| `-l, --list` | `-List` | Show available artifacts |
+| `-b, --build-id ID` | `-BuildId ID` | Use specific build |
 
 **Manual download via Azure DevOps UI:**
 
