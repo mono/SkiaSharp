@@ -334,7 +334,7 @@ namespace SkiaSharp.Tests
 
 			// Find a font that supports this emoji
 			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
-			Assert.NotNull(typeface);
+			Skip.IfNot(typeface != null, "No font with emoji support found on this system");
 
 			using var font = new SKFont(typeface, 48);
 			using var path = font.GetTextPath(text, new SKPoint(0, 0));
