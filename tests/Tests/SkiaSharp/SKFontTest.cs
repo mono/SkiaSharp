@@ -325,6 +325,27 @@ namespace SkiaSharp.Tests
 			Assert.Equal(0, path.PointCount);
 		}
 
+		[Trait(Traits.Category.Key, Traits.Category.Values.MatchCharacter)]
+		[SkippableFact]
+		public void GetTextPathReturnsPathForEmoji()
+		{
+			const string text = "😊";
+			var emojiChar = StringUtilities.GetUnicodeCharacterCode(text, SKTextEncoding.Utf32);
+
+			// Find a font that supports this emoji
+			var typeface = SKFontManager.Default.MatchCharacter(emojiChar);
+			Assert.NotNull(typeface);
+
+			using var font = new SKFont(typeface, 48);
+			using var path = font.GetTextPath(text, new SKPoint(0, 0));
+
+			Assert.NotNull(path);
+			// For emojis, we should get a bounding box path even if no vector outline exists
+			var bounds = path.Bounds;
+			Assert.True(bounds.Width > 0, $"Expected non-zero width, got {bounds.Width}");
+			Assert.True(bounds.Height > 0, $"Expected non-zero height, got {bounds.Height}");
+		}
+
 		[SkippableTheory]
 		[InlineData(SKTextEncoding.Utf8, "ä", 2)]
 		[InlineData(SKTextEncoding.Utf8, "a", 1)]
