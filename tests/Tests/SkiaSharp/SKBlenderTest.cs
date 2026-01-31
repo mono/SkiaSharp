@@ -47,40 +47,7 @@ public class SKBlenderTest
 		// Verify that all valid blend mode enum values can create blenders
 		// This test ensures the static constructor properly initializes all blend modes
 		// even when reflection is disabled (AoT compatibility)
-		// Explicitly list all enum values to avoid reflection
-		var allModes = new SKBlendMode[] {
-			SKBlendMode.Clear,
-			SKBlendMode.Src,
-			SKBlendMode.Dst,
-			SKBlendMode.SrcOver,
-			SKBlendMode.DstOver,
-			SKBlendMode.SrcIn,
-			SKBlendMode.DstIn,
-			SKBlendMode.SrcOut,
-			SKBlendMode.DstOut,
-			SKBlendMode.SrcATop,
-			SKBlendMode.DstATop,
-			SKBlendMode.Xor,
-			SKBlendMode.Plus,
-			SKBlendMode.Modulate,
-			SKBlendMode.Screen,
-			SKBlendMode.Overlay,
-			SKBlendMode.Darken,
-			SKBlendMode.Lighten,
-			SKBlendMode.ColorDodge,
-			SKBlendMode.ColorBurn,
-			SKBlendMode.HardLight,
-			SKBlendMode.SoftLight,
-			SKBlendMode.Difference,
-			SKBlendMode.Exclusion,
-			SKBlendMode.Multiply,
-			SKBlendMode.Hue,
-			SKBlendMode.Saturation,
-			SKBlendMode.Color,
-			SKBlendMode.Luminosity,
-		};
-
-		foreach (var mode in allModes)
+		foreach (SKBlendMode mode in Enum.GetValues(typeof(SKBlendMode)))
 		{
 			var blender = SKBlender.CreateBlendMode(mode);
 			Assert.NotNull(blender);
