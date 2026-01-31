@@ -41,6 +41,19 @@ public class SKBlenderTest
 		Assert.Throws<ArgumentOutOfRangeException>(() => SKBlender.CreateBlendMode((SKBlendMode)100));
 	}
 
+	[SkippableFact]
+	public void AllValidBlendModesCreateBlender()
+	{
+		// Verify that all valid blend mode enum values can create blenders
+		// This test ensures the static constructor properly initializes all blend modes
+		// even when reflection is disabled (AoT compatibility)
+		foreach (SKBlendMode mode in Enum.GetValues(typeof(SKBlendMode)))
+		{
+			var blender = SKBlender.CreateBlendMode(mode);
+			Assert.NotNull(blender);
+		}
+	}
+
 	public abstract class SurfaceTestBase : SKTest
 	{
 		protected SKSurface Surface { get; set; }
