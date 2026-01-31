@@ -9,6 +9,7 @@ SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia li
 | Skill | When to Use |
 |-------|-------------|
 | `implement-issue` | User provides GitHub issue URL or says "implement #NNNN", "fix #NNNN". Gathers context and creates implementation plans for new APIs, bug fixes, enhancements. |
+| `add-api` | Adding new C# APIs to SkiaSharp. Triggers: "add API", "expose function", "wrap method", "add SKFoo.Bar". Structured 6-phase workflow with checkpoints. |
 | `api-docs` | Writing/reviewing XML documentation. Triggers: "document SKFoo", "add XML docs", "fill in missing docs", "remove To be added placeholders". |
 | `native-dependency-update` | Updating native dependencies. Triggers: "bump libpng", "update zlib", "fix CVE in expat". Updates DEPS, cgmanifest.json, builds locally, creates PRs. |
 | `security-audit` | Security investigation. Triggers: "security audit", "audit CVEs", "CVE status". Searches issues/PRs, scans for CVEs, verifies fixes, produces report. Read-only. |
@@ -58,138 +59,57 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 
 ## Working with Native Skia Submodule
 
-When adding or modifying C API functions in `externals/skia/`, you **MUST** follow this workflow:
+The `externals/skia/` directory is a **git submodule** (separate repository). When adding or modifying C API functions, follow this critical workflow:
 
-### Complete Workflow Checklist
+### Essential Steps
 
-**Before starting:**
-- [ ] Understand the architecture: C# → P/Invoke → C API (`externals/skia/src/c/`) → C++ Skia
+1. **Commit IN submodule first** — `cd externals/skia && git commit`
+2. **Stage submodule in parent** — `cd .. && git add externals/skia`
+3. **Run generator (mandatory)** — `pwsh ./utils/generate.ps1`
+4. **Test (mandatory)** — `dotnet test` (not just build)
 
-**Phase 1: Edit C API in Submodule**
-- [ ] Navigate to `externals/skia/` directory
-- [ ] Edit header: `externals/skia/include/c/sk_*.h` 
-- [ ] Edit implementation: `externals/skia/src/c/sk_*.cpp`
-- [ ] **Configure git in submodule** (if first time):
-  ```bash
-  cd externals/skia
-  git config user.email "your-email@example.com"
-  git config user.name "Your Name"
-  ```
-- [ ] **Commit changes in submodule:**
-  ```bash
-  cd externals/skia
-  git add include/c/sk_*.h src/c/sk_*.cpp
-  git commit -m "Add sk_foo_bar to C API"
-  ```
+### Why This Matters
 
-**Phase 2: Regenerate C# Bindings**
-- [ ] Return to repo root: `cd /home/runner/work/SkiaSharp/SkiaSharp`
-- [ ] **Run generator (MANDATORY):**
-  ```bash
-  pwsh ./utils/generate.ps1
-  ```
-- [ ] Verify `binding/SkiaSharp/SkiaApi.generated.cs` was updated
-- [ ] **Never manually edit `*.generated.cs` files** — always regenerate
+**If you forget step 1:** C API changes disappear when submodule resets
+**If you forget step 2:** Parent repo won't use your updated C API
+**If you skip step 3:** C# bindings won't match C API
+**If you skip step 4:** Can't verify functionality actually works
 
-**Phase 3: Add C# Wrapper**
-- [ ] Edit wrapper class (e.g., `binding/SkiaSharp/SKCanvas.cs`)
-- [ ] Add parameter validation
-- [ ] Call generated P/Invoke method
+### Full Workflow
 
-**Phase 4: Add Tests**
-- [ ] Add test methods in `tests/Tests/SkiaSharp/`
-- [ ] Follow existing test patterns (use `[SkippableFact]`, `using` statements)
-
-**Phase 5: Build & Test (MANDATORY)**
-- [ ] **Build C# code:**
-  ```bash
-  dotnet build binding/SkiaSharp/SkiaSharp.csproj
-  ```
-- [ ] **Run tests (NOT OPTIONAL):**
-  ```bash
-  dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
-  ```
-- [ ] All tests must pass — network issues are not an excuse to skip
-
-**Phase 6: Commit Everything**
-- [ ] **Stage submodule reference in parent repo:**
-  ```bash
-  git add externals/skia
-  ```
-- [ ] Stage your C# changes:
-  ```bash
-  git add binding/SkiaSharp/ tests/Tests/
-  ```
-- [ ] Commit everything together:
-  ```bash
-  git commit -m "Add SKFoo.Bar with sampling options"
-  ```
-
-### Critical Mistakes to Avoid
-
-| ❌ NEVER | ✅ ALWAYS |
-|---------|----------|
-| Edit `*.generated.cs` manually | Run `./utils/generate.ps1` after C API changes |
-| Skip test execution | Run tests and verify they pass |
-| Forget to commit in submodule | Commit in `externals/skia/` first |
-| Forget to stage submodule in parent | `git add externals/skia` in parent repo |
-| Assume build success = working code | Verify tests pass before claiming completion |
-
-### Why This Workflow Matters
-
-**Problem:** Changes to `externals/skia/` (a git submodule) can be lost if not properly committed.
-
-**Solution:** The submodule is a separate git repository. You must:
-1. Commit changes **inside** the submodule
-2. Stage the submodule reference **in the parent** repo
-3. Both commits happen together in the parent repo
-
-**If you skip step 1:** Your C API changes disappear when the submodule is reset.
-
-**If you skip step 2:** SkiaSharp won't use your updated C API.
+👉 **For complete details, use the `add-api` skill** or see:
+- [`.github/skills/add-api/SKILL.md`](.github/skills/add-api/SKILL.md) — Structured 6-phase workflow with checkpoints
+- [`documentation/adding-apis.md`](../documentation/adding-apis.md) — Complete examples and patterns
 
 ---
 
 ## Adding New APIs
 
-When exposing new Skia C++ functionality in C#, follow this workflow:
+To expose new Skia C++ functionality in C#, use the **`add-api` skill** for structured guidance.
 
-### High-Level Process
+### Quick Process
 
 ```
-1. Find C++ API     →  Identify in upstream Skia headers
-2. Add C API        →  Write C wrapper (header + implementation in externals/skia)
-3. Commit & Regen   →  Follow submodule workflow (above) + run ./utils/generate.ps1
-4. Add C# Wrapper   →  Validate inputs, call P/Invoke, add tests
+1. Find C++ API     →  Identify pointer type & error handling
+2. Add C API        →  Write wrapper in externals/skia
+3. Commit submodule →  Commit in submodule, stage in parent
+4. Generate         →  Run ./utils/generate.ps1 (mandatory)
+5. Wrap in C#       →  Validate params, call P/Invoke
+6. Test             →  dotnet test (mandatory)
 ```
 
-### Complete Workflow
+### When to Use
 
-1. **Analyze C++ API** — Determine pointer type (raw/owned/ref-counted), error handling
-2. **Add C API in submodule** — Follow [Working with Native Skia Submodule](#working-with-native-skia-submodule) workflow above
-3. **Regenerate bindings** — Run `./utils/generate.ps1` to create P/Invoke (never edit `*.generated.cs` manually)
-4. **Add C# wrapper** — Validate parameters, handle errors, add tests
-5. **Test** — Run `dotnet test` to verify (mandatory, not optional)
+- Exposing missing Skia functionality
+- Adding convenience methods that need C API
+- Implementing feature requests from issues
 
-### Quick Example
+### Resources
 
-```csharp
-// C API (externals/skia/src/c/sk_paint.cpp)
-void sk_paint_set_color(sk_paint_t* paint, sk_color_t color) {
-    AsPaint(paint)->setColor(color);
-}
+👉 **For execution:** Use the `add-api` skill — structured 6-phase workflow with checkpoints and error prevention
+👉 **For reference:** See [`documentation/adding-apis.md`](../documentation/adding-apis.md) — complete examples, pointer types, patterns
 
-// C# wrapper (binding/SkiaSharp/SKPaint.cs)
-public void SetColor(SKColor color) {
-    SkiaApi.sk_paint_set_color(Handle, (uint)color);
-}
-```
-
-### Full Documentation
-
-👉 **See [documentation/adding-apis.md](../documentation/adding-apis.md)** for:
-- Complete examples with ref-counted objects
-- Pointer type identification guide
+---
 - Error handling patterns
 - Full checklist for all phases
 
