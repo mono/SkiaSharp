@@ -59,7 +59,7 @@ Task("libSkiaSharp")
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.29.30133/lib/spectre/{arch}' ] " +
             ADDITIONAL_GN_ARGS);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");

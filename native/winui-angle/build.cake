@@ -124,7 +124,7 @@ Task("ANGLE")
                 $"angle_enable_gl_desktop_backend=false " +
                 $"angle_enable_vulkan=false " +
                 $"extra_cflags=[ '/guard:cf', '/GS' ] " +
-                $"extra_ldflags=[ '/guard:cf' ]");
+                $"extra_ldflags=[ '/guard:cf', '/LIBPATH:C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/Tools/MSVC/14.29.30133/lib/spectre/{arch}' ]");
 
             RunNinja(ANGLE_PATH, $"out/winui{suffix}/{arch}", target);
         }
