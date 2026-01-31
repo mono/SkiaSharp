@@ -63,14 +63,18 @@ HarfBuzzSharp uses 4-digit versions: `X.Y.Z.N`
 
 | Feed | URL | Purpose |
 |------|-----|---------|
-| Preview | `https://aka.ms/skiasharp-eap/index.json` | CI builds, testing |
+| Preview | `https://aka.ms/skiasharp-eap/index.json` | CI builds, testing (regular packages) |
+| CI | `https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp-CI/nuget/v3/index.json` | Internal CI artifacts (`_*` prefixed packages) |
 | Stable | NuGet.org | Public releases |
+
+> **Note:** The Preview feed contains regular NuGet packages (`SkiaSharp`, `HarfBuzzSharp`, etc.) for public testing.
+> The CI feed contains internal build artifacts prefixed with `_` (`_NuGets`, `_Symbols`, `_NativeAssets`, etc.) used by the release pipeline and is not intended for public consumption.
 
 ### Pipelines
 
 | Pipeline | Purpose |
 |----------|---------|
-| [Main Build](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=27373) | Builds + auto-publishes to preview feed |
+| [Main Build](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25328) | Builds + auto-publishes to preview feed |
 | [NuGet.org Publish](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=25298) | Publishes to NuGet.org (manual trigger) |
 
 ---
