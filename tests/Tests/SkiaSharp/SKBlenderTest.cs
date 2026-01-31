@@ -79,7 +79,7 @@ public class SKBlenderTest
 			SKBlendMode.Color,
 			SKBlendMode.Luminosity,
 		};
-		
+
 		foreach (var mode in allModes)
 		{
 			var blender = SKBlender.CreateBlendMode(mode);
