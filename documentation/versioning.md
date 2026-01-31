@@ -41,17 +41,22 @@ Typically, the pre-release labels are:
 
 PR builds (`-pr.xxxx.yy` versions) are **not** published to any NuGet feed. These builds are unsigned and only available as pipeline artifacts from the public Azure DevOps CI.
 
-**Easiest way - use the download script:**
+**Download with a single command (no repo clone needed):**
 
 ```powershell
-# Download PR packages (finds latest successful build automatically)
-./scripts/get-skiasharp-pr.ps1 1234
+# Download PR #1234 packages
+iex "& { $(irm https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/get-skiasharp-pr.ps1) } 1234"
 
-# Add as NuGet source
+# Then add as NuGet source
 dotnet nuget add source ~/.skiasharp/hives/pr-1234/packages --name skiasharp-pr-1234
 ```
 
 Packages are installed to `~/.skiasharp/hives/pr-{number}/packages/`.
+
+**Options:**
+- `-SuccessfulOnly` - Only use successful builds (if latest build failed but you want last good one)
+- `-Force` - Overwrite existing packages
+- `-List` - Show available artifacts without downloading
 
 **Manual download via Azure DevOps UI:**
 
@@ -59,8 +64,6 @@ Packages are installed to `~/.skiasharp/hives/pr-{number}/packages/`.
 2. Find the build for your PR
 3. Click "Artifacts" → download the `nuget_preview` (or `nuget`) artifact
 4. Extract and use as a local NuGet source
-
-The response includes a `resource.downloadUrl` that can be used to download the artifact as a ZIP.
 
 ## Native API Versions
 
