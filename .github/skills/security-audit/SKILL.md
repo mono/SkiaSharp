@@ -168,16 +168,9 @@ After audit, use `native-dependency-update` skill:
 
 ### Best Practices Summary
 
-**DO:**
-- ✅ Start with NVD, Red Hat, OpenCVE for CVE verification
-- ✅ Check recently closed issues/PRs (last 30 days)
-- ✅ Verify version ranges against multiple authoritative sources
-- ✅ Use git commit ancestry checks when possible
-- ✅ Document your verification methodology
+**Critical Rules:**
+- ✅ **NVD/Red Hat first** - Always verify with authoritative sources before classification
+- ✅ **Check recent activity** - Search closed PRs/issues from last 30 days
+- ✅ **Document corrections** - If initial findings change, explain why
 
-**DON'T:**
-- ❌ Trust blog posts without verifying against NVD/Red Hat
-- ❌ Report CRITICAL without checking authoritative sources
-- ❌ Assume version ranges without verification
-- ❌ Only search open issues/PRs
-- ❌ Skip documenting corrections when needed
+> For detailed execution checklist, see [best-practices-checklist.md](references/best-practices-checklist.md)

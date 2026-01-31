@@ -1,18 +1,18 @@
-# Security Audit Best Practices Checklist
+# Security Audit Execution Checklist
 
-Use this checklist to avoid common mistakes when conducting security audits of SkiaSharp's native dependencies.
+Actionable checklist for conducting security audits. **See [SKILL.md](../SKILL.md) for detailed rationale and examples.**
 
 ## Pre-Audit Setup
 
 - [ ] Review [documentation/dependencies.md](../../../../documentation/dependencies.md) for current versions
 - [ ] Check cgmanifest.json for tracked dependency versions
-- [ ] Identify which dependencies are security-relevant (process untrusted input)
+- [ ] Identify security-relevant dependencies (process untrusted input)
 
 ---
 
 ## Step 1: Issue/PR Search
 
-**Check BOTH open AND recently closed items:**
+**Check BOTH open AND recently closed items (last 30 days):**
 
 - [ ] Search mono/SkiaSharp **open** issues for CVE keywords
 - [ ] Search mono/SkiaSharp **closed** issues from last 30 days
@@ -21,82 +21,107 @@ Use this checklist to avoid common mistakes when conducting security audits of S
 - [ ] Check mono/skia repository for related PRs
 - [ ] Use GitHub API to verify PR merge status and dates
 
-**Why?** PRs may be merged during your audit. Always check recent activity.
+> **Why?** PRs may merge during your audit. See SKILL.md Step 1 for examples.
 
 ---
 
-## Step 2: CVE Research - Source Priority
+## Step 2: CVE Research
 
-**CRITICAL: Always use this source hierarchy:**
+**Use authoritative sources FIRST (see SKILL.md Step 3 for complete hierarchy):**
 
-### Tier 1: Authoritative Sources (ALWAYS CHECK FIRST)
+- [ ] **NVD (nvd.nist.gov)** - Search for CVE or dependency name
+- [ ] **Red Hat Security Advisory** - Cross-reference findings
+- [ ] **OpenCVE (app.opencve.io)** - Verify version ranges
+- [ ] Document source, affected versions, fix version from EACH source
 
-- [ ] **NVD (nvd.nist.gov)** - Search for `CVE-YYYY-NNNNN` or dependency name
-- [ ] **Red Hat Security Advisory** - Check access.redhat.com/security
-- [ ] **OpenCVE (app.opencve.io)** - Cross-reference CVE details
-- [ ] **Vendor security pages** - Check official project security advisories
-
-**Record findings:** Note the source, affected versions, and fix version from EACH source.
-
-### Tier 2: Secondary Sources (Verify Against Tier 1)
-
-- [ ] Security blogs (markaicode.com, vulert.com, datacipher.com, etc.)
-- [ ] News aggregators (The Hacker News, etc.)
-- [ ] Community posts (Stack Overflow, forums)
-
-**⚠️ WARNING:** If Tier 2 sources conflict with Tier 1, **ALWAYS trust Tier 1 (NVD/Red Hat)**.
-
-### Search Queries to Use
-
+**Search queries:**
 ```
-site:nvd.nist.gov "libpng" CVE-2025
-site:access.redhat.com/security "freetype" CVE-2025
-"CVE-2025-27363" site:nvd.nist.gov
+site:nvd.nist.gov "{dependency}" CVE-{year}
+site:access.redhat.com/security "{dependency}" CVE-{year}
 ```
+
+> **Rule:** If sources conflict, NVD/Red Hat are authoritative. See SKILL.md for CVE-2025-27363 example.
 
 ---
 
-## Step 3: Verification Process
+## Step 3: Verification
 
-For each CVE found:
+For each CVE:
 
-- [ ] **Record affected versions** from NVD (e.g., "≤ 2.13.0")
-- [ ] **Record fix version** from NVD (e.g., "2.13.4")
-- [ ] **Check SkiaSharp's current version** in cgmanifest.json
-- [ ] **Compare versions:** Is current version in affected range?
-- [ ] **Cross-reference** with Red Hat and OpenCVE (should match NVD)
-- [ ] If sources conflict, document the discrepancy and use NVD as authority
+- [ ] Record affected versions from NVD (e.g., "≤ 2.13.0")
+- [ ] Record fix version from NVD (e.g., "2.13.4")
+- [ ] Check SkiaSharp's current version in cgmanifest.json
+- [ ] Compare: Is current version in affected range?
+- [ ] Cross-reference with Red Hat/OpenCVE (should match NVD)
+- [ ] If sources conflict, document and use NVD as authority
 
-### If Using Git Commit Verification
+**Example verification table:**
 
-- [ ] Verify the fix commit hash is mentioned in CVE or vendor advisory
-- [ ] Check if commit is ancestor of current version
-- [ ] Document the commit verification results
+| Source | Affected | Fix | Match? |
+|--------|----------|-----|--------|
+| NVD | ≤ 2.13.0 | 2.13.4 | Primary |
+| Red Hat | ≤ 2.13.0 | 2.13.4 | ✓ |
+| Blog X | ≤ 2.13.3 | 2.13.4 | ❌ Ignore |
 
-### Example Verification Table
-
-| Source | Affected Versions | Fix Version | Notes |
-|--------|-------------------|-------------|-------|
-| NVD | ≤ 2.13.0 | 2.13.4 | Primary source |
-| Red Hat | ≤ 2.13.0 | 2.13.4 | Matches NVD ✓ |
-| OpenCVE | ≤ 2.13.0 | 2.13.4 | Matches NVD ✓ |
-| Blog X | ≤ 2.13.3 | 2.13.4 | **CONFLICTS with NVD** ❌ |
-
-**Decision:** Trust NVD/Red Hat. Current version 2.13.3 is NOT vulnerable.
+**Git commit verification (if applicable):**
+- [ ] Verify fix commit hash from CVE/vendor advisory
+- [ ] Check if commit is ancestor: `git merge-base --is-ancestor {commit} HEAD`
 
 ---
 
 ## Step 4: Severity Classification
 
-Use this classification ONLY after verification:
+**Classify ONLY after NVD verification:**
 
-- [ ] **🔴 CRITICAL** - Current version IS vulnerable per NVD + actively exploited
-- [ ] **🔴 HIGH** - Current version IS vulnerable per NVD (not actively exploited)
-- [ ] **🟡 MEDIUM** - Current version MIGHT be vulnerable (uncertain/conflicting info) OR update recommended for defense in depth
-- [ ] **🟢 LOW** - Current version NOT vulnerable, but future update recommended
+- [ ] **🔴 CRITICAL** - Vulnerable per NVD + actively exploited
+- [ ] **🔴 HIGH** - Vulnerable per NVD (not actively exploited)
+- [ ] **🟡 MEDIUM** - Uncertain OR update recommended for defense in depth
+- [ ] **🟢 LOW** - Not vulnerable, but update recommended
 - [ ] **⚪ FALSE POSITIVE** - CVE doesn't apply (e.g., MiniZip not compiled)
 
-**NEVER classify as CRITICAL without NVD/Red Hat confirmation.**
+> **Rule:** NEVER classify as CRITICAL without NVD/Red Hat confirmation.
+
+---
+
+## Step 5: False Positive Check
+
+Before flagging, verify CVE affects SkiaSharp:
+
+- [ ] Check [dependencies.md#known-false-positives](../../../../documentation/dependencies.md#known-false-positives)
+- [ ] For zlib: Is it MiniZip-related? (Not compiled in SkiaSharp)
+- [ ] For multi-component packages: Is vulnerable component used?
+
+---
+
+## Step 6: Generate Report
+
+- [ ] Use [report-template.md](report-template.md) for formatting
+- [ ] Follow priority order: User-reported → PR ready → Undiscovered → False positives
+- [ ] Document verification methodology
+- [ ] Include source references (NVD, Red Hat, OpenCVE)
+
+---
+
+## Quality Assurance
+
+Before finalizing:
+
+- [ ] All CVE numbers correct
+- [ ] All version numbers match cgmanifest.json
+- [ ] All PR/issue numbers and statuses current
+- [ ] Check if any PRs merged during audit (re-verify status)
+- [ ] NVD/Red Hat consulted for CRITICAL/HIGH items
+- [ ] Document corrections if initial findings changed
+
+---
+
+## Common Mistakes
+
+**See SKILL.md "Lessons Learned" section for detailed examples.**
+
+- ❌ **Trusting blogs first** - Always verify with NVD/Red Hat
+- ❌ **Missing recent PRs** - Check closed items from last 30 days
+- ❌ **Premature CRITICAL** - Complete verification BEFORE classification
 
 ---
 
