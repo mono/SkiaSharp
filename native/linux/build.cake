@@ -116,7 +116,7 @@ Task("libSkiaSharp")
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
             $"extra_asmflags=[] " +
             $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM' {wordSizeDefine} ] " +
-            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
+            $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}', '-luuid' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
             ADDITIONAL_GN_ARGS);
