@@ -14,7 +14,38 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 		//       instances are created before any access is made to them.
 		//       See more info: SKObject.EnsureStaticInstanceAreInitialized()
 
-		var modes = Enum.GetValues (typeof (SKBlendMode));
+		// Explicitly list all enum values to avoid reflection (AoT compatibility)
+		var modes = new SKBlendMode[] {
+			SKBlendMode.Clear,
+			SKBlendMode.Src,
+			SKBlendMode.Dst,
+			SKBlendMode.SrcOver,
+			SKBlendMode.DstOver,
+			SKBlendMode.SrcIn,
+			SKBlendMode.DstIn,
+			SKBlendMode.SrcOut,
+			SKBlendMode.DstOut,
+			SKBlendMode.SrcATop,
+			SKBlendMode.DstATop,
+			SKBlendMode.Xor,
+			SKBlendMode.Plus,
+			SKBlendMode.Modulate,
+			SKBlendMode.Screen,
+			SKBlendMode.Overlay,
+			SKBlendMode.Darken,
+			SKBlendMode.Lighten,
+			SKBlendMode.ColorDodge,
+			SKBlendMode.ColorBurn,
+			SKBlendMode.HardLight,
+			SKBlendMode.SoftLight,
+			SKBlendMode.Difference,
+			SKBlendMode.Exclusion,
+			SKBlendMode.Multiply,
+			SKBlendMode.Hue,
+			SKBlendMode.Saturation,
+			SKBlendMode.Color,
+			SKBlendMode.Luminosity,
+		};
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
 		foreach (SKBlendMode mode in modes)
 		{
