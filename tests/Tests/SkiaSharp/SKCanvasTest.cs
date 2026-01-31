@@ -743,5 +743,89 @@ namespace SkiaSharp.Tests
 			Assert.Equal(SKColors.Red, bmp.GetPixel(40, 25));
 			Assert.Equal(SKColors.Green, bmp.GetPixel(40, 40));
 		}
+
+		[SkippableFact]
+		public void DrawSurfaceWithSamplingWorks()
+		{
+			using var sourceSurface = SKSurface.Create(new SKImageInfo(100, 100));
+			using var sourceCanvas = sourceSurface.Canvas;
+			
+			// Draw a red rectangle on the source surface
+			using var redPaint = new SKPaint { Color = SKColors.Red };
+			sourceCanvas.Clear(SKColors.White);
+			sourceCanvas.DrawRect(new SKRect(25, 25, 75, 75), redPaint);
+			
+			// Create destination surface and canvas
+			using var destSurface = SKSurface.Create(new SKImageInfo(200, 200));
+			using var destCanvas = destSurface.Canvas;
+			destCanvas.Clear(SKColors.Blue);
+			
+			// Draw the source surface onto the destination with sampling
+			var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None);
+			destCanvas.DrawSurface(sourceSurface, 50, 50, sampling);
+			
+			using var snapshot = destSurface.Snapshot();
+			using var bitmap = SKBitmap.FromImage(snapshot);
+			
+			// Verify the surface was drawn at the correct position
+			Assert.Equal(SKColors.Red, bitmap.GetPixel(100, 100)); // Center of drawn surface
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(25, 25)); // Outside drawn surface
+		}
+
+		[SkippableFact]
+		public void DrawSurfaceWithPointAndSamplingWorks()
+		{
+			using var sourceSurface = SKSurface.Create(new SKImageInfo(50, 50));
+			using var sourceCanvas = sourceSurface.Canvas;
+			
+			// Draw a green circle on the source surface
+			using var greenPaint = new SKPaint { Color = SKColors.Green };
+			sourceCanvas.Clear(SKColors.White);
+			sourceCanvas.DrawCircle(25, 25, 20, greenPaint);
+			
+			// Create destination surface and canvas
+			using var destSurface = SKSurface.Create(new SKImageInfo(150, 150));
+			using var destCanvas = destSurface.Canvas;
+			destCanvas.Clear(SKColors.Yellow);
+			
+			// Draw the source surface with SKPoint and sampling
+			var sampling = new SKSamplingOptions(SKCubicResampler.CatmullRom);
+			destCanvas.DrawSurface(sourceSurface, new SKPoint(50, 50), sampling);
+			
+			using var snapshot = destSurface.Snapshot();
+			using var bitmap = SKBitmap.FromImage(snapshot);
+			
+			// Verify the surface was drawn at the correct position
+			Assert.Equal(SKColors.Green, bitmap.GetPixel(75, 75)); // Center of circle
+			Assert.Equal(SKColors.Yellow, bitmap.GetPixel(25, 25)); // Outside drawn surface
+		}
+
+		[SkippableFact]
+		public void SurfaceDrawWithSamplingWorks()
+		{
+			using var sourceSurface = SKSurface.Create(new SKImageInfo(80, 80));
+			using var sourceCanvas = sourceSurface.Canvas;
+			
+			// Draw a pattern on the source surface
+			using var paint = new SKPaint { Color = SKColors.Magenta };
+			sourceCanvas.Clear(SKColors.Cyan);
+			sourceCanvas.DrawOval(new SKRect(10, 10, 70, 70), paint);
+			
+			// Create destination surface and canvas
+			using var destSurface = SKSurface.Create(new SKImageInfo(160, 160));
+			using var destCanvas = destSurface.Canvas;
+			destCanvas.Clear(SKColors.Black);
+			
+			// Use SKSurface.Draw with sampling
+			var sampling = new SKSamplingOptions(SKFilterMode.Linear);
+			sourceSurface.Draw(destCanvas, 40, 40, sampling, null);
+			
+			using var snapshot = destSurface.Snapshot();
+			using var bitmap = SKBitmap.FromImage(snapshot);
+			
+			// Verify the surface was drawn
+			Assert.Equal(SKColors.Magenta, bitmap.GetPixel(80, 80)); // Center of oval
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(10, 10)); // Outside drawn surface
+		}
 	}
 }
