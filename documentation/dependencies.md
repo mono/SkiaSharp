@@ -113,3 +113,26 @@ FreeType has its own zlib copy at `freetype/src/gzip/`. When checking zlib CVEs:
 
 - **[security-audit](/.github/skills/security-audit/SKILL.md)** — Find CVEs, verify fixes, generate reports
 - **[native-dependency-update](/.github/skills/native-dependency-update/SKILL.md)** — Update dependencies, create PRs
+
+## Security Audit Best Practices
+
+When auditing dependencies for CVEs:
+
+1. **Always prioritize authoritative sources:**
+   - ✅ NVD (nvd.nist.gov) - PRIMARY SOURCE
+   - ✅ Red Hat Security Advisory
+   - ✅ OpenCVE (app.opencve.io)
+   - ⚠️ Security blogs - Verify against NVD first
+
+2. **Check recent activity:**
+   - Search BOTH open AND recently closed issues/PRs (last 30 days)
+   - PRs may be merged during your audit
+
+3. **Verify version ranges:**
+   - Don't trust blog posts without checking NVD
+   - If sources conflict, NVD/Red Hat are authoritative
+   - Example: CVE-2025-27363 - blogs said "≤2.13.3", NVD confirmed "≤2.13.0 only"
+
+4. **Use the [security-audit checklist](/.github/skills/security-audit/references/best-practices-checklist.md)** to avoid common mistakes
+
+See [.github/skills/security-audit/SKILL.md](/.github/skills/security-audit/SKILL.md) for detailed workflow.
