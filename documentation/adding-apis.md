@@ -8,10 +8,64 @@ The C API layer is maintained in the [mono/skia](https://github.com/mono/skia) f
 
 ```
 1. Find C++ API     →  Identify pointer type & error handling
-2. Add C API        →  Header + implementation
-3. Regenerate       →  Run generator to create P/Invoke
-4. Add C# Wrapper   →  Validate, call, handle errors
+2. Add C API        →  Header + implementation in externals/skia submodule
+3. Commit Submodule →  Git workflow for submodule changes (CRITICAL)
+4. Regenerate       →  Run generator to create P/Invoke (MANDATORY)
+5. Add C# Wrapper   →  Validate, call, handle errors
+6. Test             →  Write and run tests (MANDATORY)
 ```
+
+## ⚠️ Critical: Submodule Workflow
+
+The `externals/skia/` directory is a **git submodule** (separate repository). Changes require special git handling.
+
+### Submodule Git Commands
+
+**Step 1: Make changes in the submodule**
+```bash
+cd externals/skia
+
+# Configure git (first time only)
+git config user.email "your-email@example.com"
+git config user.name "Your Name"
+
+# Edit files
+# ... edit include/c/sk_*.h and src/c/sk_*.cpp ...
+
+# Commit in submodule
+git add include/c/sk_*.h src/c/sk_*.cpp
+git commit -m "Add sk_foo_bar to C API"
+```
+
+**Step 2: Update parent repo to use new submodule commit**
+```bash
+cd /home/runner/work/SkiaSharp/SkiaSharp  # Return to repo root
+
+# Stage the submodule reference
+git add externals/skia
+
+# Verify submodule is staged
+git status
+# Should show: modified:   externals/skia (new commits)
+```
+
+**Step 3: Commit everything together in parent repo**
+```bash
+# Stage your C# changes too
+git add binding/SkiaSharp/ tests/Tests/
+
+# Commit everything
+git commit -m "Add SKFoo.Bar API with C API changes"
+```
+
+### What NOT to Do
+
+| ❌ WRONG | Why It Fails |
+|---------|-------------|
+| Edit C API but don't commit in submodule | Changes lost when submodule resets |
+| Commit in submodule but don't `git add externals/skia` | Parent repo doesn't know about your C API changes |
+| Skip running `./utils/generate.ps1` | C# bindings won't match C API |
+| Only build, don't test | Can't verify functionality actually works |
 
 ## Simple Example: SKPaint.IsAntialias
 
@@ -117,28 +171,63 @@ public static SKImage FromEncodedData(SKData data) {
 }
 ```
 
-## Checklist
+## Complete Implementation Checklist
 
-**C++ Analysis:**
+**Phase 1: C++ Analysis**
 - [ ] Identified pointer type (raw/owned/ref-counted)
 - [ ] Checked error conditions
 
-**C API:**
-- [ ] Header declaration with `SK_C_API`
-- [ ] Implementation uses `AsType()`/`ToType()` macros
+**Phase 2: C API in Submodule**
+- [ ] Header declaration with `SK_C_API` in `externals/skia/include/c/sk_*.h`
+- [ ] Implementation in `externals/skia/src/c/sk_*.cpp` uses `AsType()`/`ToType()` macros
 - [ ] Ref-counted params use `sk_ref_sp()`
 - [ ] Ref-counted returns use `.release()`
+- [ ] **Configured git in submodule** (`git config user.email/name`)
+- [ ] **Committed changes in submodule** (`cd externals/skia && git commit`)
+- [ ] **Staged submodule in parent repo** (`cd /home/runner/work/SkiaSharp/SkiaSharp && git add externals/skia`)
 
-**C#:**
-- [ ] Regenerated P/Invoke (`./utils/generate.ps1`)
+**Phase 3: C# Bindings**
+- [ ] **Regenerated P/Invoke** (`./utils/generate.ps1`) — **MANDATORY, never skip**
+- [ ] Verified `SkiaApi.generated.cs` updated correctly
+- [ ] Added C# wrapper method
 - [ ] Validates null parameters
 - [ ] Checks return values (factory→null, constructor→throw)
 - [ ] Correct ownership (`owns: true/false`)
 
-## Build & Test
+**Phase 4: Tests (MANDATORY)**
+- [ ] Added test methods in `tests/Tests/SkiaSharp/`
+- [ ] Tests follow existing patterns (`[SkippableFact]`, `using` statements)
+- [ ] **Ran tests and verified they pass** — **NOT OPTIONAL**
+- [ ] All assertions pass
 
-```pwsh
-./utils/generate.ps1              # Regenerate P/Invoke
+**Phase 5: Final Verification**
+- [ ] Build succeeds: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
+- [ ] Tests pass: `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj`
+- [ ] Both submodule and C# changes committed together
+
+## Build & Test Commands
+
+```bash
+# Step 1: Regenerate P/Invoke (after C API changes)
+pwsh ./utils/generate.ps1
+
+# Step 2: Build C# bindings
+dotnet build binding/SkiaSharp/SkiaSharp.csproj
+
+# Step 3: Run tests (MANDATORY - not optional)
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+
+# Alternative: Use Cake for everything
 dotnet cake --target=libs         # Build
 dotnet cake --target=tests        # Test
 ```
+
+## Common Mistakes
+
+| Mistake | Impact | Solution |
+|---------|--------|----------|
+| Edited C API but didn't commit in submodule | Changes disappear on next submodule update | Always commit inside `externals/skia/` first |
+| Forgot `git add externals/skia` in parent | Parent repo doesn't reference your C API changes | Stage submodule after committing inside it |
+| Manually edited `*.generated.cs` | Binding mismatch, overwrites on next generation | Always run `./utils/generate.ps1` |
+| Only built, didn't test | Functionality may not work despite compiling | Always run tests — passing tests required |
+| Assumed network failure excuses skipping steps | Incomplete implementation merged | Fix network/dependencies, never skip generator or tests |

@@ -49,9 +49,103 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | Setup (one-time) | `dotnet cake --target=externals-download` |
 | Build | `dotnet build <project.csproj>` |
 | Test | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
-| Regenerate bindings | `./utils/generate.ps1` |
+| **Regenerate bindings** | `./utils/generate.ps1` — **MANDATORY after C API changes** |
 
 > **Check if externals exist:** `ls output/native/` - if empty/missing, run the download.
+
+---
+
+## Working with Native Skia Submodule
+
+When adding or modifying C API functions in `externals/skia/`, you **MUST** follow this workflow:
+
+### Complete Workflow Checklist
+
+**Before starting:**
+- [ ] Understand the architecture: C# → P/Invoke → C API (`externals/skia/src/c/`) → C++ Skia
+
+**Phase 1: Edit C API in Submodule**
+- [ ] Navigate to `externals/skia/` directory
+- [ ] Edit header: `externals/skia/include/c/sk_*.h` 
+- [ ] Edit implementation: `externals/skia/src/c/sk_*.cpp`
+- [ ] **Configure git in submodule** (if first time):
+  ```bash
+  cd externals/skia
+  git config user.email "your-email@example.com"
+  git config user.name "Your Name"
+  ```
+- [ ] **Commit changes in submodule:**
+  ```bash
+  cd externals/skia
+  git add include/c/sk_*.h src/c/sk_*.cpp
+  git commit -m "Add sk_foo_bar to C API"
+  ```
+
+**Phase 2: Regenerate C# Bindings**
+- [ ] Return to repo root: `cd /home/runner/work/SkiaSharp/SkiaSharp`
+- [ ] **Run generator (MANDATORY):**
+  ```bash
+  pwsh ./utils/generate.ps1
+  ```
+- [ ] Verify `binding/SkiaSharp/SkiaApi.generated.cs` was updated
+- [ ] **Never manually edit `*.generated.cs` files** — always regenerate
+
+**Phase 3: Add C# Wrapper**
+- [ ] Edit wrapper class (e.g., `binding/SkiaSharp/SKCanvas.cs`)
+- [ ] Add parameter validation
+- [ ] Call generated P/Invoke method
+
+**Phase 4: Add Tests**
+- [ ] Add test methods in `tests/Tests/SkiaSharp/`
+- [ ] Follow existing test patterns (use `[SkippableFact]`, `using` statements)
+
+**Phase 5: Build & Test (MANDATORY)**
+- [ ] **Build C# code:**
+  ```bash
+  dotnet build binding/SkiaSharp/SkiaSharp.csproj
+  ```
+- [ ] **Run tests (NOT OPTIONAL):**
+  ```bash
+  dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+  ```
+- [ ] All tests must pass — network issues are not an excuse to skip
+
+**Phase 6: Commit Everything**
+- [ ] **Stage submodule reference in parent repo:**
+  ```bash
+  git add externals/skia
+  ```
+- [ ] Stage your C# changes:
+  ```bash
+  git add binding/SkiaSharp/ tests/Tests/
+  ```
+- [ ] Commit everything together:
+  ```bash
+  git commit -m "Add SKFoo.Bar with sampling options"
+  ```
+
+### Critical Mistakes to Avoid
+
+| ❌ NEVER | ✅ ALWAYS |
+|---------|----------|
+| Edit `*.generated.cs` manually | Run `./utils/generate.ps1` after C API changes |
+| Skip test execution | Run tests and verify they pass |
+| Forget to commit in submodule | Commit in `externals/skia/` first |
+| Forget to stage submodule in parent | `git add externals/skia` in parent repo |
+| Assume build success = working code | Verify tests pass before claiming completion |
+
+### Why This Workflow Matters
+
+**Problem:** Changes to `externals/skia/` (a git submodule) can be lost if not properly committed.
+
+**Solution:** The submodule is a separate git repository. You must:
+1. Commit changes **inside** the submodule
+2. Stage the submodule reference **in the parent** repo
+3. Both commits happen together in the parent repo
+
+**If you skip step 1:** Your C API changes disappear when the submodule is reset.
+
+**If you skip step 2:** SkiaSharp won't use your updated C API.
 
 ---
 
@@ -91,13 +185,33 @@ return result;
 
 Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immutable objects (Image/Shader/Data) can be shared across threads.
 
-### 4. Never Edit Generated Files
+### 4. Never Edit Generated Files (MANDATORY)
 
-Files matching `*.generated.cs` are auto-generated from C headers. After C API changes, regenerate with:
+Files matching `*.generated.cs` are auto-generated from C headers. 
+
+**❌ NEVER manually edit these files.**
+
+**✅ ALWAYS run the generator after C API changes:**
 
 ```pwsh
 ./utils/generate.ps1
 ```
+
+**Why this matters:** Manual edits will be overwritten on the next generation, and you'll introduce inconsistencies between the C API and C# bindings.
+
+**If generation fails:** Fix the network/dependency issue, don't work around it by manual editing.
+
+### 5. Tests Are Mandatory
+
+**Building alone is NOT sufficient.** You must run tests to verify your changes work.
+
+```bash
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+```
+
+**❌ NEVER claim implementation is complete without passing tests.**
+
+**Network issues preventing test execution?** Fix the network issue or notify the user — don't skip tests.
 
 ---
 
