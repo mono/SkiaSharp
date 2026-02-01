@@ -9,6 +9,7 @@ SkiaSharp is a cross-platform 2D graphics API for .NET wrapping Google's Skia li
 | Skill | When to Use |
 |-------|-------------|
 | `implement-issue` | User provides GitHub issue URL or says "implement #NNNN", "fix #NNNN". Gathers context and creates implementation plans for new APIs, bug fixes, enhancements. |
+| `add-api` | Adding new C# APIs to SkiaSharp. Triggers: "add API", "expose function", "wrap method", "add SKFoo.Bar". Structured 6-phase workflow with checkpoints. |
 | `api-docs` | Writing/reviewing XML documentation. Triggers: "document SKFoo", "add XML docs", "fill in missing docs", "remove To be added placeholders". |
 | `native-dependency-update` | Updating native dependencies. Triggers: "bump libpng", "update zlib", "fix CVE in expat". Updates DEPS, cgmanifest.json, builds locally, creates PRs. |
 | `security-audit` | Security investigation. Triggers: "security audit", "audit CVEs", "CVE status". Searches issues/PRs, scans for CVEs, verifies fixes, produces report. Read-only. |
@@ -49,9 +50,68 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | Setup (one-time) | `dotnet cake --target=externals-download` |
 | Build | `dotnet build <project.csproj>` |
 | Test | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
-| Regenerate bindings | `./utils/generate.ps1` |
+| **Regenerate bindings** | `./utils/generate.ps1` — **MANDATORY after C API changes** |
+| **Add new API** | See [Adding New APIs](#adding-new-apis) section below |
 
 > **Check if externals exist:** `ls output/native/` - if empty/missing, run the download.
+
+---
+
+## Working with Native Skia Submodule
+
+The `externals/skia/` directory is a **git submodule** (separate repository). When adding or modifying C API functions, follow this critical workflow:
+
+### Essential Steps
+
+1. **Commit IN submodule first** — `cd externals/skia && git commit`
+2. **Stage submodule in parent** — `cd .. && git add externals/skia`
+3. **Run generator (mandatory)** — `pwsh ./utils/generate.ps1`
+4. **Test (mandatory)** — `dotnet test` (not just build)
+
+### Why This Matters
+
+**If you forget step 1:** C API changes disappear when submodule resets
+**If you forget step 2:** Parent repo won't use your updated C API
+**If you skip step 3:** C# bindings won't match C API
+**If you skip step 4:** Can't verify functionality actually works
+
+### Full Workflow
+
+👉 **For complete details, use the `add-api` skill** or see:
+- [`.github/skills/add-api/SKILL.md`](.github/skills/add-api/SKILL.md) — Structured 6-phase workflow with checkpoints
+- [`documentation/adding-apis.md`](../documentation/adding-apis.md) — Complete examples and patterns
+
+---
+
+## Adding New APIs
+
+To expose new Skia C++ functionality in C#, use the **`add-api` skill** for structured guidance.
+
+### Quick Process
+
+```
+1. Find C++ API     →  Identify pointer type & error handling
+2. Add C API        →  Write wrapper in externals/skia
+3. Commit submodule →  Commit in submodule, stage in parent
+4. Generate         →  Run ./utils/generate.ps1 (mandatory)
+5. Wrap in C#       →  Validate params, call P/Invoke
+6. Test             →  dotnet test (mandatory)
+```
+
+### When to Use
+
+- Exposing missing Skia functionality
+- Adding convenience methods that need C API
+- Implementing feature requests from issues
+
+### Resources
+
+👉 **For execution:** Use the `add-api` skill — structured 6-phase workflow with checkpoints and error prevention
+👉 **For reference:** See [`documentation/adding-apis.md`](../documentation/adding-apis.md) — complete examples, pointer types, patterns
+
+---
+- Error handling patterns
+- Full checklist for all phases
 
 ---
 
@@ -91,13 +151,33 @@ return result;
 
 Skia is **NOT thread-safe**. Canvas/Paint/Path must be thread-local. Only immutable objects (Image/Shader/Data) can be shared across threads.
 
-### 4. Never Edit Generated Files
+### 4. Never Edit Generated Files (MANDATORY)
 
-Files matching `*.generated.cs` are auto-generated from C headers. After C API changes, regenerate with:
+Files matching `*.generated.cs` are auto-generated from C headers. 
+
+**❌ NEVER manually edit these files.**
+
+**✅ ALWAYS run the generator after C API changes:**
 
 ```pwsh
 ./utils/generate.ps1
 ```
+
+**Why this matters:** Manual edits will be overwritten on the next generation, and you'll introduce inconsistencies between the C API and C# bindings.
+
+**If generation fails:** Fix the network/dependency issue, don't work around it by manual editing.
+
+### 5. Tests Are Mandatory
+
+**Building alone is NOT sufficient.** You must run tests to verify your changes work.
+
+```bash
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
+```
+
+**❌ NEVER claim implementation is complete without passing tests.**
+
+**Network issues preventing test execution?** Fix the network issue or notify the user — don't skip tests.
 
 ---
 
