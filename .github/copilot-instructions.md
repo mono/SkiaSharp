@@ -39,7 +39,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | `externals/skia/src/c/` | C API implementation | ✅ Yes |
 | `externals/skia/include/c/` | C API headers | ✅ Yes |
 | `externals/skia/**` (other) | Upstream Skia | ❌ No - never modify |
-| `*.generated.cs` | Auto-generated P/Invoke | ❌ No - regenerate with `./utils/generate.ps1` |
+| `*.generated.cs` | Auto-generated P/Invoke | ❌ No - regenerate with `pwsh ./utils/generate.ps1` |
 | `docs/` | Auto-generated API docs | ❌ No |
 | `documentation/` | Architecture guides | ✅ Yes |
 
@@ -50,7 +50,7 @@ C# Wrapper (binding/SkiaSharp/)  →  P/Invoke  →  C API (externals/skia/src/c
 | Setup (one-time) | `dotnet cake --target=externals-download` |
 | Build | `dotnet build <project.csproj>` |
 | Test | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
-| **Regenerate bindings** | `./utils/generate.ps1` — **MANDATORY after C API changes** |
+| **Regenerate bindings** | `pwsh ./utils/generate.ps1` — **MANDATORY after C API changes** |
 | **Add new API** | See [Adding New APIs](#adding-new-apis) section below |
 
 > **Check if externals exist:** `ls output/native/` - if empty/missing, run the download.
@@ -64,7 +64,7 @@ The `externals/skia/` directory is a **git submodule** (separate repository). Wh
 ### Essential Steps
 
 1. **Commit IN submodule first** — `cd externals/skia && git commit`
-2. **Stage submodule in parent** — `cd .. && git add externals/skia`
+2. **Stage submodule in parent** — `cd ../.. && git add externals/skia`
 3. **Run generator (mandatory)** — `pwsh ./utils/generate.ps1`
 4. **Test (mandatory)** — `dotnet test` (not just build)
 
@@ -93,7 +93,7 @@ To expose new Skia C++ functionality in C#, use the **`add-api` skill** for stru
 1. Find C++ API     →  Identify pointer type & error handling
 2. Add C API        →  Write wrapper in externals/skia
 3. Commit submodule →  Commit in submodule, stage in parent
-4. Generate         →  Run ./utils/generate.ps1 (mandatory)
+4. Generate         →  Run pwsh ./utils/generate.ps1 (mandatory)
 5. Wrap in C#       →  Validate params, call P/Invoke
 6. Test             →  dotnet test (mandatory)
 ```
@@ -156,7 +156,7 @@ Files matching `*.generated.cs` are auto-generated from C headers.
 **✅ ALWAYS run the generator after C API changes:**
 
 ```pwsh
-./utils/generate.ps1
+pwsh ./utils/generate.ps1
 ```
 
 **Why this matters:** Manual edits will be overwritten on the next generation, and you'll introduce inconsistencies between the C API and C# bindings.

@@ -33,7 +33,7 @@ description: >
 1. Analyze C++ API  →  Find in Skia headers, identify pointer type
 2. Add C API        →  Header + impl in externals/skia/
 3. Commit Submodule →  Commit IN submodule, then stage in parent
-4. Generate         →  Run ./utils/generate.ps1 (MANDATORY)
+4. Generate         →  Run pwsh ./utils/generate.ps1 (MANDATORY)
 5. Add C# Wrapper   →  Validate params, call P/Invoke
 6. Test             →  Run tests (MANDATORY)
 ```
@@ -93,7 +93,7 @@ git add include/c/sk_*.h src/c/sk_*.cpp
 git commit -m "Add sk_foo_bar to C API"
 
 # Step 2: Stage submodule in parent
-cd ..
+cd ../..  # Back to repo root
 git add externals/skia
 
 # Step 3: Verify

@@ -64,7 +64,7 @@ git commit -m "Add SKFoo.Bar API with C API changes"
 |---------|-------------|
 | Edit C API but don't commit in submodule | Changes lost when submodule resets |
 | Commit in submodule but don't `git add externals/skia` | Parent repo doesn't know about your C API changes |
-| Skip running `./utils/generate.ps1` | C# bindings won't match C API |
+| Skip running `pwsh ./utils/generate.ps1` | C# bindings won't match C API |
 | Only build, don't test | Can't verify functionality actually works |
 
 ## Simple Example: SKPaint.IsAntialias
@@ -131,7 +131,7 @@ void sk_canvas_draw_circle(sk_canvas_t* canvas, float cx, float cy,
 Run the generator to create P/Invoke declarations from C API headers:
 
 ```pwsh
-./utils/generate.ps1
+pwsh ./utils/generate.ps1
 ```
 
 This generates in `SkiaApi.generated.cs`:
@@ -189,7 +189,7 @@ public static SKImage FromEncodedData(SKData data) {
 - [ ] **Staged submodule in parent repo** (`cd ../.. && git add externals/skia`)
 
 **Phase 4: Regenerate Bindings**
-- [ ] **Regenerated P/Invoke** (`./utils/generate.ps1`) — **MANDATORY, never skip**
+- [ ] **Regenerated P/Invoke** (`pwsh ./utils/generate.ps1`) — **MANDATORY, never skip**
 - [ ] Verified `SkiaApi.generated.cs` updated correctly
 
 **Phase 5: C# Wrapper**
@@ -229,6 +229,6 @@ dotnet cake --target=tests        # Test
 |---------|--------|----------|
 | Edited C API but didn't commit in submodule | Changes disappear on next submodule update | Always commit inside `externals/skia/` first |
 | Forgot `git add externals/skia` in parent | Parent repo doesn't reference your C API changes | Stage submodule after committing inside it |
-| Manually edited `*.generated.cs` | Binding mismatch, overwrites on next generation | Always run `./utils/generate.ps1` |
+| Manually edited `*.generated.cs` | Binding mismatch, overwrites on next generation | Always run `pwsh ./utils/generate.ps1` |
 | Only built, didn't test | Functionality may not work despite compiling | Always run tests — passing tests required |
 | Generator or tests fail | Incomplete implementation | Retry once; if still failing, stop and notify developer to fix environment |

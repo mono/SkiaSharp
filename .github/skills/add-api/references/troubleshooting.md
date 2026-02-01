@@ -11,7 +11,7 @@
 cd externals/skia
 git add include/c/sk_*.h src/c/sk_*.cpp
 git commit -m "Add sk_foo_bar to C API"
-cd ..
+cd ../..  # Back to repo root
 git add externals/skia  # NOW stage in parent
 ```
 
