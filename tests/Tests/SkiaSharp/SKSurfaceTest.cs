@@ -315,5 +315,119 @@ namespace SkiaSharp.Tests
 				}
 			});
 		}
+
+		[SkippableFact]
+		public void SurfaceCanBeDrawnOnCanvas()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+			Assert.NotNull(surface);
+
+			// Draw something on the surface
+			surface.Canvas.Clear(SKColors.Red);
+
+			// Create a destination surface to draw onto
+			using var destSurface = SKSurface.Create(new SKImageInfo(200, 200));
+			Assert.NotNull(destSurface);
+
+			destSurface.Canvas.Clear(SKColors.Blue);
+
+			// Draw the source surface onto the destination
+			destSurface.Canvas.DrawSurface(surface, 50, 50);
+
+			// Verify the draw occurred
+			using var image = destSurface.Snapshot();
+			using var bitmap = SKBitmap.FromImage(image);
+			
+			// The surface should be drawn at (50, 50), so check a pixel there
+			Assert.Equal(SKColors.Red, bitmap.GetPixel(50, 50));
+			// And check that the background is still blue
+			Assert.Equal(SKColors.Blue, bitmap.GetPixel(0, 0));
+		}
+
+		[SkippableFact]
+		public void SurfaceCanBeDrawnOnCanvasWithSampling()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+			Assert.NotNull(surface);
+
+			// Draw something on the surface
+			surface.Canvas.Clear(SKColors.Green);
+
+			// Create a destination surface to draw onto
+			using var destSurface = SKSurface.Create(new SKImageInfo(200, 200));
+			Assert.NotNull(destSurface);
+
+			destSurface.Canvas.Clear(SKColors.White);
+
+			// Draw the source surface onto the destination with sampling options
+			var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None);
+			destSurface.Canvas.DrawSurface(surface, 25, 25, sampling);
+
+			// Verify the draw occurred
+			using var image = destSurface.Snapshot();
+			using var bitmap = SKBitmap.FromImage(image);
+			
+			// The surface should be drawn at (25, 25), so check a pixel there
+			Assert.Equal(SKColors.Green, bitmap.GetPixel(25, 25));
+			// And check that the background is still white
+			Assert.Equal(SKColors.White, bitmap.GetPixel(0, 0));
+		}
+
+		[SkippableFact]
+		public void SurfaceDrawMethodWorks()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+			Assert.NotNull(surface);
+
+			// Draw something on the surface
+			surface.Canvas.Clear(SKColors.Yellow);
+
+			// Create a destination surface to draw onto
+			using var destSurface = SKSurface.Create(new SKImageInfo(200, 200));
+			Assert.NotNull(destSurface);
+
+			destSurface.Canvas.Clear(SKColors.Black);
+
+			// Use SKSurface.Draw method directly
+			surface.Draw(destSurface.Canvas, 10, 10, null);
+
+			// Verify the draw occurred
+			using var image = destSurface.Snapshot();
+			using var bitmap = SKBitmap.FromImage(image);
+			
+			// The surface should be drawn at (10, 10), so check a pixel there
+			Assert.Equal(SKColors.Yellow, bitmap.GetPixel(10, 10));
+			// And check that the background is still black
+			Assert.Equal(SKColors.Black, bitmap.GetPixel(0, 0));
+		}
+
+		[SkippableFact]
+		public void SurfaceDrawMethodWorksWithSampling()
+		{
+			using var surface = SKSurface.Create(new SKImageInfo(100, 100));
+			Assert.NotNull(surface);
+
+			// Draw something on the surface
+			surface.Canvas.Clear(SKColors.Cyan);
+
+			// Create a destination surface to draw onto
+			using var destSurface = SKSurface.Create(new SKImageInfo(200, 200));
+			Assert.NotNull(destSurface);
+
+			destSurface.Canvas.Clear(SKColors.Magenta);
+
+			// Use SKSurface.Draw method with sampling options
+			var sampling = new SKSamplingOptions(SKCubicResampler.Mitchell);
+			surface.Draw(destSurface.Canvas, 15, 15, sampling);
+
+			// Verify the draw occurred
+			using var image = destSurface.Snapshot();
+			using var bitmap = SKBitmap.FromImage(image);
+			
+			// The surface should be drawn at (15, 15), so check a pixel there
+			Assert.Equal(SKColors.Cyan, bitmap.GetPixel(15, 15));
+			// And check that the background is still magenta
+			Assert.Equal(SKColors.Magenta, bitmap.GetPixel(0, 0));
+		}
 	}
 }
