@@ -1602,6 +1602,28 @@ namespace HarfBuzzSharp
 			(hb_language_get_default_delegate ??= GetSymbol<Delegates.hb_language_get_default> ("hb_language_get_default")).Invoke ();
 		#endif
 
+		// extern hb_bool_t hb_language_matches(hb_language_t language, hb_language_t specific)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_language_matches (IntPtr language, IntPtr specific);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_language_matches (IntPtr language, IntPtr specific);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_language_matches (IntPtr language, IntPtr specific);
+		}
+		private static Delegates.hb_language_matches hb_language_matches_delegate;
+		internal static bool hb_language_matches (IntPtr language, IntPtr specific) =>
+			(hb_language_matches_delegate ??= GetSymbol<Delegates.hb_language_matches> ("hb_language_matches")).Invoke (language, specific);
+		#endif
+
 		// extern const char* hb_language_to_string(hb_language_t language)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -2111,6 +2133,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_face_builder_create hb_face_builder_create_delegate;
 		internal static hb_face_t hb_face_builder_create () =>
 			(hb_face_builder_create_delegate ??= GetSymbol<Delegates.hb_face_builder_create> ("hb_face_builder_create")).Invoke ();
+		#endif
+
+		// extern void hb_face_builder_sort_tables(hb_face_t* face, const hb_tag_t* tags)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_face_builder_sort_tables (hb_face_t face, UInt32* tags);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_face_builder_sort_tables (hb_face_t face, UInt32* tags);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_face_builder_sort_tables (hb_face_t face, UInt32* tags);
+		}
+		private static Delegates.hb_face_builder_sort_tables hb_face_builder_sort_tables_delegate;
+		internal static void hb_face_builder_sort_tables (hb_face_t face, UInt32* tags) =>
+			(hb_face_builder_sort_tables_delegate ??= GetSymbol<Delegates.hb_face_builder_sort_tables> ("hb_face_builder_sort_tables")).Invoke (face, tags);
 		#endif
 
 		// extern void hb_face_collect_unicodes(hb_face_t* face, hb_set_t* out)
@@ -5140,6 +5181,25 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_ot_layout_lookup_get_glyph_alternates hb_ot_layout_lookup_get_glyph_alternates_delegate;
 		internal static UInt32 hb_ot_layout_lookup_get_glyph_alternates (hb_face_t face, UInt32 lookup_index, UInt32 glyph, UInt32 start_offset, UInt32* alternate_count, UInt32* alternate_glyphs) =>
 			(hb_ot_layout_lookup_get_glyph_alternates_delegate ??= GetSymbol<Delegates.hb_ot_layout_lookup_get_glyph_alternates> ("hb_ot_layout_lookup_get_glyph_alternates")).Invoke (face, lookup_index, glyph, start_offset, alternate_count, alternate_glyphs);
+		#endif
+
+		// extern hb_position_t hb_ot_layout_lookup_get_optical_bound(hb_font_t* font, unsigned int lookup_index, hb_direction_t direction, hb_codepoint_t glyph)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial Int32 hb_ot_layout_lookup_get_optical_bound (hb_font_t font, UInt32 lookup_index, Direction direction, UInt32 glyph);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern Int32 hb_ot_layout_lookup_get_optical_bound (hb_font_t font, UInt32 lookup_index, Direction direction, UInt32 glyph);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate Int32 hb_ot_layout_lookup_get_optical_bound (hb_font_t font, UInt32 lookup_index, Direction direction, UInt32 glyph);
+		}
+		private static Delegates.hb_ot_layout_lookup_get_optical_bound hb_ot_layout_lookup_get_optical_bound_delegate;
+		internal static Int32 hb_ot_layout_lookup_get_optical_bound (hb_font_t font, UInt32 lookup_index, Direction direction, UInt32 glyph) =>
+			(hb_ot_layout_lookup_get_optical_bound_delegate ??= GetSymbol<Delegates.hb_ot_layout_lookup_get_optical_bound> ("hb_ot_layout_lookup_get_optical_bound")).Invoke (font, lookup_index, direction, glyph);
 		#endif
 
 		// extern void hb_ot_layout_lookup_substitute_closure(hb_face_t* face, unsigned int lookup_index, hb_set_t* glyphs)
@@ -8198,8 +8258,10 @@ namespace HarfBuzzSharp {
 		Verify = 32,
 		// HB_BUFFER_FLAG_PRODUCE_UNSAFE_TO_CONCAT = 0x00000040u
 		ProduceUnsafeToConcat = 64,
-		// HB_BUFFER_FLAG_DEFINED = 0x0000007Fu
-		Defined = 127,
+		// HB_BUFFER_FLAG_PRODUCE_SAFE_TO_INSERT_TATWEEL = 0x00000080u
+		ProduceSafeToInsertTatweel = 128,
+		// HB_BUFFER_FLAG_DEFINED = 0x000000FFu
+		Defined = 255,
 	}
 
 	// hb_buffer_serialize_flags_t
@@ -8254,8 +8316,10 @@ namespace HarfBuzzSharp {
 		UnsafeToBreak = 1,
 		// HB_GLYPH_FLAG_UNSAFE_TO_CONCAT = 0x00000002
 		UnsafeToConcat = 2,
-		// HB_GLYPH_FLAG_DEFINED = 0x00000003
-		Defined = 3,
+		// HB_GLYPH_FLAG_SAFE_TO_INSERT_TATWEEL = 0x00000004
+		SafeToInsertTatweel = 4,
+		// HB_GLYPH_FLAG_DEFINED = 0x00000007
+		Defined = 7,
 	}
 
 	// hb_memory_mode_t
