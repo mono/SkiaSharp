@@ -99,6 +99,6 @@ AsRect(sk_rect_t*)     → SkRect*
 - **C# wrappers:** Hand-written (`binding/SkiaSharp/SK*.cs`)
 
 ```pwsh
-./utils/generate.ps1                              # Regenerate all
-./utils/generate.ps1 -Config libSkiaSharp.json    # Regenerate specific config
+pwsh ./utils/generate.ps1                              # Regenerate all
+pwsh ./utils/generate.ps1 -Config libSkiaSharp.json    # Regenerate specific config
 ```
