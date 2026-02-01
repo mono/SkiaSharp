@@ -5,27 +5,47 @@ description: >
   Structured 6-phase workflow: C++ analysis → C API creation → submodule commits →
   binding generation → C# wrapper → testing.
   
-  Use when user asks to:
-  - Add/expose/wrap new API from Skia
-  - Create C# binding for Skia function
-  - Add missing method/property to SK* class
-  - Expose Skia C++ functionality in C#
-  
-  Triggers: "add API", "expose function", "wrap method", "add SKFoo.Bar",
-  "create binding for", "add support for [Skia feature]",
-  "implement #NNNN" (when issue requests new API)
+  Triggers:
+  - Issue classified as "New API" (after fetching and classification)
+  - Direct request: "add DrawFoo method", "expose SkSurface::draw", "wrap sk_foo_bar"
+  - Keywords: "add API", "expose function", "wrap method", "create binding for"
 ---
 
 # Add API Skill
+
+## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+
+> **🛑 NEVER commit directly to protected branches. This is a policy violation.**
+
+| Repository | Protected Branches | Required Action |
+|------------|-------------------|-----------------|
+| SkiaSharp (parent) | `main` | Create feature branch first |
+| externals/skia (submodule) | `main`, `skiasharp` | Create feature branch first |
+
+**BEFORE making any changes**, create feature branches in BOTH repos:
+
+```bash
+# Step 1: Create branch in SkiaSharp repo
+git checkout -b dev/issue-NNNN-description
+
+# Step 2: Create branch in submodule (REQUIRED for C API changes)
+cd externals/skia
+git checkout -b dev/issue-NNNN-description
+cd ../..
+```
 
 ## ❌ NEVER Do These
 
 | Shortcut | Consequence |
 |----------|-------------|
+| Commit directly to `main` or `skiasharp` branches | **Policy violation** — blocks PR, requires revert |
 | Edit `*.generated.cs` manually | Overwrites on next generation; binding mismatch |
 | Skip generator after C API change | C# bindings won't match C API |
+| **Skip native build after C API change** | **`EntryPointNotFoundException` at runtime — tests fail** |
 | Skip tests | Can't verify functionality works |
+| **Skip tests because they fail** | **Unacceptable — fix the issue, don't skip** |
 | Commit C API without staging submodule | Parent repo won't use your changes |
+| Use `externals-download` after modifying C API | Downloaded natives don't have your new functions |
 
 ## Workflow Overview
 
@@ -35,7 +55,8 @@ description: >
 3. Commit Submodule →  Commit IN submodule, then stage in parent
 4. Generate         →  Run pwsh ./utils/generate.ps1 (MANDATORY)
 5. Add C# Wrapper   →  Validate params, call P/Invoke
-6. Test             →  Run tests (MANDATORY)
+6. Build Native     →  dotnet cake --target=externals-{platform} (MANDATORY)
+7. Test             →  Run tests — must PASS (MANDATORY)
 ```
 
 👉 **Detailed checklists:** [references/checklists.md](references/checklists.md)
@@ -141,9 +162,31 @@ public void DrawCircle(float cx, float cy, float radius, SKPaint paint)
 
 ---
 
-## Phase 6: Test
+## Phase 6: Build & Test
 
-> **🛑 MANDATORY — Build alone is NOT sufficient**
+> **🛑 MANDATORY — You modified the C API, so you MUST build the native library**
+
+### Step 1: Build Native Library (REQUIRED)
+
+Since you added/modified C API functions in Phase 2, you **MUST** rebuild the native library before testing. The pre-built natives from `externals-download` do not contain your new functions.
+
+```bash
+# macOS (Apple Silicon)
+dotnet cake --target=externals-macos --arch=arm64
+
+# macOS (Intel)
+dotnet cake --target=externals-macos --arch=x64
+
+# Windows (x64)
+dotnet cake --target=externals-windows --arch=x64
+
+# Linux (requires Docker)
+dotnet cake --target=externals-linux --arch=x64
+```
+
+> ⚠️ **Native builds take 10-30 minutes.** Only build for platforms you can test on.
+
+### Step 2: Write Tests
 
 ```csharp
 [SkippableFact]
@@ -160,9 +203,15 @@ public void DrawCircleWorks()
 }
 ```
 
+### Step 3: Run Tests
+
 ```bash
 dotnet build binding/SkiaSharp/SkiaSharp.csproj
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
+
+> **🛑 Tests MUST PASS.** Do not skip tests. Do not claim completion if tests fail.
+> 
+> Skipping tests is only acceptable for hardware limitations (no GPU, no screen attached). `EntryPointNotFoundException` means you forgot to build the native library — go back to Step 1.
 
 **Tests must pass before claiming completion.**

@@ -23,6 +23,32 @@ git add externals/skia  # NOW stage in parent
 
 **Verify:** `git diff binding/SkiaSharp/SkiaApi.generated.cs` should show new function
 
+## EntryPointNotFoundException at runtime
+
+> **🛑 This is the #1 mistake when adding new APIs**
+
+**Cause:** You added a new C API function but didn't rebuild the native library. The pre-built natives from `externals-download` don't contain your new function.
+
+**Fix:** Build the native library for your platform:
+
+```bash
+# macOS (Apple Silicon)
+dotnet cake --target=externals-macos --arch=arm64
+
+# macOS (Intel)
+dotnet cake --target=externals-macos --arch=x64
+
+# Windows (x64)
+dotnet cake --target=externals-windows --arch=x64
+```
+
+**Do NOT:**
+- Skip the test
+- Use `SkipException` to work around it
+- Claim completion with failing tests
+
+**Verification:** After building, run tests again — they should pass.
+
 ## Test compiles but fails at runtime
 
 **Cause:** C API implementation bug, wrong pointer handling, incorrect parameters
@@ -44,15 +70,21 @@ git add externals/skia  # NOW stage in parent
 3. Verify header guards are correct
 4. If still failing, **STOP** and notify developer — don't work around by manual editing
 
-## Tests won't run
+## Tests won't run (missing natives)
 
 **Cause:** Missing externals/native binaries
 
-**Fix:**
+**Fix depends on what you changed:**
+
 ```bash
-# Download pre-built natives
+# If you ONLY changed C# code:
 dotnet cake --target=externals-download
 
-# Verify
+# If you changed C API (added/modified functions):
+dotnet cake --target=externals-{platform} --arch={arch}
+```
+
+**Verify:**
+```bash
 ls output/native/
 ```

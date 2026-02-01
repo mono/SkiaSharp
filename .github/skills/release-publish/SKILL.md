@@ -19,6 +19,17 @@ Publish packages to NuGet.org and finalize releases.
 
 ⚠️ **NO UNDO:** This is step 3 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
 
+## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+
+> **🛑 NEVER commit directly to `main` or `skiasharp` branches. This is a policy violation.**
+
+| Repository | Protected Branches | Required Action |
+|------------|-------------------|-----------------|
+| SkiaSharp (parent) | `main` | Tags/releases created from release branches, never modify main directly |
+| externals/skia (submodule) | `main`, `skiasharp` | Never modify directly |
+
+**Publishing creates tags on existing release branches — it does NOT modify protected branches.**
+
 ---
 
 ## Workflow Overview
