@@ -120,7 +120,7 @@
       <ModuleDefinitionFile>SkiaSharp_Views_WinUI_Native.def</ModuleDefinitionFile>
       <AdditionalOptions>/DEBUGTYPE:CV,FIXUP</AdditionalOptions>
       <ControlFlowGuard>true</ControlFlowGuard>
-      <AdditionalLibraryDirectories>$(VCToolsInstallDir)lib\spectre\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(VCToolsInstallDir)lib\spectre\$([MSBuild]::ValueOrDefault('$(Platform)', 'Win32').Replace('Win32', 'x86'));%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
