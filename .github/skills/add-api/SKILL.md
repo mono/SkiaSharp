@@ -87,8 +87,8 @@ void sk_canvas_draw_circle(sk_canvas_t* canvas, float cx, float cy,
 ```bash
 # Step 1: Commit IN the submodule
 cd externals/skia
-git config user.email "copilot@github.com"  # first time only
-git config user.name "GitHub Copilot"        # first time only
+git config user.email "you@example.com"  # first time only
+git config user.name "Your Name"             # first time only
 git add include/c/sk_*.h src/c/sk_*.cpp
 git commit -m "Add sk_foo_bar to C API"
 
