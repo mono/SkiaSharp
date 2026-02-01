@@ -2,16 +2,17 @@
 name: add-api
 description: >
   Add new C# APIs to SkiaSharp by wrapping Skia C++ functionality.
-  Handles the complete workflow: C++ analysis → C API creation → submodule commits →
+  Structured 6-phase workflow: C++ analysis → C API creation → submodule commits →
   binding generation → C# wrapper → testing.
   
   Use when user asks to:
-  - Add/expose new API from Skia
-  - Wrap C++ function in C#
-  - Add missing method/property
-  - Expose Skia functionality
+  - Add/expose/wrap new API from Skia
+  - Create C# binding for Skia function
+  - Add missing method/property to SK* class
+  - Expose Skia C++ functionality in C#
   
   Triggers: "add API", "expose function", "wrap method", "add SKFoo.Bar",
+  "create binding for", "add support for [Skia feature]",
   "implement #NNNN" (when issue requests new API)
 ---
 
@@ -37,8 +38,8 @@ description: >
 6. Test             →  Run tests (MANDATORY)
 ```
 
-👉 **Detailed checklists:** See [references/checklists.md](references/checklists.md)
-👉 **If stuck:** See [references/troubleshooting.md](references/troubleshooting.md)
+👉 **Detailed checklists:** [references/checklists.md](references/checklists.md)
+👉 **Troubleshooting:** [references/troubleshooting.md](references/troubleshooting.md)
 
 ---
 
@@ -55,7 +56,7 @@ Find the C++ API in Skia headers and identify:
 
 3. **Parameters** — primitives, references, pointers, const-ness
 
-👉 See [copilot-instructions.md#pointer-type-decision-tree](../../copilot-instructions.md#pointer-type-decision-tree)
+👉 See [../../../documentation/memory-management.md#pointer-type-decision-tree](../../../documentation/memory-management.md#pointer-type-decision-tree)
 
 ---
 
