@@ -151,9 +151,9 @@ git diff binding/SkiaSharp/SkiaApi.generated.cs
 > ❌ **NEVER** manually edit `*.generated.cs` — always regenerate
 
 **If generation fails:**
-- Check network connectivity
+- Retry once in case of transient issues
 - Verify C API syntax is correct
-- Fix issues, don't work around by manual editing
+- If still failing, stop and notify the developer to fix the environment
 
 ### Phase 5: Add C# Wrapper
 
@@ -213,7 +213,7 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
 > ❌ **Building alone is NOT sufficient** — must verify tests pass
-> ❌ **Network issues are NOT an excuse** — fix network, don't skip tests
+> ❌ **If tests fail, stop and fix** — don't skip or work around test failures
 
 ---
 
@@ -263,9 +263,9 @@ Before proceeding to next phase, verify:
 **Cause:** C API implementation bug, wrong pointer handling, incorrect parameters
 **Fix:** Debug C API layer, check conversion macros, verify pointer types
 
-### Issue: "Network error during generation"
-**Cause:** Azure DevOps CDN blocked, NuGet packages unavailable
-**Fix:** Use public NuGet source: `dotnet restore --source https://api.nuget.org/v3/index.json`
+### Issue: "Generator or tests fail"
+**Cause:** Environment issue, missing dependencies, transient failure
+**Fix:** Retry once. If still failing, stop and notify developer to fix the environment — don't skip or work around
 
 ---
 

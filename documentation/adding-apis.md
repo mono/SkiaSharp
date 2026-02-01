@@ -230,4 +230,4 @@ dotnet cake --target=tests        # Test
 | Forgot `git add externals/skia` in parent | Parent repo doesn't reference your C API changes | Stage submodule after committing inside it |
 | Manually edited `*.generated.cs` | Binding mismatch, overwrites on next generation | Always run `./utils/generate.ps1` |
 | Only built, didn't test | Functionality may not work despite compiling | Always run tests — passing tests required |
-| Assumed network failure excuses skipping steps | Incomplete implementation merged | Fix network/dependencies, never skip generator or tests |
+| Generator or tests fail | Incomplete implementation | Retry once; if still failing, stop and notify developer to fix environment |

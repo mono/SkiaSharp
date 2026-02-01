@@ -285,14 +285,6 @@ namespace SkiaSharp
 			SkiaApi.sk_surface_draw (Handle, canvas.Handle, x, y, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
-		public void Draw (SKCanvas canvas, float x, float y, SKSamplingOptions sampling, SKPaint paint)
-		{
-			if (canvas == null)
-				throw new ArgumentNullException (nameof (canvas));
-
-			SkiaApi.sk_surface_draw_sampling (Handle, canvas.Handle, x, y, &sampling, paint == null ? IntPtr.Zero : paint.Handle);
-		}
-
 		public SKPixmap PeekPixels ()
 		{
 			var pixmap = new SKPixmap ();

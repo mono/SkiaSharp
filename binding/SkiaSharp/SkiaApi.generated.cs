@@ -15142,25 +15142,6 @@ namespace SkiaSharp
 			(sk_surface_draw_delegate ??= GetSymbol<Delegates.sk_surface_draw> ("sk_surface_draw")).Invoke (surface, canvas, x, y, paint);
 		#endif
 
-		// void sk_surface_draw_sampling(sk_surface_t* surface, sk_canvas_t* canvas, float x, float y, const sk_sampling_options_t* sampling, const sk_paint_t* paint)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (SKIA)]
-		internal static unsafe partial void sk_surface_draw_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
-		internal static unsafe extern void sk_surface_draw_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal unsafe delegate void sk_surface_draw_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint);
-		}
-		private static Delegates.sk_surface_draw_sampling sk_surface_draw_sampling_delegate;
-		internal static unsafe void sk_surface_draw_sampling (sk_surface_t surface, sk_canvas_t canvas, Single x, Single y, SKSamplingOptions* sampling, sk_paint_t paint) =>
-			(sk_surface_draw_sampling_delegate ??= GetSymbol<Delegates.sk_surface_draw_sampling> ("sk_surface_draw_sampling")).Invoke (surface, canvas, x, y, sampling, paint);
-		#endif
-
 		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
