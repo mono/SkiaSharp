@@ -147,6 +147,7 @@
       <ObjectFileName>$(IntDir)</ObjectFileName>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AdditionalOptions>/Qspectre %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -166,6 +167,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AdditionalOptions>/Qspectre %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -185,6 +187,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AdditionalOptions>/Qspectre %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -206,12 +209,14 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AdditionalOptions>/Qspectre %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalOptions>/DEBUGTYPE:CV,FIXUP</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(VCToolsInstallDir)lib\spectre\$([MSBuild]::ValueOrDefault('$(Platform)', 'Win32').Replace('Win32', 'x86'));%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ControlFlowGuard>true</ControlFlowGuard>
     </Link>
   </ItemDefinitionGroup>
@@ -229,12 +234,14 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AdditionalOptions>/Qspectre %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalOptions>/DEBUGTYPE:CV,FIXUP</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(VCToolsInstallDir)lib\spectre\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ControlFlowGuard>true</ControlFlowGuard>
     </Link>
   </ItemDefinitionGroup>
@@ -252,12 +259,14 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <BufferSecurityCheck>true</BufferSecurityCheck>
+      <AdditionalOptions>/Qspectre %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalOptions>/DEBUGTYPE:CV,FIXUP</AdditionalOptions>
+      <AdditionalLibraryDirectories>$(VCToolsInstallDir)lib\spectre\$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ControlFlowGuard>true</ControlFlowGuard>
     </Link>
   </ItemDefinitionGroup>
