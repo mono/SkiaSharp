@@ -44,6 +44,36 @@ Before starting, confirm you will:
 
 > **🛑 STOP AND ASK** before: Creating PRs, Merging PRs, Force pushing, Any destructive git operations
 
+### 🚫 BRANCH PROTECTION (MANDATORY COMPLIANCE)
+
+> **⛔ POLICY VIOLATION: Direct commits to protected branches are prohibited.**
+
+**This rule applies to BOTH repositories:**
+
+| Repository | Protected Branches | Action Required |
+|------------|-------------------|-----------------|
+| **mono/SkiaSharp** (parent repo) | `main` | Create feature branch first |
+| **mono/skia** (`externals/skia` submodule) | `main`, `skiasharp` | Create feature branch first |
+
+**Before ANY commit in either repository:**
+
+1. **Create a feature branch** — Use naming convention: `dev/issue-NNNN-description` or `dev/update-{dep}`
+2. **Never commit directly** to `main` or `skiasharp` — All changes require a PR
+3. **This is a compliance requirement** — Direct commits bypass review, CI, and audit trails
+
+```bash
+# ✅ CORRECT — Always create feature branch first
+cd externals/skia
+git checkout skiasharp
+git checkout -b dev/update-libpng
+# Now make commits...
+
+# ❌ WRONG — Never do this
+cd externals/skia
+git checkout skiasharp
+git commit -m "Update libpng"  # POLICY VIOLATION
+```
+
 ### ❌ NEVER Do These
 
 | Shortcut | Why It's Wrong |

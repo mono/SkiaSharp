@@ -52,6 +52,36 @@ SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 
 **Building alone is NOT sufficient.** Run tests before claiming completion (see [Commands](#commands)).
 
+### 5. Branch Protection (COMPLIANCE REQUIRED)
+
+**Direct commits to protected branches are a policy violation.**
+
+| Repository | Protected Branches |
+|------------|-------------------|
+| SkiaSharp (parent) | `main` |
+| externals/skia (submodule) | `main`, `skiasharp` |
+
+**Required workflow:**
+
+1. **Create a feature branch FIRST** — Use naming convention: `dev/issue-NNNN-description`
+2. **Make all commits on the feature branch** — Never commit directly to protected branches
+3. **Submit a Pull Request** — Changes must be reviewed before merging
+
+```bash
+# ✅ CORRECT — Always create a feature branch first
+git checkout -b dev/issue-1234-fix-description
+
+# For submodule changes:
+cd externals/skia
+git checkout -b dev/issue-1234-add-c-api
+
+# ❌ NEVER DO THIS — Policy violation
+git checkout main && git commit  # FORBIDDEN
+git checkout skiasharp && git commit  # FORBIDDEN (in skia submodule)
+```
+
+**This applies to BOTH repositories.** The skia submodule has its own protected branches that must be respected.
+
 ---
 
 ## Commands

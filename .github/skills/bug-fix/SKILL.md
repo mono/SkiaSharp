@@ -18,6 +18,27 @@ description: >
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
+## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+
+> **🛑 NEVER commit directly to protected branches. This is a policy violation.**
+
+| Repository | Protected Branches | Required Action |
+|------------|-------------------|-----------------|
+| SkiaSharp (parent) | `main` | Create feature branch first |
+| externals/skia (submodule) | `main`, `skiasharp` | Create feature branch first |
+
+**BEFORE making any changes**, create a feature branch:
+
+```bash
+# Create branch in SkiaSharp repo
+git checkout -b dev/issue-NNNN-description
+
+# If bug requires C API changes, also create branch in submodule:
+cd externals/skia
+git checkout -b dev/issue-NNNN-description
+cd ../..
+```
+
 ## Workflow
 
 ```

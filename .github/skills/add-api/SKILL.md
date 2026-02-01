@@ -13,10 +13,32 @@ description: >
 
 # Add API Skill
 
+## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+
+> **🛑 NEVER commit directly to protected branches. This is a policy violation.**
+
+| Repository | Protected Branches | Required Action |
+|------------|-------------------|-----------------|
+| SkiaSharp (parent) | `main` | Create feature branch first |
+| externals/skia (submodule) | `main`, `skiasharp` | Create feature branch first |
+
+**BEFORE making any changes**, create feature branches in BOTH repos:
+
+```bash
+# Step 1: Create branch in SkiaSharp repo
+git checkout -b dev/issue-NNNN-description
+
+# Step 2: Create branch in submodule (REQUIRED for C API changes)
+cd externals/skia
+git checkout -b dev/issue-NNNN-description
+cd ../..
+```
+
 ## ❌ NEVER Do These
 
 | Shortcut | Consequence |
 |----------|-------------|
+| Commit directly to `main` or `skiasharp` branches | **Policy violation** — blocks PR, requires revert |
 | Edit `*.generated.cs` manually | Overwrites on next generation; binding mismatch |
 | Skip generator after C API change | C# bindings won't match C API |
 | Skip tests | Can't verify functionality works |

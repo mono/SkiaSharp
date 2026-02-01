@@ -14,6 +14,17 @@ Create release branches for SkiaSharp versions.
 
 ⚠️ **NO UNDO:** This is step 1 of 3. See [releasing.md](../../../documentation/releasing.md) for full workflow.
 
+## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+
+> **🛑 NEVER commit directly to `main` or `skiasharp` branches. This is a policy violation.**
+
+| Repository | Protected Branches | Required Action |
+|------------|-------------------|-----------------|
+| SkiaSharp (parent) | `main` | Create `release/X.Y.Z` branch, never commit to main |
+| externals/skia (submodule) | `main`, `skiasharp` | Must use feature branch if submodule changes needed |
+
+**Release branches are created FROM main, but never modify main directly.**
+
 ---
 
 ## Step 1: Determine Version
