@@ -111,9 +111,36 @@ return result;
 
 Methods that may return same instance: `Subset()`, `ToRasterImage()`, `ToRasterImage(false)`
 
-## Phase 4: Test
+## Phase 4: Build & Test
 
-Write regression test BEFORE claiming fix is complete:
+### If You Modified C API (Native Code)
+
+> **🛑 If the bug fix required changes to `externals/skia/` (C API), you MUST build the native library.**
+
+```bash
+# macOS (Apple Silicon)
+dotnet cake --target=externals-macos --arch=arm64
+
+# macOS (Intel)  
+dotnet cake --target=externals-macos --arch=x64
+
+# Windows (x64)
+dotnet cake --target=externals-windows --arch=x64
+```
+
+> ⚠️ `EntryPointNotFoundException` means you forgot to build natives after C API changes.
+
+### If You Only Modified C# Code
+
+For C#-only fixes, pre-built natives work fine:
+
+```bash
+dotnet cake --target=externals-download  # Only if output/native/ is empty
+```
+
+### Write Regression Test
+
+Write a test BEFORE claiming the fix is complete:
 
 ```csharp
 [SkippableFact]
@@ -129,10 +156,15 @@ public void MethodDoesNotCrashWithEmptyInput()
 }
 ```
 
-Run tests:
+### Run Tests
+
 ```bash
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
+
+> **🛑 Tests MUST PASS.** Do not skip tests. Do not claim completion if tests fail.
+>
+> Skipping is only acceptable for missing hardware (no GPU drivers, no display).
 
 ## Phase 5: Verify
 
@@ -150,3 +182,4 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 | Similar bugs exist in other methods | Consider if root cause is shared; may need broader fix |
 | Native crash (AccessViolation) | Check C API, verify pointer ownership and lifetime |
 | Memory leak persists | Review disposal pattern; check if object implements `ISKReferenceCounted` |
+| `EntryPointNotFoundException` | You modified C API but didn't rebuild natives — run `dotnet cake --target=externals-{platform}` |

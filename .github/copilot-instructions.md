@@ -90,10 +90,26 @@ Single source of truth for all commands:
 
 | Task | Command |
 |------|---------|
-| **Bootstrap** | `dotnet cake --target=externals-download` |
-| **Build** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
+| **Bootstrap (C#-only work)** | `dotnet cake --target=externals-download` |
+| **Build Native (macOS ARM64)** | `dotnet cake --target=externals-macos --arch=arm64` |
+| **Build Native (macOS Intel)** | `dotnet cake --target=externals-macos --arch=x64` |
+| **Build Native (Windows)** | `dotnet cake --target=externals-windows --arch=x64` |
+| **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
+
+### ⚠️ When to Use Which Bootstrap
+
+| What You Changed | Command Required |
+|------------------|------------------|
+| C# code only (`binding/SkiaSharp/*.cs`) | `externals-download` (pre-built natives) |
+| C API (`externals/skia/src/c/`, `externals/skia/include/c/`) | **`externals-{platform}` (MUST rebuild natives)** |
+| Dependencies (`externals/skia/DEPS`) | **`externals-{platform}` (MUST rebuild natives)** |
+
+> **🛑 CRITICAL:** If you modify ANY native code (C API headers/implementations), you MUST rebuild 
+> the native library with `dotnet cake --target=externals-{platform}`. Using `externals-download`
+> after native changes will cause `EntryPointNotFoundException` at runtime because the downloaded
+> binaries don't contain your new functions.
 
 > **Note:** For release verification, see `release-testing` skill for the full platform matrix (iOS, Android, Mac Catalyst, Blazor).
 
@@ -243,6 +259,8 @@ ThreadLocal<SKPaint> paint = new(() => new SKPaint());
 | Modifying method signatures | ABI breaking |
 | Manual edits to `*.generated.cs` | Overwritten on regenerate |
 | Using default parameters in public APIs | ABI breaking |
+| **Skipping failing tests** | **Unacceptable — tests must pass** |
+| **Using `externals-download` after C API changes** | **Causes `EntryPointNotFoundException`** |
 
 ---
 
@@ -253,6 +271,19 @@ ThreadLocal<SKPaint> paint = new(() => new SKPaint());
 ```bash
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
+
+### ⚠️ Tests MUST Pass
+
+> **🛑 NON-NEGOTIABLE:** Tests must PASS before claiming completion.
+> 
+> - Do NOT skip failing tests
+> - Do NOT claim completion if tests fail
+> - Do NOT use `SkipException` to work around failures
+>
+> **Skipping is ONLY acceptable for hardware limitations:**
+> - No GPU drivers available
+> - No display attached
+> - Platform doesn't support the feature (e.g., Metal on Windows)
 
 ### Writing Tests
 
@@ -287,6 +318,7 @@ public void FeatureWorks()
 | `AccessViolationException` | Memory management bug | Check disposal patterns |
 | `NullReferenceException` | Factory returned null | Check C API return value |
 | Random crashes | Threading violation | Check Canvas/Paint thread scope |
+| **`EntryPointNotFoundException`** | **Native library not rebuilt after C API change** | **Run `dotnet cake --target=externals-{platform}`** |
 
 See [documentation/debugging-methodology.md](../documentation/debugging-methodology.md).
 
