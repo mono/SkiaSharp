@@ -70,7 +70,7 @@ Before starting, confirm you will:
    - References vs pointers
    - Const-ness
 
-👉 See [documentation/adding-apis.md](../../../documentation/adding-apis.md#pointer-type-decision-tree) for pointer type guide.
+👉 See [copilot-instructions.md](../../copilot-instructions.md#pointer-type-decision-tree) for pointer type guide.
 
 ### Phase 2: Add C API
 

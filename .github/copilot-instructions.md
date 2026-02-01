@@ -110,10 +110,6 @@ To expose new Skia C++ functionality in C#, use the **`add-api` skill** for stru
 👉 **For reference:** See [`documentation/adding-apis.md`](../documentation/adding-apis.md) — complete examples, pointer types, patterns
 
 ---
-- Error handling patterns
-- Full checklist for all phases
-
----
 
 ## ⚠️ Critical Rules
 

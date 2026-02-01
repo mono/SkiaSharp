@@ -39,7 +39,7 @@ git commit -m "Add sk_foo_bar to C API"
 
 **Step 2: Update parent repo to use new submodule commit**
 ```bash
-cd /home/runner/work/SkiaSharp/SkiaSharp  # Return to repo root
+cd ../..  # Return to SkiaSharp repo root
 
 # Stage the submodule reference
 git add externals/skia
@@ -182,27 +182,28 @@ public static SKImage FromEncodedData(SKData data) {
 - [ ] Implementation in `externals/skia/src/c/sk_*.cpp` uses `AsType()`/`ToType()` macros
 - [ ] Ref-counted params use `sk_ref_sp()`
 - [ ] Ref-counted returns use `.release()`
+
+**Phase 3: Commit Submodule**
 - [ ] **Configured git in submodule** (`git config user.email/name`)
 - [ ] **Committed changes in submodule** (`cd externals/skia && git commit`)
-- [ ] **Staged submodule in parent repo** (`cd /home/runner/work/SkiaSharp/SkiaSharp && git add externals/skia`)
+- [ ] **Staged submodule in parent repo** (`cd ../.. && git add externals/skia`)
 
-**Phase 3: C# Bindings**
+**Phase 4: Regenerate Bindings**
 - [ ] **Regenerated P/Invoke** (`./utils/generate.ps1`) — **MANDATORY, never skip**
 - [ ] Verified `SkiaApi.generated.cs` updated correctly
+
+**Phase 5: C# Wrapper**
 - [ ] Added C# wrapper method
 - [ ] Validates null parameters
 - [ ] Checks return values (factory→null, constructor→throw)
 - [ ] Correct ownership (`owns: true/false`)
 
-**Phase 4: Tests (MANDATORY)**
+**Phase 6: Tests (MANDATORY)**
 - [ ] Added test methods in `tests/Tests/SkiaSharp/`
 - [ ] Tests follow existing patterns (`[SkippableFact]`, `using` statements)
 - [ ] **Ran tests and verified they pass** — **NOT OPTIONAL**
 - [ ] All assertions pass
-
-**Phase 5: Final Verification**
 - [ ] Build succeeds: `dotnet build binding/SkiaSharp/SkiaSharp.csproj`
-- [ ] Tests pass: `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj`
 - [ ] Both submodule and C# changes committed together
 
 ## Build & Test Commands
