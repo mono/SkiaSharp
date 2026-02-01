@@ -19,7 +19,6 @@ string GetSpectreLibPath(string arch)
     // Normalize architecture names to match spectre lib directory structure
     var spectreArch = arch.ToLower() switch {
         "win32" => "x86",
-        "arm64" => "arm64",
         _ => arch.ToLower()
     };
 
