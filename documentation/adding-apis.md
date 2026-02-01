@@ -112,13 +112,13 @@ Analysis: Canvas (owned), paint (borrowed), primitives, void return.
 
 ### Step 2: Add C API
 
-**Header** (`sk_canvas.h`):
+**Header** (`externals/skia/include/c/sk_canvas.h`):
 ```cpp
 SK_C_API void sk_canvas_draw_circle(sk_canvas_t* canvas, float cx, float cy, 
                                      float radius, const sk_paint_t* paint);
 ```
 
-**Implementation** (`sk_canvas.cpp`):
+**Implementation** (`externals/skia/src/c/sk_canvas.cpp`):
 ```cpp
 void sk_canvas_draw_circle(sk_canvas_t* canvas, float cx, float cy,
                            float radius, const sk_paint_t* paint) {
@@ -126,7 +126,20 @@ void sk_canvas_draw_circle(sk_canvas_t* canvas, float cx, float cy,
 }
 ```
 
-### Step 3: Regenerate P/Invoke
+### Step 3: Commit Submodule
+
+```bash
+# Commit in submodule first
+cd externals/skia
+git add include/c/sk_canvas.h src/c/sk_canvas.cpp
+git commit -m "Add sk_canvas_draw_circle to C API"
+
+# Stage submodule in parent
+cd ../..
+git add externals/skia
+```
+
+### Step 4: Regenerate P/Invoke
 
 Run the generator to create P/Invoke declarations from C API headers:
 
@@ -141,7 +154,7 @@ public static extern void sk_canvas_draw_circle(sk_canvas_t canvas, float cx,
                                                  float cy, float radius, sk_paint_t paint);
 ```
 
-### Step 4: Add C# Wrapper
+### Step 5: Add C# Wrapper
 
 ```csharp
 public void DrawCircle(float cx, float cy, float radius, SKPaint paint) {
@@ -149,6 +162,13 @@ public void DrawCircle(float cx, float cy, float radius, SKPaint paint) {
         throw new ArgumentNullException(nameof(paint));
     SkiaApi.sk_canvas_draw_circle(Handle, cx, cy, radius, paint.Handle);
 }
+```
+
+### Step 6: Test
+
+```bash
+dotnet build binding/SkiaSharp/SkiaSharp.csproj
+dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
 ## Reference-Counted Return Example

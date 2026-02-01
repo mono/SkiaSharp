@@ -34,11 +34,11 @@ Investigate security status of SkiaSharp's native dependencies. Produces a repor
 1. Search issues/PRs
 2. Get versions from DEPS
 3. Web search CVEs
-4. For each CVE found:
-   ├─ Verify fix commit exists
+4. Verify fix commits for each CVE
    ├─ Fixed? → Mark clean
    └─ Not fixed? → Flag for action
-5. Generate report
+5. Check false positives
+6. Generate report
 ```
 
 ### Step 1: Search Issues & PRs

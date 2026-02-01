@@ -78,7 +78,7 @@ The `externals/skia/` directory is a **git submodule** (separate repository). Wh
 ### Full Workflow
 
 👉 **For complete details, use the `add-api` skill** or see:
-- [`.github/skills/add-api/SKILL.md`](.github/skills/add-api/SKILL.md) — Structured 6-phase workflow with checkpoints
+- [`skills/add-api/SKILL.md`](skills/add-api/SKILL.md) — Structured 6-phase workflow with checkpoints
 - [`documentation/adding-apis.md`](../documentation/adding-apis.md) — Complete examples and patterns
 
 ---
