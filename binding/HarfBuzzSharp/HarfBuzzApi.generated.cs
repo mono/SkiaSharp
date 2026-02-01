@@ -3020,25 +3020,6 @@ namespace HarfBuzzSharp
 			(hb_font_funcs_set_glyph_name_func_delegate ??= GetSymbol<Delegates.hb_font_funcs_set_glyph_name_func> ("hb_font_funcs_set_glyph_name_func")).Invoke (ffuncs, func, user_data, destroy);
 		#endif
 
-		// extern void hb_font_funcs_set_glyph_shape_func(hb_font_funcs_t* ffuncs, hb_font_get_glyph_shape_func_t func, void* user_data, hb_destroy_func_t destroy)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_font_funcs_set_glyph_shape_func (hb_font_funcs_t ffuncs, void* func, void* user_data, void* destroy);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_font_funcs_set_glyph_shape_func (hb_font_funcs_t ffuncs, FontGetGlyphShapeProxyDelegate func, void* user_data, DestroyProxyDelegate destroy);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_font_funcs_set_glyph_shape_func (hb_font_funcs_t ffuncs, FontGetGlyphShapeProxyDelegate func, void* user_data, DestroyProxyDelegate destroy);
-		}
-		private static Delegates.hb_font_funcs_set_glyph_shape_func hb_font_funcs_set_glyph_shape_func_delegate;
-		internal static void hb_font_funcs_set_glyph_shape_func (hb_font_funcs_t ffuncs, FontGetGlyphShapeProxyDelegate func, void* user_data, DestroyProxyDelegate destroy) =>
-			(hb_font_funcs_set_glyph_shape_func_delegate ??= GetSymbol<Delegates.hb_font_funcs_set_glyph_shape_func> ("hb_font_funcs_set_glyph_shape_func")).Invoke (ffuncs, func, user_data, destroy);
-		#endif
-
 		// extern void hb_font_funcs_set_glyph_v_advance_func(hb_font_funcs_t* ffuncs, hb_font_get_glyph_v_advance_func_t func, void* user_data, hb_destroy_func_t destroy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -3536,25 +3517,6 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_font_get_glyph_origin_for_direction hb_font_get_glyph_origin_for_direction_delegate;
 		internal static void hb_font_get_glyph_origin_for_direction (hb_font_t font, UInt32 glyph, Direction direction, Int32* x, Int32* y) =>
 			(hb_font_get_glyph_origin_for_direction_delegate ??= GetSymbol<Delegates.hb_font_get_glyph_origin_for_direction> ("hb_font_get_glyph_origin_for_direction")).Invoke (font, glyph, direction, x, y);
-		#endif
-
-		// extern void hb_font_get_glyph_shape(hb_font_t* font, hb_codepoint_t glyph, hb_draw_funcs_t* dfuncs, void* draw_data)
-		#if !USE_DELEGATES
-		#if USE_LIBRARY_IMPORT
-		[LibraryImport (HARFBUZZ)]
-		internal static partial void hb_font_get_glyph_shape (hb_font_t font, UInt32 glyph, hb_draw_funcs_t dfuncs, void* draw_data);
-		#else // !USE_LIBRARY_IMPORT
-		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void hb_font_get_glyph_shape (hb_font_t font, UInt32 glyph, hb_draw_funcs_t dfuncs, void* draw_data);
-		#endif
-		#else
-		private partial class Delegates {
-			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
-			internal delegate void hb_font_get_glyph_shape (hb_font_t font, UInt32 glyph, hb_draw_funcs_t dfuncs, void* draw_data);
-		}
-		private static Delegates.hb_font_get_glyph_shape hb_font_get_glyph_shape_delegate;
-		internal static void hb_font_get_glyph_shape (hb_font_t font, UInt32 glyph, hb_draw_funcs_t dfuncs, void* draw_data) =>
-			(hb_font_get_glyph_shape_delegate ??= GetSymbol<Delegates.hb_font_get_glyph_shape> ("hb_font_get_glyph_shape")).Invoke (font, glyph, dfuncs, draw_data);
 		#endif
 
 		// extern hb_position_t hb_font_get_glyph_v_advance(hb_font_t* font, hb_codepoint_t glyph)
@@ -5014,6 +4976,25 @@ namespace HarfBuzzSharp
 			(hb_ot_layout_collect_features_delegate ??= GetSymbol<Delegates.hb_ot_layout_collect_features> ("hb_ot_layout_collect_features")).Invoke (face, table_tag, scripts, languages, features, feature_indexes);
 		#endif
 
+		// extern void hb_ot_layout_collect_features_map(hb_face_t* face, hb_tag_t table_tag, unsigned int script_index, unsigned int language_index, hb_map_t* feature_map)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_ot_layout_collect_features_map (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, hb_map_t feature_map);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_ot_layout_collect_features_map (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, hb_map_t feature_map);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_ot_layout_collect_features_map (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, hb_map_t feature_map);
+		}
+		private static Delegates.hb_ot_layout_collect_features_map hb_ot_layout_collect_features_map_delegate;
+		internal static void hb_ot_layout_collect_features_map (hb_face_t face, UInt32 table_tag, UInt32 script_index, UInt32 language_index, hb_map_t feature_map) =>
+			(hb_ot_layout_collect_features_map_delegate ??= GetSymbol<Delegates.hb_ot_layout_collect_features_map> ("hb_ot_layout_collect_features_map")).Invoke (face, table_tag, script_index, language_index, feature_map);
+		#endif
+
 		// extern void hb_ot_layout_collect_lookups(hb_face_t* face, hb_tag_t table_tag, const hb_tag_t* scripts, const hb_tag_t* languages, const hb_tag_t* features, hb_set_t* lookup_indexes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
@@ -5170,6 +5151,91 @@ namespace HarfBuzzSharp
 		private static Delegates.hb_ot_layout_get_baseline_with_fallback hb_ot_layout_get_baseline_with_fallback_delegate;
 		internal static void hb_ot_layout_get_baseline_with_fallback (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script_tag, UInt32 language_tag, Int32* coord) =>
 			(hb_ot_layout_get_baseline_with_fallback_delegate ??= GetSymbol<Delegates.hb_ot_layout_get_baseline_with_fallback> ("hb_ot_layout_get_baseline_with_fallback")).Invoke (font, baseline_tag, direction, script_tag, language_tag, coord);
+		#endif
+
+		// extern void hb_ot_layout_get_baseline_with_fallback2(hb_font_t* font, hb_ot_layout_baseline_tag_t baseline_tag, hb_direction_t direction, hb_script_t script, hb_language_t language, hb_position_t* coord)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		internal static partial void hb_ot_layout_get_baseline_with_fallback2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		internal static extern void hb_ot_layout_get_baseline_with_fallback2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			internal delegate void hb_ot_layout_get_baseline_with_fallback2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord);
+		}
+		private static Delegates.hb_ot_layout_get_baseline_with_fallback2 hb_ot_layout_get_baseline_with_fallback2_delegate;
+		internal static void hb_ot_layout_get_baseline_with_fallback2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord) =>
+			(hb_ot_layout_get_baseline_with_fallback2_delegate ??= GetSymbol<Delegates.hb_ot_layout_get_baseline_with_fallback2> ("hb_ot_layout_get_baseline_with_fallback2")).Invoke (font, baseline_tag, direction, script, language, coord);
+		#endif
+
+		// extern hb_bool_t hb_ot_layout_get_baseline2(hb_font_t* font, hb_ot_layout_baseline_tag_t baseline_tag, hb_direction_t direction, hb_script_t script, hb_language_t language, hb_position_t* coord)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_ot_layout_get_baseline2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_ot_layout_get_baseline2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_ot_layout_get_baseline2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord);
+		}
+		private static Delegates.hb_ot_layout_get_baseline2 hb_ot_layout_get_baseline2_delegate;
+		internal static bool hb_ot_layout_get_baseline2 (hb_font_t font, OpenTypeLayoutBaselineTag baseline_tag, Direction direction, UInt32 script, IntPtr language, Int32* coord) =>
+			(hb_ot_layout_get_baseline2_delegate ??= GetSymbol<Delegates.hb_ot_layout_get_baseline2> ("hb_ot_layout_get_baseline2")).Invoke (font, baseline_tag, direction, script, language, coord);
+		#endif
+
+		// extern hb_bool_t hb_ot_layout_get_font_extents(hb_font_t* font, hb_direction_t direction, hb_tag_t script_tag, hb_tag_t language_tag, hb_font_extents_t* extents)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_ot_layout_get_font_extents (hb_font_t font, Direction direction, UInt32 script_tag, UInt32 language_tag, FontExtents* extents);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_ot_layout_get_font_extents (hb_font_t font, Direction direction, UInt32 script_tag, UInt32 language_tag, FontExtents* extents);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_ot_layout_get_font_extents (hb_font_t font, Direction direction, UInt32 script_tag, UInt32 language_tag, FontExtents* extents);
+		}
+		private static Delegates.hb_ot_layout_get_font_extents hb_ot_layout_get_font_extents_delegate;
+		internal static bool hb_ot_layout_get_font_extents (hb_font_t font, Direction direction, UInt32 script_tag, UInt32 language_tag, FontExtents* extents) =>
+			(hb_ot_layout_get_font_extents_delegate ??= GetSymbol<Delegates.hb_ot_layout_get_font_extents> ("hb_ot_layout_get_font_extents")).Invoke (font, direction, script_tag, language_tag, extents);
+		#endif
+
+		// extern hb_bool_t hb_ot_layout_get_font_extents2(hb_font_t* font, hb_direction_t direction, hb_script_t script, hb_language_t language, hb_font_extents_t* extents)
+		#if !USE_DELEGATES
+		#if USE_LIBRARY_IMPORT
+		[LibraryImport (HARFBUZZ)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static partial bool hb_ot_layout_get_font_extents2 (hb_font_t font, Direction direction, UInt32 script, IntPtr language, FontExtents* extents);
+		#else // !USE_LIBRARY_IMPORT
+		[DllImport (HARFBUZZ, CallingConvention = CallingConvention.Cdecl)]
+		[return: MarshalAs (UnmanagedType.I1)]
+		internal static extern bool hb_ot_layout_get_font_extents2 (hb_font_t font, Direction direction, UInt32 script, IntPtr language, FontExtents* extents);
+		#endif
+		#else
+		private partial class Delegates {
+			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
+			[return: MarshalAs (UnmanagedType.I1)]
+			internal delegate bool hb_ot_layout_get_font_extents2 (hb_font_t font, Direction direction, UInt32 script, IntPtr language, FontExtents* extents);
+		}
+		private static Delegates.hb_ot_layout_get_font_extents2 hb_ot_layout_get_font_extents2_delegate;
+		internal static bool hb_ot_layout_get_font_extents2 (hb_font_t font, Direction direction, UInt32 script, IntPtr language, FontExtents* extents) =>
+			(hb_ot_layout_get_font_extents2_delegate ??= GetSymbol<Delegates.hb_ot_layout_get_font_extents2> ("hb_ot_layout_get_font_extents2")).Invoke (font, direction, script, language, extents);
 		#endif
 
 		// extern hb_ot_layout_glyph_class_t hb_ot_layout_get_glyph_class(hb_face_t* face, hb_codepoint_t glyph)
