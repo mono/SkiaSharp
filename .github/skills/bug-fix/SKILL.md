@@ -4,13 +4,9 @@ description: >
   Fix bugs in SkiaSharp C# bindings. Structured workflow for investigating, fixing,
   and testing bug reports.
   
-  Triggers (after issue classification determines it's a bug):
-  - Crash, exception, AccessViolationException
-  - Incorrect output, wrong behavior
-  - Memory leak, disposal issues
-  - "fails", "broken", "doesn't work"
+  Triggers: Crash, exception, AccessViolationException, incorrect output, wrong behavior,
+  memory leak, disposal issues, "fails", "broken", "doesn't work".
   
-  Do NOT use directly - invoke via issue classification in copilot-instructions.
   For adding new APIs, use `add-api` skill instead.
 ---
 
@@ -143,3 +139,14 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 - [ ] Fix doesn't break existing tests
 - [ ] Check for similar issues in related code
 - [ ] Minimal changes only (no unrelated cleanup)
+
+## Error Recovery
+
+| Issue | Recovery |
+|-------|----------|
+| Fix causes new test failures | Revert changes (`git checkout -- <file>`), re-analyze root cause |
+| Can't reproduce the bug | Ask user for more details: platform, version, exact reproduction steps |
+| Fix works locally but fails CI | Check platform-specific code paths; may need `#if` conditionals |
+| Similar bugs exist in other methods | Consider if root cause is shared; may need broader fix |
+| Native crash (AccessViolation) | Check C API, verify pointer ownership and lifetime |
+| Memory leak persists | Review disposal pattern; check if object implements `ISKReferenceCounted` |

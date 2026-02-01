@@ -206,6 +206,16 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 4. **Push the updated submodule reference** to the SkiaSharp PR branch
 5. **Only then merge the SkiaSharp PR**
 
+#### Merge Checklist
+
+Before proceeding past each step, verify:
+
+- [ ] mono/skia PR merged
+- [ ] Fetched `skiasharp` branch to get new SHA
+- [ ] Updated SkiaSharp submodule to new SHA (`cd externals/skia && git checkout {new-sha}`)
+- [ ] Pushed submodule update to SkiaSharp PR branch
+- [ ] SkiaSharp PR merged
+
 > ❌ **NEVER** merge both PRs in quick succession without updating the submodule in between.
 > ❌ **NEVER** assume the submodule reference is correct after squash-merging mono/skia.
 

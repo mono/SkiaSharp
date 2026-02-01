@@ -70,24 +70,31 @@ Example: `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
 
 **DO NOT ask user for exact NuGet versions.** Resolve automatically:
 
-1. Fetch release branch and read `scripts/VERSIONS.txt`:
-   - `SkiaSharp nuget` line → base version (e.g., `3.119.2`)
-   - `HarfBuzzSharp nuget` line → base version (e.g., `8.3.1.4`)
+1. Fetch release branch and read version files:
+   ```bash
+   # Read base versions (format: "PackageName  nuget  version")
+   grep "^SkiaSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
+   grep "^HarfBuzzSharp\s" scripts/VERSIONS.txt | grep "nuget" | awk '{print $3}'
+   
+   # Read preview label (remove surrounding quotes)
+   grep "PREVIEW_LABEL:" scripts/azure-templates-variables.yml | awk '{print $2}' | tr -d "'"
+   ```
+   - `SkiaSharp ... nuget` line → base version (e.g., `3.119.2`)
+   - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
+   - `PREVIEW_LABEL` → label (e.g., `preview.2` or `stable`)
 
-2. Read `PREVIEW_LABEL` from `scripts/azure-templates-variables.yml` (e.g., `preview.2` or `stable`)
-
-3. Search preview feed:
+2. Search preview feed:
    ```bash
    dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json
    ```
 
-4. Filter versions matching `{base}-{preview-label}.{build}`, pick latest
+3. Filter versions matching `{base}-{preview-label}.{build}`, pick latest
 
-5. Report to user:
+4. Report to user:
    ```
    Resolved versions:
      SkiaSharp:     3.119.2-preview.2.3
-     HarfBuzzSharp: 8.3.1.4-preview.2.3
+     HarfBuzzSharp: 8.3.1.3-preview.2.3
      Build number:  3
    ```
 
@@ -112,10 +119,10 @@ Example: `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
 
 ```
 Planned test matrix:
-  - iOS (old):     iPhone 14 Pro (iOS 16.2 - oldest available)
-  - iOS (new):     iPhone 16 Pro (iOS 18.5 - newest available)
-  - Android (old): Pixel_API_23 (Android 6.0 / API 23)
-  - Android (new): Pixel_API_36 (Android 16 / API 36)
+  - iOS (old):     [device] ([oldest available iOS runtime])
+  - iOS (new):     [device] ([newest available iOS runtime])
+  - Android (old): [device] (Android 6.0 / API 23)
+  - Android (new): [device] (Android 16 / API 36)
   - Mac Catalyst:  Current macOS
   - Blazor:        Chromium
   - Console:       .NET runtime

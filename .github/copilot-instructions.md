@@ -95,6 +95,8 @@ Single source of truth for all commands:
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
 
+> **Note:** For release verification, see `release-testing` skill for the full platform matrix (iOS, Android, Mac Catalyst, Blazor).
+
 **Recovery Commands:**
 
 | Problem | Command |
