@@ -87,13 +87,13 @@ This file tracks progress through the migration for transparency and resumabilit
 ---
 
 ## Phase 3: Baseline Verification
-- [ ] Branch created and pushed
-- [ ] DEPS updated to 2.8.2
-- [ ] git-sync-deps run
-- [ ] Generator run
-- [ ] No changes verified
-- [ ] Tests pass
-- [ ] Committed
+- [x] Branch created and pushed
+- [x] DEPS updated to 2.8.2
+- [x] git-sync-deps run
+- [x] Generator run
+- [x] No changes verified ✓
+- [x] Tests pass (106/106)
+- [x] Committed (docs only - baseline verified)
 
 ---
 
