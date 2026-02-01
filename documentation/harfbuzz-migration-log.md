@@ -101,7 +101,7 @@ This file tracks progress through the migration for transparency and resumabilit
 
 | Version | DEPS Updated | Synced | Generated | Config Updated | Built | Tests Pass | Tests Added | Committed |
 |---------|--------------|--------|-----------|----------------|-------|------------|-------------|-----------|
-| 2.9.1   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
+| 2.9.1   | [x]          | [x]    | [x]       | N/A            | [x]   | [x]        | N/A         | [x]       |
 | 3.4.0   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
 | 4.4.1   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
 | 5.3.1   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
