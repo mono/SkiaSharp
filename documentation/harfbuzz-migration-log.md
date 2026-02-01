@@ -102,29 +102,60 @@ This file tracks progress through the migration for transparency and resumabilit
 | Version | DEPS Updated | Synced | Generated | Config Updated | Built | Tests Pass | Tests Added | Committed |
 |---------|--------------|--------|-----------|----------------|-------|------------|-------------|-----------|
 | 2.9.1   | [x]          | [x]    | [x]       | N/A            | [x]   | [x]        | N/A         | [x]       |
-| 3.4.0   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
-| 4.4.1   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
-| 5.3.1   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
-| 6.0.0   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
-| 7.3.0   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
-| 8.3.1   | [ ]          | [ ]    | [ ]       | [ ]            | [ ]   | [ ]        | [ ]         | [ ]       |
+| 3.4.0   | [x]          | [x]    | [x]       | [x]            | [x]   | [x]        | N/A         | [x]       |
+| 4.4.1   | [x]          | [x]    | [x]       | [x]            | [x]   | [x]        | N/A         | [x]       |
+| 5.3.1   | [x]          | [x]    | [x]       | N/A            | [x]   | [x]        | N/A         | [x]       |
+| 6.0.0   | [x]          | [x]    | [x]       | N/A            | [x]   | [x]        | N/A (no API change) | N/A (no API change) |
+| 7.3.0   | [x]          | [x]    | [x]       | [x]            | [x]   | [x]        | N/A         | [x]       |
+| 8.3.0*  | [x]          | [x]    | [x]       | N/A            | [x]   | [x]        | [ ]         | [x]       |
+
+*Note: Using 8.3.0 instead of 8.3.1 due to libclang parsing issue with inttypes.h change
 
 ---
 
 ## Phase 5: Skipped APIs
-- [ ] Documentation created
+- [x] Documentation created (`documentation/harfbuzz-skipped-apis.md`)
 
 ---
 
 ## Key Findings
 
-(Will be populated as work progresses)
+### Namespace Exclude Feature
+- The `namespaces` config supports an `exclude: true` option to exclude entire API families
+- This is the cleanest way to exclude complex callback-based APIs like Paint
+- Works by filtering types and functions whose names start with the prefix
+
+### API Changes Across Versions
+| Version | Major API Additions | Notable Changes |
+|---------|--------------------|--------------------|
+| 2.9.1 | `hb_set_invert` | - |
+| 3.4.0 | Buffer similar, style APIs, synthetic slant | - |
+| 4.4.1 | Draw API (`hb_draw_funcs_*`) | Callback-based drawing |
+| 5.3.1 | `hb_language_matches`, optical bound API | - |
+| 6.0.0 | (Subsetting APIs only, not parsed) | No public API changes |
+| 7.3.0 | Paint API | Complex ColorLine callbacks excluded |
+| 8.3.0 | `baseline2`, `font_extents` APIs | Removed deprecated `glyph_shape` |
+
+### Generator Limitations Discovered
+1. Struct fields with function pointer types cause issues between USE_LIBRARY_IMPORT and standard mode
+2. libclang `#include_next` chains can fail to resolve SDK headers
+3. Excluding files only works for directly enumerated files, not transitively included ones
 
 ---
 
 ## Issues Encountered
 
-(Will be populated if issues arise)
+### 1. Paint API with ColorLine struct (7.3.0)
+- **Problem:** HarfBuzz 7.3.0 introduced Paint API with `hb_color_line_t` struct containing function pointer fields
+- **Impact:** Generator creates delegate types for non-USE_LIBRARY_IMPORT builds but struct properties reference delegate types that aren't defined in USE_LIBRARY_IMPORT mode
+- **Solution:** Used namespace exclusion (`hb_paint_`, `hb_color_line_`) to exclude all Paint-related types and functions
+- **APIs affected:** All `hb_paint_*` functions, `hb_color_line_*` types
+
+### 2. libclang inttypes.h parsing failure (8.3.1)
+- **Problem:** HarfBuzz 8.3.1 changed from `#include <stdint.h>` to `#include <inttypes.h>` in hb-common.h
+- **Impact:** libclang's `inttypes.h` uses `#include_next` which fails to find SDK's implementation
+- **Solution:** Use 8.3.0 instead (identical API, only C implementation difference)
+- **Alternative (not pursued):** Adding SDK include path caused system types (pthread) to be parsed
 
 ---
 

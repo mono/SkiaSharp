@@ -68,6 +68,20 @@ namespace HarfBuzzSharp
 		public void SetScale (int xScale, int yScale) =>
 			HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
 
+		/// <summary>
+		/// Gets or sets the synthetic slant of the font.
+		/// </summary>
+		/// <remarks>
+		/// The synthetic slant is in "run" units to achieve a "rise" of 1.
+		/// The typical slant value for an idealized oblique font is 0.2 (about 12°).
+		/// HarfBuzz needs to know this value to adjust shaping results, such as offsets.
+		/// </remarks>
+		public float SyntheticSlant
+		{
+			get => HarfBuzzApi.hb_font_get_synthetic_slant (Handle);
+			set => HarfBuzzApi.hb_font_set_synthetic_slant (Handle, value);
+		}
+
 		public bool TryGetHorizontalFontExtents (out FontExtents extents)
 		{
 			fixed (FontExtents* e = &extents) {
