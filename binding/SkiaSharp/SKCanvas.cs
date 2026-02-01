@@ -593,25 +593,12 @@ namespace SkiaSharp
 			DrawSurface (surface, p.X, p.Y, paint);
 		}
 
-		public void DrawSurface (SKSurface surface, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null)
-		{
-			DrawSurface (surface, p.X, p.Y, sampling, paint);
-		}
-
 		public void DrawSurface (SKSurface surface, float x, float y, SKPaint paint = null)
 		{
 			if (surface == null)
 				throw new ArgumentNullException (nameof (surface));
 
 			surface.Draw (this, x, y, paint);
-		}
-
-		public void DrawSurface (SKSurface surface, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
-		{
-			if (surface == null)
-				throw new ArgumentNullException (nameof (surface));
-
-			surface.Draw (this, x, y, sampling, paint);
 		}
 
 		// DrawText (SKTextBlob)
