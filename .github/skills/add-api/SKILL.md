@@ -5,15 +5,10 @@ description: >
   Structured 6-phase workflow: C++ analysis → C API creation → submodule commits →
   binding generation → C# wrapper → testing.
   
-  Use when user asks to:
-  - Add/expose/wrap new API from Skia
-  - Create C# binding for Skia function
-  - Add missing method/property to SK* class
-  - Expose Skia C++ functionality in C#
-  
-  Triggers: "add API", "expose function", "wrap method", "add SKFoo.Bar",
-  "create binding for", "add support for [Skia feature]",
-  "implement #NNNN" (when issue requests new API)
+  Triggers:
+  - Issue classified as "New API" (after fetching and classification)
+  - Direct request: "add DrawFoo method", "expose SkSurface::draw", "wrap sk_foo_bar"
+  - Keywords: "add API", "expose function", "wrap method", "create binding for"
 ---
 
 # Add API Skill
