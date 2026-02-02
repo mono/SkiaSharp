@@ -315,5 +315,50 @@ namespace SkiaSharp.Tests
 				}
 			});
 		}
+
+		[SkippableFact]
+		public void CanDrawSurfaceWithSamplingOptions()
+		{
+			// Create source surface with red fill
+			using var sourceSurface = SKSurface.Create(new SKImageInfo(50, 50));
+			using var sourcePaint = new SKPaint { Color = SKColors.Red };
+			sourceSurface.Canvas.Clear(SKColors.Red);
+
+			// Create destination surface  
+			using var destSurface = SKSurface.Create(new SKImageInfo(100, 100));
+			destSurface.Canvas.Clear(SKColors.Blue);
+
+			// Draw source surface with sampling options
+			var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None);
+			sourceSurface.Draw(destSurface.Canvas, 25, 25, sampling, null);
+
+			// Verify pixel was drawn
+			using var snapshot = destSurface.Snapshot();
+			using var pixmap = snapshot.PeekPixels();
+			Assert.NotNull(pixmap);
+			Assert.Equal(SKColors.Red, pixmap.GetPixelColor(50, 50));
+		}
+
+		[SkippableFact]
+		public void CanDrawSurfaceOnCanvasWithSamplingOptions()
+		{
+			// Create source surface with green fill
+			using var sourceSurface = SKSurface.Create(new SKImageInfo(50, 50));
+			sourceSurface.Canvas.Clear(SKColors.Green);
+
+			// Create destination surface  
+			using var destSurface = SKSurface.Create(new SKImageInfo(100, 100));
+			destSurface.Canvas.Clear(SKColors.White);
+
+			// Draw using Canvas.DrawSurface with sampling options
+			var sampling = new SKSamplingOptions(SKFilterMode.Linear);
+			destSurface.Canvas.DrawSurface(sourceSurface, new SKPoint(10, 10), sampling, null);
+
+			// Verify pixel was drawn
+			using var snapshot = destSurface.Snapshot();
+			using var pixmap = snapshot.PeekPixels();
+			Assert.NotNull(pixmap);
+			Assert.Equal(SKColors.Green, pixmap.GetPixelColor(30, 30));
+		}
 	}
 }
