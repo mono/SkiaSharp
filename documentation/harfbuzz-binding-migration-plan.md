@@ -218,6 +218,7 @@ Document any APIs that were excluded during migration, with rationale and future
 10. `22f0bc25` - docs: document 8.3.1 parsing issue and attempted solutions
 11. `32e4faf3` - refactor(harfbuzz): split HBNewApiTest.cs into appropriate test files
 12. `00ab5c57` - feat(harfbuzz): add Face.GetName and Face.TryGetName for OpenType names
+13. `e0581af7` - feat(harfbuzz): add Font Ppem/Ptem and Face OpenType layout APIs
 
 ### New C# APIs Added
 - `Language.Matches(Language)` - prefix matching for languages
@@ -230,10 +231,21 @@ Document any APIs that were excluded during migration, with rationale and future
 - `Font.SetSyntheticBold(float x, float y, bool inPlace)` - synthetic emboldening
 - `Font.GetSyntheticBold(out float x, out float y, out bool inPlace)` - get emboldening
 - `Font.NamedInstance` - get/set named instance index
+- `Font.GetPpem(out int, out int)` - get pixels per em
+- `Font.SetPpem(int, int)` - set pixels per em
+- `Font.Ptem` property - point size for optical sizing
 - `Face.GetName(OpenTypeNameId)` - get font name from OpenType name table
 - `Face.GetName(OpenTypeNameId, Language)` - with language parameter
 - `Face.TryGetName(OpenTypeNameId, out string)` - returns false if not found
 - `Face.TryGetName(OpenTypeNameId, Language, out string)` - with language parameter
+- `Face.GetAllNameEntries()` - enumerate all name table entries
+- `Face.GetOpenTypeLayoutScriptTags(tableTag)` - scripts in GSUB/GPOS
+- `Face.GetOpenTypeLayoutFeatureTags(tableTag)` - features in GSUB/GPOS
+- `Face.TryGetOpenTypeLayoutFeatureNameIds()` - feature name IDs for UI
+
+### New Types Added
+- `OpenTypeLayoutTableTag` enum (Gsub, Gpos)
+- `OpenTypeFeatureNameIds` struct
 
 ### Configuration Changes
 - Added namespace exclusions: `hb_paint_`, `hb_color_line_`
@@ -241,7 +253,7 @@ Document any APIs that were excluded during migration, with rationale and future
 - Added `generateProxy: false` for Draw API callbacks
 
 ### Test Results
-- All 130 HarfBuzz tests pass (106 original + 24 new)
+- All 155 HarfBuzz tests pass (106 original + 49 new)
 
 ### Documentation Created
 - `documentation/binding-generation.md` - comprehensive generator documentation
