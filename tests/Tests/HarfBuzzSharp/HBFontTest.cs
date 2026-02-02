@@ -234,5 +234,187 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(expected, position);
 			}
 		}
+
+		// Synthetic slant tests (added in HarfBuzz 3.3.0)
+
+		[SkippableFact]
+		public void SyntheticSlantDefaultsToZero()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(0f, font.SyntheticSlant);
+			}
+		}
+
+		[SkippableFact]
+		public void SyntheticSlantCanBeSet()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SyntheticSlant = 0.25f;
+				Assert.Equal(0.25f, font.SyntheticSlant);
+			}
+		}
+
+		[SkippableFact]
+		public void SyntheticSlantCanBeSetToNegative()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SyntheticSlant = -0.5f;
+				Assert.Equal(-0.5f, font.SyntheticSlant);
+			}
+		}
+
+		// Synthetic bold tests (added in HarfBuzz 7.0.0)
+
+		[SkippableFact]
+		public void SyntheticBoldDefaultsToZero()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.GetSyntheticBold(out var xEmbolden, out var yEmbolden, out var inPlace);
+				Assert.Equal(0f, xEmbolden);
+				Assert.Equal(0f, yEmbolden);
+				Assert.True(inPlace);
+			}
+		}
+
+		[SkippableFact]
+		public void SetSyntheticBoldWorks()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SetSyntheticBold(0.02f, 0.04f, false);
+				font.GetSyntheticBold(out var x, out var y, out var inPlace);
+				Assert.Equal(0.02f, x, 4);
+				Assert.Equal(0.04f, y, 4);
+				Assert.False(inPlace);
+			}
+		}
+
+		[SkippableFact]
+		public void SetSyntheticBoldInPlaceWorks()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SetSyntheticBold(0.05f, 0.05f, true);
+				font.GetSyntheticBold(out var x, out var y, out var inPlace);
+				Assert.Equal(0.05f, x, 4);
+				Assert.Equal(0.05f, y, 4);
+				Assert.True(inPlace);
+			}
+		}
+
+		// Variable font tests (added in HarfBuzz 1.4.2+, expanded in later versions)
+
+		[SkippableFact]
+		public void SetVariationsWithEmptyArrayDoesNotThrow()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SetVariations(Array.Empty<Variation>());
+			}
+		}
+
+		[SkippableFact]
+		public void SetVariationsWorksWithSingleVariation()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var variations = new[] { new Variation { Tag = Tag.Parse("wght"), Value = 700f } };
+				font.SetVariations(variations);
+			}
+		}
+
+		[SkippableFact]
+		public void SetVariationsWorksWithMultipleVariations()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				var variations = new[]
+				{
+					new Variation { Tag = Tag.Parse("wght"), Value = 700f },
+					new Variation { Tag = Tag.Parse("wdth"), Value = 100f }
+				};
+				font.SetVariations(variations);
+			}
+		}
+
+		[SkippableFact]
+		public void SetVariationWithNumericTagWorks()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SetVariation(Tag.Parse("wght"), 400f);
+			}
+		}
+
+		[SkippableFact]
+		public void SetVariationWithStringTagWorks()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SetVariation("wght", 600f);
+			}
+		}
+
+		[SkippableFact]
+		public void SetVariationWithStringTagThrowsOnNull()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				Assert.Throws<ArgumentNullException>(() => font.SetVariation(null, 400f));
+			}
+		}
+
+		[SkippableFact]
+		public void SetVariationWithStringTagThrowsOnInvalidLength()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				Assert.Throws<ArgumentException>(() => font.SetVariation("", 400f));
+				Assert.Throws<ArgumentException>(() => font.SetVariation("w", 400f));
+				Assert.Throws<ArgumentException>(() => font.SetVariation("wg", 400f));
+				Assert.Throws<ArgumentException>(() => font.SetVariation("wgh", 400f));
+			}
+		}
+
+		// Named instance tests (added in HarfBuzz 7.0.0)
+
+		[SkippableFact]
+		public void NamedInstanceDefaultsToUnset()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				// Default is HB_FONT_NO_VAR_NAMED_INSTANCE (0xFFFFFFFF)
+				Assert.Equal(0xFFFFFFFF, font.NamedInstance);
+			}
+		}
+
+		[SkippableFact]
+		public void NamedInstanceCanBeSet()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.NamedInstance = 0;
+				Assert.Equal(0u, font.NamedInstance);
+			}
+		}
 	}
 }

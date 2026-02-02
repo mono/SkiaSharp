@@ -296,5 +296,67 @@ namespace HarfBuzzSharp.Tests
 				Assert.Equal(28u, buffer.GlyphInfos[3].Codepoint);
 			}
 		}
+
+		// Buffer.CreateSimilar tests (added in HarfBuzz 3.4.0)
+
+		[SkippableFact]
+		public void CreateSimilarCreatesNewBuffer()
+		{
+			using (var original = new Buffer())
+			{
+				original.Direction = Direction.RightToLeft;
+				original.Script = Script.Arabic;
+				original.Language = new Language("ar");
+				original.ClusterLevel = ClusterLevel.MonotoneGraphemes;
+				original.ContentType = ContentType.Unicode;
+
+				using (var similar = original.CreateSimilar())
+				{
+					Assert.NotNull(similar);
+					Assert.NotSame(original, similar);
+					Assert.NotEqual(original.Handle, similar.Handle);
+
+					// Verify that properties are NOT copied
+					Assert.Equal(ContentType.Invalid, similar.ContentType);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CreateSimilarPreservesProperties()
+		{
+			using (var original = new Buffer())
+			{
+				original.Direction = Direction.RightToLeft;
+				original.Script = Script.Arabic;
+				original.Language = new Language("ar");
+				original.ClusterLevel = ClusterLevel.MonotoneGraphemes;
+
+				using (var similar = original.CreateSimilar())
+				{
+					// Verify properties are copied
+					Assert.Equal(Direction.RightToLeft, similar.Direction);
+					Assert.Equal(Script.Arabic, similar.Script);
+					Assert.Equal(new Language("ar"), similar.Language);
+					Assert.Equal(ClusterLevel.MonotoneGraphemes, similar.ClusterLevel);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CreateSimilarDoesNotCopyContent()
+		{
+			using (var original = new Buffer())
+			{
+				original.Direction = Direction.LeftToRight;
+				original.AddUtf8("Hello");
+
+				using (var similar = original.CreateSimilar())
+				{
+					// Content should NOT be copied
+					Assert.Equal(0, similar.Length);
+				}
+			}
+		}
 	}
 }
