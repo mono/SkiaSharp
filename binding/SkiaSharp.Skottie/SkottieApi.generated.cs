@@ -117,7 +117,7 @@ namespace SkiaSharp
 	{
 		#region skottie_animation.h
 
-		// void skottie_animation_builder_delete(skottie_animation_builder_t* instance)
+		// void skottie_animation_builder_delete(skottie_animation_builder_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -136,7 +136,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_delete_delegate ??= GetSymbol<Delegates.skottie_animation_builder_delete> ("skottie_animation_builder_delete")).Invoke (instance);
 		#endif
 
-		// void skottie_animation_builder_get_stats(skottie_animation_builder_t* instance, skottie_animation_builder_stats_t* stats)
+		// void skottie_animation_builder_get_stats(skottie_animation_builder_t * instance, skottie_animation_builder_stats_t * stats)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -155,7 +155,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_get_stats_delegate ??= GetSymbol<Delegates.skottie_animation_builder_get_stats> ("skottie_animation_builder_get_stats")).Invoke (instance, stats);
 		#endif
 
-		// skottie_animation_t* skottie_animation_builder_make_from_data(skottie_animation_builder_t* instance, const char* data, size_t length)
+		// skottie_animation_t * skottie_animation_builder_make_from_data(skottie_animation_builder_t * instance, char const * data, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -174,7 +174,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_make_from_data_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_data> ("skottie_animation_builder_make_from_data")).Invoke (instance, data, length);
 		#endif
 
-		// skottie_animation_t* skottie_animation_builder_make_from_file(skottie_animation_builder_t* instance, const char* path)
+		// skottie_animation_t * skottie_animation_builder_make_from_file(skottie_animation_builder_t * instance, char const * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -193,7 +193,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_make_from_file_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_file> ("skottie_animation_builder_make_from_file")).Invoke (instance, path);
 		#endif
 
-		// skottie_animation_t* skottie_animation_builder_make_from_stream(skottie_animation_builder_t* instance, sk_stream_t* stream)
+		// skottie_animation_t * skottie_animation_builder_make_from_stream(skottie_animation_builder_t * instance, sk_stream_t * stream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -212,7 +212,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_make_from_stream_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_stream> ("skottie_animation_builder_make_from_stream")).Invoke (instance, stream);
 		#endif
 
-		// skottie_animation_t* skottie_animation_builder_make_from_string(skottie_animation_builder_t* instance, const char* data, size_t length)
+		// skottie_animation_t * skottie_animation_builder_make_from_string(skottie_animation_builder_t * instance, char const * data, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -231,7 +231,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_make_from_string_delegate ??= GetSymbol<Delegates.skottie_animation_builder_make_from_string> ("skottie_animation_builder_make_from_string")).Invoke (instance, data, length);
 		#endif
 
-		// skottie_animation_builder_t* skottie_animation_builder_new(skottie_animation_builder_flags_t flags)
+		// skottie_animation_builder_t * skottie_animation_builder_new(skottie_animation_builder_flags_t flags)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -250,7 +250,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_new_delegate ??= GetSymbol<Delegates.skottie_animation_builder_new> ("skottie_animation_builder_new")).Invoke (flags);
 		#endif
 
-		// void skottie_animation_builder_set_font_manager(skottie_animation_builder_t* instance, sk_fontmgr_t* fontManager)
+		// void skottie_animation_builder_set_font_manager(skottie_animation_builder_t * instance, sk_fontmgr_t * fontManager)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -269,7 +269,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_set_font_manager_delegate ??= GetSymbol<Delegates.skottie_animation_builder_set_font_manager> ("skottie_animation_builder_set_font_manager")).Invoke (instance, fontManager);
 		#endif
 
-		// void skottie_animation_builder_set_resource_provider(skottie_animation_builder_t* instance, skottie_resource_provider_t* resourceProvider)
+		// void skottie_animation_builder_set_resource_provider(skottie_animation_builder_t * instance, skottie_resource_provider_t * resourceProvider)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -288,7 +288,7 @@ namespace SkiaSharp
 			(skottie_animation_builder_set_resource_provider_delegate ??= GetSymbol<Delegates.skottie_animation_builder_set_resource_provider> ("skottie_animation_builder_set_resource_provider")).Invoke (instance, resourceProvider);
 		#endif
 
-		// void skottie_animation_delete(skottie_animation_t* instance)
+		// void skottie_animation_delete(skottie_animation_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -307,7 +307,7 @@ namespace SkiaSharp
 			(skottie_animation_delete_delegate ??= GetSymbol<Delegates.skottie_animation_delete> ("skottie_animation_delete")).Invoke (instance);
 		#endif
 
-		// double skottie_animation_get_duration(skottie_animation_t* instance)
+		// double skottie_animation_get_duration(skottie_animation_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -326,7 +326,7 @@ namespace SkiaSharp
 			(skottie_animation_get_duration_delegate ??= GetSymbol<Delegates.skottie_animation_get_duration> ("skottie_animation_get_duration")).Invoke (instance);
 		#endif
 
-		// double skottie_animation_get_fps(skottie_animation_t* instance)
+		// double skottie_animation_get_fps(skottie_animation_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -345,7 +345,7 @@ namespace SkiaSharp
 			(skottie_animation_get_fps_delegate ??= GetSymbol<Delegates.skottie_animation_get_fps> ("skottie_animation_get_fps")).Invoke (instance);
 		#endif
 
-		// double skottie_animation_get_in_point(skottie_animation_t* instance)
+		// double skottie_animation_get_in_point(skottie_animation_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -364,7 +364,7 @@ namespace SkiaSharp
 			(skottie_animation_get_in_point_delegate ??= GetSymbol<Delegates.skottie_animation_get_in_point> ("skottie_animation_get_in_point")).Invoke (instance);
 		#endif
 
-		// double skottie_animation_get_out_point(skottie_animation_t* instance)
+		// double skottie_animation_get_out_point(skottie_animation_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -383,7 +383,7 @@ namespace SkiaSharp
 			(skottie_animation_get_out_point_delegate ??= GetSymbol<Delegates.skottie_animation_get_out_point> ("skottie_animation_get_out_point")).Invoke (instance);
 		#endif
 
-		// void skottie_animation_get_size(skottie_animation_t* instance, sk_size_t* size)
+		// void skottie_animation_get_size(skottie_animation_t * instance, sk_size_t * size)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -402,7 +402,7 @@ namespace SkiaSharp
 			(skottie_animation_get_size_delegate ??= GetSymbol<Delegates.skottie_animation_get_size> ("skottie_animation_get_size")).Invoke (instance, size);
 		#endif
 
-		// void skottie_animation_get_version(skottie_animation_t* instance, sk_string_t* version)
+		// void skottie_animation_get_version(skottie_animation_t * instance, sk_string_t * version)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -421,7 +421,7 @@ namespace SkiaSharp
 			(skottie_animation_get_version_delegate ??= GetSymbol<Delegates.skottie_animation_get_version> ("skottie_animation_get_version")).Invoke (instance, version);
 		#endif
 
-		// skottie_animation_t* skottie_animation_make_from_data(const char* data, size_t length)
+		// skottie_animation_t * skottie_animation_make_from_data(char const * data, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -440,7 +440,7 @@ namespace SkiaSharp
 			(skottie_animation_make_from_data_delegate ??= GetSymbol<Delegates.skottie_animation_make_from_data> ("skottie_animation_make_from_data")).Invoke (data, length);
 		#endif
 
-		// skottie_animation_t* skottie_animation_make_from_file(const char* path)
+		// skottie_animation_t * skottie_animation_make_from_file(char const * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -459,7 +459,7 @@ namespace SkiaSharp
 			(skottie_animation_make_from_file_delegate ??= GetSymbol<Delegates.skottie_animation_make_from_file> ("skottie_animation_make_from_file")).Invoke (path);
 		#endif
 
-		// skottie_animation_t* skottie_animation_make_from_stream(sk_stream_t* stream)
+		// skottie_animation_t * skottie_animation_make_from_stream(sk_stream_t * stream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -478,7 +478,7 @@ namespace SkiaSharp
 			(skottie_animation_make_from_stream_delegate ??= GetSymbol<Delegates.skottie_animation_make_from_stream> ("skottie_animation_make_from_stream")).Invoke (stream);
 		#endif
 
-		// skottie_animation_t* skottie_animation_make_from_string(const char* data, size_t length)
+		// skottie_animation_t * skottie_animation_make_from_string(char const * data, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -497,7 +497,7 @@ namespace SkiaSharp
 			(skottie_animation_make_from_string_delegate ??= GetSymbol<Delegates.skottie_animation_make_from_string> ("skottie_animation_make_from_string")).Invoke (data, length);
 		#endif
 
-		// void skottie_animation_ref(skottie_animation_t* instance)
+		// void skottie_animation_ref(skottie_animation_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -516,7 +516,7 @@ namespace SkiaSharp
 			(skottie_animation_ref_delegate ??= GetSymbol<Delegates.skottie_animation_ref> ("skottie_animation_ref")).Invoke (instance);
 		#endif
 
-		// void skottie_animation_render(skottie_animation_t* instance, sk_canvas_t* canvas, sk_rect_t* dst)
+		// void skottie_animation_render(skottie_animation_t * instance, sk_canvas_t * canvas, sk_rect_t * dst)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -535,7 +535,7 @@ namespace SkiaSharp
 			(skottie_animation_render_delegate ??= GetSymbol<Delegates.skottie_animation_render> ("skottie_animation_render")).Invoke (instance, canvas, dst);
 		#endif
 
-		// void skottie_animation_render_with_flags(skottie_animation_t* instance, sk_canvas_t* canvas, sk_rect_t* dst, skottie_animation_renderflags_t flags)
+		// void skottie_animation_render_with_flags(skottie_animation_t * instance, sk_canvas_t * canvas, sk_rect_t * dst, skottie_animation_renderflags_t flags)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -554,7 +554,7 @@ namespace SkiaSharp
 			(skottie_animation_render_with_flags_delegate ??= GetSymbol<Delegates.skottie_animation_render_with_flags> ("skottie_animation_render_with_flags")).Invoke (instance, canvas, dst, flags);
 		#endif
 
-		// void skottie_animation_seek(skottie_animation_t* instance, float t, sksg_invalidation_controller_t* ic)
+		// void skottie_animation_seek(skottie_animation_t * instance, float t, sksg_invalidation_controller_t * ic)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -573,7 +573,7 @@ namespace SkiaSharp
 			(skottie_animation_seek_delegate ??= GetSymbol<Delegates.skottie_animation_seek> ("skottie_animation_seek")).Invoke (instance, t, ic);
 		#endif
 
-		// void skottie_animation_seek_frame(skottie_animation_t* instance, float t, sksg_invalidation_controller_t* ic)
+		// void skottie_animation_seek_frame(skottie_animation_t * instance, float t, sksg_invalidation_controller_t * ic)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -592,7 +592,7 @@ namespace SkiaSharp
 			(skottie_animation_seek_frame_delegate ??= GetSymbol<Delegates.skottie_animation_seek_frame> ("skottie_animation_seek_frame")).Invoke (instance, t, ic);
 		#endif
 
-		// void skottie_animation_seek_frame_time(skottie_animation_t* instance, float t, sksg_invalidation_controller_t* ic)
+		// void skottie_animation_seek_frame_time(skottie_animation_t * instance, float t, sksg_invalidation_controller_t * ic)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -611,7 +611,7 @@ namespace SkiaSharp
 			(skottie_animation_seek_frame_time_delegate ??= GetSymbol<Delegates.skottie_animation_seek_frame_time> ("skottie_animation_seek_frame_time")).Invoke (instance, t, ic);
 		#endif
 
-		// void skottie_animation_unref(skottie_animation_t* instance)
+		// void skottie_animation_unref(skottie_animation_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]

@@ -117,7 +117,7 @@ namespace SkiaSharp
 	{
 		#region skresources_resource_provider.h
 
-		// skresources_resource_provider_t* skresources_caching_resource_provider_proxy_make(skresources_resource_provider_t* rp)
+		// skresources_resource_provider_t * skresources_caching_resource_provider_proxy_make(skresources_resource_provider_t * rp)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -136,7 +136,7 @@ namespace SkiaSharp
 			(skresources_caching_resource_provider_proxy_make_delegate ??= GetSymbol<Delegates.skresources_caching_resource_provider_proxy_make> ("skresources_caching_resource_provider_proxy_make")).Invoke (rp);
 		#endif
 
-		// skresources_resource_provider_t* skresources_data_uri_resource_provider_proxy_make(skresources_resource_provider_t* rp, bool predecode)
+		// skresources_resource_provider_t * skresources_data_uri_resource_provider_proxy_make(skresources_resource_provider_t * rp, bool predecode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -155,7 +155,7 @@ namespace SkiaSharp
 			(skresources_data_uri_resource_provider_proxy_make_delegate ??= GetSymbol<Delegates.skresources_data_uri_resource_provider_proxy_make> ("skresources_data_uri_resource_provider_proxy_make")).Invoke (rp, predecode);
 		#endif
 
-		// skresources_resource_provider_t* skresources_file_resource_provider_make(sk_string_t* base_dir, bool predecode)
+		// skresources_resource_provider_t * skresources_file_resource_provider_make(sk_string_t * base_dir, bool predecode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -174,7 +174,7 @@ namespace SkiaSharp
 			(skresources_file_resource_provider_make_delegate ??= GetSymbol<Delegates.skresources_file_resource_provider_make> ("skresources_file_resource_provider_make")).Invoke (base_dir, predecode);
 		#endif
 
-		// void skresources_resource_provider_delete(skresources_resource_provider_t* instance)
+		// void skresources_resource_provider_delete(skresources_resource_provider_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -193,7 +193,7 @@ namespace SkiaSharp
 			(skresources_resource_provider_delete_delegate ??= GetSymbol<Delegates.skresources_resource_provider_delete> ("skresources_resource_provider_delete")).Invoke (instance);
 		#endif
 
-		// sk_data_t* skresources_resource_provider_load(skresources_resource_provider_t* instance, const char* path, const char* name)
+		// sk_data_t * skresources_resource_provider_load(skresources_resource_provider_t * instance, char const * path, char const * name)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -212,7 +212,7 @@ namespace SkiaSharp
 			(skresources_resource_provider_load_delegate ??= GetSymbol<Delegates.skresources_resource_provider_load> ("skresources_resource_provider_load")).Invoke (instance, path, name);
 		#endif
 
-		// skresources_external_track_asset_t* skresources_resource_provider_load_audio_asset(skresources_resource_provider_t* instance, const char* path, const char* name, const char* id)
+		// skresources_external_track_asset_t * skresources_resource_provider_load_audio_asset(skresources_resource_provider_t * instance, char const * path, char const * name, char const * id)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -231,7 +231,7 @@ namespace SkiaSharp
 			(skresources_resource_provider_load_audio_asset_delegate ??= GetSymbol<Delegates.skresources_resource_provider_load_audio_asset> ("skresources_resource_provider_load_audio_asset")).Invoke (instance, path, name, id);
 		#endif
 
-		// skresources_image_asset_t* skresources_resource_provider_load_image_asset(skresources_resource_provider_t* instance, const char* path, const char* name, const char* id)
+		// skresources_image_asset_t * skresources_resource_provider_load_image_asset(skresources_resource_provider_t * instance, char const * path, char const * name, char const * id)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -250,7 +250,7 @@ namespace SkiaSharp
 			(skresources_resource_provider_load_image_asset_delegate ??= GetSymbol<Delegates.skresources_resource_provider_load_image_asset> ("skresources_resource_provider_load_image_asset")).Invoke (instance, path, name, id);
 		#endif
 
-		// sk_typeface_t* skresources_resource_provider_load_typeface(skresources_resource_provider_t* instance, const char* name, const char* url)
+		// sk_typeface_t * skresources_resource_provider_load_typeface(skresources_resource_provider_t * instance, char const * name, char const * url)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -269,7 +269,7 @@ namespace SkiaSharp
 			(skresources_resource_provider_load_typeface_delegate ??= GetSymbol<Delegates.skresources_resource_provider_load_typeface> ("skresources_resource_provider_load_typeface")).Invoke (instance, name, url);
 		#endif
 
-		// void skresources_resource_provider_ref(skresources_resource_provider_t* instance)
+		// void skresources_resource_provider_ref(skresources_resource_provider_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -288,7 +288,7 @@ namespace SkiaSharp
 			(skresources_resource_provider_ref_delegate ??= GetSymbol<Delegates.skresources_resource_provider_ref> ("skresources_resource_provider_ref")).Invoke (instance);
 		#endif
 
-		// void skresources_resource_provider_unref(skresources_resource_provider_t* instance)
+		// void skresources_resource_provider_unref(skresources_resource_provider_t * instance)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]

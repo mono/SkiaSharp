@@ -116,7 +116,7 @@ namespace SkiaSharp
 	{
 		#region gr_context.h
 
-		// void gr_backendrendertarget_delete(gr_backendrendertarget_t* rendertarget)
+		// void gr_backendrendertarget_delete(gr_backendrendertarget_t * rendertarget)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -135,7 +135,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_delete_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_delete> ("gr_backendrendertarget_delete")).Invoke (rendertarget);
 		#endif
 
-		// gr_backend_t gr_backendrendertarget_get_backend(const gr_backendrendertarget_t* rendertarget)
+		// gr_backend_t gr_backendrendertarget_get_backend(gr_backendrendertarget_t const * rendertarget)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -154,7 +154,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_get_backend_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_backend> ("gr_backendrendertarget_get_backend")).Invoke (rendertarget);
 		#endif
 
-		// bool gr_backendrendertarget_get_gl_framebufferinfo(const gr_backendrendertarget_t* rendertarget, gr_gl_framebufferinfo_t* glInfo)
+		// bool gr_backendrendertarget_get_gl_framebufferinfo(gr_backendrendertarget_t const * rendertarget, gr_gl_framebufferinfo_t * glInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -176,7 +176,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_get_gl_framebufferinfo_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_gl_framebufferinfo> ("gr_backendrendertarget_get_gl_framebufferinfo")).Invoke (rendertarget, glInfo);
 		#endif
 
-		// int gr_backendrendertarget_get_height(const gr_backendrendertarget_t* rendertarget)
+		// int gr_backendrendertarget_get_height(gr_backendrendertarget_t const * rendertarget)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -195,7 +195,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_get_height_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_height> ("gr_backendrendertarget_get_height")).Invoke (rendertarget);
 		#endif
 
-		// int gr_backendrendertarget_get_samples(const gr_backendrendertarget_t* rendertarget)
+		// int gr_backendrendertarget_get_samples(gr_backendrendertarget_t const * rendertarget)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -214,7 +214,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_get_samples_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_samples> ("gr_backendrendertarget_get_samples")).Invoke (rendertarget);
 		#endif
 
-		// int gr_backendrendertarget_get_stencils(const gr_backendrendertarget_t* rendertarget)
+		// int gr_backendrendertarget_get_stencils(gr_backendrendertarget_t const * rendertarget)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -233,7 +233,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_get_stencils_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_stencils> ("gr_backendrendertarget_get_stencils")).Invoke (rendertarget);
 		#endif
 
-		// int gr_backendrendertarget_get_width(const gr_backendrendertarget_t* rendertarget)
+		// int gr_backendrendertarget_get_width(gr_backendrendertarget_t const * rendertarget)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -252,7 +252,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_get_width_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_get_width> ("gr_backendrendertarget_get_width")).Invoke (rendertarget);
 		#endif
 
-		// bool gr_backendrendertarget_is_valid(const gr_backendrendertarget_t* rendertarget)
+		// bool gr_backendrendertarget_is_valid(gr_backendrendertarget_t const * rendertarget)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -274,7 +274,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_is_valid_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_is_valid> ("gr_backendrendertarget_is_valid")).Invoke (rendertarget);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_direct3d(int width, int height, const gr_d3d_textureresourceinfo_t* d3dInfo)
+		// gr_backendrendertarget_t * gr_backendrendertarget_new_direct3d(int width, int height, gr_d3d_textureresourceinfo_t const * d3dInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -293,7 +293,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_direct3d> ("gr_backendrendertarget_new_direct3d")).Invoke (width, height, d3dInfo);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_gl(int width, int height, int samples, int stencils, const gr_gl_framebufferinfo_t* glInfo)
+		// gr_backendrendertarget_t * gr_backendrendertarget_new_gl(int width, int height, int samples, int stencils, gr_gl_framebufferinfo_t const * glInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -312,7 +312,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_new_gl_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_gl> ("gr_backendrendertarget_new_gl")).Invoke (width, height, samples, stencils, glInfo);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_metal(int width, int height, const gr_mtl_textureinfo_t* mtlInfo)
+		// gr_backendrendertarget_t * gr_backendrendertarget_new_metal(int width, int height, gr_mtl_textureinfo_t const * mtlInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -331,7 +331,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_new_metal_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_metal> ("gr_backendrendertarget_new_metal")).Invoke (width, height, mtlInfo);
 		#endif
 
-		// gr_backendrendertarget_t* gr_backendrendertarget_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkImageInfo)
+		// gr_backendrendertarget_t * gr_backendrendertarget_new_vulkan(int width, int height, gr_vk_imageinfo_t const * vkImageInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -350,7 +350,7 @@ namespace SkiaSharp
 			(gr_backendrendertarget_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendrendertarget_new_vulkan> ("gr_backendrendertarget_new_vulkan")).Invoke (width, height, vkImageInfo);
 		#endif
 
-		// void gr_backendtexture_delete(gr_backendtexture_t* texture)
+		// void gr_backendtexture_delete(gr_backendtexture_t * texture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -369,7 +369,7 @@ namespace SkiaSharp
 			(gr_backendtexture_delete_delegate ??= GetSymbol<Delegates.gr_backendtexture_delete> ("gr_backendtexture_delete")).Invoke (texture);
 		#endif
 
-		// gr_backend_t gr_backendtexture_get_backend(const gr_backendtexture_t* texture)
+		// gr_backend_t gr_backendtexture_get_backend(gr_backendtexture_t const * texture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -388,7 +388,7 @@ namespace SkiaSharp
 			(gr_backendtexture_get_backend_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_backend> ("gr_backendtexture_get_backend")).Invoke (texture);
 		#endif
 
-		// bool gr_backendtexture_get_gl_textureinfo(const gr_backendtexture_t* texture, gr_gl_textureinfo_t* glInfo)
+		// bool gr_backendtexture_get_gl_textureinfo(gr_backendtexture_t const * texture, gr_gl_textureinfo_t * glInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -410,7 +410,7 @@ namespace SkiaSharp
 			(gr_backendtexture_get_gl_textureinfo_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_gl_textureinfo> ("gr_backendtexture_get_gl_textureinfo")).Invoke (texture, glInfo);
 		#endif
 
-		// int gr_backendtexture_get_height(const gr_backendtexture_t* texture)
+		// int gr_backendtexture_get_height(gr_backendtexture_t const * texture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -429,7 +429,7 @@ namespace SkiaSharp
 			(gr_backendtexture_get_height_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_height> ("gr_backendtexture_get_height")).Invoke (texture);
 		#endif
 
-		// int gr_backendtexture_get_width(const gr_backendtexture_t* texture)
+		// int gr_backendtexture_get_width(gr_backendtexture_t const * texture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -448,7 +448,7 @@ namespace SkiaSharp
 			(gr_backendtexture_get_width_delegate ??= GetSymbol<Delegates.gr_backendtexture_get_width> ("gr_backendtexture_get_width")).Invoke (texture);
 		#endif
 
-		// bool gr_backendtexture_has_mipmaps(const gr_backendtexture_t* texture)
+		// bool gr_backendtexture_has_mipmaps(gr_backendtexture_t const * texture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -470,7 +470,7 @@ namespace SkiaSharp
 			(gr_backendtexture_has_mipmaps_delegate ??= GetSymbol<Delegates.gr_backendtexture_has_mipmaps> ("gr_backendtexture_has_mipmaps")).Invoke (texture);
 		#endif
 
-		// bool gr_backendtexture_is_valid(const gr_backendtexture_t* texture)
+		// bool gr_backendtexture_is_valid(gr_backendtexture_t const * texture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -492,7 +492,7 @@ namespace SkiaSharp
 			(gr_backendtexture_is_valid_delegate ??= GetSymbol<Delegates.gr_backendtexture_is_valid> ("gr_backendtexture_is_valid")).Invoke (texture);
 		#endif
 
-		// gr_backendtexture_t* gr_backendtexture_new_direct3d(int width, int height, const gr_d3d_textureresourceinfo_t* d3dInfo)
+		// gr_backendtexture_t * gr_backendtexture_new_direct3d(int width, int height, gr_d3d_textureresourceinfo_t const * d3dInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -511,7 +511,7 @@ namespace SkiaSharp
 			(gr_backendtexture_new_direct3d_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_direct3d> ("gr_backendtexture_new_direct3d")).Invoke (width, height, d3dInfo);
 		#endif
 
-		// gr_backendtexture_t* gr_backendtexture_new_gl(int width, int height, bool mipmapped, const gr_gl_textureinfo_t* glInfo)
+		// gr_backendtexture_t * gr_backendtexture_new_gl(int width, int height, bool mipmapped, gr_gl_textureinfo_t const * glInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -530,7 +530,7 @@ namespace SkiaSharp
 			(gr_backendtexture_new_gl_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_gl> ("gr_backendtexture_new_gl")).Invoke (width, height, mipmapped, glInfo);
 		#endif
 
-		// gr_backendtexture_t* gr_backendtexture_new_metal(int width, int height, bool mipmapped, const gr_mtl_textureinfo_t* mtlInfo)
+		// gr_backendtexture_t * gr_backendtexture_new_metal(int width, int height, bool mipmapped, gr_mtl_textureinfo_t const * mtlInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -549,7 +549,7 @@ namespace SkiaSharp
 			(gr_backendtexture_new_metal_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_metal> ("gr_backendtexture_new_metal")).Invoke (width, height, mipmapped, mtlInfo);
 		#endif
 
-		// gr_backendtexture_t* gr_backendtexture_new_vulkan(int width, int height, const gr_vk_imageinfo_t* vkInfo)
+		// gr_backendtexture_t * gr_backendtexture_new_vulkan(int width, int height, gr_vk_imageinfo_t const * vkInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -568,7 +568,7 @@ namespace SkiaSharp
 			(gr_backendtexture_new_vulkan_delegate ??= GetSymbol<Delegates.gr_backendtexture_new_vulkan> ("gr_backendtexture_new_vulkan")).Invoke (width, height, vkInfo);
 		#endif
 
-		// void gr_direct_context_abandon_context(gr_direct_context_t* context)
+		// void gr_direct_context_abandon_context(gr_direct_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -587,7 +587,7 @@ namespace SkiaSharp
 			(gr_direct_context_abandon_context_delegate ??= GetSymbol<Delegates.gr_direct_context_abandon_context> ("gr_direct_context_abandon_context")).Invoke (context);
 		#endif
 
-		// void gr_direct_context_dump_memory_statistics(const gr_direct_context_t* context, sk_tracememorydump_t* dump)
+		// void gr_direct_context_dump_memory_statistics(gr_direct_context_t const * context, sk_tracememorydump_t * dump)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -606,7 +606,7 @@ namespace SkiaSharp
 			(gr_direct_context_dump_memory_statistics_delegate ??= GetSymbol<Delegates.gr_direct_context_dump_memory_statistics> ("gr_direct_context_dump_memory_statistics")).Invoke (context, dump);
 		#endif
 
-		// void gr_direct_context_flush(gr_direct_context_t* context)
+		// void gr_direct_context_flush(gr_direct_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -625,7 +625,7 @@ namespace SkiaSharp
 			(gr_direct_context_flush_delegate ??= GetSymbol<Delegates.gr_direct_context_flush> ("gr_direct_context_flush")).Invoke (context);
 		#endif
 
-		// void gr_direct_context_flush_and_submit(gr_direct_context_t* context, bool syncCpu)
+		// void gr_direct_context_flush_and_submit(gr_direct_context_t * context, bool syncCpu)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -644,7 +644,7 @@ namespace SkiaSharp
 			(gr_direct_context_flush_and_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_and_submit> ("gr_direct_context_flush_and_submit")).Invoke (context, syncCpu);
 		#endif
 
-		// void gr_direct_context_flush_image(gr_direct_context_t* context, const sk_image_t* image)
+		// void gr_direct_context_flush_image(gr_direct_context_t * context, sk_image_t const * image)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -663,7 +663,7 @@ namespace SkiaSharp
 			(gr_direct_context_flush_image_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_image> ("gr_direct_context_flush_image")).Invoke (context, image);
 		#endif
 
-		// void gr_direct_context_flush_surface(gr_direct_context_t* context, sk_surface_t* surface)
+		// void gr_direct_context_flush_surface(gr_direct_context_t * context, sk_surface_t * surface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -682,7 +682,7 @@ namespace SkiaSharp
 			(gr_direct_context_flush_surface_delegate ??= GetSymbol<Delegates.gr_direct_context_flush_surface> ("gr_direct_context_flush_surface")).Invoke (context, surface);
 		#endif
 
-		// void gr_direct_context_free_gpu_resources(gr_direct_context_t* context)
+		// void gr_direct_context_free_gpu_resources(gr_direct_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -701,7 +701,7 @@ namespace SkiaSharp
 			(gr_direct_context_free_gpu_resources_delegate ??= GetSymbol<Delegates.gr_direct_context_free_gpu_resources> ("gr_direct_context_free_gpu_resources")).Invoke (context);
 		#endif
 
-		// size_t gr_direct_context_get_resource_cache_limit(gr_direct_context_t* context)
+		// size_t gr_direct_context_get_resource_cache_limit(gr_direct_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -720,7 +720,7 @@ namespace SkiaSharp
 			(gr_direct_context_get_resource_cache_limit_delegate ??= GetSymbol<Delegates.gr_direct_context_get_resource_cache_limit> ("gr_direct_context_get_resource_cache_limit")).Invoke (context);
 		#endif
 
-		// void gr_direct_context_get_resource_cache_usage(gr_direct_context_t* context, int* maxResources, size_t* maxResourceBytes)
+		// void gr_direct_context_get_resource_cache_usage(gr_direct_context_t * context, int * maxResources, size_t * maxResourceBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -739,7 +739,7 @@ namespace SkiaSharp
 			(gr_direct_context_get_resource_cache_usage_delegate ??= GetSymbol<Delegates.gr_direct_context_get_resource_cache_usage> ("gr_direct_context_get_resource_cache_usage")).Invoke (context, maxResources, maxResourceBytes);
 		#endif
 
-		// bool gr_direct_context_is_abandoned(gr_direct_context_t* context)
+		// bool gr_direct_context_is_abandoned(gr_direct_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -761,7 +761,7 @@ namespace SkiaSharp
 			(gr_direct_context_is_abandoned_delegate ??= GetSymbol<Delegates.gr_direct_context_is_abandoned> ("gr_direct_context_is_abandoned")).Invoke (context);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_direct3d(const gr_d3d_backendcontext_t d3dBackendContext)
+		// gr_direct_context_t * gr_direct_context_make_direct3d(gr_d3d_backendcontext_t const d3dBackendContext)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -780,7 +780,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_direct3d_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d> ("gr_direct_context_make_direct3d")).Invoke (d3dBackendContext);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_direct3d_with_options(const gr_d3d_backendcontext_t d3dBackendContext, const gr_context_options_t* options)
+		// gr_direct_context_t * gr_direct_context_make_direct3d_with_options(gr_d3d_backendcontext_t const d3dBackendContext, gr_context_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -799,7 +799,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_direct3d_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_direct3d_with_options> ("gr_direct_context_make_direct3d_with_options")).Invoke (d3dBackendContext, options);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_gl(const gr_glinterface_t* glInterface)
+		// gr_direct_context_t * gr_direct_context_make_gl(gr_glinterface_t const * glInterface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -818,7 +818,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_gl_delegate ??= GetSymbol<Delegates.gr_direct_context_make_gl> ("gr_direct_context_make_gl")).Invoke (glInterface);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_gl_with_options(const gr_glinterface_t* glInterface, const gr_context_options_t* options)
+		// gr_direct_context_t * gr_direct_context_make_gl_with_options(gr_glinterface_t const * glInterface, gr_context_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -837,7 +837,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_gl_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_gl_with_options> ("gr_direct_context_make_gl_with_options")).Invoke (glInterface, options);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_metal(void* device, void* queue)
+		// gr_direct_context_t * gr_direct_context_make_metal(void * device, void * queue)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -856,7 +856,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_metal_delegate ??= GetSymbol<Delegates.gr_direct_context_make_metal> ("gr_direct_context_make_metal")).Invoke (device, queue);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_metal_with_options(void* device, void* queue, const gr_context_options_t* options)
+		// gr_direct_context_t * gr_direct_context_make_metal_with_options(void * device, void * queue, gr_context_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -875,7 +875,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_metal_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_metal_with_options> ("gr_direct_context_make_metal_with_options")).Invoke (device, queue, options);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_vulkan(const gr_vk_backendcontext_t vkBackendContext)
+		// gr_direct_context_t * gr_direct_context_make_vulkan(gr_vk_backendcontext_t const vkBackendContext)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -894,7 +894,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_vulkan_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan> ("gr_direct_context_make_vulkan")).Invoke (vkBackendContext);
 		#endif
 
-		// gr_direct_context_t* gr_direct_context_make_vulkan_with_options(const gr_vk_backendcontext_t vkBackendContext, const gr_context_options_t* options)
+		// gr_direct_context_t * gr_direct_context_make_vulkan_with_options(gr_vk_backendcontext_t const vkBackendContext, gr_context_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -913,7 +913,7 @@ namespace SkiaSharp
 			(gr_direct_context_make_vulkan_with_options_delegate ??= GetSymbol<Delegates.gr_direct_context_make_vulkan_with_options> ("gr_direct_context_make_vulkan_with_options")).Invoke (vkBackendContext, options);
 		#endif
 
-		// void gr_direct_context_perform_deferred_cleanup(gr_direct_context_t* context, long long ms)
+		// void gr_direct_context_perform_deferred_cleanup(gr_direct_context_t * context, long long ms)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -932,7 +932,7 @@ namespace SkiaSharp
 			(gr_direct_context_perform_deferred_cleanup_delegate ??= GetSymbol<Delegates.gr_direct_context_perform_deferred_cleanup> ("gr_direct_context_perform_deferred_cleanup")).Invoke (context, ms);
 		#endif
 
-		// void gr_direct_context_purge_unlocked_resources(gr_direct_context_t* context, bool scratchResourcesOnly)
+		// void gr_direct_context_purge_unlocked_resources(gr_direct_context_t * context, bool scratchResourcesOnly)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -951,7 +951,7 @@ namespace SkiaSharp
 			(gr_direct_context_purge_unlocked_resources_delegate ??= GetSymbol<Delegates.gr_direct_context_purge_unlocked_resources> ("gr_direct_context_purge_unlocked_resources")).Invoke (context, scratchResourcesOnly);
 		#endif
 
-		// void gr_direct_context_purge_unlocked_resources_bytes(gr_direct_context_t* context, size_t bytesToPurge, bool preferScratchResources)
+		// void gr_direct_context_purge_unlocked_resources_bytes(gr_direct_context_t * context, size_t bytesToPurge, bool preferScratchResources)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -970,7 +970,7 @@ namespace SkiaSharp
 			(gr_direct_context_purge_unlocked_resources_bytes_delegate ??= GetSymbol<Delegates.gr_direct_context_purge_unlocked_resources_bytes> ("gr_direct_context_purge_unlocked_resources_bytes")).Invoke (context, bytesToPurge, preferScratchResources);
 		#endif
 
-		// void gr_direct_context_release_resources_and_abandon_context(gr_direct_context_t* context)
+		// void gr_direct_context_release_resources_and_abandon_context(gr_direct_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -989,7 +989,7 @@ namespace SkiaSharp
 			(gr_direct_context_release_resources_and_abandon_context_delegate ??= GetSymbol<Delegates.gr_direct_context_release_resources_and_abandon_context> ("gr_direct_context_release_resources_and_abandon_context")).Invoke (context);
 		#endif
 
-		// void gr_direct_context_reset_context(gr_direct_context_t* context, uint32_t state)
+		// void gr_direct_context_reset_context(gr_direct_context_t * context, unsigned int state)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1008,7 +1008,7 @@ namespace SkiaSharp
 			(gr_direct_context_reset_context_delegate ??= GetSymbol<Delegates.gr_direct_context_reset_context> ("gr_direct_context_reset_context")).Invoke (context, state);
 		#endif
 
-		// void gr_direct_context_set_resource_cache_limit(gr_direct_context_t* context, size_t maxResourceBytes)
+		// void gr_direct_context_set_resource_cache_limit(gr_direct_context_t * context, size_t maxResourceBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1027,7 +1027,7 @@ namespace SkiaSharp
 			(gr_direct_context_set_resource_cache_limit_delegate ??= GetSymbol<Delegates.gr_direct_context_set_resource_cache_limit> ("gr_direct_context_set_resource_cache_limit")).Invoke (context, maxResourceBytes);
 		#endif
 
-		// bool gr_direct_context_submit(gr_direct_context_t* context, bool syncCpu)
+		// bool gr_direct_context_submit(gr_direct_context_t * context, bool syncCpu)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1049,7 +1049,7 @@ namespace SkiaSharp
 			(gr_direct_context_submit_delegate ??= GetSymbol<Delegates.gr_direct_context_submit> ("gr_direct_context_submit")).Invoke (context, syncCpu);
 		#endif
 
-		// const gr_glinterface_t* gr_glinterface_assemble_gl_interface(void* ctx, gr_gl_get_proc get)
+		// gr_glinterface_t const * gr_glinterface_assemble_gl_interface(void * ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1068,7 +1068,7 @@ namespace SkiaSharp
 			(gr_glinterface_assemble_gl_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_gl_interface> ("gr_glinterface_assemble_gl_interface")).Invoke (ctx, get);
 		#endif
 
-		// const gr_glinterface_t* gr_glinterface_assemble_gles_interface(void* ctx, gr_gl_get_proc get)
+		// gr_glinterface_t const * gr_glinterface_assemble_gles_interface(void * ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1087,7 +1087,7 @@ namespace SkiaSharp
 			(gr_glinterface_assemble_gles_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_gles_interface> ("gr_glinterface_assemble_gles_interface")).Invoke (ctx, get);
 		#endif
 
-		// const gr_glinterface_t* gr_glinterface_assemble_interface(void* ctx, gr_gl_get_proc get)
+		// gr_glinterface_t const * gr_glinterface_assemble_interface(void * ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1106,7 +1106,7 @@ namespace SkiaSharp
 			(gr_glinterface_assemble_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_interface> ("gr_glinterface_assemble_interface")).Invoke (ctx, get);
 		#endif
 
-		// const gr_glinterface_t* gr_glinterface_assemble_webgl_interface(void* ctx, gr_gl_get_proc get)
+		// gr_glinterface_t const * gr_glinterface_assemble_webgl_interface(void * ctx, gr_gl_get_proc get)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1125,7 +1125,7 @@ namespace SkiaSharp
 			(gr_glinterface_assemble_webgl_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_assemble_webgl_interface> ("gr_glinterface_assemble_webgl_interface")).Invoke (ctx, get);
 		#endif
 
-		// const gr_glinterface_t* gr_glinterface_create_native_interface()
+		// gr_glinterface_t const * gr_glinterface_create_native_interface()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1144,7 +1144,7 @@ namespace SkiaSharp
 			(gr_glinterface_create_native_interface_delegate ??= GetSymbol<Delegates.gr_glinterface_create_native_interface> ("gr_glinterface_create_native_interface")).Invoke ();
 		#endif
 
-		// bool gr_glinterface_has_extension(const gr_glinterface_t* glInterface, const char* extension)
+		// bool gr_glinterface_has_extension(gr_glinterface_t const * glInterface, char const * extension)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1166,7 +1166,7 @@ namespace SkiaSharp
 			(gr_glinterface_has_extension_delegate ??= GetSymbol<Delegates.gr_glinterface_has_extension> ("gr_glinterface_has_extension")).Invoke (glInterface, extension);
 		#endif
 
-		// void gr_glinterface_unref(const gr_glinterface_t* glInterface)
+		// void gr_glinterface_unref(gr_glinterface_t const * glInterface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1185,7 +1185,7 @@ namespace SkiaSharp
 			(gr_glinterface_unref_delegate ??= GetSymbol<Delegates.gr_glinterface_unref> ("gr_glinterface_unref")).Invoke (glInterface);
 		#endif
 
-		// bool gr_glinterface_validate(const gr_glinterface_t* glInterface)
+		// bool gr_glinterface_validate(gr_glinterface_t const * glInterface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1207,7 +1207,7 @@ namespace SkiaSharp
 			(gr_glinterface_validate_delegate ??= GetSymbol<Delegates.gr_glinterface_validate> ("gr_glinterface_validate")).Invoke (glInterface);
 		#endif
 
-		// gr_backend_t gr_recording_context_get_backend(gr_recording_context_t* context)
+		// gr_backend_t gr_recording_context_get_backend(gr_recording_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1226,7 +1226,7 @@ namespace SkiaSharp
 			(gr_recording_context_get_backend_delegate ??= GetSymbol<Delegates.gr_recording_context_get_backend> ("gr_recording_context_get_backend")).Invoke (context);
 		#endif
 
-		// gr_direct_context_t* gr_recording_context_get_direct_context(gr_recording_context_t* context)
+		// gr_direct_context_t * gr_recording_context_get_direct_context(gr_recording_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1245,7 +1245,7 @@ namespace SkiaSharp
 			(gr_recording_context_get_direct_context_delegate ??= GetSymbol<Delegates.gr_recording_context_get_direct_context> ("gr_recording_context_get_direct_context")).Invoke (context);
 		#endif
 
-		// int gr_recording_context_get_max_surface_sample_count_for_color_type(gr_recording_context_t* context, sk_colortype_t colorType)
+		// int gr_recording_context_get_max_surface_sample_count_for_color_type(gr_recording_context_t * context, sk_colortype_t colorType)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1264,7 +1264,7 @@ namespace SkiaSharp
 			(gr_recording_context_get_max_surface_sample_count_for_color_type_delegate ??= GetSymbol<Delegates.gr_recording_context_get_max_surface_sample_count_for_color_type> ("gr_recording_context_get_max_surface_sample_count_for_color_type")).Invoke (context, colorType);
 		#endif
 
-		// bool gr_recording_context_is_abandoned(gr_recording_context_t* context)
+		// bool gr_recording_context_is_abandoned(gr_recording_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1286,7 +1286,7 @@ namespace SkiaSharp
 			(gr_recording_context_is_abandoned_delegate ??= GetSymbol<Delegates.gr_recording_context_is_abandoned> ("gr_recording_context_is_abandoned")).Invoke (context);
 		#endif
 
-		// int gr_recording_context_max_render_target_size(gr_recording_context_t* context)
+		// int gr_recording_context_max_render_target_size(gr_recording_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1305,7 +1305,7 @@ namespace SkiaSharp
 			(gr_recording_context_max_render_target_size_delegate ??= GetSymbol<Delegates.gr_recording_context_max_render_target_size> ("gr_recording_context_max_render_target_size")).Invoke (context);
 		#endif
 
-		// int gr_recording_context_max_texture_size(gr_recording_context_t* context)
+		// int gr_recording_context_max_texture_size(gr_recording_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1324,7 +1324,7 @@ namespace SkiaSharp
 			(gr_recording_context_max_texture_size_delegate ??= GetSymbol<Delegates.gr_recording_context_max_texture_size> ("gr_recording_context_max_texture_size")).Invoke (context);
 		#endif
 
-		// void gr_recording_context_unref(gr_recording_context_t* context)
+		// void gr_recording_context_unref(gr_recording_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1343,7 +1343,7 @@ namespace SkiaSharp
 			(gr_recording_context_unref_delegate ??= GetSymbol<Delegates.gr_recording_context_unref> ("gr_recording_context_unref")).Invoke (context);
 		#endif
 
-		// void gr_vk_extensions_delete(gr_vk_extensions_t* extensions)
+		// void gr_vk_extensions_delete(gr_vk_extensions_t * extensions)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1362,7 +1362,7 @@ namespace SkiaSharp
 			(gr_vk_extensions_delete_delegate ??= GetSymbol<Delegates.gr_vk_extensions_delete> ("gr_vk_extensions_delete")).Invoke (extensions);
 		#endif
 
-		// bool gr_vk_extensions_has_extension(gr_vk_extensions_t* extensions, const char* ext, uint32_t minVersion)
+		// bool gr_vk_extensions_has_extension(gr_vk_extensions_t * extensions, char const * ext, unsigned int minVersion)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1384,7 +1384,7 @@ namespace SkiaSharp
 			(gr_vk_extensions_has_extension_delegate ??= GetSymbol<Delegates.gr_vk_extensions_has_extension> ("gr_vk_extensions_has_extension")).Invoke (extensions, ext, minVersion);
 		#endif
 
-		// void gr_vk_extensions_init(gr_vk_extensions_t* extensions, gr_vk_get_proc getProc, void* userData, vk_instance_t* instance, vk_physical_device_t* physDev, uint32_t instanceExtensionCount, const char** instanceExtensions, uint32_t deviceExtensionCount, const char** deviceExtensions)
+		// void gr_vk_extensions_init(gr_vk_extensions_t * extensions, gr_vk_get_proc getProc, void * userData, vk_instance_t * instance, vk_physical_device_t * physDev, unsigned int instanceExtensionCount, char const * * instanceExtensions, unsigned int deviceExtensionCount, char const * * deviceExtensions)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1403,7 +1403,7 @@ namespace SkiaSharp
 			(gr_vk_extensions_init_delegate ??= GetSymbol<Delegates.gr_vk_extensions_init> ("gr_vk_extensions_init")).Invoke (extensions, getProc, userData, instance, physDev, instanceExtensionCount, instanceExtensions, deviceExtensionCount, deviceExtensions);
 		#endif
 
-		// gr_vk_extensions_t* gr_vk_extensions_new()
+		// gr_vk_extensions_t * gr_vk_extensions_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1426,7 +1426,7 @@ namespace SkiaSharp
 
 		#region sk_bitmap.h
 
-		// void sk_bitmap_destructor(sk_bitmap_t* cbitmap)
+		// void sk_bitmap_destructor(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1445,7 +1445,7 @@ namespace SkiaSharp
 			(sk_bitmap_destructor_delegate ??= GetSymbol<Delegates.sk_bitmap_destructor> ("sk_bitmap_destructor")).Invoke (cbitmap);
 		#endif
 
-		// void sk_bitmap_erase(sk_bitmap_t* cbitmap, sk_color_t color)
+		// void sk_bitmap_erase(sk_bitmap_t * cbitmap, sk_color_t color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1464,7 +1464,7 @@ namespace SkiaSharp
 			(sk_bitmap_erase_delegate ??= GetSymbol<Delegates.sk_bitmap_erase> ("sk_bitmap_erase")).Invoke (cbitmap, color);
 		#endif
 
-		// void sk_bitmap_erase_rect(sk_bitmap_t* cbitmap, sk_color_t color, sk_irect_t* rect)
+		// void sk_bitmap_erase_rect(sk_bitmap_t * cbitmap, sk_color_t color, sk_irect_t * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1483,7 +1483,7 @@ namespace SkiaSharp
 			(sk_bitmap_erase_rect_delegate ??= GetSymbol<Delegates.sk_bitmap_erase_rect> ("sk_bitmap_erase_rect")).Invoke (cbitmap, color, rect);
 		#endif
 
-		// bool sk_bitmap_extract_alpha(sk_bitmap_t* cbitmap, sk_bitmap_t* dst, const sk_paint_t* paint, sk_ipoint_t* offset)
+		// bool sk_bitmap_extract_alpha(sk_bitmap_t * cbitmap, sk_bitmap_t * dst, sk_paint_t const * paint, sk_ipoint_t * offset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1505,7 +1505,7 @@ namespace SkiaSharp
 			(sk_bitmap_extract_alpha_delegate ??= GetSymbol<Delegates.sk_bitmap_extract_alpha> ("sk_bitmap_extract_alpha")).Invoke (cbitmap, dst, paint, offset);
 		#endif
 
-		// bool sk_bitmap_extract_subset(sk_bitmap_t* cbitmap, sk_bitmap_t* dst, sk_irect_t* subset)
+		// bool sk_bitmap_extract_subset(sk_bitmap_t * cbitmap, sk_bitmap_t * dst, sk_irect_t * subset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1527,7 +1527,7 @@ namespace SkiaSharp
 			(sk_bitmap_extract_subset_delegate ??= GetSymbol<Delegates.sk_bitmap_extract_subset> ("sk_bitmap_extract_subset")).Invoke (cbitmap, dst, subset);
 		#endif
 
-		// void* sk_bitmap_get_addr(sk_bitmap_t* cbitmap, int x, int y)
+		// void * sk_bitmap_get_addr(sk_bitmap_t * cbitmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1546,7 +1546,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_addr_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr> ("sk_bitmap_get_addr")).Invoke (cbitmap, x, y);
 		#endif
 
-		// uint16_t* sk_bitmap_get_addr_16(sk_bitmap_t* cbitmap, int x, int y)
+		// unsigned short * sk_bitmap_get_addr_16(sk_bitmap_t * cbitmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1565,7 +1565,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_addr_16_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr_16> ("sk_bitmap_get_addr_16")).Invoke (cbitmap, x, y);
 		#endif
 
-		// uint32_t* sk_bitmap_get_addr_32(sk_bitmap_t* cbitmap, int x, int y)
+		// unsigned int * sk_bitmap_get_addr_32(sk_bitmap_t * cbitmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1584,7 +1584,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_addr_32_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr_32> ("sk_bitmap_get_addr_32")).Invoke (cbitmap, x, y);
 		#endif
 
-		// uint8_t* sk_bitmap_get_addr_8(sk_bitmap_t* cbitmap, int x, int y)
+		// unsigned char * sk_bitmap_get_addr_8(sk_bitmap_t * cbitmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1603,7 +1603,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_addr_8_delegate ??= GetSymbol<Delegates.sk_bitmap_get_addr_8> ("sk_bitmap_get_addr_8")).Invoke (cbitmap, x, y);
 		#endif
 
-		// size_t sk_bitmap_get_byte_count(sk_bitmap_t* cbitmap)
+		// size_t sk_bitmap_get_byte_count(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1622,7 +1622,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_byte_count_delegate ??= GetSymbol<Delegates.sk_bitmap_get_byte_count> ("sk_bitmap_get_byte_count")).Invoke (cbitmap);
 		#endif
 
-		// void sk_bitmap_get_info(sk_bitmap_t* cbitmap, sk_imageinfo_t* info)
+		// void sk_bitmap_get_info(sk_bitmap_t * cbitmap, sk_imageinfo_t * info)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1641,7 +1641,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_info_delegate ??= GetSymbol<Delegates.sk_bitmap_get_info> ("sk_bitmap_get_info")).Invoke (cbitmap, info);
 		#endif
 
-		// sk_color_t sk_bitmap_get_pixel_color(sk_bitmap_t* cbitmap, int x, int y)
+		// sk_color_t sk_bitmap_get_pixel_color(sk_bitmap_t * cbitmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1660,7 +1660,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_pixel_color_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixel_color> ("sk_bitmap_get_pixel_color")).Invoke (cbitmap, x, y);
 		#endif
 
-		// void sk_bitmap_get_pixel_colors(sk_bitmap_t* cbitmap, sk_color_t* colors)
+		// void sk_bitmap_get_pixel_colors(sk_bitmap_t * cbitmap, sk_color_t * colors)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1679,7 +1679,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_pixel_colors_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixel_colors> ("sk_bitmap_get_pixel_colors")).Invoke (cbitmap, colors);
 		#endif
 
-		// void* sk_bitmap_get_pixels(sk_bitmap_t* cbitmap, size_t* length)
+		// void * sk_bitmap_get_pixels(sk_bitmap_t * cbitmap, size_t * length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1698,7 +1698,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_get_pixels> ("sk_bitmap_get_pixels")).Invoke (cbitmap, length);
 		#endif
 
-		// size_t sk_bitmap_get_row_bytes(sk_bitmap_t* cbitmap)
+		// size_t sk_bitmap_get_row_bytes(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1717,7 +1717,7 @@ namespace SkiaSharp
 			(sk_bitmap_get_row_bytes_delegate ??= GetSymbol<Delegates.sk_bitmap_get_row_bytes> ("sk_bitmap_get_row_bytes")).Invoke (cbitmap);
 		#endif
 
-		// bool sk_bitmap_install_pixels(sk_bitmap_t* cbitmap, const sk_imageinfo_t* cinfo, void* pixels, size_t rowBytes, const sk_bitmap_release_proc releaseProc, void* context)
+		// bool sk_bitmap_install_pixels(sk_bitmap_t * cbitmap, sk_imageinfo_t const * cinfo, void * pixels, size_t rowBytes, sk_bitmap_release_proc const releaseProc, void * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1739,7 +1739,7 @@ namespace SkiaSharp
 			(sk_bitmap_install_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_install_pixels> ("sk_bitmap_install_pixels")).Invoke (cbitmap, cinfo, pixels, rowBytes, releaseProc, context);
 		#endif
 
-		// bool sk_bitmap_install_pixels_with_pixmap(sk_bitmap_t* cbitmap, const sk_pixmap_t* cpixmap)
+		// bool sk_bitmap_install_pixels_with_pixmap(sk_bitmap_t * cbitmap, sk_pixmap_t const * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1761,7 +1761,7 @@ namespace SkiaSharp
 			(sk_bitmap_install_pixels_with_pixmap_delegate ??= GetSymbol<Delegates.sk_bitmap_install_pixels_with_pixmap> ("sk_bitmap_install_pixels_with_pixmap")).Invoke (cbitmap, cpixmap);
 		#endif
 
-		// bool sk_bitmap_is_immutable(sk_bitmap_t* cbitmap)
+		// bool sk_bitmap_is_immutable(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1783,7 +1783,7 @@ namespace SkiaSharp
 			(sk_bitmap_is_immutable_delegate ??= GetSymbol<Delegates.sk_bitmap_is_immutable> ("sk_bitmap_is_immutable")).Invoke (cbitmap);
 		#endif
 
-		// bool sk_bitmap_is_null(sk_bitmap_t* cbitmap)
+		// bool sk_bitmap_is_null(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1805,7 +1805,7 @@ namespace SkiaSharp
 			(sk_bitmap_is_null_delegate ??= GetSymbol<Delegates.sk_bitmap_is_null> ("sk_bitmap_is_null")).Invoke (cbitmap);
 		#endif
 
-		// sk_shader_t* sk_bitmap_make_shader(sk_bitmap_t* cbitmap, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
+		// sk_shader_t * sk_bitmap_make_shader(sk_bitmap_t * cbitmap, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, sk_sampling_options_t * sampling, sk_matrix_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1824,7 +1824,7 @@ namespace SkiaSharp
 			(sk_bitmap_make_shader_delegate ??= GetSymbol<Delegates.sk_bitmap_make_shader> ("sk_bitmap_make_shader")).Invoke (cbitmap, tmx, tmy, sampling, cmatrix);
 		#endif
 
-		// sk_bitmap_t* sk_bitmap_new()
+		// sk_bitmap_t * sk_bitmap_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1843,7 +1843,7 @@ namespace SkiaSharp
 			(sk_bitmap_new_delegate ??= GetSymbol<Delegates.sk_bitmap_new> ("sk_bitmap_new")).Invoke ();
 		#endif
 
-		// void sk_bitmap_notify_pixels_changed(sk_bitmap_t* cbitmap)
+		// void sk_bitmap_notify_pixels_changed(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1862,7 +1862,7 @@ namespace SkiaSharp
 			(sk_bitmap_notify_pixels_changed_delegate ??= GetSymbol<Delegates.sk_bitmap_notify_pixels_changed> ("sk_bitmap_notify_pixels_changed")).Invoke (cbitmap);
 		#endif
 
-		// bool sk_bitmap_peek_pixels(sk_bitmap_t* cbitmap, sk_pixmap_t* cpixmap)
+		// bool sk_bitmap_peek_pixels(sk_bitmap_t * cbitmap, sk_pixmap_t * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1884,7 +1884,7 @@ namespace SkiaSharp
 			(sk_bitmap_peek_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_peek_pixels> ("sk_bitmap_peek_pixels")).Invoke (cbitmap, cpixmap);
 		#endif
 
-		// bool sk_bitmap_ready_to_draw(sk_bitmap_t* cbitmap)
+		// bool sk_bitmap_ready_to_draw(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1906,7 +1906,7 @@ namespace SkiaSharp
 			(sk_bitmap_ready_to_draw_delegate ??= GetSymbol<Delegates.sk_bitmap_ready_to_draw> ("sk_bitmap_ready_to_draw")).Invoke (cbitmap);
 		#endif
 
-		// void sk_bitmap_reset(sk_bitmap_t* cbitmap)
+		// void sk_bitmap_reset(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1925,7 +1925,7 @@ namespace SkiaSharp
 			(sk_bitmap_reset_delegate ??= GetSymbol<Delegates.sk_bitmap_reset> ("sk_bitmap_reset")).Invoke (cbitmap);
 		#endif
 
-		// void sk_bitmap_set_immutable(sk_bitmap_t* cbitmap)
+		// void sk_bitmap_set_immutable(sk_bitmap_t * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1944,7 +1944,7 @@ namespace SkiaSharp
 			(sk_bitmap_set_immutable_delegate ??= GetSymbol<Delegates.sk_bitmap_set_immutable> ("sk_bitmap_set_immutable")).Invoke (cbitmap);
 		#endif
 
-		// void sk_bitmap_set_pixels(sk_bitmap_t* cbitmap, void* pixels)
+		// void sk_bitmap_set_pixels(sk_bitmap_t * cbitmap, void * pixels)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1963,7 +1963,7 @@ namespace SkiaSharp
 			(sk_bitmap_set_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_set_pixels> ("sk_bitmap_set_pixels")).Invoke (cbitmap, pixels);
 		#endif
 
-		// void sk_bitmap_swap(sk_bitmap_t* cbitmap, sk_bitmap_t* cother)
+		// void sk_bitmap_swap(sk_bitmap_t * cbitmap, sk_bitmap_t * cother)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -1982,7 +1982,7 @@ namespace SkiaSharp
 			(sk_bitmap_swap_delegate ??= GetSymbol<Delegates.sk_bitmap_swap> ("sk_bitmap_swap")).Invoke (cbitmap, cother);
 		#endif
 
-		// bool sk_bitmap_try_alloc_pixels(sk_bitmap_t* cbitmap, const sk_imageinfo_t* requestedInfo, size_t rowBytes)
+		// bool sk_bitmap_try_alloc_pixels(sk_bitmap_t * cbitmap, sk_imageinfo_t const * requestedInfo, size_t rowBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2004,7 +2004,7 @@ namespace SkiaSharp
 			(sk_bitmap_try_alloc_pixels_delegate ??= GetSymbol<Delegates.sk_bitmap_try_alloc_pixels> ("sk_bitmap_try_alloc_pixels")).Invoke (cbitmap, requestedInfo, rowBytes);
 		#endif
 
-		// bool sk_bitmap_try_alloc_pixels_with_flags(sk_bitmap_t* cbitmap, const sk_imageinfo_t* requestedInfo, uint32_t flags)
+		// bool sk_bitmap_try_alloc_pixels_with_flags(sk_bitmap_t * cbitmap, sk_imageinfo_t const * requestedInfo, unsigned int flags)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2030,7 +2030,7 @@ namespace SkiaSharp
 
 		#region sk_blender.h
 
-		// sk_blender_t* sk_blender_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePremul)
+		// sk_blender_t * sk_blender_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePremul)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2049,7 +2049,7 @@ namespace SkiaSharp
 			(sk_blender_new_arithmetic_delegate ??= GetSymbol<Delegates.sk_blender_new_arithmetic> ("sk_blender_new_arithmetic")).Invoke (k1, k2, k3, k4, enforcePremul);
 		#endif
 
-		// sk_blender_t* sk_blender_new_mode(sk_blendmode_t mode)
+		// sk_blender_t * sk_blender_new_mode(sk_blendmode_t mode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2068,7 +2068,7 @@ namespace SkiaSharp
 			(sk_blender_new_mode_delegate ??= GetSymbol<Delegates.sk_blender_new_mode> ("sk_blender_new_mode")).Invoke (mode);
 		#endif
 
-		// void sk_blender_ref(sk_blender_t* blender)
+		// void sk_blender_ref(sk_blender_t * blender)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2087,7 +2087,7 @@ namespace SkiaSharp
 			(sk_blender_ref_delegate ??= GetSymbol<Delegates.sk_blender_ref> ("sk_blender_ref")).Invoke (blender);
 		#endif
 
-		// void sk_blender_unref(sk_blender_t* blender)
+		// void sk_blender_unref(sk_blender_t * blender)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2110,7 +2110,7 @@ namespace SkiaSharp
 
 		#region sk_canvas.h
 
-		// void sk_canvas_clear(sk_canvas_t* ccanvas, sk_color_t color)
+		// void sk_canvas_clear(sk_canvas_t * ccanvas, sk_color_t color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2129,7 +2129,7 @@ namespace SkiaSharp
 			(sk_canvas_clear_delegate ??= GetSymbol<Delegates.sk_canvas_clear> ("sk_canvas_clear")).Invoke (ccanvas, color);
 		#endif
 
-		// void sk_canvas_clear_color4f(sk_canvas_t* ccanvas, sk_color4f_t color)
+		// void sk_canvas_clear_color4f(sk_canvas_t * ccanvas, sk_color4f_t color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2148,7 +2148,7 @@ namespace SkiaSharp
 			(sk_canvas_clear_color4f_delegate ??= GetSymbol<Delegates.sk_canvas_clear_color4f> ("sk_canvas_clear_color4f")).Invoke (ccanvas, color);
 		#endif
 
-		// void sk_canvas_clip_path_with_operation(sk_canvas_t* ccanvas, const sk_path_t* cpath, sk_clipop_t op, bool doAA)
+		// void sk_canvas_clip_path_with_operation(sk_canvas_t * ccanvas, sk_path_t const * cpath, sk_clipop_t op, bool doAA)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2167,7 +2167,7 @@ namespace SkiaSharp
 			(sk_canvas_clip_path_with_operation_delegate ??= GetSymbol<Delegates.sk_canvas_clip_path_with_operation> ("sk_canvas_clip_path_with_operation")).Invoke (ccanvas, cpath, op, doAA);
 		#endif
 
-		// void sk_canvas_clip_rect_with_operation(sk_canvas_t* ccanvas, const sk_rect_t* crect, sk_clipop_t op, bool doAA)
+		// void sk_canvas_clip_rect_with_operation(sk_canvas_t * ccanvas, sk_rect_t const * crect, sk_clipop_t op, bool doAA)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2186,7 +2186,7 @@ namespace SkiaSharp
 			(sk_canvas_clip_rect_with_operation_delegate ??= GetSymbol<Delegates.sk_canvas_clip_rect_with_operation> ("sk_canvas_clip_rect_with_operation")).Invoke (ccanvas, crect, op, doAA);
 		#endif
 
-		// void sk_canvas_clip_region(sk_canvas_t* ccanvas, const sk_region_t* region, sk_clipop_t op)
+		// void sk_canvas_clip_region(sk_canvas_t * ccanvas, sk_region_t const * region, sk_clipop_t op)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2205,7 +2205,7 @@ namespace SkiaSharp
 			(sk_canvas_clip_region_delegate ??= GetSymbol<Delegates.sk_canvas_clip_region> ("sk_canvas_clip_region")).Invoke (ccanvas, region, op);
 		#endif
 
-		// void sk_canvas_clip_rrect_with_operation(sk_canvas_t* ccanvas, const sk_rrect_t* crect, sk_clipop_t op, bool doAA)
+		// void sk_canvas_clip_rrect_with_operation(sk_canvas_t * ccanvas, sk_rrect_t const * crect, sk_clipop_t op, bool doAA)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2224,7 +2224,7 @@ namespace SkiaSharp
 			(sk_canvas_clip_rrect_with_operation_delegate ??= GetSymbol<Delegates.sk_canvas_clip_rrect_with_operation> ("sk_canvas_clip_rrect_with_operation")).Invoke (ccanvas, crect, op, doAA);
 		#endif
 
-		// void sk_canvas_concat(sk_canvas_t* ccanvas, const sk_matrix44_t* cmatrix)
+		// void sk_canvas_concat(sk_canvas_t * ccanvas, sk_matrix44_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2243,7 +2243,7 @@ namespace SkiaSharp
 			(sk_canvas_concat_delegate ??= GetSymbol<Delegates.sk_canvas_concat> ("sk_canvas_concat")).Invoke (ccanvas, cmatrix);
 		#endif
 
-		// void sk_canvas_destroy(sk_canvas_t* ccanvas)
+		// void sk_canvas_destroy(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2262,7 +2262,7 @@ namespace SkiaSharp
 			(sk_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_canvas_destroy> ("sk_canvas_destroy")).Invoke (ccanvas);
 		#endif
 
-		// void sk_canvas_discard(sk_canvas_t* ccanvas)
+		// void sk_canvas_discard(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2281,7 +2281,7 @@ namespace SkiaSharp
 			(sk_canvas_discard_delegate ??= GetSymbol<Delegates.sk_canvas_discard> ("sk_canvas_discard")).Invoke (ccanvas);
 		#endif
 
-		// void sk_canvas_draw_annotation(sk_canvas_t* t, const sk_rect_t* rect, const char* key, sk_data_t* value)
+		// void sk_canvas_draw_annotation(sk_canvas_t * t, sk_rect_t const * rect, char const * key, sk_data_t * value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2300,7 +2300,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_annotation> ("sk_canvas_draw_annotation")).Invoke (t, rect, key, value);
 		#endif
 
-		// void sk_canvas_draw_arc(sk_canvas_t* ccanvas, const sk_rect_t* oval, float startAngle, float sweepAngle, bool useCenter, const sk_paint_t* paint)
+		// void sk_canvas_draw_arc(sk_canvas_t * ccanvas, sk_rect_t const * oval, float startAngle, float sweepAngle, bool useCenter, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2319,7 +2319,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_arc_delegate ??= GetSymbol<Delegates.sk_canvas_draw_arc> ("sk_canvas_draw_arc")).Invoke (ccanvas, oval, startAngle, sweepAngle, useCenter, paint);
 		#endif
 
-		// void sk_canvas_draw_atlas(sk_canvas_t* ccanvas, const sk_image_t* atlas, const sk_rsxform_t* xform, const sk_rect_t* tex, const sk_color_t* colors, int count, sk_blendmode_t mode, const sk_sampling_options_t* sampling, const sk_rect_t* cullRect, const sk_paint_t* paint)
+		// void sk_canvas_draw_atlas(sk_canvas_t * ccanvas, sk_image_t const * atlas, sk_rsxform_t const * xform, sk_rect_t const * tex, sk_color_t const * colors, int count, sk_blendmode_t mode, sk_sampling_options_t const * sampling, sk_rect_t const * cullRect, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2338,7 +2338,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_atlas_delegate ??= GetSymbol<Delegates.sk_canvas_draw_atlas> ("sk_canvas_draw_atlas")).Invoke (ccanvas, atlas, xform, tex, colors, count, mode, sampling, cullRect, paint);
 		#endif
 
-		// void sk_canvas_draw_circle(sk_canvas_t* ccanvas, float cx, float cy, float rad, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_circle(sk_canvas_t * ccanvas, float cx, float cy, float rad, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2357,7 +2357,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_circle_delegate ??= GetSymbol<Delegates.sk_canvas_draw_circle> ("sk_canvas_draw_circle")).Invoke (ccanvas, cx, cy, rad, cpaint);
 		#endif
 
-		// void sk_canvas_draw_color(sk_canvas_t* ccanvas, sk_color_t color, sk_blendmode_t cmode)
+		// void sk_canvas_draw_color(sk_canvas_t * ccanvas, sk_color_t color, sk_blendmode_t cmode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2376,7 +2376,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_color_delegate ??= GetSymbol<Delegates.sk_canvas_draw_color> ("sk_canvas_draw_color")).Invoke (ccanvas, color, cmode);
 		#endif
 
-		// void sk_canvas_draw_color4f(sk_canvas_t* ccanvas, sk_color4f_t color, sk_blendmode_t cmode)
+		// void sk_canvas_draw_color4f(sk_canvas_t * ccanvas, sk_color4f_t color, sk_blendmode_t cmode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2395,7 +2395,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_color4f_delegate ??= GetSymbol<Delegates.sk_canvas_draw_color4f> ("sk_canvas_draw_color4f")).Invoke (ccanvas, color, cmode);
 		#endif
 
-		// void sk_canvas_draw_drawable(sk_canvas_t* ccanvas, sk_drawable_t* cdrawable, const sk_matrix_t* cmatrix)
+		// void sk_canvas_draw_drawable(sk_canvas_t * ccanvas, sk_drawable_t * cdrawable, sk_matrix_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2414,7 +2414,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_drawable_delegate ??= GetSymbol<Delegates.sk_canvas_draw_drawable> ("sk_canvas_draw_drawable")).Invoke (ccanvas, cdrawable, cmatrix);
 		#endif
 
-		// void sk_canvas_draw_drrect(sk_canvas_t* ccanvas, const sk_rrect_t* outer, const sk_rrect_t* inner, const sk_paint_t* paint)
+		// void sk_canvas_draw_drrect(sk_canvas_t * ccanvas, sk_rrect_t const * outer, sk_rrect_t const * inner, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2433,7 +2433,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_drrect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_drrect> ("sk_canvas_draw_drrect")).Invoke (ccanvas, outer, inner, paint);
 		#endif
 
-		// void sk_canvas_draw_image(sk_canvas_t* ccanvas, const sk_image_t* cimage, float x, float y, const sk_sampling_options_t* sampling, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_image(sk_canvas_t * ccanvas, sk_image_t const * cimage, float x, float y, sk_sampling_options_t const * sampling, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2452,7 +2452,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_image_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image> ("sk_canvas_draw_image")).Invoke (ccanvas, cimage, x, y, sampling, cpaint);
 		#endif
 
-		// void sk_canvas_draw_image_lattice(sk_canvas_t* ccanvas, const sk_image_t* image, const sk_lattice_t* lattice, const sk_rect_t* dst, sk_filter_mode_t mode, const sk_paint_t* paint)
+		// void sk_canvas_draw_image_lattice(sk_canvas_t * ccanvas, sk_image_t const * image, sk_lattice_t const * lattice, sk_rect_t const * dst, sk_filter_mode_t mode, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2471,7 +2471,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_image_lattice_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image_lattice> ("sk_canvas_draw_image_lattice")).Invoke (ccanvas, image, lattice, dst, mode, paint);
 		#endif
 
-		// void sk_canvas_draw_image_nine(sk_canvas_t* ccanvas, const sk_image_t* image, const sk_irect_t* center, const sk_rect_t* dst, sk_filter_mode_t mode, const sk_paint_t* paint)
+		// void sk_canvas_draw_image_nine(sk_canvas_t * ccanvas, sk_image_t const * image, sk_irect_t const * center, sk_rect_t const * dst, sk_filter_mode_t mode, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2490,7 +2490,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_image_nine_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image_nine> ("sk_canvas_draw_image_nine")).Invoke (ccanvas, image, center, dst, mode, paint);
 		#endif
 
-		// void sk_canvas_draw_image_rect(sk_canvas_t* ccanvas, const sk_image_t* cimage, const sk_rect_t* csrcR, const sk_rect_t* cdstR, const sk_sampling_options_t* sampling, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_image_rect(sk_canvas_t * ccanvas, sk_image_t const * cimage, sk_rect_t const * csrcR, sk_rect_t const * cdstR, sk_sampling_options_t const * sampling, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2509,7 +2509,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_image_rect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_image_rect> ("sk_canvas_draw_image_rect")).Invoke (ccanvas, cimage, csrcR, cdstR, sampling, cpaint);
 		#endif
 
-		// void sk_canvas_draw_line(sk_canvas_t* ccanvas, float x0, float y0, float x1, float y1, sk_paint_t* cpaint)
+		// void sk_canvas_draw_line(sk_canvas_t * ccanvas, float x0, float y0, float x1, float y1, sk_paint_t * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2528,7 +2528,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_line_delegate ??= GetSymbol<Delegates.sk_canvas_draw_line> ("sk_canvas_draw_line")).Invoke (ccanvas, x0, y0, x1, y1, cpaint);
 		#endif
 
-		// void sk_canvas_draw_link_destination_annotation(sk_canvas_t* t, const sk_rect_t* rect, sk_data_t* value)
+		// void sk_canvas_draw_link_destination_annotation(sk_canvas_t * t, sk_rect_t const * rect, sk_data_t * value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2547,7 +2547,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_link_destination_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_link_destination_annotation> ("sk_canvas_draw_link_destination_annotation")).Invoke (t, rect, value);
 		#endif
 
-		// void sk_canvas_draw_named_destination_annotation(sk_canvas_t* t, const sk_point_t* point, sk_data_t* value)
+		// void sk_canvas_draw_named_destination_annotation(sk_canvas_t * t, sk_point_t const * point, sk_data_t * value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2566,7 +2566,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_named_destination_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_named_destination_annotation> ("sk_canvas_draw_named_destination_annotation")).Invoke (t, point, value);
 		#endif
 
-		// void sk_canvas_draw_oval(sk_canvas_t* ccanvas, const sk_rect_t* crect, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_oval(sk_canvas_t * ccanvas, sk_rect_t const * crect, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2585,7 +2585,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_oval_delegate ??= GetSymbol<Delegates.sk_canvas_draw_oval> ("sk_canvas_draw_oval")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
-		// void sk_canvas_draw_paint(sk_canvas_t* ccanvas, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_paint(sk_canvas_t * ccanvas, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2604,7 +2604,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_paint_delegate ??= GetSymbol<Delegates.sk_canvas_draw_paint> ("sk_canvas_draw_paint")).Invoke (ccanvas, cpaint);
 		#endif
 
-		// void sk_canvas_draw_patch(sk_canvas_t* ccanvas, const sk_point_t* cubics, const sk_color_t* colors, const sk_point_t* texCoords, sk_blendmode_t mode, const sk_paint_t* paint)
+		// void sk_canvas_draw_patch(sk_canvas_t * ccanvas, sk_point_t const * cubics, sk_color_t const * colors, sk_point_t const * texCoords, sk_blendmode_t mode, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2623,7 +2623,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_patch_delegate ??= GetSymbol<Delegates.sk_canvas_draw_patch> ("sk_canvas_draw_patch")).Invoke (ccanvas, cubics, colors, texCoords, mode, paint);
 		#endif
 
-		// void sk_canvas_draw_path(sk_canvas_t* ccanvas, const sk_path_t* cpath, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_path(sk_canvas_t * ccanvas, sk_path_t const * cpath, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2642,7 +2642,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_path_delegate ??= GetSymbol<Delegates.sk_canvas_draw_path> ("sk_canvas_draw_path")).Invoke (ccanvas, cpath, cpaint);
 		#endif
 
-		// void sk_canvas_draw_picture(sk_canvas_t* ccanvas, const sk_picture_t* cpicture, const sk_matrix_t* cmatrix, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_picture(sk_canvas_t * ccanvas, sk_picture_t const * cpicture, sk_matrix_t const * cmatrix, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2661,7 +2661,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_picture_delegate ??= GetSymbol<Delegates.sk_canvas_draw_picture> ("sk_canvas_draw_picture")).Invoke (ccanvas, cpicture, cmatrix, cpaint);
 		#endif
 
-		// void sk_canvas_draw_point(sk_canvas_t* ccanvas, float x, float y, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_point(sk_canvas_t * ccanvas, float x, float y, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2680,7 +2680,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_point_delegate ??= GetSymbol<Delegates.sk_canvas_draw_point> ("sk_canvas_draw_point")).Invoke (ccanvas, x, y, cpaint);
 		#endif
 
-		// void sk_canvas_draw_points(sk_canvas_t* ccanvas, sk_point_mode_t pointMode, size_t count, const sk_point_t[-1] points, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_points(sk_canvas_t * ccanvas, sk_point_mode_t pointMode, size_t count, sk_point_t const[-1] points, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2699,7 +2699,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_points_delegate ??= GetSymbol<Delegates.sk_canvas_draw_points> ("sk_canvas_draw_points")).Invoke (ccanvas, pointMode, count, points, cpaint);
 		#endif
 
-		// void sk_canvas_draw_rect(sk_canvas_t* ccanvas, const sk_rect_t* crect, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_rect(sk_canvas_t * ccanvas, sk_rect_t const * crect, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2718,7 +2718,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_rect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_rect> ("sk_canvas_draw_rect")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
-		// void sk_canvas_draw_region(sk_canvas_t* ccanvas, const sk_region_t* cregion, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_region(sk_canvas_t * ccanvas, sk_region_t const * cregion, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2737,7 +2737,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_region_delegate ??= GetSymbol<Delegates.sk_canvas_draw_region> ("sk_canvas_draw_region")).Invoke (ccanvas, cregion, cpaint);
 		#endif
 
-		// void sk_canvas_draw_round_rect(sk_canvas_t* ccanvas, const sk_rect_t* crect, float rx, float ry, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_round_rect(sk_canvas_t * ccanvas, sk_rect_t const * crect, float rx, float ry, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2756,7 +2756,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_round_rect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_round_rect> ("sk_canvas_draw_round_rect")).Invoke (ccanvas, crect, rx, ry, cpaint);
 		#endif
 
-		// void sk_canvas_draw_rrect(sk_canvas_t* ccanvas, const sk_rrect_t* crect, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_rrect(sk_canvas_t * ccanvas, sk_rrect_t const * crect, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2775,7 +2775,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_rrect_delegate ??= GetSymbol<Delegates.sk_canvas_draw_rrect> ("sk_canvas_draw_rrect")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
-		// void sk_canvas_draw_simple_text(sk_canvas_t* ccanvas, const void* text, size_t byte_length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* cfont, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_simple_text(sk_canvas_t * ccanvas, void const * text, size_t byte_length, sk_text_encoding_t encoding, float x, float y, sk_font_t const * cfont, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2794,7 +2794,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_simple_text_delegate ??= GetSymbol<Delegates.sk_canvas_draw_simple_text> ("sk_canvas_draw_simple_text")).Invoke (ccanvas, text, byte_length, encoding, x, y, cfont, cpaint);
 		#endif
 
-		// void sk_canvas_draw_text_blob(sk_canvas_t* ccanvas, sk_textblob_t* text, float x, float y, const sk_paint_t* cpaint)
+		// void sk_canvas_draw_text_blob(sk_canvas_t * ccanvas, sk_textblob_t * text, float x, float y, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2813,7 +2813,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_text_blob_delegate ??= GetSymbol<Delegates.sk_canvas_draw_text_blob> ("sk_canvas_draw_text_blob")).Invoke (ccanvas, text, x, y, cpaint);
 		#endif
 
-		// void sk_canvas_draw_url_annotation(sk_canvas_t* t, const sk_rect_t* rect, sk_data_t* value)
+		// void sk_canvas_draw_url_annotation(sk_canvas_t * t, sk_rect_t const * rect, sk_data_t * value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2832,7 +2832,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_url_annotation_delegate ??= GetSymbol<Delegates.sk_canvas_draw_url_annotation> ("sk_canvas_draw_url_annotation")).Invoke (t, rect, value);
 		#endif
 
-		// void sk_canvas_draw_vertices(sk_canvas_t* ccanvas, const sk_vertices_t* vertices, sk_blendmode_t mode, const sk_paint_t* paint)
+		// void sk_canvas_draw_vertices(sk_canvas_t * ccanvas, sk_vertices_t const * vertices, sk_blendmode_t mode, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2851,7 +2851,7 @@ namespace SkiaSharp
 			(sk_canvas_draw_vertices_delegate ??= GetSymbol<Delegates.sk_canvas_draw_vertices> ("sk_canvas_draw_vertices")).Invoke (ccanvas, vertices, mode, paint);
 		#endif
 
-		// bool sk_canvas_get_device_clip_bounds(sk_canvas_t* ccanvas, sk_irect_t* cbounds)
+		// bool sk_canvas_get_device_clip_bounds(sk_canvas_t * ccanvas, sk_irect_t * cbounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2873,7 +2873,7 @@ namespace SkiaSharp
 			(sk_canvas_get_device_clip_bounds_delegate ??= GetSymbol<Delegates.sk_canvas_get_device_clip_bounds> ("sk_canvas_get_device_clip_bounds")).Invoke (ccanvas, cbounds);
 		#endif
 
-		// bool sk_canvas_get_local_clip_bounds(sk_canvas_t* ccanvas, sk_rect_t* cbounds)
+		// bool sk_canvas_get_local_clip_bounds(sk_canvas_t * ccanvas, sk_rect_t * cbounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2895,7 +2895,7 @@ namespace SkiaSharp
 			(sk_canvas_get_local_clip_bounds_delegate ??= GetSymbol<Delegates.sk_canvas_get_local_clip_bounds> ("sk_canvas_get_local_clip_bounds")).Invoke (ccanvas, cbounds);
 		#endif
 
-		// void sk_canvas_get_matrix(sk_canvas_t* ccanvas, sk_matrix44_t* cmatrix)
+		// void sk_canvas_get_matrix(sk_canvas_t * ccanvas, sk_matrix44_t * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2914,7 +2914,7 @@ namespace SkiaSharp
 			(sk_canvas_get_matrix_delegate ??= GetSymbol<Delegates.sk_canvas_get_matrix> ("sk_canvas_get_matrix")).Invoke (ccanvas, cmatrix);
 		#endif
 
-		// int sk_canvas_get_save_count(sk_canvas_t* ccanvas)
+		// int sk_canvas_get_save_count(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2933,7 +2933,7 @@ namespace SkiaSharp
 			(sk_canvas_get_save_count_delegate ??= GetSymbol<Delegates.sk_canvas_get_save_count> ("sk_canvas_get_save_count")).Invoke (ccanvas);
 		#endif
 
-		// bool sk_canvas_is_clip_empty(sk_canvas_t* ccanvas)
+		// bool sk_canvas_is_clip_empty(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2955,7 +2955,7 @@ namespace SkiaSharp
 			(sk_canvas_is_clip_empty_delegate ??= GetSymbol<Delegates.sk_canvas_is_clip_empty> ("sk_canvas_is_clip_empty")).Invoke (ccanvas);
 		#endif
 
-		// bool sk_canvas_is_clip_rect(sk_canvas_t* ccanvas)
+		// bool sk_canvas_is_clip_rect(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2977,7 +2977,7 @@ namespace SkiaSharp
 			(sk_canvas_is_clip_rect_delegate ??= GetSymbol<Delegates.sk_canvas_is_clip_rect> ("sk_canvas_is_clip_rect")).Invoke (ccanvas);
 		#endif
 
-		// sk_canvas_t* sk_canvas_new_from_bitmap(const sk_bitmap_t* bitmap)
+		// sk_canvas_t * sk_canvas_new_from_bitmap(sk_bitmap_t const * bitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -2996,7 +2996,7 @@ namespace SkiaSharp
 			(sk_canvas_new_from_bitmap_delegate ??= GetSymbol<Delegates.sk_canvas_new_from_bitmap> ("sk_canvas_new_from_bitmap")).Invoke (bitmap);
 		#endif
 
-		// sk_canvas_t* sk_canvas_new_from_raster(const sk_imageinfo_t* cinfo, void* pixels, size_t rowBytes, const sk_surfaceprops_t* props)
+		// sk_canvas_t * sk_canvas_new_from_raster(sk_imageinfo_t const * cinfo, void * pixels, size_t rowBytes, sk_surfaceprops_t const * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3015,7 +3015,7 @@ namespace SkiaSharp
 			(sk_canvas_new_from_raster_delegate ??= GetSymbol<Delegates.sk_canvas_new_from_raster> ("sk_canvas_new_from_raster")).Invoke (cinfo, pixels, rowBytes, props);
 		#endif
 
-		// bool sk_canvas_quick_reject(sk_canvas_t* ccanvas, const sk_rect_t* crect)
+		// bool sk_canvas_quick_reject(sk_canvas_t * ccanvas, sk_rect_t const * crect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3037,7 +3037,7 @@ namespace SkiaSharp
 			(sk_canvas_quick_reject_delegate ??= GetSymbol<Delegates.sk_canvas_quick_reject> ("sk_canvas_quick_reject")).Invoke (ccanvas, crect);
 		#endif
 
-		// void sk_canvas_reset_matrix(sk_canvas_t* ccanvas)
+		// void sk_canvas_reset_matrix(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3056,7 +3056,7 @@ namespace SkiaSharp
 			(sk_canvas_reset_matrix_delegate ??= GetSymbol<Delegates.sk_canvas_reset_matrix> ("sk_canvas_reset_matrix")).Invoke (ccanvas);
 		#endif
 
-		// void sk_canvas_restore(sk_canvas_t* ccanvas)
+		// void sk_canvas_restore(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3075,7 +3075,7 @@ namespace SkiaSharp
 			(sk_canvas_restore_delegate ??= GetSymbol<Delegates.sk_canvas_restore> ("sk_canvas_restore")).Invoke (ccanvas);
 		#endif
 
-		// void sk_canvas_restore_to_count(sk_canvas_t* ccanvas, int saveCount)
+		// void sk_canvas_restore_to_count(sk_canvas_t * ccanvas, int saveCount)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3094,7 +3094,7 @@ namespace SkiaSharp
 			(sk_canvas_restore_to_count_delegate ??= GetSymbol<Delegates.sk_canvas_restore_to_count> ("sk_canvas_restore_to_count")).Invoke (ccanvas, saveCount);
 		#endif
 
-		// void sk_canvas_rotate_degrees(sk_canvas_t* ccanvas, float degrees)
+		// void sk_canvas_rotate_degrees(sk_canvas_t * ccanvas, float degrees)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3113,7 +3113,7 @@ namespace SkiaSharp
 			(sk_canvas_rotate_degrees_delegate ??= GetSymbol<Delegates.sk_canvas_rotate_degrees> ("sk_canvas_rotate_degrees")).Invoke (ccanvas, degrees);
 		#endif
 
-		// void sk_canvas_rotate_radians(sk_canvas_t* ccanvas, float radians)
+		// void sk_canvas_rotate_radians(sk_canvas_t * ccanvas, float radians)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3132,7 +3132,7 @@ namespace SkiaSharp
 			(sk_canvas_rotate_radians_delegate ??= GetSymbol<Delegates.sk_canvas_rotate_radians> ("sk_canvas_rotate_radians")).Invoke (ccanvas, radians);
 		#endif
 
-		// int sk_canvas_save(sk_canvas_t* ccanvas)
+		// int sk_canvas_save(sk_canvas_t * ccanvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3151,7 +3151,7 @@ namespace SkiaSharp
 			(sk_canvas_save_delegate ??= GetSymbol<Delegates.sk_canvas_save> ("sk_canvas_save")).Invoke (ccanvas);
 		#endif
 
-		// int sk_canvas_save_layer(sk_canvas_t* ccanvas, const sk_rect_t* crect, const sk_paint_t* cpaint)
+		// int sk_canvas_save_layer(sk_canvas_t * ccanvas, sk_rect_t const * crect, sk_paint_t const * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3170,7 +3170,7 @@ namespace SkiaSharp
 			(sk_canvas_save_layer_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer> ("sk_canvas_save_layer")).Invoke (ccanvas, crect, cpaint);
 		#endif
 
-		// int sk_canvas_save_layer_rec(sk_canvas_t* ccanvas, const sk_canvas_savelayerrec_t* crec)
+		// int sk_canvas_save_layer_rec(sk_canvas_t * ccanvas, sk_canvas_savelayerrec_t const * crec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3189,7 +3189,7 @@ namespace SkiaSharp
 			(sk_canvas_save_layer_rec_delegate ??= GetSymbol<Delegates.sk_canvas_save_layer_rec> ("sk_canvas_save_layer_rec")).Invoke (ccanvas, crec);
 		#endif
 
-		// void sk_canvas_scale(sk_canvas_t* ccanvas, float sx, float sy)
+		// void sk_canvas_scale(sk_canvas_t * ccanvas, float sx, float sy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3208,7 +3208,7 @@ namespace SkiaSharp
 			(sk_canvas_scale_delegate ??= GetSymbol<Delegates.sk_canvas_scale> ("sk_canvas_scale")).Invoke (ccanvas, sx, sy);
 		#endif
 
-		// void sk_canvas_set_matrix(sk_canvas_t* ccanvas, const sk_matrix44_t* cmatrix)
+		// void sk_canvas_set_matrix(sk_canvas_t * ccanvas, sk_matrix44_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3227,7 +3227,7 @@ namespace SkiaSharp
 			(sk_canvas_set_matrix_delegate ??= GetSymbol<Delegates.sk_canvas_set_matrix> ("sk_canvas_set_matrix")).Invoke (ccanvas, cmatrix);
 		#endif
 
-		// void sk_canvas_skew(sk_canvas_t* ccanvas, float sx, float sy)
+		// void sk_canvas_skew(sk_canvas_t * ccanvas, float sx, float sy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3246,7 +3246,7 @@ namespace SkiaSharp
 			(sk_canvas_skew_delegate ??= GetSymbol<Delegates.sk_canvas_skew> ("sk_canvas_skew")).Invoke (ccanvas, sx, sy);
 		#endif
 
-		// void sk_canvas_translate(sk_canvas_t* ccanvas, float dx, float dy)
+		// void sk_canvas_translate(sk_canvas_t * ccanvas, float dx, float dy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3265,7 +3265,7 @@ namespace SkiaSharp
 			(sk_canvas_translate_delegate ??= GetSymbol<Delegates.sk_canvas_translate> ("sk_canvas_translate")).Invoke (ccanvas, dx, dy);
 		#endif
 
-		// gr_recording_context_t* sk_get_recording_context(sk_canvas_t* canvas)
+		// gr_recording_context_t * sk_get_recording_context(sk_canvas_t * canvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3284,7 +3284,7 @@ namespace SkiaSharp
 			(sk_get_recording_context_delegate ??= GetSymbol<Delegates.sk_get_recording_context> ("sk_get_recording_context")).Invoke (canvas);
 		#endif
 
-		// sk_surface_t* sk_get_surface(sk_canvas_t* canvas)
+		// sk_surface_t * sk_get_surface(sk_canvas_t * canvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3303,7 +3303,7 @@ namespace SkiaSharp
 			(sk_get_surface_delegate ??= GetSymbol<Delegates.sk_get_surface> ("sk_get_surface")).Invoke (canvas);
 		#endif
 
-		// void sk_nodraw_canvas_destroy(sk_nodraw_canvas_t* t)
+		// void sk_nodraw_canvas_destroy(sk_nodraw_canvas_t * t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3322,7 +3322,7 @@ namespace SkiaSharp
 			(sk_nodraw_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_nodraw_canvas_destroy> ("sk_nodraw_canvas_destroy")).Invoke (t);
 		#endif
 
-		// sk_nodraw_canvas_t* sk_nodraw_canvas_new(int width, int height)
+		// sk_nodraw_canvas_t * sk_nodraw_canvas_new(int width, int height)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3341,7 +3341,7 @@ namespace SkiaSharp
 			(sk_nodraw_canvas_new_delegate ??= GetSymbol<Delegates.sk_nodraw_canvas_new> ("sk_nodraw_canvas_new")).Invoke (width, height);
 		#endif
 
-		// void sk_nway_canvas_add_canvas(sk_nway_canvas_t* t, sk_canvas_t* canvas)
+		// void sk_nway_canvas_add_canvas(sk_nway_canvas_t * t, sk_canvas_t * canvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3360,7 +3360,7 @@ namespace SkiaSharp
 			(sk_nway_canvas_add_canvas_delegate ??= GetSymbol<Delegates.sk_nway_canvas_add_canvas> ("sk_nway_canvas_add_canvas")).Invoke (t, canvas);
 		#endif
 
-		// void sk_nway_canvas_destroy(sk_nway_canvas_t* t)
+		// void sk_nway_canvas_destroy(sk_nway_canvas_t * t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3379,7 +3379,7 @@ namespace SkiaSharp
 			(sk_nway_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_nway_canvas_destroy> ("sk_nway_canvas_destroy")).Invoke (t);
 		#endif
 
-		// sk_nway_canvas_t* sk_nway_canvas_new(int width, int height)
+		// sk_nway_canvas_t * sk_nway_canvas_new(int width, int height)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3398,7 +3398,7 @@ namespace SkiaSharp
 			(sk_nway_canvas_new_delegate ??= GetSymbol<Delegates.sk_nway_canvas_new> ("sk_nway_canvas_new")).Invoke (width, height);
 		#endif
 
-		// void sk_nway_canvas_remove_all(sk_nway_canvas_t* t)
+		// void sk_nway_canvas_remove_all(sk_nway_canvas_t * t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3417,7 +3417,7 @@ namespace SkiaSharp
 			(sk_nway_canvas_remove_all_delegate ??= GetSymbol<Delegates.sk_nway_canvas_remove_all> ("sk_nway_canvas_remove_all")).Invoke (t);
 		#endif
 
-		// void sk_nway_canvas_remove_canvas(sk_nway_canvas_t* t, sk_canvas_t* canvas)
+		// void sk_nway_canvas_remove_canvas(sk_nway_canvas_t * t, sk_canvas_t * canvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3436,7 +3436,7 @@ namespace SkiaSharp
 			(sk_nway_canvas_remove_canvas_delegate ??= GetSymbol<Delegates.sk_nway_canvas_remove_canvas> ("sk_nway_canvas_remove_canvas")).Invoke (t, canvas);
 		#endif
 
-		// void sk_overdraw_canvas_destroy(sk_overdraw_canvas_t* canvas)
+		// void sk_overdraw_canvas_destroy(sk_overdraw_canvas_t * canvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3455,7 +3455,7 @@ namespace SkiaSharp
 			(sk_overdraw_canvas_destroy_delegate ??= GetSymbol<Delegates.sk_overdraw_canvas_destroy> ("sk_overdraw_canvas_destroy")).Invoke (canvas);
 		#endif
 
-		// sk_overdraw_canvas_t* sk_overdraw_canvas_new(sk_canvas_t* canvas)
+		// sk_overdraw_canvas_t * sk_overdraw_canvas_new(sk_canvas_t * canvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3478,7 +3478,7 @@ namespace SkiaSharp
 
 		#region sk_codec.h
 
-		// void sk_codec_destroy(sk_codec_t* codec)
+		// void sk_codec_destroy(sk_codec_t * codec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3497,7 +3497,7 @@ namespace SkiaSharp
 			(sk_codec_destroy_delegate ??= GetSymbol<Delegates.sk_codec_destroy> ("sk_codec_destroy")).Invoke (codec);
 		#endif
 
-		// sk_encoded_image_format_t sk_codec_get_encoded_format(sk_codec_t* codec)
+		// sk_encoded_image_format_t sk_codec_get_encoded_format(sk_codec_t * codec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3516,7 +3516,7 @@ namespace SkiaSharp
 			(sk_codec_get_encoded_format_delegate ??= GetSymbol<Delegates.sk_codec_get_encoded_format> ("sk_codec_get_encoded_format")).Invoke (codec);
 		#endif
 
-		// int sk_codec_get_frame_count(sk_codec_t* codec)
+		// int sk_codec_get_frame_count(sk_codec_t * codec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3535,7 +3535,7 @@ namespace SkiaSharp
 			(sk_codec_get_frame_count_delegate ??= GetSymbol<Delegates.sk_codec_get_frame_count> ("sk_codec_get_frame_count")).Invoke (codec);
 		#endif
 
-		// void sk_codec_get_frame_info(sk_codec_t* codec, sk_codec_frameinfo_t* frameInfo)
+		// void sk_codec_get_frame_info(sk_codec_t * codec, sk_codec_frameinfo_t * frameInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3554,7 +3554,7 @@ namespace SkiaSharp
 			(sk_codec_get_frame_info_delegate ??= GetSymbol<Delegates.sk_codec_get_frame_info> ("sk_codec_get_frame_info")).Invoke (codec, frameInfo);
 		#endif
 
-		// bool sk_codec_get_frame_info_for_index(sk_codec_t* codec, int index, sk_codec_frameinfo_t* frameInfo)
+		// bool sk_codec_get_frame_info_for_index(sk_codec_t * codec, int index, sk_codec_frameinfo_t * frameInfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3576,7 +3576,7 @@ namespace SkiaSharp
 			(sk_codec_get_frame_info_for_index_delegate ??= GetSymbol<Delegates.sk_codec_get_frame_info_for_index> ("sk_codec_get_frame_info_for_index")).Invoke (codec, index, frameInfo);
 		#endif
 
-		// void sk_codec_get_info(sk_codec_t* codec, sk_imageinfo_t* info)
+		// void sk_codec_get_info(sk_codec_t * codec, sk_imageinfo_t * info)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3595,7 +3595,7 @@ namespace SkiaSharp
 			(sk_codec_get_info_delegate ??= GetSymbol<Delegates.sk_codec_get_info> ("sk_codec_get_info")).Invoke (codec, info);
 		#endif
 
-		// sk_encodedorigin_t sk_codec_get_origin(sk_codec_t* codec)
+		// sk_encodedorigin_t sk_codec_get_origin(sk_codec_t * codec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3614,7 +3614,7 @@ namespace SkiaSharp
 			(sk_codec_get_origin_delegate ??= GetSymbol<Delegates.sk_codec_get_origin> ("sk_codec_get_origin")).Invoke (codec);
 		#endif
 
-		// sk_codec_result_t sk_codec_get_pixels(sk_codec_t* codec, const sk_imageinfo_t* info, void* pixels, size_t rowBytes, const sk_codec_options_t* options)
+		// sk_codec_result_t sk_codec_get_pixels(sk_codec_t * codec, sk_imageinfo_t const * info, void * pixels, size_t rowBytes, sk_codec_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3633,7 +3633,7 @@ namespace SkiaSharp
 			(sk_codec_get_pixels_delegate ??= GetSymbol<Delegates.sk_codec_get_pixels> ("sk_codec_get_pixels")).Invoke (codec, info, pixels, rowBytes, options);
 		#endif
 
-		// int sk_codec_get_repetition_count(sk_codec_t* codec)
+		// int sk_codec_get_repetition_count(sk_codec_t * codec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3652,7 +3652,7 @@ namespace SkiaSharp
 			(sk_codec_get_repetition_count_delegate ??= GetSymbol<Delegates.sk_codec_get_repetition_count> ("sk_codec_get_repetition_count")).Invoke (codec);
 		#endif
 
-		// void sk_codec_get_scaled_dimensions(sk_codec_t* codec, float desiredScale, sk_isize_t* dimensions)
+		// void sk_codec_get_scaled_dimensions(sk_codec_t * codec, float desiredScale, sk_isize_t * dimensions)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3671,7 +3671,7 @@ namespace SkiaSharp
 			(sk_codec_get_scaled_dimensions_delegate ??= GetSymbol<Delegates.sk_codec_get_scaled_dimensions> ("sk_codec_get_scaled_dimensions")).Invoke (codec, desiredScale, dimensions);
 		#endif
 
-		// sk_codec_scanline_order_t sk_codec_get_scanline_order(sk_codec_t* codec)
+		// sk_codec_scanline_order_t sk_codec_get_scanline_order(sk_codec_t * codec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3690,7 +3690,7 @@ namespace SkiaSharp
 			(sk_codec_get_scanline_order_delegate ??= GetSymbol<Delegates.sk_codec_get_scanline_order> ("sk_codec_get_scanline_order")).Invoke (codec);
 		#endif
 
-		// int sk_codec_get_scanlines(sk_codec_t* codec, void* dst, int countLines, size_t rowBytes)
+		// int sk_codec_get_scanlines(sk_codec_t * codec, void * dst, int countLines, size_t rowBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3709,7 +3709,7 @@ namespace SkiaSharp
 			(sk_codec_get_scanlines_delegate ??= GetSymbol<Delegates.sk_codec_get_scanlines> ("sk_codec_get_scanlines")).Invoke (codec, dst, countLines, rowBytes);
 		#endif
 
-		// bool sk_codec_get_valid_subset(sk_codec_t* codec, sk_irect_t* desiredSubset)
+		// bool sk_codec_get_valid_subset(sk_codec_t * codec, sk_irect_t * desiredSubset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3731,7 +3731,7 @@ namespace SkiaSharp
 			(sk_codec_get_valid_subset_delegate ??= GetSymbol<Delegates.sk_codec_get_valid_subset> ("sk_codec_get_valid_subset")).Invoke (codec, desiredSubset);
 		#endif
 
-		// sk_codec_result_t sk_codec_incremental_decode(sk_codec_t* codec, int* rowsDecoded)
+		// sk_codec_result_t sk_codec_incremental_decode(sk_codec_t * codec, int * rowsDecoded)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3769,7 +3769,7 @@ namespace SkiaSharp
 			(sk_codec_min_buffered_bytes_needed_delegate ??= GetSymbol<Delegates.sk_codec_min_buffered_bytes_needed> ("sk_codec_min_buffered_bytes_needed")).Invoke ();
 		#endif
 
-		// sk_codec_t* sk_codec_new_from_data(sk_data_t* data)
+		// sk_codec_t * sk_codec_new_from_data(sk_data_t * data)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3788,7 +3788,7 @@ namespace SkiaSharp
 			(sk_codec_new_from_data_delegate ??= GetSymbol<Delegates.sk_codec_new_from_data> ("sk_codec_new_from_data")).Invoke (data);
 		#endif
 
-		// sk_codec_t* sk_codec_new_from_stream(sk_stream_t* stream, sk_codec_result_t* result)
+		// sk_codec_t * sk_codec_new_from_stream(sk_stream_t * stream, sk_codec_result_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3807,7 +3807,7 @@ namespace SkiaSharp
 			(sk_codec_new_from_stream_delegate ??= GetSymbol<Delegates.sk_codec_new_from_stream> ("sk_codec_new_from_stream")).Invoke (stream, result);
 		#endif
 
-		// int sk_codec_next_scanline(sk_codec_t* codec)
+		// int sk_codec_next_scanline(sk_codec_t * codec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3826,7 +3826,7 @@ namespace SkiaSharp
 			(sk_codec_next_scanline_delegate ??= GetSymbol<Delegates.sk_codec_next_scanline> ("sk_codec_next_scanline")).Invoke (codec);
 		#endif
 
-		// int sk_codec_output_scanline(sk_codec_t* codec, int inputScanline)
+		// int sk_codec_output_scanline(sk_codec_t * codec, int inputScanline)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3845,7 +3845,7 @@ namespace SkiaSharp
 			(sk_codec_output_scanline_delegate ??= GetSymbol<Delegates.sk_codec_output_scanline> ("sk_codec_output_scanline")).Invoke (codec, inputScanline);
 		#endif
 
-		// bool sk_codec_skip_scanlines(sk_codec_t* codec, int countLines)
+		// bool sk_codec_skip_scanlines(sk_codec_t * codec, int countLines)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3867,7 +3867,7 @@ namespace SkiaSharp
 			(sk_codec_skip_scanlines_delegate ??= GetSymbol<Delegates.sk_codec_skip_scanlines> ("sk_codec_skip_scanlines")).Invoke (codec, countLines);
 		#endif
 
-		// sk_codec_result_t sk_codec_start_incremental_decode(sk_codec_t* codec, const sk_imageinfo_t* info, void* pixels, size_t rowBytes, const sk_codec_options_t* options)
+		// sk_codec_result_t sk_codec_start_incremental_decode(sk_codec_t * codec, sk_imageinfo_t const * info, void * pixels, size_t rowBytes, sk_codec_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3886,7 +3886,7 @@ namespace SkiaSharp
 			(sk_codec_start_incremental_decode_delegate ??= GetSymbol<Delegates.sk_codec_start_incremental_decode> ("sk_codec_start_incremental_decode")).Invoke (codec, info, pixels, rowBytes, options);
 		#endif
 
-		// sk_codec_result_t sk_codec_start_scanline_decode(sk_codec_t* codec, const sk_imageinfo_t* info, const sk_codec_options_t* options)
+		// sk_codec_result_t sk_codec_start_scanline_decode(sk_codec_t * codec, sk_imageinfo_t const * info, sk_codec_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3909,7 +3909,7 @@ namespace SkiaSharp
 
 		#region sk_colorfilter.h
 
-		// sk_colorfilter_t* sk_colorfilter_new_color_matrix(const float[20] array = 20)
+		// sk_colorfilter_t * sk_colorfilter_new_color_matrix(float const[20] array = 20)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3928,7 +3928,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_color_matrix_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_color_matrix> ("sk_colorfilter_new_color_matrix")).Invoke (array);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_compose(sk_colorfilter_t* outer, sk_colorfilter_t* inner)
+		// sk_colorfilter_t * sk_colorfilter_new_compose(sk_colorfilter_t * outer, sk_colorfilter_t * inner)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3947,7 +3947,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_compose_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_compose> ("sk_colorfilter_new_compose")).Invoke (outer, inner);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_high_contrast(const sk_highcontrastconfig_t* config)
+		// sk_colorfilter_t * sk_colorfilter_new_high_contrast(sk_highcontrastconfig_t const * config)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3966,7 +3966,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_high_contrast_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_high_contrast> ("sk_colorfilter_new_high_contrast")).Invoke (config);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_hsla_matrix(const float[20] array = 20)
+		// sk_colorfilter_t * sk_colorfilter_new_hsla_matrix(float const[20] array = 20)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -3985,7 +3985,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_hsla_matrix_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_hsla_matrix> ("sk_colorfilter_new_hsla_matrix")).Invoke (array);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_lerp(float weight, sk_colorfilter_t* filter0, sk_colorfilter_t* filter1)
+		// sk_colorfilter_t * sk_colorfilter_new_lerp(float weight, sk_colorfilter_t * filter0, sk_colorfilter_t * filter1)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4004,7 +4004,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_lerp_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lerp> ("sk_colorfilter_new_lerp")).Invoke (weight, filter0, filter1);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
+		// sk_colorfilter_t * sk_colorfilter_new_lighting(sk_color_t mul, sk_color_t add)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4023,7 +4023,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_lighting_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_lighting> ("sk_colorfilter_new_lighting")).Invoke (mul, add);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_linear_to_srgb_gamma()
+		// sk_colorfilter_t * sk_colorfilter_new_linear_to_srgb_gamma()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4042,7 +4042,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_linear_to_srgb_gamma_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_linear_to_srgb_gamma> ("sk_colorfilter_new_linear_to_srgb_gamma")).Invoke ();
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_luma_color()
+		// sk_colorfilter_t * sk_colorfilter_new_luma_color()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4061,7 +4061,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_luma_color_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_luma_color> ("sk_colorfilter_new_luma_color")).Invoke ();
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_mode(sk_color_t c, sk_blendmode_t mode)
+		// sk_colorfilter_t * sk_colorfilter_new_mode(sk_color_t c, sk_blendmode_t mode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4080,7 +4080,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_mode_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_mode> ("sk_colorfilter_new_mode")).Invoke (c, mode);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_srgb_to_linear_gamma()
+		// sk_colorfilter_t * sk_colorfilter_new_srgb_to_linear_gamma()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4099,7 +4099,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_srgb_to_linear_gamma_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_srgb_to_linear_gamma> ("sk_colorfilter_new_srgb_to_linear_gamma")).Invoke ();
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_table(const uint8_t[256] table = 256)
+		// sk_colorfilter_t * sk_colorfilter_new_table(unsigned char const[256] table = 256)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4118,7 +4118,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_table_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_table> ("sk_colorfilter_new_table")).Invoke (table);
 		#endif
 
-		// sk_colorfilter_t* sk_colorfilter_new_table_argb(const uint8_t[256] tableA = 256, const uint8_t[256] tableR = 256, const uint8_t[256] tableG = 256, const uint8_t[256] tableB = 256)
+		// sk_colorfilter_t * sk_colorfilter_new_table_argb(unsigned char const[256] tableA = 256, unsigned char const[256] tableR = 256, unsigned char const[256] tableG = 256, unsigned char const[256] tableB = 256)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4137,7 +4137,7 @@ namespace SkiaSharp
 			(sk_colorfilter_new_table_argb_delegate ??= GetSymbol<Delegates.sk_colorfilter_new_table_argb> ("sk_colorfilter_new_table_argb")).Invoke (tableA, tableR, tableG, tableB);
 		#endif
 
-		// void sk_colorfilter_unref(sk_colorfilter_t* filter)
+		// void sk_colorfilter_unref(sk_colorfilter_t * filter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4160,7 +4160,7 @@ namespace SkiaSharp
 
 		#region sk_colorspace.h
 
-		// void sk_color4f_from_color(sk_color_t color, sk_color4f_t* color4f)
+		// void sk_color4f_from_color(sk_color_t color, sk_color4f_t * color4f)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4179,7 +4179,7 @@ namespace SkiaSharp
 			(sk_color4f_from_color_delegate ??= GetSymbol<Delegates.sk_color4f_from_color> ("sk_color4f_from_color")).Invoke (color, color4f);
 		#endif
 
-		// sk_color_t sk_color4f_to_color(const sk_color4f_t* color4f)
+		// sk_color_t sk_color4f_to_color(sk_color4f_t const * color4f)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4198,7 +4198,7 @@ namespace SkiaSharp
 			(sk_color4f_to_color_delegate ??= GetSymbol<Delegates.sk_color4f_to_color> ("sk_color4f_to_color")).Invoke (color4f);
 		#endif
 
-		// bool sk_colorspace_equals(const sk_colorspace_t* src, const sk_colorspace_t* dst)
+		// bool sk_colorspace_equals(sk_colorspace_t const * src, sk_colorspace_t const * dst)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4220,7 +4220,7 @@ namespace SkiaSharp
 			(sk_colorspace_equals_delegate ??= GetSymbol<Delegates.sk_colorspace_equals> ("sk_colorspace_equals")).Invoke (src, dst);
 		#endif
 
-		// bool sk_colorspace_gamma_close_to_srgb(const sk_colorspace_t* colorspace)
+		// bool sk_colorspace_gamma_close_to_srgb(sk_colorspace_t const * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4242,7 +4242,7 @@ namespace SkiaSharp
 			(sk_colorspace_gamma_close_to_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_gamma_close_to_srgb> ("sk_colorspace_gamma_close_to_srgb")).Invoke (colorspace);
 		#endif
 
-		// bool sk_colorspace_gamma_is_linear(const sk_colorspace_t* colorspace)
+		// bool sk_colorspace_gamma_is_linear(sk_colorspace_t const * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4264,7 +4264,7 @@ namespace SkiaSharp
 			(sk_colorspace_gamma_is_linear_delegate ??= GetSymbol<Delegates.sk_colorspace_gamma_is_linear> ("sk_colorspace_gamma_is_linear")).Invoke (colorspace);
 		#endif
 
-		// void sk_colorspace_icc_profile_delete(sk_colorspace_icc_profile_t* profile)
+		// void sk_colorspace_icc_profile_delete(sk_colorspace_icc_profile_t * profile)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4283,7 +4283,7 @@ namespace SkiaSharp
 			(sk_colorspace_icc_profile_delete_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_delete> ("sk_colorspace_icc_profile_delete")).Invoke (profile);
 		#endif
 
-		// const uint8_t* sk_colorspace_icc_profile_get_buffer(const sk_colorspace_icc_profile_t* profile, uint32_t* size)
+		// unsigned char const * sk_colorspace_icc_profile_get_buffer(sk_colorspace_icc_profile_t const * profile, unsigned int * size)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4302,7 +4302,7 @@ namespace SkiaSharp
 			(sk_colorspace_icc_profile_get_buffer_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_get_buffer> ("sk_colorspace_icc_profile_get_buffer")).Invoke (profile, size);
 		#endif
 
-		// bool sk_colorspace_icc_profile_get_to_xyzd50(const sk_colorspace_icc_profile_t* profile, sk_colorspace_xyz_t* toXYZD50)
+		// bool sk_colorspace_icc_profile_get_to_xyzd50(sk_colorspace_icc_profile_t const * profile, sk_colorspace_xyz_t * toXYZD50)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4324,7 +4324,7 @@ namespace SkiaSharp
 			(sk_colorspace_icc_profile_get_to_xyzd50_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_get_to_xyzd50> ("sk_colorspace_icc_profile_get_to_xyzd50")).Invoke (profile, toXYZD50);
 		#endif
 
-		// sk_colorspace_icc_profile_t* sk_colorspace_icc_profile_new()
+		// sk_colorspace_icc_profile_t * sk_colorspace_icc_profile_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4343,7 +4343,7 @@ namespace SkiaSharp
 			(sk_colorspace_icc_profile_new_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_new> ("sk_colorspace_icc_profile_new")).Invoke ();
 		#endif
 
-		// bool sk_colorspace_icc_profile_parse(const void* buffer, size_t length, sk_colorspace_icc_profile_t* profile)
+		// bool sk_colorspace_icc_profile_parse(void const * buffer, size_t length, sk_colorspace_icc_profile_t * profile)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4365,7 +4365,7 @@ namespace SkiaSharp
 			(sk_colorspace_icc_profile_parse_delegate ??= GetSymbol<Delegates.sk_colorspace_icc_profile_parse> ("sk_colorspace_icc_profile_parse")).Invoke (buffer, length, profile);
 		#endif
 
-		// bool sk_colorspace_is_numerical_transfer_fn(const sk_colorspace_t* colorspace, sk_colorspace_transfer_fn_t* transferFn)
+		// bool sk_colorspace_is_numerical_transfer_fn(sk_colorspace_t const * colorspace, sk_colorspace_transfer_fn_t * transferFn)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4387,7 +4387,7 @@ namespace SkiaSharp
 			(sk_colorspace_is_numerical_transfer_fn_delegate ??= GetSymbol<Delegates.sk_colorspace_is_numerical_transfer_fn> ("sk_colorspace_is_numerical_transfer_fn")).Invoke (colorspace, transferFn);
 		#endif
 
-		// bool sk_colorspace_is_srgb(const sk_colorspace_t* colorspace)
+		// bool sk_colorspace_is_srgb(sk_colorspace_t const * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4409,7 +4409,7 @@ namespace SkiaSharp
 			(sk_colorspace_is_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_is_srgb> ("sk_colorspace_is_srgb")).Invoke (colorspace);
 		#endif
 
-		// sk_colorspace_t* sk_colorspace_make_linear_gamma(const sk_colorspace_t* colorspace)
+		// sk_colorspace_t * sk_colorspace_make_linear_gamma(sk_colorspace_t const * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4428,7 +4428,7 @@ namespace SkiaSharp
 			(sk_colorspace_make_linear_gamma_delegate ??= GetSymbol<Delegates.sk_colorspace_make_linear_gamma> ("sk_colorspace_make_linear_gamma")).Invoke (colorspace);
 		#endif
 
-		// sk_colorspace_t* sk_colorspace_make_srgb_gamma(const sk_colorspace_t* colorspace)
+		// sk_colorspace_t * sk_colorspace_make_srgb_gamma(sk_colorspace_t const * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4447,7 +4447,7 @@ namespace SkiaSharp
 			(sk_colorspace_make_srgb_gamma_delegate ??= GetSymbol<Delegates.sk_colorspace_make_srgb_gamma> ("sk_colorspace_make_srgb_gamma")).Invoke (colorspace);
 		#endif
 
-		// sk_colorspace_t* sk_colorspace_new_icc(const sk_colorspace_icc_profile_t* profile)
+		// sk_colorspace_t * sk_colorspace_new_icc(sk_colorspace_icc_profile_t const * profile)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4466,7 +4466,7 @@ namespace SkiaSharp
 			(sk_colorspace_new_icc_delegate ??= GetSymbol<Delegates.sk_colorspace_new_icc> ("sk_colorspace_new_icc")).Invoke (profile);
 		#endif
 
-		// sk_colorspace_t* sk_colorspace_new_rgb(const sk_colorspace_transfer_fn_t* transferFn, const sk_colorspace_xyz_t* toXYZD50)
+		// sk_colorspace_t * sk_colorspace_new_rgb(sk_colorspace_transfer_fn_t const * transferFn, sk_colorspace_xyz_t const * toXYZD50)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4485,7 +4485,7 @@ namespace SkiaSharp
 			(sk_colorspace_new_rgb_delegate ??= GetSymbol<Delegates.sk_colorspace_new_rgb> ("sk_colorspace_new_rgb")).Invoke (transferFn, toXYZD50);
 		#endif
 
-		// sk_colorspace_t* sk_colorspace_new_srgb()
+		// sk_colorspace_t * sk_colorspace_new_srgb()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4504,7 +4504,7 @@ namespace SkiaSharp
 			(sk_colorspace_new_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_new_srgb> ("sk_colorspace_new_srgb")).Invoke ();
 		#endif
 
-		// sk_colorspace_t* sk_colorspace_new_srgb_linear()
+		// sk_colorspace_t * sk_colorspace_new_srgb_linear()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4523,7 +4523,7 @@ namespace SkiaSharp
 			(sk_colorspace_new_srgb_linear_delegate ??= GetSymbol<Delegates.sk_colorspace_new_srgb_linear> ("sk_colorspace_new_srgb_linear")).Invoke ();
 		#endif
 
-		// bool sk_colorspace_primaries_to_xyzd50(const sk_colorspace_primaries_t* primaries, sk_colorspace_xyz_t* toXYZD50)
+		// bool sk_colorspace_primaries_to_xyzd50(sk_colorspace_primaries_t const * primaries, sk_colorspace_xyz_t * toXYZD50)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4545,7 +4545,7 @@ namespace SkiaSharp
 			(sk_colorspace_primaries_to_xyzd50_delegate ??= GetSymbol<Delegates.sk_colorspace_primaries_to_xyzd50> ("sk_colorspace_primaries_to_xyzd50")).Invoke (primaries, toXYZD50);
 		#endif
 
-		// void sk_colorspace_ref(sk_colorspace_t* colorspace)
+		// void sk_colorspace_ref(sk_colorspace_t * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4564,7 +4564,7 @@ namespace SkiaSharp
 			(sk_colorspace_ref_delegate ??= GetSymbol<Delegates.sk_colorspace_ref> ("sk_colorspace_ref")).Invoke (colorspace);
 		#endif
 
-		// void sk_colorspace_to_profile(const sk_colorspace_t* colorspace, sk_colorspace_icc_profile_t* profile)
+		// void sk_colorspace_to_profile(sk_colorspace_t const * colorspace, sk_colorspace_icc_profile_t * profile)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4583,7 +4583,7 @@ namespace SkiaSharp
 			(sk_colorspace_to_profile_delegate ??= GetSymbol<Delegates.sk_colorspace_to_profile> ("sk_colorspace_to_profile")).Invoke (colorspace, profile);
 		#endif
 
-		// bool sk_colorspace_to_xyzd50(const sk_colorspace_t* colorspace, sk_colorspace_xyz_t* toXYZD50)
+		// bool sk_colorspace_to_xyzd50(sk_colorspace_t const * colorspace, sk_colorspace_xyz_t * toXYZD50)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4605,7 +4605,7 @@ namespace SkiaSharp
 			(sk_colorspace_to_xyzd50_delegate ??= GetSymbol<Delegates.sk_colorspace_to_xyzd50> ("sk_colorspace_to_xyzd50")).Invoke (colorspace, toXYZD50);
 		#endif
 
-		// float sk_colorspace_transfer_fn_eval(const sk_colorspace_transfer_fn_t* transferFn, float x)
+		// float sk_colorspace_transfer_fn_eval(sk_colorspace_transfer_fn_t const * transferFn, float x)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4624,7 +4624,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_eval_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_eval> ("sk_colorspace_transfer_fn_eval")).Invoke (transferFn, x);
 		#endif
 
-		// bool sk_colorspace_transfer_fn_invert(const sk_colorspace_transfer_fn_t* src, sk_colorspace_transfer_fn_t* dst)
+		// bool sk_colorspace_transfer_fn_invert(sk_colorspace_transfer_fn_t const * src, sk_colorspace_transfer_fn_t * dst)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4646,7 +4646,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_invert_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_invert> ("sk_colorspace_transfer_fn_invert")).Invoke (src, dst);
 		#endif
 
-		// void sk_colorspace_transfer_fn_named_2dot2(sk_colorspace_transfer_fn_t* transferFn)
+		// void sk_colorspace_transfer_fn_named_2dot2(sk_colorspace_transfer_fn_t * transferFn)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4665,7 +4665,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_named_2dot2_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_named_2dot2> ("sk_colorspace_transfer_fn_named_2dot2")).Invoke (transferFn);
 		#endif
 
-		// void sk_colorspace_transfer_fn_named_hlg(sk_colorspace_transfer_fn_t* transferFn)
+		// void sk_colorspace_transfer_fn_named_hlg(sk_colorspace_transfer_fn_t * transferFn)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4684,7 +4684,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_named_hlg_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_named_hlg> ("sk_colorspace_transfer_fn_named_hlg")).Invoke (transferFn);
 		#endif
 
-		// void sk_colorspace_transfer_fn_named_linear(sk_colorspace_transfer_fn_t* transferFn)
+		// void sk_colorspace_transfer_fn_named_linear(sk_colorspace_transfer_fn_t * transferFn)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4703,7 +4703,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_named_linear_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_named_linear> ("sk_colorspace_transfer_fn_named_linear")).Invoke (transferFn);
 		#endif
 
-		// void sk_colorspace_transfer_fn_named_pq(sk_colorspace_transfer_fn_t* transferFn)
+		// void sk_colorspace_transfer_fn_named_pq(sk_colorspace_transfer_fn_t * transferFn)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4722,7 +4722,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_named_pq_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_named_pq> ("sk_colorspace_transfer_fn_named_pq")).Invoke (transferFn);
 		#endif
 
-		// void sk_colorspace_transfer_fn_named_rec2020(sk_colorspace_transfer_fn_t* transferFn)
+		// void sk_colorspace_transfer_fn_named_rec2020(sk_colorspace_transfer_fn_t * transferFn)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4741,7 +4741,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_named_rec2020_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_named_rec2020> ("sk_colorspace_transfer_fn_named_rec2020")).Invoke (transferFn);
 		#endif
 
-		// void sk_colorspace_transfer_fn_named_srgb(sk_colorspace_transfer_fn_t* transferFn)
+		// void sk_colorspace_transfer_fn_named_srgb(sk_colorspace_transfer_fn_t * transferFn)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4760,7 +4760,7 @@ namespace SkiaSharp
 			(sk_colorspace_transfer_fn_named_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_transfer_fn_named_srgb> ("sk_colorspace_transfer_fn_named_srgb")).Invoke (transferFn);
 		#endif
 
-		// void sk_colorspace_unref(sk_colorspace_t* colorspace)
+		// void sk_colorspace_unref(sk_colorspace_t * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4779,7 +4779,7 @@ namespace SkiaSharp
 			(sk_colorspace_unref_delegate ??= GetSymbol<Delegates.sk_colorspace_unref> ("sk_colorspace_unref")).Invoke (colorspace);
 		#endif
 
-		// void sk_colorspace_xyz_concat(const sk_colorspace_xyz_t* a, const sk_colorspace_xyz_t* b, sk_colorspace_xyz_t* result)
+		// void sk_colorspace_xyz_concat(sk_colorspace_xyz_t const * a, sk_colorspace_xyz_t const * b, sk_colorspace_xyz_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4798,7 +4798,7 @@ namespace SkiaSharp
 			(sk_colorspace_xyz_concat_delegate ??= GetSymbol<Delegates.sk_colorspace_xyz_concat> ("sk_colorspace_xyz_concat")).Invoke (a, b, result);
 		#endif
 
-		// bool sk_colorspace_xyz_invert(const sk_colorspace_xyz_t* src, sk_colorspace_xyz_t* dst)
+		// bool sk_colorspace_xyz_invert(sk_colorspace_xyz_t const * src, sk_colorspace_xyz_t * dst)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4820,7 +4820,7 @@ namespace SkiaSharp
 			(sk_colorspace_xyz_invert_delegate ??= GetSymbol<Delegates.sk_colorspace_xyz_invert> ("sk_colorspace_xyz_invert")).Invoke (src, dst);
 		#endif
 
-		// void sk_colorspace_xyz_named_adobe_rgb(sk_colorspace_xyz_t* xyz)
+		// void sk_colorspace_xyz_named_adobe_rgb(sk_colorspace_xyz_t * xyz)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4839,7 +4839,7 @@ namespace SkiaSharp
 			(sk_colorspace_xyz_named_adobe_rgb_delegate ??= GetSymbol<Delegates.sk_colorspace_xyz_named_adobe_rgb> ("sk_colorspace_xyz_named_adobe_rgb")).Invoke (xyz);
 		#endif
 
-		// void sk_colorspace_xyz_named_display_p3(sk_colorspace_xyz_t* xyz)
+		// void sk_colorspace_xyz_named_display_p3(sk_colorspace_xyz_t * xyz)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4858,7 +4858,7 @@ namespace SkiaSharp
 			(sk_colorspace_xyz_named_display_p3_delegate ??= GetSymbol<Delegates.sk_colorspace_xyz_named_display_p3> ("sk_colorspace_xyz_named_display_p3")).Invoke (xyz);
 		#endif
 
-		// void sk_colorspace_xyz_named_rec2020(sk_colorspace_xyz_t* xyz)
+		// void sk_colorspace_xyz_named_rec2020(sk_colorspace_xyz_t * xyz)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4877,7 +4877,7 @@ namespace SkiaSharp
 			(sk_colorspace_xyz_named_rec2020_delegate ??= GetSymbol<Delegates.sk_colorspace_xyz_named_rec2020> ("sk_colorspace_xyz_named_rec2020")).Invoke (xyz);
 		#endif
 
-		// void sk_colorspace_xyz_named_srgb(sk_colorspace_xyz_t* xyz)
+		// void sk_colorspace_xyz_named_srgb(sk_colorspace_xyz_t * xyz)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4896,7 +4896,7 @@ namespace SkiaSharp
 			(sk_colorspace_xyz_named_srgb_delegate ??= GetSymbol<Delegates.sk_colorspace_xyz_named_srgb> ("sk_colorspace_xyz_named_srgb")).Invoke (xyz);
 		#endif
 
-		// void sk_colorspace_xyz_named_xyz(sk_colorspace_xyz_t* xyz)
+		// void sk_colorspace_xyz_named_xyz(sk_colorspace_xyz_t * xyz)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4919,7 +4919,7 @@ namespace SkiaSharp
 
 		#region sk_data.h
 
-		// const uint8_t* sk_data_get_bytes(const sk_data_t*)
+		// unsigned char const * sk_data_get_bytes(sk_data_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4938,7 +4938,7 @@ namespace SkiaSharp
 			(sk_data_get_bytes_delegate ??= GetSymbol<Delegates.sk_data_get_bytes> ("sk_data_get_bytes")).Invoke (param0);
 		#endif
 
-		// const void* sk_data_get_data(const sk_data_t*)
+		// void const * sk_data_get_data(sk_data_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4957,7 +4957,7 @@ namespace SkiaSharp
 			(sk_data_get_data_delegate ??= GetSymbol<Delegates.sk_data_get_data> ("sk_data_get_data")).Invoke (param0);
 		#endif
 
-		// size_t sk_data_get_size(const sk_data_t*)
+		// size_t sk_data_get_size(sk_data_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4976,7 +4976,7 @@ namespace SkiaSharp
 			(sk_data_get_size_delegate ??= GetSymbol<Delegates.sk_data_get_size> ("sk_data_get_size")).Invoke (param0);
 		#endif
 
-		// sk_data_t* sk_data_new_empty()
+		// sk_data_t * sk_data_new_empty()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -4995,7 +4995,7 @@ namespace SkiaSharp
 			(sk_data_new_empty_delegate ??= GetSymbol<Delegates.sk_data_new_empty> ("sk_data_new_empty")).Invoke ();
 		#endif
 
-		// sk_data_t* sk_data_new_from_file(const char* path)
+		// sk_data_t * sk_data_new_from_file(char const * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5014,7 +5014,7 @@ namespace SkiaSharp
 			(sk_data_new_from_file_delegate ??= GetSymbol<Delegates.sk_data_new_from_file> ("sk_data_new_from_file")).Invoke (path);
 		#endif
 
-		// sk_data_t* sk_data_new_from_stream(sk_stream_t* stream, size_t length)
+		// sk_data_t * sk_data_new_from_stream(sk_stream_t * stream, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5033,7 +5033,7 @@ namespace SkiaSharp
 			(sk_data_new_from_stream_delegate ??= GetSymbol<Delegates.sk_data_new_from_stream> ("sk_data_new_from_stream")).Invoke (stream, length);
 		#endif
 
-		// sk_data_t* sk_data_new_subset(const sk_data_t* src, size_t offset, size_t length)
+		// sk_data_t * sk_data_new_subset(sk_data_t const * src, size_t offset, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5052,7 +5052,7 @@ namespace SkiaSharp
 			(sk_data_new_subset_delegate ??= GetSymbol<Delegates.sk_data_new_subset> ("sk_data_new_subset")).Invoke (src, offset, length);
 		#endif
 
-		// sk_data_t* sk_data_new_uninitialized(size_t size)
+		// sk_data_t * sk_data_new_uninitialized(size_t size)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5071,7 +5071,7 @@ namespace SkiaSharp
 			(sk_data_new_uninitialized_delegate ??= GetSymbol<Delegates.sk_data_new_uninitialized> ("sk_data_new_uninitialized")).Invoke (size);
 		#endif
 
-		// sk_data_t* sk_data_new_with_copy(const void* src, size_t length)
+		// sk_data_t * sk_data_new_with_copy(void const * src, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5090,7 +5090,7 @@ namespace SkiaSharp
 			(sk_data_new_with_copy_delegate ??= GetSymbol<Delegates.sk_data_new_with_copy> ("sk_data_new_with_copy")).Invoke (src, length);
 		#endif
 
-		// sk_data_t* sk_data_new_with_proc(const void* ptr, size_t length, sk_data_release_proc proc, void* ctx)
+		// sk_data_t * sk_data_new_with_proc(void const * ptr, size_t length, sk_data_release_proc proc, void * ctx)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5109,7 +5109,7 @@ namespace SkiaSharp
 			(sk_data_new_with_proc_delegate ??= GetSymbol<Delegates.sk_data_new_with_proc> ("sk_data_new_with_proc")).Invoke (ptr, length, proc, ctx);
 		#endif
 
-		// void sk_data_ref(const sk_data_t*)
+		// void sk_data_ref(sk_data_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5128,7 +5128,7 @@ namespace SkiaSharp
 			(sk_data_ref_delegate ??= GetSymbol<Delegates.sk_data_ref> ("sk_data_ref")).Invoke (param0);
 		#endif
 
-		// void sk_data_unref(const sk_data_t*)
+		// void sk_data_unref(sk_data_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5151,7 +5151,7 @@ namespace SkiaSharp
 
 		#region sk_document.h
 
-		// void sk_document_abort(sk_document_t* document)
+		// void sk_document_abort(sk_document_t * document)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5170,7 +5170,7 @@ namespace SkiaSharp
 			(sk_document_abort_delegate ??= GetSymbol<Delegates.sk_document_abort> ("sk_document_abort")).Invoke (document);
 		#endif
 
-		// sk_canvas_t* sk_document_begin_page(sk_document_t* document, float width, float height, const sk_rect_t* content)
+		// sk_canvas_t * sk_document_begin_page(sk_document_t * document, float width, float height, sk_rect_t const * content)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5189,7 +5189,7 @@ namespace SkiaSharp
 			(sk_document_begin_page_delegate ??= GetSymbol<Delegates.sk_document_begin_page> ("sk_document_begin_page")).Invoke (document, width, height, content);
 		#endif
 
-		// void sk_document_close(sk_document_t* document)
+		// void sk_document_close(sk_document_t * document)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5208,7 +5208,7 @@ namespace SkiaSharp
 			(sk_document_close_delegate ??= GetSymbol<Delegates.sk_document_close> ("sk_document_close")).Invoke (document);
 		#endif
 
-		// sk_document_t* sk_document_create_pdf_from_stream(sk_wstream_t* stream)
+		// sk_document_t * sk_document_create_pdf_from_stream(sk_wstream_t * stream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5227,7 +5227,7 @@ namespace SkiaSharp
 			(sk_document_create_pdf_from_stream_delegate ??= GetSymbol<Delegates.sk_document_create_pdf_from_stream> ("sk_document_create_pdf_from_stream")).Invoke (stream);
 		#endif
 
-		// sk_document_t* sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t* stream, const sk_document_pdf_metadata_t* metadata)
+		// sk_document_t * sk_document_create_pdf_from_stream_with_metadata(sk_wstream_t * stream, sk_document_pdf_metadata_t const * metadata)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5246,7 +5246,7 @@ namespace SkiaSharp
 			(sk_document_create_pdf_from_stream_with_metadata_delegate ??= GetSymbol<Delegates.sk_document_create_pdf_from_stream_with_metadata> ("sk_document_create_pdf_from_stream_with_metadata")).Invoke (stream, metadata);
 		#endif
 
-		// sk_document_t* sk_document_create_xps_from_stream(sk_wstream_t* stream, float dpi)
+		// sk_document_t * sk_document_create_xps_from_stream(sk_wstream_t * stream, float dpi)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5265,7 +5265,7 @@ namespace SkiaSharp
 			(sk_document_create_xps_from_stream_delegate ??= GetSymbol<Delegates.sk_document_create_xps_from_stream> ("sk_document_create_xps_from_stream")).Invoke (stream, dpi);
 		#endif
 
-		// void sk_document_end_page(sk_document_t* document)
+		// void sk_document_end_page(sk_document_t * document)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5284,7 +5284,7 @@ namespace SkiaSharp
 			(sk_document_end_page_delegate ??= GetSymbol<Delegates.sk_document_end_page> ("sk_document_end_page")).Invoke (document);
 		#endif
 
-		// void sk_document_unref(sk_document_t* document)
+		// void sk_document_unref(sk_document_t * document)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5307,7 +5307,7 @@ namespace SkiaSharp
 
 		#region sk_drawable.h
 
-		// size_t sk_drawable_approximate_bytes_used(sk_drawable_t*)
+		// size_t sk_drawable_approximate_bytes_used(sk_drawable_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5326,7 +5326,7 @@ namespace SkiaSharp
 			(sk_drawable_approximate_bytes_used_delegate ??= GetSymbol<Delegates.sk_drawable_approximate_bytes_used> ("sk_drawable_approximate_bytes_used")).Invoke (param0);
 		#endif
 
-		// void sk_drawable_draw(sk_drawable_t*, sk_canvas_t*, const sk_matrix_t*)
+		// void sk_drawable_draw(sk_drawable_t *, sk_canvas_t *, sk_matrix_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5345,7 +5345,7 @@ namespace SkiaSharp
 			(sk_drawable_draw_delegate ??= GetSymbol<Delegates.sk_drawable_draw> ("sk_drawable_draw")).Invoke (param0, param1, param2);
 		#endif
 
-		// void sk_drawable_get_bounds(sk_drawable_t*, sk_rect_t*)
+		// void sk_drawable_get_bounds(sk_drawable_t *, sk_rect_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5364,7 +5364,7 @@ namespace SkiaSharp
 			(sk_drawable_get_bounds_delegate ??= GetSymbol<Delegates.sk_drawable_get_bounds> ("sk_drawable_get_bounds")).Invoke (param0, param1);
 		#endif
 
-		// uint32_t sk_drawable_get_generation_id(sk_drawable_t*)
+		// unsigned int sk_drawable_get_generation_id(sk_drawable_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5383,7 +5383,7 @@ namespace SkiaSharp
 			(sk_drawable_get_generation_id_delegate ??= GetSymbol<Delegates.sk_drawable_get_generation_id> ("sk_drawable_get_generation_id")).Invoke (param0);
 		#endif
 
-		// sk_picture_t* sk_drawable_new_picture_snapshot(sk_drawable_t*)
+		// sk_picture_t * sk_drawable_new_picture_snapshot(sk_drawable_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5402,7 +5402,7 @@ namespace SkiaSharp
 			(sk_drawable_new_picture_snapshot_delegate ??= GetSymbol<Delegates.sk_drawable_new_picture_snapshot> ("sk_drawable_new_picture_snapshot")).Invoke (param0);
 		#endif
 
-		// void sk_drawable_notify_drawing_changed(sk_drawable_t*)
+		// void sk_drawable_notify_drawing_changed(sk_drawable_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5421,7 +5421,7 @@ namespace SkiaSharp
 			(sk_drawable_notify_drawing_changed_delegate ??= GetSymbol<Delegates.sk_drawable_notify_drawing_changed> ("sk_drawable_notify_drawing_changed")).Invoke (param0);
 		#endif
 
-		// void sk_drawable_unref(sk_drawable_t*)
+		// void sk_drawable_unref(sk_drawable_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5444,7 +5444,7 @@ namespace SkiaSharp
 
 		#region sk_font.h
 
-		// size_t sk_font_break_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, float maxWidth, float* measuredWidth, const sk_paint_t* paint)
+		// size_t sk_font_break_text(sk_font_t const * font, void const * text, size_t byteLength, sk_text_encoding_t encoding, float maxWidth, float * measuredWidth, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5463,7 +5463,7 @@ namespace SkiaSharp
 			(sk_font_break_text_delegate ??= GetSymbol<Delegates.sk_font_break_text> ("sk_font_break_text")).Invoke (font, text, byteLength, encoding, maxWidth, measuredWidth, paint);
 		#endif
 
-		// void sk_font_delete(sk_font_t* font)
+		// void sk_font_delete(sk_font_t * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5482,7 +5482,7 @@ namespace SkiaSharp
 			(sk_font_delete_delegate ??= GetSymbol<Delegates.sk_font_delete> ("sk_font_delete")).Invoke (font);
 		#endif
 
-		// sk_font_edging_t sk_font_get_edging(const sk_font_t* font)
+		// sk_font_edging_t sk_font_get_edging(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5501,7 +5501,7 @@ namespace SkiaSharp
 			(sk_font_get_edging_delegate ??= GetSymbol<Delegates.sk_font_get_edging> ("sk_font_get_edging")).Invoke (font);
 		#endif
 
-		// sk_font_hinting_t sk_font_get_hinting(const sk_font_t* font)
+		// sk_font_hinting_t sk_font_get_hinting(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5520,7 +5520,7 @@ namespace SkiaSharp
 			(sk_font_get_hinting_delegate ??= GetSymbol<Delegates.sk_font_get_hinting> ("sk_font_get_hinting")).Invoke (font);
 		#endif
 
-		// float sk_font_get_metrics(const sk_font_t* font, sk_fontmetrics_t* metrics)
+		// float sk_font_get_metrics(sk_font_t const * font, sk_fontmetrics_t * metrics)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5539,7 +5539,7 @@ namespace SkiaSharp
 			(sk_font_get_metrics_delegate ??= GetSymbol<Delegates.sk_font_get_metrics> ("sk_font_get_metrics")).Invoke (font, metrics);
 		#endif
 
-		// bool sk_font_get_path(const sk_font_t* font, uint16_t glyph, sk_path_t* path)
+		// bool sk_font_get_path(sk_font_t const * font, unsigned short glyph, sk_path_t * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5561,7 +5561,7 @@ namespace SkiaSharp
 			(sk_font_get_path_delegate ??= GetSymbol<Delegates.sk_font_get_path> ("sk_font_get_path")).Invoke (font, glyph, path);
 		#endif
 
-		// void sk_font_get_paths(const sk_font_t* font, uint16_t[-1] glyphs, int count, const sk_glyph_path_proc glyphPathProc, void* context)
+		// void sk_font_get_paths(sk_font_t const * font, unsigned short[-1] glyphs, int count, sk_glyph_path_proc const glyphPathProc, void * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5580,7 +5580,7 @@ namespace SkiaSharp
 			(sk_font_get_paths_delegate ??= GetSymbol<Delegates.sk_font_get_paths> ("sk_font_get_paths")).Invoke (font, glyphs, count, glyphPathProc, context);
 		#endif
 
-		// void sk_font_get_pos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, sk_point_t[-1] pos, sk_point_t* origin)
+		// void sk_font_get_pos(sk_font_t const * font, unsigned short const[-1] glyphs, int count, sk_point_t[-1] pos, sk_point_t * origin)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5599,7 +5599,7 @@ namespace SkiaSharp
 			(sk_font_get_pos_delegate ??= GetSymbol<Delegates.sk_font_get_pos> ("sk_font_get_pos")).Invoke (font, glyphs, count, pos, origin);
 		#endif
 
-		// float sk_font_get_scale_x(const sk_font_t* font)
+		// float sk_font_get_scale_x(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5618,7 +5618,7 @@ namespace SkiaSharp
 			(sk_font_get_scale_x_delegate ??= GetSymbol<Delegates.sk_font_get_scale_x> ("sk_font_get_scale_x")).Invoke (font);
 		#endif
 
-		// float sk_font_get_size(const sk_font_t* font)
+		// float sk_font_get_size(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5637,7 +5637,7 @@ namespace SkiaSharp
 			(sk_font_get_size_delegate ??= GetSymbol<Delegates.sk_font_get_size> ("sk_font_get_size")).Invoke (font);
 		#endif
 
-		// float sk_font_get_skew_x(const sk_font_t* font)
+		// float sk_font_get_skew_x(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5656,7 +5656,7 @@ namespace SkiaSharp
 			(sk_font_get_skew_x_delegate ??= GetSymbol<Delegates.sk_font_get_skew_x> ("sk_font_get_skew_x")).Invoke (font);
 		#endif
 
-		// sk_typeface_t* sk_font_get_typeface(const sk_font_t* font)
+		// sk_typeface_t * sk_font_get_typeface(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5675,7 +5675,7 @@ namespace SkiaSharp
 			(sk_font_get_typeface_delegate ??= GetSymbol<Delegates.sk_font_get_typeface> ("sk_font_get_typeface")).Invoke (font);
 		#endif
 
-		// void sk_font_get_widths_bounds(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] widths, sk_rect_t[-1] bounds, const sk_paint_t* paint)
+		// void sk_font_get_widths_bounds(sk_font_t const * font, unsigned short const[-1] glyphs, int count, float[-1] widths, sk_rect_t[-1] bounds, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5694,7 +5694,7 @@ namespace SkiaSharp
 			(sk_font_get_widths_bounds_delegate ??= GetSymbol<Delegates.sk_font_get_widths_bounds> ("sk_font_get_widths_bounds")).Invoke (font, glyphs, count, widths, bounds, paint);
 		#endif
 
-		// void sk_font_get_xpos(const sk_font_t* font, const uint16_t[-1] glyphs, int count, float[-1] xpos, float origin)
+		// void sk_font_get_xpos(sk_font_t const * font, unsigned short const[-1] glyphs, int count, float[-1] xpos, float origin)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5713,7 +5713,7 @@ namespace SkiaSharp
 			(sk_font_get_xpos_delegate ??= GetSymbol<Delegates.sk_font_get_xpos> ("sk_font_get_xpos")).Invoke (font, glyphs, count, xpos, origin);
 		#endif
 
-		// bool sk_font_is_baseline_snap(const sk_font_t* font)
+		// bool sk_font_is_baseline_snap(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5735,7 +5735,7 @@ namespace SkiaSharp
 			(sk_font_is_baseline_snap_delegate ??= GetSymbol<Delegates.sk_font_is_baseline_snap> ("sk_font_is_baseline_snap")).Invoke (font);
 		#endif
 
-		// bool sk_font_is_embedded_bitmaps(const sk_font_t* font)
+		// bool sk_font_is_embedded_bitmaps(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5757,7 +5757,7 @@ namespace SkiaSharp
 			(sk_font_is_embedded_bitmaps_delegate ??= GetSymbol<Delegates.sk_font_is_embedded_bitmaps> ("sk_font_is_embedded_bitmaps")).Invoke (font);
 		#endif
 
-		// bool sk_font_is_embolden(const sk_font_t* font)
+		// bool sk_font_is_embolden(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5779,7 +5779,7 @@ namespace SkiaSharp
 			(sk_font_is_embolden_delegate ??= GetSymbol<Delegates.sk_font_is_embolden> ("sk_font_is_embolden")).Invoke (font);
 		#endif
 
-		// bool sk_font_is_force_auto_hinting(const sk_font_t* font)
+		// bool sk_font_is_force_auto_hinting(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5801,7 +5801,7 @@ namespace SkiaSharp
 			(sk_font_is_force_auto_hinting_delegate ??= GetSymbol<Delegates.sk_font_is_force_auto_hinting> ("sk_font_is_force_auto_hinting")).Invoke (font);
 		#endif
 
-		// bool sk_font_is_linear_metrics(const sk_font_t* font)
+		// bool sk_font_is_linear_metrics(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5823,7 +5823,7 @@ namespace SkiaSharp
 			(sk_font_is_linear_metrics_delegate ??= GetSymbol<Delegates.sk_font_is_linear_metrics> ("sk_font_is_linear_metrics")).Invoke (font);
 		#endif
 
-		// bool sk_font_is_subpixel(const sk_font_t* font)
+		// bool sk_font_is_subpixel(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5845,7 +5845,7 @@ namespace SkiaSharp
 			(sk_font_is_subpixel_delegate ??= GetSymbol<Delegates.sk_font_is_subpixel> ("sk_font_is_subpixel")).Invoke (font);
 		#endif
 
-		// float sk_font_measure_text(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t* bounds, const sk_paint_t* paint)
+		// float sk_font_measure_text(sk_font_t const * font, void const * text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t * bounds, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5864,7 +5864,7 @@ namespace SkiaSharp
 			(sk_font_measure_text_delegate ??= GetSymbol<Delegates.sk_font_measure_text> ("sk_font_measure_text")).Invoke (font, text, byteLength, encoding, bounds, paint);
 		#endif
 
-		// void sk_font_measure_text_no_return(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t* bounds, const sk_paint_t* paint, float* measuredWidth)
+		// void sk_font_measure_text_no_return(sk_font_t const * font, void const * text, size_t byteLength, sk_text_encoding_t encoding, sk_rect_t * bounds, sk_paint_t const * paint, float * measuredWidth)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5883,7 +5883,7 @@ namespace SkiaSharp
 			(sk_font_measure_text_no_return_delegate ??= GetSymbol<Delegates.sk_font_measure_text_no_return> ("sk_font_measure_text_no_return")).Invoke (font, text, byteLength, encoding, bounds, paint, measuredWidth);
 		#endif
 
-		// sk_font_t* sk_font_new()
+		// sk_font_t * sk_font_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5902,7 +5902,7 @@ namespace SkiaSharp
 			(sk_font_new_delegate ??= GetSymbol<Delegates.sk_font_new> ("sk_font_new")).Invoke ();
 		#endif
 
-		// sk_font_t* sk_font_new_with_values(sk_typeface_t* typeface, float size, float scaleX, float skewX)
+		// sk_font_t * sk_font_new_with_values(sk_typeface_t * typeface, float size, float scaleX, float skewX)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5921,7 +5921,7 @@ namespace SkiaSharp
 			(sk_font_new_with_values_delegate ??= GetSymbol<Delegates.sk_font_new_with_values> ("sk_font_new_with_values")).Invoke (typeface, size, scaleX, skewX);
 		#endif
 
-		// void sk_font_set_baseline_snap(sk_font_t* font, bool value)
+		// void sk_font_set_baseline_snap(sk_font_t * font, bool value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5940,7 +5940,7 @@ namespace SkiaSharp
 			(sk_font_set_baseline_snap_delegate ??= GetSymbol<Delegates.sk_font_set_baseline_snap> ("sk_font_set_baseline_snap")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_edging(sk_font_t* font, sk_font_edging_t value)
+		// void sk_font_set_edging(sk_font_t * font, sk_font_edging_t value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5959,7 +5959,7 @@ namespace SkiaSharp
 			(sk_font_set_edging_delegate ??= GetSymbol<Delegates.sk_font_set_edging> ("sk_font_set_edging")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_embedded_bitmaps(sk_font_t* font, bool value)
+		// void sk_font_set_embedded_bitmaps(sk_font_t * font, bool value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5978,7 +5978,7 @@ namespace SkiaSharp
 			(sk_font_set_embedded_bitmaps_delegate ??= GetSymbol<Delegates.sk_font_set_embedded_bitmaps> ("sk_font_set_embedded_bitmaps")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_embolden(sk_font_t* font, bool value)
+		// void sk_font_set_embolden(sk_font_t * font, bool value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -5997,7 +5997,7 @@ namespace SkiaSharp
 			(sk_font_set_embolden_delegate ??= GetSymbol<Delegates.sk_font_set_embolden> ("sk_font_set_embolden")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_force_auto_hinting(sk_font_t* font, bool value)
+		// void sk_font_set_force_auto_hinting(sk_font_t * font, bool value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6016,7 +6016,7 @@ namespace SkiaSharp
 			(sk_font_set_force_auto_hinting_delegate ??= GetSymbol<Delegates.sk_font_set_force_auto_hinting> ("sk_font_set_force_auto_hinting")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_hinting(sk_font_t* font, sk_font_hinting_t value)
+		// void sk_font_set_hinting(sk_font_t * font, sk_font_hinting_t value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6035,7 +6035,7 @@ namespace SkiaSharp
 			(sk_font_set_hinting_delegate ??= GetSymbol<Delegates.sk_font_set_hinting> ("sk_font_set_hinting")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_linear_metrics(sk_font_t* font, bool value)
+		// void sk_font_set_linear_metrics(sk_font_t * font, bool value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6054,7 +6054,7 @@ namespace SkiaSharp
 			(sk_font_set_linear_metrics_delegate ??= GetSymbol<Delegates.sk_font_set_linear_metrics> ("sk_font_set_linear_metrics")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_scale_x(sk_font_t* font, float value)
+		// void sk_font_set_scale_x(sk_font_t * font, float value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6073,7 +6073,7 @@ namespace SkiaSharp
 			(sk_font_set_scale_x_delegate ??= GetSymbol<Delegates.sk_font_set_scale_x> ("sk_font_set_scale_x")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_size(sk_font_t* font, float value)
+		// void sk_font_set_size(sk_font_t * font, float value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6092,7 +6092,7 @@ namespace SkiaSharp
 			(sk_font_set_size_delegate ??= GetSymbol<Delegates.sk_font_set_size> ("sk_font_set_size")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_skew_x(sk_font_t* font, float value)
+		// void sk_font_set_skew_x(sk_font_t * font, float value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6111,7 +6111,7 @@ namespace SkiaSharp
 			(sk_font_set_skew_x_delegate ??= GetSymbol<Delegates.sk_font_set_skew_x> ("sk_font_set_skew_x")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_subpixel(sk_font_t* font, bool value)
+		// void sk_font_set_subpixel(sk_font_t * font, bool value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6130,7 +6130,7 @@ namespace SkiaSharp
 			(sk_font_set_subpixel_delegate ??= GetSymbol<Delegates.sk_font_set_subpixel> ("sk_font_set_subpixel")).Invoke (font, value);
 		#endif
 
-		// void sk_font_set_typeface(sk_font_t* font, sk_typeface_t* value)
+		// void sk_font_set_typeface(sk_font_t * font, sk_typeface_t * value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6149,7 +6149,7 @@ namespace SkiaSharp
 			(sk_font_set_typeface_delegate ??= GetSymbol<Delegates.sk_font_set_typeface> ("sk_font_set_typeface")).Invoke (font, value);
 		#endif
 
-		// int sk_font_text_to_glyphs(const sk_font_t* font, const void* text, size_t byteLength, sk_text_encoding_t encoding, uint16_t[-1] glyphs, int maxGlyphCount)
+		// int sk_font_text_to_glyphs(sk_font_t const * font, void const * text, size_t byteLength, sk_text_encoding_t encoding, unsigned short[-1] glyphs, int maxGlyphCount)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6168,7 +6168,7 @@ namespace SkiaSharp
 			(sk_font_text_to_glyphs_delegate ??= GetSymbol<Delegates.sk_font_text_to_glyphs> ("sk_font_text_to_glyphs")).Invoke (font, text, byteLength, encoding, glyphs, maxGlyphCount);
 		#endif
 
-		// uint16_t sk_font_unichar_to_glyph(const sk_font_t* font, int32_t uni)
+		// unsigned short sk_font_unichar_to_glyph(sk_font_t const * font, int uni)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6187,7 +6187,7 @@ namespace SkiaSharp
 			(sk_font_unichar_to_glyph_delegate ??= GetSymbol<Delegates.sk_font_unichar_to_glyph> ("sk_font_unichar_to_glyph")).Invoke (font, uni);
 		#endif
 
-		// void sk_font_unichars_to_glyphs(const sk_font_t* font, const int32_t[-1] uni, int count, uint16_t[-1] glyphs)
+		// void sk_font_unichars_to_glyphs(sk_font_t const * font, int const[-1] uni, int count, unsigned short[-1] glyphs)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6206,7 +6206,7 @@ namespace SkiaSharp
 			(sk_font_unichars_to_glyphs_delegate ??= GetSymbol<Delegates.sk_font_unichars_to_glyphs> ("sk_font_unichars_to_glyphs")).Invoke (font, uni, count, glyphs);
 		#endif
 
-		// void sk_text_utils_get_path(const void* text, size_t length, sk_text_encoding_t encoding, float x, float y, const sk_font_t* font, sk_path_t* path)
+		// void sk_text_utils_get_path(void const * text, size_t length, sk_text_encoding_t encoding, float x, float y, sk_font_t const * font, sk_path_t * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6225,7 +6225,7 @@ namespace SkiaSharp
 			(sk_text_utils_get_path_delegate ??= GetSymbol<Delegates.sk_text_utils_get_path> ("sk_text_utils_get_path")).Invoke (text, length, encoding, x, y, font, path);
 		#endif
 
-		// void sk_text_utils_get_pos_path(const void* text, size_t length, sk_text_encoding_t encoding, const sk_point_t[-1] pos, const sk_font_t* font, sk_path_t* path)
+		// void sk_text_utils_get_pos_path(void const * text, size_t length, sk_text_encoding_t encoding, sk_point_t const[-1] pos, sk_font_t const * font, sk_path_t * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6267,7 +6267,7 @@ namespace SkiaSharp
 			(sk_colortype_get_default_8888_delegate ??= GetSymbol<Delegates.sk_colortype_get_default_8888> ("sk_colortype_get_default_8888")).Invoke ();
 		#endif
 
-		// int sk_nvrefcnt_get_ref_count(const sk_nvrefcnt_t* refcnt)
+		// int sk_nvrefcnt_get_ref_count(sk_nvrefcnt_t const * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6286,7 +6286,7 @@ namespace SkiaSharp
 			(sk_nvrefcnt_get_ref_count_delegate ??= GetSymbol<Delegates.sk_nvrefcnt_get_ref_count> ("sk_nvrefcnt_get_ref_count")).Invoke (refcnt);
 		#endif
 
-		// void sk_nvrefcnt_safe_ref(sk_nvrefcnt_t* refcnt)
+		// void sk_nvrefcnt_safe_ref(sk_nvrefcnt_t * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6305,7 +6305,7 @@ namespace SkiaSharp
 			(sk_nvrefcnt_safe_ref_delegate ??= GetSymbol<Delegates.sk_nvrefcnt_safe_ref> ("sk_nvrefcnt_safe_ref")).Invoke (refcnt);
 		#endif
 
-		// void sk_nvrefcnt_safe_unref(sk_nvrefcnt_t* refcnt)
+		// void sk_nvrefcnt_safe_unref(sk_nvrefcnt_t * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6324,7 +6324,7 @@ namespace SkiaSharp
 			(sk_nvrefcnt_safe_unref_delegate ??= GetSymbol<Delegates.sk_nvrefcnt_safe_unref> ("sk_nvrefcnt_safe_unref")).Invoke (refcnt);
 		#endif
 
-		// bool sk_nvrefcnt_unique(const sk_nvrefcnt_t* refcnt)
+		// bool sk_nvrefcnt_unique(sk_nvrefcnt_t const * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6346,7 +6346,7 @@ namespace SkiaSharp
 			(sk_nvrefcnt_unique_delegate ??= GetSymbol<Delegates.sk_nvrefcnt_unique> ("sk_nvrefcnt_unique")).Invoke (refcnt);
 		#endif
 
-		// int sk_refcnt_get_ref_count(const sk_refcnt_t* refcnt)
+		// int sk_refcnt_get_ref_count(sk_refcnt_t const * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6365,7 +6365,7 @@ namespace SkiaSharp
 			(sk_refcnt_get_ref_count_delegate ??= GetSymbol<Delegates.sk_refcnt_get_ref_count> ("sk_refcnt_get_ref_count")).Invoke (refcnt);
 		#endif
 
-		// void sk_refcnt_safe_ref(sk_refcnt_t* refcnt)
+		// void sk_refcnt_safe_ref(sk_refcnt_t * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6384,7 +6384,7 @@ namespace SkiaSharp
 			(sk_refcnt_safe_ref_delegate ??= GetSymbol<Delegates.sk_refcnt_safe_ref> ("sk_refcnt_safe_ref")).Invoke (refcnt);
 		#endif
 
-		// void sk_refcnt_safe_unref(sk_refcnt_t* refcnt)
+		// void sk_refcnt_safe_unref(sk_refcnt_t * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6403,7 +6403,7 @@ namespace SkiaSharp
 			(sk_refcnt_safe_unref_delegate ??= GetSymbol<Delegates.sk_refcnt_safe_unref> ("sk_refcnt_safe_unref")).Invoke (refcnt);
 		#endif
 
-		// bool sk_refcnt_unique(const sk_refcnt_t* refcnt)
+		// bool sk_refcnt_unique(sk_refcnt_t const * refcnt)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6463,7 +6463,7 @@ namespace SkiaSharp
 			(sk_version_get_milestone_delegate ??= GetSymbol<Delegates.sk_version_get_milestone> ("sk_version_get_milestone")).Invoke ();
 		#endif
 
-		// const char* sk_version_get_string()
+		// char const * sk_version_get_string()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6486,7 +6486,7 @@ namespace SkiaSharp
 
 		#region sk_graphics.h
 
-		// void sk_graphics_dump_memory_statistics(sk_tracememorydump_t* dump)
+		// void sk_graphics_dump_memory_statistics(sk_tracememorydump_t * dump)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6794,7 +6794,7 @@ namespace SkiaSharp
 
 		#region sk_image.h
 
-		// sk_alphatype_t sk_image_get_alpha_type(const sk_image_t* image)
+		// sk_alphatype_t sk_image_get_alpha_type(sk_image_t const * image)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6813,7 +6813,7 @@ namespace SkiaSharp
 			(sk_image_get_alpha_type_delegate ??= GetSymbol<Delegates.sk_image_get_alpha_type> ("sk_image_get_alpha_type")).Invoke (image);
 		#endif
 
-		// sk_colortype_t sk_image_get_color_type(const sk_image_t* image)
+		// sk_colortype_t sk_image_get_color_type(sk_image_t const * image)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6832,7 +6832,7 @@ namespace SkiaSharp
 			(sk_image_get_color_type_delegate ??= GetSymbol<Delegates.sk_image_get_color_type> ("sk_image_get_color_type")).Invoke (image);
 		#endif
 
-		// sk_colorspace_t* sk_image_get_colorspace(const sk_image_t* image)
+		// sk_colorspace_t * sk_image_get_colorspace(sk_image_t const * image)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6851,7 +6851,7 @@ namespace SkiaSharp
 			(sk_image_get_colorspace_delegate ??= GetSymbol<Delegates.sk_image_get_colorspace> ("sk_image_get_colorspace")).Invoke (image);
 		#endif
 
-		// int sk_image_get_height(const sk_image_t* cimage)
+		// int sk_image_get_height(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6870,7 +6870,7 @@ namespace SkiaSharp
 			(sk_image_get_height_delegate ??= GetSymbol<Delegates.sk_image_get_height> ("sk_image_get_height")).Invoke (cimage);
 		#endif
 
-		// uint32_t sk_image_get_unique_id(const sk_image_t* cimage)
+		// unsigned int sk_image_get_unique_id(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6889,7 +6889,7 @@ namespace SkiaSharp
 			(sk_image_get_unique_id_delegate ??= GetSymbol<Delegates.sk_image_get_unique_id> ("sk_image_get_unique_id")).Invoke (cimage);
 		#endif
 
-		// int sk_image_get_width(const sk_image_t* cimage)
+		// int sk_image_get_width(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6908,7 +6908,7 @@ namespace SkiaSharp
 			(sk_image_get_width_delegate ??= GetSymbol<Delegates.sk_image_get_width> ("sk_image_get_width")).Invoke (cimage);
 		#endif
 
-		// bool sk_image_is_alpha_only(const sk_image_t* image)
+		// bool sk_image_is_alpha_only(sk_image_t const * image)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6930,7 +6930,7 @@ namespace SkiaSharp
 			(sk_image_is_alpha_only_delegate ??= GetSymbol<Delegates.sk_image_is_alpha_only> ("sk_image_is_alpha_only")).Invoke (image);
 		#endif
 
-		// bool sk_image_is_lazy_generated(const sk_image_t* image)
+		// bool sk_image_is_lazy_generated(sk_image_t const * image)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6952,7 +6952,7 @@ namespace SkiaSharp
 			(sk_image_is_lazy_generated_delegate ??= GetSymbol<Delegates.sk_image_is_lazy_generated> ("sk_image_is_lazy_generated")).Invoke (image);
 		#endif
 
-		// bool sk_image_is_texture_backed(const sk_image_t* image)
+		// bool sk_image_is_texture_backed(sk_image_t const * image)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6974,7 +6974,7 @@ namespace SkiaSharp
 			(sk_image_is_texture_backed_delegate ??= GetSymbol<Delegates.sk_image_is_texture_backed> ("sk_image_is_texture_backed")).Invoke (image);
 		#endif
 
-		// bool sk_image_is_valid(const sk_image_t* image, gr_recording_context_t* context)
+		// bool sk_image_is_valid(sk_image_t const * image, gr_recording_context_t * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -6996,7 +6996,7 @@ namespace SkiaSharp
 			(sk_image_is_valid_delegate ??= GetSymbol<Delegates.sk_image_is_valid> ("sk_image_is_valid")).Invoke (image, context);
 		#endif
 
-		// sk_image_t* sk_image_make_non_texture_image(const sk_image_t* cimage)
+		// sk_image_t * sk_image_make_non_texture_image(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7015,7 +7015,7 @@ namespace SkiaSharp
 			(sk_image_make_non_texture_image_delegate ??= GetSymbol<Delegates.sk_image_make_non_texture_image> ("sk_image_make_non_texture_image")).Invoke (cimage);
 		#endif
 
-		// sk_image_t* sk_image_make_raster_image(const sk_image_t* cimage)
+		// sk_image_t * sk_image_make_raster_image(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7034,7 +7034,7 @@ namespace SkiaSharp
 			(sk_image_make_raster_image_delegate ??= GetSymbol<Delegates.sk_image_make_raster_image> ("sk_image_make_raster_image")).Invoke (cimage);
 		#endif
 
-		// sk_shader_t* sk_image_make_raw_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
+		// sk_shader_t * sk_image_make_raw_shader(sk_image_t const * image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, sk_sampling_options_t const * sampling, sk_matrix_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7053,7 +7053,7 @@ namespace SkiaSharp
 			(sk_image_make_raw_shader_delegate ??= GetSymbol<Delegates.sk_image_make_raw_shader> ("sk_image_make_raw_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
 		#endif
 
-		// sk_shader_t* sk_image_make_shader(const sk_image_t* image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, const sk_sampling_options_t* sampling, const sk_matrix_t* cmatrix)
+		// sk_shader_t * sk_image_make_shader(sk_image_t const * image, sk_shader_tilemode_t tileX, sk_shader_tilemode_t tileY, sk_sampling_options_t const * sampling, sk_matrix_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7072,7 +7072,7 @@ namespace SkiaSharp
 			(sk_image_make_shader_delegate ??= GetSymbol<Delegates.sk_image_make_shader> ("sk_image_make_shader")).Invoke (image, tileX, tileY, sampling, cmatrix);
 		#endif
 
-		// sk_image_t* sk_image_make_subset(const sk_image_t* cimage, gr_direct_context_t* context, const sk_irect_t* subset)
+		// sk_image_t * sk_image_make_subset(sk_image_t const * cimage, gr_direct_context_t * context, sk_irect_t const * subset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7091,7 +7091,7 @@ namespace SkiaSharp
 			(sk_image_make_subset_delegate ??= GetSymbol<Delegates.sk_image_make_subset> ("sk_image_make_subset")).Invoke (cimage, context, subset);
 		#endif
 
-		// sk_image_t* sk_image_make_subset_raster(const sk_image_t* cimage, const sk_irect_t* subset)
+		// sk_image_t * sk_image_make_subset_raster(sk_image_t const * cimage, sk_irect_t const * subset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7110,7 +7110,7 @@ namespace SkiaSharp
 			(sk_image_make_subset_raster_delegate ??= GetSymbol<Delegates.sk_image_make_subset_raster> ("sk_image_make_subset_raster")).Invoke (cimage, subset);
 		#endif
 
-		// sk_image_t* sk_image_make_texture_image(const sk_image_t* cimage, gr_direct_context_t* context, bool mipmapped, bool budgeted)
+		// sk_image_t * sk_image_make_texture_image(sk_image_t const * cimage, gr_direct_context_t * context, bool mipmapped, bool budgeted)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7129,7 +7129,7 @@ namespace SkiaSharp
 			(sk_image_make_texture_image_delegate ??= GetSymbol<Delegates.sk_image_make_texture_image> ("sk_image_make_texture_image")).Invoke (cimage, context, mipmapped, budgeted);
 		#endif
 
-		// sk_image_t* sk_image_make_with_filter(const sk_image_t* cimage, gr_recording_context_t* context, const sk_imagefilter_t* filter, const sk_irect_t* subset, const sk_irect_t* clipBounds, sk_irect_t* outSubset, sk_ipoint_t* outOffset)
+		// sk_image_t * sk_image_make_with_filter(sk_image_t const * cimage, gr_recording_context_t * context, sk_imagefilter_t const * filter, sk_irect_t const * subset, sk_irect_t const * clipBounds, sk_irect_t * outSubset, sk_ipoint_t * outOffset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7148,7 +7148,7 @@ namespace SkiaSharp
 			(sk_image_make_with_filter_delegate ??= GetSymbol<Delegates.sk_image_make_with_filter> ("sk_image_make_with_filter")).Invoke (cimage, context, filter, subset, clipBounds, outSubset, outOffset);
 		#endif
 
-		// sk_image_t* sk_image_make_with_filter_raster(const sk_image_t* cimage, const sk_imagefilter_t* filter, const sk_irect_t* subset, const sk_irect_t* clipBounds, sk_irect_t* outSubset, sk_ipoint_t* outOffset)
+		// sk_image_t * sk_image_make_with_filter_raster(sk_image_t const * cimage, sk_imagefilter_t const * filter, sk_irect_t const * subset, sk_irect_t const * clipBounds, sk_irect_t * outSubset, sk_ipoint_t * outOffset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7167,7 +7167,7 @@ namespace SkiaSharp
 			(sk_image_make_with_filter_raster_delegate ??= GetSymbol<Delegates.sk_image_make_with_filter_raster> ("sk_image_make_with_filter_raster")).Invoke (cimage, filter, subset, clipBounds, outSubset, outOffset);
 		#endif
 
-		// sk_image_t* sk_image_new_from_adopted_texture(gr_recording_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, const sk_colorspace_t* colorSpace)
+		// sk_image_t * sk_image_new_from_adopted_texture(gr_recording_context_t * context, gr_backendtexture_t const * texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, sk_colorspace_t const * colorSpace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7186,7 +7186,7 @@ namespace SkiaSharp
 			(sk_image_new_from_adopted_texture_delegate ??= GetSymbol<Delegates.sk_image_new_from_adopted_texture> ("sk_image_new_from_adopted_texture")).Invoke (context, texture, origin, colorType, alpha, colorSpace);
 		#endif
 
-		// sk_image_t* sk_image_new_from_bitmap(const sk_bitmap_t* cbitmap)
+		// sk_image_t * sk_image_new_from_bitmap(sk_bitmap_t const * cbitmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7205,7 +7205,7 @@ namespace SkiaSharp
 			(sk_image_new_from_bitmap_delegate ??= GetSymbol<Delegates.sk_image_new_from_bitmap> ("sk_image_new_from_bitmap")).Invoke (cbitmap);
 		#endif
 
-		// sk_image_t* sk_image_new_from_encoded(const sk_data_t* cdata)
+		// sk_image_t * sk_image_new_from_encoded(sk_data_t const * cdata)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7224,7 +7224,7 @@ namespace SkiaSharp
 			(sk_image_new_from_encoded_delegate ??= GetSymbol<Delegates.sk_image_new_from_encoded> ("sk_image_new_from_encoded")).Invoke (cdata);
 		#endif
 
-		// sk_image_t* sk_image_new_from_picture(sk_picture_t* picture, const sk_isize_t* dimensions, const sk_matrix_t* cmatrix, const sk_paint_t* paint, bool useFloatingPointBitDepth, const sk_colorspace_t* colorSpace, const sk_surfaceprops_t* props)
+		// sk_image_t * sk_image_new_from_picture(sk_picture_t * picture, sk_isize_t const * dimensions, sk_matrix_t const * cmatrix, sk_paint_t const * paint, bool useFloatingPointBitDepth, sk_colorspace_t const * colorSpace, sk_surfaceprops_t const * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7243,7 +7243,7 @@ namespace SkiaSharp
 			(sk_image_new_from_picture_delegate ??= GetSymbol<Delegates.sk_image_new_from_picture> ("sk_image_new_from_picture")).Invoke (picture, dimensions, cmatrix, paint, useFloatingPointBitDepth, colorSpace, props);
 		#endif
 
-		// sk_image_t* sk_image_new_from_texture(gr_recording_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, const sk_colorspace_t* colorSpace, const sk_image_texture_release_proc releaseProc, void* releaseContext)
+		// sk_image_t * sk_image_new_from_texture(gr_recording_context_t * context, gr_backendtexture_t const * texture, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_alphatype_t alpha, sk_colorspace_t const * colorSpace, sk_image_texture_release_proc const releaseProc, void * releaseContext)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7262,7 +7262,7 @@ namespace SkiaSharp
 			(sk_image_new_from_texture_delegate ??= GetSymbol<Delegates.sk_image_new_from_texture> ("sk_image_new_from_texture")).Invoke (context, texture, origin, colorType, alpha, colorSpace, releaseProc, releaseContext);
 		#endif
 
-		// sk_image_t* sk_image_new_raster(const sk_pixmap_t* pixmap, sk_image_raster_release_proc releaseProc, void* context)
+		// sk_image_t * sk_image_new_raster(sk_pixmap_t const * pixmap, sk_image_raster_release_proc releaseProc, void * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7281,7 +7281,7 @@ namespace SkiaSharp
 			(sk_image_new_raster_delegate ??= GetSymbol<Delegates.sk_image_new_raster> ("sk_image_new_raster")).Invoke (pixmap, releaseProc, context);
 		#endif
 
-		// sk_image_t* sk_image_new_raster_copy(const sk_imageinfo_t* cinfo, const void* pixels, size_t rowBytes)
+		// sk_image_t * sk_image_new_raster_copy(sk_imageinfo_t const * cinfo, void const * pixels, size_t rowBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7300,7 +7300,7 @@ namespace SkiaSharp
 			(sk_image_new_raster_copy_delegate ??= GetSymbol<Delegates.sk_image_new_raster_copy> ("sk_image_new_raster_copy")).Invoke (cinfo, pixels, rowBytes);
 		#endif
 
-		// sk_image_t* sk_image_new_raster_copy_with_pixmap(const sk_pixmap_t* pixmap)
+		// sk_image_t * sk_image_new_raster_copy_with_pixmap(sk_pixmap_t const * pixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7319,7 +7319,7 @@ namespace SkiaSharp
 			(sk_image_new_raster_copy_with_pixmap_delegate ??= GetSymbol<Delegates.sk_image_new_raster_copy_with_pixmap> ("sk_image_new_raster_copy_with_pixmap")).Invoke (pixmap);
 		#endif
 
-		// sk_image_t* sk_image_new_raster_data(const sk_imageinfo_t* cinfo, sk_data_t* pixels, size_t rowBytes)
+		// sk_image_t * sk_image_new_raster_data(sk_imageinfo_t const * cinfo, sk_data_t * pixels, size_t rowBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7338,7 +7338,7 @@ namespace SkiaSharp
 			(sk_image_new_raster_data_delegate ??= GetSymbol<Delegates.sk_image_new_raster_data> ("sk_image_new_raster_data")).Invoke (cinfo, pixels, rowBytes);
 		#endif
 
-		// bool sk_image_peek_pixels(const sk_image_t* image, sk_pixmap_t* pixmap)
+		// bool sk_image_peek_pixels(sk_image_t const * image, sk_pixmap_t * pixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7360,7 +7360,7 @@ namespace SkiaSharp
 			(sk_image_peek_pixels_delegate ??= GetSymbol<Delegates.sk_image_peek_pixels> ("sk_image_peek_pixels")).Invoke (image, pixmap);
 		#endif
 
-		// bool sk_image_read_pixels(const sk_image_t* image, const sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY, sk_image_caching_hint_t cachingHint)
+		// bool sk_image_read_pixels(sk_image_t const * image, sk_imageinfo_t const * dstInfo, void * dstPixels, size_t dstRowBytes, int srcX, int srcY, sk_image_caching_hint_t cachingHint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7382,7 +7382,7 @@ namespace SkiaSharp
 			(sk_image_read_pixels_delegate ??= GetSymbol<Delegates.sk_image_read_pixels> ("sk_image_read_pixels")).Invoke (image, dstInfo, dstPixels, dstRowBytes, srcX, srcY, cachingHint);
 		#endif
 
-		// bool sk_image_read_pixels_into_pixmap(const sk_image_t* image, const sk_pixmap_t* dst, int srcX, int srcY, sk_image_caching_hint_t cachingHint)
+		// bool sk_image_read_pixels_into_pixmap(sk_image_t const * image, sk_pixmap_t const * dst, int srcX, int srcY, sk_image_caching_hint_t cachingHint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7404,7 +7404,7 @@ namespace SkiaSharp
 			(sk_image_read_pixels_into_pixmap_delegate ??= GetSymbol<Delegates.sk_image_read_pixels_into_pixmap> ("sk_image_read_pixels_into_pixmap")).Invoke (image, dst, srcX, srcY, cachingHint);
 		#endif
 
-		// void sk_image_ref(const sk_image_t* cimage)
+		// void sk_image_ref(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7423,7 +7423,7 @@ namespace SkiaSharp
 			(sk_image_ref_delegate ??= GetSymbol<Delegates.sk_image_ref> ("sk_image_ref")).Invoke (cimage);
 		#endif
 
-		// sk_data_t* sk_image_ref_encoded(const sk_image_t* cimage)
+		// sk_data_t * sk_image_ref_encoded(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7442,7 +7442,7 @@ namespace SkiaSharp
 			(sk_image_ref_encoded_delegate ??= GetSymbol<Delegates.sk_image_ref_encoded> ("sk_image_ref_encoded")).Invoke (cimage);
 		#endif
 
-		// bool sk_image_scale_pixels(const sk_image_t* image, const sk_pixmap_t* dst, const sk_sampling_options_t* sampling, sk_image_caching_hint_t cachingHint)
+		// bool sk_image_scale_pixels(sk_image_t const * image, sk_pixmap_t const * dst, sk_sampling_options_t const * sampling, sk_image_caching_hint_t cachingHint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7464,7 +7464,7 @@ namespace SkiaSharp
 			(sk_image_scale_pixels_delegate ??= GetSymbol<Delegates.sk_image_scale_pixels> ("sk_image_scale_pixels")).Invoke (image, dst, sampling, cachingHint);
 		#endif
 
-		// void sk_image_unref(const sk_image_t* cimage)
+		// void sk_image_unref(sk_image_t const * cimage)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7487,7 +7487,7 @@ namespace SkiaSharp
 
 		#region sk_imagefilter.h
 
-		// sk_imagefilter_t* sk_imagefilter_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePMColor, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_arithmetic(float k1, float k2, float k3, float k4, bool enforcePMColor, sk_imagefilter_t const * background, sk_imagefilter_t const * foreground, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7506,7 +7506,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_arithmetic_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_arithmetic> ("sk_imagefilter_new_arithmetic")).Invoke (k1, k2, k3, k4, enforcePMColor, background, foreground, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_blend(sk_blendmode_t mode, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_blend(sk_blendmode_t mode, sk_imagefilter_t const * background, sk_imagefilter_t const * foreground, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7525,7 +7525,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_blend_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blend> ("sk_imagefilter_new_blend")).Invoke (mode, background, foreground, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_blender(sk_blender_t* blender, const sk_imagefilter_t* background, const sk_imagefilter_t* foreground, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_blender(sk_blender_t * blender, sk_imagefilter_t const * background, sk_imagefilter_t const * foreground, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7544,7 +7544,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_blender_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blender> ("sk_imagefilter_new_blender")).Invoke (blender, background, foreground, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_blur(float sigmaX, float sigmaY, sk_shader_tilemode_t tileMode, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_blur(float sigmaX, float sigmaY, sk_shader_tilemode_t tileMode, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7563,7 +7563,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_blur_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_blur> ("sk_imagefilter_new_blur")).Invoke (sigmaX, sigmaY, tileMode, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_color_filter(sk_colorfilter_t* cf, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_color_filter(sk_colorfilter_t * cf, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7582,7 +7582,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_color_filter_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_color_filter> ("sk_imagefilter_new_color_filter")).Invoke (cf, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_compose(const sk_imagefilter_t* outer, const sk_imagefilter_t* inner)
+		// sk_imagefilter_t * sk_imagefilter_new_compose(sk_imagefilter_t const * outer, sk_imagefilter_t const * inner)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7601,7 +7601,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_compose_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_compose> ("sk_imagefilter_new_compose")).Invoke (outer, inner);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_dilate(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_dilate(float radiusX, float radiusY, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7620,7 +7620,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_dilate_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_dilate> ("sk_imagefilter_new_dilate")).Invoke (radiusX, radiusY, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_displacement_map_effect(sk_color_channel_t xChannelSelector, sk_color_channel_t yChannelSelector, float scale, const sk_imagefilter_t* displacement, const sk_imagefilter_t* color, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_displacement_map_effect(sk_color_channel_t xChannelSelector, sk_color_channel_t yChannelSelector, float scale, sk_imagefilter_t const * displacement, sk_imagefilter_t const * color, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7639,7 +7639,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_displacement_map_effect_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_displacement_map_effect> ("sk_imagefilter_new_displacement_map_effect")).Invoke (xChannelSelector, yChannelSelector, scale, displacement, color, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_distant_lit_diffuse(const sk_point3_t* direction, sk_color_t lightColor, float surfaceScale, float kd, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_distant_lit_diffuse(sk_point3_t const * direction, sk_color_t lightColor, float surfaceScale, float kd, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7658,7 +7658,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_distant_lit_diffuse_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_distant_lit_diffuse> ("sk_imagefilter_new_distant_lit_diffuse")).Invoke (direction, lightColor, surfaceScale, kd, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_distant_lit_specular(const sk_point3_t* direction, sk_color_t lightColor, float surfaceScale, float ks, float shininess, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_distant_lit_specular(sk_point3_t const * direction, sk_color_t lightColor, float surfaceScale, float ks, float shininess, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7677,7 +7677,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_distant_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_distant_lit_specular> ("sk_imagefilter_new_distant_lit_specular")).Invoke (direction, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_drop_shadow(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_drop_shadow(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7696,7 +7696,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_drop_shadow_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow> ("sk_imagefilter_new_drop_shadow")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_drop_shadow_only(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_drop_shadow_only(float dx, float dy, float sigmaX, float sigmaY, sk_color_t color, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7715,7 +7715,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_drop_shadow_only_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_drop_shadow_only> ("sk_imagefilter_new_drop_shadow_only")).Invoke (dx, dy, sigmaX, sigmaY, color, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_erode(float radiusX, float radiusY, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_erode(float radiusX, float radiusY, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7734,7 +7734,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_erode_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_erode> ("sk_imagefilter_new_erode")).Invoke (radiusX, radiusY, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_image(sk_image_t* image, const sk_rect_t* srcRect, const sk_rect_t* dstRect, const sk_sampling_options_t* sampling)
+		// sk_imagefilter_t * sk_imagefilter_new_image(sk_image_t * image, sk_rect_t const * srcRect, sk_rect_t const * dstRect, sk_sampling_options_t const * sampling)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7753,7 +7753,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_image_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_image> ("sk_imagefilter_new_image")).Invoke (image, srcRect, dstRect, sampling);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_image_simple(sk_image_t* image, const sk_sampling_options_t* sampling)
+		// sk_imagefilter_t * sk_imagefilter_new_image_simple(sk_image_t * image, sk_sampling_options_t const * sampling)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7772,7 +7772,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_image_simple_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_image_simple> ("sk_imagefilter_new_image_simple")).Invoke (image, sampling);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_magnifier(const sk_rect_t* lensBounds, float zoomAmount, float inset, const sk_sampling_options_t* sampling, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_magnifier(sk_rect_t const * lensBounds, float zoomAmount, float inset, sk_sampling_options_t const * sampling, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7791,7 +7791,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_magnifier_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_magnifier> ("sk_imagefilter_new_magnifier")).Invoke (lensBounds, zoomAmount, inset, sampling, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_matrix_convolution(const sk_isize_t* kernelSize, const float[-1] kernel, float gain, float bias, const sk_ipoint_t* kernelOffset, sk_shader_tilemode_t ctileMode, bool convolveAlpha, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_matrix_convolution(sk_isize_t const * kernelSize, float const[-1] kernel, float gain, float bias, sk_ipoint_t const * kernelOffset, sk_shader_tilemode_t ctileMode, bool convolveAlpha, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7810,7 +7810,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_matrix_convolution_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_matrix_convolution> ("sk_imagefilter_new_matrix_convolution")).Invoke (kernelSize, kernel, gain, bias, kernelOffset, ctileMode, convolveAlpha, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_matrix_transform(const sk_matrix_t* cmatrix, const sk_sampling_options_t* sampling, const sk_imagefilter_t* input)
+		// sk_imagefilter_t * sk_imagefilter_new_matrix_transform(sk_matrix_t const * cmatrix, sk_sampling_options_t const * sampling, sk_imagefilter_t const * input)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7829,7 +7829,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_matrix_transform_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_matrix_transform> ("sk_imagefilter_new_matrix_transform")).Invoke (cmatrix, sampling, input);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_merge(const sk_imagefilter_t*[-1] cfilters, int count, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_merge(sk_imagefilter_t const *[-1] cfilters, int count, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7848,7 +7848,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_merge_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_merge> ("sk_imagefilter_new_merge")).Invoke (cfilters, count, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_merge_simple(const sk_imagefilter_t* first, const sk_imagefilter_t* second, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_merge_simple(sk_imagefilter_t const * first, sk_imagefilter_t const * second, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7867,7 +7867,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_merge_simple_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_merge_simple> ("sk_imagefilter_new_merge_simple")).Invoke (first, second, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_offset(float dx, float dy, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_offset(float dx, float dy, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7886,7 +7886,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_offset_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_offset> ("sk_imagefilter_new_offset")).Invoke (dx, dy, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_picture(const sk_picture_t* picture)
+		// sk_imagefilter_t * sk_imagefilter_new_picture(sk_picture_t const * picture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7905,7 +7905,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_picture_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_picture> ("sk_imagefilter_new_picture")).Invoke (picture);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_picture_with_rect(const sk_picture_t* picture, const sk_rect_t* targetRect)
+		// sk_imagefilter_t * sk_imagefilter_new_picture_with_rect(sk_picture_t const * picture, sk_rect_t const * targetRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7924,7 +7924,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_picture_with_rect_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_picture_with_rect> ("sk_imagefilter_new_picture_with_rect")).Invoke (picture, targetRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_point_lit_diffuse(const sk_point3_t* location, sk_color_t lightColor, float surfaceScale, float kd, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_point_lit_diffuse(sk_point3_t const * location, sk_color_t lightColor, float surfaceScale, float kd, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7943,7 +7943,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_point_lit_diffuse_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_point_lit_diffuse> ("sk_imagefilter_new_point_lit_diffuse")).Invoke (location, lightColor, surfaceScale, kd, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_point_lit_specular(const sk_point3_t* location, sk_color_t lightColor, float surfaceScale, float ks, float shininess, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_point_lit_specular(sk_point3_t const * location, sk_color_t lightColor, float surfaceScale, float ks, float shininess, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7962,7 +7962,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_point_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_point_lit_specular> ("sk_imagefilter_new_point_lit_specular")).Invoke (location, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_shader(const sk_shader_t* shader, bool dither, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_shader(sk_shader_t const * shader, bool dither, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -7981,7 +7981,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_shader_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_shader> ("sk_imagefilter_new_shader")).Invoke (shader, dither, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_spot_lit_diffuse(const sk_point3_t* location, const sk_point3_t* target, float specularExponent, float cutoffAngle, sk_color_t lightColor, float surfaceScale, float kd, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_spot_lit_diffuse(sk_point3_t const * location, sk_point3_t const * target, float specularExponent, float cutoffAngle, sk_color_t lightColor, float surfaceScale, float kd, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8000,7 +8000,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_spot_lit_diffuse_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_spot_lit_diffuse> ("sk_imagefilter_new_spot_lit_diffuse")).Invoke (location, target, specularExponent, cutoffAngle, lightColor, surfaceScale, kd, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_spot_lit_specular(const sk_point3_t* location, const sk_point3_t* target, float specularExponent, float cutoffAngle, sk_color_t lightColor, float surfaceScale, float ks, float shininess, const sk_imagefilter_t* input, const sk_rect_t* cropRect)
+		// sk_imagefilter_t * sk_imagefilter_new_spot_lit_specular(sk_point3_t const * location, sk_point3_t const * target, float specularExponent, float cutoffAngle, sk_color_t lightColor, float surfaceScale, float ks, float shininess, sk_imagefilter_t const * input, sk_rect_t const * cropRect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8019,7 +8019,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_spot_lit_specular_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_spot_lit_specular> ("sk_imagefilter_new_spot_lit_specular")).Invoke (location, target, specularExponent, cutoffAngle, lightColor, surfaceScale, ks, shininess, input, cropRect);
 		#endif
 
-		// sk_imagefilter_t* sk_imagefilter_new_tile(const sk_rect_t* src, const sk_rect_t* dst, const sk_imagefilter_t* input)
+		// sk_imagefilter_t * sk_imagefilter_new_tile(sk_rect_t const * src, sk_rect_t const * dst, sk_imagefilter_t const * input)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8038,7 +8038,7 @@ namespace SkiaSharp
 			(sk_imagefilter_new_tile_delegate ??= GetSymbol<Delegates.sk_imagefilter_new_tile> ("sk_imagefilter_new_tile")).Invoke (src, dst, input);
 		#endif
 
-		// void sk_imagefilter_unref(sk_imagefilter_t* cfilter)
+		// void sk_imagefilter_unref(sk_imagefilter_t * cfilter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8084,7 +8084,7 @@ namespace SkiaSharp
 
 		#region sk_maskfilter.h
 
-		// sk_maskfilter_t* sk_maskfilter_new_blur(sk_blurstyle_t, float sigma)
+		// sk_maskfilter_t * sk_maskfilter_new_blur(sk_blurstyle_t, float sigma)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8103,7 +8103,7 @@ namespace SkiaSharp
 			(sk_maskfilter_new_blur_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_blur> ("sk_maskfilter_new_blur")).Invoke (param0, sigma);
 		#endif
 
-		// sk_maskfilter_t* sk_maskfilter_new_blur_with_flags(sk_blurstyle_t, float sigma, bool respectCTM)
+		// sk_maskfilter_t * sk_maskfilter_new_blur_with_flags(sk_blurstyle_t, float sigma, bool respectCTM)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8122,7 +8122,7 @@ namespace SkiaSharp
 			(sk_maskfilter_new_blur_with_flags_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_blur_with_flags> ("sk_maskfilter_new_blur_with_flags")).Invoke (param0, sigma, respectCTM);
 		#endif
 
-		// sk_maskfilter_t* sk_maskfilter_new_clip(uint8_t min, uint8_t max)
+		// sk_maskfilter_t * sk_maskfilter_new_clip(unsigned char min, unsigned char max)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8141,7 +8141,7 @@ namespace SkiaSharp
 			(sk_maskfilter_new_clip_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_clip> ("sk_maskfilter_new_clip")).Invoke (min, max);
 		#endif
 
-		// sk_maskfilter_t* sk_maskfilter_new_gamma(float gamma)
+		// sk_maskfilter_t * sk_maskfilter_new_gamma(float gamma)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8160,7 +8160,7 @@ namespace SkiaSharp
 			(sk_maskfilter_new_gamma_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_gamma> ("sk_maskfilter_new_gamma")).Invoke (gamma);
 		#endif
 
-		// sk_maskfilter_t* sk_maskfilter_new_shader(sk_shader_t* cshader)
+		// sk_maskfilter_t * sk_maskfilter_new_shader(sk_shader_t * cshader)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8179,7 +8179,7 @@ namespace SkiaSharp
 			(sk_maskfilter_new_shader_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_shader> ("sk_maskfilter_new_shader")).Invoke (cshader);
 		#endif
 
-		// sk_maskfilter_t* sk_maskfilter_new_table(const uint8_t[256] table = 256)
+		// sk_maskfilter_t * sk_maskfilter_new_table(unsigned char const[256] table = 256)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8198,7 +8198,7 @@ namespace SkiaSharp
 			(sk_maskfilter_new_table_delegate ??= GetSymbol<Delegates.sk_maskfilter_new_table> ("sk_maskfilter_new_table")).Invoke (table);
 		#endif
 
-		// void sk_maskfilter_ref(sk_maskfilter_t*)
+		// void sk_maskfilter_ref(sk_maskfilter_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8217,7 +8217,7 @@ namespace SkiaSharp
 			(sk_maskfilter_ref_delegate ??= GetSymbol<Delegates.sk_maskfilter_ref> ("sk_maskfilter_ref")).Invoke (param0);
 		#endif
 
-		// void sk_maskfilter_unref(sk_maskfilter_t*)
+		// void sk_maskfilter_unref(sk_maskfilter_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8240,7 +8240,7 @@ namespace SkiaSharp
 
 		#region sk_matrix.h
 
-		// void sk_matrix_concat(sk_matrix_t* result, sk_matrix_t* first, sk_matrix_t* second)
+		// void sk_matrix_concat(sk_matrix_t * result, sk_matrix_t * first, sk_matrix_t * second)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8259,7 +8259,7 @@ namespace SkiaSharp
 			(sk_matrix_concat_delegate ??= GetSymbol<Delegates.sk_matrix_concat> ("sk_matrix_concat")).Invoke (result, first, second);
 		#endif
 
-		// void sk_matrix_map_points(sk_matrix_t* matrix, sk_point_t* dst, sk_point_t* src, int count)
+		// void sk_matrix_map_points(sk_matrix_t * matrix, sk_point_t * dst, sk_point_t * src, int count)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8278,7 +8278,7 @@ namespace SkiaSharp
 			(sk_matrix_map_points_delegate ??= GetSymbol<Delegates.sk_matrix_map_points> ("sk_matrix_map_points")).Invoke (matrix, dst, src, count);
 		#endif
 
-		// float sk_matrix_map_radius(sk_matrix_t* matrix, float radius)
+		// float sk_matrix_map_radius(sk_matrix_t * matrix, float radius)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8297,7 +8297,7 @@ namespace SkiaSharp
 			(sk_matrix_map_radius_delegate ??= GetSymbol<Delegates.sk_matrix_map_radius> ("sk_matrix_map_radius")).Invoke (matrix, radius);
 		#endif
 
-		// void sk_matrix_map_rect(sk_matrix_t* matrix, sk_rect_t* dest, sk_rect_t* source)
+		// void sk_matrix_map_rect(sk_matrix_t * matrix, sk_rect_t * dest, sk_rect_t * source)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8316,7 +8316,7 @@ namespace SkiaSharp
 			(sk_matrix_map_rect_delegate ??= GetSymbol<Delegates.sk_matrix_map_rect> ("sk_matrix_map_rect")).Invoke (matrix, dest, source);
 		#endif
 
-		// void sk_matrix_map_vector(sk_matrix_t* matrix, float x, float y, sk_point_t* result)
+		// void sk_matrix_map_vector(sk_matrix_t * matrix, float x, float y, sk_point_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8335,7 +8335,7 @@ namespace SkiaSharp
 			(sk_matrix_map_vector_delegate ??= GetSymbol<Delegates.sk_matrix_map_vector> ("sk_matrix_map_vector")).Invoke (matrix, x, y, result);
 		#endif
 
-		// void sk_matrix_map_vectors(sk_matrix_t* matrix, sk_point_t* dst, sk_point_t* src, int count)
+		// void sk_matrix_map_vectors(sk_matrix_t * matrix, sk_point_t * dst, sk_point_t * src, int count)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8354,7 +8354,7 @@ namespace SkiaSharp
 			(sk_matrix_map_vectors_delegate ??= GetSymbol<Delegates.sk_matrix_map_vectors> ("sk_matrix_map_vectors")).Invoke (matrix, dst, src, count);
 		#endif
 
-		// void sk_matrix_map_xy(sk_matrix_t* matrix, float x, float y, sk_point_t* result)
+		// void sk_matrix_map_xy(sk_matrix_t * matrix, float x, float y, sk_point_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8373,7 +8373,7 @@ namespace SkiaSharp
 			(sk_matrix_map_xy_delegate ??= GetSymbol<Delegates.sk_matrix_map_xy> ("sk_matrix_map_xy")).Invoke (matrix, x, y, result);
 		#endif
 
-		// void sk_matrix_post_concat(sk_matrix_t* result, sk_matrix_t* matrix)
+		// void sk_matrix_post_concat(sk_matrix_t * result, sk_matrix_t * matrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8392,7 +8392,7 @@ namespace SkiaSharp
 			(sk_matrix_post_concat_delegate ??= GetSymbol<Delegates.sk_matrix_post_concat> ("sk_matrix_post_concat")).Invoke (result, matrix);
 		#endif
 
-		// void sk_matrix_pre_concat(sk_matrix_t* result, sk_matrix_t* matrix)
+		// void sk_matrix_pre_concat(sk_matrix_t * result, sk_matrix_t * matrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8411,7 +8411,7 @@ namespace SkiaSharp
 			(sk_matrix_pre_concat_delegate ??= GetSymbol<Delegates.sk_matrix_pre_concat> ("sk_matrix_pre_concat")).Invoke (result, matrix);
 		#endif
 
-		// bool sk_matrix_try_invert(sk_matrix_t* matrix, sk_matrix_t* result)
+		// bool sk_matrix_try_invert(sk_matrix_t * matrix, sk_matrix_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8437,7 +8437,7 @@ namespace SkiaSharp
 
 		#region sk_paint.h
 
-		// sk_paint_t* sk_paint_clone(sk_paint_t*)
+		// sk_paint_t * sk_paint_clone(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8456,7 +8456,7 @@ namespace SkiaSharp
 			(sk_paint_clone_delegate ??= GetSymbol<Delegates.sk_paint_clone> ("sk_paint_clone")).Invoke (param0);
 		#endif
 
-		// void sk_paint_delete(sk_paint_t*)
+		// void sk_paint_delete(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8475,7 +8475,7 @@ namespace SkiaSharp
 			(sk_paint_delete_delegate ??= GetSymbol<Delegates.sk_paint_delete> ("sk_paint_delete")).Invoke (param0);
 		#endif
 
-		// sk_blender_t* sk_paint_get_blender(sk_paint_t* cpaint)
+		// sk_blender_t * sk_paint_get_blender(sk_paint_t * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8494,7 +8494,7 @@ namespace SkiaSharp
 			(sk_paint_get_blender_delegate ??= GetSymbol<Delegates.sk_paint_get_blender> ("sk_paint_get_blender")).Invoke (cpaint);
 		#endif
 
-		// sk_blendmode_t sk_paint_get_blendmode(sk_paint_t*)
+		// sk_blendmode_t sk_paint_get_blendmode(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8513,7 +8513,7 @@ namespace SkiaSharp
 			(sk_paint_get_blendmode_delegate ??= GetSymbol<Delegates.sk_paint_get_blendmode> ("sk_paint_get_blendmode")).Invoke (param0);
 		#endif
 
-		// sk_color_t sk_paint_get_color(const sk_paint_t*)
+		// sk_color_t sk_paint_get_color(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8532,7 +8532,7 @@ namespace SkiaSharp
 			(sk_paint_get_color_delegate ??= GetSymbol<Delegates.sk_paint_get_color> ("sk_paint_get_color")).Invoke (param0);
 		#endif
 
-		// void sk_paint_get_color4f(const sk_paint_t* paint, sk_color4f_t* color)
+		// void sk_paint_get_color4f(sk_paint_t const * paint, sk_color4f_t * color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8551,7 +8551,7 @@ namespace SkiaSharp
 			(sk_paint_get_color4f_delegate ??= GetSymbol<Delegates.sk_paint_get_color4f> ("sk_paint_get_color4f")).Invoke (paint, color);
 		#endif
 
-		// sk_colorfilter_t* sk_paint_get_colorfilter(sk_paint_t*)
+		// sk_colorfilter_t * sk_paint_get_colorfilter(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8570,7 +8570,7 @@ namespace SkiaSharp
 			(sk_paint_get_colorfilter_delegate ??= GetSymbol<Delegates.sk_paint_get_colorfilter> ("sk_paint_get_colorfilter")).Invoke (param0);
 		#endif
 
-		// bool sk_paint_get_fill_path(const sk_paint_t* cpaint, const sk_path_t* src, sk_path_t* dst, const sk_rect_t* cullRect, const sk_matrix_t* cmatrix)
+		// bool sk_paint_get_fill_path(sk_paint_t const * cpaint, sk_path_t const * src, sk_path_t * dst, sk_rect_t const * cullRect, sk_matrix_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8592,7 +8592,7 @@ namespace SkiaSharp
 			(sk_paint_get_fill_path_delegate ??= GetSymbol<Delegates.sk_paint_get_fill_path> ("sk_paint_get_fill_path")).Invoke (cpaint, src, dst, cullRect, cmatrix);
 		#endif
 
-		// sk_imagefilter_t* sk_paint_get_imagefilter(sk_paint_t*)
+		// sk_imagefilter_t * sk_paint_get_imagefilter(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8611,7 +8611,7 @@ namespace SkiaSharp
 			(sk_paint_get_imagefilter_delegate ??= GetSymbol<Delegates.sk_paint_get_imagefilter> ("sk_paint_get_imagefilter")).Invoke (param0);
 		#endif
 
-		// sk_maskfilter_t* sk_paint_get_maskfilter(sk_paint_t*)
+		// sk_maskfilter_t * sk_paint_get_maskfilter(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8630,7 +8630,7 @@ namespace SkiaSharp
 			(sk_paint_get_maskfilter_delegate ??= GetSymbol<Delegates.sk_paint_get_maskfilter> ("sk_paint_get_maskfilter")).Invoke (param0);
 		#endif
 
-		// sk_path_effect_t* sk_paint_get_path_effect(sk_paint_t* cpaint)
+		// sk_path_effect_t * sk_paint_get_path_effect(sk_paint_t * cpaint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8649,7 +8649,7 @@ namespace SkiaSharp
 			(sk_paint_get_path_effect_delegate ??= GetSymbol<Delegates.sk_paint_get_path_effect> ("sk_paint_get_path_effect")).Invoke (cpaint);
 		#endif
 
-		// sk_shader_t* sk_paint_get_shader(sk_paint_t*)
+		// sk_shader_t * sk_paint_get_shader(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8668,7 +8668,7 @@ namespace SkiaSharp
 			(sk_paint_get_shader_delegate ??= GetSymbol<Delegates.sk_paint_get_shader> ("sk_paint_get_shader")).Invoke (param0);
 		#endif
 
-		// sk_stroke_cap_t sk_paint_get_stroke_cap(const sk_paint_t*)
+		// sk_stroke_cap_t sk_paint_get_stroke_cap(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8687,7 +8687,7 @@ namespace SkiaSharp
 			(sk_paint_get_stroke_cap_delegate ??= GetSymbol<Delegates.sk_paint_get_stroke_cap> ("sk_paint_get_stroke_cap")).Invoke (param0);
 		#endif
 
-		// sk_stroke_join_t sk_paint_get_stroke_join(const sk_paint_t*)
+		// sk_stroke_join_t sk_paint_get_stroke_join(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8706,7 +8706,7 @@ namespace SkiaSharp
 			(sk_paint_get_stroke_join_delegate ??= GetSymbol<Delegates.sk_paint_get_stroke_join> ("sk_paint_get_stroke_join")).Invoke (param0);
 		#endif
 
-		// float sk_paint_get_stroke_miter(const sk_paint_t*)
+		// float sk_paint_get_stroke_miter(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8725,7 +8725,7 @@ namespace SkiaSharp
 			(sk_paint_get_stroke_miter_delegate ??= GetSymbol<Delegates.sk_paint_get_stroke_miter> ("sk_paint_get_stroke_miter")).Invoke (param0);
 		#endif
 
-		// float sk_paint_get_stroke_width(const sk_paint_t*)
+		// float sk_paint_get_stroke_width(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8744,7 +8744,7 @@ namespace SkiaSharp
 			(sk_paint_get_stroke_width_delegate ??= GetSymbol<Delegates.sk_paint_get_stroke_width> ("sk_paint_get_stroke_width")).Invoke (param0);
 		#endif
 
-		// sk_paint_style_t sk_paint_get_style(const sk_paint_t*)
+		// sk_paint_style_t sk_paint_get_style(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8763,7 +8763,7 @@ namespace SkiaSharp
 			(sk_paint_get_style_delegate ??= GetSymbol<Delegates.sk_paint_get_style> ("sk_paint_get_style")).Invoke (param0);
 		#endif
 
-		// bool sk_paint_is_antialias(const sk_paint_t*)
+		// bool sk_paint_is_antialias(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8785,7 +8785,7 @@ namespace SkiaSharp
 			(sk_paint_is_antialias_delegate ??= GetSymbol<Delegates.sk_paint_is_antialias> ("sk_paint_is_antialias")).Invoke (param0);
 		#endif
 
-		// bool sk_paint_is_dither(const sk_paint_t*)
+		// bool sk_paint_is_dither(sk_paint_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8807,7 +8807,7 @@ namespace SkiaSharp
 			(sk_paint_is_dither_delegate ??= GetSymbol<Delegates.sk_paint_is_dither> ("sk_paint_is_dither")).Invoke (param0);
 		#endif
 
-		// sk_paint_t* sk_paint_new()
+		// sk_paint_t * sk_paint_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8826,7 +8826,7 @@ namespace SkiaSharp
 			(sk_paint_new_delegate ??= GetSymbol<Delegates.sk_paint_new> ("sk_paint_new")).Invoke ();
 		#endif
 
-		// void sk_paint_reset(sk_paint_t*)
+		// void sk_paint_reset(sk_paint_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8845,7 +8845,7 @@ namespace SkiaSharp
 			(sk_paint_reset_delegate ??= GetSymbol<Delegates.sk_paint_reset> ("sk_paint_reset")).Invoke (param0);
 		#endif
 
-		// void sk_paint_set_antialias(sk_paint_t*, bool)
+		// void sk_paint_set_antialias(sk_paint_t *, bool)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8864,7 +8864,7 @@ namespace SkiaSharp
 			(sk_paint_set_antialias_delegate ??= GetSymbol<Delegates.sk_paint_set_antialias> ("sk_paint_set_antialias")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_blender(sk_paint_t* paint, sk_blender_t* blender)
+		// void sk_paint_set_blender(sk_paint_t * paint, sk_blender_t * blender)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8883,7 +8883,7 @@ namespace SkiaSharp
 			(sk_paint_set_blender_delegate ??= GetSymbol<Delegates.sk_paint_set_blender> ("sk_paint_set_blender")).Invoke (paint, blender);
 		#endif
 
-		// void sk_paint_set_blendmode(sk_paint_t*, sk_blendmode_t)
+		// void sk_paint_set_blendmode(sk_paint_t *, sk_blendmode_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8902,7 +8902,7 @@ namespace SkiaSharp
 			(sk_paint_set_blendmode_delegate ??= GetSymbol<Delegates.sk_paint_set_blendmode> ("sk_paint_set_blendmode")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_color(sk_paint_t*, sk_color_t)
+		// void sk_paint_set_color(sk_paint_t *, sk_color_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8921,7 +8921,7 @@ namespace SkiaSharp
 			(sk_paint_set_color_delegate ??= GetSymbol<Delegates.sk_paint_set_color> ("sk_paint_set_color")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_color4f(sk_paint_t* paint, sk_color4f_t* color, sk_colorspace_t* colorspace)
+		// void sk_paint_set_color4f(sk_paint_t * paint, sk_color4f_t * color, sk_colorspace_t * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8940,7 +8940,7 @@ namespace SkiaSharp
 			(sk_paint_set_color4f_delegate ??= GetSymbol<Delegates.sk_paint_set_color4f> ("sk_paint_set_color4f")).Invoke (paint, color, colorspace);
 		#endif
 
-		// void sk_paint_set_colorfilter(sk_paint_t*, sk_colorfilter_t*)
+		// void sk_paint_set_colorfilter(sk_paint_t *, sk_colorfilter_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8959,7 +8959,7 @@ namespace SkiaSharp
 			(sk_paint_set_colorfilter_delegate ??= GetSymbol<Delegates.sk_paint_set_colorfilter> ("sk_paint_set_colorfilter")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_dither(sk_paint_t*, bool)
+		// void sk_paint_set_dither(sk_paint_t *, bool)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8978,7 +8978,7 @@ namespace SkiaSharp
 			(sk_paint_set_dither_delegate ??= GetSymbol<Delegates.sk_paint_set_dither> ("sk_paint_set_dither")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_imagefilter(sk_paint_t*, sk_imagefilter_t*)
+		// void sk_paint_set_imagefilter(sk_paint_t *, sk_imagefilter_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -8997,7 +8997,7 @@ namespace SkiaSharp
 			(sk_paint_set_imagefilter_delegate ??= GetSymbol<Delegates.sk_paint_set_imagefilter> ("sk_paint_set_imagefilter")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_maskfilter(sk_paint_t*, sk_maskfilter_t*)
+		// void sk_paint_set_maskfilter(sk_paint_t *, sk_maskfilter_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9016,7 +9016,7 @@ namespace SkiaSharp
 			(sk_paint_set_maskfilter_delegate ??= GetSymbol<Delegates.sk_paint_set_maskfilter> ("sk_paint_set_maskfilter")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_path_effect(sk_paint_t* cpaint, sk_path_effect_t* effect)
+		// void sk_paint_set_path_effect(sk_paint_t * cpaint, sk_path_effect_t * effect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9035,7 +9035,7 @@ namespace SkiaSharp
 			(sk_paint_set_path_effect_delegate ??= GetSymbol<Delegates.sk_paint_set_path_effect> ("sk_paint_set_path_effect")).Invoke (cpaint, effect);
 		#endif
 
-		// void sk_paint_set_shader(sk_paint_t*, sk_shader_t*)
+		// void sk_paint_set_shader(sk_paint_t *, sk_shader_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9054,7 +9054,7 @@ namespace SkiaSharp
 			(sk_paint_set_shader_delegate ??= GetSymbol<Delegates.sk_paint_set_shader> ("sk_paint_set_shader")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_stroke_cap(sk_paint_t*, sk_stroke_cap_t)
+		// void sk_paint_set_stroke_cap(sk_paint_t *, sk_stroke_cap_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9073,7 +9073,7 @@ namespace SkiaSharp
 			(sk_paint_set_stroke_cap_delegate ??= GetSymbol<Delegates.sk_paint_set_stroke_cap> ("sk_paint_set_stroke_cap")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_stroke_join(sk_paint_t*, sk_stroke_join_t)
+		// void sk_paint_set_stroke_join(sk_paint_t *, sk_stroke_join_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9092,7 +9092,7 @@ namespace SkiaSharp
 			(sk_paint_set_stroke_join_delegate ??= GetSymbol<Delegates.sk_paint_set_stroke_join> ("sk_paint_set_stroke_join")).Invoke (param0, param1);
 		#endif
 
-		// void sk_paint_set_stroke_miter(sk_paint_t*, float miter)
+		// void sk_paint_set_stroke_miter(sk_paint_t *, float miter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9111,7 +9111,7 @@ namespace SkiaSharp
 			(sk_paint_set_stroke_miter_delegate ??= GetSymbol<Delegates.sk_paint_set_stroke_miter> ("sk_paint_set_stroke_miter")).Invoke (param0, miter);
 		#endif
 
-		// void sk_paint_set_stroke_width(sk_paint_t*, float width)
+		// void sk_paint_set_stroke_width(sk_paint_t *, float width)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9130,7 +9130,7 @@ namespace SkiaSharp
 			(sk_paint_set_stroke_width_delegate ??= GetSymbol<Delegates.sk_paint_set_stroke_width> ("sk_paint_set_stroke_width")).Invoke (param0, width);
 		#endif
 
-		// void sk_paint_set_style(sk_paint_t*, sk_paint_style_t)
+		// void sk_paint_set_style(sk_paint_t *, sk_paint_style_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9153,7 +9153,7 @@ namespace SkiaSharp
 
 		#region sk_path.h
 
-		// void sk_opbuilder_add(sk_opbuilder_t* builder, const sk_path_t* path, sk_pathop_t op)
+		// void sk_opbuilder_add(sk_opbuilder_t * builder, sk_path_t const * path, sk_pathop_t op)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9172,7 +9172,7 @@ namespace SkiaSharp
 			(sk_opbuilder_add_delegate ??= GetSymbol<Delegates.sk_opbuilder_add> ("sk_opbuilder_add")).Invoke (builder, path, op);
 		#endif
 
-		// void sk_opbuilder_destroy(sk_opbuilder_t* builder)
+		// void sk_opbuilder_destroy(sk_opbuilder_t * builder)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9191,7 +9191,7 @@ namespace SkiaSharp
 			(sk_opbuilder_destroy_delegate ??= GetSymbol<Delegates.sk_opbuilder_destroy> ("sk_opbuilder_destroy")).Invoke (builder);
 		#endif
 
-		// sk_opbuilder_t* sk_opbuilder_new()
+		// sk_opbuilder_t * sk_opbuilder_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9210,7 +9210,7 @@ namespace SkiaSharp
 			(sk_opbuilder_new_delegate ??= GetSymbol<Delegates.sk_opbuilder_new> ("sk_opbuilder_new")).Invoke ();
 		#endif
 
-		// bool sk_opbuilder_resolve(sk_opbuilder_t* builder, sk_path_t* result)
+		// bool sk_opbuilder_resolve(sk_opbuilder_t * builder, sk_path_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9232,7 +9232,7 @@ namespace SkiaSharp
 			(sk_opbuilder_resolve_delegate ??= GetSymbol<Delegates.sk_opbuilder_resolve> ("sk_opbuilder_resolve")).Invoke (builder, result);
 		#endif
 
-		// void sk_path_add_arc(sk_path_t* cpath, const sk_rect_t* crect, float startAngle, float sweepAngle)
+		// void sk_path_add_arc(sk_path_t * cpath, sk_rect_t const * crect, float startAngle, float sweepAngle)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9251,7 +9251,7 @@ namespace SkiaSharp
 			(sk_path_add_arc_delegate ??= GetSymbol<Delegates.sk_path_add_arc> ("sk_path_add_arc")).Invoke (cpath, crect, startAngle, sweepAngle);
 		#endif
 
-		// void sk_path_add_circle(sk_path_t*, float x, float y, float radius, sk_path_direction_t dir)
+		// void sk_path_add_circle(sk_path_t *, float x, float y, float radius, sk_path_direction_t dir)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9270,7 +9270,7 @@ namespace SkiaSharp
 			(sk_path_add_circle_delegate ??= GetSymbol<Delegates.sk_path_add_circle> ("sk_path_add_circle")).Invoke (param0, x, y, radius, dir);
 		#endif
 
-		// void sk_path_add_oval(sk_path_t*, const sk_rect_t*, sk_path_direction_t)
+		// void sk_path_add_oval(sk_path_t *, sk_rect_t const *, sk_path_direction_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9289,7 +9289,7 @@ namespace SkiaSharp
 			(sk_path_add_oval_delegate ??= GetSymbol<Delegates.sk_path_add_oval> ("sk_path_add_oval")).Invoke (param0, param1, param2);
 		#endif
 
-		// void sk_path_add_path(sk_path_t* cpath, sk_path_t* other, sk_path_add_mode_t add_mode)
+		// void sk_path_add_path(sk_path_t * cpath, sk_path_t * other, sk_path_add_mode_t add_mode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9308,7 +9308,7 @@ namespace SkiaSharp
 			(sk_path_add_path_delegate ??= GetSymbol<Delegates.sk_path_add_path> ("sk_path_add_path")).Invoke (cpath, other, add_mode);
 		#endif
 
-		// void sk_path_add_path_matrix(sk_path_t* cpath, sk_path_t* other, sk_matrix_t* matrix, sk_path_add_mode_t add_mode)
+		// void sk_path_add_path_matrix(sk_path_t * cpath, sk_path_t * other, sk_matrix_t * matrix, sk_path_add_mode_t add_mode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9327,7 +9327,7 @@ namespace SkiaSharp
 			(sk_path_add_path_matrix_delegate ??= GetSymbol<Delegates.sk_path_add_path_matrix> ("sk_path_add_path_matrix")).Invoke (cpath, other, matrix, add_mode);
 		#endif
 
-		// void sk_path_add_path_offset(sk_path_t* cpath, sk_path_t* other, float dx, float dy, sk_path_add_mode_t add_mode)
+		// void sk_path_add_path_offset(sk_path_t * cpath, sk_path_t * other, float dx, float dy, sk_path_add_mode_t add_mode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9346,7 +9346,7 @@ namespace SkiaSharp
 			(sk_path_add_path_offset_delegate ??= GetSymbol<Delegates.sk_path_add_path_offset> ("sk_path_add_path_offset")).Invoke (cpath, other, dx, dy, add_mode);
 		#endif
 
-		// void sk_path_add_path_reverse(sk_path_t* cpath, sk_path_t* other)
+		// void sk_path_add_path_reverse(sk_path_t * cpath, sk_path_t * other)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9365,7 +9365,7 @@ namespace SkiaSharp
 			(sk_path_add_path_reverse_delegate ??= GetSymbol<Delegates.sk_path_add_path_reverse> ("sk_path_add_path_reverse")).Invoke (cpath, other);
 		#endif
 
-		// void sk_path_add_poly(sk_path_t* cpath, const sk_point_t* points, int count, bool close)
+		// void sk_path_add_poly(sk_path_t * cpath, sk_point_t const * points, int count, bool close)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9384,7 +9384,7 @@ namespace SkiaSharp
 			(sk_path_add_poly_delegate ??= GetSymbol<Delegates.sk_path_add_poly> ("sk_path_add_poly")).Invoke (cpath, points, count, close);
 		#endif
 
-		// void sk_path_add_rect(sk_path_t*, const sk_rect_t*, sk_path_direction_t)
+		// void sk_path_add_rect(sk_path_t *, sk_rect_t const *, sk_path_direction_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9403,7 +9403,7 @@ namespace SkiaSharp
 			(sk_path_add_rect_delegate ??= GetSymbol<Delegates.sk_path_add_rect> ("sk_path_add_rect")).Invoke (param0, param1, param2);
 		#endif
 
-		// void sk_path_add_rect_start(sk_path_t* cpath, const sk_rect_t* crect, sk_path_direction_t cdir, uint32_t startIndex)
+		// void sk_path_add_rect_start(sk_path_t * cpath, sk_rect_t const * crect, sk_path_direction_t cdir, unsigned int startIndex)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9422,7 +9422,7 @@ namespace SkiaSharp
 			(sk_path_add_rect_start_delegate ??= GetSymbol<Delegates.sk_path_add_rect_start> ("sk_path_add_rect_start")).Invoke (cpath, crect, cdir, startIndex);
 		#endif
 
-		// void sk_path_add_rounded_rect(sk_path_t*, const sk_rect_t*, float, float, sk_path_direction_t)
+		// void sk_path_add_rounded_rect(sk_path_t *, sk_rect_t const *, float, float, sk_path_direction_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9441,7 +9441,7 @@ namespace SkiaSharp
 			(sk_path_add_rounded_rect_delegate ??= GetSymbol<Delegates.sk_path_add_rounded_rect> ("sk_path_add_rounded_rect")).Invoke (param0, param1, param2, param3, param4);
 		#endif
 
-		// void sk_path_add_rrect(sk_path_t*, const sk_rrect_t*, sk_path_direction_t)
+		// void sk_path_add_rrect(sk_path_t *, sk_rrect_t const *, sk_path_direction_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9460,7 +9460,7 @@ namespace SkiaSharp
 			(sk_path_add_rrect_delegate ??= GetSymbol<Delegates.sk_path_add_rrect> ("sk_path_add_rrect")).Invoke (param0, param1, param2);
 		#endif
 
-		// void sk_path_add_rrect_start(sk_path_t*, const sk_rrect_t*, sk_path_direction_t, uint32_t)
+		// void sk_path_add_rrect_start(sk_path_t *, sk_rrect_t const *, sk_path_direction_t, unsigned int)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9479,7 +9479,7 @@ namespace SkiaSharp
 			(sk_path_add_rrect_start_delegate ??= GetSymbol<Delegates.sk_path_add_rrect_start> ("sk_path_add_rrect_start")).Invoke (param0, param1, param2, param3);
 		#endif
 
-		// void sk_path_arc_to(sk_path_t*, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
+		// void sk_path_arc_to(sk_path_t *, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9498,7 +9498,7 @@ namespace SkiaSharp
 			(sk_path_arc_to_delegate ??= GetSymbol<Delegates.sk_path_arc_to> ("sk_path_arc_to")).Invoke (param0, rx, ry, xAxisRotate, largeArc, sweep, x, y);
 		#endif
 
-		// void sk_path_arc_to_with_oval(sk_path_t*, const sk_rect_t* oval, float startAngle, float sweepAngle, bool forceMoveTo)
+		// void sk_path_arc_to_with_oval(sk_path_t *, sk_rect_t const * oval, float startAngle, float sweepAngle, bool forceMoveTo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9517,7 +9517,7 @@ namespace SkiaSharp
 			(sk_path_arc_to_with_oval_delegate ??= GetSymbol<Delegates.sk_path_arc_to_with_oval> ("sk_path_arc_to_with_oval")).Invoke (param0, oval, startAngle, sweepAngle, forceMoveTo);
 		#endif
 
-		// void sk_path_arc_to_with_points(sk_path_t*, float x1, float y1, float x2, float y2, float radius)
+		// void sk_path_arc_to_with_points(sk_path_t *, float x1, float y1, float x2, float y2, float radius)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9536,7 +9536,7 @@ namespace SkiaSharp
 			(sk_path_arc_to_with_points_delegate ??= GetSymbol<Delegates.sk_path_arc_to_with_points> ("sk_path_arc_to_with_points")).Invoke (param0, x1, y1, x2, y2, radius);
 		#endif
 
-		// sk_path_t* sk_path_clone(const sk_path_t* cpath)
+		// sk_path_t * sk_path_clone(sk_path_t const * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9555,7 +9555,7 @@ namespace SkiaSharp
 			(sk_path_clone_delegate ??= GetSymbol<Delegates.sk_path_clone> ("sk_path_clone")).Invoke (cpath);
 		#endif
 
-		// void sk_path_close(sk_path_t*)
+		// void sk_path_close(sk_path_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9574,7 +9574,7 @@ namespace SkiaSharp
 			(sk_path_close_delegate ??= GetSymbol<Delegates.sk_path_close> ("sk_path_close")).Invoke (param0);
 		#endif
 
-		// void sk_path_compute_tight_bounds(const sk_path_t*, sk_rect_t*)
+		// void sk_path_compute_tight_bounds(sk_path_t const *, sk_rect_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9593,7 +9593,7 @@ namespace SkiaSharp
 			(sk_path_compute_tight_bounds_delegate ??= GetSymbol<Delegates.sk_path_compute_tight_bounds> ("sk_path_compute_tight_bounds")).Invoke (param0, param1);
 		#endif
 
-		// void sk_path_conic_to(sk_path_t*, float x0, float y0, float x1, float y1, float w)
+		// void sk_path_conic_to(sk_path_t *, float x0, float y0, float x1, float y1, float w)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9612,7 +9612,7 @@ namespace SkiaSharp
 			(sk_path_conic_to_delegate ??= GetSymbol<Delegates.sk_path_conic_to> ("sk_path_conic_to")).Invoke (param0, x0, y0, x1, y1, w);
 		#endif
 
-		// bool sk_path_contains(const sk_path_t* cpath, float x, float y)
+		// bool sk_path_contains(sk_path_t const * cpath, float x, float y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9634,7 +9634,7 @@ namespace SkiaSharp
 			(sk_path_contains_delegate ??= GetSymbol<Delegates.sk_path_contains> ("sk_path_contains")).Invoke (cpath, x, y);
 		#endif
 
-		// int sk_path_convert_conic_to_quads(const sk_point_t* p0, const sk_point_t* p1, const sk_point_t* p2, float w, sk_point_t* pts, int pow2)
+		// int sk_path_convert_conic_to_quads(sk_point_t const * p0, sk_point_t const * p1, sk_point_t const * p2, float w, sk_point_t * pts, int pow2)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9653,7 +9653,7 @@ namespace SkiaSharp
 			(sk_path_convert_conic_to_quads_delegate ??= GetSymbol<Delegates.sk_path_convert_conic_to_quads> ("sk_path_convert_conic_to_quads")).Invoke (p0, p1, p2, w, pts, pow2);
 		#endif
 
-		// int sk_path_count_points(const sk_path_t* cpath)
+		// int sk_path_count_points(sk_path_t const * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9672,7 +9672,7 @@ namespace SkiaSharp
 			(sk_path_count_points_delegate ??= GetSymbol<Delegates.sk_path_count_points> ("sk_path_count_points")).Invoke (cpath);
 		#endif
 
-		// int sk_path_count_verbs(const sk_path_t* cpath)
+		// int sk_path_count_verbs(sk_path_t const * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9691,7 +9691,7 @@ namespace SkiaSharp
 			(sk_path_count_verbs_delegate ??= GetSymbol<Delegates.sk_path_count_verbs> ("sk_path_count_verbs")).Invoke (cpath);
 		#endif
 
-		// sk_path_iterator_t* sk_path_create_iter(sk_path_t* cpath, int forceClose)
+		// sk_path_iterator_t * sk_path_create_iter(sk_path_t * cpath, int forceClose)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9710,7 +9710,7 @@ namespace SkiaSharp
 			(sk_path_create_iter_delegate ??= GetSymbol<Delegates.sk_path_create_iter> ("sk_path_create_iter")).Invoke (cpath, forceClose);
 		#endif
 
-		// sk_path_rawiterator_t* sk_path_create_rawiter(sk_path_t* cpath)
+		// sk_path_rawiterator_t * sk_path_create_rawiter(sk_path_t * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9729,7 +9729,7 @@ namespace SkiaSharp
 			(sk_path_create_rawiter_delegate ??= GetSymbol<Delegates.sk_path_create_rawiter> ("sk_path_create_rawiter")).Invoke (cpath);
 		#endif
 
-		// void sk_path_cubic_to(sk_path_t*, float x0, float y0, float x1, float y1, float x2, float y2)
+		// void sk_path_cubic_to(sk_path_t *, float x0, float y0, float x1, float y1, float x2, float y2)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9748,7 +9748,7 @@ namespace SkiaSharp
 			(sk_path_cubic_to_delegate ??= GetSymbol<Delegates.sk_path_cubic_to> ("sk_path_cubic_to")).Invoke (param0, x0, y0, x1, y1, x2, y2);
 		#endif
 
-		// void sk_path_delete(sk_path_t*)
+		// void sk_path_delete(sk_path_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9767,7 +9767,7 @@ namespace SkiaSharp
 			(sk_path_delete_delegate ??= GetSymbol<Delegates.sk_path_delete> ("sk_path_delete")).Invoke (param0);
 		#endif
 
-		// void sk_path_get_bounds(const sk_path_t*, sk_rect_t*)
+		// void sk_path_get_bounds(sk_path_t const *, sk_rect_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9786,7 +9786,7 @@ namespace SkiaSharp
 			(sk_path_get_bounds_delegate ??= GetSymbol<Delegates.sk_path_get_bounds> ("sk_path_get_bounds")).Invoke (param0, param1);
 		#endif
 
-		// sk_path_filltype_t sk_path_get_filltype(sk_path_t*)
+		// sk_path_filltype_t sk_path_get_filltype(sk_path_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9805,7 +9805,7 @@ namespace SkiaSharp
 			(sk_path_get_filltype_delegate ??= GetSymbol<Delegates.sk_path_get_filltype> ("sk_path_get_filltype")).Invoke (param0);
 		#endif
 
-		// bool sk_path_get_last_point(const sk_path_t* cpath, sk_point_t* point)
+		// bool sk_path_get_last_point(sk_path_t const * cpath, sk_point_t * point)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9827,7 +9827,7 @@ namespace SkiaSharp
 			(sk_path_get_last_point_delegate ??= GetSymbol<Delegates.sk_path_get_last_point> ("sk_path_get_last_point")).Invoke (cpath, point);
 		#endif
 
-		// void sk_path_get_point(const sk_path_t* cpath, int index, sk_point_t* point)
+		// void sk_path_get_point(sk_path_t const * cpath, int index, sk_point_t * point)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9846,7 +9846,7 @@ namespace SkiaSharp
 			(sk_path_get_point_delegate ??= GetSymbol<Delegates.sk_path_get_point> ("sk_path_get_point")).Invoke (cpath, index, point);
 		#endif
 
-		// int sk_path_get_points(const sk_path_t* cpath, sk_point_t* points, int max)
+		// int sk_path_get_points(sk_path_t const * cpath, sk_point_t * points, int max)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9865,7 +9865,7 @@ namespace SkiaSharp
 			(sk_path_get_points_delegate ??= GetSymbol<Delegates.sk_path_get_points> ("sk_path_get_points")).Invoke (cpath, points, max);
 		#endif
 
-		// uint32_t sk_path_get_segment_masks(sk_path_t* cpath)
+		// unsigned int sk_path_get_segment_masks(sk_path_t * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9884,7 +9884,7 @@ namespace SkiaSharp
 			(sk_path_get_segment_masks_delegate ??= GetSymbol<Delegates.sk_path_get_segment_masks> ("sk_path_get_segment_masks")).Invoke (cpath);
 		#endif
 
-		// bool sk_path_is_convex(const sk_path_t* cpath)
+		// bool sk_path_is_convex(sk_path_t const * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9906,7 +9906,7 @@ namespace SkiaSharp
 			(sk_path_is_convex_delegate ??= GetSymbol<Delegates.sk_path_is_convex> ("sk_path_is_convex")).Invoke (cpath);
 		#endif
 
-		// bool sk_path_is_line(sk_path_t* cpath, sk_point_t[2] line = 2)
+		// bool sk_path_is_line(sk_path_t * cpath, sk_point_t[2] line = 2)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9928,7 +9928,7 @@ namespace SkiaSharp
 			(sk_path_is_line_delegate ??= GetSymbol<Delegates.sk_path_is_line> ("sk_path_is_line")).Invoke (cpath, line);
 		#endif
 
-		// bool sk_path_is_oval(sk_path_t* cpath, sk_rect_t* bounds)
+		// bool sk_path_is_oval(sk_path_t * cpath, sk_rect_t * bounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9950,7 +9950,7 @@ namespace SkiaSharp
 			(sk_path_is_oval_delegate ??= GetSymbol<Delegates.sk_path_is_oval> ("sk_path_is_oval")).Invoke (cpath, bounds);
 		#endif
 
-		// bool sk_path_is_rect(sk_path_t* cpath, sk_rect_t* rect, bool* isClosed, sk_path_direction_t* direction)
+		// bool sk_path_is_rect(sk_path_t * cpath, sk_rect_t * rect, bool * isClosed, sk_path_direction_t * direction)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9972,7 +9972,7 @@ namespace SkiaSharp
 			(sk_path_is_rect_delegate ??= GetSymbol<Delegates.sk_path_is_rect> ("sk_path_is_rect")).Invoke (cpath, rect, isClosed, direction);
 		#endif
 
-		// bool sk_path_is_rrect(sk_path_t* cpath, sk_rrect_t* bounds)
+		// bool sk_path_is_rrect(sk_path_t * cpath, sk_rrect_t * bounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -9994,7 +9994,7 @@ namespace SkiaSharp
 			(sk_path_is_rrect_delegate ??= GetSymbol<Delegates.sk_path_is_rrect> ("sk_path_is_rrect")).Invoke (cpath, bounds);
 		#endif
 
-		// float sk_path_iter_conic_weight(sk_path_iterator_t* iterator)
+		// float sk_path_iter_conic_weight(sk_path_iterator_t * iterator)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10013,7 +10013,7 @@ namespace SkiaSharp
 			(sk_path_iter_conic_weight_delegate ??= GetSymbol<Delegates.sk_path_iter_conic_weight> ("sk_path_iter_conic_weight")).Invoke (iterator);
 		#endif
 
-		// void sk_path_iter_destroy(sk_path_iterator_t* iterator)
+		// void sk_path_iter_destroy(sk_path_iterator_t * iterator)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10032,7 +10032,7 @@ namespace SkiaSharp
 			(sk_path_iter_destroy_delegate ??= GetSymbol<Delegates.sk_path_iter_destroy> ("sk_path_iter_destroy")).Invoke (iterator);
 		#endif
 
-		// int sk_path_iter_is_close_line(sk_path_iterator_t* iterator)
+		// int sk_path_iter_is_close_line(sk_path_iterator_t * iterator)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10051,7 +10051,7 @@ namespace SkiaSharp
 			(sk_path_iter_is_close_line_delegate ??= GetSymbol<Delegates.sk_path_iter_is_close_line> ("sk_path_iter_is_close_line")).Invoke (iterator);
 		#endif
 
-		// int sk_path_iter_is_closed_contour(sk_path_iterator_t* iterator)
+		// int sk_path_iter_is_closed_contour(sk_path_iterator_t * iterator)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10070,7 +10070,7 @@ namespace SkiaSharp
 			(sk_path_iter_is_closed_contour_delegate ??= GetSymbol<Delegates.sk_path_iter_is_closed_contour> ("sk_path_iter_is_closed_contour")).Invoke (iterator);
 		#endif
 
-		// sk_path_verb_t sk_path_iter_next(sk_path_iterator_t* iterator, sk_point_t[4] points = 4)
+		// sk_path_verb_t sk_path_iter_next(sk_path_iterator_t * iterator, sk_point_t[4] points = 4)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10089,7 +10089,7 @@ namespace SkiaSharp
 			(sk_path_iter_next_delegate ??= GetSymbol<Delegates.sk_path_iter_next> ("sk_path_iter_next")).Invoke (iterator, points);
 		#endif
 
-		// void sk_path_line_to(sk_path_t*, float x, float y)
+		// void sk_path_line_to(sk_path_t *, float x, float y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10108,7 +10108,7 @@ namespace SkiaSharp
 			(sk_path_line_to_delegate ??= GetSymbol<Delegates.sk_path_line_to> ("sk_path_line_to")).Invoke (param0, x, y);
 		#endif
 
-		// void sk_path_move_to(sk_path_t*, float x, float y)
+		// void sk_path_move_to(sk_path_t *, float x, float y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10127,7 +10127,7 @@ namespace SkiaSharp
 			(sk_path_move_to_delegate ??= GetSymbol<Delegates.sk_path_move_to> ("sk_path_move_to")).Invoke (param0, x, y);
 		#endif
 
-		// sk_path_t* sk_path_new()
+		// sk_path_t * sk_path_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10146,7 +10146,7 @@ namespace SkiaSharp
 			(sk_path_new_delegate ??= GetSymbol<Delegates.sk_path_new> ("sk_path_new")).Invoke ();
 		#endif
 
-		// bool sk_path_parse_svg_string(sk_path_t* cpath, const char* str)
+		// bool sk_path_parse_svg_string(sk_path_t * cpath, char const * str)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10168,7 +10168,7 @@ namespace SkiaSharp
 			(sk_path_parse_svg_string_delegate ??= GetSymbol<Delegates.sk_path_parse_svg_string> ("sk_path_parse_svg_string")).Invoke (cpath, str);
 		#endif
 
-		// void sk_path_quad_to(sk_path_t*, float x0, float y0, float x1, float y1)
+		// void sk_path_quad_to(sk_path_t *, float x0, float y0, float x1, float y1)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10187,7 +10187,7 @@ namespace SkiaSharp
 			(sk_path_quad_to_delegate ??= GetSymbol<Delegates.sk_path_quad_to> ("sk_path_quad_to")).Invoke (param0, x0, y0, x1, y1);
 		#endif
 
-		// void sk_path_rarc_to(sk_path_t*, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
+		// void sk_path_rarc_to(sk_path_t *, float rx, float ry, float xAxisRotate, sk_path_arc_size_t largeArc, sk_path_direction_t sweep, float x, float y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10206,7 +10206,7 @@ namespace SkiaSharp
 			(sk_path_rarc_to_delegate ??= GetSymbol<Delegates.sk_path_rarc_to> ("sk_path_rarc_to")).Invoke (param0, rx, ry, xAxisRotate, largeArc, sweep, x, y);
 		#endif
 
-		// float sk_path_rawiter_conic_weight(sk_path_rawiterator_t* iterator)
+		// float sk_path_rawiter_conic_weight(sk_path_rawiterator_t * iterator)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10225,7 +10225,7 @@ namespace SkiaSharp
 			(sk_path_rawiter_conic_weight_delegate ??= GetSymbol<Delegates.sk_path_rawiter_conic_weight> ("sk_path_rawiter_conic_weight")).Invoke (iterator);
 		#endif
 
-		// void sk_path_rawiter_destroy(sk_path_rawiterator_t* iterator)
+		// void sk_path_rawiter_destroy(sk_path_rawiterator_t * iterator)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10244,7 +10244,7 @@ namespace SkiaSharp
 			(sk_path_rawiter_destroy_delegate ??= GetSymbol<Delegates.sk_path_rawiter_destroy> ("sk_path_rawiter_destroy")).Invoke (iterator);
 		#endif
 
-		// sk_path_verb_t sk_path_rawiter_next(sk_path_rawiterator_t* iterator, sk_point_t[4] points = 4)
+		// sk_path_verb_t sk_path_rawiter_next(sk_path_rawiterator_t * iterator, sk_point_t[4] points = 4)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10263,7 +10263,7 @@ namespace SkiaSharp
 			(sk_path_rawiter_next_delegate ??= GetSymbol<Delegates.sk_path_rawiter_next> ("sk_path_rawiter_next")).Invoke (iterator, points);
 		#endif
 
-		// sk_path_verb_t sk_path_rawiter_peek(sk_path_rawiterator_t* iterator)
+		// sk_path_verb_t sk_path_rawiter_peek(sk_path_rawiterator_t * iterator)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10282,7 +10282,7 @@ namespace SkiaSharp
 			(sk_path_rawiter_peek_delegate ??= GetSymbol<Delegates.sk_path_rawiter_peek> ("sk_path_rawiter_peek")).Invoke (iterator);
 		#endif
 
-		// void sk_path_rconic_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1, float w)
+		// void sk_path_rconic_to(sk_path_t *, float dx0, float dy0, float dx1, float dy1, float w)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10301,7 +10301,7 @@ namespace SkiaSharp
 			(sk_path_rconic_to_delegate ??= GetSymbol<Delegates.sk_path_rconic_to> ("sk_path_rconic_to")).Invoke (param0, dx0, dy0, dx1, dy1, w);
 		#endif
 
-		// void sk_path_rcubic_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1, float dx2, float dy2)
+		// void sk_path_rcubic_to(sk_path_t *, float dx0, float dy0, float dx1, float dy1, float dx2, float dy2)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10320,7 +10320,7 @@ namespace SkiaSharp
 			(sk_path_rcubic_to_delegate ??= GetSymbol<Delegates.sk_path_rcubic_to> ("sk_path_rcubic_to")).Invoke (param0, dx0, dy0, dx1, dy1, dx2, dy2);
 		#endif
 
-		// void sk_path_reset(sk_path_t* cpath)
+		// void sk_path_reset(sk_path_t * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10339,7 +10339,7 @@ namespace SkiaSharp
 			(sk_path_reset_delegate ??= GetSymbol<Delegates.sk_path_reset> ("sk_path_reset")).Invoke (cpath);
 		#endif
 
-		// void sk_path_rewind(sk_path_t* cpath)
+		// void sk_path_rewind(sk_path_t * cpath)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10358,7 +10358,7 @@ namespace SkiaSharp
 			(sk_path_rewind_delegate ??= GetSymbol<Delegates.sk_path_rewind> ("sk_path_rewind")).Invoke (cpath);
 		#endif
 
-		// void sk_path_rline_to(sk_path_t*, float dx, float yd)
+		// void sk_path_rline_to(sk_path_t *, float dx, float yd)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10377,7 +10377,7 @@ namespace SkiaSharp
 			(sk_path_rline_to_delegate ??= GetSymbol<Delegates.sk_path_rline_to> ("sk_path_rline_to")).Invoke (param0, dx, yd);
 		#endif
 
-		// void sk_path_rmove_to(sk_path_t*, float dx, float dy)
+		// void sk_path_rmove_to(sk_path_t *, float dx, float dy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10396,7 +10396,7 @@ namespace SkiaSharp
 			(sk_path_rmove_to_delegate ??= GetSymbol<Delegates.sk_path_rmove_to> ("sk_path_rmove_to")).Invoke (param0, dx, dy);
 		#endif
 
-		// void sk_path_rquad_to(sk_path_t*, float dx0, float dy0, float dx1, float dy1)
+		// void sk_path_rquad_to(sk_path_t *, float dx0, float dy0, float dx1, float dy1)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10415,7 +10415,7 @@ namespace SkiaSharp
 			(sk_path_rquad_to_delegate ??= GetSymbol<Delegates.sk_path_rquad_to> ("sk_path_rquad_to")).Invoke (param0, dx0, dy0, dx1, dy1);
 		#endif
 
-		// void sk_path_set_filltype(sk_path_t*, sk_path_filltype_t)
+		// void sk_path_set_filltype(sk_path_t *, sk_path_filltype_t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10434,7 +10434,7 @@ namespace SkiaSharp
 			(sk_path_set_filltype_delegate ??= GetSymbol<Delegates.sk_path_set_filltype> ("sk_path_set_filltype")).Invoke (param0, param1);
 		#endif
 
-		// void sk_path_to_svg_string(const sk_path_t* cpath, sk_string_t* str)
+		// void sk_path_to_svg_string(sk_path_t const * cpath, sk_string_t * str)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10453,7 +10453,7 @@ namespace SkiaSharp
 			(sk_path_to_svg_string_delegate ??= GetSymbol<Delegates.sk_path_to_svg_string> ("sk_path_to_svg_string")).Invoke (cpath, str);
 		#endif
 
-		// void sk_path_transform(sk_path_t* cpath, const sk_matrix_t* cmatrix)
+		// void sk_path_transform(sk_path_t * cpath, sk_matrix_t const * cmatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10472,7 +10472,7 @@ namespace SkiaSharp
 			(sk_path_transform_delegate ??= GetSymbol<Delegates.sk_path_transform> ("sk_path_transform")).Invoke (cpath, cmatrix);
 		#endif
 
-		// void sk_path_transform_to_dest(const sk_path_t* cpath, const sk_matrix_t* cmatrix, sk_path_t* destination)
+		// void sk_path_transform_to_dest(sk_path_t const * cpath, sk_matrix_t const * cmatrix, sk_path_t * destination)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10491,7 +10491,7 @@ namespace SkiaSharp
 			(sk_path_transform_to_dest_delegate ??= GetSymbol<Delegates.sk_path_transform_to_dest> ("sk_path_transform_to_dest")).Invoke (cpath, cmatrix, destination);
 		#endif
 
-		// void sk_pathmeasure_destroy(sk_pathmeasure_t* pathMeasure)
+		// void sk_pathmeasure_destroy(sk_pathmeasure_t * pathMeasure)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10510,7 +10510,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_destroy_delegate ??= GetSymbol<Delegates.sk_pathmeasure_destroy> ("sk_pathmeasure_destroy")).Invoke (pathMeasure);
 		#endif
 
-		// float sk_pathmeasure_get_length(sk_pathmeasure_t* pathMeasure)
+		// float sk_pathmeasure_get_length(sk_pathmeasure_t * pathMeasure)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10529,7 +10529,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_get_length_delegate ??= GetSymbol<Delegates.sk_pathmeasure_get_length> ("sk_pathmeasure_get_length")).Invoke (pathMeasure);
 		#endif
 
-		// bool sk_pathmeasure_get_matrix(sk_pathmeasure_t* pathMeasure, float distance, sk_matrix_t* matrix, sk_pathmeasure_matrixflags_t flags)
+		// bool sk_pathmeasure_get_matrix(sk_pathmeasure_t * pathMeasure, float distance, sk_matrix_t * matrix, sk_pathmeasure_matrixflags_t flags)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10551,7 +10551,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_get_matrix_delegate ??= GetSymbol<Delegates.sk_pathmeasure_get_matrix> ("sk_pathmeasure_get_matrix")).Invoke (pathMeasure, distance, matrix, flags);
 		#endif
 
-		// bool sk_pathmeasure_get_pos_tan(sk_pathmeasure_t* pathMeasure, float distance, sk_point_t* position, sk_vector_t* tangent)
+		// bool sk_pathmeasure_get_pos_tan(sk_pathmeasure_t * pathMeasure, float distance, sk_point_t * position, sk_vector_t * tangent)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10573,7 +10573,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_get_pos_tan_delegate ??= GetSymbol<Delegates.sk_pathmeasure_get_pos_tan> ("sk_pathmeasure_get_pos_tan")).Invoke (pathMeasure, distance, position, tangent);
 		#endif
 
-		// bool sk_pathmeasure_get_segment(sk_pathmeasure_t* pathMeasure, float start, float stop, sk_path_t* dst, bool startWithMoveTo)
+		// bool sk_pathmeasure_get_segment(sk_pathmeasure_t * pathMeasure, float start, float stop, sk_path_t * dst, bool startWithMoveTo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10595,7 +10595,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_get_segment_delegate ??= GetSymbol<Delegates.sk_pathmeasure_get_segment> ("sk_pathmeasure_get_segment")).Invoke (pathMeasure, start, stop, dst, startWithMoveTo);
 		#endif
 
-		// bool sk_pathmeasure_is_closed(sk_pathmeasure_t* pathMeasure)
+		// bool sk_pathmeasure_is_closed(sk_pathmeasure_t * pathMeasure)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10617,7 +10617,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_is_closed_delegate ??= GetSymbol<Delegates.sk_pathmeasure_is_closed> ("sk_pathmeasure_is_closed")).Invoke (pathMeasure);
 		#endif
 
-		// sk_pathmeasure_t* sk_pathmeasure_new()
+		// sk_pathmeasure_t * sk_pathmeasure_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10636,7 +10636,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_new_delegate ??= GetSymbol<Delegates.sk_pathmeasure_new> ("sk_pathmeasure_new")).Invoke ();
 		#endif
 
-		// sk_pathmeasure_t* sk_pathmeasure_new_with_path(const sk_path_t* path, bool forceClosed, float resScale)
+		// sk_pathmeasure_t * sk_pathmeasure_new_with_path(sk_path_t const * path, bool forceClosed, float resScale)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10655,7 +10655,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_new_with_path_delegate ??= GetSymbol<Delegates.sk_pathmeasure_new_with_path> ("sk_pathmeasure_new_with_path")).Invoke (path, forceClosed, resScale);
 		#endif
 
-		// bool sk_pathmeasure_next_contour(sk_pathmeasure_t* pathMeasure)
+		// bool sk_pathmeasure_next_contour(sk_pathmeasure_t * pathMeasure)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10677,7 +10677,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_next_contour_delegate ??= GetSymbol<Delegates.sk_pathmeasure_next_contour> ("sk_pathmeasure_next_contour")).Invoke (pathMeasure);
 		#endif
 
-		// void sk_pathmeasure_set_path(sk_pathmeasure_t* pathMeasure, const sk_path_t* path, bool forceClosed)
+		// void sk_pathmeasure_set_path(sk_pathmeasure_t * pathMeasure, sk_path_t const * path, bool forceClosed)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10696,7 +10696,7 @@ namespace SkiaSharp
 			(sk_pathmeasure_set_path_delegate ??= GetSymbol<Delegates.sk_pathmeasure_set_path> ("sk_pathmeasure_set_path")).Invoke (pathMeasure, path, forceClosed);
 		#endif
 
-		// bool sk_pathop_as_winding(const sk_path_t* path, sk_path_t* result)
+		// bool sk_pathop_as_winding(sk_path_t const * path, sk_path_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10718,7 +10718,7 @@ namespace SkiaSharp
 			(sk_pathop_as_winding_delegate ??= GetSymbol<Delegates.sk_pathop_as_winding> ("sk_pathop_as_winding")).Invoke (path, result);
 		#endif
 
-		// bool sk_pathop_op(const sk_path_t* one, const sk_path_t* two, sk_pathop_t op, sk_path_t* result)
+		// bool sk_pathop_op(sk_path_t const * one, sk_path_t const * two, sk_pathop_t op, sk_path_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10740,7 +10740,7 @@ namespace SkiaSharp
 			(sk_pathop_op_delegate ??= GetSymbol<Delegates.sk_pathop_op> ("sk_pathop_op")).Invoke (one, two, op, result);
 		#endif
 
-		// bool sk_pathop_simplify(const sk_path_t* path, sk_path_t* result)
+		// bool sk_pathop_simplify(sk_path_t const * path, sk_path_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10762,7 +10762,7 @@ namespace SkiaSharp
 			(sk_pathop_simplify_delegate ??= GetSymbol<Delegates.sk_pathop_simplify> ("sk_pathop_simplify")).Invoke (path, result);
 		#endif
 
-		// bool sk_pathop_tight_bounds(const sk_path_t* path, sk_rect_t* result)
+		// bool sk_pathop_tight_bounds(sk_path_t const * path, sk_rect_t * result)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10788,7 +10788,7 @@ namespace SkiaSharp
 
 		#region sk_patheffect.h
 
-		// sk_path_effect_t* sk_path_effect_create_1d_path(const sk_path_t* path, float advance, float phase, sk_path_effect_1d_style_t style)
+		// sk_path_effect_t * sk_path_effect_create_1d_path(sk_path_t const * path, float advance, float phase, sk_path_effect_1d_style_t style)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10807,7 +10807,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_1d_path_delegate ??= GetSymbol<Delegates.sk_path_effect_create_1d_path> ("sk_path_effect_create_1d_path")).Invoke (path, advance, phase, style);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_2d_line(float width, const sk_matrix_t* matrix)
+		// sk_path_effect_t * sk_path_effect_create_2d_line(float width, sk_matrix_t const * matrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10826,7 +10826,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_2d_line_delegate ??= GetSymbol<Delegates.sk_path_effect_create_2d_line> ("sk_path_effect_create_2d_line")).Invoke (width, matrix);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_2d_path(const sk_matrix_t* matrix, const sk_path_t* path)
+		// sk_path_effect_t * sk_path_effect_create_2d_path(sk_matrix_t const * matrix, sk_path_t const * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10845,7 +10845,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_2d_path_delegate ??= GetSymbol<Delegates.sk_path_effect_create_2d_path> ("sk_path_effect_create_2d_path")).Invoke (matrix, path);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_compose(sk_path_effect_t* outer, sk_path_effect_t* inner)
+		// sk_path_effect_t * sk_path_effect_create_compose(sk_path_effect_t * outer, sk_path_effect_t * inner)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10864,7 +10864,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_compose_delegate ??= GetSymbol<Delegates.sk_path_effect_create_compose> ("sk_path_effect_create_compose")).Invoke (outer, inner);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_corner(float radius)
+		// sk_path_effect_t * sk_path_effect_create_corner(float radius)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10883,7 +10883,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_corner_delegate ??= GetSymbol<Delegates.sk_path_effect_create_corner> ("sk_path_effect_create_corner")).Invoke (radius);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_dash(const float[-1] intervals, int count, float phase)
+		// sk_path_effect_t * sk_path_effect_create_dash(float const[-1] intervals, int count, float phase)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10902,7 +10902,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_dash_delegate ??= GetSymbol<Delegates.sk_path_effect_create_dash> ("sk_path_effect_create_dash")).Invoke (intervals, count, phase);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_discrete(float segLength, float deviation, uint32_t seedAssist)
+		// sk_path_effect_t * sk_path_effect_create_discrete(float segLength, float deviation, unsigned int seedAssist)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10921,7 +10921,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_discrete_delegate ??= GetSymbol<Delegates.sk_path_effect_create_discrete> ("sk_path_effect_create_discrete")).Invoke (segLength, deviation, seedAssist);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_sum(sk_path_effect_t* first, sk_path_effect_t* second)
+		// sk_path_effect_t * sk_path_effect_create_sum(sk_path_effect_t * first, sk_path_effect_t * second)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10940,7 +10940,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_sum_delegate ??= GetSymbol<Delegates.sk_path_effect_create_sum> ("sk_path_effect_create_sum")).Invoke (first, second);
 		#endif
 
-		// sk_path_effect_t* sk_path_effect_create_trim(float start, float stop, sk_path_effect_trim_mode_t mode)
+		// sk_path_effect_t * sk_path_effect_create_trim(float start, float stop, sk_path_effect_trim_mode_t mode)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10959,7 +10959,7 @@ namespace SkiaSharp
 			(sk_path_effect_create_trim_delegate ??= GetSymbol<Delegates.sk_path_effect_create_trim> ("sk_path_effect_create_trim")).Invoke (start, stop, mode);
 		#endif
 
-		// void sk_path_effect_unref(sk_path_effect_t* t)
+		// void sk_path_effect_unref(sk_path_effect_t * t)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -10982,7 +10982,7 @@ namespace SkiaSharp
 
 		#region sk_picture.h
 
-		// size_t sk_picture_approximate_bytes_used(const sk_picture_t* picture)
+		// size_t sk_picture_approximate_bytes_used(sk_picture_t const * picture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11001,7 +11001,7 @@ namespace SkiaSharp
 			(sk_picture_approximate_bytes_used_delegate ??= GetSymbol<Delegates.sk_picture_approximate_bytes_used> ("sk_picture_approximate_bytes_used")).Invoke (picture);
 		#endif
 
-		// int sk_picture_approximate_op_count(const sk_picture_t* picture, bool nested)
+		// int sk_picture_approximate_op_count(sk_picture_t const * picture, bool nested)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11020,7 +11020,7 @@ namespace SkiaSharp
 			(sk_picture_approximate_op_count_delegate ??= GetSymbol<Delegates.sk_picture_approximate_op_count> ("sk_picture_approximate_op_count")).Invoke (picture, nested);
 		#endif
 
-		// sk_picture_t* sk_picture_deserialize_from_data(sk_data_t* data)
+		// sk_picture_t * sk_picture_deserialize_from_data(sk_data_t * data)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11039,7 +11039,7 @@ namespace SkiaSharp
 			(sk_picture_deserialize_from_data_delegate ??= GetSymbol<Delegates.sk_picture_deserialize_from_data> ("sk_picture_deserialize_from_data")).Invoke (data);
 		#endif
 
-		// sk_picture_t* sk_picture_deserialize_from_memory(void* buffer, size_t length)
+		// sk_picture_t * sk_picture_deserialize_from_memory(void * buffer, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11058,7 +11058,7 @@ namespace SkiaSharp
 			(sk_picture_deserialize_from_memory_delegate ??= GetSymbol<Delegates.sk_picture_deserialize_from_memory> ("sk_picture_deserialize_from_memory")).Invoke (buffer, length);
 		#endif
 
-		// sk_picture_t* sk_picture_deserialize_from_stream(sk_stream_t* stream)
+		// sk_picture_t * sk_picture_deserialize_from_stream(sk_stream_t * stream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11077,7 +11077,7 @@ namespace SkiaSharp
 			(sk_picture_deserialize_from_stream_delegate ??= GetSymbol<Delegates.sk_picture_deserialize_from_stream> ("sk_picture_deserialize_from_stream")).Invoke (stream);
 		#endif
 
-		// void sk_picture_get_cull_rect(sk_picture_t*, sk_rect_t*)
+		// void sk_picture_get_cull_rect(sk_picture_t *, sk_rect_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11096,7 +11096,7 @@ namespace SkiaSharp
 			(sk_picture_get_cull_rect_delegate ??= GetSymbol<Delegates.sk_picture_get_cull_rect> ("sk_picture_get_cull_rect")).Invoke (param0, param1);
 		#endif
 
-		// sk_canvas_t* sk_picture_get_recording_canvas(sk_picture_recorder_t* crec)
+		// sk_canvas_t * sk_picture_get_recording_canvas(sk_picture_recorder_t * crec)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11115,7 +11115,7 @@ namespace SkiaSharp
 			(sk_picture_get_recording_canvas_delegate ??= GetSymbol<Delegates.sk_picture_get_recording_canvas> ("sk_picture_get_recording_canvas")).Invoke (crec);
 		#endif
 
-		// uint32_t sk_picture_get_unique_id(sk_picture_t*)
+		// unsigned int sk_picture_get_unique_id(sk_picture_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11134,7 +11134,7 @@ namespace SkiaSharp
 			(sk_picture_get_unique_id_delegate ??= GetSymbol<Delegates.sk_picture_get_unique_id> ("sk_picture_get_unique_id")).Invoke (param0);
 		#endif
 
-		// sk_shader_t* sk_picture_make_shader(sk_picture_t* src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, sk_filter_mode_t mode, const sk_matrix_t* localMatrix, const sk_rect_t* tile)
+		// sk_shader_t * sk_picture_make_shader(sk_picture_t * src, sk_shader_tilemode_t tmx, sk_shader_tilemode_t tmy, sk_filter_mode_t mode, sk_matrix_t const * localMatrix, sk_rect_t const * tile)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11153,7 +11153,7 @@ namespace SkiaSharp
 			(sk_picture_make_shader_delegate ??= GetSymbol<Delegates.sk_picture_make_shader> ("sk_picture_make_shader")).Invoke (src, tmx, tmy, mode, localMatrix, tile);
 		#endif
 
-		// void sk_picture_playback(const sk_picture_t* picture, sk_canvas_t* canvas)
+		// void sk_picture_playback(sk_picture_t const * picture, sk_canvas_t * canvas)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11172,7 +11172,7 @@ namespace SkiaSharp
 			(sk_picture_playback_delegate ??= GetSymbol<Delegates.sk_picture_playback> ("sk_picture_playback")).Invoke (picture, canvas);
 		#endif
 
-		// sk_canvas_t* sk_picture_recorder_begin_recording(sk_picture_recorder_t*, const sk_rect_t*)
+		// sk_canvas_t * sk_picture_recorder_begin_recording(sk_picture_recorder_t *, sk_rect_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11191,7 +11191,7 @@ namespace SkiaSharp
 			(sk_picture_recorder_begin_recording_delegate ??= GetSymbol<Delegates.sk_picture_recorder_begin_recording> ("sk_picture_recorder_begin_recording")).Invoke (param0, param1);
 		#endif
 
-		// sk_canvas_t* sk_picture_recorder_begin_recording_with_bbh_factory(sk_picture_recorder_t*, const sk_rect_t*, sk_bbh_factory_t*)
+		// sk_canvas_t * sk_picture_recorder_begin_recording_with_bbh_factory(sk_picture_recorder_t *, sk_rect_t const *, sk_bbh_factory_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11210,7 +11210,7 @@ namespace SkiaSharp
 			(sk_picture_recorder_begin_recording_with_bbh_factory_delegate ??= GetSymbol<Delegates.sk_picture_recorder_begin_recording_with_bbh_factory> ("sk_picture_recorder_begin_recording_with_bbh_factory")).Invoke (param0, param1, param2);
 		#endif
 
-		// void sk_picture_recorder_delete(sk_picture_recorder_t*)
+		// void sk_picture_recorder_delete(sk_picture_recorder_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11229,7 +11229,7 @@ namespace SkiaSharp
 			(sk_picture_recorder_delete_delegate ??= GetSymbol<Delegates.sk_picture_recorder_delete> ("sk_picture_recorder_delete")).Invoke (param0);
 		#endif
 
-		// sk_picture_t* sk_picture_recorder_end_recording(sk_picture_recorder_t*)
+		// sk_picture_t * sk_picture_recorder_end_recording(sk_picture_recorder_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11248,7 +11248,7 @@ namespace SkiaSharp
 			(sk_picture_recorder_end_recording_delegate ??= GetSymbol<Delegates.sk_picture_recorder_end_recording> ("sk_picture_recorder_end_recording")).Invoke (param0);
 		#endif
 
-		// sk_drawable_t* sk_picture_recorder_end_recording_as_drawable(sk_picture_recorder_t*)
+		// sk_drawable_t * sk_picture_recorder_end_recording_as_drawable(sk_picture_recorder_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11267,7 +11267,7 @@ namespace SkiaSharp
 			(sk_picture_recorder_end_recording_as_drawable_delegate ??= GetSymbol<Delegates.sk_picture_recorder_end_recording_as_drawable> ("sk_picture_recorder_end_recording_as_drawable")).Invoke (param0);
 		#endif
 
-		// sk_picture_recorder_t* sk_picture_recorder_new()
+		// sk_picture_recorder_t * sk_picture_recorder_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11286,7 +11286,7 @@ namespace SkiaSharp
 			(sk_picture_recorder_new_delegate ??= GetSymbol<Delegates.sk_picture_recorder_new> ("sk_picture_recorder_new")).Invoke ();
 		#endif
 
-		// void sk_picture_ref(sk_picture_t*)
+		// void sk_picture_ref(sk_picture_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11305,7 +11305,7 @@ namespace SkiaSharp
 			(sk_picture_ref_delegate ??= GetSymbol<Delegates.sk_picture_ref> ("sk_picture_ref")).Invoke (param0);
 		#endif
 
-		// sk_data_t* sk_picture_serialize_to_data(const sk_picture_t* picture)
+		// sk_data_t * sk_picture_serialize_to_data(sk_picture_t const * picture)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11324,7 +11324,7 @@ namespace SkiaSharp
 			(sk_picture_serialize_to_data_delegate ??= GetSymbol<Delegates.sk_picture_serialize_to_data> ("sk_picture_serialize_to_data")).Invoke (picture);
 		#endif
 
-		// void sk_picture_serialize_to_stream(const sk_picture_t* picture, sk_wstream_t* stream)
+		// void sk_picture_serialize_to_stream(sk_picture_t const * picture, sk_wstream_t * stream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11343,7 +11343,7 @@ namespace SkiaSharp
 			(sk_picture_serialize_to_stream_delegate ??= GetSymbol<Delegates.sk_picture_serialize_to_stream> ("sk_picture_serialize_to_stream")).Invoke (picture, stream);
 		#endif
 
-		// void sk_picture_unref(sk_picture_t*)
+		// void sk_picture_unref(sk_picture_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11362,7 +11362,7 @@ namespace SkiaSharp
 			(sk_picture_unref_delegate ??= GetSymbol<Delegates.sk_picture_unref> ("sk_picture_unref")).Invoke (param0);
 		#endif
 
-		// void sk_rtree_factory_delete(sk_rtree_factory_t*)
+		// void sk_rtree_factory_delete(sk_rtree_factory_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11381,7 +11381,7 @@ namespace SkiaSharp
 			(sk_rtree_factory_delete_delegate ??= GetSymbol<Delegates.sk_rtree_factory_delete> ("sk_rtree_factory_delete")).Invoke (param0);
 		#endif
 
-		// sk_rtree_factory_t* sk_rtree_factory_new()
+		// sk_rtree_factory_t * sk_rtree_factory_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11404,7 +11404,7 @@ namespace SkiaSharp
 
 		#region sk_pixmap.h
 
-		// void sk_color_get_bit_shift(int* a, int* r, int* g, int* b)
+		// void sk_color_get_bit_shift(int * a, int * r, int * g, int * b)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11423,7 +11423,7 @@ namespace SkiaSharp
 			(sk_color_get_bit_shift_delegate ??= GetSymbol<Delegates.sk_color_get_bit_shift> ("sk_color_get_bit_shift")).Invoke (a, r, g, b);
 		#endif
 
-		// sk_pmcolor_t sk_color_premultiply(const sk_color_t color)
+		// sk_pmcolor_t sk_color_premultiply(sk_color_t const color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11442,7 +11442,7 @@ namespace SkiaSharp
 			(sk_color_premultiply_delegate ??= GetSymbol<Delegates.sk_color_premultiply> ("sk_color_premultiply")).Invoke (color);
 		#endif
 
-		// void sk_color_premultiply_array(const sk_color_t* colors, int size, sk_pmcolor_t* pmcolors)
+		// void sk_color_premultiply_array(sk_color_t const * colors, int size, sk_pmcolor_t * pmcolors)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11461,7 +11461,7 @@ namespace SkiaSharp
 			(sk_color_premultiply_array_delegate ??= GetSymbol<Delegates.sk_color_premultiply_array> ("sk_color_premultiply_array")).Invoke (colors, size, pmcolors);
 		#endif
 
-		// sk_color_t sk_color_unpremultiply(const sk_pmcolor_t pmcolor)
+		// sk_color_t sk_color_unpremultiply(sk_pmcolor_t const pmcolor)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11480,7 +11480,7 @@ namespace SkiaSharp
 			(sk_color_unpremultiply_delegate ??= GetSymbol<Delegates.sk_color_unpremultiply> ("sk_color_unpremultiply")).Invoke (pmcolor);
 		#endif
 
-		// void sk_color_unpremultiply_array(const sk_pmcolor_t* pmcolors, int size, sk_color_t* colors)
+		// void sk_color_unpremultiply_array(sk_pmcolor_t const * pmcolors, int size, sk_color_t * colors)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11499,7 +11499,7 @@ namespace SkiaSharp
 			(sk_color_unpremultiply_array_delegate ??= GetSymbol<Delegates.sk_color_unpremultiply_array> ("sk_color_unpremultiply_array")).Invoke (pmcolors, size, colors);
 		#endif
 
-		// bool sk_jpegencoder_encode(sk_wstream_t* dst, const sk_pixmap_t* src, const sk_jpegencoder_options_t* options)
+		// bool sk_jpegencoder_encode(sk_wstream_t * dst, sk_pixmap_t const * src, sk_jpegencoder_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11521,7 +11521,7 @@ namespace SkiaSharp
 			(sk_jpegencoder_encode_delegate ??= GetSymbol<Delegates.sk_jpegencoder_encode> ("sk_jpegencoder_encode")).Invoke (dst, src, options);
 		#endif
 
-		// bool sk_pixmap_compute_is_opaque(const sk_pixmap_t* cpixmap)
+		// bool sk_pixmap_compute_is_opaque(sk_pixmap_t const * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11543,7 +11543,7 @@ namespace SkiaSharp
 			(sk_pixmap_compute_is_opaque_delegate ??= GetSymbol<Delegates.sk_pixmap_compute_is_opaque> ("sk_pixmap_compute_is_opaque")).Invoke (cpixmap);
 		#endif
 
-		// void sk_pixmap_destructor(sk_pixmap_t* cpixmap)
+		// void sk_pixmap_destructor(sk_pixmap_t * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11562,7 +11562,7 @@ namespace SkiaSharp
 			(sk_pixmap_destructor_delegate ??= GetSymbol<Delegates.sk_pixmap_destructor> ("sk_pixmap_destructor")).Invoke (cpixmap);
 		#endif
 
-		// bool sk_pixmap_erase_color(const sk_pixmap_t* cpixmap, sk_color_t color, const sk_irect_t* subset)
+		// bool sk_pixmap_erase_color(sk_pixmap_t const * cpixmap, sk_color_t color, sk_irect_t const * subset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11584,7 +11584,7 @@ namespace SkiaSharp
 			(sk_pixmap_erase_color_delegate ??= GetSymbol<Delegates.sk_pixmap_erase_color> ("sk_pixmap_erase_color")).Invoke (cpixmap, color, subset);
 		#endif
 
-		// bool sk_pixmap_erase_color4f(const sk_pixmap_t* cpixmap, const sk_color4f_t* color, const sk_irect_t* subset)
+		// bool sk_pixmap_erase_color4f(sk_pixmap_t const * cpixmap, sk_color4f_t const * color, sk_irect_t const * subset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11606,7 +11606,7 @@ namespace SkiaSharp
 			(sk_pixmap_erase_color4f_delegate ??= GetSymbol<Delegates.sk_pixmap_erase_color4f> ("sk_pixmap_erase_color4f")).Invoke (cpixmap, color, subset);
 		#endif
 
-		// bool sk_pixmap_extract_subset(const sk_pixmap_t* cpixmap, sk_pixmap_t* result, const sk_irect_t* subset)
+		// bool sk_pixmap_extract_subset(sk_pixmap_t const * cpixmap, sk_pixmap_t * result, sk_irect_t const * subset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11628,7 +11628,7 @@ namespace SkiaSharp
 			(sk_pixmap_extract_subset_delegate ??= GetSymbol<Delegates.sk_pixmap_extract_subset> ("sk_pixmap_extract_subset")).Invoke (cpixmap, result, subset);
 		#endif
 
-		// sk_colorspace_t* sk_pixmap_get_colorspace(const sk_pixmap_t* cpixmap)
+		// sk_colorspace_t * sk_pixmap_get_colorspace(sk_pixmap_t const * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11647,7 +11647,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_colorspace_delegate ??= GetSymbol<Delegates.sk_pixmap_get_colorspace> ("sk_pixmap_get_colorspace")).Invoke (cpixmap);
 		#endif
 
-		// void sk_pixmap_get_info(const sk_pixmap_t* cpixmap, sk_imageinfo_t* cinfo)
+		// void sk_pixmap_get_info(sk_pixmap_t const * cpixmap, sk_imageinfo_t * cinfo)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11666,7 +11666,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_info_delegate ??= GetSymbol<Delegates.sk_pixmap_get_info> ("sk_pixmap_get_info")).Invoke (cpixmap, cinfo);
 		#endif
 
-		// float sk_pixmap_get_pixel_alphaf(const sk_pixmap_t* cpixmap, int x, int y)
+		// float sk_pixmap_get_pixel_alphaf(sk_pixmap_t const * cpixmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11685,7 +11685,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_pixel_alphaf_delegate ??= GetSymbol<Delegates.sk_pixmap_get_pixel_alphaf> ("sk_pixmap_get_pixel_alphaf")).Invoke (cpixmap, x, y);
 		#endif
 
-		// sk_color_t sk_pixmap_get_pixel_color(const sk_pixmap_t* cpixmap, int x, int y)
+		// sk_color_t sk_pixmap_get_pixel_color(sk_pixmap_t const * cpixmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11704,7 +11704,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_pixel_color_delegate ??= GetSymbol<Delegates.sk_pixmap_get_pixel_color> ("sk_pixmap_get_pixel_color")).Invoke (cpixmap, x, y);
 		#endif
 
-		// void sk_pixmap_get_pixel_color4f(const sk_pixmap_t* cpixmap, int x, int y, sk_color4f_t* color)
+		// void sk_pixmap_get_pixel_color4f(sk_pixmap_t const * cpixmap, int x, int y, sk_color4f_t * color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11723,7 +11723,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_pixel_color4f_delegate ??= GetSymbol<Delegates.sk_pixmap_get_pixel_color4f> ("sk_pixmap_get_pixel_color4f")).Invoke (cpixmap, x, y, color);
 		#endif
 
-		// size_t sk_pixmap_get_row_bytes(const sk_pixmap_t* cpixmap)
+		// size_t sk_pixmap_get_row_bytes(sk_pixmap_t const * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11742,7 +11742,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_row_bytes_delegate ??= GetSymbol<Delegates.sk_pixmap_get_row_bytes> ("sk_pixmap_get_row_bytes")).Invoke (cpixmap);
 		#endif
 
-		// void* sk_pixmap_get_writable_addr(const sk_pixmap_t* cpixmap)
+		// void * sk_pixmap_get_writable_addr(sk_pixmap_t const * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11761,7 +11761,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_writable_addr_delegate ??= GetSymbol<Delegates.sk_pixmap_get_writable_addr> ("sk_pixmap_get_writable_addr")).Invoke (cpixmap);
 		#endif
 
-		// void* sk_pixmap_get_writeable_addr_with_xy(const sk_pixmap_t* cpixmap, int x, int y)
+		// void * sk_pixmap_get_writeable_addr_with_xy(sk_pixmap_t const * cpixmap, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11780,7 +11780,7 @@ namespace SkiaSharp
 			(sk_pixmap_get_writeable_addr_with_xy_delegate ??= GetSymbol<Delegates.sk_pixmap_get_writeable_addr_with_xy> ("sk_pixmap_get_writeable_addr_with_xy")).Invoke (cpixmap, x, y);
 		#endif
 
-		// sk_pixmap_t* sk_pixmap_new()
+		// sk_pixmap_t * sk_pixmap_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11799,7 +11799,7 @@ namespace SkiaSharp
 			(sk_pixmap_new_delegate ??= GetSymbol<Delegates.sk_pixmap_new> ("sk_pixmap_new")).Invoke ();
 		#endif
 
-		// sk_pixmap_t* sk_pixmap_new_with_params(const sk_imageinfo_t* cinfo, const void* addr, size_t rowBytes)
+		// sk_pixmap_t * sk_pixmap_new_with_params(sk_imageinfo_t const * cinfo, void const * addr, size_t rowBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11818,7 +11818,7 @@ namespace SkiaSharp
 			(sk_pixmap_new_with_params_delegate ??= GetSymbol<Delegates.sk_pixmap_new_with_params> ("sk_pixmap_new_with_params")).Invoke (cinfo, addr, rowBytes);
 		#endif
 
-		// bool sk_pixmap_read_pixels(const sk_pixmap_t* cpixmap, const sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY)
+		// bool sk_pixmap_read_pixels(sk_pixmap_t const * cpixmap, sk_imageinfo_t const * dstInfo, void * dstPixels, size_t dstRowBytes, int srcX, int srcY)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11840,7 +11840,7 @@ namespace SkiaSharp
 			(sk_pixmap_read_pixels_delegate ??= GetSymbol<Delegates.sk_pixmap_read_pixels> ("sk_pixmap_read_pixels")).Invoke (cpixmap, dstInfo, dstPixels, dstRowBytes, srcX, srcY);
 		#endif
 
-		// void sk_pixmap_reset(sk_pixmap_t* cpixmap)
+		// void sk_pixmap_reset(sk_pixmap_t * cpixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11859,7 +11859,7 @@ namespace SkiaSharp
 			(sk_pixmap_reset_delegate ??= GetSymbol<Delegates.sk_pixmap_reset> ("sk_pixmap_reset")).Invoke (cpixmap);
 		#endif
 
-		// void sk_pixmap_reset_with_params(sk_pixmap_t* cpixmap, const sk_imageinfo_t* cinfo, const void* addr, size_t rowBytes)
+		// void sk_pixmap_reset_with_params(sk_pixmap_t * cpixmap, sk_imageinfo_t const * cinfo, void const * addr, size_t rowBytes)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11878,7 +11878,7 @@ namespace SkiaSharp
 			(sk_pixmap_reset_with_params_delegate ??= GetSymbol<Delegates.sk_pixmap_reset_with_params> ("sk_pixmap_reset_with_params")).Invoke (cpixmap, cinfo, addr, rowBytes);
 		#endif
 
-		// bool sk_pixmap_scale_pixels(const sk_pixmap_t* cpixmap, const sk_pixmap_t* dst, const sk_sampling_options_t* sampling)
+		// bool sk_pixmap_scale_pixels(sk_pixmap_t const * cpixmap, sk_pixmap_t const * dst, sk_sampling_options_t const * sampling)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11900,7 +11900,7 @@ namespace SkiaSharp
 			(sk_pixmap_scale_pixels_delegate ??= GetSymbol<Delegates.sk_pixmap_scale_pixels> ("sk_pixmap_scale_pixels")).Invoke (cpixmap, dst, sampling);
 		#endif
 
-		// void sk_pixmap_set_colorspace(sk_pixmap_t* cpixmap, sk_colorspace_t* colorspace)
+		// void sk_pixmap_set_colorspace(sk_pixmap_t * cpixmap, sk_colorspace_t * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11919,7 +11919,7 @@ namespace SkiaSharp
 			(sk_pixmap_set_colorspace_delegate ??= GetSymbol<Delegates.sk_pixmap_set_colorspace> ("sk_pixmap_set_colorspace")).Invoke (cpixmap, colorspace);
 		#endif
 
-		// bool sk_pngencoder_encode(sk_wstream_t* dst, const sk_pixmap_t* src, const sk_pngencoder_options_t* options)
+		// bool sk_pngencoder_encode(sk_wstream_t * dst, sk_pixmap_t const * src, sk_pngencoder_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11941,7 +11941,7 @@ namespace SkiaSharp
 			(sk_pngencoder_encode_delegate ??= GetSymbol<Delegates.sk_pngencoder_encode> ("sk_pngencoder_encode")).Invoke (dst, src, options);
 		#endif
 
-		// void sk_swizzle_swap_rb(uint32_t* dest, const uint32_t* src, int count)
+		// void sk_swizzle_swap_rb(unsigned int * dest, unsigned int const * src, int count)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11960,7 +11960,7 @@ namespace SkiaSharp
 			(sk_swizzle_swap_rb_delegate ??= GetSymbol<Delegates.sk_swizzle_swap_rb> ("sk_swizzle_swap_rb")).Invoke (dest, src, count);
 		#endif
 
-		// bool sk_webpencoder_encode(sk_wstream_t* dst, const sk_pixmap_t* src, const sk_webpencoder_options_t* options)
+		// bool sk_webpencoder_encode(sk_wstream_t * dst, sk_pixmap_t const * src, sk_webpencoder_options_t const * options)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -11986,7 +11986,7 @@ namespace SkiaSharp
 
 		#region sk_region.h
 
-		// void sk_region_cliperator_delete(sk_region_cliperator_t* iter)
+		// void sk_region_cliperator_delete(sk_region_cliperator_t * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12005,7 +12005,7 @@ namespace SkiaSharp
 			(sk_region_cliperator_delete_delegate ??= GetSymbol<Delegates.sk_region_cliperator_delete> ("sk_region_cliperator_delete")).Invoke (iter);
 		#endif
 
-		// bool sk_region_cliperator_done(sk_region_cliperator_t* iter)
+		// bool sk_region_cliperator_done(sk_region_cliperator_t * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12027,7 +12027,7 @@ namespace SkiaSharp
 			(sk_region_cliperator_done_delegate ??= GetSymbol<Delegates.sk_region_cliperator_done> ("sk_region_cliperator_done")).Invoke (iter);
 		#endif
 
-		// sk_region_cliperator_t* sk_region_cliperator_new(const sk_region_t* region, const sk_irect_t* clip)
+		// sk_region_cliperator_t * sk_region_cliperator_new(sk_region_t const * region, sk_irect_t const * clip)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12046,7 +12046,7 @@ namespace SkiaSharp
 			(sk_region_cliperator_new_delegate ??= GetSymbol<Delegates.sk_region_cliperator_new> ("sk_region_cliperator_new")).Invoke (region, clip);
 		#endif
 
-		// void sk_region_cliperator_next(sk_region_cliperator_t* iter)
+		// void sk_region_cliperator_next(sk_region_cliperator_t * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12065,7 +12065,7 @@ namespace SkiaSharp
 			(sk_region_cliperator_next_delegate ??= GetSymbol<Delegates.sk_region_cliperator_next> ("sk_region_cliperator_next")).Invoke (iter);
 		#endif
 
-		// void sk_region_cliperator_rect(const sk_region_cliperator_t* iter, sk_irect_t* rect)
+		// void sk_region_cliperator_rect(sk_region_cliperator_t const * iter, sk_irect_t * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12084,7 +12084,7 @@ namespace SkiaSharp
 			(sk_region_cliperator_rect_delegate ??= GetSymbol<Delegates.sk_region_cliperator_rect> ("sk_region_cliperator_rect")).Invoke (iter, rect);
 		#endif
 
-		// bool sk_region_contains(const sk_region_t* r, const sk_region_t* region)
+		// bool sk_region_contains(sk_region_t const * r, sk_region_t const * region)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12106,7 +12106,7 @@ namespace SkiaSharp
 			(sk_region_contains_delegate ??= GetSymbol<Delegates.sk_region_contains> ("sk_region_contains")).Invoke (r, region);
 		#endif
 
-		// bool sk_region_contains_point(const sk_region_t* r, int x, int y)
+		// bool sk_region_contains_point(sk_region_t const * r, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12128,7 +12128,7 @@ namespace SkiaSharp
 			(sk_region_contains_point_delegate ??= GetSymbol<Delegates.sk_region_contains_point> ("sk_region_contains_point")).Invoke (r, x, y);
 		#endif
 
-		// bool sk_region_contains_rect(const sk_region_t* r, const sk_irect_t* rect)
+		// bool sk_region_contains_rect(sk_region_t const * r, sk_irect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12150,7 +12150,7 @@ namespace SkiaSharp
 			(sk_region_contains_rect_delegate ??= GetSymbol<Delegates.sk_region_contains_rect> ("sk_region_contains_rect")).Invoke (r, rect);
 		#endif
 
-		// void sk_region_delete(sk_region_t* r)
+		// void sk_region_delete(sk_region_t * r)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12169,7 +12169,7 @@ namespace SkiaSharp
 			(sk_region_delete_delegate ??= GetSymbol<Delegates.sk_region_delete> ("sk_region_delete")).Invoke (r);
 		#endif
 
-		// bool sk_region_get_boundary_path(const sk_region_t* r, sk_path_t* path)
+		// bool sk_region_get_boundary_path(sk_region_t const * r, sk_path_t * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12191,7 +12191,7 @@ namespace SkiaSharp
 			(sk_region_get_boundary_path_delegate ??= GetSymbol<Delegates.sk_region_get_boundary_path> ("sk_region_get_boundary_path")).Invoke (r, path);
 		#endif
 
-		// void sk_region_get_bounds(const sk_region_t* r, sk_irect_t* rect)
+		// void sk_region_get_bounds(sk_region_t const * r, sk_irect_t * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12210,7 +12210,7 @@ namespace SkiaSharp
 			(sk_region_get_bounds_delegate ??= GetSymbol<Delegates.sk_region_get_bounds> ("sk_region_get_bounds")).Invoke (r, rect);
 		#endif
 
-		// bool sk_region_intersects(const sk_region_t* r, const sk_region_t* src)
+		// bool sk_region_intersects(sk_region_t const * r, sk_region_t const * src)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12232,7 +12232,7 @@ namespace SkiaSharp
 			(sk_region_intersects_delegate ??= GetSymbol<Delegates.sk_region_intersects> ("sk_region_intersects")).Invoke (r, src);
 		#endif
 
-		// bool sk_region_intersects_rect(const sk_region_t* r, const sk_irect_t* rect)
+		// bool sk_region_intersects_rect(sk_region_t const * r, sk_irect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12254,7 +12254,7 @@ namespace SkiaSharp
 			(sk_region_intersects_rect_delegate ??= GetSymbol<Delegates.sk_region_intersects_rect> ("sk_region_intersects_rect")).Invoke (r, rect);
 		#endif
 
-		// bool sk_region_is_complex(const sk_region_t* r)
+		// bool sk_region_is_complex(sk_region_t const * r)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12276,7 +12276,7 @@ namespace SkiaSharp
 			(sk_region_is_complex_delegate ??= GetSymbol<Delegates.sk_region_is_complex> ("sk_region_is_complex")).Invoke (r);
 		#endif
 
-		// bool sk_region_is_empty(const sk_region_t* r)
+		// bool sk_region_is_empty(sk_region_t const * r)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12298,7 +12298,7 @@ namespace SkiaSharp
 			(sk_region_is_empty_delegate ??= GetSymbol<Delegates.sk_region_is_empty> ("sk_region_is_empty")).Invoke (r);
 		#endif
 
-		// bool sk_region_is_rect(const sk_region_t* r)
+		// bool sk_region_is_rect(sk_region_t const * r)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12320,7 +12320,7 @@ namespace SkiaSharp
 			(sk_region_is_rect_delegate ??= GetSymbol<Delegates.sk_region_is_rect> ("sk_region_is_rect")).Invoke (r);
 		#endif
 
-		// void sk_region_iterator_delete(sk_region_iterator_t* iter)
+		// void sk_region_iterator_delete(sk_region_iterator_t * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12339,7 +12339,7 @@ namespace SkiaSharp
 			(sk_region_iterator_delete_delegate ??= GetSymbol<Delegates.sk_region_iterator_delete> ("sk_region_iterator_delete")).Invoke (iter);
 		#endif
 
-		// bool sk_region_iterator_done(const sk_region_iterator_t* iter)
+		// bool sk_region_iterator_done(sk_region_iterator_t const * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12361,7 +12361,7 @@ namespace SkiaSharp
 			(sk_region_iterator_done_delegate ??= GetSymbol<Delegates.sk_region_iterator_done> ("sk_region_iterator_done")).Invoke (iter);
 		#endif
 
-		// sk_region_iterator_t* sk_region_iterator_new(const sk_region_t* region)
+		// sk_region_iterator_t * sk_region_iterator_new(sk_region_t const * region)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12380,7 +12380,7 @@ namespace SkiaSharp
 			(sk_region_iterator_new_delegate ??= GetSymbol<Delegates.sk_region_iterator_new> ("sk_region_iterator_new")).Invoke (region);
 		#endif
 
-		// void sk_region_iterator_next(sk_region_iterator_t* iter)
+		// void sk_region_iterator_next(sk_region_iterator_t * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12399,7 +12399,7 @@ namespace SkiaSharp
 			(sk_region_iterator_next_delegate ??= GetSymbol<Delegates.sk_region_iterator_next> ("sk_region_iterator_next")).Invoke (iter);
 		#endif
 
-		// void sk_region_iterator_rect(const sk_region_iterator_t* iter, sk_irect_t* rect)
+		// void sk_region_iterator_rect(sk_region_iterator_t const * iter, sk_irect_t * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12418,7 +12418,7 @@ namespace SkiaSharp
 			(sk_region_iterator_rect_delegate ??= GetSymbol<Delegates.sk_region_iterator_rect> ("sk_region_iterator_rect")).Invoke (iter, rect);
 		#endif
 
-		// bool sk_region_iterator_rewind(sk_region_iterator_t* iter)
+		// bool sk_region_iterator_rewind(sk_region_iterator_t * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12440,7 +12440,7 @@ namespace SkiaSharp
 			(sk_region_iterator_rewind_delegate ??= GetSymbol<Delegates.sk_region_iterator_rewind> ("sk_region_iterator_rewind")).Invoke (iter);
 		#endif
 
-		// sk_region_t* sk_region_new()
+		// sk_region_t * sk_region_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12459,7 +12459,7 @@ namespace SkiaSharp
 			(sk_region_new_delegate ??= GetSymbol<Delegates.sk_region_new> ("sk_region_new")).Invoke ();
 		#endif
 
-		// bool sk_region_op(sk_region_t* r, const sk_region_t* region, sk_region_op_t op)
+		// bool sk_region_op(sk_region_t * r, sk_region_t const * region, sk_region_op_t op)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12481,7 +12481,7 @@ namespace SkiaSharp
 			(sk_region_op_delegate ??= GetSymbol<Delegates.sk_region_op> ("sk_region_op")).Invoke (r, region, op);
 		#endif
 
-		// bool sk_region_op_rect(sk_region_t* r, const sk_irect_t* rect, sk_region_op_t op)
+		// bool sk_region_op_rect(sk_region_t * r, sk_irect_t const * rect, sk_region_op_t op)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12503,7 +12503,7 @@ namespace SkiaSharp
 			(sk_region_op_rect_delegate ??= GetSymbol<Delegates.sk_region_op_rect> ("sk_region_op_rect")).Invoke (r, rect, op);
 		#endif
 
-		// bool sk_region_quick_contains(const sk_region_t* r, const sk_irect_t* rect)
+		// bool sk_region_quick_contains(sk_region_t const * r, sk_irect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12525,7 +12525,7 @@ namespace SkiaSharp
 			(sk_region_quick_contains_delegate ??= GetSymbol<Delegates.sk_region_quick_contains> ("sk_region_quick_contains")).Invoke (r, rect);
 		#endif
 
-		// bool sk_region_quick_reject(const sk_region_t* r, const sk_region_t* region)
+		// bool sk_region_quick_reject(sk_region_t const * r, sk_region_t const * region)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12547,7 +12547,7 @@ namespace SkiaSharp
 			(sk_region_quick_reject_delegate ??= GetSymbol<Delegates.sk_region_quick_reject> ("sk_region_quick_reject")).Invoke (r, region);
 		#endif
 
-		// bool sk_region_quick_reject_rect(const sk_region_t* r, const sk_irect_t* rect)
+		// bool sk_region_quick_reject_rect(sk_region_t const * r, sk_irect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12569,7 +12569,7 @@ namespace SkiaSharp
 			(sk_region_quick_reject_rect_delegate ??= GetSymbol<Delegates.sk_region_quick_reject_rect> ("sk_region_quick_reject_rect")).Invoke (r, rect);
 		#endif
 
-		// bool sk_region_set_empty(sk_region_t* r)
+		// bool sk_region_set_empty(sk_region_t * r)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12591,7 +12591,7 @@ namespace SkiaSharp
 			(sk_region_set_empty_delegate ??= GetSymbol<Delegates.sk_region_set_empty> ("sk_region_set_empty")).Invoke (r);
 		#endif
 
-		// bool sk_region_set_path(sk_region_t* r, const sk_path_t* t, const sk_region_t* clip)
+		// bool sk_region_set_path(sk_region_t * r, sk_path_t const * t, sk_region_t const * clip)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12613,7 +12613,7 @@ namespace SkiaSharp
 			(sk_region_set_path_delegate ??= GetSymbol<Delegates.sk_region_set_path> ("sk_region_set_path")).Invoke (r, t, clip);
 		#endif
 
-		// bool sk_region_set_rect(sk_region_t* r, const sk_irect_t* rect)
+		// bool sk_region_set_rect(sk_region_t * r, sk_irect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12635,7 +12635,7 @@ namespace SkiaSharp
 			(sk_region_set_rect_delegate ??= GetSymbol<Delegates.sk_region_set_rect> ("sk_region_set_rect")).Invoke (r, rect);
 		#endif
 
-		// bool sk_region_set_rects(sk_region_t* r, const sk_irect_t* rects, int count)
+		// bool sk_region_set_rects(sk_region_t * r, sk_irect_t const * rects, int count)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12657,7 +12657,7 @@ namespace SkiaSharp
 			(sk_region_set_rects_delegate ??= GetSymbol<Delegates.sk_region_set_rects> ("sk_region_set_rects")).Invoke (r, rects, count);
 		#endif
 
-		// bool sk_region_set_region(sk_region_t* r, const sk_region_t* region)
+		// bool sk_region_set_region(sk_region_t * r, sk_region_t const * region)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12679,7 +12679,7 @@ namespace SkiaSharp
 			(sk_region_set_region_delegate ??= GetSymbol<Delegates.sk_region_set_region> ("sk_region_set_region")).Invoke (r, region);
 		#endif
 
-		// void sk_region_spanerator_delete(sk_region_spanerator_t* iter)
+		// void sk_region_spanerator_delete(sk_region_spanerator_t * iter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12698,7 +12698,7 @@ namespace SkiaSharp
 			(sk_region_spanerator_delete_delegate ??= GetSymbol<Delegates.sk_region_spanerator_delete> ("sk_region_spanerator_delete")).Invoke (iter);
 		#endif
 
-		// sk_region_spanerator_t* sk_region_spanerator_new(const sk_region_t* region, int y, int left, int right)
+		// sk_region_spanerator_t * sk_region_spanerator_new(sk_region_t const * region, int y, int left, int right)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12717,7 +12717,7 @@ namespace SkiaSharp
 			(sk_region_spanerator_new_delegate ??= GetSymbol<Delegates.sk_region_spanerator_new> ("sk_region_spanerator_new")).Invoke (region, y, left, right);
 		#endif
 
-		// bool sk_region_spanerator_next(sk_region_spanerator_t* iter, int* left, int* right)
+		// bool sk_region_spanerator_next(sk_region_spanerator_t * iter, int * left, int * right)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12739,7 +12739,7 @@ namespace SkiaSharp
 			(sk_region_spanerator_next_delegate ??= GetSymbol<Delegates.sk_region_spanerator_next> ("sk_region_spanerator_next")).Invoke (iter, left, right);
 		#endif
 
-		// void sk_region_translate(sk_region_t* r, int x, int y)
+		// void sk_region_translate(sk_region_t * r, int x, int y)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12762,7 +12762,7 @@ namespace SkiaSharp
 
 		#region sk_rrect.h
 
-		// bool sk_rrect_contains(const sk_rrect_t* rrect, const sk_rect_t* rect)
+		// bool sk_rrect_contains(sk_rrect_t const * rrect, sk_rect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12784,7 +12784,7 @@ namespace SkiaSharp
 			(sk_rrect_contains_delegate ??= GetSymbol<Delegates.sk_rrect_contains> ("sk_rrect_contains")).Invoke (rrect, rect);
 		#endif
 
-		// void sk_rrect_delete(const sk_rrect_t* rrect)
+		// void sk_rrect_delete(sk_rrect_t const * rrect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12803,7 +12803,7 @@ namespace SkiaSharp
 			(sk_rrect_delete_delegate ??= GetSymbol<Delegates.sk_rrect_delete> ("sk_rrect_delete")).Invoke (rrect);
 		#endif
 
-		// float sk_rrect_get_height(const sk_rrect_t* rrect)
+		// float sk_rrect_get_height(sk_rrect_t const * rrect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12822,7 +12822,7 @@ namespace SkiaSharp
 			(sk_rrect_get_height_delegate ??= GetSymbol<Delegates.sk_rrect_get_height> ("sk_rrect_get_height")).Invoke (rrect);
 		#endif
 
-		// void sk_rrect_get_radii(const sk_rrect_t* rrect, sk_rrect_corner_t corner, sk_vector_t* radii)
+		// void sk_rrect_get_radii(sk_rrect_t const * rrect, sk_rrect_corner_t corner, sk_vector_t * radii)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12841,7 +12841,7 @@ namespace SkiaSharp
 			(sk_rrect_get_radii_delegate ??= GetSymbol<Delegates.sk_rrect_get_radii> ("sk_rrect_get_radii")).Invoke (rrect, corner, radii);
 		#endif
 
-		// void sk_rrect_get_rect(const sk_rrect_t* rrect, sk_rect_t* rect)
+		// void sk_rrect_get_rect(sk_rrect_t const * rrect, sk_rect_t * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12860,7 +12860,7 @@ namespace SkiaSharp
 			(sk_rrect_get_rect_delegate ??= GetSymbol<Delegates.sk_rrect_get_rect> ("sk_rrect_get_rect")).Invoke (rrect, rect);
 		#endif
 
-		// sk_rrect_type_t sk_rrect_get_type(const sk_rrect_t* rrect)
+		// sk_rrect_type_t sk_rrect_get_type(sk_rrect_t const * rrect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12879,7 +12879,7 @@ namespace SkiaSharp
 			(sk_rrect_get_type_delegate ??= GetSymbol<Delegates.sk_rrect_get_type> ("sk_rrect_get_type")).Invoke (rrect);
 		#endif
 
-		// float sk_rrect_get_width(const sk_rrect_t* rrect)
+		// float sk_rrect_get_width(sk_rrect_t const * rrect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12898,7 +12898,7 @@ namespace SkiaSharp
 			(sk_rrect_get_width_delegate ??= GetSymbol<Delegates.sk_rrect_get_width> ("sk_rrect_get_width")).Invoke (rrect);
 		#endif
 
-		// void sk_rrect_inset(sk_rrect_t* rrect, float dx, float dy)
+		// void sk_rrect_inset(sk_rrect_t * rrect, float dx, float dy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12917,7 +12917,7 @@ namespace SkiaSharp
 			(sk_rrect_inset_delegate ??= GetSymbol<Delegates.sk_rrect_inset> ("sk_rrect_inset")).Invoke (rrect, dx, dy);
 		#endif
 
-		// bool sk_rrect_is_valid(const sk_rrect_t* rrect)
+		// bool sk_rrect_is_valid(sk_rrect_t const * rrect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12939,7 +12939,7 @@ namespace SkiaSharp
 			(sk_rrect_is_valid_delegate ??= GetSymbol<Delegates.sk_rrect_is_valid> ("sk_rrect_is_valid")).Invoke (rrect);
 		#endif
 
-		// sk_rrect_t* sk_rrect_new()
+		// sk_rrect_t * sk_rrect_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12958,7 +12958,7 @@ namespace SkiaSharp
 			(sk_rrect_new_delegate ??= GetSymbol<Delegates.sk_rrect_new> ("sk_rrect_new")).Invoke ();
 		#endif
 
-		// sk_rrect_t* sk_rrect_new_copy(const sk_rrect_t* rrect)
+		// sk_rrect_t * sk_rrect_new_copy(sk_rrect_t const * rrect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12977,7 +12977,7 @@ namespace SkiaSharp
 			(sk_rrect_new_copy_delegate ??= GetSymbol<Delegates.sk_rrect_new_copy> ("sk_rrect_new_copy")).Invoke (rrect);
 		#endif
 
-		// void sk_rrect_offset(sk_rrect_t* rrect, float dx, float dy)
+		// void sk_rrect_offset(sk_rrect_t * rrect, float dx, float dy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -12996,7 +12996,7 @@ namespace SkiaSharp
 			(sk_rrect_offset_delegate ??= GetSymbol<Delegates.sk_rrect_offset> ("sk_rrect_offset")).Invoke (rrect, dx, dy);
 		#endif
 
-		// void sk_rrect_outset(sk_rrect_t* rrect, float dx, float dy)
+		// void sk_rrect_outset(sk_rrect_t * rrect, float dx, float dy)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13015,7 +13015,7 @@ namespace SkiaSharp
 			(sk_rrect_outset_delegate ??= GetSymbol<Delegates.sk_rrect_outset> ("sk_rrect_outset")).Invoke (rrect, dx, dy);
 		#endif
 
-		// void sk_rrect_set_empty(sk_rrect_t* rrect)
+		// void sk_rrect_set_empty(sk_rrect_t * rrect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13034,7 +13034,7 @@ namespace SkiaSharp
 			(sk_rrect_set_empty_delegate ??= GetSymbol<Delegates.sk_rrect_set_empty> ("sk_rrect_set_empty")).Invoke (rrect);
 		#endif
 
-		// void sk_rrect_set_nine_patch(sk_rrect_t* rrect, const sk_rect_t* rect, float leftRad, float topRad, float rightRad, float bottomRad)
+		// void sk_rrect_set_nine_patch(sk_rrect_t * rrect, sk_rect_t const * rect, float leftRad, float topRad, float rightRad, float bottomRad)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13053,7 +13053,7 @@ namespace SkiaSharp
 			(sk_rrect_set_nine_patch_delegate ??= GetSymbol<Delegates.sk_rrect_set_nine_patch> ("sk_rrect_set_nine_patch")).Invoke (rrect, rect, leftRad, topRad, rightRad, bottomRad);
 		#endif
 
-		// void sk_rrect_set_oval(sk_rrect_t* rrect, const sk_rect_t* rect)
+		// void sk_rrect_set_oval(sk_rrect_t * rrect, sk_rect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13072,7 +13072,7 @@ namespace SkiaSharp
 			(sk_rrect_set_oval_delegate ??= GetSymbol<Delegates.sk_rrect_set_oval> ("sk_rrect_set_oval")).Invoke (rrect, rect);
 		#endif
 
-		// void sk_rrect_set_rect(sk_rrect_t* rrect, const sk_rect_t* rect)
+		// void sk_rrect_set_rect(sk_rrect_t * rrect, sk_rect_t const * rect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13091,7 +13091,7 @@ namespace SkiaSharp
 			(sk_rrect_set_rect_delegate ??= GetSymbol<Delegates.sk_rrect_set_rect> ("sk_rrect_set_rect")).Invoke (rrect, rect);
 		#endif
 
-		// void sk_rrect_set_rect_radii(sk_rrect_t* rrect, const sk_rect_t* rect, const sk_vector_t* radii)
+		// void sk_rrect_set_rect_radii(sk_rrect_t * rrect, sk_rect_t const * rect, sk_vector_t const * radii)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13110,7 +13110,7 @@ namespace SkiaSharp
 			(sk_rrect_set_rect_radii_delegate ??= GetSymbol<Delegates.sk_rrect_set_rect_radii> ("sk_rrect_set_rect_radii")).Invoke (rrect, rect, radii);
 		#endif
 
-		// void sk_rrect_set_rect_xy(sk_rrect_t* rrect, const sk_rect_t* rect, float xRad, float yRad)
+		// void sk_rrect_set_rect_xy(sk_rrect_t * rrect, sk_rect_t const * rect, float xRad, float yRad)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13129,7 +13129,7 @@ namespace SkiaSharp
 			(sk_rrect_set_rect_xy_delegate ??= GetSymbol<Delegates.sk_rrect_set_rect_xy> ("sk_rrect_set_rect_xy")).Invoke (rrect, rect, xRad, yRad);
 		#endif
 
-		// bool sk_rrect_transform(sk_rrect_t* rrect, const sk_matrix_t* matrix, sk_rrect_t* dest)
+		// bool sk_rrect_transform(sk_rrect_t * rrect, sk_matrix_t const * matrix, sk_rrect_t * dest)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13155,7 +13155,7 @@ namespace SkiaSharp
 
 		#region sk_runtimeeffect.h
 
-		// void sk_runtimeeffect_get_child_from_index(const sk_runtimeeffect_t* effect, int index, sk_runtimeeffect_child_t* cchild)
+		// void sk_runtimeeffect_get_child_from_index(sk_runtimeeffect_t const * effect, int index, sk_runtimeeffect_child_t * cchild)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13174,7 +13174,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_child_from_index_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_child_from_index> ("sk_runtimeeffect_get_child_from_index")).Invoke (effect, index, cchild);
 		#endif
 
-		// void sk_runtimeeffect_get_child_from_name(const sk_runtimeeffect_t* effect, const char* name, size_t len, sk_runtimeeffect_child_t* cchild)
+		// void sk_runtimeeffect_get_child_from_name(sk_runtimeeffect_t const * effect, char const * name, size_t len, sk_runtimeeffect_child_t * cchild)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13193,7 +13193,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_child_from_name_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_child_from_name> ("sk_runtimeeffect_get_child_from_name")).Invoke (effect, name, len, cchild);
 		#endif
 
-		// void sk_runtimeeffect_get_child_name(const sk_runtimeeffect_t* effect, int index, sk_string_t* name)
+		// void sk_runtimeeffect_get_child_name(sk_runtimeeffect_t const * effect, int index, sk_string_t * name)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13212,7 +13212,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_child_name_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_child_name> ("sk_runtimeeffect_get_child_name")).Invoke (effect, index, name);
 		#endif
 
-		// size_t sk_runtimeeffect_get_children_size(const sk_runtimeeffect_t* effect)
+		// size_t sk_runtimeeffect_get_children_size(sk_runtimeeffect_t const * effect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13231,7 +13231,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_children_size_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_children_size> ("sk_runtimeeffect_get_children_size")).Invoke (effect);
 		#endif
 
-		// size_t sk_runtimeeffect_get_uniform_byte_size(const sk_runtimeeffect_t* effect)
+		// size_t sk_runtimeeffect_get_uniform_byte_size(sk_runtimeeffect_t const * effect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13250,7 +13250,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_uniform_byte_size_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_uniform_byte_size> ("sk_runtimeeffect_get_uniform_byte_size")).Invoke (effect);
 		#endif
 
-		// void sk_runtimeeffect_get_uniform_from_index(const sk_runtimeeffect_t* effect, int index, sk_runtimeeffect_uniform_t* cuniform)
+		// void sk_runtimeeffect_get_uniform_from_index(sk_runtimeeffect_t const * effect, int index, sk_runtimeeffect_uniform_t * cuniform)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13269,7 +13269,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_uniform_from_index_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_uniform_from_index> ("sk_runtimeeffect_get_uniform_from_index")).Invoke (effect, index, cuniform);
 		#endif
 
-		// void sk_runtimeeffect_get_uniform_from_name(const sk_runtimeeffect_t* effect, const char* name, size_t len, sk_runtimeeffect_uniform_t* cuniform)
+		// void sk_runtimeeffect_get_uniform_from_name(sk_runtimeeffect_t const * effect, char const * name, size_t len, sk_runtimeeffect_uniform_t * cuniform)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13288,7 +13288,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_uniform_from_name_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_uniform_from_name> ("sk_runtimeeffect_get_uniform_from_name")).Invoke (effect, name, len, cuniform);
 		#endif
 
-		// void sk_runtimeeffect_get_uniform_name(const sk_runtimeeffect_t* effect, int index, sk_string_t* name)
+		// void sk_runtimeeffect_get_uniform_name(sk_runtimeeffect_t const * effect, int index, sk_string_t * name)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13307,7 +13307,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_uniform_name_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_uniform_name> ("sk_runtimeeffect_get_uniform_name")).Invoke (effect, index, name);
 		#endif
 
-		// size_t sk_runtimeeffect_get_uniforms_size(const sk_runtimeeffect_t* effect)
+		// size_t sk_runtimeeffect_get_uniforms_size(sk_runtimeeffect_t const * effect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13326,7 +13326,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_get_uniforms_size_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_get_uniforms_size> ("sk_runtimeeffect_get_uniforms_size")).Invoke (effect);
 		#endif
 
-		// sk_blender_t* sk_runtimeeffect_make_blender(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount)
+		// sk_blender_t * sk_runtimeeffect_make_blender(sk_runtimeeffect_t * effect, sk_data_t * uniforms, sk_flattenable_t * * children, size_t childCount)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13345,7 +13345,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_make_blender_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_blender> ("sk_runtimeeffect_make_blender")).Invoke (effect, uniforms, children, childCount);
 		#endif
 
-		// sk_colorfilter_t* sk_runtimeeffect_make_color_filter(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount)
+		// sk_colorfilter_t * sk_runtimeeffect_make_color_filter(sk_runtimeeffect_t * effect, sk_data_t * uniforms, sk_flattenable_t * * children, size_t childCount)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13364,7 +13364,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_make_color_filter_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_color_filter> ("sk_runtimeeffect_make_color_filter")).Invoke (effect, uniforms, children, childCount);
 		#endif
 
-		// sk_runtimeeffect_t* sk_runtimeeffect_make_for_blender(sk_string_t* sksl, sk_string_t* error)
+		// sk_runtimeeffect_t * sk_runtimeeffect_make_for_blender(sk_string_t * sksl, sk_string_t * error)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13383,7 +13383,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_make_for_blender_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_for_blender> ("sk_runtimeeffect_make_for_blender")).Invoke (sksl, error);
 		#endif
 
-		// sk_runtimeeffect_t* sk_runtimeeffect_make_for_color_filter(sk_string_t* sksl, sk_string_t* error)
+		// sk_runtimeeffect_t * sk_runtimeeffect_make_for_color_filter(sk_string_t * sksl, sk_string_t * error)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13402,7 +13402,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_make_for_color_filter_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_for_color_filter> ("sk_runtimeeffect_make_for_color_filter")).Invoke (sksl, error);
 		#endif
 
-		// sk_runtimeeffect_t* sk_runtimeeffect_make_for_shader(sk_string_t* sksl, sk_string_t* error)
+		// sk_runtimeeffect_t * sk_runtimeeffect_make_for_shader(sk_string_t * sksl, sk_string_t * error)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13421,7 +13421,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_make_for_shader_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_for_shader> ("sk_runtimeeffect_make_for_shader")).Invoke (sksl, error);
 		#endif
 
-		// sk_shader_t* sk_runtimeeffect_make_shader(sk_runtimeeffect_t* effect, sk_data_t* uniforms, sk_flattenable_t** children, size_t childCount, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_runtimeeffect_make_shader(sk_runtimeeffect_t * effect, sk_data_t * uniforms, sk_flattenable_t * * children, size_t childCount, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13440,7 +13440,7 @@ namespace SkiaSharp
 			(sk_runtimeeffect_make_shader_delegate ??= GetSymbol<Delegates.sk_runtimeeffect_make_shader> ("sk_runtimeeffect_make_shader")).Invoke (effect, uniforms, children, childCount, localMatrix);
 		#endif
 
-		// void sk_runtimeeffect_unref(sk_runtimeeffect_t* effect)
+		// void sk_runtimeeffect_unref(sk_runtimeeffect_t * effect)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13463,7 +13463,7 @@ namespace SkiaSharp
 
 		#region sk_shader.h
 
-		// sk_shader_t* sk_shader_new_blend(sk_blendmode_t mode, const sk_shader_t* dst, const sk_shader_t* src)
+		// sk_shader_t * sk_shader_new_blend(sk_blendmode_t mode, sk_shader_t const * dst, sk_shader_t const * src)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13482,7 +13482,7 @@ namespace SkiaSharp
 			(sk_shader_new_blend_delegate ??= GetSymbol<Delegates.sk_shader_new_blend> ("sk_shader_new_blend")).Invoke (mode, dst, src);
 		#endif
 
-		// sk_shader_t* sk_shader_new_blender(sk_blender_t* blender, const sk_shader_t* dst, const sk_shader_t* src)
+		// sk_shader_t * sk_shader_new_blender(sk_blender_t * blender, sk_shader_t const * dst, sk_shader_t const * src)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13501,7 +13501,7 @@ namespace SkiaSharp
 			(sk_shader_new_blender_delegate ??= GetSymbol<Delegates.sk_shader_new_blender> ("sk_shader_new_blender")).Invoke (blender, dst, src);
 		#endif
 
-		// sk_shader_t* sk_shader_new_color(sk_color_t color)
+		// sk_shader_t * sk_shader_new_color(sk_color_t color)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13520,7 +13520,7 @@ namespace SkiaSharp
 			(sk_shader_new_color_delegate ??= GetSymbol<Delegates.sk_shader_new_color> ("sk_shader_new_color")).Invoke (color);
 		#endif
 
-		// sk_shader_t* sk_shader_new_color4f(const sk_color4f_t* color, const sk_colorspace_t* colorspace)
+		// sk_shader_t * sk_shader_new_color4f(sk_color4f_t const * color, sk_colorspace_t const * colorspace)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13539,7 +13539,7 @@ namespace SkiaSharp
 			(sk_shader_new_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_color4f> ("sk_shader_new_color4f")).Invoke (color, colorspace);
 		#endif
 
-		// sk_shader_t* sk_shader_new_empty()
+		// sk_shader_t * sk_shader_new_empty()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13558,7 +13558,7 @@ namespace SkiaSharp
 			(sk_shader_new_empty_delegate ??= GetSymbol<Delegates.sk_shader_new_empty> ("sk_shader_new_empty")).Invoke ();
 		#endif
 
-		// sk_shader_t* sk_shader_new_linear_gradient(const sk_point_t[2] points = 2, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_linear_gradient(sk_point_t const[2] points = 2, sk_color_t const[-1] colors, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13577,7 +13577,7 @@ namespace SkiaSharp
 			(sk_shader_new_linear_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_linear_gradient> ("sk_shader_new_linear_gradient")).Invoke (points, colors, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
-		// sk_shader_t* sk_shader_new_linear_gradient_color4f(const sk_point_t[2] points = 2, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_linear_gradient_color4f(sk_point_t const[2] points = 2, sk_color4f_t const * colors, sk_colorspace_t const * colorspace, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13596,7 +13596,7 @@ namespace SkiaSharp
 			(sk_shader_new_linear_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_linear_gradient_color4f> ("sk_shader_new_linear_gradient_color4f")).Invoke (points, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
-		// sk_shader_t* sk_shader_new_perlin_noise_fractal_noise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, const sk_isize_t* tileSize)
+		// sk_shader_t * sk_shader_new_perlin_noise_fractal_noise(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, sk_isize_t const * tileSize)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13615,7 +13615,7 @@ namespace SkiaSharp
 			(sk_shader_new_perlin_noise_fractal_noise_delegate ??= GetSymbol<Delegates.sk_shader_new_perlin_noise_fractal_noise> ("sk_shader_new_perlin_noise_fractal_noise")).Invoke (baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize);
 		#endif
 
-		// sk_shader_t* sk_shader_new_perlin_noise_turbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, const sk_isize_t* tileSize)
+		// sk_shader_t * sk_shader_new_perlin_noise_turbulence(float baseFrequencyX, float baseFrequencyY, int numOctaves, float seed, sk_isize_t const * tileSize)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13634,7 +13634,7 @@ namespace SkiaSharp
 			(sk_shader_new_perlin_noise_turbulence_delegate ??= GetSymbol<Delegates.sk_shader_new_perlin_noise_turbulence> ("sk_shader_new_perlin_noise_turbulence")).Invoke (baseFrequencyX, baseFrequencyY, numOctaves, seed, tileSize);
 		#endif
 
-		// sk_shader_t* sk_shader_new_radial_gradient(const sk_point_t* center, float radius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_radial_gradient(sk_point_t const * center, float radius, sk_color_t const[-1] colors, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13653,7 +13653,7 @@ namespace SkiaSharp
 			(sk_shader_new_radial_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_radial_gradient> ("sk_shader_new_radial_gradient")).Invoke (center, radius, colors, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
-		// sk_shader_t* sk_shader_new_radial_gradient_color4f(const sk_point_t* center, float radius, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_radial_gradient_color4f(sk_point_t const * center, float radius, sk_color4f_t const * colors, sk_colorspace_t const * colorspace, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13672,7 +13672,7 @@ namespace SkiaSharp
 			(sk_shader_new_radial_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_radial_gradient_color4f> ("sk_shader_new_radial_gradient_color4f")).Invoke (center, radius, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
-		// sk_shader_t* sk_shader_new_sweep_gradient(const sk_point_t* center, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_sweep_gradient(sk_point_t const * center, sk_color_t const[-1] colors, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13691,7 +13691,7 @@ namespace SkiaSharp
 			(sk_shader_new_sweep_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_sweep_gradient> ("sk_shader_new_sweep_gradient")).Invoke (center, colors, colorPos, colorCount, tileMode, startAngle, endAngle, localMatrix);
 		#endif
 
-		// sk_shader_t* sk_shader_new_sweep_gradient_color4f(const sk_point_t* center, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_sweep_gradient_color4f(sk_point_t const * center, sk_color4f_t const * colors, sk_colorspace_t const * colorspace, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, float startAngle, float endAngle, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13710,7 +13710,7 @@ namespace SkiaSharp
 			(sk_shader_new_sweep_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_sweep_gradient_color4f> ("sk_shader_new_sweep_gradient_color4f")).Invoke (center, colors, colorspace, colorPos, colorCount, tileMode, startAngle, endAngle, localMatrix);
 		#endif
 
-		// sk_shader_t* sk_shader_new_two_point_conical_gradient(const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius, const sk_color_t[-1] colors, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_two_point_conical_gradient(sk_point_t const * start, float startRadius, sk_point_t const * end, float endRadius, sk_color_t const[-1] colors, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13729,7 +13729,7 @@ namespace SkiaSharp
 			(sk_shader_new_two_point_conical_gradient_delegate ??= GetSymbol<Delegates.sk_shader_new_two_point_conical_gradient> ("sk_shader_new_two_point_conical_gradient")).Invoke (start, startRadius, end, endRadius, colors, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
-		// sk_shader_t* sk_shader_new_two_point_conical_gradient_color4f(const sk_point_t* start, float startRadius, const sk_point_t* end, float endRadius, const sk_color4f_t* colors, const sk_colorspace_t* colorspace, const float[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_new_two_point_conical_gradient_color4f(sk_point_t const * start, float startRadius, sk_point_t const * end, float endRadius, sk_color4f_t const * colors, sk_colorspace_t const * colorspace, float const[-1] colorPos, int colorCount, sk_shader_tilemode_t tileMode, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13748,7 +13748,7 @@ namespace SkiaSharp
 			(sk_shader_new_two_point_conical_gradient_color4f_delegate ??= GetSymbol<Delegates.sk_shader_new_two_point_conical_gradient_color4f> ("sk_shader_new_two_point_conical_gradient_color4f")).Invoke (start, startRadius, end, endRadius, colors, colorspace, colorPos, colorCount, tileMode, localMatrix);
 		#endif
 
-		// void sk_shader_ref(sk_shader_t* shader)
+		// void sk_shader_ref(sk_shader_t * shader)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13767,7 +13767,7 @@ namespace SkiaSharp
 			(sk_shader_ref_delegate ??= GetSymbol<Delegates.sk_shader_ref> ("sk_shader_ref")).Invoke (shader);
 		#endif
 
-		// void sk_shader_unref(sk_shader_t* shader)
+		// void sk_shader_unref(sk_shader_t * shader)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13786,7 +13786,7 @@ namespace SkiaSharp
 			(sk_shader_unref_delegate ??= GetSymbol<Delegates.sk_shader_unref> ("sk_shader_unref")).Invoke (shader);
 		#endif
 
-		// sk_shader_t* sk_shader_with_color_filter(const sk_shader_t* shader, const sk_colorfilter_t* filter)
+		// sk_shader_t * sk_shader_with_color_filter(sk_shader_t const * shader, sk_colorfilter_t const * filter)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13805,7 +13805,7 @@ namespace SkiaSharp
 			(sk_shader_with_color_filter_delegate ??= GetSymbol<Delegates.sk_shader_with_color_filter> ("sk_shader_with_color_filter")).Invoke (shader, filter);
 		#endif
 
-		// sk_shader_t* sk_shader_with_local_matrix(const sk_shader_t* shader, const sk_matrix_t* localMatrix)
+		// sk_shader_t * sk_shader_with_local_matrix(sk_shader_t const * shader, sk_matrix_t const * localMatrix)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13828,7 +13828,7 @@ namespace SkiaSharp
 
 		#region sk_stream.h
 
-		// void sk_dynamicmemorywstream_copy_to(sk_wstream_dynamicmemorystream_t* cstream, void* data)
+		// void sk_dynamicmemorywstream_copy_to(sk_wstream_dynamicmemorystream_t * cstream, void * data)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13847,7 +13847,7 @@ namespace SkiaSharp
 			(sk_dynamicmemorywstream_copy_to_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_copy_to> ("sk_dynamicmemorywstream_copy_to")).Invoke (cstream, data);
 		#endif
 
-		// void sk_dynamicmemorywstream_destroy(sk_wstream_dynamicmemorystream_t* cstream)
+		// void sk_dynamicmemorywstream_destroy(sk_wstream_dynamicmemorystream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13866,7 +13866,7 @@ namespace SkiaSharp
 			(sk_dynamicmemorywstream_destroy_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_destroy> ("sk_dynamicmemorywstream_destroy")).Invoke (cstream);
 		#endif
 
-		// sk_data_t* sk_dynamicmemorywstream_detach_as_data(sk_wstream_dynamicmemorystream_t* cstream)
+		// sk_data_t * sk_dynamicmemorywstream_detach_as_data(sk_wstream_dynamicmemorystream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13885,7 +13885,7 @@ namespace SkiaSharp
 			(sk_dynamicmemorywstream_detach_as_data_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_detach_as_data> ("sk_dynamicmemorywstream_detach_as_data")).Invoke (cstream);
 		#endif
 
-		// sk_stream_asset_t* sk_dynamicmemorywstream_detach_as_stream(sk_wstream_dynamicmemorystream_t* cstream)
+		// sk_stream_asset_t * sk_dynamicmemorywstream_detach_as_stream(sk_wstream_dynamicmemorystream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13904,7 +13904,7 @@ namespace SkiaSharp
 			(sk_dynamicmemorywstream_detach_as_stream_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_detach_as_stream> ("sk_dynamicmemorywstream_detach_as_stream")).Invoke (cstream);
 		#endif
 
-		// sk_wstream_dynamicmemorystream_t* sk_dynamicmemorywstream_new()
+		// sk_wstream_dynamicmemorystream_t * sk_dynamicmemorywstream_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13923,7 +13923,7 @@ namespace SkiaSharp
 			(sk_dynamicmemorywstream_new_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_new> ("sk_dynamicmemorywstream_new")).Invoke ();
 		#endif
 
-		// bool sk_dynamicmemorywstream_write_to_stream(sk_wstream_dynamicmemorystream_t* cstream, sk_wstream_t* dst)
+		// bool sk_dynamicmemorywstream_write_to_stream(sk_wstream_dynamicmemorystream_t * cstream, sk_wstream_t * dst)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13945,7 +13945,7 @@ namespace SkiaSharp
 			(sk_dynamicmemorywstream_write_to_stream_delegate ??= GetSymbol<Delegates.sk_dynamicmemorywstream_write_to_stream> ("sk_dynamicmemorywstream_write_to_stream")).Invoke (cstream, dst);
 		#endif
 
-		// void sk_filestream_destroy(sk_stream_filestream_t* cstream)
+		// void sk_filestream_destroy(sk_stream_filestream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13964,7 +13964,7 @@ namespace SkiaSharp
 			(sk_filestream_destroy_delegate ??= GetSymbol<Delegates.sk_filestream_destroy> ("sk_filestream_destroy")).Invoke (cstream);
 		#endif
 
-		// bool sk_filestream_is_valid(sk_stream_filestream_t* cstream)
+		// bool sk_filestream_is_valid(sk_stream_filestream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -13986,7 +13986,7 @@ namespace SkiaSharp
 			(sk_filestream_is_valid_delegate ??= GetSymbol<Delegates.sk_filestream_is_valid> ("sk_filestream_is_valid")).Invoke (cstream);
 		#endif
 
-		// sk_stream_filestream_t* sk_filestream_new(const char* path)
+		// sk_stream_filestream_t * sk_filestream_new(char const * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14005,7 +14005,7 @@ namespace SkiaSharp
 			(sk_filestream_new_delegate ??= GetSymbol<Delegates.sk_filestream_new> ("sk_filestream_new")).Invoke (path);
 		#endif
 
-		// void sk_filewstream_destroy(sk_wstream_filestream_t* cstream)
+		// void sk_filewstream_destroy(sk_wstream_filestream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14024,7 +14024,7 @@ namespace SkiaSharp
 			(sk_filewstream_destroy_delegate ??= GetSymbol<Delegates.sk_filewstream_destroy> ("sk_filewstream_destroy")).Invoke (cstream);
 		#endif
 
-		// bool sk_filewstream_is_valid(sk_wstream_filestream_t* cstream)
+		// bool sk_filewstream_is_valid(sk_wstream_filestream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14046,7 +14046,7 @@ namespace SkiaSharp
 			(sk_filewstream_is_valid_delegate ??= GetSymbol<Delegates.sk_filewstream_is_valid> ("sk_filewstream_is_valid")).Invoke (cstream);
 		#endif
 
-		// sk_wstream_filestream_t* sk_filewstream_new(const char* path)
+		// sk_wstream_filestream_t * sk_filewstream_new(char const * path)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14065,7 +14065,7 @@ namespace SkiaSharp
 			(sk_filewstream_new_delegate ??= GetSymbol<Delegates.sk_filewstream_new> ("sk_filewstream_new")).Invoke (path);
 		#endif
 
-		// void sk_memorystream_destroy(sk_stream_memorystream_t* cstream)
+		// void sk_memorystream_destroy(sk_stream_memorystream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14084,7 +14084,7 @@ namespace SkiaSharp
 			(sk_memorystream_destroy_delegate ??= GetSymbol<Delegates.sk_memorystream_destroy> ("sk_memorystream_destroy")).Invoke (cstream);
 		#endif
 
-		// sk_stream_memorystream_t* sk_memorystream_new()
+		// sk_stream_memorystream_t * sk_memorystream_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14103,7 +14103,7 @@ namespace SkiaSharp
 			(sk_memorystream_new_delegate ??= GetSymbol<Delegates.sk_memorystream_new> ("sk_memorystream_new")).Invoke ();
 		#endif
 
-		// sk_stream_memorystream_t* sk_memorystream_new_with_data(const void* data, size_t length, bool copyData)
+		// sk_stream_memorystream_t * sk_memorystream_new_with_data(void const * data, size_t length, bool copyData)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14122,7 +14122,7 @@ namespace SkiaSharp
 			(sk_memorystream_new_with_data_delegate ??= GetSymbol<Delegates.sk_memorystream_new_with_data> ("sk_memorystream_new_with_data")).Invoke (data, length, copyData);
 		#endif
 
-		// sk_stream_memorystream_t* sk_memorystream_new_with_length(size_t length)
+		// sk_stream_memorystream_t * sk_memorystream_new_with_length(size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14141,7 +14141,7 @@ namespace SkiaSharp
 			(sk_memorystream_new_with_length_delegate ??= GetSymbol<Delegates.sk_memorystream_new_with_length> ("sk_memorystream_new_with_length")).Invoke (length);
 		#endif
 
-		// sk_stream_memorystream_t* sk_memorystream_new_with_skdata(sk_data_t* data)
+		// sk_stream_memorystream_t * sk_memorystream_new_with_skdata(sk_data_t * data)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14160,7 +14160,7 @@ namespace SkiaSharp
 			(sk_memorystream_new_with_skdata_delegate ??= GetSymbol<Delegates.sk_memorystream_new_with_skdata> ("sk_memorystream_new_with_skdata")).Invoke (data);
 		#endif
 
-		// void sk_memorystream_set_memory(sk_stream_memorystream_t* cmemorystream, const void* data, size_t length, bool copyData)
+		// void sk_memorystream_set_memory(sk_stream_memorystream_t * cmemorystream, void const * data, size_t length, bool copyData)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14179,7 +14179,7 @@ namespace SkiaSharp
 			(sk_memorystream_set_memory_delegate ??= GetSymbol<Delegates.sk_memorystream_set_memory> ("sk_memorystream_set_memory")).Invoke (cmemorystream, data, length, copyData);
 		#endif
 
-		// void sk_stream_asset_destroy(sk_stream_asset_t* cstream)
+		// void sk_stream_asset_destroy(sk_stream_asset_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14198,7 +14198,7 @@ namespace SkiaSharp
 			(sk_stream_asset_destroy_delegate ??= GetSymbol<Delegates.sk_stream_asset_destroy> ("sk_stream_asset_destroy")).Invoke (cstream);
 		#endif
 
-		// void sk_stream_destroy(sk_stream_t* cstream)
+		// void sk_stream_destroy(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14217,7 +14217,7 @@ namespace SkiaSharp
 			(sk_stream_destroy_delegate ??= GetSymbol<Delegates.sk_stream_destroy> ("sk_stream_destroy")).Invoke (cstream);
 		#endif
 
-		// sk_stream_t* sk_stream_duplicate(sk_stream_t* cstream)
+		// sk_stream_t * sk_stream_duplicate(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14236,7 +14236,7 @@ namespace SkiaSharp
 			(sk_stream_duplicate_delegate ??= GetSymbol<Delegates.sk_stream_duplicate> ("sk_stream_duplicate")).Invoke (cstream);
 		#endif
 
-		// sk_stream_t* sk_stream_fork(sk_stream_t* cstream)
+		// sk_stream_t * sk_stream_fork(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14255,7 +14255,7 @@ namespace SkiaSharp
 			(sk_stream_fork_delegate ??= GetSymbol<Delegates.sk_stream_fork> ("sk_stream_fork")).Invoke (cstream);
 		#endif
 
-		// size_t sk_stream_get_length(sk_stream_t* cstream)
+		// size_t sk_stream_get_length(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14274,7 +14274,7 @@ namespace SkiaSharp
 			(sk_stream_get_length_delegate ??= GetSymbol<Delegates.sk_stream_get_length> ("sk_stream_get_length")).Invoke (cstream);
 		#endif
 
-		// const void* sk_stream_get_memory_base(sk_stream_t* cstream)
+		// void const * sk_stream_get_memory_base(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14293,7 +14293,7 @@ namespace SkiaSharp
 			(sk_stream_get_memory_base_delegate ??= GetSymbol<Delegates.sk_stream_get_memory_base> ("sk_stream_get_memory_base")).Invoke (cstream);
 		#endif
 
-		// size_t sk_stream_get_position(sk_stream_t* cstream)
+		// size_t sk_stream_get_position(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14312,7 +14312,7 @@ namespace SkiaSharp
 			(sk_stream_get_position_delegate ??= GetSymbol<Delegates.sk_stream_get_position> ("sk_stream_get_position")).Invoke (cstream);
 		#endif
 
-		// bool sk_stream_has_length(sk_stream_t* cstream)
+		// bool sk_stream_has_length(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14334,7 +14334,7 @@ namespace SkiaSharp
 			(sk_stream_has_length_delegate ??= GetSymbol<Delegates.sk_stream_has_length> ("sk_stream_has_length")).Invoke (cstream);
 		#endif
 
-		// bool sk_stream_has_position(sk_stream_t* cstream)
+		// bool sk_stream_has_position(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14356,7 +14356,7 @@ namespace SkiaSharp
 			(sk_stream_has_position_delegate ??= GetSymbol<Delegates.sk_stream_has_position> ("sk_stream_has_position")).Invoke (cstream);
 		#endif
 
-		// bool sk_stream_is_at_end(sk_stream_t* cstream)
+		// bool sk_stream_is_at_end(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14378,7 +14378,7 @@ namespace SkiaSharp
 			(sk_stream_is_at_end_delegate ??= GetSymbol<Delegates.sk_stream_is_at_end> ("sk_stream_is_at_end")).Invoke (cstream);
 		#endif
 
-		// bool sk_stream_move(sk_stream_t* cstream, int offset)
+		// bool sk_stream_move(sk_stream_t * cstream, long offset)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14400,7 +14400,7 @@ namespace SkiaSharp
 			(sk_stream_move_delegate ??= GetSymbol<Delegates.sk_stream_move> ("sk_stream_move")).Invoke (cstream, offset);
 		#endif
 
-		// size_t sk_stream_peek(sk_stream_t* cstream, void* buffer, size_t size)
+		// size_t sk_stream_peek(sk_stream_t * cstream, void * buffer, size_t size)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14419,7 +14419,7 @@ namespace SkiaSharp
 			(sk_stream_peek_delegate ??= GetSymbol<Delegates.sk_stream_peek> ("sk_stream_peek")).Invoke (cstream, buffer, size);
 		#endif
 
-		// size_t sk_stream_read(sk_stream_t* cstream, void* buffer, size_t size)
+		// size_t sk_stream_read(sk_stream_t * cstream, void * buffer, size_t size)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14438,7 +14438,7 @@ namespace SkiaSharp
 			(sk_stream_read_delegate ??= GetSymbol<Delegates.sk_stream_read> ("sk_stream_read")).Invoke (cstream, buffer, size);
 		#endif
 
-		// bool sk_stream_read_bool(sk_stream_t* cstream, bool* buffer)
+		// bool sk_stream_read_bool(sk_stream_t * cstream, bool * buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14460,7 +14460,7 @@ namespace SkiaSharp
 			(sk_stream_read_bool_delegate ??= GetSymbol<Delegates.sk_stream_read_bool> ("sk_stream_read_bool")).Invoke (cstream, buffer);
 		#endif
 
-		// bool sk_stream_read_s16(sk_stream_t* cstream, int16_t* buffer)
+		// bool sk_stream_read_s16(sk_stream_t * cstream, short * buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14482,7 +14482,7 @@ namespace SkiaSharp
 			(sk_stream_read_s16_delegate ??= GetSymbol<Delegates.sk_stream_read_s16> ("sk_stream_read_s16")).Invoke (cstream, buffer);
 		#endif
 
-		// bool sk_stream_read_s32(sk_stream_t* cstream, int32_t* buffer)
+		// bool sk_stream_read_s32(sk_stream_t * cstream, int * buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14504,29 +14504,29 @@ namespace SkiaSharp
 			(sk_stream_read_s32_delegate ??= GetSymbol<Delegates.sk_stream_read_s32> ("sk_stream_read_s32")).Invoke (cstream, buffer);
 		#endif
 
-		// bool sk_stream_read_s8(sk_stream_t* cstream, int8_t* buffer)
+		// bool sk_stream_read_s8(sk_stream_t * cstream, char * buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static partial bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
+		internal static partial bool sk_stream_read_s8 (sk_stream_t cstream, /* char */ void* buffer);
 		#else // !USE_LIBRARY_IMPORT
 		[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]
 		[return: MarshalAs (UnmanagedType.I1)]
-		internal static extern bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
+		internal static extern bool sk_stream_read_s8 (sk_stream_t cstream, /* char */ void* buffer);
 		#endif
 		#else
 		private partial class Delegates {
 			[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 			[return: MarshalAs (UnmanagedType.I1)]
-			internal delegate bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer);
+			internal delegate bool sk_stream_read_s8 (sk_stream_t cstream, /* char */ void* buffer);
 		}
 		private static Delegates.sk_stream_read_s8 sk_stream_read_s8_delegate;
-		internal static bool sk_stream_read_s8 (sk_stream_t cstream, SByte* buffer) =>
+		internal static bool sk_stream_read_s8 (sk_stream_t cstream, /* char */ void* buffer) =>
 			(sk_stream_read_s8_delegate ??= GetSymbol<Delegates.sk_stream_read_s8> ("sk_stream_read_s8")).Invoke (cstream, buffer);
 		#endif
 
-		// bool sk_stream_read_u16(sk_stream_t* cstream, uint16_t* buffer)
+		// bool sk_stream_read_u16(sk_stream_t * cstream, unsigned short * buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14548,7 +14548,7 @@ namespace SkiaSharp
 			(sk_stream_read_u16_delegate ??= GetSymbol<Delegates.sk_stream_read_u16> ("sk_stream_read_u16")).Invoke (cstream, buffer);
 		#endif
 
-		// bool sk_stream_read_u32(sk_stream_t* cstream, uint32_t* buffer)
+		// bool sk_stream_read_u32(sk_stream_t * cstream, unsigned int * buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14570,7 +14570,7 @@ namespace SkiaSharp
 			(sk_stream_read_u32_delegate ??= GetSymbol<Delegates.sk_stream_read_u32> ("sk_stream_read_u32")).Invoke (cstream, buffer);
 		#endif
 
-		// bool sk_stream_read_u8(sk_stream_t* cstream, uint8_t* buffer)
+		// bool sk_stream_read_u8(sk_stream_t * cstream, unsigned char * buffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14592,7 +14592,7 @@ namespace SkiaSharp
 			(sk_stream_read_u8_delegate ??= GetSymbol<Delegates.sk_stream_read_u8> ("sk_stream_read_u8")).Invoke (cstream, buffer);
 		#endif
 
-		// bool sk_stream_rewind(sk_stream_t* cstream)
+		// bool sk_stream_rewind(sk_stream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14614,7 +14614,7 @@ namespace SkiaSharp
 			(sk_stream_rewind_delegate ??= GetSymbol<Delegates.sk_stream_rewind> ("sk_stream_rewind")).Invoke (cstream);
 		#endif
 
-		// bool sk_stream_seek(sk_stream_t* cstream, size_t position)
+		// bool sk_stream_seek(sk_stream_t * cstream, size_t position)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14636,7 +14636,7 @@ namespace SkiaSharp
 			(sk_stream_seek_delegate ??= GetSymbol<Delegates.sk_stream_seek> ("sk_stream_seek")).Invoke (cstream, position);
 		#endif
 
-		// size_t sk_stream_skip(sk_stream_t* cstream, size_t size)
+		// size_t sk_stream_skip(sk_stream_t * cstream, size_t size)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14655,7 +14655,7 @@ namespace SkiaSharp
 			(sk_stream_skip_delegate ??= GetSymbol<Delegates.sk_stream_skip> ("sk_stream_skip")).Invoke (cstream, size);
 		#endif
 
-		// size_t sk_wstream_bytes_written(sk_wstream_t* cstream)
+		// size_t sk_wstream_bytes_written(sk_wstream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14674,7 +14674,7 @@ namespace SkiaSharp
 			(sk_wstream_bytes_written_delegate ??= GetSymbol<Delegates.sk_wstream_bytes_written> ("sk_wstream_bytes_written")).Invoke (cstream);
 		#endif
 
-		// void sk_wstream_flush(sk_wstream_t* cstream)
+		// void sk_wstream_flush(sk_wstream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14712,7 +14712,7 @@ namespace SkiaSharp
 			(sk_wstream_get_size_of_packed_uint_delegate ??= GetSymbol<Delegates.sk_wstream_get_size_of_packed_uint> ("sk_wstream_get_size_of_packed_uint")).Invoke (value);
 		#endif
 
-		// bool sk_wstream_newline(sk_wstream_t* cstream)
+		// bool sk_wstream_newline(sk_wstream_t * cstream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14734,7 +14734,7 @@ namespace SkiaSharp
 			(sk_wstream_newline_delegate ??= GetSymbol<Delegates.sk_wstream_newline> ("sk_wstream_newline")).Invoke (cstream);
 		#endif
 
-		// bool sk_wstream_write(sk_wstream_t* cstream, const void* buffer, size_t size)
+		// bool sk_wstream_write(sk_wstream_t * cstream, void const * buffer, size_t size)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14756,7 +14756,7 @@ namespace SkiaSharp
 			(sk_wstream_write_delegate ??= GetSymbol<Delegates.sk_wstream_write> ("sk_wstream_write")).Invoke (cstream, buffer, size);
 		#endif
 
-		// bool sk_wstream_write_16(sk_wstream_t* cstream, uint16_t value)
+		// bool sk_wstream_write_16(sk_wstream_t * cstream, unsigned short value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14778,7 +14778,7 @@ namespace SkiaSharp
 			(sk_wstream_write_16_delegate ??= GetSymbol<Delegates.sk_wstream_write_16> ("sk_wstream_write_16")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_32(sk_wstream_t* cstream, uint32_t value)
+		// bool sk_wstream_write_32(sk_wstream_t * cstream, unsigned int value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14800,7 +14800,7 @@ namespace SkiaSharp
 			(sk_wstream_write_32_delegate ??= GetSymbol<Delegates.sk_wstream_write_32> ("sk_wstream_write_32")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_8(sk_wstream_t* cstream, uint8_t value)
+		// bool sk_wstream_write_8(sk_wstream_t * cstream, unsigned char value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14822,7 +14822,7 @@ namespace SkiaSharp
 			(sk_wstream_write_8_delegate ??= GetSymbol<Delegates.sk_wstream_write_8> ("sk_wstream_write_8")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_bigdec_as_text(sk_wstream_t* cstream, int64_t value, int minDigits)
+		// bool sk_wstream_write_bigdec_as_text(sk_wstream_t * cstream, long long value, int minDigits)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14844,7 +14844,7 @@ namespace SkiaSharp
 			(sk_wstream_write_bigdec_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_bigdec_as_text> ("sk_wstream_write_bigdec_as_text")).Invoke (cstream, value, minDigits);
 		#endif
 
-		// bool sk_wstream_write_bool(sk_wstream_t* cstream, bool value)
+		// bool sk_wstream_write_bool(sk_wstream_t * cstream, bool value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14866,7 +14866,7 @@ namespace SkiaSharp
 			(sk_wstream_write_bool_delegate ??= GetSymbol<Delegates.sk_wstream_write_bool> ("sk_wstream_write_bool")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_dec_as_text(sk_wstream_t* cstream, int32_t value)
+		// bool sk_wstream_write_dec_as_text(sk_wstream_t * cstream, int value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14888,7 +14888,7 @@ namespace SkiaSharp
 			(sk_wstream_write_dec_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_dec_as_text> ("sk_wstream_write_dec_as_text")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_hex_as_text(sk_wstream_t* cstream, uint32_t value, int minDigits)
+		// bool sk_wstream_write_hex_as_text(sk_wstream_t * cstream, unsigned int value, int minDigits)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14910,7 +14910,7 @@ namespace SkiaSharp
 			(sk_wstream_write_hex_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_hex_as_text> ("sk_wstream_write_hex_as_text")).Invoke (cstream, value, minDigits);
 		#endif
 
-		// bool sk_wstream_write_packed_uint(sk_wstream_t* cstream, size_t value)
+		// bool sk_wstream_write_packed_uint(sk_wstream_t * cstream, size_t value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14932,7 +14932,7 @@ namespace SkiaSharp
 			(sk_wstream_write_packed_uint_delegate ??= GetSymbol<Delegates.sk_wstream_write_packed_uint> ("sk_wstream_write_packed_uint")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_scalar(sk_wstream_t* cstream, float value)
+		// bool sk_wstream_write_scalar(sk_wstream_t * cstream, float value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14954,7 +14954,7 @@ namespace SkiaSharp
 			(sk_wstream_write_scalar_delegate ??= GetSymbol<Delegates.sk_wstream_write_scalar> ("sk_wstream_write_scalar")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_scalar_as_text(sk_wstream_t* cstream, float value)
+		// bool sk_wstream_write_scalar_as_text(sk_wstream_t * cstream, float value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14976,7 +14976,7 @@ namespace SkiaSharp
 			(sk_wstream_write_scalar_as_text_delegate ??= GetSymbol<Delegates.sk_wstream_write_scalar_as_text> ("sk_wstream_write_scalar_as_text")).Invoke (cstream, value);
 		#endif
 
-		// bool sk_wstream_write_stream(sk_wstream_t* cstream, sk_stream_t* input, size_t length)
+		// bool sk_wstream_write_stream(sk_wstream_t * cstream, sk_stream_t * input, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -14998,7 +14998,7 @@ namespace SkiaSharp
 			(sk_wstream_write_stream_delegate ??= GetSymbol<Delegates.sk_wstream_write_stream> ("sk_wstream_write_stream")).Invoke (cstream, input, length);
 		#endif
 
-		// bool sk_wstream_write_text(sk_wstream_t* cstream, const char* value)
+		// bool sk_wstream_write_text(sk_wstream_t * cstream, char const * value)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15024,7 +15024,7 @@ namespace SkiaSharp
 
 		#region sk_string.h
 
-		// void sk_string_destructor(const sk_string_t*)
+		// void sk_string_destructor(sk_string_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15043,7 +15043,7 @@ namespace SkiaSharp
 			(sk_string_destructor_delegate ??= GetSymbol<Delegates.sk_string_destructor> ("sk_string_destructor")).Invoke (param0);
 		#endif
 
-		// const char* sk_string_get_c_str(const sk_string_t*)
+		// char const * sk_string_get_c_str(sk_string_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15062,7 +15062,7 @@ namespace SkiaSharp
 			(sk_string_get_c_str_delegate ??= GetSymbol<Delegates.sk_string_get_c_str> ("sk_string_get_c_str")).Invoke (param0);
 		#endif
 
-		// size_t sk_string_get_size(const sk_string_t*)
+		// size_t sk_string_get_size(sk_string_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15081,7 +15081,7 @@ namespace SkiaSharp
 			(sk_string_get_size_delegate ??= GetSymbol<Delegates.sk_string_get_size> ("sk_string_get_size")).Invoke (param0);
 		#endif
 
-		// sk_string_t* sk_string_new_empty()
+		// sk_string_t * sk_string_new_empty()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15100,7 +15100,7 @@ namespace SkiaSharp
 			(sk_string_new_empty_delegate ??= GetSymbol<Delegates.sk_string_new_empty> ("sk_string_new_empty")).Invoke ();
 		#endif
 
-		// sk_string_t* sk_string_new_with_copy(const char* src, size_t length)
+		// sk_string_t * sk_string_new_with_copy(char const * src, size_t length)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15123,7 +15123,7 @@ namespace SkiaSharp
 
 		#region sk_surface.h
 
-		// void sk_surface_draw(sk_surface_t* surface, sk_canvas_t* canvas, float x, float y, const sk_paint_t* paint)
+		// void sk_surface_draw(sk_surface_t * surface, sk_canvas_t * canvas, float x, float y, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15142,7 +15142,7 @@ namespace SkiaSharp
 			(sk_surface_draw_delegate ??= GetSymbol<Delegates.sk_surface_draw> ("sk_surface_draw")).Invoke (surface, canvas, x, y, paint);
 		#endif
 
-		// sk_canvas_t* sk_surface_get_canvas(sk_surface_t*)
+		// sk_canvas_t * sk_surface_get_canvas(sk_surface_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15161,7 +15161,7 @@ namespace SkiaSharp
 			(sk_surface_get_canvas_delegate ??= GetSymbol<Delegates.sk_surface_get_canvas> ("sk_surface_get_canvas")).Invoke (param0);
 		#endif
 
-		// const sk_surfaceprops_t* sk_surface_get_props(sk_surface_t* surface)
+		// sk_surfaceprops_t const * sk_surface_get_props(sk_surface_t * surface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15180,7 +15180,7 @@ namespace SkiaSharp
 			(sk_surface_get_props_delegate ??= GetSymbol<Delegates.sk_surface_get_props> ("sk_surface_get_props")).Invoke (surface);
 		#endif
 
-		// gr_recording_context_t* sk_surface_get_recording_context(sk_surface_t* surface)
+		// gr_recording_context_t * sk_surface_get_recording_context(sk_surface_t * surface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15199,7 +15199,7 @@ namespace SkiaSharp
 			(sk_surface_get_recording_context_delegate ??= GetSymbol<Delegates.sk_surface_get_recording_context> ("sk_surface_get_recording_context")).Invoke (surface);
 		#endif
 
-		// sk_surface_t* sk_surface_new_backend_render_target(gr_recording_context_t* context, const gr_backendrendertarget_t* target, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
+		// sk_surface_t * sk_surface_new_backend_render_target(gr_recording_context_t * context, gr_backendrendertarget_t const * target, gr_surfaceorigin_t origin, sk_colortype_t colorType, sk_colorspace_t * colorspace, sk_surfaceprops_t const * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15218,7 +15218,7 @@ namespace SkiaSharp
 			(sk_surface_new_backend_render_target_delegate ??= GetSymbol<Delegates.sk_surface_new_backend_render_target> ("sk_surface_new_backend_render_target")).Invoke (context, target, origin, colorType, colorspace, props);
 		#endif
 
-		// sk_surface_t* sk_surface_new_backend_texture(gr_recording_context_t* context, const gr_backendtexture_t* texture, gr_surfaceorigin_t origin, int samples, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
+		// sk_surface_t * sk_surface_new_backend_texture(gr_recording_context_t * context, gr_backendtexture_t const * texture, gr_surfaceorigin_t origin, int samples, sk_colortype_t colorType, sk_colorspace_t * colorspace, sk_surfaceprops_t const * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15237,7 +15237,7 @@ namespace SkiaSharp
 			(sk_surface_new_backend_texture_delegate ??= GetSymbol<Delegates.sk_surface_new_backend_texture> ("sk_surface_new_backend_texture")).Invoke (context, texture, origin, samples, colorType, colorspace, props);
 		#endif
 
-		// sk_image_t* sk_surface_new_image_snapshot(sk_surface_t*)
+		// sk_image_t * sk_surface_new_image_snapshot(sk_surface_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15256,7 +15256,7 @@ namespace SkiaSharp
 			(sk_surface_new_image_snapshot_delegate ??= GetSymbol<Delegates.sk_surface_new_image_snapshot> ("sk_surface_new_image_snapshot")).Invoke (param0);
 		#endif
 
-		// sk_image_t* sk_surface_new_image_snapshot_with_crop(sk_surface_t* surface, const sk_irect_t* bounds)
+		// sk_image_t * sk_surface_new_image_snapshot_with_crop(sk_surface_t * surface, sk_irect_t const * bounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15275,7 +15275,7 @@ namespace SkiaSharp
 			(sk_surface_new_image_snapshot_with_crop_delegate ??= GetSymbol<Delegates.sk_surface_new_image_snapshot_with_crop> ("sk_surface_new_image_snapshot_with_crop")).Invoke (surface, bounds);
 		#endif
 
-		// sk_surface_t* sk_surface_new_metal_layer(gr_recording_context_t* context, const void* layer, gr_surfaceorigin_t origin, int sampleCount, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props, const void** drawable)
+		// sk_surface_t * sk_surface_new_metal_layer(gr_recording_context_t * context, void const * layer, gr_surfaceorigin_t origin, int sampleCount, sk_colortype_t colorType, sk_colorspace_t * colorspace, sk_surfaceprops_t const * props, void const * * drawable)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15294,7 +15294,7 @@ namespace SkiaSharp
 			(sk_surface_new_metal_layer_delegate ??= GetSymbol<Delegates.sk_surface_new_metal_layer> ("sk_surface_new_metal_layer")).Invoke (context, layer, origin, sampleCount, colorType, colorspace, props, drawable);
 		#endif
 
-		// sk_surface_t* sk_surface_new_metal_view(gr_recording_context_t* context, const void* mtkView, gr_surfaceorigin_t origin, int sampleCount, sk_colortype_t colorType, sk_colorspace_t* colorspace, const sk_surfaceprops_t* props)
+		// sk_surface_t * sk_surface_new_metal_view(gr_recording_context_t * context, void const * mtkView, gr_surfaceorigin_t origin, int sampleCount, sk_colortype_t colorType, sk_colorspace_t * colorspace, sk_surfaceprops_t const * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15313,7 +15313,7 @@ namespace SkiaSharp
 			(sk_surface_new_metal_view_delegate ??= GetSymbol<Delegates.sk_surface_new_metal_view> ("sk_surface_new_metal_view")).Invoke (context, mtkView, origin, sampleCount, colorType, colorspace, props);
 		#endif
 
-		// sk_surface_t* sk_surface_new_null(int width, int height)
+		// sk_surface_t * sk_surface_new_null(int width, int height)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15332,7 +15332,7 @@ namespace SkiaSharp
 			(sk_surface_new_null_delegate ??= GetSymbol<Delegates.sk_surface_new_null> ("sk_surface_new_null")).Invoke (width, height);
 		#endif
 
-		// sk_surface_t* sk_surface_new_raster(const sk_imageinfo_t*, size_t rowBytes, const sk_surfaceprops_t*)
+		// sk_surface_t * sk_surface_new_raster(sk_imageinfo_t const *, size_t rowBytes, sk_surfaceprops_t const *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15351,7 +15351,7 @@ namespace SkiaSharp
 			(sk_surface_new_raster_delegate ??= GetSymbol<Delegates.sk_surface_new_raster> ("sk_surface_new_raster")).Invoke (param0, rowBytes, param2);
 		#endif
 
-		// sk_surface_t* sk_surface_new_raster_direct(const sk_imageinfo_t*, void* pixels, size_t rowBytes, const sk_surface_raster_release_proc releaseProc, void* context, const sk_surfaceprops_t* props)
+		// sk_surface_t * sk_surface_new_raster_direct(sk_imageinfo_t const *, void * pixels, size_t rowBytes, sk_surface_raster_release_proc const releaseProc, void * context, sk_surfaceprops_t const * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15370,7 +15370,7 @@ namespace SkiaSharp
 			(sk_surface_new_raster_direct_delegate ??= GetSymbol<Delegates.sk_surface_new_raster_direct> ("sk_surface_new_raster_direct")).Invoke (param0, pixels, rowBytes, releaseProc, context, props);
 		#endif
 
-		// sk_surface_t* sk_surface_new_render_target(gr_recording_context_t* context, bool budgeted, const sk_imageinfo_t* cinfo, int sampleCount, gr_surfaceorigin_t origin, const sk_surfaceprops_t* props, bool shouldCreateWithMips)
+		// sk_surface_t * sk_surface_new_render_target(gr_recording_context_t * context, bool budgeted, sk_imageinfo_t const * cinfo, int sampleCount, gr_surfaceorigin_t origin, sk_surfaceprops_t const * props, bool shouldCreateWithMips)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15389,7 +15389,7 @@ namespace SkiaSharp
 			(sk_surface_new_render_target_delegate ??= GetSymbol<Delegates.sk_surface_new_render_target> ("sk_surface_new_render_target")).Invoke (context, budgeted, cinfo, sampleCount, origin, props, shouldCreateWithMips);
 		#endif
 
-		// bool sk_surface_peek_pixels(sk_surface_t* surface, sk_pixmap_t* pixmap)
+		// bool sk_surface_peek_pixels(sk_surface_t * surface, sk_pixmap_t * pixmap)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15411,7 +15411,7 @@ namespace SkiaSharp
 			(sk_surface_peek_pixels_delegate ??= GetSymbol<Delegates.sk_surface_peek_pixels> ("sk_surface_peek_pixels")).Invoke (surface, pixmap);
 		#endif
 
-		// bool sk_surface_read_pixels(sk_surface_t* surface, sk_imageinfo_t* dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY)
+		// bool sk_surface_read_pixels(sk_surface_t * surface, sk_imageinfo_t * dstInfo, void * dstPixels, size_t dstRowBytes, int srcX, int srcY)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15433,7 +15433,7 @@ namespace SkiaSharp
 			(sk_surface_read_pixels_delegate ??= GetSymbol<Delegates.sk_surface_read_pixels> ("sk_surface_read_pixels")).Invoke (surface, dstInfo, dstPixels, dstRowBytes, srcX, srcY);
 		#endif
 
-		// void sk_surface_unref(sk_surface_t*)
+		// void sk_surface_unref(sk_surface_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15452,7 +15452,7 @@ namespace SkiaSharp
 			(sk_surface_unref_delegate ??= GetSymbol<Delegates.sk_surface_unref> ("sk_surface_unref")).Invoke (param0);
 		#endif
 
-		// void sk_surfaceprops_delete(sk_surfaceprops_t* props)
+		// void sk_surfaceprops_delete(sk_surfaceprops_t * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15471,7 +15471,7 @@ namespace SkiaSharp
 			(sk_surfaceprops_delete_delegate ??= GetSymbol<Delegates.sk_surfaceprops_delete> ("sk_surfaceprops_delete")).Invoke (props);
 		#endif
 
-		// uint32_t sk_surfaceprops_get_flags(sk_surfaceprops_t* props)
+		// unsigned int sk_surfaceprops_get_flags(sk_surfaceprops_t * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15490,7 +15490,7 @@ namespace SkiaSharp
 			(sk_surfaceprops_get_flags_delegate ??= GetSymbol<Delegates.sk_surfaceprops_get_flags> ("sk_surfaceprops_get_flags")).Invoke (props);
 		#endif
 
-		// sk_pixelgeometry_t sk_surfaceprops_get_pixel_geometry(sk_surfaceprops_t* props)
+		// sk_pixelgeometry_t sk_surfaceprops_get_pixel_geometry(sk_surfaceprops_t * props)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15509,7 +15509,7 @@ namespace SkiaSharp
 			(sk_surfaceprops_get_pixel_geometry_delegate ??= GetSymbol<Delegates.sk_surfaceprops_get_pixel_geometry> ("sk_surfaceprops_get_pixel_geometry")).Invoke (props);
 		#endif
 
-		// sk_surfaceprops_t* sk_surfaceprops_new(uint32_t flags, sk_pixelgeometry_t geometry)
+		// sk_surfaceprops_t * sk_surfaceprops_new(unsigned int flags, sk_pixelgeometry_t geometry)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15532,7 +15532,7 @@ namespace SkiaSharp
 
 		#region sk_svg.h
 
-		// sk_canvas_t* sk_svgcanvas_create_with_stream(const sk_rect_t* bounds, sk_wstream_t* stream)
+		// sk_canvas_t * sk_svgcanvas_create_with_stream(sk_rect_t const * bounds, sk_wstream_t * stream)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15555,7 +15555,7 @@ namespace SkiaSharp
 
 		#region sk_textblob.h
 
-		// void sk_textblob_builder_alloc_run(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float x, float y, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run(sk_textblob_builder_t * builder, sk_font_t const * font, int count, float x, float y, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15574,7 +15574,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run> ("sk_textblob_builder_alloc_run")).Invoke (builder, font, count, x, y, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_alloc_run_pos(sk_textblob_builder_t* builder, const sk_font_t* font, int count, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_pos(sk_textblob_builder_t * builder, sk_font_t const * font, int count, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15593,7 +15593,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_pos_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_pos> ("sk_textblob_builder_alloc_run_pos")).Invoke (builder, font, count, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_alloc_run_pos_h(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float y, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_pos_h(sk_textblob_builder_t * builder, sk_font_t const * font, int count, float y, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15612,7 +15612,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_pos_h_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_pos_h> ("sk_textblob_builder_alloc_run_pos_h")).Invoke (builder, font, count, y, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_alloc_run_rsxform(sk_textblob_builder_t* builder, const sk_font_t* font, int count, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_rsxform(sk_textblob_builder_t * builder, sk_font_t const * font, int count, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15631,7 +15631,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_rsxform_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_rsxform> ("sk_textblob_builder_alloc_run_rsxform")).Invoke (builder, font, count, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_alloc_run_text(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float x, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_text(sk_textblob_builder_t * builder, sk_font_t const * font, int count, float x, float y, int textByteCount, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15650,7 +15650,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_text_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text> ("sk_textblob_builder_alloc_run_text")).Invoke (builder, font, count, x, y, textByteCount, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_alloc_run_text_pos(sk_textblob_builder_t* builder, const sk_font_t* font, int count, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_text_pos(sk_textblob_builder_t * builder, sk_font_t const * font, int count, int textByteCount, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15669,7 +15669,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_text_pos_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text_pos> ("sk_textblob_builder_alloc_run_text_pos")).Invoke (builder, font, count, textByteCount, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_alloc_run_text_pos_h(sk_textblob_builder_t* builder, const sk_font_t* font, int count, float y, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_text_pos_h(sk_textblob_builder_t * builder, sk_font_t const * font, int count, float y, int textByteCount, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15688,7 +15688,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_text_pos_h_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text_pos_h> ("sk_textblob_builder_alloc_run_text_pos_h")).Invoke (builder, font, count, y, textByteCount, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_alloc_run_text_rsxform(sk_textblob_builder_t* builder, const sk_font_t* font, int count, int textByteCount, const sk_rect_t* bounds, sk_textblob_builder_runbuffer_t* runbuffer)
+		// void sk_textblob_builder_alloc_run_text_rsxform(sk_textblob_builder_t * builder, sk_font_t const * font, int count, int textByteCount, sk_rect_t const * bounds, sk_textblob_builder_runbuffer_t * runbuffer)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15707,7 +15707,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_alloc_run_text_rsxform_delegate ??= GetSymbol<Delegates.sk_textblob_builder_alloc_run_text_rsxform> ("sk_textblob_builder_alloc_run_text_rsxform")).Invoke (builder, font, count, textByteCount, bounds, runbuffer);
 		#endif
 
-		// void sk_textblob_builder_delete(sk_textblob_builder_t* builder)
+		// void sk_textblob_builder_delete(sk_textblob_builder_t * builder)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15726,7 +15726,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_delete_delegate ??= GetSymbol<Delegates.sk_textblob_builder_delete> ("sk_textblob_builder_delete")).Invoke (builder);
 		#endif
 
-		// sk_textblob_t* sk_textblob_builder_make(sk_textblob_builder_t* builder)
+		// sk_textblob_t * sk_textblob_builder_make(sk_textblob_builder_t * builder)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15745,7 +15745,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_make_delegate ??= GetSymbol<Delegates.sk_textblob_builder_make> ("sk_textblob_builder_make")).Invoke (builder);
 		#endif
 
-		// sk_textblob_builder_t* sk_textblob_builder_new()
+		// sk_textblob_builder_t * sk_textblob_builder_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15764,7 +15764,7 @@ namespace SkiaSharp
 			(sk_textblob_builder_new_delegate ??= GetSymbol<Delegates.sk_textblob_builder_new> ("sk_textblob_builder_new")).Invoke ();
 		#endif
 
-		// void sk_textblob_get_bounds(const sk_textblob_t* blob, sk_rect_t* bounds)
+		// void sk_textblob_get_bounds(sk_textblob_t const * blob, sk_rect_t * bounds)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15783,7 +15783,7 @@ namespace SkiaSharp
 			(sk_textblob_get_bounds_delegate ??= GetSymbol<Delegates.sk_textblob_get_bounds> ("sk_textblob_get_bounds")).Invoke (blob, bounds);
 		#endif
 
-		// int sk_textblob_get_intercepts(const sk_textblob_t* blob, const float[2] bounds = 2, float[-1] intervals, const sk_paint_t* paint)
+		// int sk_textblob_get_intercepts(sk_textblob_t const * blob, float const[2] bounds = 2, float[-1] intervals, sk_paint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15802,7 +15802,7 @@ namespace SkiaSharp
 			(sk_textblob_get_intercepts_delegate ??= GetSymbol<Delegates.sk_textblob_get_intercepts> ("sk_textblob_get_intercepts")).Invoke (blob, bounds, intervals, paint);
 		#endif
 
-		// uint32_t sk_textblob_get_unique_id(const sk_textblob_t* blob)
+		// unsigned int sk_textblob_get_unique_id(sk_textblob_t const * blob)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15821,7 +15821,7 @@ namespace SkiaSharp
 			(sk_textblob_get_unique_id_delegate ??= GetSymbol<Delegates.sk_textblob_get_unique_id> ("sk_textblob_get_unique_id")).Invoke (blob);
 		#endif
 
-		// void sk_textblob_ref(const sk_textblob_t* blob)
+		// void sk_textblob_ref(sk_textblob_t const * blob)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15840,7 +15840,7 @@ namespace SkiaSharp
 			(sk_textblob_ref_delegate ??= GetSymbol<Delegates.sk_textblob_ref> ("sk_textblob_ref")).Invoke (blob);
 		#endif
 
-		// void sk_textblob_unref(const sk_textblob_t* blob)
+		// void sk_textblob_unref(sk_textblob_t const * blob)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15863,7 +15863,7 @@ namespace SkiaSharp
 
 		#region sk_typeface.h
 
-		// int sk_fontmgr_count_families(sk_fontmgr_t*)
+		// int sk_fontmgr_count_families(sk_fontmgr_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15882,7 +15882,7 @@ namespace SkiaSharp
 			(sk_fontmgr_count_families_delegate ??= GetSymbol<Delegates.sk_fontmgr_count_families> ("sk_fontmgr_count_families")).Invoke (param0);
 		#endif
 
-		// sk_fontmgr_t* sk_fontmgr_create_default()
+		// sk_fontmgr_t * sk_fontmgr_create_default()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15901,7 +15901,7 @@ namespace SkiaSharp
 			(sk_fontmgr_create_default_delegate ??= GetSymbol<Delegates.sk_fontmgr_create_default> ("sk_fontmgr_create_default")).Invoke ();
 		#endif
 
-		// sk_typeface_t* sk_fontmgr_create_from_data(sk_fontmgr_t*, sk_data_t* data, int index)
+		// sk_typeface_t * sk_fontmgr_create_from_data(sk_fontmgr_t *, sk_data_t * data, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15920,7 +15920,7 @@ namespace SkiaSharp
 			(sk_fontmgr_create_from_data_delegate ??= GetSymbol<Delegates.sk_fontmgr_create_from_data> ("sk_fontmgr_create_from_data")).Invoke (param0, data, index);
 		#endif
 
-		// sk_typeface_t* sk_fontmgr_create_from_file(sk_fontmgr_t*, const char* path, int index)
+		// sk_typeface_t * sk_fontmgr_create_from_file(sk_fontmgr_t *, char const * path, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15939,7 +15939,7 @@ namespace SkiaSharp
 			(sk_fontmgr_create_from_file_delegate ??= GetSymbol<Delegates.sk_fontmgr_create_from_file> ("sk_fontmgr_create_from_file")).Invoke (param0, path, index);
 		#endif
 
-		// sk_typeface_t* sk_fontmgr_create_from_stream(sk_fontmgr_t*, sk_stream_asset_t* stream, int index)
+		// sk_typeface_t * sk_fontmgr_create_from_stream(sk_fontmgr_t *, sk_stream_asset_t * stream, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15958,7 +15958,7 @@ namespace SkiaSharp
 			(sk_fontmgr_create_from_stream_delegate ??= GetSymbol<Delegates.sk_fontmgr_create_from_stream> ("sk_fontmgr_create_from_stream")).Invoke (param0, stream, index);
 		#endif
 
-		// sk_fontstyleset_t* sk_fontmgr_create_styleset(sk_fontmgr_t*, int index)
+		// sk_fontstyleset_t * sk_fontmgr_create_styleset(sk_fontmgr_t *, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15977,7 +15977,7 @@ namespace SkiaSharp
 			(sk_fontmgr_create_styleset_delegate ??= GetSymbol<Delegates.sk_fontmgr_create_styleset> ("sk_fontmgr_create_styleset")).Invoke (param0, index);
 		#endif
 
-		// void sk_fontmgr_get_family_name(sk_fontmgr_t*, int index, sk_string_t* familyName)
+		// void sk_fontmgr_get_family_name(sk_fontmgr_t *, int index, sk_string_t * familyName)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -15996,7 +15996,7 @@ namespace SkiaSharp
 			(sk_fontmgr_get_family_name_delegate ??= GetSymbol<Delegates.sk_fontmgr_get_family_name> ("sk_fontmgr_get_family_name")).Invoke (param0, index, familyName);
 		#endif
 
-		// sk_fontstyleset_t* sk_fontmgr_match_family(sk_fontmgr_t*, const char* familyName)
+		// sk_fontstyleset_t * sk_fontmgr_match_family(sk_fontmgr_t *, char const * familyName)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16015,7 +16015,7 @@ namespace SkiaSharp
 			(sk_fontmgr_match_family_delegate ??= GetSymbol<Delegates.sk_fontmgr_match_family> ("sk_fontmgr_match_family")).Invoke (param0, familyName);
 		#endif
 
-		// sk_typeface_t* sk_fontmgr_match_family_style(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style)
+		// sk_typeface_t * sk_fontmgr_match_family_style(sk_fontmgr_t *, char const * familyName, sk_fontstyle_t * style)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16034,7 +16034,7 @@ namespace SkiaSharp
 			(sk_fontmgr_match_family_style_delegate ??= GetSymbol<Delegates.sk_fontmgr_match_family_style> ("sk_fontmgr_match_family_style")).Invoke (param0, familyName, style);
 		#endif
 
-		// sk_typeface_t* sk_fontmgr_match_family_style_character(sk_fontmgr_t*, const char* familyName, sk_fontstyle_t* style, const char** bcp47, int bcp47Count, int32_t character)
+		// sk_typeface_t * sk_fontmgr_match_family_style_character(sk_fontmgr_t *, char const * familyName, sk_fontstyle_t * style, char const * * bcp47, int bcp47Count, int character)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16053,7 +16053,7 @@ namespace SkiaSharp
 			(sk_fontmgr_match_family_style_character_delegate ??= GetSymbol<Delegates.sk_fontmgr_match_family_style_character> ("sk_fontmgr_match_family_style_character")).Invoke (param0, familyName, style, bcp47, bcp47Count, character);
 		#endif
 
-		// sk_fontmgr_t* sk_fontmgr_ref_default()
+		// sk_fontmgr_t * sk_fontmgr_ref_default()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16072,7 +16072,7 @@ namespace SkiaSharp
 			(sk_fontmgr_ref_default_delegate ??= GetSymbol<Delegates.sk_fontmgr_ref_default> ("sk_fontmgr_ref_default")).Invoke ();
 		#endif
 
-		// void sk_fontmgr_unref(sk_fontmgr_t*)
+		// void sk_fontmgr_unref(sk_fontmgr_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16091,7 +16091,7 @@ namespace SkiaSharp
 			(sk_fontmgr_unref_delegate ??= GetSymbol<Delegates.sk_fontmgr_unref> ("sk_fontmgr_unref")).Invoke (param0);
 		#endif
 
-		// void sk_fontstyle_delete(sk_fontstyle_t* fs)
+		// void sk_fontstyle_delete(sk_fontstyle_t * fs)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16110,7 +16110,7 @@ namespace SkiaSharp
 			(sk_fontstyle_delete_delegate ??= GetSymbol<Delegates.sk_fontstyle_delete> ("sk_fontstyle_delete")).Invoke (fs);
 		#endif
 
-		// sk_font_style_slant_t sk_fontstyle_get_slant(const sk_fontstyle_t* fs)
+		// sk_font_style_slant_t sk_fontstyle_get_slant(sk_fontstyle_t const * fs)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16129,7 +16129,7 @@ namespace SkiaSharp
 			(sk_fontstyle_get_slant_delegate ??= GetSymbol<Delegates.sk_fontstyle_get_slant> ("sk_fontstyle_get_slant")).Invoke (fs);
 		#endif
 
-		// int sk_fontstyle_get_weight(const sk_fontstyle_t* fs)
+		// int sk_fontstyle_get_weight(sk_fontstyle_t const * fs)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16148,7 +16148,7 @@ namespace SkiaSharp
 			(sk_fontstyle_get_weight_delegate ??= GetSymbol<Delegates.sk_fontstyle_get_weight> ("sk_fontstyle_get_weight")).Invoke (fs);
 		#endif
 
-		// int sk_fontstyle_get_width(const sk_fontstyle_t* fs)
+		// int sk_fontstyle_get_width(sk_fontstyle_t const * fs)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16167,7 +16167,7 @@ namespace SkiaSharp
 			(sk_fontstyle_get_width_delegate ??= GetSymbol<Delegates.sk_fontstyle_get_width> ("sk_fontstyle_get_width")).Invoke (fs);
 		#endif
 
-		// sk_fontstyle_t* sk_fontstyle_new(int weight, int width, sk_font_style_slant_t slant)
+		// sk_fontstyle_t * sk_fontstyle_new(int weight, int width, sk_font_style_slant_t slant)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16186,7 +16186,7 @@ namespace SkiaSharp
 			(sk_fontstyle_new_delegate ??= GetSymbol<Delegates.sk_fontstyle_new> ("sk_fontstyle_new")).Invoke (weight, width, slant);
 		#endif
 
-		// sk_fontstyleset_t* sk_fontstyleset_create_empty()
+		// sk_fontstyleset_t * sk_fontstyleset_create_empty()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16205,7 +16205,7 @@ namespace SkiaSharp
 			(sk_fontstyleset_create_empty_delegate ??= GetSymbol<Delegates.sk_fontstyleset_create_empty> ("sk_fontstyleset_create_empty")).Invoke ();
 		#endif
 
-		// sk_typeface_t* sk_fontstyleset_create_typeface(sk_fontstyleset_t* fss, int index)
+		// sk_typeface_t * sk_fontstyleset_create_typeface(sk_fontstyleset_t * fss, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16224,7 +16224,7 @@ namespace SkiaSharp
 			(sk_fontstyleset_create_typeface_delegate ??= GetSymbol<Delegates.sk_fontstyleset_create_typeface> ("sk_fontstyleset_create_typeface")).Invoke (fss, index);
 		#endif
 
-		// int sk_fontstyleset_get_count(sk_fontstyleset_t* fss)
+		// int sk_fontstyleset_get_count(sk_fontstyleset_t * fss)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16243,7 +16243,7 @@ namespace SkiaSharp
 			(sk_fontstyleset_get_count_delegate ??= GetSymbol<Delegates.sk_fontstyleset_get_count> ("sk_fontstyleset_get_count")).Invoke (fss);
 		#endif
 
-		// void sk_fontstyleset_get_style(sk_fontstyleset_t* fss, int index, sk_fontstyle_t* fs, sk_string_t* style)
+		// void sk_fontstyleset_get_style(sk_fontstyleset_t * fss, int index, sk_fontstyle_t * fs, sk_string_t * style)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16262,7 +16262,7 @@ namespace SkiaSharp
 			(sk_fontstyleset_get_style_delegate ??= GetSymbol<Delegates.sk_fontstyleset_get_style> ("sk_fontstyleset_get_style")).Invoke (fss, index, fs, style);
 		#endif
 
-		// sk_typeface_t* sk_fontstyleset_match_style(sk_fontstyleset_t* fss, sk_fontstyle_t* style)
+		// sk_typeface_t * sk_fontstyleset_match_style(sk_fontstyleset_t * fss, sk_fontstyle_t * style)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16281,7 +16281,7 @@ namespace SkiaSharp
 			(sk_fontstyleset_match_style_delegate ??= GetSymbol<Delegates.sk_fontstyleset_match_style> ("sk_fontstyleset_match_style")).Invoke (fss, style);
 		#endif
 
-		// void sk_fontstyleset_unref(sk_fontstyleset_t* fss)
+		// void sk_fontstyleset_unref(sk_fontstyleset_t * fss)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16300,7 +16300,7 @@ namespace SkiaSharp
 			(sk_fontstyleset_unref_delegate ??= GetSymbol<Delegates.sk_fontstyleset_unref> ("sk_fontstyleset_unref")).Invoke (fss);
 		#endif
 
-		// sk_data_t* sk_typeface_copy_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
+		// sk_data_t * sk_typeface_copy_table_data(sk_typeface_t const * typeface, sk_font_table_tag_t tag)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16319,7 +16319,7 @@ namespace SkiaSharp
 			(sk_typeface_copy_table_data_delegate ??= GetSymbol<Delegates.sk_typeface_copy_table_data> ("sk_typeface_copy_table_data")).Invoke (typeface, tag);
 		#endif
 
-		// int sk_typeface_count_glyphs(const sk_typeface_t* typeface)
+		// int sk_typeface_count_glyphs(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16338,7 +16338,7 @@ namespace SkiaSharp
 			(sk_typeface_count_glyphs_delegate ??= GetSymbol<Delegates.sk_typeface_count_glyphs> ("sk_typeface_count_glyphs")).Invoke (typeface);
 		#endif
 
-		// int sk_typeface_count_tables(const sk_typeface_t* typeface)
+		// int sk_typeface_count_tables(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16357,7 +16357,7 @@ namespace SkiaSharp
 			(sk_typeface_count_tables_delegate ??= GetSymbol<Delegates.sk_typeface_count_tables> ("sk_typeface_count_tables")).Invoke (typeface);
 		#endif
 
-		// sk_typeface_t* sk_typeface_create_default()
+		// sk_typeface_t * sk_typeface_create_default()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16376,7 +16376,7 @@ namespace SkiaSharp
 			(sk_typeface_create_default_delegate ??= GetSymbol<Delegates.sk_typeface_create_default> ("sk_typeface_create_default")).Invoke ();
 		#endif
 
-		// sk_typeface_t* sk_typeface_create_from_data(sk_data_t* data, int index)
+		// sk_typeface_t * sk_typeface_create_from_data(sk_data_t * data, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16395,7 +16395,7 @@ namespace SkiaSharp
 			(sk_typeface_create_from_data_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_data> ("sk_typeface_create_from_data")).Invoke (data, index);
 		#endif
 
-		// sk_typeface_t* sk_typeface_create_from_file(const char* path, int index)
+		// sk_typeface_t * sk_typeface_create_from_file(char const * path, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16414,7 +16414,7 @@ namespace SkiaSharp
 			(sk_typeface_create_from_file_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_file> ("sk_typeface_create_from_file")).Invoke (path, index);
 		#endif
 
-		// sk_typeface_t* sk_typeface_create_from_name(const char* familyName, const sk_fontstyle_t* style)
+		// sk_typeface_t * sk_typeface_create_from_name(char const * familyName, sk_fontstyle_t const * style)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16433,7 +16433,7 @@ namespace SkiaSharp
 			(sk_typeface_create_from_name_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_name> ("sk_typeface_create_from_name")).Invoke (familyName, style);
 		#endif
 
-		// sk_typeface_t* sk_typeface_create_from_stream(sk_stream_asset_t* stream, int index)
+		// sk_typeface_t * sk_typeface_create_from_stream(sk_stream_asset_t * stream, int index)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16452,7 +16452,7 @@ namespace SkiaSharp
 			(sk_typeface_create_from_stream_delegate ??= GetSymbol<Delegates.sk_typeface_create_from_stream> ("sk_typeface_create_from_stream")).Invoke (stream, index);
 		#endif
 
-		// sk_string_t* sk_typeface_get_family_name(const sk_typeface_t* typeface)
+		// sk_string_t * sk_typeface_get_family_name(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16471,7 +16471,7 @@ namespace SkiaSharp
 			(sk_typeface_get_family_name_delegate ??= GetSymbol<Delegates.sk_typeface_get_family_name> ("sk_typeface_get_family_name")).Invoke (typeface);
 		#endif
 
-		// sk_font_style_slant_t sk_typeface_get_font_slant(const sk_typeface_t* typeface)
+		// sk_font_style_slant_t sk_typeface_get_font_slant(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16490,7 +16490,7 @@ namespace SkiaSharp
 			(sk_typeface_get_font_slant_delegate ??= GetSymbol<Delegates.sk_typeface_get_font_slant> ("sk_typeface_get_font_slant")).Invoke (typeface);
 		#endif
 
-		// int sk_typeface_get_font_weight(const sk_typeface_t* typeface)
+		// int sk_typeface_get_font_weight(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16509,7 +16509,7 @@ namespace SkiaSharp
 			(sk_typeface_get_font_weight_delegate ??= GetSymbol<Delegates.sk_typeface_get_font_weight> ("sk_typeface_get_font_weight")).Invoke (typeface);
 		#endif
 
-		// int sk_typeface_get_font_width(const sk_typeface_t* typeface)
+		// int sk_typeface_get_font_width(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16528,7 +16528,7 @@ namespace SkiaSharp
 			(sk_typeface_get_font_width_delegate ??= GetSymbol<Delegates.sk_typeface_get_font_width> ("sk_typeface_get_font_width")).Invoke (typeface);
 		#endif
 
-		// sk_fontstyle_t* sk_typeface_get_fontstyle(const sk_typeface_t* typeface)
+		// sk_fontstyle_t * sk_typeface_get_fontstyle(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16547,7 +16547,7 @@ namespace SkiaSharp
 			(sk_typeface_get_fontstyle_delegate ??= GetSymbol<Delegates.sk_typeface_get_fontstyle> ("sk_typeface_get_fontstyle")).Invoke (typeface);
 		#endif
 
-		// bool sk_typeface_get_kerning_pair_adjustments(const sk_typeface_t* typeface, const uint16_t[-1] glyphs, int count, int32_t[-1] adjustments)
+		// bool sk_typeface_get_kerning_pair_adjustments(sk_typeface_t const * typeface, unsigned short const[-1] glyphs, int count, int[-1] adjustments)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16569,7 +16569,7 @@ namespace SkiaSharp
 			(sk_typeface_get_kerning_pair_adjustments_delegate ??= GetSymbol<Delegates.sk_typeface_get_kerning_pair_adjustments> ("sk_typeface_get_kerning_pair_adjustments")).Invoke (typeface, glyphs, count, adjustments);
 		#endif
 
-		// sk_string_t* sk_typeface_get_post_script_name(const sk_typeface_t* typeface)
+		// sk_string_t * sk_typeface_get_post_script_name(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16588,7 +16588,7 @@ namespace SkiaSharp
 			(sk_typeface_get_post_script_name_delegate ??= GetSymbol<Delegates.sk_typeface_get_post_script_name> ("sk_typeface_get_post_script_name")).Invoke (typeface);
 		#endif
 
-		// size_t sk_typeface_get_table_data(const sk_typeface_t* typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void* data)
+		// size_t sk_typeface_get_table_data(sk_typeface_t const * typeface, sk_font_table_tag_t tag, size_t offset, size_t length, void * data)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16607,7 +16607,7 @@ namespace SkiaSharp
 			(sk_typeface_get_table_data_delegate ??= GetSymbol<Delegates.sk_typeface_get_table_data> ("sk_typeface_get_table_data")).Invoke (typeface, tag, offset, length, data);
 		#endif
 
-		// size_t sk_typeface_get_table_size(const sk_typeface_t* typeface, sk_font_table_tag_t tag)
+		// size_t sk_typeface_get_table_size(sk_typeface_t const * typeface, sk_font_table_tag_t tag)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16626,7 +16626,7 @@ namespace SkiaSharp
 			(sk_typeface_get_table_size_delegate ??= GetSymbol<Delegates.sk_typeface_get_table_size> ("sk_typeface_get_table_size")).Invoke (typeface, tag);
 		#endif
 
-		// int sk_typeface_get_table_tags(const sk_typeface_t* typeface, sk_font_table_tag_t[-1] tags)
+		// int sk_typeface_get_table_tags(sk_typeface_t const * typeface, sk_font_table_tag_t[-1] tags)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16645,7 +16645,7 @@ namespace SkiaSharp
 			(sk_typeface_get_table_tags_delegate ??= GetSymbol<Delegates.sk_typeface_get_table_tags> ("sk_typeface_get_table_tags")).Invoke (typeface, tags);
 		#endif
 
-		// int sk_typeface_get_units_per_em(const sk_typeface_t* typeface)
+		// int sk_typeface_get_units_per_em(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16664,7 +16664,7 @@ namespace SkiaSharp
 			(sk_typeface_get_units_per_em_delegate ??= GetSymbol<Delegates.sk_typeface_get_units_per_em> ("sk_typeface_get_units_per_em")).Invoke (typeface);
 		#endif
 
-		// bool sk_typeface_is_fixed_pitch(const sk_typeface_t* typeface)
+		// bool sk_typeface_is_fixed_pitch(sk_typeface_t const * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16686,7 +16686,7 @@ namespace SkiaSharp
 			(sk_typeface_is_fixed_pitch_delegate ??= GetSymbol<Delegates.sk_typeface_is_fixed_pitch> ("sk_typeface_is_fixed_pitch")).Invoke (typeface);
 		#endif
 
-		// sk_stream_asset_t* sk_typeface_open_stream(const sk_typeface_t* typeface, int* ttcIndex)
+		// sk_stream_asset_t * sk_typeface_open_stream(sk_typeface_t const * typeface, int * ttcIndex)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16705,7 +16705,7 @@ namespace SkiaSharp
 			(sk_typeface_open_stream_delegate ??= GetSymbol<Delegates.sk_typeface_open_stream> ("sk_typeface_open_stream")).Invoke (typeface, ttcIndex);
 		#endif
 
-		// sk_typeface_t* sk_typeface_ref_default()
+		// sk_typeface_t * sk_typeface_ref_default()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16724,7 +16724,7 @@ namespace SkiaSharp
 			(sk_typeface_ref_default_delegate ??= GetSymbol<Delegates.sk_typeface_ref_default> ("sk_typeface_ref_default")).Invoke ();
 		#endif
 
-		// uint16_t sk_typeface_unichar_to_glyph(const sk_typeface_t* typeface, const int32_t unichar)
+		// unsigned short sk_typeface_unichar_to_glyph(sk_typeface_t const * typeface, int const unichar)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16743,7 +16743,7 @@ namespace SkiaSharp
 			(sk_typeface_unichar_to_glyph_delegate ??= GetSymbol<Delegates.sk_typeface_unichar_to_glyph> ("sk_typeface_unichar_to_glyph")).Invoke (typeface, unichar);
 		#endif
 
-		// void sk_typeface_unichars_to_glyphs(const sk_typeface_t* typeface, const int32_t[-1] unichars, int count, uint16_t[-1] glyphs)
+		// void sk_typeface_unichars_to_glyphs(sk_typeface_t const * typeface, int const[-1] unichars, int count, unsigned short[-1] glyphs)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16762,7 +16762,7 @@ namespace SkiaSharp
 			(sk_typeface_unichars_to_glyphs_delegate ??= GetSymbol<Delegates.sk_typeface_unichars_to_glyphs> ("sk_typeface_unichars_to_glyphs")).Invoke (typeface, unichars, count, glyphs);
 		#endif
 
-		// void sk_typeface_unref(sk_typeface_t* typeface)
+		// void sk_typeface_unref(sk_typeface_t * typeface)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16785,7 +16785,7 @@ namespace SkiaSharp
 
 		#region sk_vertices.h
 
-		// sk_vertices_t* sk_vertices_make_copy(sk_vertices_vertex_mode_t vmode, int vertexCount, const sk_point_t* positions, const sk_point_t* texs, const sk_color_t* colors, int indexCount, const uint16_t* indices)
+		// sk_vertices_t * sk_vertices_make_copy(sk_vertices_vertex_mode_t vmode, int vertexCount, sk_point_t const * positions, sk_point_t const * texs, sk_color_t const * colors, int indexCount, unsigned short const * indices)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16804,7 +16804,7 @@ namespace SkiaSharp
 			(sk_vertices_make_copy_delegate ??= GetSymbol<Delegates.sk_vertices_make_copy> ("sk_vertices_make_copy")).Invoke (vmode, vertexCount, positions, texs, colors, indexCount, indices);
 		#endif
 
-		// void sk_vertices_ref(sk_vertices_t* cvertices)
+		// void sk_vertices_ref(sk_vertices_t * cvertices)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16823,7 +16823,7 @@ namespace SkiaSharp
 			(sk_vertices_ref_delegate ??= GetSymbol<Delegates.sk_vertices_ref> ("sk_vertices_ref")).Invoke (cvertices);
 		#endif
 
-		// void sk_vertices_unref(sk_vertices_t* cvertices)
+		// void sk_vertices_unref(sk_vertices_t * cvertices)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16846,7 +16846,7 @@ namespace SkiaSharp
 
 		#region sk_compatpaint.h
 
-		// sk_compatpaint_t* sk_compatpaint_clone(const sk_compatpaint_t* paint)
+		// sk_compatpaint_t * sk_compatpaint_clone(sk_compatpaint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16865,7 +16865,7 @@ namespace SkiaSharp
 			(sk_compatpaint_clone_delegate ??= GetSymbol<Delegates.sk_compatpaint_clone> ("sk_compatpaint_clone")).Invoke (paint);
 		#endif
 
-		// void sk_compatpaint_delete(sk_compatpaint_t* paint)
+		// void sk_compatpaint_delete(sk_compatpaint_t * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16884,7 +16884,7 @@ namespace SkiaSharp
 			(sk_compatpaint_delete_delegate ??= GetSymbol<Delegates.sk_compatpaint_delete> ("sk_compatpaint_delete")).Invoke (paint);
 		#endif
 
-		// int sk_compatpaint_get_filter_quality(const sk_compatpaint_t* paint)
+		// int sk_compatpaint_get_filter_quality(sk_compatpaint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16903,7 +16903,7 @@ namespace SkiaSharp
 			(sk_compatpaint_get_filter_quality_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_filter_quality> ("sk_compatpaint_get_filter_quality")).Invoke (paint);
 		#endif
 
-		// sk_font_t* sk_compatpaint_get_font(sk_compatpaint_t* paint)
+		// sk_font_t * sk_compatpaint_get_font(sk_compatpaint_t * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16922,7 +16922,7 @@ namespace SkiaSharp
 			(sk_compatpaint_get_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_font> ("sk_compatpaint_get_font")).Invoke (paint);
 		#endif
 
-		// bool sk_compatpaint_get_lcd_render_text(const sk_compatpaint_t* paint)
+		// bool sk_compatpaint_get_lcd_render_text(sk_compatpaint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16944,7 +16944,7 @@ namespace SkiaSharp
 			(sk_compatpaint_get_lcd_render_text_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_lcd_render_text> ("sk_compatpaint_get_lcd_render_text")).Invoke (paint);
 		#endif
 
-		// sk_text_align_t sk_compatpaint_get_text_align(const sk_compatpaint_t* paint)
+		// sk_text_align_t sk_compatpaint_get_text_align(sk_compatpaint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16963,7 +16963,7 @@ namespace SkiaSharp
 			(sk_compatpaint_get_text_align_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_text_align> ("sk_compatpaint_get_text_align")).Invoke (paint);
 		#endif
 
-		// sk_text_encoding_t sk_compatpaint_get_text_encoding(const sk_compatpaint_t* paint)
+		// sk_text_encoding_t sk_compatpaint_get_text_encoding(sk_compatpaint_t const * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -16982,7 +16982,7 @@ namespace SkiaSharp
 			(sk_compatpaint_get_text_encoding_delegate ??= GetSymbol<Delegates.sk_compatpaint_get_text_encoding> ("sk_compatpaint_get_text_encoding")).Invoke (paint);
 		#endif
 
-		// sk_font_t* sk_compatpaint_make_font(sk_compatpaint_t* paint)
+		// sk_font_t * sk_compatpaint_make_font(sk_compatpaint_t * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17001,7 +17001,7 @@ namespace SkiaSharp
 			(sk_compatpaint_make_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_make_font> ("sk_compatpaint_make_font")).Invoke (paint);
 		#endif
 
-		// sk_compatpaint_t* sk_compatpaint_new()
+		// sk_compatpaint_t * sk_compatpaint_new()
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17020,7 +17020,7 @@ namespace SkiaSharp
 			(sk_compatpaint_new_delegate ??= GetSymbol<Delegates.sk_compatpaint_new> ("sk_compatpaint_new")).Invoke ();
 		#endif
 
-		// sk_compatpaint_t* sk_compatpaint_new_with_font(const sk_font_t* font)
+		// sk_compatpaint_t * sk_compatpaint_new_with_font(sk_font_t const * font)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17039,7 +17039,7 @@ namespace SkiaSharp
 			(sk_compatpaint_new_with_font_delegate ??= GetSymbol<Delegates.sk_compatpaint_new_with_font> ("sk_compatpaint_new_with_font")).Invoke (font);
 		#endif
 
-		// void sk_compatpaint_reset(sk_compatpaint_t* paint)
+		// void sk_compatpaint_reset(sk_compatpaint_t * paint)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17058,7 +17058,7 @@ namespace SkiaSharp
 			(sk_compatpaint_reset_delegate ??= GetSymbol<Delegates.sk_compatpaint_reset> ("sk_compatpaint_reset")).Invoke (paint);
 		#endif
 
-		// void sk_compatpaint_set_filter_quality(sk_compatpaint_t* paint, int quality)
+		// void sk_compatpaint_set_filter_quality(sk_compatpaint_t * paint, int quality)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17077,7 +17077,7 @@ namespace SkiaSharp
 			(sk_compatpaint_set_filter_quality_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_filter_quality> ("sk_compatpaint_set_filter_quality")).Invoke (paint, quality);
 		#endif
 
-		// void sk_compatpaint_set_is_antialias(sk_compatpaint_t* paint, bool antialias)
+		// void sk_compatpaint_set_is_antialias(sk_compatpaint_t * paint, bool antialias)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17096,7 +17096,7 @@ namespace SkiaSharp
 			(sk_compatpaint_set_is_antialias_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_is_antialias> ("sk_compatpaint_set_is_antialias")).Invoke (paint, antialias);
 		#endif
 
-		// void sk_compatpaint_set_lcd_render_text(sk_compatpaint_t* paint, bool lcdRenderText)
+		// void sk_compatpaint_set_lcd_render_text(sk_compatpaint_t * paint, bool lcdRenderText)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17115,7 +17115,7 @@ namespace SkiaSharp
 			(sk_compatpaint_set_lcd_render_text_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_lcd_render_text> ("sk_compatpaint_set_lcd_render_text")).Invoke (paint, lcdRenderText);
 		#endif
 
-		// void sk_compatpaint_set_text_align(sk_compatpaint_t* paint, sk_text_align_t align)
+		// void sk_compatpaint_set_text_align(sk_compatpaint_t * paint, sk_text_align_t align)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17134,7 +17134,7 @@ namespace SkiaSharp
 			(sk_compatpaint_set_text_align_delegate ??= GetSymbol<Delegates.sk_compatpaint_set_text_align> ("sk_compatpaint_set_text_align")).Invoke (paint, align);
 		#endif
 
-		// void sk_compatpaint_set_text_encoding(sk_compatpaint_t* paint, sk_text_encoding_t encoding)
+		// void sk_compatpaint_set_text_encoding(sk_compatpaint_t * paint, sk_text_encoding_t encoding)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17157,7 +17157,7 @@ namespace SkiaSharp
 
 		#region sk_manageddrawable.h
 
-		// sk_manageddrawable_t* sk_manageddrawable_new(void* context)
+		// sk_manageddrawable_t * sk_manageddrawable_new(void * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17195,7 +17195,7 @@ namespace SkiaSharp
 			(sk_manageddrawable_set_procs_delegate ??= GetSymbol<Delegates.sk_manageddrawable_set_procs> ("sk_manageddrawable_set_procs")).Invoke (procs);
 		#endif
 
-		// void sk_manageddrawable_unref(sk_manageddrawable_t*)
+		// void sk_manageddrawable_unref(sk_manageddrawable_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17218,7 +17218,7 @@ namespace SkiaSharp
 
 		#region sk_managedstream.h
 
-		// void sk_managedstream_destroy(sk_stream_managedstream_t* s)
+		// void sk_managedstream_destroy(sk_stream_managedstream_t * s)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17237,7 +17237,7 @@ namespace SkiaSharp
 			(sk_managedstream_destroy_delegate ??= GetSymbol<Delegates.sk_managedstream_destroy> ("sk_managedstream_destroy")).Invoke (s);
 		#endif
 
-		// sk_stream_managedstream_t* sk_managedstream_new(void* context)
+		// sk_stream_managedstream_t * sk_managedstream_new(void * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17275,7 +17275,7 @@ namespace SkiaSharp
 			(sk_managedstream_set_procs_delegate ??= GetSymbol<Delegates.sk_managedstream_set_procs> ("sk_managedstream_set_procs")).Invoke (procs);
 		#endif
 
-		// void sk_managedwstream_destroy(sk_wstream_managedstream_t* s)
+		// void sk_managedwstream_destroy(sk_wstream_managedstream_t * s)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17294,7 +17294,7 @@ namespace SkiaSharp
 			(sk_managedwstream_destroy_delegate ??= GetSymbol<Delegates.sk_managedwstream_destroy> ("sk_managedwstream_destroy")).Invoke (s);
 		#endif
 
-		// sk_wstream_managedstream_t* sk_managedwstream_new(void* context)
+		// sk_wstream_managedstream_t * sk_managedwstream_new(void * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17336,7 +17336,7 @@ namespace SkiaSharp
 
 		#region sk_managedtracememorydump.h
 
-		// void sk_managedtracememorydump_delete(sk_managedtracememorydump_t*)
+		// void sk_managedtracememorydump_delete(sk_managedtracememorydump_t *)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17355,7 +17355,7 @@ namespace SkiaSharp
 			(sk_managedtracememorydump_delete_delegate ??= GetSymbol<Delegates.sk_managedtracememorydump_delete> ("sk_managedtracememorydump_delete")).Invoke (param0);
 		#endif
 
-		// sk_managedtracememorydump_t* sk_managedtracememorydump_new(bool detailed, bool dumpWrapped, void* context)
+		// sk_managedtracememorydump_t * sk_managedtracememorydump_new(bool detailed, bool dumpWrapped, void * context)
 		#if !USE_DELEGATES
 		#if USE_LIBRARY_IMPORT
 		[LibraryImport (SKIA)]
@@ -17404,146 +17404,146 @@ namespace SkiaSharp
 #if !USE_LIBRARY_IMPORT
 
 namespace SkiaSharp {
-	// typedef void (*)()* gr_gl_func_ptr
+	// typedef void (*)() * gr_gl_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void GRGlFuncPtr();
 
-	// typedef gr_gl_func_ptr (*)(void* ctx, const char* name)* gr_gl_get_proc
+	// typedef gr_gl_func_ptr (*)(void * ctx, char const * name) * gr_gl_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr GRGlGetProcProxyDelegate(void* ctx, /* char */ void* name);
 
-	// typedef void (*)()* gr_vk_func_ptr
+	// typedef void (*)() * gr_vk_func_ptr
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void GRVkFuncPtr();
 
-	// typedef gr_vk_func_ptr (*)(void* ctx, const char* name, vk_instance_t* instance, vk_device_t* device)* gr_vk_get_proc
+	// typedef gr_vk_func_ptr (*)(void * ctx, char const * name, vk_instance_t * instance, vk_device_t * device) * gr_vk_get_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate IntPtr GRVkGetProcProxyDelegate(void* ctx, /* char */ void* name, vk_instance_t instance, vk_device_t device);
 
-	// typedef void (*)(void* addr, void* context)* sk_bitmap_release_proc
+	// typedef void (*)(void * addr, void * context) * sk_bitmap_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKBitmapReleaseProxyDelegate(void* addr, void* context);
 
-	// typedef void (*)(const void* ptr, void* context)* sk_data_release_proc
+	// typedef void (*)(void const * ptr, void * context) * sk_data_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKDataReleaseProxyDelegate(void* ptr, void* context);
 
-	// typedef void (*)(const sk_path_t* pathOrNull, const sk_matrix_t* matrix, void* context)* sk_glyph_path_proc
+	// typedef void (*)(sk_path_t const * pathOrNull, sk_matrix_t const * matrix, void * context) * sk_glyph_path_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKGlyphPathProxyDelegate(sk_path_t pathOrNull, SKMatrix* matrix, void* context);
 
-	// typedef void (*)(const void* addr, void* context)* sk_image_raster_release_proc
+	// typedef void (*)(void const * addr, void * context) * sk_image_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKImageRasterReleaseProxyDelegate(void* addr, void* context);
 
-	// typedef void (*)(void* context)* sk_image_texture_release_proc
+	// typedef void (*)(void * context) * sk_image_texture_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKImageTextureReleaseProxyDelegate(void* context);
 
-	// typedef size_t (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_approximateBytesUsed_proc
+	// typedef size_t (*)(sk_manageddrawable_t * d, void * context) * sk_manageddrawable_approximateBytesUsed_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate /* size_t */ IntPtr SKManagedDrawableApproximateBytesUsedProxyDelegate(sk_manageddrawable_t d, void* context);
 
-	// typedef void (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_destroy_proc
+	// typedef void (*)(sk_manageddrawable_t * d, void * context) * sk_manageddrawable_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedDrawableDestroyProxyDelegate(sk_manageddrawable_t d, void* context);
 
-	// typedef void (*)(sk_manageddrawable_t* d, void* context, sk_canvas_t* ccanvas)* sk_manageddrawable_draw_proc
+	// typedef void (*)(sk_manageddrawable_t * d, void * context, sk_canvas_t * ccanvas) * sk_manageddrawable_draw_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedDrawableDrawProxyDelegate(sk_manageddrawable_t d, void* context, sk_canvas_t ccanvas);
 
-	// typedef void (*)(sk_manageddrawable_t* d, void* context, sk_rect_t* rect)* sk_manageddrawable_getBounds_proc
+	// typedef void (*)(sk_manageddrawable_t * d, void * context, sk_rect_t * rect) * sk_manageddrawable_getBounds_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedDrawableGetBoundsProxyDelegate(sk_manageddrawable_t d, void* context, SKRect* rect);
 
-	// typedef sk_picture_t* (*)(sk_manageddrawable_t* d, void* context)* sk_manageddrawable_makePictureSnapshot_proc
+	// typedef sk_picture_t * (*)(sk_manageddrawable_t * d, void * context) * sk_manageddrawable_makePictureSnapshot_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_picture_t SKManagedDrawableMakePictureSnapshotProxyDelegate(sk_manageddrawable_t d, void* context);
 
-	// typedef void (*)(sk_stream_managedstream_t* s, void* context)* sk_managedstream_destroy_proc
+	// typedef void (*)(sk_stream_managedstream_t * s, void * context) * sk_managedstream_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedStreamDestroyProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef sk_stream_managedstream_t* (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_duplicate_proc
+	// typedef sk_stream_managedstream_t * (*)(sk_stream_managedstream_t const * s, void * context) * sk_managedstream_duplicate_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_stream_managedstream_t SKManagedStreamDuplicateProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef sk_stream_managedstream_t* (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_fork_proc
+	// typedef sk_stream_managedstream_t * (*)(sk_stream_managedstream_t const * s, void * context) * sk_managedstream_fork_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate sk_stream_managedstream_t SKManagedStreamForkProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef size_t (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_getLength_proc
+	// typedef size_t (*)(sk_stream_managedstream_t const * s, void * context) * sk_managedstream_getLength_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamGetLengthProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef size_t (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_getPosition_proc
+	// typedef size_t (*)(sk_stream_managedstream_t const * s, void * context) * sk_managedstream_getPosition_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamGetPositionProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef bool (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_hasLength_proc
+	// typedef bool (*)(sk_stream_managedstream_t const * s, void * context) * sk_managedstream_hasLength_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamHasLengthProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef bool (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_hasPosition_proc
+	// typedef bool (*)(sk_stream_managedstream_t const * s, void * context) * sk_managedstream_hasPosition_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamHasPositionProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef bool (*)(const sk_stream_managedstream_t* s, void* context)* sk_managedstream_isAtEnd_proc
+	// typedef bool (*)(sk_stream_managedstream_t const * s, void * context) * sk_managedstream_isAtEnd_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamIsAtEndProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef bool (*)(sk_stream_managedstream_t* s, void* context, int offset)* sk_managedstream_move_proc
+	// typedef bool (*)(sk_stream_managedstream_t * s, void * context, long offset) * sk_managedstream_move_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamMoveProxyDelegate(sk_stream_managedstream_t s, void* context, Int32 offset);
 
-	// typedef size_t (*)(const sk_stream_managedstream_t* s, void* context, void* buffer, size_t size)* sk_managedstream_peek_proc
+	// typedef size_t (*)(sk_stream_managedstream_t const * s, void * context, void * buffer, size_t size) * sk_managedstream_peek_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamPeekProxyDelegate(sk_stream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
 
-	// typedef size_t (*)(sk_stream_managedstream_t* s, void* context, void* buffer, size_t size)* sk_managedstream_read_proc
+	// typedef size_t (*)(sk_stream_managedstream_t * s, void * context, void * buffer, size_t size) * sk_managedstream_read_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate /* size_t */ IntPtr SKManagedStreamReadProxyDelegate(sk_stream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
 
-	// typedef bool (*)(sk_stream_managedstream_t* s, void* context)* sk_managedstream_rewind_proc
+	// typedef bool (*)(sk_stream_managedstream_t * s, void * context) * sk_managedstream_rewind_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamRewindProxyDelegate(sk_stream_managedstream_t s, void* context);
 
-	// typedef bool (*)(sk_stream_managedstream_t* s, void* context, size_t position)* sk_managedstream_seek_proc
+	// typedef bool (*)(sk_stream_managedstream_t * s, void * context, size_t position) * sk_managedstream_seek_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedStreamSeekProxyDelegate(sk_stream_managedstream_t s, void* context, /* size_t */ IntPtr position);
 
-	// typedef void (*)(sk_managedtracememorydump_t* d, void* context, const char* dumpName, const char* valueName, const char* units, uint64_t value)* sk_managedtraceMemoryDump_dumpNumericValue_proc
+	// typedef void (*)(sk_managedtracememorydump_t * d, void * context, char const * dumpName, char const * valueName, char const * units, unsigned long long value) * sk_managedtraceMemoryDump_dumpNumericValue_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedTraceMemoryDumpDumpNumericValueProxyDelegate(sk_managedtracememorydump_t d, void* context, /* char */ void* dumpName, /* char */ void* valueName, /* char */ void* units, UInt64 value);
 
-	// typedef void (*)(sk_managedtracememorydump_t* d, void* context, const char* dumpName, const char* valueName, const char* value)* sk_managedtraceMemoryDump_dumpStringValue_proc
+	// typedef void (*)(sk_managedtracememorydump_t * d, void * context, char const * dumpName, char const * valueName, char const * value) * sk_managedtraceMemoryDump_dumpStringValue_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedTraceMemoryDumpDumpStringValueProxyDelegate(sk_managedtracememorydump_t d, void* context, /* char */ void* dumpName, /* char */ void* valueName, /* char */ void* value);
 
-	// typedef size_t (*)(const sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_bytesWritten_proc
+	// typedef size_t (*)(sk_wstream_managedstream_t const * s, void * context) * sk_managedwstream_bytesWritten_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate /* size_t */ IntPtr SKManagedWStreamBytesWrittenProxyDelegate(sk_wstream_managedstream_t s, void* context);
 
-	// typedef void (*)(sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_destroy_proc
+	// typedef void (*)(sk_wstream_managedstream_t * s, void * context) * sk_managedwstream_destroy_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedWStreamDestroyProxyDelegate(sk_wstream_managedstream_t s, void* context);
 
-	// typedef void (*)(sk_wstream_managedstream_t* s, void* context)* sk_managedwstream_flush_proc
+	// typedef void (*)(sk_wstream_managedstream_t * s, void * context) * sk_managedwstream_flush_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKManagedWStreamFlushProxyDelegate(sk_wstream_managedstream_t s, void* context);
 
-	// typedef bool (*)(sk_wstream_managedstream_t* s, void* context, const void* buffer, size_t size)* sk_managedwstream_write_proc
+	// typedef bool (*)(sk_wstream_managedstream_t * s, void * context, void const * buffer, size_t size) * sk_managedwstream_write_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	[return: MarshalAs (UnmanagedType.I1)]
 	internal unsafe delegate bool SKManagedWStreamWriteProxyDelegate(sk_wstream_managedstream_t s, void* context, void* buffer, /* size_t */ IntPtr size);
 
-	// typedef void (*)(void* addr, void* context)* sk_surface_raster_release_proc
+	// typedef void (*)(void * addr, void * context) * sk_surface_raster_release_proc
 	[UnmanagedFunctionPointer (CallingConvention.Cdecl)]
 	internal unsafe delegate void SKSurfaceRasterReleaseProxyDelegate(void* addr, void* context);
 
@@ -17608,16 +17608,16 @@ namespace SkiaSharp {
 	// gr_d3d_backendcontext_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRD3DBackendContextNative : IEquatable<GRD3DBackendContextNative> {
-		// public d3d_dxgi_adapter_t* fAdapter
+		// public d3d_dxgi_adapter_t * fAdapter
 		public d3d_dxgi_adapter_t fAdapter;
 
-		// public d3d_d12_device_t* fDevice
+		// public d3d_d12_device_t * fDevice
 		public d3d_d12_device_t fDevice;
 
-		// public d3d_d12_command_queue_t* fQueue
+		// public d3d_d12_command_queue_t * fQueue
 		public d3d_d12_command_queue_t fQueue;
 
-		// public gr_d3d_memory_allocator_t* fMemoryAllocator
+		// public gr_d3d_memory_allocator_t * fMemoryAllocator
 		public gr_d3d_memory_allocator_t fMemoryAllocator;
 
 		// public bool fProtectedContext
@@ -17653,22 +17653,22 @@ namespace SkiaSharp {
 	// gr_d3d_textureresourceinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRD3DTextureResourceInfoNative : IEquatable<GRD3DTextureResourceInfoNative> {
-		// public d3d_d12_resource_t* fResource
+		// public d3d_d12_resource_t * fResource
 		public d3d_d12_resource_t fResource;
 
-		// public d3d_alloc_t* fAlloc
+		// public d3d_alloc_t * fAlloc
 		public d3d_alloc_t fAlloc;
 
-		// public uint32_t fResourceState
+		// public unsigned int fResourceState
 		public UInt32 fResourceState;
 
-		// public uint32_t fFormat
+		// public unsigned int fFormat
 		public UInt32 fFormat;
 
-		// public uint32_t fSampleCount
+		// public unsigned int fSampleCount
 		public UInt32 fSampleCount;
 
-		// public uint32_t fLevelCount
+		// public unsigned int fLevelCount
 		public UInt32 fLevelCount;
 
 		// public unsigned int fSampleQualityPattern
@@ -17816,7 +17816,7 @@ namespace SkiaSharp {
 	// gr_mtl_textureinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRMtlTextureInfoNative : IEquatable<GRMtlTextureInfoNative> {
-		// public const void* fTexture
+		// public void const * fTexture
 		public void* fTexture;
 
 		public readonly bool Equals (GRMtlTextureInfoNative obj) =>
@@ -17845,28 +17845,28 @@ namespace SkiaSharp {
 	// gr_vk_alloc_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GRVkAlloc : IEquatable<GRVkAlloc> {
-		// public uint64_t fMemory
+		// public unsigned long long fMemory
 		private UInt64 fMemory;
 		public UInt64 Memory {
 			readonly get => fMemory;
 			set => fMemory = value;
 		}
 
-		// public uint64_t fOffset
+		// public unsigned long long fOffset
 		private UInt64 fOffset;
 		public UInt64 Offset {
 			readonly get => fOffset;
 			set => fOffset = value;
 		}
 
-		// public uint64_t fSize
+		// public unsigned long long fSize
 		private UInt64 fSize;
 		public UInt64 Size {
 			readonly get => fSize;
 			set => fSize = value;
 		}
 
-		// public uint32_t fFlags
+		// public unsigned int fFlags
 		private UInt32 fFlags;
 		public UInt32 Flags {
 			readonly get => fFlags;
@@ -17914,46 +17914,46 @@ namespace SkiaSharp {
 	// gr_vk_backendcontext_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct GRVkBackendContextNative : IEquatable<GRVkBackendContextNative> {
-		// public vk_instance_t* fInstance
+		// public vk_instance_t * fInstance
 		public vk_instance_t fInstance;
 
-		// public vk_physical_device_t* fPhysicalDevice
+		// public vk_physical_device_t * fPhysicalDevice
 		public vk_physical_device_t fPhysicalDevice;
 
-		// public vk_device_t* fDevice
+		// public vk_device_t * fDevice
 		public vk_device_t fDevice;
 
-		// public vk_queue_t* fQueue
+		// public vk_queue_t * fQueue
 		public vk_queue_t fQueue;
 
-		// public uint32_t fGraphicsQueueIndex
+		// public unsigned int fGraphicsQueueIndex
 		public UInt32 fGraphicsQueueIndex;
 
-		// public uint32_t fMinAPIVersion
+		// public unsigned int fMinAPIVersion
 		public UInt32 fMinAPIVersion;
 
-		// public uint32_t fInstanceVersion
+		// public unsigned int fInstanceVersion
 		public UInt32 fInstanceVersion;
 
-		// public uint32_t fMaxAPIVersion
+		// public unsigned int fMaxAPIVersion
 		public UInt32 fMaxAPIVersion;
 
-		// public uint32_t fExtensions
+		// public unsigned int fExtensions
 		public UInt32 fExtensions;
 
-		// public const gr_vk_extensions_t* fVkExtensions
+		// public gr_vk_extensions_t const * fVkExtensions
 		public gr_vk_extensions_t fVkExtensions;
 
-		// public uint32_t fFeatures
+		// public unsigned int fFeatures
 		public UInt32 fFeatures;
 
-		// public const vk_physical_device_features_t* fDeviceFeatures
+		// public vk_physical_device_features_t const * fDeviceFeatures
 		public vk_physical_device_features_t fDeviceFeatures;
 
-		// public const vk_physical_device_features_2_t* fDeviceFeatures2
+		// public vk_physical_device_features_2_t const * fDeviceFeatures2
 		public vk_physical_device_features_2_t fDeviceFeatures2;
 
-		// public gr_vk_memory_allocator_t* fMemoryAllocator
+		// public gr_vk_memory_allocator_t * fMemoryAllocator
 		public gr_vk_memory_allocator_t fMemoryAllocator;
 
 		// public gr_vk_get_proc fGetProc
@@ -17963,7 +17963,7 @@ namespace SkiaSharp {
 		public GRVkGetProcProxyDelegate fGetProc;
 #endif
 
-		// public void* fGetProcUserData
+		// public void * fGetProcUserData
 		public void* fGetProcUserData;
 
 		// public bool fOwnsInstanceAndDevice
@@ -18015,7 +18015,7 @@ namespace SkiaSharp {
 	// gr_vk_imageinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GRVkImageInfo : IEquatable<GRVkImageInfo> {
-		// public uint64_t fImage
+		// public unsigned long long fImage
 		private UInt64 fImage;
 		public UInt64 Image {
 			readonly get => fImage;
@@ -18029,49 +18029,49 @@ namespace SkiaSharp {
 			set => fAlloc = value;
 		}
 
-		// public uint32_t fImageTiling
+		// public unsigned int fImageTiling
 		private UInt32 fImageTiling;
 		public UInt32 ImageTiling {
 			readonly get => fImageTiling;
 			set => fImageTiling = value;
 		}
 
-		// public uint32_t fImageLayout
+		// public unsigned int fImageLayout
 		private UInt32 fImageLayout;
 		public UInt32 ImageLayout {
 			readonly get => fImageLayout;
 			set => fImageLayout = value;
 		}
 
-		// public uint32_t fFormat
+		// public unsigned int fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
 			readonly get => fFormat;
 			set => fFormat = value;
 		}
 
-		// public uint32_t fImageUsageFlags
+		// public unsigned int fImageUsageFlags
 		private UInt32 fImageUsageFlags;
 		public UInt32 ImageUsageFlags {
 			readonly get => fImageUsageFlags;
 			set => fImageUsageFlags = value;
 		}
 
-		// public uint32_t fSampleCount
+		// public unsigned int fSampleCount
 		private UInt32 fSampleCount;
 		public UInt32 SampleCount {
 			readonly get => fSampleCount;
 			set => fSampleCount = value;
 		}
 
-		// public uint32_t fLevelCount
+		// public unsigned int fLevelCount
 		private UInt32 fLevelCount;
 		public UInt32 LevelCount {
 			readonly get => fLevelCount;
 			set => fLevelCount = value;
 		}
 
-		// public uint32_t fCurrentQueueFamily
+		// public unsigned int fCurrentQueueFamily
 		private UInt32 fCurrentQueueFamily;
 		public UInt32 CurrentQueueFamily {
 			readonly get => fCurrentQueueFamily;
@@ -18092,7 +18092,7 @@ namespace SkiaSharp {
 			set => fYcbcrConversionInfo = value;
 		}
 
-		// public uint32_t fSharingMode
+		// public unsigned int fSharingMode
 		private UInt32 fSharingMode;
 		public UInt32 SharingMode {
 			readonly get => fSharingMode;
@@ -18136,63 +18136,63 @@ namespace SkiaSharp {
 	// gr_vk_ycbcrconversioninfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct GrVkYcbcrConversionInfo : IEquatable<GrVkYcbcrConversionInfo> {
-		// public uint32_t fFormat
+		// public unsigned int fFormat
 		private UInt32 fFormat;
 		public UInt32 Format {
 			readonly get => fFormat;
 			set => fFormat = value;
 		}
 
-		// public uint64_t fExternalFormat
+		// public unsigned long long fExternalFormat
 		private UInt64 fExternalFormat;
 		public UInt64 ExternalFormat {
 			readonly get => fExternalFormat;
 			set => fExternalFormat = value;
 		}
 
-		// public uint32_t fYcbcrModel
+		// public unsigned int fYcbcrModel
 		private UInt32 fYcbcrModel;
 		public UInt32 YcbcrModel {
 			readonly get => fYcbcrModel;
 			set => fYcbcrModel = value;
 		}
 
-		// public uint32_t fYcbcrRange
+		// public unsigned int fYcbcrRange
 		private UInt32 fYcbcrRange;
 		public UInt32 YcbcrRange {
 			readonly get => fYcbcrRange;
 			set => fYcbcrRange = value;
 		}
 
-		// public uint32_t fXChromaOffset
+		// public unsigned int fXChromaOffset
 		private UInt32 fXChromaOffset;
 		public UInt32 XChromaOffset {
 			readonly get => fXChromaOffset;
 			set => fXChromaOffset = value;
 		}
 
-		// public uint32_t fYChromaOffset
+		// public unsigned int fYChromaOffset
 		private UInt32 fYChromaOffset;
 		public UInt32 YChromaOffset {
 			readonly get => fYChromaOffset;
 			set => fYChromaOffset = value;
 		}
 
-		// public uint32_t fChromaFilter
+		// public unsigned int fChromaFilter
 		private UInt32 fChromaFilter;
 		public UInt32 ChromaFilter {
 			readonly get => fChromaFilter;
 			set => fChromaFilter = value;
 		}
 
-		// public uint32_t fForceExplicitReconstruction
+		// public unsigned int fForceExplicitReconstruction
 		private UInt32 fForceExplicitReconstruction;
 		public UInt32 ForceExplicitReconstruction {
 			readonly get => fForceExplicitReconstruction;
 			set => fForceExplicitReconstruction = value;
 		}
 
-		// public uint32_t fFormatFeatures
+		// public unsigned int fFormatFeatures
 		private UInt32 fFormatFeatures;
 		public UInt32 FormatFeatures {
 			readonly get => fFormatFeatures;
@@ -18233,13 +18233,13 @@ namespace SkiaSharp {
 	// sk_canvas_savelayerrec_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKCanvasSaveLayerRecNative : IEquatable<SKCanvasSaveLayerRecNative> {
-		// public sk_rect_t* fBounds
+		// public sk_rect_t * fBounds
 		public SKRect* fBounds;
 
-		// public sk_paint_t* fPaint
+		// public sk_paint_t * fPaint
 		public sk_paint_t fPaint;
 
-		// public sk_imagefilter_t* fBackdrop
+		// public sk_imagefilter_t * fBackdrop
 		public sk_imagefilter_t fBackdrop;
 
 		// public sk_canvas_savelayerrec_flags_t fFlags
@@ -18366,7 +18366,7 @@ namespace SkiaSharp {
 		// public sk_codec_zero_initialized_t fZeroInitialized
 		public SKZeroInitialized fZeroInitialized;
 
-		// public sk_irect_t* fSubset
+		// public sk_irect_t * fSubset
 		public SKRectI* fSubset;
 
 		// public int fFrameIndex
@@ -18715,28 +18715,28 @@ namespace SkiaSharp {
 	// sk_document_pdf_datetime_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKTimeDateTimeInternal : IEquatable<SKTimeDateTimeInternal> {
-		// public int16_t fTimeZoneMinutes
+		// public short fTimeZoneMinutes
 		public Int16 fTimeZoneMinutes;
 
-		// public uint16_t fYear
+		// public unsigned short fYear
 		public UInt16 fYear;
 
-		// public uint8_t fMonth
+		// public unsigned char fMonth
 		public Byte fMonth;
 
-		// public uint8_t fDayOfWeek
+		// public unsigned char fDayOfWeek
 		public Byte fDayOfWeek;
 
-		// public uint8_t fDay
+		// public unsigned char fDay
 		public Byte fDay;
 
-		// public uint8_t fHour
+		// public unsigned char fHour
 		public Byte fHour;
 
-		// public uint8_t fMinute
+		// public unsigned char fMinute
 		public Byte fMinute;
 
-		// public uint8_t fSecond
+		// public unsigned char fSecond
 		public Byte fSecond;
 
 		public readonly bool Equals (SKTimeDateTimeInternal obj) =>
@@ -18772,28 +18772,28 @@ namespace SkiaSharp {
 	// sk_document_pdf_metadata_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKDocumentPdfMetadataInternal : IEquatable<SKDocumentPdfMetadataInternal> {
-		// public sk_string_t* fTitle
+		// public sk_string_t * fTitle
 		public sk_string_t fTitle;
 
-		// public sk_string_t* fAuthor
+		// public sk_string_t * fAuthor
 		public sk_string_t fAuthor;
 
-		// public sk_string_t* fSubject
+		// public sk_string_t * fSubject
 		public sk_string_t fSubject;
 
-		// public sk_string_t* fKeywords
+		// public sk_string_t * fKeywords
 		public sk_string_t fKeywords;
 
-		// public sk_string_t* fCreator
+		// public sk_string_t * fCreator
 		public sk_string_t fCreator;
 
-		// public sk_string_t* fProducer
+		// public sk_string_t * fProducer
 		public sk_string_t fProducer;
 
-		// public sk_document_pdf_datetime_t* fCreation
+		// public sk_document_pdf_datetime_t * fCreation
 		public SKTimeDateTimeInternal* fCreation;
 
-		// public sk_document_pdf_datetime_t* fModified
+		// public sk_document_pdf_datetime_t * fModified
 		public SKTimeDateTimeInternal* fModified;
 
 		// public float fRasterDPI
@@ -18841,7 +18841,7 @@ namespace SkiaSharp {
 	// sk_fontmetrics_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKFontMetrics : IEquatable<SKFontMetrics> {
-		// public uint32_t fFlags
+		// public unsigned int fFlags
 		private UInt32 fFlags;
 
 		// public float fTop
@@ -18979,13 +18979,13 @@ namespace SkiaSharp {
 	// sk_imageinfo_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKImageInfoNative : IEquatable<SKImageInfoNative> {
-		// public sk_colorspace_t* colorspace
+		// public sk_colorspace_t * colorspace
 		public sk_colorspace_t colorspace;
 
-		// public int32_t width
+		// public int width
 		public Int32 width;
 
-		// public int32_t height
+		// public int height
 		public Int32 height;
 
 		// public sk_colortype_t colorType
@@ -19024,14 +19024,14 @@ namespace SkiaSharp {
 	// sk_ipoint_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKPointI : IEquatable<SKPointI> {
-		// public int32_t x
+		// public int x
 		private Int32 x;
 		public Int32 X {
 			readonly get => x;
 			set => x = value;
 		}
 
-		// public int32_t y
+		// public int y
 		private Int32 y;
 		public Int32 Y {
 			readonly get => y;
@@ -19065,28 +19065,28 @@ namespace SkiaSharp {
 	// sk_irect_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKRectI : IEquatable<SKRectI> {
-		// public int32_t left
+		// public int left
 		private Int32 left;
 		public Int32 Left {
 			readonly get => left;
 			set => left = value;
 		}
 
-		// public int32_t top
+		// public int top
 		private Int32 top;
 		public Int32 Top {
 			readonly get => top;
 			set => top = value;
 		}
 
-		// public int32_t right
+		// public int right
 		private Int32 right;
 		public Int32 Right {
 			readonly get => right;
 			set => right = value;
 		}
 
-		// public int32_t bottom
+		// public int bottom
 		private Int32 bottom;
 		public Int32 Bottom {
 			readonly get => bottom;
@@ -19122,14 +19122,14 @@ namespace SkiaSharp {
 	// sk_isize_t
 	[StructLayout (LayoutKind.Sequential)]
 	public unsafe partial struct SKSizeI : IEquatable<SKSizeI> {
-		// public int32_t w
+		// public int w
 		private Int32 w;
 		public Int32 Width {
 			readonly get => w;
 			set => w = value;
 		}
 
-		// public int32_t h
+		// public int h
 		private Int32 h;
 		public Int32 Height {
 			readonly get => h;
@@ -19172,13 +19172,13 @@ namespace SkiaSharp {
 		// public sk_jpegencoder_alphaoption_t fAlphaOption
 		private readonly SKJpegEncoderAlphaOption fAlphaOption;
 
-		// public const sk_data_t* xmpMetadata
+		// public sk_data_t const * xmpMetadata
 		private readonly sk_data_t xmpMetadata;
 
-		// public const sk_colorspace_icc_profile_t* fICCProfile
+		// public sk_colorspace_icc_profile_t const * fICCProfile
 		private readonly sk_colorspace_icc_profile_t fICCProfile;
 
-		// public const char* fICCProfileDescription
+		// public char const * fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
 		public readonly bool Equals (SKJpegEncoderOptions obj) =>
@@ -19212,13 +19212,13 @@ namespace SkiaSharp {
 	// sk_lattice_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKLatticeInternal : IEquatable<SKLatticeInternal> {
-		// public const int* fXDivs
+		// public int const * fXDivs
 		public Int32* fXDivs;
 
-		// public const int* fYDivs
+		// public int const * fYDivs
 		public Int32* fYDivs;
 
-		// public const sk_lattice_recttype_t* fRectTypes
+		// public sk_lattice_recttype_t const * fRectTypes
 		public SKLatticeRectType* fRectTypes;
 
 		// public int fXCount
@@ -19227,10 +19227,10 @@ namespace SkiaSharp {
 		// public int fYCount
 		public Int32 fYCount;
 
-		// public const sk_irect_t* fBounds
+		// public sk_irect_t const * fBounds
 		public SKRectI* fBounds;
 
-		// public const sk_color_t* fColors
+		// public sk_color_t const * fColors
 		public UInt32* fColors;
 
 		public readonly bool Equals (SKLatticeInternal obj) =>
@@ -19813,13 +19813,13 @@ namespace SkiaSharp {
 		// public int fZLibLevel
 		private readonly Int32 fZLibLevel;
 
-		// public void* fComments
+		// public void * fComments
 		private readonly void* fComments;
 
-		// public const sk_colorspace_icc_profile_t* fICCProfile
+		// public sk_colorspace_icc_profile_t const * fICCProfile
 		private readonly sk_colorspace_icc_profile_t fICCProfile;
 
-		// public const char* fICCProfileDescription
+		// public char const * fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
 		public readonly bool Equals (SKPngEncoderOptions obj) =>
@@ -20056,7 +20056,7 @@ namespace SkiaSharp {
 	// sk_runtimeeffect_child_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKRuntimeEffectChildNative : IEquatable<SKRuntimeEffectChildNative> {
-		// public const char* fName
+		// public char const * fName
 		public /* char */ void* fName;
 
 		// public size_t fNameLength
@@ -20097,7 +20097,7 @@ namespace SkiaSharp {
 	// sk_runtimeeffect_uniform_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKRuntimeEffectUniformNative : IEquatable<SKRuntimeEffectUniformNative> {
-		// public const char* fName
+		// public char const * fName
 		public /* char */ void* fName;
 
 		// public size_t fNameLength
@@ -20237,16 +20237,16 @@ namespace SkiaSharp {
 	// sk_textblob_builder_runbuffer_t
 	[StructLayout (LayoutKind.Sequential)]
 	internal unsafe partial struct SKRunBufferInternal : IEquatable<SKRunBufferInternal> {
-		// public void* glyphs
+		// public void * glyphs
 		public void* glyphs;
 
-		// public void* pos
+		// public void * pos
 		public void* pos;
 
-		// public void* utf8text
+		// public void * utf8text
 		public void* utf8text;
 
-		// public void* clusters
+		// public void * clusters
 		public void* clusters;
 
 		public readonly bool Equals (SKRunBufferInternal obj) =>
@@ -20284,10 +20284,10 @@ namespace SkiaSharp {
 		// public float fQuality
 		private readonly Single fQuality;
 
-		// public const sk_colorspace_icc_profile_t* fICCProfile
+		// public sk_colorspace_icc_profile_t const * fICCProfile
 		private readonly sk_colorspace_icc_profile_t fICCProfile;
 
-		// public const char* fICCProfileDescription
+		// public char const * fICCProfileDescription
 		private readonly /* char */ void* fICCProfileDescription;
 
 		public readonly bool Equals (SKWebpEncoderOptions obj) =>
