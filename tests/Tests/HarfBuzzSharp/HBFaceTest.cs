@@ -142,5 +142,91 @@ namespace HarfBuzzSharp.Tests
 			Assert.False(emptyFace.IsDisposed());
 			Assert.NotEqual(IntPtr.Zero, emptyFace.Handle);
 		}
+
+		// OpenType Name Table Tests
+
+		[SkippableFact]
+		public void GetNameReturnsFullFontName()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				var fullName = face.GetName(OpenTypeNameId.FullName);
+				// SpiderSymbol font should have a name
+				Assert.NotNull(fullName);
+				Assert.NotEmpty(fullName);
+			}
+		}
+
+		[SkippableFact]
+		public void GetNameReturnsFontFamily()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				var familyName = face.GetName(OpenTypeNameId.FontFamily);
+				Assert.NotNull(familyName);
+				Assert.NotEmpty(familyName);
+			}
+		}
+
+		[SkippableFact]
+		public void GetNameReturnsEmptyStringForInvalidId()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				var name = face.GetName(OpenTypeNameId.Invalid);
+				Assert.Equal(string.Empty, name);
+			}
+		}
+
+		[SkippableFact]
+		public void TryGetNameReturnsTrue()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				var result = face.TryGetName(OpenTypeNameId.FontFamily, out var name);
+				Assert.True(result);
+				Assert.NotNull(name);
+				Assert.NotEmpty(name);
+			}
+		}
+
+		[SkippableFact]
+		public void TryGetNameReturnsFalseForInvalidId()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				var result = face.TryGetName(OpenTypeNameId.Invalid, out var name);
+				Assert.False(result);
+				Assert.Null(name);
+			}
+		}
+
+		[SkippableFact]
+		public void GetNameWithLanguageWorks()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				var name = face.GetName(OpenTypeNameId.FontFamily, Language.Default);
+				Assert.NotNull(name);
+			}
+		}
+
+		[SkippableFact]
+		public void GetNameThrowsOnNullLanguage()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				Assert.Throws<ArgumentNullException>(() => face.GetName(OpenTypeNameId.FontFamily, null));
+			}
+		}
+
+		[SkippableFact]
+		public void TryGetNameThrowsOnNullLanguage()
+		{
+			using (var face = new Face(Blob, 0))
+			{
+				Assert.Throws<ArgumentNullException>(() => face.TryGetName(OpenTypeNameId.FontFamily, null, out _));
+			}
+		}
 	}
 }

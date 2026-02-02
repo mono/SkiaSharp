@@ -85,6 +85,79 @@ namespace HarfBuzzSharp
 
 		public void MakeImmutable () => HarfBuzzApi.hb_face_make_immutable (Handle);
 
+		/// <summary>
+		/// Gets the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <returns>The name string, or an empty string if not found.</returns>
+		public string GetName (OpenTypeNameId nameId) =>
+			GetName (nameId, Language.Default);
+
+		/// <summary>
+		/// Gets the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <param name="language">The language for the name.</param>
+		/// <returns>The name string, or an empty string if not found.</returns>
+		public string GetName (OpenTypeNameId nameId, Language language)
+		{
+			if (language == null)
+				throw new ArgumentNullException (nameof (language));
+
+			// First call to get the length
+			uint length = 0;
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, null);
+
+			if (length == 0)
+				return string.Empty;
+
+			// Allocate buffer and get the string
+			length++; // Add space for null terminator
+			var buffer = stackalloc ushort[(int)length];
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, buffer);
+
+			return new string ((char*)buffer, 0, (int)length);
+		}
+
+		/// <summary>
+		/// Tries to get the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <param name="name">The name string, or null if not found.</param>
+		/// <returns>True if the name was found, false otherwise.</returns>
+		public bool TryGetName (OpenTypeNameId nameId, out string name) =>
+			TryGetName (nameId, Language.Default, out name);
+
+		/// <summary>
+		/// Tries to get the name string from the face's OpenType 'name' table.
+		/// </summary>
+		/// <param name="nameId">The name ID to retrieve.</param>
+		/// <param name="language">The language for the name.</param>
+		/// <param name="name">The name string, or null if not found.</param>
+		/// <returns>True if the name was found, false otherwise.</returns>
+		public bool TryGetName (OpenTypeNameId nameId, Language language, out string name)
+		{
+			if (language == null)
+				throw new ArgumentNullException (nameof (language));
+
+			// First call to get the length
+			uint length = 0;
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, null);
+
+			if (length == 0) {
+				name = null;
+				return false;
+			}
+
+			// Allocate buffer and get the string
+			length++; // Add space for null terminator
+			var buffer = stackalloc ushort[(int)length];
+			HarfBuzzApi.hb_ot_name_get_utf16 (Handle, nameId, language.Handle, &length, buffer);
+
+			name = new string ((char*)buffer, 0, (int)length);
+			return true;
+		}
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
