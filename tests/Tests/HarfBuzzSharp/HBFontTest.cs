@@ -292,8 +292,8 @@ namespace HarfBuzzSharp.Tests
 			{
 				font.SetSyntheticBold(0.02f, 0.04f, false);
 				font.GetSyntheticBold(out var x, out var y, out var inPlace);
-				Assert.Equal(0.02f, x, 4);
-				Assert.Equal(0.04f, y, 4);
+				Assert.Equal(0.02, (double)x, 4);
+				Assert.Equal(0.04, (double)y, 4);
 				Assert.False(inPlace);
 			}
 		}
@@ -306,8 +306,8 @@ namespace HarfBuzzSharp.Tests
 			{
 				font.SetSyntheticBold(0.05f, 0.05f, true);
 				font.GetSyntheticBold(out var x, out var y, out var inPlace);
-				Assert.Equal(0.05f, x, 4);
-				Assert.Equal(0.05f, y, 4);
+				Assert.Equal(0.05, (double)x, 4);
+				Assert.Equal(0.05, (double)y, 4);
 				Assert.True(inPlace);
 			}
 		}
@@ -414,6 +414,80 @@ namespace HarfBuzzSharp.Tests
 			{
 				font.NamedInstance = 0;
 				Assert.Equal(0u, font.NamedInstance);
+			}
+		}
+
+		// Ppem tests
+
+		[SkippableFact]
+		public void PpemDefaultsToZero()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.GetPpem(out var xPpem, out var yPpem);
+				Assert.Equal(0, xPpem);
+				Assert.Equal(0, yPpem);
+			}
+		}
+
+		[SkippableFact]
+		public void SetPpemWorks()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SetPpem(16, 16);
+				font.GetPpem(out var xPpem, out var yPpem);
+				Assert.Equal(16, xPpem);
+				Assert.Equal(16, yPpem);
+			}
+		}
+
+		[SkippableFact]
+		public void SetPpemWithDifferentValues()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.SetPpem(12, 24);
+				font.GetPpem(out var xPpem, out var yPpem);
+				Assert.Equal(12, xPpem);
+				Assert.Equal(24, yPpem);
+			}
+		}
+
+		// Ptem tests
+
+		[SkippableFact]
+		public void PtemDefaultsToZero()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				Assert.Equal(0f, font.Ptem);
+			}
+		}
+
+		[SkippableFact]
+		public void PtemCanBeSet()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.Ptem = 12.0f;
+				Assert.Equal(12.0f, font.Ptem);
+			}
+		}
+
+		[SkippableFact]
+		public void PtemCanBeSetToLargeValue()
+		{
+			using (var face = new Face(Blob, 0))
+			using (var font = new Font(face))
+			{
+				font.Ptem = 72.0f;
+				Assert.Equal(72.0f, font.Ptem);
 			}
 		}
 	}

@@ -310,7 +310,7 @@ namespace HarfBuzzSharp.Tests
 				original.ClusterLevel = ClusterLevel.MonotoneGraphemes;
 				original.ContentType = ContentType.Unicode;
 
-				using (var similar = original.CreateSimilar())
+				using (var similar = Buffer.CreateSimilar(original))
 				{
 					Assert.NotNull(similar);
 					Assert.NotSame(original, similar);
@@ -323,22 +323,36 @@ namespace HarfBuzzSharp.Tests
 		}
 
 		[SkippableFact]
-		public void CreateSimilarPreservesProperties()
+		public void CreateSimilarPreservesClusterLevel()
+		{
+			using (var original = new Buffer())
+			{
+				// CreateSimilar copies: flags, cluster_level, replacement, invisible, not_found, unicode
+				// It does NOT copy: Direction, Script, Language, content
+				original.ClusterLevel = ClusterLevel.MonotoneGraphemes;
+
+				using (var similar = Buffer.CreateSimilar(original))
+				{
+					// ClusterLevel should be copied
+					Assert.Equal(ClusterLevel.MonotoneGraphemes, similar.ClusterLevel);
+				}
+			}
+		}
+
+		[SkippableFact]
+		public void CreateSimilarDoesNotCopyDirectionScriptLanguage()
 		{
 			using (var original = new Buffer())
 			{
 				original.Direction = Direction.RightToLeft;
 				original.Script = Script.Arabic;
 				original.Language = new Language("ar");
-				original.ClusterLevel = ClusterLevel.MonotoneGraphemes;
 
-				using (var similar = original.CreateSimilar())
+				using (var similar = Buffer.CreateSimilar(original))
 				{
-					// Verify properties are copied
-					Assert.Equal(Direction.RightToLeft, similar.Direction);
-					Assert.Equal(Script.Arabic, similar.Script);
-					Assert.Equal(new Language("ar"), similar.Language);
-					Assert.Equal(ClusterLevel.MonotoneGraphemes, similar.ClusterLevel);
+					// Direction, Script, Language are NOT copied by CreateSimilar
+					Assert.Equal(Direction.Invalid, similar.Direction);
+					Assert.Equal(Script.Invalid, similar.Script);
 				}
 			}
 		}
@@ -351,7 +365,7 @@ namespace HarfBuzzSharp.Tests
 				original.Direction = Direction.LeftToRight;
 				original.AddUtf8("Hello");
 
-				using (var similar = original.CreateSimilar())
+				using (var similar = Buffer.CreateSimilar(original))
 				{
 					// Content should NOT be copied
 					Assert.Equal(0, similar.Length);

@@ -69,6 +69,44 @@ namespace HarfBuzzSharp
 			HarfBuzzApi.hb_font_set_scale (Handle, xScale, yScale);
 
 		/// <summary>
+		/// Gets the horizontal and vertical pixels-per-em (ppem) of the font.
+		/// </summary>
+		/// <param name="xPpem">The horizontal ppem value.</param>
+		/// <param name="yPpem">The vertical ppem value.</param>
+		public void GetPpem (out int xPpem, out int yPpem)
+		{
+			uint x, y;
+			HarfBuzzApi.hb_font_get_ppem (Handle, &x, &y);
+			xPpem = (int)x;
+			yPpem = (int)y;
+		}
+
+		/// <summary>
+		/// Sets the horizontal and vertical pixels-per-em (ppem) of the font.
+		/// </summary>
+		/// <remarks>
+		/// The ppem values are used by HarfBuzz for pixel rounding and hinting.
+		/// </remarks>
+		/// <param name="xPpem">The horizontal ppem value.</param>
+		/// <param name="yPpem">The vertical ppem value.</param>
+		public void SetPpem (int xPpem, int yPpem) =>
+			HarfBuzzApi.hb_font_set_ppem (Handle, (uint)xPpem, (uint)yPpem);
+
+		/// <summary>
+		/// Gets or sets the "point size" of the font in typographic points (1/72 inch).
+		/// </summary>
+		/// <remarks>
+		/// This is used for optical sizing in variable fonts. Fonts with an 'opsz' axis
+		/// will use this value to select the appropriate optical size. A value of 0
+		/// means "not set" and disables automatic optical sizing.
+		/// </remarks>
+		public float Ptem
+		{
+			get => HarfBuzzApi.hb_font_get_ptem (Handle);
+			set => HarfBuzzApi.hb_font_set_ptem (Handle, value);
+		}
+
+		/// <summary>
 		/// Gets or sets the synthetic slant of the font.
 		/// </summary>
 		/// <remarks>

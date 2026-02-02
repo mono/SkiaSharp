@@ -158,6 +158,104 @@ namespace HarfBuzzSharp
 			return true;
 		}
 
+		/// <summary>
+		/// Gets all name entries from the face's OpenType 'name' table.
+		/// </summary>
+		/// <returns>An array of name entries.</returns>
+		public OpenTypeNameEntry[] GetAllNameEntries ()
+		{
+			uint count = 0;
+			var entries = HarfBuzzApi.hb_ot_name_list_names (Handle, &count);
+
+			if (count == 0 || entries == null)
+				return Array.Empty<OpenTypeNameEntry> ();
+
+			var result = new OpenTypeNameEntry[count];
+			for (int i = 0; i < count; i++)
+				result[i] = entries[i];
+
+			return result;
+		}
+
+		/// <summary>
+		/// Gets all script tags supported by the specified OpenType layout table.
+		/// </summary>
+		/// <param name="tableTag">The layout table to query (GSUB or GPOS).</param>
+		/// <returns>An array of script tags.</returns>
+		public Tag[] GetOpenTypeLayoutScriptTags (OpenTypeLayoutTableTag tableTag)
+		{
+			// First call to get the count
+			uint count = 0;
+			var total = HarfBuzzApi.hb_ot_layout_table_get_script_tags (Handle, (uint)tableTag, 0, &count, null);
+
+			if (total == 0)
+				return Array.Empty<Tag> ();
+
+			// Allocate and get all tags
+			var buffer = new Tag[total];
+			count = total;
+			fixed (Tag* ptr = buffer) {
+				HarfBuzzApi.hb_ot_layout_table_get_script_tags (Handle, (uint)tableTag, 0, &count, (uint*)ptr);
+			}
+
+			return buffer;
+		}
+
+		/// <summary>
+		/// Gets all feature tags supported by the specified OpenType layout table.
+		/// </summary>
+		/// <param name="tableTag">The layout table to query (GSUB or GPOS).</param>
+		/// <returns>An array of feature tags.</returns>
+		public Tag[] GetOpenTypeLayoutFeatureTags (OpenTypeLayoutTableTag tableTag)
+		{
+			// First call to get the count
+			uint count = 0;
+			var total = HarfBuzzApi.hb_ot_layout_table_get_feature_tags (Handle, (uint)tableTag, 0, &count, null);
+
+			if (total == 0)
+				return Array.Empty<Tag> ();
+
+			// Allocate and get all tags
+			var buffer = new Tag[total];
+			count = total;
+			fixed (Tag* ptr = buffer) {
+				HarfBuzzApi.hb_ot_layout_table_get_feature_tags (Handle, (uint)tableTag, 0, &count, (uint*)ptr);
+			}
+
+			return buffer;
+		}
+
+		/// <summary>
+		/// Tries to get the name IDs for an OpenType layout feature.
+		/// </summary>
+		/// <param name="tableTag">The layout table (GSUB or GPOS).</param>
+		/// <param name="featureIndex">The index of the feature in the table.</param>
+		/// <param name="nameIds">The name IDs for the feature if found.</param>
+		/// <returns>True if the feature has name IDs, false otherwise.</returns>
+		public bool TryGetOpenTypeLayoutFeatureNameIds (OpenTypeLayoutTableTag tableTag, int featureIndex, out OpenTypeFeatureNameIds nameIds)
+		{
+			OpenTypeNameId labelId, tooltipId, sampleId, firstParamId;
+			uint numParams;
+
+			var result = HarfBuzzApi.hb_ot_layout_feature_get_name_ids (
+				Handle, (uint)tableTag, (uint)featureIndex,
+				&labelId, &tooltipId, &sampleId, &numParams, &firstParamId);
+
+			if (!result) {
+				nameIds = default;
+				return false;
+			}
+
+			nameIds = new OpenTypeFeatureNameIds {
+				LabelId = labelId,
+				TooltipId = tooltipId,
+				SampleId = sampleId,
+				NumNamedParameters = (int)numParams,
+				FirstParamId = firstParamId
+			};
+			return true;
+		}
+
 		protected override void Dispose (bool disposing) =>
 			base.Dispose (disposing);
 
