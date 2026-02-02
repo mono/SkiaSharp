@@ -188,15 +188,31 @@ namespace SkiaSharp
 			if (colorType == SKColorType.Unknown)
 				return false;
 
+			// To check if we can do a direct copy
+			// If a SKBitmap is created by ExtractSubset, its pixels may not be stored contiguously
+			// In most cases, des and src have the same Size and ColorType
+			int desWidth = destination.Width;
+			int desHeight = destination.Height;
 			if (ColorType == destination.ColorType && ColorType == colorType) {
-				if (Width == destination.Width) {
-					var des = destination.GetPixelSpan ();
-					var src = GetPixelSpan ();
-					if(Height<=destination.Height) {
-						return src.TryCopyTo (des);
+				if (Width * Height * BytesPerPixel == ByteCount &&
+				    desWidth * desHeight * BytesPerPixel == destination.ByteCount) {
+					if (Width == desWidth) {
+						var des = destination.GetPixelSpan ();
+						var src = GetPixelSpan ();
+						if(Height<=desHeight) {
+							return src.TryCopyTo (des);
+						}
+						return src.Slice (0, des.Length).TryCopyTo (des);
 					}
-					return src.Slice (0, des.Length).TryCopyTo (des);
 				}
+				// Copy row by row
+				var rowBytes = Math.Min (RowBytes, destination.RowBytes);
+				for(var row=0;row<Math.Min(Height, desHeight);row++) {
+					var des =new Span<byte> (destination.GetAddress(0, row).ToPointer(), rowBytes);
+					var src =new Span<byte> (GetAddress(0, row).ToPointer(), rowBytes);
+					src.CopyTo(des);
+				}
+				return true;
 			}
 
 			using var srcPixmap = PeekPixels ();
