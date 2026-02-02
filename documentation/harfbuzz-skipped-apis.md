@@ -236,6 +236,27 @@ These types are excluded because they're internal implementation details:
 
 ---
 
+## Generator Parsing Issue (8.3.1)
+
+### Problem
+HarfBuzz 8.3.1 changed from `#include <stdint.h>` to `#include <inttypes.h>` in hb-common.h.
+The bundled clang's `inttypes.h` uses `#include_next` which fails to find the SDK implementation.
+
+### Attempted Solutions
+1. **CppAst 0.24.0**: Has proper `SystemIncludeFolders` support but introduced breaking changes
+   to type naming (generates `Unsigned int` instead of `unsigned int`).
+2. **Adding SDK includes**: Adding macOS SDK include path causes system types (pthread) to be parsed.
+
+### Current Status
+Using HarfBuzz 8.3.0 instead, which has identical API but uses `stdint.h`.
+
+### Future Fix Options
+1. Update CppAst and adapt type mappings to handle new naming
+2. Create a shim `inttypes.h` header that provides needed types
+3. Use clang's `-isystem` flag via CppParserOptions.AdditionalArguments
+
+---
+
 ## Version Information
 
 - **Generated from:** HarfBuzz 8.3.0
