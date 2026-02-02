@@ -188,6 +188,17 @@ namespace SkiaSharp
 			if (colorType == SKColorType.Unknown)
 				return false;
 
+			if (ColorType == destination.ColorType && ColorType == colorType) {
+				if (Width == destination.Width) {
+					var des = destination.GetPixelSpan ();
+					var src = GetPixelSpan ();
+					if(Height<=destination.Height) {
+						return src.TryCopyTo (des);
+					}
+					return src.Slice (0, des.Length).TryCopyTo (des);
+				}
+			}
+
 			using var srcPixmap = PeekPixels ();
 			if (srcPixmap == null)
 				return false;
