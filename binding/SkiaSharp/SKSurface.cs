@@ -285,6 +285,11 @@ namespace SkiaSharp
 			SkiaApi.sk_surface_draw (Handle, canvas.Handle, x, y, paint == null ? IntPtr.Zero : paint.Handle);
 		}
 
+		public void Draw (SKCanvas canvas, SKPoint p, SKSamplingOptions sampling, SKPaint paint = null)
+		{
+			Draw (canvas, p.X, p.Y, sampling, paint);
+		}
+
 		public void Draw (SKCanvas canvas, float x, float y, SKSamplingOptions sampling, SKPaint paint = null)
 		{
 			if (canvas == null)

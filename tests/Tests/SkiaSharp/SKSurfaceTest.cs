@@ -319,20 +319,20 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CanDrawSurfaceWithSamplingOptions()
 		{
-			// Create source surface with red fill
+			// Create source surface with red fill (50x50)
 			using var sourceSurface = SKSurface.Create(new SKImageInfo(50, 50));
-			using var sourcePaint = new SKPaint { Color = SKColors.Red };
 			sourceSurface.Canvas.Clear(SKColors.Red);
 
-			// Create destination surface  
+			// Create destination surface (100x100)
 			using var destSurface = SKSurface.Create(new SKImageInfo(100, 100));
 			destSurface.Canvas.Clear(SKColors.Blue);
 
-			// Draw source surface with sampling options
+			// Draw source surface at (25, 25) with sampling options
+			// Source occupies pixels 25-74 in both dimensions
 			var sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.None);
 			sourceSurface.Draw(destSurface.Canvas, 25, 25, sampling, null);
 
-			// Verify pixel was drawn
+			// Verify red pixel at center of drawn area (50, 50)
 			using var snapshot = destSurface.Snapshot();
 			using var pixmap = snapshot.PeekPixels();
 			Assert.NotNull(pixmap);
@@ -342,19 +342,20 @@ namespace SkiaSharp.Tests
 		[SkippableFact]
 		public void CanDrawSurfaceOnCanvasWithSamplingOptions()
 		{
-			// Create source surface with green fill
+			// Create source surface with green fill (50x50)
 			using var sourceSurface = SKSurface.Create(new SKImageInfo(50, 50));
 			sourceSurface.Canvas.Clear(SKColors.Green);
 
-			// Create destination surface  
+			// Create destination surface (100x100)
 			using var destSurface = SKSurface.Create(new SKImageInfo(100, 100));
 			destSurface.Canvas.Clear(SKColors.White);
 
-			// Draw using Canvas.DrawSurface with sampling options
+			// Draw using Canvas.DrawSurface at (10, 10) with sampling options
+			// Source occupies pixels 10-59 in both dimensions
 			var sampling = new SKSamplingOptions(SKFilterMode.Linear);
 			destSurface.Canvas.DrawSurface(sourceSurface, new SKPoint(10, 10), sampling, null);
 
-			// Verify pixel was drawn
+			// Verify green pixel at center of drawn area (30, 30)
 			using var snapshot = destSurface.Snapshot();
 			using var pixmap = snapshot.PeekPixels();
 			Assert.NotNull(pixmap);
