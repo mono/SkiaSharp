@@ -536,3 +536,22 @@ Key type aliases:
 - `utils/SkiaSharpGenerator/ConfigJson/` — Configuration model source
 - `utils/SkiaSharpGenerator/Generate/Generator.cs` — Generation logic
 - `utils/SkiaSharpGenerator/BaseTool.cs` — Type mapping and cleaning logic
+
+## CppAst Parser Configuration
+
+The binding generator uses CppAst (version 0.24.0) to parse C headers. The generator automatically configures the parser with appropriate system include paths.
+
+### Cross-Platform Include Paths
+
+The generator automatically detects and configures system include paths:
+
+**macOS:**
+- Clang include path: `/Library/Developer/CommandLineTools/usr/lib/clang/<version>/include`
+- SDK include path: `/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include` or Xcode SDK path
+
+**Linux:**
+- `/usr/include`
+- `/usr/local/include`
+
+**Windows:**
+- Windows Kits ucrt path: `Program Files/Windows Kits/10/Include/<version>/ucrt`

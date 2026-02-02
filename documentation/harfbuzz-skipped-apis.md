@@ -236,29 +236,35 @@ These types are excluded because they're internal implementation details:
 
 ---
 
-## Generator Parsing Issue (8.3.1)
+## Generator Parsing Issue (8.3.1) - RESOLVED
 
-### Problem
+### Problem (Historical)
 HarfBuzz 8.3.1 changed from `#include <stdint.h>` to `#include <inttypes.h>` in hb-common.h.
-The bundled clang's `inttypes.h` uses `#include_next` which fails to find the SDK implementation.
+The bundled clang's `inttypes.h` uses `#include_next` which failed to find the SDK implementation.
 
-### Attempted Solutions
-1. **CppAst 0.24.0**: Has proper `SystemIncludeFolders` support but introduced breaking changes
-   to type naming (generates `Unsigned int` instead of `unsigned int`).
-2. **Adding SDK includes**: Adding macOS SDK include path causes system types (pthread) to be parsed.
+### Resolution
+Upgraded CppAst to 0.24.0 and added cross-platform system include path detection:
+- **macOS:** Adds SDK include path (`/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include`)
+- **Linux:** Adds `/usr/include` and `/usr/local/include`
+- **Windows:** Adds Windows Kits ucrt path
 
-### Current Status
-Using HarfBuzz 8.3.0 instead, which has identical API but uses `stdint.h`.
+Additional fixes for CppAst 0.24.0 compatibility:
+- Handle trailing `const` in type names (e.g., `hb_blob_t const *` → `hb_blob_t*`)
+- Normalize pointer spacing (`hb_blob_t *` → `hb_blob_t*`)
+- Added type mappings for `unsigned char` → `Byte`, `signed char` → `SByte`
+- Added type mappings for `unsigned long long` and `signed long long`
+- Added explicit parameter mapping for `sk_stream_move` to maintain `Int32` for cross-platform ABI
 
-### Future Fix Options
-1. Update CppAst and adapt type mappings to handle new naming
-2. Create a shim `inttypes.h` header that provides needed types
-3. Use clang's `-isystem` flag via CppParserOptions.AdditionalArguments
+### Minor Remaining Differences
+After upgrade, there are minor cosmetic differences in generated output:
+- Some `int8_t` parameters appear as `/* char */ void*` instead of `SByte*` due to typedef resolution
+- These are functionally equivalent for P/Invoke purposes
 
 ---
 
 ## Version Information
 
-- **Generated from:** HarfBuzz 8.3.0
-- **Target versions covered:** 2.8.2 through 8.3.0
-- **Last updated:** During migration work
+- **Generated from:** HarfBuzz 8.3.0 (can now support 8.3.1+)
+- **Target versions covered:** 2.8.2 through 8.3.1+
+- **Generator:** CppAst 0.24.0
+- **Last updated:** During CppAst upgrade
