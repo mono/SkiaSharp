@@ -214,11 +214,26 @@ Document any APIs that were excluded during migration, with rationale and future
 6. `89651699` - feat(harfbuzz): update bindings to 7.3.0
 7. `0bdf7329` - feat(harfbuzz): update bindings to 8.3.0
 8. `83eb73cc` - feat(harfbuzz): add C# wrappers and tests for new APIs
+9. `996f918b` - feat(harfbuzz): add variable font and additional APIs
+10. `22f0bc25` - docs: document 8.3.1 parsing issue and attempted solutions
+11. `32e4faf3` - refactor(harfbuzz): split HBNewApiTest.cs into appropriate test files
+12. `00ab5c57` - feat(harfbuzz): add Face.GetName and Face.TryGetName for OpenType names
 
 ### New C# APIs Added
 - `Language.Matches(Language)` - prefix matching for languages
 - `Buffer.CreateSimilar(Buffer)` - create buffer with same settings
 - `Font.SyntheticSlant` - get/set synthetic slant for oblique fonts
+- `Font.SetVariations(Variation[])` - set multiple variation axes
+- `Font.SetVariations(ReadOnlySpan<Variation>)` - span overload
+- `Font.SetVariation(uint tag, float value)` - set single axis by numeric tag
+- `Font.SetVariation(string tag, float value)` - set single axis by string name
+- `Font.SetSyntheticBold(float x, float y, bool inPlace)` - synthetic emboldening
+- `Font.GetSyntheticBold(out float x, out float y, out bool inPlace)` - get emboldening
+- `Font.NamedInstance` - get/set named instance index
+- `Face.GetName(OpenTypeNameId)` - get font name from OpenType name table
+- `Face.GetName(OpenTypeNameId, Language)` - with language parameter
+- `Face.TryGetName(OpenTypeNameId, out string)` - returns false if not found
+- `Face.TryGetName(OpenTypeNameId, Language, out string)` - with language parameter
 
 ### Configuration Changes
 - Added namespace exclusions: `hb_paint_`, `hb_color_line_`
@@ -226,7 +241,7 @@ Document any APIs that were excluded during migration, with rationale and future
 - Added `generateProxy: false` for Draw API callbacks
 
 ### Test Results
-- All 115 HarfBuzz tests pass (106 existing + 9 new)
+- All 130 HarfBuzz tests pass (106 original + 24 new)
 
 ### Documentation Created
 - `documentation/binding-generation.md` - comprehensive generator documentation
