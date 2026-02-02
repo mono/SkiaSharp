@@ -46,6 +46,12 @@ public unsafe class SKBlender : SKObject, ISKReferenceCounted
 			SKBlendMode.Color,
 			SKBlendMode.Luminosity,
 		};
+#if DEBUG
+		// Ensure that the explicit list stays in sync with the SKBlendMode enum.
+		var allModes = (SKBlendMode[])Enum.GetValues (typeof (SKBlendMode));
+		if (allModes.Length != modes.Length)
+			throw new InvalidOperationException ("The SKBlender blend mode list is out of sync with the SKBlendMode enum.");
+#endif
 		blendModeBlenders = new Dictionary<SKBlendMode, SKBlender> (modes.Length);
 		foreach (SKBlendMode mode in modes)
 		{
