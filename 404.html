@@ -3,14 +3,23 @@
 <head>
     <meta charset="utf-8">
     <title>Page Not Found - SkiaSharp</title>
-    <script>
-        // Handle SPA routing for dashboard
+    <script type="text/javascript">
+        // Single Page Apps for GitHub Pages - handle dashboard SPA routing
+        // https://github.com/rafrex/spa-github-pages
         (function() {
             var path = window.location.pathname;
-            if (path.startsWith('/SkiaSharp/dashboard/')) {
-                // Redirect to dashboard with the path preserved via session storage
-                sessionStorage.setItem('redirect-path', path);
-                window.location.replace('/SkiaSharp/dashboard/');
+            // Only handle dashboard paths - redirect with query string approach
+            if (path.startsWith('/SkiaSharp/dashboard/') && path !== '/SkiaSharp/dashboard/') {
+                // segmentCount = 2 preserves /SkiaSharp/dashboard
+                var segmentCount = 2;
+                var l = window.location;
+                l.replace(
+                    l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+                    l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+                    l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+                    (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+                    l.hash
+                );
             }
         })();
     </script>
