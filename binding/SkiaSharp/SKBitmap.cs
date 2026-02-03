@@ -188,11 +188,16 @@ namespace SkiaSharp
 			if (colorType == SKColorType.Unknown)
 				return false;
 
+			if (Width == 0 || Height == 0)
+				return false;
+
 			// To check if we can do a direct copy
 			// If a SKBitmap is created by ExtractSubset, its pixels may not be stored contiguously
 			// In most cases, des and src have the same Size and ColorType
 			int desWidth = destination.Width;
 			int desHeight = destination.Height;
+			if(desWidth==0||desHeight==0)
+				return false;
 			if (ColorType == destination.ColorType && ColorType == colorType) {
 				if (Width * Height * BytesPerPixel == ByteCount &&
 				    desWidth * desHeight * BytesPerPixel == destination.ByteCount) {
@@ -207,10 +212,14 @@ namespace SkiaSharp
 				}
 				// Copy row by row
 				var rowBytes = Math.Min (RowBytes, destination.RowBytes);
-				for(var row=0;row<Math.Min(Height, desHeight);row++) {
-					var des =new Span<byte> (destination.GetAddress(0, row).ToPointer(), rowBytes);
-					var src =new Span<byte> (GetAddress(0, row).ToPointer(), rowBytes);
-					src.CopyTo(des);
+				var srcAddress = GetAddress (0, 0);
+				var desAddress = destination.GetAddress (0, 0);
+				var srcOriginalRowBytes = GetAddress (0, 1) - srcAddress;
+				var desOriginalRowBytes = destination.GetAddress (0, 1) - destination.GetAddress (0, 0);
+				for(var row=0;row<Math.Min(Height, desHeight);row++,srcAddress+=srcOriginalRowBytes,desAddress+=desOriginalRowBytes) {
+					var des =new Span<byte> (srcAddress.ToPointer(), rowBytes);
+					var src =new Span<byte> (desAddress.ToPointer(), rowBytes);
+					src.TryCopyTo(des);
 				}
 				return true;
 			}
