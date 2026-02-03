@@ -41,6 +41,9 @@ jobs:
       - name: Set base href for GitHub Pages
         run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' ./publish/wwwroot/index.html
 
+      - name: Remove placeholder data (preserve deployed data)
+        run: rm -rf ./publish/wwwroot/data
+
       - name: Add .nojekyll
         run: touch ./publish/wwwroot/.nojekyll
 
