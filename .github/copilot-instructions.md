@@ -61,6 +61,7 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 - Layout components go in `Layout/`
 - Services use constructor injection via `@inject`
 - Data loading happens in `OnInitializedAsync()`
+- **⚠️ CRITICAL: Use RELATIVE URLs** - never use absolute paths like `/issues` in `href` or `NavigateTo()`. Always use relative paths like `issues` so they work with the base href (`/SkiaSharp/dashboard/`). Absolute paths bypass the base href and break navigation on GitHub Pages.
 
 ### Naming
 - Pages: `{Feature}.razor` (e.g., `GitHub.razor`, `PrTriage.razor`)

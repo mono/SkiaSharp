@@ -17,6 +17,11 @@ All major pages implemented and deployed:
 
 ## Recent Changes
 
+### 2026-02-03 (Bug Fixes)
+1. ✅ Fixed model type mismatches (int → double for DaysOpen fields)
+2. ✅ Fixed NuGet model (nullable Downloads)
+3. ✅ **Fixed navigation paths** - changed absolute paths (`/issues`) to relative (`issues`) for base href compatibility
+
 ### 2026-02-03 (Phase 2 Complete)
 1. ✅ Phase 2.1: Data Layer - collectors, models, ApexCharts
 2. ✅ Phase 2.2: Home/Insights with 4 charts
@@ -26,7 +31,8 @@ All major pages implemented and deployed:
 6. ✅ Deleted GitHub.razor (merged into Community)
 
 ### Key Commits
-- `b8467de4` - Phase 2.3: Issues page with filters
+- `e3ed9448` - Fix navigation paths (relative URLs)
+- `0e6cbac1` - Fix model type mismatches
 - `8d18029e` - Phase 2.4-2.5: Enhanced PRs & merged Community
 
 ## Current Page Structure
@@ -37,6 +43,22 @@ All major pages implemented and deployed:
 | Pull Requests | `/pull-requests` | ✅ Triage cards, filters |
 | Community | `/community` | ✅ Repo stats + contributors |
 | NuGet | `/nuget` | ✅ Downloads |
+
+## ⚠️ Critical Learnings
+
+### URL Paths in Blazor with Base Href
+**ALWAYS use relative paths**, never absolute:
+- ✅ `href="issues"` or `NavigateTo("issues")`
+- ❌ `href="/issues"` or `NavigateTo("/issues")`
+
+Absolute paths bypass the base href (`/SkiaSharp/dashboard/`) and navigate to the wrong location (e.g., `mono.github.io/issues` instead of `mono.github.io/SkiaSharp/dashboard/issues`).
+
+### JSON Model Types
+PowerShell collectors output floats for day calculations (e.g., `5.0`). Use `double` not `int` for:
+- `DaysOpen`
+- `DaysSinceActivity`
+
+NuGet API returns `null` for some download counts. Use nullable types (`long?`).
 
 ## Implementation Details
 
