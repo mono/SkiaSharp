@@ -137,6 +137,54 @@ dotnet publish -c Release     # Production build
 - Run data collectors locally: `pwsh collectors/collect-github.ps1 -OutputPath test.json`
 - Manual testing: Navigate all 5 pages, verify data loads
 
+## GitHub Pages SPA Routing
+
+This app uses the [spa-github-pages](https://github.com/rafrex/spa-github-pages) approach for client-side routing on GitHub Pages. This is the **official Microsoft-recommended approach** per [MS Learn docs](https://learn.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/webassembly/github-pages).
+
+### How It Works
+
+1. **404.html** - When GitHub Pages can't find a file (e.g., `/dashboard/issues`), it serves 404.html which redirects to `/?p=/issues` with the path encoded in a query string
+2. **index.html script** - Restores the original URL via `history.replaceState` before Blazor starts
+3. **Blazor Router** - Sees the correct URL and routes to the right component
+
+### Critical Configuration for Nested Subdirectories
+
+Our app lives at `/SkiaSharp/dashboard/` (2 segments deep). Key settings:
+
+| File | Setting | Purpose |
+|------|---------|---------|
+| `wwwroot/404.html` | `segmentCount = 2` | Preserves `/SkiaSharp/dashboard` in redirect |
+| `wwwroot/index.html` | spa-github-pages script in `<head>` | Restores URL before Blazor loads |
+| `wwwroot/root-404.html` | Deployed to site root | Root 404 intercepts ALL site 404s |
+| CI workflow | `sed` to set base href | Changes `<base href="/">` to `<base href="/SkiaSharp/dashboard/">` |
+
+### ⚠️ CRITICAL: URL Path Rules
+
+Per [MS Learn](https://learn.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/app-base-path#configure-the-app-base-path):
+
+**NavigateTo calls:**
+- ❌ `Navigation.NavigateTo("/issues")` - Goes to site root!
+- ✅ `Navigation.NavigateTo("issues")` - Relative to base href
+- ✅ `Navigation.NavigateTo("./issues")` - Also works
+
+**Anchor hrefs:**
+- ❌ `<a href="/issues">` - Goes to site root!
+- ✅ `<a href="issues">` - Relative to base href
+- ✅ `<NavLink href="issues">` - Correct
+
+**@page routes:**
+- ✅ `@page "/issues"` - Routes DO use leading slash (this is correct)
+
+### Debugging Navigation Issues
+
+If clicking links navigates to wrong URLs (e.g., `/issues` instead of `/SkiaSharp/dashboard/issues`):
+
+1. Check for leading slashes in `NavigateTo()` calls
+2. Check for leading slashes in `href` attributes  
+3. Verify `<base href="/SkiaSharp/dashboard/">` is set (trailing slash required!)
+4. Check browser console for navigation errors
+5. Verify 404.html has correct `segmentCount`
+
 ## What NOT To Do
 
 - ❌ Don't add server-side code (this is client-only WASM)

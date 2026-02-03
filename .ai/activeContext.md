@@ -6,34 +6,74 @@
 ## Current Focus
 
 **Phase**: Phase 2 - Dashboard Restructure
-**Status**: COMPLETE ✅
+**Status**: Bug Fixing - Navigation Redirect Issue
 
-All major pages implemented and deployed:
-- ✅ Home (Insights) with ApexCharts
-- ✅ Issues page with filters
-- ✅ Pull Requests page with triage & filters
-- ✅ Community page merged with GitHub stats
-- ✅ NuGet page (unchanged)
+Navigation was broken on GitHub Pages due to:
+1. Leading slashes in `NavigateTo()` calls in Issues.razor and PrTriage.razor
+2. Old sessionStorage-based 404.html at site root
 
 ## Recent Changes
 
-### 2026-02-03 (Bug Fixes)
+### 2026-02-03 (SPA Routing Fix)
+1. ✅ Reset index.html to clean Blazor template + spa-github-pages script
+2. ✅ Created proper 404.html with segmentCount=2 for nested subdirectory
+3. ✅ Created root-404.html to replace old sessionStorage approach at site root
+4. ✅ **CRITICAL FIX**: Removed leading slash from NavigateTo URLs:
+   - Issues.razor: `/issues` → `issues`
+   - PrTriage.razor: `/pull-requests` → `pull-requests`
+5. ✅ Updated copilot-instructions.md with comprehensive SPA routing docs
+
+### 2026-02-03 (Earlier Bug Fixes)
 1. ✅ Fixed model type mismatches (int → double for DaysOpen fields)
 2. ✅ Fixed NuGet model (nullable Downloads)
-3. ✅ **Fixed navigation paths** - changed absolute paths (`/issues`) to relative (`issues`) for base href compatibility
-
-### 2026-02-03 (Phase 2 Complete)
-1. ✅ Phase 2.1: Data Layer - collectors, models, ApexCharts
-2. ✅ Phase 2.2: Home/Insights with 4 charts
-3. ✅ Phase 2.3: Issues page with filters & table
-4. ✅ Phase 2.4: Pull Requests with triage cards & filters
-5. ✅ Phase 2.5: Community merged with GitHub stats
-6. ✅ Deleted GitHub.razor (merged into Community)
 
 ### Key Commits
-- `e3ed9448` - Fix navigation paths (relative URLs)
-- `0e6cbac1` - Fix model type mismatches
-- `8d18029e` - Phase 2.4-2.5: Enhanced PRs & merged Community
+- `e1f5741e` - Fix NavigateTo leading slash (THE FIX)
+- `219a9a66` - Root 404.html with spa-github-pages approach
+- `072251ce` - Reset to clean template with spa-github-pages
+
+## ⚠️ CRITICAL: SPA Routing on GitHub Pages
+
+### The Problem
+Blazor WASM apps on GitHub Pages subdirectories have navigation issues because:
+1. GitHub Pages doesn't support server-side URL rewriting
+2. The `<base href>` setting affects how Blazor computes navigation URLs
+3. Root 404.html intercepts ALL 404s site-wide
+
+### The Solution (spa-github-pages approach)
+**Per [MS Learn docs](https://learn.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/webassembly/github-pages)**:
+
+1. **404.html** - Redirects `/SkiaSharp/dashboard/issues` to `/SkiaSharp/dashboard/?p=/issues`
+2. **index.html script** - Restores URL via `history.replaceState` before Blazor loads
+3. **segmentCount=2** - For nested paths like `/SkiaSharp/dashboard/`
+
+### URL Rules (MEMORIZE THESE)
+```csharp
+// ❌ WRONG - Goes to site root /issues
+Navigation.NavigateTo("/issues");
+
+// ✅ CORRECT - Relative to base href
+Navigation.NavigateTo("issues");
+Navigation.NavigateTo("./issues");
+
+// ❌ WRONG - Goes to site root
+<a href="/issues">
+
+// ✅ CORRECT - Relative to base
+<a href="issues">
+<NavLink href="issues">
+
+// ✅ @page routes DO use leading slash
+@page "/issues"
+```
+
+### Files Involved
+| File | Purpose |
+|------|---------|
+| `wwwroot/index.html` | spa-github-pages restore script in `<head>` |
+| `wwwroot/404.html` | Redirect script with segmentCount=2 |
+| `wwwroot/root-404.html` | Deployed to site root to handle all 404s |
+| `.github/workflows/build-dashboard.yml` | Sets base href via sed |
 
 ## Current Page Structure
 | Page | Route | Status |
@@ -43,22 +83,6 @@ All major pages implemented and deployed:
 | Pull Requests | `/pull-requests` | ✅ Triage cards, filters |
 | Community | `/community` | ✅ Repo stats + contributors |
 | NuGet | `/nuget` | ✅ Downloads |
-
-## ⚠️ Critical Learnings
-
-### URL Paths in Blazor with Base Href
-**ALWAYS use relative paths**, never absolute:
-- ✅ `href="issues"` or `NavigateTo("issues")`
-- ❌ `href="/issues"` or `NavigateTo("/issues")`
-
-Absolute paths bypass the base href (`/SkiaSharp/dashboard/`) and navigate to the wrong location (e.g., `mono.github.io/issues` instead of `mono.github.io/SkiaSharp/dashboard/issues`).
-
-### JSON Model Types
-PowerShell collectors output floats for day calculations (e.g., `5.0`). Use `double` not `int` for:
-- `DaysOpen`
-- `DaysSinceActivity`
-
-NuGet API returns `null` for some download counts. Use nullable types (`long?`).
 
 ## Implementation Details
 
@@ -87,24 +111,19 @@ NuGet API returns `null` for some download counts. Use nullable types (`long?`).
 // Strip prefix for display
 "type/bug" → "bug"
 "area/text" → "text"
-
-// Use prefix for categorization
-if (label.StartsWith("type/")) types.Add(label[5..]);
 ```
 
-### URL Filter Pattern
-```csharp
-[SupplyParameterFromQuery] public string? Type { get; set; }
-NavigationManager.NavigateTo($"/issues?type={type}", replace: true);
-```
+### JSON Model Types
+PowerShell outputs floats (`5.0`) - use `double` not `int` for DaysOpen fields.
+NuGet API returns `null` for some downloads - use `long?`.
 
 ## Context for Next AI Session
 
 When resuming work:
 1. Read ALL files in `.ai/` folder first
-2. Phase 2 is COMPLETE
-3. Branch is `dashboard`
-4. Live at https://mono.github.io/SkiaSharp/dashboard/
+2. Branch is `dashboard`
+3. Live at https://mono.github.io/SkiaSharp/dashboard/
+4. **CHECK NAVIGATION WORKS** - click Issues/PRs links, verify URL stays correct
 
 ## Potential Future Work
 
