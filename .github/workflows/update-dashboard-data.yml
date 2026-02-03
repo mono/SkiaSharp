@@ -1,0 +1,72 @@
+name: Update Dashboard Data
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:
+
+concurrency:
+  group: dashboard-deploy
+  cancel-in-progress: false
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout dashboard branch
+        uses: actions/checkout@v4
+        with:
+          ref: dashboard
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Collect GitHub Stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pwsh collectors/collect-github.ps1 -OutputPath src/Dashboard/wwwroot/data/github-stats.json
+
+      - name: Collect NuGet Stats
+        run: |
+          pwsh collectors/collect-nuget.ps1 -OutputPath src/Dashboard/wwwroot/data/nuget-stats.json
+
+      - name: Collect Community Stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pwsh collectors/collect-community.ps1 -OutputPath src/Dashboard/wwwroot/data/community-stats.json
+
+      - name: Collect PR Triage Data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          # AZURE_OPENAI_KEY: ${{ secrets.AZURE_OPENAI_KEY }}
+        run: |
+          pwsh collectors/collect-pr-triage.ps1 -OutputPath src/Dashboard/wwwroot/data/pr-triage.json
+
+      - name: Set base href for GitHub Pages
+        run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' src/Dashboard/wwwroot/index.html
+
+      - name: Build Dashboard
+        run: |
+          dotnet restore src/Dashboard/Dashboard.csproj
+          dotnet publish src/Dashboard/Dashboard.csproj --configuration Release --output ./publish
+
+      - name: Add .nojekyll
+        run: touch ./publish/wwwroot/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish/wwwroot
+          publish_branch: docs-live
+          destination_dir: dashboard
+          keep_files: true
+          commit_message: 'Update dashboard data - ${{ github.run_id }}'

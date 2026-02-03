@@ -1,0 +1,145 @@
+﻿@page "/"
+@inject DashboardDataService DataService
+
+<PageTitle>SkiaSharp Dashboard</PageTitle>
+
+<h1>SkiaSharp Project Dashboard</h1>
+
+@if (_loading)
+{
+    <p><em>Loading dashboard data...</em></p>
+}
+else
+{
+    <div class="dashboard-grid">
+        <!-- GitHub Stats Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>GitHub</h3>
+                <a href="github" class="card-link">View Details →</a>
+            </div>
+            <div class="card-body stats-grid">
+                <div class="stat">
+                    <span class="stat-value">@(_github?.Repository.Stars.ToString("N0") ?? "—")</span>
+                    <span class="stat-label">Stars</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@(_github?.Repository.Forks.ToString("N0") ?? "—")</span>
+                    <span class="stat-label">Forks</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@(_github?.Issues.Open.ToString("N0") ?? "—")</span>
+                    <span class="stat-label">Open Issues</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@(_github?.PullRequests.Open.ToString("N0") ?? "—")</span>
+                    <span class="stat-label">Open PRs</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- NuGet Stats Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>NuGet</h3>
+                <a href="nuget" class="card-link">View Details →</a>
+            </div>
+            <div class="card-body">
+                <div class="stat stat-large">
+                    <span class="stat-value">@(_nuget?.TotalDownloads.ToString("N0") ?? "—")</span>
+                    <span class="stat-label">Total Downloads</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Community Card -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Community</h3>
+                <a href="community" class="card-link">View Details →</a>
+            </div>
+            <div class="card-body stats-grid">
+                <div class="stat">
+                    <span class="stat-value">@(_community?.TotalContributors.ToString("N0") ?? "—")</span>
+                    <span class="stat-label">Contributors</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@(_github?.Activity.CommitsLast30Days.ToString("N0") ?? "—")</span>
+                    <span class="stat-label">Commits (30d)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- PR Triage Card -->
+        <div class="card card-highlight">
+            <div class="card-header">
+                <h3>PR Triage</h3>
+                <a href="pr-triage" class="card-link">View Details →</a>
+            </div>
+            <div class="card-body stats-grid">
+                <div class="stat stat-success">
+                    <span class="stat-value">@(_triage?.Summary.ReadyToMerge.ToString() ?? "—")</span>
+                    <span class="stat-label">Ready to Merge</span>
+                </div>
+                <div class="stat stat-warning">
+                    <span class="stat-value">@(_triage?.Summary.NeedsReview.ToString() ?? "—")</span>
+                    <span class="stat-label">Needs Review</span>
+                </div>
+                <div class="stat stat-danger">
+                    <span class="stat-value">@(_triage?.Summary.ConsiderClosing.ToString() ?? "—")</span>
+                    <span class="stat-label">Consider Closing</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <p class="last-updated">
+        Last updated: @(_github?.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC") ?? "Unknown")
+    </p>
+}
+
+@code {
+    private bool _loading = true;
+    private GitHubStats? _github;
+    private NuGetStats? _nuget;
+    private CommunityStats? _community;
+    private PrTriageStats? _triage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var tasks = new[]
+        {
+            LoadGitHubAsync(),
+            LoadNuGetAsync(),
+            LoadCommunityAsync(),
+            LoadTriageAsync()
+        };
+
+        await Task.WhenAll(tasks);
+        _loading = false;
+    }
+
+    private async Task LoadGitHubAsync()
+    {
+        try { _github = await DataService.GetGitHubStatsAsync(); }
+        catch { /* Data not yet available */ }
+    }
+
+    private async Task LoadNuGetAsync()
+    {
+        try { _nuget = await DataService.GetNuGetStatsAsync(); }
+        catch { /* Data not yet available */ }
+    }
+
+    private async Task LoadCommunityAsync()
+    {
+        try { _community = await DataService.GetCommunityStatsAsync(); }
+        catch { /* Data not yet available */ }
+    }
+
+    private async Task LoadTriageAsync()
+    {
+        try { _triage = await DataService.GetPrTriageStatsAsync(); }
+        catch { /* Data not yet available */ }
+    }
+}

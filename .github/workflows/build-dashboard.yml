@@ -1,0 +1,58 @@
+name: Build Dashboard
+
+on:
+  push:
+    branches: [dashboard]
+  workflow_dispatch:
+
+concurrency:
+  group: dashboard-deploy
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore src/Dashboard/Dashboard.csproj
+
+      - name: Set base href for GitHub Pages
+        run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' src/Dashboard/wwwroot/index.html
+
+      - name: Build
+        run: dotnet build src/Dashboard/Dashboard.csproj --configuration Release --no-restore
+
+      - name: Publish
+        run: dotnet publish src/Dashboard/Dashboard.csproj --configuration Release --no-build --output ./publish
+
+      - name: Add .nojekyll
+        run: touch ./publish/wwwroot/.nojekyll
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./publish/wwwroot
+          publish_branch: docs-live
+          destination_dir: dashboard
+          keep_files: true
+          commit_message: 'Deploy dashboard - ${{ github.sha }}'

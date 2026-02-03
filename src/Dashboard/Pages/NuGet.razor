@@ -1,0 +1,74 @@
+@page "/nuget"
+@inject DashboardDataService DataService
+
+<PageTitle>NuGet Stats - SkiaSharp Dashboard</PageTitle>
+
+<h1>NuGet Downloads</h1>
+
+@if (_loading)
+{
+    <p><em>Loading NuGet data...</em></p>
+}
+else if (_stats is null)
+{
+    <p>No data available.</p>
+}
+else
+{
+    <div class="dashboard-grid">
+        <!-- Total Downloads -->
+        <div class="card card-wide">
+            <div class="card-header"><h3>Total Downloads</h3></div>
+            <div class="card-body">
+                <div class="stat stat-hero">
+                    <span class="stat-value">@_stats.TotalDownloads.ToString("N0")</span>
+                    <span class="stat-label">across all packages</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Package Breakdown -->
+        @foreach (var package in _stats.Packages.OrderByDescending(p => p.TotalDownloads))
+        {
+            <div class="card">
+                <div class="card-header">
+                    <h3>@package.Id</h3>
+                    <a href="https://www.nuget.org/packages/@package.Id" target="_blank" class="card-link">NuGet →</a>
+                </div>
+                <div class="card-body">
+                    <div class="stat">
+                        <span class="stat-value">@package.TotalDownloads.ToString("N0")</span>
+                        <span class="stat-label">Total Downloads</span>
+                    </div>
+                    @if (package.Versions.Count > 0)
+                    {
+                        <h4>Recent Versions</h4>
+                        <ul class="version-list">
+                            @foreach (var version in package.Versions.Take(5))
+                            {
+                                <li>
+                                    <span class="version-number">@version.Version</span>
+                                    <span class="version-downloads">@version.Downloads.ToString("N0") downloads</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <p class="last-updated">Last updated: @_stats.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+}
+
+@code {
+    private bool _loading = true;
+    private NuGetStats? _stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _stats = await DataService.GetNuGetStatsAsync(); }
+        catch { /* Data not yet available */ }
+        _loading = false;
+    }
+}

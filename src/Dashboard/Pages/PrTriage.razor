@@ -1,0 +1,120 @@
+@page "/pr-triage"
+@inject DashboardDataService DataService
+
+<PageTitle>PR Triage - SkiaSharp Dashboard</PageTitle>
+
+<h1>Pull Request Triage</h1>
+<p class="subtitle">AI-powered analysis to help prioritize PR reviews</p>
+
+@if (_loading)
+{
+    <p><em>Loading PR triage data...</em></p>
+}
+else if (_stats is null)
+{
+    <p>No data available.</p>
+}
+else
+{
+    <!-- Summary Cards -->
+    <div class="triage-summary">
+        <div class="triage-card triage-success">
+            <span class="triage-count">@_stats.Summary.ReadyToMerge</span>
+            <span class="triage-label">Ready to Merge</span>
+            <span class="triage-desc">Good idea, simple, quick review</span>
+        </div>
+        <div class="triage-card triage-warning">
+            <span class="triage-count">@_stats.Summary.NeedsReview</span>
+            <span class="triage-label">Needs Review</span>
+            <span class="triage-desc">Complex or uncertain</span>
+        </div>
+        <div class="triage-card triage-danger">
+            <span class="triage-count">@_stats.Summary.ConsiderClosing</span>
+            <span class="triage-label">Consider Closing</span>
+            <span class="triage-desc">May not align with project goals</span>
+        </div>
+    </div>
+
+    <!-- PR Lists by Category -->
+    @foreach (var category in Enum.GetValues<TriageCategory>())
+    {
+        var prs = _stats.PullRequests.Where(p => p.Category == category).ToList();
+        if (prs.Count > 0)
+        {
+            <h2 class="@GetCategoryClass(category)">@GetCategoryTitle(category)</h2>
+            <div class="pr-list">
+                @foreach (var pr in prs)
+                {
+                    <div class="pr-card @GetCategoryClass(category)">
+                        <div class="pr-header">
+                            <img src="@pr.AuthorAvatarUrl" alt="@pr.Author" class="avatar-small" />
+                            <a href="https://github.com/mono/SkiaSharp/pull/@pr.Number" target="_blank" class="pr-title">
+                                #@pr.Number: @pr.Title
+                            </a>
+                        </div>
+                        <div class="pr-meta">
+                            <span>by @pr.Author</span>
+                            <span>@GetAge(pr.CreatedAt)</span>
+                            <span>@pr.FilesChanged files (+@pr.Additions/-@pr.Deletions)</span>
+                        </div>
+                        @if (pr.Labels.Count > 0)
+                        {
+                            <div class="pr-labels">
+                                @foreach (var label in pr.Labels)
+                                {
+                                    <span class="label">@label</span>
+                                }
+                            </div>
+                        }
+                        <div class="pr-reasoning">
+                            <strong>AI Analysis:</strong> @pr.AiReasoning
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+
+    <p class="last-updated">Last updated: @_stats.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+}
+
+@code {
+    private bool _loading = true;
+    private PrTriageStats? _stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _stats = await DataService.GetPrTriageStatsAsync(); }
+        catch { /* Data not yet available */ }
+        _loading = false;
+    }
+
+    private static string GetCategoryTitle(TriageCategory category) => category switch
+    {
+        TriageCategory.ReadyToMerge => "✅ Ready to Merge",
+        TriageCategory.NeedsReview => "🔍 Needs Deeper Review",
+        TriageCategory.ConsiderClosing => "❌ Consider Closing",
+        _ => category.ToString()
+    };
+
+    private static string GetCategoryClass(TriageCategory category) => category switch
+    {
+        TriageCategory.ReadyToMerge => "category-success",
+        TriageCategory.NeedsReview => "category-warning",
+        TriageCategory.ConsiderClosing => "category-danger",
+        _ => ""
+    };
+
+    private static string GetAge(DateTime created)
+    {
+        var age = DateTime.UtcNow - created;
+        var days = age.TotalDays;
+
+        if (days < 1) return "today";
+        if (days < 2) return "yesterday";
+        if (days < 7) return $"{(int)days} days ago";
+        if (days < 30) return $"{(int)(days / 7)} weeks ago";
+        if (days < 365) return $"{(int)(days / 30)} months ago";
+        return $"{(int)(days / 365)} years ago";
+    }
+}

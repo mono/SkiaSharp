@@ -1,0 +1,95 @@
+@page "/community"
+@inject DashboardDataService DataService
+
+<PageTitle>Community - SkiaSharp Dashboard</PageTitle>
+
+<h1>Community</h1>
+
+@if (_loading)
+{
+    <p><em>Loading community data...</em></p>
+}
+else if (_stats is null)
+{
+    <p>No data available.</p>
+}
+else
+{
+    <div class="dashboard-grid">
+        <!-- Overview -->
+        <div class="card">
+            <div class="card-header"><h3>Overview</h3></div>
+            <div class="card-body">
+                <div class="stat stat-large">
+                    <span class="stat-value">@_stats.TotalContributors.ToString("N0")</span>
+                    <span class="stat-label">Total Contributors</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Contributors -->
+        <div class="card card-wide">
+            <div class="card-header"><h3>Top Contributors</h3></div>
+            <div class="card-body">
+                @if (_stats.TopContributors.Count == 0)
+                {
+                    <p>No contributor data available.</p>
+                }
+                else
+                {
+                    <div class="contributor-grid">
+                        @foreach (var contributor in _stats.TopContributors.Take(12))
+                        {
+                            <div class="contributor">
+                                <img src="@contributor.AvatarUrl" alt="@contributor.Login" class="avatar" />
+                                <a href="https://github.com/@contributor.Login" target="_blank" class="contributor-name">
+                                    @contributor.Login
+                                </a>
+                                <span class="contributor-count">@contributor.Contributions commits</span>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Recent Commits -->
+        <div class="card card-wide">
+            <div class="card-header"><h3>Recent Commits</h3></div>
+            <div class="card-body">
+                @if (_stats.RecentCommits.Count == 0)
+                {
+                    <p>No recent commits.</p>
+                }
+                else
+                {
+                    <ul class="commit-list">
+                        @foreach (var commit in _stats.RecentCommits.Take(10))
+                        {
+                            <li>
+                                <code>@commit.Sha[..7]</code>
+                                <span class="commit-message">@commit.Message</span>
+                                <span class="commit-author">by @commit.Author</span>
+                                <span class="commit-date">@commit.Date.ToString("MMM dd")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <p class="last-updated">Last updated: @_stats.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+}
+
+@code {
+    private bool _loading = true;
+    private CommunityStats? _stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _stats = await DataService.GetCommunityStatsAsync(); }
+        catch { /* Data not yet available */ }
+        _loading = false;
+    }
+}

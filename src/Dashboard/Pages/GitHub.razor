@@ -1,0 +1,123 @@
+@page "/github"
+@inject DashboardDataService DataService
+
+<PageTitle>GitHub Stats - SkiaSharp Dashboard</PageTitle>
+
+<h1>GitHub Statistics</h1>
+
+@if (_loading)
+{
+    <p><em>Loading GitHub data...</em></p>
+}
+else if (_stats is null)
+{
+    <p>No data available.</p>
+}
+else
+{
+    <div class="dashboard-grid">
+        <!-- Repository Overview -->
+        <div class="card">
+            <div class="card-header"><h3>Repository</h3></div>
+            <div class="card-body stats-grid">
+                <div class="stat">
+                    <span class="stat-value">@_stats.Repository.Stars.ToString("N0")</span>
+                    <span class="stat-label">Stars</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@_stats.Repository.Forks.ToString("N0")</span>
+                    <span class="stat-label">Forks</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@_stats.Repository.Watchers.ToString("N0")</span>
+                    <span class="stat-label">Watchers</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issues -->
+        <div class="card">
+            <div class="card-header"><h3>Issues</h3></div>
+            <div class="card-body stats-grid">
+                <div class="stat">
+                    <span class="stat-value">@_stats.Issues.Open.ToString("N0")</span>
+                    <span class="stat-label">Open</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@_stats.Issues.Closed.ToString("N0")</span>
+                    <span class="stat-label">Closed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">+@_stats.Issues.OpenedLast30Days</span>
+                    <span class="stat-label">Opened (30d)</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">-@_stats.Issues.ClosedLast30Days</span>
+                    <span class="stat-label">Closed (30d)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pull Requests -->
+        <div class="card">
+            <div class="card-header"><h3>Pull Requests</h3></div>
+            <div class="card-body stats-grid">
+                <div class="stat">
+                    <span class="stat-value">@_stats.PullRequests.Open.ToString("N0")</span>
+                    <span class="stat-label">Open</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@_stats.PullRequests.Merged.ToString("N0")</span>
+                    <span class="stat-label">Merged</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">@_stats.PullRequests.Closed.ToString("N0")</span>
+                    <span class="stat-label">Closed</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">+@_stats.PullRequests.MergedLast30Days</span>
+                    <span class="stat-label">Merged (30d)</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card card-wide">
+            <div class="card-header"><h3>Recent Commits</h3></div>
+            <div class="card-body">
+                @if (_stats.Activity.RecentCommits.Count == 0)
+                {
+                    <p>No recent commits.</p>
+                }
+                else
+                {
+                    <ul class="commit-list">
+                        @foreach (var commit in _stats.Activity.RecentCommits.Take(10))
+                        {
+                            <li>
+                                <code>@commit.Sha[..7]</code>
+                                <span class="commit-message">@commit.Message</span>
+                                <span class="commit-author">by @commit.Author</span>
+                                <span class="commit-date">@commit.Date.ToString("MMM dd")</span>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        </div>
+    </div>
+
+    <p class="last-updated">Last updated: @_stats.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+}
+
+@code {
+    private bool _loading = true;
+    private GitHubStats? _stats;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { _stats = await DataService.GetGitHubStatsAsync(); }
+        catch { /* Data not yet available */ }
+        _loading = false;
+    }
+}
