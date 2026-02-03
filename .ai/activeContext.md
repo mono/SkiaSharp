@@ -12,6 +12,11 @@ The dashboard is live at https://mono.github.io/SkiaSharp/dashboard/ with real G
 
 ## Recent Changes (Last Session)
 
+### 2026-02-03 (Latest)
+1. ✅ Moved MS/Community breakdown from Home to Community page
+2. ✅ Fixed Microsoft detection - now uses public user profile `company` field
+3. ✅ Added Microsoft badge to top contributors on Community page
+
 ### 2026-02-03 (Evening)
 1. ✅ Merged build + data workflows into single `build-dashboard.yml`
 2. ✅ Fixed SPA routing 404 issue with root-level 404.html
