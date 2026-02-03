@@ -16,7 +16,7 @@
 | Local Testing | ✅ Complete | Runs on localhost |
 | Playwright | ✅ Complete | MCP configured |
 | AI Context | ✅ Complete | Memory bank created |
-| Deployment | ⏳ Pending | Need to push & verify |
+| Deployment | 🟡 Pushed | Waiting for workflow to run |
 | Real Data | ⏳ Pending | Collectors not run yet |
 | Polish | ⏳ Pending | Logo, branding |
 
