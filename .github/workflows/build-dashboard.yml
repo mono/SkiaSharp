@@ -72,18 +72,3 @@ jobs:
           destination_dir: dashboard
           keep_files: true
           commit_message: 'Deploy dashboard - ${{ github.sha }}'
-
-      - name: Create root 404.html for SPA routing
-        run: |
-          mkdir -p ./root-404
-          cp ./src/Dashboard/wwwroot/root-404.html ./root-404/404.html
-
-      - name: Deploy root 404.html
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./root-404
-          publish_branch: docs-live
-          destination_dir: .
-          keep_files: true
-          commit_message: 'Update root 404.html for dashboard SPA routing'
