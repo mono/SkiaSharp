@@ -214,7 +214,7 @@ else
         if (!string.IsNullOrEmpty(SelectedAuthor)) query.Add($"author={SelectedAuthor}");
         if (!string.IsNullOrEmpty(SelectedDraft)) query.Add($"draft={SelectedDraft}");
 
-        var url = "/pull-requests" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        var url = "pull-requests" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
         Navigation.NavigateTo(url, replace: true);
     }
 

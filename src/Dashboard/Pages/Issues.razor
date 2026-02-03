@@ -223,7 +223,7 @@ else
         if (!string.IsNullOrEmpty(SelectedBackend)) query.Add($"backend={Uri.EscapeDataString(SelectedBackend)}");
         if (!string.IsNullOrEmpty(SelectedOs)) query.Add($"os={Uri.EscapeDataString(SelectedOs)}");
         
-        var url = "/issues" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        var url = "issues" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
         Navigation.NavigateTo(url, replace: true);
     }
 
