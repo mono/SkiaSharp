@@ -89,11 +89,14 @@ This phase is quick — get enough context to create the PR.
 > - Create branch
 > - Push empty commit
 > - Create draft PR with template
+> - Add "copilot" label
 
 ```bash
 git checkout -b copilot/issue-NNNN-short-description
 git commit --allow-empty -m "Investigating #NNNN: [description]"
 git push -u origin copilot/issue-NNNN-short-description
+gh pr create --draft --title "Investigating #NNNN: [description]" --body "[template]"
+gh pr edit --add-label "copilot"
 ```
 
 Create PR using investigation template from [references/pr-templates.md](references/pr-templates.md).
@@ -110,6 +113,7 @@ Create PR using investigation template from [references/pr-templates.md](referen
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Feature branch created and pushed
 - [ ] Draft PR opened with investigation template
+- [ ] "copilot" label added to PR
 
 ### ⛔ AFTER PHASE 2: Verify PR exists before continuing
 
