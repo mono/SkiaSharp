@@ -18,20 +18,22 @@ else
                 <h3>GitHub</h3>
                 <a href="github" class="card-link">View Details →</a>
             </div>
-            <div class="card-body stats-grid">
-                <div class="stat">
-                    <span class="stat-value">@(_github?.Repository.Stars.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Stars</span>
+            <div class="card-body">
+                <div class="stats-grid stats-grid-3">
+                    <div class="stat">
+                        <span class="stat-value">@(_github?.Repository.Stars.ToString("N0") ?? "—")</span>
+                        <span class="stat-label">Stars</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">@(_github?.Repository.Forks.ToString("N0") ?? "—")</span>
+                        <span class="stat-label">Forks</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">@(_github?.Issues.Open.ToString("N0") ?? "—")</span>
+                        <span class="stat-label">Open Issues</span>
+                    </div>
                 </div>
-                <div class="stat">
-                    <span class="stat-value">@(_github?.Repository.Forks.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Forks</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-value">@(_github?.Issues.Open.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Open Issues</span>
-                </div>
-                <div class="stat">
+                <div class="stat stat-full">
                     <span class="stat-value">@(_github?.PullRequests.Open.ToString("N0") ?? "—")</span>
                     <span class="stat-label">Open PRs</span>
                 </div>
@@ -58,12 +60,12 @@ else
                 <h3>Community</h3>
                 <a href="community" class="card-link">View Details →</a>
             </div>
-            <div class="card-body stats-grid">
-                <div class="stat">
+            <div class="card-body">
+                <div class="stat stat-large">
                     <span class="stat-value">@(_community?.TotalContributors.ToString("N0") ?? "—")</span>
                     <span class="stat-label">Contributors</span>
                 </div>
-                <div class="stat">
+                <div class="stat stat-full">
                     <span class="stat-value">@(_github?.Activity.CommitsLast30Days.ToString("N0") ?? "—")</span>
                     <span class="stat-label">Commits (30d)</span>
                 </div>
