@@ -13,16 +13,33 @@ This ensures continuity across AI sessions. Never end a session without updating
 
 ## Project Overview
 
-This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application that displays community metrics, project health, and AI-powered PR triage for the SkiaSharp library.
+This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application that displays community metrics, project health, and PR triage for the SkiaSharp library.
 
 - **Live URL**: https://mono.github.io/SkiaSharp/dashboard/
 - **Repository**: mono/SkiaSharp (dashboard branch)
 - **Parent Project**: SkiaSharp is a cross-platform 2D graphics library for .NET
 
+## Current Phase: Dashboard Restructure
+
+**Page Structure:**
+| Page | Route | Purpose |
+|------|-------|---------|
+| Home (Insights) | `/` | Health metrics + charts showing hotspots |
+| Issues | `/issues` | Drill-down with filters |
+| Pull Requests | `/pull-requests` | Triage categories, filters |
+| Community | `/community` | Stars, forks, contributors |
+| NuGet | `/nuget` | Package downloads |
+
+**Data Context:**
+- 659 open issues, 50 PRs
+- Labels use prefixes: `type/`, `area/`, `backend/`, `os/`
+- Strip prefixes for display, use for categorization
+
 ## Tech Stack
 
 - **.NET 10** with **C# 14** (use latest language features)
 - **Blazor WebAssembly** (standalone, client-side only)
+- **Blazor-ApexCharts** for charts
 - **Bootstrap 5** for styling
 - **PowerShell** for data collection scripts
 - **GitHub Actions** for CI/CD

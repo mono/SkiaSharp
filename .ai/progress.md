@@ -4,105 +4,120 @@
 
 ## Current Status
 
-**Overall**: 🟢 MVP Live with Real Data
+**Overall**: 🟡 Phase 2 - Dashboard Restructure In Progress
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Foundation | ✅ Complete | Project setup, structure |
-| UI Pages | ✅ Complete | All 5 pages working |
-| Data Models | ✅ Complete | All DTOs defined |
-| Collectors | ✅ Complete | 4 scripts, MS/Community split |
-| CI/CD | ✅ Complete | Single unified workflow |
-| Local Testing | ✅ Complete | Runs on localhost |
-| Playwright | ✅ Complete | MCP configured |
-| AI Context | ✅ Complete | Memory bank created |
-| Deployment | ✅ Live | https://mono.github.io/SkiaSharp/dashboard/ |
-| Real Data | ✅ Working | GitHub, Community stats show real data |
-| SPA Routing | ✅ Fixed | Root 404.html handles deep links |
-| Logo | ✅ Added | nuget.png used |
+| Phase 1 | ✅ Complete | Initial dashboard live |
+| Phase 2 Data | 🔄 Starting | New collectors needed |
+| Phase 2 UI | ⏳ Pending | After data layer |
+| Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 
-## Completed Milestones
+## Phase 1 (Completed)
 
 ### Milestone 1: Foundation ✅
-- [x] Create orphan dashboard branch
-- [x] Initialize Blazor WASM project
-- [x] Configure .NET 10, C# 14
-- [x] Add .editorconfig, global.json
-- [x] Set up project structure
+- [x] Orphan dashboard branch
+- [x] Blazor WASM project (.NET 10, C# 14)
+- [x] Project structure
 
 ### Milestone 2: Data Layer ✅
-- [x] Define data models (records)
-- [x] Create DashboardDataService
-- [x] Create placeholder JSON files
-- [x] Create GitHub collector
-- [x] Create NuGet collector
-- [x] Create Community collector (with MS/Community split)
-- [x] Create PR Triage collector
+- [x] GitHub, NuGet, Community, PR Triage collectors
+- [x] Data models and services
+- [x] Microsoft vs Community detection
 
-### Milestone 3: UI ✅
-- [x] Overview page with summary cards
-- [x] GitHub stats page
-- [x] NuGet downloads page
-- [x] Community page
-- [x] PR Triage page
-- [x] Navigation sidebar with logo
-- [x] Responsive layout
-- [x] Custom dashboard CSS
-- [x] Card layout improvements (3-col + full-width)
-- [x] Microsoft vs Community contributor breakdown
+### Milestone 3: Initial UI ✅
+- [x] 5 pages: Home, GitHub, NuGet, Community, PR Triage
+- [x] Navigation, layout, styling
+- [x] SkiaSharp logo
 
 ### Milestone 4: CI/CD ✅
-- [x] Single unified workflow (build-dashboard.yml)
-- [x] Data collection integrated into build
-- [x] Base href sed replacement (after publish)
-- [x] 404.html for SPA routing in /dashboard/
-- [x] Root 404.html for deep link routing
-- [x] Concurrency controls
+- [x] Single unified workflow
+- [x] SPA routing fix (root 404.html)
+- [x] 6-hour scheduled builds
 
-### Milestone 5: Testing & Documentation ✅
-- [x] Playwright MCP setup
-- [x] Screenshot capability
-- [x] README with screenshot
-- [x] copilot-instructions.md
-- [x] Memory bank files
+---
+
+## Phase 2: Dashboard Restructure
+
+### Context
+- 659 open issues (7 paginated API calls)
+- 50 open PRs
+- 77 labels: `type/`, `area/`, `backend/`, `os/`
+
+### New Page Structure
+| Page | Route | Status |
+|------|-------|--------|
+| Home (Insights) | `/` | ⏳ Pending |
+| Issues | `/issues` | ⏳ Pending |
+| Pull Requests | `/pull-requests` | ⏳ Pending |
+| Community | `/community` | ⏳ Pending (merge GitHub) |
+| NuGet | `/nuget` | ✅ No changes |
+
+### Phase 2.1: Data Layer
+- [ ] Create `collect-issues.ps1` (paginated, all open issues)
+- [ ] Update `collect-pr-triage.ps1` (add labels, size, author type)
+- [ ] Update `collect-github.ps1` (add time metrics)
+- [ ] Create `IssueStats.cs` data model
+- [ ] Update `PrTriageStats.cs` with new fields
+- [ ] Add `GetIssueStatsAsync()` to service
+
+### Phase 2.2: Home Page (Insights)
+- [ ] Add Blazor-ApexCharts NuGet package
+- [ ] Create health metrics cards row
+- [ ] Create "by type" horizontal bar chart
+- [ ] Create "by area" horizontal bar chart
+- [ ] Create "by backend" horizontal bar chart
+- [ ] Create "by OS" horizontal bar chart
+- [ ] Create age distribution bar chart
+- [ ] Add click handlers → navigate to Issues with filter
+
+### Phase 2.3: Issues Page
+- [ ] Create `Issues.razor` page
+- [ ] Add filter dropdowns (Type, Area, Backend, OS, Age)
+- [ ] Add stats bar (showing X of Y)
+- [ ] Add sortable issues table
+- [ ] Implement URL-based filter state (`?type=bug&age=stale`)
+
+### Phase 2.4: Pull Requests Page
+- [ ] Rename `PrTriage.razor` → `PullRequests.razor`
+- [ ] Add filter dropdowns (Size, Age, Review Status, Author)
+- [ ] Add triage summary cards
+- [ ] Add categorized PR lists
+- [ ] Implement URL-based filter state
+
+### Phase 2.5: Community Page
+- [ ] Add stars, forks, watchers from GitHub stats
+- [ ] Keep contributors section
+- [ ] Remove GitHub.razor page
+- [ ] Update navigation
+
+### Phase 2.6: Polish
+- [ ] Update NavMenu with new routes
+- [ ] Update Home overview cards (if any remain)
+- [ ] Mobile responsive charts
+- [ ] Test all filter combinations
+- [ ] Update memory bank
+
+---
 
 ## Known Issues
 
 | Issue | Severity | Status |
 |-------|----------|--------|
-| NuGet totalDownloads shows 0 | Low | Collector calculation issue |
-| PR Triage shows dashes | Low | May be enum deserialization |
-
-## Backlog (Prioritized)
-
-### High Priority
-- [ ] Fix NuGet total downloads calculation
-- [ ] Verify PR Triage data displays correctly
-- [ ] Add error boundaries for failed data loads
-
-### Medium Priority
-- [ ] Add loading spinners/skeletons
-- [ ] Improve mobile responsiveness
-- [ ] Add "last updated" timestamp to all pages
-- [ ] Add links to specific issues/PRs on GitHub
-
-### Low Priority
-- [ ] Add charts for trends (stars over time, etc.)
-- [ ] Add historical data storage
-- [ ] Dark mode support
-- [ ] PWA support (offline)
+| NuGet totalDownloads shows 0 | Low | Pending fix |
+| PR Triage shows dashes | Low | May be fixed with restructure |
 
 ## Future Ideas (Icebox)
 
-1. **AI-powered PR triage**: Use OpenAI/Copilot API for actual analysis
-2. **Issue categorization**: Auto-categorize issues by type
-3. **Release tracking**: Show release timeline and changelog
-4. **Dependency dashboard**: Track dependency updates
-5. **Build status**: Show CI/CD pipeline status
+1. AI-powered PR triage (needs API key management)
+2. Historical data for trend charts
+3. Milestone tracking
+4. Release progress view
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.2.0 | 2026-02-03 | MS/Community split, SPA routing fix, unified workflow |
+| 0.3.0 | TBD | Phase 2 restructure |
+| 0.2.0 | 2026-02-03 | MS/Community split, SPA fix, unified workflow |
 | 0.1.0 | 2026-02-03 | Initial implementation |

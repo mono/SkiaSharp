@@ -5,119 +5,110 @@
 
 ## Current Focus
 
-**Phase**: Live & Iterating
-**Status**: Dashboard deployed with real data, SPA routing fixed
+**Phase**: Phase 2 - Dashboard Restructure
+**Status**: Starting implementation
 
-The dashboard is live at https://mono.github.io/SkiaSharp/dashboard/ with real GitHub and Community data.
+Restructuring the dashboard for better repo management:
+- Home page becomes Insights (charts showing hotspots)
+- New Issues page with filters
+- Enhanced Pull Requests page
+- Merged Community page (GitHub + Contributors)
 
-## Recent Changes (Last Session)
+## Recent Changes
 
-### 2026-02-03 (Latest)
-1. ✅ Moved MS/Community breakdown from Home to Community page
-2. ✅ Fixed Microsoft detection - now uses public user profile `company` field
-3. ✅ Added Microsoft badge to top contributors on Community page
-
-### 2026-02-03 (Evening)
-1. ✅ Merged build + data workflows into single `build-dashboard.yml`
-2. ✅ Fixed SPA routing 404 issue with root-level 404.html
-3. ✅ Added Microsoft vs Community contributor breakdown
-4. ✅ Improved card layouts (3-col stats, full-width rows)
-5. ✅ Fixed contributor collector to check Microsoft org membership
-6. ✅ Updated memory bank files
+### 2026-02-03 (Planning)
+1. ✅ Planned Phase 2 restructure with user input
+2. ✅ Defined new page structure: Home(Insights), Issues, PRs, Community, NuGet
+3. ✅ Identified data needs: 659 issues, 50 PRs, 77 labels
 
 ### 2026-02-03 (Earlier)
-1. ✅ Created orphan `dashboard` branch
-2. ✅ Initialized Blazor WASM project (.NET 10, C# 14)
-3. ✅ Added all 5 pages: Overview, GitHub, NuGet, Community, PR Triage
-4. ✅ Created data models and DashboardDataService
-5. ✅ Created 4 PowerShell collector scripts
-6. ✅ Fixed base href for GitHub Pages (sed AFTER publish)
-7. ✅ Set up Playwright MCP for visual testing
-8. ✅ Created AI context system (copilot-instructions + memory bank)
-9. ✅ Added SkiaSharp logo (nuget.png)
+1. ✅ Dashboard deployed and live
+2. ✅ Fixed SPA routing with root 404.html
+3. ✅ Microsoft vs Community contributor detection working
+4. ✅ Single unified workflow
 
-## Key Technical Fixes Applied
+## Phase 2 Plan Summary
 
-### SPA Routing on GitHub Pages
-- **Problem**: Direct links like `/dashboard/community` return 404
-- **Solution**: Two-part fix:
-  1. Root `404.html` in docs-live - redirects `/dashboard/*` URLs to `/dashboard/` with path in sessionStorage
-  2. `index.html` script reads sessionStorage and updates browser history
-  3. Blazor then handles the route normally
+### New Page Structure
+| Page | Route | Purpose |
+|------|-------|---------|
+| Home (Insights) | `/` | Health metrics + charts showing hotspots |
+| Issues | `/issues` | Drill-down with filters, sortable list |
+| Pull Requests | `/pull-requests` | Triage categories, filters |
+| Community | `/community` | Stars, forks, contributors |
+| NuGet | `/nuget` | Downloads (unchanged) |
 
-### Base href Timing
-- **Problem**: `sed` was running before publish, but publish regenerates index.html
-- **Solution**: Run `sed` AFTER `dotnet publish` on the output file
+### Data Context
+- 659 open issues (paginated: 7 API calls)
+- 50 open PRs
+- 77 labels with prefixes: `type/`, `area/`, `backend/`, `os/`
 
-### Data Workflow Race Condition
-- **Problem**: Separate build and data workflows caused data to be overwritten
-- **Solution**: Single unified workflow that collects data → builds → deploys
+### Key Features
+- Clickable charts → drill down to filtered pages
+- URL-based filters (`/issues?type=bug&age=stale`)
+- Labels displayed without prefixes
+- Health metrics (median response/close times)
 
-## Files Recently Modified
+## Implementation Order
 
-- `.github/workflows/build-dashboard.yml` - Unified workflow with root 404.html deploy
-- `collectors/collect-community.ps1` - Added Microsoft org membership check
-- `src/Dashboard/Services/CommunityStats.cs` - Added MicrosoftContributors, CommunityContributors, IsMicrosoft
-- `src/Dashboard/Pages/Home.razor` - Microsoft/Community contributor display
-- `src/Dashboard/wwwroot/css/dashboard.css` - New grid classes, MS/Community colors
-- `src/Dashboard/wwwroot/index.html` - SessionStorage redirect handling
-- `src/Dashboard/wwwroot/root-404.html` - New file for root-level 404
+1. **Data Layer** - New collectors, updated models
+2. **Home/Insights** - Charts with ApexCharts
+3. **Issues Page** - Filters, table
+4. **PRs Page** - Enhanced triage
+5. **Community** - Merge GitHub stats
 
-## Immediate Next Steps
+## Files to Create/Modify
 
-1. [ ] Verify SPA routing fix works (test direct link to /dashboard/community)
-2. [ ] Fix NuGet total downloads (shows 0)
-3. [ ] Verify PR Triage data displays correctly
-4. [ ] Take final screenshot with all data working
+### New Files
+- `collectors/collect-issues.ps1` - Paginated issue collection
+- `src/Dashboard/Services/IssueStats.cs` - Issue data model
+- `src/Dashboard/Pages/Issues.razor` - Issues page
+
+### Modified Files
+- `collectors/collect-pr-triage.ps1` - Add labels, size, author type
+- `collectors/collect-github.ps1` - Add time metrics
+- `src/Dashboard/Pages/Home.razor` - Convert to Insights
+- `src/Dashboard/Pages/PrTriage.razor` → `PullRequests.razor`
+- `src/Dashboard/Pages/Community.razor` - Add GitHub stats
+- `src/Dashboard/Layout/NavMenu.razor` - Update navigation
+
+### Deleted Files
+- `src/Dashboard/Pages/GitHub.razor` - Merged into Community
 
 ## Working Patterns
 
-### When Adding a New Page
-1. Create `Pages/{Name}.razor` with `@page "/{route}"` directive
-2. Inject `DashboardDataService` if data needed
-3. Add loading state and null checks
-4. Add navigation link in `Layout/NavMenu.razor`
-5. Add entry to Overview page if it should appear there
+### Label Handling
+```csharp
+// Strip prefix for display
+"type/bug" → "bug"
+"area/text" → "text"
 
-### When Adding New Data
-1. Create/update model in `Services/`
-2. Add JSON file in `wwwroot/data/`
-3. Add method to `DashboardDataService`
-4. Create/update collector script in `collectors/`
-5. Workflow automatically runs collectors
+// Use prefix for categorization
+if (label.StartsWith("type/")) types.Add(label[5..]);
+if (label.StartsWith("area/")) areas.Add(label[5..]);
+```
 
-### When Debugging
-1. Use Playwright MCP to navigate and screenshot
-2. Check browser console for errors
-3. Verify JSON files are valid and accessible
-4. Check network tab for failed requests
+### URL Filter Pattern
+```csharp
+// Read from URL
+[SupplyParameterFromQuery] public string? Type { get; set; }
+[SupplyParameterFromQuery] public string? Age { get; set; }
 
-## Key Decisions Made This Session
-
-| Decision | Rationale |
-|----------|-----------|
-| Single unified workflow | Avoids race conditions between data and build |
-| Root 404.html redirect | Only way to handle SPA routing on GitHub Pages |
-| Microsoft org check | Shows contributor breakdown; limited to top 20 to avoid API rate limits |
-| sessionStorage for redirect | Preserves original URL across redirect |
+// Navigate with filter
+NavigationManager.NavigateTo($"/issues?type={type}");
+```
 
 ## Context for Next AI Session
 
 When resuming work:
 1. Read ALL files in `.ai/` folder first
-2. Check `progress.md` for current status
-3. Check this file for recent changes
-4. Branch is `dashboard` (orphan, no relation to main)
+2. Check this file for current phase (Phase 2 - Restructure)
+3. Check session plan.md for detailed work plan
+4. Branch is `dashboard`
 5. Live at https://mono.github.io/SkiaSharp/dashboard/
-
-## Open Questions
-
-1. Should PR triage use actual AI? (Would need API key management)
-2. How to handle historical data for trends? (Store snapshots over time?)
-3. Should we add charts/visualizations?
 
 ## Notes
 
-- NuGet totalDownloads shows 0 - collector calculation may be wrong
-- PR Triage shows dashes - may be enum deserialization issue
-- Microsoft org check requires `read:org` scope - may show 0 if token lacks permission
+- Using Blazor-ApexCharts for charts (~50KB)
+- All filtering is client-side (JSON pre-loaded)
+- ~60-70 API calls per collection (safe for 6-hour schedule)
