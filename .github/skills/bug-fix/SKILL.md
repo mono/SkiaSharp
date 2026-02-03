@@ -51,12 +51,26 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 
 | Symptom | Likely Cause | Fix Location |
 |---------|--------------|--------------|
-| `undefined symbol: X` | Missing library link | `externals/skia/third_party/BUILD.gn` or `native/linux/build.cake` |
+| `undefined symbol: X` (all platforms) | Missing library link | `externals/skia/third_party/BUILD.gn` or `native/linux/build.cake` |
+| `undefined symbol: X` (ARM64 only) | **Cross-compile sysroot issue** | `scripts/Docker/debian/clang-cross/*/Dockerfile` |
 | `EntryPointNotFoundException` | C API not rebuilt | Rebuild natives after C API changes |
 | `AccessViolationException` | Memory/disposal bug | C# validation or native code |
 | `ArgumentNullException` | Missing null check | C# wrapper before P/Invoke |
 | Platform-specific crash | Build config | `native/{platform}/build.cake` |
 | GLIBC version error | Build environment | Docker base image version |
+
+### Platform-Specific Issues: The Investigation Pattern
+
+When a bug affects ONE platform but not others (e.g., ARM64 but not x64):
+
+1. **Build BOTH platforms locally** and compare artifacts
+2. **Use `readelf -d | grep NEEDED`** to compare linked libraries
+3. **Check if the difference is in:**
+   - GN args (different flags per platform)
+   - Sysroot setup (cross-compile Docker missing libraries)
+   - Build scripts (different linker flags)
+
+**The difference between platforms IS the root cause.** Don't look for code bugs — look for build configuration differences.
 
 ---
 
@@ -240,21 +254,60 @@ Document each attempt in PR. After exhausting ALL options: ask user for details,
 Refer back to the Quick Diagnosis Table at the top of this document. 
 If symptom matches, go directly to the fix location.
 
-### 5.2 Locate the Problem (if needed)
+### 5.2 For Platform-Specific Issues: Build and Compare
+
+When a bug affects one platform but not another, **build both platforms locally** and compare:
+
+```bash
+# Build x64 native (in Docker)
+bash ./scripts/Docker/debian/amd64/build-local.sh
+
+# Build ARM64 cross-compile (in Docker)
+bash ./scripts/Docker/debian/clang-cross/build-local.sh arm64 10
+
+# Compare DT_NEEDED entries (the linked libraries)
+docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
+  "apt-get update -qq && apt-get install -y -qq binutils >/dev/null && \
+   echo '=== x64 ===' && readelf -d /work/externals/skia/out/linux/x64/libSkiaSharp.so.* | grep NEEDED && \
+   echo && echo '=== ARM64 ===' && readelf -d /work/externals/skia/out/linux/arm64/libSkiaSharp.so.* | grep NEEDED"
+```
+
+**If a library appears in one but not the other, investigate:**
+1. Does the ninja file have `-lfoo` for both? → Check `externals/skia/out/linux/{arch}/obj/SkiaSharp.ninja`
+2. If yes, the linker is silently failing → Check if library exists in sysroot
+3. If no, the GN configuration differs → Check `native/linux/build.cake` and `externals/skia/gn/skia.gni`
+
+### 5.3 Locate the Problem (for C# issues)
 
 ```bash
 grep -rn "MethodName" binding/SkiaSharp/
 grep -r "sk_.*methodname" binding/SkiaSharp/
-readelf -d output/native/linux/arm64/libSkiaSharp.so | grep NEEDED
 ```
 
-### 5.3 Exit Criteria
+### 5.4 Exit Criteria
 
 Stop investigating when you can answer:
 - [ ] What exact code causes the bug?
 - [ ] Why does it fail?
 - [ ] Why doesn't it fail elsewhere?
 - [ ] What single change fixes it?
+
+### 5.4 Workaround vs Root Cause
+
+> ⚠️ **CRITICAL: Don't mistake a workaround for the root cause fix.**
+
+**Example from #3369:**
+- Symptom: `undefined symbol: uuid_generate_random` on ARM64
+- **Wrong fix (workaround):** Add `-luuid` to linker flags
+- **Root cause:** fontconfig wasn't being linked at all (broken symlink in sysroot)
+- **Correct fix:** Add the fontconfig runtime library to the cross-compile sysroot
+
+**How to tell the difference:**
+- If your fix adds something NEW to compensate → probably a workaround
+- If your fix restores something that SHOULD have been there → probably root cause
+- If x64 doesn't need it but ARM64 does → ask WHY the difference exists
+
+**The question to ask:** "Why does this work on [other platform] without this change?"
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Identified root cause
@@ -342,6 +395,26 @@ Mark PR as ready for review (remove draft status).
 | Fix causes test failures | Revert, re-analyze root cause |
 | `EntryPointNotFoundException` | Rebuild natives after C API changes |
 | Can't test on required platform | Use Docker or ask user to verify |
+| Proposed fix is a workaround | Stop — find why it works on other platforms |
+| Docker build uses cached layers | Use `docker build --no-cache` to rebuild |
+| Linker silently skips library | Check if .so file exists and symlinks are valid |
+
+### Cross-Compile Sysroot Issues
+
+If a library is in the ninja file (`-lfoo`) but not in the final binary:
+
+1. **Check if the library exists in the sysroot:**
+   ```bash
+   docker run --rm skiasharp-linux-gnu-cross-arm64 ls -la /usr/aarch64-linux-gnu/lib/libfoo*
+   ```
+
+2. **Check for broken symlinks:**
+   - `libfoo.so -> libfoo.so.1.2.3` where `libfoo.so.1.2.3` doesn't exist
+   - The `-dev` package provides the symlink, but the runtime package has the actual .so
+
+3. **Fix the Dockerfile:**
+   - Download BOTH the `-dev` package (headers) AND the runtime package (actual .so)
+   - Example: `libfontconfig1-dev` + `libfontconfig1`
 
 ---
 
