@@ -35,7 +35,7 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 1. Understand   → Fetch issue, extract key details
 2. Create PR    → 🛑 STOP: Create PR before ANY investigation
 3. Research     → Search related issues, READ ALL COMMENTS
-4. Reproduce    → Test on target platform (skip only if build config issue)
+4. Reproduce    → 🛑 MANDATORY: Test on target platform
 5. Investigate  → Find root cause (often already found in Phase 3!)
 6. Fix          → Minimal change
 7. Test         → Regression test + existing tests
@@ -166,19 +166,22 @@ Search GitHub issues for:
 - [ ] Updated PR with related issues and any diagnosis found
 - [ ] Checked the Quick Diagnosis Table above
 
-**If a related issue already contains the root cause diagnosis, skip to Phase 5 or 6.**
-When skipping, still document the known root cause in the PR before proceeding.
+**If a related issue already contains the root cause diagnosis, document it in the PR,
+but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
 
 ---
 
 ## Phase 4: Reproduce
 
-> 💡 **When to skip reproduction:**
-> - Build configuration bugs (undefined symbol, linker errors) — verify via code inspection
-> - Root cause already confirmed in related issue comments
-> - Fix is obviously correct from code review
+> ⛔ **REPRODUCTION IS MANDATORY. NO EXCEPTIONS.**
 >
-> If skipping, document WHY in PR and proceed to Phase 5 or 6.
+> Even if you think you know the root cause from Phase 3:
+> - Community diagnosis could be a workaround, not the real fix
+> - The hypothesis could be wrong or incomplete
+> - You need evidence, not assumptions
+> - Reproduction validates the issue actually exists
+>
+> **NEVER skip this phase.** Always attempt reproduction.
 
 ### 4.1 Target Platform Requirements
 
@@ -215,12 +218,15 @@ Add to PR description:
 2. Try older/newer .NET versions
 3. Try the exact SkiaSharp version AND the last known working version
 4. Check if issue mentions specific hardware or configurations
+5. Download and use any reproduction project attached to the issue
+6. Try minimal reproduction code from the issue verbatim
 
-Document each attempt in PR. After exhausting options: ask user for details, proceed with code review.
+Document each attempt in PR. After exhausting ALL options: ask user for details, but still proceed with code review while waiting.
 
 ### ✅ GATE: Do not proceed until you have:
-- [ ] Reproduced the issue OR documented why reproduction is unnecessary
-- [ ] Updated PR with reproduction results
+- [ ] Attempted reproduction on target platform (Docker if needed)
+- [ ] Documented ALL reproduction attempts and results in PR
+- [ ] If reproduction failed: documented what was tried and asked user for help
 
 ---
 
@@ -346,7 +352,7 @@ Before marking complete, verify ALL gates were passed:
 - [ ] **Phase 1**: Issue understood, key details extracted
 - [ ] **Phase 2**: Draft PR created and used as living document
 - [ ] **Phase 3**: Related issues searched, ALL comments read, diagnosis collected
-- [ ] **Phase 4**: Reproduced OR documented why skipped
+- [ ] **Phase 4**: Reproduced issue (mandatory - no skipping allowed)
 - [ ] **Phase 5**: Root cause identified and documented
 - [ ] **Phase 6**: Minimal fix implemented
 - [ ] **Phase 7**: Build passes, tests pass
