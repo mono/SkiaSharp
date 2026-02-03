@@ -5,7 +5,8 @@ description: >
   and testing bug reports.
   
   Triggers: Crash, exception, AccessViolationException, incorrect output, wrong behavior,
-  memory leak, disposal issues, "fails", "broken", "doesn't work".
+  memory leak, disposal issues, "fails", "broken", "doesn't work", "investigate issue",
+  "fix issue", "look at #NNNN", any GitHub issue number referencing a bug.
   
   For adding new APIs, use `add-api` skill instead.
 ---
@@ -14,147 +15,186 @@ description: >
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
-## ⚠️ Branch Protection (COMPLIANCE REQUIRED)
+## Prerequisites
 
-> **🛑 NEVER commit directly to protected branches. This is a policy violation.**
-
-| Repository | Protected Branches | Required Action |
-|------------|-------------------|-----------------|
-| SkiaSharp (parent) | `main` | Create feature branch first |
-| externals/skia (submodule) | `main`, `skiasharp` | Create feature branch first |
-
-**BEFORE making any changes**, create a feature branch:
-
-```bash
-# Create branch in SkiaSharp repo
-git checkout -b dev/issue-NNNN-description
-
-# If bug requires C API changes, also create branch in submodule:
-cd externals/skia
-git checkout -b dev/issue-NNNN-description
-cd ../..
-```
+- GitHub API access (fetch issues, search issues, read comments)
+- Git with push access
+- Docker for cross-platform testing (check: `docker --version`)
 
 ## Workflow
 
 ```
-1. Understand   → Extract symptoms, reproduction steps, expected behavior
-2. Locate       → Find affected code, trace to root cause
-3. Fix          → Implement minimal fix
-4. Test         → Write regression test, run existing tests
-5. Verify       → Check for similar issues elsewhere
+1. Understand   → Fetch issue, extract key details
+2. Create PR    → Start tracking immediately (living document)
+3. Research     → Search related issues, read ALL comments, collect info
+4. Reproduce    → Test on target platform, document all attempts in PR
+5. Investigate  → Find root cause (may loop back to 4)
+6. Fix          → Minimal change
+7. Test         → Regression test + existing tests
+8. Finalize     → Rewrite PR description, link all fixed issues
 ```
 
-## Phase 1: Understand the Bug
+Phases 4-5 often iterate together. Update PR throughout.
 
-Extract from issue:
-- **Symptoms:** What goes wrong? (crash, incorrect output, exception)
-- **Reproduction:** Steps to trigger
-- **Expected:** What should happen
-- **Environment:** Platform-specific? Version-specific?
+---
 
-## Phase 2: Locate the Problem
+## Phase 1: Understand the Issue
+
+Fetch the issue from GitHub. Extract:
+- Symptoms, error messages, stack traces
+- Platform (OS, arch, .NET version, SkiaSharp version)
+- Last working version (if mentioned)
+- Reproduction steps or code snippets
+
+This phase is quick — get enough context to create the PR.
+
+---
+
+## Phase 2: Create Draft PR
+
+Create PR **immediately** to track the entire journey.
 
 ```bash
-# Find the method mentioned in the issue
+git checkout -b copilot/issue-NNNN-short-description
+git commit --allow-empty -m "Investigating #NNNN: [description]"
+git push -u origin copilot/issue-NNNN-short-description
+```
+
+Use investigation template from [references/pr-templates.md](references/pr-templates.md).
+
+**The PR description is your living document:**
+- All collected info, links, and related issues (added as you find them)
+- WHY each related issue is similar (same platform? same error? same root cause?)
+- Your investigation plan with checkboxes
+- Progress log (add rows as you work)
+- Alternatives tried (add when something doesn't work)
+
+**Update the PR description OFTEN** — after every significant step.
+
+---
+
+## Phase 3: Research Related Issues
+
+Search GitHub issues for:
+- Same error message (e.g., the exception type or error text)
+- Same platform (e.g., the OS and architecture from the issue)
+- Same SkiaSharp version
+- Keywords from title
+
+**For EACH related issue found:**
+1. Read ALL comments on that issue (not just the issue body)
+2. Note: issue number, title, WHY it's related (same symptom? platform? root cause?)
+3. Extract: workarounds mentioned, root cause analysis, resolution if closed
+4. Record links to external issues mentioned in comments
+
+**Update PR** with all related issues and extracted information.
+
+---
+
+## Phase 4: Reproduce
+
+### 4.1 Target Platform Requirements
+
+| Attribute | Must Match |
+|-----------|------------|
+| OS (macOS/Windows/Linux) | ✅ |
+| Architecture (x64/ARM64) | ✅ |
+| .NET version | ✅ |
+| SkiaSharp version | ✅ |
+
+### 4.2 Docker Testing
+
+For cross-platform testing, see [references/docker-testing.md](references/docker-testing.md).
+
+Example (adapt platform to match the issue):
+```bash
+# Replace with the platform from the issue
+docker run --platform linux/arm64 -it <dotnet-sdk-image> bash
+```
+
+### 4.3 Document Results in PR
+
+Add to PR description:
+
+| Environment | Version | Result |
+|-------------|---------|--------|
+| [Platform from issue] | [version] | ❌ Crashes |
+| [Different platform] | [version] | ✅ Works |
+
+### 4.4 If Reproduction Fails
+
+**Try hard and exhaust all options** before giving up:
+1. Try different Docker base images (different Linux distros)
+2. Try older/newer .NET versions
+3. Try the exact SkiaSharp version AND the last known working version
+4. Check if issue mentions specific hardware or configurations
+
+Document each attempt in PR. After exhausting options: ask user for details, proceed with code review.
+
+---
+
+## Phase 5: Investigate Root Cause
+
+### 5.1 Locate the Problem
+
+```bash
 grep -rn "MethodName" binding/SkiaSharp/
-
-# Check what validation exists (null checks, range checks, state checks)
-# Find the native call
 grep -r "sk_.*methodname" binding/SkiaSharp/
+readelf -d output/native/linux/arm64/libSkiaSharp.so | grep NEEDED
 ```
 
-| Symptom | Likely Fix Location |
-|---------|---------------------|
+### 5.2 Symptom → Location
+
+| Symptom | Fix Location |
+|---------|--------------|
 | ArgumentNullException | Add null check before P/Invoke |
-| AccessViolationException | Missing validation, bad state |
-| Incorrect output | Logic error in C# or native |
-| Memory leak | Missing dispose, wrong ownership |
+| AccessViolationException | Validation, state, or native linking |
+| undefined symbol | `native/linux/build.cake` linker flags |
+| Platform-specific crash | `native/{platform}/build.cake` |
 
-## Phase 3: Implement Fix
+### 5.3 Exit Criteria
 
-### Common Patterns
+Stop investigating when you can answer:
+- [ ] What exact code causes the bug?
+- [ ] Why does it fail?
+- [ ] Why doesn't it fail elsewhere?
+- [ ] What single change fixes it?
 
-**Missing Null Check:**
-```csharp
-// Before (crashes)
-public void DrawPath(SKPath path, SKPaint paint)
-{
-    SkiaApi.sk_canvas_draw_path(Handle, path.Handle, paint.Handle);
-}
+**Update PR** with root cause analysis before proceeding to fix.
 
-// After (validates)
-public void DrawPath(SKPath path, SKPaint paint)
-{
-    if (path == null)
-        throw new ArgumentNullException(nameof(path));
-    if (paint == null)
-        throw new ArgumentNullException(nameof(paint));
-    SkiaApi.sk_canvas_draw_path(Handle, path.Handle, paint.Handle);
-}
-```
+---
 
-**Same-Instance Return Bug:**
-```csharp
-// WRONG - may dispose what we're returning
-using var source = GetImage();
-var result = source.Subset(bounds);
-return result;
+## Phase 6: Fix
 
-// CORRECT - check first
-var source = GetImage();
-var result = source.Subset(bounds);
-if (result != source)
-    source.Dispose();
-return result;
-```
+For common fix patterns, see [references/fix-patterns.md](references/fix-patterns.md).
 
-Methods that may return same instance: `Subset()`, `ToRasterImage()`, `ToRasterImage(false)`
+---
 
-## Phase 4: Build & Test
+## Phase 7: Build & Test
 
-### If You Modified C API (Native Code)
-
-> **🛑 If the bug fix required changes to `externals/skia/` (C API), you MUST build the native library.**
+### If Modified Native Code
 
 ```bash
-# macOS (Apple Silicon)
-dotnet cake --target=externals-macos --arch=arm64
-
-# macOS (Intel)  
-dotnet cake --target=externals-macos --arch=x64
-
-# Windows (x64)
-dotnet cake --target=externals-windows --arch=x64
+dotnet cake --target=externals-macos --arch=arm64   # macOS ARM64
+dotnet cake --target=externals-linux --arch=arm64   # Linux ARM64 (in Docker)
 ```
 
-> ⚠️ `EntryPointNotFoundException` means you forgot to build natives after C API changes.
-
-### If You Only Modified C# Code
-
-For C#-only fixes, pre-built natives work fine:
+### If Modified C# Only
 
 ```bash
-dotnet cake --target=externals-download  # Only if output/native/ is empty
+dotnet cake --target=externals-download  # If output/native/ empty
 ```
 
 ### Write Regression Test
 
-Write a test BEFORE claiming the fix is complete:
+| Affected Class | Test File |
+|----------------|-----------|
+| SKCanvas | `tests/Tests/SKCanvasTest.cs` |
+| SKBitmap | `tests/Tests/SKBitmapTest.cs` |
+| SKImage | `tests/Tests/SKImageTest.cs` |
+| Other | Find matching `*Test.cs` |
 
-```csharp
-[SkippableFact]
-public void MethodDoesNotCrashWithEmptyInput()
-{
-    using var bitmap = new SKBitmap(100, 100);
-    using var canvas = new SKCanvas(bitmap);
-    using var paint = new SKPaint();
-    using var path = new SKPath();  // Empty
-    
-    // Should not throw
-    canvas.DrawTextOnPath("text", path, 0, 0, paint);
-}
-```
+Name: `Issue_NNNN_BriefDescription()`
 
 ### Run Tests
 
@@ -162,24 +202,36 @@ public void MethodDoesNotCrashWithEmptyInput()
 dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 ```
 
-> **🛑 Tests MUST PASS.** Do not skip tests. Do not claim completion if tests fail.
->
-> Skipping is only acceptable for missing hardware (no GPU drivers, no display).
+Tests MUST pass. Verify fix on original platform.
 
-## Phase 5: Verify
+---
 
-- [ ] Fix doesn't break existing tests
-- [ ] Check for similar issues in related code
-- [ ] Minimal changes only (no unrelated cleanup)
+## Phase 8: Finalize
+
+Rewrite PR description using final template from [references/pr-templates.md](references/pr-templates.md).
+
+Link ALL fixed issues:
+```markdown
+Fixes #3369
+Fixes #3272
+```
+
+---
 
 ## Error Recovery
 
 | Issue | Recovery |
 |-------|----------|
-| Fix causes new test failures | Revert changes (`git checkout -- <file>`), re-analyze root cause |
-| Can't reproduce the bug | Ask user for more details: platform, version, exact reproduction steps |
-| Fix works locally but fails CI | Check platform-specific code paths; may need `#if` conditionals |
-| Similar bugs exist in other methods | Consider if root cause is shared; may need broader fix |
-| Native crash (AccessViolation) | Check C API, verify pointer ownership and lifetime |
-| Memory leak persists | Review disposal pattern; check if object implements `ISKReferenceCounted` |
-| `EntryPointNotFoundException` | You modified C API but didn't rebuild natives — run `dotnet cake --target=externals-{platform}` |
+| Can't reproduce | Ask user for exact environment details |
+| Fix causes test failures | Revert, re-analyze root cause |
+| `EntryPointNotFoundException` | Rebuild natives after C API changes |
+| Can't test on required platform | Use Docker or ask user to verify |
+
+## Checklist
+
+- [ ] Collected info from issue and related issues
+- [ ] Reproduced on target platform
+- [ ] Found and documented root cause
+- [ ] Implemented minimal fix with regression test
+- [ ] All tests pass
+- [ ] PR description finalized with "Fixes #NNNN"
