@@ -60,9 +60,6 @@ jobs:
       - name: Set base href for GitHub Pages
         run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' ./publish/wwwroot/index.html
 
-      - name: Create 404.html for SPA routing
-        run: cp ./publish/wwwroot/index.html ./publish/wwwroot/404.html
-
       - name: Add .nojekyll
         run: touch ./publish/wwwroot/.nojekyll
 

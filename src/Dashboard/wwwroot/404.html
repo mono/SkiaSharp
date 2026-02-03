@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Redirecting...</title>
+    <script type="text/javascript">
+        // Single Page Apps for GitHub Pages
+        // https://github.com/rafrex/spa-github-pages
+        // This 404.html file redirects all paths to index.html with the path encoded in the query string
+        // The script in index.html will restore the path before Blazor starts
+        
+        // segmentCount = 2 for /SkiaSharp/dashboard/ (two path segments to preserve)
+        var segmentCount = 2;
+        var l = window.location;
+        l.replace(
+            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?/' +
+            l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+            (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+            l.hash
+        );
+    </script>
+</head>
+<body>
+</body>
+</html>
