@@ -57,7 +57,7 @@ Before starting, confirm you will:
 
 **Before ANY commit in either repository:**
 
-1. **Create a feature branch** — Use naming convention: `dev/issue-NNNN-description` or `dev/update-{dep}`
+1. **Create a feature branch** — Use naming convention: `copilot/issue-NNNN-description` or `copilot/update-{dep}`
 2. **Never commit directly** to `main` or `skiasharp` — All changes require a PR
 3. **This is a compliance requirement** — Direct commits bypass review, CI, and audit trails
 
@@ -65,7 +65,7 @@ Before starting, confirm you will:
 # ✅ CORRECT — Always create feature branch first
 cd externals/skia
 git checkout skiasharp
-git checkout -b dev/update-libpng
+git checkout -b copilot/update-libpng
 # Now make commits...
 
 # ❌ WRONG — Never do this
@@ -142,20 +142,20 @@ dotnet cake --target=tests-netcore --skipExternals=all
 
 | Repository | Branch Name | Target Branch |
 |------------|-------------|---------------|
-| mono/skia | `dev/update-{dep}` | `skiasharp` |
-| mono/SkiaSharp | `dev/update-{dep}` | `main` |
+| mono/skia | `copilot/update-{dep}` | `skiasharp` |
+| mono/SkiaSharp | `copilot/update-{dep}` | `main` |
 
-Example: For libfoo, use `dev/update-libwebp` in both repos.
+Example: For libfoo, use `copilot/update-libwebp` in both repos.
 
 #### Step 1: Create mono/skia PR
 
-In the `externals/skia` directory, create a branch named `dev/update-{dep}`, commit the DEPS and BUILD.gn changes, push, and create a PR targeting the `skiasharp` branch.
+In the `externals/skia` directory, create a branch named `copilot/update-{dep}`, commit the DEPS and BUILD.gn changes, push, and create a PR targeting the `skiasharp` branch.
 
 #### Step 2: Create SkiaSharp PR
 
 > **⚠️ CRITICAL: You MUST update the submodule reference, not just cgmanifest.json**
 
-In the SkiaSharp root, create a branch named `dev/update-{dep}`. Then:
+In the SkiaSharp root, create a branch named `copilot/update-{dep}`. Then:
 
 1. **Update the submodule** — In `externals/skia`, fetch and checkout the branch you just pushed in Step 1
 2. **Stage both changes** — `git add externals/skia cgmanifest.json` (the submodule AND the manifest)
@@ -171,7 +171,7 @@ Edit **both** PRs to reference each other:
 
 Before proceeding, verify ALL of these:
 
-- [ ] Branch names follow `dev/update-{dep}` convention
+- [ ] Branch names follow `copilot/update-{dep}` convention
 - [ ] mono/skia PR targets `skiasharp` branch
 - [ ] mono/SkiaSharp PR targets `main` branch
 - [ ] **SkiaSharp's `externals/skia` submodule points to the mono/skia PR branch** (check with `git submodule status`)
@@ -189,7 +189,7 @@ SkiaSharp uses Azure DevOps. mono/skia has no CI — relies on SkiaSharp's.
 > **🚨 CRITICAL: SQUASH MERGE CREATES NEW COMMITS**
 >
 > When you squash-merge mono/skia PR, GitHub creates a **NEW commit SHA** on the `skiasharp` branch.
-> The original commits on `dev/update-{dep}` become **orphaned** when the branch is deleted.
+> The original commits on `copilot/update-{dep}` become **orphaned** when the branch is deleted.
 > 
 > **If SkiaSharp's submodule still points to the old (orphaned) commit, it will BREAK:**
 > - New clones will fail

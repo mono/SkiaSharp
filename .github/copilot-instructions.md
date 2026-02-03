@@ -63,17 +63,17 @@ SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 
 **Required workflow:**
 
-1. **Create a feature branch FIRST** — Use naming convention: `dev/issue-NNNN-description`
+1. **Create a feature branch FIRST** — Use naming convention: `copilot/issue-NNNN-description`
 2. **Make all commits on the feature branch** — Never commit directly to protected branches
 3. **Submit a Pull Request** — Changes must be reviewed before merging
 
 ```bash
 # ✅ CORRECT — Always create a feature branch first
-git checkout -b dev/issue-1234-fix-description
+git checkout -b copilot/issue-1234-fix-description
 
 # For submodule changes:
 cd externals/skia
-git checkout -b dev/issue-1234-add-c-api
+git checkout -b copilot/issue-1234-add-c-api
 
 # ❌ NEVER DO THIS — Policy violation
 git checkout main && git commit  # FORBIDDEN
