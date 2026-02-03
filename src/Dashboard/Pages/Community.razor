@@ -4,106 +4,192 @@
 <PageTitle>Community - SkiaSharp Dashboard</PageTitle>
 
 <h1>Community</h1>
+<p class="subtitle">Project health, contributors, and activity</p>
 
 @if (_loading)
 {
     <p><em>Loading community data...</em></p>
 }
-else if (_stats is null)
-{
-    <p>No data available.</p>
-}
 else
 {
     <div class="dashboard-grid">
-        <!-- Overview -->
-        <div class="card">
-            <div class="card-header"><h3>Overview</h3></div>
-            <div class="card-body">
-                <div class="stat stat-large">
-                    <span class="stat-value">@_stats.TotalContributors.ToString("N0")</span>
-                    <span class="stat-label">Total Contributors</span>
+        <!-- Project Stats (from GitHub) -->
+        @if (_github is not null)
+        {
+            <div class="card">
+                <div class="card-header"><h3>Repository</h3></div>
+                <div class="card-body stats-grid-3">
+                    <div class="stat">
+                        <span class="stat-value">@_github.Repository.Stars.ToString("N0")</span>
+                        <span class="stat-label">Stars ⭐</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">@_github.Repository.Forks.ToString("N0")</span>
+                        <span class="stat-label">Forks 🍴</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">@_github.Repository.Watchers.ToString("N0")</span>
+                        <span class="stat-label">Watchers 👀</span>
+                    </div>
                 </div>
-                <div class="stats-grid stats-grid-2">
-                    <div class="stat stat-microsoft">
-                        <span class="stat-value">@_stats.MicrosoftContributors.ToString("N0")</span>
-                        <span class="stat-label">Microsoft</span>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Issues</h3></div>
+                <div class="card-body stats-grid">
+                    <div class="stat">
+                        <span class="stat-value">@_github.Issues.Open.ToString("N0")</span>
+                        <span class="stat-label">Open</span>
                     </div>
-                    <div class="stat stat-community">
-                        <span class="stat-value">@_stats.CommunityContributors.ToString("N0")</span>
-                        <span class="stat-label">Community</span>
+                    <div class="stat">
+                        <span class="stat-value">@_github.Issues.Closed.ToString("N0")</span>
+                        <span class="stat-label">Closed</span>
+                    </div>
+                    <div class="stat stat-success">
+                        <span class="stat-value">+@_github.Issues.OpenedLast30Days</span>
+                        <span class="stat-label">Opened (30d)</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">-@_github.Issues.ClosedLast30Days</span>
+                        <span class="stat-label">Closed (30d)</span>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Top Contributors -->
-        <div class="card card-wide">
-            <div class="card-header"><h3>Top Contributors</h3></div>
-            <div class="card-body">
-                @if (_stats.TopContributors.Count == 0)
-                {
-                    <p>No contributor data available.</p>
-                }
-                else
-                {
-                    <div class="contributor-grid">
-                        @foreach (var contributor in _stats.TopContributors.Take(12))
-                        {
-                            <div class="contributor @(contributor.IsMicrosoft ? "contributor-microsoft" : "")">
-                                <img src="@contributor.AvatarUrl" alt="@contributor.Login" class="avatar" />
-                                <a href="https://github.com/@contributor.Login" target="_blank" class="contributor-name">
-                                    @contributor.Login
-                                </a>
-                                <span class="contributor-count">@contributor.Contributions commits</span>
-                                @if (contributor.IsMicrosoft)
-                                {
-                                    <span class="badge-microsoft">Microsoft</span>
-                                }
-                            </div>
-                        }
+            <div class="card">
+                <div class="card-header"><h3>Pull Requests</h3></div>
+                <div class="card-body stats-grid">
+                    <div class="stat">
+                        <span class="stat-value">@_github.PullRequests.Open.ToString("N0")</span>
+                        <span class="stat-label">Open</span>
                     </div>
-                }
+                    <div class="stat">
+                        <span class="stat-value">@_github.PullRequests.Merged.ToString("N0")</span>
+                        <span class="stat-label">Merged</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">@_github.PullRequests.Closed.ToString("N0")</span>
+                        <span class="stat-label">Closed</span>
+                    </div>
+                    <div class="stat stat-success">
+                        <span class="stat-value">+@_github.PullRequests.MergedLast30Days</span>
+                        <span class="stat-label">Merged (30d)</span>
+                    </div>
+                </div>
             </div>
-        </div>
+        }
 
-        <!-- Recent Commits -->
-        <div class="card card-wide">
-            <div class="card-header"><h3>Recent Commits</h3></div>
-            <div class="card-body">
-                @if (_stats.RecentCommits.Count == 0)
-                {
-                    <p>No recent commits.</p>
-                }
-                else
-                {
-                    <ul class="commit-list">
-                        @foreach (var commit in _stats.RecentCommits.Take(10))
-                        {
-                            <li>
-                                <code>@commit.Sha[..7]</code>
-                                <span class="commit-message">@commit.Message</span>
-                                <span class="commit-author">by @commit.Author</span>
-                                <span class="commit-date">@commit.Date.ToString("MMM dd")</span>
-                            </li>
-                        }
-                    </ul>
-                }
+        <!-- Contributors Overview -->
+        @if (_community is not null)
+        {
+            <div class="card">
+                <div class="card-header"><h3>Contributors</h3></div>
+                <div class="card-body">
+                    <div class="stat stat-hero">
+                        <span class="stat-value">@_community.TotalContributors.ToString("N0")</span>
+                        <span class="stat-label">Total Contributors</span>
+                    </div>
+                    <div class="stats-grid stats-grid-2">
+                        <div class="stat stat-microsoft">
+                            <span class="stat-value">@_community.MicrosoftContributors.ToString("N0")</span>
+                            <span class="stat-label">Microsoft</span>
+                        </div>
+                        <div class="stat stat-community">
+                            <span class="stat-value">@_community.CommunityContributors.ToString("N0")</span>
+                            <span class="stat-label">Community</span>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
+
+            <!-- Top Contributors -->
+            <div class="card card-wide">
+                <div class="card-header"><h3>Top Contributors</h3></div>
+                <div class="card-body">
+                    @if (_community.TopContributors.Count == 0)
+                    {
+                        <p>No contributor data available.</p>
+                    }
+                    else
+                    {
+                        <div class="contributor-grid">
+                            @foreach (var contributor in _community.TopContributors.Take(12))
+                            {
+                                <div class="contributor @(contributor.IsMicrosoft ? "contributor-microsoft" : "")">
+                                    <img src="@contributor.AvatarUrl" alt="@contributor.Login" class="avatar" />
+                                    <a href="https://github.com/@contributor.Login" target="_blank" class="contributor-name">
+                                        @contributor.Login
+                                    </a>
+                                    <span class="contributor-count">@contributor.Contributions commits</span>
+                                    @if (contributor.IsMicrosoft)
+                                    {
+                                        <span class="badge-microsoft">Microsoft</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Recent Commits -->
+            <div class="card card-wide">
+                <div class="card-header"><h3>Recent Commits</h3></div>
+                <div class="card-body">
+                    @if (_community.RecentCommits.Count == 0)
+                    {
+                        <p>No recent commits.</p>
+                    }
+                    else
+                    {
+                        <ul class="commit-list">
+                            @foreach (var commit in _community.RecentCommits.Take(10))
+                            {
+                                <li>
+                                    <code>@commit.Sha[..7]</code>
+                                    <span class="commit-message">@commit.Message</span>
+                                    <span class="commit-author">by @commit.Author</span>
+                                    <span class="commit-date">@commit.Date.ToString("MMM dd")</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body">
+                    <p>No community data available.</p>
+                </div>
+            </div>
+        }
     </div>
 
-    <p class="last-updated">Last updated: @_stats.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+    @if (_github is not null)
+    {
+        <p class="last-updated">Last updated: @_github.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+    }
+    else if (_community is not null)
+    {
+        <p class="last-updated">Last updated: @_community.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+    }
 }
 
 @code {
     private bool _loading = true;
-    private CommunityStats? _stats;
+    private CommunityStats? _community;
+    private GitHubStats? _github;
 
     protected override async Task OnInitializedAsync()
     {
-        try { _stats = await DataService.GetCommunityStatsAsync(); }
-        catch { /* Data not yet available */ }
+        var tasks = new List<Task>
+        {
+            Task.Run(async () => { try { _community = await DataService.GetCommunityStatsAsync(); } catch { } }),
+            Task.Run(async () => { try { _github = await DataService.GetGitHubStatsAsync(); } catch { } })
+        };
+        await Task.WhenAll(tasks);
         _loading = false;
     }
 }

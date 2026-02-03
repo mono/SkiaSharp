@@ -1,16 +1,18 @@
 @page "/pr-triage"
+@page "/pull-requests"
 @inject DashboardDataService DataService
+@inject NavigationManager Navigation
 
-<PageTitle>PR Triage - SkiaSharp Dashboard</PageTitle>
+<PageTitle>Pull Requests - SkiaSharp Dashboard</PageTitle>
 
-<h1>Pull Request Triage</h1>
-<p class="subtitle">AI-powered analysis to help prioritize PR reviews</p>
+<h1>Pull Requests</h1>
+<p class="subtitle">Review queue with triage categories and filters</p>
 
 @if (_loading)
 {
-    <p><em>Loading PR triage data...</em></p>
+    <p><em>Loading PR data...</em></p>
 }
-else if (_stats is null)
+else if (_data is null)
 {
     <p>No data available.</p>
 }
@@ -18,93 +20,242 @@ else
 {
     <!-- Summary Cards -->
     <div class="triage-summary">
-        <div class="triage-card triage-success">
-            <span class="triage-count">@_stats.Summary.ReadyToMerge</span>
+        <div class="triage-card triage-success @(SelectedCategory == "ready" ? "selected" : "")" @onclick='() => FilterByCategory("ready")'>
+            <span class="triage-count">@_data.Summary.ReadyToMerge</span>
             <span class="triage-label">Ready to Merge</span>
-            <span class="triage-desc">Good idea, simple, quick review</span>
         </div>
-        <div class="triage-card triage-warning">
-            <span class="triage-count">@_stats.Summary.NeedsReview</span>
+        <div class="triage-card triage-info @(SelectedCategory == "quick" ? "selected" : "")" @onclick='() => FilterByCategory("quick")'>
+            <span class="triage-count">@_data.Summary.QuickReview</span>
+            <span class="triage-label">Quick Review</span>
+        </div>
+        <div class="triage-card triage-warning @(SelectedCategory == "review" ? "selected" : "")" @onclick='() => FilterByCategory("review")'>
+            <span class="triage-count">@_data.Summary.NeedsReview</span>
             <span class="triage-label">Needs Review</span>
-            <span class="triage-desc">Complex or uncertain</span>
         </div>
-        <div class="triage-card triage-danger">
-            <span class="triage-count">@_stats.Summary.ConsiderClosing</span>
+        <div class="triage-card triage-author @(SelectedCategory == "author" ? "selected" : "")" @onclick='() => FilterByCategory("author")'>
+            <span class="triage-count">@_data.Summary.NeedsAuthor</span>
+            <span class="triage-label">Needs Author</span>
+        </div>
+        <div class="triage-card triage-danger @(SelectedCategory == "close" ? "selected" : "")" @onclick='() => FilterByCategory("close")'>
+            <span class="triage-count">@_data.Summary.ConsiderClosing</span>
             <span class="triage-label">Consider Closing</span>
-            <span class="triage-desc">May not align with project goals</span>
         </div>
     </div>
 
-    <!-- PR Lists by Category -->
-    @foreach (var category in Enum.GetValues<TriageCategory>())
-    {
-        var prs = _stats.PullRequests.Where(p => p.Category == category).ToList();
-        if (prs.Count > 0)
-        {
-            <h2 class="@GetCategoryClass(category)">@GetCategoryTitle(category)</h2>
-            <div class="pr-list">
-                @foreach (var pr in prs)
+    <!-- Filter Row -->
+    <div class="filter-row">
+        <div class="filter-group">
+            <label>Size</label>
+            <select @bind="SelectedSize" @bind:after="ApplyFilters">
+                <option value="">All Sizes</option>
+                @foreach (var size in _data.BySize)
                 {
-                    <div class="pr-card @GetCategoryClass(category)">
-                        <div class="pr-header">
-                            <img src="@pr.AuthorAvatarUrl" alt="@pr.Author" class="avatar-small" />
-                            <a href="https://github.com/mono/SkiaSharp/pull/@pr.Number" target="_blank" class="pr-title">
-                                #@pr.Number: @pr.Title
-                            </a>
-                        </div>
-                        <div class="pr-meta">
-                            <span>by @pr.Author</span>
-                            <span>@GetAge(pr.CreatedAt)</span>
-                            <span>@pr.FilesChanged files (+@pr.Additions/-@pr.Deletions)</span>
-                        </div>
-                        @{
-                            var allLabels = new List<string>();
-                            if (pr.Type != null) allLabels.Add(pr.Type);
-                            allLabels.AddRange(pr.Areas);
-                            allLabels.AddRange(pr.Backends);
-                            allLabels.AddRange(pr.Oses);
-                            allLabels.AddRange(pr.OtherLabels);
-                        }
-                        @if (allLabels.Count > 0)
+                    <option value="@size.Label">@size.Display (@size.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Age</label>
+            <select @bind="SelectedAge" @bind:after="ApplyFilters">
+                <option value="">All Ages</option>
+                @foreach (var age in _data.ByAge)
+                {
+                    <option value="@age.Label">@age.Display (@age.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Author Type</label>
+            <select @bind="SelectedAuthor" @bind:after="ApplyFilters">
+                <option value="">All Authors</option>
+                <option value="microsoft">Microsoft</option>
+                <option value="community">Community</option>
+                <option value="bot">Bot</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Draft</label>
+            <select @bind="SelectedDraft" @bind:after="ApplyFilters">
+                <option value="">All</option>
+                <option value="ready">Ready for Review</option>
+                <option value="draft">Draft</option>
+            </select>
+        </div>
+        @if (HasFilters)
+        {
+            <button class="btn-clear" @onclick="ClearFilters">Clear Filters</button>
+        }
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <span>Showing <strong>@_filteredPRs.Count</strong> of @_data.TotalCount pull requests</span>
+    </div>
+
+    <!-- PR List -->
+    <div class="pr-list">
+        @foreach (var pr in _filteredPRs)
+        {
+            <div class="pr-card @GetCategoryClass(pr.Category)">
+                <div class="pr-header">
+                    <img src="@pr.AuthorAvatarUrl" alt="@pr.Author" class="avatar-small" />
+                    <a href="@pr.Url" target="_blank" class="pr-title">
+                        #@pr.Number: @pr.Title
+                    </a>
+                    @if (pr.IsDraft)
+                    {
+                        <span class="badge-draft">Draft</span>
+                    }
+                    <span class="badge-category badge-@pr.Category.ToString().ToLower()">@GetCategoryShort(pr.Category)</span>
+                </div>
+                <div class="pr-meta">
+                    <span class="author-badge author-@pr.AuthorType">@pr.Author</span>
+                    <span class="@GetAgeClass(pr.AgeCategory)">@pr.DaysOpen days old</span>
+                    <span class="size-badge size-@pr.SizeCategory">@pr.SizeCategory.ToUpper() (@pr.TotalChanges lines)</span>
+                    <span>@pr.FilesChanged files</span>
+                </div>
+                @{
+                    var allLabels = new List<string>();
+                    if (pr.Type != null) allLabels.Add(pr.Type);
+                    allLabels.AddRange(pr.Areas);
+                    allLabels.AddRange(pr.Backends);
+                    allLabels.AddRange(pr.Oses);
+                }
+                @if (allLabels.Count > 0)
+                {
+                    <div class="pr-labels">
+                        @foreach (var label in allLabels.Take(5))
                         {
-                            <div class="pr-labels">
-                                @foreach (var label in allLabels)
-                                {
-                                    <span class="label">@label</span>
-                                }
-                            </div>
+                            <span class="label">@label</span>
                         }
-                        <div class="pr-reasoning">
-                            <strong>Analysis:</strong> @pr.Reasoning
-                        </div>
+                        @if (allLabels.Count > 5)
+                        {
+                            <span class="label-more">+@(allLabels.Count - 5) more</span>
+                        }
                     </div>
                 }
+                <div class="pr-reasoning">
+                    @pr.Reasoning
+                </div>
             </div>
         }
-    }
+    </div>
 
-    <p class="last-updated">Last updated: @_stats.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+    <p class="last-updated">Last updated: @_data.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
 }
 
 @code {
+    [SupplyParameterFromQuery] public string? Category { get; set; }
+    [SupplyParameterFromQuery] public string? Size { get; set; }
+    [SupplyParameterFromQuery] public string? Age { get; set; }
+    [SupplyParameterFromQuery] public string? Author { get; set; }
+    [SupplyParameterFromQuery] public string? Draft { get; set; }
+
     private bool _loading = true;
-    private PrTriageStats? _stats;
+    private PrTriageStats? _data;
+    private List<TriagedPullRequest> _filteredPRs = [];
+
+    private string SelectedCategory { get; set; } = "";
+    private string SelectedSize { get; set; } = "";
+    private string SelectedAge { get; set; } = "";
+    private string SelectedAuthor { get; set; } = "";
+    private string SelectedDraft { get; set; } = "";
+
+    private bool HasFilters => !string.IsNullOrEmpty(SelectedCategory) ||
+                               !string.IsNullOrEmpty(SelectedSize) ||
+                               !string.IsNullOrEmpty(SelectedAge) ||
+                               !string.IsNullOrEmpty(SelectedAuthor) ||
+                               !string.IsNullOrEmpty(SelectedDraft);
 
     protected override async Task OnInitializedAsync()
     {
-        try { _stats = await DataService.GetPrTriageStatsAsync(); }
+        SelectedCategory = Category ?? "";
+        SelectedSize = Size ?? "";
+        SelectedAge = Age ?? "";
+        SelectedAuthor = Author ?? "";
+        SelectedDraft = Draft ?? "";
+
+        try { _data = await DataService.GetPrTriageStatsAsync(); }
         catch { /* Data not yet available */ }
+
+        ApplyFilters();
         _loading = false;
     }
 
-    private static string GetCategoryTitle(TriageCategory category) => category switch
+    private void FilterByCategory(string category)
     {
-        TriageCategory.ReadyToMerge => "✅ Ready to Merge",
-        TriageCategory.QuickReview => "⚡ Quick Review",
-        TriageCategory.NeedsReview => "🔍 Needs Review",
-        TriageCategory.NeedsAuthor => "✏️ Needs Author",
-        TriageCategory.ConsiderClosing => "❌ Consider Closing",
-        _ => category.ToString()
+        SelectedCategory = SelectedCategory == category ? "" : category;
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        if (_data is null) return;
+
+        _filteredPRs = _data.PullRequests.Where(pr =>
+            (string.IsNullOrEmpty(SelectedCategory) || GetCategoryKey(pr.Category) == SelectedCategory) &&
+            (string.IsNullOrEmpty(SelectedSize) || pr.SizeCategory == SelectedSize) &&
+            (string.IsNullOrEmpty(SelectedAge) || pr.AgeCategory == SelectedAge) &&
+            (string.IsNullOrEmpty(SelectedAuthor) || pr.AuthorType == SelectedAuthor) &&
+            (string.IsNullOrEmpty(SelectedDraft) || 
+                (SelectedDraft == "draft" && pr.IsDraft) || 
+                (SelectedDraft == "ready" && !pr.IsDraft))
+        ).OrderBy(pr => GetCategoryOrder(pr.Category)).ThenBy(pr => pr.DaysOpen).ToList();
+
+        UpdateUrl();
+    }
+
+    private void UpdateUrl()
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrEmpty(SelectedCategory)) query.Add($"category={SelectedCategory}");
+        if (!string.IsNullOrEmpty(SelectedSize)) query.Add($"size={SelectedSize}");
+        if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={SelectedAge}");
+        if (!string.IsNullOrEmpty(SelectedAuthor)) query.Add($"author={SelectedAuthor}");
+        if (!string.IsNullOrEmpty(SelectedDraft)) query.Add($"draft={SelectedDraft}");
+
+        var url = "/pull-requests" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        Navigation.NavigateTo(url, replace: true);
+    }
+
+    private void ClearFilters()
+    {
+        SelectedCategory = "";
+        SelectedSize = "";
+        SelectedAge = "";
+        SelectedAuthor = "";
+        SelectedDraft = "";
+        ApplyFilters();
+    }
+
+    private static string GetCategoryKey(TriageCategory category) => category switch
+    {
+        TriageCategory.ReadyToMerge => "ready",
+        TriageCategory.QuickReview => "quick",
+        TriageCategory.NeedsReview => "review",
+        TriageCategory.NeedsAuthor => "author",
+        TriageCategory.ConsiderClosing => "close",
+        _ => ""
+    };
+
+    private static int GetCategoryOrder(TriageCategory category) => category switch
+    {
+        TriageCategory.ReadyToMerge => 1,
+        TriageCategory.QuickReview => 2,
+        TriageCategory.NeedsReview => 3,
+        TriageCategory.NeedsAuthor => 4,
+        TriageCategory.ConsiderClosing => 5,
+        _ => 99
+    };
+
+    private static string GetCategoryShort(TriageCategory category) => category switch
+    {
+        TriageCategory.ReadyToMerge => "✅ Ready",
+        TriageCategory.QuickReview => "⚡ Quick",
+        TriageCategory.NeedsReview => "🔍 Review",
+        TriageCategory.NeedsAuthor => "✏️ Author",
+        TriageCategory.ConsiderClosing => "❌ Stale",
+        _ => ""
     };
 
     private static string GetCategoryClass(TriageCategory category) => category switch
@@ -117,16 +268,13 @@ else
         _ => ""
     };
 
-    private static string GetAge(DateTime created)
+    private static string GetAgeClass(string ageCategory) => ageCategory switch
     {
-        var age = DateTime.UtcNow - created;
-        var days = age.TotalDays;
-
-        if (days < 1) return "today";
-        if (days < 2) return "yesterday";
-        if (days < 7) return $"{(int)days} days ago";
-        if (days < 30) return $"{(int)(days / 7)} weeks ago";
-        if (days < 365) return $"{(int)(days / 30)} months ago";
-        return $"{(int)(days / 365)} years ago";
-    }
+        "fresh" => "age-fresh",
+        "recent" => "age-recent",
+        "aging" => "age-aging",
+        "stale" => "age-stale",
+        "ancient" => "age-ancient",
+        _ => ""
+    };
 }
