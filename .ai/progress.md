@@ -90,9 +90,7 @@
 
 ## Known Issues
 
-| Issue | Severity | Status |
-|-------|----------|--------|
-| NuGet totalDownloads shows 0 | Low | Collector bug, not dashboard |
+None! 🎉
 
 ## SPA Routing (SOLVED)
 
@@ -115,6 +113,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.2 | 2026-02-03 | NuGet collector fixed - 822M+ downloads now shown |
 | 0.3.1 | 2026-02-03 | SPA routing fix - navigation fully working |
 | 0.3.0 | 2026-02-03 | Phase 2: Charts, filters, restructure |
 | 0.2.0 | 2026-02-03 | MS/Community split, SPA fix, unified workflow |
