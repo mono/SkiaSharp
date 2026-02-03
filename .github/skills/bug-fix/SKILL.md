@@ -218,6 +218,8 @@ Document each attempt in PR. After exhausting ALL options: ask user for details,
 > 💡 **Often already done!** If Phase 3 found a diagnosis in related issue comments,
 > this phase is just confirmation. Don't re-investigate what's already known.
 
+For detailed debugging methodology, see [documentation/debugging-methodology.md](../../../documentation/debugging-methodology.md).
+
 ### 5.1 Start with the Key Question
 
 **"Why does this work on [other platform/version] but fail here?"**
@@ -285,9 +287,12 @@ Stop investigating when you can answer:
 
 ## Phase 6: Fix
 
-For common fix patterns, see [references/fix-patterns.md](references/fix-patterns.md).
-
 **Principle: Minimal change.** Fix only what's broken.
+
+For guidance on specific types of fixes, see:
+- [Memory management](../../../documentation/memory-management.md) - disposal patterns, ownership
+- [API design](../../../documentation/api-design.md) - same-instance returns, null checks
+- [Debugging methodology](../../../documentation/debugging-methodology.md) - native linking issues
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Made the fix
