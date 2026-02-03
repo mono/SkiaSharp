@@ -50,13 +50,13 @@ jobs:
         run: |
           pwsh collectors/collect-pr-triage.ps1 -OutputPath src/Dashboard/wwwroot/data/pr-triage.json
 
-      - name: Set base href for GitHub Pages
-        run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' src/Dashboard/wwwroot/index.html
-
       - name: Build Dashboard
         run: |
           dotnet restore src/Dashboard/Dashboard.csproj
           dotnet publish src/Dashboard/Dashboard.csproj --configuration Release --output ./publish
+
+      - name: Set base href for GitHub Pages
+        run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' ./publish/wwwroot/index.html
 
       - name: Add .nojekyll
         run: touch ./publish/wwwroot/.nojekyll
