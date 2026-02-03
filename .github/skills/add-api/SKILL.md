@@ -26,11 +26,11 @@ description: >
 
 ```bash
 # Step 1: Create branch in SkiaSharp repo
-git checkout -b copilot/issue-NNNN-description
+git checkout -b dev/issue-NNNN-description
 
 # Step 2: Create branch in submodule (REQUIRED for C API changes)
 cd externals/skia
-git checkout -b copilot/issue-NNNN-description
+git checkout -b dev/issue-NNNN-description
 cd ../..
 ```
 

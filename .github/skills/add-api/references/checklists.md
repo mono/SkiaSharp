@@ -5,8 +5,8 @@ Use these checklists to verify each phase is complete before proceeding.
 ## Before Starting (MANDATORY)
 
 - [ ] **NOT on `main` or `skiasharp` branch** — Check with `git branch`
-- [ ] **Created feature branch:** `git checkout -b copilot/issue-NNNN-description`
-- [ ] **Submodule on feature branch:** `cd externals/skia && git checkout -b copilot/issue-NNNN-description`
+- [ ] **Created feature branch:** `git checkout -b dev/issue-NNNN-description`
+- [ ] **Submodule on feature branch:** `cd externals/skia && git checkout -b dev/issue-NNNN-description`
 
 ## After Phase 1 (Analyze C++)
 
