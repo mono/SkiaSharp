@@ -370,24 +370,7 @@ Mark PR as ready for review (remove draft status).
 | Can't test on required platform | Use Docker or ask user to verify |
 | Proposed fix is a workaround | Stop — find why it works on other platforms |
 | Docker build uses cached layers | Use `docker build --no-cache` to rebuild |
-| Linker silently skips library | Check if .so file exists and symlinks are valid |
-
-### Cross-Compile Sysroot Issues
-
-If a library is in the ninja file (`-lfoo`) but not in the final binary:
-
-1. **Check if the library exists in the sysroot:**
-   ```bash
-   docker run --rm skiasharp-linux-gnu-cross-arm64 ls -la /usr/aarch64-linux-gnu/lib/libfoo*
-   ```
-
-2. **Check for broken symlinks:**
-   - `libfoo.so -> libfoo.so.1.2.3` where `libfoo.so.1.2.3` doesn't exist
-   - The `-dev` package provides the symlink, but the runtime package has the actual .so
-
-3. **Fix the Dockerfile:**
-   - Download BOTH the `-dev` package (headers) AND the runtime package (actual .so)
-   - Example: `libfontconfig1-dev` + `libfontconfig1`
+| Linker silently skips library | See [debugging-methodology.md](../../../documentation/debugging-methodology.md#native-library-debugging-linux) |
 
 ---
 
