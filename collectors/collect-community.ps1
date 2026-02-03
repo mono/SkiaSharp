@@ -41,8 +41,13 @@ function Invoke-GitHubApi {
 function Test-MicrosoftMember {
     param([string]$Username)
     try {
-        $null = Invoke-GitHubApi "/orgs/microsoft/members/$Username"
-        return $true
+        # Check user's public profile for Microsoft affiliation
+        $user = Invoke-GitHubApi "/users/$Username"
+        $company = $user.company
+        if ($company -and ($company -match "Microsoft|@microsoft|MSFT")) {
+            return $true
+        }
+        return $false
     }
     catch {
         return $false
