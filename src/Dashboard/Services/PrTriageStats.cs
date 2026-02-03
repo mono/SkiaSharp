@@ -25,7 +25,7 @@ public record TriagedPullRequest(
     string AuthorType,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    int DaysOpen,
+    double DaysOpen,
     string AgeCategory,
     int FilesChanged,
     int Additions,

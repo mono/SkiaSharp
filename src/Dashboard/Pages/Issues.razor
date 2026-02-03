@@ -121,7 +121,7 @@ else
                                 <span class="label-more">+@(issue.Areas.Count - 2)</span>
                             }
                         </td>
-                        <td class="col-age @GetAgeClass(issue.AgeCategory)">@issue.DaysOpen days</td>
+                        <td class="col-age @GetAgeClass(issue.AgeCategory)">@((int)issue.DaysOpen) days</td>
                         <td class="col-comments">@issue.CommentCount</td>
                     </tr>
                     @if (ExpandedIssue == issue.Number)
@@ -242,8 +242,8 @@ else
         ExpandedIssue = ExpandedIssue == number ? null : number;
     }
 
-    private string GetOldest() => _filteredIssues.MaxBy(i => i.DaysOpen)?.DaysOpen + " days" ?? "";
-    private string GetNewest() => _filteredIssues.MinBy(i => i.DaysOpen)?.DaysOpen + " days" ?? "";
+    private string GetOldest() => _filteredIssues.MaxBy(i => i.DaysOpen)?.DaysOpen is double d ? $"{(int)d} days" : "";
+    private string GetNewest() => _filteredIssues.MinBy(i => i.DaysOpen)?.DaysOpen is double d ? $"{(int)d} days" : "";
 
     private static string GetAgeClass(string ageCategory) => ageCategory switch
     {

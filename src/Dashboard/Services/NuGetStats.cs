@@ -14,5 +14,5 @@ public record PackageStats(
 
 public record VersionStats(
     string Version,
-    long Downloads
+    long? Downloads
 );
