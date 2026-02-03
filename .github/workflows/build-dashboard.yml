@@ -3,6 +3,8 @@ name: Build Dashboard
 on:
   push:
     branches: [dashboard]
+  schedule:
+    - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:
 
 concurrency:
@@ -24,14 +26,26 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Cache NuGet packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
+      # Collect fresh data
+      - name: Collect GitHub Stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pwsh collectors/collect-github.ps1 -OutputPath src/Dashboard/wwwroot/data/github-stats.json
 
+      - name: Collect NuGet Stats
+        run: pwsh collectors/collect-nuget.ps1 -OutputPath src/Dashboard/wwwroot/data/nuget-stats.json
+
+      - name: Collect Community Stats
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pwsh collectors/collect-community.ps1 -OutputPath src/Dashboard/wwwroot/data/community-stats.json
+
+      - name: Collect PR Triage Data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pwsh collectors/collect-pr-triage.ps1 -OutputPath src/Dashboard/wwwroot/data/pr-triage.json
+
+      # Build and deploy
       - name: Restore dependencies
         run: dotnet restore src/Dashboard/Dashboard.csproj
 
@@ -40,9 +54,6 @@ jobs:
 
       - name: Set base href for GitHub Pages
         run: sed -i 's|<base href="/" />|<base href="/SkiaSharp/dashboard/" />|' ./publish/wwwroot/index.html
-
-      - name: Remove placeholder data (preserve deployed data)
-        run: rm -rf ./publish/wwwroot/data
 
       - name: Add .nojekyll
         run: touch ./publish/wwwroot/.nojekyll
