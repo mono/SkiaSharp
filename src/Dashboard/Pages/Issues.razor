@@ -167,6 +167,7 @@ else
     [SupplyParameterFromQuery] public string? Os { get; set; }
 
     private bool _loading = true;
+    private bool _initialLoad = true;
     private IssuesData? _data;
     private List<IssueInfo> _filteredIssues = [];
     private int? ExpandedIssue;
@@ -195,11 +196,12 @@ else
         try { _data = await DataService.GetIssuesDataAsync(); }
         catch { /* Data not yet available */ }
         
-        ApplyFilters();
+        ApplyFilters(updateUrl: false); // Don't update URL on initial load
         _loading = false;
+        _initialLoad = false;
     }
 
-    private void ApplyFilters()
+    private void ApplyFilters(bool updateUrl = true)
     {
         if (_data is null) return;
 
@@ -211,7 +213,7 @@ else
             (string.IsNullOrEmpty(SelectedOs) || i.Oses.Contains(SelectedOs))
         ).OrderByDescending(i => i.CreatedAt).ToList();
 
-        UpdateUrl();
+        if (updateUrl) UpdateUrl();
     }
 
     private void UpdateUrl()

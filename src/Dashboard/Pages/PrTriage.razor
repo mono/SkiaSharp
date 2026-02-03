@@ -178,7 +178,7 @@ else
         try { _data = await DataService.GetPrTriageStatsAsync(); }
         catch { /* Data not yet available */ }
 
-        ApplyFilters();
+        ApplyFilters(updateUrl: false); // Don't update URL on initial load
         _loading = false;
     }
 
@@ -188,7 +188,7 @@ else
         ApplyFilters();
     }
 
-    private void ApplyFilters()
+    private void ApplyFilters(bool updateUrl = true)
     {
         if (_data is null) return;
 
@@ -202,7 +202,7 @@ else
                 (SelectedDraft == "ready" && !pr.IsDraft))
         ).OrderBy(pr => GetCategoryOrder(pr.Category)).ThenBy(pr => pr.DaysOpen).ToList();
 
-        UpdateUrl();
+        if (updateUrl) UpdateUrl();
     }
 
     private void UpdateUrl()
