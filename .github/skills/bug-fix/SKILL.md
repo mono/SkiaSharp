@@ -124,7 +124,7 @@ Search GitHub issues for:
 1. **Read ALL comments** (not just the issue body) — diagnosis is often in comments!
 2. Note: issue number, title, WHY it's related
 3. Extract: workarounds mentioned, root cause analysis, resolution if closed
-4. Check for links to external issues (Avalonia, Uno, etc.)
+4. Check for links to external issues (other projects that use SkiaSharp)
 
 **Update PR** with all related issues and extracted information.
 
@@ -135,6 +135,7 @@ Search GitHub issues for:
 - [ ] Checked the Quick Diagnosis Table above
 
 **If a related issue already contains the root cause diagnosis, skip to Phase 5 or 6.**
+When skipping, still document the known root cause in the PR before proceeding.
 
 ---
 
