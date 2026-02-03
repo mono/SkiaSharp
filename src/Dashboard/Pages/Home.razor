@@ -15,11 +15,11 @@ else
 {
     <!-- Health Metrics Row -->
     <div class="metrics-row">
-        <div class="metric-card" @onclick='() => Navigation.NavigateTo("/issues")'>
+        <div class="metric-card" @onclick='() => Navigation.NavigateTo("issues")'>
             <span class="metric-value">@(_issues?.TotalCount.ToString("N0") ?? "—")</span>
             <span class="metric-label">Open Issues</span>
         </div>
-        <div class="metric-card" @onclick='() => Navigation.NavigateTo("/pull-requests")'>
+        <div class="metric-card" @onclick='() => Navigation.NavigateTo("pull-requests")'>
             <span class="metric-value">@(_prs?.TotalCount.ToString("N0") ?? "—")</span>
             <span class="metric-label">Open PRs</span>
         </div>
@@ -124,23 +124,23 @@ else
     <div class="triage-row">
         <h3>PR Triage Summary</h3>
         <div class="triage-cards">
-            <div class="triage-item triage-success" @onclick='() => Navigation.NavigateTo("/pull-requests?category=ready")'>
+            <div class="triage-item triage-success" @onclick='() => Navigation.NavigateTo("pull-requests?category=ready")'>
                 <span class="triage-count">@(_prs?.Summary.ReadyToMerge ?? 0)</span>
                 <span class="triage-label">Ready to Merge</span>
             </div>
-            <div class="triage-item triage-info" @onclick='() => Navigation.NavigateTo("/pull-requests?category=quick")'>
+            <div class="triage-item triage-info" @onclick='() => Navigation.NavigateTo("pull-requests?category=quick")'>
                 <span class="triage-count">@(_prs?.Summary.QuickReview ?? 0)</span>
                 <span class="triage-label">Quick Review</span>
             </div>
-            <div class="triage-item triage-warning" @onclick='() => Navigation.NavigateTo("/pull-requests?category=review")'>
+            <div class="triage-item triage-warning" @onclick='() => Navigation.NavigateTo("pull-requests?category=review")'>
                 <span class="triage-count">@(_prs?.Summary.NeedsReview ?? 0)</span>
                 <span class="triage-label">Needs Review</span>
             </div>
-            <div class="triage-item triage-author" @onclick='() => Navigation.NavigateTo("/pull-requests?category=author")'>
+            <div class="triage-item triage-author" @onclick='() => Navigation.NavigateTo("pull-requests?category=author")'>
                 <span class="triage-count">@(_prs?.Summary.NeedsAuthor ?? 0)</span>
                 <span class="triage-label">Needs Author</span>
             </div>
-            <div class="triage-item triage-danger" @onclick='() => Navigation.NavigateTo("/pull-requests?category=close")'>
+            <div class="triage-item triage-danger" @onclick='() => Navigation.NavigateTo("pull-requests?category=close")'>
                 <span class="triage-count">@(_prs?.Summary.ConsiderClosing ?? 0)</span>
                 <span class="triage-label">Consider Closing</span>
             </div>
@@ -149,19 +149,19 @@ else
 
     <!-- Quick Links -->
     <div class="quick-links">
-        <a href="/issues" class="quick-link">
+        <a href="issues" class="quick-link">
             <span class="quick-link-icon">📋</span>
             <span>Browse Issues</span>
         </a>
-        <a href="/pull-requests" class="quick-link">
+        <a href="pull-requests" class="quick-link">
             <span class="quick-link-icon">🔀</span>
             <span>Review PRs</span>
         </a>
-        <a href="/community" class="quick-link">
+        <a href="community" class="quick-link">
             <span class="quick-link-icon">👥</span>
             <span>Community</span>
         </a>
-        <a href="/nuget" class="quick-link">
+        <a href="nuget" class="quick-link">
             <span class="quick-link-icon">📦</span>
             <span>NuGet Stats</span>
         </a>
