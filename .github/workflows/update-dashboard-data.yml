@@ -3,6 +3,10 @@ name: Update Dashboard Data
 on:
   schedule:
     - cron: '0 */6 * * *'  # Every 6 hours
+  push:
+    branches: [dashboard]
+    paths:
+      - 'collectors/*.ps1'  # Re-run when collector scripts change
   workflow_dispatch:
 
 concurrency:
