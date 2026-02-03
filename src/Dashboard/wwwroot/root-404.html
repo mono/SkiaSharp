@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Page Not Found - SkiaSharp</title>
+    <script type="text/javascript">
+        // Single Page Apps for GitHub Pages - handle dashboard SPA routing
+        // https://github.com/rafrex/spa-github-pages
+        (function() {
+            var path = window.location.pathname;
+            // Only handle dashboard paths - redirect with query string approach
+            if (path.startsWith('/SkiaSharp/dashboard/') && path !== '/SkiaSharp/dashboard/') {
+                // segmentCount = 2 preserves /SkiaSharp/dashboard
+                var segmentCount = 2;
+                var l = window.location;
+                l.replace(
+                    l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+                    l.pathname.split('/').slice(0, 1 + segmentCount).join('/') + '/?p=/' +
+                    l.pathname.slice(1).split('/').slice(segmentCount).join('/').replace(/&/g, '~and~') +
+                    (l.search ? '&q=' + l.search.slice(1).replace(/&/g, '~and~') : '') +
+                    l.hash
+                );
+            }
+        })();
+    </script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 40px; }
+        h1 { color: #333; }
+        a { color: #0078d4; }
+    </style>
+</head>
+<body>
+    <h1>Page Not Found</h1>
+    <p>The page you're looking for doesn't exist.</p>
+    <p><a href="/SkiaSharp/">Return to SkiaSharp Documentation</a></p>
+    <p><a href="/SkiaSharp/dashboard/">Go to Dashboard</a></p>
+</body>
+</html>
