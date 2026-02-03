@@ -1,0 +1,257 @@
+@page "/issues"
+@inject DashboardDataService DataService
+@inject NavigationManager Navigation
+
+<PageTitle>Issues - SkiaSharp Dashboard</PageTitle>
+
+<h1>Issues</h1>
+<p class="subtitle">Browse and filter open issues</p>
+
+@if (_loading)
+{
+    <p><em>Loading issues data...</em></p>
+}
+else if (_data is null)
+{
+    <p>No data available.</p>
+}
+else
+{
+    <!-- Filter Row -->
+    <div class="filter-row">
+        <div class="filter-group">
+            <label>Type</label>
+            <select @bind="SelectedType" @bind:after="ApplyFilters">
+                <option value="">All Types</option>
+                @foreach (var type in _data.ByType)
+                {
+                    <option value="@type.Label">@type.Label (@type.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Area</label>
+            <select @bind="SelectedArea" @bind:after="ApplyFilters">
+                <option value="">All Areas</option>
+                @foreach (var area in _data.ByArea.Take(20))
+                {
+                    <option value="@area.Label">@area.Label (@area.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Age</label>
+            <select @bind="SelectedAge" @bind:after="ApplyFilters">
+                <option value="">All Ages</option>
+                @foreach (var age in _data.ByAge)
+                {
+                    <option value="@age.Label">@age.Display (@age.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Backend</label>
+            <select @bind="SelectedBackend" @bind:after="ApplyFilters">
+                <option value="">All Backends</option>
+                @foreach (var backend in _data.ByBackend)
+                {
+                    <option value="@backend.Label">@backend.Label (@backend.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>OS</label>
+            <select @bind="SelectedOs" @bind:after="ApplyFilters">
+                <option value="">All OS</option>
+                @foreach (var os in _data.ByOs)
+                {
+                    <option value="@os.Label">@os.Label (@os.Count)</option>
+                }
+            </select>
+        </div>
+        @if (HasFilters)
+        {
+            <button class="btn-clear" @onclick="ClearFilters">Clear Filters</button>
+        }
+    </div>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <span>Showing <strong>@_filteredIssues.Count</strong> of @_data.TotalCount issues</span>
+        @if (_filteredIssues.Count > 0)
+        {
+            <span>Oldest: @GetOldest() | Newest: @GetNewest()</span>
+        }
+    </div>
+
+    <!-- Issue Table -->
+    <div class="issue-table-container">
+        <table class="issue-table">
+            <thead>
+                <tr>
+                    <th class="col-number">#</th>
+                    <th class="col-title">Title</th>
+                    <th class="col-type">Type</th>
+                    <th class="col-area">Area</th>
+                    <th class="col-age">Age</th>
+                    <th class="col-comments">💬</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var issue in _filteredIssues.Take(100))
+                {
+                    <tr @onclick="() => ExpandIssue(issue.Number)" class="@(ExpandedIssue == issue.Number ? "expanded" : "")">
+                        <td class="col-number">@issue.Number</td>
+                        <td class="col-title">
+                            <a href="@issue.Url" target="_blank" @onclick:stopPropagation="true">@issue.Title</a>
+                        </td>
+                        <td class="col-type">
+                            @if (issue.Type != null)
+                            {
+                                <span class="label label-type">@issue.Type</span>
+                            }
+                        </td>
+                        <td class="col-area">
+                            @foreach (var area in issue.Areas.Take(2))
+                            {
+                                <span class="label label-area">@area</span>
+                            }
+                            @if (issue.Areas.Count > 2)
+                            {
+                                <span class="label-more">+@(issue.Areas.Count - 2)</span>
+                            }
+                        </td>
+                        <td class="col-age @GetAgeClass(issue.AgeCategory)">@issue.DaysOpen days</td>
+                        <td class="col-comments">@issue.CommentCount</td>
+                    </tr>
+                    @if (ExpandedIssue == issue.Number)
+                    {
+                        <tr class="expanded-row">
+                            <td colspan="6">
+                                <div class="issue-details">
+                                    <div class="issue-meta">
+                                        <img src="@issue.AuthorAvatarUrl" alt="@issue.Author" class="avatar-small" />
+                                        <span>Opened by <strong>@issue.Author</strong> on @issue.CreatedAt.ToString("MMM dd, yyyy")</span>
+                                        <span>Last activity: @issue.DaysSinceActivity days ago</span>
+                                    </div>
+                                    <div class="issue-labels">
+                                        @if (issue.Type != null) { <span class="label label-type">@issue.Type</span> }
+                                        @foreach (var area in issue.Areas) { <span class="label label-area">@area</span> }
+                                        @foreach (var backend in issue.Backends) { <span class="label label-backend">@backend</span> }
+                                        @foreach (var os in issue.Oses) { <span class="label label-os">@os</span> }
+                                        @foreach (var other in issue.OtherLabels) { <span class="label">@other</span> }
+                                    </div>
+                                    <a href="@issue.Url" target="_blank" class="btn-view">View on GitHub →</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (_filteredIssues.Count > 100)
+    {
+        <p class="showing-limit">Showing first 100 of @_filteredIssues.Count filtered issues</p>
+    }
+
+    <p class="last-updated">Last updated: @_data.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC")</p>
+}
+
+@code {
+    [SupplyParameterFromQuery] public string? Type { get; set; }
+    [SupplyParameterFromQuery] public string? Area { get; set; }
+    [SupplyParameterFromQuery] public string? Age { get; set; }
+    [SupplyParameterFromQuery] public string? Backend { get; set; }
+    [SupplyParameterFromQuery] public string? Os { get; set; }
+
+    private bool _loading = true;
+    private IssuesData? _data;
+    private List<IssueInfo> _filteredIssues = [];
+    private int? ExpandedIssue;
+
+    private string SelectedType { get; set; } = "";
+    private string SelectedArea { get; set; } = "";
+    private string SelectedAge { get; set; } = "";
+    private string SelectedBackend { get; set; } = "";
+    private string SelectedOs { get; set; } = "";
+
+    private bool HasFilters => !string.IsNullOrEmpty(SelectedType) || 
+                               !string.IsNullOrEmpty(SelectedArea) || 
+                               !string.IsNullOrEmpty(SelectedAge) ||
+                               !string.IsNullOrEmpty(SelectedBackend) ||
+                               !string.IsNullOrEmpty(SelectedOs);
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Read initial filters from URL
+        SelectedType = Type ?? "";
+        SelectedArea = Area ?? "";
+        SelectedAge = Age ?? "";
+        SelectedBackend = Backend ?? "";
+        SelectedOs = Os ?? "";
+
+        try { _data = await DataService.GetIssuesDataAsync(); }
+        catch { /* Data not yet available */ }
+        
+        ApplyFilters();
+        _loading = false;
+    }
+
+    private void ApplyFilters()
+    {
+        if (_data is null) return;
+
+        _filteredIssues = _data.Issues.Where(i =>
+            (string.IsNullOrEmpty(SelectedType) || i.Type == SelectedType) &&
+            (string.IsNullOrEmpty(SelectedArea) || i.Areas.Contains(SelectedArea)) &&
+            (string.IsNullOrEmpty(SelectedAge) || i.AgeCategory == SelectedAge) &&
+            (string.IsNullOrEmpty(SelectedBackend) || i.Backends.Contains(SelectedBackend)) &&
+            (string.IsNullOrEmpty(SelectedOs) || i.Oses.Contains(SelectedOs))
+        ).OrderByDescending(i => i.CreatedAt).ToList();
+
+        UpdateUrl();
+    }
+
+    private void UpdateUrl()
+    {
+        var query = new List<string>();
+        if (!string.IsNullOrEmpty(SelectedType)) query.Add($"type={Uri.EscapeDataString(SelectedType)}");
+        if (!string.IsNullOrEmpty(SelectedArea)) query.Add($"area={Uri.EscapeDataString(SelectedArea)}");
+        if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={Uri.EscapeDataString(SelectedAge)}");
+        if (!string.IsNullOrEmpty(SelectedBackend)) query.Add($"backend={Uri.EscapeDataString(SelectedBackend)}");
+        if (!string.IsNullOrEmpty(SelectedOs)) query.Add($"os={Uri.EscapeDataString(SelectedOs)}");
+        
+        var url = "/issues" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
+        Navigation.NavigateTo(url, replace: true);
+    }
+
+    private void ClearFilters()
+    {
+        SelectedType = "";
+        SelectedArea = "";
+        SelectedAge = "";
+        SelectedBackend = "";
+        SelectedOs = "";
+        ApplyFilters();
+    }
+
+    private void ExpandIssue(int number)
+    {
+        ExpandedIssue = ExpandedIssue == number ? null : number;
+    }
+
+    private string GetOldest() => _filteredIssues.MaxBy(i => i.DaysOpen)?.DaysOpen + " days" ?? "";
+    private string GetNewest() => _filteredIssues.MinBy(i => i.DaysOpen)?.DaysOpen + " days" ?? "";
+
+    private static string GetAgeClass(string ageCategory) => ageCategory switch
+    {
+        "fresh" => "age-fresh",
+        "recent" => "age-recent",
+        "aging" => "age-aging",
+        "stale" => "age-stale",
+        "ancient" => "age-ancient",
+        _ => ""
+    };
+}
