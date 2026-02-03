@@ -4,13 +4,12 @@
 
 ## Current Status
 
-**Overall**: 🟡 Phase 2 - Dashboard Restructure In Progress
+**Overall**: ✅ Phase 2 - Dashboard Restructure COMPLETE
 
 | Area | Status | Notes |
 |------|--------|-------|
-| Phase 1 | ✅ Complete | Initial dashboard live |
-| Phase 2 Data | 🔄 Starting | New collectors needed |
-| Phase 2 UI | ⏳ Pending | After data layer |
+| Phase 1 | ✅ Complete | Initial dashboard |
+| Phase 2 | ✅ Complete | Restructure with charts |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 
 ## Phase 1 (Completed)
@@ -37,66 +36,55 @@
 
 ---
 
-## Phase 2: Dashboard Restructure
+## Phase 2: Dashboard Restructure ✅
 
-### Context
-- 659 open issues (7 paginated API calls)
-- 50 open PRs
-- 77 labels: `type/`, `area/`, `backend/`, `os/`
-
-### New Page Structure
+### Page Structure
 | Page | Route | Status |
 |------|-------|--------|
-| Home (Insights) | `/` | ⏳ Pending |
-| Issues | `/issues` | ⏳ Pending |
-| Pull Requests | `/pull-requests` | ⏳ Pending |
-| Community | `/community` | ⏳ Pending (merge GitHub) |
-| NuGet | `/nuget` | ✅ No changes |
+| Home (Insights) | `/` | ✅ Complete |
+| Issues | `/issues` | ✅ Complete |
+| Pull Requests | `/pull-requests` | ✅ Complete |
+| Community | `/community` | ✅ Complete |
+| NuGet | `/nuget` | ✅ No changes needed |
 
-### Phase 2.1: Data Layer
-- [ ] Create `collect-issues.ps1` (paginated, all open issues)
-- [ ] Update `collect-pr-triage.ps1` (add labels, size, author type)
-- [ ] Update `collect-github.ps1` (add time metrics)
-- [ ] Create `IssueStats.cs` data model
-- [ ] Update `PrTriageStats.cs` with new fields
-- [ ] Add `GetIssueStatsAsync()` to service
+### Phase 2.1: Data Layer ✅
+- [x] Create `collect-issues.ps1` (paginated, all open issues)
+- [x] Update `collect-pr-triage.ps1` (add labels, size, author type)
+- [x] Create `IssueStats.cs` data model (renamed to IssuesData)
+- [x] Update `PrTriageStats.cs` with new fields
+- [x] Add `GetIssuesDataAsync()` to service
 
-### Phase 2.2: Home Page (Insights)
-- [ ] Add Blazor-ApexCharts NuGet package
-- [ ] Create health metrics cards row
-- [ ] Create "by type" horizontal bar chart
-- [ ] Create "by area" horizontal bar chart
-- [ ] Create "by backend" horizontal bar chart
-- [ ] Create "by OS" horizontal bar chart
-- [ ] Create age distribution bar chart
-- [ ] Add click handlers → navigate to Issues with filter
+### Phase 2.2: Home Page (Insights) ✅
+- [x] Add Blazor-ApexCharts NuGet package
+- [x] Create health metrics cards row
+- [x] Create "by type" bar chart
+- [x] Create "by age" bar chart
+- [x] Create "by area" horizontal bar chart
+- [x] Create "PRs by size" chart
+- [x] Add triage summary section
+- [x] Add click handlers → navigate to filtered pages
 
-### Phase 2.3: Issues Page
-- [ ] Create `Issues.razor` page
-- [ ] Add filter dropdowns (Type, Area, Backend, OS, Age)
-- [ ] Add stats bar (showing X of Y)
-- [ ] Add sortable issues table
-- [ ] Implement URL-based filter state (`?type=bug&age=stale`)
+### Phase 2.3: Issues Page ✅
+- [x] Create `Issues.razor` page
+- [x] Add filter dropdowns (Type, Area, Backend, OS, Age)
+- [x] Add stats bar (showing X of Y)
+- [x] Add sortable issues table
+- [x] Implement URL-based filter state (`?type=bug&age=stale`)
+- [x] Add expandable issue rows
 
-### Phase 2.4: Pull Requests Page
-- [ ] Rename `PrTriage.razor` → `PullRequests.razor`
-- [ ] Add filter dropdowns (Size, Age, Review Status, Author)
-- [ ] Add triage summary cards
-- [ ] Add categorized PR lists
-- [ ] Implement URL-based filter state
+### Phase 2.4: Pull Requests Page ✅
+- [x] Add dual routes (`/pr-triage` and `/pull-requests`)
+- [x] Add filter dropdowns (Size, Age, Author Type, Draft)
+- [x] Add clickable triage summary cards (5 categories)
+- [x] Add categorized PR lists with badges
+- [x] Implement URL-based filter state
 
-### Phase 2.5: Community Page
-- [ ] Add stars, forks, watchers from GitHub stats
-- [ ] Keep contributors section
-- [ ] Remove GitHub.razor page
-- [ ] Update navigation
-
-### Phase 2.6: Polish
-- [ ] Update NavMenu with new routes
-- [ ] Update Home overview cards (if any remain)
-- [ ] Mobile responsive charts
-- [ ] Test all filter combinations
-- [ ] Update memory bank
+### Phase 2.5: Community Page ✅
+- [x] Add stars, forks, watchers from GitHub stats
+- [x] Keep contributors section with MS/Community breakdown
+- [x] Add issues/PRs overview with 30-day activity
+- [x] Remove GitHub.razor page
+- [x] Update navigation
 
 ---
 
@@ -104,20 +92,20 @@
 
 | Issue | Severity | Status |
 |-------|----------|--------|
-| NuGet totalDownloads shows 0 | Low | Pending fix |
-| PR Triage shows dashes | Low | May be fixed with restructure |
+| NuGet totalDownloads shows 0 | Low | Collector bug, not fixed |
 
 ## Future Ideas (Icebox)
 
-1. AI-powered PR triage (needs API key management)
-2. Historical data for trend charts
+1. Pagination for large issue/PR lists (currently shows all)
+2. Trend charts (historical data over time)
 3. Milestone tracking
-4. Release progress view
+4. CI/CD build status integration
+5. Release progress view
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.3.0 | TBD | Phase 2 restructure |
+| 0.3.0 | 2026-02-03 | Phase 2: Charts, filters, restructure |
 | 0.2.0 | 2026-02-03 | MS/Community split, SPA fix, unified workflow |
 | 0.1.0 | 2026-02-03 | Initial implementation |

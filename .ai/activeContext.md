@@ -6,74 +6,57 @@
 ## Current Focus
 
 **Phase**: Phase 2 - Dashboard Restructure
-**Status**: Starting implementation
+**Status**: COMPLETE ✅
 
-Restructuring the dashboard for better repo management:
-- Home page becomes Insights (charts showing hotspots)
-- New Issues page with filters
-- Enhanced Pull Requests page
-- Merged Community page (GitHub + Contributors)
+All major pages implemented and deployed:
+- ✅ Home (Insights) with ApexCharts
+- ✅ Issues page with filters
+- ✅ Pull Requests page with triage & filters
+- ✅ Community page merged with GitHub stats
+- ✅ NuGet page (unchanged)
 
 ## Recent Changes
 
-### 2026-02-03 (Planning)
-1. ✅ Planned Phase 2 restructure with user input
-2. ✅ Defined new page structure: Home(Insights), Issues, PRs, Community, NuGet
-3. ✅ Identified data needs: 659 issues, 50 PRs, 77 labels
+### 2026-02-03 (Phase 2 Complete)
+1. ✅ Phase 2.1: Data Layer - collectors, models, ApexCharts
+2. ✅ Phase 2.2: Home/Insights with 4 charts
+3. ✅ Phase 2.3: Issues page with filters & table
+4. ✅ Phase 2.4: Pull Requests with triage cards & filters
+5. ✅ Phase 2.5: Community merged with GitHub stats
+6. ✅ Deleted GitHub.razor (merged into Community)
 
-### 2026-02-03 (Earlier)
-1. ✅ Dashboard deployed and live
-2. ✅ Fixed SPA routing with root 404.html
-3. ✅ Microsoft vs Community contributor detection working
-4. ✅ Single unified workflow
+### Key Commits
+- `b8467de4` - Phase 2.3: Issues page with filters
+- `8d18029e` - Phase 2.4-2.5: Enhanced PRs & merged Community
 
-## Phase 2 Plan Summary
+## Current Page Structure
+| Page | Route | Status |
+|------|-------|--------|
+| Home (Insights) | `/` | ✅ Charts, metrics, triage summary |
+| Issues | `/issues` | ✅ Filters, sortable table |
+| Pull Requests | `/pull-requests` | ✅ Triage cards, filters |
+| Community | `/community` | ✅ Repo stats + contributors |
+| NuGet | `/nuget` | ✅ Downloads |
 
-### New Page Structure
-| Page | Route | Purpose |
-|------|-------|---------|
-| Home (Insights) | `/` | Health metrics + charts showing hotspots |
-| Issues | `/issues` | Drill-down with filters, sortable list |
-| Pull Requests | `/pull-requests` | Triage categories, filters |
-| Community | `/community` | Stars, forks, contributors |
-| NuGet | `/nuget` | Downloads (unchanged) |
+## Implementation Details
 
-### Data Context
-- 659 open issues (paginated: 7 API calls)
-- 50 open PRs
-- 77 labels with prefixes: `type/`, `area/`, `backend/`, `os/`
+### Charts (ApexCharts)
+- Issues by Type (bar)
+- Issues by Age (bar)
+- Issues by Area (horizontal bar)
+- PRs by Size (donut)
 
-### Key Features
-- Clickable charts → drill down to filtered pages
-- URL-based filters (`/issues?type=bug&age=stale`)
-- Labels displayed without prefixes
-- Health metrics (median response/close times)
+### Filters
+- **Issues**: Type, Area, Age, Backend, OS
+- **PRs**: Category (triage), Size, Age, Author Type, Draft
+- All filters use URL query params for shareable links
 
-## Implementation Order
-
-1. **Data Layer** - New collectors, updated models
-2. **Home/Insights** - Charts with ApexCharts
-3. **Issues Page** - Filters, table
-4. **PRs Page** - Enhanced triage
-5. **Community** - Merge GitHub stats
-
-## Files to Create/Modify
-
-### New Files
-- `collectors/collect-issues.ps1` - Paginated issue collection
-- `src/Dashboard/Services/IssueStats.cs` - Issue data model
-- `src/Dashboard/Pages/Issues.razor` - Issues page
-
-### Modified Files
-- `collectors/collect-pr-triage.ps1` - Add labels, size, author type
-- `collectors/collect-github.ps1` - Add time metrics
-- `src/Dashboard/Pages/Home.razor` - Convert to Insights
-- `src/Dashboard/Pages/PrTriage.razor` → `PullRequests.razor`
-- `src/Dashboard/Pages/Community.razor` - Add GitHub stats
-- `src/Dashboard/Layout/NavMenu.razor` - Update navigation
-
-### Deleted Files
-- `src/Dashboard/Pages/GitHub.razor` - Merged into Community
+### Triage Categories (5)
+1. ReadyToMerge - Approved, no changes requested
+2. QuickReview - Small, fresh, no blockers
+3. NeedsReview - Awaiting first review
+4. NeedsAuthor - Changes requested
+5. ConsiderClosing - Very old or stale
 
 ## Working Patterns
 
@@ -85,30 +68,25 @@ Restructuring the dashboard for better repo management:
 
 // Use prefix for categorization
 if (label.StartsWith("type/")) types.Add(label[5..]);
-if (label.StartsWith("area/")) areas.Add(label[5..]);
 ```
 
 ### URL Filter Pattern
 ```csharp
-// Read from URL
 [SupplyParameterFromQuery] public string? Type { get; set; }
-[SupplyParameterFromQuery] public string? Age { get; set; }
-
-// Navigate with filter
-NavigationManager.NavigateTo($"/issues?type={type}");
+NavigationManager.NavigateTo($"/issues?type={type}", replace: true);
 ```
 
 ## Context for Next AI Session
 
 When resuming work:
 1. Read ALL files in `.ai/` folder first
-2. Check this file for current phase (Phase 2 - Restructure)
-3. Check session plan.md for detailed work plan
-4. Branch is `dashboard`
-5. Live at https://mono.github.io/SkiaSharp/dashboard/
+2. Phase 2 is COMPLETE
+3. Branch is `dashboard`
+4. Live at https://mono.github.io/SkiaSharp/dashboard/
 
-## Notes
+## Potential Future Work
 
-- Using Blazor-ApexCharts for charts (~50KB)
-- All filtering is client-side (JSON pre-loaded)
-- ~60-70 API calls per collection (safe for 6-hour schedule)
+- Add pagination to Issues/PRs tables for very large lists
+- Add more chart types (trends over time)
+- CI/CD status integration
+- Milestone tracking
