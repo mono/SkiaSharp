@@ -158,6 +158,66 @@ State hypotheses explicitly and test them:
 3. **Ask clarifying questions** - maybe context is missing
 4. **Request artifacts** (build logs, binaries) to verify assumptions
 
+---
+
+## Native Library Debugging (Linux)
+
+### Investigating `undefined symbol` Errors
+
+When you see `undefined symbol: xxx` errors, the symbol is missing from the linked libraries.
+
+#### Step 1: Compare DT_NEEDED between working and broken builds
+
+```bash
+# Compare linked libraries between platforms
+docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
+  "apt-get update -qq && apt-get install -y -qq binutils >/dev/null && \
+   echo '=== x64 ===' && readelf -d /work/output/native/linux/x64/libSkiaSharp.so | grep NEEDED && \
+   echo && echo '=== ARM64 ===' && readelf -d /work/output/native/linux/arm64/libSkiaSharp.so | grep NEEDED"
+```
+
+**If a library appears in one but not the other, that's your root cause.**
+
+#### Step 2: Check if the linker is silently failing
+
+The ninja file may have `-lfoo` but the linker silently skips it if it can't find the library:
+
+```bash
+# Check ninja file for expected libraries
+grep "libs = " externals/skia/out/linux/arm64/obj/SkiaSharp.ninja
+
+# Check if library exists in cross-compile sysroot
+docker run --rm skiasharp-linux-gnu-cross-arm64 bash -c \
+  "ls -la /usr/aarch64-linux-gnu/lib/libfontconfig*"
+```
+
+**Common issue:** The `-dev` package provides a broken symlink (`libfoo.so -> libfoo.so.1.2.3`)
+but the actual `.so.1.2.3` file is in the runtime package (`libfoo1`), not the dev package.
+
+#### Step 3: Fix location depends on root cause
+
+| Root Cause | Fix Location |
+|------------|--------------|
+| Library missing from linker flags | `native/linux/build.cake` or `externals/skia/third_party/BUILD.gn` |
+| Library missing from cross-compile sysroot | `scripts/Docker/debian/clang-cross/*/Dockerfile` |
+| Indirect dependency (A→B→C missing) | Fix B's linkage or add C explicitly |
+
+### Real Example: ARM64 fontconfig issue (#3369)
+
+**Symptom:** `undefined symbol: uuid_generate_random` on ARM64 only
+
+**Investigation:**
+- x64 had `libfontconfig.so.1` in DT_NEEDED
+- ARM64 was missing `libfontconfig.so.1` in DT_NEEDED  
+- But ninja file had `-lfontconfig` for BOTH builds
+
+**Root cause:** Cross-compile Docker only had `libfontconfig1-dev` which provides a broken symlink.
+The actual shared library is in `libfontconfig1` (runtime package).
+
+**Fix:** Download both `-dev` (headers) AND runtime (actual .so) packages in the Dockerfile.
+
+---
+
 ## Summary
 
 | Do | Don't |

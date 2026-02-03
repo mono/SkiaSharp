@@ -63,17 +63,17 @@ SkiaSharp maintains stable ABI. Breaking changes break downstream apps.
 
 **Required workflow:**
 
-1. **Create a feature branch FIRST** — Use naming convention: `dev/issue-NNNN-description`
+1. **Create a feature branch FIRST** — Use naming convention: `copilot/issue-NNNN-description`
 2. **Make all commits on the feature branch** — Never commit directly to protected branches
 3. **Submit a Pull Request** — Changes must be reviewed before merging
 
 ```bash
 # ✅ CORRECT — Always create a feature branch first
-git checkout -b dev/issue-1234-fix-description
+git checkout -b copilot/issue-1234-fix-description
 
 # For submodule changes:
 cd externals/skia
-git checkout -b dev/issue-1234-add-c-api
+git checkout -b copilot/issue-1234-add-c-api
 
 # ❌ NEVER DO THIS — Policy violation
 git checkout main && git commit  # FORBIDDEN
@@ -93,7 +93,9 @@ Single source of truth for all commands:
 | **Bootstrap (C#-only work)** | `dotnet cake --target=externals-download` |
 | **Build Native (macOS ARM64)** | `dotnet cake --target=externals-macos --arch=arm64` |
 | **Build Native (macOS Intel)** | `dotnet cake --target=externals-macos --arch=x64` |
-| **Build Native (Windows)** | `dotnet cake --target=externals-windows --arch=x64` |
+| **Build Native (Windows x64)** | `dotnet cake --target=externals-windows --arch=x64` |
+| **Build Native (Linux x64)** | `dotnet cake --target=externals-linux --arch=x64` |
+| **Build Native (Linux ARM64)** | `dotnet cake --target=externals-linux --arch=arm64` |
 | **Build C#** | `dotnet build binding/SkiaSharp/SkiaSharp.csproj` |
 | **Test** | `dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj` |
 | **Regenerate** | `pwsh ./utils/generate.ps1` |
@@ -328,12 +330,27 @@ See [documentation/debugging-methodology.md](../documentation/debugging-methodol
 
 Skills are specialized workflows for complex tasks. **Your job is classification and routing** — skills handle the detailed implementation.
 
+### ⚠️ Skill Invocation Process
+
+When the user mentions a GitHub issue number OR describes a bug/crash/problem:
+
+1. **Fetch issue details** — Get the issue title, body, and labels from GitHub
+2. **Classify** — Based on **ISSUE CONTENT**, not user's words (see table below)
+3. **Invoke skill** — The skill handles all investigation, reproduction, and fixing
+
+> **CRITICAL:** Classify based on what the ISSUE describes, not what the USER says.
+> - User says "investigate" but issue says "crash" → It's a bug → invoke `bug-fix`
+> - User says "look at" but issue says "add support for" → It's new API → invoke `add-api`
+>
+> **What's NOT allowed:** Investigating (running Docker, searching code, downloading 
+> attachments) before invoking the skill. The skill handles all of that.
+
 ### When to Use Skills
 
 | Task | Skill | Triggers |
 |------|-------|----------|
+| Fix bug | `bug-fix` | "investigate #NNNN", "fix issue", crash, exception, "undefined symbol", incorrect output, wrong behavior, memory leak, "fails", "broken", "doesn't work" |
 | Add new API | `add-api` | "expose", "wrap method", issue requests new functionality |
-| Fix bug | `bug-fix` | SkiaSharp crashes, wrong output, exceptions |
 | Update dependency | `native-dependency-update` | "bump libpng", "fix CVE in zlib" |
 | Write XML docs | `api-docs` | "document", "fill in missing docs" |
 | Security check | `security-audit` | "audit CVEs", "security overview" (read-only) |
@@ -346,23 +363,21 @@ Skills are specialized workflows for complex tasks. **Your job is classification
 Work directly for:
 - Trivial fixes (typos, whitespace, obvious one-liners)
 - Changes only to `documentation/` (non-generated docs)
-- Build/test-only tasks
-- Questions or exploration
+- Build/test-only tasks (no reported bug)
+- Questions about code or architecture
+- Refactoring without a reported problem
+- Performance optimization (unless there's a "slow" bug report)
 
-### Issue Triage (#NNNN)
+### Issue Classification (#NNNN)
 
-When user mentions an issue number:
+| If Issue Contains... | Type | Skill |
+|---------------------|------|-------|
+| "crash", "exception", "wrong", "fails", "broken", "hard crash", "segfault", "undefined symbol", "AccessViolation" | Bug | `bug-fix` |
+| "add", "expose", "missing", "support", "new method", "feature request" | New API | `add-api` |
+| "docs", "documentation", "XML", "comments" | Docs | `api-docs` |
+| CVE, security, vulnerability | Security | `security-audit` then `native-dependency-update` |
 
-1. **Fetch** — Retrieve issue details
-2. **Classify** — Determine type:
-   | If Issue Contains... | Type | Skill |
-   |---------------------|------|-------|
-   | "add", "expose", "missing", "support" | New API | `add-api` |
-   | "crash", "exception", "wrong", "fails" | Bug | `bug-fix` |
-   | "docs", "documentation", "XML" | Docs | `api-docs` |
-3. **Context** — Grep for affected class/method
-4. **Confirm** — Ask: "This looks like a [Type] task. Proceed with `[skill]`?"
-5. **Invoke** — After confirmation, invoke the skill
+**Ambiguous cases:** If unclear, ask: "Does the user report something that doesn't match expected behavior?" If yes → `bug-fix`. If no → work directly or ask for clarification.
 
 ### If a Skill Fails
 
