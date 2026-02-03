@@ -1,9 +1,11 @@
 ﻿@page "/"
 @inject DashboardDataService DataService
+@inject NavigationManager Navigation
 
 <PageTitle>SkiaSharp Dashboard</PageTitle>
 
-<h1>SkiaSharp Project Dashboard</h1>
+<h1>SkiaSharp Project Insights</h1>
+<p class="subtitle">See where things are piling up, then drill down to take action</p>
 
 @if (_loading)
 {
@@ -11,110 +13,233 @@
 }
 else
 {
-    <div class="dashboard-grid">
-        <!-- GitHub Stats Card -->
-        <div class="card">
-            <div class="card-header">
-                <h3>GitHub</h3>
-                <a href="github" class="card-link">View Details →</a>
-            </div>
-            <div class="card-body">
-                <div class="stats-grid stats-grid-3">
-                    <div class="stat">
-                        <span class="stat-value">@(_github?.Repository.Stars.ToString("N0") ?? "—")</span>
-                        <span class="stat-label">Stars</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-value">@(_github?.Repository.Forks.ToString("N0") ?? "—")</span>
-                        <span class="stat-label">Forks</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-value">@(_github?.Issues.Open.ToString("N0") ?? "—")</span>
-                        <span class="stat-label">Open Issues</span>
-                    </div>
-                </div>
-                <div class="stat stat-full">
-                    <span class="stat-value">@(_github?.PullRequests.Open.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Open PRs</span>
-                </div>
-            </div>
+    <!-- Health Metrics Row -->
+    <div class="metrics-row">
+        <div class="metric-card" @onclick='() => Navigation.NavigateTo("/issues")'>
+            <span class="metric-value">@(_issues?.TotalCount.ToString("N0") ?? "—")</span>
+            <span class="metric-label">Open Issues</span>
+        </div>
+        <div class="metric-card" @onclick='() => Navigation.NavigateTo("/pull-requests")'>
+            <span class="metric-value">@(_prs?.TotalCount.ToString("N0") ?? "—")</span>
+            <span class="metric-label">Open PRs</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-value">@(_github?.Repository.Stars.ToString("N0") ?? "—")</span>
+            <span class="metric-label">Stars</span>
+        </div>
+        <div class="metric-card">
+            <span class="metric-value">@(_community?.TotalContributors.ToString("N0") ?? "—")</span>
+            <span class="metric-label">Contributors</span>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-grid">
+        <!-- Issues by Type -->
+        <div class="chart-card">
+            <h3>Issues by Type</h3>
+            @if (_issues?.ByType.Count > 0)
+            {
+                <ApexChart TItem="LabelCount"
+                           Options="_typeChartOptions"
+                           @ref="_typeChart">
+                    <ApexPointSeries TItem="LabelCount"
+                                     Items="_issues.ByType.Take(6).ToList()"
+                                     SeriesType="SeriesType.Bar"
+                                     XValue="e => e.Label"
+                                     YValue="e => e.Count" />
+                </ApexChart>
+            }
+            else
+            {
+                <p class="no-data">No data available</p>
+            }
         </div>
 
-        <!-- NuGet Stats Card -->
-        <div class="card">
-            <div class="card-header">
-                <h3>NuGet</h3>
-                <a href="nuget" class="card-link">View Details →</a>
-            </div>
-            <div class="card-body">
-                <div class="stat stat-large">
-                    <span class="stat-value">@(_nuget?.TotalDownloads.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Total Downloads</span>
-                </div>
-            </div>
+        <!-- Issues by Age -->
+        <div class="chart-card">
+            <h3>Issues by Age</h3>
+            @if (_issues?.ByAge.Count > 0)
+            {
+                <ApexChart TItem="AgeCount"
+                           Options="_ageChartOptions"
+                           @ref="_ageChart">
+                    <ApexPointSeries TItem="AgeCount"
+                                     Items="_issues.ByAge"
+                                     SeriesType="SeriesType.Bar"
+                                     XValue="e => e.Display"
+                                     YValue="e => e.Count" />
+                </ApexChart>
+            }
+            else
+            {
+                <p class="no-data">No data available</p>
+            }
         </div>
 
-        <!-- Community Card -->
-        <div class="card">
-            <div class="card-header">
-                <h3>Community</h3>
-                <a href="community" class="card-link">View Details →</a>
-            </div>
-            <div class="card-body">
-                <div class="stat stat-large">
-                    <span class="stat-value">@(_community?.TotalContributors.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Contributors</span>
-                </div>
-                <div class="stat stat-full">
-                    <span class="stat-value">@(_github?.Activity.CommitsLast30Days.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Commits (30d)</span>
-                </div>
-            </div>
+        <!-- Issues by Area (Top 8) -->
+        <div class="chart-card">
+            <h3>Issues by Area</h3>
+            @if (_issues?.ByArea.Count > 0)
+            {
+                <ApexChart TItem="LabelCount"
+                           Options="_areaChartOptions"
+                           @ref="_areaChart">
+                    <ApexPointSeries TItem="LabelCount"
+                                     Items="_issues.ByArea.Take(8).ToList()"
+                                     SeriesType="SeriesType.Bar"
+                                     XValue="e => e.Label"
+                                     YValue="e => e.Count" />
+                </ApexChart>
+            }
+            else
+            {
+                <p class="no-data">No area labels found</p>
+            }
         </div>
 
-        <!-- PR Triage Card -->
-        <div class="card card-highlight">
-            <div class="card-header">
-                <h3>PR Triage</h3>
-                <a href="pr-triage" class="card-link">View Details →</a>
+        <!-- PRs by Size -->
+        <div class="chart-card">
+            <h3>PRs by Size</h3>
+            @if (_prs?.BySize.Count > 0)
+            {
+                <ApexChart TItem="AgeCount"
+                           Options="_sizeChartOptions"
+                           @ref="_sizeChart">
+                    <ApexPointSeries TItem="AgeCount"
+                                     Items="_prs.BySize"
+                                     SeriesType="SeriesType.Bar"
+                                     XValue="e => e.Display"
+                                     YValue="e => e.Count" />
+                </ApexChart>
+            }
+            else
+            {
+                <p class="no-data">No data available</p>
+            }
+        </div>
+    </div>
+
+    <!-- PR Triage Summary -->
+    <div class="triage-row">
+        <h3>PR Triage Summary</h3>
+        <div class="triage-cards">
+            <div class="triage-item triage-success" @onclick='() => Navigation.NavigateTo("/pull-requests?category=ready")'>
+                <span class="triage-count">@(_prs?.Summary.ReadyToMerge ?? 0)</span>
+                <span class="triage-label">Ready to Merge</span>
             </div>
-            <div class="card-body stats-grid">
-                <div class="stat stat-success">
-                    <span class="stat-value">@(_triage?.Summary.ReadyToMerge.ToString() ?? "—")</span>
-                    <span class="stat-label">Ready to Merge</span>
-                </div>
-                <div class="stat stat-warning">
-                    <span class="stat-value">@(_triage?.Summary.NeedsReview.ToString() ?? "—")</span>
-                    <span class="stat-label">Needs Review</span>
-                </div>
-                <div class="stat stat-danger">
-                    <span class="stat-value">@(_triage?.Summary.ConsiderClosing.ToString() ?? "—")</span>
-                    <span class="stat-label">Consider Closing</span>
-                </div>
+            <div class="triage-item triage-info" @onclick='() => Navigation.NavigateTo("/pull-requests?category=quick")'>
+                <span class="triage-count">@(_prs?.Summary.QuickReview ?? 0)</span>
+                <span class="triage-label">Quick Review</span>
+            </div>
+            <div class="triage-item triage-warning" @onclick='() => Navigation.NavigateTo("/pull-requests?category=review")'>
+                <span class="triage-count">@(_prs?.Summary.NeedsReview ?? 0)</span>
+                <span class="triage-label">Needs Review</span>
+            </div>
+            <div class="triage-item triage-author" @onclick='() => Navigation.NavigateTo("/pull-requests?category=author")'>
+                <span class="triage-count">@(_prs?.Summary.NeedsAuthor ?? 0)</span>
+                <span class="triage-label">Needs Author</span>
+            </div>
+            <div class="triage-item triage-danger" @onclick='() => Navigation.NavigateTo("/pull-requests?category=close")'>
+                <span class="triage-count">@(_prs?.Summary.ConsiderClosing ?? 0)</span>
+                <span class="triage-label">Consider Closing</span>
             </div>
         </div>
     </div>
 
+    <!-- Quick Links -->
+    <div class="quick-links">
+        <a href="/issues" class="quick-link">
+            <span class="quick-link-icon">📋</span>
+            <span>Browse Issues</span>
+        </a>
+        <a href="/pull-requests" class="quick-link">
+            <span class="quick-link-icon">🔀</span>
+            <span>Review PRs</span>
+        </a>
+        <a href="/community" class="quick-link">
+            <span class="quick-link-icon">👥</span>
+            <span>Community</span>
+        </a>
+        <a href="/nuget" class="quick-link">
+            <span class="quick-link-icon">📦</span>
+            <span>NuGet Stats</span>
+        </a>
+    </div>
+
     <p class="last-updated">
-        Last updated: @(_github?.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC") ?? "Unknown")
+        Last updated: @(_issues?.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC") ?? _github?.GeneratedAt.ToString("yyyy-MM-dd HH:mm UTC") ?? "Unknown")
     </p>
 }
 
 @code {
     private bool _loading = true;
     private GitHubStats? _github;
-    private NuGetStats? _nuget;
     private CommunityStats? _community;
-    private PrTriageStats? _triage;
+    private IssuesData? _issues;
+    private PrTriageStats? _prs;
+
+    private ApexChart<LabelCount>? _typeChart;
+    private ApexChart<AgeCount>? _ageChart;
+    private ApexChart<LabelCount>? _areaChart;
+    private ApexChart<AgeCount>? _sizeChart;
+
+    private ApexChartOptions<LabelCount> _typeChartOptions = new()
+    {
+        Chart = new Chart { Height = 250, Toolbar = new Toolbar { Show = false } },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar { Horizontal = true, BarHeight = "70%" }
+        },
+        Colors = ["#6366f1"],
+        DataLabels = new DataLabels { Enabled = true },
+        Xaxis = new XAxis { Labels = new XAxisLabels { Show = true } }
+    };
+
+    private ApexChartOptions<AgeCount> _ageChartOptions = new()
+    {
+        Chart = new Chart { Height = 250, Toolbar = new Toolbar { Show = false } },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar { Horizontal = false, ColumnWidth = "60%" }
+        },
+        Colors = ["#10b981", "#22c55e", "#eab308", "#f97316", "#ef4444"],
+        DataLabels = new DataLabels { Enabled = true },
+        Xaxis = new XAxis { Labels = new XAxisLabels { Show = true } }
+    };
+
+    private ApexChartOptions<LabelCount> _areaChartOptions = new()
+    {
+        Chart = new Chart { Height = 250, Toolbar = new Toolbar { Show = false } },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar { Horizontal = true, BarHeight = "70%" }
+        },
+        Colors = ["#8b5cf6"],
+        DataLabels = new DataLabels { Enabled = true },
+        Xaxis = new XAxis { Labels = new XAxisLabels { Show = true } }
+    };
+
+    private ApexChartOptions<AgeCount> _sizeChartOptions = new()
+    {
+        Chart = new Chart { Height = 250, Toolbar = new Toolbar { Show = false } },
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar { Horizontal = false, ColumnWidth = "60%" }
+        },
+        Colors = ["#06b6d4"],
+        DataLabels = new DataLabels { Enabled = true },
+        Xaxis = new XAxis { Labels = new XAxisLabels { Show = true } }
+    };
 
     protected override async Task OnInitializedAsync()
     {
         var tasks = new[]
         {
             LoadGitHubAsync(),
-            LoadNuGetAsync(),
             LoadCommunityAsync(),
-            LoadTriageAsync()
+            LoadIssuesAsync(),
+            LoadPrsAsync()
         };
 
         await Task.WhenAll(tasks);
@@ -127,21 +252,21 @@ else
         catch { /* Data not yet available */ }
     }
 
-    private async Task LoadNuGetAsync()
-    {
-        try { _nuget = await DataService.GetNuGetStatsAsync(); }
-        catch { /* Data not yet available */ }
-    }
-
     private async Task LoadCommunityAsync()
     {
         try { _community = await DataService.GetCommunityStatsAsync(); }
         catch { /* Data not yet available */ }
     }
 
-    private async Task LoadTriageAsync()
+    private async Task LoadIssuesAsync()
     {
-        try { _triage = await DataService.GetPrTriageStatsAsync(); }
+        try { _issues = await DataService.GetIssuesDataAsync(); }
+        catch { /* Data not yet available */ }
+    }
+
+    private async Task LoadPrsAsync()
+    {
+        try { _prs = await DataService.GetPrTriageStatsAsync(); }
         catch { /* Data not yet available */ }
     }
 }
