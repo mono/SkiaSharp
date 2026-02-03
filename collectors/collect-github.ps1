@@ -143,3 +143,4 @@ $output = @{
 $output | ConvertTo-Json -Depth 10 | Set-Content -Path $OutputPath -Encoding UTF8
 
 Write-Host "GitHub stats written to $OutputPath"
+# Trigger initial run
