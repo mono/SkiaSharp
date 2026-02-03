@@ -16,7 +16,7 @@
 | Local Testing | ✅ Complete | Runs on localhost |
 | Playwright | ✅ Complete | MCP configured |
 | AI Context | ✅ Complete | Memory bank created |
-| Deployment | 🟡 Pushed | Waiting for workflow to run |
+| Deployment | ✅ Live | https://mono.github.io/SkiaSharp/dashboard/ |
 | Real Data | ⏳ Pending | Collectors not run yet |
 | Polish | ✅ Logo added | Charts still pending |
 
