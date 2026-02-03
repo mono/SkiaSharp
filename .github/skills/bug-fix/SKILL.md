@@ -15,16 +15,39 @@ description: >
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
-> ⚠️ **MANDATORY: Follow phases in order. Do NOT skip phases.**
-> 
-> Each phase has a **GATE** — you cannot proceed until the gate criteria are met.
-> The workflow exists to prevent wasted investigation. Trust the process.
+## ⛔ CRITICAL: SEQUENTIAL EXECUTION REQUIRED
+
+> **🛑 PHASES MUST BE EXECUTED IN STRICT ORDER. NO PARALLELIZATION. NO SKIPPING.**
+>
+> ```
+> Phase 1 → Phase 2 → Phase 3 → Phase 4 → Phase 5 → Phase 6 → Phase 7 → Phase 8
+> ```
+>
+> **STOP** at each phase gate. Do not proceed until gate criteria are met.
+> **NEVER** say "in parallel" — phases are strictly sequential.
+> **NEVER** start research (Phase 3) before PR exists (Phase 2).
 
 ---
 
-## Quick Diagnosis Table (Check FIRST)
+## Workflow Overview
 
-Before deep investigation, check if the symptom matches a known pattern:
+```
+1. Understand   → Fetch issue, extract key details
+2. Create PR    → 🛑 STOP: Create PR before ANY investigation
+3. Research     → Search related issues, READ ALL COMMENTS
+4. Reproduce    → Test on target platform (skip only if build config issue)
+5. Investigate  → Find root cause (often already found in Phase 3!)
+6. Fix          → Minimal change
+7. Test         → Regression test + existing tests
+8. Finalize     → Rewrite PR description, link all fixed issues
+```
+
+---
+
+## Quick Diagnosis Table (Reference Only)
+
+> ⚠️ This table is for REFERENCE during Phase 5. Do NOT use this to skip phases.
+> You must still complete Phase 2 (Create PR) and Phase 3 (Research) first.
 
 | Symptom | Likely Cause | Fix Location |
 |---------|--------------|--------------|
@@ -35,8 +58,6 @@ Before deep investigation, check if the symptom matches a known pattern:
 | Platform-specific crash | Build config | `native/{platform}/build.cake` |
 | GLIBC version error | Build environment | Docker base image version |
 
-**If the symptom matches, the fix location is usually obvious. Research phase will confirm.**
-
 ---
 
 ## Prerequisites
@@ -44,21 +65,6 @@ Before deep investigation, check if the symptom matches a known pattern:
 - GitHub API access (fetch issues, search issues, read comments)
 - Git with push access
 - Docker for cross-platform testing (check: `docker --version`)
-
----
-
-## Workflow Overview
-
-```
-1. Understand   → Fetch issue, extract key details
-2. Create PR    → Start tracking immediately (living document)  
-3. Research     → Search related issues, READ ALL COMMENTS, find existing diagnosis
-4. Reproduce    → Test on target platform (skip if build config issue)
-5. Investigate  → Find root cause (often already found in Phase 3!)
-6. Fix          → Minimal change
-7. Test         → Regression test + existing tests
-8. Finalize     → Rewrite PR description, link all fixed issues
-```
 
 ---
 
@@ -76,13 +82,29 @@ This phase is quick — get enough context to create the PR.
 - [ ] Issue title, symptoms, and error message (if any)
 - [ ] Target platform identified
 
+### ⛔ AFTER PHASE 1: STOP AND CREATE PR
+
+> **🛑 DO NOT search for related issues yet. DO NOT investigate yet.**
+> **🛑 Your ONLY next action is Phase 2: Create the Draft PR.**
+> 
+> The PR must exist BEFORE any research or investigation begins.
+
 ---
 
 ## Phase 2: Create Draft PR
 
-> 🛑 **MANDATORY: Create the PR NOW, before any investigation.**
+> 🛑 **THIS PHASE IS BLOCKING. Complete it before ANY other work.**
 > 
-> The PR is your living document. Skip this and you lose track of your work.
+> Do NOT:
+> - Search for related issues (that's Phase 3)
+> - Read comments on other issues (that's Phase 3)
+> - Look at code (that's Phase 5)
+> - Try to reproduce (that's Phase 4)
+>
+> Do ONLY:
+> - Create branch
+> - Push empty commit
+> - Create draft PR with template
 
 ```bash
 git checkout -b copilot/issue-NNNN-short-description
@@ -105,9 +127,19 @@ Create PR using investigation template from [references/pr-templates.md](referen
 - [ ] Feature branch created and pushed
 - [ ] Draft PR opened with investigation template
 
+### ⛔ AFTER PHASE 2: Verify PR exists before continuing
+
+> **🛑 STOP. Verify the PR URL exists before proceeding to Phase 3.**
+> 
+> Only after confirming the PR is created should you begin research.
+
 ---
 
 ## Phase 3: Research Related Issues
+
+> 🛑 **PREREQUISITE: Phase 2 must be complete. PR must exist.**
+> 
+> If you have not created the draft PR yet, STOP and go back to Phase 2.
 
 > 🛑 **CRITICAL: This phase often SOLVES the bug.**
 > 
