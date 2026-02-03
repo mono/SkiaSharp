@@ -5,32 +5,40 @@
 
 ## Current Focus
 
-**Phase**: Phase 2 - Dashboard Restructure
-**Status**: Bug Fixing - Navigation Redirect Issue
+**Phase**: Phase 2 - Dashboard Restructure COMPLETE ✅
+**Status**: Navigation Fixed & Verified
 
-Navigation was broken on GitHub Pages due to:
-1. Leading slashes in `NavigateTo()` calls in Issues.razor and PrTriage.razor
-2. Old sessionStorage-based 404.html at site root
+All pages working with click navigation AND direct URL access.
 
 ## Recent Changes
 
-### 2026-02-03 (SPA Routing Fix)
+### 2026-02-03 (SPA Routing Fix - COMPLETE)
 1. ✅ Reset index.html to clean Blazor template + spa-github-pages script
 2. ✅ Created proper 404.html with segmentCount=2 for nested subdirectory
 3. ✅ Created root-404.html to replace old sessionStorage approach at site root
 4. ✅ **CRITICAL FIX**: Removed leading slash from NavigateTo URLs:
    - Issues.razor: `/issues` → `issues`
    - PrTriage.razor: `/pull-requests` → `pull-requests`
-5. ✅ Updated copilot-instructions.md with comprehensive SPA routing docs
+5. ✅ **CRITICAL FIX**: Don't call NavigateTo on initial page load:
+   - Split `ApplyFilters()` into parameterless (for @bind:after) and `ApplyFiltersInternal(updateUrl)`
+   - Call with `updateUrl: false` in OnInitializedAsync
+6. ✅ Updated copilot-instructions.md with comprehensive SPA routing docs + bug fixes table
 
 ### 2026-02-03 (Earlier Bug Fixes)
 1. ✅ Fixed model type mismatches (int → double for DaysOpen fields)
 2. ✅ Fixed NuGet model (nullable Downloads)
 
 ### Key Commits
-- `e1f5741e` - Fix NavigateTo leading slash (THE FIX)
+- `1bb2d910` - Fix method group conversion errors in filter bindings
+- `e1f5741e` - Fix NavigateTo leading slash
 - `219a9a66` - Root 404.html with spa-github-pages approach
 - `072251ce` - Reset to clean template with spa-github-pages
+
+### Verified Working ✅
+- ✅ Click navigation between pages
+- ✅ Direct URL access (e.g., typing `/SkiaSharp/dashboard/issues` directly)
+- ✅ Filter URLs (e.g., `/issues?type=bug`)
+- ✅ Browser back/forward buttons
 
 ## ⚠️ CRITICAL: SPA Routing on GitHub Pages
 

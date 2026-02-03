@@ -92,7 +92,16 @@
 
 | Issue | Severity | Status |
 |-------|----------|--------|
-| NuGet totalDownloads shows 0 | Low | Collector bug, not fixed |
+| NuGet totalDownloads shows 0 | Low | Collector bug, not dashboard |
+
+## SPA Routing (SOLVED)
+
+Navigation bugs were fixed by:
+1. Using relative URLs in `NavigateTo()` - no leading slash
+2. Not calling `NavigateTo()` on initial page load
+3. Using spa-github-pages redirect pattern with segmentCount=2
+
+See `.github/copilot-instructions.md` for full documentation.
 
 ## Future Ideas (Icebox)
 
@@ -106,6 +115,7 @@
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.3.1 | 2026-02-03 | SPA routing fix - navigation fully working |
 | 0.3.0 | 2026-02-03 | Phase 2: Charts, filters, restructure |
 | 0.2.0 | 2026-02-03 | MS/Community split, SPA fix, unified workflow |
 | 0.1.0 | 2026-02-03 | Initial implementation |
