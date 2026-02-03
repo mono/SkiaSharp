@@ -36,52 +36,40 @@ $packages = @(
 function Get-NuGetStats {
     param([string]$PackageId)
 
-    $url = "https://api.nuget.org/v3-flatcontainer/$($PackageId.ToLower())/index.json"
-
     try {
-        $versions = Invoke-RestMethod -Uri $url -ErrorAction Stop
+        # Use the Search API which has reliable download counts
+        $searchUrl = "https://azuresearch-usnc.nuget.org/query?q=packageid:$PackageId&prerelease=true&take=1"
+        $searchData = Invoke-RestMethod -Uri $searchUrl -ErrorAction Stop
 
-        # Get stats for latest versions
-        $latestVersions = $versions.versions | Select-Object -Last 5
-
-        # Get registration data for download counts
-        $regUrl = "https://api.nuget.org/v3/registration5-gz-semver2/$($PackageId.ToLower())/index.json"
-        $regData = Invoke-RestMethod -Uri $regUrl -ErrorAction Stop
-
-        $totalDownloads = 0
-        $versionStats = @()
-
-        foreach ($page in $regData.items) {
-            if ($page.items) {
-                foreach ($item in $page.items) {
-                    $totalDownloads += $item.catalogEntry.downloads
-                    if ($latestVersions -contains $item.catalogEntry.version) {
-                        $versionStats += @{
-                            version = $item.catalogEntry.version
-                            downloads = $item.catalogEntry.downloads
-                        }
-                    }
-                }
-            }
-            elseif ($page.'@id') {
-                # Need to fetch the page
-                $pageData = Invoke-RestMethod -Uri $page.'@id' -ErrorAction Stop
-                foreach ($item in $pageData.items) {
-                    $totalDownloads += $item.catalogEntry.downloads
-                    if ($latestVersions -contains $item.catalogEntry.version) {
-                        $versionStats += @{
-                            version = $item.catalogEntry.version
-                            downloads = $item.catalogEntry.downloads
-                        }
-                    }
-                }
+        if ($searchData.data.Count -eq 0) {
+            Write-Warning "Package $PackageId not found in search"
+            return @{
+                id = $PackageId
+                totalDownloads = 0
+                versions = @()
             }
         }
+
+        $pkg = $searchData.data[0]
+        $totalDownloads = $pkg.totalDownloads
+
+        # Get the latest 5 versions with their downloads
+        $versionStats = $pkg.versions | Select-Object -Last 5 | ForEach-Object {
+            @{
+                version = $_.version
+                downloads = $_.downloads
+            }
+        }
+
+        # Sort by version descending (newest first)
+        $versionStats = $versionStats | Sort-Object { 
+            try { [version]($_.version -replace '-.*', '') } catch { [version]"0.0.0" }
+        } -Descending
 
         return @{
             id = $PackageId
             totalDownloads = $totalDownloads
-            versions = ($versionStats | Sort-Object { [version]($_.version -replace '-.*', '') } -Descending | Select-Object -First 5)
+            versions = $versionStats
         }
     }
     catch {
@@ -106,7 +94,7 @@ foreach ($package in $packages) {
     $totalDownloads += $stats.totalDownloads
 
     # Rate limiting - be nice to NuGet API
-    Start-Sleep -Milliseconds 500
+    Start-Sleep -Milliseconds 300
 }
 
 $output = @{
