@@ -16,20 +16,6 @@
 </head>
 
 <body>
-    <script>
-        // Handle redirect from root 404.html for SPA routing
-        (function() {
-            var redirectPath = sessionStorage.getItem('redirect-path');
-            if (redirectPath) {
-                sessionStorage.removeItem('redirect-path');
-                var basePath = '/SkiaSharp/dashboard';
-                if (redirectPath.startsWith(basePath)) {
-                    var route = redirectPath.substring(basePath.length) || '/';
-                    history.replaceState(null, '', basePath + route);
-                }
-            }
-        })();
-    </script>
     <div id="app">
         <svg class="loading-progress">
             <circle r="40%" cx="50%" cy="50%" />
