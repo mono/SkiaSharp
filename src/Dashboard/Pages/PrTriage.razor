@@ -178,7 +178,7 @@ else
         try { _data = await DataService.GetPrTriageStatsAsync(); }
         catch { /* Data not yet available */ }
 
-        ApplyFilters(updateUrl: false); // Don't update URL on initial load
+        ApplyFiltersInternal(updateUrl: false); // Don't update URL on initial load
         _loading = false;
     }
 
@@ -188,7 +188,9 @@ else
         ApplyFilters();
     }
 
-    private void ApplyFilters(bool updateUrl = true)
+    private void ApplyFilters() => ApplyFiltersInternal(updateUrl: true);
+
+    private void ApplyFiltersInternal(bool updateUrl)
     {
         if (_data is null) return;
 

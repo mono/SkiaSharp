@@ -62,6 +62,12 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 - Services use constructor injection via `@inject`
 - Data loading happens in `OnInitializedAsync()`
 - **⚠️ CRITICAL: Use RELATIVE URLs** - never use absolute paths like `/issues` in `href` or `NavigateTo()`. Always use relative paths like `issues` so they work with the base href (`/SkiaSharp/dashboard/`). Absolute paths bypass the base href and break navigation on GitHub Pages.
+- **Don't call NavigateTo() on initial page load** - If a page updates URL based on filters, don't call `NavigateTo()` in `OnInitializedAsync()`. This breaks direct URL navigation. Use a flag like `ApplyFilters(updateUrl: false)` on init.
+
+### JSON Model Types
+PowerShell collectors output floats for calculated values (e.g., `5.0` for days). C# models must match:
+- Use `double` not `int` for: `DaysOpen`, `DaysSinceActivity`
+- Use `long?` (nullable) for NuGet download counts (API returns null sometimes)
 
 ### Naming
 - Pages: `{Feature}.razor` (e.g., `GitHub.razor`, `PrTriage.razor`)
@@ -192,6 +198,18 @@ If clicking links navigates to wrong URLs (e.g., `/issues` instead of `/SkiaShar
 - ❌ Don't modify `docs-live` branch directly
 - ❌ Don't use old C# patterns (var everywhere, expression bodies, etc.)
 - ❌ Don't add heavy dependencies (keep WASM bundle small)
+- ❌ Don't use leading slashes in `NavigateTo()` or `href` (breaks GitHub Pages)
+- ❌ Don't call `NavigateTo()` in `OnInitializedAsync()` without a guard
+
+## Common Bugs & Fixes
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| Clicking link goes to `mono.github.io/issues` instead of `/SkiaSharp/dashboard/issues` | Leading slash in NavigateTo or href | Use `"issues"` not `"/issues"` |
+| Page loads then redirects to wrong URL | `NavigateTo()` called on init | Add `updateUrl: false` param for initial load |
+| Direct URL access shows 404 | Missing or wrong 404.html | Check segmentCount matches path depth |
+| JSON fails to deserialize | Type mismatch (int vs double) | Use `double` for day calculations |
+| NuGet downloads show as 0 | Non-nullable type for null API response | Use `long?` for Downloads |
 
 ## Getting Help
 
