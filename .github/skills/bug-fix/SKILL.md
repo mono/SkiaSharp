@@ -92,9 +92,9 @@ This phase is quick — get enough context to create the PR.
 > - Add "copilot" label
 
 ```bash
-git checkout -b copilot/issue-NNNN-short-description
+git checkout -b dev/issue-NNNN-short-description
 git commit --allow-empty -m "Investigating #NNNN: [description]"
-git push -u origin copilot/issue-NNNN-short-description
+git push -u origin dev/issue-NNNN-short-description
 gh pr create --draft --title "Investigating #NNNN: [description]" --body "[template]"
 gh pr edit --add-label "copilot"
 ```
