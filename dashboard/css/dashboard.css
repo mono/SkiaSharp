@@ -1,0 +1,355 @@
+/* SkiaSharp Dashboard Custom Styles */
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+/* Cards */
+.card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.card-wide {
+    grid-column: span 2;
+}
+
+@media (max-width: 768px) {
+    .card-wide {
+        grid-column: span 1;
+    }
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.25rem;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.card-link {
+    font-size: 0.875rem;
+    text-decoration: none;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-highlight {
+    border: 2px solid #0071c1;
+}
+
+/* Stats */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 1rem;
+}
+
+.stat {
+    text-align: center;
+}
+
+.stat-large {
+    padding: 1rem 0;
+}
+
+.stat-hero {
+    padding: 2rem 0;
+}
+
+.stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1b6ec2;
+}
+
+.stat-hero .stat-value {
+    font-size: 3rem;
+}
+
+.stat-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+
+.stat-success .stat-value {
+    color: #198754;
+}
+
+.stat-warning .stat-value {
+    color: #ffc107;
+}
+
+.stat-danger .stat-value {
+    color: #dc3545;
+}
+
+/* Commit List */
+.commit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.commit-list li {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+
+.commit-list li:last-child {
+    border-bottom: none;
+}
+
+.commit-list code {
+    font-size: 0.8rem;
+    background: #f1f3f5;
+    padding: 0.125rem 0.375rem;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.commit-message {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 150px;
+}
+
+.commit-author {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.commit-date {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+/* Version List */
+.version-list {
+    list-style: none;
+    padding: 0;
+    margin: 0.5rem 0 0 0;
+}
+
+.version-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+    font-size: 0.875rem;
+}
+
+.version-number {
+    font-family: monospace;
+}
+
+.version-downloads {
+    color: #6c757d;
+}
+
+/* Contributors */
+.contributor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.contributor {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    margin-bottom: 0.5rem;
+}
+
+.avatar-small {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.contributor-name {
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.contributor-count {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+/* PR Triage */
+.subtitle {
+    color: #6c757d;
+    margin-bottom: 2rem;
+}
+
+.triage-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.triage-card {
+    padding: 1.5rem;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.triage-success {
+    background: #d1e7dd;
+    border: 1px solid #a3cfbb;
+}
+
+.triage-warning {
+    background: #fff3cd;
+    border: 1px solid #ffe69c;
+}
+
+.triage-danger {
+    background: #f8d7da;
+    border: 1px solid #f1aeb5;
+}
+
+.triage-count {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+}
+
+.triage-label {
+    display: block;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0.5rem 0;
+}
+
+.triage-desc {
+    display: block;
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* PR List */
+.pr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.pr-card {
+    background: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    border-left: 4px solid #6c757d;
+}
+
+.pr-card.category-success {
+    border-left-color: #198754;
+}
+
+.pr-card.category-warning {
+    border-left-color: #ffc107;
+}
+
+.pr-card.category-danger {
+    border-left-color: #dc3545;
+}
+
+.pr-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.pr-title {
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.pr-meta {
+    display: flex;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+}
+
+.pr-labels {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+}
+
+.label {
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    background: #e9ecef;
+    border-radius: 12px;
+}
+
+.pr-reasoning {
+    font-size: 0.875rem;
+    background: #f8f9fa;
+    padding: 0.75rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+}
+
+/* Category Headers */
+h2.category-success {
+    color: #198754;
+}
+
+h2.category-warning {
+    color: #997404;
+}
+
+h2.category-danger {
+    color: #dc3545;
+}
+
+/* Last Updated */
+.last-updated {
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
