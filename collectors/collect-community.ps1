@@ -47,6 +47,16 @@ function Test-MicrosoftMember {
         if ($company -and ($company -match "Microsoft|@microsoft|MSFT")) {
             return $true
         }
+        
+        # Also check public org memberships for Microsoft-related orgs
+        $orgs = Invoke-GitHubApi "/users/$Username/orgs"
+        $msOrgs = @("microsoft", "dotnet", "xamarin", "mono", "azure")
+        foreach ($org in $orgs) {
+            if ($msOrgs -contains $org.login.ToLower()) {
+                return $true
+            }
+        }
+        
         return $false
     }
     catch {
