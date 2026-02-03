@@ -115,33 +115,71 @@
 │  (library code) │  (DocFX source) │  (this project)             │
 └─────────────────┴─────────────────┴──────────────┬──────────────┘
                                                    │
-                            ┌──────────────────────┴──────────────┐
-                            │                                     │
-                    ┌───────▼───────┐                 ┌───────────▼───────────┐
-                    │ Push trigger  │                 │ Schedule (6h) trigger │
-                    │ build-dashboard│                 │ update-dashboard-data │
-                    └───────┬───────┘                 └───────────┬───────────┘
-                            │                                     │
-                            │  1. Build WASM                      │  1. Run collectors
-                            │  2. Set base href                   │  2. Update JSON
-                            │  3. Deploy                          │  3. Build WASM
-                            │                                     │  4. Deploy
-                            │                                     │
-                            └─────────────────┬───────────────────┘
-                                              │
-                                              ▼
-                            ┌─────────────────────────────────────┐
-                            │  peaceiris/actions-gh-pages@v4      │
-                            │  - publish_branch: docs-live        │
-                            │  - destination_dir: dashboard       │
-                            │  - keep_files: true                 │
-                            └─────────────────────────────────────┘
-                                              │
-                                              ▼
-                            ┌─────────────────────────────────────┐
-                            │  https://mono.github.io/SkiaSharp/  │
-                            │           └── dashboard/            │
-                            └─────────────────────────────────────┘
+                                    ┌──────────────┴──────────────┐
+                                    │   build-dashboard.yml       │
+                                    │   (unified workflow)        │
+                                    │   Triggers:                 │
+                                    │   - Push to dashboard       │
+                                    │   - Schedule (every 6h)     │
+                                    │   - Manual dispatch         │
+                                    └──────────────┬──────────────┘
+                                                   │
+                      ┌────────────────────────────┼────────────────────────────┐
+                      │                            │                            │
+              ┌───────▼───────┐          ┌─────────▼─────────┐        ┌─────────▼─────────┐
+              │ 1. Collect    │          │ 2. Build WASM     │        │ 3. Deploy         │
+              │    Data       │          │    App            │        │                   │
+              │ - GitHub API  │          │ - dotnet publish  │        │ - Dashboard to    │
+              │ - NuGet API   │          │ - Set base href   │        │   /dashboard/     │
+              │ - MS org check│          │ - Create 404.html │        │ - Root 404.html   │
+              └───────────────┘          └───────────────────┘        └───────────────────┘
+                                                   │
+                                                   ▼
+                             ┌─────────────────────────────────────┐
+                             │  peaceiris/actions-gh-pages@v4      │
+                             │  - publish_branch: docs-live        │
+                             │  - destination_dir: dashboard       │
+                             │  - keep_files: true                 │
+                             └─────────────────────────────────────┘
+                                                   │
+                                                   ▼
+                             ┌─────────────────────────────────────┐
+                             │  https://mono.github.io/SkiaSharp/  │
+                             │           └── dashboard/            │
+                             └─────────────────────────────────────┘
+```
+
+## SPA Routing on GitHub Pages
+
+GitHub Pages doesn't support SPA routing natively. We use a two-part fix:
+
+```
+User visits: /SkiaSharp/dashboard/community
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  GitHub Pages: File not found, serve 404.html                   │
+│  (root 404.html, not /dashboard/404.html)                       │
+└─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  root-404.html script:                                          │
+│  1. Check if path starts with /SkiaSharp/dashboard/             │
+│  2. Save original path to sessionStorage                        │
+│  3. Redirect to /SkiaSharp/dashboard/                           │
+└─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  index.html script (on load):                                   │
+│  1. Read path from sessionStorage                               │
+│  2. Update browser history with original path                   │
+│  3. Blazor router handles the route                             │
+└─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+        User sees /community page ✓
 ```
 
 ## Key Design Decisions

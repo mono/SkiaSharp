@@ -5,37 +5,65 @@
 
 ## Current Focus
 
-**Phase**: Testing & Deployment
-**Status**: Pushed to remote, awaiting workflow run
+**Phase**: Live & Iterating
+**Status**: Dashboard deployed with real data, SPA routing fixed
 
-Dashboard branch pushed to origin. Waiting for GitHub Actions to pick up the workflows.
+The dashboard is live at https://mono.github.io/SkiaSharp/dashboard/ with real GitHub and Community data.
 
 ## Recent Changes (Last Session)
 
-### 2026-02-03
+### 2026-02-03 (Evening)
+1. ✅ Merged build + data workflows into single `build-dashboard.yml`
+2. ✅ Fixed SPA routing 404 issue with root-level 404.html
+3. ✅ Added Microsoft vs Community contributor breakdown
+4. ✅ Improved card layouts (3-col stats, full-width rows)
+5. ✅ Fixed contributor collector to check Microsoft org membership
+6. ✅ Updated memory bank files
+
+### 2026-02-03 (Earlier)
 1. ✅ Created orphan `dashboard` branch
 2. ✅ Initialized Blazor WASM project (.NET 10, C# 14)
 3. ✅ Added all 5 pages: Overview, GitHub, NuGet, Community, PR Triage
 4. ✅ Created data models and DashboardDataService
 5. ✅ Created 4 PowerShell collector scripts
-6. ✅ Created CI/CD workflows (build + data update)
-7. ✅ Fixed base href for local vs production
-8. ✅ Set up Playwright MCP for visual testing
-9. ✅ Took screenshot for README (1280x720)
-10. ✅ Created AI context system (copilot-instructions + memory bank)
-11. ✅ Committed initial implementation
+6. ✅ Fixed base href for GitHub Pages (sed AFTER publish)
+7. ✅ Set up Playwright MCP for visual testing
+8. ✅ Created AI context system (copilot-instructions + memory bank)
+9. ✅ Added SkiaSharp logo (nuget.png)
+
+## Key Technical Fixes Applied
+
+### SPA Routing on GitHub Pages
+- **Problem**: Direct links like `/dashboard/community` return 404
+- **Solution**: Two-part fix:
+  1. Root `404.html` in docs-live - redirects `/dashboard/*` URLs to `/dashboard/` with path in sessionStorage
+  2. `index.html` script reads sessionStorage and updates browser history
+  3. Blazor then handles the route normally
+
+### Base href Timing
+- **Problem**: `sed` was running before publish, but publish regenerates index.html
+- **Solution**: Run `sed` AFTER `dotnet publish` on the output file
+
+### Data Workflow Race Condition
+- **Problem**: Separate build and data workflows caused data to be overwritten
+- **Solution**: Single unified workflow that collects data → builds → deploys
+
+## Files Recently Modified
+
+- `.github/workflows/build-dashboard.yml` - Unified workflow with root 404.html deploy
+- `collectors/collect-community.ps1` - Added Microsoft org membership check
+- `src/Dashboard/Services/CommunityStats.cs` - Added MicrosoftContributors, CommunityContributors, IsMicrosoft
+- `src/Dashboard/Pages/Home.razor` - Microsoft/Community contributor display
+- `src/Dashboard/wwwroot/css/dashboard.css` - New grid classes, MS/Community colors
+- `src/Dashboard/wwwroot/index.html` - SessionStorage redirect handling
+- `src/Dashboard/wwwroot/root-404.html` - New file for root-level 404
 
 ## Immediate Next Steps
 
-1. [x] Push `dashboard` branch to remote origin ✅
-2. [ ] Verify GitHub Actions workflow runs
-3. [ ] Check deployed site at https://mono.github.io/SkiaSharp/dashboard/
-4. [ ] Run data collection manually to populate real data
-5. [ ] Add SkiaSharp logo to sidebar
-
-## Current Blockers
-
-None currently.
+1. [ ] Verify SPA routing fix works (test direct link to /dashboard/community)
+2. [ ] Fix NuGet total downloads (shows 0)
+3. [ ] Verify PR Triage data displays correctly
+4. [ ] Take final screenshot with all data working
 
 ## Working Patterns
 
@@ -51,7 +79,7 @@ None currently.
 2. Add JSON file in `wwwroot/data/`
 3. Add method to `DashboardDataService`
 4. Create/update collector script in `collectors/`
-5. Update workflow if new collector added
+5. Workflow automatically runs collectors
 
 ### When Debugging
 1. Use Playwright MCP to navigate and screenshot
@@ -59,21 +87,14 @@ None currently.
 3. Verify JSON files are valid and accessible
 4. Check network tab for failed requests
 
-## Files Currently Being Modified
-
-None - just committed everything.
-
 ## Key Decisions Made This Session
 
 | Decision | Rationale |
 |----------|-----------|
-| Orphan branch | Clean separation from main SkiaSharp code |
-| Decoupled data/app | Independent update cycles |
-| PowerShell collectors | Cross-platform, familiar to .NET devs |
-| `keep_files: true` deployment | Allows dashboard + docs to coexist |
-| Heuristic PR triage first | Simpler than AI, can add AI later |
-| Playwright MCP | Visual debugging for AI assistants |
-| Memory bank pattern | Persistent context across sessions |
+| Single unified workflow | Avoids race conditions between data and build |
+| Root 404.html redirect | Only way to handle SPA routing on GitHub Pages |
+| Microsoft org check | Shows contributor breakdown; limited to top 20 to avoid API rate limits |
+| sessionStorage for redirect | Preserves original URL across redirect |
 
 ## Context for Next AI Session
 
@@ -82,16 +103,16 @@ When resuming work:
 2. Check `progress.md` for current status
 3. Check this file for recent changes
 4. Branch is `dashboard` (orphan, no relation to main)
-5. App is Blazor WASM, runs on localhost:5050
+5. Live at https://mono.github.io/SkiaSharp/dashboard/
 
 ## Open Questions
 
-1. Should we add charts/visualizations? (Consider lightweight Blazor chart library)
-2. Should PR triage use actual AI? (Would need API key management)
-3. How to handle historical data for trends? (Store snapshots over time?)
+1. Should PR triage use actual AI? (Would need API key management)
+2. How to handle historical data for trends? (Store snapshots over time?)
+3. Should we add charts/visualizations?
 
 ## Notes
 
-- Logo is missing - need to add SkiaSharp logo to `wwwroot/images/logo.png`
-- Data files have placeholder zeros - will be populated by collectors
-- PR triage uses heuristics, not AI, for now
+- NuGet totalDownloads shows 0 - collector calculation may be wrong
+- PR Triage shows dashes - may be enum deserialization issue
+- Microsoft org check requires `read:org` scope - may show 0 if token lacks permission

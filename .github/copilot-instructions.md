@@ -3,6 +3,14 @@
 > This file provides context for GitHub Copilot and other AI assistants working on this project.
 > For deeper context, see the `.ai/` folder.
 
+## ⚠️ CRITICAL: Memory Bank Updates
+
+**After completing ANY significant work, you MUST update:**
+1. `.ai/activeContext.md` - Add to "Recent Changes" section
+2. `.ai/progress.md` - Update status, check off completed items
+
+This ensures continuity across AI sessions. Never end a session without updating these files!
+
 ## Project Overview
 
 This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application that displays community metrics, project health, and AI-powered PR triage for the SkiaSharp library.
