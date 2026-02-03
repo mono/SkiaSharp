@@ -12,6 +12,9 @@ bool SUPPORT_VULKAN = SUPPORT_VULKAN_VAR == "1" || SUPPORT_VULKAN_VAR.ToLower() 
 var VERIFY_EXCLUDED = Argument("verifyExcluded", Argument("verifyexcluded", ""))
     .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
+var VERIFY_INCLUDED = Argument("verifyIncluded", Argument("verifyincluded", ""))
+    .ToLower().Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+
 var VERIFY_GLIBC_MAX_VAR = Argument("verifyGlibcMax", Argument("verifyglibcmax", "2.28"));
 var VERIFY_GLIBC_MAX = string.IsNullOrEmpty(VERIFY_GLIBC_MAX_VAR) ? null : System.Version.Parse(VERIFY_GLIBC_MAX_VAR);
 
@@ -32,9 +35,11 @@ if (!string.IsNullOrEmpty(CXX))
 if (!string.IsNullOrEmpty(AR))
     COMPILERS += $"ar='{AR}' ";
 
-void CheckDeps(FilePath so)
+void CheckDeps(FilePath so, bool checkIncluded = true)
 {
     Information($"Making sure that there are no dependencies on: {string.Join(", ", VERIFY_EXCLUDED)}");
+    if (checkIncluded && VERIFY_INCLUDED.Length > 0)
+        Information($"Making sure that there ARE dependencies on: {string.Join(", ", VERIFY_INCLUDED)}");
 
     RunProcess("readelf", $"-dV {so}", out var stdoutEnum);
     var stdout = stdoutEnum.ToArray();
@@ -49,6 +54,13 @@ void CheckDeps(FilePath so)
     foreach (var exclude in VERIFY_EXCLUDED) {
         if (needed.Any(o => o.Contains(exclude.Trim(), StringComparison.OrdinalIgnoreCase)))
             throw new Exception($"{so} contained a dependency on {exclude}.");
+    }
+
+    if (checkIncluded) {
+        foreach (var include in VERIFY_INCLUDED) {
+            if (!needed.Any(o => o.Contains(include.Trim(), StringComparison.OrdinalIgnoreCase)))
+                throw new Exception($"{so} is missing an expected dependency on {include}.");
+        }
     }
 
     var glibcs = MatchRegex(@"GLIBC_([\w\.\d]+)", stdout).Distinct().ToList();
@@ -159,7 +171,7 @@ Task("libHarfBuzzSharp")
         CopyFileToDirectory(so, outDir);
         CopyFile(so, outDir.CombineWithFilePath("libHarfBuzzSharp.so"));
 
-        CheckDeps(so);
+        CheckDeps(so, checkIncluded: false); // HarfBuzz doesn't need fontconfig
     }
 });
 

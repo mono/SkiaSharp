@@ -50,23 +50,32 @@ RUN . /etc/skia-env \
     && sed -i "s/\/usr\/${TOOLCHAIN_ARCH}\/lib\///g" /usr/${TOOLCHAIN_ARCH}/lib/libc.so
 
 # Install the cross-compilation skia build dependencies (fontconfig)
+# We need BOTH libfontconfig1 (runtime .so) and libfontconfig1-dev (headers and .a)
+# The -dev package only has a broken symlink; the runtime package has the actual .so
 RUN . /etc/skia-env \
     && mkdir -p /skia-utils/libfontconfig-dev \
     && cd /skia-utils/libfontconfig-dev \
     && case "${TOOLCHAIN_ARCH_SHORT}" in \
-         loong64) FC_VERSION=2.17.1-3   ; FC_PKG=libfontconfig-dev  ; APT_REPO=http://deb.debian.org/debian         ;; \
-         riscv64) FC_VERSION=2.15.0-2.3 ; FC_PKG=libfontconfig-dev  ; APT_REPO=http://deb.debian.org/debian         ;; \
-         *)       FC_VERSION=2.13.1-2   ; FC_PKG=libfontconfig1-dev ; APT_REPO=http://deb.debian.org/debian         ;; \
+         loong64) FC_VERSION=2.17.1-3   ; FC_DEV_PKG=libfontconfig-dev  ; FC_RT_PKG=libfontconfig1 ; APT_REPO=http://deb.debian.org/debian ;; \
+         riscv64) FC_VERSION=2.15.0-2.3 ; FC_DEV_PKG=libfontconfig-dev  ; FC_RT_PKG=libfontconfig1 ; APT_REPO=http://deb.debian.org/debian ;; \
+         *)       FC_VERSION=2.13.1-2   ; FC_DEV_PKG=libfontconfig1-dev ; FC_RT_PKG=libfontconfig1 ; APT_REPO=http://deb.debian.org/debian ;; \
        esac \
-    && FC_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
-    && echo "Downloading fontconfig from $FC_URL" \
-    && curl $FC_URL -L -o libfontconfig-dev.deb \
+    && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
+    && FC_DEV_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_DEV_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && echo "Downloading fontconfig-dev from $FC_DEV_URL" \
+    && curl $FC_DEV_URL -L -o libfontconfig-dev.deb \
     && ar vx libfontconfig-dev.deb \
     && tar -xJvf data.tar.xz \
-    && rm libfontconfig-dev.deb \
-    && TOOLCHAIN_ARCH=$(echo ${TOOLCHAIN_ARCH} | sed 's/x86-64/x86_64/g') \
     && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ \
-    && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/
+    && cp -R usr/include/* /usr/${TOOLCHAIN_ARCH}/include/ \
+    && rm -rf *.deb *.tar* debian-binary usr \
+    && FC_RT_URL=${APT_REPO}/pool/main/f/fontconfig/${FC_RT_PKG}_${FC_VERSION}_${TOOLCHAIN_ARCH_SHORT}.deb \
+    && echo "Downloading fontconfig runtime from $FC_RT_URL" \
+    && curl $FC_RT_URL -L -o libfontconfig1.deb \
+    && ar vx libfontconfig1.deb \
+    && tar -xJvf data.tar.xz \
+    && cp -R usr/lib/*/* /usr/${TOOLCHAIN_ARCH}/lib/ \
+    && rm -rf *.deb *.tar* debian-binary usr
 
 # Install the .NET SDK
 ARG DOTNET_SDK_VERSION=8.0
