@@ -44,36 +44,6 @@ Fix bugs in SkiaSharp with minimal, surgical changes.
 
 ---
 
-## Quick Diagnosis Table (Reference Only)
-
-> ⚠️ This table is for REFERENCE during Phase 5. Do NOT use this to skip phases.
-> You must still complete Phase 2 (Create PR) and Phase 3 (Research) first.
-
-| Symptom | Likely Cause | Fix Location |
-|---------|--------------|--------------|
-| `undefined symbol: X` (all platforms) | Missing library link | `externals/skia/third_party/BUILD.gn` or `native/linux/build.cake` |
-| `undefined symbol: X` (ARM64 only) | **Cross-compile sysroot issue** | `scripts/Docker/debian/clang-cross/*/Dockerfile` |
-| `EntryPointNotFoundException` | C API not rebuilt | Rebuild natives after C API changes |
-| `AccessViolationException` | Memory/disposal bug | C# validation or native code |
-| `ArgumentNullException` | Missing null check | C# wrapper before P/Invoke |
-| Platform-specific crash | Build config | `native/{platform}/build.cake` |
-| GLIBC version error | Build environment | Docker base image version |
-
-### Platform-Specific Issues: The Investigation Pattern
-
-When a bug affects ONE platform but not others (e.g., ARM64 but not x64):
-
-1. **Build BOTH platforms locally** and compare artifacts
-2. **Use `readelf -d | grep NEEDED`** to compare linked libraries
-3. **Check if the difference is in:**
-   - GN args (different flags per platform)
-   - Sysroot setup (cross-compile Docker missing libraries)
-   - Build scripts (different linker flags)
-
-**The difference between platforms IS the root cause.** Don't look for code bugs — look for build configuration differences.
-
----
-
 ## Prerequisites
 
 - GitHub API access (fetch issues, search issues, read comments)
@@ -178,7 +148,6 @@ Search GitHub issues for:
 - [ ] Searched for related issues (at least 2-3 search queries)
 - [ ] Read ALL comments on the most relevant related issues
 - [ ] Updated PR with related issues and any diagnosis found
-- [ ] Checked the Quick Diagnosis Table above
 
 **If a related issue already contains the root cause diagnosis, document it in the PR,
 but you MUST still proceed to Phase 4 (Reproduce) to validate the hypothesis.**
@@ -249,10 +218,11 @@ Document each attempt in PR. After exhausting ALL options: ask user for details,
 > 💡 **Often already done!** If Phase 3 found a diagnosis in related issue comments,
 > this phase is just confirmation. Don't re-investigate what's already known.
 
-### 5.1 Check Quick Diagnosis Table First
+### 5.1 Start with the Key Question
 
-Refer back to the Quick Diagnosis Table at the top of this document. 
-If symptom matches, go directly to the fix location.
+**"Why does this work on [other platform/version] but fail here?"**
+
+The answer to this question IS the root cause. Focus your investigation on finding the difference.
 
 ### 5.2 For Platform-Specific Issues: Build and Compare
 
@@ -277,20 +247,12 @@ docker run --rm -v $(pwd):/work debian:bookworm-slim bash -c \
 2. If yes, the linker is silently failing → Check if library exists in sysroot
 3. If no, the GN configuration differs → Check `native/linux/build.cake` and `externals/skia/gn/skia.gni`
 
-### 5.3 Locate the Problem (for C# issues)
+### 5.3 For C# Issues: Locate the Code
 
 ```bash
 grep -rn "MethodName" binding/SkiaSharp/
 grep -r "sk_.*methodname" binding/SkiaSharp/
 ```
-
-### 5.4 Exit Criteria
-
-Stop investigating when you can answer:
-- [ ] What exact code causes the bug?
-- [ ] Why does it fail?
-- [ ] Why doesn't it fail elsewhere?
-- [ ] What single change fixes it?
 
 ### 5.4 Workaround vs Root Cause
 
@@ -307,7 +269,13 @@ Stop investigating when you can answer:
 - If your fix restores something that SHOULD have been there → probably root cause
 - If x64 doesn't need it but ARM64 does → ask WHY the difference exists
 
-**The question to ask:** "Why does this work on [other platform] without this change?"
+### 5.5 Exit Criteria
+
+Stop investigating when you can answer:
+- [ ] What exact code/config causes the bug?
+- [ ] Why does it fail?
+- [ ] Why doesn't it fail elsewhere?
+- [ ] What single change fixes it?
 
 ### ✅ GATE: Do not proceed until you have:
 - [ ] Identified root cause
