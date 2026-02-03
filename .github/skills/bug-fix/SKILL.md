@@ -15,26 +15,50 @@ description: >
 
 Fix bugs in SkiaSharp with minimal, surgical changes.
 
+> ⚠️ **MANDATORY: Follow phases in order. Do NOT skip phases.**
+> 
+> Each phase has a **GATE** — you cannot proceed until the gate criteria are met.
+> The workflow exists to prevent wasted investigation. Trust the process.
+
+---
+
+## Quick Diagnosis Table (Check FIRST)
+
+Before deep investigation, check if the symptom matches a known pattern:
+
+| Symptom | Likely Cause | Fix Location |
+|---------|--------------|--------------|
+| `undefined symbol: X` | Missing library link | `externals/skia/third_party/BUILD.gn` or `native/linux/build.cake` |
+| `EntryPointNotFoundException` | C API not rebuilt | Rebuild natives after C API changes |
+| `AccessViolationException` | Memory/disposal bug | C# validation or native code |
+| `ArgumentNullException` | Missing null check | C# wrapper before P/Invoke |
+| Platform-specific crash | Build config | `native/{platform}/build.cake` |
+| GLIBC version error | Build environment | Docker base image version |
+
+**If the symptom matches, the fix location is usually obvious. Research phase will confirm.**
+
+---
+
 ## Prerequisites
 
 - GitHub API access (fetch issues, search issues, read comments)
 - Git with push access
 - Docker for cross-platform testing (check: `docker --version`)
 
-## Workflow
+---
+
+## Workflow Overview
 
 ```
 1. Understand   → Fetch issue, extract key details
-2. Create PR    → Start tracking immediately (living document)
-3. Research     → Search related issues, read ALL comments, collect info
-4. Reproduce    → Test on target platform, document all attempts in PR
-5. Investigate  → Find root cause (may loop back to 4)
+2. Create PR    → Start tracking immediately (living document)  
+3. Research     → Search related issues, READ ALL COMMENTS, find existing diagnosis
+4. Reproduce    → Test on target platform (skip if build config issue)
+5. Investigate  → Find root cause (often already found in Phase 3!)
 6. Fix          → Minimal change
 7. Test         → Regression test + existing tests
 8. Finalize     → Rewrite PR description, link all fixed issues
 ```
-
-Phases 4-5 often iterate together. Update PR throughout.
 
 ---
 
@@ -48,11 +72,17 @@ Fetch the issue from GitHub. Extract:
 
 This phase is quick — get enough context to create the PR.
 
+### ✅ GATE: Do not proceed until you have:
+- [ ] Issue title, symptoms, and error message (if any)
+- [ ] Target platform identified
+
 ---
 
 ## Phase 2: Create Draft PR
 
-Create PR **immediately** to track the entire journey.
+> 🛑 **MANDATORY: Create the PR NOW, before any investigation.**
+> 
+> The PR is your living document. Skip this and you lose track of your work.
 
 ```bash
 git checkout -b copilot/issue-NNNN-short-description
@@ -60,7 +90,7 @@ git commit --allow-empty -m "Investigating #NNNN: [description]"
 git push -u origin copilot/issue-NNNN-short-description
 ```
 
-Use investigation template from [references/pr-templates.md](references/pr-templates.md).
+Create PR using investigation template from [references/pr-templates.md](references/pr-templates.md).
 
 **The PR description is your living document:**
 - All collected info, links, and related issues (added as you find them)
@@ -71,27 +101,51 @@ Use investigation template from [references/pr-templates.md](references/pr-templ
 
 **Update the PR description OFTEN** — after every significant step.
 
+### ✅ GATE: Do not proceed until you have:
+- [ ] Feature branch created and pushed
+- [ ] Draft PR opened with investigation template
+
 ---
 
 ## Phase 3: Research Related Issues
 
+> 🛑 **CRITICAL: This phase often SOLVES the bug.**
+> 
+> The community may have already diagnosed the root cause in issue comments.
+> READ ALL COMMENTS on related issues before investigating yourself.
+
 Search GitHub issues for:
-- Same error message (e.g., the exception type or error text)
-- Same platform (e.g., the OS and architecture from the issue)
+- Same error message (e.g., `undefined symbol: uuid_generate_random`)
+- Same platform (e.g., `Linux ARM64`)
 - Same SkiaSharp version
 - Keywords from title
 
 **For EACH related issue found:**
-1. Read ALL comments on that issue (not just the issue body)
-2. Note: issue number, title, WHY it's related (same symptom? platform? root cause?)
+1. **Read ALL comments** (not just the issue body) — diagnosis is often in comments!
+2. Note: issue number, title, WHY it's related
 3. Extract: workarounds mentioned, root cause analysis, resolution if closed
-4. Record links to external issues mentioned in comments
+4. Check for links to external issues (Avalonia, Uno, etc.)
 
 **Update PR** with all related issues and extracted information.
+
+### ✅ GATE: Do not proceed until you have:
+- [ ] Searched for related issues (at least 2-3 search queries)
+- [ ] Read ALL comments on the most relevant related issues
+- [ ] Updated PR with related issues and any diagnosis found
+- [ ] Checked the Quick Diagnosis Table above
+
+**If a related issue already contains the root cause diagnosis, skip to Phase 5 or 6.**
 
 ---
 
 ## Phase 4: Reproduce
+
+> 💡 **When to skip reproduction:**
+> - Build configuration bugs (undefined symbol, linker errors) — verify via code inspection
+> - Root cause already confirmed in related issue comments
+> - Fix is obviously correct from code review
+>
+> If skipping, document WHY in PR and proceed to Phase 5 or 6.
 
 ### 4.1 Target Platform Requirements
 
@@ -131,26 +185,29 @@ Add to PR description:
 
 Document each attempt in PR. After exhausting options: ask user for details, proceed with code review.
 
+### ✅ GATE: Do not proceed until you have:
+- [ ] Reproduced the issue OR documented why reproduction is unnecessary
+- [ ] Updated PR with reproduction results
+
 ---
 
 ## Phase 5: Investigate Root Cause
 
-### 5.1 Locate the Problem
+> 💡 **Often already done!** If Phase 3 found a diagnosis in related issue comments,
+> this phase is just confirmation. Don't re-investigate what's already known.
+
+### 5.1 Check Quick Diagnosis Table First
+
+Refer back to the Quick Diagnosis Table at the top of this document. 
+If symptom matches, go directly to the fix location.
+
+### 5.2 Locate the Problem (if needed)
 
 ```bash
 grep -rn "MethodName" binding/SkiaSharp/
 grep -r "sk_.*methodname" binding/SkiaSharp/
 readelf -d output/native/linux/arm64/libSkiaSharp.so | grep NEEDED
 ```
-
-### 5.2 Symptom → Location
-
-| Symptom | Fix Location |
-|---------|--------------|
-| ArgumentNullException | Add null check before P/Invoke |
-| AccessViolationException | Validation, state, or native linking |
-| undefined symbol | `native/linux/build.cake` linker flags |
-| Platform-specific crash | `native/{platform}/build.cake` |
 
 ### 5.3 Exit Criteria
 
@@ -160,13 +217,21 @@ Stop investigating when you can answer:
 - [ ] Why doesn't it fail elsewhere?
 - [ ] What single change fixes it?
 
-**Update PR** with root cause analysis before proceeding to fix.
+### ✅ GATE: Do not proceed until you have:
+- [ ] Identified root cause
+- [ ] Updated PR with root cause analysis
 
 ---
 
 ## Phase 6: Fix
 
 For common fix patterns, see [references/fix-patterns.md](references/fix-patterns.md).
+
+**Principle: Minimal change.** Fix only what's broken.
+
+### ✅ GATE: Do not proceed until you have:
+- [ ] Made the fix
+- [ ] Committed with descriptive message referencing issue number
 
 ---
 
@@ -204,17 +269,29 @@ dotnet test tests/SkiaSharp.Tests.Console/SkiaSharp.Tests.Console.csproj
 
 Tests MUST pass. Verify fix on original platform.
 
+### ✅ GATE: Do not proceed until you have:
+- [ ] Built successfully
+- [ ] All tests pass
+- [ ] Verified fix resolves the original issue (if possible)
+
 ---
 
 ## Phase 8: Finalize
 
 Rewrite PR description using final template from [references/pr-templates.md](references/pr-templates.md).
 
-Link ALL fixed issues:
+Link ALL fixed issues (including related issues that have the same root cause):
 ```markdown
 Fixes #3369
 Fixes #3272
 ```
+
+Mark PR as ready for review (remove draft status).
+
+### ✅ GATE: Complete when:
+- [ ] PR description rewritten with final template
+- [ ] All related issues linked with "Fixes #NNNN"
+- [ ] PR marked ready for review
 
 ---
 
@@ -227,11 +304,17 @@ Fixes #3272
 | `EntryPointNotFoundException` | Rebuild natives after C API changes |
 | Can't test on required platform | Use Docker or ask user to verify |
 
-## Checklist
+---
 
-- [ ] Collected info from issue and related issues
-- [ ] Reproduced on target platform
-- [ ] Found and documented root cause
-- [ ] Implemented minimal fix with regression test
-- [ ] All tests pass
-- [ ] PR description finalized with "Fixes #NNNN"
+## Final Checklist
+
+Before marking complete, verify ALL gates were passed:
+
+- [ ] **Phase 1**: Issue understood, key details extracted
+- [ ] **Phase 2**: Draft PR created and used as living document
+- [ ] **Phase 3**: Related issues searched, ALL comments read, diagnosis collected
+- [ ] **Phase 4**: Reproduced OR documented why skipped
+- [ ] **Phase 5**: Root cause identified and documented
+- [ ] **Phase 6**: Minimal fix implemented
+- [ ] **Phase 7**: Build passes, tests pass
+- [ ] **Phase 8**: PR finalized with "Fixes #NNNN"
