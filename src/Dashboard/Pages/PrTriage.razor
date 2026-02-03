@@ -57,17 +57,25 @@ else
                             <span>@GetAge(pr.CreatedAt)</span>
                             <span>@pr.FilesChanged files (+@pr.Additions/-@pr.Deletions)</span>
                         </div>
-                        @if (pr.Labels.Count > 0)
+                        @{
+                            var allLabels = new List<string>();
+                            if (pr.Type != null) allLabels.Add(pr.Type);
+                            allLabels.AddRange(pr.Areas);
+                            allLabels.AddRange(pr.Backends);
+                            allLabels.AddRange(pr.Oses);
+                            allLabels.AddRange(pr.OtherLabels);
+                        }
+                        @if (allLabels.Count > 0)
                         {
                             <div class="pr-labels">
-                                @foreach (var label in pr.Labels)
+                                @foreach (var label in allLabels)
                                 {
                                     <span class="label">@label</span>
                                 }
                             </div>
                         }
                         <div class="pr-reasoning">
-                            <strong>AI Analysis:</strong> @pr.AiReasoning
+                            <strong>Analysis:</strong> @pr.Reasoning
                         </div>
                     </div>
                 }
@@ -92,7 +100,9 @@ else
     private static string GetCategoryTitle(TriageCategory category) => category switch
     {
         TriageCategory.ReadyToMerge => "✅ Ready to Merge",
-        TriageCategory.NeedsReview => "🔍 Needs Deeper Review",
+        TriageCategory.QuickReview => "⚡ Quick Review",
+        TriageCategory.NeedsReview => "🔍 Needs Review",
+        TriageCategory.NeedsAuthor => "✏️ Needs Author",
         TriageCategory.ConsiderClosing => "❌ Consider Closing",
         _ => category.ToString()
     };
@@ -100,7 +110,9 @@ else
     private static string GetCategoryClass(TriageCategory category) => category switch
     {
         TriageCategory.ReadyToMerge => "category-success",
+        TriageCategory.QuickReview => "category-info",
         TriageCategory.NeedsReview => "category-warning",
+        TriageCategory.NeedsAuthor => "category-author",
         TriageCategory.ConsiderClosing => "category-danger",
         _ => ""
     };

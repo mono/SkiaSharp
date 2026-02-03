@@ -24,4 +24,7 @@ public class DashboardDataService(HttpClient http)
 
     public async Task<PrTriageStats?> GetPrTriageStatsAsync() =>
         await http.GetFromJsonAsync<PrTriageStats>("data/pr-triage.json", JsonOptions);
+
+    public async Task<IssuesData?> GetIssuesDataAsync() =>
+        await http.GetFromJsonAsync<IssuesData>("data/issues.json", JsonOptions);
 }

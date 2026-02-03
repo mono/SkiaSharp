@@ -40,6 +40,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: pwsh collectors/collect-community.ps1 -OutputPath src/Dashboard/wwwroot/data/community-stats.json
 
+      - name: Collect Issues Data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pwsh collectors/collect-issues.ps1 -OutputPath src/Dashboard/wwwroot/data/issues.json
+
       - name: Collect PR Triage Data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
