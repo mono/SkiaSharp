@@ -3,6 +3,8 @@ namespace SkiaSharp.Dashboard.Services;
 public record CommunityStats(
     DateTime GeneratedAt,
     int TotalContributors,
+    int MicrosoftContributors,
+    int CommunityContributors,
     List<ContributorInfo> TopContributors,
     List<CommitInfo> RecentCommits,
     List<GrowthPoint> ContributorGrowth
@@ -11,7 +13,8 @@ public record CommunityStats(
 public record ContributorInfo(
     string Login,
     string AvatarUrl,
-    int Contributions
+    int Contributions,
+    bool IsMicrosoft
 );
 
 public record GrowthPoint(

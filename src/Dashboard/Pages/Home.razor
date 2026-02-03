@@ -63,7 +63,17 @@ else
             <div class="card-body">
                 <div class="stat stat-large">
                     <span class="stat-value">@(_community?.TotalContributors.ToString("N0") ?? "—")</span>
-                    <span class="stat-label">Contributors</span>
+                    <span class="stat-label">Total Contributors</span>
+                </div>
+                <div class="stats-grid stats-grid-2">
+                    <div class="stat stat-microsoft">
+                        <span class="stat-value">@(_community?.MicrosoftContributors.ToString("N0") ?? "—")</span>
+                        <span class="stat-label">Microsoft</span>
+                    </div>
+                    <div class="stat stat-community">
+                        <span class="stat-value">@(_community?.CommunityContributors.ToString("N0") ?? "—")</span>
+                        <span class="stat-label">Community</span>
+                    </div>
                 </div>
                 <div class="stat stat-full">
                     <span class="stat-value">@(_github?.Activity.CommitsLast30Days.ToString("N0") ?? "—")</span>
