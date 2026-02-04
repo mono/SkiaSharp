@@ -135,10 +135,10 @@ else
     // Package grouping structure based on user's tree
     private static Dictionary<string, List<string>> GetPackageGroups() => new()
     {
-        ["SkiaSharp"] = [], // No subgroups - flat list
+        ["SkiaSharp"] = ["Core", "Native Assets"],
         ["SkiaSharp Views"] = ["Native Platform", ".NET MAUI", "Xamarin.Forms", "Uno Platform", "Web"],
         ["SkiaSharp Extensions"] = ["Text", "Animation", "GPU Backends"],
-        ["HarfBuzzSharp"] = [] // No subgroups - flat list
+        ["HarfBuzzSharp"] = ["Core", "Native Assets"]
     };
 
     private List<PackageStats> GetPackagesForGroup(string group)
@@ -166,6 +166,10 @@ else
 
         return (group, subgroup) switch
         {
+            ("SkiaSharp", "Core") => _stats.Packages.Where(p => 
+                p.Id == "SkiaSharp").ToList(),
+            ("SkiaSharp", "Native Assets") => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.NativeAssets.")).ToList(),
             ("SkiaSharp Views", "Native Platform") => _stats.Packages.Where(p => 
                 p.Id is "SkiaSharp.Views" or "SkiaSharp.Views.Desktop.Common" 
                      or "SkiaSharp.Views.WPF" or "SkiaSharp.Views.WindowsForms"
@@ -185,6 +189,10 @@ else
                 p.Id is "SkiaSharp.Skottie" or "SkiaSharp.SceneGraph" or "SkiaSharp.Resources").ToList(),
             ("SkiaSharp Extensions", "GPU Backends") => _stats.Packages.Where(p => 
                 p.Id is "SkiaSharp.Vulkan.SharpVk" or "SkiaSharp.Direct3D.Vortice").ToList(),
+            ("HarfBuzzSharp", "Core") => _stats.Packages.Where(p => 
+                p.Id == "HarfBuzzSharp").ToList(),
+            ("HarfBuzzSharp", "Native Assets") => _stats.Packages.Where(p => 
+                p.Id.StartsWith("HarfBuzzSharp.NativeAssets.")).ToList(),
             _ => []
         };
     }
