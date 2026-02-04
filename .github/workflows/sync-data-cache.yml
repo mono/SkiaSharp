@@ -20,9 +20,13 @@ on:
         type: boolean
         default: false
       engagement_count:
-        description: 'Number of items to sync engagement for'
+        description: 'Items per engagement batch'
         type: number
-        default: 50
+        default: 25
+      engagement_batches:
+        description: 'Number of engagement batches'
+        type: number
+        default: 10
 
 concurrency:
   group: data-cache-sync
@@ -51,28 +55,63 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Sync data
+      - name: Configure git
+        working-directory: .data-cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 1: Sync basic item data (Layer 1)
+      - name: Sync items (Layer 1)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           SOURCE="${{ inputs.source || 'all' }}"
           FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
-          ENGAGEMENT_COUNT="${{ inputs.engagement_count || '50' }}"
           
           dotnet run --project src/SkiaSharp.Collector -- sync $SOURCE \
             --cache-path .data-cache \
-            --engagement-count $ENGAGEMENT_COUNT \
+            --items-only \
             $FULL_FLAG
 
-      - name: Commit and push cache updates
+      - name: Push items
         working-directory: .data-cache
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --staged --quiet; then
-            echo "No changes to commit"
+            echo "No item changes to commit"
           else
-            git commit -m "Sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "Sync: Items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
+
+      # Step 2: Sync engagement data (Layer 2) in batches
+      - name: Sync engagement (Layer 2 - batched)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ENGAGEMENT_COUNT="${{ inputs.engagement_count || '25' }}"
+          BATCHES="${{ inputs.engagement_batches || '10' }}"
+          
+          for i in $(seq 1 $BATCHES); do
+            echo ""
+            echo "========================================"
+            echo "  Engagement batch $i of $BATCHES"
+            echo "========================================"
+            
+            dotnet run --project src/SkiaSharp.Collector -- sync github \
+              --cache-path .data-cache \
+              --engagement-only \
+              --engagement-count $ENGAGEMENT_COUNT
+            
+            cd .data-cache
+            git add -A
+            if git diff --staged --quiet; then
+              echo "No engagement changes in batch $i"
+            else
+              git commit -m "Sync: Engagement batch $i $(date -u +%H:%M)"
+              git push
+              echo "Pushed batch $i"
+            fi
+            cd ..
+          done

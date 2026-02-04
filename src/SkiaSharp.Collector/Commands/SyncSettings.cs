@@ -30,13 +30,7 @@ public class SyncSettings : CommandSettings
     [CommandOption("-q|--quiet")]
     [Description("Suppress output except errors")]
     public bool Quiet { get; set; }
-}
 
-/// <summary>
-/// Settings for GitHub sync command.
-/// </summary>
-public class SyncGitHubSettings : SyncSettings
-{
     [CommandOption("--items-only")]
     [Description("Only sync basic item data (Layer 1)")]
     public bool ItemsOnly { get; set; }
@@ -44,11 +38,17 @@ public class SyncGitHubSettings : SyncSettings
     [CommandOption("--engagement-only")]
     [Description("Only sync engagement data (Layer 2)")]
     public bool EngagementOnly { get; set; }
+}
 
+/// <summary>
+/// Settings for GitHub sync command.
+/// </summary>
+public class SyncGitHubSettings : SyncSettings
+{
     [CommandOption("--engagement-count <COUNT>")]
-    [Description("Number of items to sync engagement for")]
-    [DefaultValue(50)]
-    public int EngagementCount { get; set; } = 50;
+    [Description("Number of items to sync engagement for per batch")]
+    [DefaultValue(25)]
+    public int EngagementCount { get; set; } = 25;
 
     [CommandOption("--full")]
     [Description("Force full refresh, ignore timestamps")]

@@ -23,7 +23,9 @@ public class SyncCommand : AsyncCommand<SyncSettings>
             Owner = settings.Owner,
             Repo = settings.Repo,
             Verbose = settings.Verbose,
-            Quiet = settings.Quiet
+            Quiet = settings.Quiet,
+            ItemsOnly = settings.ItemsOnly,
+            EngagementOnly = settings.EngagementOnly
         };
         
         result = await githubCmd.ExecuteAsync(context, githubSettings);
@@ -33,21 +35,24 @@ public class SyncCommand : AsyncCommand<SyncSettings>
             // Don't fail - continue with other sources
         }
 
-        // Sync NuGet
-        var nugetCmd = new SyncNuGetCommand();
-        var nugetSettings = new SyncNuGetSettings
+        // Sync NuGet (only if not engagement-only, since NuGet has no engagement)
+        if (!settings.EngagementOnly)
         {
-            CachePath = settings.CachePath,
-            Owner = settings.Owner,
-            Repo = settings.Repo,
-            Verbose = settings.Verbose,
-            Quiet = settings.Quiet
-        };
+            var nugetCmd = new SyncNuGetCommand();
+            var nugetSettings = new SyncNuGetSettings
+            {
+                CachePath = settings.CachePath,
+                Owner = settings.Owner,
+                Repo = settings.Repo,
+                Verbose = settings.Verbose,
+                Quiet = settings.Quiet
+            };
 
-        var nugetResult = await nugetCmd.ExecuteAsync(context, nugetSettings);
-        if (nugetResult != 0)
-        {
-            AnsiConsole.MarkupLine("[yellow]NuGet sync completed with warnings[/]");
+            var nugetResult = await nugetCmd.ExecuteAsync(context, nugetSettings);
+            if (nugetResult != 0)
+            {
+                AnsiConsole.MarkupLine("[yellow]NuGet sync completed with warnings[/]");
+            }
         }
 
         if (!settings.Quiet)
