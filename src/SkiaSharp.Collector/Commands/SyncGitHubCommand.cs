@@ -248,7 +248,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             {
                 foreach (var indexItem in toProcess)
                 {
-                    ctx.Status($"[{processed + 1}/{toProcess.Count}] #{indexItem.Number}...");
+                    ctx.Status($"({processed + 1}/{toProcess.Count}) #{indexItem.Number}...");
 
                     // Check rate limit
                     var rateLimit = await client.RateLimit.GetRateLimits();
