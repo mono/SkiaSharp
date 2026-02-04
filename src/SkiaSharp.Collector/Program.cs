@@ -14,28 +14,51 @@ class Program
             config.SetApplicationName("skiasharp-collector");
             config.SetApplicationVersion("1.0.0");
 
+            // ===== New Cache-Based Commands =====
+            config.AddBranch("sync", sync =>
+            {
+                sync.SetDescription("Sync data from sources to cache");
+
+                sync.AddCommand<SyncCommand>("all")
+                    .WithDescription("Sync all data sources")
+                    .WithExample("sync", "all", "-c", "./.data-cache");
+
+                sync.AddCommand<SyncGitHubCommand>("github")
+                    .WithDescription("Sync GitHub data to cache")
+                    .WithExample("sync", "github", "-c", "./.data-cache");
+
+                sync.AddCommand<SyncNuGetCommand>("nuget")
+                    .WithDescription("Sync NuGet data to cache")
+                    .WithExample("sync", "nuget", "-c", "./.data-cache");
+            });
+
+            config.AddCommand<GenerateCommand>("generate")
+                .WithDescription("Generate dashboard JSON from cache")
+                .WithExample("generate", "-c", "./.data-cache", "-o", "./data");
+
+            // ===== Legacy Direct-API Commands (still useful for quick testing) =====
             config.AddCommand<AllCommand>("all")
-                .WithDescription("Run all collectors (default)")
+                .WithDescription("Run all collectors directly (legacy)")
                 .WithExample("all", "-o", "./data");
 
             config.AddCommand<GitHubCommand>("github")
-                .WithDescription("Collect GitHub repository statistics")
+                .WithDescription("Collect GitHub stats directly (legacy)")
                 .WithExample("github", "-o", "./data");
 
             config.AddCommand<NuGetCommand>("nuget")
-                .WithDescription("Collect NuGet package download statistics")
+                .WithDescription("Collect NuGet stats directly (legacy)")
                 .WithExample("nuget", "-o", "./data", "--min-version", "3");
 
             config.AddCommand<CommunityCommand>("community")
-                .WithDescription("Collect contributor and community statistics")
+                .WithDescription("Collect contributor stats directly (legacy)")
                 .WithExample("community", "-o", "./data");
 
             config.AddCommand<IssuesCommand>("issues")
-                .WithDescription("Collect all open issues with labels")
+                .WithDescription("Collect all open issues directly (legacy)")
                 .WithExample("issues", "-o", "./data");
 
             config.AddCommand<PrTriageCommand>("pr-triage")
-                .WithDescription("Collect and analyze open PRs for triage")
+                .WithDescription("Collect and analyze PRs directly (legacy)")
                 .WithExample("pr-triage", "-o", "./data");
         });
 
