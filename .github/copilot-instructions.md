@@ -19,7 +19,7 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 - **Repository**: mono/SkiaSharp (docs-dashboard branch)
 - **Parent Project**: SkiaSharp is a cross-platform 2D graphics library for .NET
 
-## Current Phase: Data Cache Architecture
+## Solution Structure
 
 **Solution**: `SkiaSharp.slnx` (new XML-based format)
 
@@ -27,21 +27,122 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 | Project | Path | Purpose |
 |---------|------|---------|
 | Dashboard | `src/Dashboard/` | Blazor WASM app |
-| SkiaSharp.Collector | `src/SkiaSharp.Collector/` | .NET CLI for data collection |
+| SkiaSharp.Collector | `src/SkiaSharp.Collector/` | .NET CLI for data sync & generation |
 
 **Page Structure:**
 | Page | Route | Purpose |
 |------|-------|---------|
-| Home (Insights) | `/` | Health metrics + charts showing hotspots |
-| Issues | `/issues` | Drill-down with filters |
+| Home (Insights) | `/` | Health metrics, charts, hot issues |
+| Issues | `/issues` | All issues with filters, hot issues section |
 | Pull Requests | `/pull-requests` | Triage categories, filters |
 | Community | `/community` | Stars, forks, contributors |
-| NuGet | `/nuget` | Package downloads |
+| NuGet | `/nuget` | Package downloads (grouped layout) |
 
-**Data Context:**
-- 659 open issues, 50 PRs
-- Labels use prefixes: `type/`, `area/`, `backend/`, `os/`
-- Strip prefixes for display, use for categorization
+## Branch Strategy
+
+| Branch | Purpose | Triggers |
+|--------|---------|----------|
+| `docs-dashboard` | Dashboard source code (orphan) | Push triggers sync + build |
+| `docs-data-cache` | Cached API data (GitHub/NuGet) | Updated hourly by sync |
+| `docs-live` | Deployed GitHub Pages site | Updated by build workflow |
+| `main` | SkiaSharp library source | Do not modify |
+| `docs` | Documentation source | Do not modify |
+
+**Never commit directly to main, docs, or docs-live.**
+
+## Data Architecture
+
+**Key principle**: Data sync is **decoupled** from dashboard build.
+
+```
+HOURLY + ON PUSH (sync-data-cache.yml):
+  GitHub API ─┬─→ sync command ─→ docs-data-cache branch
+  NuGet API  ─┘
+
+EVERY 6 HOURS (build-dashboard.yml):  
+  docs-data-cache ─→ generate command ─→ dashboard JSON ─→ deploy to docs-live
+```
+
+### Cache Structure (`docs-data-cache` branch)
+```
+docs-data-cache/
+├── github/
+│   ├── sync-meta.json       # Sync state, rate limits, skip list
+│   ├── index.json           # All issues + PRs (lightweight)
+│   └── items/{number}.json  # Full data + engagement per item
+├── nuget/
+│   ├── sync-meta.json
+│   ├── index.json
+│   └── packages/{id}.json
+```
+
+### Layered Sync Strategy
+- **Layer 1**: Basic item data (all issues/PRs) - ~15 API calls, fast
+- **Layer 2**: Engagement data (comments, reactions) - 50 items/run, builds over time
+
+### Engagement Scoring
+Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
+
+**Hot Issues**: Current score > historical score (7 days ago) AND score > 5
+
+## CI/CD Workflows
+
+| Workflow | File | Triggers | Purpose |
+|----------|------|----------|---------|
+| Sync Data Cache | `sync-data-cache.yml` | Hourly, push to docs-dashboard | Sync GitHub/NuGet → cache branch |
+| Build Dashboard | `build-dashboard.yml` | Every 6 hours, manual | Generate JSON + build + deploy |
+
+Both use `concurrency: cancel-in-progress: false` to allow queuing.
+
+## Collector CLI
+
+The `SkiaSharp.Collector` .NET console app has two main modes:
+
+### Sync Mode (populates cache)
+```bash
+# Sync all sources to cache
+dotnet run -- sync --cache-path ./cache
+
+# Sync specific source
+dotnet run -- sync github --cache-path ./cache
+dotnet run -- sync nuget --cache-path ./cache
+
+# Options
+--engagement-count 100    # How many items to fetch engagement for (default: 50)
+--items-only              # Skip engagement sync (Layer 1 only)
+--full                    # Force full sync (ignore timestamps)
+```
+
+### Generate Mode (cache → dashboard JSON)
+```bash
+# Generate all dashboard JSON from cache
+dotnet run -- generate --from-cache ./cache -o ./data
+```
+
+### Legacy Direct-API Commands (still available)
+```bash
+dotnet run -- all -o ./data           # Fetch all data directly
+dotnet run -- github -o ./data        # Just GitHub stats
+dotnet run -- nuget -o ./data         # Just NuGet stats
+```
+
+## Local Development
+
+```bash
+# One-time setup: Create worktree for cache
+git worktree add .data-cache docs-data-cache
+
+# Sync data locally
+dotnet run --project src/SkiaSharp.Collector -- sync --cache-path .data-cache
+
+# Generate dashboard JSON
+dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
+
+# Run dashboard
+cd src/Dashboard && dotnet run
+```
+
+**Base href**: Uses `/` locally, CI changes to `/SkiaSharp/dashboard/` via sed.
 
 ## Tech Stack
 
@@ -49,7 +150,9 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 - **Blazor WebAssembly** (standalone, client-side only)
 - **Blazor-ApexCharts** for charts
 - **Bootstrap 5** for styling
-- **GitHub Actions** for CI/CD
+- **Spectre.Console** for CLI UI
+- **Octokit** for GitHub API
+- **NuGet.Protocol** for NuGet API
 
 ## Code Conventions
 
@@ -68,18 +171,11 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 - Layout components go in `Layout/`
 - Services use constructor injection via `@inject`
 - Data loading happens in `OnInitializedAsync()`
-- **⚠️ CRITICAL: Use RELATIVE URLs** - never use absolute paths like `/issues` in `href` or `NavigateTo()`. Always use relative paths like `issues` so they work with the base href (`/SkiaSharp/dashboard/`). Absolute paths bypass the base href and break navigation on GitHub Pages.
-- **Don't call NavigateTo() on initial page load** - If a page updates URL based on filters, don't call `NavigateTo()` in `OnInitializedAsync()`. This breaks direct URL navigation. Use a flag like `ApplyFilters(updateUrl: false)` on init.
+- **⚠️ CRITICAL: Use RELATIVE URLs** - never use `/issues`, always use `issues`
 
 ### JSON Model Types
-PowerShell collectors output floats for calculated values (e.g., `5.0` for days). C# models must match:
 - Use `double` not `int` for: `DaysOpen`, `DaysSinceActivity`
-- Use `long?` (nullable) for NuGet download counts (API returns null sometimes)
-
-### Naming
-- Pages: `{Feature}.razor` (e.g., `GitHub.razor`, `PrTriage.razor`)
-- Services: `{Feature}Service.cs` (e.g., `DashboardDataService.cs`)
-- Models: Descriptive records (e.g., `GitHubStats`, `TriagedPullRequest`)
+- Use `long?` (nullable) for NuGet download counts
 
 ## Project Structure
 
@@ -90,197 +186,59 @@ src/Dashboard/
 ├── Layout/          # MainLayout, NavMenu
 ├── Services/        # Data services and models
 └── wwwroot/
-    ├── data/        # JSON data files (updated by collectors)
+    ├── data/        # JSON data files (generated)
     ├── css/         # Stylesheets
     └── images/      # Static images
 
-src/SkiaSharp.Collector/     # .NET CLI for data collection
-├── Commands/                # all, github, nuget, community, issues, pr-triage
-├── Services/                # GitHubService, NuGetService, LabelParser
-└── Models/                  # Type-safe data models
+src/SkiaSharp.Collector/
+├── Commands/        # CLI commands (sync, generate, legacy)
+├── Services/        # GitHubService, NuGetService, CacheService
+└── Models/          # CacheModels, output models
 
 .github/workflows/   # CI/CD pipelines
 .ai/                 # AI memory bank (deep context)
 ```
 
-## Collector CLI
+## Generated Data Files
 
-The `SkiaSharp.Collector` .NET console app collects all dashboard data.
-
-**Commands**: `sync`, `generate` (new), `github`, `nuget`, `community`, `issues`, `pr-triage` (legacy)
-**Options**: `-o/--output`, `--cache-path`, `--from-cache`, `--engagement-count`
-
-## Data Files (Generated)
-| File | Purpose |
-|------|---------|
-| `github-stats.json` | Stars, issues, PRs, commits |
-| `nuget-stats.json` | Package downloads |
-| `community-stats.json` | Contributors, activity |
-| `issues.json` | All issues with engagement scores |
-| `pr-triage.json` | PR analysis and recommendations |
-
-## Branch Strategy
-
-- **docs-dashboard** (this branch): Dashboard source code (orphan branch)
-- **docs-data-cache**: Cached API data from GitHub/NuGet (hourly sync)
-- **docs-live**: Deployed GitHub Pages site
-- **main**: SkiaSharp library source (different project)
-- **docs**: Documentation source (different project)
-
-**Never commit directly to main or docs-live.**
-
-## Data Architecture
-
-**Key principle**: Data sync is decoupled from dashboard build.
-
-```
-HOURLY (sync-data-cache.yml):
-  GitHub API → sync command → docs-data-cache branch
-  NuGet API  →
-
-EVERY 6 HOURS (build-dashboard.yml):
-  docs-data-cache → generate command → dashboard JSON → deploy to docs-live
-```
-
-### Data Cache Structure (`docs-data-cache` branch)
-```
-docs-data-cache/
-├── github/
-│   ├── sync-meta.json       # Sync state, rate limits, failures
-│   ├── index.json           # All issues + PRs (lightweight)
-│   └── items/{number}.json  # Full data per issue/PR
-├── nuget/
-│   ├── sync-meta.json
-│   ├── index.json
-│   └── packages/{id}.json
-```
-
-### Layered Sync
-- **Layer 1**: Basic item data (all issues/PRs) - ~15 API calls
-- **Layer 2**: Engagement data (comments, reactions) - 50 items/run
-
-## CI/CD Workflows
-
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `sync-data-cache.yml` | Hourly, manual | Sync GitHub/NuGet data to cache branch |
-| `build-dashboard.yml` | Push to docs-dashboard, every 6 hours, manual | Generate JSON from cache + build + deploy |
-
-## Collector CLI
-
-The `SkiaSharp.Collector` .NET console app has two modes:
-
-### Sync Mode (populates cache)
-```bash
-# Sync all data sources
-dotnet run -- sync --cache-path ./cache
-
-# Sync specific source
-dotnet run -- sync github --cache-path ./cache
-dotnet run -- sync nuget --cache-path ./cache
-
-# Control engagement sync
-dotnet run -- sync github --cache-path ./cache --engagement-count 100
-dotnet run -- sync github --cache-path ./cache --items-only  # Skip engagement
-```
-
-### Generate Mode (creates dashboard JSON)
-```bash
-# Generate all dashboard data from cache
-dotnet run -- generate --from-cache ./cache -o ./data
-```
-
-## Local Development
-
-```bash
-# Setup (one-time): Create worktree for cache
-git worktree add .data-cache docs-data-cache
-
-# Sync data locally
-dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
-
-# Generate dashboard JSON
-dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
-
-# Run dashboard
-cd src/Dashboard && dotnet run
-```
-
-**Base href**: Uses `/` locally, CI changes to `/SkiaSharp/dashboard/` via sed.
-
-## Testing
-
-- Use **Playwright** for visual testing (WebKit browser)
-- Run data collectors locally: `dotnet run --project src/SkiaSharp.Collector -- all -o ./test-data`
-- Manual testing: Navigate all 5 pages, verify data loads
+| File | Source | Purpose |
+|------|--------|---------|
+| `github-stats.json` | Cache | Stars, issues, PRs, commits |
+| `nuget-stats.json` | Cache | Package downloads |
+| `community-stats.json` | Cache | Contributors, activity |
+| `issues.json` | Cache | All issues with engagement scores |
+| `pr-triage.json` | Cache | PR analysis and triage categories |
 
 ## GitHub Pages SPA Routing
 
-This app uses the [spa-github-pages](https://github.com/rafrex/spa-github-pages) approach for client-side routing on GitHub Pages. This is the **official Microsoft-recommended approach** per [MS Learn docs](https://learn.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/webassembly/github-pages).
+Uses [spa-github-pages](https://github.com/rafrex/spa-github-pages) approach:
 
-### How It Works
+1. **404.html** - Redirects unknown paths to `/?p=/path`
+2. **index.html script** - Restores original URL via `history.replaceState`
+3. **Blazor Router** - Handles the route
 
-1. **404.html** - When GitHub Pages can't find a file (e.g., `/dashboard/issues`), it serves 404.html which redirects to `/?p=/issues` with the path encoded in a query string
-2. **index.html script** - Restores the original URL via `history.replaceState` before Blazor starts
-3. **Blazor Router** - Sees the correct URL and routes to the right component
+**Critical**: `segmentCount = 2` in 404.html (for `/SkiaSharp/dashboard/`)
 
-### Critical Configuration for Nested Subdirectories
+### URL Rules
+- ❌ `NavigateTo("/issues")` - Goes to site root!
+- ✅ `NavigateTo("issues")` - Relative to base href
+- ❌ `<a href="/issues">` - Wrong!
+- ✅ `<a href="issues">` - Correct
 
-Our app lives at `/SkiaSharp/dashboard/` (2 segments deep). Key settings:
+## Error Handling (Sync)
 
-| File | Setting | Purpose |
-|------|---------|---------|
-| `wwwroot/404.html` | `segmentCount = 2` | Preserves `/SkiaSharp/dashboard` in redirect |
-| `wwwroot/index.html` | spa-github-pages script in `<head>` | Restores URL before Blazor loads |
-| `wwwroot/root-404.html` | Deployed to site root | Root 404 intercepts ALL site 404s |
-| CI workflow | `sed` to set base href | Changes `<base href="/">` to `<base href="/SkiaSharp/dashboard/">` |
-
-### ⚠️ CRITICAL: URL Path Rules
-
-Per [MS Learn](https://learn.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/app-base-path#configure-the-app-base-path):
-
-**NavigateTo calls:**
-- ❌ `Navigation.NavigateTo("/issues")` - Goes to site root!
-- ✅ `Navigation.NavigateTo("issues")` - Relative to base href
-- ✅ `Navigation.NavigateTo("./issues")` - Also works
-
-**Anchor hrefs:**
-- ❌ `<a href="/issues">` - Goes to site root!
-- ✅ `<a href="issues">` - Relative to base href
-- ✅ `<NavLink href="issues">` - Correct
-
-**@page routes:**
-- ✅ `@page "/issues"` - Routes DO use leading slash (this is correct)
-
-### Debugging Navigation Issues
-
-If clicking links navigates to wrong URLs (e.g., `/issues` instead of `/SkiaSharp/dashboard/issues`):
-
-1. Check for leading slashes in `NavigateTo()` calls
-2. Check for leading slashes in `href` attributes  
-3. Verify `<base href="/SkiaSharp/dashboard/">` is set (trailing slash required!)
-4. Check browser console for navigation errors
-5. Verify 404.html has correct `segmentCount`
+- **Proactive rate limit check**: Stop if < 100 API calls remaining
+- **Skip list**: Failed items get cooldown periods (404=7d, 403=1d, other=1h)
+- **Retry logic**: Items automatically retry after cooldown expires
+- **No data = empty files**: Generate always writes files to support cache resets
 
 ## What NOT To Do
 
-- ❌ Don't add server-side code (this is client-only WASM)
+- ❌ Don't add server-side code (client-only WASM)
 - ❌ Don't commit secrets or API keys
-- ❌ Don't modify `docs-live` branch directly
-- ❌ Don't use old C# patterns (var everywhere, expression bodies, etc.)
-- ❌ Don't add heavy dependencies (keep WASM bundle small)
-- ❌ Don't use leading slashes in `NavigateTo()` or `href` (breaks GitHub Pages)
+- ❌ Don't modify `docs-live`, `main`, or `docs` branches directly
+- ❌ Don't use leading slashes in `NavigateTo()` or `href`
 - ❌ Don't call `NavigateTo()` in `OnInitializedAsync()` without a guard
-
-## Common Bugs & Fixes
-
-| Symptom | Cause | Fix |
-|---------|-------|-----|
-| Clicking link goes to `mono.github.io/issues` instead of `/SkiaSharp/dashboard/issues` | Leading slash in NavigateTo or href | Use `"issues"` not `"/issues"` |
-| Page loads then redirects to wrong URL | `NavigateTo()` called on init | Add `updateUrl: false` param for initial load |
-| Direct URL access shows 404 | Missing or wrong 404.html | Check segmentCount matches path depth |
-| JSON fails to deserialize | Type mismatch (int vs double) | Use `double` for day calculations |
-| NuGet downloads show as 0 | Non-nullable type for null API response | Use `long?` for Downloads |
 
 ## Getting Help
 

@@ -6,14 +6,17 @@
 
 | Layer | Technology | Version | Notes |
 |-------|------------|---------|-------|
-| Runtime | .NET | 10.0 | Latest LTS |
+| Runtime | .NET | 10.0 | Latest |
 | Language | C# | 14 | Use latest features |
 | Framework | Blazor WebAssembly | 10.0 | Standalone (no server) |
+| Charts | Blazor-ApexCharts | Latest | Interactive charts |
 | CSS | Bootstrap | 5.x | From template |
 | Styling | Custom CSS | - | `dashboard.css` |
+| CLI UI | Spectre.Console | Latest | Progress bars, tables |
+| GitHub API | Octokit | Latest | Type-safe client |
+| NuGet API | NuGet.Protocol | Latest | Package metadata |
 | CI/CD | GitHub Actions | - | Two workflows |
 | Hosting | GitHub Pages | - | Static files only |
-| Scripts | PowerShell | 7.x | Cross-platform |
 
 ## Development Setup
 
@@ -22,22 +25,19 @@
 # Required
 dotnet --version  # 10.0.100 or higher
 
-# For data collection testing
-pwsh --version    # PowerShell 7.x
-
 # For visual testing (optional)
 npx playwright install webkit
 ```
 
 ### Local Development Commands
 ```bash
-# Navigate to project
+# Navigate to dashboard
 cd src/Dashboard
 
 # Run with hot reload
 dotnet watch run
 
-# Run without hot reload
+# Run without hot reload  
 dotnet run --urls "http://localhost:5050"
 
 # Build only
@@ -47,51 +47,72 @@ dotnet build
 dotnet publish -c Release -o ../../publish
 ```
 
-### Testing Data Collectors
+### Working with Data Cache
 ```bash
-# GitHub stats (requires GITHUB_TOKEN for higher rate limits)
-export GITHUB_TOKEN=ghp_xxxxx
-pwsh collectors/collect-github.ps1 -OutputPath test-github.json
+# One-time setup: Create worktree for cache branch
+git worktree add .data-cache docs-data-cache
 
-# NuGet stats (no auth required)
-pwsh collectors/collect-nuget.ps1 -OutputPath test-nuget.json
+# Sync data from APIs to cache
+dotnet run --project src/SkiaSharp.Collector -- sync --cache-path .data-cache
 
-# Community stats
-pwsh collectors/collect-community.ps1 -OutputPath test-community.json
+# Generate dashboard JSON from cache
+dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
 
-# PR triage
-pwsh collectors/collect-pr-triage.ps1 -OutputPath test-triage.json
+# Full refresh workflow
+dotnet run --project src/SkiaSharp.Collector -- sync --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
+```
+
+### Collector CLI Reference
+```bash
+# Sync commands (populate cache)
+dotnet run -- sync                     # Sync all (GitHub + NuGet)
+dotnet run -- sync github              # GitHub only
+dotnet run -- sync nuget               # NuGet only
+dotnet run -- sync github --items-only # Skip engagement (Layer 1 only)
+dotnet run -- sync github --engagement-count 100  # More engagement items
+dotnet run -- sync --full              # Ignore timestamps, full sync
+
+# Generate command (cache → JSON)
+dotnet run -- generate --from-cache ./cache -o ./data
+
+# Legacy direct-API commands (still work)
+dotnet run -- all -o ./data
+dotnet run -- github -o ./data
+dotnet run -- nuget -o ./data
+dotnet run -- issues -o ./data
+dotnet run -- pr-triage -o ./data
 ```
 
 ## External APIs
 
 ### GitHub REST API
 - **Base URL**: `https://api.github.com`
-- **Auth**: Bearer token (optional, but increases rate limit)
-- **Rate Limit**: 60/hr unauthenticated, 5000/hr authenticated
-- **Used For**: Repository stats, issues, PRs, commits, contributors
+- **Auth**: Bearer token (provided by `GITHUB_TOKEN`)
+- **Rate Limit**: 5000/hr authenticated
+- **Used For**: Repository stats, issues, PRs, comments, reactions
 
-**Endpoints Used**:
+**Key Endpoints**:
 | Endpoint | Purpose |
 |----------|---------|
 | `GET /repos/{owner}/{repo}` | Stars, forks, watchers |
-| `GET /search/issues` | Issue/PR counts and filters |
-| `GET /repos/{owner}/{repo}/commits` | Recent commits |
-| `GET /repos/{owner}/{repo}/contributors` | Contributor list |
+| `GET /repos/{owner}/{repo}/issues` | Issues and PRs (paginated) |
+| `GET /repos/{owner}/{repo}/issues/{number}/comments` | Comments |
+| `GET /repos/{owner}/{repo}/issues/{number}/reactions` | Reactions |
 | `GET /repos/{owner}/{repo}/pulls/{number}` | PR details |
 | `GET /repos/{owner}/{repo}/pulls/{number}/reviews` | PR reviews |
 
 ### NuGet API
 - **Base URL**: `https://api.nuget.org`
 - **Auth**: None required
-- **Rate Limit**: Unknown, be conservative
+- **Rate Limit**: Generous (be conservative)
 - **Used For**: Package download counts
 
-**Endpoints Used**:
+**Key Endpoints**:
 | Endpoint | Purpose |
 |----------|---------|
-| `GET /v3-flatcontainer/{id}/index.json` | Package versions |
-| `GET /v3/registration5-gz-semver2/{id}/index.json` | Download counts |
+| `GET /v3/registration5-gz-semver2/{id}/index.json` | Package metadata |
+| `GET /query?q={id}` | Search (better download stats) |
 
 ## File Locations
 
@@ -103,16 +124,56 @@ src/Dashboard/
 ├── App.razor               # Root component, router
 ├── _Imports.razor          # Global usings
 ├── Pages/                  # Routable pages
+│   ├── Home.razor          # Overview + hot issues
+│   ├── Issues.razor        # Issues + hot issues section
+│   ├── PullRequests.razor  # PR triage
+│   ├── Community.razor     # Contributors
+│   └── NuGet.razor         # Package downloads
 ├── Layout/                 # MainLayout, NavMenu
-├── Services/               # Data service + models
-├── Properties/
-│   └── launchSettings.json # Dev server settings
+├── Services/               # DashboardDataService + models
 └── wwwroot/
-    ├── index.html          # HTML shell
+    ├── index.html          # HTML shell + SPA redirect script
+    ├── 404.html            # SPA routing redirect
     ├── css/                # Stylesheets
-    ├── data/               # JSON data files
-    ├── images/             # Static images
-    └── lib/                # Bootstrap
+    ├── data/               # JSON data files (generated)
+    └── images/             # Static images
+
+src/SkiaSharp.Collector/
+├── SkiaSharp.Collector.csproj
+├── Program.cs              # CLI entry point
+├── Commands/
+│   ├── SyncCommand.cs      # sync orchestrator
+│   ├── SyncGitHubCommand.cs # GitHub Layer 1+2
+│   ├── SyncNuGetCommand.cs # NuGet sync
+│   ├── GenerateCommand.cs  # Cache → JSON
+│   └── (legacy commands)
+├── Services/
+│   ├── CacheService.cs     # Read/write cache files
+│   ├── GitHubService.cs    # GitHub API client
+│   ├── NuGetService.cs     # NuGet API client
+│   ├── EngagementCalculator.cs # Hot issue scoring
+│   └── LabelParser.cs      # Parse type/area labels
+└── Models/
+    ├── CacheModels.cs      # SyncMeta, CachedItem, etc.
+    └── (output models)
+```
+
+### Cache Structure (docs-data-cache branch)
+```
+/
+├── github/
+│   ├── sync-meta.json      # Last sync time, rate limits, skip list
+│   ├── index.json          # All items (number, type, state, title)
+│   └── items/
+│       ├── 1.json          # Full item + engagement data
+│       ├── 2.json
+│       └── ...
+├── nuget/
+│   ├── sync-meta.json
+│   ├── index.json          # Package list with download totals
+│   └── packages/
+│       ├── SkiaSharp.json
+│       └── ...
 ```
 
 ### Configuration Files
@@ -120,34 +181,35 @@ src/Dashboard/
 /
 ├── .editorconfig           # C# code style
 ├── global.json             # .NET SDK version
-├── .gitignore              # Git ignores
+├── SkiaSharp.slnx          # Solution (XML format)
 └── .github/
-    ├── copilot-instructions.md  # Copilot context
+    ├── copilot-instructions.md
     └── workflows/
-        ├── build-dashboard.yml
-        └── update-dashboard-data.yml
-```
-
-### AI Context Files
-```
-.ai/
-├── projectbrief.md         # Vision, goals, constraints
-├── architecture.md         # System design
-├── techContext.md          # This file
-├── activeContext.md        # Current work
-├── progress.md             # Status, backlog
-└── decisions/              # ADRs
+        ├── sync-data-cache.yml   # Hourly + on push
+        └── build-dashboard.yml   # Every 6 hours
 ```
 
 ## Build Configuration
 
-### Project Settings (`Dashboard.csproj`)
+### Dashboard Project (`Dashboard.csproj`)
 ```xml
 <TargetFramework>net10.0</TargetFramework>
 <LangVersion>latest</LangVersion>
 <Nullable>enable</Nullable>
-<ImplicitUsings>enable</ImplicitUsings>
 <RootNamespace>SkiaSharp.Dashboard</RootNamespace>
+```
+
+### Collector Project (`SkiaSharp.Collector.csproj`)
+```xml
+<TargetFramework>net10.0</TargetFramework>
+<LangVersion>latest</LangVersion>
+<Nullable>enable</Nullable>
+<OutputType>Exe</OutputType>
+
+<!-- Dependencies -->
+<PackageReference Include="Spectre.Console.Cli" />
+<PackageReference Include="Octokit" />
+<PackageReference Include="NuGet.Protocol" />
 ```
 
 ### Base Href Handling
@@ -158,69 +220,47 @@ src/Dashboard/
 
 ### GitHub Pages
 - Static files only (no server-side code)
-- Single branch deployment (we use `docs-live`)
-- Must handle SPA routing (404.html or redirect)
+- Single branch deployment (`docs-live`)
+- Must handle SPA routing (404.html redirect)
 
 ### Blazor WASM
 - Initial load includes .NET runtime (~2-3MB)
 - No access to server-side secrets
-- All API calls are client-side (CORS restrictions)
+- All API calls must go through collectors
 
 ### Rate Limits
 - GitHub: 5000 requests/hour (authenticated)
-- Collectors run every 6 hours, well within limits
-- If rate limited, collectors fail gracefully
+- Sync checks remaining calls, stops at < 100
+- Skip list prevents hammering failed items
 
 ### Browser Support
 - Modern browsers only (WASM requirement)
 - IE11 not supported
-- Mobile browsers work but WASM is slower
+- Mobile browsers work but slower
 
 ## Environment Variables
 
 ### GitHub Actions
 | Variable | Used In | Purpose |
 |----------|---------|---------|
-| `GITHUB_TOKEN` | All collectors | API authentication |
-| `secrets.GITHUB_TOKEN` | Workflows | Auto-provided by Actions |
+| `GITHUB_TOKEN` | Workflows | Auto-provided by Actions |
 
 ### Local Development
 | Variable | Purpose |
 |----------|---------|
-| `GITHUB_TOKEN` | Higher rate limits for collector testing |
+| `GITHUB_TOKEN` | Higher rate limits for sync |
 
 ## Dependencies
 
-### NuGet Packages
-| Package | Version | Purpose |
-|---------|---------|---------|
-| `Microsoft.AspNetCore.Components.WebAssembly` | 10.0.0 | Blazor WASM framework |
-| `Microsoft.AspNetCore.Components.WebAssembly.DevServer` | 10.0.0 | Dev server (dev only) |
+### Dashboard NuGet Packages
+| Package | Purpose |
+|---------|---------|
+| `Microsoft.AspNetCore.Components.WebAssembly` | Blazor WASM |
+| `Blazor-ApexCharts` | Charts |
 
-### Frontend Libraries
-| Library | Version | Purpose |
-|---------|---------|---------|
-| Bootstrap | 5.x | CSS framework |
-| (none) | - | No JS frameworks |
-
-## Useful Commands Reference
-
-```bash
-# Git
-git status
-git add -A
-git commit -m "message"
-git push -u origin dashboard
-
-# .NET
-dotnet build
-dotnet run
-dotnet publish -c Release
-dotnet clean
-
-# PowerShell
-pwsh script.ps1 -Param value
-
-# Playwright (for testing)
-npx playwright install webkit
-```
+### Collector NuGet Packages
+| Package | Purpose |
+|---------|---------|
+| `Spectre.Console.Cli` | CLI framework + UI |
+| `Octokit` | GitHub API client |
+| `NuGet.Protocol` | NuGet API client |

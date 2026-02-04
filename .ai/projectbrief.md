@@ -9,7 +9,7 @@ Create a **community-facing dashboard** for the SkiaSharp project that provides 
 ## Goals
 
 1. **Community Visibility**: Show project health metrics (stars, forks, downloads) publicly
-2. **Maintainer Efficiency**: AI-powered PR triage to prioritize review efforts
+2. **Maintainer Efficiency**: Engagement scoring to identify hot issues and priority items
 3. **Transparency**: Open display of activity, contributors, and project velocity
 4. **Low Maintenance**: Automated data updates, minimal manual intervention
 
@@ -25,16 +25,33 @@ Create a **community-facing dashboard** for the SkiaSharp project that provides 
 | User | Needs |
 |------|-------|
 | **Contributors** | See project activity, find good-first-issues, understand review queue |
-| **Maintainers** | Quickly triage PRs, track community health, identify trends |
+| **Maintainers** | Quickly triage PRs, track community health, identify hot issues |
 | **Community** | Understand project health before adopting SkiaSharp |
 
 ## Success Criteria
 
-- [ ] Dashboard loads in < 3 seconds
-- [ ] Data refreshes automatically every 6 hours
-- [ ] PR triage reduces time-to-first-review
-- [ ] All pages work on mobile devices
-- [ ] Zero manual intervention required for normal operation
+- [x] Dashboard loads in < 3 seconds
+- [x] Data refreshes automatically (hourly sync, 6-hour build)
+- [x] Hot issues highlight trending discussions
+- [x] All pages work on mobile devices
+- [x] Zero manual intervention required for normal operation
+
+## Architecture
+
+```
+docs-dashboard branch          docs-data-cache branch        docs-live branch
+(Source code)                  (Cached API data)             (Deployed site)
+       │                              │                            │
+       │                              │                            │
+       └──→ sync workflow ──────────→ │                            │
+       │    (hourly + on push)        │                            │
+       │                              │                            │
+       └──→ build workflow ←─────────→┘                            │
+            (every 6 hours)           │                            │
+                   │                  │                            │
+                   └─────────────────→┴───────────────────────────→│
+                                      generate + deploy
+```
 
 ## Relationship to SkiaSharp
 
@@ -42,9 +59,10 @@ This dashboard is a **companion project** to the main SkiaSharp library:
 
 - **SkiaSharp** (main branch): Cross-platform 2D graphics library for .NET
 - **Documentation** (docs branch): API docs and conceptual guides
-- **Dashboard** (dashboard branch): This project - community metrics
+- **Dashboard** (docs-dashboard branch): This project - community metrics
+- **Data Cache** (docs-data-cache branch): Cached API data for dashboard
 
-The dashboard lives on an orphan branch to keep concerns separated. It shares the same repository for deployment convenience (GitHub Pages serves from `docs-live`).
+The dashboard lives on orphan branches to keep concerns separated. It shares the same repository for deployment convenience (GitHub Pages serves from `docs-live`).
 
 ## Key Stakeholders
 
@@ -55,19 +73,20 @@ The dashboard lives on an orphan branch to keep concerns separated. It shares th
 ## Constraints
 
 1. **GitHub Pages hosting**: Static files only, no server-side code
-2. **API rate limits**: GitHub API (5000/hr), NuGet API (unknown)
+2. **API rate limits**: GitHub API (5000/hr), proactive checking
 3. **Bundle size**: WASM should stay reasonable for load times
 4. **No secrets in client**: All data must be pre-computed
 
-## Timeline
+## Project Timeline
 
 | Phase | Status | Description |
 |-------|--------|-------------|
-| Foundation | ✅ Complete | Project setup, basic structure |
-| Data Collection | ✅ Complete | Collector scripts created |
-| Dashboard UI | ✅ Complete | All 5 pages implemented |
-| CI/CD | ✅ Complete | Workflows created |
-| Testing | 🔄 In Progress | Playwright setup, smoke tests |
-| AI Context | 🔄 In Progress | Memory bank creation |
-| Deployment | ⏳ Pending | Push to remote, verify live site |
-| Polish | ⏳ Pending | Logo, branding, error handling |
+| Phase 1 | ✅ Complete | Foundation - project setup, basic structure |
+| Phase 2 | ✅ Complete | Dashboard UI - all 5 pages, charts, filters |
+| Phase 2.7 | ✅ Complete | NuGet redesign - grouped layout, 50 packages |
+| Phase 3 | ✅ Complete | Collector CLI - .NET replaces PowerShell |
+| Phase 4 | ✅ Complete | Data Cache - decoupled sync, engagement scoring |
+
+## Live Site
+
+**URL**: https://mono.github.io/SkiaSharp/dashboard/

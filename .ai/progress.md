@@ -47,10 +47,10 @@
 - [x] Hot issues card on Home page (top 3 hot issues)
 - [x] Engagement score display with 🔥 badges
 
-### Notes
-- Sync workflow runs on schedule (hourly at :00)
-- Cannot be manually triggered until workflow file exists on default branch
-- Hot issues will appear once first sync runs and populates cache
+### Workflow Triggers ✅
+- [x] `sync-data-cache.yml` triggers on: hourly schedule, push to docs-dashboard
+- [x] `build-dashboard.yml` triggers on: 6-hour schedule, manual dispatch
+- [x] Concurrency: `cancel-in-progress: false` (queue, don't cancel)
 
 ---
 
@@ -130,10 +130,6 @@
 
 ---
 
-## Known Issues
-
-None! 🎉
-
 ## Phase 2.7: NuGet Page Redesign ✅
 
 ### Collector Enhancements
@@ -179,6 +175,12 @@ None! 🎉
 
 ---
 
+## Known Issues
+
+None! 🎉
+
+---
+
 ## SPA Routing (SOLVED)
 
 Navigation bugs were fixed by:
@@ -195,11 +197,14 @@ See `.github/copilot-instructions.md` for full documentation.
 3. Milestone tracking
 4. CI/CD build status integration
 5. Release progress view
+6. AI-powered PR triage recommendations
+7. Historical engagement data for trend analysis
 
 ## Version History
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.6.1 | 2026-02-04 | Added push trigger to sync workflow |
 | 0.6.0 | 2026-02-04 | Data cache architecture with engagement scoring |
 | 0.5.0 | 2026-02-04 | .NET collector CLI replaces 5 PowerShell scripts |
 | 0.4.0 | 2026-02-04 | NuGet page redesign - grouped layout, legacy toggle, 50 packages |

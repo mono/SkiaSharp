@@ -6,7 +6,7 @@
 ## Current Focus
 
 **Phase**: Phase 4 - Data Cache Architecture (COMPLETE ✅)
-**Status**: All infrastructure complete, awaiting first scheduled sync
+**Status**: All infrastructure complete, sync runs hourly + on push
 
 ## Recent Changes
 
@@ -14,35 +14,46 @@
 1. ✅ Branch renamed: `dashboard` → `docs-dashboard`
 2. ✅ Created `docs-data-cache` orphan branch for cached API data
 3. ✅ Updated `build-dashboard.yml` to use `generate --from-cache`
-4. ✅ Created `sync-data-cache.yml` workflow (hourly sync)
+4. ✅ Created `sync-data-cache.yml` workflow (hourly + on push)
 5. ✅ Implemented `sync` commands (github, nuget, all)
 6. ✅ Implemented `generate` command (cache → dashboard JSON)
 7. ✅ Engagement scoring with hot issue detection
 8. ✅ Dashboard UI updates (hot issues on Home and Issues pages)
 9. ✅ Generate command always writes files (even when cache is empty)
+10. ✅ Added push trigger to sync workflow
 
-**Note**: The sync workflow runs on schedule (hourly at :00). Cannot be manually triggered until workflow file exists on default branch.
+## Architecture Summary
 
-### New CLI Commands
+```
+Push to docs-dashboard
+         │
+         ├──→ sync-data-cache.yml (triggered)
+         │         │
+         │         ▼
+         │    docs-data-cache (updated)
+         │
+         └──→ build-dashboard.yml (NOT triggered on push)
+                   │
+                   ▼ (runs every 6 hours)
+              docs-live/dashboard/ (deployed)
+```
+
+### Workflows
+| Workflow | Triggers | Purpose |
+|----------|----------|---------|
+| `sync-data-cache.yml` | Hourly, push to docs-dashboard | Sync APIs → cache |
+| `build-dashboard.yml` | Every 6 hours, manual | Cache → JSON → deploy |
+
+### CLI Commands
 ```bash
-# Cache-based workflow
-dotnet run -- sync github -c ./cache    # Layer 1 + Layer 2
-dotnet run -- sync nuget -c ./cache     # NuGet packages
-dotnet run -- sync all -c ./cache       # All sources
-dotnet run -- generate -c ./cache -o ./data  # Generate dashboard JSON
+# Cache-based workflow (production)
+dotnet run -- sync --cache-path ./cache           # Layer 1 + Layer 2
+dotnet run -- sync github --cache-path ./cache    # GitHub only
+dotnet run -- sync nuget --cache-path ./cache     # NuGet only
+dotnet run -- generate --from-cache ./cache -o ./data
 
-# Legacy direct-API commands still available
+# Legacy direct-API commands (still work)
 dotnet run -- all -o ./data
-```
-
-### Architecture Overview
-```
-HOURLY (sync-data-cache.yml):
-  GitHub API → sync command → docs-data-cache branch
-  NuGet API  →
-
-EVERY 6 HOURS (build-dashboard.yml):
-  docs-data-cache → generate command → dashboard JSON → deploy
 ```
 
 ### Cache Structure (`docs-data-cache` branch)
@@ -62,14 +73,14 @@ docs-data-cache/
 - **Layer 1**: Basic item data (all issues/PRs) - ~15 API calls
 - **Layer 2**: Engagement data (comments, reactions) - 50 items/run, builds up over time
 
+### Engagement Scoring
+- Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
+- Hot detection: Current score > Historical score (7 days ago) AND score > 5
+
 ### Error Handling
 - Proactive rate limit checking (stop if < 100 remaining)
 - Skip list for failed items with cooldown periods
 - Resume from checkpoint on next run
-
-### Engagement Scoring
-- Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
-- Hot detection: Current score > Historical score (7 days ago)
 
 ## Context for Next AI Session
 
@@ -78,7 +89,7 @@ When resuming work:
 2. Branch is `docs-dashboard` (renamed from `dashboard`)
 3. Data cache is `docs-data-cache` branch
 4. Live at https://mono.github.io/SkiaSharp/dashboard/
-5. **NEXT**: Add hot issues to dashboard UI (Issues page + Home page)
+5. Sync runs on push AND hourly, build runs every 6 hours
 
 ## Previous Completed Phases
 

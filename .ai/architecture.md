@@ -17,11 +17,11 @@
                                     │     Blazor WASM App               │
                                     │  ┌─────────────────────────────┐  │
                                     │  │  Pages (5)                  │  │
-                                    │  │  - Home (Overview)          │  │
-                                    │  │  - GitHub                   │  │
-                                    │  │  - NuGet                    │  │
+                                    │  │  - Home (Insights + Hot)    │  │
+                                    │  │  - Issues (Hot + Filters)   │  │
+                                    │  │  - Pull Requests (Triage)   │  │
                                     │  │  - Community                │  │
-                                    │  │  - PR Triage                │  │
+                                    │  │  - NuGet (Grouped)          │  │
                                     │  └─────────────────────────────┘  │
                                     │              │                    │
                                     │  ┌───────────▼─────────────────┐  │
@@ -31,199 +31,216 @@
                                     │              │                    │
                                     │  ┌───────────▼─────────────────┐  │
                                     │  │  wwwroot/data/*.json        │  │
-                                    │  │  (Static JSON files)        │  │
+                                    │  │  (Generated from cache)     │  │
                                     │  └─────────────────────────────┘  │
                                     └───────────────────────────────────┘
 ```
 
-## Data Flow
+## Data Flow (New Cache Architecture)
 
 ```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│  GitHub API      │     │  NuGet API       │     │  (Future: AI)    │
-└────────┬─────────┘     └────────┬─────────┘     └────────┬─────────┘
-         │                        │                        │
-         ▼                        ▼                        ▼
+┌──────────────────┐     ┌──────────────────┐
+│  GitHub API      │     │  NuGet API       │
+└────────┬─────────┘     └────────┬─────────┘
+         │                        │
+         ▼                        ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                    PowerShell Collectors                          │
-│  collect-github.ps1 │ collect-nuget.ps1 │ collect-pr-triage.ps1  │
+│              sync-data-cache.yml (Hourly + On Push)              │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ SkiaSharp.Collector sync command                            │ │
+│  │ - Layer 1: Basic item data (all issues/PRs)                 │ │
+│  │ - Layer 2: Engagement data (50 items/run)                   │ │
+│  │ - Rate limit aware (stops at < 100 remaining)               │ │
+│  │ - Skip list for failed items with cooldowns                 │ │
+│  └─────────────────────────────────────────────────────────────┘ │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                    JSON Data Files                                │
-│  github-stats.json │ nuget-stats.json │ pr-triage.json           │
+│                  docs-data-cache branch                          │
+│  ┌─────────────────┐  ┌─────────────────┐                       │
+│  │ github/         │  │ nuget/          │                       │
+│  │ ├─ sync-meta    │  │ ├─ sync-meta    │                       │
+│  │ ├─ index.json   │  │ ├─ index.json   │                       │
+│  │ └─ items/*.json │  │ └─ packages/*.json                      │
+│  └─────────────────┘  └─────────────────┘                       │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│              GitHub Actions Commit & Deploy                       │
-│         (update-dashboard-data.yml → docs-live branch)           │
+│              build-dashboard.yml (Every 6 Hours)                 │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │ SkiaSharp.Collector generate command                        │ │
+│  │ - Reads cache, transforms to dashboard JSON                 │ │
+│  │ - Calculates engagement scores                              │ │
+│  │ - Identifies hot issues (score trending up)                 │ │
+│  │ - Always writes files (even if empty)                       │ │
+│  └─────────────────────────────────────────────────────────────┘ │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│                    Blazor WASM App                                │
-│              (fetches JSON at runtime)                            │
+│                    Dashboard JSON Files                          │
+│  github-stats.json │ nuget-stats.json │ issues.json │ pr-triage │
+└────────────────────────────────┬─────────────────────────────────┘
+                                 │
+                                 ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              peaceiris/actions-gh-pages@v4                       │
+│              - publish_branch: docs-live                         │
+│              - destination_dir: dashboard                        │
+│              - keep_files: true                                  │
+└────────────────────────────────┬─────────────────────────────────┘
+                                 │
+                                 ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              https://mono.github.io/SkiaSharp/dashboard/         │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-## Component Breakdown
-
-### Pages (5 total)
-
-| Page | Route | Purpose | Data Source |
-|------|-------|---------|-------------|
-| Home | `/` | Overview dashboard with summary cards | All JSON files |
-| GitHub | `/github` | Detailed GitHub stats | `github-stats.json` |
-| NuGet | `/nuget` | Package download stats | `nuget-stats.json` |
-| Community | `/community` | Contributors and activity | `community-stats.json` |
-| PR Triage | `/pr-triage` | AI-analyzed PR queue | `pr-triage.json` |
-
-### Services
-
-| Service | Purpose |
-|---------|---------|
-| `DashboardDataService` | Fetches and deserializes JSON data files |
-
-### Data Models (Records)
-
-| Model | File | Purpose |
-|-------|------|---------|
-| `GitHubStats` | `GitHubStats.cs` | Repository, issues, PRs, activity |
-| `NuGetStats` | `NuGetStats.cs` | Packages and download counts |
-| `CommunityStats` | `CommunityStats.cs` | Contributors and growth |
-| `PrTriageStats` | `PrTriageStats.cs` | Triaged PRs with AI reasoning |
-
-### Collectors (PowerShell)
-
-| Script | APIs Used | Output |
-|--------|-----------|--------|
-| `collect-github.ps1` | GitHub REST API | Stars, forks, issues, PRs, commits |
-| `collect-nuget.ps1` | NuGet API | Downloads per package and version |
-| `collect-community.ps1` | GitHub REST API | Contributors, recent commits |
-| `collect-pr-triage.ps1` | GitHub REST API + (future) AI | Categorized PRs with reasoning |
-
-## Deployment Architecture
+## Branch Relationships
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     GitHub Repository                            │
 │                     mono/SkiaSharp                               │
 ├─────────────────┬─────────────────┬─────────────────────────────┤
-│  main branch    │  docs branch    │  dashboard branch (orphan)  │
-│  (library code) │  (DocFX source) │  (this project)             │
+│  main branch    │  docs branch    │  docs-dashboard (orphan)    │
+│  (library code) │  (DocFX source) │  (dashboard source)         │
+│                 │                 │                             │
+│  DO NOT MODIFY  │  DO NOT MODIFY  │  ← Active development       │
 └─────────────────┴─────────────────┴──────────────┬──────────────┘
                                                    │
-                                    ┌──────────────┴──────────────┐
-                                    │   build-dashboard.yml       │
-                                    │   (unified workflow)        │
-                                    │   Triggers:                 │
-                                    │   - Push to dashboard       │
-                                    │   - Schedule (every 6h)     │
-                                    │   - Manual dispatch         │
-                                    └──────────────┬──────────────┘
-                                                   │
-                      ┌────────────────────────────┼────────────────────────────┐
-                      │                            │                            │
-              ┌───────▼───────┐          ┌─────────▼─────────┐        ┌─────────▼─────────┐
-              │ 1. Collect    │          │ 2. Build WASM     │        │ 3. Deploy         │
-              │    Data       │          │    App            │        │                   │
-              │ - GitHub API  │          │ - dotnet publish  │        │ - Dashboard to    │
-              │ - NuGet API   │          │ - Set base href   │        │   /dashboard/     │
-              │ - MS org check│          │ - Create 404.html │        │ - Root 404.html   │
-              └───────────────┘          └───────────────────┘        └───────────────────┘
-                                                   │
-                                                   ▼
-                             ┌─────────────────────────────────────┐
-                             │  peaceiris/actions-gh-pages@v4      │
-                             │  - publish_branch: docs-live        │
-                             │  - destination_dir: dashboard       │
-                             │  - keep_files: true                 │
-                             └─────────────────────────────────────┘
-                                                   │
-                                                   ▼
-                             ┌─────────────────────────────────────┐
-                             │  https://mono.github.io/SkiaSharp/  │
-                             │           └── dashboard/            │
-                             └─────────────────────────────────────┘
+                                    ┌──────────────┼──────────────┐
+                                    │              │              │
+                            ┌───────▼───────┐  ┌───▼────────────┐ │
+                            │docs-data-cache│  │ docs-live      │ │
+                            │(orphan)       │  │                │ │
+                            │               │  │ /dashboard/    │ │
+                            │ Cached API    │  │ /docs/         │ │
+                            │ data (JSON)   │  │ /              │ │
+                            └───────────────┘  └────────────────┘ │
+                                    ▲                    ▲        │
+                                    │                    │        │
+                            sync workflow        build workflow   │
+                            (hourly)             (6-hourly)       │
+                                                                  │
+                                    Push to docs-dashboard ───────┘
+                                    triggers BOTH workflows
 ```
 
-## SPA Routing on GitHub Pages
+## Component Breakdown
 
-GitHub Pages doesn't support SPA routing natively. We use a two-part fix:
+### Pages (5 total)
 
-```
-User visits: /SkiaSharp/dashboard/community
-                    │
-                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  GitHub Pages: File not found, serve 404.html                   │
-│  (root 404.html, not /dashboard/404.html)                       │
-└─────────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  root-404.html script:                                          │
-│  1. Check if path starts with /SkiaSharp/dashboard/             │
-│  2. Save original path to sessionStorage                        │
-│  3. Redirect to /SkiaSharp/dashboard/                           │
-└─────────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  index.html script (on load):                                   │
-│  1. Read path from sessionStorage                               │
-│  2. Update browser history with original path                   │
-│  3. Blazor router handles the route                             │
-└─────────────────────────────────────────────────────────────────┘
-                    │
-                    ▼
-        User sees /community page ✓
-```
+| Page | Route | Purpose | Key Features |
+|------|-------|---------|--------------|
+| Home | `/` | Overview dashboard | Summary cards, charts, top 3 hot issues |
+| Issues | `/issues` | Issue exploration | Hot issues section, filters, engagement scores |
+| Pull Requests | `/pull-requests` | PR triage | 5 categories, size/age filters |
+| Community | `/community` | Contributors | Stars, forks, MS/community breakdown |
+| NuGet | `/nuget` | Package downloads | Grouped layout, legacy toggle, 50 packages |
+
+### Collector CLI Commands
+
+| Command | Purpose | API Calls |
+|---------|---------|-----------|
+| `sync github` | Layer 1 + Layer 2 sync | ~15 + 50×3 |
+| `sync nuget` | Package downloads | ~50 |
+| `sync all` | Orchestrate all syncs | Combined |
+| `generate` | Cache → dashboard JSON | 0 (file I/O) |
+
+### Services
+
+| Service | Location | Purpose |
+|---------|----------|---------|
+| `DashboardDataService` | Dashboard | Fetches JSON at runtime |
+| `GitHubService` | Collector | GitHub API client |
+| `NuGetService` | Collector | NuGet API client |
+| `CacheService` | Collector | Read/write cache files |
+| `EngagementCalculator` | Collector | Hot issue scoring |
+| `LabelParser` | Collector | Parse type/area/backend labels |
 
 ## Key Design Decisions
 
-### 1. Orphan Branch
-**Decision**: Dashboard lives on an orphan branch with no history from main.
+### 1. Orphan Branches
+**Decision**: Dashboard and cache live on orphan branches.
 **Why**: 
-- Dashboard is a separate project, not derived from SkiaSharp source
-- Keeps git history clean and relevant
-- Smaller clone size for dashboard-only contributors
+- Completely separate projects, no shared history
+- Smaller clone size
+- Clear separation of concerns
 
-### 2. Decoupled Data
-**Decision**: JSON files are separate from the app; updated independently.
+### 2. Decoupled Sync and Build
+**Decision**: Sync hourly, build every 6 hours.
 **Why**:
-- Can update data without rebuilding the app
-- Can update app without touching data
-- Simpler CI/CD (two focused workflows instead of one complex one)
-- Data persists across app rebuilds
+- Sync can fail partially and resume
+- Build uses whatever data is available
+- Rate limits don't block dashboard updates
 
-### 3. Static Site (Blazor WASM)
-**Decision**: Client-side only, no server.
+### 3. Layered Sync
+**Decision**: Layer 1 (all items) + Layer 2 (engagement, 50/run).
 **Why**:
-- GitHub Pages is free and reliable
-- No server infrastructure to maintain
-- WASM provides rich interactivity without backend
+- Get full coverage quickly (Layer 1)
+- Build up engagement data over time (Layer 2)
+- Stay well under rate limits
 
-### 4. PowerShell Collectors
-**Decision**: Use PowerShell for data collection scripts.
+### 4. Skip List with Cooldowns
+**Decision**: Failed items go to skip list with error-specific cooldowns.
 **Why**:
-- Cross-platform (works in GitHub Actions Linux runners)
-- Rich HTTP/JSON support built-in
-- Easy to read and modify
-- Familiar to .NET developers
+- 404 (deleted) = 7 days (rarely recovers)
+- 403 (forbidden) = 1 day (permissions may change)
+- Other errors = 1 hour (transient)
 
-### 5. Heuristic-based PR Triage (for now)
-**Decision**: Use simple rules for PR categorization initially.
+### 5. Always Write Files
+**Decision**: Generate always writes JSON, even if cache is empty.
 **Why**:
-- AI integration (OpenAI/Copilot API) adds complexity and cost
-- Heuristics work for basic triage (old PRs, small PRs, approved PRs)
-- Can add AI layer later without changing the data format
+- Dashboard reflects actual cache state
+- Supports cache reset scenarios
+- No stale data from previous commits
 
-### 6. keep_files Deployment
-**Decision**: Use `keep_files: true` in GitHub Pages action.
+### 6. Engagement Scoring
+**Decision**: Score = `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + freshness bonuses`
 **Why**:
-- Allows dashboard and docs to deploy independently
-- Neither deployment overwrites the other
-- Simple solution to multi-source single-branch problem
+- Comments show active discussion
+- Multiple contributors show broader interest
+- Recent activity gets bonus
+- Simple, explainable formula
+
+### 7. Hot Issue Detection
+**Decision**: Hot = current score > historical score AND score > 5
+**Why**:
+- Trending up (not just high absolute score)
+- Minimum threshold avoids noise
+- 7-day comparison window
+
+## SPA Routing on GitHub Pages
+
+```
+User visits: /SkiaSharp/dashboard/issues
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  GitHub Pages: File not found → serve 404.html                  │
+└─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  404.html (segmentCount = 2):                                   │
+│  1. Keep /SkiaSharp/dashboard                                   │
+│  2. Encode /issues in query string                              │
+│  3. Redirect to /SkiaSharp/dashboard/?p=/issues                 │
+└─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  index.html script:                                             │
+│  1. Read ?p=/issues from URL                                    │
+│  2. history.replaceState to /SkiaSharp/dashboard/issues         │
+│  3. Blazor router handles /issues route                         │
+└─────────────────────────────────────────────────────────────────┘
+                    │
+                    ▼
+        User sees Issues page ✓
+```
