@@ -28,13 +28,17 @@
 - [x] `CacheModels.cs` - All cache record types
 - [x] `CacheService.cs` - Read/write cache files, atomic writes
 - [x] Skip list management with error types and cooldowns
+- [x] Index.json sorted by item number (stable for diffs)
 
 ### Sync Commands ✅
 - [x] `sync github` - Layer 1 (items) + Layer 2 (engagement)
 - [x] `sync nuget` - Package downloads and versions
-- [x] `sync all` - Orchestrates all syncs
+- [x] `--items-only` flag - Skip engagement (Layer 1 only)
+- [x] `--engagement-only` flag - Skip items (Layer 2 only)
+- [x] `--engagement-count` flag - Batch size (default: 25)
 - [x] Proactive rate limit checking
 - [x] Error handling with skip list
+- [x] Smart engagement sync (only items updated since last sync)
 
 ### Generate Command ✅
 - [x] `generate` command reads cache, outputs dashboard JSON
@@ -47,9 +51,12 @@
 - [x] Hot issues card on Home page (top 3 hot issues)
 - [x] Engagement score display with 🔥 badges
 
-### Workflow Triggers ✅
-- [x] `sync-data-cache.yml` triggers on: hourly schedule, push to docs-dashboard
-- [x] `build-dashboard.yml` triggers on: 6-hour schedule, manual dispatch
+### Workflow Structure ✅
+- [x] 3-step workflow: NuGet → GitHub items → GitHub engagement
+- [x] NuGet syncs every 6 hours (0, 6, 12, 18 UTC)
+- [x] GitHub items sync every hour
+- [x] GitHub engagement in 10 batches of 25, push after each
+- [x] Push to `docs-dashboard` triggers sync workflow
 - [x] Concurrency: `cancel-in-progress: false` (queue, don't cancel)
 
 ---
@@ -204,6 +211,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.7.0 | 2026-02-04 | Workflow restructure: NuGet first, batched engagement, 3-step sync |
 | 0.6.1 | 2026-02-04 | Added push trigger to sync workflow |
 | 0.6.0 | 2026-02-04 | Data cache architecture with engagement scoring |
 | 0.5.0 | 2026-02-04 | .NET collector CLI replaces 5 PowerShell scripts |

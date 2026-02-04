@@ -66,18 +66,17 @@ dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cach
 ### Collector CLI Reference
 ```bash
 # Sync commands (populate cache)
-dotnet run -- sync                     # Sync all (GitHub + NuGet)
-dotnet run -- sync github              # GitHub only
+dotnet run -- sync github              # GitHub Layer 1 + Layer 2
 dotnet run -- sync nuget               # NuGet only
 dotnet run -- sync github --items-only # Skip engagement (Layer 1 only)
-dotnet run -- sync github --engagement-count 100  # More engagement items
+dotnet run -- sync github --engagement-only  # Skip items (Layer 2 only)
+dotnet run -- sync github --engagement-count 25  # Batch size (default: 25)
 dotnet run -- sync --full              # Ignore timestamps, full sync
 
 # Generate command (cache → JSON)
 dotnet run -- generate --from-cache ./cache -o ./data
 
 # Legacy direct-API commands (still work)
-dotnet run -- all -o ./data
 dotnet run -- github -o ./data
 dotnet run -- nuget -o ./data
 dotnet run -- issues -o ./data
@@ -163,7 +162,7 @@ src/SkiaSharp.Collector/
 /
 ├── github/
 │   ├── sync-meta.json      # Last sync time, rate limits, skip list
-│   ├── index.json          # All items (number, type, state, title)
+│   ├── index.json          # All items sorted by number
 │   └── items/
 │       ├── 1.json          # Full item + engagement data
 │       ├── 2.json
@@ -185,8 +184,27 @@ src/SkiaSharp.Collector/
 └── .github/
     ├── copilot-instructions.md
     └── workflows/
-        ├── sync-data-cache.yml   # Hourly + on push
+        ├── sync-data-cache.yml   # Hourly + on push (3-step)
         └── build-dashboard.yml   # Every 6 hours
+```
+
+## Workflow Structure
+
+### sync-data-cache.yml (3 steps)
+```yaml
+# Step 1: NuGet (every 6 hours: 0, 6, 12, 18 UTC)
+- run: dotnet run -- sync nuget --cache-path $CACHE
+- run: git commit && git push  # if changes
+
+# Step 2: GitHub items (every run)
+- run: dotnet run -- sync github --items-only --cache-path $CACHE
+- run: git commit && git push  # if changes
+
+# Step 3: GitHub engagement (10 batches of 25)
+- for i in {1..10}; do
+    dotnet run -- sync github --engagement-only --engagement-count 25
+    git commit && git push  # if changes
+  done
 ```
 
 ## Build Configuration

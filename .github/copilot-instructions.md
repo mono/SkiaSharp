@@ -56,8 +56,9 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 
 ```
 HOURLY + ON PUSH (sync-data-cache.yml):
-  GitHub API ─┬─→ sync command ─→ docs-data-cache branch
-  NuGet API  ─┘
+  Step 1: NuGet API  ─→ sync nuget  ─→ push (every 6 hours: 0,6,12,18 UTC)
+  Step 2: GitHub API ─→ sync github --items-only ─→ push
+  Step 3: GitHub API ─→ sync github --engagement-only (10 batches of 25) ─→ push each
 
 EVERY 6 HOURS (build-dashboard.yml):  
   docs-data-cache ─→ generate command ─→ dashboard JSON ─→ deploy to docs-live
@@ -68,7 +69,7 @@ EVERY 6 HOURS (build-dashboard.yml):
 docs-data-cache/
 ├── github/
 │   ├── sync-meta.json       # Sync state, rate limits, skip list
-│   ├── index.json           # All issues + PRs (lightweight)
+│   ├── index.json           # All issues + PRs (sorted by number)
 │   └── items/{number}.json  # Full data + engagement per item
 ├── nuget/
 │   ├── sync-meta.json
@@ -77,8 +78,14 @@ docs-data-cache/
 ```
 
 ### Layered Sync Strategy
-- **Layer 1**: Basic item data (all issues/PRs) - ~15 API calls, fast
-- **Layer 2**: Engagement data (comments, reactions) - 50 items/run, builds over time
+- **Layer 1**: Basic item data (all issues/PRs) - ~35 pages, with progress indicator
+- **Layer 2**: Engagement data (comments, reactions) - 25 items/batch, 10 batches/run
+
+### Progress Indicators
+```
+Fetching... 34% (1,200/3,474) ~1m 42s remaining
+✓ 3,474 items synced in 2m 31s
+```
 
 ### Engagement Scoring
 Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
@@ -92,6 +99,11 @@ Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinc
 | Sync Data Cache | `sync-data-cache.yml` | Hourly, push to docs-dashboard | Sync GitHub/NuGet → cache branch |
 | Build Dashboard | `build-dashboard.yml` | Every 6 hours, manual | Generate JSON + build + deploy |
 
+**Sync workflow steps:**
+1. NuGet (every 6 hours only) → push
+2. GitHub items (Layer 1) → push  
+3. GitHub engagement (Layer 2, 10 batches) → push each batch
+
 Both use `concurrency: cancel-in-progress: false` to allow queuing.
 
 ## Collector CLI
@@ -100,16 +112,16 @@ The `SkiaSharp.Collector` .NET console app has two main modes:
 
 ### Sync Mode (populates cache)
 ```bash
-# Sync all sources to cache
-dotnet run -- sync --cache-path ./cache
-
-# Sync specific source
+# Sync GitHub data
 dotnet run -- sync github --cache-path ./cache
+
+# Sync NuGet data
 dotnet run -- sync nuget --cache-path ./cache
 
 # Options
---engagement-count 100    # How many items to fetch engagement for (default: 50)
+--engagement-count 25     # Items per engagement batch (default: 25)
 --items-only              # Skip engagement sync (Layer 1 only)
+--engagement-only         # Skip items sync (Layer 2 only)
 --full                    # Force full sync (ignore timestamps)
 ```
 
@@ -121,7 +133,6 @@ dotnet run -- generate --from-cache ./cache -o ./data
 
 ### Legacy Direct-API Commands (still available)
 ```bash
-dotnet run -- all -o ./data           # Fetch all data directly
 dotnet run -- github -o ./data        # Just GitHub stats
 dotnet run -- nuget -o ./data         # Just NuGet stats
 ```
@@ -133,7 +144,8 @@ dotnet run -- nuget -o ./data         # Just NuGet stats
 git worktree add .data-cache docs-data-cache
 
 # Sync data locally
-dotnet run --project src/SkiaSharp.Collector -- sync --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Collector -- sync nuget --cache-path .data-cache
 
 # Generate dashboard JSON
 dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data

@@ -191,7 +191,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         index = index with 
         { 
             UpdatedAt = DateTime.UtcNow,
-            Items = [.. itemsDict.Values.OrderByDescending(i => i.UpdatedAt)]
+            Items = [.. itemsDict.Values.OrderBy(i => i.Number)]
         };
 
         meta = meta with 
@@ -246,7 +246,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             .Where(i => 
                 !meta.Failures.ContainsKey(i.Number.ToString()) && // Not on skip list
                 (i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt)) // Needs sync
-            .OrderByDescending(i => i.UpdatedAt)
+            .OrderByDescending(i => i.UpdatedAt) // Most recently updated first
             .Take(settings.EngagementCount)
             .ToList();
 
@@ -330,7 +330,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         
         index = index with 
         { 
-            Items = [.. itemsDict.Values.OrderByDescending(i => i.UpdatedAt)]
+            Items = [.. itemsDict.Values.OrderBy(i => i.Number)]
         };
 
         meta = meta with 

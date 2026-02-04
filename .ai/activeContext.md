@@ -10,32 +10,40 @@
 
 ## Recent Changes
 
-### 2026-02-04 (Data Cache Architecture - COMPLETE)
+### 2026-02-04 (Data Cache Architecture - Session 2)
+1. ✅ Implemented 2-step sync with batched engagement
+2. ✅ Added `--items-only` and `--engagement-only` flags
+3. ✅ Fixed Spectre.Console markup escape bug (`[1/25]` → `(1/25)`)
+4. ✅ Added progress indicators with percentage, count, and ETA
+5. ✅ Restructured workflow: NuGet first, then GitHub
+6. ✅ NuGet now syncs every 6 hours (0, 6, 12, 18 UTC)
+7. ✅ Index.json now sorted by number (stable for diffs)
+8. ✅ Updated all documentation
+
+### 2026-02-04 (Data Cache Architecture - Session 1)
 1. ✅ Branch renamed: `dashboard` → `docs-dashboard`
-2. ✅ Created `docs-data-cache` orphan branch for cached API data
-3. ✅ Updated `build-dashboard.yml` to use `generate --from-cache`
-4. ✅ Created `sync-data-cache.yml` workflow (hourly + on push)
-5. ✅ Implemented `sync` commands (github, nuget, all)
-6. ✅ Implemented `generate` command (cache → dashboard JSON)
-7. ✅ Engagement scoring with hot issue detection
-8. ✅ Dashboard UI updates (hot issues on Home and Issues pages)
-9. ✅ Generate command always writes files (even when cache is empty)
-10. ✅ Added push trigger to sync workflow
+2. ✅ Created `docs-data-cache` orphan branch
+3. ✅ Created `sync-data-cache.yml` workflow
+4. ✅ Implemented `sync github` and `sync nuget` commands
+5. ✅ Implemented `generate` command
+6. ✅ Engagement scoring with hot issue detection
+7. ✅ Dashboard UI (hot issues on Home and Issues pages)
 
 ## Architecture Summary
 
 ```
 Push to docs-dashboard
          │
-         ├──→ sync-data-cache.yml (triggered)
-         │         │
-         │         ▼
-         │    docs-data-cache (updated)
+         ▼
+sync-data-cache.yml
          │
-         └──→ build-dashboard.yml (NOT triggered on push)
-                   │
-                   ▼ (runs every 6 hours)
-              docs-live/dashboard/ (deployed)
+         ├─ Step 1: NuGet (every 6 hours only) ──→ push
+         │
+         ├─ Step 2: GitHub items (Layer 1) ──→ push
+         │
+         └─ Step 3: GitHub engagement (Layer 2)
+                    │
+                    └─ 10 batches of 25 items ──→ push each
 ```
 
 ### Workflows
@@ -46,14 +54,13 @@ Push to docs-dashboard
 
 ### CLI Commands
 ```bash
-# Cache-based workflow (production)
-dotnet run -- sync --cache-path ./cache           # Layer 1 + Layer 2
-dotnet run -- sync github --cache-path ./cache    # GitHub only
-dotnet run -- sync nuget --cache-path ./cache     # NuGet only
-dotnet run -- generate --from-cache ./cache -o ./data
+# Sync commands (use in workflow)
+dotnet run -- sync github --cache-path ./cache --items-only
+dotnet run -- sync github --cache-path ./cache --engagement-only --engagement-count 25
+dotnet run -- sync nuget --cache-path ./cache
 
-# Legacy direct-API commands (still work)
-dotnet run -- all -o ./data
+# Generate command
+dotnet run -- generate --from-cache ./cache -o ./data
 ```
 
 ### Cache Structure (`docs-data-cache` branch)
@@ -61,7 +68,7 @@ dotnet run -- all -o ./data
 docs-data-cache/
 ├── github/
 │   ├── sync-meta.json       # Sync state, rate limits, skip list
-│   ├── index.json           # All issues + PRs (lightweight)
+│   ├── index.json           # All issues + PRs (sorted by number)
 │   └── items/{number}.json  # Full data + engagement per item
 ├── nuget/
 │   ├── sync-meta.json
@@ -69,18 +76,19 @@ docs-data-cache/
 │   └── packages/{id}.json
 ```
 
+### Progress Indicators
+```
+Fetching... 34% (1,200/3,474) ~1m 42s remaining
+✓ 3,474 items synced in 2m 31s
+```
+
 ### Layered Sync Strategy
-- **Layer 1**: Basic item data (all issues/PRs) - ~15 API calls
-- **Layer 2**: Engagement data (comments, reactions) - 50 items/run, builds up over time
+- **Layer 1**: Basic item data (all issues/PRs) - ~35 pages
+- **Layer 2**: Engagement data - 25 items/batch, 10 batches/run
 
 ### Engagement Scoring
 - Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
 - Hot detection: Current score > Historical score (7 days ago) AND score > 5
-
-### Error Handling
-- Proactive rate limit checking (stop if < 100 remaining)
-- Skip list for failed items with cooldown periods
-- Resume from checkpoint on next run
 
 ## Context for Next AI Session
 
@@ -89,13 +97,13 @@ When resuming work:
 2. Branch is `docs-dashboard` (renamed from `dashboard`)
 3. Data cache is `docs-data-cache` branch
 4. Live at https://mono.github.io/SkiaSharp/dashboard/
-5. Sync runs on push AND hourly, build runs every 6 hours
+5. Sync runs hourly (NuGet every 6h), build runs every 6 hours
 
 ## Previous Completed Phases
 
 ### Phase 3 - Collector CLI (COMPLETE)
 - Converted 5 PowerShell scripts to .NET CLI
-- Commands: `all`, `github`, `nuget`, `community`, `issues`, `pr-triage`
+- Commands: `github`, `nuget`, `community`, `issues`, `pr-triage`
 - Spectre.Console UI with progress bars
 
 ### Phase 2 - Dashboard Features (COMPLETE)

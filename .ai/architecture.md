@@ -47,13 +47,24 @@
 ┌──────────────────────────────────────────────────────────────────┐
 │              sync-data-cache.yml (Hourly + On Push)              │
 │                                                                  │
-│  ┌─────────────────────────────────────────────────────────────┐ │
-│  │ SkiaSharp.Collector sync command                            │ │
-│  │ - Layer 1: Basic item data (all issues/PRs)                 │ │
-│  │ - Layer 2: Engagement data (50 items/run)                   │ │
-│  │ - Rate limit aware (stops at < 100 remaining)               │ │
-│  │ - Skip list for failed items with cooldowns                 │ │
-│  └─────────────────────────────────────────────────────────────┘ │
+│  Step 1: NuGet (every 6 hours only)                             │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ dotnet run -- sync nuget --cache-path $CACHE               │ │
+│  │ → commit & push                                            │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  Step 2: GitHub items (Layer 1)                                 │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ dotnet run -- sync github --items-only --cache-path $CACHE │ │
+│  │ → commit & push                                            │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  Step 3: GitHub engagement (Layer 2) - 10 batches               │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ for i in 1..10:                                            │ │
+│  │   dotnet run -- sync github --engagement-only --count 25   │ │
+│  │   → commit & push                                          │ │
+│  └────────────────────────────────────────────────────────────┘ │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
@@ -147,9 +158,9 @@
 
 | Command | Purpose | API Calls |
 |---------|---------|-----------|
-| `sync github` | Layer 1 + Layer 2 sync | ~15 + 50×3 |
+| `sync github --items-only` | Layer 1 only | ~35 pages |
+| `sync github --engagement-only` | Layer 2 only | 25×3 per batch |
 | `sync nuget` | Package downloads | ~50 |
-| `sync all` | Orchestrate all syncs | Combined |
 | `generate` | Cache → dashboard JSON | 0 (file I/O) |
 
 ### Services
@@ -179,21 +190,31 @@
 - Build uses whatever data is available
 - Rate limits don't block dashboard updates
 
-### 3. Layered Sync
-**Decision**: Layer 1 (all items) + Layer 2 (engagement, 50/run).
+### 3. Layered Sync with Batched Engagement
+**Decision**: Layer 1 (all items) + Layer 2 (engagement, 25/batch × 10 batches).
 **Why**:
 - Get full coverage quickly (Layer 1)
 - Build up engagement data over time (Layer 2)
+- Commit after each batch for incremental progress
 - Stay well under rate limits
+- Resume from any point on failure
 
-### 4. Skip List with Cooldowns
+### 4. Smart Engagement Sync
+**Decision**: Only fetch engagement for items where `UpdatedAt > EngagementSyncedAt`.
+**Why**:
+- No wasted API calls on unchanged items
+- Prioritizes recently active items (`OrderByDescending(UpdatedAt)`)
+- Skip list excludes failed items with cooldowns
+- Efficient even with 3000+ items in cache
+
+### 5. Skip List with Cooldowns
 **Decision**: Failed items go to skip list with error-specific cooldowns.
 **Why**:
 - 404 (deleted) = 7 days (rarely recovers)
 - 403 (forbidden) = 1 day (permissions may change)
 - Other errors = 1 hour (transient)
 
-### 5. Always Write Files
+### 6. Always Write Files
 **Decision**: Generate always writes JSON, even if cache is empty.
 **Why**:
 - Dashboard reflects actual cache state

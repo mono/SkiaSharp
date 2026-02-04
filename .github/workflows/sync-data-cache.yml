@@ -61,32 +61,72 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Step 1: Sync basic item data (Layer 1)
-      - name: Sync items (Layer 1)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # ============================================================
+      # Step 1: NuGet (every 6 hours: 0, 6, 12, 18 UTC)
+      # ============================================================
+      - name: Check if NuGet sync needed
+        id: nuget-check
         run: |
+          HOUR=$(date -u +%H)
           SOURCE="${{ inputs.source || 'all' }}"
-          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
-          
-          dotnet run --project src/SkiaSharp.Collector -- sync $SOURCE \
-            --cache-path .data-cache \
-            --items-only \
-            $FULL_FLAG
+          # Run NuGet if: source is 'all' or 'nuget', AND (manual trigger OR hour is 0,6,12,18)
+          if [[ "$SOURCE" == "nuget" ]] || [[ "$SOURCE" == "all" && ("${{ github.event_name }}" != "schedule" || "$HOUR" == "00" || "$HOUR" == "06" || "$HOUR" == "12" || "$HOUR" == "18") ]]; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          else
+            echo "run=false" >> $GITHUB_OUTPUT
+            echo "Skipping NuGet sync (only runs at 0, 6, 12, 18 UTC)"
+          fi
 
-      - name: Push items
+      - name: Sync NuGet
+        if: steps.nuget-check.outputs.run == 'true'
+        run: |
+          dotnet run --project src/SkiaSharp.Collector -- sync nuget \
+            --cache-path .data-cache
+
+      - name: Push NuGet
+        if: steps.nuget-check.outputs.run == 'true'
         working-directory: .data-cache
         run: |
           git add -A
           if git diff --staged --quiet; then
-            echo "No item changes to commit"
+            echo "No NuGet changes to commit"
           else
-            git commit -m "Sync: Items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "Sync: NuGet $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
 
-      # Step 2: Sync engagement data (Layer 2) in batches
-      - name: Sync engagement (Layer 2 - batched)
+      # ============================================================
+      # Step 2: GitHub items (Layer 1)
+      # ============================================================
+      - name: Sync GitHub items (Layer 1)
+        if: inputs.source != 'nuget'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
+          
+          dotnet run --project src/SkiaSharp.Collector -- sync github \
+            --cache-path .data-cache \
+            --items-only \
+            $FULL_FLAG
+
+      - name: Push GitHub items
+        if: inputs.source != 'nuget'
+        working-directory: .data-cache
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No GitHub item changes to commit"
+          else
+            git commit -m "Sync: GitHub items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
+
+      # ============================================================
+      # Step 3: GitHub engagement (Layer 2) in batches
+      # ============================================================
+      - name: Sync GitHub engagement (Layer 2 - batched)
+        if: inputs.source != 'nuget'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
