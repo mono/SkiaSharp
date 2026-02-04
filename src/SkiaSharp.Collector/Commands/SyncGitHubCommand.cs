@@ -110,10 +110,16 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Layer 1: Basic item data[/]");
 
+        // Get total count for progress
+        var repo = await client.Repository.Get(settings.Owner, settings.Repo);
+        var totalCount = repo.OpenIssuesCount; // Includes open issues + PRs
+        
         var since = settings.FullRefresh ? null : meta.Layers.Items.LastSync;
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
         var page = 1;
+        var startTime = DateTime.UtcNow;
+        var pageTimes = new Queue<double>(); // Rolling average for ETA
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Dots)
@@ -121,7 +127,11 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             {
                 while (true)
                 {
-                    ctx.Status($"Fetching page {page}...");
+                    var pageStart = DateTime.UtcNow;
+                    var pct = totalCount > 0 ? (processed * 100 / totalCount) : 0;
+                    var eta = GetEta(pageTimes, totalCount - processed, 100); // 100 items per page
+                    
+                    ctx.Status($"Fetching... {pct}% ({processed:N0}/{totalCount:N0}){eta}");
                     
                     // Check rate limit
                     var rateLimit = await client.RateLimit.GetRateLimits();
@@ -166,11 +176,18 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                             AnsiConsole.MarkupLine($"  [dim]#{issue.Number}: {Markup.Escape(issue.Title.Truncate(50))}[/]");
                     }
 
+                    // Track page time for ETA
+                    var pageTime = (DateTime.UtcNow - pageStart).TotalSeconds;
+                    pageTimes.Enqueue(pageTime);
+                    if (pageTimes.Count > 5) pageTimes.Dequeue(); // Rolling avg of last 5
+
                     page++;
                     await Task.Delay(100); // Small delay between pages
                 }
             });
 
+        var elapsed = DateTime.UtcNow - startTime;
+        
         index = index with 
         { 
             UpdatedAt = DateTime.UtcNow,
@@ -191,7 +208,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         };
 
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[green]  ✓ {processed} items synced[/]");
+            AnsiConsole.MarkupLine($"[green]  ✓ {processed:N0} items synced in {FormatTime(elapsed)}[/]");
 
         return (index, meta, processed);
     }
@@ -209,6 +226,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var now = DateTime.UtcNow;
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
+        var startTime = DateTime.UtcNow;
+        var itemTimes = new Queue<double>(); // Rolling average for ETA
 
         // Process skip list retries first
         var toRetry = cache.GetItemsToRetry(meta, now);
@@ -238,6 +257,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             .ToList();
         
         var toProcess = retryItems.Concat(needsSync).Take(settings.EngagementCount).ToList();
+        var totalToProcess = toProcess.Count;
 
         if (!settings.Quiet && toRetry.Count > 0)
             AnsiConsole.MarkupLine($"  [dim]Retrying {Math.Min(toRetry.Count, settings.EngagementCount)} items from skip list[/]");
@@ -248,7 +268,11 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             {
                 foreach (var indexItem in toProcess)
                 {
-                    ctx.Status($"({processed + 1}/{toProcess.Count}) #{indexItem.Number}...");
+                    var itemStart = DateTime.UtcNow;
+                    var pct = totalToProcess > 0 ? ((processed + 1) * 100 / totalToProcess) : 0;
+                    var eta = GetEta(itemTimes, totalToProcess - processed - 1, 1);
+                    
+                    ctx.Status($"{pct}% ({processed + 1}/{totalToProcess}) #{indexItem.Number}{eta}");
 
                     // Check rate limit
                     var rateLimit = await client.RateLimit.GetRateLimits();
@@ -280,6 +304,11 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [dim]#{indexItem.Number}: {engagement.Comments.Count} comments, {engagement.Reactions.Count} reactions[/]");
 
+                        // Track item time for ETA
+                        var itemTime = (DateTime.UtcNow - itemStart).TotalSeconds;
+                        itemTimes.Enqueue(itemTime);
+                        if (itemTimes.Count > 5) itemTimes.Dequeue();
+
                         await Task.Delay(100);
                     }
                     catch (NotFoundException)
@@ -297,6 +326,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                 }
             });
 
+        var elapsed = DateTime.UtcNow - startTime;
+        
         index = index with 
         { 
             Items = [.. itemsDict.Values.OrderByDescending(i => i.UpdatedAt)]
@@ -319,7 +350,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
 
         if (!settings.Quiet)
         {
-            AnsiConsole.MarkupLine($"[green]  ✓ {processed} items with engagement synced[/]");
+            AnsiConsole.MarkupLine($"[green]  ✓ {processed} items with engagement synced in {FormatTime(elapsed)}[/]");
             if (meta.Failures.Count > 0)
                 AnsiConsole.MarkupLine($"[yellow]  ⚠ {meta.Failures.Count} items on skip list[/]");
         }
@@ -460,6 +491,30 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (!string.IsNullOrEmpty(token))
             client.Credentials = new Credentials(token);
         return client;
+    }
+
+    private static string GetEta(Queue<double> times, int remaining, int itemsPerUnit)
+    {
+        if (times.Count == 0 || remaining <= 0)
+            return "";
+        
+        var avgTime = times.Average();
+        var unitsRemaining = (double)remaining / itemsPerUnit;
+        var secondsRemaining = avgTime * unitsRemaining;
+        
+        if (secondsRemaining < 5)
+            return "";
+            
+        return $" ~{FormatTime(TimeSpan.FromSeconds(secondsRemaining))} remaining";
+    }
+
+    private static string FormatTime(TimeSpan ts)
+    {
+        if (ts.TotalHours >= 1)
+            return $"{(int)ts.TotalHours}h {ts.Minutes}m";
+        if (ts.TotalMinutes >= 1)
+            return $"{(int)ts.TotalMinutes}m {ts.Seconds}s";
+        return $"{ts.Seconds}s";
     }
 }
 
