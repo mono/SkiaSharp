@@ -49,5 +49,7 @@ public enum TriageCategory
     QuickReview,
     NeedsReview,
     NeedsAuthor,
-    ConsiderClosing
+    ConsiderClosing,
+    Untriaged,
+    Draft
 }
