@@ -109,7 +109,7 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
       <WarningLevel>Level4</WarningLevel>
-      <AdditionalOptions>%(AdditionalOptions) /bigobj /Qspectre</AdditionalOptions>
+      <AdditionalOptions>%(AdditionalOptions) /bigobj</AdditionalOptions>
       <PreprocessorDefinitions>_WINRT_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>$(WindowsSDK_WindowsMetadata);$(AdditionalUsingDirectories)</AdditionalUsingDirectories>
       <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -120,7 +120,6 @@
       <ModuleDefinitionFile>SkiaSharp_Views_WinUI_Native.def</ModuleDefinitionFile>
       <AdditionalOptions>/DEBUGTYPE:CV,FIXUP</AdditionalOptions>
       <ControlFlowGuard>true</ControlFlowGuard>
-      <AdditionalLibraryDirectories>$(VCToolsInstallDir)lib\spectre\$([MSBuild]::ValueOrDefault('$(Platform)', 'Win32').Replace('Win32', 'x86'));%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
