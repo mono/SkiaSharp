@@ -10,16 +10,26 @@
 
 ## Recent Changes
 
+### 2026-02-04 (NuGet.Protocol SDK Refactor - v0.9.1)
+1. ✅ **Refactored to NuGet.Protocol SDK**:
+   - Replaced raw HTTP calls with official NuGet SDK
+   - PackageSearchResource: All versions + download counts
+   - PackageMetadataResource: All versions + publish dates
+   - Cleaner, more maintainable code
+2. ✅ **All versions now have downloads**:
+   - 145 SkiaSharp versions (was 5)
+   - Previews now show real download counts
+   - No more 0-download entries
+
 ### 2026-02-04 (NuGet Download Trend Charts - v0.9.0)
-1. ✅ **Hybrid NuGet API approach**:
-   - Registration API: All versions + publish dates
-   - Search API: Download counts
-   - Combined for timeline chart data
-2. ✅ **6 cumulative download charts** on NuGet page:
+1. ✅ **6 cumulative download charts** on NuGet page:
    - SkiaSharp Core, .NET MAUI Views, HarfBuzzSharp
    - Skottie Animation, GPU Backends (Direct3D + Vulkan), Blazor
-3. ✅ Store ALL versions with publish dates (not just last 5)
-4. ✅ New `nuget-charts.json` output file
+2. ✅ Store ALL versions with publish dates
+3. ✅ New `nuget-charts.json` output file
+4. ✅ Sorting filters on Issues page (6 options)
+5. ✅ Sorting filters on PRs page (7 options)
+6. ✅ Fixed engagement loop infinite commits (exit code 2)
 
 ### 2026-02-04 (Community Sync & Documentation)
 1. ✅ Updated .ai/techContext.md with CLI commands
