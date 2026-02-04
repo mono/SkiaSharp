@@ -9,7 +9,8 @@ public record NuGetStats(
 public record PackageStats(
     string Id,
     long TotalDownloads,
-    List<VersionStats> Versions
+    List<VersionStats> Versions,
+    bool IsLegacy = false
 );
 
 public record VersionStats(

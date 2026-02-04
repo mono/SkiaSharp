@@ -14,6 +14,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Minimum major version to be considered "supported" (not legacy)
+# Packages without a stable release >= this version are marked as legacy
+$minSupportedMajorVersion = 3
+
 # Dynamically build package list from VERSIONS.txt files in the repo
 function Get-PackageListFromVersionsFile {
     param([string]$Url)
@@ -58,6 +62,7 @@ function Get-NuGetStats {
                 id = $PackageId
                 totalDownloads = 0
                 versions = @()
+                isLegacy = $true
             }
         }
 
@@ -77,10 +82,29 @@ function Get-NuGetStats {
             try { [version]($_.version -replace '-.*', '') } catch { [version]"0.0.0" }
         } -Descending
 
+        # Check if package has a stable version >= minSupportedMajorVersion
+        # A stable version is one without a prerelease suffix (no '-')
+        $isLegacy = $true
+        foreach ($v in $pkg.versions) {
+            $ver = $v.version
+            # Skip prerelease versions
+            if ($ver -match '-') { continue }
+            # Extract major version
+            try {
+                $major = [int]($ver -split '\.')[0]
+                if ($major -ge $minSupportedMajorVersion) {
+                    $isLegacy = $false
+                    break
+                }
+            }
+            catch { }
+        }
+
         return @{
             id = $PackageId
             totalDownloads = $totalDownloads
             versions = $versionStats
+            isLegacy = $isLegacy
         }
     }
     catch {
@@ -89,6 +113,7 @@ function Get-NuGetStats {
             id = $PackageId
             totalDownloads = 0
             versions = @()
+            isLegacy = $true
         }
     }
 }

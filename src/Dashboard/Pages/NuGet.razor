@@ -15,46 +15,94 @@ else if (_stats is null)
 }
 else
 {
-    <div class="dashboard-grid">
-        <!-- Total Downloads -->
-        <div class="card card-wide">
-            <div class="card-header"><h3>Total Downloads</h3></div>
-            <div class="card-body">
-                <div class="stat stat-hero">
-                    <span class="stat-value">@_stats.TotalDownloads.ToString("N0")</span>
-                    <span class="stat-label">across all packages</span>
-                </div>
-            </div>
+    <!-- Total Downloads Hero -->
+    <div class="nuget-hero">
+        <div class="hero-stat">
+            <span class="hero-value">@_stats.TotalDownloads.ToString("N0")</span>
+            <span class="hero-label">Total Downloads</span>
         </div>
+        <div class="hero-meta">
+            <span>@_stats.Packages.Count(p => !p.IsLegacy) supported packages</span>
+            <label class="legacy-toggle">
+                <input type="checkbox" @bind="_showLegacy" />
+                Show @_stats.Packages.Count(p => p.IsLegacy) legacy packages
+            </label>
+        </div>
+    </div>
 
-        <!-- Package Breakdown -->
-        @foreach (var package in _stats.Packages.OrderByDescending(p => p.TotalDownloads))
+    <!-- Package Groups -->
+    <div class="nuget-groups">
+        @foreach (var group in GetPackageGroups())
         {
-            <div class="card">
-                <div class="card-header">
-                    <h3>@package.Id</h3>
-                    <a href="https://www.nuget.org/packages/@package.Id" target="_blank" class="card-link">NuGet →</a>
-                </div>
-                <div class="card-body">
-                    <div class="stat">
-                        <span class="stat-value">@package.TotalDownloads.ToString("N0")</span>
-                        <span class="stat-label">Total Downloads</span>
+            var groupPackages = GetPackagesForGroup(group.Key);
+            var visiblePackages = groupPackages.Where(p => _showLegacy || !p.IsLegacy).ToList();
+            
+            @if (visiblePackages.Any())
+            {
+                <div class="nuget-group @(IsGroupExpanded(group.Key) ? "expanded" : "")">
+                    <div class="group-header" @onclick="() => ToggleGroup(group.Key)">
+                        <span class="group-toggle">@(IsGroupExpanded(group.Key) ? "▼" : "▶")</span>
+                        <span class="group-name">@group.Key</span>
+                        <span class="group-stats">
+                            <span class="group-downloads">@groupPackages.Sum(p => p.TotalDownloads).ToString("N0")</span>
+                            <span class="group-count">@visiblePackages.Count packages</span>
+                        </span>
                     </div>
-                    @if (package.Versions.Count > 0)
+                    
+                    @if (IsGroupExpanded(group.Key))
                     {
-                        <h4>Recent Versions</h4>
-                        <ul class="version-list">
-                            @foreach (var version in package.Versions.Take(5))
+                        <div class="group-content">
+                            @if (group.Value.Any())
                             {
-                                <li>
-                                    <span class="version-number">@version.Version</span>
-                                    <span class="version-downloads">@(version.Downloads?.ToString("N0") ?? "—") downloads</span>
-                                </li>
+                                @* Has subgroups *@
+                                @foreach (var subgroup in group.Value)
+                                {
+                                    var subPackages = GetPackagesForSubGroup(group.Key, subgroup);
+                                    var visibleSubPackages = subPackages.Where(p => _showLegacy || !p.IsLegacy).ToList();
+                                    
+                                    @if (visibleSubPackages.Any())
+                                    {
+                                        <div class="nuget-subgroup">
+                                            <div class="subgroup-header">
+                                                <span class="subgroup-name">@subgroup</span>
+                                                <span class="subgroup-downloads">@subPackages.Sum(p => p.TotalDownloads).ToString("N0")</span>
+                                            </div>
+                                            <div class="package-list">
+                                                @foreach (var pkg in visibleSubPackages.OrderByDescending(p => p.TotalDownloads))
+                                                {
+                                                    <div class="package-item @(pkg.IsLegacy ? "legacy" : "")">
+                                                        <a href="https://www.nuget.org/packages/@pkg.Id" target="_blank" class="package-name">
+                                                            @GetShortName(pkg.Id)
+                                                            @if (pkg.IsLegacy) { <span class="legacy-badge">legacy</span> }
+                                                        </a>
+                                                        <span class="package-downloads">@pkg.TotalDownloads.ToString("N0")</span>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                }
                             }
-                        </ul>
+                            else
+                            {
+                                @* No subgroups - show packages directly *@
+                                <div class="package-list">
+                                    @foreach (var pkg in visiblePackages.OrderByDescending(p => p.TotalDownloads))
+                                    {
+                                        <div class="package-item @(pkg.IsLegacy ? "legacy" : "")">
+                                            <a href="https://www.nuget.org/packages/@pkg.Id" target="_blank" class="package-name">
+                                                @GetShortName(pkg.Id)
+                                                @if (pkg.IsLegacy) { <span class="legacy-badge">legacy</span> }
+                                            </a>
+                                            <span class="package-downloads">@pkg.TotalDownloads.ToString("N0")</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
                     }
                 </div>
-            </div>
+            }
         }
     </div>
 
@@ -63,12 +111,93 @@ else
 
 @code {
     private bool _loading = true;
+    private bool _showLegacy = false;
     private NuGetStats? _stats;
+    private HashSet<string> _expandedGroups = ["SkiaSharp", "SkiaSharp Views", "SkiaSharp Extensions", "HarfBuzzSharp"];
 
     protected override async Task OnInitializedAsync()
     {
         try { _stats = await DataService.GetNuGetStatsAsync(); }
         catch { /* Data not yet available */ }
         _loading = false;
+    }
+
+    private void ToggleGroup(string group)
+    {
+        if (_expandedGroups.Contains(group))
+            _expandedGroups.Remove(group);
+        else
+            _expandedGroups.Add(group);
+    }
+
+    private bool IsGroupExpanded(string group) => _expandedGroups.Contains(group);
+
+    // Package grouping structure based on user's tree
+    private static Dictionary<string, List<string>> GetPackageGroups() => new()
+    {
+        ["SkiaSharp"] = [], // No subgroups - flat list
+        ["SkiaSharp Views"] = ["Native Platform", ".NET MAUI", "Xamarin.Forms", "Uno Platform", "Web"],
+        ["SkiaSharp Extensions"] = ["Text", "Animation", "GPU Backends"],
+        ["HarfBuzzSharp"] = [] // No subgroups - flat list
+    };
+
+    private List<PackageStats> GetPackagesForGroup(string group)
+    {
+        if (_stats is null) return [];
+        
+        return group switch
+        {
+            "SkiaSharp" => _stats.Packages.Where(p => 
+                p.Id == "SkiaSharp" || p.Id.StartsWith("SkiaSharp.NativeAssets.")).ToList(),
+            "SkiaSharp Views" => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.Views")).ToList(),
+            "SkiaSharp Extensions" => _stats.Packages.Where(p => 
+                p.Id is "SkiaSharp.HarfBuzz" or "SkiaSharp.Skottie" or "SkiaSharp.SceneGraph" 
+                     or "SkiaSharp.Resources" or "SkiaSharp.Vulkan.SharpVk" or "SkiaSharp.Direct3D.Vortice").ToList(),
+            "HarfBuzzSharp" => _stats.Packages.Where(p => 
+                p.Id.StartsWith("HarfBuzzSharp")).ToList(),
+            _ => []
+        };
+    }
+
+    private List<PackageStats> GetPackagesForSubGroup(string group, string subgroup)
+    {
+        if (_stats is null) return [];
+
+        return (group, subgroup) switch
+        {
+            ("SkiaSharp Views", "Native Platform") => _stats.Packages.Where(p => 
+                p.Id is "SkiaSharp.Views" or "SkiaSharp.Views.Desktop.Common" 
+                     or "SkiaSharp.Views.WPF" or "SkiaSharp.Views.WindowsForms"
+                     or "SkiaSharp.Views.WinUI" or "SkiaSharp.Views.NativeAssets.UWP"
+                     or "SkiaSharp.Views.Gtk2" or "SkiaSharp.Views.Gtk3").ToList(),
+            ("SkiaSharp Views", ".NET MAUI") => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.Views.Maui")).ToList(),
+            ("SkiaSharp Views", "Xamarin.Forms") => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.Views.Forms")).ToList(),
+            ("SkiaSharp Views", "Uno Platform") => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.Views.Uno")).ToList(),
+            ("SkiaSharp Views", "Web") => _stats.Packages.Where(p => 
+                p.Id == "SkiaSharp.Views.Blazor").ToList(),
+            ("SkiaSharp Extensions", "Text") => _stats.Packages.Where(p => 
+                p.Id == "SkiaSharp.HarfBuzz").ToList(),
+            ("SkiaSharp Extensions", "Animation") => _stats.Packages.Where(p => 
+                p.Id is "SkiaSharp.Skottie" or "SkiaSharp.SceneGraph" or "SkiaSharp.Resources").ToList(),
+            ("SkiaSharp Extensions", "GPU Backends") => _stats.Packages.Where(p => 
+                p.Id is "SkiaSharp.Vulkan.SharpVk" or "SkiaSharp.Direct3D.Vortice").ToList(),
+            _ => []
+        };
+    }
+
+    private static string GetShortName(string id)
+    {
+        // Remove common prefixes for cleaner display
+        if (id == "SkiaSharp" || id == "HarfBuzzSharp") return id;
+        if (id.StartsWith("SkiaSharp.NativeAssets.")) return id.Replace("SkiaSharp.NativeAssets.", "");
+        if (id.StartsWith("SkiaSharp.Views.")) return id.Replace("SkiaSharp.Views.", "");
+        if (id.StartsWith("SkiaSharp.")) return id.Replace("SkiaSharp.", "");
+        if (id.StartsWith("HarfBuzzSharp.NativeAssets.")) return id.Replace("HarfBuzzSharp.NativeAssets.", "");
+        if (id.StartsWith("HarfBuzzSharp.")) return id.Replace("HarfBuzzSharp.", "");
+        return id;
     }
 }
