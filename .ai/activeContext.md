@@ -5,21 +5,23 @@
 
 ## Current Focus
 
-**Phase**: Phase 2.7 - NuGet Redesign COMPLETE ✅
+**Phase**: Phase 3 - Collector CLI Migration COMPLETE ✅
 **Status**: Production - All Features Working
 
-All 5 pages fully functional with charts, filters, and proper navigation.
+Dashboard app + .NET collector CLI in `src/`, solution uses new `.slnx` format.
 
 ## Recent Changes
 
 ### 2026-02-04 (Collector CLI Migration)
-1. ✅ **New .NET CLI**: `collectors/SkiaSharp.Collector/` replaces 5 PowerShell scripts
+1. ✅ **New .NET CLI**: `src/SkiaSharp.Collector/` replaces 5 PowerShell scripts
    - Commands: `all`, `github`, `nuget`, `community`, `issues`, `pr-triage`
    - Options: `-o/--output`, `--owner`, `--repo`, `-v/--verbose`, `-q/--quiet`
    - NuGet-specific: `--min-version` (default 3, for legacy detection)
 2. ✅ **Spectre.Console UI**: Progress bars, spinners, colored summary tables
 3. ✅ **Shared services**: GitHubService, NuGetService, LabelParser, OutputService
 4. ✅ **GitHub Actions updated**: Single `dotnet run -- all` instead of 5 `pwsh` calls
+5. ✅ **Project cleanup**: Moved to `src/`, added to solution, deleted PowerShell scripts
+6. ✅ **Solution format**: Converted to `.slnx` (new XML-based format)
 
 ### 2026-02-04 (NuGet Page Redesign)
 1. ✅ **Dynamic package list**: Collector now fetches VERSIONS.txt from main & release/2.x branches

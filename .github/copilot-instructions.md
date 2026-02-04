@@ -19,7 +19,15 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 - **Repository**: mono/SkiaSharp (dashboard branch)
 - **Parent Project**: SkiaSharp is a cross-platform 2D graphics library for .NET
 
-## Current Phase: Dashboard Restructure
+## Current Phase: Production
+
+**Solution**: `SkiaSharp.slnx` (new XML-based format)
+
+**Projects**:
+| Project | Path | Purpose |
+|---------|------|---------|
+| Dashboard | `src/Dashboard/` | Blazor WASM app |
+| SkiaSharp.Collector | `src/SkiaSharp.Collector/` | .NET CLI for data collection |
 
 **Page Structure:**
 | Page | Route | Purpose |
@@ -151,10 +159,9 @@ The NuGet collector (`collect-nuget.ps1`) has special logic:
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-dashboard.yml` | Push to dashboard, manual | Build and deploy app |
-| `update-dashboard-data.yml` | Every 6 hours, manual | Refresh data JSON files |
+| `build-dashboard.yml` | Push to dashboard, every 6 hours, manual | Collect data + build + deploy |
 
-Both deploy to `docs-live/dashboard/` using `keep_files: true` to preserve other content.
+Deploys to `docs-live/dashboard/` using `keep_files: true` to preserve other content.
 
 ## Local Development
 
@@ -170,7 +177,7 @@ dotnet publish -c Release     # Production build
 ## Testing
 
 - Use **Playwright** for visual testing (WebKit browser)
-- Run data collectors locally: `pwsh collectors/collect-github.ps1 -OutputPath test.json`
+- Run data collectors locally: `dotnet run --project src/SkiaSharp.Collector -- all -o ./test-data`
 - Manual testing: Navigate all 5 pages, verify data loads
 
 ## GitHub Pages SPA Routing

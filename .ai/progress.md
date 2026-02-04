@@ -118,7 +118,7 @@ None! 🎉
 ## Phase 3: Collector CLI Migration ✅
 
 ### .NET Console App
-- [x] Create `collectors/SkiaSharp.Collector/` project (.NET 10)
+- [x] Create `src/SkiaSharp.Collector/` project (.NET 10)
 - [x] Add Spectre.Console.Cli, Octokit, NuGet.Protocol packages
 - [x] Create 6 commands: all, github, nuget, community, issues, pr-triage
 
@@ -128,9 +128,14 @@ None! 🎉
 - [x] LabelParser - Shared label parsing and age/size categories
 - [x] OutputService - JSON serialization
 
+### Project Cleanup
+- [x] Move project from `collectors/` to `src/`
+- [x] Add to solution
+- [x] Delete PowerShell scripts (5 files, 975 lines removed)
+- [x] Convert solution to `.slnx` format
+
 ### CI/CD Integration
 - [x] Update workflow: single `dotnet run -- all` instead of 5 `pwsh` calls
-- [ ] Archive PowerShell scripts (keep for reference)
 
 ---
 
