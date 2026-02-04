@@ -1,40 +1,33 @@
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using NuGet.Common;
+using NuGet.Protocol;
+using NuGet.Protocol.Core.Types;
 using Spectre.Console;
 
 namespace SkiaSharp.Collector.Services;
 
 /// <summary>
-/// NuGet API client for fetching package statistics.
-/// Uses Registration API for full version history with publish dates,
-/// and Search API for download counts.
+/// NuGet API client for fetching package statistics using the official NuGet.Protocol SDK.
+/// Combines PackageSearchResource (downloads) and PackageMetadataResource (publish dates)
+/// to get complete version history with all data.
 /// </summary>
 public sealed class NuGetService : IDisposable
 {
     private readonly HttpClient _httpClient;
+    private readonly SourceRepository _repository;
+    private readonly SourceCacheContext _cache;
     private readonly int _minSupportedMajorVersion;
     private readonly bool _verbose;
 
-    private const string RegistrationApiUrl = "https://api.nuget.org/v3/registration5-gz-semver2";
-    private const string SearchApiUrl = "https://azuresearch-usnc.nuget.org/query";
+    private const string NuGetV3Url = "https://api.nuget.org/v3/index.json";
     private const string MainVersionsUrl = "https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/VERSIONS.txt";
     private const string ReleaseVersionsUrl = "https://raw.githubusercontent.com/mono/SkiaSharp/release/2.x/VERSIONS.txt";
 
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
     public NuGetService(int minSupportedMajorVersion = 3, bool verbose = false)
     {
-        var handler = new HttpClientHandler
-        {
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-        _httpClient = new HttpClient(handler);
+        _httpClient = new HttpClient();
+        _repository = Repository.Factory.GetCoreV3(NuGetV3Url);
+        _cache = new SourceCacheContext();
         _minSupportedMajorVersion = minSupportedMajorVersion;
         _verbose = verbose;
     }
@@ -70,93 +63,78 @@ public sealed class NuGetService : IDisposable
     }
 
     /// <summary>
-    /// Get full version history for a package using both Registration and Search APIs.
-    /// Registration API: All versions with publish dates
-    /// Search API: Download counts
+    /// Get full version history for a package using the NuGet.Protocol SDK.
+    /// Combines PackageSearchResource (downloads) and PackageMetadataResource (publish dates).
     /// </summary>
     public async Task<PackageSearchResult> GetPackageStatsAsync(string packageId)
     {
         try
         {
-            // Get download counts from Search API
-            var searchUrl = $"{SearchApiUrl}?q=packageid:{packageId}&prerelease=true&take=1";
-            var searchResponse = await _httpClient.GetFromJsonAsync<NuGetSearchResponse>(searchUrl, JsonOptions);
+            var searchResource = await _repository.GetResourceAsync<PackageSearchResource>();
+            var metadataResource = await _repository.GetResourceAsync<PackageMetadataResource>();
+
+            // Get downloads from Search API
+            var searchFilter = new SearchFilter(includePrerelease: true);
+            var searchResults = await searchResource.SearchAsync(
+                $"packageid:{packageId}",
+                searchFilter,
+                skip: 0,
+                take: 1,
+                NullLogger.Instance,
+                CancellationToken.None);
+
+            var searchPkg = searchResults.FirstOrDefault();
             
             long totalDownloads = 0;
             var downloadsByVersion = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
             var isLegacy = true;
 
-            if (searchResponse?.Data?.Count > 0)
+            if (searchPkg != null)
             {
-                var pkg = searchResponse.Data[0];
-                totalDownloads = pkg.TotalDownloads;
+                totalDownloads = searchPkg.DownloadCount ?? 0;
                 
-                // Build downloads lookup from search results
-                if (pkg.Versions != null)
+                // Get all versions with download counts
+                var searchVersions = await searchPkg.GetVersionsAsync();
+                foreach (var v in searchVersions)
                 {
-                    foreach (var v in pkg.Versions)
+                    var versionStr = v.Version.ToNormalizedString();
+                    downloadsByVersion[versionStr] = v.DownloadCount ?? 0;
+                    
+                    // Check legacy status
+                    if (!versionStr.Contains('-'))
                     {
-                        downloadsByVersion[v.Version] = v.Downloads;
-                        
-                        // Check legacy status
-                        if (!v.Version.Contains('-'))
-                        {
-                            var parts = v.Version.Split('.');
-                            if (parts.Length > 0 && int.TryParse(parts[0], out var major))
-                            {
-                                if (major >= _minSupportedMajorVersion)
-                                    isLegacy = false;
-                            }
-                        }
+                        var major = v.Version.Major;
+                        if (major >= _minSupportedMajorVersion)
+                            isLegacy = false;
                     }
                 }
             }
 
-            // Get all versions with publish dates from Registration API
-            var regUrl = $"{RegistrationApiUrl}/{packageId.ToLowerInvariant()}/index.json";
-            var regResponse = await _httpClient.GetFromJsonAsync<RegistrationIndex>(regUrl, JsonOptions);
+            // Get publish dates from Metadata API
+            var metadata = await metadataResource.GetMetadataAsync(
+                packageId,
+                includePrerelease: true,
+                includeUnlisted: false,
+                _cache,
+                NullLogger.Instance,
+                CancellationToken.None);
 
             var versions = new List<VersionStats>();
 
-            if (regResponse?.Items != null)
+            foreach (var pkg in metadata)
             {
-                foreach (var page in regResponse.Items)
-                {
-                    // If page has items inline, use them; otherwise fetch the page
-                    var pageItems = page.Items;
-                    if (pageItems == null && page.Id != null)
-                    {
-                        try
-                        {
-                            var pageResponse = await _httpClient.GetFromJsonAsync<RegistrationPage>(page.Id, JsonOptions);
-                            pageItems = pageResponse?.Items;
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-                    }
+                var versionStr = pkg.Identity.Version.ToNormalizedString();
+                var published = pkg.Published?.UtcDateTime;
+                var downloads = downloadsByVersion.GetValueOrDefault(versionStr, 0);
 
-                    if (pageItems == null) continue;
-
-                    foreach (var item in pageItems)
-                    {
-                        var entry = item.CatalogEntry;
-                        if (entry == null) continue;
-
-                        var version = entry.Version ?? "";
-                        var published = entry.Published;
-                        
-                        // Get downloads from search API lookup, default to 0
-                        var downloads = downloadsByVersion.GetValueOrDefault(version, 0);
-
-                        versions.Add(new VersionStats(version, downloads, published));
-                    }
-                }
+                versions.Add(new VersionStats(versionStr, downloads, published));
             }
 
             // Sort by publish date (oldest first for chart data)
             versions = [.. versions.OrderBy(v => v.Published ?? DateTime.MinValue)];
+
+            if (_verbose)
+                AnsiConsole.MarkupLine($"[dim]Fetched {versions.Count} versions for {packageId}[/]");
 
             return new PackageSearchResult(packageId, totalDownloads, versions, isLegacy);
         }
@@ -170,36 +148,11 @@ public sealed class NuGetService : IDisposable
 
     public void Dispose()
     {
+        _cache.Dispose();
         _httpClient.Dispose();
     }
 }
 
-// JSON models for NuGet Search API response
-public record NuGetSearchResponse(List<NuGetPackageResult>? Data);
-public record NuGetPackageResult(string Id, long TotalDownloads, List<NuGetVersionResult>? Versions);
-public record NuGetVersionResult(string Version, long Downloads);
-
-// JSON models for NuGet Registration API response
-public record RegistrationIndex(
-    [property: JsonPropertyName("items")] List<RegistrationPage>? Items
-);
-
-public record RegistrationPage(
-    [property: JsonPropertyName("@id")] string? Id,
-    [property: JsonPropertyName("items")] List<RegistrationLeaf>? Items
-);
-
-public record RegistrationLeaf(
-    [property: JsonPropertyName("catalogEntry")] CatalogEntry? CatalogEntry
-);
-
-public record CatalogEntry(
-    [property: JsonPropertyName("version")] string? Version,
-    [property: JsonPropertyName("downloads")] long? Downloads,
-    [property: JsonPropertyName("published")] DateTime? Published,
-    [property: JsonPropertyName("description")] string? Description
-);
-
-// Our result model
+// Our result models
 public record PackageSearchResult(string Id, long TotalDownloads, List<VersionStats> Versions, bool IsLegacy);
 public record VersionStats(string Version, long Downloads, DateTime? Published);
