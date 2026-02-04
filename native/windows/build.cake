@@ -14,6 +14,21 @@ bool SUPPORT_DIRECT3D = SUPPORT_DIRECT3D_VAR == "1" || SUPPORT_DIRECT3D_VAR.ToLo
 #load "../../scripts/cake/native-shared.cake"
 #load "../../scripts/cake/msbuild.cake"
 
+string GetSpectreLibPath(string arch)
+{
+    // Normalize architecture names to match spectre lib directory structure
+    var spectreArch = arch.ToLower() switch {
+        "win32" => "x86",
+        _ => arch.ToLower()
+    };
+
+    var spectrePaths = GetDirectories($"{VS_INSTALL}/VC/Tools/MSVC/*/lib/spectre/{spectreArch}");
+    if (spectrePaths.Count == 0) {
+        throw new Exception($"Could not find spectre library path for {spectreArch}, please ensure that --vsinstall is used or the envvar VS_INSTALL is set.");
+    }
+    return spectrePaths.First().FullPath;
+}
+
 string VARIANT = BUILD_VARIANT ?? "windows";
 
 Information("Native Arguments:");
@@ -38,6 +53,7 @@ Task("libSkiaSharp")
         var clang = string.IsNullOrEmpty(LLVM_HOME.FullPath) ? "" : $"clang_win='{LLVM_HOME}' ";
         var win_vcvars_version = string.IsNullOrEmpty(VC_TOOLSET_VERSION) ? "" : $"win_vcvars_version='{VC_TOOLSET_VERSION}' ";
         var d = CONFIGURATION.ToLower() == "release" ? "" : "d";
+        var spectreLibPath = GetSpectreLibPath(arch);
 
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='win'" +
@@ -59,7 +75,7 @@ Task("libSkiaSharp")
             clang +
             win_vcvars_version +
             $"extra_cflags=[ '-DSKIA_C_DLL', '/MT{d}', '/EHsc', '/Z7', '/guard:cf', '-D_HAS_AUTO_PTR_ETC=1' ] " +
-            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf' ] " +
+            $"extra_ldflags=[ '/DEBUG:FULL', '/DEBUGTYPE:CV,FIXUP', '/guard:cf', '/LIBPATH:{spectreLibPath}' ] " +
             ADDITIONAL_GN_ARGS);
 
         var outDir = OUTPUT_PATH.Combine($"{VARIANT}/{dir}");
