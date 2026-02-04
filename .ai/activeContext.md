@@ -5,18 +5,32 @@
 
 ## Current Focus
 
-**Phase**: Phase 4 - Data Cache Architecture (IN PROGRESS)
-**Status**: Implementing cache-based sync system
+**Phase**: Phase 4 - Data Cache Architecture (MOSTLY COMPLETE)
+**Status**: Core infrastructure done, UI updates and testing remaining
 
 ## Recent Changes
 
-### 2026-02-04 (Data Cache Architecture - IN PROGRESS)
+### 2026-02-04 (Data Cache Architecture)
 1. ✅ Branch renamed: `dashboard` → `docs-dashboard`
 2. ✅ Created `docs-data-cache` orphan branch for cached API data
 3. ✅ Updated `build-dashboard.yml` to use `generate --from-cache`
 4. ✅ Created `sync-data-cache.yml` workflow (hourly sync)
-5. 🔄 Implementing `sync` and `generate` commands in collector
-6. ⏳ Engagement scoring (hot issues) - pending
+5. ✅ Implemented `sync` commands (github, nuget, all)
+6. ✅ Implemented `generate` command (cache → dashboard JSON)
+7. ✅ Engagement scoring with hot issue detection
+8. ⏳ Dashboard UI updates (hot issues display) - pending
+
+### New CLI Commands
+```bash
+# Cache-based workflow
+dotnet run -- sync github -c ./cache    # Layer 1 + Layer 2
+dotnet run -- sync nuget -c ./cache     # NuGet packages
+dotnet run -- sync all -c ./cache       # All sources
+dotnet run -- generate -c ./cache -o ./data  # Generate dashboard JSON
+
+# Legacy direct-API commands still available
+dotnet run -- all -o ./data
+```
 
 ### Architecture Overview
 ```
@@ -50,6 +64,10 @@ docs-data-cache/
 - Skip list for failed items with cooldown periods
 - Resume from checkpoint on next run
 
+### Engagement Scoring
+- Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
+- Hot detection: Current score > Historical score (7 days ago)
+
 ## Context for Next AI Session
 
 When resuming work:
@@ -57,7 +75,7 @@ When resuming work:
 2. Branch is `docs-dashboard` (renamed from `dashboard`)
 3. Data cache is `docs-data-cache` branch
 4. Live at https://mono.github.io/SkiaSharp/dashboard/
-5. **NEXT**: Implement `SyncCommand` and `GenerateCommand` in collector
+5. **NEXT**: Add hot issues to dashboard UI (Issues page + Home page)
 
 ## Previous Completed Phases
 

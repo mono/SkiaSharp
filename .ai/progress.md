@@ -4,7 +4,7 @@
 
 ## Current Status
 
-**Overall**: ✅ Phase 3 - Collector CLI Migration COMPLETE
+**Overall**: 🔄 Phase 4 - Data Cache Architecture IN PROGRESS
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -12,7 +12,41 @@
 | Phase 2 | ✅ Complete | Restructure with charts |
 | Phase 2.7 | ✅ Complete | NuGet grouped layout + legacy toggle |
 | Phase 3 | ✅ Complete | .NET collector CLI replaces PowerShell |
+| Phase 4 | 🔄 In Progress | Data cache with engagement scoring |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
+
+---
+
+## Phase 4: Data Cache Architecture (In Progress)
+
+### Branch Setup ✅
+- [x] Rename `dashboard` → `docs-dashboard`
+- [x] Create `docs-data-cache` orphan branch
+- [x] Update workflows for new architecture
+
+### Cache Infrastructure ✅
+- [x] `CacheModels.cs` - All cache record types
+- [x] `CacheService.cs` - Read/write cache files, atomic writes
+- [x] Skip list management with error types and cooldowns
+
+### Sync Commands ✅
+- [x] `sync github` - Layer 1 (items) + Layer 2 (engagement)
+- [x] `sync nuget` - Package downloads and versions
+- [x] `sync all` - Orchestrates all syncs
+- [x] Proactive rate limit checking
+- [x] Error handling with skip list
+
+### Generate Command ✅
+- [x] `generate` command reads cache, outputs dashboard JSON
+- [x] Engagement scoring with hot issue detection
+- [x] `EngagementCalculator.cs` service
+
+### Dashboard UI (Remaining)
+- [ ] Add hot issues section to Issues page
+- [ ] Add hot issues card to Home page
+- [ ] Display engagement scores and 🔥 badges
+
+---
 
 ## Phase 1 (Completed)
 
@@ -160,6 +194,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.6.0 | 2026-02-04 | Data cache architecture with engagement scoring |
 | 0.5.0 | 2026-02-04 | .NET collector CLI replaces 5 PowerShell scripts |
 | 0.4.0 | 2026-02-04 | NuGet page redesign - grouped layout, legacy toggle, 50 packages |
 | 0.3.2 | 2026-02-03 | NuGet collector fixed - 822M+ downloads now shown |
