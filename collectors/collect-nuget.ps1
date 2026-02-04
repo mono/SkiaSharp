@@ -14,24 +14,35 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-# SkiaSharp packages to track
-$packages = @(
-    "SkiaSharp",
-    "SkiaSharp.NativeAssets.Linux",
-    "SkiaSharp.NativeAssets.macOS",
-    "SkiaSharp.NativeAssets.Win32",
-    "SkiaSharp.NativeAssets.WebAssembly",
-    "SkiaSharp.Views",
-    "SkiaSharp.Views.Maui.Controls",
-    "SkiaSharp.Views.Maui.Core",
-    "SkiaSharp.Views.WPF",
-    "SkiaSharp.Views.WindowsForms",
-    "SkiaSharp.Views.Blazor",
-    "HarfBuzzSharp",
-    "HarfBuzzSharp.NativeAssets.Linux",
-    "HarfBuzzSharp.NativeAssets.macOS",
-    "HarfBuzzSharp.NativeAssets.Win32"
-)
+# Dynamically build package list from VERSIONS.txt files in the repo
+function Get-PackageListFromVersionsFile {
+    param([string]$Url)
+    
+    try {
+        $content = Invoke-RestMethod -Uri $Url -ErrorAction Stop
+        # Match lines like "SkiaSharp.Views.WPF                             nuget       2.88.9"
+        $matches = [regex]::Matches($content, '^\s*((?:SkiaSharp|HarfBuzzSharp)[^\s]*)\s+nuget\s+', [System.Text.RegularExpressions.RegexOptions]::Multiline)
+        return $matches | ForEach-Object { $_.Groups[1].Value }
+    }
+    catch {
+        Write-Warning "Failed to fetch $Url : $_"
+        return @()
+    }
+}
+
+Write-Host "Building package list from VERSIONS.txt files..."
+
+# Fetch from both main and release/2.x branches
+$mainUrl = "https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/VERSIONS.txt"
+$releaseUrl = "https://raw.githubusercontent.com/mono/SkiaSharp/release/2.x/VERSIONS.txt"
+
+$mainPackages = Get-PackageListFromVersionsFile -Url $mainUrl
+$releasePackages = Get-PackageListFromVersionsFile -Url $releaseUrl
+
+# Union of both lists, sorted
+$packages = ($mainPackages + $releasePackages) | Sort-Object -Unique
+
+Write-Host "  Found $($packages.Count) packages to track"
 
 function Get-NuGetStats {
     param([string]$PackageId)
