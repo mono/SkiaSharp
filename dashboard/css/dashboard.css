@@ -769,3 +769,223 @@ h2.category-danger { color: #dc3545; }
 .size-m { color: #6c757d; }
 .size-l { color: #fd7e14; }
 .size-xl { color: #dc3545; font-weight: 700; }
+
+/* ==================== */
+/* NuGet Page Styles    */
+/* ==================== */
+
+.nuget-hero {
+    background: linear-gradient(135deg, #512bd4, #7b4fd3);
+    color: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.hero-stat {
+    text-align: left;
+}
+
+.hero-value {
+    display: block;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.hero-label {
+    display: block;
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+.hero-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.legacy-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    opacity: 0.9;
+}
+
+.legacy-toggle:hover {
+    opacity: 1;
+}
+
+.legacy-toggle input {
+    cursor: pointer;
+}
+
+/* Package Groups */
+.nuget-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.nuget-group {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    background: #f8f9fa;
+    border-bottom: 1px solid transparent;
+    transition: background 0.15s;
+}
+
+.group-header:hover {
+    background: #e9ecef;
+}
+
+.nuget-group.expanded .group-header {
+    border-bottom-color: #dee2e6;
+}
+
+.group-toggle {
+    font-size: 0.75rem;
+    color: #6c757d;
+    width: 1rem;
+}
+
+.group-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1b6ec2;
+    flex: 1;
+}
+
+.group-stats {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.group-downloads {
+    font-weight: 600;
+    color: #333;
+}
+
+.group-count {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.group-content {
+    padding: 1rem 1.25rem;
+}
+
+/* Subgroups */
+.nuget-subgroup {
+    margin-bottom: 1.25rem;
+}
+
+.nuget-subgroup:last-child {
+    margin-bottom: 0;
+}
+
+.subgroup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.subgroup-name {
+    font-weight: 600;
+    color: #495057;
+}
+
+.subgroup-downloads {
+    font-size: 0.9rem;
+    color: #6c757d;
+}
+
+/* Package List */
+.package-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.package-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0.75rem;
+    border-radius: 4px;
+    transition: background 0.1s;
+}
+
+.package-item:hover {
+    background: #f8f9fa;
+}
+
+.package-item.legacy {
+    opacity: 0.7;
+}
+
+.package-name {
+    color: #333;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.package-name:hover {
+    color: #1b6ec2;
+    text-decoration: underline;
+}
+
+.legacy-badge {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.4rem;
+    background: #ffc107;
+    color: #333;
+    border-radius: 3px;
+    font-weight: 500;
+}
+
+.package-downloads {
+    font-size: 0.9rem;
+    color: #6c757d;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 768px) {
+    .nuget-hero {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .hero-meta {
+        align-items: flex-start;
+    }
+    
+    .hero-value {
+        font-size: 2.5rem;
+    }
+}
