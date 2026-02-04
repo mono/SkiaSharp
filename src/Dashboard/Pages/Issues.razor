@@ -17,6 +17,36 @@ else if (_data is null)
 }
 else
 {
+    <!-- Hot Issues Section -->
+    @if (_data.HotIssues?.Count > 0)
+    {
+        <div class="hot-issues-section">
+            <h2>🔥 Hot Issues</h2>
+            <p class="hot-issues-subtitle">Trending issues with recent activity</p>
+            <div class="hot-issues-grid">
+                @foreach (var issue in _data.HotIssues.Take(5))
+                {
+                    <a href="@issue.Url" target="_blank" class="hot-issue-card">
+                        <div class="hot-issue-header">
+                            <span class="hot-issue-number">#@issue.Number</span>
+                            @if (issue.Engagement != null)
+                            {
+                                <span class="hot-score" title="Engagement score: @issue.Engagement.CurrentScore.ToString("F1")">
+                                    🔥 @issue.Engagement.CurrentScore.ToString("F0")
+                                </span>
+                            }
+                        </div>
+                        <div class="hot-issue-title">@Truncate(issue.Title, 80)</div>
+                        <div class="hot-issue-meta">
+                            <span>💬 @issue.CommentCount</span>
+                            <span>@((int)issue.DaysOpen) days old</span>
+                        </div>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
     <!-- Filter Row -->
     <div class="filter-row">
         <div class="filter-group">
@@ -101,7 +131,13 @@ else
                 @foreach (var issue in _filteredIssues.Take(100))
                 {
                     <tr @onclick="() => ExpandIssue(issue.Number)" class="@(ExpandedIssue == issue.Number ? "expanded" : "")">
-                        <td class="col-number">@issue.Number</td>
+                        <td class="col-number">
+                            @issue.Number
+                            @if (issue.Engagement?.IsHot == true)
+                            {
+                                <span class="hot-badge" title="Trending">🔥</span>
+                            }
+                        </td>
                         <td class="col-title">
                             <a href="@issue.Url" target="_blank" @onclick:stopPropagation="true">@issue.Title</a>
                         </td>
@@ -133,6 +169,16 @@ else
                                         <img src="@issue.AuthorAvatarUrl" alt="@issue.Author" class="avatar-small" />
                                         <span>Opened by <strong>@issue.Author</strong> on @issue.CreatedAt.ToString("MMM dd, yyyy")</span>
                                         <span>Last activity: @issue.DaysSinceActivity days ago</span>
+                                        @if (issue.Engagement != null)
+                                        {
+                                            <span class="engagement-info">
+                                                Engagement: <strong>@issue.Engagement.CurrentScore.ToString("F1")</strong>
+                                                @if (issue.Engagement.IsHot)
+                                                {
+                                                    <span class="trending-up" title="Score increased from @issue.Engagement.PreviousScore.ToString("F1")">📈</span>
+                                                }
+                                            </span>
+                                        }
                                     </div>
                                     <div class="issue-labels">
                                         @if (issue.Type != null) { <span class="label label-type">@issue.Type</span> }
@@ -256,4 +302,7 @@ else
         "ancient" => "age-ancient",
         _ => ""
     };
+
+    private static string Truncate(string value, int maxLength)
+        => value.Length <= maxLength ? value : value[..(maxLength - 3)] + "...";
 }

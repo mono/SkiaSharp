@@ -33,6 +33,27 @@ else
         </div>
     </div>
 
+    <!-- Hot Issues Card -->
+    @if (_issues?.HotIssues?.Count > 0)
+    {
+        <div class="hot-issues-home">
+            <div class="hot-issues-header">
+                <h3>🔥 Hot Issues</h3>
+                <a href="issues" class="view-all">View all →</a>
+            </div>
+            <div class="hot-issues-list">
+                @foreach (var issue in _issues.HotIssues.Take(3))
+                {
+                    <a href="@($"https://github.com/mono/SkiaSharp/issues/{issue.Number}")" target="_blank" class="hot-issue-item">
+                        <span class="hot-issue-num">#@issue.Number</span>
+                        <span class="hot-issue-text">@Truncate(issue.Title, 60)</span>
+                        <span class="hot-score-small">🔥 @(issue.Engagement?.CurrentScore.ToString("F0") ?? "—")</span>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+
     <!-- Charts Section -->
     <div class="charts-grid">
         <!-- Issues by Type -->
@@ -269,4 +290,7 @@ else
         try { _prs = await DataService.GetPrTriageStatsAsync(); }
         catch { /* Data not yet available */ }
     }
+
+    private static string Truncate(string value, int maxLength)
+        => value.Length <= maxLength ? value : value[..(maxLength - 3)] + "...";
 }

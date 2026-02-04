@@ -9,7 +9,8 @@ public record IssuesData(
     List<LabelCount> ByBackend,
     List<LabelCount> ByOs,
     List<AgeCount> ByAge,
-    List<IssueInfo> Issues
+    List<IssueInfo> Issues,
+    List<IssueInfo>? HotIssues = null
 );
 
 public record AgeCount(string Label, string Display, int Count);
@@ -30,5 +31,12 @@ public record IssueInfo(
     List<string> Backends,
     List<string> Oses,
     List<string> OtherLabels,
-    string Url
+    string Url,
+    IssueEngagementScore? Engagement = null
+);
+
+public record IssueEngagementScore(
+    double CurrentScore,
+    double PreviousScore,
+    bool IsHot
 );
