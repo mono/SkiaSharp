@@ -1,0 +1,19 @@
+{
+  "number": 193,
+  "type": "issue",
+  "state": "closed",
+  "title": "An exception of type \u0027System.DllNotFoundException\u0027 occurred in SkiaSharp.dll",
+  "body": "An exception of type \u0027System.DllNotFoundException\u0027 occurred in SkiaSharp.dll\r\n\r\nThe issue is releated to #187. Unfortunately I wasn\u0027t fast enough to response and the case was closed. I am sorry about my delay. \r\n\r\nOriginal message:\r\nThis exception occurs always when e.g. calling \u0027SKBitmap bitmap = new SKBitmap(frame.Size.Width, frame.Size.Height, SKColorType.Rgb565, SKAlphaType.Premul);\u0027 within an UWP Xamarin project and using any Windows 10 Mobile Emulator or a XBox One as device while running a debug session in Visual Studio.\r\n\r\n\r\nDoes it work in Release? \r\n\r\nNo it fails also.\r\n\r\nAlso, did you install the SkiaSharp NuGet into all the relevant projects (PCL/iOS/Android/UWP)? \r\n\r\nOf course.\r\n\r\nFinally, are you able to check if the samples build for v1.54.1: \r\nhttps://github.com/mono/SkiaSharp/releases/tag/v1.54.1\r\n For this, you should download the source using the \u0022Source code (zip)\u0022 link at the bottom of the page. v1.55.0 is still in development.\r\n\r\nThe UWP sample don\u0027t work also in both debug and release mode when using a Mobile Emulator or a XBox One as device.\r\n\r\nMoreover v1.54.1 uses eglGetProcAddress  in Binding/GRGlInterface.cs, what causes your app fails to pass the Windows Store certification process.\r\n\r\nAny help is welcome. Thank you and sorry again.",
+  "author": {
+    "login": "jaladaGmbH",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.55.1",
+  "createdAt": "2016-11-12T09:33:57",
+  "updatedAt": "2022-08-20T00:01:27",
+  "closedAt": "2016-11-16T08:56:53",
+  "commentCount": 13,
+  "reactionCount": 0
+}

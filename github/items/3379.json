@@ -1,0 +1,34 @@
+{
+  "number": 3379,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Strong-naming support lost due to OpenTK.GLWpfControl reference",
+  "body": "### Description\n\nSkiaSharp.Views.WPF has a PackageReference to OpenTK.GLWpfControl version 3.3.0 for .NET Framework:\nhttps://github.com/mono/SkiaSharp/blob/c38c6820b05fb2538afdd5a2f6662c5aff1d07e0/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SkiaSharp.Views.WPF.csproj#L15\n\nIn version 3.3.0, the GLWpfControl assembly is not strong-named.  \nAs a result, I cannot use this library in my strong-named application, since all dependencies must also be strong-named.\n\nStrong-naming was added in OpenTK.GLWpfControl 3.3.1.  \nCould you please release a version of SkiaSharp.Views.WPF with an updated reference to OpenTK.GLWpfControl 3.3.1 or later?\n\n### Code\n\n\nExample App csproj:\n\n\u0060\u0060\u0060xml\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n\n  \u003CPropertyGroup\u003E\n    \u003COutputType\u003EWinExe\u003C/OutputType\u003E\n    \u003CTargetFramework\u003Enet48\u003C/TargetFramework\u003E    \n    \u003CSignAssembly\u003Etrue\u003C/SignAssembly\u003E\n    \u003CAssemblyOriginatorKeyFile\u003EMyStrongNameKey.snk\u003C/AssemblyOriginatorKeyFile\u003E\n  \u003C/PropertyGroup\u003E\n\n  \u003CItemGroup\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.WPF\u0022 Version=\u00223.119.1\u0022 /\u003E\n  \u003C/ItemGroup\u003E\n\n\u003C/Project\u003E\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nSystem.IO.FileLoadException: \u0027Could not load file or assembly \u0027GLWpfControl, Version=3.3.0.0, Culture=neutral, PublicKeyToken=null\u0027 or one of its dependencies. A strongly-named assembly is required. (Exception from HRESULT: 0x80131044)\u0027\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ChristianRadloff",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/compatibility",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-06T13:37:57",
+  "updatedAt": "2025-10-06T13:38:31",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,59 @@
+{
+  "number": 847,
+  "type": "pr",
+  "state": "closed",
+  "title": "HarfBuzzSharp Allow loading face by table data",
+  "body": "This introduces support for http://www.manpagez.com/html/harfbuzz/harfbuzz-2.3.1/harfbuzz-hb-face.php#hb-face-create-for-tables\r\nCurrently, https://docs.microsoft.com/ja-jp/dotnet/api/skiasharp.sktypeface.openstream?view=skiasharp-1.68.0 is used to obtain https://docs.microsoft.com/ja-jp/dotnet/api/skiasharp.skstreamasset?view=skiasharp-1.68.0 and that is used to access the font file via \u0060GetMemoryBase()\u0060 which currently fails on Linux\r\n\r\nThis new approach should work all the time because it just uses the table data that is already loaded into SKTypeface. It would be preferable if \u0060SKTypeface.GetTableData\u0060 could return a pointer to the table instead of returning a copy.\r\n\r\nhttps://chromium.googlesource.com/chromium/src/\u002B/refs/heads/master/ui/gfx/harfbuzz_font_skia.cc just for reference how it is used.",
+  "author": {
+    "login": "Gillibald",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-05-21T15:37:33",
+  "updatedAt": "2019-06-21T09:54:26",
+  "closedAt": "2019-06-18T14:33:54",
+  "commentCount": 12,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "feature/HarfBuzzFaceCreateForTables",
+  "additions": 134,
+  "deletions": 84,
+  "changedFiles": 14,
+  "commits": 20,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-05-27T11:19:56"
+    },
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2019-05-27T11:43:07"
+    },
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2019-05-27T11:47:08"
+    },
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2019-05-27T11:48:51"
+    },
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2019-05-27T11:59:52"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-05-27T17:32:42"
+    }
+  ]
+}

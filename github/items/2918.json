@@ -1,0 +1,42 @@
+{
+  "number": 2918,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix SKXamlCanvas on Uno Skia to use Bgra8888",
+  "body": "**Description of Change**\r\n\r\n\u003C!-- Describe your changes here. --\u003E\r\nUse Bgra8888 instead of PlatformColorType\r\n\r\n**Bugs Fixed**\r\n\r\nWhen not running on Windows where PlatformColorType may not be Bgra8888, rendering will be incorrect. In Uno, both WriteableBitmap and SkiaCompositionSurface deal explicitly with Bgra8888, so the format used in SKXamlCanvas has to match.\r\n\r\nhttps://github.com/unoplatform/uno/blob/1d1f8c9f1f87fbb7e1af9d884049cef06cb46680/src/Uno.UI.Composition/Composition/SkiaCompositionSurface.skia.cs#L64\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "Youssef1313",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    },
+    {
+      "name": "backport/release/2.x",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-03T09:48:14",
+  "updatedAt": "2024-07-04T01:28:21",
+  "closedAt": "2024-07-03T21:07:13",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "patch-1",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-07-03T21:07:01"
+    }
+  ]
+}

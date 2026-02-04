@@ -1,0 +1,22 @@
+{
+  "number": 2751,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKPixmap.GetPixelSpan() returns incorrectly sized ReadOnlySpan\u003Cbyte\u003E",
+  "body": "### Description\n\nWhen using \u0060SKPixmap\u0060 to get the raw pixel data via \u0060GetPixelSpan()\u0060, the length that is used to create the span is incorrectly calculated when a pixmap is derived from \u0060ExtractSubset\u0060 on another pixmap/bitmap (or manually created with a larger-than-normal row size).\n\n### Code\n\n\u0060\u0060\u0060cs\r\n// A sample PNG image that is larger than the subset required below (25x25).\r\n// This sample image is sized: 111x33\r\nbyte[] imageData = [\r\n    0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00, 0x00, 0x00, 0x0D,\r\n    0x49, 0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x6F, 0x00, 0x00, 0x00, 0x21,\r\n    0x08, 0x02, 0x00, 0x00, 0x00, 0x58, 0xF5, 0x62, 0x2B, 0x00, 0x00, 0x00,\r\n    0x03, 0x73, 0x42, 0x49, 0x54, 0x08, 0x08, 0x08, 0xDB, 0xE1, 0x4F, 0xE0,\r\n    0x00, 0x00, 0x00, 0x7B, 0x49, 0x44, 0x41, 0x54, 0x68, 0x81, 0xED, 0xDA,\r\n    0xB1, 0x0D, 0x02, 0x51, 0x0C, 0x05, 0xC1, 0x6F, 0x44, 0xFF, 0x2D, 0x9B,\r\n    0x80, 0x13, 0x0D, 0xB0, 0xD2, 0x09, 0x34, 0x13, 0x39, 0xB4, 0x36, 0x7E,\r\n    0xB3, 0xBB, 0x87, 0x8A, 0x9A, 0x95, 0xDD, 0x7D, 0x7E, 0xAE, 0x7B, 0x5F,\r\n    0xF9, 0x75, 0x33, 0x73, 0xCE, 0x79, 0xDC, 0xFD, 0xC6, 0x5F, 0x51, 0xB3,\r\n    0xA4, 0x66, 0x49, 0xCD, 0x92, 0x9A, 0x25, 0x35, 0x4B, 0x6A, 0x96, 0xD4,\r\n    0x2C, 0xA9, 0x59, 0x52, 0xB3, 0xA4, 0x66, 0x49, 0xCD, 0x92, 0x9A, 0x25,\r\n    0x35, 0x4B, 0x6A, 0x96, 0xD4, 0x2C, 0xA9, 0x59, 0x52, 0xB3, 0xA4, 0x66,\r\n    0x49, 0xCD, 0x92, 0x9A, 0x25, 0x35, 0x4B, 0x6A, 0x96, 0xD4, 0x2C, 0xA9,\r\n    0x59, 0x52, 0xB3, 0xA4, 0x66, 0x49, 0xCD, 0xD2, 0xB5, 0xEA, 0x7A, 0x8F,\r\n    0x92, 0xF8, 0xD2, 0x58, 0xC7, 0x85, 0x5E, 0x3B, 0x1C, 0x0F, 0x3A, 0x22,\r\n    0x47, 0x3D, 0x10, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4E, 0x44, 0xAE,\r\n    0x42, 0x60, 0x82\r\n];\r\n\r\nusing var bitmap = SKBitmap.Decode(imageData);\r\n\r\n// Get a smaller portion of the bitmap (bottom-right corner--to exemplify the last row requiring less than the\r\n// pixmap\u0027s full row bytes).\r\nusing var bitmapSubset = new SKBitmap();\r\nif (!bitmap.ExtractSubset(bitmapSubset, SKRectI.Create(bitmap.Width - 25, bitmap.Height - 25, 25, 25)))\r\n    throw new InvalidOperationException(\u0022Unable to create subset!\u0022);\r\n\r\n// Get the subset bitmap\u0027s pixmap.\r\nvar pixmap = bitmapSubset.PeekPixels();\r\nvar pixmapInfo = pixmap.Info;\r\nvar pixmapBytes = pixmap.GetPixelSpan();\r\n\r\n// Calculate the actual byte length of the pixmap data.\r\nvar pixmapActualByteLength = pixmapInfo.Height \u003E 0\r\n    ? ((pixmap.RowBytes * (pixmapInfo.Height - 1)) \u002B pixmapInfo.RowBytes)\r\n    : 0;\r\n\r\n// Validate pixmap span\u0027s length.\r\nif (pixmapBytes.Length \u003C pixmapActualByteLength)\r\n    throw new InvalidOperationException(\u0022Pixel data not fully specified!\u0022);\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nNo exception should be thrown and \u0060SKPixmap.GetPixelSpan()\u0060 should return a span with a length of 11200 bytes (in this particular example).\r\n\r\nThe span\u0027s length should match the native Skia API: \u0060SkPixmap::computeByteSize()\u0060 which in turn calls \u0060SkImageInfo::computeByteSize(pixmap-\u003ErowBytes())\u0060. Neither of these APIs appear to be available in the exposed/referenced C library. Though it is easy to calculate as seen in the example code above.\n\n### Actual Behavior\n\n\u0060InvalidOperationException\u0060 is thrown with the message: **Pixel data not fully specified!**\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nTested on Windows 10.0.19045.0 x64, .NET 8.0.1 x64, SkiaSharp 2.88.7.\n\n### Devices\n\nIn theory, bug should occur on all devices.\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "assumenothing",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-11T18:17:36",
+  "updatedAt": "2024-02-11T18:17:36",
+  "commentCount": 0,
+  "reactionCount": 0
+}

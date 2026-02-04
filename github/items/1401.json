@@ -1,0 +1,19 @@
+{
+  "number": 1401,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] origin parameter is ignored in SKSurface.Create",
+  "body": "**Description**\r\n\r\nOne overload of \u0060SKSurface.Create\u0060 is not passing the \u0060origin\u0060 parameter, it passed \u0060BottomLeft\u0060 instead.\r\n\r\nRelated to #1381 \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060CS\r\nvar surface = SKSurface.Create(context, false, info, 0, GRSurfaceOrigin.TopLeft);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n\u0060TopLeft\u0060 is used.\r\n\r\n\r\n**Actual Behavior**\r\n\r\n\u0060BottomLeft\u0060 is used.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80 364f92eea3d42f32765b71fc29226fe22a06d1c1\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-14T14:05:40",
+  "updatedAt": "2022-08-19T03:02:35",
+  "closedAt": "2020-07-15T01:37:32",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,22 @@
+{
+  "number": 3170,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp.Views.WinUI.Native.BufferExtensions unhandled exception in previously working code.",
+  "body": "### Description\nNet 8.0 fails and now tested on Net 9.0 also fails.\nMy existing Store App AIIR works without issue locally and globally.When updating to certification it fails certification on a clean windows 11 machine with the following debug Exception thrown at 0x762B8FA4 (KernelBase.dll) in AIIR.exe: WinRT originate error - 0x80131534 : \u0027The type initializer for \u0027SkiaSharp.Views.WinUI.Native.BufferExtensions\u0027 threw an exception.\u0027.\nUnhandled exception at 0x7568C5B1 (combase.dll) in AIIR.exe: 0xC000027B: An application-internal exception has occurred (parameters: 0x1559AB40, 0x00000001).\nI have TRACE through my code and all set up code works fine but Skiasharp fails to initialise.\nI have also checked through the canvas drawing code with no offending code.\nOddly when i have the source code in visual studio I have no issues with running the code either in debug or release.\nBecause the issue only happens on a clean win11 machine I am debugging remotely into a clean win11 VM.I can not replicate the code in any other way.\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nPrevious to windows updating and with minimal code updates from the previous version(all lines checked) I expected no issues.\nI have tried updating skaisharp to latest version and no difference in behaviour.\n\n### Actual Behavior\n\nException thrown at 0x762B8FA4 (KernelBase.dll) in AIIR.exe: WinRT originate error - 0x80131534 : \u0027The type initializer for \u0027SkiaSharp.Views.WinUI.Native.BufferExtensions\u0027 threw an exception.\u0027.\nUnhandled exception at 0x7568C5B1 (combase.dll) in AIIR.exe: 0xC000027B: An application-internal exception has occurred (parameters: 0x1559AB40, 0x00000001).\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nwindows 11 clean \n\n### Devices\n\nwindows 11 clean\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nException thrown at 0x762B8FA4 (KernelBase.dll) in AIIR.exe: WinRT originate error - 0x80131534 : \u0027The type initializer for \u0027SkiaSharp.Views.WinUI.Native.BufferExtensions\u0027 threw an exception.\u0027.\nUnhandled exception at 0x7568C5B1 (combase.dll) in AIIR.exe: 0xC000027B: An application-internal exception has occurred (parameters: 0x1559AB40, 0x00000001).\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Braysoft",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-19T13:21:19",
+  "updatedAt": "2025-02-26T14:02:45",
+  "commentCount": 1,
+  "reactionCount": 0
+}

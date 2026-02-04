@@ -1,0 +1,18 @@
+{
+  "number": 896,
+  "type": "issue",
+  "state": "closed",
+  "title": "Cannot set width of canvas view to more then 1000",
+  "body": "**Description**\r\n\r\nI am trying to create a custom bar chart using canvas view on **xamarin forms** . So I need to draw almost 500 rect of 30 width with 30 spacing within each of them so the width of canvas view will become almost 30000 the rectangle is drawing but when the pages load canvas view becomes blank with white color . Everything works fine when when I set widht to 1000 . Note I am having the canvas view in horizontal scroll view so the user can scroll horizontally to the last rect . It would be better if you could add bar chart sample to skia sharp demo sample of xamarin forms . Let me know if it\u0027s not possible so that I\u0027ll start finding any other solution\r\n\r\n**Code**\r\nXaml\r\n\u003Cskia:SKCanvasView HeightRequest=\u0022500\u0022 WidthRequest=\u002230000\u0022 x:Name=\u0022skiaView\u0022 PaintSurface=\u0022OnPaintSurface\u0022 /\u003E \r\n\r\n\r\nCode Behind\r\nfloat lastx = 0;\r\nfor (int k = 0; k \u003C mData.mergedLists.Count; k\u002B\u002B)\r\n            {\r\n                var rect = SKRect.Create(lastx, (float)skiaView.Height - (float)mData.mergedLists[k].WidthValue, 30, (float)mData.mergedLists[k].WidthValue);\r\n                var paint = new SKPaint\r\n                {\r\n                    Style = SKPaintStyle.Fill,\r\n                    Color = SKColors.Blue\r\n                };\r\n                canvas.DrawRect(rect, paint);\r\n                paint.Style = SKPaintStyle.Stroke;\r\n                paint.Color = SKColors.Red;\r\n                canvas.DrawRect(rect, paint);\r\n\r\n                var rect2 = SKRect.Create(rect.Right, (float)skiaView.Height - (float)mData.mergedLists[k].PeakValue, 30, (float)mData.mergedLists[k].PeakValue);\r\n                var paint2 = new SKPaint\r\n                {\r\n                    Style = SKPaintStyle.Fill,\r\n                    Color = SKColors.Red\r\n                };\r\n                // draw fill\r\n                // change the brush (stroke with red)\r\n                paint.Style = SKPaintStyle.Stroke;\r\n                paint.Color = SKColors.Blue;\r\n                canvas.DrawRect(rect2, paint2);\r\n                lstx = rect2.Right \u002B 30;\r\n            }\r\n**Expected Behavior**\r\n\r\nIt should have set to whatever width we set to canvas view\r\n\r\nCanvas view becomes blank with white color in it . \r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- latest version of skia sharp\u003E\r\n- IDE:  \u003C!-- Visual Studio 2019 / Visual Studio for Mac 2019  --\u003E\r\n- Platform Target Frameworks: \u003C!-- Android ,iOS --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n",
+  "author": {
+    "login": "sarthak199526",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-06-28T05:56:32",
+  "updatedAt": "2022-08-19T09:02:51",
+  "closedAt": "2019-07-01T10:22:36",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,22 @@
+{
+  "number": 3015,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] DllNotFoundException when trying to invoke Skia in a Wasi Wasm Console app",
+  "body": "### Description\r\n\r\nWhen trying to run a Wasi Console app that depends on SkiaSharp. It builds the single-file wasm just fine. I added the nuget package for the NativeAssets.WebAssembly. But when attempting to run, it throws:\r\n\r\n\u0022System.TypeInitializationException: TypeInitialization_Type, SkiaSharp.SKImageInfo --- System.DllNotFoundException: libSkiaSharp   at SkiaSharp.SKImageInfo..cctor()\r\n\r\nThe NativeAssets has build targets for Blazor, but seems to be missing them for Wasi Wasm apps.\r\n\r\nI\u0027m on .NET 9 preview 6. Is there some workaround or something I\u0027m missing? I attached a small repro project. I included the wasm file in case that\u0027s useful. If you\u0027re not familiar with wasi or wasitime, see in the instructions in the readme.\r\n[WasiSkiaSharpRepro.zip](https://github.com/user-attachments/files/17092944/WasiSkiaSharpRepro.zip)\r\n\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\r\n  \u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enet9.0\u003C/TargetFramework\u003E\r\n    \u003CRuntimeIdentifier\u003Ewasi-wasm\u003C/RuntimeIdentifier\u003E\r\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\r\n    \u003CPublishTrimmed\u003Etrue\u003C/PublishTrimmed\u003E\r\n\t\u003CWasmSingleFileBundle\u003Etrue\u003C/WasmSingleFileBundle\u003E\r\n  \u003C/PropertyGroup\u003E\r\n  \u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.0.0-preview.4.1\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00223.0.0-preview.4.1\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System Version\r\n\r\nWasi Wasm\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "enghch",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-23T05:23:18",
+  "updatedAt": "2024-11-26T20:36:24",
+  "commentCount": 3,
+  "reactionCount": 0
+}

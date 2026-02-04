@@ -1,0 +1,22 @@
+{
+  "number": 2684,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKMaskFilter.CreateBlur and SKMaskFilter.CreateGamma issue ",
+  "body": "### Description\r\n\r\nI\u0027m struggling with some issue related to SKMaskFilter. I try to use Gamma, I found CreateGamma method available for SKMaskFilter. I want to apply this filter on whole SKBitmap. I tried something like code example in the documentation. But SKMaskFilter doesn\u0027t work for both blur and gamma. I figured out that blur works via SKImageFilter, but there is no Gamma.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\nusing (var skPaint = new SKPaint())\r\n            {\r\n                using (var maskFilter = SKMaskFilter.CreateGamma(Gamma))\r\n                {\r\n                    skPaint.MaskFilter = maskFilter;\r\n\r\n                    using (var skCanvas = new SKCanvas(bitmap))\r\n                    {\r\n                        skCanvas.DrawBitmap(bitmap, new SKRect(0, 0, bitmap.Width, bitmap.Height), skPaint);\r\n                    }\r\n                }\r\n            }\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.6 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "SuperPotato45",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-12-05T20:42:14",
+  "updatedAt": "2023-12-05T20:44:04",
+  "commentCount": 0,
+  "reactionCount": 0
+}

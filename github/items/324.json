@@ -1,0 +1,18 @@
+{
+  "number": 324,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Question] - Safe way to determine libSkiaSharp has loaded?",
+  "body": "Is there a safe way to determine if libSkiaSharp has loaded successfully and is available for use? A great way would be a method to get the native version number, and have this method throw an exception if the native library is not available.\r\n\r\nRight now I am attempting to detect with this:\r\n\r\n\u0060            using (var bitmap = new SKBitmap())\r\n            {\r\n                return typeof(SKBitmap).GetTypeInfo().Assembly.GetName().Version.ToString();\r\n            }\r\n\u0060\r\n\r\nUnfortunately this causes an unhandled exception that I\u0027m unable to trap and prevent:\r\n\r\n\u003E System.ArgumentNullException: Value cannot be null.\r\nParameter name: obj\r\n  at (wrapper managed-to-native) System.Object:__icall_wrapper_mono_monitor_enter_v4 (object,intptr)\r\n  at SkiaSharp.SKObject.Dispose (System.Boolean disposing) [0x00009] in \u003Caa538976f268441bbb03d0446551ca24\u003E:0 \r\n  at SkiaSharp.SKBitmap.Dispose (System.Boolean disposing) [0x0002b] in \u003Caa538976f268441bbb03d0446551ca24\u003E:0 \r\n  at SkiaSharp.SKNativeObject.Finalize () [0x00000] in \u003Caa538976f268441bbb03d0446551ca24\u003E:0 \r\nSystem.ArgumentNullException\r\n  at (wrapper managed-to-native) System.Object:__icall_wrapper_mono_monitor_enter_v4 (object,intptr)\r\n  at SkiaSharp.SKObject.Dispose (System.Boolean disposing) [0x00009] in \u003Caa538976f268441bbb03d0446551ca24\u003E:0 \r\n  at SkiaSharp.SKBitmap.Dispose (System.Boolean disposing) [0x0002b] in \u003Caa538976f268441bbb03d0446551ca24\u003E:0 \r\n  at SkiaSharp.SKNativeObject.Finalize () [0x00000] in \u003Caa538976f268441bbb03d0446551ca24\u003E:0 \r\n\r\n",
+  "author": {
+    "login": "LukePulverenti",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-06-23T16:52:58",
+  "updatedAt": "2022-08-19T21:01:37",
+  "closedAt": "2017-06-24T03:11:14",
+  "commentCount": 4,
+  "reactionCount": 0
+}

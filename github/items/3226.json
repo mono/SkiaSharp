@@ -1,0 +1,22 @@
+{
+  "number": 3226,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKMatrix44 Matrix Property Incorrect In SkiaSharp 3.0",
+  "body": "### Description\n\nThe SKMatrix44 Matrix property in SkiaSharp 3.0 is incorrectly building the SKMatrix.\n\nThe previous implementation in v2 was performing the conversion in the native Skia library which was using the SkMatrix::get9() method:\nhttps://api.skia.org/classSkMatrix.html#aa49a9684efff87a979f8e26607bd2932\n\nThe description for the get9() method defines the order of the parameters:\nCopies nine scalar values contained by [SkMatrix](https://api.skia.org/classSkMatrix.html) into buffer, in member value ascending order: kMScaleX, kMSkewX, kMTransX, kMSkewY, kMScaleY, kMTransY, kMPersp0, kMPersp1, kMPersp2.\n\nThe SKMatrix constructor defines the same order:\n\u0060\u0060\u0060cs\npublic SKMatrix(float scaleX, float skewX, float transX, float skewY, float scaleY, float transY, float persp0, float persp1, float persp2);\n\u0060\u0060\u0060\n\nHowever, the current Matrix property is passing in the parameters in the wrong order:\n\u0060\u0060\u0060cs\npublic SKMatrix Matrix =\u003E\n\tnew SKMatrix (\n\t\tm00, m10, m30,\n\t\tm01, m11, m31,\n\t\tm03, m13, m33);\n\u0060\u0060\u0060\n\n### Code\n\nTherefore, the corrected Matrix property should be:\n\n\u0060\u0060\u0060cs\npublic SKMatrix Matrix =\u003E\n\tnew SKMatrix (\n\t\tm00, m01, m03,\n\t\tm10, m11, m13,\n\t\tm30, m31, m33);\n\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio Code (macOS)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "mlancione",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-02T23:49:05",
+  "updatedAt": "2025-08-07T23:12:00",
+  "commentCount": 7,
+  "reactionCount": 0
+}

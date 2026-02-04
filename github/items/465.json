@@ -1,0 +1,27 @@
+{
+  "number": 465,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKImage.FromEncodeData(...).Subset(...).Encode(...) encodes the entire image instead of the subset",
+  "body": "Hi,\r\n\r\nwhen creating an image from encoded data, Subset()ting it and then saving the result, the original image is encoded instead of the subset. If the image is created from an SKBitmap instead, this issue doesn\u0027t happen.\r\n\r\n\u0060\u0060\u0060csharp\r\nusing SkiaSharp;\r\nusing System.IO;\r\n\r\nclass Program {\r\n    // pick your favorite png file.\r\n    const string InputPath = @\u0022input.png\u0022;\r\n\r\n    static void Main(string[] args) {\r\n        SKImage image = LoadBroken();\r\n        // or: SKImage image = LoadCorrectly();\r\n\r\n        // save the right half\r\n        using (var rightHalf = image.Subset(new SKRectI(image.Width / 2, 0, image.Width, image.Height)))\r\n        using (var rightData = rightHalf.Encode())\r\n        using (var outputStream = File.OpenWrite(\u0022output.png\u0022))\r\n            rightData.SaveTo(outputStream);\r\n    }\r\n\r\n    static SKImage LoadBroken() {\r\n        using (var stream = File.OpenRead(InputPath))\r\n        using (var data = SKData.Create(stream))\r\n            return SKImage.FromEncodedData(data);\r\n    }\r\n\r\n    static SKImage LoadCorrectly() {\r\n        using (var stream = File.OpenRead(InputPath))\r\n        using (var bitmap = SKBitmap.Decode(stream))\r\n            return SKImage.FromBitmap(bitmap);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected output:** The right half of \u0060input.png\u0060 is saved to \u0060output.png\u0060.\r\n**Actual output:** The entirety of \u0060input.png\u0060 is saved instead.\r\n**Version:** SkiaSharp 1.60.0\r\n**Environment:** .NET Core 2.0 on Windows 10 version 1709\r\n\r\nIf the call to \u0060LoadBroken()\u0060 is replaced with \u0060LoadCorrectly()\u0060 the issue doesn\u0027t happen.",
+  "author": {
+    "login": "raphaelr",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-03-07T18:04:29",
+  "updatedAt": "2022-08-19T18:01:20",
+  "closedAt": "2020-07-30T20:38:47",
+  "commentCount": 3,
+  "reactionCount": 1
+}

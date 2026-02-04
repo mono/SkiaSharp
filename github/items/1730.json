@@ -1,0 +1,27 @@
+{
+  "number": 1730,
+  "type": "pr",
+  "state": "closed",
+  "title": "iOS requires that the view have a background",
+  "body": "**Description of Change**\r\n\r\nIf there is no color set, then iOS can\u0027t clear it. As a result, the canvas is clear, but then it draws that clear canvas onto whatever there was before. And what was there before was the canvas so it keeps stacking things up.\r\n\r\nThis PR make sure that we let iOS know that it has to clear the underlying surface with transparent.\r\n\r\n**Bugs Fixed**\r\n\r\nAn issue where the canvas never really cleared.\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-07-01T01:18:33",
+  "updatedAt": "2021-07-06T20:03:16",
+  "closedAt": "2021-07-06T20:03:13",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/clear-surface",
+  "additions": 2,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

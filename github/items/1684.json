@@ -1,0 +1,17 @@
+{
+  "number": 1684,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG]Obsolete member overrides non-obsolete member",
+  "body": "A bit of background to the above problem, I recently upgraded to Xamarin.AndroidX.AppCompat 1.2.0.7 and Xamarin.AndroidX.Navigation.Fragment 2.3.3.1 which immediately gave me deprecated warnings on ViewPager and FragmentStatePagerAdapter and FragmentPagerAdapter etc. I was using a ViewPager with FragmentStatePagerAdapter using two SKCanvas classes CircularGauge and SemiCircularGauge. The CircularGauge set up is reasonable complex because the user can choose to display either 2, 4 or 6 gauges on a page, so rather than directly modify the existing code I wrote a test app using ViewPager2 and the new FragmentStateAdapter to display 2 gauges per page for a total of 24 gauges, hence 12 pages or fragments.\r\n\r\nI\u2019ve been using the 2.80.2 version of SkiaSharp.Views for 3 or 4 months and haven\u2019t had any issues before this. However now only on the CircularGauge, I get the message in the heading for OnSizeChanged and I\u2019m struggling to figure out why.\r\n\r\nUsing the SemiCircularGauge class if I type\r\nprotected override \u2013 IntelliSense prompts you for all the overrides. But for the CircularGauge nothing. I feel as though I\u2019m doing something really dumb but can\u2019t figure it out.\r\n\r\nAdding the pragma to eliminate the warning does get rid of the warning, but the method isn\u2019t marked as an obsolete/deprecated member if the first place\r\n\r\nAny suggestions would be appreciated.\r\n\r\nAndroid 7.1 to 11.\r\n",
+  "author": {
+    "login": "gmck",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-04-08T02:13:19",
+  "updatedAt": "2021-04-08T02:14:47",
+  "commentCount": 0,
+  "reactionCount": 0
+}

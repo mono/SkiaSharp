@@ -1,0 +1,17 @@
+{
+  "number": 1364,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Investigate not always building the native bits",
+  "body": "Today, each PR builds all the native platforms. \r\n\r\nWe could probably be smart and only build them when they have changed. This is greatly speed up the builds - which spends 50 mins on all the native bits.\r\n\r\nThe XamarinComponents repo does this, so we could leverage some of that logic. \r\n\r\nPretty much, all the bits required to determine whether to build is in:\r\n - externals/skia\r\n - externals/depot_tools\r\n - native\r\n - cake\r\n\r\nAlready the native bits cane be build without the bootstrapper using \u0060dotnet cake\u0060, so we could even move that to the skia repo. The shared cake is quite large, but the native bits only use a few functions.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-29T03:56:35",
+  "updatedAt": "2020-06-29T03:56:35",
+  "commentCount": 0,
+  "reactionCount": 1
+}

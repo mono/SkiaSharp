@@ -1,0 +1,22 @@
+{
+  "number": 2983,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Unicode characters are not displayed correctly when saving the image in Ubuntu Linux",
+  "body": "### Description\r\n\r\nSome specific Unicode characters (\u0022\\u00Fc\u0022, \u0022\\u0071\u0022, \u0022\\u00D8\u0022) are not drawn properly in an image file when saving it in Ubuntu Linux. But the same Unicode characters are drawn properly in windows.\r\n\r\n**Additional information**\r\n\r\n- **SkiaSharp version** = v2.88.8\r\n- **Last known good version** = None\r\n- **IDE** = Ubuntu Linux (VM)\r\n\r\n### Code\r\n\r\n**Replication Steps:**\r\n\u2022\tCreate a simple .NET (.NET 8.0) console application with below code.\r\n\u2022\tInstall SkiaSharp (v2.88.8) in the above app.\r\n\u2022\tRun this application in Ubuntu Linux (VM) terminal using **\u201Cdotnet run -- proj consoleApp.csproj\u201D** command.\r\n\u0060\u0060\u0060cs\r\nint width = 500;\r\nint height = 500;\r\nSKImageInfo imageInfo = new SKImageInfo(width, height);\r\nusing (SKSurface surface = SKSurface.Create(imageInfo))\r\n{\r\n    SKCanvas canvas = surface.Canvas;\r\n    canvas.Clear(SKColors.White);\r\n    var bulletPaint = new SKPaint\r\n    {\r\n         Color = SKColors.Black,\r\n         TextSize = 30,\r\n         IsAntialias = true,\r\n         Typeface = SKTypeface.FromFamilyName(\u0022Wingdings\u0022)\r\n    }\r\n    float X = 30;\r\n    float Y = 50;\r\n    // List of Unicode bullets\r\n    string[] bullets = { \u0022\\u00Fc\u0022, \u0022\\u0071\u0022, \u0022\\u00D8\u0022 };\r\n    // Draw the Unicode bullet\r\n    canvas.DrawText(bullets[0], X, Y, bulletPaint);\r\n    canvas.DrawText(bullets[1], X, Y \u002B 50, bulletPaint);\r\n    canvas.DrawText(bullets[2], X, Y \u002B 100, bulletPaint);               \r\n    using (SKImage image = surface.Snapshot())\r\n    using (SKData data = image.Encode(SKEncodedImageFormat.Jpeg, 100))\r\n    using (FileStream outputStream = new FileStream(\u0022Output.jpg\u0022, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite))\r\n    {\r\n        data.SaveTo(outputStream);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n### Expected Behavior\r\n\r\nThe Unicode character should be drawn properly in Ubuntu Linux as same as Windows.\r\n\r\n### Actual Behavior\r\n\r\nThe specific Unicode characters are drawn as rectangle box in Ubuntu Linux.\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System\r\n\r\nLinux\r\n\r\n### Platform / Operating System Version\r\n\r\nUbuntu Linux (VM) \r\nVersion : v22.04\r\n\r\n### Devices\r\n\r\nUbuntu Linux (VM) \r\nVersion : v22.04\r\n\r\n### Relevant Screenshots\r\n\r\n**Windows**\r\n![Screenshot 2024-08-29 172345](https://github.com/user-attachments/assets/bdab51b0-af52-48a2-9d0d-e1d60981123c)\r\n**Ubuntu Linux**\r\n![Screenshot from 2024-08-29 17-24-49](https://github.com/user-attachments/assets/b5e6c7c2-ec6e-4ca7-9feb-e765d5319e79)\r\n\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Maaran21",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-08-29T13:51:11",
+  "updatedAt": "2024-12-10T13:38:23",
+  "commentCount": 2,
+  "reactionCount": 0
+}

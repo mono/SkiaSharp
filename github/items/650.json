@@ -1,0 +1,36 @@
+{
+  "number": 650,
+  "type": "issue",
+  "state": "closed",
+  "title": "DrawTextOnPath distorts typeface when attempting to rotate text 90-degrees",
+  "body": "### Description\r\n\r\nI am attempting to rotate text by 90-degrees using canvas.DrawTextOnPath - however the vertical font is distorted. What am I missing here?\r\n\r\n### Code\r\n\r\n        public static byte[] Test()\r\n        {\r\n            var info = new SKImageInfo(100, 100, SKColorType.Rgba8888, SKAlphaType.Opaque);\r\n            var bitmap = new SKBitmap(info);\r\n            var canvas = new SKCanvas(bitmap);\r\n            canvas.Clear(SKColors.White);\r\n            using (var paint = new SKPaint())\r\n            using (var path = new SKPath())\r\n            {\r\n                var text = \u0022TESTING 123\u0022;\r\n\r\n                paint.TextSize = 14;\r\n                paint.Typeface = SKTypeface.FromFamilyName(\u0022Terminal\u0022);\r\n                //paint.Typeface = SKTypeface.FromFamilyName(\u0022Courier New\u0022);\r\n                paint.Color = SKColors.Red;\r\n\r\n                //draw horizontal text\r\n                canvas.DrawText(text, 0, 95, paint);\r\n\r\n                //draw same text vertically along a path\r\n                path.MoveTo(95, 95);\r\n                path.LineTo(95, 0);\r\n                canvas.DrawTextOnPath(text, path, 0, 0, paint);\r\n            }\r\n\r\n            var bytes = bitmap.SaveToBytes(SKEncodedImageFormat.Png);\r\n            //if (System.IO.Directory.Exists(\u0022c:/temp\u0022))\r\n            //    System.IO.File.WriteAllBytes(\u0022c:/temp/test.png\u0022, bytes);\r\n            return bytes;\r\n        }\r\n\r\n### Expected Behavior\r\n\r\nI would expect the vertical \u0022TESTING 123\u0022 text to be 100% identical down to the horizontal version of the text, yet simply displayed vertically.\r\n\r\n### Actual Behavior\r\n\r\nThe vertical font is distorted, with the naked eye you can see the vertical typeface is distorted. I have have attempted to change to different fonts (Terminal, Courier New) and also font sizes and in all attempts the vertical text is messed-up.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .NET Standard 2.0\r\n- Target Devices:\r\n  -   Windows 10\r\n\r\n### Screenshots\r\n\r\n![test](https://user-images.githubusercontent.com/16097639/46803942-464c7780-cd59-11e8-9181-91f61dd7174a.png)\n\n\u003E VS bug [#738685](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/738685)",
+  "author": {
+    "login": "f2calv",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-10-11T12:33:37",
+  "updatedAt": "2024-10-30T12:55:04",
+  "closedAt": "2024-10-30T12:55:04",
+  "commentCount": 4,
+  "reactionCount": 0
+}

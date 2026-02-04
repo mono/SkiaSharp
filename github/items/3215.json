@@ -1,0 +1,27 @@
+{
+  "number": 3215,
+  "type": "pr",
+  "state": "closed",
+  "title": "Use a \u0022better\u0022 dotnet-install URL",
+  "body": "\r\n\r\n**Description of Change**\r\n\r\nNot sure if this is a sign of anything, but there is another URL\r\n\r\n**Bugs Fixed**\r\n\r\n\r\n\u0060\u0060\u0060\r\n#12 [ 7/10] RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh     \u0026\u0026 bash dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet --verbose     \u0026\u0026 ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet     \u0026\u0026 rm dotnet-install.sh     \u0026\u0026 dotnet help     \u0026\u0026 dotnet --info\r\n#12 0.200   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current\r\n#12 0.201                                  Dload  Upload   Total   Spent    Left  Speed\r\n#12 0.203 \r\n  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:02 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:03 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:04 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:05 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:06 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:07 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:08 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:09 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:10 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:11 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:12 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:13 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:14 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:15 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:15 --:--:--     0\r\n#12 15.96 curl: (52) Empty reply from server\r\n\r\n#12 ERROR: process \u0022/bin/sh -c curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh     \u0026\u0026 bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose     \u0026\u0026 ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet     \u0026\u0026 rm dotnet-install.sh     \u0026\u0026 dotnet help     \u0026\u0026 dotnet --info\u0022 did not complete successfully: exit code: 52\r\n------\r\n \u003E [ 7/10] RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh     \u0026\u0026 bash dotnet-install.sh --channel 8.0 --install-dir /usr/share/dotnet --verbose     \u0026\u0026 ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet     \u0026\u0026 rm dotnet-install.sh     \u0026\u0026 dotnet help     \u0026\u0026 dotnet --info:\r\n\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:15 --:--:--     0\r\n  0     0    0     0    0     0      0      0 --:--:--  0:00:15 --:--:--     0\r\n15.96 curl: (52) Empty reply from server\r\n------\r\nDockerfile:69\r\n--------------------\r\n  68 |     ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1\r\n  69 | \u003E\u003E\u003E RUN curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh \\\r\n  70 | \u003E\u003E\u003E     \u0026\u0026 bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose \\\r\n  71 | \u003E\u003E\u003E     \u0026\u0026 ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet \\\r\n  72 | \u003E\u003E\u003E     \u0026\u0026 rm dotnet-install.sh \\\r\n  73 | \u003E\u003E\u003E     \u0026\u0026 dotnet help \\\r\n  74 | \u003E\u003E\u003E     \u0026\u0026 dotnet --info\r\n  75 |     \r\n--------------------\r\nERROR: failed to solve: process \u0022/bin/sh -c curl https://dot.net/v1/dotnet-install.sh -L -o dotnet-install.sh     \u0026\u0026 bash dotnet-install.sh --channel ${DOTNET_SDK_VERSION} --install-dir /usr/share/dotnet --verbose     \u0026\u0026 ln -s /usr/share/dotnet/dotnet /usr/bin/dotnet     \u0026\u0026 rm dotnet-install.sh     \u0026\u0026 dotnet help     \u0026\u0026 dotnet --info\u0022 did not complete successfully: exit code: 52\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-03-24T11:39:07",
+  "updatedAt": "2025-03-24T11:39:21",
+  "closedAt": "2025-03-24T11:39:18",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/installer",
+  "additions": 9,
+  "deletions": 9,
+  "changedFiles": 8,
+  "commits": 1,
+  "reviews": []
+}

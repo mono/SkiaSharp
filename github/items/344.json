@@ -1,0 +1,18 @@
+{
+  "number": 344,
+  "type": "issue",
+  "state": "closed",
+  "title": "UWPSample - cannot create instance of SKSwapChainPanel",
+  "body": "I got the latest SkiaSharp code.  The solution - UWPSample - under \u0027samples/UWPSample\u0027 has a run time issue.  It builds fine.  However, when I deploy and run I get the error message, \r\n\r\n\u003E An exception of type \u0027Windows.UI.Xaml.Markup.XamlParseException\u0027 occurred in SkiaSharpSample.UWPSample.exe ...\r\n\u003E \r\n\u003E WinRT information: Cannot create instance of the type \u0027SkiaSharp.Views.UWP.SKSwapChainPanel\u0027 [Line 57 Position: 147]\r\n\r\n\r\nSo, there\u0027s an issue with line 57 in the MainPage.xaml.  The line is, \r\n\r\n\u0060\u003Cviews:SKSwapChainPanel x:Name=\u0022glview\u0022 Grid.Row=\u00221\u0022 PaintSurface=\u0022OnPaintGL\u0022 DrawInBackground=\u0022True\u0022 Visibility=\u0022Collapsed\u0022 /\u003E\u0060\r\n\r\n\r\nIf I comment this line out, and then go over to MainPage.xaml.cs and comment out the four references to \u0027glview\u0027, then I can run the sample, and it appears there are no issues.  But, I\u0027d really like to know what the cause of the error is so I don\u0027t have to work around it.  Anyone know what is causing this?",
+  "author": {
+    "login": "TomTuttle",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-07-25T14:39:39",
+  "updatedAt": "2022-08-19T21:01:18",
+  "closedAt": "2018-05-08T18:45:56",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 888,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] CentOS 7 libSkiaSharp.so error \u0027CXXABI_1.3.8\u0027 not found and \u0027GLIBCXX_3.4.21\u0027 not found ",
+  "body": "**Description**\r\nOn CentOS 7 you get the following error. This code works on windows 10 just fine.\r\n\r\n\u0060\u0060\u0060\r\n#ldd libSkiaSharp.so\r\n\r\nlibSkiaSharp.so\r\n\r\n\u0027CXXABI_1.3.8\u0027 not found\r\n\u0027GLIBCXX_3.4.21\u0027 not found \r\n\u0060\u0060\u0060\r\n\r\n- Version with issue:  \r\n\u0060\u0060\u0060\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00221.68.0\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00221.68.0\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\n- Last known good version:  First time using SkiaSharp.\r\n- IDE:  Visual Studio (2017,2019) / Visual Studio Code latest\r\n- Platform Target Frameworks: .net core 2.2\r\n- runtime : linux-x64 and win-x64\r\n - Linux:  CentOS 7 (fully updated)\r\n\r\nThe solution I found was the following. (install gcc,gcc-c\u002B\u002B 4.8.5) to be utilized to bootstrap compiling to the latest 9.* version via source.\r\n\r\nCentOS 7 Steps\r\n\r\n1) Upgrade GCC,GCC-C\u002B\u002B (Steps are online).\r\n2) Reboot\r\n3) Run these commands to fix actual issue for error list above.\r\n\r\n\u0060\u0060\u0060\r\n#cd /usr/local/lib64\r\n#cp libstdc\u002B\u002B.so.6.0.29 /usr/lib64/\r\n#cd /usr/lib64/\r\n#mv libstdc\u002B\u002B.so.6 libstdc\u002B\u002B.so.6.OLD\r\n#ln -sf libstdc\u002B\u002B.so.6.0.29\r\n\u0060\u0060\u0060\r\n\r\nAfter upgrading gcc, I was able to get a self-contained published .net core 2.2 app working on centos 7 server.\r\n\r\nI have gotten it to work on dotnet (FDD and SCD) deployment models.\r\n\r\n",
+  "author": {
+    "login": "BruceHunter",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-06-25T13:45:13",
+  "updatedAt": "2022-08-19T09:02:53",
+  "closedAt": "2020-06-25T02:36:30",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,27 @@
+{
+  "number": 3338,
+  "type": "pr",
+  "state": "closed",
+  "title": "Build EGL as Win32 and GLESv2 as WASDK to fix unpackaged WinUI loading issues",
+  "body": "**Description of Change**\r\n\r\nThis fixes WinUI apps running as unpackaged. Thanks for the hard work in figuring all this out @TommiGustafsson-HMP!\r\n\r\nI am still investigating the _why_ but it may be because we do \u0060[DllImport]\u0060 directly with libEGL and thus it has a specific calling convention or some pre-execution code that is failing in unpackaged. \r\n\r\nI think this fixes the issue as the main WASDK code is in libGLESv2 and not libEGL. And WASDK apps can load and use Win32 binaries just fine since they are all the same thing now - unlike UWP apps.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2968\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-08-19T19:21:43",
+  "updatedAt": "2025-08-22T23:55:13",
+  "closedAt": "2025-08-22T23:55:09",
+  "commentCount": 1,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-2968",
+  "additions": 18,
+  "deletions": 13,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

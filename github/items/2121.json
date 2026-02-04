@@ -1,0 +1,18 @@
+{
+  "number": 2121,
+  "type": "issue",
+  "state": "closed",
+  "title": "How to implement SKCanvasView in Blazor it works in MAUI",
+  "body": "Hi I have a MAUI app with a SKCanvasView decalared as this\r\n\u003Cskia:SKCanvasView  WidthRequest=\u00221300\u0022 HeightRequest=\u00221300\u0022 x:Name=\u0022GpuView\u0022 PaintSurface=\u0022OnPaintCanvas\u0022\t\t\t\t\t\t\t\t\r\ngnorePixelScaling=\u0022True\u0022\t\r\n                   VerticalOptions=\u0022Start\u0022\r\norizontalOptions=\u0022Start\u0022 /\u003E\r\ni call OnPaintCanvas in codebehind and it works with \r\n                            Application.Current.Dispatcher.Dispatch(() =\u003E\r\n                            {\r\n                                if (GpuView != null)\r\n                                    GpuView.InvalidateSurface();\r\n                            });\r\n\r\nNow i tried this in Blazor\r\n  \u003CSkiaSharp.Views.Blazor.SKCanvasView     Width=\u00221024px\u0022 Height=\u00221024px\u0022  id=@CanvasID  OnPaintSurface=\u0022OnPaintCanvas\u0022 EnableRenderLoop=\u0022false\u0022 /\u003E\r\n\r\nHow do I call OnPaintCanvas from codebehind in Blazor,  it is called if i declare EnableRenderLoop=\u0022true\u0022  but I want to call it myself to save CPU and later on GPU when SKGLView works in Blazor \r\nThanks\r\n",
+  "author": {
+    "login": "peder1896",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-19T19:59:56",
+  "updatedAt": "2022-09-09T21:01:13",
+  "closedAt": "2022-08-10T19:33:48",
+  "commentCount": 1,
+  "reactionCount": 0
+}

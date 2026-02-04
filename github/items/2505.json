@@ -1,0 +1,27 @@
+{
+  "number": 2505,
+  "type": "pr",
+  "state": "closed",
+  "title": "Modernize the repository and prepare SkiaSharp 3.0",
+  "body": "**Description of Change**\r\n\r\nThis PR is a massive jump for SkiaSharp. Not sure of the full scope just yet, but SkiaSharp is far too huge to be maintainable as well as it holds onto the past. Some platforms are no longer relevant/supported and the tooling is ancient.\r\n\r\nThe changes so far:\r\n - Dropping support for old platforms:\r\n    - watchOS as this is not a platform that is useful to have SkiaSharp on - SkiaSharp is larger than the allowed app size\r\n    - UWP as this platform is not so active - we can revisit this later and it appears Win32 dlls work in UWP now\r\n - Dropping support for old frameworks:\r\n    - Classic Xamarin (the non .NET version) as this is going out of support in May 2024\r\n    - Classic Tizen (the non .NET version)\r\n    - Xamarin.Forms as this is no longer actively developed and requires Classic Xamarin\r\n    - GTK 2 as this is super ancient\r\n    - netcoreapp3.1 - moving to net6 and net7\r\n - Switching the build system to .NET 7 since this is far superior\r\n - Switching to the new xharness and device tests\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-06-22T20:13:33",
+  "updatedAt": "2023-07-30T15:50:01",
+  "closedAt": "2023-07-30T15:49:57",
+  "commentCount": 13,
+  "reactionCount": 28,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/modern",
+  "additions": 83319,
+  "deletions": 71680,
+  "changedFiles": 1608,
+  "commits": 142,
+  "reviews": []
+}

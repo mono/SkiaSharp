@@ -1,0 +1,28 @@
+{
+  "number": 675,
+  "type": "issue",
+  "state": "closed",
+  "title": "Support Windows Nano Server",
+  "body": "### Description\r\n\r\nWindows Nano Server is missing some dlls, so SkiaSharp does not work. Related to https://github.com/mono/SkiaSharp/issues/591\r\n\r\nHaving a look at Nano Server... Ran the \u0060NanoServerApiScan.exe\u0060 tool from: https://blogs.technet.microsoft.com/nanoserver/2016/04/27/nanoserverapiscan-exe-updated-for-tp5/\r\n\r\n\u0060\u0060\u0060\r\n=== libSkiaSharp.dll ===\r\n\r\nERRORS:\r\n\r\n  FONTSUB.dll\r\n    CreateFontPackage(Proc not found)\r\n  USER32.dll\r\n    SystemParametersInfoW(Proc not found)\r\n  MSVCP140.dll\r\n    \u2026\r\n    \u2026\r\n    \u2026\r\n      Please copy Nano Server compliant MSVCP140.dll from %ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\redist\\onecore\\x64\\Microsoft.VC140.CRT\\\r\n  VCRUNTIME140.dll\r\n    \u2026\r\n    \u2026\r\n    \u2026\r\n      Please copy Nano Server compliant VCRUNTIME140.dll from %ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\redist\\onecore\\x64\\Microsoft.VC140.CRT\\\r\n\u0060\u0060\u0060\r\n\r\nI need to investigate the 2 usages that appear to be bad:\r\n\r\n - FONTSUB.dll (CreateFontPackage)\r\n - USER32.dll (SystemParametersInfoW)\r\n\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    },
+    {
+      "name": "status/low-priority",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2018-11-06T17:55:39",
+  "updatedAt": "2022-08-19T12:02:49",
+  "closedAt": "2018-11-06T17:58:24",
+  "commentCount": 1,
+  "reactionCount": 0
+}

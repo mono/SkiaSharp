@@ -1,0 +1,22 @@
+{
+  "number": 3125,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Windows Docker container: Exception: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E),",
+  "body": "### Description\r\n\r\nHaving an issue running SkiaSharp within a docker container:\r\n\r\nFROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base\r\nFROM mcr.microsoft.com/dotnet/sdk:7.0 AS build\r\n\r\nTarget Framework: .Net 7.0\r\n\r\nThe following Nuget packages installed:\r\n\r\n- SkiaSharp 3.116.1\r\n- SkiaSharp.NativeAssets.Win32 3.116.1\r\n\r\nMy csproj looks like:\r\n\r\n  \u003CTarget Name=\u0022CopyRequiredNativeAssets\u0022 AfterTargets=\u0022_FunctionsPostPublish\u0022\u003E\r\n  \u003CItemGroup\u003E\r\n    \u003CNativeAssetToCopy Include=\u0022$(PublishDir)runtimes\\win-x64\\native\\libSkiaSharp.dll\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n  \u003CCopy SourceFiles=\u0022@(NativeAssetToCopy)\u0022 DestinationFolder=\u0022$(PublishDir)bin\u0022 /\u003E\r\n\u003C/Target\u003E\r\n\r\n\r\nWorks fine in my development environment (Windows 11, running Visual studio 2022).\r\n\r\n\r\n\r\n### Version of SkiaSharp\r\n\r\n3.116.0 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n1.x (Obsolete)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Mbond65",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-20T13:08:08",
+  "updatedAt": "2024-12-20T13:08:34",
+  "commentCount": 1,
+  "reactionCount": 0
+}

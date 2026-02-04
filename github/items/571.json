@@ -1,0 +1,24 @@
+{
+  "number": 571,
+  "type": "issue",
+  "state": "closed",
+  "title": "Crash drawing polygon using DrawPath with SKGLView on iOS",
+  "body": "### Description\r\n\r\nThe entire app crashes when drawing a polygon with 450 points. \r\n\r\nMessage in Debug console:\r\n\u003E The app has been terminated.\r\n\u003E Failed to Stop app:  An error occured on client IDB410102 while executing a reply for topic xvs/idb/4.10.10.2/stop-app\r\n\u003E The app has been terminated.\r\n\r\n- The crash occurs now and then. In the sample project (in the git repository pointed to below) you can pinch zoom in and out. If you try that for a while the app crashes. Usually this is within 10 seconds.\r\n- The polygon has no holes. \r\n- I could not reproduce is the DrawPath Style argument is set to Fill, Stroke or StrokeAndFill seem to be necessary.\r\n- The app zooms in by recalculating the coordinates. Not sure if it crashes with Scale zoom. \r\n- This is polygon entered by a user. Most polygons don\u0027t crash. \r\n\r\n### Code\r\n\r\nhttps://raw.githubusercontent.com/pauldendulk/PolygonCrash/master/CrashWhenDrawingPolygon/MyView.cs\r\n\r\n### Expected Behavior\r\n\r\nNo crash\r\n\r\n### Actual Behavior\r\n\r\nAfter fast pinch zooming in and out the iOS application crashes.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.2\r\n- Last known good version:  None, that I know\r\n- IDE: Visual Studio \r\n- Platform Target Frameworks: iOS when using SKGLView. On Android, WPF and UWP I do use GL views yet.\r\n- Target Devices:\r\n  -   Tested on iPad Air 2 hardware. \r\n\r\n### Screenshots\r\n\r\n![image](https://user-images.githubusercontent.com/963462/42123899-e18aa380-7c59-11e8-8a75-30c64e3625af.png)\r\n\r\n### Reproduction Link\r\n\r\nhttps://github.com/pauldendulk/PolygonCrash\r\nReproduce: Place two fingers on the screen and pinch zoom in and out repeatedly. For me it crashes within 10 seconds most of the time.\r\n\r\n",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-06-30T09:45:34",
+  "updatedAt": "2022-08-19T15:02:11",
+  "closedAt": "2018-11-09T14:41:47",
+  "commentCount": 4,
+  "reactionCount": 0
+}

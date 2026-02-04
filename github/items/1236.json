@@ -1,0 +1,17 @@
+{
+  "number": 1236,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Pixel-accurate rendering not possible on WPF SKElement ",
+  "body": "**Description**\r\n\r\nWhen using the \u0060SKElement\u0060 on WPF, there seems to be some internal scaling interpolation going on, which prevents pixel-accurate rendering.\r\n\r\n**Code**\r\n\r\nJust draw some lines and display using \u0060SKElement\u0060.\r\n\r\n**Expected Behavior**\r\nSharp, pixel-accurate lines (image in 4x zoom):\r\n\r\n![image](https://user-images.githubusercontent.com/18097859/79539376-7da28f80-8086-11ea-9a51-7c72dfeb3208.png)\r\n\r\n\r\n**Actual Behavior**\r\nLines are more or less blurry, depending on the offset of WPF units to physical device pixels.\r\n\r\n![image](https://user-images.githubusercontent.com/18097859/79539419-914df600-8086-11ea-92ba-ed0aa122dabc.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 1.68.2-preview.60 \r\n- Last known good version:  -\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  WPF on Windows 10\r\n\r\n**Fix**\r\n\r\n- call \u0060RenderOptions.SetBitmapScalingMode(this, BitmapScalingMode.NearestNeighbor);\u0060 in constructor of \u0060SKElement\u0060 (cf. https://docs.microsoft.com/en-us/dotnet/api/system.windows.media.imaging.writeablebitmap?view=netframework-4.8)\r\n- Replace https://github.com/mono/SkiaSharp/blob/2550d14410839ebba2d541ec5b423261b9236197/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs#L79 by \u0060drawingContext.DrawImage(bitmap, new Rect(0, 0, size.Width / scaleX, size.Height / scaleY));\u0060 to make sure rendered height matches physical height",
+  "author": {
+    "login": "Jonarw",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-17T07:02:00",
+  "updatedAt": "2020-04-17T07:02:00",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1166,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Error Converting SKData",
+  "body": "**Description**\r\nI am using SkiaSharp to generate an image that represent a transaction receipt that can be shared via my Xamarin app.  When I try to convert the SKData to array I get an error message:\r\n{System.MethodAccessException: Method \u0060System.ReadOnlySpan\u00601[System.Byte]..ctor(void*,int)\u0027 is inaccessible from method \u0060SkiaSharp.SKData.AsSpan()\u0027\r\n The code bellow works fine with the Android version of the app, both not with iOS.\r\n\r\n\r\n**Code**\r\n\r\n        public static byte[] GenerateImage(ImageReceipt imageReceipt)\r\n        {\r\n            FontFamilyName = ImageReceipt.FontFamilyName;\r\n            SKBitmap bitmap = GetReceiptBitmap(imageReceipt);\r\n            using (SKImage image = SKImage.FromBitmap(bitmap))\r\n            using (SKData data = image.Encode(SKEncodedImageFormat.Png, 80))\r\n            {\r\n                return data.ToArray();\r\n            }\r\n        }\r\n\r\n*Expected Behavior**\r\n\r\nReturn the Byte Array \r\n\r\nException : {System.MethodAccessException: Method \u0060System.ReadOnlySpan\u00601[System.Byte]..ctor(void*,int)\u0027 is inaccessible from method \u0060SkiaSharp.SKData.AsSpan()\u0027\r\n\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1.1\r\n- Last known good version:  N/A\r\n- IDE:   Visual Studio \r\n  - Android:8.1\r\n  - iOS:  12.4.0.64\r\n",
+  "author": {
+    "login": "seoduda",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-05T21:58:36",
+  "updatedAt": "2022-08-19T06:02:32",
+  "closedAt": "2020-06-12T18:51:17",
+  "commentCount": 3,
+  "reactionCount": 0
+}

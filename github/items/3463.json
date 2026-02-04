@@ -1,0 +1,56 @@
+{
+  "number": 3463,
+  "type": "pr",
+  "state": "closed",
+  "title": "Remove unused dependencies and add dependencies documentation",
+  "body": "## Summary\n\nRemove 18 unused native dependencies from Skia\u0027s DEPS file and add comprehensive dependency documentation.\n\n## Changes\n\n### Documentation\n- **New:** \u0060documentation/dependencies.md\u0060 - Comprehensive dependency reference including:\n  - Security-relevant dependencies (10 total)\n  - GPU/graphics dependencies\n  - Unused dependencies with reasons for exclusion\n  - Platform-specific usage details\n  - cgmanifest.json mapping table\n\n### Skills\n- Update \u0060security-audit\u0060 skill to reference central documentation\n- Update \u0060native-dependency-update\u0060 skill to reference central documentation\n\n### Submodule (mono/skia#164)\n- Comment out 18 unused dependencies in DEPS\n- Retain 15 active dependencies\n\n## Dependencies Removed\n\n| Dependency | Reason |\n|------------|--------|\n| abseil-cpp | Dawn/WebGPU only (disabled) |\n| egl-registry | No BUILD.gn references |\n| highway | libjxl only (disabled) |\n| imgui | Viewer tool only |\n| libavif | \u0060skia_use_libavif=false\u0060 |\n| libgav1 | libavif dependency |\n| libgrapheme | \u0060skia_use_libgrapheme=false\u0060 |\n| libjxl | \u0060skia_use_libjxl_decode=false\u0060 |\n| libyuv | libavif dependency |\n| microhttpd | skiaserve tool only |\n| oboe | audioplayer/viewer only |\n| opengl-registry | No BUILD.gn references |\n| spirv-headers | spirv-tools dependency (dev builds) |\n| spirv-tools | \u0060is_skia_dev_build\u0060 only |\n| vello | \u0060skia_enable_vello_shaders=false\u0060 |\n| vulkan-deps | Meta-repo, not directly used |\n| vulkan-tools | Debugging tools only |\n| vulkan-utility-libraries | Debugging only |\n\n## Dependencies Retained (15)\n\nbrotli, d3d12allocator, dng_sdk, expat, freetype, harfbuzz, libjpeg-turbo, libpng, libwebp, piex, spirv-cross, vulkan-headers, vulkanmemoryallocator, wuffs, zlib\n\n## Verification\n\nLocal builds verified:\n- \u2705 macOS (arm64)\n- \u2705 iOS (all architectures)\n- \u2705 Android (arm64)\n\n## Related\n\n- mono/skia#164",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/macOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/iOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "backend/Vulkan",
+      "color": "1acea7"
+    },
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-27T19:21:23",
+  "updatedAt": "2026-02-02T21:47:40",
+  "closedAt": "2026-01-27T21:59:12",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/remove-unused-deps",
+  "additions": 482,
+  "deletions": 740,
+  "changedFiles": 11,
+  "commits": 10,
+  "reviews": []
+}

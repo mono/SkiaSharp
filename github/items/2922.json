@@ -1,0 +1,38 @@
+{
+  "number": 2922,
+  "type": "pr",
+  "state": "closed",
+  "title": "Do not stretch the background",
+  "body": "**Description of Change**\r\n\r\nWhen a view is resized, the canvas is not yet resized and updated to match. Before this PR, the canvas would be stretched to fill the view. This PR make sure to not stretch the canvas but instead keep it fixed.\r\n\r\nThe reason for the scaling in the first place is that \u0060WriteableBitmap\u0060 does not have a DPI parameter. As a result, we have to create a larger bitmap than the view such that when it is scaled down to match the view size, the resolution matches that of the rest of the app. Previously, the larger canvas was just squashed to fit, but this was non-uniform. This PR always scales the canvas to the correct size preserving the aspect ratio.\r\n\r\n**Bugs Fixed**\r\n\r\n- None.\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backport/release/2.x",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-04T11:31:41",
+  "updatedAt": "2024-07-05T08:18:38",
+  "closedAt": "2024-07-05T08:18:33",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/winui-scaling",
+  "additions": 48,
+  "deletions": 20,
+  "changedFiles": 1,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-07-04T17:53:48"
+    }
+  ]
+}

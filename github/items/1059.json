@@ -1,0 +1,23 @@
+{
+  "number": 1059,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] How to crop image using SKPixmap and SKImage?",
+  "body": "**Description**\r\nI\u0027m using Skiasharp to crop a screenshot. Currently I\u0027m seeing an issue with the image after cropping it. The image is all black as if it is completely blank. However before cropping, if we save the image, it returns okay.\r\n\r\nPlease could you suggest how to properly save a cropped image?\r\n\r\nNOTE*: The code commented out under headers \u0022crop image/bounds of cropped image/size\u0022 is what we are using to crop the image. Currently it is cropped out to show where the problem appears to be. As is the code will return the screenshot successfully and unmodified.\r\n\r\nThanks\r\n-j\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\n// Use this function to crop a screen shot to a specific element.  \r\npublic byte[] test(byte[] screenshotData, View element)\r\n{\r\n    //  locate IntPtr to byte[] of uncropped screenshot\r\n    GCHandle gch = GCHandle.Alloc(screenshotData, GCHandleType.Pinned);\r\n    IntPtr addr = gch.AddrOfPinnedObject();\r\n\r\n    //  assign initial bounds\r\n    SKImageInfo info = new SKImageInfo((int)App.Current.MainPage.Width,\r\n        (int)App.Current.MainPage.Height);\r\n\r\n    //  create initial pixel map\r\n    using SKPixmap pixmap = new SKPixmap(info, addr);\r\n    //  Release\r\n    gch.Free();\r\n\r\n    //  create bitmap\r\n    using SKBitmap bitmap = new SKBitmap();\r\n    //  assign pixel data\r\n    bitmap.InstallPixels(pixmap);\r\n\r\n    //  create surface\r\n    using SKSurface surface = SKSurface.Create(info);\r\n    //  create a canvas for drawing\r\n    using SKCanvas canvas = surface.Canvas;\r\n    //  draw\r\n    canvas.DrawBitmap(bitmap, info.Rect);\r\n\r\n    //  get an image subset to save\r\n    SKImage image = surface.Snapshot();\r\n    SKRectI rec = new SKRectI((int)element.Bounds.Left, (int)element.Bounds.Top,\r\n        (int)element.Bounds.Right, (int)element.Bounds.Bottom);\r\n\r\n    //  crop image\r\n    //image = image.Subset(rec);\r\n\r\n    //  bounds of cropped image\r\n    //SKImageInfo info2 = new SKImageInfo(rec.Width, rec.Height);\r\n\r\n    //  size\r\n    //int size = info2.RowBytes * info2.Height;\r\n    int size = info.RowBytes * info.Height;\r\n\r\n    using SKPixmap pmap = image.PeekPixels();\r\n    IntPtr ptr = Marshal.AllocHGlobal(size);\r\n    pmap.ReadPixels(pmap.Info, ptr, pmap.RowBytes);\r\n\r\n    byte[] managedArray = new byte[size];\r\n    Marshal.Copy(ptr, managedArray, 0, size);\r\n    image.Dispose();\r\n\r\n    return managedArray;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nExpected Behavior\r\nSave the cropped image\r\n\r\nActual Behavior\r\nImage is blank (all black)\r\n\r\nBasic Information\r\nVersion : 1.68.1\r\nIDE: Visual Studio\r\nPlatform Target Frameworks:\r\nAndroid: 8 and above\r\niOS: 9 and above\r\n",
+  "author": {
+    "login": "jvhgamer",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-12-13T00:53:53",
+  "updatedAt": "2022-08-19T09:01:46",
+  "closedAt": "2019-12-26T13:09:18",
+  "commentCount": 3,
+  "reactionCount": 0
+}

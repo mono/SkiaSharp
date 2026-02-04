@@ -1,0 +1,27 @@
+{
+  "number": 454,
+  "type": "issue",
+  "state": "closed",
+  "title": "Width of png file dimensions is limited to 32767",
+  "body": "(Title is not entirely accurate, please see below)\r\nThe following code in C# will generate a png image that has 36666 in width, but only the first 32767 pixels in width will be correctly generated.\r\n\u0060\u0060\u0060\r\n                const int TEST_WIDTH = 36666;\r\n                SKPath testPath = new SKPath();\r\n                // A straight horizontal path covering the full width\r\n                testPath.MoveTo(new SKPoint(0, 100));\r\n                testPath.LineTo(TEST_WIDTH, 100);\r\n                // Configure paint\r\n                SKPaint testPaint = new SKPaint\r\n                {\r\n                    Style = SKPaintStyle.Stroke,\r\n                    Color = SKColors.Red,\r\n                    StrokeWidth = 50,\r\n                    StrokeCap = SKStrokeCap.Cyan\r\n                };\r\n                // Save to file\r\n                var bitMap = new SKBitmap(TEST_WIDTH, 200);\r\n                SKCanvas imageCanvas = new SKCanvas(bitMap);\r\n                imageCanvas.DrawPath(testPath, testPaint);\r\n                using (Stream stream = File.OpenWrite(\u0027path to png file\u0027))\r\n                {\r\n                    SKData data = SKImage.FromBitmap(bitMap).Encode(SKEncodedImageFormat.Png, 100);\r\n                    data.SaveTo(stream);\r\n                }\r\n\u0060\u0060\u0060\r\nThe resulting image, if opened with Gimp or similar tools, will have a horizontal stroke that only spans to the 32767th pixel in x.\r\n\r\nThis is found in a Xamarin.Forms project, tested on Nexus 6P running Android 8.1 and iPhone 6s running iOS 11.2.6.",
+  "author": {
+    "login": "ChengmingLu",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-02-22T19:19:32",
+  "updatedAt": "2022-08-19T18:01:28",
+  "closedAt": "2018-02-23T12:59:26",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1421,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Getting segmentation fault on Ubuntu 20.04 with nvidia drivers and avalonia wrapper",
+  "body": "**Description**\r\n\r\nI am getting segmentation fault errors when drawing certain forms on an SKCanvas through Avalonia on Ubuntu 20.04 \u002B nvidia 440 drivers.\r\nI put together a minimal example to reproduce this behavior here: https://github.com/merschformann/avalonia-skia-minimal (steps to reproduce in readme, gdb screenshot too)\r\n\r\nThe following line seems to be problematic:\r\n\u0060canvas.DrawOval(500, 500, 100, 200, _debugPaint);\u0060\r\n(see https://github.com/merschformann/avalonia-skia-minimal/blob/d2be7d2bfc439791f85a0d0ffc2a7e84e258401c/Rendering/ElementRenderOperation.cs#L47 )\r\nReplace it with the following and it works:\r\n\u0060canvas.DrawRect(500, 500, 100, 200, _debugPaint);\u0060\r\n\r\nI am not sure what exactly causes the problem. The same code seems to run with the nouveau driver. Any help on this would be highly appreciated. I am stuck on this for quite a while now. I would really love to use this combination for a platform independent desktop app doing something like this: https://github.com/merschformann/avalonia-move-visualizer (but it breaks on the simplest forms being drawn)\r\n\r\nI already reported the issue to the avalonia devs (they can reproduce but cannot see a problem on their end, see https://github.com/AvaloniaUI/Avalonia/issues/4319 ) and posted it to nvidia developer forums (see https://forums.developer.nvidia.com/t/getting-a-segmentation-fault-in-libnvidia-glcore-so-440-100-on-ubuntu-20-04/142538 , I don\u0027t expect support their though).\r\n\r\nThanks for your great work and support!\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\nShould draw a pink oval.\r\n\r\n**Actual Behavior**\r\n\r\nExits with segmentation fault.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  Avalonia 0.9.11 depends on SkiaSharp \u003E= 1.68.0 (dotnet core 3.1)\r\n- Last known good version:  did not work yet\r\n- IDE:  dotnet core CLI (I use Rider, but it does not make a difference)\r\n- Platform Target Frameworks:\r\n  - Linux:  Ubuntu 20.04\r\n- Target Devices:\r\n  - Desktop\r\n\r\n**Screenshots**\r\n\r\n(some screenshots provided in the readmes of the minimal example [here](https://github.com/merschformann/avalonia-skia-minimal) and proof of concept project [here](https://github.com/merschformann/avalonia-move-visualizer) )\r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/merschformann/avalonia-skia-minimal\r\n\r\nReproduction steps in readme.\r\n",
+  "author": {
+    "login": "merschformann",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-19T18:34:55",
+  "updatedAt": "2022-08-19T03:02:28",
+  "closedAt": "2020-08-01T16:58:34",
+  "commentCount": 4,
+  "reactionCount": 0
+}

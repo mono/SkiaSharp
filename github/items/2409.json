@@ -1,0 +1,17 @@
+{
+  "number": 2409,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG]  - \u0060unsafe-inline\u0060 / \u0060unsafe-eval\u0060 required in CSP for WebAssembly",
+  "body": "We have a client that uses our webassembly application built using the Uno platform. They are  requiring the removal of \u0060unsafe-inline\u0060 / \u0060unsafe-eval\u0060 expressions from the our Content-Security-Policy response header, as these are considered security issues.\n\nFrom what we can see the, the WebAssembly version of SkiaSharp makes use of eval. Is there are roadmap to supporting .NET7 \u0060js import\u0060 statements?\n\n**Expected Behavior**\n\nWebAssembly applications can utilize SkiaSharp without requiring the \u0060unsafe\u0060 expressions in the CSP.\n\n**Actual Behavior**\n\nApplications must use unsafe expressions in the CSP.\n\n**Basic Information**\n\n- Version with issue: Latest version.\n- Last known good version:  N/A\n- IDE:  N/A\n- Platform Target Frameworks: WebAssembly\n\n\n**Screenshots**\n\n**Reproduction Link**",
+  "author": {
+    "login": "darenm",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-03-07T01:23:45",
+  "updatedAt": "2023-03-07T01:23:45",
+  "commentCount": 0,
+  "reactionCount": 0
+}

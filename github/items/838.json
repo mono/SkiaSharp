@@ -1,0 +1,17 @@
+{
+  "number": 838,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Text size measured improperly in Linux OS",
+  "body": "**Description**\r\n\r\nParticular text width was calculated wrongly in Linux OS. The same text was measured properly in Windows.\r\n\r\n**Code**\r\n\r\n            SKPaint paint = new SKPaint();\r\n            paint.TextEncoding = SKTextEncoding.Utf8;\r\n            paint.IsAntialias = true;\r\n            paint.Typeface = SKTypeface.FromFamilyName(\u0022Arial\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n            paint.TextSize = 9;\r\n            paint.TextAlign = SKTextAlign.Left;\r\n\r\n            SKRect rect = new SKRect();\r\n            float width = paint.MeasureText(\u0022Locatio\u0022, ref rect);\r\n            Console.WriteLine(width);\r\n\r\n            string text = ((char)61608).ToString();\r\n            paint.Typeface = SKTypeface.FromFamilyName(\u0022Wingdings\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n            paint.TextSize = 12;\r\n            rect = new SKRect();\r\n            width = paint.MeasureText(text, ref rect);\r\n            Console.WriteLine(width);\r\n\r\n**Expected Behavior**\r\n\r\nThe width of the text should be same as Windows OS.\r\n\r\n **Text**  | **Expected Width**\r\n-- |--\r\n\u00A0Locatio | \u00A032.00098\r\n\u00A0\uF0FE   | \u00A010.93359\r\n\r\n\r\n\r\n**Actual Behavior**\r\n\r\n **Text**  | **Actual Width**\r\n-- |--\r\n\u00A0Locatio | \u00A034\r\n\u00A0\uF0FE   | \u00A011\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.59.3\r\n- IDE:  MonoDevelop\r\n- Platform Target Frameworks: .NET Core 2.1\r\n- Linux:  Ubuntu 18.04 \r\n\r\n\r\n",
+  "author": {
+    "login": "VijayRM",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-05-08T13:40:36",
+  "updatedAt": "2023-12-28T23:08:35",
+  "commentCount": 21,
+  "reactionCount": 0
+}

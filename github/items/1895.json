@@ -1,0 +1,43 @@
+{
+  "number": 1895,
+  "type": "pr",
+  "state": "closed",
+  "title": "[android] don\u0027t include .so files in class libraries",
+  "body": "Fixes: https://github.com/xamarin/xamarin-android/issues/5776\r\nFixes: https://github.com/xamarin/xamarin-android/issues/6545\r\n\r\nIf you do:\r\n\r\n1. File -\u003E New Xamarin.Android class library\r\n2. Add \u0060\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.3\u0022 /\u003E\u0060\r\n\r\nYou end up with 13MB \u0060.dll\u0060 file with C# code inside! The class\r\nlibrary is redistributing the SkiaSharp native libraries.\r\n\r\n\u0060$(ShouldIncludeNativeSkiaSharp)\u0060 should default to \u0060False\u0060 for class\r\nlibraries.\r\n\r\nTo test this change, I manually edited:\r\n\r\n    %userprofile%\\.nuget\\packages\\skiasharp\\2.80.3\\build\\monoandroid1.0\\SkiaSharp.targets\r\n    %userprofile%\\.nuget\\packages\\skiasharp\\2.80.3\\buildTransitive\\monoandroid1.0\\SkiaSharp.targets\r\n\r\nNow my class library is 76,800 bytes.\r\n\r\nWhen consuming this class library in an Android application project,\r\neverything should still work as expected. However, the application\r\nwill need to reference SkiaSharp -- which is actually ideal.\r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "jonathanpeppers",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-17T17:19:54",
+  "updatedAt": "2022-01-10T22:15:48",
+  "closedAt": "2022-01-10T22:11:45",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "android-class-libraries",
+  "additions": 2,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-01-10T22:08:14"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-01-10T22:11:37"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-01-10T22:11:37"
+    }
+  ]
+}

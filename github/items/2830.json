@@ -1,0 +1,27 @@
+{
+  "number": 2830,
+  "type": "pr",
+  "state": "closed",
+  "title": "Expose SKBlender",
+  "body": "**Description of Change**\r\n\r\n\u0060SKBlender\u0060 represents a custom blend function in the Skia pipeline. \r\n\r\nWhen a blender is present in a paint, the \u0060BlendMode\u0060 property is ignored. A blender combines a source color (the result of our paint) and destination color (from the canvas) into a final color.\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cs\r\n// NEW TYPES\r\n\r\npublic unsafe class SKBlender : SKObject, ISKReferenceCounted\r\n{\r\n    public static SKBlender CreateBlendMode (SKBlendMode mode);\r\n    public static SKBlender CreateArithmetic (float k1, float k2, float k3, float k4, bool enforcePMColor);\r\n}\r\n\r\npublic class SKRuntimeBlenderBuilder : SKRuntimeEffectBuilder\r\n{\r\n    public SKRuntimeBlenderBuilder (SKRuntimeEffect effect);\r\n    public SKBlender Build ();\r\n}\r\n\r\n// NEW MEMBERS\r\n\r\nclass SKImageFilter\r\n{\r\n    public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background);\r\n    public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground);\r\n    public static SKImageFilter CreateBlendMode (SKBlender blender, SKImageFilter? background, SKImageFilter? foreground, SKRect cropRect);\r\n}\r\n\r\nclass SKPaint\r\n{\r\n    public SKBlender Blender { get; set; }\r\n}\r\n\r\nclass SKRuntimeEffect\r\n{\r\n    public SKBlender ToBlender ();\r\n    public SKBlender ToBlender (SKRuntimeEffectUniforms uniforms);\r\n    public SKBlender ToBlender (SKRuntimeEffectUniforms uniforms, SKRuntimeEffectChildren children);\r\n}\r\n\r\nstruct SKRuntimeEffectChild\r\n{\r\n    public SKRuntimeEffectChild (SKBlender blender);\r\n    public SKBlender Blender { get; }\r\n    public static implicit operator SKRuntimeEffectChild (SKBlender blender);\r\n}\r\n\r\nclass SKShader\r\n{\r\n    public static SKShader CreateBlend (SKBlendMode mode, SKShader shaderA, SKShader shaderB);\r\n    public static SKShader CreateBlend (SKBlender blender, SKShader shaderA, SKShader shaderB);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/123\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-04-12T23:25:41",
+  "updatedAt": "2024-04-15T21:50:40",
+  "closedAt": "2024-04-15T21:50:36",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/blender",
+  "additions": 567,
+  "deletions": 2,
+  "changedFiles": 18,
+  "commits": 3,
+  "reviews": []
+}

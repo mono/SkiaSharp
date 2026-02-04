@@ -1,0 +1,30 @@
+{
+  "number": 648,
+  "type": "issue",
+  "state": "open",
+  "title": "Large images shows blank after resizing",
+  "body": "_From @amerella on September 7, 2018 9:34_\r\n\r\nWhen resizing a large image (\u003E 6MB, 14034px by 9921px), the process goes through with no errors, but the image itself doesn\u0027t show upon save, only the white background canvas. The pixels cannot be read in the SKCodec, and similarly if I try and create an SKBitmap instead of an image, I get error \u0027Unable to allocate pixels for the bitmap\u0027.\r\n\r\nThe code works fine with smaller images.\r\n\r\nIs there a limit on how large a file size can be processed?\r\n\u0060\u0060\u0060csharp \r\n    using (SKMemoryStream sourceStream = new SKMemoryStream(imageData))\r\n    {\r\n        using (SKCodec codec = SKCodec.Create(sourceStream))\r\n        {\r\n            sourceStream.Seek(0);\r\n\r\n            using (SKImage image = SKImage.FromEncodedData(SKData.Create(sourceStream)))\r\n            {\r\n                int newHeight = image.Height;\r\n                int newWidth = image.Width;\r\n\r\n                if (maxHeight \u003E 0 \u0026\u0026 newHeight \u003E maxHeight)\r\n                {\r\n                    double scale = (double)maxHeight / newHeight;\r\n                    newHeight = maxHeight;\r\n                    newWidth = (int)Math.Floor(newWidth * scale);\r\n                }\r\n\r\n                if (maxWidth \u003E 0 \u0026\u0026 newWidth \u003E maxWidth)\r\n                {\r\n                    double scale = (double)maxWidth / newWidth;\r\n                    newWidth = maxWidth;\r\n                    newHeight = (int)Math.Floor(newHeight * scale);\r\n                }\r\n\r\n                var info = codec.Info.ColorSpace.IsSrgb ? new SKImageInfo(newWidth, newHeight) : new SKImageInfo(newWidth, newHeight, SKImageInfo.PlatformColorType, SKAlphaType.Premul, SKColorSpace.CreateSrgb());\r\n                using (SKSurface surface = SKSurface.Create(info))\r\n                {\r\n                    using (SKPaint paint = new SKPaint())\r\n                    {\r\n                        // High quality without antialiasing\r\n                        paint.IsAntialias = true;\r\n                        paint.FilterQuality = SKFilterQuality.High;\r\n\r\n                        // Draw the bitmap to fill the surface\r\n                        surface.Canvas.Clear(SKColors.White);\r\n                        var rect = new SKRect(0, 0, newWidth, newHeight);\r\n                        surface.Canvas.DrawImage(image, rect, paint);\r\n                        surface.Canvas.Flush();\r\n\r\n                        using (SKImage newImage = surface.Snapshot())\r\n                        {\r\n                            using (SKData newImageData = newImage.Encode(convertToJpeg ? SKEncodedImageFormat.Jpeg : (codec.EncodedFormat == SKEncodedImageFormat.Gif ? SKEncodedImageFormat.Png : codec.EncodedFormat), \r\n                                codec.EncodedFormat == SKEncodedImageFormat.Gif || codec.EncodedFormat == SKEncodedImageFormat.Png || !downsampleJpeg ? 100 : 85))\r\n                            {\r\n                                return newImageData.ToArray();\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n_Copied from original issue: mono/SkiaSharp.Extended#49_",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-10-04T14:04:35",
+  "updatedAt": "2020-05-12T08:30:23",
+  "commentCount": 8,
+  "reactionCount": 0
+}

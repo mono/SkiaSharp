@@ -1,0 +1,40 @@
+{
+  "number": 900,
+  "type": "pr",
+  "state": "closed",
+  "title": "Re-work the managed-native types",
+  "body": "**Description of Change**\r\n\r\n - Added \u0060GCHandleProxy\u0060 to debug builds\r\n    - this is used to track all \u0060GCHandle\u0060 \u0060Alloc\u0060 and \u0060Free\u0060 calls to ensure that all allocations are freed.\r\n    - added some unit tests to make sure this is actually enforced\r\n    - as a result, several object are now freed correctly\r\n - Added \u0060ISKReferenceCounted\u0060 and \u0060ISKNonVirtualReferenceCounted\u0060 interfaces to represent the reference counting types used in the native library\r\n    - this helps with automatically de-referencing objects\r\n - \u0060SKAbstractManagedStream\u0060, \u0060SKAbstractManagedWStream\u0060 and \u0060SKDrawable\u0060 have been re-written to use better delegates\r\n   - instead of passing each of the delegates as parameters, they are now a struct that is passed as a single object\r\n   - better for extensions (which there shouldn\u0027t be) and only a single static field on the type\r\n   - removed the usage of \u0060Marshal.GetFunctionPointerForDelegate\u0060, which should help out with WASM (see #876)\r\n   - the objects now only keep weak references, meaning that they can now be garbage collected\r\n   - instead of trying to resolve the instances with a dictionary, a delegate is used and passed as \u0022user context\u0022\r\n - Moved some of the repetitive logic from the types into the base \u0060SKObject\u0060 and \u0060SKNativeObject\u0060\r\n    - some logic is automatically executed if the concrete type is \u0060ISKReferenceCounted\u0060 or \u0060ISKNonVirtualReferenceCounted\u0060\r\n    - with the more centralized logic and stricter patterns, better tests can be written to make sure all memory is freed correctly and timely\r\n - \u0060SKData\u0060, \u0060SKFontManager\u0060 and \u0060SKTypeface\u0060 now correctly prevent disposal of the \u0022static\u0022 instances\r\n - \u0060SKPaint\u0060 now references the \u0060Shader\u0060, \u0060MaskFilter\u0060, \u0060ColorFilter\u0060, \u0060ImageFilter\u0060, \u0060Typeface\u0060 and \u0060PathEffect\u0060 properties\r\n    - this prevents accidental collection, or non-collection when the object goes out of scope\r\n - the \u0060SKPath\u0060 iterators (\u0060Iterator\u0060 and \u0060RawIterator\u0060) and op builder (\u0060OpBuilder\u0060) now correctly own and dispose their native objects\r\n - \u0060SKRegion\u0060 objects are now disposed on the native side\r\n - \u0060SKTypeface\u0060 construction from a \u0060SKManagedStream\u0060 (via both \u0060SKTypeface\u0060 and \u0060SKFontManager\u0060) now copy the contents of the .NET \u0060Stream\u0060 into a native memory\r\n    - typeface construction requires multiple seeks (previously, the stream was copied only if it was non-seekable)\r\n    - it also requires \u0022duplicating\u0022 the stream, which is not supported on .NET streams\r\n       - duplicates or forks of a stream means that each of the streams need to be read concurrently from different locations\r\n       - .NET streams can only have a single position\r\n - Updated the NuGets used for the tests\r\n     - using the \u0060Xunit.AssemblyFixture\u0060 and \u0060Xunit.SkippableFact\u0060 NuGets instead of using the code directly\r\n    - removed the \u0060Xunit.Categories\u0060 NuGet as it was preventing tests from running\r\n\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to issue #876 \r\n\r\nProvide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR.\r\n\r\n**API Changes**\r\nNone visible.\r\n\r\n**Behavioral Changes**\r\n\r\nThis PR has a big set of changes that may be breaking due to bug fixes:\r\n\r\nThe \u0060SKAbstractManagedStream\u0060, \u0060SKAbstractManagedWStream\u0060 and \u0060SKDrawable\u0060 no longer prevent the GC from collecting them. This means that if code no longer references them, they will be disposed. \r\n - As far as I can tell, this should not be a problem for the streams as they are never kept around - they are just used for reading and writing and typically only need to live for as long as a single method, and then need to be disposed by the caller. The \u0060SKTypeface\u0060 and \u0060SKDocument\u0060 do keep it around for a bit, but then they also take ownership of the stream and keep a hard reference to the streams themselves. They will dispose the streams when they are disposed.\r\n - \u0060SKDrawable\u0060 is never kept around and is entirely a user-controlled object. If it goes out of scope, skia doesn\u0027t have a reference anyway.\r\n\r\nThe \u0060SKFontManager\u0060 and \u0060SKTypeface\u0060 no longer use the managed streams (\u0060SKManagedStream\u0060 or \u0060Stream\u0060) directly - they make a copy.\r\n - This is simply because skia streams can do things that are not possible for .NET - they can be read concurrently from different positions. If a \u0060SKFileStream\u0060 or \u0060SKMemoryStream\u0060 are passed, then the streams are not copied.\r\n - Further optimizations can be made in the case of a \u0060MemoryStream\u0060 or \u0060byte[]\u0060 to not actually copy but use GC pinning to get a handle to the managed data and work with pointers. But this can be done later so that this PR can be merged and tested.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-07-01T05:36:14",
+  "updatedAt": "2019-11-21T20:35:10",
+  "closedAt": "2019-07-30T01:26:22",
+  "commentCount": 1,
+  "reactionCount": 5,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/improve-managed",
+  "additions": 2885,
+  "deletions": 1472,
+  "changedFiles": 87,
+  "commits": 28,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-07-07T01:50:37"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-07-07T02:52:46"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "number": 958,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKBitmap.SetPixel treating color type rgba8888 as bgra8888",
+  "body": "**Description**\r\n\r\n\u003C!-- a general description goes here --\u003E\r\nSKBitmap.SetPixel function treating color type rgba8888 as bgra8888, while color type bgra8888 works correctly.\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\u0060\u0060\u0060csharp\r\nSKBitmap testbmp = new SKBitmap(new SKImageInfo(32,32,SKColorType.Rgba8888,SKAlphaType.Premul));\r\ntestbmp.SetPixel(0,0,new SKColor(220,0,0,255));\r\nSKColor c = testbmp.GetPixel(0, 0);\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\ntestbmp.Bytes[0] == 220\r\ntestbmp.Bytes[1] == 0\r\ntestbmp.Bytes[2] == 0\r\ntestbmp.Bytes[3] == 255\r\nc == ffdc0000\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\ntestbmp.Bytes[0] == 0\r\ntestbmp.Bytes[1] == 0\r\ntestbmp.Bytes[2] == 220\r\ntestbmp.Bytes[3] == 255\r\nc == ff0000dc\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  v1.68.0\r\n- IDE: Visual Studio 2017\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - UWP:  Windows 10, version 1803 (17134)\r\n",
+  "author": {
+    "login": "0x5b25",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-09-19T07:13:51",
+  "updatedAt": "2022-08-19T09:02:28",
+  "closedAt": "2020-10-13T22:24:19",
+  "commentCount": 14,
+  "reactionCount": 0
+}

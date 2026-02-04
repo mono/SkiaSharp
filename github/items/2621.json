@@ -1,0 +1,22 @@
+{
+  "number": 2621,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Reset clipPath autoincrement ids",
+  "body": "### Is your feature request related to a problem?\r\n\r\nMy unit tests produce set of SVG files and compare them with expected result.\r\nIn version 2.88, clipPath id property is being autoincrement of every run, resulting in different SVG content produced on every run.\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/11254187/379e916c-3129-4aa1-8182-b2c3ba8e17e2)\r\n\r\n\r\n### Describe the solution you would like\r\n\r\n- some manual API call to reset seed/suffix value\r\n- automatically restart seed for each SVG (is it a static counter used?)\r\n\r\n### Describe alternatives you have considered\r\n\r\nIt is possible to parse SVG and manually reset id attribute to some known value on each test run, which is not ideal.\r\n\r\n\u0060\u0060\u0060\r\n        public static string FixClipPathId(string svg)\r\n        {\r\n            var doc = XDocument.Parse(svg);\r\n\r\n            var clipPathElements = doc.Root.Elements().Where(e =\u003E e.Name.LocalName == \u0022clipPath\u0022);\r\n            var cpCounter = 0;\r\n            foreach (var clipPath in clipPathElements)\r\n            {\r\n                var id = clipPath.Attribute(\u0022id\u0022);\r\n                if (id != null)\r\n                {\r\n                    svg = svg.Replace(id.Value, $\u0022cp_{cpCounter}\u0022);\r\n                    cpCounter\u002B\u002B;\r\n                }\r\n            }\r\n\r\n            return svg;\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n### Additional context\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "EvgenyMuryshkin",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-09-18T21:36:58",
+  "updatedAt": "2023-09-21T21:35:11",
+  "commentCount": 2,
+  "reactionCount": 0
+}

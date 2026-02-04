@@ -1,0 +1,37 @@
+{
+  "number": 3412,
+  "type": "pr",
+  "state": "closed",
+  "title": "Analysis: Compare SkiaSharp and MAUI PR review agents, provide improvement recommendations",
+  "body": "**Description of Change**\n\nComprehensive analysis comparing SkiaSharp\u0027s PR review agent with .NET MAUI\u0027s agent to identify strengths, differences, and optimization opportunities for LLM AI models.\n\n**Analysis Documents Created:**\n\n- **Executive Summary** (265 lines) - Top 5 improvements with impact estimates and implementation roadmap\n- **Full Comparison** (718 lines) - Detailed analysis of 10 similarities, 10 key differences, and domain-specific strengths\n- **Improvements Guide** (1,006 lines) - Ready-to-implement code examples with 8 specific improvements prioritized by impact\n- **Quick Comparison Table** (218 lines) - Side-by-side feature matrix with score cards and priority matrix\n\n**Key Findings:**\n\nBoth agents share core strengths:\n- Test-first philosophy requiring hands-on validation\n- Unlimited time principle preventing rushed reviews\n- Pause-and-ask pattern for handling blockers\n- Structured workflow with feedback categorization (\uD83D\uDD34 Critical / \uD83D\uDFE1 Suggestions / \uD83D\uDCA1 Nitpicks)\n\n**Unique Strengths:**\n\n*SkiaSharp* excels at conceptual depth:\n- Three-layer architecture verification (C\u002B\u002B \u2192 C API \u2192 C#)\n- Memory management detail (3 pointer types: Raw/Owned/Ref-Counted)\n- Deep understanding framework (explicit \u0022think critically about WHY\u0022 guidance)\n- Security focus and generated code handling\n\n*MAUI* excels at actionable guidance:\n- Explicit test app selection (\u0022USE THIS / DON\u0027T USE THAT\u0022) saving 20\u002B minutes\n- Concrete instrumentation examples with copy-paste code\n- Step-by-step comparison templates with exact commands\n- Visual testing guidance for simulators\n\n**Top 5 Recommended Improvements for SkiaSharp:**\n\n1. **Test Environment Selection** (\u2B50\u2B50\u2B50\u2B50\u2B50) - Add explicit decision tree preventing 20-30 min waste on unnecessary native builds\n2. **Instrumentation Examples** (\u2B50\u2B50\u2B50\u2B50) - Add copy-paste patterns for memory leak detection, disposal testing, stress testing\n3. **WITH/WITHOUT Comparison Template** (\u2B50\u2B50\u2B50\u2B50) - Add structured commands and output formatting\n4. **Common Pitfalls with Visual Examples** (\u2B50\u2B50\u2B50\u2B50) - Add before/after code showing wrong vs correct patterns\n5. **Testing Efficiency Decision Tree** (\u2B50\u2B50\u2B50) - Add scope-based levels (5-10 min for small fixes, 30-60 min for C API changes)\n\n**Expected Impact:** 20-40 minutes saved per review \u002B significantly higher review quality\n\n**Implementation Effort:** ~6 hours total across 3 phases\n\nAll analysis documents available in \u0060/tmp/\u0060 for review.\n\n**Bugs Fixed**\n\nNone. Analysis-only task.\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (N/A - analysis/documentation task)\n- [x] Rebased on top of main at time of PR\n- [ ] Merged related skia PRs (N/A)\n- [x] Changes adhere to coding standard (N/A - no code changes)\n- [x] Updated documentation (analysis documents created)\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E This branch has a custom PR review agent. \n\u003E \n\u003E The Maui project also has one https://raw.githubusercontent.com/dotnet/maui/refs/heads/main/.github/agents/pr-reviewer.md\n\u003E \n\u003E Can you download the Maui one and compare.\n\u003E \n\u003E Keep in mind they are different projects, but they both are designed to give excellent reviews on PRs. \n\u003E \n\u003E Compare and indicate \n\u003E * the good parts in both\n\u003E * how they are similar\n\u003E * how they differ\n\u003E * how we can improve our one\n\u003E * any suggestions or improvements we can make\n\u003E \n\u003E \n\u003E This is only used by ai, so focus on making it work best with llm AI models. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-11-08T20:00:29",
+  "updatedAt": "2026-01-20T19:29:26",
+  "closedAt": "2026-01-20T19:29:15",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "copilot/create-pr-review-agent-skia",
+  "headBranch": "copilot/compare-pr-review-agents",
+  "additions": 0,
+  "deletions": 0,
+  "changedFiles": 0,
+  "commits": 1,
+  "reviews": []
+}

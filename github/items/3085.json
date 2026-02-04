@@ -1,0 +1,32 @@
+{
+  "number": 3085,
+  "type": "pr",
+  "state": "closed",
+  "title": "Use \u0060\u003CWindowsSdkPackageVersion\u003E\u0060 to set the SDK version",
+  "body": "**Description of Change**\r\n\r\nI think the SDK and/or VS updates have brought in some issue, but I think there is another way to do what we want.\r\n\r\nWe currently have this:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CFrameworkReference\r\n    Update=\u0022Microsoft.Windows.SDK.NET.Ref\u0022\r\n    RuntimeFrameworkVersion=\u002210.0.19041.27\u0022\r\n    TargetingPackVersion=\u002210.0.19041.27\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nBut that is assuming the framework references are added early and we run late. But, it appears something changed and now the values are either ignored or the items are added in a different place. This results in our adjustments being ignored.\r\n\r\nThere is another property \u0060\u003CWindowsSdkPackageVersion\u003E\u0060 that can be used and feels more official.\r\n\r\nI think in net6 something broke with the property so we had to do it via the framework references, but now it appears they fixed it and broke us.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backport/release/3.116.0",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-11-27T15:55:52",
+  "updatedAt": "2024-11-27T22:50:15",
+  "closedAt": "2024-11-27T22:48:37",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-ci",
+  "additions": 1,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": []
+}

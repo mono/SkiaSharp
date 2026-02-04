@@ -1,0 +1,24 @@
+{
+  "number": 1393,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Linker Error on Build",
+  "body": "Building a Xamarin Forms (currently 4.7.0.1080) project fails when using SkiaSharp 2.80.0.\r\n\r\n\u0060\u0060\u0060\r\nerror MT5209 : Native linking error : framework not found libSkiaSharp\r\nMTOUCH : error MT5202: Native linking failed. Please review the build log.\r\n\u0060\u0060\u0060\r\n\r\nSteps to reproduce:\r\n1. In Visual Studio for Mac, create a new Xamarin Forms app using Blank Forms App template.\r\n2. Upgrade NuGets on all 3 projects, Android, iOS, and Common. (Xamarin Forms -\u003E 4.7.0.180; Xamarin Essentials -\u003E 1.5.3.2)\r\n3. Add SkiaSharp.Views.Forms (2.80.0) NuGet to the shared project.\r\n3. Add a reference to SkiaSharp \u0060new SKCanvasView();\u0060 to MainPage.xaml.cs to prevent the Linker from pruning out SkiaSharp.\r\n4. Perform Build All.\r\n\r\n\r\n[SkiaLinkerDemo.zip](https://github.com/mono/SkiaSharp/files/4898304/SkiaLinkerDemo.zip)\r\n\r\n**Expected Behavior**\r\n\r\nApp should build and be able to launch.\r\n\r\n**Actual Behavior**\r\n\r\nBuild for iOS fails with linker errors.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.0\r\n- Last known good version: 1.68.3\r\n- IDE:  Visual Studio for Mac v8.6.5\r\n\r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EIDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\nVisual Studio Community 2019 for Mac\r\nVersion 8.6.5 (build 23)\r\nInstallation UUID: 06132a91-56f5-4cdb-afc7-6be5f4773937\r\n\tGTK\u002B 2.24.23 (Raleigh theme)\r\n\tXamarin.Mac 6.18.0.23 (d16-6 / 088c73638)\r\n\r\n\tPackage version: 610000104\r\n\r\nMono Framework MDK\r\nRuntime:\r\n\tMono 6.10.0.104 (2019-12/5d03a6fe116) (64-bit)\r\n\tPackage version: 610000104\r\n\r\nRoslyn (Language Service)\r\n3.6.0-3.20210.9\u002B4eafdcb1bcbd8d3573f2ba6065e56d9b9ce4f8a3\r\n\r\nNuGet\r\nVersion: 5.6.0.6591\r\n\r\n.NET Core SDK\r\nSDK: /usr/local/share/dotnet/sdk/3.1.301/Sdks\r\nSDK Versions:\r\n\t3.1.301\r\n\t3.1.300\r\n\t3.1.202\r\n\t3.1.200\r\nMSBuild SDKs: /Library/Frameworks/Mono.framework/Versions/6.10.0/lib/mono/msbuild/Current/bin/Sdks\r\n\r\n.NET Core Runtime\r\nRuntime: /usr/local/share/dotnet/dotnet\r\nRuntime Versions:\r\n\t3.1.5\r\n\t3.1.4\r\n\t3.1.2\r\n\t2.1.19\r\n\t2.1.18\r\n\t2.1.17\r\n\t2.1.16\r\n\r\nXamarin.Profiler\r\nVersion: 1.6.13.11\r\nLocation: /Applications/Xamarin Profiler.app/Contents/MacOS/Xamarin Profiler\r\n\r\nUpdater\r\nVersion: 11\r\n\r\nApple Developer Tools\r\nXcode 11.5 (16139)\r\nBuild 11E608c\r\n\r\nXamarin.Mac\r\nVersion: 6.18.2.1 (Visual Studio Community)\r\nHash: 29c4ea731\r\nBranch: d16-6\r\nBuild date: 2020-05-26 17:03:04-0400\r\n\r\nXamarin.iOS\r\nVersion: 13.18.2.1 (Visual Studio Community)\r\nHash: 29c4ea731\r\nBranch: d16-6\r\nBuild date: 2020-05-26 17:03:05-0400\r\n\r\nXamarin Designer\r\nVersion: 16.6.0.329\r\nHash: d4f8bcd13\r\nBranch: remotes/origin/d16-6\r\nBuild date: 2020-04-24 02:16:02 UTC\r\n\r\nXamarin.Android\r\nVersion: 10.3.1.4 (Visual Studio Community)\r\nCommit: xamarin-android/d16-6/3a10de9\r\nAndroid SDK: **REMOVED**\r\n\tSupported Android versions:\r\n\t\tNone installed\r\n\r\nSDK Tools Version: 26.1.1\r\nSDK Platform Tools Version: 29.0.5\r\nSDK Build Tools Version: 29.0.2\r\n\r\nBuild Information: \r\nMono: 165f4b0\r\nJava.Interop: xamarin/java.interop/d16-6@2cab35c\r\nProGuard: xamarin/proguard/master@905836d\r\nSQLite: xamarin/sqlite/3.31.1@49232bc\r\nXamarin.Android Tools: xamarin/xamarin-android-tools/d16-6@bfb66f3\r\n\r\nMicrosoft OpenJDK for Mobile\r\nJava SDK: **REMOVED**\r\n1.8.0-25\r\nAndroid Designer EPL code available here:\r\nhttps://github.com/xamarin/AndroidDesigner.EPL\r\n\r\nAndroid SDK Manager\r\nVersion: 16.6.0.50\r\nHash: 5901879\r\nBranch: remotes/origin/d16-6\r\nBuild date: 2020-06-10 22:42:50 UTC\r\n\r\nAndroid Device Manager\r\nVersion: 16.6.0.96\r\nHash: 6e8b80b\r\nBranch: remotes/origin/d16-6\r\nBuild date: 2020-06-10 22:43:28 UTC\r\n\r\nBuild Information\r\nRelease ID: 806050023\r\nGit revision: 5289d413b99fddfc20b4ecf3e445ccb822213427\r\nBuild date: 2020-06-18 12:08:30-04\r\nBuild branch: release-8.6\r\nXamarin extensions: 5289d413b99fddfc20b4ecf3e445ccb822213427\r\n\r\nOperating System\r\nMac OS X 10.15.5\r\nDarwin 19.5.0 Darwin Kernel Version 19.5.0\r\n    Tue May 26 20:41:44 PDT 2020\r\n    root:xnu-6153.121.2~2/RELEASE_X86_64 x86_64\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n",
+  "author": {
+    "login": "hollyschilling",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-09T17:04:06",
+  "updatedAt": "2022-08-19T03:02:39",
+  "closedAt": "2020-08-02T07:38:08",
+  "commentCount": 10,
+  "reactionCount": 8
+}

@@ -1,0 +1,18 @@
+{
+  "number": 2525,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Examples/docs on how to handle scaling in SKGLView in Blazor?",
+  "body": "I\u0027m building a drawing/editing app in Blazor WASM, and using SkiaSharp for the image handling. So far looking good. :)\r\n\r\nHowever, I\u0027m having some difficulties with scaling and mouse interaction. I\u0027m implementing a drag selector for cropping, and hitting two scenarios:\r\n\r\n1. If I set \u0060IgnorePixelScaling=false\u0060 then my canvas is scaled correctly and when I draw my bitmaps etc., they\u0027re all scaled to fit in the canvas. E.g., when \u0060OnPaintSurface\u0060 is called, \u0060e.BackendRenderTarget.Size\u0060 really does represent the canvas size. However, if I then process mouse events to click/drag on the canvas, those mouse events have coordinates that are scaled differently. \r\n \r\n3. If I set \u0060IgnorePixelScaling=true\u0060 then my mouse event coords scale to the canvas correctly - but the canvas is not scaled correctly for the display. \r\n\r\nIn the following two examples, the page/browser window is the same for both, and the click/drag region is the same for both, but you can see the difference in rendering for the image and the selection rectangle. In the first, the image is scaled correctly, but the selection rect is about 50% too small. In the second, the selection rectangle is drawn correctly, but the image is about twice as large as it should be.\r\n\r\n\u0060IgnorePixelScaling=true\u0060\r\n\u003Cimg width=\u00221078\u0022 alt=\u0022Screenshot 2023-07-17 at 11 48 33\u0022 src=\u0022https://github.com/mono/SkiaSharp/assets/4901102/b8d79db4-0d26-4022-a73b-ebd4a7cc5956\u0022\u003E\r\n\r\n\u0060IgnorePixelScaling=false\u0060\r\n\u003Cimg width=\u00221036\u0022 alt=\u0022Screenshot 2023-07-17 at 11 47 10\u0022 src=\u0022https://github.com/mono/SkiaSharp/assets/4901102/67952a46-22a6-4b24-94ab-a82c12bf37d0\u0022\u003E\r\n\r\nI gues the question I\u0027m asking is, how can I translate from device to canvas pixels? I\u0027m happy to do the translation, either by scaling the mouse coords, or the image drawing coords. But for the life of me I can\u0027t find any properties within the \u0060SkSurface\u0060 or \u0060SkCanvas\u0060 that tell me the DPI or scaling factor, so I can include it in my calculations. I might just be struggling to find it though, as the documentation is a bit patchy, and there aren\u0027t many people using \u0060SKGLView\u0060 yet, it seems.\r\n\r\nEdit: It looks like what I might be trying to find is being added here: https://github.com/mono/SkiaSharp/pull/1832 but I don\u0027t think that\u0027s been merged. ",
+  "author": {
+    "login": "Webreaper",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-07-17T10:52:26",
+  "updatedAt": "2023-08-16T12:00:28",
+  "closedAt": "2023-07-17T11:21:09",
+  "commentCount": 1,
+  "reactionCount": 0
+}

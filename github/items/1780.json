@@ -1,0 +1,18 @@
+{
+  "number": 1780,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] System.IO.FileNotFoundExcption : Could not load file or assembly \u0027gtk-sharp",
+  "body": "I am trying to test view in nunit test project.\r\nView uses **SkiaSharp.Views.Forms.SKCanvasView** internally. Therefore, I include **SkiaSharp.Views.Forms.GTK** as NuGet Dependencies like below. (#1225)\r\n\r\n![image](https://user-images.githubusercontent.com/9730869/130028056-4817833f-7cfb-4805-9873-2d1c23c2ab1a.png)\r\n![image](https://user-images.githubusercontent.com/9730869/130028489-f7a63ffa-a391-49a9-b9a3-102afcadec5d.png)\r\n\r\nBut after build I am getting following exception,\r\n\r\n![image](https://user-images.githubusercontent.com/9730869/130028677-7161c4fe-2ef3-4383-844b-988a3105a021.png)\r\n\r\nIs there a way to solve this?\r\n\r\nI can find **gtk-sharp.dll** in _/Library/Frameworks/Mono.framework/Versions/6.12.0/lib/mono/gac/gtk-sharp/2.12.0.0__35e10195dab3c99f_ folder.\r\nI tried install GTK# (https://www.mono-project.com/docs/gui/gtksharp/).\r\n\r\n#### Package Console\r\n\u0060\u0060\u0060\r\nPackage \u0027OpenTK 3.0.1\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETCoreApp,Version=v3.1\u0027. This package may not be fully compatible with your project.\r\nPackage \u0027OpenTK.GLControl 3.0.1\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETCoreApp,Version=v3.1\u0027. This package may not be fully compatible with your project.\r\nPackage \u0027SkiaSharp.Views.Forms.GTK 2.80.2\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETCoreApp,Version=v3.1\u0027. This package may not be fully compatible with your project.\r\nPackage \u0027Xamarin.Forms.Platform.GTK 5.0.0.2012\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETCoreApp,Version=v3.1\u0027. This package may not be fully compatible with your project.\r\n\u0060\u0060\u0060\r\nHowever **OpenTK 3.0.1** does not depends on .NET Framework. Why it is restoring using .NET Framework?\r\n\r\n![image](https://user-images.githubusercontent.com/9730869/130035863-ded5f1b3-52f6-476a-bfda-a5669935957d.png)\r\n",
+  "author": {
+    "login": "ibocon",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-08-19T07:46:20",
+  "updatedAt": "2022-08-19T00:02:29",
+  "closedAt": "2021-09-06T22:29:08",
+  "commentCount": 1,
+  "reactionCount": 0
+}

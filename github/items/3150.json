@@ -1,0 +1,27 @@
+{
+  "number": 3150,
+  "type": "pr",
+  "state": "closed",
+  "title": "Reland #2873 - Disable the unused and problematic tools",
+  "body": "**Description of Change**\r\n\r\nThe Go modules are all far out of date and some tooling is reporting the repo as having security issues. We do not use any part of Go, EMSDK or perfetto in the SkiaSharp project.\r\n\r\nIn an ideal world we don\u0027t have to make changes and there is a special flag that exists for us to \u0022disable all issues\u0022, but that does not exist and trying to make that flag work only on CI is unnecessary. We can just delete the few places that are having issues.\r\n\r\nThis was originally merged as part of #2873 but I lost the changes when updating to 118. None of this code made it into the library as can be seen by the fact it still works when I just simply remove whole chunks.\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-01-30T18:47:09",
+  "updatedAt": "2025-01-31T15:32:29",
+  "closedAt": "2025-01-31T15:32:24",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/tools",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

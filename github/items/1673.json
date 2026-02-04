@@ -1,0 +1,17 @@
+{
+  "number": 1673,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] CreateRotation Gives the Wrong Answer",
+  "body": "**Description**\r\n\r\nSKMatrix.CreateRotationDegrees and SKMatrix.CreateRotation both give the wrong answer\r\n\r\nIt appears if you do BOTH a rotation and translation, the rotation has to happen first\r\nthis works:\r\n\u0060\u0060\u0060\r\npath.Transform( SKMatrix.CreateRotationDegrees( 180.0F ) );\r\npath.Transform( SKMatrix.CreateTranslation( offset.X, offset.Y ) );\r\nreturn path;\r\n\u0060\u0060\u0060\r\n\r\nthis does not:\r\n\u0060\u0060\u0060\r\npath.Transform( SKMatrix.CreateTranslation( offset.X, offset.Y ) );\r\npath.Transform( SKMatrix.CreateRotationDegrees( 180.0F ) );\r\nreturn path;\r\n\u0060\u0060\u0060\r\nMaybe I\u0027m missing some method to clear the matrix first?\r\nI tried combining as well, but that got the same wrong answer?\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nSKPath path = Cross( outerRadius, innerRadius, offset );\r\npath.Transform( SKMatrix.CreateRotationDegrees( 45.0F ) );\r\nreturn path;\r\n\r\n// Cross calls MakePath after creating an SKPoint[] around origin 0,0\r\n// Make path just turns that to a SKPath and offsets to the proper location\r\n\r\npublic static SKPath MakePath( SKPoint[] vertices, SKPoint offset )\r\n{\r\n\tSKPath path = new SKPath { FillType = SKPathFillType.EvenOdd };\r\n\r\n\t// create the path\r\n\tpath.MoveTo( vertices[0] );\r\n\r\n\tfor ( int i = 1; i \u003C vertices.Length; \u002B\u002Bi )\r\n\t\tpath.LineTo( vertices[i] );\r\n\r\n\tpath.Close();\r\n\tpath.Transform( SKMatrix.CreateTranslation( offset.X, offset.Y ) );\r\n\treturn path;\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nSKPath is rotated in place. But appears to be translated as well as rotated. The new translation doesn\u0027t seem to correspond to anything except moving to X=0 and Y = whatever it was before \u002B its own height?\r\n\r\n\r\n**Actual Behavior**\r\n\r\nAppears to be translating as well back to an X origin of 0. Tried both functions in deg and rad and both gave the same incorrect results. And yet, I took some very old rotation code I wrote ages ago and got the right results after modding it for SKPoints\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  IDK\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks: this is just simple command line writing out a PNG file\r\n- Target Devices:  Mac but its written as an API to return PNG images\r\n  \r\nThe first image is my own code. Second image is when I rotate the same path using CreateRotationDegrees\r\n\r\n**Screenshots**\r\n![Screen Shot 2021-03-26 at 5 09 01 PM](https://user-images.githubusercontent.com/17300872/112697779-4c197300-8e56-11eb-8202-8e7541425c9a.png)\r\n![Screen Shot 2021-03-26 at 5 10 40 PM](https://user-images.githubusercontent.com/17300872/112697845-723f1300-8e56-11eb-89ad-6a1aed89802e.png)\r\n\r\n\r\n",
+  "author": {
+    "login": "GrumpyCockatiel",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-03-26T22:19:36",
+  "updatedAt": "2021-04-01T14:50:44",
+  "commentCount": 0,
+  "reactionCount": 0
+}

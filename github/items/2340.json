@@ -1,0 +1,17 @@
+{
+  "number": 2340,
+  "type": "issue",
+  "state": "open",
+  "title": "Windows forms on .net6 core - ToBitmap Dispose not functional",
+  "body": "**Description**\r\n\r\nWhen using the ToBitmap to convert to windows Image or Bitmap, the conversion happens but the memory it used to do it does not get called or fails. If i force the garbage collector to run it cleans up all the objects and works.\r\n\r\n**Code**\r\n\r\nBitmap bmp1 = obj.picture.ToBitmap();\r\npb.image = bmp1;\r\nbmp1.Dispose();     //// FAILS HERE \r\n\r\n// normally use this code - but it also fails\r\nusing Bitmap bmp1 = obj.picture.ToBitmap();\r\npb.image = bmp1;\r\n\r\n**Expected Behavior**\r\n\r\nI would expect the command not to crash my application, with a \u0022Parameter is not valid.\u0022 exception.\r\nI would also expect not to have to use the GC.Collect to force CG cleanup in place of the Dispose.\r\n\r\n**Actual Behavior**\r\n\r\nApplication crashes on the dispose on \u0022Parameter is not valid.\u0022 exception\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version:  Never used skiasharp before\r\n- IDE:  VS 2022 Pro\r\n- Platform Target Frameworks: .net6\r\n- Target Devices:   Desktop\r\n  \r\n\u003Cdetails\u003E\r\n \r\n\u0060\u0060\u0060\r\n\r\n   at System.Drawing.Image.get_RawFormat()\r\n   at System.Drawing.Graphics.DrawImage(Image image, Int32 x, Int32 y, Int32 width, Int32 height)\r\n   at System.Drawing.Graphics.DrawImage(Image image, Rectangle rect)\r\n   at System.Windows.Forms.PictureBox.OnPaint(PaintEventArgs pe)\r\n   at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)\r\n   at System.Windows.Forms.Control.WmPaint(Message\u0026 m)\r\n   at System.Windows.Forms.Control.WndProc(Message\u0026 m)\r\n   at System.Windows.Forms.Control.ControlNativeWindow.OnMessage(Message\u0026 m)\r\n   at System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message\u0026 m)\r\n   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, WM msg, IntPtr wparam, IntPtr lparam)\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\nWorks but memory runs away\r\n                    Bitmap ovpic = result.ovpicture.ToBitmap();\r\n                    OVpictureBox.Image = ovpic;\r\n\r\nDoes not work and crashes the program\r\n                    Bitmap ovpic = result.ovpicture.ToBitmap();\r\n                    OVpictureBox.Image = ovpic;\r\n                    ovpic.Dispose();\r\n\r\n![image](https://user-images.githubusercontent.com/42337026/207782505-03282254-1f77-4992-bf1f-6b17bf38ed28.png)\r\n\r\n\r\n",
+  "author": {
+    "login": "Skyhikeeper",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-12-15T05:48:33",
+  "updatedAt": "2022-12-15T05:48:33",
+  "commentCount": 0,
+  "reactionCount": 0
+}

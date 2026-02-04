@@ -1,0 +1,18 @@
+{
+  "number": 2325,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKPath boolean operation union",
+  "body": "**Description**\r\n\r\n\u003C!-- a general description goes here --\u003E\r\nWhen I try to get an offset path from a source path with GetFillPath() and boolean operation union. I get different results if the path is at a different position.\r\n\r\nAs you can see the paths are the same but the only difference is the first point after the SVG m comand.\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\nvar pathBug = SKPath.ParseSvgPathData(\u0022m 450.35434,822.38865 c 0.617,-0.3014 0.617,-1.18 -8e-4,-1.4897 l -88.8175,-0.01 v -14.1176 l 88.8175,0.047 c 0.6178,-0.2555 0.6178,-1.13424 8e-4,-1.43545 -8.9949,-1.11499 -17.90118,-2.85449 -26.6546,-5.20599 -16.69,-4.07019 -43.8432,-25.11432 -43.8432,-25.11432 l 104.71302,26.80432 c 0,0 -31.0553,32.1922 -34.21524,20.52164 z\u0022);\r\n\r\nvar pathCorrect = SKPath.ParseSvgPathData(\u0022m 602.35434,822.38865 c 0.617,-0.3014 0.617,-1.18 -8e-4,-1.4897 l -88.8175,-0.01 v -14.1176 l 88.8175,0.047 c 0.6178,-0.2555 0.6178,-1.13424 8e-4,-1.43545 -8.9949,-1.11499 -17.90118,-2.85449 -26.6546,-5.20599 -16.69,-4.07019 -43.8432,-25.11432 -43.8432,-25.11432 l 104.71302,26.80432 c 0,0 -31.0553,32.1922 -34.21524,20.52164 z\u0022);\r\n\t\r\n\t\r\n\tvar p = new SKPaint\r\n            {\r\n                Color = SKColors.Blue,\r\n                StrokeJoin = SKStrokeJoin.Round,\r\n                Style = SKPaintStyle.Stroke,\r\n                IsAntialias = true,\r\n                StrokeCap = SKStrokeCap.Round,\r\n                StrokeWidth = 3.6f\r\n            };\r\n            \r\n    var strokePath = new SKPath();\r\n    p.GetFillPath(pathCorrect, strokePath, 2);\r\n    \r\n    var offsetPath = new SKPath();\r\n    pathCorrect.Op(strokePath, SKPathOp.Union, offsetPath);\r\n    \r\n    var strokePathBug = new SKPath();\r\n    p.GetFillPath(pathBug, strokePathBug, 2);\r\n    \r\n    var offsetPathBug = new SKPath();\r\n    pathBug.Op(strokePathBug, SKPathOp.Union, offsetPathBug);\r\n\r\n\tp.StrokeWidth = 1;\r\n\t\r\n\tp.Color = SKColors.Red;\r\n\tcanvas.DrawPath(pathCorrect, p);\r\n\tcanvas.DrawPath(pathBug, p);\r\n\t\r\n\tp.Color = SKColors.Green;\r\n\tcanvas.DrawPath(offsetPath, p);\r\n\tcanvas.DrawPath(offsetPathBug, p);\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n![image](https://user-images.githubusercontent.com/117271075/204579760-ad11fc86-caac-4c4a-bea3-1b07b65568cc.png)\r\n\r\nthe result on the left should looks like to the one on the right\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.88.3 \u003C!-- the version of SkiaSharp that has the issue --\u003E\r\n- IDE:  Visual Studio \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n- Windows Classic: 10, 11  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n  \r\n\r\n",
+  "author": {
+    "login": "filippo-springa",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-29T16:12:24",
+  "updatedAt": "2022-12-31T12:00:53",
+  "closedAt": "2022-11-30T15:59:14",
+  "commentCount": 5,
+  "reactionCount": 0
+}

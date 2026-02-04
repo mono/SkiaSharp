@@ -1,0 +1,29 @@
+{
+  "number": 1141,
+  "type": "pr",
+  "state": "closed",
+  "title": "Make sure the OpenGL context is \u0022current\u0022 before drawing on it",
+  "body": "**Description of Change**\r\n\r\nIf there are multiple \u0060SKGLControls\u0060 drawing at the same time, there is the chance that one view may draw on another view. Or cause issues. This is because OpenGL is basically a thread-static library, and can only have a single \u0022current\u0022 context per thread. By calling \u0060MakeCurrent\u0060, we are letting OpenGL know that _this_ view is drawing and all operations are here. The next view that wants to draw then also lets OpenGL know that it wants to do some work and the OpenGL can \u0022shift\u0022 over to that one.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #920\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nWhen multiple \u0060SKGLControls\u0060 are created, there is some cross-talk. This PR makes sure that each view requests control over all operations.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-02-11T18:51:20",
+  "updatedAt": "2020-04-29T23:48:02",
+  "closedAt": "2020-02-11T23:42:26",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-920",
+  "additions": 2,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

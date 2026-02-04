@@ -1,0 +1,39 @@
+{
+  "number": 1804,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix the what the \u0060IgnorePixelScaling\u0060 property works",
+  "body": "**Description of Change**\r\n\r\nPreviously the \u0060IgnorePixelScaling\u0060 allowed the drawing code to work in density-independent UI units, however it did so in a poor manner. Instead of scaling the canvas in such a way that it preserved the high density, it stretched and reduced the quality of the image.\r\n\r\nThis PR makes sure to always draw in high resolution, and then pre-scale the canvas before invoking the paint events.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1177 \r\n- Avoids the need for https://github.com/dotnet/Microsoft.Maui.Graphics/pull/155\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nA demo of the change. \r\n\r\n| Before | After |\r\n| :-: | :-: |\r\n| ![image](https://user-images.githubusercontent.com/1096616/132806022-a19ac648-2c33-484b-9005-b72faa77ddd8.png) | ![image](https://user-images.githubusercontent.com/1096616/132806077-eb155c7c-9b64-48e0-9a23-07fae3fc56ac.png) | \r\n\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2021-09-10T05:50:42",
+  "updatedAt": "2022-12-13T08:41:18",
+  "closedAt": "2021-09-12T07:32:49",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/improve-view-scaling",
+  "additions": 683,
+  "deletions": 325,
+  "changedFiles": 83,
+  "commits": 17,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-11T08:37:11"
+    },
+    {
+      "author": "myroot",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-11T09:19:15"
+    }
+  ]
+}

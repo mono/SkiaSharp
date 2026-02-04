@@ -1,0 +1,18 @@
+{
+  "number": 733,
+  "type": "issue",
+  "state": "closed",
+  "title": "DllNotFoundException on Linux (Synology DSM)",
+  "body": "### Description\r\n\r\nSkiaSharp crashes with DllNotFoundException on Linux (1.68.0 \u002B Core 2.2). I\u0027m pretty sure this has worked sometime but I can\u0027t verify that right now. I think that was running .NET Core 1.1 and I can\u0027t seem to create a 1.1 project at the moment. It works on Windows though.\r\n\r\n### Repro steps (minimal project)\r\n\r\n1. Create a new ASP.NET Web Core Application (empty, no ssl, no docker)\r\n2. Add mvc-support\r\n3. Add Nugets SkiaSharp and SkiaSharp.NativeAssets.Linux\r\n4. Add a controller that invokes SkiaSharp\r\n5. Publish with VS Community 15.9.3 (release Linux-64) on Windows 10\r\n6. Add a basic Docker-file\r\n7. Copy files to Linux (Synology custom version based straight on Linux kernel)\r\n8. Build and run with docker\r\n9. Invoke controller, crash\r\n\r\n### Exception message\r\n\r\nThe type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n\r\n### Files\r\n\r\n[project.zip](https://github.com/mono/SkiaSharp/files/2682570/project.zip)\r\n[publish.zip](https://github.com/mono/SkiaSharp/files/2682571/publish.zip)\r\n[log.zip](https://github.com/mono/SkiaSharp/files/2682572/log.zip)\r\n",
+  "author": {
+    "login": "automagisk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-12-15T11:28:25",
+  "updatedAt": "2022-08-19T12:02:09",
+  "closedAt": "2019-01-26T14:48:48",
+  "commentCount": 3,
+  "reactionCount": 0
+}

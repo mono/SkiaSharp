@@ -1,0 +1,18 @@
+{
+  "number": 406,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKBitmap issues on Ubuntu MATE for Raspberry Pi 2",
+  "body": "Hello,\r\n\r\nI was able to successfully compile SkiaSharp for the RPi as detailed in #312. When running my app, the library gets loaded just fine, I see some native skia functions being called, etc etc etc until I try to create the bitmap to draw the canvas:\r\n\r\n\u0060System.Exception: Unable to allocate pixels for the bitmap.\u0060\r\n\r\nThe exception is raised if I remove the using statement and put a try/catch block on here: https://github.com/DanWBR/dwsim5/blob/master/DWSIM.UI.Desktop.GTK/SkiaSharp/CanvasControl.cs#L149\r\n\r\nThe code in the above works on x86 Linux just fine.\r\n\r\nI thought that it could be something related to the low video memory, then tried to fix the bitmap dimensions to 100x100px but it didn\u0027t help. Also tried all color types, none of them worked. Finally, I\u0027ve tried to create the bitmap using the constructor which only takes the dimensions as input, but it also didn\u0027t work.",
+  "author": {
+    "login": "DanWBR",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-12-01T18:27:56",
+  "updatedAt": "2022-08-19T18:02:03",
+  "closedAt": "2017-12-02T20:36:39",
+  "commentCount": 10,
+  "reactionCount": 0
+}

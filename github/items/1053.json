@@ -1,0 +1,24 @@
+{
+  "number": 1053,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] 2 Issues: Antialiasing is broken, SVG doesn\u0027t show up on GPU backend",
+  "body": "**Description**\r\n\r\nOur another test with the 1.68.1 on GPU backend:\r\n- [ ] we see that Antialias doesn\u0027t work anymore on some machines\r\n- [ ] SVGs do not show up\r\n\r\n**Regarding Antialias:** the machine I\u0027m using: ThinkPad X1, GeForce GTX 1050 Ti, Driver 441.12, tested with different drivers.\r\n\r\n**Regarding SVG**: the SVG is drawn only if the SKPaint is set to null.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n            var paint = new SKPaint();\r\n            paint.IsAntialias = true;\r\n            paint.Style = SKPaintStyle.Stroke;\r\n            paint.StrokeWidth = 2;\r\n\r\n            //no Antialias while drawing paths\r\n            var path = new SKPath();\r\n            path.AddCircle(100.0f, 100.0f, 70.0f);\r\n            canvas.DrawPath(path, paint);\r\n\r\n            var svg = new SkiaSharp.Extended.Svg.SKSvg();\r\n            var picture = svg.Load(@\u0022Resources/heart-solid.svg\u0022);\r\n\r\n            //SVG is there\r\n            var mat = new SKMatrix();           \r\n            mat.SetScaleTranslate(0.3f, 0.3f, 200.0f, 20.0f);       \r\n            canvas.DrawPicture(picture, ref mat, null);\r\n\r\n            //SVG doesn\u0027t show up\r\n            var mat2 = new SKMatrix();\r\n            mat2.SetScaleTranslate(0.3f, 0.3f, 400.0f, 20.0f);\r\n            canvas.DrawPicture(picture, ref mat2, new SKPaint());\r\n\u0060\u0060\u0060\r\n\r\n**Expected \u0026 Actual Behavior**\r\n\r\n![image](https://user-images.githubusercontent.com/1189037/70343390-74432400-1857-11ea-8cf2-8a656a15d62e.png)\r\n\r\nThe circle is a path, hearts are SVG.\r\n \r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1\r\n- Last known good version:  1.68.0\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  Windows10\r\n- Target Devices:   \r\n  - Desktop\r\n\r\n**Reproduction Link**\r\n\r\n[SkiaAntiAliasAndSVG.zip](https://github.com/mono/SkiaSharp/files/3933327/SkiaAntiAliasAndSVG.zip)\r\n\r\n",
+  "author": {
+    "login": "antongit",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-12-06T17:43:13",
+  "updatedAt": "2022-08-19T09:01:47",
+  "closedAt": "2019-12-13T05:26:38",
+  "commentCount": 4,
+  "reactionCount": 0
+}

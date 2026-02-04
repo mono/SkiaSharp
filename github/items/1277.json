@@ -1,0 +1,35 @@
+{
+  "number": 1277,
+  "type": "pr",
+  "state": "closed",
+  "title": "Performance Improvements",
+  "body": "**Description of Change**\r\n\r\nSome work into improving performance of object creation and disposal. On average as simple create-dispose operation is 2.84x faster:\r\n\r\n\u0060\u0060\u0060cs\r\nnew SKPaint().Dispose()\r\n\u0060\u0060\u0060\r\n\r\nThis is almost 3x faster, and just using a single thread, one object at a time. The perf improvements will come for a few reasons:\r\n - some objects do not need to be added/located in a dictionary\r\n - reduced dictionary operations improves perf for other objects that are in the dictionary\r\n - the commonly used objects are not added\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nSome objects no longer are stored in the the global dictionary. This is not a user-visible change.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.3",
+  "createdAt": "2020-05-08T01:00:55",
+  "updatedAt": "2021-04-14T10:24:11",
+  "closedAt": "2020-05-10T14:56:12",
+  "commentCount": 4,
+  "reactionCount": 4,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/perf-improvements",
+  "additions": 264,
+  "deletions": 69,
+  "changedFiles": 38,
+  "commits": 10,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-08T01:19:02"
+    }
+  ]
+}

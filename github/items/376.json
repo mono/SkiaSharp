@@ -1,0 +1,28 @@
+{
+  "number": 376,
+  "type": "issue",
+  "state": "closed",
+  "title": "System.ObjectDisposedException when using type fonts loaded from resource",
+  "body": "Hi Matthew,\r\n\r\ni have a problem with type fonts loaded from embedded resources and using them in an SKDocument.\r\nI my application i use different type fonts to draw text on the canvas. The type fonts are added as embedded resources and loaded via SKTypeface.FromStream(). As soon as my application reaches the memory limit and the garbage collector gets activated the application crashes with the following exception:\r\n\r\nSystem.ObjectDisposedException: Cannot access a disposed object.\r\nObject name: \u0027SKManagedStream: -1736448144\u0027.\r\n\r\nHere is a repro project to demonstrate the behavior:\r\n\r\n[SkiaSharpManagedStreamBug.zip](https://github.com/mono/SkiaSharp/files/1333677/SkiaSharpManagedStreamBug.zip)\r\n\r\nI am using version 1.59.1\r\n\r\nbest regards\r\nFrederik",
+  "author": {
+    "login": "bay0fred",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.59.2",
+  "createdAt": "2017-09-26T15:18:08",
+  "updatedAt": "2022-08-19T18:02:30",
+  "closedAt": "2017-10-25T14:31:02",
+  "commentCount": 2,
+  "reactionCount": 0
+}

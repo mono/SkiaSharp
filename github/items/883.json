@@ -1,0 +1,24 @@
+{
+  "number": 883,
+  "type": "issue",
+  "state": "closed",
+  "title": "How do I get the native binaries for a Managed-only build?",
+  "body": "I\u0027m trying to do a managed-only build by following [the instructions here](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp#preparation-1) since I wasn\u0027t able to get the externals/skia native builds to complete without compilation errors (in GrAHardwareBufferImageGenerator.cpp, line 217, GrBackendTexture backendTex: no matching constructor).\r\n\r\nHowever, I don\u0027t know how to get the correct Azure Build IDs. If I go to the [Azure build page](https://dev.azure.com/xamarin/public/_build?definitionId=4) and pick one of the builds from SkiaSharp (Public) that appears to have built successfully with a green tick (e.g., [build 3348](https://dev.azure.com/xamarin/public/_build/results?buildId=3348)) ) and copy the buildId from the URL (e.g., 3348), and use that with the bootstrapper,\r\n\r\n\u0060\u0060\u0060\r\n./bootstrapper.sh -t externals-download --azureBuildId=3348\r\n\u0060\u0060\u0060\r\n(Also tried \u00223348\u0022 in quotes.)\r\n\r\nI get the following error:\r\n\r\n\u0060\u0060\u0060\r\n========================================\r\nexternals-download\r\n========================================\r\nAn error occurred when executing task \u0027externals-download\u0027.\r\nError: One or more errors occurred. (One or more errors occurred. (404 (Not Found)))\r\n\t404 (Not Found)\r\n\r\n\u0060\u0060\u0060\r\n\r\nI found the AZURE_BUILD_URL that the SkiaSharp/build.cake and SkiaSharp/cake/BuildExternals.cake build scripts use to download the native binaries in a zip file. Using that URL with the buildId and \u0022native\u0022 for the artifactName field, I get the following error:\r\n\r\n\u0060\u0060\u0060\r\n{\u0022$id\u0022:\u00221\u0022,\u0022innerException\u0022:null,\u0022message\u0022:\u0022Artifact native was not found for build 3348.\u0022,\u0022typeName\u0022:\u0022Microsoft.TeamFoundation.Build.WebApi.ArtifactNotFoundException, Microsoft.TeamFoundation.Build2.WebApi\u0022,\u0022typeKey\u0022:\u0022ArtifactNotFoundException\u0022,\u0022errorCode\u0022:0,\u0022eventId\u0022:3000}\r\n\u0060\u0060\u0060\r\n\r\nI\u0027ve tried several of the other builds and also the ones from SkiaSharp.Extended (Public) and they all return the same error.\r\n\r\nIs there a way I can figure out which builds contain the native binaries without guessing?\r\n\r\nThank you.",
+  "author": {
+    "login": "danien",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-06-24T15:01:32",
+  "updatedAt": "2022-08-19T09:02:55",
+  "closedAt": "2019-06-27T17:58:27",
+  "commentCount": 16,
+  "reactionCount": 0
+}

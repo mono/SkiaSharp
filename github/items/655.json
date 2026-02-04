@@ -1,0 +1,35 @@
+{
+  "number": 655,
+  "type": "issue",
+  "state": "open",
+  "title": "Wrong calculation of path\u0027s intersection.",
+  "body": "### Description\r\n\r\nMany times SkiaSharp doesn\u0027t calculate intersection of two paths well. Result path contains no points. For example next dotNet core console application is not able to calculate intersection. It writes 0 on console.\r\n\r\nThe same example in C\u002B\u002B is working well. You can try it in the next fiddle record:\r\n\r\nhttps://fiddle.skia.org/c/cde611c02e7cfb956670649610eb40d3\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060C#\r\n    class Program\r\n    {\r\n        private static float SkBits2Float(uint n)\r\n        {\r\n            byte[] data = BitConverter.GetBytes(n);\r\n            return BitConverter.ToSingle(data, 0);\r\n        }\r\n\r\n        static void Main(string[] args)\r\n        {\r\n            SKPath path_a = new SKPath();\r\n\r\n            path_a.FillType = SKPathFillType.Winding;\r\n\r\n            path_a.MoveTo(SkBits2Float(0x00000000), SkBits2Float(0x44070000));\r\n            path_a.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x44070000));\r\n            path_a.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x00000000));\r\n            path_a.LineTo(SkBits2Float(0x00000000), SkBits2Float(0x00000000));\r\n            path_a.Close();\r\n\r\n            SKPath path_b = new SKPath();\r\n\r\n            path_b.FillType = SKPathFillType.EvenOdd;\r\n\r\n            path_b.MoveTo(SkBits2Float(0xB6D27CA9), SkBits2Float(0x44070000));\r\n            path_b.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x44070000));\r\n            path_b.LineTo(SkBits2Float(0x44340000), SkBits2Float(0x36CCD0F6));\r\n            path_b.LineTo(SkBits2Float(0xB6D27CA9), SkBits2Float(0x36CCD0F6));\r\n            path_b.Close();\r\n\r\n            SKPath path_r = path_a.Op(path_b, SKPathOp.Intersect);\r\n\r\n            if (path_r != null)\r\n            {\r\n                Console.WriteLine(path_r.PointCount);\r\n            }\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nIt has to calculate intersection well as the fiddle example (result path is rendered by green color).\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  SkiaSharp nuget package 1.60.3\r\n- IDE:  Visual Studio 2017 version 15.8.7\r\n- Platform Target Frameworks: .NET Core 2.1\r\n\r\nExample was tested on Windows 10\n\n\u003E VS bug [#738688](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/738688)",
+  "author": {
+    "login": "pcerman",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-10-18T10:06:59",
+  "updatedAt": "2025-06-17T07:04:08",
+  "commentCount": 1,
+  "reactionCount": 0
+}

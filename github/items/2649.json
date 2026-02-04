@@ -1,0 +1,31 @@
+{
+  "number": 2649,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKSL doesn\u0027t recognize \u0027smoothstep\u0027, or \u0027fwidth\u0027 (and other OpenGL operators)",
+  "body": "### Description\r\n\r\nWe are needing SkiaSharp\u0027s SKSL to provide better OpenGL shader support - namely \u0027smoothstep\u0027 and \u0027fwidth\u0027.\r\n\r\nBoth of these operators (built-in methods) result in this shader compiler error:\r\n\r\n    \u0022error: 48: unknown identifier \u0027smoothstep\u0027\u0022\r\n\r\nAnd the shader won\u0027t compile.\r\n\r\nNOTE: We\u0027re using latest Skia 2.88.6  (not .3 as shown below, as it didn\u0027t give me the .6 option)\r\n\r\nNOTE#2:  If we can\u0027t get Skia to do these operations, our fallback is to do something more complex where we do it using OpenTK/OpenGL - with a RenderTarget that hopefully we can share back with SKIA, where we can Blit our OpenTK/GL result onto an SKGLSurface in some efficient manner.\r\n\r\n\r\n### Code\r\n\r\nOur actual shader is far more involved, but the following very simple shader code triggers the exact same error:\r\n\u0060\u0060\u0060cs\r\nfloat4 main(float2 fragCoord) {\r\n\tfloat red = smoothstep(0.3, 0.7, fragCoord.x);   // \u003C== FAILS \u0027smoothstep\u0027\r\n\tfloat blue = fwidth(fragCoord.x);                      // \u003C== ALSO FAILS \u0027fwidth\u0027\r\n\tfloat4 color = float4(red, 0.0, blue, 1.0);\r\n\treturn color;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThen in C#, our code looks like this:  (where \u0027source\u0027 string is equal to the SKSL code above)\r\n\r\n\u0060\u0060\u0060cs\r\n\t_shaderEffect = SKRuntimeEffect.Create(source, out string error);\r\n\u0060\u0060\u0060\r\n\r\nError returns as \u0022error: 48: unknown identifier \u0027smoothstep\u0027\u0022\r\n\r\n### Expected Behavior\r\n\r\nI was sure hoping that SKSL would support these very useful and commonly used operators - smoothstep and fwidth, and that we could see the same effects here as we were producing using OpenGL, in a 3D view context.\r\n\r\n\r\n### Actual Behavior\r\n\r\nShader won\u0027t compile, and therefore does not run at all.\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindow 11.   Latest Home Edition\r\n\r\n### Devices\r\n\r\nDell XPS PC\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "najak3d",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-16T07:40:25",
+  "updatedAt": "2024-02-17T03:00:24",
+  "closedAt": "2024-01-18T02:00:27",
+  "commentCount": 11,
+  "reactionCount": 0
+}

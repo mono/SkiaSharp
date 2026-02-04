@@ -1,0 +1,35 @@
+{
+  "number": 811,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] A SKPixmap from a disposed SKSurface should throw an exception on .GetPixels call",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nWhen learning Skia I did not realize the Surface was required to be live and undisposed to use the Pixmap. So I ended up with an AccessViolationException sometimes when using .GetPixels after disposing the Surface via a using block.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nIt would be nice if the SKPixmap class could detect this condition and throw an exception instead of returning a pointer to freed memory.\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nAlternatively the Surface could wait until all Pixmaps created from it are disposed before disposing itself. This is more complex than necessary, though, and violates the contract of IDisposable.\r\n\r\n**Additional context**\r\nI am using SkiaSharp in Unity where the AccessViolationException causes Unity Editor to hard crash. Not fun!\r\n\r\nAdditional API calls on Pixmap besides GetPixels should also throw the Exception. Possibly all of them.\n\n\u003E VS bug [#820075](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/820075)",
+  "author": {
+    "login": "The-MAZZTer",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2019-03-13T17:15:51",
+  "updatedAt": "2019-06-17T16:50:28",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,22 @@
+{
+  "number": 3262,
+  "type": "issue",
+  "state": "open",
+  "title": "It is necessary to check whether an object is disposed before using it.",
+  "body": "### Is your feature request related to a problem?\n\nI was careless to call dispose on the SKPaint object before passing it to the function as an argument.  After that, my program crashed with the text in the console \u0022segmentation error\u0022 without a stack trace or a detailed description.\n\nThis error does not happen in this code:\n\u0060font.MeasureText(line, paint);\u0060\n\nBut this error happens in this code:\ncanvas.DrawText(text, x, y, font, paint);\n\n### Describe the solution you would like\n\nIt would be good if your library checked whether the object was disposed of before using it, and if it was disposed of, then it would also throw an exception with the text \u0022object SKPaint has already been disposed, cannot be used\u0022.\nBecause I spent the whole day understanding why it happens.\n\n### Describe alternatives you have considered\n\nNo thought\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Rombersoft",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-02T17:13:23",
+  "updatedAt": "2025-05-03T07:29:32",
+  "commentCount": 1,
+  "reactionCount": 1
+}

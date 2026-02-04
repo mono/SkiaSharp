@@ -1,0 +1,31 @@
+{
+  "number": 3328,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKFont.GetTextPath returns an empty path for emojis",
+  "body": "### Description\n\nI\u0027ve been using SKFont.GetTextPath for a while now to render text into a path to be later processed and rendered.\nAll works as expected, except for emoji characters.\nI\u0027m on SkiaSharp/HurfBuzz 3.119.0.\n\n### Code\n\n\u0060\u0060\u0060\nstring text = \u0022\uD83D\uDE0A\u0022;\nstring fontFamily = \u0022Segoe UI Emoji\u0022; // Use a font that supports emoji\nfloat fontSize = 48;\n\n// Create typeface and font\nusing var typeface = SKTypeface.FromFamilyName(fontFamily);\nusing var fontTest = new SKFont(typeface, fontSize);\n\n// Get SKPath for the text\nusing var path = fontTest.GetTextPath(text, new SKPoint(0, 0));\nDebug.Print(path.Bounds.ToString()); // The SKRect returned here shows as 0 width and 0 height.\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "AndreaLabeljoy",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-08-04T16:07:41",
+  "updatedAt": "2026-01-31T15:13:45",
+  "commentCount": 1,
+  "reactionCount": 2
+}

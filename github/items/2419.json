@@ -1,0 +1,17 @@
+{
+  "number": 2419,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] .NET Maui throws build exception on iOS ",
+  "body": "**Description**\r\n\r\n.NET Maui throws the following exception on iOS when I try to build my project \r\n\r\n\u0060\u0060\u0060\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tclang\u002B\u002B exited with code 1:\r\nld: framework not found System\r\nclang: error: linker command failed with exit code 1 (use -v to see invocation)\tMyproject\tC:\\Program Files\\dotnet\\packs\\Microsoft.iOS.Sdk\\16.2.1024\\targets\\Xamarin.Shared.Sdk.targets\t1225\t\r\n\u0060\u0060\u0060\r\n\r\n**Code**\r\n\r\nI tried with \r\n\u0060\u0060\u0060xml\r\n\u003CAdditionalArgs\u003E\r\n    --linkskip=SkiaSharp.Extended.UI.Maui\r\n\u003C/AdditionalArgs\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\nand by installing the other dependencies directly into the prject and then adding a LinkSkip like so:\r\n\r\n\u0060\u0060\u0060xml\r\n \u003CTarget Name=\u0022AddSkia\u0022 Condition=\u0022\u0027$(TargetFramework)\u0027==\u0027net7.0-ios\u0027\u0022 AfterTargets=\u0022_LoadLinkerOutput\u0022 BeforeTargets=\u0022_ComputeLinkNativeExecutableInputs\u0022\u003E\r\n\t\t\u003CItemGroup\u003E\r\n\t\t\t\u003C_LinkerFrameworks Include=\u0022SkiaSharp\u0022 /\u003E\r\n\t\t\t\u003C_LinkerFrameworks Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 /\u003E\r\n\t\t\t\u003C_LinkerFrameworks Include=\u0022SkiaSharp.Extended.UI.Maui\u0022 /\u003E\r\n\t\t\t\u003C_LinkerFrameworks Include=\u0022SkiaSharp.Views.Maui.Core\u0022 /\u003E\r\n\t\t\u003C/ItemGroup\u003E\r\n\t\u003C/Target\u003E \r\n\u0060\u0060\u0060\r\n\r\ngetting the same error...\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.0.0-preview 61\r\n- Last known good version:  --\r\n- IDE:  Visual Studio and Visual Studio for Mac \r\n- Platform Target Frameworks:\r\n  - iOS:  16.2, 14.3\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - iPhone SE and X\r\n  - Simulator\r\n  \r\n\r\n",
+  "author": {
+    "login": "borrmann",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-03-15T18:57:08",
+  "updatedAt": "2023-06-29T00:42:50",
+  "commentCount": 1,
+  "reactionCount": 1
+}

@@ -1,0 +1,19 @@
+{
+  "number": 1435,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Measuring width is different in the Higher SkiaSharp version for Linux Docker environment",
+  "body": "**Description**\r\n\r\nI am using a SkiaSharp library for measuring the text and I have recently upgraded the SkiaSharp library version [2.80.0]. Then I try to measure the text in the Higher version and its text width different from the older version. kindly provide your suggestion to resolve this issue.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nSKBitmap bmp = new SKBitmap(120, 120, SKImageInfo.PlatformColorType, SKAlphaType.Premul);\r\n            float skiaMeasurement = 0;\r\n            SKCanvas canvas = new SKCanvas(bmp);\r\n            canvas.Clear(SKColors.White);\r\n            using (SKPaint paint = new SKPaint())\r\n            {\r\n                paint.Typeface = SKTypeface.FromFamilyName(\u0022Cambria\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n                //paint.Typeface = SKTypeface.FromFile(\u0022CustomFonts\\times.ttf\u0022);\r\n                paint.Color = SKColors.Black;\r\n                paint.IsAntialias = true;\r\n                paint.TextSize = 11f;\r\n                paint.SubpixelText = true;\r\n                paint.TextAlign = SKTextAlign.Left;\r\n                paint.TextEncoding = SKTextEncoding.Utf8;\r\n                SKRect rect = new SKRect();\r\n                skiaMeasurement = paint.MeasureText(\u0022this certificate\u0022, ref rect);\r\n                Console.WriteLine(\u0022SKia Width = \u0022 \u002B skiaMeasurement);\r\n            }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nSKia Width = 72\r\n\r\n**Actual Behavior**\r\n\r\nSKia Width = 73.00391\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.0\r\n- Last known good version:  1.59.3\r\n- IDE:  Visual Studio 2017\r\n- Platform Target Frameworks: .NET Core 3.0\r\n  - Windows OS: Linux Docker\r\n  \r\n",
+  "author": {
+    "login": "MadhanKumarasamy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-30T12:48:47",
+  "updatedAt": "2022-08-19T03:02:20",
+  "closedAt": "2020-07-31T21:56:45",
+  "commentCount": 1,
+  "reactionCount": 0
+}

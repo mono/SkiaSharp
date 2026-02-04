@@ -1,0 +1,43 @@
+{
+  "number": 765,
+  "type": "issue",
+  "state": "open",
+  "title": "SKCanvas.Clear() draws with much lighter color while on SKGLControl",
+  "body": "**Description**\r\nOn my AMD laptop with Radeon HD 7600M/7640G the SKCanvas.Clear() draws my SKGLControl with much lighter color. SKControl behaves correctly. Drivers are up-to-date.\r\nIt looks like, that on NVIDIA machines everything works fine.\r\n\r\nWhat can it be?\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n        protected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            base.OnPaintSurface(e);\r\n\r\n            var surface = e.Surface;\r\n            var surfaceWidth = e.BackendRenderTarget.Width;\r\n            var surfaceHeight = e.BackendRenderTarget.Height;\r\n\r\n            var canvas = surface.Canvas;\r\n\r\n            canvas.Clear(new SkiaSharp.SKColor(128, 128, 128, 255));\r\n\r\n            canvas.Flush();\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Actual Behavior**\r\nPhotoshop says: \r\nThe color of the control is (188, 188, 188)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  Windows 10\r\n\r\n**Screenshots**\r\n\r\n![skglcontrol-radeon-clearbug](https://user-images.githubusercontent.com/1189037/51404113-bf2a4f00-1b52-11e9-8a74-b520086222bd.PNG)\n\n\u003E VS bug [#782038](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/782038)",
+  "author": {
+    "login": "antongit",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/Raster",
+      "color": "1acea7"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2019-01-18T17:58:04",
+  "updatedAt": "2019-06-17T16:50:27",
+  "commentCount": 2,
+  "reactionCount": 0
+}

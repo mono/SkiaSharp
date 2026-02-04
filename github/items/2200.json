@@ -1,0 +1,28 @@
+{
+  "number": 2200,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Build issues concerning libSkiaSharp",
+  "body": "**Description**\r\nHello folks, thank you for the cool open source software! I am using SkiaSharp inside the game engine Godot for [this](https://github.com/file-acomplaint/GodoTeX). On Windows, it works just wonderful. Now, building the same code on Linux, this exception is raised, sadly without further information:\r\n\r\n\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027.\r\n\u0060\r\n\r\n**Version Information**\r\nThe \u0060.csproj\u0060 is\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CProject Sdk=\u0022Godot.NET.Sdk/3.3.0\u0022\u003E\r\n  \u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enet472\u003C/TargetFramework\u003E\r\n    \u003CRootNamespace\u003EGodoTeX\u003C/RootNamespace\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\r\n  \u003CItemGroup\u003E    \r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.1-preview.91\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022CSharpMath\u0022 Version=\u00220.5.1\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022CSharpMath.SkiaSharp\u0022 Version=\u00220.5.1\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n\r\nI have also tried using version 2.80.4 of SkiaSharp, using SkiaSharp.NativeAssets.Linux, and specifying \u0060\u003CPreferredNativeSkiaSharp\u003E\u0060.\r\n\r\nThe output of  \u0060ldd\u0060 on \u0060bin/Debug/x64/libSkiaSharp.so\u0060 is\r\n\r\n\u0060\u0060\u0060\r\n        linux-vdso.so.1 (0x00007ffd4ced6000)\r\n        libpthread.so.0 =\u003E /usr/lib/libpthread.so.0 (0x00007fb717155000)\r\n        libdl.so.2 =\u003E /usr/lib/libdl.so.2 (0x00007fb717150000)\r\n        libm.so.6 =\u003E /usr/lib/libm.so.6 (0x00007fb716519000)\r\n        libc.so.6 =\u003E /usr/lib/libc.so.6 (0x00007fb716200000)\r\n        /usr/lib64/ld-linux-x86-64.so.2 (0x00007fb71717c000)\r\n\r\n\u0060\u0060\u0060\r\n\r\nThis is running on Arch Linux 5.18.14. I have also tried it on a clean install of Ubuntu, with precisely the same result.\r\n\r\nI would be very grateful for any and all feedback.\r\n",
+  "author": {
+    "login": "lennart-finke",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-08-06T18:37:36",
+  "updatedAt": "2022-09-11T21:01:14",
+  "closedAt": "2022-08-12T06:47:23",
+  "commentCount": 7,
+  "reactionCount": 0
+}

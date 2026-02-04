@@ -1,0 +1,19 @@
+{
+  "number": 793,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKGLView CanvasSize null reference ecxeption",
+  "body": "I\u0027m having a problem with SKGLView using 1.68.0 on Android / Xamarin.Forms. When I create the view initially everything works fine, but when I navigate away and back again, rendering fails because SKGLView.CanvasSize throws null reference excpetions.\r\n\r\n![image](https://user-images.githubusercontent.com/2269624/52949674-a0072300-3385-11e9-98ab-9c1221ce859a.png)\r\n\r\nThe stack trace I get is as follows:\r\n\r\n\u003E   at SkiaSharp.Views.Android.SKGLTextureViewRenderer.get_CanvasSize () [0x00000] in \u003Ca6c14eed3af3471db7c51e05d420f851\u003E:0 \r\n  at SkiaSharp.Views.Android.SKGLTextureView.get_CanvasSize () [0x00000] in \u003Ca6c14eed3af3471db7c51e05d420f851\u003E:0 \r\n  at SkiaSharp.Views.Forms.SKGLViewRendererBase\u00602[TFormsView,TNativeView].OnGetCanvasSize (System.Object sender, SkiaSharp.Views.Forms.GetPropertyValueEventArgs\u00601[T] e) [0x00007] in \u003C78489ceef2214790aa3f6565a844acc3\u003E:0 \r\n  at (wrapper delegate-invoke) System.EventHandler\u00601[SkiaSharp.Views.Forms.GetPropertyValueEventArgs\u00601[SkiaSharp.SKSize]].invoke_void_object_TEventArgs(object,SkiaSharp.Views.Forms.GetPropertyValueEventArgs\u00601\u003CSkiaSharp.SKSize\u003E)\r\n  at SkiaSharp.Views.Forms.SKGLView.get_CanvasSize () [0x00010] in \u003C78489ceef2214790aa3f6565a844acc3\u003E:0 \r\n  at Moonbase.Apps.Infrastructure.Core.Controls.Canvas.Base.GLCanvasControl.HandleSurfaceChanged (SkiaSharp.SKSurface surface) [0x00002] in C:\\Code\\Moonbase\\Moonbase.Apps\\Moonbase.Apps.Infrastructure\\Moonbase.Apps.Infrastructure.Core\\Controls\\Canvas\\Base\\GLCanvasControl.cs:26 \r\n\r\nIt sounds a lot like #460 but this issue was fixed back in 1.60.1. \r\n\r\nIf I revert to 1.60.3 the issue goes away completely... but I\u0027d prefer to stay current :)\r\n\r\nHope you can help\r\n\r\n\r\n",
+  "author": {
+    "login": "freever",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2019-02-18T12:03:01",
+  "updatedAt": "2022-08-19T12:01:50",
+  "closedAt": "2020-01-10T15:56:29",
+  "commentCount": 4,
+  "reactionCount": 0
+}

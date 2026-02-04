@@ -1,0 +1,33 @@
+{
+  "number": 758,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKCanvas rendering rotated image very slow compared to System.Drawing (4x slower)",
+  "body": "Rendering a rotated bitmap with SKCanvas is slow, compared with System.Drawing (4x slower)\r\nSee below code, it produces following output:\r\nrotation: 20\u00B0\r\nSkia: 6860ms\r\nSystem.Drawing: 1643ms\r\n\r\n\r\n           float rotation = 20;\r\n            Console.WriteLine(\u0022rotation: \u0022\u002Brotation\u002B\u0022\u00B0\u0022);\r\n\r\n            // Skia part...\r\n            MemoryStream imageStream = new MemoryStream(new WebClient().DownloadData(@\u0022https://via.placeholder.com/450\u0022));\r\n            SKBitmap skBitmapToBlit = SKBitmap.Decode(imageStream);\r\n            SKBitmap renderSkBitmap = new SKBitmap(512, 512, isOpaque: false);\r\n            SKCanvas canvas = new SKCanvas(renderSkBitmap);\r\n            SKPaint paint = new SKPaint()\r\n            {\r\n                FilterQuality = SKFilterQuality.High\r\n            };\r\n            canvas.RotateDegrees(rotation);\r\n            var sw = Stopwatch.StartNew();\r\n            for (int i=0; i\u003C100; i\u002B\u002B)\r\n            {             \r\n                canvas.DrawBitmap(skBitmapToBlit, new SKPoint(10, 10), paint);\r\n            };\r\n            Console.WriteLine(\u0022Skia: \u0022\u002Bsw.ElapsedMilliseconds \u002B \u0022ms\u0022);\r\n\r\n            // System.Drawing part...\r\n            imageStream = new MemoryStream(new WebClient().DownloadData(@\u0022https://via.placeholder.com/450\u0022));\r\n            Bitmap gdiBitmapToBlit = new Bitmap(imageStream);\r\n            Bitmap renderGdiBitmap = new Bitmap(512, 512, System.Drawing.Imaging.PixelFormat.Format32bppArgb);\r\n            Graphics graphics = Graphics.FromImage(renderGdiBitmap);\r\n            graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bicubic;\r\n            graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighSpeed;\r\n            var matrix = new Matrix();\r\n            matrix.Rotate(rotation);\r\n            graphics.Transform=matrix;\r\n            sw = Stopwatch.StartNew();\r\n            for (int i = 0; i \u003C 100; i\u002B\u002B)\r\n            {\r\n                graphics.DrawImage(gdiBitmapToBlit, new PointF(10, 10));\r\n            };\r\n            Console.WriteLine(\u0022System.Drawing: \u0022 \u002B sw.ElapsedMilliseconds \u002B \u0022ms\u0022);\r\n\r\n\r\nNote that, without rotating, Skia is much faster than System.Drawing (36x faster).\r\n\r\nSymptom : Skia 4x slower than System.Drawing, with provided code.\r\nExpected : Skia faster than System.Drawing, with provided code.\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  N/A\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .net framework 4.7\n\n\u003E VS bug [#776803](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/776803)",
+  "author": {
+    "login": "MathieuJack",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-01-14T21:35:26",
+  "updatedAt": "2022-08-19T12:01:59",
+  "closedAt": "2019-11-11T20:13:42",
+  "commentCount": 8,
+  "reactionCount": 4
+}

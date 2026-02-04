@@ -1,0 +1,22 @@
+{
+  "number": 2754,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Bug with SKBlendMode.SrcOver",
+  "body": "### Description\n\nWhen drawing on an empty canvas with a half transparent color, then the resulting color is not identically to the paint anymore.\r\nExample: \r\n- background cleared with rgba(0,0,0,0)\r\n- paint with color rgba(0,0,255,128), blue with 50% alpha, SKBlendMode.SrcOver\r\n- result is rgba(0,0,128,128), so the blue was changed from 255 to 128 \n\n### Code\n\n\u0060\u0060\u0060cs\r\nvar size = 32;\r\nvar buffer = new byte[size * size * 4];\r\nvar pinnedbuffer = GCHandle.Alloc(buffer, GCHandleType.Pinned);\r\nvar pointer = pinnedbuffer.AddrOfPinnedObject();\r\n\r\nvar imageinfo = new SKImageInfo(size, size, SKColorType.Rgba8888 , SKAlphaType.Premul);\r\nusing (var surface = SKSurface.Create(imageinfo, pointer))  \r\n{\r\n    var blendmodes = Enum.GetValues(typeof(SKBlendMode));\r\n    var color = new SKColor(0, 0, 255, 128);\r\n\r\n    foreach (var blendmode in blendmodes)\r\n    {\r\n        surface.Canvas.Clear(new SKColor(0, 0, 0, 0));\r\n        var paint = new SKPaint\r\n        {\r\n            Style = SKPaintStyle.Fill,\r\n            Color = color,\r\n            BlendMode = (SKBlendMode)blendmode\r\n        };\r\n        surface.Canvas.DrawRect(0, 0, size, size, paint);\r\n\r\n        // check first pixel\r\n        var r = buffer[0];\r\n        var g = buffer[1];\r\n        var b = buffer[2];\r\n        var a = buffer[3];\r\n        //Debug.WriteLine(string.Format(\u0022alpha={0} blue={1} mode={2}\u0022, a, b, blendmode.ToString()));\r\n        if (a == color.Alpha  \u0026\u0026 b == color.Blue )\r\n        {\r\n            // ok\r\n        }\r\n    }            \r\n}\r\n\u0060\u0060\u0060\r\n\r\n\n\n### Expected Behavior\n\nDrawing with source rgba(0,0,255,128) with SrcOver on an emtpy canvas destination rgba(0,0,0,0) should result in unchanged color.\n\n### Actual Behavior\n\nIts not, result is rgba(0,0,128,128) instead of rgba(0,0,255,128).\r\n\r\nI actually tried all SKBlendmodes, but none of them is producing the expected behaviour.\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "TomQv",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-13T16:05:49",
+  "updatedAt": "2024-02-13T16:07:39",
+  "commentCount": 0,
+  "reactionCount": 0
+}

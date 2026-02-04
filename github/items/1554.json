@@ -1,0 +1,18 @@
+{
+  "number": 1554,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] How to get the number of pixels in a Xamarin.Forms view unit?",
+  "body": "To get the number of (SkiaSharp) pixels in a Xamarin.Forms view unit, we are using these methods:\r\n\r\n\u0060\u0060\u0060csharp\r\n// Mac\r\nNSScreen.MainScreen.BackingScaleFactor\r\n// Android\r\nResources.System.DisplayMetrics.ScaledDensity\r\n// iOS\r\nUIScreen.MainScreen.Scale\r\n// UWP\r\nWindows.Graphics.Display.DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel\r\n\u0060\u0060\u0060\r\n\r\nThese seem to work most of the time but not always. In particular the Android doesn\u0027t seem to work when the user sets a custom font size in Accessibility settings.\r\n\r\nIs this the right type of approach and is there any better approach on Android?",
+  "author": {
+    "login": "charlesroddie",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-11-18T11:40:40",
+  "updatedAt": "2022-08-19T03:01:32",
+  "closedAt": "2020-12-02T20:58:32",
+  "commentCount": 1,
+  "reactionCount": 0
+}

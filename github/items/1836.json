@@ -1,0 +1,17 @@
+{
+  "number": 1836,
+  "type": "issue",
+  "state": "open",
+  "title": "Cannot retrieve a particular font stream from TTC font",
+  "body": "**Issue Description:**\r\nWhile we creating particular font from TTC file using SkiaSharp library, typeface is created properly But, stream retrieved from typeface gives TTC file (collection of TTF file) stream instead of particular TTF file stream. \r\n\r\n**Expected Behaviour:**\r\nStream retrieved from the typeface should be stream of specific TTF file.\r\n\r\n**Code snippet:**\r\n            SkiaSharp.SKTypeface typeface = SkiaSharp.SKTypeface.FromFamilyName(\u0022GungSuhChe\u0022);\r\n            Console.WriteLine(typeface.FamilyName);\r\n            SkiaSharp.SKStreamAsset fontStream = typeface.OpenStream();\r\n            Stream stream = null;\r\n            if (fontStream != null \u0026\u0026 fontStream.Length \u003E 0)\r\n            {\r\n                byte[] fontData = new byte[fontStream.Length - 1];\r\n                fontStream.Read(fontData, fontStream.Length);\r\n                fontStream.Dispose();\r\n                stream = new MemoryStream(fontData);\r\n            }\r\n            stream.Position = 0;\r\n            SkiaSharp.SKTypeface typeface2 = SkiaSharp.SKTypeface.FromStream(stream);\r\n            Console.WriteLine(typeface2.FamilyName);\r\n\r\nCould you please check and share possibility to get the particular TTF file (GungSuhChe) stream from TTC file stream?\r\n\r\n**Basic Information:**\r\n\r\n- SkiaSharp NuGet package version: 2.80.3\r\n- IDE: Visual Studio 2019\r\n",
+  "author": {
+    "login": "HemalathaChiranjeevulu",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-21T17:17:24",
+  "updatedAt": "2021-12-15T06:28:10",
+  "commentCount": 2,
+  "reactionCount": 0
+}

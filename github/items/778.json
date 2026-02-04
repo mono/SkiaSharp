@@ -1,0 +1,24 @@
+{
+  "number": 778,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Better SKRegion methods/constructors",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\nIt\u0027s very clunky to work with regions at times, due to a lack of variety in ways to work with them.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\n* New methods\r\n\u0060\u0060\u0060csharp\r\n// use the path\u0027s own bounds from GetBounds() as the clip region\r\nSKRegion.SetPath(SKPath path, bool usePathClip)\r\n{\r\n    // why do we need a whole extra region just for SetPath to clip appropriately?\r\n    using (SKRegion clip = new SKRegion())\r\n    {\r\n        if (usePathClip \u0026\u0026 path.GetBounds(out SKRect r))\r\n        {\r\n            clip.SetRect(r);\r\n            this.SetPath(path, clip);\r\n        }\r\n        else\r\n        {\r\n            this.SetPath(path);\r\n        }\r\n    }\r\n}\r\n\r\n// why require a whole region for this as well? Should just be able to check against a path\r\nSKRegion.IntersectsPath(SKPath path)\r\n\u0060\u0060\u0060\r\n\r\n* New constructors\r\n\u0060\u0060\u0060csharp\r\n// create from path, clipped to the bounds of the path\r\nSKRegion(SKPath path)\r\n{\r\n    path.GetBounds(out SKRect clip);\r\n    // not currently possible, due to SetPath requiring YET ANOTHER region\r\n    // why not just permit a rectangle, or use the path\u0027s own clip bounds as above?\r\n    SetPath(path, clip); \r\n}\r\n\r\n// create directly from SKRect; ideally it should _keep_ the non-rounded bounds though :(\r\nSKRegion(SKRect rect)\r\n{\r\n    SetRect(SKRectI.Round(rect));\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Describe alternatives you\u0027ve considered**\r\nThe alternatives are basically re-implementing these QOL methods as extension methods in every project where I don\u0027t want to have to reuse the same 5 extra lines of code for every operation along these lines.\r\n\r\nThere just seems to be a fundamental reliance on creating excessive amounts of region objects, which really ought to be tucked away as an implementation detail if it\u0027s actually _necessary_ to have somewhere; having to create a region every time I want to see if a path intersects my current region seems really strange and expensive. Doubly so, because there\u0027s _also_ no clear way to just create a region from a pre-existing path without _first creating **yet another** region_... so I have to juggle 3 regions around just to check the intersection of a path with one of them. \r\n\r\n---\r\n\r\nSee below, where I am implementing some of these I have a need for them as extension methods, and I\u0027m sure I\u0027ll keep adding to them to help tidy up my code as I get towards something I can sensibly debug.\r\n\r\nhttps://github.com/vexx32/PSWordCloud/blob/Cmdlet/Cmdlet/src/WCUtils.cs#L20\r\n\r\nIf there is interest I can try to find some time to fork and PR some or all of these fun little QOL ones in. They make the code _so much_ tidier.",
+  "author": {
+    "login": "vexx32",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-02-05T21:34:38",
+  "updatedAt": "2022-08-19T12:01:52",
+  "closedAt": "2019-03-13T21:56:31",
+  "commentCount": 0,
+  "reactionCount": 0
+}

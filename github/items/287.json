@@ -1,0 +1,18 @@
+{
+  "number": 287,
+  "type": "issue",
+  "state": "closed",
+  "title": "The type initializer for \u0027SkiaSharp.SKManagedStream\u0027 threw an exception.",
+  "body": "I am trying to convert stream to SKManagedStream. In one pc its working find and in another pc its giving below exception for same image. I am using same code and same package of skiasharp(1.57.0) on both the pc \r\n\r\nCode....\r\n\u0060\u0060\u0060csharp\r\npublic static Stream ResizeImage(Stream imageStream, int mySize, int myQuality = 75)\r\n        {\r\n            int size = mySize;\r\n            int quality = myQuality;\r\n            imageStream.Position = 0;\r\n            using (var inputStream = new SKManagedStream(imageStream))\r\n            { \r\n                //SomeCode....\r\n            }\r\n}\r\n\u0060\u0060\u0060\r\nException....\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException occurred\r\n  HResult=0x80131534\r\n  Message=The type initializer for \u0027SkiaSharp.SKManagedStream\u0027 threw an exception.\r\n  Source=SkiaSharp\r\n  StackTrace:\r\n   at SkiaSharp.SKManagedStream..ctor(Stream managedStream)\r\n   at ImageUploadOWIN.Controllers.ImageUploadController.ResizeImage(Stream imageStream, Int32 mySize, Int32 myQuality) in Controllers\\ImageUploadController.cs:line 271\r\n\r\nInner Exception 1:\r\nBadImageFormatException: An attempt was made to load a program with an incorrect format. (Exception from HRESULT: 0x8007000B)\r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "AwsomeCode",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-05-01T19:24:38",
+  "updatedAt": "2022-08-19T21:02:02",
+  "closedAt": "2017-08-29T12:43:39",
+  "commentCount": 4,
+  "reactionCount": 0
+}

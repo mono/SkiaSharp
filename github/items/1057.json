@@ -1,0 +1,46 @@
+{
+  "number": 1057,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add the .targets file to buildTransitive",
+  "body": "**Description of Change**\r\n\r\nAdd the .targets file to the \u0060buildTransitive\u0060 folder in the NuGet package. This only applies to net45 and Full Framework apps. This makes sure that the .targets file is always referenced and the native files are always copied as part of the build. \r\n\r\nThe main issue this solves is for transitive dependencies with App -\u003E Core -\u003E ThirdParty -\u003E SkiaSharp. In this scenario, the native libraries will only be copied as part of build for ThirdParty - which is not even part of the project. As a result, the app will never get the binaries. After this PR, each level will get the binaries, including the App and Core.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1041\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nThe libSkiaSharp.* binaries will always be copied to the output folder for all projects in the build.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [X] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/HarfBuzzSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/Build",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-12-10T21:35:09",
+  "updatedAt": "2019-12-19T19:29:35",
+  "closedAt": "2019-12-13T00:45:35",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/buildTransitive",
+  "additions": 6,
+  "deletions": 0,
+  "changedFiles": 6,
+  "commits": 1,
+  "reviews": []
+}

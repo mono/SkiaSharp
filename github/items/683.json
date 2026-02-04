@@ -1,0 +1,32 @@
+{
+  "number": 683,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKImage from loaded SKSvg is corrupted most of the time.",
+  "body": "### Description\r\n\r\nWe load a svg stream from file and load it into a SKSvg. When we create a SKImage from the SKSvg.Picture we get inconsistent results. In debug mode, the SKImage is corrupted only the first time it is executed. Every following execution produces a valid image which can be displayed in a Xamarin.Forms.Image. In release mode the behavior is different. The SKImage is always corrupted. The Xam Image never shows the image.\r\n\r\nWhat you will find in the sample project:\r\n- Create Image Button which triggers the creation of the image and setting the bound ImageSources.\r\n- Three Xamarin.Forms.Image:\r\n  1. ImageSource is loaded from png file for reference. Is always working and displayed.\r\n  2. ImageSource is loaded from SKImage, which is created from svg file.\r\n  3. ImageSource is loaded from png stream, which is created from SKImage above.\r\n\r\nWhat to do to reproduce:\r\n- Click the \u0022Create image\u0022 button repeatedly\r\n- Look at the three different Images\r\n\r\nWe haven\u0027t tested if the problem persists on Android and iOs as well. We only use UWP yet.\r\n\r\n### Code\r\n\r\n            var s1 = await _assetLoader.Load(@\u0022Assets\\Test.png\u0022);\r\n            ImageSource1 = ImageSource.FromStream(() =\u003E s1);\r\n\r\n            float width = 500;\r\n            float height = 500;\r\n\r\n            var skSvg = new SKSvg(new SKSize(width, height));\r\n\r\n            using (var svgStream = await _assetLoader.Load(@\u0022Assets\\Basemodule.svg\u0022))\r\n                skSvg.Load(svgStream);\r\n\r\n            var recorder = new SKPictureRecorder();\r\n            var canvas = recorder.BeginRecording(new SKRect(0, 0, width, height));\r\n            canvas.Clear(SKColors.Transparent);\r\n\r\n            var skImage = SKImage.FromPicture(skSvg.Picture, skSvg.CanvasSize.ToSizeI());\r\n            ImageSource2 = skImage;\r\n\r\n            canvas.DrawImage(skImage, 0, 0);\r\n\r\n            var skPicture = recorder.EndRecording();\r\n\r\n            var s2 = PictureToPngStream(skPicture);\r\n            ImageSource3 = ImageSource.FromStream(() =\u003E s2);\u0060\r\n\r\n### Expected Behavior\r\n\r\nThe Xamarin.Forms.Image should display the SKImage on the first execution and on every repeated exection.\r\n\r\n### Actual Behavior\r\n\r\nThe Xamarin.Forms.Image doesn\u0027t display the image on the first execution.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- Last known good version:  None\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:\r\n  - UWP:  16299\r\n- Target Devices:\r\n  -   Dell Windows 10 Laptop\r\n\r\n### Screenshots\r\n\r\nXamarin.Forms.Image doesn\u0027t show the image.\r\n\r\n### Reproduction Link\r\n\r\nhttps://drive.google.com/open?id=1bHJySrQKEf7gMVPlZeyeAh8rGoEPmA_t\n\n\u003E VS bug [#738686](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/738686)",
+  "author": {
+    "login": "XamDevv",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/wontfix",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-11-14T09:39:56",
+  "updatedAt": "2022-08-19T12:02:43",
+  "closedAt": "2020-04-26T06:27:13",
+  "commentCount": 3,
+  "reactionCount": 0
+}

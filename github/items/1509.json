@@ -1,0 +1,18 @@
+{
+  "number": 1509,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Reduce heap allocation on SKManagedStream.OnReadManagedStream",
+  "body": "I\u0027ve found a big heap allocation on images decode at \u0060SKManagedStream.OnReadManagedStream\u0060. \r\n![Screenshot 2020-09-25 at 23 50 48](https://user-images.githubusercontent.com/4997065/94314864-20dac780-ff8a-11ea-8f89-4821d18f7aec.png)\r\nMaybe it would be better to use a 81920 bytes length buffer to copy a managed stream data to unmanaged pointer? I hope Marshal.Copy cost is not huge.\r\n\u003Cimg width=\u0022544\u0022 alt=\u0022Screenshot 2020-09-25 at 23 54 03\u0022 src=\u0022https://user-images.githubusercontent.com/4997065/94315030-66979000-ff8a-11ea-9826-bd0926ada8a3.png\u0022\u003E\r\n",
+  "author": {
+    "login": "Mikolaytis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-25T20:57:02",
+  "updatedAt": "2022-08-19T03:01:46",
+  "closedAt": "2020-09-26T17:06:37",
+  "commentCount": 1,
+  "reactionCount": 0
+}

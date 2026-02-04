@@ -1,0 +1,18 @@
+{
+  "number": 1914,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] sk_fontmgr_match_family_style must input family name argument by utf8 string",
+  "body": "**Description**\r\n\r\nThe \u0060sk_fontmgr_match_family_style\u0060 must input the family name argument by utf8 string. But we will input the Unicode16 string to it.\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/fffae82cf6ec1c4a6f490ddb780709ce9211725e/binding/Binding/SkiaApi.generated.cs#L12369-L12381\r\n\r\nIt means that we can not input any non-ascii font family name string to \u0060sk_fontmgr_match_family_style\u0060.\r\n\r\nReference: https://github.com/mono/SkiaSharp/issues/401\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\nvar typeface2 = SKFontManager.Default.MatchFamily(\u0022Arial\u0022); // OK, because the \u0060Arial\u0060 is the ASCII string.\r\n\r\nvar typeface2 = SKFontManager.Default.MatchFamily(\u0022\u5B8B\u4F53\u0022); // Fail, because the \u0060\u5B8B\u4F53\u0060 is the Unicode string.\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nWe can input the font family name with the Unicode string.\r\n\r\n**Actual Behavior**\r\n\r\nIt always returns null when we input the font family name with the Unicode string.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- the version of SkiaSharp that has the issue --\u003E\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Linux:  \u003C!-- The version and distro of linux that you are building for, e.g. Ubuntu 16.04 --\u003E\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.10 --\u003E\r\n  - Tizen:  \u003C!-- the version of the Tizen SDK you are compiling against, e.g. 4.0 --\u003E \r\n  - tvOS:  \u003C!-- the version of the tvOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E \r\n  - watchOS:  \u003C!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - \u003C!-- Google Pixel 4 XL --\u003E\r\n  - \u003C!-- iPhone 11 --\u003E\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "lindexi",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-30T06:39:29",
+  "updatedAt": "2022-09-08T00:01:16",
+  "closedAt": "2022-08-08T22:43:53",
+  "commentCount": 1,
+  "reactionCount": 0
+}

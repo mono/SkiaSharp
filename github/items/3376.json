@@ -1,0 +1,38 @@
+{
+  "number": 3376,
+  "type": "pr",
+  "state": "open",
+  "title": "Disposing SKStreamAsset when asset MemoryBase is not IntPtr.Zero",
+  "body": "Extension \u0060public static Blob ToHarfBuzzBlob(this SKStreamAsset asset)\u0060 may leak when asset MemoryBase is not IntPtr.Zero.\r\n\r\nAfter freeing memory, Dispose to SKStreamAsset (SKNativeObject) is added.\r\n\r\n**Bugs Fixed**\r\n\r\n- Discussion #3373\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "michaldobrodenka",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-03T10:45:13",
+  "updatedAt": "2026-01-28T08:40:45",
+  "commentCount": 7,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-01-26T23:01:12"
+    }
+  ]
+}

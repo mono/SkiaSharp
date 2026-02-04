@@ -1,0 +1,36 @@
+{
+  "number": 3356,
+  "type": "pr",
+  "state": "closed",
+  "title": "[WIP] Can you help migrate my docs from the docs folder into the c# source.\n\nThere is a guide here: ~/API.Docs.Migration.Guide.md\n\nThis is the checklist of APIs to migrate: ~/API.Docs.Migration.Checklist.md\n\nPlease go through each item on the checklist and m...",
+  "body": "- [x] Initialize and understand the documentation migration task\n- [x] Check out submodules to get access to docs XML files\n- [x] Review migration guide and checklist structure\n- [x] Plan systematic migration approach - one type at a time\n- [x] Migrate \u0060HarfBuzzSharp.Blob\u0060 - **COMPLETED**\n- [x] Mark \u0060HarfBuzzSharp.BlobReleaseDelegate\u0060 as missing in code\n- [x] Migrate \u0060HarfBuzzSharp.Buffer\u0060 - **PARTIALLY COMPLETED**\n- [ ] Continue with remaining enum types and smaller classes\n\n**Migration Strategy:**\n1. For each type, find XML file in \u0060docs/SkiaSharpAPI/\u003CNamespace\u003E/\u003CType\u003E.xml\u0060\n2. Find corresponding C# source file in \u0060binding/**\u0060 or \u0060source/**\u0060\n3. Copy XML documentation verbatim into C# source as XML comments\n4. Mark type as completed in checklist\n5. Commit each type separately\n\n**Current Status:**\n- \u2705 HarfBuzzSharp.Blob migrated successfully (all members documented)\n- \u26A0\uFE0F HarfBuzzSharp.BlobReleaseDelegate - missing in code (obsolete delegate)\n- \uD83D\uDD04 HarfBuzzSharp.Buffer partially migrated:\n  - \u2705 Type summary and constructor documented  \n  - \u2705 Key properties (ContentType, Direction, Language) documented\n  - \u2705 DefaultReplacementCodepoint field documented\n  - \u26A0\uFE0F Many members have placeholder documentation (\u0022To be added.\u0022)\n  - \uD83D\uDD04 Large class with 60\u002B members - will focus on simpler types next\n\n**Next Steps:**\n- Focus on enum types and smaller classes with better documentation\n- Return to complete Buffer class members later if needed\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC Share your feedback on Copilot coding agent for the chance to win a $200 gift card! Click [here](https://survey3.medallia.com/?EAHeSx-AP01bZqG0Ld9QLQ) to start the survey.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-09-04T18:45:59",
+  "updatedAt": "2025-09-04T19:05:34",
+  "closedAt": "2025-09-04T19:05:30",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeableState": "unknown",
+  "baseBranch": "dev/inline-docs",
+  "headBranch": "copilot/fix-efe0e4fb-4577-49a2-9f95-c78e91e042f8",
+  "additions": 176,
+  "deletions": 82,
+  "changedFiles": 4,
+  "commits": 4,
+  "reviews": []
+}

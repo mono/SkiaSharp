@@ -1,0 +1,22 @@
+{
+  "number": 3160,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Crash using new Maui \u002B Web template project (Net9 specific)",
+  "body": "### Description\n\nUsing the new Net9 project:\n\n![Image](https://github.com/user-attachments/assets/9df5e162-d0b8-4537-b72f-5107a0b6cb55)\n\nThe _Web App is ok_, but the **MAUI App crashes** (Windows and Android tested):\n\n![Image](https://github.com/user-attachments/assets/46a17d0a-1e64-460b-9032-c0b42727cdf1)\n\n### Code\n\nI have a test project, private, but the key is that _removing this_:\n\n\u0060\u0060\u0060razor\n\u003CSKCanvasView @ref=\u0022canvasView\u0022 id=\u0022canvasView\u0022 OnPaintSurface=\u0022PaintSurface\u0022 @onclick=\u0022OnMouseClick\u0022 @onmousemove=\u0022(args)=\u003EOnMouseMove(args)\u0022\n              style=\u0022width: 100%; height: 90%;user-select: none;\u0022 class=\u0022BG\u0022 /\u003E\n\u0060\u0060\u0060\n\n**All turns ok** (except from no graphics output).\n\n### Expected Behavior\n\nNo difference between Web and MAUI, because Web is OK with the SKCanvasView present.\n\n### Actual Behavior\n\nException:\n\n![Image](https://github.com/user-attachments/assets/4f5585d9-54b9-4b0c-977a-8b62846c53f9)\n\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\nWorking web app (FireWorks emulator):\n\n![Image](https://github.com/user-attachments/assets/cb7e0363-16b8-4bee-806b-faaa084043be)\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "LucaCris",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-09T16:06:14",
+  "updatedAt": "2025-03-19T16:19:44",
+  "commentCount": 3,
+  "reactionCount": 0
+}

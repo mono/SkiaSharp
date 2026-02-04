@@ -1,0 +1,19 @@
+{
+  "number": 2242,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] The CGRect.ToRect() extension sets width and height incorrectly",
+  "body": "**Description**\r\n\r\nThe Apple extension method ToRect() to convert an SKRect to a CGRect is passing in the rectangle\u0027s Right and Bottom values instead of its Width and Height values.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nvar skRect = new SKRect( left: 5, top: 5, right: 15, bottom: 15 );\r\nvar cgRect = skRect.ToRect();\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\ncgRect should have a width and height of 10.\r\n\r\n**Actual Behavior**\r\n\r\ncgRect has a width and height of 15.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.1\r\n- Last known good version:  This seems to have always been the case.\r\n- IDE:  Any\r\n- Platform Target Frameworks: \r\n  - iOS:  15.6\r\n  \r\n",
+  "author": {
+    "login": "mlancione",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.2",
+  "createdAt": "2022-09-06T21:52:00",
+  "updatedAt": "2022-10-08T12:01:20",
+  "closedAt": "2022-09-08T09:55:49",
+  "commentCount": 0,
+  "reactionCount": 0
+}

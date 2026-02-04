@@ -1,0 +1,27 @@
+{
+  "number": 2810,
+  "type": "pr",
+  "state": "closed",
+  "title": "[release/2.x] Add some new overloads for better compat",
+  "body": "**Description of Change**\r\n\r\nIn SkiaSharp 3.x, the overloads no longer take the \u0060SKImageFilter.CropRect\u0060 and instead use a plain \u0060SKRect\u0060.\r\n\r\nThis PR adds a bunch of overloads into the 2.x series that are present in 3.x - notably the \u0060SKImageFilter.CropRect\u0060 to \u0060SKRect\u0060 as well as some others. \u0060CreateShader\u0060 is also new and really \u0060CreatePaint\u0060 is a \u0060CreateShader\u0060 under the hood in C\u002B\u002B.\r\n\r\nFor the variations of \u0060CreateMatrix\u0060 with the different \u0060in\u0060 overloads, I will add this back into 3.x using the mechanism in https://github.com/mono/SkiaSharp/pull/2789\r\n\r\nInstead of a single overload with all the default parameters, the new overloads avoid defaults so we can not require nullable structs as well as not use the \u0060CropRect\u0060 class if the crop rect is not in use.\r\n\r\nAfter this PR lands, libraries that want to be compatible with 3.x will need to:\r\n\r\n - Switch to the \u0060SKRect\u0060 overloads\r\n - Switch to \u0060CreateShader\u0060\r\n - Switch to \u0060ReadOnlySpan\u0060 overloads\r\n - Recompile to get C# to pick the correct overloads if default parameters are used\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to https://github.com/mono/SkiaSharp/pull/2756\r\n- Related to #2790 \r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-03-27T18:47:39",
+  "updatedAt": "2024-03-27T22:24:35",
+  "closedAt": "2024-03-27T22:24:31",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "release/2.x",
+  "headBranch": "dev/compat-forwards",
+  "additions": 267,
+  "deletions": 40,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": []
+}

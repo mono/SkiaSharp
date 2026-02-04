@@ -1,0 +1,53 @@
+{
+  "number": 807,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add Reset method to SKPaint and add constructor to SKMatrix",
+  "body": "It\u0027s quite a bit faster to reuse \u0060SKPaint\u0060 objects (due to the all pinvoke, extra bookkeeping for the references, etc.). But without having an reset method (https://skia.org/user/api/SkPaint_Reference#SkPaint_reset) it is hard to actually reuse objects, as it will be quite slow to reset properties one by one.\r\n\r\nNative changes in: https://github.com/mono/skia/pull/59\r\n\r\nAdditionally I added a constructor to \u0060SKMatrix\u0060 as it leads to better codegen, especially when inlining (like Avalonia conversion methods).\r\n\r\nBenchmark code: https://gist.github.com/MarchingCube/3bcfbc8894a93b92cb2997b650a05508\r\nBenchmark results for \u0060SKPaint\u0060 reuse:\r\n\r\n\u0060\u0060\u0060 ini\r\n\r\nBenchmarkDotNet=v0.11.4, OS=Windows 10.0.17763.316 (1809/October2018Update/Redstone5)\r\nAMD Ryzen 7 2700X, 1 CPU, 16 logical and 8 physical cores\r\n.NET Core SDK=3.0.100-preview-009812\r\n  [Host]     : .NET Core 2.0.9 (CoreCLR 4.6.26614.01, CoreFX 4.6.26614.01), 64bit RyuJIT\r\n  DefaultJob : .NET Core 2.0.9 (CoreCLR 4.6.26614.01, CoreFX 4.6.26614.01), 64bit RyuJIT\r\n\r\n\u0060\u0060\u0060\r\n|        Method |     Mean |      Error |     StdDev | Ratio |\r\n|-------------- |---------:|-----------:|-----------:|------:|\r\n| AllocatePaint | 697.9 us | 15.9502 us | 13.3191 us |  1.00 |\r\n|    ResetPaint | 211.7 us |  0.5672 us |  0.5028 us |  0.30 |\r\n\r\nResults for \u0060SKMatrix\u0060 change:\r\n\r\n|                       Method |      Mean |     Error |    StdDev | Ratio |\r\n|----------------------------- |----------:|----------:|----------:|------:|\r\n|            MatrixConstructor |  7.926 ns | 0.0267 ns | 0.0250 ns |  0.79 |\r\n| MatrixPropertyInitialization | 10.050 ns | 0.1238 ns | 0.1158 ns |  1.00 |\n\n\u003E VS bug [#817073](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/817073)",
+  "author": {
+    "login": "MarchingCube",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-03-09T20:09:21",
+  "updatedAt": "2019-11-21T20:35:53",
+  "closedAt": "2019-03-13T02:57:31",
+  "commentCount": 9,
+  "reactionCount": 2,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "skpaint-and-skmatrix",
+  "additions": 24,
+  "deletions": 1,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2019-03-10T14:09:17"
+    }
+  ]
+}

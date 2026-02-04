@@ -1,0 +1,18 @@
+{
+  "number": 2391,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG]  SKRect to WPF Rect is incorrect",
+  "body": "**Description**\r\n\r\nSkiaSharp.Views.WPF.WPFExtensions\r\n\r\n**Code**\r\n\r\nSKRect skrect = new SKRect(left: 5, top: 5, right: 15, bottom: 15);\r\nRect rect = skrect.ToRect();\r\n\r\n**Expected Behavior**\r\n\r\nrect.Right = 15 and rect.Bottom = 15\r\n\r\n**Actual Behavior**\r\n\r\nrect.Right = 20 and rect.Bottom = 20\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version:  don\u0027t know\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic: WPF, .NET Framework 4.8\r\n- Target Devices: \r\n  - Windows PC\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\npublic static Rect ToRect(this SKRect rect) returns new System.Windows.Rect by its constructor call.\r\nIts prototype accepts x, y, width and heigth parameters but your call is: new Rect(rect.Left, rect.Top, rect.Right, rect.Bottom);\r\nAs result I get incorrect rectangle.\r\n\u003C/details\u003E\r\n\r\n",
+  "author": {
+    "login": "niza93",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-17T11:35:20",
+  "updatedAt": "2023-07-21T15:00:47",
+  "closedAt": "2023-06-21T12:55:43",
+  "commentCount": 0,
+  "reactionCount": 0
+}

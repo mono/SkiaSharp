@@ -1,0 +1,23 @@
+{
+  "number": 3212,
+  "type": "issue",
+  "state": "closed",
+  "title": "Could not find \u0060System.Formats.Nrbf\u0060",
+  "body": "### Description\n\nOn a Maui app, debugging in iOS, I am getting a TargetInvocationException when creating an SKBitmap. Below is the error:\n\n\u0060\u0060\u0060\nCould not find \u0060System.Formats.Nrbf\u0060 referenced by assembly \u0060System.Private.Windows.Core, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089\u0060.\n Unhandled managed exception: Exception has been thrown by the target of an invocation. (System.Reflection.TargetInvocationException)\n\u0060\u0060\u0060\n\nThis project is in .NET 9.0. I did not notice the issue when using SkiaSharp for Blazor in .Net9.0.\n\n### Code\n\n\u0060\u0060\u0060\nSKBitmap buffer = new SKBitmap(new SKImageInfo(2000,2000));\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nI am not sure if it is vaguely related to this issue:\nhttps://github.com/dotnet/maui/issues/27057\n\n### Actual Behavior\n\nThe app loads, but crashes on the first occurrence of \u0060\u0060\u0060new SKBitmap\u0060\u0060\u0060. This happened after upgrading from 2.88.9 to 3.116.1\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\nAlso tested the latest prerelease 3.118.2.3\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio Code (macOS)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\niOS and Mac\n\n### Devices\n\niPhone 14\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "gktval",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-20T17:56:20",
+  "updatedAt": "2026-01-31T15:39:56",
+  "closedAt": "2026-01-31T15:39:56",
+  "commentCount": 1,
+  "reactionCount": 0
+}

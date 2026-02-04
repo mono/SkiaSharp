@@ -1,0 +1,44 @@
+{
+  "number": 3443,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix issues with CI",
+  "body": "This pull request updates the Docker build scripts and related CI configuration to improve cross-platform builds, standardize architecture selection, and enhance support for additional architectures like LoongArch. The main changes involve switching from the deprecated \u0060IMAGE_ARCH\u0060 mechanism to the modern \u0060--platform\u0060 Docker flag, updating architecture-specific build arguments, and refining package selection for certain platforms.\r\n\r\n**Docker platform and architecture handling:**\r\n\r\n* Replaced the use of the \u0060IMAGE_ARCH\u0060 variable and \u0060${IMAGE_ARCH}/debian\u0060 image references in all relevant Dockerfiles with the \u0060--platform\u0060 flag and standard base images (e.g., \u0060FROM debian:12\u0060), aligning with best practices for multi-architecture Docker builds. [[1]](diffhunk://#diff-a1613361171fcfa0feed4d89bc7ab5880c9d3a805b0e516e0840656180a6d850L2-R7) [[2]](diffhunk://#diff-e50d4b3c75eabc1b5ca85fff9ed01e0ae211395d17dfa3f0fa9299374139df88L2-R9) [[3]](diffhunk://#diff-363372c5760ecbaeabc63b0eeabcd413f377a99eb0b6668f397f347a45ee0be1L2-R9) [[4]](diffhunk://#diff-5b0cb7bf7b394a1c5f05d66a4ec1732c478958f9fdc7171bb3ba5369fd950882L2-R9) [[5]](diffhunk://#diff-2e38bee7dffb53bed1402e24164ebac1ac2fe08209c65d966ec22736cdb2c6c0L2-R9)\r\n* Updated the \u0060scripts/Docker/_clang-cross-common.sh\u0060 script to set the Docker \u0060PLATFORM\u0060 variable based on the detected machine architecture and to use \u0060--platform\u0060 when building images, removing the obsolete \u0060IMAGE_ARCH\u0060 argument. [[1]](diffhunk://#diff-10cb18441f12b56d81917c169132efa93f2810558ba5ae4e8ed4de7407c952fcL18-R22) [[2]](diffhunk://#diff-10cb18441f12b56d81917c169132efa93f2810558ba5ae4e8ed4de7407c952fcR31-L34)\r\n\r\n**Architecture-specific build improvements:**\r\n\r\n* Added support for passing extra build arguments (e.g., \u0060--verifyGlibcMax=2.38\u0060) for specific architectures like \u0060loongarch64\u0060 in the Docker build script, ensuring compatibility with CI configuration. [[1]](diffhunk://#diff-10cb18441f12b56d81917c169132efa93f2810558ba5ae4e8ed4de7407c952fcR31-L34) [[2]](diffhunk://#diff-10cb18441f12b56d81917c169132efa93f2810558ba5ae4e8ed4de7407c952fcL43-R49)\r\n* Updated the LoongArch-specific fontconfig package installation in the Debian 13 cross-compile Dockerfile to use the standard Debian repository and the latest compatible package version.\r\n\r\n**CI pipeline updates:**\r\n\r\n* Modified Azure pipeline templates to explicitly use the \u0060--platform linux/amd64\u0060 flag in Docker build arguments, ensuring consistent architecture targeting in CI builds. [[1]](diffhunk://#diff-9868ae59fd82a0f3a833a20544c01d5b4a6f011a882d1206fee0a3ef8e917907L355-R355) [[2]](diffhunk://#diff-9868ae59fd82a0f3a833a20544c01d5b4a6f011a882d1206fee0a3ef8e917907L370-R370)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/Build",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/compatibility",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-21T03:17:55",
+  "updatedAt": "2026-02-02T22:32:40",
+  "closedAt": "2026-01-21T03:18:24",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-ci",
+  "additions": 24,
+  "deletions": 24,
+  "changedFiles": 7,
+  "commits": 2,
+  "reviews": []
+}

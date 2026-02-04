@@ -1,0 +1,29 @@
+{
+  "number": 1258,
+  "type": "pr",
+  "state": "closed",
+  "title": "Prevent the GC from collecting \u0022this\u0022 and \u0022pixels\u0022",
+  "body": "**Description of Change**\r\n\r\nPrevent the GC from collecting \u0060this\u0060 and some cases where we no longer reference the object, just pixel data.\r\n\r\nReading pixels takes long enough that the GC will collect the object. Use GC.KeepAlive to prevent this.\r\n\r\nOften the cause is that we go \u0060SKImage\u0060 -\u003E \u0060SKPixmap\u0060. This basically tells the GC that the bitmap is free, but in actual fact it is not - the pixmap is just a pointer to the pixel data.\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to issue #1244\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nPreserve \u0060this\u0060.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-04-28T17:41:57",
+  "updatedAt": "2020-04-29T23:47:40",
+  "closedAt": "2020-04-29T01:51:46",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/preserve-this",
+  "additions": 42,
+  "deletions": 15,
+  "changedFiles": 8,
+  "commits": 2,
+  "reviews": []
+}

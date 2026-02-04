@@ -1,0 +1,18 @@
+{
+  "number": 1823,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Arc angle not correct",
+  "body": "**Description**\r\n\r\nit seems like that SkiaSharp is not handling arc start and sweep angle correct.\r\nI\u0027m trying to draw a pie with the following code.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\nvar rect = new SKRect(10, 40, 190, 160);\r\nvar brush = new SKPaint\r\n{\r\n    Color = SKColors.LightSeaGreen,\r\n    Style = SKPaintStyle.Stroke,\r\n    StrokeWidth = 2,\r\n};\r\n\r\nvar midPoint = new SKPoint(rect.MidX, rect.MidY);\r\nusing var path = new SKPath();\r\n\r\nvar startAngle = -45f;\r\nvar sweepAngle = 90f;\r\npath.ArcTo(rect, startAngle, sweepAngle, forceMoveTo: false);\r\npath.LineTo(midPoint);\r\npath.Close();\r\n\r\nsurface.Canvas.DrawPath(path, brush);\r\n\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nthe sweep angle should be 90 degree.\r\n\r\n**Actual Behavior**\r\n\r\nthe sweep angle of the pie is not 90 degree.\r\n![SkiaSharp_TestDrawPie](https://user-images.githubusercontent.com/909168/136017684-1a718ac7-1ef7-4a49-b47f-72a57471debc.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: netstandard2.0\r\n\r\n",
+  "author": {
+    "login": "hippasus",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-05T11:56:27",
+  "updatedAt": "2022-08-19T00:02:18",
+  "closedAt": "2021-10-09T08:30:23",
+  "commentCount": 1,
+  "reactionCount": 0
+}

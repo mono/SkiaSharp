@@ -1,0 +1,18 @@
+{
+  "number": 235,
+  "type": "issue",
+  "state": "closed",
+  "title": "Async Await issue System.AccessViolationException",
+  "body": "I am getting below exception \r\n\u0060System.AccessViolationException: \u0027Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0027\u0060\r\n\r\nin Xamarin Forms UWP while doing **await Task.Deley(500);**\r\n\u0060canvas.DrawCircle(point.Item1.X, point.Item1.Y, 10, dotPaint\u0060\r\n\r\n\r\n\u0060\u0060\u0060csharp\r\n\t\tprivate async void OnPainting(object sender, SKPaintSurfaceEventArgs e)\r\n\t\t{\r\n\t\t\tvar canvas = e.Surface.Canvas;\r\n\r\n\t\t\t// scale the canvas up (for higher resolution screens)\r\n\t\t\tvar scale = e.Info.Width / (float)Width;\r\n\t\t\tcanvas.Scale(scale);\r\n\r\n\r\n\t\t\t// make the surface nice\r\n\t\t\tcanvas.Clear(SKColors.White);\r\n\r\n\r\n\t\t\t// draw the dots\r\n\t\t\tvar dotPaint = new SKPaint\r\n\t\t\t{\r\n\t\t\t\tIsAntialias = true,\r\n\t\t\t\tStyle = SKPaintStyle.Fill\r\n\t\t\t};\r\n\t\t\tforeach (var point in points)\r\n\t\t\t{\r\n                \t\tawait Task.Delay(500);\r\n\t\t\t\tdotPaint.Color = point.Item2;\r\n\t\t\t\tcanvas.DrawCircle(point.Item1.X, point.Item1.Y, 10, dotPaint);\r\n\t\t\t}\r\n\r\n\r\n\t\t\t// draw the instructions\r\n\t\t\tvar textPaint = new SKPaint\r\n\t\t\t{\r\n\t\t\t\tIsAntialias = true,\r\n\t\t\t\tColor = SKColors.Brown,\r\n\t\t\t\tStyle = SKPaintStyle.Fill,\r\n\t\t\t\tTextSize = 48,\r\n\t\t\t\tTextAlign = SKTextAlign.Center,\r\n\t\t\t\tTypeface = SKTypeface.FromFamilyName(\u0022Arial\u0022, SKTypefaceStyle.Bold)\r\n\t\t\t};\r\n\t\t\tcanvas.DrawText(\u0022tap 4 dots!\u0022, (float)Width / 2, 50, textPaint);\r\n\t\t\t// give it a border\r\n\t\t\ttextPaint.Style = SKPaintStyle.Stroke;\r\n\t\t\ttextPaint.StrokeWidth = 1;\r\n\t\t\ttextPaint.Color = SKColors.White;\r\n\t\t\tcanvas.DrawText(\u0022tap 4 dots!\u0022, (float)Width / 2, 50, textPaint);\r\n\t\t}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "AwsomeCode",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-02-08T14:19:31",
+  "updatedAt": "2022-08-19T21:02:40",
+  "closedAt": "2017-02-09T05:33:02",
+  "commentCount": 5,
+  "reactionCount": 0
+}

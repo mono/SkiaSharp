@@ -1,0 +1,19 @@
+{
+  "number": 1551,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] 2.84.0-preview.4: SKCodec.Create - Value cannot be null. Parameter name: buffer",
+  "body": "**Description**\r\n\r\nException **\u0022Value cannot be null. Parameter name: buffer\u0022** on \u0060SKCodec.Create\u0060 - stack:\r\n\u0060\u0060\u0060\r\nSkiaSharp.SKManagedStream.OnReadManagedStream(IntPtr buffer, IntPtr size)\r\nSkiaSharp.SKAbstractManagedStream.ReadInternal(IntPtr s, Void* context, Void* buffer, IntPtr size)\r\nSkiaSharp.SKCodec.Create(SKStream stream, SKCodecResult\u0026 result)\r\n\u0060\u0060\u0060\r\n\r\nThis only happens on a few images - attached one.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\n// inStream is a filestream\r\nusing var imgStream = new SKManagedStream(inStream);\r\nusing var codec = SKCodec.Create(imgStream, out SKCodecResult result);\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\nVersion with issue: 2.84.0-preview.4\r\nLast known good version: 2.84.0-preview.1\r\nIDE: Visual Studio 2019\r\nPlatform Target Frameworks: .NETFramework 4.8\r\n\r\n**Image File Sample**\r\n\r\n![file-22](https://user-images.githubusercontent.com/4574570/98824601-c9a68e80-2433-11eb-968f-890606f3dbe7.jpg)",
+  "author": {
+    "login": "AndersMad",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.3",
+  "createdAt": "2020-11-11T14:50:26",
+  "updatedAt": "2022-10-29T09:01:18",
+  "closedAt": "2022-09-29T06:55:00",
+  "commentCount": 23,
+  "reactionCount": 14
+}

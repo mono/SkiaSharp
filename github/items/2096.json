@@ -1,0 +1,18 @@
+{
+  "number": 2096,
+  "type": "issue",
+  "state": "closed",
+  "title": "\u0022The type initializer for \u0027SkiaSharp.SKAbstractManagedWStream\u0027 threw an exception.\u0022 occuring if QuestPDF library published in Docker container.",
+  "body": "Hello. I am trying to use the QuestPDF library with docker container. \r\nIf i try to send a request via Postman, the following exception was occured:\r\n\r\n\u0022The type initializer for \u0027SkiaSharp.SKAbstractManagedWStream\u0027 threw an exception.\u0022\r\n\r\n-----------------------\r\n**Dockerfile**\r\nFROM mcr.microsoft.com/dotnet/sdk:6.0-focal as build\r\nWORKDIR /src\r\nRUN apt-get update \u0026\u0026 apt-get install libfontconfig1 -y\r\nCOPY . .\r\n\r\nRUN dotnet restore \u0022./DataExportService.csproj\u0022\r\nRUN dotnet publish \u0022./DataExportService.csproj\u0022 -c Release -o /app --no-restore\r\n\r\nFROM mcr.microsoft.com/dotnet/aspnet:6.0-focal\r\nWORKDIR /app\r\nCOPY --from=build /app ./\r\nEXPOSE 5000\r\n\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022DataExportService.dll\u0022]\r\n\r\n-----------------------\r\n\r\nIs it possible to suppress this error and make the container work correctly? Thanks.\r\n\r\n\u003Cimg width=\u0022298\u0022 alt=\u0022image\u0022 src=\u0022https://user-images.githubusercontent.com/53487981/171676389-ddf9660f-6f99-4157-af33-2627a4a16de0.png\u0022\u003E\r\n",
+  "author": {
+    "login": "71a1den",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-02T16:18:29",
+  "updatedAt": "2022-08-19T00:01:20",
+  "closedAt": "2022-06-07T07:13:02",
+  "commentCount": 1,
+  "reactionCount": 0
+}

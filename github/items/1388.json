@@ -1,0 +1,29 @@
+{
+  "number": 1388,
+  "type": "pr",
+  "state": "closed",
+  "title": "Explicitly request GL ES 3.x in case we have it",
+  "body": "**Description of Change**\r\n\r\nThis actually \u0022hides\u0022 an \u0022issue\u0022 with the GL process. If we use the \u0022default\u0022 APIs, then it explicitly requests a OpenGL ES 2.0 context. Then SkiaSharp will ask the API what version - which is actually 3.1 (at least on my watch), so then skia tries to set up a 3.x context, but only has the 2.x API.\r\n\r\nWe _could_ override/intercept the \u0060glGetString(GL_VERSION)\u0060 call, but that is work. Also, we want new things. So, we first request a 3.x, then 2.x and _then_ get the default. Since 3.x came with Tizen 4.0\u002B, we should _always_ be getting a 3.x context. Not only do we avoid this issue, but also get a newer context.\r\n\r\n**Bugs Fixed**\r\n\r\n - \u0060SKGLView\u0060 crashes on the watch.\r\n\r\n**API Changes**\r\n\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static GRGlInterface CreateEvas (IntPtr evas, IntPtr evasGlContext);\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-07-08T02:18:12",
+  "updatedAt": "2020-07-09T02:17:48",
+  "closedAt": "2020-07-08T04:45:28",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-tizen-gl",
+  "additions": 80,
+  "deletions": 18,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

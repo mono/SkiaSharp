@@ -1,0 +1,22 @@
+{
+  "number": 2914,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Visual Studio is unable to load 32-bit assembly \u0027SkiaSharp.dll\u0027.  Do you want to use the Windows Forms out-of-process designer ...",
+  "body": "### Description\n\nI have a desktop winforms application that has been using SkiaSharp 2.88.8.  After updating to 3.0.0-preview.3.1 (and updating several api calls), I now cannot use the normal windows forms designer, and the out-of-process designer doesn\u0027t work in this case, only partially displaying the form.\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/8198486/1e5f37ec-056c-4d1f-bcf6-5d603c74dd9f)\r\n\r\nUsing Microsoft Visual Studio Community 2022 (64-bit) - Preview, Version 17.11.0 Preview 2.1\r\nMicrosoft .NET Framework Version 4.8.09037\r\n\r\nI\u0027ve confirmed that SkiaSharp.NativeAssets.Win32.3.0.0-preview.3.1 is in my packages/ directory.  Under SkiaSharp.NativeAssets.Win32.3.0.0-preview.3.1/runtimes, I see win-x64/native/ and win-x86/native/, and the copies of libSkiaSharp.dll in those directories look like they are compiled for the right architectures.  Using file, I see PE32\u002B under win-x64 and PE32 under win-x86.\r\n\r\nI\u0027ve reverted back to version 2.88.8, and the windows forms designer works again.  I\u0027m stumped as to why SkiaSharp.dll isn\u0027t loading.\r\n\r\nNote that the SkiaSharp version pulldown below doesn\u0027t include 3.0.0-preview.3.1\r\n\r\nI normally build the app for the x64 platform.  I\u0027ve also built it for the Any CPU platform, because I have some unrelated controls that need to be built that way to load into the designer.\n\n### Code\n\nn/a\r\n\n\n### Expected Behavior\n\nI expected the windows forms designer to open showing me my form as usual.\n\n### Actual Behavior\n\nI got the error message shown.  The out-of-process designer does open, but it\u0027s not fully usable yet.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 10 Enterprise 10.0.19045 build 19045\r\n.NET Framework 4.8.09037\n\n### Devices\n\nDell Windows laptop\n\n### Relevant Screenshots\n\n![image](https://github.com/mono/SkiaSharp/assets/8198486/a9d23c2b-ec96-45f1-af0a-4366819d29e1)\r\n\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nI haven\u0027t been able to generate a log of dll load attempts and failures.\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Costigan",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-02T03:08:29",
+  "updatedAt": "2025-01-24T04:51:40",
+  "commentCount": 4,
+  "reactionCount": 1
+}

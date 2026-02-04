@@ -1,0 +1,18 @@
+{
+  "number": 1291,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] XPS creation silently fails on Linux",
+  "body": "**Description**\r\n\r\nCreation of an XPS document fails on Linux with no exception.  Just a null result.\r\nWorks fine on windows.\r\n\r\n**Code**\r\n\r\n\u0060            var outputStream = File.Create(\u0022./xpstest.xps\u0022);\r\n            var managedStream = new SKManagedWStream(outputStream);\r\n            var document = SKDocument.CreateXps(managedStream);\r\n\u0060\r\n\r\n**Expected Behavior**\r\n\r\nDocument should not be null or an exception raised.\r\n\r\n**Actual Behavior**\r\n\r\nDocument is null.\r\n\r\n**Basic Information**\r\n\r\nnetcoreapp3.1\r\n\r\n- Version with issue:  1.68.2.1\r\n- Last known good version:  ??\r\n- IDE:  Visual Studio Code \r\n- Platform Target Frameworks:  \r\n  - Linux:  Ubuntu 18.04 LTS\r\n  - Windows Classic:  Windows 7\u002B\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\nhttps://gist.github.com/Jonesie/0ce0e93d541c92516429fa205fc6319b\r\n",
+  "author": {
+    "login": "Jonesie",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-05-15T20:42:41",
+  "updatedAt": "2022-08-19T06:01:43",
+  "closedAt": "2020-05-15T20:51:22",
+  "commentCount": 2,
+  "reactionCount": 0
+}

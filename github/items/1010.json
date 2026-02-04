@@ -1,0 +1,59 @@
+{
+  "number": 1010,
+  "type": "pr",
+  "state": "closed",
+  "title": "Vulkan Support for Win32 (and APIs for everyone as well)",
+  "body": "**Description of Change**\r\n\r\nThis is the workspace for Vulkan dev. \r\n\r\nThis PR has the support for Win32 builds. Android and Linux are in this PR: #1287\r\n\r\nThe native PR is https://github.com/mono/skia/pull/69\r\n\r\nNew tests were added in a separate project so that they can be run separately (or ignored on platforms that don\u0027t support Vulkan) as well as to work around the fact that the library we use to set up the Vulkan surfaces [SharpVk](https://github.com/FacticiusVir/SharpVk) not strong named.\r\n\r\n**Building Vulkan**\r\n\r\nIn order to build SkiaSharp with Vulkan support, either set the environment variable \u0060SUPPORT_VULKAN\u0060 or the command line arguments \u0060--supportVulkan\u0060 to \u0060true\u0060 or \u00601\u0060.\r\n\r\n\u003E The Vulkan headers ship with the skia project source, so no need to install and SDKs.\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to #252\r\n- Related to #897 (thanks to @tuccio) \r\n- Fixes #1222\r\n\r\n**API Changes**\r\n\r\n - Adding the Vulkan support APIs:\r\n    - new class: \u0060GRSharpVkBackendContext\u0060\r\n    - new class: \u0060GRVkBackendContext\u0060\r\n    - new class: \u0060GRVkExtensions\u0060\r\n    - new method: \u0060GRContext.CreateVulkan(GRVkBackendContext)\u0060\r\n    - new ctor: \u0060GRBackendTexture(int, int, GRVkImageInfo)\u0060\r\n    - new ctor: \u0060GRBackendRenderTarget(int, int, int, GRVkImageInfo)\u0060\r\n    - new struct: \u0060GRVkAlloc\u0060\r\n    - new struct: \u0060GRVkImageInfo\u0060\r\n    - new struct: \u0060GrVkYcbcrConversionInfo\u0060\r\n - Renames the \u0060SKColorType\u0060 enum values (#1222)  \r\n    - \u0060Unnormalized\u0060 suffix was incorrect (should be \u0022unsigned normalized\u0022) and is the default, so remove it\r\n    - \u0060RgbaF16Normalized\u0060 was not a correct \u0022normalization\u0022 and is actually clamped\r\n    - Rename the new values to follow the pattern:  \r\n      integral: \u0060\u003Ccomponents\u003E\u003Csizes\u003E\u0060 (RGB 565 = Rgb565)\r\n      floating: \u0060\u003Ccomponent\u003EF\u003Ccomponent size\u003E\u0060 (RGBA half-float = RgbaF16)\r\n- Obsoletes and hide the \u0060GRPixelConfig\u0060 as that is now private API\r\n    - Remove the mapping code that used to pass through this type\r\n\r\n**Behavioral Changes**\r\n\r\nNew members to use the Vulkan APIs. No changes to functionality.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] ~~Updated documentation~~ _(in a separate PR)_\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2019-11-14T22:25:43",
+  "updatedAt": "2020-07-09T02:18:26",
+  "closedAt": "2020-05-14T01:01:39",
+  "commentCount": 8,
+  "reactionCount": 31,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/vulkan",
+  "additions": 1836,
+  "deletions": 295,
+  "changedFiles": 56,
+  "commits": 53,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-11-14T22:45:45"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-11-14T22:46:43"
+    },
+    {
+      "author": "tuccio",
+      "state": "COMMENTED",
+      "submittedAt": "2019-11-15T13:11:48"
+    },
+    {
+      "author": "tuccio",
+      "state": "COMMENTED",
+      "submittedAt": "2019-11-15T13:15:36"
+    },
+    {
+      "author": "tuccio",
+      "state": "APPROVED",
+      "submittedAt": "2019-11-15T17:26:41"
+    },
+    {
+      "author": "tuccio",
+      "state": "DISMISSED",
+      "submittedAt": "2019-11-15T17:28:12"
+    }
+  ]
+}

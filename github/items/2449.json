@@ -1,0 +1,17 @@
+{
+  "number": 2449,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] [Mac] Support mouse scroll-wheel touch handler on Mac",
+  "body": "On UWP, the mouse scroll wheel event is captured and passed in [SkTouchHandler.cs](https://github.com/mono/SkiaSharp/blob/2ad29861d5a40d3bf78c28ab0a9cb02a8f0fe437/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/SKTouchHandler.cs).\r\n\r\nHowever the mouse wheel handling is missing on the Mac platform in [SkTouchHandler.cs](https://github.com/mono/SkiaSharp/blob/2ad29861d5a40d3bf78c28ab0a9cb02a8f0fe437/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/SKTouchHandler.cs).\r\n\r\nIt would be useful if the Mac platform could also capture and generate an \u0060SkTouchEvent\u0060 when the mouse wheel is scrolled.\r\n\r\nFor now, as a work-around we have been able to add a custom renderer for Mac, and overriding the NSResponder \u0060ScrollWheel\u0060 [event](https://developer.apple.com/documentation/appkit/nsresponder/1534192-scrollwheel), as it is part of the Xamarin.Mac [AppKit](https://learn.microsoft.com/cs-cz/dotnet/api/appkit.nsresponder.scrollwheel?view=xamarin-mac-sdk-14).\r\n\r\nCan support for the scroll wheel on Mac be added to SkiaSharp by default, to avoid needing to add a separate custom renderer?",
+  "author": {
+    "login": "kevcrooks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-04-26T15:10:02",
+  "updatedAt": "2023-04-26T15:10:02",
+  "commentCount": 0,
+  "reactionCount": 6
+}

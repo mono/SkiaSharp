@@ -1,0 +1,17 @@
+{
+  "number": 1706,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception while using SkiaSharp in Red Hat OpenShift container",
+  "body": "**Description**\r\n\r\nFacing error while using SkiaSharp library in OpenShift container\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n        SKBitmap bitmap = new SKBitmap(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul);\r\n        var surface = SKSurface.Create(bitmap.Info);\r\n        SKCanvas canvas = surface.Canvas;\r\n        canvas.Clear(SKColors.White);\r\n        var paint = new SKPaint();\r\n        paint.IsAntialias = true;\r\n        paint.Color = SKColors.Red;\r\n        paint.StrokeWidth = 3;\r\n        string fontName = SKTypeface.Default.FamilyName;\r\n        canvas.DrawCircle(50, 50, 25, paint);\r\n        var image = SKImage.FromBitmap(bitmap);\r\n        var data = surface.Snapshot().Encode(SKEncodedImageFormat.Jpeg, 80);\r\n        MemoryStream outputStream = new MemoryStream();\r\n        data.SaveTo(outputStream);\r\n        outputStream.Position = 0;\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nShould draw the circle as expected.\r\n\r\n**Actual Behavior**\r\n\r\nBelow exception thrown from line no. 1.\r\n\u0060The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp 2.80.2\r\n- IDE:  Microsoft Visual Studio Professional 2019, Version 16.8.4\r\n- Platform Target Frameworks: ASP.NET Core 3.1 targeted application in Red Hat OpenShift container\r\n\r\n**Note:** Already we have tried to resolve this issue by installing **SkiaSharpNativeAssets.Linux**, **SkiaSharpNativeAssets.NoDependencies** packages. But nothing helps.\r\n\r\n\r\n**Reproduction Link**\r\n\r\nKindly deploy the below sample in Red Hat OpenShift container to replicate this issue,\r\nhttps://github.com/RamarajMarimuthu/s2i-dotnetcore-ex/tree/SkApp\r\n\r\n**References**\r\nhttps://docs.openshift.com/container-platform/4.3/applications/application_life_cycle_management/odc-creating-applications-using-developer-perspective.html\r\nhttps://www.openshift.com/blog/how-to-deploy-an-application-from-git-to-openshift\r\n",
+  "author": {
+    "login": "RamarajMarimuthu",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-05-18T13:45:19",
+  "updatedAt": "2021-06-04T18:42:34",
+  "commentCount": 1,
+  "reactionCount": 4
+}

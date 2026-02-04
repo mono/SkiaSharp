@@ -1,0 +1,38 @@
+{
+  "number": 2720,
+  "type": "pr",
+  "state": "closed",
+  "title": "Avoid async void in SKXamlCanvas.",
+  "body": "**Description of Change**\r\n\r\nThe async void will terminate here. And we can ignore the Dispatcher.RunAsync result and we can receive the exception from TaskScheduler.UnobservedTaskException.\r\n\r\nSee https://github.com/dotnet/runtime/issues/76367\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes https://github.com/unoplatform/uno/issues/15123\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nIn the original behavior, if the \u0060SKXamlCanvas.Invalidate\u0060 method is called in the background thread, it will be scheduled back to the main thread through the \u0060Dispatcher.RunAsync\u0060 method. However, if any business code throws an exception in the \u0060PaintSurface\u0060 event, it will cause the process to crash.\r\n\r\nAfter the modification, if business code throws an exception in the \u0060PaintSurface\u0060 event, the exception will be received in TaskScheduler.UnobservedTaskException, but the process will still be safe. This is very important for client applications as it can greatly enhance stability.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "lindexi",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backport/release/2.x",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-19T06:18:25",
+  "updatedAt": "2024-03-22T02:55:06",
+  "closedAt": "2024-01-31T06:45:40",
+  "commentCount": 0,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "t/lindexi/SKXamlCanvas",
+  "additions": 2,
+  "deletions": 2,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-01-31T06:44:38"
+    }
+  ]
+}

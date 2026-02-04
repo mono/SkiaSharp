@@ -1,0 +1,18 @@
+{
+  "number": 319,
+  "type": "issue",
+  "state": "closed",
+  "title": "Image resize/scale - bitmap vs. image (findings)",
+  "body": "@mattleibow asks \u0022What is the recommended way to resize bitmaps\u0022 here https://groups.google.com/d/msg/skia-discuss/r-2svp3dK_8/2MRh6HKyEQAJ\r\n\r\nThe response is to use Image and not Bitmap as Bitmap is on a route to obsolete. Thats a big FYI i spose. But when i tried using image vs. bitmap:\r\n\r\n**Bitmap**: Using e.g. \u0060bmp.Resize(bmpDest, SKBitmapResizeMethod.Lanczos3)\u0060 the result is very nice and beats System.Drawing in quality and size (and twice as fast).\r\n\r\n**Image**: BUT when resizing an image using surface/canvas/paint and even with \u0060paint.IsAntialias = false\u0060 and \u0060paint.FilterQuality = SKFilterQuality.High\u0060 set - the result is pretty bad in blurriness - its smudgy: \u0060canvas.DrawImage(img, r1, r2, paint);\u0060\r\n\r\nThis might likely be a root Skia problem (or me overlooking something?) - but when considering that Chrome uses Skia for its canvas elements - the forum responses here is to make sure that anti-alias is turned off - so maybe there is a missing property for this? Or maybe its just the Skia lack of being able to set the resize method using image draw.\r\n\r\nAnyone else bumped into this?",
+  "author": {
+    "login": "AndersMad",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-06-21T11:28:43",
+  "updatedAt": "2022-08-19T21:01:40",
+  "closedAt": "2017-09-05T15:49:19",
+  "commentCount": 7,
+  "reactionCount": 1
+}

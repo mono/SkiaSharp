@@ -1,0 +1,18 @@
+{
+  "number": 145,
+  "type": "issue",
+  "state": "closed",
+  "title": "Slow performance when drawing thick lines",
+  "body": "Some time ago I\u0027ve already reported [this issue](https://forums.xamarin.com/discussion/62790/skiasharp-slow-performance-in-drawing-thick-lines) on the Xamarin\u0027s Forum.\n\nSkiaSharp performs very slow in comparison to GDI\u002B when it comes to draw thick lines (stroke width greater than 1 pixel). To help you reproduce this issue, I\u0027ve created a [GitHub repository](https://github.com/Rungee/GraphicsLibBenchmark) with a rather simple benchmark which compares the performance of SkiSharp and GDI\u002B. \n\nOn my machine I got the following results:\n\n\u0060\u0060\u0060 ini\n\nHost Process Environment Information:\nBenchmarkDotNet=v0.9.8.0\nOS=Microsoft Windows NT 6.2.9200.0\nProcessor=Intel(R) Core(TM) i3 CPU M 380 2.53GHz, ProcessorCount=4\nFrequency=2467784 ticks, Resolution=405.2219 ns, Timer=TSC\nCLR=MS.NET 4.0.30319.42000, Arch=64-bit RELEASE [RyuJIT]\nGC=Concurrent Workstation\nJitModules=clrjit-v4.6.1532.0\n\nType=Benchmarks  Mode=Throughput  GarbageCollection=Concurrent Workstation  \n\n\u0060\u0060\u0060\n\n| Method | AntiAlias | Median | StdDev |\n| --- | --- | --- | --- |\n| **Skia_Clear** | **False** | **626.0689 us** | **33.5835 us** |\n| GDI_Clear | False | 1,883.3675 us | 92.5697 us |\n| Skia_DrawLines_SolidThick | False | 34.3181 us | 2.3956 us |\n| GDI_DrawLines_SolidThick | False | 69.2968 us | 3.5125 us |\n| Skia_DrawLines_SolidThin | False | 33.6100 us | 2.0326 us |\n| GDI_DrawLines_SolidThin | False | 31.2110 us | 0.7240 us |\n| Skia_DrawLines_DashedThick | False | 216.3211 us | 7.8385 us |\n| GDI_DrawLines_DashedThick | False | 198.5229 us | 5.8046 us |\n| Skia_DrawLines_DashedThin | False | 216.9377 us | 9.8053 us |\n| GDI_DrawLines_DashedThin | False | 85.8987 us | 1.6362 us |\n| **Skia_Clear** | **True** | **689.3211 us** | **18.8872 us** |\n| GDI_Clear | True | 1,882.9171 us | 54.4645 us |\n| Skia_DrawLines_SolidThick | True | 925.7412 us | 27.4917 us |\n| GDI_DrawLines_SolidThick | True | 331.8494 us | 16.4880 us |\n| Skia_DrawLines_SolidThin | True | 39.8524 us | 1.3069 us |\n| GDI_DrawLines_SolidThin | True | 297.3545 us | 3.2218 us |\n| Skia_DrawLines_DashedThick | True | 646.9674 us | 2.7239 us |\n| GDI_DrawLines_DashedThick | True | 341.4178 us | 1.2708 us |\n| Skia_DrawLines_DashedThin | True | 128.6211 us | 1.1245 us |\n| GDI_DrawLines_DashedThin | True | 503.6172 us | 1.7782 us |\n\nAs it can be seen from the table (see the case when AntiAlias = True), Skia_DrawLines_SolidThick (stroke width equals 2 px) method is 2.78 times slower than its GDI\u002B counterpart GDI_DrawLines_SolidThick. Next, the performance of thick dashed strokes is a bit better, namely, Skia_DrawLines_DashedThick is 1.89 times slower than GDI_DrawLines_DashedThick.\nAt the same time, SkiaSharp is able to draw thin solid lines 7.46 times faster than GDI\u002B.  The difference in drawing thin dashed lines is 3.9 times respectively.\n\nDo you have any explanation for such performance degradation of SkiaSharp when drawing thick lines? Is it a SkiaSharp or even Skia specific issue?\n",
+  "author": {
+    "login": "Rungee",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-09-05T07:10:38",
+  "updatedAt": "2022-08-20T00:02:08",
+  "closedAt": "2016-09-06T01:20:09",
+  "commentCount": 1,
+  "reactionCount": 0
+}

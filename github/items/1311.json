@@ -1,0 +1,19 @@
+{
+  "number": 1311,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] libSkiaSharp.dll in x64 and x86 folder not been used",
+  "body": "**Description**\r\n\r\nSkaiShapr version:1.68.3\r\nEnvironment: Visual Stdio 2019\r\nProject: .NetFramework project (Please note the issue not happening in .NetCore Project)\r\nCompile platform: Any CPU\r\n\r\nIssue:\r\nWhen compile the project, libSkiaSharp.dll been copied to \r\n    Bin\\Debug\\x64\\libSkiaSharp.dll\r\n    Bin\\Debug\\x86\\libSkiaSharp.dll\r\n    Bin\\Debug\\libSkiaSharp.dll \r\nbut it seems like application not using any of those Dlls in x64 nor x86.  Instead application always using the one  the Debug folder.\r\n\r\nMy understanding is that the Bin\\Debug\\libSkiaSharp.dll shouldn\u0027t be there at all, app should use the ones in x64/x86 folder depending on current application platform (any cpu/x86/x64).\r\n\r\n\r\n**Code**\r\n\r\nNo code needed, just reference the nugetpackage, and compile.\r\n\r\n**Expected Behavior**\r\n\r\nApplication should use Bin\\Debug\\x86(x64)libSkiaSharp.dll depending on current application platform (any cpu/x86/x64) automatically\r\n \r\n**Actual Behavior**\r\n\r\nApplication always using the one in Bin\\Debug\\libSkiaSharp.dll.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.3\r\n- Last known good version:  Unknown\r\n- IDE:  Visual Studio 2019 - Windows 10\r\n- Platform Target Frameworks: Any CPU\r\n  - Windows Classic:  Windows 10\r\n- Target Devices: Windows application\r\n\r\n**Screenshots**\r\n\r\nnone\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n",
+  "author": {
+    "login": "JackLi-tg",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-05-27T20:38:36",
+  "updatedAt": "2022-08-19T06:01:30",
+  "closedAt": "2020-06-25T01:00:50",
+  "commentCount": 6,
+  "reactionCount": 0
+}

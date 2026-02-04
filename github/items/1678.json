@@ -1,0 +1,28 @@
+{
+  "number": 1678,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add .NET MAUI views (compat and handlers)",
+  "body": "**Description of Change**\r\n\r\n\u003E **I just pushed the bits from this PR to the preview feed as \u00602.88.0-pr.1678.25\u0060.**\r\n\r\nAdd the .NET Maui views into the repo:\r\n - Compatibility Renderers and Image Handlers\r\n - .NET Maui View Handlers\r\n - .NET Maui Image Source Services\r\n\r\n**Not Included**\r\n - Support for running Mac Catalyst apps\r\n - SKGLView using the new handlers on iOS/Android (compatibility renderers will still work)\r\n - SKGLView on WinUI since we are needing an update to ANGLE to work with WinUI\r\n\r\n**Usage**\r\n\r\nThere are 3 new NuGet packages:\r\n - SkiaSharp.Views.Maui.Core - the main implementation logic\r\n - SkiaSharp.Views.Maui.Controls - the XAML views \r\n - SkiaSharp.Views.Maui.Controls.Compatibility - the compatibility renderers and image handlers\r\n\r\nUnless you are specifically using the compatibility renderers, you should be able to just use the SkiaSharp.Views.Maui.Controls NuGet package. \r\n\r\nJust for the first merge, there are a few limitations listed above, and a requirement on using the \u0060UseSkiaSharpHandlers\u0060 in the startup. If you need to add the compatibility renderers, the \u0060UseSkiaSharpCompatibilityRenderers\u0060 is also needed. Order matters and the last one wins. For a hybrid approach, use compatibility first as this will register the compat views and image sources, but then overwrite the ones with the new handlers:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic void Configure(IAppHostBuilder appBuilder) =\u003E\r\n\tappBuilder\r\n\t\t.UseSkiaSharpCompatibilityRenderers()\r\n\t\t.UseSkiaSharpHandlers()\r\n\t\t.UseMauiApp\u003CApp\u003E();\r\n\u0060\u0060\u0060\r\n\r\n\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2021-03-30T16:01:47",
+  "updatedAt": "2022-05-22T09:38:40",
+  "closedAt": "2021-06-17T19:25:18",
+  "commentCount": 0,
+  "reactionCount": 3,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/dotnet-6.0",
+  "additions": 1829,
+  "deletions": 194,
+  "changedFiles": 80,
+  "commits": 80,
+  "reviews": []
+}

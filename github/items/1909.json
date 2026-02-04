@@ -1,0 +1,17 @@
+{
+  "number": 1909,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKShaper/DrawShapedText ignores SKPaint.TextAlign property",
+  "body": "**Description**\r\nWhen drawing text with DrawShapedText, the specified TextAlign in SKPaint is ignored.\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\nusing var paint= new SKPaint { ... TextAlign = SKTextAlign.Center ...};\r\ncanvas.DrawShapedText(shaper, \u0022test\u0022, width / 2f, (height / 2f) \u002B (paint.FontMetrics.XHeight / 2), paint);\r\n\u0060\u0060\u0060\r\n\r\nWould result in:\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/5482304/147596629-82728dd2-8682-4a1c-9cac-45212e14eab3.png\u0022 width=25% height=25%\u003E\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/5482304/147596632-bec64e06-4ab7-451e-b65a-58bcd2f22cf9.png\u0022 width=25% height=25%\u003E\r\n\r\nWhen I would expect the same behaviour as DrawText as for the alignment.\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/5482304/147596410-f897c031-6f9e-40c9-94b2-716d05339a00.png\u0022 width=25% height=25%\u003E\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/5482304/147596412-27fc2ce5-795f-4dcf-a036-8adbf78adcdd.png\u0022 width=25% height=25%\u003E\r\n\r\nI am opening a PR to fix it,\r\n\r\n",
+  "author": {
+    "login": "koolkdev",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-28T19:04:51",
+  "updatedAt": "2023-05-11T19:36:36",
+  "commentCount": 1,
+  "reactionCount": 0
+}

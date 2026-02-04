@@ -1,0 +1,22 @@
+{
+  "number": 3140,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] iOS app throws the unable to convert skiasharp.views.maui.handlers.skcanvasviewhandler to uikit.uiview and then app is crashed",
+  "body": "### Description\n\nOur iOS app only supports the UIInterfaceOrientation.LandscapeLeft, UIInterfaceOrientation.LandscapeRight Orientation.\r\nBut if we keep the device in Portrait mode and try to capture the image, the app throws the above-mentioned error and then app crashes.\n\n### Code\n\n\u0060\u0060\u0060cs\r\nvar cts = new CancellationTokenSource();\r\ncts.CancelAfter(TimeSpan.FromMinutes(5));\r\nawait MediaGallery.CapturePhotoAsync(cts.Token);\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nThe app should not crash.\n\n### Actual Behavior\n\nWhen we support only landscape mode and try to capture images on iOS in portrait mode, the app crashes.\n\n### Version of SkiaSharp\n\n2.88.8 (Deprecated)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (macOS)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\niPadOS 18.2.1\n\n### Devices\n\niPad 10th Gen\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "safvanmansuri-cygnet",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-01-15T08:04:32",
+  "updatedAt": "2025-01-15T08:04:32",
+  "commentCount": 0,
+  "reactionCount": 0
+}

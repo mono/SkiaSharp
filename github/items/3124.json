@@ -1,0 +1,22 @@
+{
+  "number": 3124,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] The Canvas.DrawPath call leads to an incorrect result if the path points are too far from each other",
+  "body": "### Description\n\nHi,\r\n\r\nWe utilize the SkiaSharp library within one of our commercial DevExpress products to offer cross-platform drawing and printing functionalities.\r\n\r\nUpon executing the code below, we notice a discrepancy in the resulting figure compared to the one generated using GDI\u002B functionality.\r\n\r\nAlthough I am not sure whether this behavior is a bug, I would greatly appreciate any suggestions or recommendations on how to resolve this issue. \n\n### Code\n\n\r\n\u0060\u0060\u0060cs\r\nSKPoint[] points = new SKPoint[] {\r\n    new SKPoint(-6388600, 3162518),\r\n    new SKPoint(-6010237, 6388600),\r\n    new SKPoint(639, 40),\r\n    new SKPoint(639, 40),\r\n};\r\nusing (SKBitmap bmp = new SKBitmap(650, 350)) {\r\n    using (SKCanvas canvas = new SKCanvas(bmp))\r\n    using (SKPaint paint = new SKPaint())\r\n    using (SKPath path = new SKPath()) {\r\n        paint.Style = SKPaintStyle.Stroke;\r\n        paint.StrokeWidth = 2;\r\n        paint.StrokeMiter = 10;\r\n        paint.Color = SKColors.Red;\r\n        canvas.Clear(SKColors.White);\r\n\r\n        path.MoveTo(points[0]);\r\n        path.CubicTo(points[1], points[2], points[3]);\r\n        canvas.DrawPath(path, paint);\r\n    }\r\n    string savePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), \u0022skia.png\u0022);\r\n    using (FileStream stream = File.OpenWrite(savePath))\r\n    using (SKPixmap pixmap = bmp.PeekPixels()) {\r\n        const int compression = 5;\r\n        SKPngEncoderOptions options = new SKPngEncoderOptions(SKPngEncoderFilterFlags.None, zLibLevel: compression);\r\n        using (SKManagedWStream skStream = new SKManagedWStream(stream, false))\r\n            pixmap.Encode(skStream, options);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\n\n### Expected Behavior\n\nThis is the result we obtain when we call GDI\u002B methods: \r\n\r\n![image](https://github.com/user-attachments/assets/b8adb0a5-373d-4d2f-88fa-035d756d6ac7)\r\n\r\n\u0060\u0060\u0060cs\r\nusing (Image image = new Bitmap(650, 350)) {\r\n    using (Graphics graphics = Graphics.FromImage(image)) {\r\n        PointF[] points = new PointF[] {\r\n            new PointF(-6388600, 3162518),\r\n            new PointF(-6010237, 6388600),\r\n            new PointF(639, 40),\r\n            new PointF(639, 40),\r\n        };\r\n        graphics.Clear(Color.White);\r\n        graphics.DrawBeziers(new Pen(Color.Red, 2), points);\r\n    }\r\n    string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), \u0022gdi\u002B.png\u0022);\r\n    image.Save(path, ImageFormat.Png);\r\n}\r\n\u0060\u0060\u0060\n\n### Actual Behavior\n\nThis is the result with SkiaSharp: \r\n![image](https://github.com/user-attachments/assets/6fd56b61-4d99-4436-a8b4-d51f8ab7945a)\r\n\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "e1em3ntoDX",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-20T07:58:09",
+  "updatedAt": "2024-12-20T07:58:09",
+  "commentCount": 0,
+  "reactionCount": 1
+}

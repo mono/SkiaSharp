@@ -1,0 +1,23 @@
+{
+  "number": 3197,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] LoongArch64 flavor of libSkiaSharp and libHarfBuzzSharp",
+  "body": "### Is your feature request related to a problem?\n\nI need to programming Watt Toolkit in Loongson 3A6000 using AOSC OS on LoongArch, need SkiaSharp and HarfBuzzSharp\n\n### Describe the solution you would like\n\ne.g. https://github.com/loongson-community/dotnet-unofficial-build has runtimes/linux-loongarch64 and runtimes/linux-musl-loongarch64. same thing can be done for SkiaSharp and HarfBuzzSharp. toolchains are available in [Loongnix 25](https://pkg.loongnix.cn/loongnix/25/ ), [AOSC OS](https://repo.aosc.io/ ), [Deepin](https://ci.deepin.com/repo/deepin/deepin-community/ ), [Gentoo](https://www.gentoo.org/downloads/#loong ), ALT Linux, [Alpine](https://alpinelinux.org/downloads/ ) and so on.\n\nideally infra should be DRY\u0027d so it\u0027s just a matter of adding a single line in shell or cake script for new platform: define_platform(dotnetArch, nativeArch, osName) {. ... expand ...  } which will expand to rubberstamped stuff for clang -target .... e.g.\n\n\u0060\u0060\u0060\n# existing\ndefine_platform(\u0022arm64\u0022, \u0022aarch64\u0022, \u0022linux\u0022)\ndefine_platform(\u0022arm64\u0022, \u0022aarch64\u0022, \u0022linux-musl\u0022)\ndefine_platform(\u0022riscv64\u0022, \u0022riscv64\u0022, \u0022linux\u0022)\ndefine_platform(\u0022riscv64\u0022, \u0022riscv64\u0022, \u0022linux-musl\u0022)\n\n# for this feature request\ndefine_platform(\u0022loongarch64\u0022, \u0022loongarch64\u0022, \u0022linux\u0022)\ndefine_platform(\u0022loongarch64\u0022, \u0022loongarch64\u0022, \u0022linux-musl\u0022)\n\u0060\u0060\u0060\n\n### Describe alternatives you have considered\n\nN/A\n\n### Additional context\n\nI hope programmers of mono can accept this issue.\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "4Darmygeometry",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-13T08:18:18",
+  "updatedAt": "2025-04-01T23:16:07",
+  "closedAt": "2025-03-24T19:54:21",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1997,
+  "type": "issue",
+  "state": "closed",
+  "title": "How to install through Dockerfile into a Microsoft\u0027s Mariner (Azure) Linux deployment ",
+  "body": "On Ubuntu this will take care of the dependencies generating a .webP file\r\n\r\nFROM mcr.microsoft.com/dotnet/aspnet:6.0-focal AS runtime\r\nRUN apt-get update\r\nRUN apt-get install -y libicu-dev fontconfig-config\r\nENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=true\r\nRUN apt-get install -y libgdiplus linux-libc-dev\r\nCOPY . .\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022Yourapp.dll\u0022]\r\n\r\nBut now I would like to use Mariner 1.x or 2.x and apt-get doesn\u0027t work, only way is tdnf \u003C= but packages are not found.\r\n\r\nWithout the RUN commands on the Docker file regardless if I use the SkiaSharp with or without dependencies, I got an error of a missing dependency. But this only works on Ubuntu apparently, not on Mariner/Cosmic (deployment)\r\n\r\nAnyone has been able to generate webp files on Mariner\u0027s Linux? Thanks",
+  "author": {
+    "login": "alerine1",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-13T15:37:09",
+  "updatedAt": "2022-04-15T15:14:22",
+  "closedAt": "2022-04-15T15:14:22",
+  "commentCount": 0,
+  "reactionCount": 0
+}

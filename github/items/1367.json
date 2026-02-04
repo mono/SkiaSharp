@@ -1,0 +1,29 @@
+{
+  "number": 1367,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fire Cancelled events from SKTouchHandler.Reset() when needed",
+  "body": "**Description of Change**\r\n\r\nTouches are now tracked in \u0060SKTouchHandler\u0060. For all touches that aren\u0027t Ended or Cancelled by the time \u0060Reset()\u0060 is called, the \u0060Reset()\u0060 method fires \u0060SKTouchAction.Cancelled\u0060 events. This fixes \u0060SKTouchAction.Cancelled\u0060 not getting sent when the user scrolls.\r\n\r\nhttps://developer.apple.com/documentation/uikit/uigesturerecognizer/1620004-reset\r\n\r\nThere could potentially be a better way of doing this without a \u0060HashSet\u0060, but this is the only method that I have found to work just like the other platforms.\r\n\r\n**Bugs Fixed**\r\n\r\n- #1048\r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\nWhen the iOS gesture recognizer is Reset (commonly due to the user scrolling a view), the \u0060SKTouchAction.Cancelled\u0060 touch event will now be received.\r\n\r\n**PR Checklist**\r\n\r\n- [Let me know if there are tests to add] Has tests (if omitted, state reason in description)\r\n- [\u2714] Rebased on top of master at time of PR\r\n- [\u2714?] Changes adhere to coding standard\r\n- [N/A I hope] Updated documentation\r\n",
+  "author": {
+    "login": "daltonks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2020-06-29T21:25:12",
+  "updatedAt": "2023-09-22T17:10:30",
+  "closedAt": "2023-09-22T17:10:30",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "iOS_touch_cancelled_when_gesture_recognizer_reset",
+  "additions": 21,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 3,
+  "reviews": []
+}

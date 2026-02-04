@@ -1,0 +1,24 @@
+{
+  "number": 190,
+  "type": "issue",
+  "state": "closed",
+  "title": "libSkiaSharp.dll not deploying if referenced in a Class Library",
+  "body": "In a desktop windows application, if SkiaSharp is installed via nuget to a class library then building this project will only deploy SkiaSharp.dll to the bin folder.  libSkiaSharp.dll will be missing in the bin folder.  If I change the class library project to be a windows application project, then the dll will get deployed to my bin folder along side SkiaSharp.dll.  This seems to only affect versions greater than 1.53.1.2 (I was testing with 1.55.0).  With 1.53.1.2 referenced in my class library, the libSkiaSharp.dll will deploy along side SkiaSharp.dll.\r\n\r\nI also noticed that with 1.53.1.2 I will get an error in the SkiaSharp.targets file telling me to set the platform to either x64 or x86 to support Skia.  I do not get this error when building the class library with 1.55.0 under an anycpu config.  (setting to my desired architecture doesn\u0027t work with 1.55.0).\r\n\r\nI have the C\u002B\u002B redistributable installed as noted in the Readme.  I\u0027m building with VS2015 Pro update 3.\r\n\r\nI was able to reproduce this by creating an empty wpf project, adding a class library, installing the 1.55.0 from nuget to the class library, and creating a canvas in a static method called by the startup project.",
+  "author": {
+    "login": "jacoblange-dev",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/help-wanted",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.56.2",
+  "createdAt": "2016-11-10T19:21:55",
+  "updatedAt": "2022-08-20T00:01:30",
+  "closedAt": "2017-02-04T20:29:58",
+  "commentCount": 11,
+  "reactionCount": 0
+}

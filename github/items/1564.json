@@ -1,0 +1,18 @@
+{
+  "number": 1564,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SKCanvas.DrawText on Synology fails to draw text",
+  "body": "I have an issue that seems similar to #1131 but the particular Linux flavor is Synology\u0027s DSM platform version 6.2.3 armv7l build.\r\n\r\nIn Windows, and Ubuntu, SKCanvas.DrawText renders text correctly when called from my dll, which is run as a plugin in a parent application. Running the same build on the Synology, there\u0027s nothing. No evidence of drawing text on the image and no errors that I can find.\r\n\r\nOther operations like SKBitmap.Resize and SKCanvas.DrawCircle are working fine under the Synology.\r\n\r\nI\u0027ve tried the solution of copying a font over to /usr/share/fonts (the directory didn\u0027t exist on the Synology) to reference directly, but there was no change.\r\n\r\nHere\u0027s an example of what I\u0027m trying:\r\n\r\n\u0060\u0060\u0060 \r\n                    using (SKCanvas canvas = new SKCanvas(resizedImage))\r\n                    {\r\n                          var paint = new SKPaint\r\n                            {\r\n                                Color = SKColors.Blue,\r\n                                IsAntialias = true,\r\n                                Style = SKPaintStyle.Fill,\r\n                                TextAlign = SKTextAlign.Center,\r\n                                TextSize = 90,\r\n                                Typeface = SKTypeface.CreateDefault()\r\n                            };\r\n                            var coord = new SKPoint(resizedImage.Width / 2, (resizedImage.Height \u002B paint.TextSize) / 2);\r\n                            canvas.DrawText(\u0022TEST\u0022, coord, paint);\r\n                            canvas.Flush();\r\n\r\n                            using (var image = SKImage.FromBitmap(resizedImage))\r\n                            {\r\n                                using (var data = image.Encode())\r\n                                {\r\n                                    using (var stream = new FileStream(outputFile, FileMode.Create, FileAccess.Write))\r\n                                        data.SaveTo(stream);\r\n                                }\r\n                            }\r\n                        }\r\n\u0060\u0060\u0060\r\n\r\nI\u0027ve tried this with no declared typeface, CreateDefault() like the above example, and various ones by familyname, but nothing changes.\r\n\r\nIs there anything else I can try here?\r\n\r\nThanks",
+  "author": {
+    "login": "jsavell",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-12-20T04:44:46",
+  "updatedAt": "2022-08-19T03:01:26",
+  "closedAt": "2020-12-20T15:09:56",
+  "commentCount": 2,
+  "reactionCount": 0
+}

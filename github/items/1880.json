@@ -1,0 +1,17 @@
+{
+  "number": 1880,
+  "type": "issue",
+  "state": "open",
+  "title": "SkiaSharp could dispose objects too early",
+  "body": "Skia objects, like SkiaSharp.SKPaint, have disposable Skia properties that are retrieved based on their underlying C\u002B\u002B objects. The C# owner class does not have any reference to the C# equivalent of this property. This could result in too early garbage collection of dependent objects. This dispose action will call the C# destructor and free all allocated memory while the property is still in use. \r\n\r\nSee for example the following scenario:\r\n* A new SkiaSharp.SKPaint instance is created\r\n* A Shader is set onto the SKPaint object\r\n* Garbage collection is triggered\r\n* The C# Shader class is garbage collected since it is not referenced anymore. All C\u002B\u002B shader resources are freed\r\n* A fatal crash will occur since the SKPaint is making use of the freed memory\r\n\r\nAn alternative fault situation:\r\n* A new SkiaSharp.SKPaint instance is created\r\n* A Shader is set onto the SKPaint object\r\n* The SKPaint instance is used\r\n* Garbage collection is triggered\r\n* The C# Shader class is garbage collected since it is not referenced anymore. All C\u002B\u002B shader resources are freed\r\n* The SKPaint object is disposed\r\n* A fatal crash occurs when the SKPaint instance tried to destruct the shader. \r\n\r\nThe SKPaint.Shader property:\r\n\r\n\u0060\u0060\u0060\r\npublic SKShader Shader\r\n{\r\n  get =\u003E SKShader.GetObject(SkiaApi.sk_paint_get_shader(this.Handle));\r\n  set =\u003E SkiaApi.sk_paint_set_shader(this.Handle, value == null ? IntPtr.Zero : value.Handle);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe SkiaSharp.SKPaint class should hold a reference to the C# Shader to prevent garbage collection.\r\n\r\nAn example of the alternative situation, this results in the following fatal crash:\r\n\r\n![image](https://user-images.githubusercontent.com/518177/145032550-149cd681-17b7-4c26-a5ca-8b3cfa895679.png)\r\n\r\n**Version information:**\r\n* SkiaSharp version 2.80.3",
+  "author": {
+    "login": "laurenceSaes",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-07T13:26:35",
+  "updatedAt": "2023-02-21T03:22:35",
+  "commentCount": 1,
+  "reactionCount": 2
+}

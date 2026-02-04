@@ -1,0 +1,19 @@
+{
+  "number": 1031,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Uses of ArrayPool need to be checked",
+  "body": "**Description**\r\n\r\n@Gillibald usage of the array pool need to be checked because the arrays are not actually cleared.\r\n\r\nIn this example, the second buffer still has the values from the first Rent.\r\n\r\n\u0060\u0060\u0060\r\nvar buffer = ArrayPool\u003Cchar\u003E.Shared.Rent (NameBufferLength);\r\nfor (int i = 0; i \u003C buffer.Length; i\u002B\u002B) {\r\n\tbuffer[i] = (char)i;\r\n}\r\nArrayPool\u003Cchar\u003E.Shared.Return (buffer);\r\n\r\nbuffer = ArrayPool\u003Cchar\u003E.Shared.Rent (NameBufferLength);\r\n\u0060\u0060\u0060\u0060\r\n\r\nThis is used in 2 places so far (\u0060TryGetGlyphName\u0060 and \u0060GlyphToString\u0060):\r\n\r\n\u0060\u0060\u0060csharp\r\nfixed (char* first = buffer) {\r\n\tif (!HarfBuzzApi.hb_font_get_glyph_name (Handle, glyph, first, buffer.Length)) {\r\n\t\tname = string.Empty;\r\n\t\treturn false;\r\n\t}\r\n\tname = new string (first);\r\n\treturn true;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe issue might actually be in the usage of \u0060name = new string (first);\u0060 as that creates a string from the full array, and does not stop at the \u0060\\0\u0060 character.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-11-25T01:04:36",
+  "updatedAt": "2022-08-19T09:01:57",
+  "closedAt": "2019-11-27T08:14:47",
+  "commentCount": 5,
+  "reactionCount": 0
+}

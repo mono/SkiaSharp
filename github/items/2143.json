@@ -1,0 +1,17 @@
+{
+  "number": 2143,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Skottie failed to call native method in arm64",
+  "body": "**Description**\r\n\r\nLibrary failed to call native methods. \u0060skottie_animation_make_from_string\u0060\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nAnimation.Parse(loadingAnimation)\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\u0060\u0060\u0060\r\nUnhandled exception. System.EntryPointNotFoundException: Unable to find an entry point named \u0027skottie_animation_make_from_string\u0027 in shared library \u0027libSkiaSharp\u0027.\r\n   at SkiaSharp.SkottieApi.skottie_animation_make_from_string(String data, Int32 length)\r\n   at SkiaSharp.Skottie.Animation.TryParse(String json, Animation\u0026 animation)\r\n   at SkiaSharp.Skottie.Animation.Parse(String json)\r\n\u0060\u0060\u0060\r\n**Actual Behavior**\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.1-preview.79\r\n- Last known good version:  2.88.1-preview.79\r\n- IDE:  Any\r\n- Platform Target Frameworks: dotnet 6\r\n  - Linux: \u0060raspberrypi 5.15.32-v8\u002B #1538 SMP PREEMPT Thu Mar 31 19:40:39 BST 2022 aarch64 GNU/Linux\u0060\r\n- Target Devices:   RPi 3\r\n\r\n",
+  "author": {
+    "login": "OmidID",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-03T09:12:38",
+  "updatedAt": "2022-07-03T11:03:02",
+  "commentCount": 1,
+  "reactionCount": 0
+}

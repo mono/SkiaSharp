@@ -1,0 +1,28 @@
+{
+  "number": 572,
+  "type": "issue",
+  "state": "closed",
+  "title": "BadImageFormatException on .NET Framework 4.6.2 with AnyCPU setting AND Cannot found libskiasharp on desing view",
+  "body": "### Description\r\n\r\nWe are having problems with SkiaSharp 1.60.2 when we try to run our desktop application. The problem, in our opinion, is that you are not choosing correctly between x64 and x86 when compiling the solution.\r\n\r\nOn the other hand, we are having problems with the design view of the forms that use skiasharp (we can not use the design view on that forms) and we believe that this error could be related to the previous one.\r\n\r\nI do not know if it will help or not, but if the problem is to decide on which platform to run the SkiaSharp version, a possible solution could be this:\r\n\r\n### Code\r\n\r\nvar uri = new Uri(typeof(DWGSpatialDriver).Assembly.CodeBase);\r\nvar path = Path.Combine(Path.GetDirectoryName(uri.LocalPath), IntPtr.Size == 8 ? \u0022x64\u0022 : \u0022x86\u0022);\r\n\r\n### Expected Behavior\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n### Actual Behavior\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.2\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio 2017 (15.7.4)\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - Windows Classic: Windows 10  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:\r\n  -   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n\r\n### Screenshots\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n![image](https://user-images.githubusercontent.com/37209374/42156578-b9be7690-7deb-11e8-8def-fdd11a5c2049.png)\r\n\r\n\r\n\r\n### Reproduction Link\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\n\n\u003E VS bug [#738682](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/738682)",
+  "author": {
+    "login": "TerceraFaseSoftware",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-07-02T09:36:03",
+  "updatedAt": "2022-08-19T15:02:10",
+  "closedAt": "2020-10-14T00:35:43",
+  "commentCount": 3,
+  "reactionCount": 0
+}

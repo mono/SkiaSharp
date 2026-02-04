@@ -1,0 +1,18 @@
+{
+  "number": 1523,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unable to use skiasharp.views.forms in .Net Framework 4.7.2",
+  "body": "**Description**\r\n\r\nMy unit tests project\u0027s based on .net Framework 4.7.2 and I got a missing assembly error after update skiasharp.views.forms from old version.\r\n\r\n**Code**\r\n\r\nTo reproduce this defect, create a .net class library.\r\nAdd NuGet packages:\r\n\r\n\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\r\n\u003Cpackages\u003E\r\n  \u003Cpackage id=\u0022OpenTK\u0022 version=\u00223.1.0\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022OpenTK.GLControl\u0022 version=\u00223.1.0\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp\u0022 version=\u00222.80.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.Views\u0022 version=\u00222.80.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.Views.Desktop.Common\u0022 version=\u00222.80.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.Views.Forms\u0022 version=\u00222.80.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.Views.Gtk2\u0022 version=\u00222.80.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.Views.WindowsForms\u0022 version=\u00222.80.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.Views.WPF\u0022 version=\u00222.80.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022System.Buffers\u0022 version=\u00224.4.0\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022System.Memory\u0022 version=\u00224.5.3\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022System.Numerics.Vectors\u0022 version=\u00224.4.0\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022System.Runtime.CompilerServices.Unsafe\u0022 version=\u00224.5.2\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n  \u003Cpackage id=\u0022Xamarin.Forms\u0022 version=\u00224.6.0.800\u0022 targetFramework=\u0022net472\u0022 /\u003E\r\n\u003C/packages\u003E\r\n\u0060\u0060\u0060\r\n\r\nand just create a simple class\r\n\r\n\u0060\u0060\u0060\r\nusing SkiaSharp.Views.Forms;\r\n\r\nnamespace ClassLibrary1\r\n{\r\n    public class Class1\r\n    {\r\n        private SKCanvasView _canvasView;\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nTry to build and got a build failure.\r\n\r\n**Expected Behavior**\r\n\r\nBuild successful \r\n\r\n**Actual Behavior**\r\n\r\nBuild failure\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  1.68.0 \r\n- IDE:   Visual Studio \r\n- Platform Target Frameworks: \r\n  - Windows Classic:  windows 10\r\n- Target Devices: \r\nPC dev machine  \r\n\r\n\r\n",
+  "author": {
+    "login": "alexander-kobelev",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-07T06:33:52",
+  "updatedAt": "2022-08-19T03:01:41",
+  "closedAt": "2020-10-22T00:30:20",
+  "commentCount": 3,
+  "reactionCount": 0
+}

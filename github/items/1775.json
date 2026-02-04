@@ -1,0 +1,23 @@
+{
+  "number": 1775,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Add support for missing SkColorFilters: HSLAMatrix, LinearToSRGBGamma, SRGBToLinearGamma, Lerp, WithWorkingFormat ",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\nWhen doing svg filters and processing I need additional color filters that are currently missing from SKColorFilter (especially for color space conversion LinearToSRGBGamma() and SRGBToLinearGamma())\r\n\r\n\u003C!-- A clear and concise description of what the problem is. Ex. I need to do X, but the API is missing from the C# binding. --\u003E\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\n\r\nAPI proposal (new members in SKColorFilter class):\r\n\u0060\u0060\u0060C#\r\n\r\npublic static SkiaSharp.SKColorFilter SKColorFilter.CreateHSLAMatrix(float[] rowMajor);\r\npublic static SkiaSharp.SKColorFilter SKColorFilter.CreateLinearToSRGBGamma();\r\npublic static SkiaSharp.SKColorFilter SKColorFilter.CreateSRGBToLinearGamma();\r\npublic static SkiaSharp.SKColorFilter SKColorFilter.CreateLerp(float t, SKColorFilter dst, SKColorFilter src);\r\n\u0060\u0060\u0060\r\n\r\nnor sure how \u0060WithWorkingFormat\u0060 would look like\r\n\r\nAdd below API from skia to SKColorFilter\r\n\r\n\u0060\u0060\u0060C\u002B\u002B\r\n    // A version of Matrix which operates in HSLA space instead of RGBA.\r\n    // I.e. HSLA-to-RGBA(Matrix(RGBA-to-HSLA(input))).\r\n    static sk_sp\u003CSkColorFilter\u003E HSLAMatrix(const SkColorMatrix\u0026);\r\n    static sk_sp\u003CSkColorFilter\u003E HSLAMatrix(const float rowMajor[20]);\r\n\r\n    static sk_sp\u003CSkColorFilter\u003E LinearToSRGBGamma();\r\n    static sk_sp\u003CSkColorFilter\u003E SRGBToLinearGamma();\r\n    static sk_sp\u003CSkColorFilter\u003E Lerp(float t, sk_sp\u003CSkColorFilter\u003E dst, sk_sp\u003CSkColorFilter\u003E src);\r\n\r\n    // Runs the child filter in a different working color format than usual (premul in\r\n    // destination surface\u0027s color space), with all inputs and outputs expressed in this format.\r\n    // Each non-null {tf,gamut,at} parameter overrides that particular aspect of the color format.\r\n    static sk_sp\u003CSkColorFilter\u003E WithWorkingFormat(sk_sp\u003CSkColorFilter\u003E          child,\r\n                                                  const skcms_TransferFunction* tf,\r\n                                                  const skcms_Matrix3x3*        gamut,\r\n                                                  const SkAlphaType*            at);\r\n\u0060\u0060\u0060\r\nhttps://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/include/core/SkColorFilter.h#L78-L93\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\n**Additional context**\r\n",
+  "author": {
+    "login": "wieslawsoltes",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2021-08-18T06:16:25",
+  "updatedAt": "2025-02-27T14:28:13",
+  "closedAt": "2025-02-27T14:28:13",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2008,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG?] Setting \u0060SKPaint.IsAntialias\u0060 became quite expensive ",
+  "body": "**Description**\r\n\r\nSince #1802 setting \u0060IsAntiAlias\u0060 causes \u0060UpdateFontEdging()\u0060 \u0026 \u0060GetFont()\u0060 to be called, which might allocate a \u0060ConcurrentDictionary\u0060.\r\n\r\nThis is a fairly significant overhead if we just want to use the \u0060SKPaint\u0060 for drawing antialiased lines/paths\r\n\r\nPerhaps in this situation we could cache the paint, but there are circumstances where this doesn\u0027t work well/crashes in multithreading (eg with shaders). I think users\u0027 expectation (well, my expectation \uD83D\uDE05) is that SKPaints should be **relatively** cheap to make as long as you properly dispose them\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nprivate SKPaint MakePaint() =\u003E new SKPaint()\r\n\t\t{\r\n\t\t\tColor = SKColors.White,\r\n\t\t\tStrokeWidth = 3.0f,\r\n\t\t\tStyle = SKPaintStyle.Stroke,\r\n\t\t\tIsAntialias = true, // \u003C--- Calls UpdateFontEdging() etc, eventually allocating a ConcurrentDictionary\r\n\t\t};\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0-preview.187\r\n- Last known good version:  2.80.3? \r\n- IDE:  VS2022\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  10\r\n  ",
+  "author": {
+    "login": "ojb500",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-21T14:11:05",
+  "updatedAt": "2023-07-19T07:48:57",
+  "commentCount": 1,
+  "reactionCount": 1
+}

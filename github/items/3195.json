@@ -1,0 +1,22 @@
+{
+  "number": 3195,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Please expose SKCanvas.WritePixels() method",
+  "body": "### Is your feature request related to a problem?\n\nWe\u0027d like to be able to blit straight from a PixelBuffer in RAM direct to an existed (and re-used) SKSurface (which is sized/formatted the same as our pixel buffer).\n\nWe do a TON of this, including this Raster Map tile example that we just resolved.\n\nExample:  Our App Animates Weather (images) -- we have the images in RAM in \u0022code-runLength\u0022 quick compression mode, which we then send to the GPU to render the resulting Image. \n\nSo as we animate, currently, these images are decompressed JIT, into a fixed Pixel Buffer (the same one for all frames), and then we are creating SKImage from it, each frame, and then use DrawImage to our render surface. (which is a full 1:1 copy of the image)...    Then our render pipeline Draws this full Image (enscribed onto the Surface) onto the final Screen Render Surface (using Matrix manipulations to scale/rotate/translate it)...\n\nIt would be nice to just go from \u0022PixBuffer\u0022 to \u0022Surface\u0022 each frame without creating this SKImage chaff as middleman.\n\n### Describe the solution you would like\n\nPlease expose SKIA\u0027s SKCanvas.WritePixels() method as is.\n\n### Describe alternatives you have considered\n\nThe alternative is what we use now, which is \u0022DrawImage()\u0022 which seems to be creating a new middleman SKImage as the first step, which is then used to blit pixels, and then is disposed right after.   Conceptually, this is a meaningless step.\n\n### Additional context\n\nI\u0027m in love with Matt Leibow.   He is our hero.  :)\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "najak3d",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-11T21:22:47",
+  "updatedAt": "2025-04-17T12:25:21",
+  "commentCount": 0,
+  "reactionCount": 0
+}

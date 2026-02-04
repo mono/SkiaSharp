@@ -1,0 +1,17 @@
+{
+  "number": 2424,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKPictureRecorder.EndRecordingAsDrawable should strongly hold inner drawables",
+  "body": "**Description**\r\n\r\nAn inner drawable added to an \u0060SKPictureRecorder\u0060 is not held with a strong reference by the outer drawable returned by \u0060EndRecordingAsDrawable\u0060, causing a NRE when the outer drawable is drawn later, since the inner drawable can be potentially garbage collected, therefore the \u0060WeakReferece\u0060 holding it can resolve to \u0060null\u0060.\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\nusing System;\r\nusing SkiaSharp;\r\n\r\nstatic class Program\r\n{\r\n    public static void Main()\r\n    {\r\n        using SKCanvas cv = new SKCanvas(new SKBitmap());\r\n        SKDrawable outer = MakeOuter();\r\n        GC.Collect();\r\n        cv.DrawDrawable(outer, 0, 0);\r\n    }\r\n    \r\n    static SKDrawable MakeOuter()\r\n    {\r\n        using SKPictureRecorder pr = new SKPictureRecorder();\r\n        using SKCanvas cv = pr.BeginRecording(new SKRect(0, 0, 100, 100));\r\n        cv.DrawDrawable(new Inner(), 0, 0);\r\n        return pr.EndRecordingAsDrawable();\r\n    }\r\n\r\n    class Inner : SKDrawable { }\r\n}\r\n\r\n\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nNo exception.\r\n\r\n**Actual Behavior**\r\n\r\nException thrown by the last line in \u0060Main()\u0060:\r\n\r\n\u0060\u0060\u0060\r\nUnhandled exception. System.NullReferenceException: Object reference not set to an instance of an object.\r\n   at SkiaSharp.SKDrawable.DrawInternal(IntPtr d, Void* context, IntPtr canvas)\r\n\u0060\u0060\u0060\r\n\r\n**Suggested fix**\r\n\u0060SKPictureRecorder\u0060 would keep a set of strong references to drawables added to it, and \u0060EndRecordingAsDrawble\u0060 would transfer those to the outer \u0060SKDrawable\u0060, with \u0060SKObject.Referenced(outerDrawable, innerDrawable)\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version: unknown\r\n- IDE:  not applicable\r\n- Platform Target Frameworks: repros with .NET 7 on Windows and Mac, presumably platform agnostic",
+  "author": {
+    "login": "nagya",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-03-23T01:56:44",
+  "updatedAt": "2023-03-23T02:11:15",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,33 @@
+{
+  "number": 727,
+  "type": "issue",
+  "state": "closed",
+  "title": "NullReferenceException in System.Delegate.Combine on macOS in 1.68.0",
+  "body": "### Description\r\n\r\nAfter updating from \u00601.60.3\u0060 to \u00601.68.0\u0060. I\u0027m getting a \u0060NullReferenceException\u0060 when I try to subscribe to the \u0060PaintSurface\u0060 event of a \u0060SKGLView\u0060.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\nNullReferenceException\u0022  at System.Delegate.Combine (System.Delegate a, System.Delegate b) [0x0001d] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/mcs/class/corlib/System/Delegate.cs:548 \r\n  at SkiaSharp.Views.Mac.SKGLView.add_PaintSurface (System.EventHandler1[TEventArgs] value) [0x00009] in \u003Cf196d3fbe68d4774a19d9220fd09cf57\u003E:0 \r\n  at MyViewController\u002B\u003CViewDidLoad\u003Ed__59.MoveNext () [0x00277] in -mypath-MyViewController.cs:599 \r\n--- End of stack trace from previous location where exception was thrown ---\r\n  at System.Runtime.CompilerServices.AsyncMethodBuilderCore\u002B\u003C\u003Ec.\u003CThrowAsync\u003Eb__6_0 (System.Object state) [0x00000] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/mcs/class/referencesource/mscorlib/system/runtime/compilerservices/AsyncMethodBuilder.cs:1023 \r\n  at Foundation.NSAsyncSynchronizationContextDispatcher.Apply () [0x00002] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/Foundation/NSAction.cs:178 \r\n  at (wrapper managed-to-native) AppKit.NSApplication.NSApplicationMain(int,string[])\r\n  at AppKit.NSApplication.Main (System.String[] args) [0x00040] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/AppKit/NSApplication.cs:100 \r\n  at MainClass.Main (System.String[] args) [0x00007] in main.cs:10\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nThe NullReferenceException above is thrown once I subscribe to the \u0060PaintSurface\u0060 event of \u0060SKGLView\u0060 in a \u0060NSViewController\u0060.\r\n\r\n\u0060CanvasView.PaintSurface \u002B= CanvasView_PaintSurface;\u0060\r\n\r\nI haven\u0027t changed any code, just updated the NuGet package for \u0060SkiaSharp\u0060 and \u0060SkiaSharp.Views\u0060 from \u00601.60.3\u0060 to \u00601.68.0\u0060. \r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  1.60.3\r\n- IDE:  Visual Studio for Mac 7.7.1 (build 15)\r\n- Platform Target Frameworks: \r\n  - macOS:  10.14.1\r\n\r\n- Target Devices:\r\n  -   MacBook Pro (13-inch, 2018)\n\n\u003E VS bug [#754181](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/754181)",
+  "author": {
+    "login": "nor0x",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1",
+  "createdAt": "2018-12-12T13:39:11",
+  "updatedAt": "2022-08-19T12:02:12",
+  "closedAt": "2018-12-21T15:24:58",
+  "commentCount": 27,
+  "reactionCount": 1
+}

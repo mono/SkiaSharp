@@ -1,0 +1,23 @@
+{
+  "number": 629,
+  "type": "issue",
+  "state": "closed",
+  "title": "Invalid AlphaType obtained from DecodeBounds method",
+  "body": "### Description\r\n\r\nHi, I\u0027m trying to use SkiaSharp to merge a few images. To do that I was trying to create a surface using \u0060SKImageInfo\u0060 obtained from the first image but the resulting image was brighter than I expected.\r\nIt turned out that \u0060AlphaType\u0060 for the same image that comes from \u0060DecodeBouns\u0060 is different than \u0060AlphaType\u0060 that comes from \u0060Decode\u0060 method. When I used an \u0060AlphaType\u0060 that comes from the \u0060Decode\u0060 method then everything started to work.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060C#\r\nvar firstImageInfo = SKBitmap.DecodeBounds(firstImageDataSource.ImageData); // ImageData is type of SKData\r\nvar firstImage = SKBitmap.Decode(firstImageDataSource.ImageData);\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\n\u0060firstImageInfo.AlphaType == firstImage.Info.AlphaType\u0060\r\n\r\n### Actual Behavior\r\n\r\n\u0060firstImageInfo.AlphaType\u0060 is different than \u0060firstImage.Info.AlphaType\u0060\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Rider\r\n- Platform Target Frameworks: .NET Core 2.0\r\n  - Windows Classic:  Windows 10\r\n- Target Devices:\r\n  - PC\r\n",
+  "author": {
+    "login": "konrad147",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-09-03T13:52:52",
+  "updatedAt": "2022-08-19T15:01:36",
+  "closedAt": "2018-12-11T05:02:54",
+  "commentCount": 2,
+  "reactionCount": 0
+}

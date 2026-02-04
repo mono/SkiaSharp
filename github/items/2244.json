@@ -1,0 +1,26 @@
+{
+  "number": 2244,
+  "type": "issue",
+  "state": "open",
+  "title": "SKBitmap.ByteCount should support images \u003E2GB",
+  "body": "The following code is problematic for large images, it throwns an overflow exception\r\n\u0060\u0060\u0060\r\n /// \u003Csummary\u003EReturns the byte size of the pixels, based on the \u003Csee cref=\u0022P:SkiaSharp.SKBitmap.Height\u0022 /\u003E and \u003Csee cref=\u0022P:SkiaSharp.SKBitmap.RowBytes\u0022 /\u003E.\u003C/summary\u003E\r\n    /// \u003Cvalue\u003EThe byte size of the pixels.\u003C/value\u003E\r\n    /// \u003Cremarks\u003ENote: this truncates the result to 32-bits.\u003C/remarks\u003E\r\n    public int ByteCount =\u003E (int) SkiaApi.sk_bitmap_get_byte_count(this.Handle);\r\n\u0060\u0060\u0060\r\n\r\nI suggest to convert this to a \u0060long\u0060 or \u0060ulong\u0060?\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-09-07T10:21:42",
+  "updatedAt": "2022-09-08T17:56:13",
+  "commentCount": 1,
+  "reactionCount": 0
+}

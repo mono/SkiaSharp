@@ -1,0 +1,19 @@
+{
+  "number": 1155,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] [UWP] Canvas is blank after PopAsync() from Navigation in Forms",
+  "body": "**Description**\r\n\r\nCanvas is blank after PopAsync() from Navigation in Forms\r\n\r\n**Code**\r\n\r\nThis shows nothing after moving away and back\r\n\u0060\u0060\u0060csharp\r\n        private void Mv_PaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            e.Surface.Canvas.DrawRect(100, 100, 500, 500, new SKPaint { Color = SKColors.Pink });\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nA pink square is shown.\r\n\r\n**Actual Behavior**\r\n\r\nScreen stays blank.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \r\n  - \u274C 1.68.2-preview.50\r\n  - \u274C 1.68.2-preview.29\r\n  - \u274C 1.68.1.1 (latest stable)\r\n  - \u274C 1.68.1\r\n  - \u2714\uFE0F 1.68.0\r\n\r\n- IDE:  Visual Studio \r\n- Platform Target Frameworks: UWP with SKGLView\r\n- UWP: 16299\r\n\r\n**Reproduction Link**\r\n\r\nHere a sample to reproduce it. Instructions in the readme.\r\nhttps://github.com/pauldendulk/skiasharp-uwp-blank-screen\r\nThanks to @spaddlewit for providing the original one submitted for Mapsui.\r\n",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-02-25T08:29:48",
+  "updatedAt": "2022-08-19T06:02:37",
+  "closedAt": "2020-04-16T12:50:52",
+  "commentCount": 14,
+  "reactionCount": 0
+}

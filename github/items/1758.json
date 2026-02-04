@@ -1,0 +1,28 @@
+{
+  "number": 1758,
+  "type": "pr",
+  "state": "closed",
+  "title": "Split SkiaSharp package into smaller \u0022Native Asset\u0022 packages",
+  "body": "**Description of Change**\r\n\r\nRight now the SkiaSharp package is 120 MB and this takes forever to download, and things like .NET Interactive sometimes time out.\r\n\r\nPreviously the Page was about 30 MB and this was big, but not huge. In recent updates we have added more platforms and slowly seen the size rise. In order to add maccatalyst, we are going to push the size up even more. \r\n\r\nSo, to fix all this, the PR breaks out the platforms into chunks that get pulled in as needed. There is no need for a 30MB watchOS platform when we are building Android.\r\n\r\n\u003E This PR is a bit dumb in that I just created lots of .nuspec files that probably will need maintenance. However, this can be automated but that is for a new PR.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1073\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nMSBuild code that would directly work with assets in the SkiaSharp package will no longer work. They are still in the same location, but now in a new package ID.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2021-08-05T16:11:22",
+  "updatedAt": "2022-05-22T09:38:42",
+  "closedAt": "2021-08-06T00:09:18",
+  "commentCount": 0,
+  "reactionCount": 8,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/split-nugets",
+  "additions": 720,
+  "deletions": 280,
+  "changedFiles": 16,
+  "commits": 7,
+  "reviews": []
+}

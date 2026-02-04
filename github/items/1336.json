@@ -1,0 +1,18 @@
+{
+  "number": 1336,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKBitmap.Copy and SKBitmap.ScalePixels are not working properly",
+  "body": "**Description**\r\nI am trying to scale a bitmap in and out multiple times. I wanted to keep quality so the successive scale operations will not accumulate bad quality as each scale will be generated from the original bitmap.\r\n\r\nSo I used SKBitmap.Copy to get the original bitmap, and SKBitmap.ScalePixels to scale it. but aparently SKBitmap.Copy is shallow and **SKBitmap.ScalePixels affects both the source and destination, both bitmaps will have the new size and quality!!**\r\n\r\n**Code**\r\nAttached Xamarin Forms Simple Demo\r\n\r\n**Expected Behavior**\r\nSuccessive scales not to cause accumulated bad quality\r\n\r\n**Actual Behavior**\r\nOriginal bitmap, it\u0027s copy, and the destination bitmap, all of them will get the same width and height of the destination in **ScalePixels** method, also accumulate bad quality as if any scaling is originated from a previous scale and applied to all bitmaps\r\n\r\n**Basic Information**\r\nXamarin Forms 4.6.0.847\r\nAndroid 9 and 10, Pixel Emulator\r\nWindows 10 \r\n\r\n[SkiaTest.zip](https://github.com/mono/SkiaSharp/files/4776780/SkiaTest.zip)",
+  "author": {
+    "login": "MhAllan",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-14T15:50:16",
+  "updatedAt": "2022-08-19T06:01:18",
+  "closedAt": "2020-10-13T23:42:07",
+  "commentCount": 7,
+  "reactionCount": 0
+}

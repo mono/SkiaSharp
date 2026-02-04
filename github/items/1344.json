@@ -1,0 +1,29 @@
+{
+  "number": 1344,
+  "type": "pr",
+  "state": "closed",
+  "title": "Correctly dispose (again) the managed/native object relationship",
+  "body": "**Description of Change**\r\n\r\nThis PR fine tunes the disposal steps of a co-owned object pair. There are a few scenarios:\r\n\r\n1. A managed creates and owns an underlying native instance. (\u0060SKBitmap\u0060)  \r\n   When the managed object is disposed, destroy the native object.\r\n2. A native object creates a child native object that is managed on the native side. (\u0060SKSurface\u0060 controls \u0060SKCanvas\u0060)  \r\n  When then the managed object destroys the native surface, the native canvas is also destroyed. There may be a case where a brand new native canvas is constructed in the same place - before the managed canvas is disposed. We have to make sure that e dispose the managed object before we destroy the native object.\r\n3. A native object \u0022creates\u0022 a managed object that is managed from the native side. (\u0060SKSvgCanvas\u0060 controls \u0060SKManagedStream\u0060)  \r\n  The managed object creates the native object, but the native object owns the managed object. This means that even when the managed object is disposed, the action is \u0022ignored\u0022 and proxied to the native destructor - which will then call back into managed code to dispose the managed object. This is because the native canvas may flush or write closing data into the managed stream.\r\n\r\nScenarios 2 and 3 cause an issue: In one case, the managed \u0060SKCanvas\u0060 needs to be destroyed before destroying the native \u0060SkSurface\u0060. On the other hand, the native \u0060SKSvgCanvas\u0060 needs to be destroyed before destroying the managed \u0060SKManagedStream\u0060. So which goes first?\r\n\r\nThe answer is in the ownership of the handle: In scenario 1, the surface owns its handle and the canvas - which does _not_ own its handle. In scenario 2, the canvas owns its handle and the stream - which _does_ own its handle.\r\n\r\nThis shows that we need to first dispose all the \u0022reference-only\u0022 objects - or the ones that do _not_ own their handle. Then dispose the native object. Finally, clean up any managed objects.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1343\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nSee description...\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-06-21T13:44:32",
+  "updatedAt": "2020-07-09T02:17:43",
+  "closedAt": "2020-06-21T19:18:58",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1343",
+  "additions": 139,
+  "deletions": 1,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": []
+}

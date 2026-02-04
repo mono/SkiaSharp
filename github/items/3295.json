@@ -1,0 +1,36 @@
+{
+  "number": 3295,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update Azure Pipelines from ubuntu-20.04 to ubuntu-22.04",
+  "body": "The ubuntu-20.04 images are no longer available on Azure Pipelines. This PR updates all remaining references from \u0060ubuntu-20.04\u0060 to \u0060ubuntu-22.04\u0060 in the Azure Pipelines configuration files.\n\n## Changes Made\n\nUpdated the \u0060vmImage\u0060 configuration in the following files:\n- \u0060scripts/azure-pipelines-complete.yml\u0060 - Updated \u0060buildAgentHost\u0060 and \u0060buildAgentLinuxNative\u0060 pool configurations\n- \u0060scripts/azure-pipelines-complete-internal.yml\u0060 - Updated \u0060buildAgentHost\u0060 and \u0060buildAgentLinuxNative\u0060 pool configurations  \n- \u0060scripts/azure-pipelines-tests.yml\u0060 - Updated \u0060buildAgentHost\u0060 pool configuration\n\nAll changes are minimal and surgical, affecting only the vmImage settings while preserving all other configuration parameters.\n\n## Validation\n\n- \u2705 YAML syntax validation passed for all modified files\n- \u2705 Only 5 lines changed across 3 files (2\u002B2\u002B1)\n- \u2705 No ubuntu-20.04 references remain in the codebase\n- \u2705 All ubuntu references now consistently use ubuntu-22.04\n\nFixes #3294.\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC Share your feedback on Copilot coding agent for the chance to win a $200 gift card! Click [here](https://survey.alchemer.com/s3/8343779/Copilot-Coding-agent) to start the survey.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-06-19T17:55:44",
+  "updatedAt": "2025-06-20T20:06:09",
+  "closedAt": "2025-06-20T20:05:57",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/fix-3294",
+  "additions": 5,
+  "deletions": 5,
+  "changedFiles": 3,
+  "commits": 2,
+  "reviews": []
+}

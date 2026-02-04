@@ -1,0 +1,17 @@
+{
+  "number": 1049,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Text size measured improperly while using skiasharp",
+  "body": "**Description**\r\n\r\nParticular text width is calculated wrongly when using skiasharp to measure the text size.\r\nGot the same result when using with SKTypeface.FromStream and SKTypeface.FromFamilyName.\r\n\r\n**Code**\r\n\r\n            SKPaint paint = new SKPaint();\r\n            paint.Typeface = SKTypeface.FromFamilyName(\u0022B Sina\u0022,SKTypefaceStyle.Normal);\r\n            paint.TextSize = 11;\r\n            float size = paint.MeasureText(\u0022\u0633\u0644\u0627\u0645 \u062F\u0646\u06CC\u0627\u0022); \r\n\r\n**Expected Behavior**\r\nThe width of the text should be same as GDI measure.\r\n\r\n Expected Width\r\n| --\r\n49.2260742\r\n\r\n\r\n**Actual Behavior**\r\n\r\n Actual Width\r\n| --\r\n 63\r\n\r\n\r\n**Basic Information**\r\nVersion with issue: 1.59.3\r\nIDE: Visual studio 2017\r\nPlatform Target Frameworks: .NET Core 2.0",
+  "author": {
+    "login": "loketha",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-12-03T12:54:02",
+  "updatedAt": "2019-12-03T17:25:28",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,19 @@
+{
+  "number": 132,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKTypeface.FromFamilyName throws ArgumentNullException when \u0022familyNam",
+  "body": "In the documentation, it is written that the parameter \u0022familyName\u0022 of the method SKTypeface.FromFamilyName may be null:\nhttps://developer.xamarin.com/api/member/SkiaSharp.SKTypeface.FromFamilyName/p/System.String/SkiaSharp.SKTypefaceStyle/\n\nHowever, calling\n\n\u0060var typeface = SKTypeface.FromFamilyName(null)\u0060\nresults in an ArgumentNullException.\n\nThis happened on Windows.Forms version of SkiaSharp 1.53.0\n\nWhen passing \u0022string.Empty\u0022 it works just fine - that is our current workaround\n",
+  "author": {
+    "login": "gentledepp",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.1",
+  "createdAt": "2016-08-11T11:25:53",
+  "updatedAt": "2022-08-20T00:02:21",
+  "closedAt": "2016-08-11T16:39:46",
+  "commentCount": 2,
+  "reactionCount": 0
+}

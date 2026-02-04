@@ -1,0 +1,32 @@
+{
+  "number": 3479,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add NuGet feed management tools and PR package download script",
+  "body": "## Summary\n\nThis PR adds tooling for managing Azure DevOps NuGet feeds and downloading PR packages.\n\n## Changes\n\n### Feed Management Script (\u0060scripts/manage-nuget-feed.ps1\u0060)\n\nPowerShell script to manage Azure DevOps NuGet feeds:\n- **Move packages** from one feed to another (e.g., \u0060_*\u0060 prefixed packages \u2192 SkiaSharp-CI archive feed)\n- **Delete bad versions** matching patterns like \u0060-pr.*\u0060, \u0060-preview-*\u0060 (malformed prerelease tags)\n- **Keep valid versions**: \u0060-preview.N\u0060, \u0060-rc.N\u0060, \u0060-nightly.N\u0060, \u0060-stable.N\u0060, \u0060-alpha.N\u0060, and stable releases\n- Checks destination feed before downloading to skip already-copied packages\n- Stateless and idempotent - safe to re-run\n\n### GitHub Action (\u0060.github/workflows/manage-nuget-feed.yml\u0060)\n\nWorkflow with parallel matrix jobs for efficient processing:\n- 6 jobs for underscore packages (\u0060_NativeAssets\u0060, \u0060_NuGets\u0060, \u0060_Symbols\u0060, etc.)\n- 5 jobs for regular packages (SkiaSharp, HarfBuzzSharp families)\n- Modes: \u0060parallel-underscore\u0060, \u0060parallel-all\u0060, \u0060single\u0060\n\n### PR Package Download Script (\u0060scripts/get-skiasharp-pr.ps1\u0060)\n\nScript for external users to download PR build packages:\n\n\u0060\u0060\u0060powershell\n# One-liner (no repo clone needed)\niex \u0022\u0026 { $(irm https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/get-skiasharp-pr.ps1) } 1234\u0022\n\n# Then add as NuGet source\ndotnet nuget add source ~/.skiasharp/hives/pr-1234/packages --name skiasharp-pr-1234\n\u0060\u0060\u0060\n\nFeatures:\n- Downloads from Azure DevOps public CI (no auth required)\n- Prefers \u0060nuget_preview\u0060 artifact (smaller), falls back to full \u0060nuget\u0060\n- Finds latest build by default (in-progress, failed, or successful)\n- \u0060-SuccessfulOnly\u0060 flag to restrict to successful builds only\n- Progress display during download\n\n### Pipeline Updates (\u0060scripts/azure-templates-stages-package.yml\u0060)\n\n- Added \u0060nuget_preview\u0060 artifact containing only prerelease packages (\u0060*-*.nupkg\u0060)\n- Smaller download for PR testing (~50% smaller than full artifact)\n\n### Documentation Updates\n\n- \u0060documentation/versioning.md\u0060 - Updated PR packages section with one-liner usage\n- \u0060documentation/releasing.md\u0060 - Added SkiaSharp-CI feed to feeds table\n\n## Feed Structure\n\n| Feed | Purpose | Packages |\n|------|---------|----------|\n| SkiaSharp | Public preview/release packages | SkiaSharp.*, HarfBuzzSharp.* |\n| SkiaSharp-CI | Internal CI artifacts | _NativeAssets, _NuGets, _Symbols, etc. |\n\n## Testing\n\n- [x] Feed management script tested on CI with real packages\n- [x] PR download script tested locally\n- [x] Workflow runs successfully in parallel mode\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-30T20:56:15",
+  "updatedAt": "2026-02-02T21:40:24",
+  "closedAt": "2026-01-31T12:53:25",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/testing",
+  "additions": 2302,
+  "deletions": 4,
+  "changedFiles": 7,
+  "commits": 20,
+  "reviews": []
+}

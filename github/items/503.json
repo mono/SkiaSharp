@@ -1,0 +1,47 @@
+{
+  "number": 503,
+  "type": "pr",
+  "state": "closed",
+  "title": "GH-460 : Make sure to re-create the SkiaSharp context",
+  "body": "When the app is paused, the texture is destroyed. This is all good so far. \r\n\r\nHowever, when the app resumed, the texture is re-created under the hood and thus follows another path - and this is where I was missing logic to re-create the SkiaSharp context.\r\n\r\nFixes #460 ",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "1.60.1",
+  "createdAt": "2018-05-04T14:43:34",
+  "updatedAt": "2018-05-04T16:33:49",
+  "closedAt": "2018-05-04T16:32:38",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/android-gl-lifecycle",
+  "additions": 13,
+  "deletions": 9,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": []
+}

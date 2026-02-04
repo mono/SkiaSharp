@@ -1,0 +1,23 @@
+{
+  "number": 3018,
+  "type": "issue",
+  "state": "closed",
+  "title": "Attempted to read or write protected memory. This is often an indication that other memory is corrupt",
+  "body": "### Description\r\n\r\nSome of our users are running into the following error:\r\n\u0060System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0060\r\nWe have unfortunately been unable to reproduce it on our systems.\r\n \r\nThe stacktrace from the even log brings us to the following line of code causing the issue:\r\n\u0060\u0060\u0060\r\n   at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)\r\n   at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr)\r\n\u0060\u0060\u0060\r\n\r\nThe following snippet is the method in which the DrawCanvas method is called. We are certain this is done on the main thread and we don\u0027t have a threading issue here: \r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060cs\r\n        canvas.Save();\r\n        var path = new SKPath();\r\n\r\n        // clipping so lines are not drawn outside the graph area, but adding 1 px bottom to show lines that are at exactly min scale.\r\n        path.AddRect(new SKRectI(this._snapshotXGraphLeft, this._snapshotYGraphTop, this._snapshotXGraphRight, (int)(this._snapshotYGraphBottom \u002B this.ScaleUp(1))));\r\n        canvas.ClipPath(path);\r\n\r\n        foreach (ChartSignal signal in this.Signals)\r\n        {\r\n            if (!signal.IsEnabled)\r\n            {\r\n                continue;\r\n            }\r\n\r\n            foreach (List\u003CLinePoint\u003E? line in signal.GetLines(this.ChartRange.ChartMin, this.ChartRange.ChartMax))\r\n            {\r\n                SKColor.TryParse(signal.Color?.Value, out SKColor color);\r\n\r\n                this._linePaint.Color = color;\r\n\r\n                var linePath = new SKPath();\r\n                linePath.MoveTo(this.CreateSKPoint(line[0]));\r\n                for (var i = 1; i \u003C line.Count; i\u002B\u002B)\r\n                {\r\n                    linePath.LineTo(this.CreateSKPoint(line[i]));\r\n                }\r\n\r\n                canvas.DrawPath(linePath, this._linePaint);\r\n            }\r\n        }\r\n\r\n        canvas.Restore();\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nIt\u0027s a WinUI 3 application running on Windows 10 Pro 22H2 (OS Build: 19045.4651).\r\nWe are also using version 2.88.8 of the Skiasharp.Views.Winui.\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n\u0060\u0060\u0060shell\r\nApplication: Bronkhorst FlowSuite 2.exe CoreCLR Version: 8.0.824.36612 .NET Version: 8.0.8 Description: The process was terminated due to an unhandled exception. Exception Info: System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt. Stack: at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr) at SkiaSharp.SkiaApi.sk_canvas_draw_path(IntPtr, IntPtr, IntPtr) at Bronkhorst.FlowControl.Windows.Views.Controls.ChartControl.DrawSignalLines(SkiaSharp.SKCanvas) at Bronkhorst.FlowControl.Windows.Views.Controls.ChartControl.OnPaintSurface(System.Object, SkiaSharp.Views.Windows.SKPaintSurfaceEventArgs) at SkiaSharp.Views.Windows.SKXamlCanvas.DoInvalidate() at ABI.Microsoft.UI.Dispatching.DispatcherQueueHandler.Do_Abi_Invoke(IntPtr) at ABI.Microsoft.UI.Xaml.IApplicationStaticsMethods.Start(WinRT.IObjectReference, Microsoft.UI.Xaml.ApplicationInitializationCallback) at Bronkhorst.FlowControl.Windows.Program.Main(System.String[])\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Joost-Jens-Luminis",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-25T11:48:49",
+  "updatedAt": "2024-10-09T06:02:42",
+  "closedAt": "2024-10-09T06:02:42",
+  "commentCount": 3,
+  "reactionCount": 0
+}

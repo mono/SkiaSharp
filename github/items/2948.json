@@ -1,0 +1,23 @@
+{
+  "number": 2948,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Windows, 3.0 Preview 3.1] SkiaSharp throws exception using .NET MAUI 9.0 Preview 6 in Microsoft Store certification",
+  "body": "### Description\r\n\r\nWe are trying to get our game to Microsoft Store. It works fine on all our Windows computers (including servers), but during the certification process in Microsoft Store, it throws the following exception in SkiaSharp:\r\n\r\n\u0060\u0060\u0060\r\nSystem.Runtime.InteropServices.COMException: Class not registered (0x80040154 (REGDB_E_CLASSNOTREG))\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.Views.WinUI.Native.PropertySetExtensions\u0027 threw an exception.\r\n  ?, in IObjectReference PropertySetExtensions.get__objRef_global__SkiaSharp_Views_WinUI_Native_IPropertySetExtensionsStatics()\r\n  ?, in void PropertySetExtensions.AddSingle(PropertySet propertySet, string key, float value)\r\n  ?, in void GlesContext.CreateSurface(SwapChainPanel panel, Size? renderSurfaceSize, float? resolutionScale)\r\n  ?, in void AngleSwapChainPanel.EnsureRenderSurface()\r\n  ?, in void AngleSwapChainPanel.OnSizeChanged(object sender, SizeChangedEventArgs e)\r\n\u0060\u0060\u0060\r\n\r\nThis seems to be related to AngleSwapChainPanel.cs in SkiaSharp.Views.WinUI and GlesContext.cs in SkiaSharp.Views.WinUI\\GlesInterop. In the latter, the lines\r\n\r\n\u0060\u0060\u0060\r\n    if (resolutionScale.HasValue)\r\n    {\r\n         PropertySetExtensions.AddSingle(surfaceCreationProperties, Egl.EGLRenderResolutionScaleProperty, resolutionScale.Value);\r\n    }\r\n\u0060\u0060\u0060\r\nseem to fail. What may be causing this in Microsoft Store certification? Does anybody know any workarounds for this?\r\n\r\n### Code\r\n\r\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\n### Expected Behavior\r\n\r\nMicrosoft Store certification does not result in exceptions.\r\n\r\n### Actual Behavior\r\n\r\nMicrosoft Store certification throws System.Runtime.InteropServices.COMException: Class not registered (0x80040154 (REGDB_E_CLASSNOTREG))\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x (Alpha)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 10.0.22631.3296\r\n\r\n### Devices\r\n\r\nDell Latitude 5520, during Microsoft Store certification process\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-18T09:02:01",
+  "updatedAt": "2024-07-18T14:19:09",
+  "closedAt": "2024-07-18T14:19:09",
+  "commentCount": 1,
+  "reactionCount": 0
+}

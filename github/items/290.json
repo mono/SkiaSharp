@@ -1,0 +1,32 @@
+{
+  "number": 290,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKGLView - DrawRect resulting in a black screen",
+  "body": "canvas.DrawRect doesn\u0027t appear to be working consistently with SKGLView. I am drawing a bunch of rectangles in a loop and everything works great using rectangles with a regular SKCanvasView. Also, interestingly enough, DrawRoundRect works as a substitute with GLView as long as the rounding radius provided is greater than 0.\r\n\r\n                canvas.DrawRect(rect, paint); // Doesn\u0027t show in GL\r\n                canvas.DrawRoundRect(rect, 1, 1, paint); // Shows in either\r\n                canvas.DrawRoundRect(rect, 0, 0, paint); // Doesn\u0027t show in GL\r\n\r\nI am using version 1.57.1 installed from Nuget. \r\n\r\n\r\n**=========== Current work around using SKPath ==============**\r\n\u0060\u0060\u0060\r\n\r\nusing (var path = new SKPath()) {\r\n\tpath.FillType = SKPathFillType.EvenOdd;\r\n\t\r\n\t\u0022loop each draw object\u0022\r\n\t{\r\n        \tpath.Reset();\r\n        \tpath.AddRect(rect);\r\n        \tcanvas.DrawPath(path, paint);\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\n_This leads me to believe there is suspect code within how DrawRect creates the underlying path, if that is how it does the drawing under the hood - haven\u0027t looked yet though._\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "kowalej",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.60.0",
+  "createdAt": "2017-05-05T19:42:50",
+  "updatedAt": "2022-08-19T21:02:00",
+  "closedAt": "2017-09-15T01:40:04",
+  "commentCount": 6,
+  "reactionCount": 0
+}

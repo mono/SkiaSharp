@@ -1,0 +1,31 @@
+{
+  "number": 2881,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Introduce SKPicture.Playback()",
+  "body": "### Is your feature request related to a problem?\r\n\r\nI need to calculate bounds of a picture as follows:\r\n\r\n\u0060\u0060\u0060cs\r\nstatic SkRect CalculateApproximateLocalBounds(const SkPicture\u0026 picture) {\r\n\tSkRTreeFactory factory;\r\n\tSkPictureRecorder recorder;\r\n\tSkCanvas* pictureCanvas = recorder.beginRecording(SkIntToScalar(1000000), SkIntToScalar(1000000), \u0026factory);\r\n\tpicture.playback(pictureCanvas);\r\n\treturn recorder.finishRecordingAsPicture()-\u003EcullRect();\r\n}\r\n\u0060\u0060\u0060\r\nWith SkiaSharp i am missing SkPicture::playback() API. I hope this one gets exposed before the release of SkiaSharp 3.0.\r\n\r\n### Describe the solution you would like\r\n\u0060\u0060\u0060cs\r\npublic static class SKPictureExtensions\r\n{\r\n  public static void Playback(this SKPicture skPicture, SKCanvas skCanvas);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Describe alternatives you have considered\r\n\r\nN/A\r\n\r\n### Additional context\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "edward-a",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-06-01T01:18:50",
+  "updatedAt": "2024-06-03T15:15:29",
+  "closedAt": "2024-06-03T15:15:29",
+  "commentCount": 1,
+  "reactionCount": 0
+}

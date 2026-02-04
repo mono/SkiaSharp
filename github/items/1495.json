@@ -1,0 +1,17 @@
+{
+  "number": 1495,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] An exception is raised when trying to resize an SKBitmap image using an SKInfo structure.",
+  "body": "**Description**\r\n\r\nAn exception is raised when trying to resize an SKBitmap image using an SKInfo structure. The exception message is: \u0022Passing the size parameters directly  into the function does work.\u0022\r\n\r\nPassing the size parameters (width and height) directly  into the function does work.\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\n                    SKImageInfo info = new SKImageInfo\r\n                    {\r\n                        Width = (int)Math.Floor(bitmap.Width * 0.25),\r\n                        Height = (int)Math.Floor(bitmap.Height * 0.25)\r\n                    };\r\n                    bitmap= bitmap.Resize(info, SKFilterQuality.High); // this line causes the exception\r\n\r\n                    // doing it like this works:\r\n                    bitmap = bitmap.Resize(new SKImageInfo((int)Math.Floor(bitmap.Width * 0.25), \r\n                        (int)Math.Floor(bitmap.Height * 0.25)), SKFilterQuality.High);\r\n\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\n\r\nThe function should \r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: Xamarin, Android\r\n  - Android: from the manifest: uses-sdk android:minSdkVersion=\u002223\u0022 android:targetSdkVersion=\u002228\u0022 /\r\n- Target Devices:  simulator\r\n  \r\n",
+  "author": {
+    "login": "BertHeesakkers",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-10T11:54:00",
+  "updatedAt": "2020-10-12T22:55:21",
+  "commentCount": 1,
+  "reactionCount": 0
+}

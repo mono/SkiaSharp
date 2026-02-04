@@ -1,0 +1,34 @@
+{
+  "number": 2247,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add RTLD_DEEPBIND flag to dlopen mode",
+  "body": "**Description of Change**\r\n\r\nBy default, internal dependences of a library loaded with \u0060dlopen\u0060 are resolved using the global lookup scope first. If there are already matched symbols in the global scope, internal calls in the library that are supposed to use its local functions, will be linked to some external code, which is usually results in segmentation faults when the library is used. This is particularly true for the \u0060libharfbuzz.so.0\u0060, that is often present in the system, exports the same symbols as \u0060libHarfBuzzSharp.so\u0060 and is implicitly used by some dependencies of \u0060mono\u0060 or \u0060dotnet\u0060. To avoid such conflicts, there is a flag RTLD_DEEPBIND in \u0060glibc\u0060 since version 2.3.4. Earlier versions do not check the mode argument for unknown flags, and \u0060musl\u0060 does not check it either. So just adding this flag to the mode appears to be quite harmless.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2113\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "snnz",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.3",
+  "createdAt": "2022-09-09T10:18:04",
+  "updatedAt": "2022-09-11T18:34:22",
+  "closedAt": "2022-09-11T18:33:21",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 3,
+  "deletions": 2,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-09-10T16:56:25"
+    }
+  ]
+}

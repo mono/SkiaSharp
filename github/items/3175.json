@@ -1,0 +1,22 @@
+{
+  "number": 3175,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Not full stream reading for bmp/png images",
+  "body": "### Description\n\nI\u0027m tying to resize large png/bmp image and save in jpeg. To get image i\u0027m downloading it from azure blob. Default stream downloading chunk size is 4mb. When png is larger than 4mb it looks like image creates only for first 4mb, but image size is correct. When I\u0027m copying blob stream into memory stream it works correctly. Even if I change default size of stream chunk for example into 50mb png/bmp images belove 50mb downloads correctly\n\n### Code\n\n\u0060\nawait using var image = await blobStorage.GetBlob(blobName, cancellationToken);\nawait using MemoryStream memoryStream = new();\nawait image.CopyToAsync(memoryStream, cancellationToken);\nmemoryStream.Seek(0, SeekOrigin.Begin);\nusing var originalImage = SKBitmap.Decode(memoryStream);\n\nusing var thumbnail = new SKBitmap(\n    _thumbnailOptions.Width,\n    _thumbnailOptions.Height,\n    originalImage.ColorType,\n    originalImage.AlphaType);\n\nvar sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\nawait using var thumbnailStorageStream = await blobStorage.OpenWrite(thumbnailName, \u0022image/jpeg\u0022, cancellationToken);\nvar success =\n    originalImage.ScalePixels(thumbnail, sampling) \u0026\u0026\n    thumbnail.Encode(thumbnailStorageStream, SKEncodedImageFormat.Jpeg, quality: 100);\u0060\n\n### Expected Behavior\n\nFull data from stream reads into image\n\n### Actual Behavior\n\nOnly specific data length downloads into image for png/bmp \n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux, Windows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "SharkoTaras",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-27T14:28:08",
+  "updatedAt": "2025-02-27T14:33:23",
+  "commentCount": 0,
+  "reactionCount": 0
+}

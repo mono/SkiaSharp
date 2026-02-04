@@ -1,0 +1,18 @@
+{
+  "number": 394,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKGLView OnTouch mystery",
+  "body": "Hi there. I have been struggling with a problem handling touch events using a SkiaSharp SKGLView in Xamarin.Forms. Here is a simple piece of test code to illustrate my problem. \r\n\r\n\u0060\u0060\u0060c#\r\n    public class TestCanvasView : SKGLView\r\n    {\r\n        private SKSurface _surface;\r\n        private SKCanvas _canvas;\r\n\r\n        public TestCanvasView()\r\n        {\r\n            HorizontalOptions = LayoutOptions.CenterAndExpand;\r\n            VerticalOptions = LayoutOptions.CenterAndExpand;\r\n            HeightRequest = 200;\r\n            WidthRequest = 200;\r\n            EnableTouchEvents = true;\r\n\r\n            PaintSurface \u002B= OnCanvasViewPaintSurface;\r\n        }\r\n\r\n        private void OnCanvasViewPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            _surface = e.Surface;\r\n            _canvas = _surface.Canvas;\r\n            _canvas.DrawRect(new SKRect(0,0,CanvasSize.Width, CanvasSize.Height), new SKPaint{Color = Color.DarkSeaGreen.ToSKColor()});\r\n        }\r\n\r\n        protected override void OnTouch(SKTouchEventArgs e)\r\n        {\r\n            base.OnTouch(e);\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\nNow this renders my DarkSeaGreen block just fine, but the OnTouch method is only called when I tap on the top left quadrant of the View. Essentially only 1/4 of the view is touch-sensitive. When I try to add a Xamarin.Forms GestureRecognizer, the same problem occurs. If I change this code to use an SKCanvasView, the touch events fire perfectly. \r\n\r\nThis is on UWP, btw, I haven\u0027t been able to check it yet on any other platforms. ",
+  "author": {
+    "login": "freever",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-11-18T11:58:23",
+  "updatedAt": "2022-08-19T18:02:14",
+  "closedAt": "2017-11-24T11:57:30",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 2827,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Text Missing When Running From AWS Lambda",
+  "body": "### Description\n\nWhen generating a png image with SKCanvas the text is missing. The image displays properly when run locally on a windows 10 environment, but the text is missing when running from AWS Lambda. There are no exceptions being thrown for me to troubleshoot with.\r\n\r\nThis code was working last year, until I upgraded to .net 8 and changed my pdf nuget to QuestPDF. Not sure of the relevance. \n\n### Code\n\n\r\n\u0060\u0060\u0060\r\nusing SKBitmap bitmap = new(imageWidth, imageHeight);\r\nusing SKCanvas canvas = new(bitmap);\r\n\r\ncanvas.DrawText(\u0022my text\u0022, myPoint, myPaint);\r\n\r\nusing SKImage image = SKImage.FromBitmap(bitmap);\r\nusing SKData data = image.Encode(SKEncodedImageFormat.Png, 100);\r\n\r\nusing MemoryStream dataStream = new();\r\ndata.SaveTo(dataStream);\r\n\r\nreturn dataStream.ToArray();\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\n\u003CItemGroup\u003E\r\n  \u003CPackageReference Include=\u0022QuestPDF\u0022 Version=\u00222023.12.6\u0022 /\u003E\r\n  \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n  \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n\u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\n-AWS Lambda\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\nRun Locally\r\n![image](https://github.com/mono/SkiaSharp/assets/51172742/cb0589f1-6308-484e-a4f5-083434d13784)\r\n\r\nRun From AWS Lambda\r\n![image](https://github.com/mono/SkiaSharp/assets/51172742/809dc225-f0a7-409a-a9b6-867ed9a77af0)\r\n\r\n\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "WheelerAustin",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-11T02:56:25",
+  "updatedAt": "2024-12-11T23:50:20",
+  "closedAt": "2024-05-13T17:21:52",
+  "commentCount": 4,
+  "reactionCount": 0
+}

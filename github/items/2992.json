@@ -1,0 +1,22 @@
+{
+  "number": 2992,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Expose API for registering new codecs",
+  "body": "### Is your feature request related to a problem?\n\nI want to add new image codecs for image formats which are not supported by the built-in Skia codecs. This is not currently possible, even though Skia itself supports it. There is no C# API and the C\u002B\u002B API has been excluded from the native library.\n\n### Describe the solution you would like\n\nThe native API, \u0060SkCodec::Register\u0060, requires a pointer to a C\u002B\u002B object.\r\n\r\nSince this is not easy to wrap in C#, it would be acceptable just to expose the native API in your build of the native Skia library. We can then write and register a codec ourselves in a small native library.\r\n\r\n* [Method Declaration](https://github.com/google/skia/blob/06cd203d0607e1c7b3e25d9f08eb2c67c11c268c/include/codec/SkCodec.h#L1064)\r\n* [Method Definition](https://github.com/google/skia/blob/06cd203d0607e1c7b3e25d9f08eb2c67c11c268c/src/codec/SkCodec.cpp#L135)\n\n### Describe alternatives you have considered\n\nThere are no alternatives.\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "TomEdwardsEnscape",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-09T11:28:55",
+  "updatedAt": "2025-01-19T09:09:55",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,26 @@
+{
+  "number": 3312,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Failed to obtain vulkan context",
+  "body": "### Description\n\nI\u0027m trying to make skiasharp and godot work together. I want them to share gpu textures. When I use \u0060GRContext.CreateVulkan\u0060 it keeps returning \u0060null\u0060.\n\nI use the following code to create a \u0060SKSurface\u0060\n\n\u0060\u0060\u0060c#\n        GRVkImageInfo vkImageInfo = new GRVkImageInfo\n        {\n            Alloc = new GRVkAlloc(),\n            Image = textureHandle,\n            ImageLayout = 7, // VK_IMAGE_LAYOUT_GENERAL\n            Format = 37, // VK_FORMAT_R8G8B8A8_UNORM\n            LevelCount = 1,\n            SampleCount = 1,\n            Protected = false\n        };\n\n        GRBackendTexture backendTexture = new GRBackendTexture(Width, Height, vkImageInfo);\n        GRVkBackendContext vkBackendContext = new GRVkBackendContext\n        {\n            VkDevice = VkDevice,\n            VkPhysicalDevice = VkPhysicalDevice,\n            VkInstance = VkInstance,\n            VkQueue = VkQueue,\n            GraphicsQueueIndex = 0\n        };\n        \n        var context = GRContext.CreateVulkan(vkBackendContext);\n        \n        if (context == null)\n        {\n            backendTexture.Dispose();\n            throw new InvalidOperationException(\u0022Vulkan GRContext creation failed\u0022);\n        }\n        \n        SKSurface surface = SKSurface.Create(context, backendTexture, GRSurfaceOrigin.TopLeft, SKColorType.Rgba8888);\n        if (surface == null)\n        {\n            backendTexture.Dispose();\n            context.Dispose();\n            throw new InvalidOperationException(\u0022Vulkan SKSurface creation failed\u0022);\n        }\n        \n\u0060\u0060\u0060\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "shitake2333",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "backend/Vulkan",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-07-21T08:49:55",
+  "updatedAt": "2025-09-11T23:41:57",
+  "commentCount": 1,
+  "reactionCount": 2
+}

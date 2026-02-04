@@ -1,0 +1,22 @@
+{
+  "number": 3129,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] \u003Ctitle\u003EskglControl1_SizeChanged  Event new SKBitmap will cause visual studio Crash",
+  "body": "### Description\n\nSkiaSharp version 3.116.1\r\nVisual Studio 2022 Community  Winform C#  .net 4.7.2\r\nWhen Open Form Designer  Visual Studio Freeze and crash\n\n### Code\n\n        private void skglControl1_SizeChanged(object sender, EventArgs e)\r\n        {\r\n            if (this.DesignMode)\r\n            {\r\n                return;\r\n            }\r\n                Disposable.SafeDispose(ref _BackBuffer);\r\n                if (ParentForm?.WindowState != FormWindowState.Minimized)\r\n                {\r\n                    if (ClientSize.Width \u003E 0 \u0026\u0026 ClientSize.Height \u003E 0)\r\n                    {\r\n                        try\r\n                        {\r\n                  \r\n\r\n          _****//_BackBuffer = new SKBitmap(ClientSize.Width, ClientSize.Height);****_\r\n\r\n                        }\r\n                        catch (Exception ex){\r\n                            // \u8BB0\u5F55\u5F02\u5E38\u4FE1\u606F\r\n                            Console.WriteLine($\u0022SKBitmap \u521D\u59CB\u5316\u5931\u8D25: {ex.Message}\u0022);\r\n                        }\r\n                        //CurrentState?.OnDeviceReset();\r\n                        //skglControl1.Invalidate();\r\n                    }\r\n                }\r\n            \r\n\r\n        }\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11 home \n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "dzhydaniel",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-27T06:10:26",
+  "updatedAt": "2024-12-27T06:10:26",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 2258,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp does not work in Blazor of Asp.Net 7 RC1",
+  "body": "**Description**\r\n\r\n\u003C!-- a general description goes here --\u003E\r\nSkiaSharp does not work in Blazor of Asp.Net 7 RC1\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n@page \u0022/\u0022\r\n\r\n@using SkiaSharp\r\n@using SkiaSharp.Views.Blazor\r\n\r\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022/\u003E\r\n\r\n@code {\r\n\r\n    void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n    {\r\n\r\n        var canvas = e.Surface.Canvas;\r\n\r\n        using var paint = new SKPaint { Color = new SKColor(0xEB000000) };\r\n        canvas.DrawLine(0, 0, 300, 300, paint);\r\n    }\r\n}\r\n\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\nA line will be drawn\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\nGot exception:\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n        ---\u003E System.DllNotFoundException: libSkiaSharp\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- the version of SkiaSharp that has the issue --\u003E 2.88.2\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E .net 6\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E VS 2022 17.4.0 preview2\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Linux:  \u003C!-- The version and distro of linux that you are building for, e.g. Ubuntu 16.04 --\u003E\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.10 --\u003E\r\n  - Tizen:  \u003C!-- the version of the Tizen SDK you are compiling against, e.g. 4.0 --\u003E \r\n  - tvOS:  \u003C!-- the version of the tvOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E \r\n  - watchOS:  \u003C!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - \u003C!-- Google Pixel 4 XL --\u003E\r\n  - \u003C!-- iPhone 11 --\u003E\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nInstall VS 2022 17.4.0 Preview2 and .Net SDK 7.0 RC\r\nCreate a Blazor WebAssembly Empty project targeting to .net 7.0 preview\r\nAdd Nugets to SkiaSharp and SkiaSharp.View.Blazor 2.88.2\r\nReplace the index.razor with above code\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "jjzhang12",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-09-19T22:32:37",
+  "updatedAt": "2022-10-26T21:00:57",
+  "closedAt": "2022-09-26T18:07:37",
+  "commentCount": 2,
+  "reactionCount": 0
+}

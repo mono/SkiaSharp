@@ -1,0 +1,17 @@
+{
+  "number": 2299,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Android draws bitmap to entire canvas",
+  "body": "I opened a discussion [(here)](https://github.com/mono/SkiaSharp/discussions/2175) a while back regarding some odd scaling that I was seeing when creating a \u0022blurred\u0022 background affect on Android. I\u0027ve since tracked the issue down to the \u0060SurfaceFactory.DrawSurface\u0060 method. The approach to create the blurred view is the create a new canvas and manually draw a target view to it. This approach is nothing novel. When doing this, however, I have noticed though is that the native canvas passed to the \u0060DrawChild\u0060 method of a \u0060SKCanvasViewRenderer\u0060, is NOT the size of immediate view but the size of the view on which the original draw request was made. Instead, the canvas has a clip region and translation applied to it. I have been able to work around this by creating my own \u0060SKCanvasViewRenderer\u0060.\r\n\r\nIn the base class\u0027s \u0060SurfaceFactory.DrawSurface\u0060 method, the destination rect is set from (0, 0) on the canvas to the height and width of the canvas. I think that this needs to be changed to draw to the hight and width of the clipping region.\r\n\r\nI would gladly implement this fix myself and post a PR; however, I have had a heck of a time getting the repo to build on my workstation.\r\n\r\n**Basic Information**\r\n- Version with issue:  At least 2.88.0 - I have not tested further back than that.\r\n- Last known good version:  N/A\r\n- IDE:  Visual Studio / Visual Studio for Mac / Rider\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n- Target Devices: \r\n  - Any Android Device\r\n\r\n",
+  "author": {
+    "login": "jaredballen",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-10-31T13:22:21",
+  "updatedAt": "2022-10-31T13:22:21",
+  "commentCount": 0,
+  "reactionCount": 0
+}

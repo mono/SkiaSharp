@@ -1,0 +1,23 @@
+{
+  "number": 3111,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] NativeAssets no longer copied for .NET Framework projects using packages.config",
+  "body": "### Description\n\nStarting with SkiaSharp 3.x the \u0060libSkiaSharp.dll\u0060 is no longer copied into the output directory. This happens for older .NET Framework projects that still use \u0060packages.config\u0060 instead of the new \u0060PackageReference\u0060 inside the csproj file.\r\n\r\nThis affects both .NET Framework and Mono projects:\r\n- [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux)\r\n- [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies)\r\n- [SkiaSharp.NativeAssets.macOS](https://www.nuget.org/packages/SkiaSharp.NativeAssets.macOS)\r\n- [SkiaSharp.NativeAssets.NanoServer](https://www.nuget.org/packages/SkiaSharp.NativeAssets.NanoServer)\r\n- [SkiaSharp.NativeAssets.Win32](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Win32)\n\n### Code\n\nExample \u0060packages.config\u0060 file:\r\n\u0060\u0060\u0060xml\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\r\n\u003Cpackages\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.NativeAssets.Win32\u0022 version=\u00223.116.1\u0022 targetFramework=\u0022net462\u0022 /\u003E\r\n\u003C/packages\u003E\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nThe build directory should contain \u0060x86\u0060, \u0060x64\u0060, \u0060arm64\u0060 containing the \u0060libSkiaSharp.dll\u0060/\u0060libSkiaSharp.so\u0060/\u0060libSkiaSharp.dylib\u0060.\n\n### Actual Behavior\n\nNothing is copied into the output directory. Unless the project was migrated from \u0060packages.config\u0060 to \u0060PackageReference\u0060.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "sungaila",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-10T15:52:30",
+  "updatedAt": "2025-02-26T15:23:35",
+  "closedAt": "2025-02-26T15:23:35",
+  "commentCount": 4,
+  "reactionCount": 2
+}

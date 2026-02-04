@@ -1,0 +1,18 @@
+{
+  "number": 3193,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] vulkanmemallocator is missing snprintf header",
+  "body": "I am converging debian an alpine toolchains on top of https://github.com/mono/SkiaSharp/pull/3192 and ran into an error with clang-19 on debian amd64 cross-compiling for alpine riscv64:\n\n\n\u0060\u0060\u0060\nerror: \u0027snprintf\u0027 was not declared in this scope\n[  424s]  2817 |         snprintf(outStr, strLen, \u0022%u\u0022, static_cast\u003Cunsigned int\u003E(num));\n[  424s]       |         ^~~~~~~~\n\u0060\u0060\u0060\n\ntracked it to\nhttps://github.com/mono/skia/blob/1c3113af31028b19affaff5d71f47c920acbe4f4/DEPS#L59\n\nwhich is \u003E2y old because it\u0027s missing this patch https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/commit/29d492b60c84ca784ea0943efc7d2e6e0f3bdaac",
+  "author": {
+    "login": "kasperk81",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-03-11T02:47:38",
+  "updatedAt": "2025-03-13T15:57:32",
+  "closedAt": "2025-03-13T15:57:32",
+  "commentCount": 2,
+  "reactionCount": 0
+}

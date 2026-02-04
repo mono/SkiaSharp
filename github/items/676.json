@@ -1,0 +1,45 @@
+{
+  "number": 676,
+  "type": "issue",
+  "state": "closed",
+  "title": "Support Windows Nano Server",
+  "body": "### Description\r\n\r\nWindows Nano Server is missing some dlls, so SkiaSharp does not work. Related to https://github.com/mono/SkiaSharp/issues/591\r\n\r\n\r\nHaving a look at Nano Server... Ran the \u0060NanoServerApiScan.exe\u0060 tool from: https://blogs.technet.microsoft.com/nanoserver/2016/04/27/nanoserverapiscan-exe-updated-for-tp5/\r\n\r\n\u0060\u0060\u0060\r\n=== libSkiaSharp.dll ===\r\n\r\nERRORS:\r\n\r\n  FONTSUB.dll\r\n    CreateFontPackage(Proc not found)\r\n  USER32.dll\r\n    SystemParametersInfoW(Proc not found)\r\n  MSVCP140.dll\r\n    \u2026\r\n    \u2026\r\n    \u2026\r\n      Please copy Nano Server compliant MSVCP140.dll from %ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\redist\\onecore\\x64\\Microsoft.VC140.CRT\\\r\n  VCRUNTIME140.dll\r\n    \u2026\r\n    \u2026\r\n    \u2026\r\n      Please copy Nano Server compliant VCRUNTIME140.dll from %ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\redist\\onecore\\x64\\Microsoft.VC140.CRT\\\r\n\u0060\u0060\u0060\r\n\r\nI need to investigate the 2 usages that appear to be bad:\r\n\r\n - FONTSUB.dll (CreateFontPackage)\r\n - USER32.dll (SystemParametersInfoW)\r\n\r\n---\r\n\r\nJust did some investigation :)\r\n\r\n\u0060CreateFontPackage\u0060 from FONTSUB.dll is just for XPS support - and this is also just for font subsetting. The UWP build does not have this at all, so I could just remove it for a nano build.\r\n\r\n\u0060SystemParametersInfoW\u0060 from USER32.dll is also not too essential - it is just for determining the default font. Again, this is not available for UWP - we just pick the \u0022Segoe UI\u0022 which we know is available by default.\r\n\r\nNano Server support could very well be possible in the near future - just have to check priorities.\r\n\r\nAdd your vote to this issue so we can prioritize this issue.\n\n\u003E VS bug [#727251](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/727251)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/low-priority",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2018-11-06T17:55:48",
+  "updatedAt": "2022-08-19T12:02:48",
+  "closedAt": "2019-12-04T01:12:15",
+  "commentCount": 13,
+  "reactionCount": 41
+}

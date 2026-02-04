@@ -1,0 +1,19 @@
+{
+  "number": 1408,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKCanvas.DrawTextOnPath v2.80.1 iOS NullReferenceException",
+  "body": "**Description**\r\n\r\nI just updated from 1.68.0 to 2.80.1 and found SKCanvas.DrawTextOnPath crashes with a NullReferenceException\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\nText is rendered on path without crashing\r\n\r\n**Actual Behavior**\r\n\r\nApp crashes with following stack trace:\r\n\r\n\u0060\u0060\u0060\r\nSystem.NullReferenceException: Object reference not set to an instance of an object\r\n  at SkiaSharp.SKFont\u002BGlyphPathCache.Dispose () [0x00016] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKFont.GetTextPathOnPath (System.ReadOnlySpan\u00601[T] glyphs, System.ReadOnlySpan\u00601[T] glyphWidths, System.ReadOnlySpan\u00601[T] glyphPositions, SkiaSharp.SKPath path, SkiaSharp.SKTextAlign textAlign) [0x00158] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKFont.GetTextPathOnPath (System.ReadOnlySpan\u00601[T] glyphs, SkiaSharp.SKPath path, SkiaSharp.SKTextAlign textAlign, SkiaSharp.SKPoint origin) [0x00067] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKFont.GetTextPathOnPath (System.Void* text, System.Int32 length, SkiaSharp.SKTextEncoding encoding, SkiaSharp.SKPath path, SkiaSharp.SKTextAlign textAlign, SkiaSharp.SKPoint origin) [0x00042] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKFont.GetTextPathOnPath (System.ReadOnlySpan\u00601[T] text, SkiaSharp.SKPath path, SkiaSharp.SKTextAlign textAlign, SkiaSharp.SKPoint origin) [0x00014] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKFont.GetTextPathOnPath (System.String text, SkiaSharp.SKPath path, SkiaSharp.SKTextAlign textAlign, SkiaSharp.SKPoint origin) [0x00007] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKCanvas.DrawTextOnPath (System.String text, SkiaSharp.SKPath path, SkiaSharp.SKPoint offset, System.Boolean warpGlyphs, SkiaSharp.SKFont font, SkiaSharp.SKPaint paint) [0x00049] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKCanvas.DrawTextOnPath (System.String text, SkiaSharp.SKPath path, SkiaSharp.SKPoint offset, System.Boolean warpGlyphs, SkiaSharp.SKPaint paint) [0x0001c] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SkiaSharp.SKCanvas.DrawTextOnPath (System.String text, SkiaSharp.SKPath path, SkiaSharp.SKPoint offset, SkiaSharp.SKPaint paint) [0x00000] in \u003C94e661f937c8433bbde4a540f6b2d091\u003E:0 \r\n  at SADPmini2.Drawing.RoundedButton.DrawText (SkiaSharp.SKCanvas canvas, SkiaSharp.SKRect drawingBounds) [0x00031] in /Users/geoff/Projects/SADPmini2/SADPmini2/SADPmini2/Drawing/RoundedButton.cs:301 \r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.1\r\n- Last known good version:  1.86.3\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - iOS: 13.5\r\n",
+  "author": {
+    "login": "geoffwc",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-15T13:50:27",
+  "updatedAt": "2022-08-19T03:02:32",
+  "closedAt": "2020-07-23T00:08:52",
+  "commentCount": 16,
+  "reactionCount": 0
+}

@@ -1,0 +1,47 @@
+{
+  "number": 3485,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix AoT crash when IlcDisableReflection=true",
+  "body": "**Description of Change**\n\n\u0060SKBlender\u0060 static constructor used \u0060Enum.GetValues()\u0060, breaking AoT builds with reflection disabled. Replaced with explicit array of all 29 \u0060SKBlendMode\u0060 values.\n\n\u0060\u0060\u0060csharp\n// Before\nvar modes = Enum.GetValues(typeof(SKBlendMode));\n\n// After\nvar modes = new SKBlendMode[] {\n    SKBlendMode.Clear,\n    SKBlendMode.Src,\n    // ... all 29 values\n    SKBlendMode.Luminosity,\n};\n\u0060\u0060\u0060\n\nTest uses \u0060Enum.GetValues()\u0060 to catch when enum grows - will fail if production array not updated.\n\n**Bugs Fixed**\n\nCrash on \u0060SKPaint\u0060 instantiation in AoT apps with \u0060IlcDisableReflection=true\u0060 (\u0060TypeInitialization_Type_NoTypeAvailable\u0060 \u2192 \u0060Reflection_Disabled\u0060)\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (if omitted, state reason in description)\n- [x] Rebased on top of main at time of PR\n- [x] Merged related skia PRs\n- [x] Changes adhere to coding standard\n- [ ] Updated documentation\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E \n\u003E ----\n\u003E \n\u003E *This section details on the original issue you should resolve*\n\u003E \n\u003E \u003Cissue_title\u003E[BUG] AoT application is crashing when reflection is disabled.\u003C/issue_title\u003E\n\u003E \u003Cissue_description\u003E### Description\n\u003E \n\u003E The error ocurrs at instantiate the SkPaint using the latest version (3.116.1)\n\u003E \n\u003E I remember the previous version (2.88.9) working at some point. But trying again reults on different error.\n\u003E \u0060\u0060\u0060ps\n\u003E The version of the native libSkiaSharp library (116.0) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [88.1, 89.0)\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E ### Code\n\u003E \n\u003E \u0060\u0060\u0060cs\n\u003E using SkiaSharp;\n\u003E \n\u003E var paint = new SKPaint();\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E \u0060\u0060\u0060csproj\n\u003E \u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n\u003E   \u003CPropertyGroup\u003E\n\u003E     \u003CTargetFramework\u003Enet9.0\u003C/TargetFramework\u003E\n\u003E     \u003COutputType\u003EExe\u003C/OutputType\u003E\n\u003E     \u003CPublishAot\u003Etrue\u003C/PublishAot\u003E\n\u003E     \u003CIlcDisableReflection\u003Etrue\u003C/IlcDisableReflection\u003E\n\u003E     \u003CIsAotCompatible\u003Etrue\u003C/IsAotCompatible\u003E\n\u003E   \u003C/PropertyGroup\u003E\n\u003E \u003C/Project\u003E\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E \u0060\u0060\u0060ps\n\u003E Unhandled exception. 0x7ff76e3a5180: TypeInitialization_Type_NoTypeAvailable\n\u003E  ---\u003E 0x7ff76e3a5180: TypeInitialization_Type_NoTypeAvailable\n\u003E  ---\u003E 0x7ff76e3a4c58: Reflection_Disabled\n\u003E    at System.RuntimeType.InitializeRuntimeTypeInfoHandle() \u002B 0x2c\n\u003E    at System.Array.InternalCreate(RuntimeType, Int32, Int32*, Int32*) \u002B 0x180\n\u003E    at System.Array.CreateInstance(Type, Int32) \u002B 0x27\n\u003E    at System.RuntimeType.GetEnumValues() \u002B 0x74\n\u003E    at SkiaSharp.SKBlender..cctor() \u002B 0x1f\n\u003E    at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0xba\n\u003E    Exception_EndOfInnerExceptionStack\n\u003E    at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0x13d\n\u003E    at System.Runtime.CompilerServices.ClassConstructorRunner.CheckStaticClassConstructionReturnNonGCStaticBase(StaticClassConstructionContext*, IntPtr) \u002B 0xd\n\u003E    at SkiaSharp.SKObject..cctor() \u002B 0x7a\n\u003E    at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0xba\n\u003E    Exception_EndOfInnerExceptionStack\n\u003E    at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0x13d\n\u003E    at System.Runtime.CompilerServices.ClassConstructorRunner.CheckStaticClassConstructionReturnNonGCStaticBase(StaticClassConstructionContext*, IntPtr) \u002B 0xd\n\u003E    at SkiaSharp.SKPaint..ctor() \u002B 0x68\n\u003E    at Program.\u003CMain\u003E$(String[]) \u002B 0x18\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E ### Expected Behavior\n\u003E \n\u003E No crash when reflection disabled\n\u003E \n\u003E ### Actual Behavior\n\u003E \n\u003E AoT application crashes when reflection disabled\n\u003E \n\u003E ### Version of SkiaSharp\n\u003E \n\u003E 3.116.0 (Current)\n\u003E \n\u003E ### Last Known Good Version of SkiaSharp\n\u003E \n\u003E Other (Please indicate in the description)\n\u003E \n\u003E ### IDE / Editor\n\u003E \n\u003E Visual Studio Code (Windows)\n\u003E \n\u003E ### Platform / Operating System\n\u003E \n\u003E Windows\n\u003E \n\u003E ### Platform / Operating System Version\n\u003E \n\u003E Windows 11\n\u003E \n\u003E ### Devices\n\u003E \n\u003E _No response_\n\u003E \n\u003E ### Relevant Screenshots\n\u003E \n\u003E _No response_\n\u003E \n\u003E ### Relevant Log Output\n\u003E \n\u003E \u0060\u0060\u0060shell\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E \n\u003E ### Code of Conduct\n\u003E \n\u003E - [x] I agree to follow this project\u0027s Code of Conduct\u003C/issue_description\u003E\n\u003E \n\u003E ## Comments on the Issue (you are @copilot in this section)\n\u003E \n\u003E \u003Ccomments\u003E\n\u003E \u003C/comments\u003E\n\u003E \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n- Fixes mono/SkiaSharp#3238\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-01-31T15:38:09",
+  "updatedAt": "2026-02-02T22:47:11",
+  "closedAt": "2026-02-02T22:47:09",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/fix-aot-crash-reflection-disable",
+  "additions": 46,
+  "deletions": 1,
+  "changedFiles": 2,
+  "commits": 10,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-02T20:11:08"
+    }
+  ]
+}

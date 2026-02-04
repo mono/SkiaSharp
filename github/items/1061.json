@@ -1,0 +1,18 @@
+{
+  "number": 1061,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unable to load DLL \u0027libHarfBuzzSharp\u0027 during WPF \u0022Text Shaping\u0022 sample",
+  "body": "**Description**\r\n\r\nUnable to load the DLL \u0060libHarfBuzzSharp\u0060 from the \u0060Text Shaping\u0060 sample in the \u0060Gallery\u0060 solution for WPF.\r\n\r\n**Steps to Reproduce**\r\n\r\n1. Clone repo\r\n2. Open the \u0060master\u0060 branch\r\n3. Open the WPF \u0060Gallery\u0060 sample at \u0060samples\\Gallery\\WPF\\SkiaSharpSample.sln\u0060 using Visual Studio\r\n4. Set \u0060SkiaSharpSample\u0060 as the StartUp project*\r\n5. Start debugging in Visual Studio\r\n6. Click \u0060Text Shaping\u0060\r\n![2019-12-13_08-07-48_8](https://user-images.githubusercontent.com/34664007/70806518-252e4f00-1d81-11ea-85fb-822fc7335e78.png)\r\n\r\n*This step would not be necessary if this project appeared first in the \u0060sln\u0060 file.  All other projects are library projects (so they are not executable projects), so this is the only project that ever needs to be the startup project.\r\n\r\n**Expected Behavior**\r\n\r\nSome sample is displayed.\r\n\r\n**Actual Behavior**\r\n\r\nAn unhandled exception on line\r\nhttps://github.com/mono/SkiaSharp/blob/975b47a913bf849276e40358ba577245d0f86de3/binding/HarfBuzzSharp.Shared/Blob.cs#L90\r\nwith message\r\n\r\n\u003E System.DllNotFoundException: \u0027Unable to load DLL \u0027libHarfBuzzSharp\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\u0027\r\n\r\n![2019-12-13_08-07-59_9_devenv](https://user-images.githubusercontent.com/34664007/70806560-3bd4a600-1d81-11ea-8119-23ab8428ff35.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: current commit on \u0060master\u0060, which is https://github.com/mono/SkiaSharp/commit/ff7cc7823c3fe9d68d2977c75bbeb51cc0c1c94a\r\n- Last known good version: Unknown (didn\u0027t try any other commits)\r\n- IDE:  Visual Studio 2019 Enterprise 16.4.1 (which is currently the latest)\r\n- Platform Target Frameworks:\r\n  - Windows Classic:\r\n    - Name: Microsoft Windows 10 Enterprise\r\n    - Version: 10.0.18362 Build 18362",
+  "author": {
+    "login": "TysonMN",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-12-13T14:35:42",
+  "updatedAt": "2022-08-19T09:01:45",
+  "closedAt": "2020-06-25T01:10:49",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,27 @@
+{
+  "number": 2889,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add R-Tree overload of beginRecording",
+  "body": "**Description of Change**\r\n\r\nAdd the R-Tree overload of \u0060SKPicture.BeginRecording\u0060. \r\n\r\nThe R-Tree factory type (\u0060SkRTreeFactory\u0060) or any other \u0060SkBBHFactory\u0060 types are not exposed since it is fairly complicated and not many use cases. It can be added later. For now, we just have a boolean flag indicating whether to use it or not.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes https://github.com/mono/SkiaSharp/issues/2372\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cs\r\nclass SKPicture {\r\n    public SKCanvas BeginRecording (SKRect cullRect, bool useRTree);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/129\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-06-04T13:49:35",
+  "updatedAt": "2024-06-18T09:09:55",
+  "closedAt": "2024-06-18T09:09:50",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/rtree",
+  "additions": 118,
+  "deletions": 15,
+  "changedFiles": 4,
+  "commits": 3,
+  "reviews": []
+}

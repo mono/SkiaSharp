@@ -1,0 +1,22 @@
+{
+  "number": 2191,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Vulkan Interopt requires exposure of ImageLayout",
+  "body": "**Description**\r\n\r\nFor Vulkan interopt we need to communicate the ImageLayout with Skia.\r\n\r\nSee the last paragraph of https://skia.org/docs/user/special/vulkan/\r\n\r\n\u003E GrVkImageInfo specifies a VkImage and associated state (tiling, layout, format, etc). After getting a GrVkImageInfo* via getTextureHandle() or getRenderTargetHandle(), the client should check the fImageLayout field to know what layout Skia left the VkImage in before using the VkImage. If the client changes the layout of the VkImage, GrVkImageInfo::updateImageLayout(VkImageLayout layout) should be called before resuming Skia rendering.\r\n\r\n\r\nSadly it seems like these functions aren\u0027t exposed in SkiaSharp.\r\n\r\n",
+  "author": {
+    "login": "KCoen",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backend/Vulkan",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-08-01T10:36:10",
+  "updatedAt": "2022-08-19T09:16:43",
+  "commentCount": 2,
+  "reactionCount": 0
+}

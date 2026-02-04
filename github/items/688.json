@@ -1,0 +1,23 @@
+{
+  "number": 688,
+  "type": "issue",
+  "state": "closed",
+  "title": "Offscreen rendering not using a control",
+  "body": "### Description\r\n\r\nI am a Skia newbie so pardon if my question is based on misunderstanding or ignorance.\r\n\r\nI work as part of a team that develops mobile apps and Xamarin and MvvmCross is the technology we use.  The first project I worked on required GPU vector graphics to be run on Windows 8.1, so we couldn\u0027t use Skia and used Win2d instead.  It turns out that MvvmCross will drop load events randomly.  Given that the Win2d controls use the load and unload events to start up GPU connections, this caused the mapping widget which was shared in more than one view, to freeze and not be recoverable.  The way around this was to use CanvasRenderTargets, which were not controls but had a GPU context held internally, and which is not affected by load and unload events.  A service could then be built to generate maps based on vector features and pass the images to the control to render.\r\n\r\nIt seems that in SkiaSharp, the GRContext is hidden inside an internal library, and can only be accessed through a native view (eg. SKGLView).  Ideally I\u0027d like to be able to do offscreen GPU based rendering of vector based features, which would generate sources which can be rendered by controls.  This question may be along similar lines to issue #665.  Is this possible?  It would be a great benefit to our project if it is.\r\n\r\nBarring that, can I grab the glContext from the native view and will it be unaffected by actions on the view itself?\r\n\r\nAny insights would be greatly appreciated.\r\n\r\nCheers,\r\nTom Cuthill\r\n\r\n",
+  "author": {
+    "login": "tcuthill",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-11-16T03:03:39",
+  "updatedAt": "2022-08-19T12:02:39",
+  "closedAt": "2019-01-16T19:18:27",
+  "commentCount": 12,
+  "reactionCount": 0
+}

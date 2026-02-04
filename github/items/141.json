@@ -1,0 +1,19 @@
+{
+  "number": 141,
+  "type": "issue",
+  "state": "closed",
+  "title": "Wrap SkPaint.setSubpixelText",
+  "body": "It\u0027d be nice to wrap \u0060SkPaint::setSubpixelText()\u0060 and/or \u0060SkPaint::setLCDRenderText()\u0060 (I don\u0027t actually know the difference between these two). Without setting these flags to true to enable subpixel rendering, text rendered by SkiaSharp will appear slightly blurry.\n\nHere\u0027s a side-by-side comparison of how text with greyscale antialiasing (the Skia default) compares with Windows ClearType subpixel rendering. The top text \u0022No Subpixel\u0022 is rendered with SkiaSharp. The bottom text \u0022Subpixel\u0022 is rendered with WPF, which by default uses ClearType (a subpixel rendering technique).\n\n![subpixel](https://cloud.githubusercontent.com/assets/934815/17828270/efbe97d4-665a-11e6-882a-651fcc9804c8.png)\n\nWith my LCD monitor, the \u0022Subpixel\u0022 text appears sharper than the \u0022No Subpixel\u0022 text. You may have to right click and view the image in full size to see the difference, as Github scales down the preview to fit within the issue text, and the relevant detail may be lost in the raster scaling process.\n",
+  "author": {
+    "login": "tdenniston",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.1.2",
+  "createdAt": "2016-08-20T02:27:28",
+  "updatedAt": "2022-08-20T00:02:12",
+  "closedAt": "2016-08-20T09:32:46",
+  "commentCount": 2,
+  "reactionCount": 0
+}

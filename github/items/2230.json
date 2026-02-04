@@ -1,0 +1,18 @@
+{
+  "number": 2230,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Update to skia milestone 90 (or greater)",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nUsage of a simple shader within SKCanvasView leads to a crash.\r\n\r\n\u003C!-- A clear and concise description of what the problem is. Ex. I need to do X, but the API is missing from the C# binding. --\u003E\r\n\r\nUpdating to MAUI from UWP is only possible for SKCanvasView. The usage of any shader for SKCanvasView is unfortunately blocked by this crash.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nUpdate to a skia milestone that has the SKVM enabled/integrated. (afaik 90\u002B)\r\n\r\n\u003C!-- A clear and concise description of what you want to happen. --\u003E\r\n\r\nUpdate the Skia library to milestone 90\u002B\r\n\r\n**Additional context**\r\n\r\n\u003C!-- Add any other context or screenshots about the feature request here. --\u003E\r\n\r\ncode that crashes within SKCanvasView:\r\n\u0060\u0060\u0060\r\nvar src = \u0022half4 main(float2 coord) { return half4(1, 0, 0, 1); }\u0022;\r\n\r\nusing (var effect = SKRuntimeEffect.Create(src, out var errorText))\r\n{\t\r\n\tusing (var shader = effect.ToShader(true, new SKRuntimeEffectUniforms(effect), new SKRuntimeEffectChildren(effect)))\r\n\t{\r\n\t\tvar paint = new SKPaint\r\n\t\t{\r\n\t\t  Shader = shader\r\n\t\t};\t\t\r\n\r\n\t\tcanvas.DrawRect(new SKRect(0, 0, 100, 100), paint);\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "Bluenuance",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-08-31T11:48:11",
+  "updatedAt": "2023-08-30T18:00:29",
+  "closedAt": "2023-07-31T16:32:28",
+  "commentCount": 6,
+  "reactionCount": 2
+}

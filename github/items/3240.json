@@ -1,0 +1,22 @@
+{
+  "number": 3240,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] \u0060libSkiaSharp.dll\u0060 gets build with \u0060/DEBUG:FULL\u0060 without reenabling linker opts",
+  "body": "### Description\n\nThe Windows Cake build script passes \u0060/DEBUG:FULL\u0060 in all configuration in the linker args which disables linker optimizations like removal of unused code or identical code folding as per:\n\u0060\u0060\u0060\n/DEBUG changes the defaults for the /OPT option from REF to NOREF and from ICF to NOICF, so if you want the original defaults, you must explicitly specify /OPT:REF or /OPT:ICF after the /DEBUG option.\n\u0060\u0060\u0060\nI believe the script should reenable those to reduce release build sizes.\n\n### Code\n\nhttps://github.com/mono/SkiaSharp/blob/481369a6fdc6c5589850b55487ca0f9902b1814e/native/windows/build.cake#L62\n\n### Expected Behavior\n\n\u0060/OPT:REF\u0060 and \u0060/OPT:ICF\u0060 get passed to the linker on build.\n\n### Actual Behavior\n\nOnly \u0060/DEBUG:FULL\u0060 seems to be passed.\n\n### Version of SkiaSharp\n\n3.118.0-preview.2 (Next Preview)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MichalPetryka",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-20T19:07:47",
+  "updatedAt": "2025-04-20T19:07:47",
+  "commentCount": 0,
+  "reactionCount": 0
+}

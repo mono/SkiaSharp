@@ -1,0 +1,29 @@
+{
+  "number": 1802,
+  "type": "pr",
+  "state": "closed",
+  "title": "IsAntialias should also control the Edging",
+  "body": "**Description of Change**\r\n\r\n@mattleibow\r\n\r\nThis is for compatibility and consistency. Before 2.80, the anti-aliasing flag would also affect the font edging. After 2.80, the properties were separate and now we have to make sure the paint updates the edging based on what the anti-aliasing and LCD rendering indicate.\r\n\r\n**Bugs Fixed**\r\n\r\n| 1.68.x | 2.80.x | PR |\r\n| :-: | :-: | :-: |\r\n| ![image](https://user-images.githubusercontent.com/1096616/132564635-8b0e485c-fd23-4415-a0d9-54930120d3f8.png) | ![image](https://user-images.githubusercontent.com/1096616/132564872-bf859b47-a694-415a-80d8-3b681831581f.png) | ![image](https://user-images.githubusercontent.com/1096616/132564945-cf215985-825d-4074-88da-33e66f5b0c57.png) |\r\n\r\n\u0060\u0060\u0060csharp\r\ncnv.Clear(SKColors.White);\r\n\r\nvar paint = new SKPaint();\r\npaint.TextSize = 40;\r\n\r\npaint.IsAntialias = false;\r\npaint.LcdRenderText = false;\r\ncnv.DrawText(\u0022Hello World!\u0022, 20, 50, paint);\r\n\r\npaint.IsAntialias = true;\r\npaint.LcdRenderText = false;\r\ncnv.DrawText(\u0022Hello World!\u0022, 20, 100, paint);\r\n\r\npaint.IsAntialias = false;\r\npaint.LcdRenderText = true;\r\ncnv.DrawText(\u0022Hello World!\u0022, 20, 150, paint);\r\n\r\npaint.IsAntialias = true;\r\npaint.LcdRenderText = true;\r\ncnv.DrawText(\u0022Hello World!\u0022, 20, 200, paint);\r\n\u0060\u0060\u0060\r\n\r\n**API Changes**\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n \r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.4",
+  "createdAt": "2021-09-08T18:30:46",
+  "updatedAt": "2022-05-22T09:05:58",
+  "closedAt": "2021-09-08T21:34:34",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "patch/v2.80.4",
+  "headBranch": "dev/aa",
+  "additions": 111,
+  "deletions": 4,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

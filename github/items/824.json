@@ -1,0 +1,17 @@
+{
+  "number": 824,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] This image loses a lot of data when opened and resaved",
+  "body": "**Description**\r\n\r\nRun the following code using the attached image \u0060i9.jpg\u0060. Compare \u0060i9.jpg\u0060 to \u0060i10.jpg\u0060. A lot of data has been lost. Take a look at the tiles on the floor, and the wave of the curtains behind. Do not use a web browser to view the images, since they use Skia. Use something like Windows Photo Viewer.\r\n\r\nReally this is an [YCCK](https://blog.idrsolutions.com/2010/05/understanding-the-pdf-file-format-cmyk-does-not-always-mean-cmyk/) image, so ideally Skia should do the YCCK conversion. [JpegBitmapDecoder](https://docs.microsoft.com/en-us/dotnet/api/system.windows.media.imaging.jpegbitmapdecoder?view=netframework-4.7.2) does. However most programs do not do the conversion, so it\u0027s fine if Skia doesn\u0027t. But the fact that Skia loses data when opening it is a bug, since most programs do not.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060 C#\r\nvar img = SKImage.FromEncodedData(\u0022i9.jpg\u0022);\r\nusing (var file = File.Create(\u0022i10.png\u0022))\r\n\timg.Encode(SKEncodedImageFormat.Png, 100).SaveTo(file);\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:\r\n  - Windows Classic:  Windows 10\r\n\r\n**Attachments**\r\n\r\ni9.jpg\r\n\r\n![i9](https://user-images.githubusercontent.com/1690985/55682026-0f38d680-5936-11e9-8d20-fec62d2f7346.jpg)\r\n",
+  "author": {
+    "login": "ecymerman",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-04-07T10:06:09",
+  "updatedAt": "2019-04-13T18:48:01",
+  "commentCount": 0,
+  "reactionCount": 1
+}

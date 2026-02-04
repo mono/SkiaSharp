@@ -1,0 +1,23 @@
+{
+  "number": 3123,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] 3.116.1 throws TypeLoadException in Debian 10(buster)",
+  "body": "### Description\r\n\r\nASP.NET 9 MVC application is running in Debian 10 (buster) server. It use captcha \r\n\r\nhttps://github.com/VahidN/DNTCaptcha.Core\r\n\r\nnuget package whose latest version requires Skiasharp 3.116.1 \r\n\r\nhttps://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies/3.116.1\r\n\r\nAfter upgrading to SkiaSharp to latest version 3.116.1  \r\n\r\nin NuGet running application throws System.TypeInitializationException\r\n\r\n\r\n\r\n### Code\r\n\r\nusing SkiaSharp;\r\n\r\npublic static class Thumbnail\r\n{\r\n  public static byte[] MakeMeAGoodThumbnail(byte[] source, int imageHeight, int imageWidth)\r\n  {\r\n    // https://stackoverflow.com/questions/73860277/what-is-the-decent-approach-to-resizing-images-in-asp-net-core\r\n    SKBitmap image = SKBitmap.Decode(source);\r\n    var ratioX = (double)imageWidth / image.Width;\r\n    var ratioY = (double)imageHeight / image.Height;\r\n    var ratio = Math.Min(ratioX, ratioY);\r\n    var newWidth = (int)(image.Width * ratio);\r\n    var newHeight = (int)(image.Height * ratio);\r\n    var info = new SKImageInfo(newWidth, newHeight);\r\n    image = image.Resize(info, SKFilterQuality.High);\r\n    using var ms = new MemoryStream();\r\n    image.Encode(ms, SKEncodedImageFormat.Png, 100);\r\n    return ms.ToArray();\r\n  }\r\n}\r\n\r\n### Expected Behavior\r\n\r\nIt should work in Debian 10 like previous version https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies/3.116.0\r\n\r\n\r\n### Actual Behavior\r\n\r\n    System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception.\r\n    ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider using a tool like strace. If you\u0027re using glibc, consider setting the LD_DEBUG environment variable:\r\n    /lib/x86_64-linux-gnu/libm.so.6: version \u0060GLIBC_2.29\u0027 not found (required by /var/www/myapp/libSkiaSharp.so)\r\n    libSkiaSharp.so: cannot open shared object file: No such file or directory\r\n    /var/www/myapp/liblibSkiaSharp.so: cannot open shared object file: No such file or directory\r\n    /var/www/myapp/libSkiaSharp: cannot open shared object file: No such file or directory\r\n    /var/www/myapp/liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n    \r\n      at SkiaSharp.SkiaApi.sk_data_new_empty()\r\n      at SkiaSharp.SkiaApi.sk_data_new_empty()  at SkiaSharp.SKData..cctor()\r\n      --- End of inner exception stack trace ---\r\n      at SkiaSharp.SKData.Create(IntPtr address, Int32 length)\r\n      at SkiaSharp.SKBitmap.Decode(ReadOnlySpan\u00601 buffer)\r\n      at SkiaSharp.SKBitmap.Decode(Byte[] buffer)\r\n    ....\r\n\r\n\r\n### Version of SkiaSharp\r\n\r\n3.116.1 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.9 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nLinux\r\n\r\n### Platform / Operating System Version\r\n\r\n Debian GNU/Linux 10 (buster)\r\n\r\n### Devices\r\n\r\nDebian VPS server\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "kobruleht",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-19T21:38:25",
+  "updatedAt": "2025-04-10T22:08:02",
+  "closedAt": "2025-04-10T22:08:00",
+  "commentCount": 6,
+  "reactionCount": 1
+}

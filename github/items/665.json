@@ -1,0 +1,18 @@
+{
+  "number": 665,
+  "type": "issue",
+  "state": "closed",
+  "title": "Make SKGLDrawable public so users can try to create GPU-powered WPF controls",
+  "body": "### Description\r\n\r\nBy mixing and matching the code for SKElement and SKGLControl, users can try to make a WPF control that uses GPU acceleration, but SKGLDrawable and GRBackendRenderTarget prevent compilation from being successful since SKGLDrawable is internal.\r\nReplicating its code proves to be hard though, since it is a facade for more internal calls,\r\n\r\nHosting the WinForms control proved to be problematic on old machines with no dedicated GPU, but with an integrated one (2nd generation i5) where the samples work, but moving our drawing code to use SKGLControl crashes with AccessViolationException on the 3rd-4th draw on this particular machine (though it works OK when a dedicated GPU is present).\r\nAlso using the SKGLControl makes the task of falling back to CPU rendering on an exception much harder, since if we roll our own one once we get an exception during GPU rendering we can just stop using it, and reuse the old SKElement code for CPU only\r\n\r\nIf SKGLDrawable is public we have the opportunity of experimenting and implementing out own GPU-accelerated WPF controls \r\n### Code\r\n\u0060\u0060\u0060\r\n\r\n      // create the contexts if not done already\r\n      if (grContext == null) {\r\n        var glInterface = GRGlInterface.CreateNativeGlInterface();\r\n        grContext = GRContext.Create(GRBackend.OpenGL, glInterface);\r\n      }\r\n\r\n      // manage the drawing surface\r\n      if (renderTarget == null || surface == null || renderTarget.Width != info.Width || renderTarget.Height != info.Height) {\r\n        // create or update the dimensions\r\n        renderTarget?.Dispose();\r\n        renderTarget = SKGLDrawable.CreateRenderTarget(Width, Height);\r\n\r\n        // create the surface\r\n        surface?.Dispose();\r\n       // TODO This fails due to being internal\r\n        surface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);\r\n      }\r\n\r\n      OnPaintSurface(new SKPaintSurfaceEventArgs(surface, info));\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n",
+  "author": {
+    "login": "v-vasilev-synergy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-10-31T10:31:53",
+  "updatedAt": "2022-08-19T15:01:17",
+  "closedAt": "2020-04-24T21:14:35",
+  "commentCount": 1,
+  "reactionCount": 1
+}

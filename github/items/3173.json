@@ -1,0 +1,22 @@
+{
+  "number": 3173,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKImageFilter.CreateTile(src, dst) overload is useless",
+  "body": "### Description\n\n\u0060SKImageFilter.CreateTile\u0060 with \u0060(SKRect src, SKRect dst)\u0060 overload is useless. It makes a call to overload with \u0060input\u0060 parameter and passes null to it. However this overload throws \u0060ArgumentException\u0060 if input is null. Nullability of said overload is also misleading, since it clearly can\u0027t be null.\n\n\u0060\u0060\u0060cs\nSKImageFilter.CreateTile(src, dst, (SKImageFilter) null);\n\u0060\u0060\u0060\n\n### Code\n\nhttps://github.com/mono/SkiaSharp/blob/80d6b5915329d04ba8e557398e6ecc379dd48914/binding/SkiaSharp/SKImageFilter.cs#L321-L328\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "flabbet",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-24T09:52:19",
+  "updatedAt": "2026-01-26T22:13:34",
+  "commentCount": 1,
+  "reactionCount": 0
+}

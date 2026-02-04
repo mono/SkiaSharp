@@ -1,0 +1,22 @@
+{
+  "number": 3206,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] linux-bionic flavor of libSkiaSharp and libHarfBuzzSharp",
+  "body": "### Description\n\ne.g. https://nuget.info/packages/SQLitePCLRaw.lib.e_sqlite3/2.1.11 doesn\u0027t have runtimes/linux-bionic . Something can be done for SkiaSharp. toolchains are available in modern ubuntu/debian, fedora and alpine.\n\nfor ref\nhttps://github.com/ericsink/cb/commit/fe4e4255c9ccd10e298ed5b0f1f47478fa34982a\nhttps://github.com/ericsink/SQLitePCL.raw/commit/685942a31a9e43db85366a719b3b30547f90ef79\n\nideally infra should be DRY\u0027d so it\u0027s just a matter of adding a single line in shell or cake script for new platform: define_platform(dotnetArch, nativeArch, osName) {. ... expand ...  } which will expand to rubberstamped stuff for clang -target .... e.g.\n\n\n\n### Code\n\n# existing\ndefine_platform(\u0022arm64\u0022, \u0022aarch64\u0022, \u0022linux\u0022)\ndefine_platform(\u0022arm64\u0022, \u0022aarch64\u0022, \u0022linux-musl\u0022)\n\n# for this feature request\ndefine_platform(\u0022arm64\u0022, \u0022x64\u0022, \u0022linux-bionic\u0022)\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\n- Android 16 (Termux)\n\n### Devices\n\nSamsung Galaxy S25 Ultra\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "aicynide",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-15T22:40:33",
+  "updatedAt": "2025-04-16T18:38:18",
+  "commentCount": 22,
+  "reactionCount": 0
+}

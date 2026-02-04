@@ -1,0 +1,17 @@
+{
+  "number": 1548,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] replace color in surface beefore drawing to canvas ",
+  "body": "I have been trying to figure out how to replace a color with SKColors.Empty or SKColors.Transparent in a SKSurface before i \r\ndo a canvas.DrawSurface with the sksurface rather like this:\r\n\r\n\r\n  \tvar  _locgrContext = GRContext.Create(GRBackend.OpenGL); \r\nvar sKImageInfo = new SKImageInfo(1200, 1200);\r\n\tSKSurface  radarsurfspoke = SKSurface.Create(_locgrContext, true, sKImageInfo);\r\n\tstatic SKPaint black = new SkiaSharp.SKPaint { Color = SKColors.Black };\r\n        static SKPaint theColorStrong = new SkiaSharp.SKPaint { Color = SKColors.Red };\r\n        static SKPaint theColorIntermediate = new SkiaSharp.SKPaint { Color = SKColors.Green };\r\n        static SKPaint theColorWeak = new SkiaSharp.SKPaint { Color = SKColors.Blue };\r\n\r\nprivate void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)\r\n        {\r\n\r\n            SKCanvas canvas = e.Surface.Canvas;\r\n// several x and ys \r\n\tradarsurfspoke.Canvas.DrawCircle((int)x, (int)y, 5f, black );\r\n\tradarsurfspoke.Canvas.DrawCircle((int)x, (int)y, 5f, theColorStrong );\r\n\tradarsurfspoke.Canvas.DrawCircle((int)x, (int)y, 5f, theColorWeak );\r\n// now before i do DrawSurface i would like to replace the black colored dots (can be serveral) with Empty or Transparent\r\n// how can i do that? is it using SKBlendMode or ColorFilter to achieve this, i have really looked for an answer but have not found one \r\n     canvas.DrawSurface(radarsurfspoke, new SKPoint(0f, 0f));\r\n\r\n\t}\r\n\r\nThank You",
+  "author": {
+    "login": "pilotshamn",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-11-09T12:10:38",
+  "updatedAt": "2020-11-09T12:10:38",
+  "commentCount": 0,
+  "reactionCount": 2
+}

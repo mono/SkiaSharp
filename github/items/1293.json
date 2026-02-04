@@ -1,0 +1,44 @@
+{
+  "number": 1293,
+  "type": "pr",
+  "state": "open",
+  "title": "Improve triggering of touch event and introduce Eraser device",
+  "body": "**Description of Changes**\r\n\r\n- Capture touch pressure for Mac, UWP and iOS.\r\n- Capture wheel delta for Mac.\r\n- Support touch and stylus on WPF platform.\r\n- Support mouse on Android platform.\r\n- Introduce Eraser device.\r\n- Add a TO-DO for Tizen where device ID is buggy.\r\n\r\n**API Changes**\r\n\r\nAdded: \r\n \r\n- \u0060Eraser\u0060 member for \u0060SKTouchDeviceType\u0060 enum.\r\n- Constructor \u0060.ctor(long, SKTouchAction, SKPoint, bool, float)\u0060 for \u0060SKTouchEventArgs\u0060 class.\r\n\r\n**Behavioral Changes**\r\n\r\n- Android triggers \u0060Pressed\u0060, \u0060Up\u0060 and \u0060Cancel\u0060 events for all pointers instead of triggering just for \u0060Moved\u0060 event.\r\n- When Stylus pen is inverted trigger touch event as Eraser device.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "skarllot",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2020-05-16T01:31:31",
+  "updatedAt": "2024-04-30T15:59:11",
+  "commentCount": 5,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "release/2.x",
+  "headBranch": "master",
+  "additions": 273,
+  "deletions": 70,
+  "changedFiles": 7,
+  "commits": 9,
+  "reviews": [
+    {
+      "author": "Pepsi1x1",
+      "state": "DISMISSED",
+      "submittedAt": "2020-05-29T19:46:05"
+    },
+    {
+      "author": "nshtinkov",
+      "state": "COMMENTED",
+      "submittedAt": "2024-04-28T16:06:51"
+    },
+    {
+      "author": "nshtinkov",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2024-04-30T15:59:11"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "number": 2689,
+  "type": "issue",
+  "state": "open",
+  "title": "SkSVGDOM bindings",
+  "body": "### Is your feature request related to a problem?\r\n\r\nSkia\u0027s own frontend support for the SVG format is no longer experimental. Please expose an API around \u0060SkSVGDOM::Builder()\u0060 with the ability to load SVG from file/string and render to a canvas.\r\n\r\n### Describe the solution you would like\r\n\r\nFor \u0022inspiration\u0022, \u0060rust-skia\u0060 re-exports via a C interface:\r\n\r\n\u0060\u0060\u0060cpp\r\nextern \u0022C\u0022 SkSVGDOM* C_SkSVGDOM_MakeFromStream(SkStream\u0026 stream, loadSkData loadCb, loadSkTypeface loadTfCb, void* loadContext) {\r\n    auto provider = sk_make_sp\u003CImageResourceProvider\u003E(loadCb, loadTfCb, loadContext);\r\n    auto builder = SkSVGDOM::Builder();\r\n    builder.setResourceProvider(provider);\r\n    return builder.make(stream).release();\r\n}\r\n\u0060\u0060\u0060\r\n\r\nand then exposes in its crate.\r\n\r\nSkiaSharp should do the same.\r\n\r\n### Describe alternatives you have considered\r\n\r\nSvg.Skia (which is based on SVG.Net). For reasons I don\u0027t fully understand, I found this to generate very large, inefficient PDFs (which used hundreds of \u0060/Pattern\u0060s and produced PDF files hundreds of times larger than required) when importing a specific SVG to an SkPicture and then rendering to a PDF canvas. Generally I would expect the built-in native code in C\u002B\u002B to be a bit more performant too.\r\n\r\nWhen I tried using the native C\u002B\u002B SkSVGCanvas stuff myself, the commands generated in the SkPicture were much more sensible.\r\n\r\n### Additional context\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "lol768",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/help-wanted",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-04T17:03:44",
+  "updatedAt": "2024-10-28T10:35:13",
+  "commentCount": 10,
+  "reactionCount": 6
+}

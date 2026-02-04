@@ -1,0 +1,40 @@
+{
+  "number": 1135,
+  "type": "pr",
+  "state": "closed",
+  "title": "Queue the redraw for iOS and macOS",
+  "body": "**Description of Change**\r\n\r\nmacOS and iOS draw immediately, so rather queue the redraw. Not only does this fix the stack overflow, but is now more consistent with the other platforms.\r\n\r\nThis also just fixes it for macOS and the render loop. Unlike iOS, macOS does not start the \u0060CVDisplayLink\u0060 the same way as the \u0060CADisplayLink\u0060. As a result, the callback is on the background thread.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1074\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nThis technically a breaking change for macOS in that the draw is now on the main thread. But, the loop never worked, and the one shot caused a stack overflow.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-02-09T21:46:47",
+  "updatedAt": "2020-04-29T23:48:01",
+  "closedAt": "2020-02-11T15:56:36",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1074",
+  "additions": 3,
+  "deletions": 3,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-02-09T22:45:25"
+    }
+  ]
+}

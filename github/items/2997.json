@@ -1,0 +1,22 @@
+{
+  "number": 2997,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKMatrix.MapRect method standardizes the output rectangle.",
+  "body": "### Description\r\n\r\nDue to many various libraries/formats from legacy systems, we deal with various coordinate systems. \r\nThe \u0022Top\u0022 of an SKRect artifact is not always the smalles Y number\u0022 and the Y axis does not always decrease when moving up on the screen.\r\nSimilar on the X axis. What the user perceives as the \u0022Left\u0022 of a screen artifact may along the way have been higher X coordinate due to the format that it was persisted in.\r\n\r\nA use case for me is to draw in any technology specific coordinate system and have a SKMatrix map the points to their corresponding output coordinates. \r\n\r\nHaving quirks like this inside the library affects the whole concept of matrices since operation1 and operation2 done separately will no longer equal their concatenation if operation1 decides to standardize the intermediate result.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\nvar inputRect = new SKRect();\r\n\r\ninputRect.Left =25; \r\ninputRect.Right = 15;\r\ninputRect.Bottom = 2;\r\ninputRect.Top = 10;\r\n// For simplicity, I have entered the described case here. But this test should be for all variations of inputRect.\r\nvar resultRect = SKMatrix.CreateIdentity().MapRect(inputRect);\r\n\r\nAssert.AreEqual(inputRect.Right,resultRect.Right);\r\nAssert.AreEqual(inputRect.Left,resultRect.Left);\r\nAssert.AreEqual(inputRect.Top,resultRect.Top);\r\nAssert.AreEqual(inputRect.Bottom,resultRect.Bottom);\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nThe resultRectangle.**Left** == inputRectangle.**Left** \r\nThe resultRectangle.**Right** == inputRectangle.**Right** \r\nThe resultRectangle.**Top** == inputRectangle.**Top** \r\nThe resultRectangle.**Bottom** == inputRectangle.**Bottom** \r\n\r\nI expect to use **.Standardized** property or similarif I want X/Y axis \u0022corrected\u0022 (/flipped) in the output rectangle.\r\n\r\n### Actual Behavior\r\n\r\nThe resultRectangle.**Left** == inputRectangle.**Right** \r\nThe resultRectangle.**Right** == inputRectangle.**Left** \r\nThe resultRectangle.**Top** == inputRectangle.**Bottom** \r\nThe resultRectangle.**Bottom** == inputRectangle.**Top** \r\n\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "TormodS",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-13T10:50:54",
+  "updatedAt": "2025-08-07T10:20:15",
+  "commentCount": 1,
+  "reactionCount": 0
+}

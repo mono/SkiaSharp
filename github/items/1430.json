@@ -1,0 +1,18 @@
+{
+  "number": 1430,
+  "type": "issue",
+  "state": "closed",
+  "title": "Classes should not dispose objects that they didn\u0027t create",
+  "body": "I want to create helper methods that wrap some functionalities like this one for example\r\n\r\n\u0060\u0060\u0060chsharp\r\npublic bool IsImage(Stream stream) =\u003E SKCodec.Create(stream) != null;\r\n\u0060\u0060\u0060\r\n\r\nThe problem is that it created SKCodec and it is disposable, so we have to dispose it, but if we do like this\r\n\r\n\u0060\u0060\u0060csharp\r\npublic bool IsImage(Stream stream) \r\n{\r\n    using(var codec = SKCodec.Create(stream))\r\n    {\r\n        return codec != null;\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\nIt will also dispose the stream, and I obviously don\u0027t want to dispose the stream.\r\n\r\nSo I ended up returning Disposable wrapper or the SKCodec itself, so the client can dispose it when done with the stream. which makes my helper methods very useless wrappers that encapsulate nothing.\r\n\r\nI think an object shouldn\u0027t dispose a resource that it doesn\u0027t own, if the Stream is passed to SKCodec, SKCodec should not dispose it because the client could be still using it.",
+  "author": {
+    "login": "MhAllan",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-27T11:59:16",
+  "updatedAt": "2022-08-19T03:02:24",
+  "closedAt": "2020-07-28T08:12:16",
+  "commentCount": 7,
+  "reactionCount": 0
+}

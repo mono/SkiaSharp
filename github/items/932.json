@@ -1,0 +1,19 @@
+{
+  "number": 932,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Bad black image on scaling image (not bitmap) for certain JPGs",
+  "body": "**Description**\r\n\r\nScaling fails for image (not bitmap) on certain JPG\u0027s - see attached image below.\r\n\r\n**Code**\r\n\r\nBad - draws a black image instead of scaled (for certain images - using web server code):\r\n\u0060\u0060\u0060\r\nvar img = SKImage.FromPixelCopy(codec.info, codec.Pixels);\r\ncanvas.DrawImage(img, SKRect.Create(0, 0, w, h), SKRect.Create(0, 0, 450, 450));\r\n// This is ok - so only fails on scaling\r\ncanvas.DrawImage(bmp, 0, 0);\r\n\u0060\u0060\u0060\r\n\r\nWorks:\r\n\u0060\u0060\u0060\r\nvar bmp = SKBitmap.Decode(codec);\r\ncanvas.DrawBitmap(bmp, SKRect.Create(0, 0, w, h), SKRect.Create(0, 0, 450, 450));\r\n\u0060\u0060\u0060\r\n\r\nCodec is read like:\r\n\u0060\u0060\u0060\r\nimgStream = new SKManagedStream(inStream);\r\ncodec = SKCodec.Create(imgStream, out SKCodecResult result);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nA scaled image.\r\n\r\n**Actual Behavior**\r\n\r\nBlack image.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 1.68\r\n- Last known good version: 1.60\r\n- IDE: VS.NET 2019\r\n- Platform Target Frameworks: .NET Standard 4.8 - Windows Web Server\r\n\r\nI read that bitmap is on its way out - but I had to revert to bitmap (back from image) as it fails on certain images. I took the attached image and re-saved in Paint and then it works. Comparing the two files shows that non-working has a thumbnail (that might be the culprit!?)\r\n\r\nI have had several other issues on v1.68 (from v1.60) (e.g. #719) and wonder if Google has/is neglecting CPU/non-GPU. \r\n\r\nI chance we can soon get a preview build? Thanks\r\n\r\nBad image: ![file-3717](https://user-images.githubusercontent.com/4574570/63246424-eff67200-c262-11e9-8f5a-f028eebf07b0.jpg)",
+  "author": {
+    "login": "AndersMad",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2019-08-19T07:20:32",
+  "updatedAt": "2022-08-19T09:02:35",
+  "closedAt": "2020-05-02T22:06:51",
+  "commentCount": 1,
+  "reactionCount": 1
+}

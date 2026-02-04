@@ -1,0 +1,17 @@
+{
+  "number": 1199,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Optimize SKTypeface.FamilyName ",
+  "body": "**Description**\r\n\r\nCurrently \u0060SKTypeface.FamilyName\u0060 is retrieving a \u0060SKString\u0060 from the native side and is then always cast to a string that calls back to the native side to retrieve a UTF8 encoded string that is then marshaled back to the managed side.\r\n\r\nI suggest changing the native side to return a string directly instead of a \u0060SKString\u0060\r\n\r\n\u0060(string)GetObject\u003CSKString\u003E (SkiaApi.sk_typeface_get_family_name (Handle));\u0060\r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKTypeface.cs#L158\r\n",
+  "author": {
+    "login": "Gillibald",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-29T19:54:31",
+  "updatedAt": "2020-03-29T23:47:03",
+  "commentCount": 1,
+  "reactionCount": 1
+}

@@ -1,0 +1,29 @@
+{
+  "number": 1224,
+  "type": "pr",
+  "state": "closed",
+  "title": "Make sure to not dispose system fonts",
+  "body": "**Description of Change**\r\n\r\nMake sure to not dispose system fonts.\r\n\r\n\u0060SKFontManager\u0060 and \u0060SKTypeface\u0060 return a cached/singleton for system fonts. Do not dispose these because they may be in use in other parts of drawing code.\r\n\r\nBecause it is actually reference counted on the native side, we can allow the GC to collect it still. When the GC is working, this means that there are no more managed references and a disposal of the managed object will do nothing bad.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1220\r\n- Fixes #1179\r\n\r\n**API Changes**\r\n\r\n\u0060SKFontManager.SKTypeface MatchFamily (string familyName);\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nSystem fonts are no longer disposed.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-04-10T11:51:25",
+  "updatedAt": "2020-04-29T23:47:37",
+  "closedAt": "2020-04-11T17:48:05",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1220",
+  "additions": 367,
+  "deletions": 65,
+  "changedFiles": 11,
+  "commits": 5,
+  "reviews": []
+}

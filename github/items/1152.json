@@ -1,0 +1,43 @@
+{
+  "number": 1152,
+  "type": "pr",
+  "state": "closed",
+  "title": "Improve the experience with the SKTextBlobBuilder",
+  "body": "**Description of Change**\r\n\r\nWhen the paint encoding is anything but GlyphId, the underlying allocation fails. This results in not only strange behaviour, but also invalid data. The run buffer is given a size, but nothing was allocated. This does 2 things:\r\n\r\n- if a buffer is null, override the size\r\n- if the encoding is not glyph, then change it temporarily\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1151\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nInstead of throwing an unexpected exception when trying to USE the run buffer, the allocation will now succeed. And, if the each buffer on the run is null, then don\u0027t return a \u0060Span\u003CT\u003E\u0060 that is not null.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-02-21T11:11:45",
+  "updatedAt": "2020-04-29T23:48:03",
+  "closedAt": "2020-02-21T18:30:14",
+  "commentCount": 4,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1151",
+  "additions": 44,
+  "deletions": 8,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

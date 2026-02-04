@@ -1,0 +1,26 @@
+{
+  "number": 2431,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Add overload for \u0060SKVertices.CreateCopy\u0060 that accepts offset and count for vertices and indexes ",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nCurrently, it\u0027s impossible to create a copy of SKVertices as a \u0022slice\u0022 of original one. It\u0027s common practice in low-level graphics to reuse the same array with different \u0022regions\u0022 of it determined by offset and count. I have troubles to make it work with SkiaSharp as the third-party API provides me with complete merged array of vertices and indexes that I want to use without additional allocations.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nAn extended main method could look like that (reflects the native call completely):\r\n\r\n\u0060\u0060\u0060csharp\r\nSKVertices CreateCopy (SKVertexMode vmode, int vertexOffset, int vertexCount, SKPoint[] positions, SKPoint[] texs, SKColor[] colors, int indexOffset, int indexCount, UInt16[] indices)\r\n\u0060\u0060\u0060\r\n\r\nWith the native call inside:\r\n\r\n\u0060\u0060\u0060csharp\r\nfixed (SKPoint* p = positions)\r\nfixed (SKPoint* t = texs)\r\nfixed (SKColor* c = colors)\r\nfixed (UInt16* i = indices) {\r\n  return GetObject (SkiaApi.sk_vertices_make_copy (vmode, vertexCount, p \u002B vertexOffset, t \u002B vertexOffset, (uint*)c \u002B vertexOffset, indexCount, i \u002B indexOffset));\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nSplit input arrays into parts manually. Unoptimized solution with additional allocations.\r\n\r\n---\r\n\r\nPR: https://github.com/mono/SkiaSharp/pull/2432",
+  "author": {
+    "login": "seclerp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/performance",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-03-29T13:35:11",
+  "updatedAt": "2024-03-02T13:46:36",
+  "commentCount": 0,
+  "reactionCount": 0
+}

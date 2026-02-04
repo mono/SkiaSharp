@@ -1,0 +1,19 @@
+{
+  "number": 1471,
+  "type": "issue",
+  "state": "closed",
+  "title": "How to deal with lots of Font/Typeface operations? ",
+  "body": "Hi @mattleibow hope you\u0027re doing well... I\u0027ve using SkiaSharp a lot since a couple of years (thanks for your great work!)\r\nI have a project where it requires a lot of font usage... I see a problem with memory consumption if I load fonts from a Stream like this basic template\r\n\r\n\u0060\u0060\u0060csharp\r\nvar s = new SKMemoryStream(File.ReadAllBytes(@\u0022c:\\Windows\\Fonts\\georgiab.ttf\u0022));\r\nvar tf = SKTypeface.FromStream(s);\r\nusing (var paint = new SKPaint())\r\n{\r\n   paint.Typeface = tf;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nI notice that disposing the paint obj will not dispose the specified SKTypeface nor the Stream associated to it. I\u0027ve read [this old post](https://github.com/mono/SkiaSharp/pull/386) and need you provide me some hints about how to deal with it... Do I have to create some font cache and then forcing the disposition of each cached obj as proposed in that post? or am I misreading it? Any suggestion will be very welcomed! thanks in advance\r\n",
+  "author": {
+    "login": "GabMarc",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-08-17T14:54:21",
+  "updatedAt": "2022-08-19T03:02:03",
+  "closedAt": "2020-08-21T19:41:01",
+  "commentCount": 3,
+  "reactionCount": 0
+}

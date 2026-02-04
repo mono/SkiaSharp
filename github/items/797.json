@@ -1,0 +1,17 @@
+{
+  "number": 797,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Problem building for AArch64 - \u0022 error: cannot convert \u2018neon::U16 {aka short unsigned int}\u2019\u0022",
+  "body": "Hello\r\n\r\nBuilding the native library fails when targeting AArch64, with the following error...\r\n\u0060\u0060\u0060\r\n../../../src/opts/SkRasterPipeline_opts.h: In function \u2018neon::F neon::from_half(neon::U16)\u2019:\r\n../../../src/opts/SkRasterPipeline_opts.h:657:26: error: cannot convert \u2018neon::U16 {aka short unsigned int}\u2019 to \u2018float16x4_t {aka __vector(4) __fp16}\u2019 for argument \u20181\u2019 to \u2018float32x4_t vcvt_f32_f16(float16x4_t)\u2019\r\n     return vcvt_f32_f16(h);\r\n\u0060\u0060\u0060\r\nThere are references to this elsewhere, for example : https://github.com/OSSystems/meta-browser/blob/master/recipes-browser/chromium/files/aarch64-skia-build-fix.patch\r\n\r\nDo you have a preferred or existing resolution?\r\n\r\n- Version with issue: 1.68.0\r\n- Last known good version:  1.60.3\r\n\r\nBest\r\n\\-James",
+  "author": {
+    "login": "solabc16",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-02-25T12:00:51",
+  "updatedAt": "2020-06-11T00:14:15",
+  "commentCount": 5,
+  "reactionCount": 0
+}

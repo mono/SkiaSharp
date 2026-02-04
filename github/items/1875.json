@@ -1,0 +1,17 @@
+{
+  "number": 1875,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] GPU acceleration makes canvas background go black",
+  "body": "This is quite a long question.\r\n\r\nDrawing with GPU acceleration makes canvas background black (regardless of flushed or not), and SKSurface.Snapshot() is empty after second SKCanvas.Flush().\r\n\r\nI am creating an SKCanvas like this:\r\n\u0060\u0060\u0060csharp\r\nprivate GRGlInterface grGlInterface;\r\nprivate GRContext grContext;\r\nprivate GRBackendRenderTarget renderTarget;\r\n\r\nprivate SKSurface surface;\r\nprotected SKCanvas canvas;\r\n\r\n...\r\n\r\ngrGlInterface = GRGlInterface.Create();\r\ngrContext = GRContext.CreateGl(grGlInterface);\r\nrenderTarget = new((int)size.x, (int)size.y, 0, 8, new GRGlFramebufferInfo(0, 0x8058));\r\n\r\nsurface = SKSurface.Create(grContext, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);\r\ncanvas = surface.Canvas;\r\n\u0060\u0060\u0060\r\nAnd rendering to it like this:\r\n\u0060\u0060\u0060csharp\r\ncanvas.Clear();\r\n\r\nusing SKPaint primary = new SKPaint();\r\nprimary.Color = SKColor.Parse(\u0022#1abc9c\u0022);\r\nprimary.IsAntialias = true;\r\n\r\nusing SKRoundRect rect = new SKRoundRect(new(0, 0, 140, 40), 15f);\r\ncanvas.DrawRoundRect(rect, primary);\r\n\r\ncanvas.Flush();\r\n\u0060\u0060\u0060\r\nThen finally drawing it to another canvas that uses a Silk.NET GLFW window GLContext:\r\n\u0060\u0060\u0060csharp\r\nusing SKImage image = surface.Snapshot();\r\ntarget.DrawImage(image, position);\r\n\u0060\u0060\u0060\r\n\r\nAfter the first render (the red circled area is the entire canvas is having the problem. the other canvas is the entire window):\r\n![image](https://user-images.githubusercontent.com/46281840/143937726-2179dbd7-7ba4-4a7d-8711-1e1a56608180.png)\r\nAfter the second render:\r\n![image](https://user-images.githubusercontent.com/46281840/143938000-1f50294f-3681-4807-8d15-2d1d7671eb47.png)\r\n\r\nIf I take SKSnapshot straight after second flush, the snapshot is empty, but if I do the drawing-and-flushing process multiple times at some other point in the program and not directly before the snapshot, there isn\u0027t an issue.",
+  "author": {
+    "login": "davwat",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-11-29T20:33:35",
+  "updatedAt": "2024-02-26T06:46:42",
+  "commentCount": 2,
+  "reactionCount": 0
+}

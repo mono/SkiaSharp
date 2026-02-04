@@ -1,0 +1,22 @@
+{
+  "number": 2853,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Decoding fails with tif files",
+  "body": "### Description\n\nI tried to load large .tif files, but they all fail. I\u0027ve tried \u0060SKImage.FromEncodedData(Stream)\u0060, \u0060SKImage.FromEncodedData(byte[])\u0060, \u0060SKImage.FromEncodedData(string)\u0060, \u0060SKBitmap.Decode(Stream)\u0060, \u0060SKBitmap.Decode(byte[])\u0060, \u0060SKBitmap.Decode(string)\u0060, but they all return null for this image or crash with an ArgumentNullException \u0060Value cannot be null. (Parameter \u0027codec\u0027) at SkiaSharp.SKBitmap.Decode(SKCodec codec)\u0060\r\n\r\nThis image does not work:\r\n[C 7 142 18-0002.zip](https://github.com/mono/SkiaSharp/files/15253367/C.7.142.18-0002.zip)\n\n### Code\n\n\u0060SKImage.FromEncodedData(Stream)\u0060, \u0060SKImage.FromEncodedData(byte[])\u0060, \u0060SKImage.FromEncodedData(string)\u0060, \u0060SKBitmap.Decode(Stream)\u0060, \u0060SKBitmap.Decode(byte[])\u0060, \u0060SKBitmap.Decode(string)\u0060 all don\u0027t work\n\n### Expected Behavior\n\nThese methods should not return null\n\n### Actual Behavior\n\nAll of these methods return null or crash with an ArgumentNullException \n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 10.0.19045\r\n\r\nBehaves the same on a different Windows 11 mashine, don\u0027t know the exact version number.\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "FuJa0815",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-08T18:38:32",
+  "updatedAt": "2024-05-09T14:23:25",
+  "commentCount": 0,
+  "reactionCount": 0
+}

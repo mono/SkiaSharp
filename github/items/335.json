@@ -1,0 +1,19 @@
+{
+  "number": 335,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKBitmap.Decode returns null when provided WebClient Stream with certain jpg",
+  "body": "**Environment:**\r\nWindows 10, .NET Core 2.0 Preview 2, SkiaSharp@1.58.1\r\n\r\nSKBitmap.Decode returns null when provided Stream from WebClient for some jpg files.\r\n\u0060\u0060\u0060csharp\r\nusing (var client = new WebClient())\r\n{\r\n    using (var stream = client.OpenRead(url))\r\n    {\r\n        var bitmap = SKBitmap.Decode(stream); //returns null\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nInteresting enough, the same image will be decoded fine if first downloaded to memory stream. Also works if converted to bytes. \r\n\r\nI tried to compare failing/working files, using JPEGSnoop. Found out that the following data is present in the failing files. Not sure if it is exactly the reason, but at least some clue.\r\n![image](https://user-images.githubusercontent.com/2235489/27949579-dba54f46-6306-11e7-9897-0b3a94ce9be4.png)\r\n\r\nPlease see the repro here:\r\nhttps://github.com/funkyOne/SkiaSharpStreamIssueRepro\r\n\r\nThis does seem like a bug. I\u0027m happy to help more, but don\u0027t have much expertise in imaging stuff. I can provide more of such images if needed.\r\n\r\nThanks",
+  "author": {
+    "login": "funkyOne",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.59.2",
+  "createdAt": "2017-07-07T08:30:27",
+  "updatedAt": "2022-08-19T21:01:26",
+  "closedAt": "2017-09-18T14:54:22",
+  "commentCount": 4,
+  "reactionCount": 0
+}

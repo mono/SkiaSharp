@@ -1,0 +1,44 @@
+{
+  "number": 3492,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix: #3369 - Hard crash on Linux ARM64",
+  "body": "## Investigation: #3369 - Hard crash on Linux ARM64\n\n### Status: \uD83D\uDD0D Root Cause Identified\n\n### Issue Summary\n- **Title:** [BUG] Hard crash on Linux ARM64 on 3.119.0\n- **Symptoms:** Application crashes without logs on Linux ARM64. Works on Windows.\n- **Platform:** Linux ARM64 (IMX8, RPI5, Amazon Graviton), .NET 9, SkiaSharp 3.119.0\n- **Last Working:** 2.88.8 on .NET 6\n- **Reproduction:** Blazor app renders a red circle, crashes immediately on ARM64\n\n### Related Issues\n| Issue | Title | Why Similar | Status |\n|-------|-------|-------------|--------|\n| #3272 | undefined symbol: uuid_generate_random on Debian Bookworm ARM64 | **Same root cause** - missing libuuid link | Open |\n| #3436 | undefined symbol exception thrown in linux ARM-64 | **Same root cause** - missing libuuid/freetype | Open |\n| #3229 | linux-riscv64/libSkiaSharp.so: undefined symbol: FT_Get_BDF_Property | Related - same linker issue | Open |\n\n**Key diagnosis from #3272 comments (rowan-gray):**\n\u003E The issue is caused by the arm64 libSkiaSharp.so binary not including DT_NEEDED entries for two required dependencies:\n\u003E - libuuid.so.1 (defines uuid_generate_random)\n\u003E - libfreetype.so.6 (defines FT_Get_BDF_Property)\n\n**Note from kekekeks:**\n\u003E libSkiaSharp.so already contains its own private build of libfreetype. Attempting to resolve symbols from the system libfreetype can and will cause crashes once versions drift.\n\n### Root Cause\nThe Linux ARM64 build is missing \u0060-luuid\u0060 linker flag, causing \u0060libSkiaSharp.so\u0060 to have undefined symbols for:\n- \u0060uuid_generate_random\u0060\n- \u0060uuid_parse\u0060\n\nThe freetype symbols (\u0060FT_Get_BDF_Property\u0060) are a separate issue - those should be included in the internal freetype build, not linked externally.\n\n### Investigation Plan\n- [x] Fetch issue and extract details\n- [x] Create draft PR\n- [x] Search for related issues (found #3272, #3436, #3229)\n- [x] Read all comments on related issues\n- [ ] Skip reproduction (build config issue - code inspection sufficient)\n- [ ] Find where libuuid is linked in Linux build\n- [ ] Verify ARM64-specific build config\n- [ ] Add missing linker flag\n\n### Progress Log\n| Action | Result |\n|--------|--------|\n| Fetched #3369 | Hard crash on Linux ARM64, multiple users affected |\n| Created branch | copilot/issue-3369-linux-arm64-crash |\n| Searched related issues | Found #3272 (same error), #3436 (same error), #3229 (freetype) |\n| Read #3272 comments | **Root cause identified**: missing -luuid linker flag for ARM64 |\n| Verified diagnosis | Multiple users confirm ldd shows missing DT_NEEDED entries |\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Blazor",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-03T00:59:50",
+  "updatedAt": "2026-02-03T01:03:14",
+  "closedAt": "2026-02-03T01:03:13",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/issue-3369-linux-arm64-crash",
+  "additions": 578,
+  "deletions": 156,
+  "changedFiles": 8,
+  "commits": 6,
+  "reviews": []
+}

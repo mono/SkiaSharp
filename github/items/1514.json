@@ -1,0 +1,28 @@
+{
+  "number": 1514,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add bindings for the serialization of SKPicture",
+  "body": "**Description of Change**\r\n\r\nAdd bindings for the serialization of SKPicture.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #880 \r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060csharp\r\nclass SKPicture {\r\n    public SKData Serialize ();\r\n    public void Serialize (Stream stream);\r\n    public void Serialize (SKWStream stream);\r\n\r\n    public static SKPicture Deserialize (IntPtr data, int length);\r\n    public static SKPicture Deserialize (ReadOnlySpan\u003Cbyte\u003E data);\r\n    public static SKPicture Deserialize (SKData data);\r\n    public static SKPicture Deserialize (Stream stream);\r\n    public static SKPicture Deserialize (SKStream stream);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNew APIs that do not change behaviour of existing functionality.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-30T13:56:46",
+  "updatedAt": "2020-10-04T18:33:36",
+  "closedAt": "2020-09-30T20:49:57",
+  "commentCount": 1,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/picture-serialization",
+  "additions": 244,
+  "deletions": 16,
+  "changedFiles": 6,
+  "commits": 2,
+  "reviews": []
+}

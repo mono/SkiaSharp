@@ -1,0 +1,18 @@
+{
+  "number": 1048,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKTouchAction.Cancelled not issued on iOS when SkCanvasView is in a ScrollView",
+  "body": "**Description**\r\n\r\n[On iOS]\r\nWhen a SkCanvasView is in a ScrollView, and the EnableTouchEvents property is set to \u0027true\u0027, the touch event is not cancelled (i.e.: SkTouchAction.Cancelled is not invoked) if the ScrollView is scrolled while touching the SkCanvasView. Neither is the SkTouchAction.Released event.\r\nEverything works fine on Android.\r\n\r\n**Code**\r\n\r\nSee attached sample project.\r\n\r\n**Expected Behavior**\r\n\r\nSKTouchAction.Cancelled event invoked when the container is scrolled while touching the SkCanvasView.\r\n\r\n**Actual Behavior**\r\n\r\nEvent is not invoked on iOS. Works fine on Android. Not tested on other platforms.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1\r\n- Last known good version:  unknown\r\n- IDE:  VS2019 Mac/Windows\r\n- Platform Target Frameworks: \r\n  - Xamarin.Forms\r\n\r\n**Reproduction Link**\r\n\r\n[TestSkiaSharp.zip](https://github.com/mono/SkiaSharp/files/3916183/TestSkiaSharp.zip)\r\n\r\n",
+  "author": {
+    "login": "ghost",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2019-12-03T10:57:51",
+  "updatedAt": "2022-09-11T18:31:03",
+  "commentCount": 17,
+  "reactionCount": 0
+}

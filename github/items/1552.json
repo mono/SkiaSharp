@@ -1,0 +1,17 @@
+{
+  "number": 1552,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] No support for color type BGR888x / BGRx8888",
+  "body": "**Description**\r\n\r\nWe use Xamarin.Forms with SkiaSharp on the platforms iOS, Android, UWP.\r\n\r\nSkiaSharp is used to process pixel information in the Bgrx8888 format (color type).\r\n\r\nHowever, if the color type SKColorType.Bgra8888 is used, the setting SKAlphaType.Opaque will always be ignored. The alpha value is always taken into account. The same setting works on Android and UWP.\r\n\r\n**Code**\r\n\r\nSKImageInfo info = new SKImageInfo(\r\n                    width: w,\r\n                    height: h,\r\n                    colorType: SKColorType.Bgra8888,\r\n                    alphaType: SKAlphaType.Opaque\r\n                );\r\n\r\n**Expected Behavior**\r\n\r\nThe setting of SKAlphaType is taken into account and the color scheme BGRX is possible on iOS.\r\n",
+  "author": {
+    "login": "ghost",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-11-16T22:35:15",
+  "updatedAt": "2020-11-16T22:45:42",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,108 @@
+{
+  "number": 1817,
+  "type": "pr",
+  "state": "closed",
+  "title": "Replace HandleDictionary lock with a critical section under Windows",
+  "body": "**Description of Change**\r\n\r\nFix for deadlock issue related to the lock implementation used by HandleDictionary under Windows. See issue #1383 for full description of issue.\r\n\r\n* The decision of which lock implementation to use is made at runtime to save compile time build directives\r\n* The lock is abstracted behind a \u0060IPlatformLock\u0060 interface\r\n* On Windows, \u0060IPlatformLock\u0060 maps to a Win32 Critical Section via PInvoke\r\n* On all other platforms, \u0060IPlatformLock\u0060 maps to a \u0060ReaderWriterLockSlim\u0060 as before\r\n\r\nTested on Windows 10 under a heavy load scenario where this issue was previously easily reproducible. After the fix issue couldn\u0027t be reproduced.\r\n\r\n**Bugs Fixed**\r\n\r\n-Related to issue: #1383 \r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\n* Besides fixing deadlock, functionality remains the same.\r\n* No tests are included because the issue is timing and platform specific and can only be reliably reproduced under load and can depend on GC interactions.\r\n* Not sure about coding standards, but tried to match existing style.\r\n* No documentation updates applicable",
+  "author": {
+    "login": "toptensoftware",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-09-26T12:34:44",
+  "updatedAt": "2022-08-13T17:15:46",
+  "closedAt": "2021-11-16T04:07:04",
+  "commentCount": 23,
+  "reactionCount": 4,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "FixIssue1383",
+  "additions": 161,
+  "deletions": 1,
+  "changedFiles": 2,
+  "commits": 14,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-26T16:43:02"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-26T23:39:12"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-26T23:47:51"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-26T23:48:00"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-26T23:48:21"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-26T23:49:04"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-27T01:20:55"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-27T09:02:53"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-27T09:05:14"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-29T12:25:40"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-29T12:30:36"
+    },
+    {
+      "author": "toptensoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2021-09-29T12:30:45"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2021-09-29T12:31:37"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2021-11-05T23:03:25"
+    },
+    {
+      "author": "mattleibow",
+      "state": "DISMISSED",
+      "submittedAt": "2021-11-10T03:44:56"
+    },
+    {
+      "author": "mattleibow",
+      "state": "DISMISSED",
+      "submittedAt": "2021-11-13T06:00:44"
+    }
+  ]
+}

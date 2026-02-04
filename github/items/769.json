@@ -1,0 +1,39 @@
+{
+  "number": 769,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKBitmap pixels are premultiplied, even if specified un-premultiplied at constructor.",
+  "body": "SKBitmap pixels are premultiplied, even if specified un-premultiplied at constructor.\r\n\r\n            SKBitmap bmp = new SKBitmap(16,16, SKColorType.Rgba8888, SKAlphaType.Unpremul);\r\n            bmp.SetPixel(0, 0, new SKColor(red: 255, green:255,blue:255,alpha:100));\r\n            byte[] bytes = bmp.Bytes;\r\n\r\n            Assert.IsTrue(bytes[0] == 255); //Blue. Expected 255, result 100\r\n            Assert.IsTrue(bytes[1] == 255); //Green. Expected 255, result 100\r\n            Assert.IsTrue(bytes[2] == 255); //Red. Expected 255, result 100\r\n            Assert.IsTrue(bytes[3] == 100); //Alpha. Expected 100, result 100\r\n\r\nNote : Chaning the SKAlphaType value to Opaque or Premultiplied does not change the result.\r\n\r\n- Version with issue:  1.60.3\r\n- Last known good version:  N/A\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: Full Framework / Windows 10\n\n\u003E VS bug [#782039](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/782039)",
+  "author": {
+    "login": "MathieuJack",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2019-01-25T20:20:58",
+  "updatedAt": "2024-06-02T07:23:40",
+  "commentCount": 4,
+  "reactionCount": 0
+}

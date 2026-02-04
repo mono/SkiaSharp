@@ -1,0 +1,18 @@
+{
+  "number": 1204,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG]  The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception in .NET Core 3.1 nanoserver docker container",
+  "body": "**Description**\r\n\r\nIn a .NET Core 2.2 project that includes SkiaSharp, SkiaSharp.NativeAssets.NanoServer, building and running on mcr.microsoft.com/dotnet/core/sdk:2.2-nanoserver-1803 worked fine.\r\n\r\nIn a .NET Core 3.1 project that includes SkiaSharp, SkiaSharp.NativeAssets.NanoServer, building and running on mcr.microsoft.com/dotnet/core/sdk:3.1-nanoserver-1803 does not work.  The exception is:\r\n\r\n_The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\nUnable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\nUnhandled exception. System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n_\r\n\r\n\r\n**Code**\r\n\r\nJust this one line will do it:\r\n\r\nvar bitmap = new SKBitmap(100, 100);\r\n\r\n**Expected Behavior**\r\n\r\nNo exception\r\n\r\n**Actual Behavior**\r\n\r\nThis exception:  _The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\nUnable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\nUnhandled exception. System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()_\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1.1\r\n- IDE: .NET Core 3.1 SDK on mcr.microsoft.com/dotnet/core/sdk:3.1-nanoserver-1803\r\n",
+  "author": {
+    "login": "djarvis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-31T20:31:13",
+  "updatedAt": "2022-08-19T06:02:10",
+  "closedAt": "2020-04-01T21:19:13",
+  "commentCount": 4,
+  "reactionCount": 0
+}

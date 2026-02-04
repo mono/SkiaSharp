@@ -1,0 +1,18 @@
+{
+  "number": 1345,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] ",
+  "body": "Hi\r\nIn a Xamarin Forms app i use a SKGLView to write spokes to a circle via the GPU, the thing is the whole canvas gets completly redrawn(cleared) with every call to \r\nDispatcher.BeginInvokeOnMainThread(() =\u003E{SKGLView.InvalidateSurface(); }); not just update the spoke of 10 degrees.\r\nBut if i use a SKCanvasView instead with the same code the canvas keeps the rest of the circle and only updates the spoke as expected. Using the SKCanvasView is far to slow!\r\nThe Dispatcher.BeginInvokeOnMainThread(() is called from an SignalR.On event..\r\nI know SKGLView redraws the surface at InvalidateSurface\r\nand \r\nSKCanvasView redraws the canvas at InvalidateSurface but i was under the impression that the functionality was the same,how to solve this?\r\nThe SKCanvasView/SKGLView is declared in the .xaml file.\r\nAll this is done on an Android emulator with Visual Studio 2019 16.6.2\r\nVersions:\r\nProject .NET Standard 2.0\r\nXamarin Forms 4.6.0.847\r\nSkiaSharp.Views.Forms 1.68.3\r\nSkiaSharp.Svg 1.60.0\r\nSkiaSharp.Extended 1.60.0\r\nSkiaSharp 1.68.3\r\n\r\nThx Peder",
+  "author": {
+    "login": "pilotshamn",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-22T09:02:34",
+  "updatedAt": "2022-08-19T06:01:15",
+  "closedAt": "2020-06-22T09:05:20",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,83 @@
+{
+  "number": 3156,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix iOS Simulator performance with Metal",
+  "body": "This comes from a new synced branch.\r\n\r\nHad iOS simulator lagging on M1 at 9 fps with SKGLView, so had to adjust its platform-related code for iOS to unlock 60 fps.\r\nJust followed Apple guidelines for simulator:   https://developer.apple.com/documentation/metal/developing-metal-apps-that-run-in-simulator?language=objc\r\n\r\nreplacing \u0060SampleCount = 1;\u0060 (no MSAA) inside \u0060SKMetalView\u0060 with:\r\n\r\n\u0060\u0060\u0060csharp\r\n\t\t\tif (DeviceInfo.Current.DeviceType == DeviceType.Virtual)\r\n\t\t\t{\r\n\t\t\t\tDepthStencilStorageMode = MTLStorageMode.Private;\r\n\t\t\t\tSampleCount = 4;\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tDepthStencilStorageMode = MTLStorageMode.Shared;\r\n\t\t\t\tSampleCount = 2;\r\n\t\t\t}\r\n\u0060\u0060\u0060\r\n \r\nWorks fine in DrawnUi now, wanted to share.\r\n",
+  "author": {
+    "login": "taublast",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-06T07:08:13",
+  "updatedAt": "2025-05-02T09:31:26",
+  "closedAt": "2025-02-17T15:43:50",
+  "commentCount": 13,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "synched",
+  "additions": 19,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 7,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2025-02-12T14:16:44"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:02:50"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:11:38"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:14:33"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:17:33"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:18:35"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:24:25"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:47:57"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T15:49:24"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-02-12T17:09:42"
+    }
+  ]
+}

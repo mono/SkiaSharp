@@ -1,0 +1,22 @@
+{
+  "number": 2732,
+  "type": "issue",
+  "state": "open",
+  "title": "The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception",
+  "body": "### Description\r\n\r\nI am running running a webassembly blazor application and I included the nuget package for SkiaSharp and NativeAssets.WebAssembly. When I try and generate the QR barcode in my test environment on Windows it gives me this error message. \r\n\r\nThis is the first time trying to use SkiaSharp in a coding enivornment. \r\n\r\n### Code\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\nusing SkiaSharp.QrCode;\r\n\r\nusing MemoryStream ms = new();\r\nQRCodeGenerator qrGenerator = new QRCodeGenerator();\r\nQRCodeData qrCodeData = qrGenerator.CreateQrCode(Input, ECCLevel.L);\r\nvar info = new SKImageInfo(512, 512);\r\nusing var surface = SKSurface.Create(info);\r\n\u0060\u0060\u0060\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\nI get The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception with an inner exception of dllnotfound libSkiaSharp\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 11\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "kbrow20",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-01T21:18:11",
+  "updatedAt": "2025-09-16T23:21:06",
+  "commentCount": 3,
+  "reactionCount": 3
+}

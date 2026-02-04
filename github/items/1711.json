@@ -1,0 +1,17 @@
+{
+  "number": 1711,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Can\u0027t take the alpha channel out of a PNG?",
+  "body": "**Description**\r\n\r\nJust wondering if this is a bug, but when I load a PNG and explicitly request the bitmap to have alpha = opaque, nothing gets drawn on the canvas. (However a jpg of the same image works fine?). The call to GetPixels also seems to end far too quickly as if it\u0027s not even reading anything from the file.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n            var codec = SKCodec.Create(\u0022myimage.png\u0022);\r\n\r\n            var codecInfo = codec.Info;\r\n            SKImageInfo desiredInfo = new SKImageInfo(codecInfo.Width, codecInfo.Height);\r\n            desiredInfo.AlphaType = SKAlphaType.Opaque;\r\n\r\n            bitmap = new SKBitmap(desiredInfo);\r\n            codec.GetPixels(bitmap.Info, bitmap.GetPixels());\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nA bitmap with no transparency.\r\n\r\n**Actual Behavior**\r\n\r\nNo pixels loaded?\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3-pre-90, 2.80.2\r\n- IDE:  VS 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  Windows 10 using WinForms with SkiaSharp.Views.Desktop.SKGLControl\r\n",
+  "author": {
+    "login": "miltontaylor-panotek",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-06-02T10:28:44",
+  "updatedAt": "2021-06-02T10:28:44",
+  "commentCount": 0,
+  "reactionCount": 0
+}

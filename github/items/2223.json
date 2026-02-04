@@ -1,0 +1,18 @@
+{
+  "number": 2223,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp.NativeAssets.macos is adding a reference to osx binary which cannot be found",
+  "body": "**Description**\r\n\r\nWe get the following warning in visual studio for our WPF project:\r\n\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\n\r\nWarning\t\tThe referenced component \u0027C:\\Users\\Alexandru Stefan Nea\\.nuget\\packages\\harfbuzzsharp.nativeassets.macos\\2.8.2.1-preview.91\\buildTransitive\\net462\\..\\..\\runtimes\\osx\\native\\libHarfBuzzSharp.dylib\u0027 could not be found.\tctServiceTool\t\t\t\r\nWarning\t\tThe referenced component \u0027C:\\Users\\Alexandru Stefan Nea\\.nuget\\packages\\skiasharp.nativeassets.macos\\2.88.1-preview.91\\buildTransitive\\net462\\..\\..\\runtimes\\osx\\native\\libSkiaSharp.dylib\u0027 could not be found.\tctServiceTool\t\t\t\r\n\r\nI am using a WPF project which only targets windows. I do not understand why it is throwing these macOS warnings. I manually traveled the path suggested and the file is there on the machine. I do not understand why Visual Studio says it cannot be found.\r\n\r\nCould this be related to this? https://github.com/mono/SkiaSharp/issues/1159\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.1-preview.91 (I had the same issue with 2.88.0)\r\n- IDE:  VS 2022\r\n- Platform Target Frameworks: .net 4.7.2\r\n- Target Devices:   Windows\r\n",
+  "author": {
+    "login": "alexachso",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-08-24T19:48:11",
+  "updatedAt": "2024-04-24T07:50:05",
+  "closedAt": "2024-04-24T07:50:04",
+  "commentCount": 5,
+  "reactionCount": 2
+}

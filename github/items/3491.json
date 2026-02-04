@@ -1,0 +1,52 @@
+{
+  "number": 3491,
+  "type": "pr",
+  "state": "open",
+  "title": "Add SKSamplingOptions support to SKSurface.Draw and SKCanvas.DrawSurface",
+  "body": "## Summary\n\nFixes #3344\n\nThis PR adds \u0060SKSamplingOptions\u0060 parameter support to \u0060SKSurface.Draw\u0060 and \u0060SKCanvas.DrawSurface\u0060 methods, allowing users to specify sampling options when drawing surfaces.\n\n## Changes\n\n### C API (externals/skia)\n- Added \u0060sk_surface_draw_with_sampling()\u0060 function\n\n### C# API\n- Added \u0060SKSurface.Draw(SKCanvas, float, float, SKSamplingOptions, SKPaint)\u0060 overload\n- Added \u0060SKSurface.Draw(SKCanvas, SKPoint, SKSamplingOptions, SKPaint)\u0060 overload\n- Added \u0060SKCanvas.DrawSurface(SKSurface, float, float, SKSamplingOptions, SKPaint)\u0060 overload  \n- Added \u0060SKCanvas.DrawSurface(SKSurface, SKPoint, SKSamplingOptions, SKPaint)\u0060 overload\n\n### Tests\n- Added \u0060CanDrawSurfaceWithSamplingOptions\u0060 test\n- Added \u0060CanDrawSurfaceOnCanvasWithSamplingOptions\u0060 test\n\n## Usage Example\n\n\u0060\u0060\u0060csharp\nvar sampling = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\n\n// Using SKSurface.Draw\nsurface.Draw(canvas, x, y, sampling, paint);\nsurface.Draw(canvas, new SKPoint(x, y), sampling, paint);\n\n// Using SKCanvas.DrawSurface\ncanvas.DrawSurface(surface, x, y, sampling, paint);\ncanvas.DrawSurface(surface, new SKPoint(x, y), sampling, paint);\n\u0060\u0060\u0060\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-02T22:48:17",
+  "updatedAt": "2026-02-03T11:07:58",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "clean",
+  "baseBranch": "main",
+  "headBranch": "copilot/fix-drawsurface-sampling-options",
+  "additions": 92,
+  "deletions": 1,
+  "changedFiles": 5,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-02T23:19:13"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-02T23:59:40"
+    }
+  ]
+}

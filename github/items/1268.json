@@ -1,0 +1,44 @@
+{
+  "number": 1268,
+  "type": "pr",
+  "state": "closed",
+  "title": "Ensure that the assemblies are in fact signed",
+  "body": "**Description of Change**\r\n\r\nEnsure that the assemblies are in fact signed.\r\n\r\nSince the addition of the \u0060Xamarin.Build.TypeRedirector\u0060 NuGet package to fix up the VS2017 and VS2019 issues, the assembly is modified AFTER the signing, so that breaks it. This PR now specifies that the signing task depends on the redirection task.\r\n\r\nType redirector issues:\r\n - https://github.com/xamarin/xamarin-macios/issues/5273\r\n - https://github.com/xamarin/XamarinComponents/pull/764\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1267\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/Build",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2.1",
+  "createdAt": "2020-05-01T15:09:22",
+  "updatedAt": "2020-05-02T08:05:52",
+  "closedAt": "2020-05-02T08:05:46",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1267",
+  "additions": 58,
+  "deletions": 30,
+  "changedFiles": 6,
+  "commits": 7,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-01T22:30:14"
+    }
+  ]
+}

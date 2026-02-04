@@ -1,0 +1,46 @@
+{
+  "number": 3378,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKShader doesn\u0027t release all memory on Dispose()",
+  "body": "### Description\n\nI think the bug is in ToHarfBuzzBlob() extension - it doesn\u0027t dispose SKStreamAsset in all paths.\n\n### Code\n\nIt seems that this code leaks SKStreamAssets even if properly disposed:\n\n\u0060\u0060\u0060    class TextSegmentShaper : IDisposable\n    {\n        public SKPaint Paint { get; set; }\n        public SKShaper Shaper { get; set; }\n\n        private bool disposedValue;\n\n        public TextSegmentShaper(SKTypeface typeface, SKPaint fromPaint)\n        {\n            Paint = new SKPaint()\n            {\n                Style = fromPaint.Style,\n                IsAntialias = fromPaint.IsAntialias,\n                Color = fromPaint.Color,\n                Typeface = typeface,\n                TextSize = fromPaint.TextSize,\n                TextAlign = fromPaint.TextAlign,\n                SubpixelText = fromPaint.SubpixelText,\n            };\n\n            Shaper = new SKShaper(typeface);\n        }\n\n        protected virtual void Dispose(bool disposing)\n        {\n            if (!disposedValue)\n            {\n                Paint?.Dispose();\n                Shaper?.Dispose();\n\n                Paint = null;\n                Shaper = null;\n\n                disposedValue = true;\n            }\n        }\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nFirst observed bug on Android, but seems to be a problem also on Windows.\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "michaldobrodenka",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/Metal",
+      "color": "1acea7"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/Android",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-06T07:51:55",
+  "updatedAt": "2025-10-06T07:52:31",
+  "commentCount": 1,
+  "reactionCount": 0
+}

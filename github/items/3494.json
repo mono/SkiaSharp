@@ -1,0 +1,52 @@
+{
+  "number": 3494,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix Linux ARM64 crash caused by missing fontconfig in cross-compile sysroot",
+  "body": "## Summary\n\nThis PR fixes the hard crash on Linux ARM64 (issue #3369) by adding the fontconfig runtime library to ALL cross-compile Docker sysroots.\n\n## Root Cause Analysis\n\nThe ARM64 cross-compile Docker was only downloading \u0060libfontconfig1-dev\u0060 which provides:\n- Headers (fontconfig.h, etc.)\n- Static library (libfontconfig.a) \n\nThe actual shared library (\u0060libfontconfig.so.1.12.0\u0060) is in the **runtime package** (\u0060libfontconfig1\u0060), not the dev package.\n\n### Why the build succeeded but runtime failed\n\n1. The ninja build includes \u0060-lfontconfig\u0060 in the link command\n2. The linker finds \u0060libfontconfig.so\u0060 symlink, but it points to a non-existent file\n4. The resulting \u0060libSkiaSharp.so\u0060 is missing \u0060libfontconfig.so.1\u0060 from its \u0060DT_NEEDED\u0060 entries\n5. At runtime, fontconfig is loaded implicitly via freetype\n6. fontconfig calls \u0060uuid_generate_random()\u0060 which requires libuuid\n7. **CRASH**: \u0060undefined symbol: uuid_generate_random\u0060\n\n### Comparison: x64 vs ARM64 before fix\n\n**x64 (native build)** - has fontconfig:\n\u0060\u0060\u0060\nDT_NEEDED: libpthread.so.0, libfontconfig.so.1, libdl.so.2, libm.so.6, libc.so.6\n\u0060\u0060\u0060\n\n**ARM64 (cross-compile)** - missing fontconfig:\n\u0060\u0060\u0060\nDT_NEEDED: libpthread.so.0, libdl.so.2, libm.so.6, libc.so.6\n\u0060\u0060\u0060\n\n### ARM64 after fix\n\n\u0060\u0060\u0060\nDT_NEEDED: libpthread.so.0, libfontconfig.so.1, libdl.so.2, libm.so.6, libc.so.6\n\u0060\u0060\u0060\n\n## The Fix\n\nDownload **both** packages when setting up the cross-compile sysroot:\n- \u0060libfontconfig1-dev\u0060 - headers and static library\n- \u0060libfontconfig1\u0060 - actual shared library\n\n**Files changed:**\n- \u0060scripts/Docker/debian/clang-cross/10/Dockerfile\u0060 (arm, arm64, x86, riscv64)\n- \u0060scripts/Docker/debian/clang-cross/11/Dockerfile\u0060 (same fix for consistency)\n- \u0060scripts/Docker/debian/clang-cross/12/Dockerfile\u0060 (same fix for consistency)\n- \u0060scripts/Docker/debian/clang-cross/13/Dockerfile\u0060 (loongarch64)\n\n## Testing\n\n\u2705 Built ARM64 with fix - fontconfig now appears in DT_NEEDED  \n\u2705 Tested font operations (SKTypeface.FromFamilyName, DrawText) on ARM64 Docker  \n\u2705 No more \u0060undefined symbol: uuid_generate_random\u0060 crash  \n\n## Related Issues\n\nThis fix also resolves:\n- #3272 - Same uuid_generate_random error on Debian ARM64\n- #3436 - Both FT_Get_BDF_Property and uuid_generate_random on ARM64\n\nFixes #3369\nFixes #3272\nFixes #3436",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/Android",
+      "color": "ededed"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-03T01:07:10",
+  "updatedAt": "2026-02-03T10:33:31",
+  "closedAt": "2026-02-03T10:33:29",
+  "commentCount": 1,
+  "reactionCount": 2,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/issue-3369-linux-arm64-crash",
+  "additions": 93,
+  "deletions": 37,
+  "changedFiles": 8,
+  "commits": 5,
+  "reviews": []
+}

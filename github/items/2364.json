@@ -1,0 +1,17 @@
+{
+  "number": 2364,
+  "type": "issue",
+  "state": "open",
+  "title": "Is there a way to only build the skia nuget?  Skipping all the Views/Controls projects because they dont seem to build any longer.",
+  "body": "We dont need the views or controls libraries, is there a way to only build the skiasharp nuget without all the extra stuff?  Currently we cant build the Views/Controls libraries using the build.cake because the workloads cannot be restored:\r\n\r\n\u0022       \u0022C:\\Development\\Examples\\SkiaSharp\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (Restore target) (1) -\u003E\r\n       \u0022C:\\Development\\Examples\\SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj\u0022 (_GenerateProjectRestoreGraph target) (10:18) -\u003E\r\n       \u0022C:\\Development\\Examples\\SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj\u0022 (_GenerateProjectRestoreGraphPerFramework target) (10:25) -\u003E\r\n       (_CheckForMissingWorkload target) -\u003E\r\n         C:\\Program Files\\dotnet\\sdk\\7.0.102\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To build this project, the following workloads must be installed: ios [C:\\Development\\Examples\\SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.V\r\n       iews\\SkiaSharp.Views.csproj::TargetFramework=net6.0-ios]\r\n       C:\\Program Files\\dotnet\\sdk\\7.0.102\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To install these workloads, run the following command: dotnet workload restore [C:\\Development\\Examples\\SkiaSharp\\source\\SkiaSharp.Views\\Skia\r\n       Sharp.Views\\SkiaSharp.Views.csproj::TargetFramework=net6.0-ios]\u0022\r\n\r\nand when we restore we get this:\r\n\r\n\u0022Project \u0022C:\\Development\\Examples\\SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj\u0022 is building \u0022C:\\Development\\Examples\\SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj\u0022 (_GetRequiredWorkloads target(s)):\r\n\r\nC:\\Program Files\\dotnet\\sdk\\7.0.200-preview.22628.1\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.targets(1226,3): error MSB4019: The imported project \u0022C:\\Program Files\\dotnet\\sdk\\7.0.200-preview.22628.1\\Sdks\\Microsoft.NET.Sdk\\16.2.1020\\targets\\Xamarin.Shared.Sdk.MultiTarget.targets\u0022 was not found. Confirm that the expression in the Import declaration \u0022;..\\16.2.1020\\targets\\Xamarin.Shared.Sdk.MultiTarget.targets\u0022 is correct, and that the file exists on disk.\r\nDone building project \u0022SkiaSharp.Views.csproj\u0022 -- FAILED.\u0022\r\n\r\n\r\n\r\nWe were looking to update our custom SkiaSharp to the latest code but cant compile any of it any longer because of these views...  Doesnt matter the .net sdk version we use, the non preview has the same error.\r\n\r\nThanks much!\r\nBrad\r\n",
+  "author": {
+    "login": "BradChase2011",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-01-23T23:36:59",
+  "updatedAt": "2023-01-23T23:36:59",
+  "commentCount": 0,
+  "reactionCount": 0
+}

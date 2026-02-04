@@ -1,0 +1,23 @@
+{
+  "number": 3016,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unity Editor can\u2019t find dependency DLLs in subfolders anymore (DLLNotFoundException)",
+  "body": "### Description\r\n\r\nHi,\r\n\r\nI came into some frustrating issue today in the editor : I have a project in which I have manually imported libraries. All of the required dependencies are also in the project, in a subfolder (see screenshots below).\r\n\r\nThis project was working fine and finding everything it needed. Today I downloaded the new version of the libraries (from skiasharp 2.88.7 to skiasharp 2.88.8), replaced DLLs without changing any of the folder structure, and suddendly, with two different libraries _(libSkiaSharp and pdfium from SkiaSharp and PDFToImage)_, when I hit play i have a \u201CDLLNotFoundException\u201D on the dependencies, but **only** if they are in a subfolder\u2026\r\n\r\nI have many dlls and .so because this is a cross-platform project (android ARM64 \u002B android x64 \u002B UWP ARM64 \u002B Winx64), so putting every single dependency dll in the same folder is a no-go.\r\n\r\nAnyone knows why this happens ?\r\nThanks.\r\n\r\nHere are the screenshots :\r\n\r\n**Working old project structure, this exact same structure on the updated dlls doesn\u2019t work, and I have to put libskiasharp.dll in the root Skia folder :**\r\n\r\n![image](https://github.com/user-attachments/assets/f292ebb3-c39a-4cca-96a6-aeadad510bc9)\r\n![image](https://github.com/user-attachments/assets/259e8a39-a92c-45e6-954b-90693116a401)\r\n\r\n_(And same goes for pdfium.dll)_\r\n\r\n### Code\r\n\r\n[https://github.com/SashelI/skiadll-tests-unity](https://github.com/SashelI/skiadll-tests-unity)\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n\u0060DllNotFoundException: libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\nSkiaSharp.SKImageInfo..cctor () (at \u003Cba5db125678d4cb8bfb461a6f3fca1c2\u003E:0)\r\nRethrow as TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\u0060\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 10 x64\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n![image](https://github.com/user-attachments/assets/8888366f-ab43-4256-b082-9a4e3bc2c252)\r\n![image](https://github.com/user-attachments/assets/4990cd5f-0490-446b-a0b8-4a9d54a68bec)\r\n\r\n\r\n### Relevant Log Output\r\n\r\n\u0060\u0060\u0060shell\r\n\u0060DllNotFoundException: libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\nSkiaSharp.SKImageInfo..cctor () (at \u003Cba5db125678d4cb8bfb461a6f3fca1c2\u003E:0)\r\nRethrow as TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\u0060\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "SashelI",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-23T16:03:40",
+  "updatedAt": "2024-09-30T03:09:34",
+  "closedAt": "2024-09-30T03:09:34",
+  "commentCount": 1,
+  "reactionCount": 0
+}

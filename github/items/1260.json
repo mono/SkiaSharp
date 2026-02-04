@@ -1,0 +1,27 @@
+{
+  "number": 1260,
+  "type": "pr",
+  "state": "closed",
+  "title": "First version of high quality image downsampler",
+  "body": "**Description of Change**\r\n\r\n- Currently uses Skia for upsampling (IMHO upsampling always looks blurry anyway)\r\n- Not optimized yet, just uses \u0060Vector4\u0060 from the \u0060System.Numerics\u0060 package.  \r\n   - Most of the time is actually spent in Skia\u0027s color type conversion...\r\n   - I have optimized AVX2 code ready that short circuits the most common case (speedup x5), but I first wanted to share a \u0022minimal\u0022 working example, without unsafe pointers, to get feedback\r\n- The code currently always uses a \u0060Parallel.For\u0060, but by default only uses a single thread. \r\n- Since Skia native doesn\u0027t have this resampler, I decided to use extensions methods, and put the code in a separate directory.\r\n- The \u0060outputWidth\u0060 and \u0060outputHeight\u0060 are \u0060float\u0060s, to allow fractional sizes (just like \u0060SKCanvas.DrawImage\u0060  can draw into a fractional rectangle). \r\n- The \u0060SKImageSamplingOptions.OutputOffset\u0060 allows to control the sub-pixel offsets, if needed, and allows setting other options.\r\n- \u0060SKCanvas.DrawResampledBitmap(bitmap, sourceRect, targetRect, options, paint)\u0060 and overloads could be a handy method too, I didn\u0027t add this yet.\r\n- I added an example in the gallery. The baboon image is actually a good image, clearly showing the difference in quality between Skia\u0027s native hybrid box-resampler/resizer and this Lanczos based resampler.\r\n- Currently always uses a Lanczos filter (good average filter), but allows to provide external ones.\r\n- [To improve quality](https://github.com/avaneev/avir), the image is first upscaled \u0060x2\u0060, but this is completely integrated in the filter weights, so has zero overhead. \r\n- I haven\u0027t done any testing on ARM devices yet (not sure how to do this). \r\n- I was able to run all unit tests, but I didn\u0027t add any yet. The existing APIs don\u0027t change at all.\r\n- I struggled a lot to verify the results. I reported some bugs to Skia regarding PNG image encoding bugs. Thanks for the GIMP tip, that one always worked correctly.\r\n- I should add a lot more comments about how this all works ;-)\r\n\r\n\r\n**Bugs Fixed**\r\n\r\nSkia\u0027s default image resizing can be blurry.\r\n\r\n- Related to issue ##1127 \r\n\r\n**API Changes**\r\n\r\nAdded: \r\n\r\n- \u0060public static SKBitmap ResampledBy (this SKBitmap srcBitmap, float scaleFactor, SKImageSamplingOptions options = null)\u0060\r\n- \u0060public static SKBitmap ResampledBy (this SKBitmap srcBitmap, float widthFactor, float heightFactor, SKImageSamplingOptions options = null)\u0060\r\n- \u0060public static SKBitmap ResampledTo (this SKBitmap srcBitmap, float outputWidth, float outputHeight, SKImageSamplingOptions options = null)\u0060\r\n- \u0060public static SKBitmap ResampledBy (this SKPixmap srcPixmap, float scaleFactor, SKImageSamplingOptions options = null)\u0060\r\n- \u0060public static SKBitmap ResampledBy (this SKPixmap srcPixmap, float widthFactor, float heightFactor, SKImageSamplingOptions options = null)\u0060\r\n- \u0060public static SKBitmap ResampledTo (this SKPixmap srcPixmap, float outputWidth, float outputHeight, SKImageSamplingOptions options = null)\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone\r\n\r\n**PR Checklist**\r\n\r\n- [n] Has tests (if omitted, state reason in description) -\u003E Added sample (should add many unit tests some day)\r\n- [y] Rebased on top of \u0060develop\u0060 at time of PR\r\n- [y] Changes adhere to coding standard -\u003E formatted according to \u0060.editorconfig\u0060\r\n- [n] Updated documentation -\u003E Not yet, until we agree on API, if this PR is accepted at all ;-)\r\n\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-29T11:50:28",
+  "updatedAt": "2020-04-30T11:46:56",
+  "closedAt": "2020-04-30T11:44:45",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "issue/1127",
+  "additions": 555,
+  "deletions": 0,
+  "changedFiles": 7,
+  "commits": 1,
+  "reviews": []
+}

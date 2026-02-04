@@ -1,0 +1,32 @@
+{
+  "number": 2955,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix memory leaks in MAUI views",
+  "body": "**Description of Change**\r\n\r\nIt is very easy to create a circular reference in iOS and we had a few. When you have an event from a platform view to another instance that then references that platform view, you get an un-collectable set.\r\n\r\nThis PR breaks this chain by making the platform view have an event on a proxy object that has a _weak_ reference to handlers and/or virtual views.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2923\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backport/release/2.x",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-23T21:04:51",
+  "updatedAt": "2024-09-18T16:29:39",
+  "closedAt": "2024-07-26T08:14:49",
+  "commentCount": 3,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-mem-leak",
+  "additions": 596,
+  "deletions": 133,
+  "changedFiles": 13,
+  "commits": 1,
+  "reviews": []
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1983,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unable to load library \u0027libSkiaSharp.dll\u0027 when SkiaSharp used on a UserControl / Control (Designer)",
+  "body": "**Description**\r\n\r\nI made a sample solution to explain the problem, composed by two projects:\r\n-Windows Form Net App (build target x64)\r\n-UserControl library referenced to the windows form net app (build target Any CPU) that use SkiaSharp library 2.80.3 imported from nuget.\r\n\r\nIn the UserControl class there is only a simple/random instantiation of a SkiaSharp class (SKPaint in this case) that cause the main problem:\r\n\u0022Unable to load library \u0027libSkiaSharp\u0027 ...\u0022\r\n\r\nI noticed that the file libSkiaSharp.dll it can be found on the bin\\debug folder inside the respective target folder (x86, x64), but not on the main bin\\debug directory; so i tried to copy it there too, but haven\u0027t resolved the problem.\r\n\r\n**Expected Behavior**\r\n\r\nCreation of the user control and correct localisation of the libSkiaSharp.dll\r\n\r\n**Actual Behavior**\r\n\r\nCan\u0027t create the user control and unable to locate the libSkiaSharp.dll.\r\nAfter this error, visual studio crashes and after reopen the solution i noticed that in the references is added the file \r\n\u0022\\skiasharp\\2.80.3\\runtimes\\osx\\native\\libSkiaSharp.dylib\u0022\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n- Last known good version:  2.80.3 (?)\r\n- IDE:  Visual Studio 2019 / 2022 (tried both)\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  Windows 10 (.net 4.7.2, tried both x86 and x64)\r\n\r\n**Screenshots**\r\n\r\n![skiasharp error](https://user-images.githubusercontent.com/66755712/160802419-99a75e8a-9517-4aef-813d-450540741602.png)\r\n\r\n",
+  "author": {
+    "login": "upics",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-03-30T09:54:27",
+  "updatedAt": "2022-08-19T00:01:47",
+  "closedAt": "2022-03-31T15:15:46",
+  "commentCount": 1,
+  "reactionCount": 1
+}

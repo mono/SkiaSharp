@@ -1,0 +1,37 @@
+{
+  "number": 3407,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix documentation inaccuracies about C API error handling",
+  "body": "**Description of Change**\n\nDocumentation incorrectly claimed the C API layer implements an \u0022exception firewall\u0022 with try-catch blocks and defensive null checks. Code inspection revealed the C API is a minimal pass-through wrapper with no exception handling.\n\n**Corrections Made:**\n\n- **Error handling claims**: Removed all references to \u0022exception firewall\u0022 and defensive null checks\n  - Changed: \u0022C API catches all C\u002B\u002B exceptions\u0022 \u2192 \u0022C API is minimal wrapper, trusts C# validation\u0022\n  - Removed: Code examples showing \u0060if (!canvas || !paint) return;\u0060 defensive checks\n  - Actual implementation: Direct pass-through with zero try-catch blocks\n\n- **Architecture descriptions**: Updated layer responsibility descriptions\n  - C API: Minimal wrapper that trusts C# validation\n  - C#: Safety boundary where ALL validation occurs\n\n**Files Updated:**\n- \u0060AGENTS.md\u0060\n- \u0060design/architecture-overview.md\u0060\n- \u0060design/QUICKSTART.md\u0060\n- \u0060design/README.md\u0060\n- \u0060design/adding-new-apis.md\u0060\n- \u0060design/error-handling.md\u0060\n- \u0060.github/instructions/README.md\u0060\n\n**Verified Accurate:**\n- Memory management patterns (ref counting, pointer types)\n- C# validation patterns\n- Threading claims\n- File paths and build commands\n- Code examples\n\n**Bugs Fixed**\n\nNone. Documentation-only changes.\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (N/A - documentation only)\n- [x] Rebased on top of main at time of PR\n- [x] Merged related skia PRs (N/A)\n- [x] Changes adhere to coding standard\n- [x] Updated documentation\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Can you go through all these docs in the .github, design, and AGENTS.md and make sure they are accurate to the code. It is essential that they represent the code and not try make the code match the docs.\n\u003E \n\u003E Please check every statement. \n\u003E \n\u003E Validate assumptions. \n\u003E \n\u003E The project reputation depends on the docs being accurate. \n\u003E \n\u003E If you have questions, doubts or concerns. Validate against the code. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-11-07T12:39:58",
+  "updatedAt": "2025-11-08T13:38:01",
+  "closedAt": "2025-11-08T13:37:54",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "dev/ai",
+  "headBranch": "copilot/validate-documentation-accuracy",
+  "additions": 41,
+  "deletions": 51,
+  "changedFiles": 7,
+  "commits": 3,
+  "reviews": []
+}

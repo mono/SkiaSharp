@@ -1,0 +1,22 @@
+{
+  "number": 2908,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG]I cannot draw a paint which has a custom SKSL shader, SEHException was thrown",
+  "body": "### Description\r\n\r\nI have a simple console application which create a bitmap and a canvas, then draw using a paint made from custom sksl shader. However, when canvas.DrawPaint(paint) is called, SEHException is thrown. The error code of is -2147467259, which is 0x80004005. In [Common HRESULT Values](https://learn.microsoft.com/en-us/windows/win32/seccrypto/common-hresult-values), it\u0027s E_FAIL, Unspecified failure. I have no idea what\u0027s happening.\r\nThe SkiaSharp version is 2.88.8. There\u0027s no last known version that make it work.\r\n\r\n### Code\r\n\r\nSimply create a console application with top level statement and add package reference to SkiaSharp. In Program.cs write\r\n\u0060\u0060\u0060\r\nusing SkiaSharp;\r\n\r\nstring sksl = \u0022\u0022\u0022\r\n                    half4 main(float2 fragCoord) { \r\n                        return half4(0,0,0,1);\r\n                    }\r\n                    \u0022\u0022\u0022;\r\nstring error;\r\nSKRuntimeEffect runtimeEffect = SKRuntimeEffect.Create(sksl, out error);\r\nSKShader shader = runtimeEffect.ToShader(true);\r\nSKPaint paint = new SKPaint() {\r\n    Shader = shader,\r\n};\r\n\r\n\r\nint width = 1024;\r\nint height = 1024;\r\n\r\nSKImageInfo imageInfo = new SKImageInfo(width, height, SKColorType.Rgba8888);\r\nSKBitmap bitmap = new SKBitmap(imageInfo);\r\nSKCanvas canvas = new SKCanvas(bitmap);\r\ncanvas.DrawPaint(paint); //SEHException thrown here\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nI should just draw fill the canvas by black color.\r\n\r\n### Actual Behavior\r\n\r\nSEH exception with error code -2147467259 thrown.\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.8\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nN/A\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 11\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "martinrhan",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-06-20T08:25:13",
+  "updatedAt": "2024-07-04T13:16:47",
+  "commentCount": 1,
+  "reactionCount": 0
+}

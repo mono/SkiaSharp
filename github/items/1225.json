@@ -1,0 +1,18 @@
+{
+  "number": 1225,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Xamarin Forms - xunit - Could not load file or assembly \u0027SkiaSharp.Views.Forms",
+  "body": "**Description**\r\n\r\nI have a xamarin forms project where I make use of this library in a ContentPage. When I create the ContentPage within a xunit test project (like: new DamagePage()), I get the following error: \u0022Could not load file or assembly \u0027SkiaSharp.Views.Forms\u0022. The error is given when the Initializecomponent method is called in the codebehind of the ContentPage.\r\n\r\nI have installed SkiaSharp.Views.Forms and SkySharp.svg in both the xamarin forms project and the test project, why do I still get this error?\r\n\r\n**Code**\r\n\r\n        \u003C!--Damage view image--\u003E\r\n        \u003Cskia:SKCanvasView Grid.Row=\u00220\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 VerticalOptions=\u0022FillAndExpand\u0022\u003E\r\n            \u003C!-- The Behaviours element binds the canvas to a command responsible for drawing in it. --\u003E\r\n            \u003Cskia:SKCanvasView.Behaviors\u003E\r\n                \u003Cbehaviour:PaintSurfaceCommandBehavior Command=\u0022{Binding ShowDamageScreenCommand}\u0022 /\u003E\r\n            \u003C/skia:SKCanvasView.Behaviors\u003E\r\n\r\n            \u003C!-- This element is responsible for binding a tap on the screen to opening a new window to set damage.--\u003E\r\n            \u003Cskia:SKCanvasView.GestureRecognizers\u003E\r\n                \u003CTapGestureRecognizer Command=\u0022{ Binding OpenSetDamageCommand, Mode=TwoWay }\u0022 /\u003E\r\n            \u003C/skia:SKCanvasView.GestureRecognizers\u003E\r\n        \u003C/skia:SKCanvasView\u003E\r\n\r\n**Expected Behavior**\r\n\r\nWhen I create a the ContentPage from within my test project, I don\u0027t want it to fail because of the error.\r\n\r\n**Actual Behavior**\r\n\r\nWhen I delete the code in the view, the unit tests passes. When I put the code in there and I run a unit tests which creates the particular contentpage, the error arrises..\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1.1\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\nXamarin Forms\r\n\r\n",
+  "author": {
+    "login": "programmingworld1",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-10T15:29:28",
+  "updatedAt": "2022-08-19T06:02:04",
+  "closedAt": "2020-10-22T00:31:30",
+  "commentCount": 5,
+  "reactionCount": 0
+}

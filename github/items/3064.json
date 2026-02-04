@@ -1,0 +1,33 @@
+{
+  "number": 3064,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix .NET 9 ASP.NET Blazor issues",
+  "body": "**Description of Change**\r\n\r\nThe \u0060IJSUnmarshalledObjectReference\u0060 type has been removed (and we may have only ever needed \u0060IJSInProcessObjectReference\u0060) but we want to use the new \u0060[JSImport]\u0060 attributes.\r\n\r\nThere are several changes:\r\n\r\n* For .NET 7\u002B we use the new \u0060[JSImport]\u0060 attributes\r\n* The new \u0060[JSImport]\u0060 attribute does not yet support the \u0060ElementReference\u0060 type, so we have to use the element ID \u0060_bl_#\u0060 (https://github.com/dotnet/runtime/issues/78455)\r\n* Added a workaround for a linking order or some other issue (https://github.com/dotnet/runtime/issues/109289)\r\n* The \u0060Module\u0060 object is no longer available, so we copy the work we did for GL and add Module and GL to \u0060SkiaSharpInterop\u0060\r\n* Fixed the ordering of the wasm features: \u0060simd,st\u0060 to the correct \u0060st,simd\u0060\r\n* Update Xcode since 14 is gone\r\n* Using the correct get/set methods instead of the (incorrect) indexer which makes the delete work\r\n\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes https://github.com/mono/SkiaSharp/issues/2991\r\n- Fixes https://github.com/mono/SkiaSharp/issues/3065\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backport/release/3.116.0",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "milestone": "3.118.0",
+  "createdAt": "2024-11-13T05:53:39",
+  "updatedAt": "2024-11-27T11:23:57",
+  "closedAt": "2024-11-25T18:48:21",
+  "commentCount": 7,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-blazor",
+  "additions": 321,
+  "deletions": 109,
+  "changedFiles": 24,
+  "commits": 4,
+  "reviews": []
+}

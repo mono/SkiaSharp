@@ -1,0 +1,27 @@
+{
+  "number": 166,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKTypeface.FromFamilyName() not working with generic fonts",
+  "body": "I can\u0027t seem to get \u0060SKTypeface.FromFamilyName()\u0060 to recognize the generic font family names. For example, the following should render the text with a serif font:\n\n\u0060\u0060\u0060\nusing (var paint = new SKPaint()) {\n    paint.IsStroke = false;\n    paint.Typeface = SKTypeface.FromFamilyName(\u0022serif\u0022, SKTypefaceStyle.Normal);\n    paint.TextSize = 24;\n    paint.Color = SKColors.Black;\n    paint.IsAntialias = true;\n\n    canvas.Translate(5, 50);\n    canvas.DrawText(\u0022This should be serif\u0022, 0, 0, paint);\n}\n\u0060\u0060\u0060\n\nBut on my system, it renders like this:\n\n![serif-bug-1](https://cloud.githubusercontent.com/assets/934815/19601541/c4c4af02-9777-11e6-8b46-cdaf348f7611.png)\n\nUsing the same code in a [Skia Fiddle](https://fiddle.skia.org/c/2c8e94fe13f751bca5cd2c75dc37cb6d):\n\n\u0060\u0060\u0060\nvoid draw(SkCanvas* canvas) {\n    canvas-\u003EdrawColor(SK_ColorWHITE);\n    canvas-\u003Etranslate(5, 50);\n\n    SkPaint paint;\n    paint.setStyle(SkPaint::kFill_Style);\n    paint.setTypeface(SkTypeface::MakeFromName(\u0022serif\u0022, SkFontStyle()));\n    paint.setTextSize(24);\n    paint.setColor(0xff000000);\n    paint.setAntiAlias(true);\n\n    std::string str(\u0022This should be serif\u0022);\n    canvas-\u003EdrawText(str.c_str(), str.size(), 0, 0, paint);\n}\n\u0060\u0060\u0060\n\nIt renders with a serif font like this:\n\n![serif-bug-2](https://cloud.githubusercontent.com/assets/934815/19601592/f21c07c0-9777-11e6-9ae0-b465f1d6a4da.png)\n\nI am using SkiaSharp 1.54.1 on Windows 7.\n",
+  "author": {
+    "login": "tdenniston",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2016-10-21T14:20:49",
+  "updatedAt": "2022-08-20T00:01:50",
+  "closedAt": "2016-11-01T10:06:51",
+  "commentCount": 8,
+  "reactionCount": 0
+}

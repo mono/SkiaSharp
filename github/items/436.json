@@ -1,0 +1,18 @@
+{
+  "number": 436,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKSurface.Snapshot returns null when called from SKGLView",
+  "body": "When using a \u0060SKGLView\u0060 and calling Snapshot appears to return a null SKImage. Switching to a \u0060SKCanvasView\u0060 provides the expected output.\r\n\r\n\u0060\u0060\u0060\r\nprotected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\r\n{\r\n    var snapshot = e.Surface.Snapshot();\r\n    System.Diagnostics.Debug.WriteLine(\u0022Has Value: \u0022 \u002B snapshot != null);\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "michaelstonis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-01-27T21:26:27",
+  "updatedAt": "2022-08-19T18:01:40",
+  "closedAt": "2018-02-23T03:37:11",
+  "commentCount": 4,
+  "reactionCount": 0
+}

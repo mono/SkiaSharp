@@ -1,0 +1,33 @@
+{
+  "number": 1812,
+  "type": "pr",
+  "state": "closed",
+  "title": "[android] eliminate lots of fields in Resource.designer.cs",
+  "body": "**Description of Change**\r\n\r\nContext: https://github.com/jonathanpeppers/CustomResourceDesigner\r\nContext: https://github.com/xamarin/xamarin-android/issues/6310\r\n\r\nWe found a case where a .NET MAUI app that included SkiaSharp and\r\nTelerik controls was setting ~90,000 fields at startup in the\r\n\u0060Resource.designer.cs\u0060 file via the \u0060UpdateIdValues()\u0060 method.\r\n\r\nThis also would happen in any Xamarin.Android class library:\r\n\r\n* Include AndroidX \u0026 Google Material\r\n* Include at least one \u0060@(AndroidResource)\u0060 and use the ID from C#\r\n* \u0060Resource.designer.cs\u0060 has 2,700\u002B fields\r\n\r\nSo SkiaSharp is not unique to the problem here...\r\n\r\nReviewing the SkiaSharp fields, I found:\r\n\r\n    source\\SkiaSharp.Views.Maui\\SkiaSharp.Views.Maui.Controls\\obj\\Debug\\net6.0-android\\Resource.designer.cs\r\n    5335 fields\r\n    source\\SkiaSharp.Views.Maui\\SkiaSharp.Views.Maui.Core\\obj\\Debug\\net6.0-android\\Resource.designer.cs\r\n    5313 fields\r\n    source\\SkiaSharp.Views.Maui\\SkiaSharp.Views.Maui.Controls.Compatibility\\obj\\Debug\\net6.0-android\\Resource.designer.cs\r\n    5335 fields\r\n\r\nWe can simply set \u0060$(AndroidGenerateResourceDesigner)\u0060 to \u0060false\u0060 in\r\nthese projects, as they do not use any of the fields. This will\r\nprevent .NET 6 apps using these libraries from setting 16,005 fields\r\nat startup.\r\n\r\nI also did a spot check on \u0060SkiaSharp.Views.Android\u0060, but it\u0027s OK --\r\nit only has 3 fields:\r\n\r\n    public class Resource\r\n    {\r\n        public class Attribute\r\n        {\r\n            public static int ignorePixelScaling;\r\n            //...\r\n        }\r\n        public class Styleable\r\n        {\r\n            public static int[] SKCanvasView;\r\n            public static int SKCanvasView_ignorePixelScaling;\r\n            //...\r\n        }\r\n        //...\r\n    }\r\n\r\nWe are working on a long-term solution for this issue in\r\nXamarin.Android, but we can do a simple workaround in SkiaSharp for\r\nnow.\r\n\r\n**Bugs Fixed**\r\n\r\nn/a\r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\nIf the three projects require usage of \u0060Resource.designer.cs\u0060 in the future, we could follow the pattern here:\r\n\r\nhttps://github.com/jonathanpeppers/CustomResourceDesigner\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "jonathanpeppers",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-09-20T17:59:59",
+  "updatedAt": "2021-09-23T16:18:15",
+  "closedAt": "2021-09-23T15:33:52",
+  "commentCount": 6,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "androidgenerateresourcedesigner",
+  "additions": 3,
+  "deletions": 0,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2021-09-20T18:08:08"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "number": 3475,
+  "type": "pr",
+  "state": "closed",
+  "title": "Strengthen skill guidance on submodule merge sequence",
+  "body": "This pull request updates the documentation and submodule handling process to prevent critical issues when merging native dependency updates, specifically around squash-merging and submodule references. It also updates the \u0060externals/skia\u0060 submodule to a new commit.\r\n\r\n**Critical documentation updates to merge process:**\r\n\r\n* Added a warning to \u0060.github/skills/native-dependency-update/SKILL.md\u0060 about the dangers of merging both PRs without updating the submodule in between, highlighting that squash-merging creates a new SHA and can orphan commits, breaking users if the submodule isn\u0027t updated.\r\n* Expanded the documentation with a detailed, step-by-step mandatory merge sequence, emphasizing that the submodule must be updated to the new squashed commit before merging the SkiaSharp PR, and added explicit warnings against improper merge order.\r\n\r\n**Submodule update:**\r\n\r\n* Updated the \u0060externals/skia\u0060 submodule to point to commit \u0060346cbd67e038d3b432b08a89316527625cd30ecc\u0060.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-29T00:51:35",
+  "updatedAt": "2026-02-02T21:44:01",
+  "closedAt": "2026-01-29T00:51:55",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "fix/skia-submodule-ref",
+  "additions": 25,
+  "deletions": 4,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": []
+}

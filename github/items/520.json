@@ -1,0 +1,19 @@
+{
+  "number": 520,
+  "type": "issue",
+  "state": "closed",
+  "title": "Resizing via SKImage is blurry. Resizing via SKBitmap is great.",
+  "body": "### Description\r\n\r\nAs @AndersMad discovered in #319 SKImage resizes very blurry, whereas resizing a SKBitmap works great.\r\n\r\n### Code\r\n\r\n\tSKBitmap srcBitmap = ...\r\n\t// Use attached \u0022boat.jpg\u0022. A large image like this provides a more dramatic resize comparison\r\n\t// (e.g. 5400x3615px). The more dramatic the resize, the more dramatic the resize quality between\r\n\t// SKImage and SKBitmap.\r\n\tint resizedWidth = 160, resizedHeight = 107;\r\n\t\r\n\t// SKImage resizes blurry\r\n\tusing (var surface = SKSurface.Create(resizedWidth, resizedHeight, SKImageInfo.PlatformColorType,\r\n\t\tSKAlphaType.Premul))\r\n\tusing (var paint = new SKPaint())\r\n\t{\r\n\t\t// high quality with antialiasing\r\n\t\tpaint.IsAntialias = true;\r\n\t\tpaint.FilterQuality = SKFilterQuality.High;\r\n\r\n\t\t// draw the bitmap to fill the surface\r\n\t\tsurface.Canvas.DrawBitmap(srcBitmap, new SKRectI(0, 0, resizedWidth, resizedHeight),\r\n\t\t\tpaint);\r\n\t\tsurface.Canvas.Flush();\r\n\r\n\t\t// save\r\n\t\tusing (var newImg = surface.Snapshot())\r\n\t\tusing (SKData data = newImg.Encode(SKEncodedImageFormat.Jpeg, 100))\r\n\t\tusing (Stream imgStream = data.AsStream())\r\n\t\t{\r\n\t\t\t// save the stream and look at the image. e.g. \u0022blurry.jpg\u0022\r\n\t\t}\r\n\t}\r\n\r\n\t// SKBitmap resizes crisp.\r\n\tSKImageInfo resizeInfo = new SKImageInfo(resizedWidth, resizedHeight);\r\n\tusing (SKBitmap resizedSKBitmap = srcBitmap.Resize(resizeInfo, SKBitmapResizeMethod.Lanczos3))\r\n\tusing (SKImage newImg = SKImage.FromPixels(resizedSKBitmap.PeekPixels()))\r\n\tusing (SKData data = newImg.Encode(SKEncodedImageFormat.Jpeg, jpegQuality))\r\n\tusing (Stream imgStream = data.AsStream())\r\n\t{\r\n\t\t// save the stream and look at the image. e.g. \u0022crisp.jpg\u0022\r\n\t}\r\n\r\n### Expected Behavior\r\n\r\nSKImage should be able to resize with the same good quality as SKBitmap\r\n\r\n### Actual Behavior\r\n\r\nSKImage resizes very blurry.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.0\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .NET Core 2.0 (AWS Lambda)\r\n\r\n### Attachments\r\n\r\nboat.jpg\r\n![boat](https://user-images.githubusercontent.com/7843827/40087687-b945b5ba-5871-11e8-9362-9fccf13ad50a.jpg)\r\n\r\nblurry.jpg (SKImage resize)\r\n![blurry](https://user-images.githubusercontent.com/7843827/40087848-658ad026-5872-11e8-90b7-81a242b230fb.jpg)\r\n\r\ncrisp.jpg (SKBitmap resize)\r\n![crisp](https://user-images.githubusercontent.com/7843827/40087853-6c07e2c2-5872-11e8-8ffe-28e11a57fadc.jpg)\r\n",
+  "author": {
+    "login": "dsyno",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-05-15T23:07:39",
+  "updatedAt": "2022-08-19T15:02:32",
+  "closedAt": "2018-11-29T17:32:21",
+  "commentCount": 12,
+  "reactionCount": 4
+}

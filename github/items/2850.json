@@ -1,0 +1,22 @@
+{
+  "number": 2850,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] CR2 image orientation being detected incorrectly. ",
+  "body": "### Description\r\n\r\nI\u0027m loading and orienting a CR2 image using the code below. However, whilst ExifTool correctly shows the orientation as: \u0060Orientation = Left side, bottom (Rotate 270 CW)\u0060, SkiaSharp seems to be incorrectly decoding the orientation to \u0060SKEncodedOrigin.TopLeft\u0060. This means I don\u0027t rotate the image, and the thumbnails are rendered incorrectly. \r\n\r\nI have a sample image, but it\u0027s too large to attach, so I\u0027ve zipped it and put it in my GDrive folder here: \r\n\r\n[LV1_3765.CR2.zip](https://drive.google.com/file/d/1dVffxdpPy0yYM3eScQqOleisoAqwglT8/view?usp=sharing)\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\n        var codec = SKCodec.Create(source.FullName);\r\n        var info = codec.Info;\r\n\r\n        // get the scale that is nearest to what we want (eg: jpg returned 512)\r\n        var supportedScale = codec.GetScaledDimensions((float)desiredWidth / info.Width);\r\n\r\n        // decode the bitmap at the nearest size\r\n        var nearest = new SKImageInfo(supportedScale.Width, supportedScale.Height);\r\n        var bmp = SKBitmap.Decode(codec, nearest);\r\n\u0060\u0060\u0060\r\nMy code then uses \u0060codec.EncodedOrigin\u0060 to auto-orient the image to the right way, before I resize to generate thumbs. \r\n\r\n\r\n### Expected Behavior\r\n\r\nI expect the image orientation to be \u0060SKEncodedOrigin.LeftBottom\u0060 which would allow the image to be rotated correctly.\r\n\r\n### Actual Behavior\r\n\r\nThe image orientation is evaluated as \u0060SKEncodedOrigin.TopLeft\u0060, so my code never attempts to rotate. \r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.8 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nn/a\r\n\r\n### IDE / Editor\r\n\r\nRider\r\n\r\n### Platform / Operating System\r\n\r\n.Net 8.0 on Linux, macOS\r\n\r\n### Platform / Operating System Version\r\n\r\nLinux and MacOS\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n\u003Cimg width=\u0022570\u0022 alt=\u0022Screenshot 2024-04-30 at 10 14 30\u0022 src=\u0022https://github.com/mono/SkiaSharp/assets/4901102/3434df7d-2f35-441c-a1f0-ae20d192fdd3\u0022\u003E\r\n\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Webreaper",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-30T09:15:09",
+  "updatedAt": "2024-04-30T09:16:57",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2373,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Expose SkImageFilters::RuntimeShader()",
+  "body": "I want to use \u0060SKCanvas.SaveLayer()\u0060, and then apply a shader ( or a tree of shaders ) to the content of that layer on \u0060SKCanvas.Restore()\u0060. I found out about \u0060SkImageFilters::RuntimeShader()\u0060 but it seems like it\u0027s not yet exposed in SkiaSharp.\r\n\r\nThe code would look something like:\r\n\u0060\u0060\u0060cs\r\nvar effect = SKRuntimeEffect.Create(\u0022...\u0022, out string errors);\r\nSKShader shader = effect.ToShader(false);\r\nvar imageFilter = SKImageFilter.CreateShader(shader, ...);\r\nvar paint = new SKPaint\r\n{\r\n    ImageFilter = imageFilter\r\n};\r\n\r\ncanvas.SaveLayer(paint);\r\n// draw stuff\r\ncanvas.Restore();\r\n\u0060\u0060\u0060\r\n\r\nI would like the API the expose a \u0060SKImageFilter.CreateShader()\u0060 or \u0060SKImageFilter.CreateRuntimeShader()\u0060 method\r\n\r\n[Mentioned here](https://groups.google.com/g/skia-discuss/c/uc-5b4Hy4YU)",
+  "author": {
+    "login": "RedyG",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-06T00:14:04",
+  "updatedAt": "2023-05-24T15:43:01",
+  "commentCount": 1,
+  "reactionCount": 10
+}

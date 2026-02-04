@@ -1,0 +1,19 @@
+{
+  "number": 599,
+  "type": "issue",
+  "state": "closed",
+  "title": "[docs] Visual Studio publishing and \u003CRuntimeIdentifiers\u003E",
+  "body": "This is a documentation/readme suggestion based on https://github.com/AvaloniaUI/Avalonia/issues/1665#issuecomment-408824373\r\n\r\nThe SkiaSharp NuGet package offers runtime versions such as \u0060win7-x64\u0060 and \u0060win10-x64\u0060, but by default Visual Studio 2017\u0027s Publish options only list fallback runtime identifiers such as \u0060win-x64\u0060. The result is a missing libSkiaSharp.dll and the \u0060Unable to load DLL\u0060 exception.\r\n\r\nThe solution is simple but not necessarily obvious: add a \u0060\u003CRuntimeIdentifiers\u003E\u0060 node to the csproj, which expands the available RIDs in the VS Publish dialog.\r\n\r\nI\u0027m suggesting this and the specific available runtime versions should be documented, especially given that the readme mentions the same exception but attributes it to a different problem, which could be misleading and confusing.",
+  "author": {
+    "login": "MV10",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-07-30T11:06:03",
+  "updatedAt": "2022-08-19T15:01:55",
+  "closedAt": "2018-08-15T19:15:46",
+  "commentCount": 1,
+  "reactionCount": 0
+}

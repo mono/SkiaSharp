@@ -1,0 +1,40 @@
+{
+  "number": 3488,
+  "type": "pr",
+  "state": "closed",
+  "title": "Improve AI instructions and skills",
+  "body": "This pull request makes significant improvements to the SkiaSharp contribution workflow documentation, focusing on clearer compliance requirements, more robust build and test instructions, and better separation of workflows for adding APIs and fixing bugs. It introduces stricter branch protection guidance, mandates native builds after C API changes, and updates troubleshooting steps to prevent common errors. Additionally, it adds a dedicated skill file for bug fixes and removes the old \u0060implement-issue\u0060 workflow, streamlining and clarifying the process for contributors.\r\n\r\n**Branch protection and compliance:**\r\n\r\n* Added explicit branch protection instructions to \u0060.github/skills/add-api/SKILL.md\u0060 and \u0060.github/skills/bug-fix/SKILL.md\u0060, requiring feature branches for both parent and submodule repositories before making any changes. [[1]](diffhunk://#diff-05db2292a4a74ee2f53f25d3fdc69eb3749a4c1dcda9f542a63a7ebc8a3f9e98L8-R48) [[2]](diffhunk://#diff-519944862ba0a073113c61cdedcead550fe69e7fbf2cae1a61d449f5b95bbe53R1-R185)\r\n\r\n**Build and test workflow improvements:**\r\n\r\n* Updated the add-API workflow to require building the native library after any C API changes, with platform-specific commands and mandatory passing tests before claiming completion. Troubleshooting documentation now emphasizes that \u0060EntryPointNotFoundException\u0060 is caused by missing native builds. [[1]](diffhunk://#diff-05db2292a4a74ee2f53f25d3fdc69eb3749a4c1dcda9f542a63a7ebc8a3f9e98L38-R59) [[2]](diffhunk://#diff-05db2292a4a74ee2f53f25d3fdc69eb3749a4c1dcda9f542a63a7ebc8a3f9e98L144-R189) [[3]](diffhunk://#diff-05db2292a4a74ee2f53f25d3fdc69eb3749a4c1dcda9f542a63a7ebc8a3f9e98R206-R216) [[4]](diffhunk://#diff-48635ed5d93b2b242873759dd4bdd535dcad359bb36cf51fb386fa87fc1d6af3R26-R51) [[5]](diffhunk://#diff-48635ed5d93b2b242873759dd4bdd535dcad359bb36cf51fb386fa87fc1d6af3L47-R88)\r\n\r\n**Bug fix workflow separation:**\r\n\r\n* Added a new \u0060.github/skills/bug-fix/SKILL.md\u0060 file with a structured workflow for investigating, fixing, and testing bug reports, including patterns for common bug types and mandatory regression testing.\r\n* Removed the generic \u0060.github/skills/implement-issue/SKILL.md\u0060 and associated bug-fix reference files, consolidating workflows into more focused skills. [[1]](diffhunk://#diff-947db9a801159c304671e7d5083be4eebedacd5db17a33bf371400c9398c2b4aL1-L126) [[2]](diffhunk://#diff-2b01d575533497ebaadfcbf11abfc5f9d5ed570fc737e35694936c04c5520aa8L1-L127) [[3]](diffhunk://#diff-46b5322bf37ffc883fed9ac9d30230da6c92d760ef5a263ca119262a3f87616aL1-L83)\r\n\r\n**Checklist and documentation updates:**\r\n\r\n* Updated checklists to require feature branches before starting work and clarified verification steps for both add-API and bug-fix workflows.\r\n* Refined API documentation skill triggers for clarity and consistency.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-01T22:47:33",
+  "updatedAt": "2026-02-02T21:38:43",
+  "closedAt": "2026-02-01T22:48:24",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/instructions",
+  "additions": 632,
+  "deletions": 740,
+  "changedFiles": 14,
+  "commits": 5,
+  "reviews": []
+}

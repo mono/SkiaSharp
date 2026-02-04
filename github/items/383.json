@@ -1,0 +1,18 @@
+{
+  "number": 383,
+  "type": "issue",
+  "state": "closed",
+  "title": "Adding SkiaSharp to .NET Standard projects produces many duplicate DLLs",
+  "body": "Originally in: https://bugzilla.xamarin.com/show_bug.cgi?id=60353\r\n\r\nWhen I add SkiaSharp to a .NET standard project, the project tree gets overrun with DLLs, and DYLIBs (SO files are missing, where could they be?). Please see attached project and screenshots.\r\n\r\nThere are several bugs here:\r\n\r\n1. Libraries shouldn\u0027t display their native file dependencies. I don\u0027t see Android support libs, Xamarin iOS, sqlite-raw, or any other native library wrappers showing their dependencies in the tree.\r\n\r\n2. There\u0027s duplication in the tree: the same DLL shows up multiple times (along with its config files).\r\n\r\n3. When compiling, there are duplicate output DLLs. libSkiaSharp.dll shows up no less than 3 times in the bin directory. Once at root, and twice on x86 and x64. 64-bit Intel has been mainstream for 10 years now - maybe we can drop at least the 32-bit version?\r\n\r\nI understand you are shipping at least 2 * 3 platforms here (32-bit/64-bit, Linux/Mac/Windows) - but they shouldn\u0027t appear in the project tree. And please fix the naming in the bin directory so I actually know what to ship. As it is, I have no idea which of these DLLs actually needs to be deployed with my app.\r\n\r\nIf you need examples on how to package better, please look at Eric Sink\u0027s sqlite-raw. He is covering even more complex scenarios than you and never spills out these implementation details.\r\n\r\n[TestSkia.zip](https://github.com/mono/SkiaSharp/files/1411732/TestSkia.zip)\r\n![screenshot 2017-10-24 09 26 24](https://user-images.githubusercontent.com/6392201/31957169-7e21c572-b8b3-11e7-9d19-ee19c5e651bf.png)\r\n![screenshot 2017-10-24 09 24 30](https://user-images.githubusercontent.com/6392201/31957172-80741758-b8b3-11e7-9a20-984b2ce22396.png)",
+  "author": {
+    "login": "chamons",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-10-24T17:04:45",
+  "updatedAt": "2022-08-19T18:02:23",
+  "closedAt": "2017-10-24T20:08:27",
+  "commentCount": 8,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 2899,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] (preview3.1) Access violation when a \u0060Clone\u0060d \u0060SKPaint\u0060 is disposed/finalized",
+  "body": "### Description\r\n\r\n\u0060AccessViolationException\u0060 is thrown from the finalizer thread during \u0060DisposeNative()\u0060 of an \u0060SKPaint\u0060 that is created using the \u0060Clone()\u0060 method. This happens whether or not the user actually disposes of the cloned paint themselves.\r\n\r\nI notice that \u0060SKPaint.Clone\u0060 calls \u0060sk_paint_clone\u0060 not \u0060sk_compatpaint_clone\u0060\r\nhttps://github.com/mono/SkiaSharp/blob/5b31788346b54b3e12a13eec38241b04de1af85c/binding/SkiaSharp/SKPaint.cs#L279-L280\r\n\r\nthough DisposeNative calls \u0060sk_compatpaint_delete\u0060\r\nhttps://github.com/mono/SkiaSharp/blob/5b31788346b54b3e12a13eec38241b04de1af85c/binding/SkiaSharp/SKPaint.cs#L72-L73\r\n\r\nMaybe related to #2821 or #2794?\r\n\r\n\r\n### Code\r\n\r\nThis provokes the crash at about \u0060i\u0060=2\r\n\r\n\u0060\u0060\u0060cs\r\nusing var paint = new SKPaint { Color = SKColors.Red, Style = SKPaintStyle.Stroke, StrokeWidth = 1f };\r\n\r\nfor (int i = 0; i \u003C 512; i\u002B\u002B)\r\n{\r\n\tusing var clonedPaint = paint.Clone(); // Even making this a \u0027using var\u0027 doesn\u0027t help\r\n\r\n\tGC.Collect();\r\n\tGC.WaitForPendingFinalizers();\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nProbably the finalizer shouldn\u0027t get called at all if we disposed it ourselves.\r\nAnd it definitely shouldn\u0027t crash \uD83D\uDE05\r\n\r\n### Actual Behavior\r\n\r\nProcess crashes with AccessViolationException\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x (Alpha)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "chersoft-oliverb",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-06-13T17:11:15",
+  "updatedAt": "2024-07-08T12:35:01",
+  "closedAt": "2024-07-08T12:35:01",
+  "commentCount": 1,
+  "reactionCount": 1
+}

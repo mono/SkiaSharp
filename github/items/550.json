@@ -1,0 +1,44 @@
+{
+  "number": 550,
+  "type": "pr",
+  "state": "closed",
+  "title": "Improve rendering speed for Gtk#\u0027s SKWidget",
+  "body": "This gives the \u0060SKWidget\u0060 for Gtk# a massive performance boost by moving\r\nthe creation of the \u0060SKSurface\u0060 (and \u0060SKImageInfo\u0060) to the\r\n\u0060CreateDrawingObjects()\u0060 method (formally \u0060CreatePixbuf()\u0060).  This makes\r\nit so that these objects aren\u0027t being made every render cycle.  That is\r\nwhat was causing the slowdow.\r\n\r\nThis also gets rid of the flicker reported in #534; it\u0027s flicker from\r\nwindow dragging \u0026 resizing is now on par with that of Cairo\u0027s.\r\n\r\nAnother minor optimization was made, removing the call to\r\n\u0060base.OnExposeEvent()\u0060.  It\u0027s not needed and the extra fuction call can\r\nsiphon off CPU cycles we\u0027d like to keep.  Some other optimizations can\r\nbe made, but most of them probably are very minor.\r\n\r\ncloses #534",
+  "author": {
+    "login": "define-private-public",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.60.2",
+  "createdAt": "2018-06-14T01:07:58",
+  "updatedAt": "2018-06-14T04:25:33",
+  "closedAt": "2018-06-14T03:49:59",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "534.imporove-gtk-rendering-speed",
+  "additions": 23,
+  "deletions": 21,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2018-06-14T01:59:15"
+    }
+  ]
+}

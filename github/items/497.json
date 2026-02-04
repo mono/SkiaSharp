@@ -1,0 +1,33 @@
+{
+  "number": 497,
+  "type": "issue",
+  "state": "closed",
+  "title": "AccessViolationException when working with Index8 png",
+  "body": "Recently I updated SkiaSharp to v1.60.0 from v1.59.3 and now it fails with AccessViolationException. Platform - Windows 10, the code is quite standard, it should resize the image\r\n\r\n\u0060\u0060\u0060 \r\nusing (var input = File.OpenRead(sourcePath))\r\n{\r\n    using (var inputStream = new SKManagedStream(input))\r\n    {\r\n        using (var original = SKBitmap.Decode(inputStream))\r\n        {\r\n            if (original.ColorType != SKImageInfo.PlatformColorType)\r\n            {\r\n                original.CopyTo(original, SKImageInfo.PlatformColorType); // \u003C-- Exception happens here\r\n            }\r\n\r\n            using (var resized = original.Resize(new SKImageInfo(size.Width, size.Height), resizeMethod))\r\n            {\r\n                using (var image = SKImage.FromBitmap(resized))\r\n                {\r\n                    using (var output = File.OpenWrite(targetPath))\r\n                    {\r\n                        image.Encode(SKEncodedImageFormat.Png, 100)\r\n                            .SaveTo(output);\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAny ideas why and how this can be fixed?",
+  "author": {
+    "login": "zihotki",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "1.60.1",
+  "createdAt": "2018-04-29T20:57:23",
+  "updatedAt": "2022-08-19T15:02:43",
+  "closedAt": "2018-05-06T20:35:35",
+  "commentCount": 1,
+  "reactionCount": 0
+}

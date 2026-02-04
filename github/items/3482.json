@@ -1,0 +1,36 @@
+{
+  "number": 3482,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix Linux ARM64 crash by linking libuuid",
+  "body": "**Description of Change**\n\nLinux ARM64 builds crash on startup with undefined symbols \u0060uuid_generate_random\u0060 and \u0060uuid_parse\u0060. These are called by Skia\u0027s PDF subsystem but \u0060libSkiaSharp.so\u0060 wasn\u0027t linked against \u0060libuuid\u0060.\n\n**The Fix**\n\nAdded \u0060-luuid\u0060 to linker flags in \u0060native/linux/build.cake\u0060. Applies to all Linux variants (glibc, musl/Alpine, all architectures).\n\n\u0060\u0060\u0060diff\n-extra_ldflags=[ \u0027-static-libstdc\u002B\u002B\u0027, \u0027-static-libgcc\u0027, \u0027-Wl,--version-script={map}\u0027 ]\n\u002Bextra_ldflags=[ \u0027-static-libstdc\u002B\u002B\u0027, \u0027-static-libgcc\u0027, \u0027-Wl,--version-script={map}\u0027, \u0027-luuid\u0027 ]\n\u0060\u0060\u0060\n\n**Test Infrastructure**\n\n- \u0060scripts/test/test-arm64-linux.sh\u0060: Validation script for ARM64 hardware (Raspberry Pi, AWS Graviton, etc.)\n- \u0060documentation/arm64-linux-uuid-fix.md\u0060: Root cause analysis and verification procedures\n\n**ARM64 Testing**\n\nAttempted QEMU emulation and Docker buildx - both failed in CI environment. Validation requires actual ARM64 hardware using provided test script. Fix verified through code analysis, related issue patterns, and standard Linux linking practices.\n\n**Bugs Fixed**\n\n- #3369 - Hard crash on Linux ARM64 \n- #3272 - undefined symbol: uuid_generate_random on Debian Bookworm ARM64\n- #3436 - undefined symbol exception in Linux ARM64\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (ARM64 validation script; requires real hardware to execute)\n- [x] Rebased on top of main at time of PR\n- [x] Merged related skia PRs (N/A)\n- [x] Changes adhere to coding standard\n- [x] Updated documentation\n\n\u003E [!WARNING]\n\u003E\n\u003E \u003Cdetails\u003E\n\u003E \u003Csummary\u003EFirewall rules blocked me from connecting to one or more addresses (expand for details)\u003C/summary\u003E\n\u003E\n\u003E #### I tried to connect to the following addresses, but was blocked by firewall rules:\n\u003E\n\u003E - \u0060centralus.data.mcr.microsoft.com\u0060\n\u003E   - Triggering command: \u0060/usr/bin/buildkitd buildkitd --allow-insecure-entitlement=network.host 5cfd7a6b448d243841d45fdb508a80f1751e4f916b1dd2a8e778cf6aebb57b09\u0060 (dns block)\n\u003E\n\u003E If you need me to access, download, or install something from one of these locations, you can either:\n\u003E\n\u003E - Configure [Actions setup steps](https://gh.io/copilot/actions-setup-steps) to set up my environment, which run before the firewall is enabled\n\u003E - Add the appropriate URLs or hosts to the custom allowlist in this repository\u0027s [Copilot coding agent settings](https://github.com/mono/SkiaSharp/settings/copilot/coding_agent) (admins only)\n\u003E\n\u003E \u003C/details\u003E\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Please investigate https://github.com/mono/SkiaSharp/issues/3369\n\u003E \n\u003E This is for arm64, so please first use a docker image that is arm. Or find some way to test this on arm. Please try really hard and exhaust all options. \n\u003E \n\u003E If arm64 cannot be used, then let me know all the options you tried and. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC We\u0027d love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-01-31T15:12:24",
+  "updatedAt": "2026-02-03T02:09:37",
+  "closedAt": "2026-02-03T02:09:33",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/investigate-arm64-support",
+  "additions": 351,
+  "deletions": 1,
+  "changedFiles": 3,
+  "commits": 3,
+  "reviews": []
+}

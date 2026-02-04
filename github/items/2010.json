@@ -1,0 +1,33 @@
+{
+  "number": 2010,
+  "type": "pr",
+  "state": "closed",
+  "title": "LibraryLoader: Try p/invoking to libdl.so.2 before libdl.so on Linux",
+  "body": "Newer Linux distributions (like Ubuntu 21.04) no longer ship with libdl.so, instead they have libdl.so.2\r\nTry loading the newer lib first to fix issues like https://github.com/dotnet/maui/discussions/6385\r\n\r\nIdeally we\u0027d be using the [NativeLibrary.Load](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.nativelibrary.load?view=net-6.0) API but we target netstandard2.0 here so we can\u0027t do that.",
+  "author": {
+    "login": "akoeplinger",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-22T18:19:32",
+  "updatedAt": "2022-04-26T12:37:59",
+  "closedAt": "2022-04-26T12:36:15",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "fix-libdl",
+  "additions": 41,
+  "deletions": 9,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-04-26T12:34:59"
+    }
+  ]
+}

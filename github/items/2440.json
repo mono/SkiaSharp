@@ -1,0 +1,17 @@
+{
+  "number": 2440,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] [Windows] [Docker] \u0060DllNotFoundException\u0060 on Docker with Windows container",
+  "body": "**Description**\r\n\r\nI\u0027m using \u0060mcr.microsoft.com/dotnet/aspnet:6.0\u0060 as runtime Docker image.\r\n\r\nRelated issue for Linux: https://github.com/mono/SkiaSharp/issues/1341\r\n\r\nI wanted to install SkiaSharp.NativeAssets.*, but there are only 32 bit version for Windows... (and installing it doesn\u0027t fix the problem)\r\n![image](https://user-images.githubusercontent.com/905878/231474684-6745dd8a-7d38-4116-90a7-84f0921deef3.png)\r\n\r\n**Expected Behavior**\r\n\r\nSkiaSharp is copying its DLL without manually doing anything in Dockerfile.\r\n\r\n**Actual Behavior**\r\n\r\n\u0060\u0060\u0060\r\nSystem.DllNotFoundException:\r\nUnable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\nat SkiaSharp.SkiaApi.sk_path_new()\r\nat SkiaSharp.SKPath..ctor()\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \u0060mcr.microsoft.com/dotnet/aspnet:6.0\u0060 built on Azure DevOps in Windows containers",
+  "author": {
+    "login": "Saibamen",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-04-12T13:39:26",
+  "updatedAt": "2026-01-28T05:03:26",
+  "commentCount": 2,
+  "reactionCount": 1
+}

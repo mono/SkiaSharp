@@ -1,0 +1,23 @@
+{
+  "number": 1303,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG][iOS] Could not initialize an instance of the type \u0027OpenGLES.EAGLContext\u0027: the native \u0027initWithAPI:\u0027 method returned nil",
+  "body": "**Description**\r\n\r\nSKGLView fails to initialise with the error \u0022**Could not initialize an instance of the type \u0027OpenGLES.EAGLContext\u0027: the native \u0027initWithAPI:\u0027 method returned nil**\u0022\r\n\r\nStackTrace:\r\n\r\n\u0060NSObject.InitializeHandle (System.IntPtr handle, System.String initSelector)\r\nOpenGLES.EAGLContext..ctor (OpenGLES.EAGLRenderingAPI api) \u003C0x100a9c820 \u002B 0x0005b\u003E in \u003C79170d3ca0a34f20a27c5ea33d79161f#cb7c80be70a7684816046182eab111ad\u003E:0\r\nSKGLView.Initialize ()\r\nSkiaSharp.Views.iOS.SKGLView..ctor () \u003C0x101575dc0 \u002B 0x0001b\u003E in \u003C1dff7dabaada4d38b0d12baee26f046c#cb7c80be70a7684816046182eab111ad\u003E:0\u0060\r\n\r\n**Code**\r\n\r\n\u0060\t\t\t\tvar view = new SKGLView\r\n\t\t\t\t{\r\n\t\t\t\t\tTranslatesAutoresizingMaskIntoConstraints = false,\r\n\t\t\t\t\tBackgroundColor = UIColor.Clear\r\n\t\t\t\t};\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe GL view works as normal.\r\n\r\n**Actual Behavior**\r\n\r\nThe above exception\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks: \r\n  - iOS:  13.4.1\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - iPad Air (3rd gen)\r\n",
+  "author": {
+    "login": "MKnoski",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-05-20T11:50:15",
+  "updatedAt": "2022-08-19T06:01:39",
+  "closedAt": "2020-10-13T23:18:13",
+  "commentCount": 4,
+  "reactionCount": 0
+}

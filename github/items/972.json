@@ -1,0 +1,29 @@
+{
+  "number": 972,
+  "type": "pr",
+  "state": "closed",
+  "title": "[HarfBuzzSharp] Add int unicode overloads to be more consistent",
+  "body": "**Description of Change**\r\nThis add overloads that accept an integer as codepoint. Under .Net codepoints are usually represented as an integer rather than an unsigned integer.\r\n\r\nI hope these are the last changes for the new release.\r\n\r\n**API Changes**\r\nAdded: \r\n \r\n- \u0060bool Script.TryParse(string str, out Script script)\u0060\r\n- \u0060void Buffer.Add (int codepoint, int cluster)\u0060\r\n- \u0060UnicodeCombiningClass GetCombiningClass (int unicode)\u0060\r\n- \u0060UnicodeGeneralCategory GetGeneralCategory (int unicode)\u0060\r\n- \u0060int GetMirroring (int unicode)\u0060\r\n- \u0060Script GetScript (int unicode)\u0060\r\n- \u0060bool TryCompose (int a, int b, out int ab)\u0060\r\n- \u0060bool TryDecompose (int ab, out int a, out int b)\u0060\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "Gillibald",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-09-29T15:11:51",
+  "updatedAt": "2019-11-21T20:33:32",
+  "closedAt": "2019-10-24T18:57:49",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "harfbuzzUnicode",
+  "additions": 59,
+  "deletions": 5,
+  "changedFiles": 5,
+  "commits": 2,
+  "reviews": []
+}

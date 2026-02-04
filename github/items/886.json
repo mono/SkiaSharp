@@ -1,0 +1,29 @@
+{
+  "number": 886,
+  "type": "pr",
+  "state": "closed",
+  "title": "Make sure to use the correct .targets name on Linux",
+  "body": "This fixes 2 bugs:\r\n 1. The .targets file should have been renamed for the separate packages. \r\n 2. The \u0060Prefer32Bit\u0060 property appears to be ignored on Linux, so in this case we also need to ignore it.\r\n\r\nA workaround for bug 1 would be to add this to the bottom of the .csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CTarget Name=\u0022AfterBuild\u0022\u003E\r\n  \u003CCopy SourceFiles=\u0022$(NuGetPackageRoot)skiasharp.nativeassets.linux\\1.68.0\\runtimes\\linux-x64\\native\\libSkiaSharp.so\u0022\r\n        DestinationFiles=\u0022$(TargetDir)libSkiaSharp.so\u0022 /\u003E\r\n\u003C/Target\u003E\r\n\u0060\u0060\u0060\r\n\r\nA workaround for bug 2 would be to add the  \u0060PreferredNativeSkiaSharp\u0060 property in the .csproj (making sure to select the correct architecture of the OS):\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPreferredNativeSkiaSharp\u003Ex64\u003C/PreferredNativeSkiaSharp\u003E\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-06-25T00:55:17",
+  "updatedAt": "2019-11-21T20:35:08",
+  "closedAt": "2019-06-25T19:01:48",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-linux-nuget",
+  "additions": 34,
+  "deletions": 19,
+  "changedFiles": 6,
+  "commits": 11,
+  "reviews": []
+}

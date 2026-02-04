@@ -1,0 +1,22 @@
+{
+  "number": 2862,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Implicit conversions between ValueTuples and SKPoint",
+  "body": "### Is your feature request related to a problem?\r\n\r\nI would like to be able to specify points in an easier way.\r\n\r\n### Describe the solution you would like\r\n\r\nTherefore, I suggest adding an implicit conversion  between a ValueTuple and a \u0060SKPoint\u0060 as well as a deconstructor:\r\n\u0060\u0060\u0060 c#\r\n// In struct SKPoint\r\n\r\npublic static implicit operator SKPoint((float x, float y) tuple) =\u003E new SKPoint(tuple.x, tuple.y);\r\n\r\npublic void Deconstruct(out float x, out float y) =\u003E (x = X, y = Y);\r\n\u0060\u0060\u0060\r\nThis would allow us to define a point as \u0060SKPoint point = (x, y);\u0060 instead of \u0060SKPoint point = new SKPoint(x, y);\u0060.\r\n\r\nThe inverse would also be possible: \u0060var (x, y) = point;\u0060.\r\n\r\n### Describe alternatives you have considered\r\n\r\nIt is currently (C#12) not possible to declare an implicit operator as extension method.\r\n\r\n### Additional context\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "OJacot-Descombes",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-17T15:36:58",
+  "updatedAt": "2024-06-17T13:07:50",
+  "commentCount": 0,
+  "reactionCount": 0
+}

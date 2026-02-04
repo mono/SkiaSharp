@@ -1,0 +1,22 @@
+{
+  "number": 3255,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] InvalidateSurface needed after SKXamlCanvas Unloaded",
+  "body": "### Description\n\nThis appears to be .NET Maui / Windows specific.\n\nI have a several custom SKCanvasView, one of which draws a simple circle and another one draws an svg loaded into an SKPicture.  When my app loads, I set things up and call InvalidateSurface on each.  While OnPaintSurface is called (three times, in some cases), the result is not shown on the screen.  When the SKCanvasView is later invalidated, the circle/svg are shown correctly.\n\nI discovered that during the calls to OnPaintSurface which don\u0027t show anything, the value of SKXamlCanvas loadUnloadCounter was 1.  Which made sense, BTW.  In the latter case, when things show up correctly, loadUnloadCounter is 0!\n\nI had the odd thought of calling InvalidateSurface on the SKXamCanvasd.Unloaded event - and it worked!\n\nI have no idea why it worked, but I thought I would post this for others who are wandering around this particular uncharted territory.  My workaround is below.\n\n### Code\n\n\u0060\u0060\u0060cs\npublic class MySKCanvasView : SKCanvasView\n{\n    public MySKCanvasView()\n    {\n        this.HandlerChanged \u002B= this.OnHandlerChanged;\n    }\n\n    private void OnHandlerChanged(object? sender, EventArgs e)\n    {\n#if WINDOWS\n        if (this.Handler?.PlatformView is SkiaSharp.Views.Windows.SKXamlCanvas canvas)\n        {\n            canvas.Unloaded \u002B= (a, b) =\u003E this.InvalidateSurface();\n        }\n#endif\n    }\n}\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11.\n\n### Devices\n\nWindows Desktop.\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "craigwi",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-27T17:21:55",
+  "updatedAt": "2025-04-27T17:21:55",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,113 @@
+{
+  "number": 2149,
+  "type": "pr",
+  "state": "open",
+  "title": "Png chunk reader codec bitmap",
+  "body": "**Description of Change**\r\n\r\nexpose more api\u0027s\r\n\r\n**Bugs Fixed**\r\n\r\nNone\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nAdded: \r\n \r\n- \u0060bool SKBitmap.SetInfo(SKImageInfo info)\u0060\r\n- \u0060bool SKBitmap.SetInfo(SKImageInfo info, int rowBytes)\u0060\r\n- \u0060bool SKBitmap.ComputeIsOpaque()\u0060\r\n- \u0060void SKBitmap.AllocPixels(SKImageInfo info)\u0060\r\n- \u0060void SKBitmap.AllocPixels(SKImageInfo info, int rowBytes)\u0060\r\n- \u0060void SKBitmap.AllocPixels(SKImageInfo info, SKBitmapAllocFlags flags)\u0060\r\n- \u0060SKImage SKBitmap.AsImage ()\u0060\r\n- \u0060uint SKBitmap.GenerationId()\u0060\r\n- \u0060SKPixmap SkBitmap.Pixmap { get; }\u0060\r\n- \u0060bool SKBitmap.ReadPixels (SKImageInfo info, IntPtr dstpixels, int rowBytes, int x, int y)\u0060\r\n- \u0060bool SKBitmap.ReadPixels(SKPixmap dstPixmap)\u0060\r\n- \u0060bool SKBitmap.ReadPixels(SKPixmap pixmap, int x, int y)\u0060\r\n- \u0060bool SKBitmap.WritePixels(SKPixmap pixmap)\u0060\r\n- \u0060bool SKBitmap.WritePixels(SKPixmap dstPixmap, int x, int y)\u0060\r\n- \u0060enum SKCodec.SelectionPolicy.preferStillImage\u0060\r\n- \u0060enum SKCodec.SelectionPolicy.preferAnimation\u0060\r\n- \u0060SKSizeI SKCodec.Dimensions { get; }\u0060\r\n- \u0060static SKCodec SKCodec.Create(string filename, SKPngChunkReader chunkReader)\u0060\r\n- \u0060static SKCodec SKCodec.Create(string filename, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(string filename, SKPngChunkReader chunkReader, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(string filename, out SKCodecResult result, SKPngChunkReader chunkReader)\u0060\r\n- \u0060static SKCodec SKCodec.Create(string filename, out SKCodecResult result, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create (string filename, out SKCodecResult result, SKPngChunkReader chunkReader, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(Stream stream, SKPngChunkReader chunkReader)\u0060\r\n- \u0060static SKCodec SKCodec.Create(Stream stream, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(Stream stream, SKPngChunkReader chunkReader, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(Stream stream, out SKCodecResult result, SKPngChunkReader chunkReader)\u0060\r\n- \u0060static SKCodec SKCodec.Create(Stream stream, out SKCodecResult result, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(Stream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKStream stream, SKPngChunkReader chunkReader)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKStream stream, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKStream stream, SKPngChunkReader chunkReader, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKStream stream, out SKCodecResult result)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKStream stream, out SKCodecResult result, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKStream stream, out SKCodecResult result, SKPngChunkReader chunkReader, SelectionPolicy selectionPolicy)\u0060\r\n- \u0060static SKCodec SKCodec.Create(SKData data, SKPngChunkReader chunkReader)\u0060\r\n- \u0060abstract bool SKPngChunkReader.ReadChunk(string tag, void* data, IntPtr length)\u0060\r\n- \u0060virtual bool SKPngChunkReader.ReadChunk (string tag, IntPtr data, IntPtr length)\u0060\r\n- \u0060virtual bool SKPngChunkReader.ReadChunk (void* tag, void* data, IntPtr length)\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/88\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mgood7123",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-07T11:56:03",
+  "updatedAt": "2022-08-26T08:14:01",
+  "commentCount": 16,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "png_chunk_reader_codec_bitmap",
+  "additions": 429,
+  "deletions": 25,
+  "changedFiles": 28,
+  "commits": 39,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-08T13:16:20"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-12T08:15:13"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-12T08:16:07"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-12T08:18:51"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-12T08:19:04"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-12T08:19:42"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-12T13:59:55"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-15T22:07:23"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-15T22:07:51"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-15T22:07:56"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-16T05:07:57"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-16T07:58:53"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-17T02:50:57"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-17T02:54:26"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-17T02:56:52"
+    },
+    {
+      "author": "mgood7123",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-17T02:59:26"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-17T09:12:43"
+    }
+  ]
+}

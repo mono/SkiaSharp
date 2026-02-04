@@ -1,0 +1,27 @@
+{
+  "number": 2614,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] wasm-ld : error : --shared-memory is disallowed by libskia.SkOpts.o because it was not compiled with \u0027atomics\u0027 or \u0027bulk-memory\u0027 features.",
+  "body": "### Description\r\n\r\nHey! Im trying to use SkiaSharp in combination with \u0060\u003CWasmEnableThreads\u003Etrue\u003C/WasmEnableThreads\u003E\u0060, but I get the following error(s):\r\n\u0060\u0060\u0060\r\nwasm-ld : error : --shared-memory is disallowed by libskia.SkOpts.o because it was not compiled with \u0027atomics\u0027 or \u0027bulk-memory\u0027 features.\r\nwasm-ld : error : \u003C....\u003E/obj/Debug/net8.0/wasm/for-build/pinvoke.o: undefined symbol: InterceptGLObject\r\n...\r\n\u0060\u0060\u0060\r\n\r\nI do get the \u0060-msimd128\u0060 flag passed way down the end though. \r\n\r\n\r\nIt seems like a similar issue has been solved previously (https://github.com/mono/SkiaSharp/pull/2286), although I have not been able to get it working either on net7 \u002B 2.88.4 or on the latest net8 RC1 and 2.88.6-preview, so Im not sure this is a regression. As it seems like others are also still running into this I\u0027m guessing this never worked completely in the first place? Is there some flag I need to pass in \u0060\u003CEmccExtraCFlags\u003E\u0060 or \u0060\u003CEmccExtraLDFlags\u003E\u0060?\r\n\r\nMy IDE is Rider.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\r\n\r\n  \u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enet8.0\u003C/TargetFramework\u003E\r\n    \u003CNullable\u003Eenable\u003C/Nullable\u003E\r\n    \u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\r\n    \u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E\r\n    \u003CRunAOTCompilation\u003Etrue\u003C/RunAOTCompilation\u003E\r\n    \u003CWasmEnableThreads\u003Etrue\u003C/WasmEnableThreads\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\r\n  \u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u00228.0.0-rc.1.23421.29\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u00228.0.0-rc.1.23421.29\u0022 PrivateAssets=\u0022all\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022Microsoft.NET.WebAssembly.Threading\u0022 Version=\u00228.0.0-rc.1.23419.4\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00222.88.6-preview.1.2\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00222.88.6-preview.1.2\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\r\n  \u003CItemGroup\u003E\r\n    \u003CProjectReference Include=\u0022..\\Shared\\Project.Shared.csproj\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\r\n\u003C/Project\u003E\r\n\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System\r\n\r\nmacOS\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Maxxen",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Blazor",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-09-18T18:30:25",
+  "updatedAt": "2024-10-28T11:48:40",
+  "closedAt": "2024-10-28T11:48:40",
+  "commentCount": 5,
+  "reactionCount": 0
+}

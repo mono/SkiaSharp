@@ -1,0 +1,19 @@
+{
+  "number": 994,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Memory leak at SKRoundRect#Transform?",
+  "body": "https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKRoundRect.cs\r\n\r\n\u0060\u0060\u0060cs\r\npublic SKRoundRect Transform (SKMatrix matrix)\r\n{\r\n  var destHandle = SkiaApi.sk_rrect_new ();\r\n  if (SkiaApi.sk_rrect_transform (Handle, ref matrix, destHandle)) {\r\n    return new SKRoundRect (destHandle, true);\r\n  }\r\n  return null;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nI think before \u0060return null;\u0060, we need to call \u0060SkiaApi.sk_rrect_delete (destHandle);\u0060.",
+  "author": {
+    "login": "ngocdaothanh",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-04T21:37:56",
+  "updatedAt": "2022-08-19T09:02:11",
+  "closedAt": "2019-11-06T16:24:36",
+  "commentCount": 5,
+  "reactionCount": 0
+}

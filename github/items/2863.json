@@ -1,0 +1,31 @@
+{
+  "number": 2863,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] samples/Basic/iOS/SkiaSharpSample canvas.DrawText cannot convert arguments",
+  "body": "### Description\r\n\r\nTo start with an iOS SkiaSharp example that matches what I would do as a nuget user, I modified samples/Basic/iOS/SkiaSharpSample/SkiaSharpSample.csproj:\r\n* target net8-ios and iOS 13.0.\r\n* Instead of referencing source projects, add nugets SkiaSharp, SkiaSharp.Views, SkiaSharp.NativeAssets.iOS 2.88.8\r\n\r\nWhen build, ViewController.cs, OnPaintSurface line 41 \u0060canvas.DrawText(...)\u0060 can\u0027t find a match for parameter types:\r\n* Argument 3: cannot convert from Skiasharp.SKTextAlign to float.\r\n* Argument 2: cannot convert from SkiaSharp.SKPoint to float.\r\n\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060cs\r\ncanvas.DrawText(\u0022SkiaSharp\u0022, coord, SKTextAlign.Center, font, paint);\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nThe project builds and runs on an iOS 17.2 simulator.\r\n\r\n\r\n### Actual Behavior\r\n\r\nCompile errors mentioned above.\r\n\r\nI can probably fix this. But posting issue in case\r\n* there is some other nuget I should have included to handle iOS type conversions,\r\n* or the sample matches some preview version I have not tried,\r\n* or the sample needs to be updated.\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\niOS\r\n\r\n### Platform / Operating System Version\r\n\r\nVS 2022 17.9.7 connected to iOS 17.2 Simulator on Mac.\r\n\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ToolmakerSteve",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-19T21:09:43",
+  "updatedAt": "2024-05-28T06:33:57",
+  "closedAt": "2024-05-28T06:33:57",
+  "commentCount": 4,
+  "reactionCount": 0
+}

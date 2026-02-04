@@ -1,0 +1,46 @@
+{
+  "number": 3374,
+  "type": "pr",
+  "state": "closed",
+  "title": "Preserve and pack the Android symbols",
+  "body": "This pull request refactors the native asset packaging logic for SkiaSharp and HarfBuzzSharp to unify and modernize how native binaries and debug symbols are handled across platforms, especially for Android and Windows. The changes introduce a new, consistent property and item group for native asset projects, update build scripts to extract and package debug symbols, and streamline symbol handling in NuGet packaging.\r\n\r\n**Native asset packaging unification:**\r\n\r\n* Replaced platform-specific project property \u0060IsWindowsNativeAssets\u0060 with a unified \u0060IsNativeAssetsProject\u0060 property in all relevant \u0060.csproj\u0060 files, and standardized the item group from \u0060NativeWindowsPackageFile\u0060/\u0060PackageFile\u0060 to \u0060NativeAssetPackageFile\u0060 for both Android and Windows projects. (\u0060binding/SkiaSharp.NativeAssets.Win32/SkiaSharp.NativeAssets.Win32.csproj\u0060, \u0060binding/SkiaSharp.NativeAssets.WinUI/SkiaSharp.NativeAssets.WinUI.csproj\u0060, \u0060binding/SkiaSharp.NativeAssets.NanoServer/SkiaSharp.NativeAssets.NanoServer.csproj\u0060, \u0060binding/HarfBuzzSharp.NativeAssets.Win32/HarfBuzzSharp.NativeAssets.Win32.csproj\u0060, \u0060binding/HarfBuzzSharp.NativeAssets.Android/HarfBuzzSharp.NativeAssets.Android.csproj\u0060, \u0060binding/SkiaSharp.NativeAssets.Android/SkiaSharp.NativeAssets.Android.csproj\u0060) [[1]](diffhunk://#diff-d955338449e43951b418b7c7c90de61af14107d672ed7cbb831c210c642cc85eL6-R11) [[2]](diffhunk://#diff-b5714154803a2e77f57398cd2efa2f3d3f7f12be92abc0d0baa89f90d0979f7cL6-R14) [[3]](diffhunk://#diff-16fa36b38e988694aa88ec6031104d034a345d04201dd9dfa6a6af66b6a34241L7-R10) [[4]](diffhunk://#diff-43db30200e046f72748674141b845a93d6964b4fbe6269b7153f597dedeec0edR7-R13) [[5]](diffhunk://#diff-dd6569b5fae8f93900a3a611fc2321ece5a6fd3ec6f80030817800aee8ccb3c2R7-R13) [[6]](diffhunk://#diff-a6d73f2b3d575e70ed303e33427d709bcb7cf156dfdd64a25402980286f0e2f4L6-R11)\r\n\r\n* Updated \u0060NativeAssets.Build.targets\u0060 to use the new property and item group, ensuring all platforms use the same logic for including native binaries and symbols in NuGet packages. This includes improved symbol file handling for both \u0060.pdb\u0060 and \u0060.dbg\u0060 files. (\u0060binding/NativeAssets.Build.targets\u0060)\r\n\r\n**Android build and symbol extraction improvements:**\r\n\r\n* Refactored the Android build script to use a shared \u0060ndk.cake\u0060 module, which now provides functions for alignment checking, symbol extraction, and stripping. The build process now extracts debug symbols into \u0060.dbg\u0060 files and links them to the stripped binaries, improving debugging support. (\u0060native/android/build.cake\u0060, \u0060scripts/cake/ndk.cake\u0060) [[1]](diffhunk://#diff-4b2d4d6e454c8a73a9705904c2475addfb60c3be7555ccaf05033281e59b3235L5-L34) [[2]](diffhunk://#diff-4b2d4d6e454c8a73a9705904c2475addfb60c3be7555ccaf05033281e59b3235L64-L83) [[3]](diffhunk://#diff-4b2d4d6e454c8a73a9705904c2475addfb60c3be7555ccaf05033281e59b3235L93-R70) [[4]](diffhunk://#diff-45d844f2378066bca87e208ba8a1ac764689f556306980d2e21570daa13eac62R1-R86)\r\n\r\n* Updated Android native build flags to disable automatic stripping, and added debug info flags (\u0060-g -ggdb3\u0060) to both SkiaSharp and HarfBuzzSharp builds, ensuring debug symbols are available for extraction. (\u0060native/android/libHarfBuzzSharp/jni/Application.mk\u0060, \u0060native/android/libHarfBuzzSharp/jni/HarfBuzzSharp.mk\u0060) [[1]](diffhunk://#diff-70485081f253dbdb14f0929da89a2c238b68c0f37367167160380741991278ddR6) [[2]](diffhunk://#diff-4920896f8be133b1ae5dbde7d88287540db3b9e527aa1acf53af75ff000aa379L4-R16)\r\n\r\n**NuGet packaging and symbol file support:**\r\n\r\n* Modified \u0060SkiaSharp.NuGet.targets\u0060 to always allow \u0060.pdb\u0060 and \u0060.so\u0060 files in the package output, and to include \u0060.dbg\u0060 files in the symbols package, ensuring that debug symbols extracted during the build are properly packaged. (\u0060source/SkiaSharp.NuGet.targets\u0060)\r\n\r\n**Dependency update:**\r\n\r\n* Updated the Skia submodule to a newer commit, likely pulling in upstream changes or fixes. (\u0060externals/skia\u0060)\r\n\r\nThese changes collectively improve the maintainability and debugging experience for native assets across platforms, and provide a more consistent packaging workflow.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/Android",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-09-22T19:06:11",
+  "updatedAt": "2025-10-10T14:40:19",
+  "closedAt": "2025-10-10T14:40:13",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/android-symbols",
+  "additions": 164,
+  "deletions": 92,
+  "changedFiles": 15,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "jonpryor",
+      "state": "APPROVED",
+      "submittedAt": "2025-10-08T19:06:38"
+    }
+  ]
+}

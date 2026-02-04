@@ -1,0 +1,36 @@
+{
+  "number": 3468,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add debugging methodology documentation",
+  "body": "## Summary\n\nAdd documentation on debugging methodology for complex cross-platform issues, based on lessons learned from the libwebp AVX2 debugging session.\n\n## Changes\n\n- **New file**: \u0060documentation/debugging-methodology.md\u0060 - Full debugging methodology guide\n- **Updated**: \u0060.github/copilot-instructions.md\u0060 - Added brief section with key principles and link to full doc\n- **Updated**: \u0060documentation/README.md\u0060 - Added to documentation index\n\n## Key Principles Documented\n\n1. **Establish baseline first** - Know what\u0027s working before investigating\n2. **Track changes and effects** - Log every change and its result\n3. **Trace conditional code completely** - Evaluate preprocessor logic for EACH platform\n4. **Use platform differences as diagnostic signals** - When X works and Y fails, the difference IS the answer\n5. **One change at a time** - Verify before proceeding\n6. **Verify claims with evidence** - Don\u0027t state assumptions as facts\n7. **Revert if fixes make things worse** - Don\u0027t pile more fixes on top\n\n## Common Pitfalls Covered\n\n- \u0060#if defined(X)\u0060 vs \u0060#if X\u0060 preprocessor gotcha\n- Defensive broad fixes that obscure root causes\n- Parallel operations on shared resources\n- Dismissing errors without explanation\n\nThis documentation will help avoid the kinds of mistakes that extended the libwebp debugging session unnecessarily.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-28T00:38:01",
+  "updatedAt": "2026-02-02T21:46:47",
+  "closedAt": "2026-01-29T00:55:44",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "add-debugging-methodology",
+  "additions": 191,
+  "deletions": 1,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": []
+}

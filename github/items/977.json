@@ -1,0 +1,36 @@
+{
+  "number": 977,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG][macOS] AppKit.NSOpenGLPixelFormat: the native \u0027init*\u0027 method returned nil",
+  "body": "**Description**\r\n\r\n\u0060SKGLView\u0060 fails to initialize with the error **Could not initialize an instance of the type \u0027AppKit.NSOpenGLPixelFormat\u0027: the native \u0027init*\u0027 method returned nil.**\r\n\r\n\u0060\u0060\u0060\r\nSystem.Exception: Could not initialize an instance of the type \u0027AppKit.NSOpenGLPixelFormat\u0027: the native \u0027init*\u0027 method returned nil.\r\nIt is possible to ignore this condition by setting ObjCRuntime.Class.ThrowOnInitFailure to false.\r\n  at Foundation.NSObject.InitializeHandle (System.IntPtr handle, System.String initSelector) [0x000b9] in /Library/Frameworks/Xamarin.Mac.framework/Versions/6.4.0.2/src/Xamarin.Mac/Foundation/NSObject2.cs:504 \r\n  at Foundation.NSObject.InitializeHandle (System.IntPtr handle) [0x00001] in /Library/Frameworks/Xamarin.Mac.framework/Versions/6.4.0.2/src/Xamarin.Mac/Foundation/NSObject2.cs:480 \r\n  at AppKit.NSOpenGLPixelFormat..ctor (System.UInt32[] attribs) [0x0005f] in /Library/Frameworks/Xamarin.Mac.framework/Versions/6.4.0.2/src/Xamarin.Mac/AppKit/NSOpenGLPixelFormat.cs:69 \r\n  at AppKit.NSOpenGLPixelFormat..ctor (System.Object[] attribs) [0x00000] in /Library/Frameworks/Xamarin.Mac.framework/Versions/6.4.0.2/src/Xamarin.Mac/AppKit/NSOpenGLPixelFormat.cs:150 \r\n  at SkiaSharp.Views.Mac.SKGLView.Initialize () [0x000af] in \u003C08acf5ba669b46b0a186cc90d42326cf\u003E:0 \r\n  at SkiaSharp.Views.Mac.SKGLView.AwakeFromNib () [0x00000] in \u003C08acf5ba669b46b0a186cc90d42326cf\u003E:0 \r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n  at (wrapper managed-to-native) AppKit.NSApplication.NSApplicationMain(int,string[])\r\n  at AppKit.NSApplication.Main (System.String[] args) [0x00040] in /Library/Frameworks/Xamarin.Mac.framework/Versions/6.4.0.2/src/Xamarin.Mac/AppKit/NSApplication.cs:100 \r\n  at Circuit.Mac.MainClass.Main (System.String[] args) [0x00007] in /Users/fak/Dropbox/Projects/Circuit/CircuitMac/Main.cs:14 \r\n\u0060\u0060\u0060\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\nnew SkiaSharp.Views.Mac.SKGLView ()\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe GL view works as normal.\r\n\r\n**Actual Behavior**\r\n\r\nThe above exception\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1-rc.153\r\n- Last known good version:  1.68.0\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - macOS:  10.11\r\n\r\n",
+  "author": {
+    "login": "praeclarum",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/macOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2019-10-12T04:27:17",
+  "updatedAt": "2022-08-19T09:02:18",
+  "closedAt": "2019-12-28T15:24:34",
+  "commentCount": 10,
+  "reactionCount": 0
+}

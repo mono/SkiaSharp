@@ -1,0 +1,18 @@
+{
+  "number": 1338,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] WPF SKElement and memory consumption",
+  "body": "Hi\r\nIn a WPF app i use skiasharp to write spokes to a circle via the GPU, i create my grcontext all works allrigth\r\nbut if do not update the Canvas that i get in PaintSurface from SKElement, every operation on the surface created from grcontext consumes memory without releaseing it.\r\n se code\r\n\r\n\u0060\u0060\u0060xaml\r\n  \u003Cwpf:SKElement x:Name=\u0022BitmapHost\u0022 PaintSurface=\u0022OnPaintCanvas\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\n        private void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)\r\n        {\r\n            SKCanvas canvas = e.Surface.Canvas;\r\n            int width = e.Info.Width;\r\n            int height = e.Info.Height;\r\n            if (SendScreenImage)\r\n            {\r\n                var canvasSize = new SKSize(width, height);\r\n                if (_screenCanvasSize != canvasSize)\r\n                {\r\n                    _surface?.Dispose();\r\n                    _grContext?.Dispose();\r\n\r\n                    _grContext = GRContext.Create(GRBackend.OpenGL);\r\n                    _surface = SKSurface.Create(_grContext, true, new SKImageInfo(width, height));\r\n\r\n                    _screenCanvasSize = canvasSize;\r\n                }\r\n                MY_Skia_PaintSurfaceCommonNew(TheTarget, _surface, false, ref FirstPaint, QueuDrawings, ref Range, ref LastSend, signalrConnection, sendSpan, broadcastImageArray, false, listOfAllW);\r\n                _surface.Canvas.Flush();\r\n// if this is not called memory does not get relased (can it have to with garbage collection??\r\n                if (ShowScreenUpdate)\r\n                {\r\n                    canvas.DrawSurface(_surface, new SKPoint(0f, 0f));\r\n                }\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nThank You",
+  "author": {
+    "login": "pilotshamn",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-16T14:09:34",
+  "updatedAt": "2021-02-08T23:10:21",
+  "closedAt": "2021-02-08T23:10:18",
+  "commentCount": 5,
+  "reactionCount": 1
+}

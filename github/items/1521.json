@@ -1,0 +1,27 @@
+{
+  "number": 1521,
+  "type": "pr",
+  "state": "open",
+  "title": "Angle WPF",
+  "body": "**Description of Change**\r\n\r\nI\u0027ve added working ANGLE approach to the SkiaSharp.Views.WPF that enables GPU rendering with minimum performance overhead on transferring draw calls between OpenGL and DirectX.\r\n\r\nThis version of code is a minimum working example that\u0027s have minimum changes to the SKElement code. I\u0027ve decided to do so to make PR as simple as I can, so it will be easy to understand the code and make some changes to it, if we will need some. \r\n\r\n[WARNING]\r\nANGLE libs are attached by Avalonia nuget package, but it has an issue, somehow it do not copy angle libs to the connected projects output, like WPF sample. So to make ANGLE working you need to copy libs manually. We need to ask and make an update to Avalonia nuget package or make SkiaSharp ANGLE libs package that supports dlls copying to connected projects.\r\n\r\nIf this PR will be merged I will continue the work and add support of rendering in specific thread, and other tweaks.\r\n\r\n**Bugs Added**\r\n\r\n* Window hang on any DEVICE_LOST. Device lost can be triggered by PC sleep/hybernate or by directX command line call.\r\n\r\n- Related to issue #745 \r\n\r\n**API Changes**\r\n\r\nAdded: \r\n \r\n- \u0060GLMode SKElement.Mode { get; }\u0060\r\n- \u0060GRContext SKElement.GRContext { get; }\u0060\r\n- \u0060void SKElement.StopRenderAndDisposeAllUnmanagedResources()\u0060\r\n\r\n**Behavioral Changes**\r\n\r\n* My code do not support multiple instances of SKElement. I don\u0027t know if we need to make this feature.\r\n* I\u0027ve removed openGL/WindowsFormsHost approach because it\u0027s bad and don\u0027t needed anymore (from my perspective)\r\n* My code do not support backend switch. Do I need to implement it?\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n- [ ] Angle Libs nuget issue is resolved\r\n",
+  "author": {
+    "login": "Mikolaytis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-06T09:46:55",
+  "updatedAt": "2022-08-08T22:46:26",
+  "commentCount": 11,
+  "reactionCount": 2,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "AngleWPF",
+  "additions": 579,
+  "deletions": 90,
+  "changedFiles": 14,
+  "commits": 9,
+  "reviews": []
+}

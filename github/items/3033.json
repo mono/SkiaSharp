@@ -1,0 +1,43 @@
+{
+  "number": 3033,
+  "type": "pr",
+  "state": "open",
+  "title": "Add caching to DrawShapedText",
+  "body": "**Description of Change**\r\n\r\nThis enables a user to set a cache duration. When set to a value \u003E 0, it caches the \u0060SKShaper\u0060 and the \u0060SKShaper.Result\u0060 thus repeated calls with the same font and/or text are faster.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #3032\r\n\r\n**API Changes**\r\n\r\nAdded: \r\n \r\n- \u0060public static void SetShaperCacheDuration(this SKCanvas canvas, uint milliseconds)\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nIf the cache duration was set to a value bigger than zero, \u0060DrawShapedText\u0060 will cache the \u0060SKShaper\u0060 and the \u0060SKShaper.Result\u0060 for that amount of milliseconds. Therefore repeated calls with the same \u0060SKFont\u0060 and/or \u0060string\u0060 will be faster.\r\n\r\nIf the cache duration is set to 0, then the cache will be cleared, all contained \u0060SKShaper\u0060 objects disposed and caching will be disabled.\r\n\r\nThe default cache duration is 0. So if \u0060SetShaperCacheDuration\u0060 is never called, \u0060DrawShapedText\u0060 works as before.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "MichaelRumpler",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-08T13:04:22",
+  "updatedAt": "2024-11-11T18:45:53",
+  "commentCount": 11,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "CacheDrawShapedText",
+  "additions": 426,
+  "deletions": 3,
+  "changedFiles": 3,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-11-11T12:58:30"
+    },
+    {
+      "author": "MichaelRumpler",
+      "state": "COMMENTED",
+      "submittedAt": "2024-11-11T16:12:21"
+    }
+  ]
+}

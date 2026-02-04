@@ -1,0 +1,18 @@
+{
+  "number": 270,
+  "type": "issue",
+  "state": "closed",
+  "title": "Deployment to Windows 8.1 is missing",
+  "body": "There\u0027s an error (Unable to load DLL \u0027libSkiaSharp\u0027) when publishing SkiaSharp to Windows 8.1\r\n\r\nTo reproduce:\r\n\u0060\u0060\u0060\r\ndotnet restore -r win81-x64\r\ndotnet build -r win81-x64\r\ndotnet publish -f netcoreapp1.1 -c Release -r win81-x64\r\n\u0060\u0060\u0060\r\n\r\nIs this because there is no native library for Windows 8.1 ? \r\nStrangely, if I copy the Windows 7 libSkiaSharp.dll into the folder, it doesn\u0027t work. \r\nIt also doesn\u0027t work with the Windows10 libSkiaSharp.dll\r\n\r\nIs this because there is no library for Windows 8.1 ? If so, it should be provided. Might it be because of missing C/C\u002B\u002B-runtime files ?  If so, the C-runtime should be linked statically. \r\nCopying the dll for Windows 7/10 x64 or x32 to the application folder or the Windows folder didn\u0027t help either...\r\nOn Linux it began to work as soon as I compiled the native library and added it to ldconfig (BTW: there\u0027s an error when generating the documentation in the native library). \r\n\r\n[![Where is 8.1][1]][1]\r\n\r\n[![Error][2]][2]\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n  [1]: https://i.stack.imgur.com/vhxbi.png\r\n  [2]: https://i.stack.imgur.com/l5HR0.png",
+  "author": {
+    "login": "ststeiger",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-03-27T11:05:23",
+  "updatedAt": "2022-08-19T21:02:15",
+  "closedAt": "2017-03-29T02:02:49",
+  "commentCount": 5,
+  "reactionCount": 0
+}

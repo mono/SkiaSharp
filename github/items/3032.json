@@ -1,0 +1,22 @@
+{
+  "number": 3032,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Add caching in DrawShapedText",
+  "body": "### Is your feature request related to a problem?\n\nThe \u0060DrawShapedText\u0060 method is meant to be an easy replacement for \u0060DrawText\u0060 which adds text shaping via HarfBuzz but otherwise uses the same parameters as \u0060DrawText\u0060. It creates and disposes a \u0060SKShaper\u0060 at every call which is very slow.\n\n### Describe the solution you would like\n\nThe \u0060SKShaper\u0060 should not be created and disposed at every call. It should be cached and reused instead.\r\n\r\nFurthermore also the result of the text shaping should be cached. This would improve the performance even more.\n\n### Describe alternatives you have considered\n\nThere is an overload of \u0060DrawShapedText\u0060 which takes a \u0060SKShaper\u0060 and does not create/dispose it at every call, but people need to have more insider knowledge of HarfBuzzSharp to use it. Also the caching of the results is something which everybody has to do to use HarfBuzz efficiently. It would be better if it was built in.\n\n### Additional context\n\nI wrote a [blog post](https://www.mrumpler.at/performance-tuning-drawshapedtext/) about this problem. It also includes benchmarks which show the possible improvement.\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MichaelRumpler",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-08T12:33:02",
+  "updatedAt": "2024-10-08T12:33:02",
+  "commentCount": 0,
+  "reactionCount": 0
+}

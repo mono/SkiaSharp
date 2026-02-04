@@ -1,0 +1,18 @@
+{
+  "number": 2462,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKBitmap.GetPixels crashes in Release mode, unless called often",
+  "body": "**Description**\r\n\r\nAccessing data returned by \u0060SKBitmap.GetPixels()\u0060 causes an \u0060AccessViolationException\u0060, unless it is called often. The image used in the example below is [available here](https://www.dropbox.com/s/u49yd6retbs6f3f/skybox.png?dl=0).\r\n\r\nI am unable to reproduce this in Debug mode, only in Release mode (i.e. optimised .NET builds)\r\n\r\n**Code**\r\nThis code returns how many unique colours are in an image. Removing the line starting with \u0060var test =\u0060 causes the program to crash.\r\n\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\n\r\nnamespace SkiaCrash;\r\n\r\ninternal unsafe class Program\r\n{\r\n    static void Main(string[] args)\r\n    {\r\n        var bitmap = SKBitmap.Decode(File.OpenRead(\u0022skybox.png\u0022));\r\n        var skiaPtr = (uint*)bitmap.GetPixels();\r\n\r\n\r\n        // Ensure there are 4 bytes per pixel\r\n        if (bitmap.ColorType != SKColorType.Bgra8888)\r\n            return;\r\n\r\n\r\n        // Get every colour in the PNG\r\n        var colours = new HashSet\u003Cuint\u003E();\r\n\r\n        var read = skiaPtr;\r\n        var end = read \u002B bitmap.Width * bitmap.Height;\r\n\r\n        while (read \u003C end)\r\n        {\r\n            // Remove this line to cause the crash\r\n            var test = (uint*)bitmap.GetPixels();\r\n\r\n            colours.Add(*read\u002B\u002B);\r\n        }\r\n\r\n\r\n        // Use the result in some way so the compiler doesn\u0027t remove any code\r\n        Console.WriteLine(colours.Count);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\nThe program does not crash\r\n\r\n**Actual Behavior**\r\nThe program crashes with this exception:\r\n\r\n\u0060\u0060\u0060\r\nAn unhandled exception of type \u0027System.AccessViolationException\u0027 occurred in SkiaCrash.dll\r\nAttempted to read or write protected memory. This is often an indication that other memory is corrupt.\r\n\r\nThe program \u0027[31788] SkiaCrash.exe\u0027 has exited with code 4294967295 (0xffffffff).\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n- .NET version: 6.0\r\n- Version with issue:  2.88.3\r\n- Last known good version:  Unsure\r\n- IDE:  Microsoft Visual Studio Community 2022 (64-bit) - Current - Version 17.4.3\r\n- Platform Target Frameworks:\r\n  - Windows Classic:  Windows 10\r\n",
+  "author": {
+    "login": "Vercidium",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-05-17T08:54:41",
+  "updatedAt": "2023-07-20T00:00:44",
+  "closedAt": "2023-06-19T17:09:50",
+  "commentCount": 3,
+  "reactionCount": 0
+}

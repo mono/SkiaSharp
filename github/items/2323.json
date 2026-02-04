@@ -1,0 +1,17 @@
+{
+  "number": 2323,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Possible GC issues with HarfBuzzSharp.Blob.FromStream",
+  "body": "Hi,\r\n\r\nI have a question regarding the \u0060HarfBuzzSharp.Blob.FromStream\u0060 implementation, which I pasted here for convenience: \r\nisn\u0027t is necessary to pin the \u0060data\u0060 for the whole \u0060Blob\u0060 lifetime to avoid memory relocation by the GC?\r\n\u0060\u0060\u0060\r\npublic static unsafe Blob FromStream (Stream stream)\r\n{\r\n\t// TODO: check to see if we can avoid the second copy (the ToArray)\r\n\r\n\tusing (var ms = new MemoryStream ()) {\r\n\t\tstream.CopyTo (ms);\r\n\t\tvar data = ms.ToArray ();\r\n\r\n\t\tfixed (byte* dataPtr = data) {\r\n\t\t\treturn new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () =\u003E ms.Dispose ());\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n",
+  "author": {
+    "login": "cbersch",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-23T12:10:04",
+  "updatedAt": "2023-03-31T05:00:50",
+  "commentCount": 1,
+  "reactionCount": 1
+}

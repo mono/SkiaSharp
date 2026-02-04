@@ -1,0 +1,28 @@
+{
+  "number": 276,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Windows] Non-antialiased text on a scaled canvas",
+  "body": "There appears to be an issue on Windows when drawing text onto a scaled canvas:\r\n\r\n\u0060\u0060\u0060csharp\r\n// scale\r\ncanvas.Scale (1, 2);\r\n\r\n// paint\r\nvar paint = new SKPaint {\r\n    TextSize = 50\r\n};\r\n\r\n// draw\r\ncanvas.DrawText (\u0022Skia\u0022, 10, 60, paint);\r\n\u0060\u0060\u0060\r\n![first](https://cloud.githubusercontent.com/assets/1096616/24983859/31a18f46-1fea-11e7-9a6b-24b572c646ee.PNG)\r\n\r\nBut if we set antialiasing on:\r\n\r\n\u0060\u0060\u0060csharp\r\npaint.IsAntialias = true;\r\n\u0060\u0060\u0060\r\n\r\n![second](https://cloud.githubusercontent.com/assets/1096616/24983860/3426f4cc-1fea-11e7-877a-3a187bfb609e.PNG)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.57.1",
+  "createdAt": "2017-04-12T23:40:24",
+  "updatedAt": "2022-08-19T21:02:11",
+  "closedAt": "2017-04-21T08:16:10",
+  "commentCount": 1,
+  "reactionCount": 0
+}

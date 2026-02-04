@@ -1,0 +1,23 @@
+{
+  "number": 58,
+  "type": "issue",
+  "state": "closed",
+  "title": "Build error with VS 2015",
+  "body": "I\u0027m seeing a build error with Visual Studio 2015 Update 2 (community edition) on 64-bit Windows 7.\n\n\u0060\u0060\u0060\n\u0022C:\\...\\SkiaSharp\\native-builds\\libskia_windows\\libskia_windows_x64.sln\u0022 (Build target) (1) -\u003E\n\u0022C:\\...\\SkiaSharp\\skia\\out\\gyp\\core.vcxproj\u0022 (default target) (6) -\u003E\n(ClCompile target) -\u003E\n  ..\\..\\src\\core\\SkVarAlloc.cpp(48): warning C4334: \u0027\u003C\u003C\u0027: result of 32-bit shift implicitly converted to 64 bits\n(was 64-bit shift intended?) [C:\\...\\SkiaSharp\\skia\\out\\gyp\\core.vcxproj]\n\u0060\u0060\u0060\n\nAnd the build doesn\u0027t complete:\n\n\u0060\u0060\u0060\n ..\\..\\src\\core\\SkVarAlloc.cpp(48): error C2220: warning treated as error\n\u0060\u0060\u0060\n\nSome searching around turned up this skia upstream bug: https://bugs.chromium.org/p/chromium/issues/detail?id=593448. I don\u0027t think it\u0027s been fixed upstream yet, but they have identified a workaround, which is to suppress warning C4334. \n\nBy applying the following patch in skia, this issue is resolved:\n\n\u0060\u0060\u0060\ndiff --git a/gyp/common_conditions.gypi b/gyp/common_conditions.gypi\nindex cf43271..3cc5dfb 100644\n--- a/gyp/common_conditions.gypi\n\u002B\u002B\u002B b/gyp/common_conditions.gypi\n@@ -54,6 \u002B54,7 @@\n             4275,  # An exported class was derived from a class that was not ex\n             4345,  # This is an FYI about a behavior change from long ago. Chro\n             4355,  # \u0027this\u0027 used in base member initializer list. Off by defaul\n\u002B            4334,\n         ],\n         \u0027msvs_cygwin_shell\u0027: 0,\n         \u0027msvs_settings\u0027: {\n\u0060\u0060\u0060\n\nI don\u0027t know that this should be an open issue on SkiaSharp, but I figured it was worth documenting so others don\u0027t have to duplicate the effort.\n",
+  "author": {
+    "login": "tdenniston",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/low-priority",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2016-04-08T18:57:01",
+  "updatedAt": "2022-08-20T06:01:37",
+  "closedAt": "2018-11-14T19:08:40",
+  "commentCount": 4,
+  "reactionCount": 0
+}

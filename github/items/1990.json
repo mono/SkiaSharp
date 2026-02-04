@@ -1,0 +1,17 @@
+{
+  "number": 1990,
+  "type": "issue",
+  "state": "open",
+  "title": "Unable to load assembly \u0027System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 through COM",
+  "body": "**Description**\r\nI am trying to use SkiaSharp through Codecrete.SwissQRBill.Generator package.\r\nBut when I am accessing this dll through COM compoenent I am getting errors as below:\r\n\r\nSystem.TypeInitializationException\r\n  HResult=0x80131534\r\n  Message=The type initializer for \u0027PerTypeValues\u00601\u0027 threw an exception.\r\n  Source=System.Memory\r\n  StackTrace:\r\n   at System.SpanHelpers.IsReferenceOrContainsReferences[T]()\r\n   at SkiaSharp.SKString.ToString()\r\n   at SkiaSharp.SKTypeface.get_FamilyName()\r\n   at Codecrete.SwissQRBill.PixelCanvas.PNGCanvas.FindInstalledFontFamily(String fontFamilyList) in /_/PixelCanvas/Canvas/PNGCanvas.cs:line 110\r\n   at Codecrete.SwissQRBill.PixelCanvas.PNGCanvas..ctor(Double width, Double height, Int32 resolution, String fontFamilyList) in /_/PixelCanvas/Canvas/PNGCanvas.cs:line 57\r\n   at Codecrete.SwissQRBill.PixelCanvas.PNGCanvasFactory.Codecrete.SwissQRBill.Generator.Canvas.ICanvasFactory.Create(BillFormat format, Double width, Double height) in /_/PixelCanvas/Canvas/PNGCanvasFactory.cs:line 25\r\n   at Codecrete.SwissQRBill.Generator.Canvas.CanvasCreator.Create(BillFormat format, Double width, Double height) in /_/Core/Canvas/CanvasCreator.cs:line 50\r\n   at Codecrete.SwissQRBill.Generator.QRBill.CreateCanvas(BillFormat format) in /_/Core/QRBill.cs:line 309\r\n   at Codecrete.SwissQRBill.Generator.QRBill.Generate(Bill bill) in /_/Core/QRBill.cs:line 132\r\n   at Util.QRCodeGenerator.QRCodeGen.GenerateQRCode(String input) in C:\\Nova\\NovaProd\\Source\\DEV\\4_Kailash_Scrum\\Jd\\Src\\Util\\QRCodeGen.cs:line 96\r\n\r\nInner Exception 1:\r\nFileLoadException: Could not load file or assembly \u0027System.Runtime.CompilerServices.Unsafe, Version=4.0.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 or one of its dependencies. The located assembly\u0027s manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)\r\n\r\nInner Exception 2:\r\nFileLoadException: Could not load file or assembly \u0027System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 or one of its dependencies. The located assembly\u0027s manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)\r\n\r\n\r\nSo can you please help me to resolve this issue?\r\n\r\nRegards,\r\nVinod\r\n\r\n",
+  "author": {
+    "login": "vinodd30",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-07T10:53:30",
+  "updatedAt": "2025-03-26T13:04:55",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2300,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Indexed image is broken after decode and encode",
+  "body": "**Description**\r\n\r\nThe Image is an indexed image, it is broken after decode and encode. Also, the result image changes when you try my sample code for several times.\r\n\r\nsourceImage.png:\r\n![sourceImage](https://user-images.githubusercontent.com/6427581/199411942-d8993e91-7444-41f3-af41-d8b802f35991.png)\r\n\r\ndestImage.png:\r\n![destImage](https://user-images.githubusercontent.com/6427581/199412014-ac8c1aa3-3dcc-4bb3-abc5-7223f3ed5475.png)\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nusing (SKBitmap b = SKBitmap.Decode(\u0022sourceImage.png\u0022))\r\n{\r\n    using (FileStream fs = new FileStream(\u0022destImage.png\u0022, FileMode.Create))\r\n    {\r\n        b.Encode(fs, SKEncodedImageFormat.Png, 100);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe result image is not broken.\r\n\r\n**Actual Behavior**\r\n\r\nThe result image is broken.\r\n\r\n**Basic Information**\r\n\r\n- SkiaSharp 2.88.3\r\n- .Net 6\r\n- Windows 10\r\n\r\n",
+  "author": {
+    "login": "dallonxu",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-01T10:07:38",
+  "updatedAt": "2022-11-28T21:08:58",
+  "commentCount": 5,
+  "reactionCount": 0
+}

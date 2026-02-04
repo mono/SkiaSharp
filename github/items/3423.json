@@ -1,0 +1,34 @@
+{
+  "number": 3423,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] .Net Framework 4.7.2 ClickOnce package -  Unable to load library \u0027libSkiaSharp\u0027",
+  "body": "### Description\n\nSkiaSharp Nuget version: 3.119.1\n\nWe\u0027re adding SkiaSharp to our .net winforms app (framework 4.7.2) for the first time, and we have a problem where the ClickOnce version of the app throws the following exception.\n\n\u0060\u0060\u0060\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027.\n   at SkiaSharp.LibraryLoader.LoadLocalLibrary[T](String libraryName)\n   at System.Lazy\u00601.CreateValue()\n   at System.Lazy\u00601.LazyInitValue()\n   at SkiaSharp.SkiaApi.sk_data_new_empty()\n   at SkiaSharp.SKData..cctor()\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKData.Create(IntPtr address, Int32 length)\n   at SkiaSharp.SKBitmap.Decode(ReadOnlySpan\u00601 buffer)\n   at SkiaSharp.SKBitmap.Decode(Byte[] buffer)\n\u0060\u0060\u0060\n\nOur MSIX version of the app does not however, and I think its because \u0060libSkiaSharp.dylib\u0060 is not being included in the ClickOnce publish, even though I have it configured to (the Application Files dialog says its not referenced).  That file IS included in the MSIX package however.\n\n### Code\n\n\u0060\u0060\u0060\nvar image = SKBitmap.Decode(imageData ?? throw new ArgumentNullException(nameof(imageData)))\n\u0060\u0060\u0060\n\nIn a WinForms app, then published with ClickOnce.\n\n### Expected Behavior\n\nI expect the image to be decoded.\n\n### Actual Behavior\n\nAn exception:  System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Windows 11\n- Windows 10\n\n### Devices\n\n- Dell workstations\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ajohnstone-ks",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-11-25T19:47:59",
+  "updatedAt": "2025-11-25T19:48:43",
+  "commentCount": 1,
+  "reactionCount": 0
+}

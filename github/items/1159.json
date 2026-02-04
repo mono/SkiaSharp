@@ -1,0 +1,23 @@
+{
+  "number": 1159,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp.NativeAssets.Linux.NoDependencies is adding a reference to osx binary which does not exist",
+  "body": "**Description**\r\n\r\nWe get the following warning in visual studio for our winforms project:\r\n\u003E Warning\t\tThe referenced component \u0027C:\\Users\\xPaw\\.nuget\\packages\\skiasharp.nativeassets.linux.nodependencies\\1.68.1.1\\buildTransitive\\net45\\\\..\\\\..\\\\runtimes\\osx\\native\\libSkiaSharp.dylib\u0027 could not be found.\tGUI\t\t\t\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- the version of SkiaSharp that has the issue --\u003E 1.68.1.1\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E VS 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E .net 4.7.2\r\n- Target Devices:  Windows\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\nProject: https://github.com/SteamDatabase/ValveResourceFormat\r\n\r\nValveResourceFormat.csproj (net core) references skia like this:\r\n\u0060\u0060\u0060\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00221.68.1.1\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00221.68.1.1\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nand the GUI (winforms) references the csproj above.\r\n",
+  "author": {
+    "login": "xPaw",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/try-latest-version",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-03-01T15:29:47",
+  "updatedAt": "2022-09-11T21:01:19",
+  "closedAt": "2022-08-12T19:30:13",
+  "commentCount": 8,
+  "reactionCount": 0
+}

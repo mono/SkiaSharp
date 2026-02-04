@@ -1,0 +1,40 @@
+{
+  "number": 3451,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add AI release skills and integration test suite",
+  "body": "## Summary\r\n\r\nThis PR introduces a comprehensive AI-assisted release workflow and integration testing infrastructure for SkiaSharp.\r\n\r\n## New AI Skills\r\n\r\nThree new skills to guide AI through the complete release process:\r\n\r\n### 1. \u0060release-branch\u0060 \u2014 Create Release Branches\r\n- Auto-detects next preview version from main branch\r\n- Supports all release types: preview, stable, hotfix preview, hotfix stable\r\n- Updates \u0060PREVIEW_LABEL\u0060 in azure-templates-variables.yml\r\n- Bumps main version after preview releases\r\n\r\n### 2. \u0060release-testing\u0060 \u2014 Verify Packages Before Publishing\r\n- Resolves package versions automatically from preview feed\r\n- Runs integration tests across multiple platforms:\r\n  - Console (.NET runtime)\r\n  - Blazor (Chromium)\r\n  - MAUI iOS (oldest \u002B newest simulators)\r\n  - MAUI Android (API 21-23 \u002B API 35-36)\r\n  - MAUI Mac Catalyst\r\n- Includes detailed setup, monitoring, and troubleshooting references\r\n- Strict pass/fail criteria \u2014 no rationalizing failures\r\n\r\n### 3. \u0060release-publish\u0060 \u2014 Publish and Finalize Releases\r\n- Step-by-step Azure DevOps pipeline instructions\r\n- NuGet.org verification with polling\r\n- Git tag creation with confirmation prompts\r\n- GitHub release creation with auto-generated notes\r\n- Release notes annotation with platform/contributor emojis\r\n- Milestone closing for stable releases\r\n- Error recovery guidance for common issues\r\n\r\n## Integration Test Suite\r\n\r\nNew \u0060tests/SkiaSharp.Tests.Integration/\u0060 project for pre-release verification:\r\n\r\n| Test | Purpose |\r\n|------|---------|\r\n| \u0060SmokeTests\u0060 | Quick sanity check |\r\n| \u0060ConsoleTests\u0060 | Core API functionality |\r\n| \u0060BlazorTests\u0060 | WebAssembly rendering |\r\n| \u0060MauiiOSTests\u0060 | iOS simulator rendering |\r\n| \u0060MauiAndroidTests\u0060 | Android emulator rendering |\r\n| \u0060MauiMacCatalystTests\u0060 | Mac Catalyst rendering |\r\n| \u0060MauiWindowsTests\u0060 | Windows rendering |\r\n\r\nFeatures:\r\n- Screenshot comparison against reference images\r\n- Appium-based UI automation for mobile/desktop\r\n- Parameterized device/version testing\r\n- Clear failure diagnostics\r\n\r\n## Documentation Updates\r\n\r\n- **releasing.md** \u2014 Expanded with workflow diagrams, version patterns, and skill references\r\n- **copilot-instructions.md** \u2014 Updated with skill descriptions\r\n\r\n## Files Changed\r\n\r\n- \u0060.github/skills/release-branch/\u0060 \u2014 Branch creation skill\r\n- \u0060.github/skills/release-testing/\u0060 \u2014 Testing skill \u002B 3 reference docs\r\n- \u0060.github/skills/release-publish/\u0060 \u2014 Publishing skill \u002B release notes reference\r\n- \u0060documentation/releasing.md\u0060 \u2014 Release workflow documentation\r\n- \u0060tests/SkiaSharp.Tests.Integration/\u0060 \u2014 New integration test project\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-26T22:34:11",
+  "updatedAt": "2026-02-02T22:32:30",
+  "closedAt": "2026-01-26T22:38:26",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/skills",
+  "additions": 3079,
+  "deletions": 430,
+  "changedFiles": 31,
+  "commits": 25,
+  "reviews": []
+}

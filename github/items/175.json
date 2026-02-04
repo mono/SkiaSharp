@@ -1,0 +1,24 @@
+{
+  "number": 175,
+  "type": "issue",
+  "state": "closed",
+  "title": "Add a property to the views to indicate the scale",
+  "body": "Because the SkiaSharp views are using actual device pixels, this may be unexpected for some apps. I think we should expose two options:\n1. A property to indicate the current scale\n   This is especially noticeable on UWP when dragging the window from a hi-res display to a low res monitor, the image should stay the same size when drawing with the same coordinates.\n2. A property to enable automatic scaling\n   Currently, the rendering is done with device pixels, an option to draw with \u0022base\u0022 pixels and automatically scale\n\nThese options might have a secondary option to indicate whether to scale the completed image (draw a bitmap of 100x100, but then scaling it up to 200x200 when blitting - may cause blurring) or to scale all drawing operations (drawing a bitmap of 200x200, but all draw operations are scaled up).\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.55.1",
+  "createdAt": "2016-10-28T16:10:38",
+  "updatedAt": "2022-08-20T00:01:43",
+  "closedAt": "2016-11-18T00:34:53",
+  "commentCount": 5,
+  "reactionCount": 1
+}

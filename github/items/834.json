@@ -1,0 +1,18 @@
+{
+  "number": 834,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. ",
+  "body": "**Description**\r\n\r\n\r\nSkiaSharp does not work under MacOS and Ubuntu 18.04. I have a .net core 1.1 web application (vanilla stuff). It builds and runs fine, but when I access skia it results in the following error:\r\n\r\n\u0060\u0060\u0060\r\n\u0060DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n\r\nSkiaSharp.SkiaApi.sk_memorystream_new()\r\nSkiaSharp.SKMemoryStream..ctor()\r\nSkiaSharp.SKMemoryStream..ctor(byte[] data)\r\nSkiaSharp.SKBitmap.Decode(byte[] buffer)\r\nImageProcessor.ResizePng(byte[] data, int size) in ImageProcessor.cs\r\n\u0060\u0060\u0060\r\n\r\n**Code**\r\n\u0060\u0060\u0060csharp\r\n   internal static class ImageProcessor\r\n    {\r\n      public  static byte[] ResizePng(byte[] data, int size)\r\n        {\r\n            using (var bitmap = SKBitmap.Decode(data))\r\n            {\r\n                var widthHeight = Math.Min(bitmap.Width, bitmap.Height);\r\n                var scale = (float)size / widthHeight;\r\n                var newInfo = new SKImageInfo((int)(bitmap.Width * scale), (int)(bitmap.Height * scale));\r\n\r\n                using (var scaled = bitmap.Resize(newInfo, SKFilterQuality.High))\r\n                    return ToPngData(scaled);\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\n\r\nIt works fine under windows and should also under MacOS and Linux\r\n\r\n**Actual Behavior**\r\n\r\nsee above.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:  Visual Studio / Visual Studio Code \r\n- Platform Target Frameworks: netstandard2.0/netcoreapp2.2\r\n  - Linux: Ubuntu 18.04 \r\n  - macOS: current\r\n  - Windows Classic: (it works under windows 10 1809)\r\n\r\n**Screenshots**\r\n\r\n**Reproduction Link**\r\n\r\n",
+  "author": {
+    "login": "ajdotnet",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-04-25T08:26:16",
+  "updatedAt": "2022-08-19T12:01:33",
+  "closedAt": "2019-06-24T02:26:39",
+  "commentCount": 15,
+  "reactionCount": 1
+}

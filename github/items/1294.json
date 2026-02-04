@@ -1,0 +1,28 @@
+{
+  "number": 1294,
+  "type": "pr",
+  "state": "closed",
+  "title": "Improve the GPU APIs",
+  "body": "**Description of Change**\r\n\r\n - Improve the Vulkan APIs\r\n   - removed the context argument as this is unused as well as an older C/C\u002B\u002B feature\r\n   - added a SharpVk version of the GetProc property.\r\n - Removed the context argument (This is more an older C/C\u002B\u002B feature/requirement)\r\n - Expose the WebGL APIs\r\n - Improve the GRGlInterface and GPU delegates\r\n   - removing the object context for the GPU construction\r\n   - obsoleted GRGlGetProcDelegate in favour of the better named GRGlGetProcedureAddressDelegate\r\n   - renamed GRVkGetProcDelegate to GRVkGetProcedureAddressDelegate\r\n   - use \u0022ProcedureAddress\u0022 instead of \u0022Proc\u0022 to show that it is the \u0022address\u0022 not the actual procedure\r\n - reworked the GRGlInterface\r\n   - use the new non-context delegates\r\n   - use better naming: Create*\r\n   - adding WebGL\r\n - created a SharpVk-specific delegate GRSharpVkGetProcedureAddressDelegate\r\n   - use actual types instead of IntPtr\r\n   - Reduce the using obsolete warnings \r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-05-16T15:08:33",
+  "updatedAt": "2020-07-09T02:18:13",
+  "closedAt": "2020-05-17T20:12:00",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/improve-apis",
+  "additions": 269,
+  "deletions": 152,
+  "changedFiles": 33,
+  "commits": 7,
+  "reviews": []
+}

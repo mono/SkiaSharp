@@ -1,0 +1,23 @@
+{
+  "number": 1567,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] PDF is corrupted after creating",
+  "body": "I am trying to generate PDF document using Skiasharp package.\r\nDocument is created and downloaded successfully but I am not able to open it in my laptop showing error message of **Can not open corrupted PDF**\r\n\r\n**code**\r\n\r\n\u0060\u0060\u0060csharp\r\n        private void GenerateDocument()\r\n        {\r\n            try\r\n            {\r\n                var root = EnsureTempDataDirectory(\u0022CreatePdfSample\u0022);\r\n                path = Path.Combine(root, $\u0022{Guid.NewGuid():N}.pdf\u0022);                \r\n                if (!isSupported || (isSupported \u0026\u0026 File.Exists(path)))\r\n                    return;\r\n                var metadata = new SKDocumentPdfMetadata\r\n                {\r\n                    Author = \u0022Cool Developer\u0022,\r\n                    Creation = DateTime.Now,\r\n                    Creator = \u0022Cool Developer Library\u0022,\r\n                    Keywords = \u0022SkiaSharp, Sample, PDF, Developer, Library\u0022,\r\n                    Modified = DateTime.Now,\r\n                    Producer = \u0022SkiaSharp\u0022,\r\n                    Subject = \u0022SkiaSharp Sample PDF\u0022,\r\n                    Title = \u0022Sample PDF\u0022,\r\n                };\r\n                var stream = SKFileWStream.OpenStream(path);\r\n                var document = SKDocument.CreatePdf(path, metadata);\r\n                if (document == null)\r\n                {\r\n                    isSupported = false;\r\n                    return;\r\n                }\r\n                var paint = new SKPaint\r\n                {\r\n                    TextSize = 64.0f,\r\n                    IsAntialias = true,\r\n                    Color = 0xFF9CAFB7,\r\n                    IsStroke = true,\r\n                    StrokeWidth = 3,\r\n                    TextAlign = SKTextAlign.Center\r\n                };\r\n                var pageWidth = 840;\r\n                var pageHeight = 1188;\r\n                // draw page 1\r\n                using (var pdfCanvas = document.BeginPage(pageWidth, pageHeight))\r\n                {\r\n                    // draw button\r\n                    var nextPagePaint = new SKPaint\r\n                    {\r\n                        IsAntialias = true,\r\n                        TextSize = 16,\r\n                        Color = SKColors.OrangeRed\r\n                    };\r\n                    var nextText = \u0022Next Page \u003E\u003E\u0022;\r\n                    var btn = new SKRect(pageWidth - nextPagePaint.MeasureText(nextText) - 24, 0, pageWidth, nextPagePaint.TextSize \u002B 24);\r\n                    pdfCanvas.DrawText(nextText, btn.Left \u002B 12, btn.Bottom - 12, nextPagePaint);\r\n                    // make button link\r\n                    pdfCanvas.DrawLinkDestinationAnnotation(btn, \u0022next-page\u0022);\r\n                    // draw contents\r\n                    pdfCanvas.DrawText(\u0022...PDF 1/2...\u0022, pageWidth / 2, pageHeight / 4, paint);\r\n                    document.EndPage();\r\n                }\r\n                // draw page 2\r\n                using (var pdfCanvas = document.BeginPage(pageWidth, pageHeight))\r\n                {\r\n                    // draw link destintion\r\n                    pdfCanvas.DrawNamedDestinationAnnotation(SKPoint.Empty, \u0022next-page\u0022);\r\n                    // draw contents\r\n                    pdfCanvas.DrawText(\u0022...PDF 2/2...\u0022, pageWidth / 2, pageHeight / 4, paint);\r\n                    document.EndPage();\r\n                }\r\n                // end the doc\r\n                document.Close();\r\n            }\r\n            catch (Exception ex)\r\n            {\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nGenerated PDF should be available on mobile as well as on laptop\r\n\r\n**Actual Behavior**\r\n\r\nAfter creating PDF, mobile shows it\u0027s correct size for e.g. 183KB but in my laptop it always show )KB or 1 KB. and while openig it shows above error message. Can I know why corrupted pdf is downloaded and its visible on device but not on laptop ?\r\n\r\n**Basic Information**\r\n\r\nThis behavior is tested on android device only. \r\nAndroid 10.0 API 29\r\n\r\nThanks,\r\nGayatri\r\n",
+  "author": {
+    "login": "gayugokhale",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-12-26T11:58:19",
+  "updatedAt": "2022-08-19T03:01:25",
+  "closedAt": "2021-02-08T23:12:20",
+  "commentCount": 3,
+  "reactionCount": 0
+}

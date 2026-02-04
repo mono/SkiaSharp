@@ -1,0 +1,29 @@
+{
+  "number": 1360,
+  "type": "pr",
+  "state": "closed",
+  "title": "[Build] Copy to output retries",
+  "body": "**Description of Change**\r\n\r\nFor some reason the \u0060\u003CCopy /\u003E\u0060 MSBuild task tries to copy files that it should have skipped due to it existing already. The \u0060_CopyToOutputDirectoryDep\u0060 task is already using the correct inputs/outputs, but I suspect that using \u0060AfterTargets\u0060 to control the steps is not correct and should be a \u0060DependsOnTargets\u0060 for the build process.\r\n\r\nHowever, since we are near release time, a simple retry might just be what it takes.\r\n\r\n\u003E This only happens on Windows because macOS and Linux do not support parallel builds.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-06-27T22:39:40",
+  "updatedAt": "2020-07-09T02:17:45",
+  "closedAt": "2020-06-28T00:24:21",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/copy-retries",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

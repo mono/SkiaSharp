@@ -1,0 +1,19 @@
+{
+  "number": 867,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] [WPF] SKElement crash when ActualWidth or ActualHeight is less than 1px",
+  "body": "Hello,\r\n\r\nIn a very basic Wpf application with an SKElement in a grid, it\u0027s possible to have a crash just by resizing the window when ActualHeight or ActualWidth of the control becomes less than 1 pixel.\r\n\r\nThe OnRender function verify if ActualWidth or ActualHeight are equal to zero, but since theses values are defined as double in WPF and later cast to integer, the constructor of WriteableBitmap can be called with width and/or height parameter set to zero.\r\n\r\nThe problem is reproducted with a simple WPF application like this one https://github.com/Odirb/BugSkiaSharpSKElement\r\n\r\nI\u0027ll push a pull request with a fix.\r\n\r\nRegards.\r\n",
+  "author": {
+    "login": "Odirb",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-06-20T14:34:30",
+  "updatedAt": "2022-08-19T12:01:18",
+  "closedAt": "2019-06-24T02:20:48",
+  "commentCount": 2,
+  "reactionCount": 1
+}

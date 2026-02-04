@@ -1,0 +1,30 @@
+{
+  "number": 3429,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG]  Memory Leak on Window with Nvidia GPU driver",
+  "body": "### Description\n\nWhen drawing patterns in wpf, a memory leak issue was encountered on the high resolution monitor.\n\nThere are variations for each GPU driver, so when I analyzed it, I found that it only occurred in the Nvidia Quadro series. \n\nI\u0027ve checked that it doesn\u0027t happen with the graphic card below.\n- Nvidia Geforce\n- AMD\n\nAssuming the Nvidia Quadro series was a problem, I tested it after adding the code below.\nWe have confirmed that the issue does not occur when we add the code below.\n\u0060\u0060\u0060\n        protected override void OnStartup(StartupEventArgs e)\n        {\n           // Mode to turn off hardware acceleration and enable software rendering only\n           // Completely exclude GPUs and handle all screen outputs with only CPU operations\n            RenderOptions.ProcessRenderMode = RenderMode.SoftwareOnly;\n\n            base.OnStartup(e);\n        }\n\n\u0060\u0060\u0060\n\n\nDue to the performance of other features of the current application, it is impossible to use the code above. How can I solve that problem?\n\n\n### Expected Behavior\n\nI always want to be a good draw without having a Memory Leak issue.\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "chea-young",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-12-12T08:07:01",
+  "updatedAt": "2025-12-12T08:07:50",
+  "commentCount": 1,
+  "reactionCount": 0
+}

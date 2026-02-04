@@ -1,0 +1,22 @@
+{
+  "number": 3237,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Please add overload for \u0022SKPath.AddPoly(points, count, isClosed)\u0022",
+  "body": "### Description\n\nCurrently using 2.89 and this overload is missing.  The only one available looks like this:\n\n\tpublic unsafe void AddPoly(SKPoint[] points, bool close = true)\n\nand internally makes this call:\n\n       SkiaApi.sk_path_add_poly(Handle, points2, points.Length, close);\n\nInstead of always setting PointCount = points.Length, we\u0027d like to set this count ourselves.\n\nOtherwise we have to recreate the SKPoint[] array every time the point count changes (which happens frequently).\n\nSKIA supports it, so just asking that SkiaSharp adds this overload.\n\n### Code\n\nWant to change our call:\npath.AddPoly(points, false);\n\nto:\npath.AddPoly(points, pointCount, false);\n\n\n### Expected Behavior\n\nAdded support for this overload.\n\n### Actual Behavior\n\nThis method is missing.\n\n### Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### Last Known Good Version of SkiaSharp\n\n1.x (Obsolete)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid, All\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "najak3d",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-18T09:04:54",
+  "updatedAt": "2025-07-30T16:03:11",
+  "commentCount": 1,
+  "reactionCount": 0
+}

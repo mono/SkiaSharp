@@ -1,0 +1,17 @@
+{
+  "number": 1901,
+  "type": "issue",
+  "state": "open",
+  "title": "BUG Clipping by Region for PDF Creation",
+  "body": "**Description**\r\n\r\nClipping by path via SkRegion fails for PDF creation\r\n\r\n**Code**\r\n\r\nClipping is done \r\n\r\n\u0060\tvar clipPath = new SKPath();\r\n\tclipPath.AddCircle(100, 100, 50);\r\n\tcanvas.ClipRegion(new SKRegion(clipPath));\u0060\r\n\r\nhttps://gist.github.com/WinstonSmith77/204eb0316b19ad2a2403205d2940647a\r\n\r\n\r\n**Expected Behavior**\r\n\r\nCorrect clipping by path\r\n\r\n**Actual Behavior**\r\n\r\nClipping by bounding box of region is applied\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.80.3\r\n\r\n\r\n- Platform Target Frameworks \r\n** .net Core on Windows\r\n\r\n  **Screenshots**\r\n\r\nBitmap is fine: Clipping by circle\r\n\r\n![image](https://user-images.githubusercontent.com/2392406/147108924-0035fc1f-813e-4619-9c98-349e6a3463f5.png)\r\n\r\nPDF is wrong: Bounding Box of circle\r\n\r\n![image](https://user-images.githubusercontent.com/2392406/147108783-88123045-40b1-44f4-bc69-20838e61a212.png)\r\n\r\n\r\n\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\nhttps://gist.github.com/WinstonSmith77/204eb0316b19ad2a2403205d2940647a\r\n\r\n",
+  "author": {
+    "login": "WinstonSmith77",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-22T14:30:55",
+  "updatedAt": "2021-12-22T14:36:10",
+  "commentCount": 0,
+  "reactionCount": 1
+}

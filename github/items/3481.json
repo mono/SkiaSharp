@@ -1,0 +1,37 @@
+{
+  "number": 3481,
+  "type": "pr",
+  "state": "closed",
+  "title": "Security audit of native dependencies with skill optimization",
+  "body": "**Description of Change**\n\nAudited 10 native dependencies against 2025-2026 CVE databases. Corrected initial findings via authoritative sources (NVD, Red Hat). Optimized security-audit skill to prevent future misclassifications.\n\n**Findings:**\n\n| Dependency | Status | Details |\n|------------|--------|---------|\n| libpng 1.6.44 | \uD83D\uDD34 Critical | 5 HIGH CVEs (buffer overflows) \u2192 Update to 1.6.54 required |\n| freetype 2.13.3 | \uD83D\uDFE1 Verify | CVE-2025-27363 affects \u22642.13.0 only per NVD/Red Hat. Likely not vulnerable. |\n| libwebp | \u2705 Resolved | PR #3478 merged during audit. Now at 1.6.0. |\n| harfbuzz 8.3.1 | \uD83D\uDFE1 Update | CVE-2026-22693/0943. PR #3232 available. |\n| zlib | \u26AA False positive | CVE-2023-45853 affects MiniZip only (not compiled) |\n| Others | \uD83D\uDFE2 Clean | expat, brotli, libjpeg-turbo, dng_sdk |\n\n**Corrections Made:**\n\nInitial assessment reported freetype CVE-2025-27363 as CRITICAL affecting 2.13.3 based on security blogs. NVD and Red Hat confirm vulnerability limited to \u22642.13.0. SkiaSharp\u0027s 2.13.3 not vulnerable.\n\n**Skill Optimization:**\n\nRestructured \u0060.github/skills/security-audit/\u0060 per skill-creator principles:\n- Moved examples from SKILL.md to checklist (SKILL.md: 183\u2192127 lines, -31%)\n- Established source hierarchy: NVD/Red Hat \u2192 OpenCVE \u2192 blogs\n- Required checking closed PRs (last 30 days) to detect merged work\n- Eliminated duplication (~40% \u2192 0%)\n- Progressive disclosure: Overview in SKILL.md, examples in checklist\n\n**Deliverables:**\n\nAudit reports:\n- \u0060SECURITY-AUDIT-2026-01-31.md\u0060 - Full CVE analysis with risk assessments\n- \u0060SECURITY-AUDIT-SUMMARY.md\u0060 - Executive summary with action items\n- \u0060AUDIT-CORRECTIONS-2026-01-31.md\u0060 - Documents corrections with evidence tables\n\nSkill improvements:\n- \u0060.github/skills/security-audit/SKILL.md\u0060 - Workflow overview (optimized)\n- \u0060.github/skills/security-audit/references/best-practices-checklist.md\u0060 - Execution checklist with examples\n- \u0060documentation/dependencies.md\u0060 - Added security audit best practices\n\n**Bugs Fixed**\n\nNone. Documentation only.\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (N/A - documentation only)\n- [x] Rebased on top of main at time of PR\n- [x] Merged related skia PRs (N/A)\n- [x] Changes adhere to coding standard\n- [x] Updated documentation\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Can you do a dependency audit please. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-01-31T14:55:11",
+  "updatedAt": "2026-02-03T15:11:18",
+  "closedAt": "2026-02-03T15:11:13",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "copilot/perform-dependency-audit",
+  "additions": 1347,
+  "deletions": 17,
+  "changedFiles": 8,
+  "commits": 10,
+  "reviews": []
+}

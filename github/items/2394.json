@@ -1,0 +1,17 @@
+{
+  "number": 2394,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Circles are not drawn centered",
+  "body": "**Description**\r\n\r\nI tried to draw a circle with an odd diameter and it does not look like a circle;\r\nI guess negative distances are rounded differently, but I am not sure how to fix this.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060c#\r\nnamespace ImageDemo\r\n{\r\n    using SkiaSharp;\r\n\r\n    public class Program\r\n    {\r\n        static void Main(string[] args)\r\n        {\r\n            var bm = new SKBitmap(9, 9, false);\r\n            var can = new SKCanvas(bm);\r\n            var paint = new SKPaint();\r\n            paint.Color = SKColors.Gray;\r\n            paint.IsStroke = true;\r\n\r\n            //draw a pattern for easier reference\r\n            for (int i = 0; i \u003C 9; i\u002B\u002B)\r\n            {\r\n                for (int j = 0; j \u003C 9; j\u002B\u002B)\r\n                {\r\n                    if ((i \u002B j) % 2 == 0)\r\n                    {\r\n                        can.DrawPoint(i, j, paint);\r\n                    }\r\n                }\r\n            }\r\n            paint.Color = SKColors.Blue;\r\n            can.DrawPoint(4, 4, paint);\r\n            can.DrawCircle(4, 4, 3.5f, paint);\r\n            var data = bm.Encode(SKEncodedImageFormat.Png, 90);\r\n            var stream = File.Open(\u0022test.png\u0022, FileMode.Create);\r\n            data.SaveTo(stream);\r\n            stream.Close();\r\n        }\r\n    }\r\n}\r\n\r\n\r\n\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n![image](https://user-images.githubusercontent.com/306107/219901245-8b869567-6e87-49be-b643-85fad58875c0.png) or \r\n![image](https://user-images.githubusercontent.com/306107/219901332-c07d8251-037b-42e2-ad9a-4020041459f4.png)\r\n\r\n**Actual Behavior**\r\n![image](https://user-images.githubusercontent.com/306107/219901199-8555f983-a6f1-43b5-bd05-962a6bc067c3.png)\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- IDE:  Visual Studio Code \r\n- Platform Target Frameworks: \r\n  - Linux:  \u003C!-- Arch Linux --\u003E\r\n\r\n",
+  "author": {
+    "login": "feanor12",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-18T22:07:47",
+  "updatedAt": "2023-02-18T23:23:53",
+  "commentCount": 6,
+  "reactionCount": 1
+}

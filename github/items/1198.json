@@ -1,0 +1,79 @@
+{
+  "number": 1198,
+  "type": "pr",
+  "state": "closed",
+  "title": "Implemented SKCanvas.DrawTextOnPath",
+  "body": "**Description of Change**\r\n\r\nGoogle deleted \u0060DrawTextOnPath\u0060 so this PR adds it back along with other text-related APIs.\r\n\r\n - Added an overload for \u0060SKCanvas.DrawTextOnPath\u0060 that disables glyph warping\r\n - Wrapped the \u0060ArrayPool\u003CT\u003E.Shared\u0060 logic into a disposable util method\r\n - Renamed \u0060SKFont.GetPath\u0060 to \u0060SKFont.GetTextPath\u0060 so that it makes more sense\r\n - Added \u0060SKFont.GetTextPathOnPath\u0060 to get the text path, but following another path instance (warps glyphs)\r\n - Removed/obsoleted the non-glyph overloads for \u0060SKTextBlobBuilder.Add*Run\u0060\r\n - Added a set of \u0060SKTextBlob.Create\u0060 overloads that are used to make \u0022string\u0022 runs\r\n - A few other small changes to make the API better\r\n\r\n**Bugs Fixed**\r\n\r\n - Fixes #1183\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-03-28T13:24:32",
+  "updatedAt": "2020-07-09T02:18:10",
+  "closedAt": "2020-05-14T22:16:53",
+  "commentCount": 14,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "issue/1183",
+  "additions": 646,
+  "deletions": 275,
+  "changedFiles": 12,
+  "commits": 124,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-02T23:11:17"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-03T08:24:24"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-03T08:30:58"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-03T08:33:18"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-03T08:34:37"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-03T08:35:21"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-03T08:46:09"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-03T09:05:26"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-15T12:22:53"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-15T12:50:16"
+    }
+  ]
+}

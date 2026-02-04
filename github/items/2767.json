@@ -1,0 +1,23 @@
+{
+  "number": 2767,
+  "type": "issue",
+  "state": "closed",
+  "title": "Issues with Containerize a Blazor WebAssembly app that uses SkiaSharp",
+  "body": "### Description\n\nI have successfully containerized a Blazor WebAssembly application following Chris Sainty\u0027s article. For net8 you simply change the mrc platform to 8.0, and the listening ports listen 80 to listen 8080 (nginx.conf file).\r\n\r\nWhen you use SkiaSharp in your application, theoretically it would be enough to add the dependency SkiaSharp.NativeAssets.Linux.NoDependencies, and include the line in Dockerfile for it to install wasm-tools. However, you get Build FAILED.\r\n\r\nI had published the repository https://github.com/harveytriana/SS-Docker, to reproduce the problem in a simple way. The file Notes.txt I shows the essence of the logs that report the error. In the same repository I have included a console application that uses SkiaSharp, in net8, based on a Matthew Leibowitz\u0027s example, which demonstrates that SkiaSharp does run in a container (I used Docker init for simplicity). Apparently, the problem with Blazor and SkiaSharp is in how the Docker image is built. I can\u0027t identify where the fault is.\r\n\n\n### Code\n\nhttps://github.com/harveytriana/SS-Docker\n\n### Expected Behavior\n\nContainerize a Blazor WebAssembly app that uses SkiaSharp\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "harveytriana",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-27T15:51:59",
+  "updatedAt": "2024-02-28T20:59:28",
+  "closedAt": "2024-02-28T20:59:28",
+  "commentCount": 3,
+  "reactionCount": 0
+}

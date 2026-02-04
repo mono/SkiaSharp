@@ -1,0 +1,18 @@
+{
+  "number": 1151,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKTextBlobBuilder.AddHorizontalRun requires SKPaint.TextEncoding to be set to SKTextEncoding.GlyphId",
+  "body": "**Description**\r\n\r\nA similar issues #1094 was reported and closed, but I would like to discuss this again.\r\n\r\nCalling \u0060SKTextBlobBuilder.AddHorizontalRun\u0060 throws a \u0060NullReferenceException\u0060 unless the \u0060SKPaint.TextEncoding\u0060 is set to \u0060SKTextEncoding.GlyphId\u0060.\r\n\r\nIMO this doesn\u0027t make sense, since the text encoding is not needed, as the glyph ids are already known when calling this method?\r\n\r\nThis is caused by the [following old Skia m68 code](https://github.com/mono/skia/blob/2411fe768b0e3d16a1e59839f65b4d802b74499a/src/core/SkTextBlob.cpp#L631) (that doesn\u0027t use \u0060SKFont\u0060 yet) in \u0060SKTextBlob.cpp\u0060:\r\n\r\n\u0060\u0060\u0060cpp\r\nvoid SkTextBlobBuilder::allocInternal(const SkPaint \u0026font,\r\n                                      SkTextBlob::GlyphPositioning positioning,\r\n                                      int count, int textSize, SkPoint offset,\r\n                                      const SkRect* bounds) {\r\n    if (count \u003C= 0 || textSize \u003C 0 || font.getTextEncoding() != SkPaint::kGlyphID_TextEncoding) {\r\n        fCurrentRunBuffer = { nullptr, nullptr, nullptr, nullptr };\r\n        return;\r\n    }\r\n\u0060\u0060\u0060\r\n\r\nThe \u0060getTextEncoding\u0060 check was [removed by Google in this commit](https://github.com/google/skia/commit/b3f4aac0ba02d13af8fa85a33e856d09ab7855b0), where \u0060SKFont\u0060 is used instead. \r\n\r\nI\u0027m not sure if the check is actually required?\r\n\r\nPersonally the imperative API of setting \u0060TextEncoding\u0060 on the \u0060SKPaint\u0060 feel errors prone, in the latest version Skia the text encoding has to be passed as an argument, and was removed from \u0060SKFont\u0060. But I guess SkiaSharp wants to maintain backwards compatibility? Maybe a major version bump could use a newer version of Skia, where \u0060SKFont\u0060 is used? It seems you are already planning this in #711 ?\r\n\r\n**_Maybe a simple patch for now could be to validate the \u0060SKPaint.TextEncoding\u0060 and throw an exception? Not ideal, but at least the user wouldn\u0027t have to dig into the source code to find why the call crashed \uD83D\uDE09_** \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060CS\r\n  var glyphIds = paint.GetGlyphs(\u0022X\u0022);\r\n  var glyphXs = new float[] {0};\r\n  var builder = new SKTextBlobBuilder();\r\n  builder.AddHorizontalRun(paint, 0, glyphIds, glyphXs);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nA horizontal text run is added to the builder\r\n\r\n**Actual Behavior**\r\n\r\nA \u0060NullReferenceException\u0060 is thrown\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u00601.68.2-preview.29\u0060\r\n- Last known good version:  none\r\n- IDE: any\r\n- Platform Target Frameworks: all\r\n- Target Devices:   all\r\n\r\n**Workaround**\r\n\r\n\u0060\u0060\u0060CS\r\n  var glyphIds = paint.GetGlyphs(\u0022X\u0022);\r\n  var glyphXs = new float[] {0};\r\n  var builder = new SKTextBlobBuilder();\r\n  paint.TextEncoding = SKTextEncoding.GlyphId;\r\n  builder.AddHorizontalRun(paint, 0, glyphIds, glyphXs);\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-02-20T13:38:40",
+  "updatedAt": "2022-08-19T06:02:39",
+  "closedAt": "2020-02-21T18:30:14",
+  "commentCount": 3,
+  "reactionCount": 0
+}

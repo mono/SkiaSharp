@@ -1,0 +1,22 @@
+{
+  "number": 3234,
+  "type": "issue",
+  "state": "open",
+  "title": "[Windows, 9.0.50] Stretching and squeezing a bitmap malfunctions by omitting the middle pixel column on some scale / zoom levels",
+  "body": "### Description\n\nWe\u0027ve noticed that at some zoom levels on Windows only, the stretching of the bitmap malfunctions by leaving out one pixel column altogether from the middle. In the attached videos, there are two very close zoom levels displaying the character breathing animation that slightly stretches and squeezes the player bitmap, where the first one works as intended while in the other the middle pixel column disappears sometimes.\n\n[WindowsScalingProblem.zip](https://github.com/user-attachments/files/19726652/WindowsScalingProblem.zip)\n\nThis may be some sort of a rounding error. Happens only on Windows, possibly when scaled using Windows Display \u003E Scale setting.\n\n### Code\n\n**Steps to reproduce:**\n1. Clone the reproduction repository at https://github.com/hyvanmielenpelit/GnollHackMAUIEasyBuild\n2. Build it for Windows according to instructions\n3. Start the game, press Play Game, and create a character to start playing\n4. Choose a zoom level using the mouse wheel while focusing on your character\n5. At some zoom levels, the middle pixels are omitted in the breathing animations, as per the videos\n\n### Expected Behavior\n\nThe squeeze and stretching works the same way at all zoom levels without sometimes omitting the middle pixel column during the character breathing animation.\n\n### Actual Behavior\n\nThe squeeze and stretching in the character breathing animation omits sometimes the middle pixel column at some zoom levels.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\nMSI Windows Laptop\n\n### Relevant Screenshots\n\nSee the attached videos.\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-13T18:37:34",
+  "updatedAt": "2025-04-16T18:36:03",
+  "commentCount": 1,
+  "reactionCount": 0
+}

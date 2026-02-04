@@ -1,0 +1,36 @@
+{
+  "number": 3483,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add structured workflow for adding APIs to SkiaSharp",
+  "body": "**Description of Change**\r\n\r\nCreated a skill-based architecture for adding C# APIs to SkiaSharp, eliminating duplication and establishing clear separation between execution workflows, quick reference, and comprehensive documentation.\r\n\r\n**Changes:**\r\n\r\n- **Created \u0060.github/skills/add-api/SKILL.md\u0060** \u2014 6-phase structured workflow (analyze C\u002B\u002B \u2192 add C API \u2192 commit submodule \u2192 generate bindings \u2192 wrap in C# \u2192 test) with checkpoints preventing common mistakes (lost submodule commits, manual edits of generated files, skipped tests)\r\n\r\n- **Optimized \u0060.github/copilot-instructions.md\u0060** \u2014 Reduced from 496 to 416 lines by replacing detailed workflows with summaries and links. Added \u0060add-api\u0060 to skills table. Created \u0022Working with Native Skia Submodule\u0022 and \u0022Adding New APIs\u0022 sections as concise references pointing to the skill and comprehensive docs.\r\n\r\n- **Enhanced \u0060documentation/adding-apis.md\u0060** \u2014 Added submodule git workflow section with step-by-step commands, expanded checklist from 3 to 5 phases, added common mistakes table.\r\n\r\n**Architecture:** Three-tier system where skill provides structured execution, instructions provide quick reference, and documentation provides comprehensive guide. Follows pattern established by native-dependency-update and other skills.\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description) \u2014 Documentation only\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-01-31T15:13:10",
+  "updatedAt": "2026-02-01T20:25:10",
+  "closedAt": "2026-02-01T20:25:08",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/fix-drawsurface-sampling-options",
+  "additions": 507,
+  "deletions": 39,
+  "changedFiles": 9,
+  "commits": 18,
+  "reviews": []
+}

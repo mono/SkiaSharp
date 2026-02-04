@@ -1,0 +1,28 @@
+{
+  "number": 1806,
+  "type": "pr",
+  "state": "closed",
+  "title": "Build using the older gcc 6.2 and new llvm 10 compiler",
+  "body": "**Description of Change**\r\n\r\nPreviously I had used the new compiler AND new GCC to use the new features, however, it seems this may not have actually been working or we got lucky.\r\n\r\nAfter upgrading to skia m88, I notice that the Tizen apps are no longer running. I think either m80 just did not make use of certain symbols in the newer glibc. However, with m88, this is now happening. It might have been a bit deceiving because the app may have launched and rendered content because libSkiaSharp is actually bundled on the Tizen device - at least my watch has it.\r\n\r\nThe new approach is to use the new compilers still, but the old GCC and work around the features needed in the code.\r\n\r\nThe even better solution would be to have 2 versions of the library built for different versions of Tizen. However, that is for a new PR.\r\n\r\n**Bugs Fixed**\r\n\r\n - The libSkiaSharp.so not being loaded because it depended on a newer glibc\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nShould not be as this was the compiler we were using previously, however, there may be some slight perf decreases if there were any optimizations done in headers. \r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2021-09-11T08:18:05",
+  "updatedAt": "2022-05-22T09:38:44",
+  "closedAt": "2021-09-12T05:18:49",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/tizen",
+  "additions": 7,
+  "deletions": 6,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": []
+}

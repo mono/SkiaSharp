@@ -1,0 +1,22 @@
+{
+  "number": 2798,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] \u003CImage background color is different for Jpeg compared to PNG in Xamarin android\u003E",
+  "body": "### Description\r\n\r\nWe used SkiaSharp in the Xamarin Android platform to create a bitmap and applied a red background color to specific rectangles. We saved the bitmap as both PNG and JPEG image formats. However, we noticed that the JPEG image displays a different background color than the PNG image. This issue only occurs in Xamarin Android, as the background color displays correctly in both PNG and JPEG formats on Windows. Please check and update details\r\n\r\n### Code\r\n\r\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\r\n\r\nBut, you can also share a short block of code here:\r\n\u0060\u0060\u0060cs\r\nusing (var bitmap = new SKBitmap(100, 100))\r\n{\r\n    // Create SKCanvas with the bitmap\r\n    using (var canvas = new SKCanvas(bitmap))\r\n    {\r\n        // Define rectangle parameters\r\n        SKRect rectBounds = new SKRect(0, 0, 100, 100);\r\n        SKPaint paint = new SKPaint\r\n        {\r\n            Color = new SKColor(255, 0, 0, 255)\r\n        };\r\n\r\n        // Draw the rectangle on the canvas\r\n        canvas.DrawRect(rectBounds, paint);\r\n    }\r\n\r\n    // Create a MemoryStream to hold the image data\r\n    var imageStream = new MemoryStream();\r\n    bitmap.Encode(SKEncodedImageFormat.Jpeg, 100).SaveTo(imageStream);\r\n    imageStream.Position = 0;\r\n\r\n    return imageStream;\r\n}\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xaml\r\n\u003C!-- xaml code here --\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nThe image\u0027s background color should match the PNG.\r\n\r\n### Actual Behavior\r\n\r\nThe Background color should match the PNG image.\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.6 \r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.6\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nAndroid\r\n\r\n### Platform / Operating System Version\r\n\r\nAndroid \r\n\r\n### Devices\r\n\r\nOppo\r\n\r\n### Relevant Screenshots\r\n\r\nhttps://github.com/mono/SkiaSharp/assets/131945130/dcfff30a-013a-444d-bd05-22e098091a08\r\n\r\n\r\n### Relevant Log Output\r\n\r\n\u0060\u0060\u0060shell\r\n\u003Cimg src=\u0022data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAABHNCSVQICAgIfAhkiAAAAQBJREFUeJzt0UENACAQwLAD/57hjQL2aBUs2TozZ8jYvwN4GRJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSIwhMYbEGBJjSMwF7EwCxk\u002B5tz8AAAAASUVORK5CYII=\u0022\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Yaavannvignesh",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-14T15:59:48",
+  "updatedAt": "2024-03-14T16:02:11",
+  "commentCount": 0,
+  "reactionCount": 0
+}

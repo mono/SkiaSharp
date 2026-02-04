@@ -1,0 +1,18 @@
+{
+  "number": 1466,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] When deploying on Azure, error MSB4066: The attribute \u0022Kind\u0022 in element \u003CNativeReference\u003E is unrecognized.",
+  "body": "**Description**\r\nWhen deploying on Azure, WebApp, git deploy (windows machine), the following error shows up:\r\n\r\n\u0060\u0060\u0060\r\nMSBuild auto-detection: using msbuild version \u002714.0\u0027\r\npackages\\SkiaSharp.2.80.1\\build\\net462\\SkiaSharp.targets(12,109): error MSB4066: The attribute \u0022Kind\u0022 in element \u0026lt;NativeReference\u003E is unrecognized.\r\n\u0060\u0060\u0060\r\n\r\nThis is the line.\r\n\u0060\u0060\u0060\r\n\u003CNativeReference Include=\u0022$(MSBuildThisFileDirectory)..\\..\\runtimes\\osx\\native\\libSkiaSharp*.dylib\u0022 Kind=\u0022Dynamic\u0022 Visible=\u0022false\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nThis is strange to happen on Azure?\r\nShould I be setting the \u0060ShouldIncludeNativeSkiaSharp\u0060 property to \u0060false\u0060?\r\n\r\nLast person who changed this file is @mattleibow \r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.1\r\n- Last known good version:  Never deployed before\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: My framework is 4.7.1. It uses the targets 4.6.2.\r\n\r\n",
+  "author": {
+    "login": "jsgoupil",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-14T12:47:43",
+  "updatedAt": "2022-08-19T03:02:05",
+  "closedAt": "2020-08-15T16:22:38",
+  "commentCount": 6,
+  "reactionCount": 0
+}

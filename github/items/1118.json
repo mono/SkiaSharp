@@ -1,0 +1,32 @@
+{
+  "number": 1118,
+  "type": "issue",
+  "state": "closed",
+  "title": "UWP ScrollViewer.TopHeader with SkiaSharp does not drawing",
+  "body": "I want to use the SkiaSharp Canvas in ScrollViewer, but not only in Main content, but in TopHeader and LeftHeader as well.  The paint events are called, the skia is drawing, but the result does not displayed on the screen, just in a main content.\r\n\r\nhere is the example:\r\n\r\n    \u003CScrollViewer\r\n\t\tHorizontalScrollBarVisibility=\u0022Visible\u0022\r\n\t\tHorizontalScrollMode=\u0022Enabled\u0022\r\n\t\tVerticalScrollBarVisibility=\u0022Visible\u0022\r\n\t\tVerticalScrollMode=\u0022Enabled\u0022\u003E\r\n\t\t\u003CScrollViewer.TopHeader\u003E\r\n\t\t\t\u003CGrid\r\n\t\t\t\tWidth=\u0022{Binding ElementName=Canvas, Path=ActualWidth}\u0022\r\n\t\t\t\tHeight=\u002230\u0022\r\n\t\t\t\tBackground=\u0022LightGray\u0022\u003E\r\n\t\t\t\t\u003CTextBlock Text=\u0022Hello\u0022 /\u003E\r\n\t\t\t\t\u003Cskia:SKXamlCanvas\r\n\t\t\t\t\tx:Name=\u0022TopHeaderCanvas\u0022\r\n\t\t\t\t\tMargin=\u00220\u0022\r\n\t\t\t\t\tHorizontalAlignment=\u0022Stretch\u0022\r\n\t\t\t\t\tVerticalAlignment=\u0022Stretch\u0022\r\n\t\t\t\t\tPaintSurface=\u0022OnPaintTopHeader\u0022 /\u003E\r\n\t\t\t\u003C/Grid\u003E\r\n\t\t\u003C/ScrollViewer.TopHeader\u003E\r\n\t\t\u003CScrollViewer.LeftHeader\u003E\r\n\t\t\t\u003Cskia:SKXamlCanvas\r\n\t\t\t\tWidth=\u002260\u0022\r\n\t\t\t\tHeight=\u0022{Binding ElementName=Canvas, Path=ActualHeight}\u0022\r\n\t\t\t\tBackground=\u0022Gray\u0022\r\n\t\t\t\tPaintSurface=\u0022OnPaintLeftHeader\u0022 /\u003E\r\n\t\t\u003C/ScrollViewer.LeftHeader\u003E\r\n\t\t\u003CScrollViewer.Content\u003E\r\n\t\t\t\u003Cskia:SKXamlCanvas\r\n\t\t\t\tx:Name=\u0022Canvas\u0022\r\n\t\t\t\tWidth=\u00224000\u0022\r\n\t\t\t\tHeight=\u00223500\u0022\r\n\t\t\t\tMargin=\u00220\u0022\r\n\t\t\t\tHorizontalAlignment=\u0022Left\u0022\r\n\t\t\t\tVerticalAlignment=\u0022Top\u0022\r\n\t\t\t\tPaintSurface=\u0022OnPaintMainContent\u0022 /\u003E\r\n\t\t\u003C/ScrollViewer.Content\u003E\r\n\t\u003C/ScrollViewer\u003E\r\n\r\n\r\nAs You can see, I tried the skia sharp canvas in wrapped in grid, directly under the ScrollViewer. Unfortunately it does not help.\r\n\r\nHere is the result.  \r\n[![enter image description here][1]][1]\r\n\r\nThe left is totally empty, but is should be filled with HotPink, and the TopHeader just displays the Grid with \u0022hello\u0022 , but it should be covered by canvas, and filled with Green color.\r\n\r\nThe SkiaSharp nuget which contains the canvas:\r\nhttps://www.nuget.org/packages/SkiaSharp.Views/1.68.2-preview.21\r\n\r\nAnd here are some SkiaSharp example:\r\nhttps://github.com/mono/SkiaSharp/tree/master/samples/Basic/UWP/SkiaSharpSample\r\n\r\nStackOverflow link: https://stackoverflow.com/posts/59921693\r\n\r\n  [1]: https://i.stack.imgur.com/xiCw6.png",
+  "author": {
+    "login": "gyorgygulyas",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-01-29T12:16:48",
+  "updatedAt": "2022-08-19T09:01:15",
+  "closedAt": "2020-02-09T18:07:56",
+  "commentCount": 5,
+  "reactionCount": 0
+}

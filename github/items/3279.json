@@ -1,0 +1,22 @@
+{
+  "number": 3279,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKMatrix Operations work well in SkiaSharp 2.88.9 not work in  3.119.0",
+  "body": "### Description\n\nIn Wasm / Blazor\nSKMatrix Operations work well in SkiaSharp 2.88.9 not work in  3.119.0\n\nCompiler error respone\n\n\n### Code\n\nCompiler Error Code\nCode statement Error as follow;\n1.   CS1501 : No overload for method \u0027PostConcat\u0027 takes 2 arguments\n     SKMatrix.PostConcat( ref Matrix, matrix44.Matrix );\n\n2.   CS0117 : \u0027SKMatrix\u0027 does not contain a definition for \u0027MakeTranslation\u0027\n     SKMatrix.PostConcat(ref Matrix, SKMatrix.MakeTranslation(\n                    GuaSkiaGfx.DisplaySize.Width / 2.0f, GuaSkiaGfx.DisplaySize.Height / 2.0f ) );\n\n3. CS0117 :  \u0027SKMatrix\u0027 does not contain a definition for \u0027MakeScale\u0027\n    SKMatrix.PostConcat(ref Matrix, SKMatrix.MakeScale(GfxScale, GfxScale, Center.X, Center.Y));\n\n4. CS0117 :  \u0027SKMatrix\u0027 does not contain a definition for \u0027MakeRotation\u0027\n    SKMatrix.PostConcat(ref Matrix, SKMatrix.MakeRotation((float)zAngle, Center.X, Center.Y));\n\n5. CS0117 : \u0027SKMatrix\u0027 does not contain a definition for \u0027MakeIdentity\u0027\n    Matrix = SKMatrix.MakeIdentity();\n\n### Expected Behavior\n\nExpect SKMatrix Operations work well in  3.119.0 as in SkiaSharp 2.88.9 \n\n\n### Actual Behavior\n\nCompiler Error Code CS0117 and CS1501\n\n### Version of SkiaSharp\n\n3.118.0-preview.2 (Next Preview)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\nWin 11 / Edge\n\n### Devices\n\nDell LapTop\n\n### Relevant Screenshots\n\nN/A\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nas above compiler error codes\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ShingYehGit",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-23T02:57:47",
+  "updatedAt": "2026-01-31T15:34:27",
+  "commentCount": 5,
+  "reactionCount": 1
+}

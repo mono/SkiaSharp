@@ -1,0 +1,23 @@
+{
+  "number": 2773,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Expose SkCanvas::SaveLayerRec API",
+  "body": "### Is your feature request related to a problem?\r\n\r\n\u0060SkCanvas::SaveLayerRec\u0060 is missing from SkiaSharp\u0027s API surface, this API is very useful for implementing backdrop effects/filters, we need this API in order to implement [CompositionBackdropBrush](https://learn.microsoft.com/en-us/uwp/api/windows.ui.composition.compositionbackdropbrush) properly in Uno Platform.\r\n\r\n### Describe the solution you would like\r\n\r\nIt would be great if \u0060SkCanvas::SaveLayerRec\u0060 got exposed in SkiaSharp\r\n\r\n### Describe alternatives you have considered\r\n\r\nWe currently use a combination of \u0060SKCanvas.SaveLayer(SKPaint)\u0060, \u0060SKCanvas.DrawSurface(SKSurface, SKRect)\u0060, and \u0060SKCanvas.Restore()\u0060 as a workaround, but it isn\u0027t ideal and has few issues (e.g. need to downscale the canvas manually, no custom clipping, slower since it\u0027s not optimized for backdrop effects unlike \u0060SkCanvas::SaveLayerRec\u0060, image filter of SKPaint isn\u0027t fully applied to the saved region (due to scaling miscalculations?), etc...)\r\n\r\n### Additional context\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ahmed605",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-29T15:12:17",
+  "updatedAt": "2025-03-04T13:04:58",
+  "closedAt": "2025-03-04T13:04:58",
+  "commentCount": 4,
+  "reactionCount": 12
+}

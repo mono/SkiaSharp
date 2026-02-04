@@ -1,0 +1,49 @@
+{
+  "number": 697,
+  "type": "issue",
+  "state": "closed",
+  "title": "Update managed code for file streams",
+  "body": "### Description\r\n\r\nAfter updating to skia m68, I see Google fixed the bug #390, so we need to update our code to prevent copying of data and other overheads used to work around this issue.\r\n\r\n### Problem\r\n\r\nThis is actually quite a problem because of the amount of work just to open a file, and this just increases as the file size increases. On non-Windows, this is mostly OK as there is just an extra \u0060if\u0060 statement to check the OS, and then continue as normal. On Windows, this gets expensive.\r\n\r\nAssume a path that does not contain any non-ASCII characters. In order to open a file, the stream first checks each character in the path to ensure that each is ASCII. If this is the case, then use the native streams and all is well.\r\n\r\nBut, assume non-ASCII characters in the path. First we check each character, and we detect a non-ASCII character. Then, we proceed to open a MANAGED stream. We then WRAP this stream with a native interop stream. The real performance comes in the read/write. Each read/write operation from the native side has to ask the managed stream for data, and then the managed stream then has to COPY the data to native code.\r\n\r\nAs a result, if the path contains non-ASCII characters, there are 2 stream objects created, and each read/write has at least 2 interop boundary crossings and the data is copied from the managed stream to the native memory - which may again be copied by the object doing the reading.\r\n\r\n### Solution\r\n\r\nAs the native code can now read UTF-8 paths, we still have to convert the UTF-16 string to a UTF-8 byte array, but this is FAR less work than copying data across the boundary.\r\n\r\nWe could further optimize this to only convert to UTF-8 byte array if there are non-ASCII characters and on Windows, but this should not really matter because most paths are short. However, there is a byte array allocation, but there is not much we can do as the native code expects a UTF-8 string.\n\n\u003E VS bug [#734990](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/734990)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-11-24T23:23:05",
+  "updatedAt": "2022-08-19T12:02:31",
+  "closedAt": "2018-11-24T23:57:24",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,38 @@
+{
+  "number": 1023,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix bad colors",
+  "body": "**Description of Change**\r\n\r\nSeems that when colors go into the native world and back, we aren\u0027t passing it correctly.\r\n\r\nThis issue keeps coming up when I update the native interop. I add tests that catch it, but it looks like every time I update, I do something to bypass the tests. I am writing bad tests then.\r\n\r\nThe reason for this time is because I switched to the new interop generator, but the rules for \u0060SKColor\u0060 are special. When being passed INTO a method as arguments, then you can just pass \u0060SKColor\u0060 (the struct) directly. But, as part of a RETURN, you have to use the actual \u0060uint\u0060. This is all because we are working with a nice struct on the managed side, but in the native side it is just a \u0060uint\u0060.\r\n\r\nIn this PR, I just switch to \u0060uint\u0060 everywhere, except for arrays where I explicitly cast from \u0060SKColor*\u0060 to \u0060uint*\u0060 so nothing can break accidentally.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1017 \r\n- Related to #307\r\n- Related to #143 \r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nCorrect colors.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-20T14:28:18",
+  "updatedAt": "2019-11-21T20:33:37",
+  "closedAt": "2019-11-20T20:23:13",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-colors",
+  "additions": 108,
+  "deletions": 74,
+  "changedFiles": 13,
+  "commits": 2,
+  "reviews": []
+}

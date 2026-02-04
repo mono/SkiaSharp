@@ -1,0 +1,40 @@
+{
+  "number": 892,
+  "type": "pr",
+  "state": "closed",
+  "title": "Change native artifact name to match Azure Build.",
+  "body": "**Description of Change**\r\n\r\nChanges the artifact name for the externals-download target from \u0022native\u0022 to \u0022native-default\u0022 to match the Azure Build.\r\nThis allows the [Build Preparation instructions](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp#preparation-1) to work as documented instead of returning a 404 error.\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to issue #889, #883 \r\n- Fixes #883\r\n\r\n**Changes**\r\n\r\nChanges the artifact name from \u0022native\u0022 to \u0022native-default\u0022 to match the Azure Build Pipeline.\r\nAlso some minor refactoring of local string constants for the output path.\r\n\r\n**Behavioral Changes**\r\n\r\nSince the unzipped folder is named \u0022native-default\u0022, it is renamed back to \u0022native\u0022 so the rest of the build scripts can still work.\r\n\r\n**PR Checklist**\r\n\r\n- [ NA ] Has tests (if omitted, state reason in description)\r\n- [ Y ] Rebased on top of master at time of PR\r\n- [ Y ] Changes adhere to coding standard\r\n- [ NA ] Updated documentation\r\n",
+  "author": {
+    "login": "danien",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-06-27T06:40:16",
+  "updatedAt": "2019-11-21T20:35:09",
+  "closedAt": "2019-06-27T17:58:27",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/change-externals-download-native-artifact-name",
+  "additions": 9,
+  "deletions": 5,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2019-06-27T11:04:19"
+    },
+    {
+      "author": "danien",
+      "state": "COMMENTED",
+      "submittedAt": "2019-06-27T15:17:50"
+    }
+  ]
+}

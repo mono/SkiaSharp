@@ -1,0 +1,32 @@
+{
+  "number": 3462,
+  "type": "pr",
+  "state": "closed",
+  "title": "Improve source file verification in native-dependency-update skill",
+  "body": "## Summary\n\nImproves the native-dependency-update skill to prevent build failures from missing source files.\n\n## Problem\n\nDuring the libwebp 1.3.2\u21921.6.0 update, a partial check of only \u0060src/dec\u0060, \u0060src/enc\u0060, \u0060src/dsp\u0060 directories missed the new \u0060src/utils/palette.c\u0060 file. This caused a link failure that could have been caught during analysis.\n\nThe flawed approach was assuming a \u0060src/\u0060 directory exists and filtering by specific subdirectories.\n\n## Solution\n\nAdd a mandatory source file verification procedure that:\n\n1. Gets **ALL** added/deleted files without any path filtering first\n2. Cross-references against BUILD.gn to identify what actually needs updating\n3. Documents the correct approach with a concrete example\n\n## Changes\n\n- \u0060.github/skills/native-dependency-update/SKILL.md\u0060 - Added Step 1a/1b/1c verification procedure\n- \u0060.github/skills/native-dependency-update/references/breaking-changes.md\u0060 - Added detailed verification guidance",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-27T18:30:52",
+  "updatedAt": "2026-02-02T21:48:22",
+  "closedAt": "2026-01-27T19:25:18",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/skill-source-file-check",
+  "additions": 180,
+  "deletions": 18,
+  "changedFiles": 3,
+  "commits": 3,
+  "reviews": []
+}

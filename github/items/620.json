@@ -1,0 +1,31 @@
+{
+  "number": 620,
+  "type": "issue",
+  "state": "closed",
+  "title": "Screen updates are not stable",
+  "body": "### Description\r\n\r\nScreen updates are not stable\r\n\r\nhttps://youtu.be/5rGbVSVFMZk\r\n\r\n\r\nI am developing Android applications using SkiaSharp and SkiaSharp.Views.Forms (using Xamarin.Forms).\r\nI am suffering because this application is not stable frame rate.\r\n\r\nI am programming to update the screen at 60 FPS, but the update is not stable.\r\n\r\nI wonder why\r\nFor some reason the screen update is done at 60 FPS only during the touch, and if there is no touch it will be a slow screen update.\r\n\r\nThere is no touch related setting in the code.\r\n\r\n\r\nWhat kind of place do I have to check to update the screen at 60 FPS?\r\n\r\n\r\n\r\n\r\n### Code\r\n\r\nBuildable solution:\r\nhttps://www.dropbox.com/s/aquap1xwfxinz3j/SkiaSharpFrameratesProblem.zip?dl=0\r\n\r\n\u0060\u0060\u0060 xml\r\n\u003CContentPage x:Class=\u0022App5.MainPage\u0022\r\n             xmlns=\u0022http://xamarin.com/schemas/2014/forms\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:forms=\u0022clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms\u0022\u003E\r\n    \u003Cforms:SKCanvasView x:Name=\u0022Canvas\u0022/\u003E\r\n\u003C/ContentPage\u003E\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\npublic partial class MainPage\r\n{\r\n    public MainPage()\r\n    {\r\n        InitializeComponent();\r\n    }\r\n\r\n    protected override void OnAppearing()\r\n    {\r\n        base.OnAppearing();\r\n\r\n        var stopwatch = Stopwatch.StartNew();\r\n        var tp = new SKPaint\r\n        {\r\n            Style = SKPaintStyle.Fill,\r\n            Color = SKColors.DarkBlue,\r\n            IsAntialias = true,\r\n            TextSize = 70.0f,\r\n        };\r\n\r\n        var timer = new Timer(1000.0 / 60.0);\r\n        timer.Elapsed \u002B= (_, __) =\u003E Device.BeginInvokeOnMainThread(Canvas.InvalidateSurface);\r\n        timer.Start();\r\n\r\n        var x = 0;\r\n\r\n        Canvas.PaintSurface \u002B= (_, e) =\u003E\r\n        {\r\n            var interval = stopwatch.ElapsedMilliseconds;\r\n            stopwatch.Restart();\r\n\r\n            e.Surface.Canvas.Clear(SKColors.LightGray);\r\n\r\n            e.Surface.Canvas.DrawText($\u0022Interval:{interval}\u0022, new SKPoint(150, 150), tp);\r\n\r\n            if ((\u002B\u002Bx) \u003E= 120)\r\n                x = 0;\r\n\r\n            e.Surface.Canvas.DrawText(\u0022$\u0022, new SKPoint(150 \u002B x * 4, 300), tp);\r\n        };\r\n    }\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\n\r\n\r\n\r\n### Basic Information\r\n\r\nAndroid: OnePlus6(Oreo 8.1)\r\nSkiaSharp: 1.60.3\r\nXamarin.Forms: 3.1.0.697\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "YoshihiroIto",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-08-20T04:20:36",
+  "updatedAt": "2026-01-03T15:09:41",
+  "closedAt": "2026-01-03T15:09:41",
+  "commentCount": 5,
+  "reactionCount": 0
+}

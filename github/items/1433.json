@@ -1,0 +1,36 @@
+{
+  "number": 1433,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Font issue",
+  "body": "**Description**\r\nI upgraded my app to 2.80.1 and then to 2.80.2-preview.9, and the way fonts work on Android seem to have changed. \r\nAlso tested on iOS 13.6 and fonts work as expected.\r\n\r\n\u003C!-- a general description goes here --\u003E\r\n\r\n**Code**\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\nI determine the typeface as follows:\r\n\r\n\r\n                var sampleChar = \u0027A\u0027;\r\n                var fontManager = SKFontManager.Default;\r\n                var typeface = fontManager.MatchCharacter(sampleChar);\r\n\r\n\r\n                if (typeface == null)\r\n                {\r\n                    foreach (var font in fontManager.FontFamilies)\r\n                    {\r\n                        if (font.ToLower().Contains(\u0022helvetica\u0022))\r\n                        {\r\n                            typeface = fontManager.MatchFamily(font, SKFontStyle.Normal);\r\n                            break;\r\n                        }\r\n                    }\r\n                }\r\n                \r\n                _textPaint.Typeface = typeface;\r\n\r\n\r\nAnd then drawtext as follows:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.DrawText(textString,\r\n    -info.Width / (float) _canvasScale /\r\n    2 \u002B offset, // \u002B textString.Length * _textPaint.TextSize/2 /(float)scale ,\r\n    -info.Height / (float) _canvasScale / 2 \u002B _textPaint.TextSize * 1.1f,\r\n    _textPaint);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\nText should display the same as on 1.68.3\r\n\r\n**Actual Behavior**\r\nTypeface on Android change and text no longer displays as intended\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.1 and then to 2.80.2-preview.9 \u003C!-- the version of SkiaSharp that has the issue --\u003E\r\n- Last known good version: 1.68.3 \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Microsoft Visual Studio 2019 Version 16.6.5 \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: Android 10 API Level 29  \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n\r\n- Target Devices: \r\n\u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\nPixel 2 Emulator running Android 10 \r\nSamsung S8 running Android 9  \r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nXamarin   16.6.000.1064 (d16-6@b03f31e)\r\nVisual Studio extension to enable development for Xamarin.iOS and Xamarin.Android.\r\n\r\nXamarin Designer   16.6.0.318 (remotes/origin/d16-6@66afc5421)\r\nVisual Studio extension to enable Xamarin Designer tools in Visual Studio.\r\n\r\nXamarin Templates   16.6.40 (1f1466f)\r\nTemplates for building iOS, Android, and Windows apps with Xamarin and Xamarin.Forms.\r\n\r\nXamarin.Android SDK   10.3.1.4 (d16-6/3a10de9)\r\nXamarin.Android Reference Assemblies and MSBuild support.\r\n    Mono: 165f4b0\r\n    Java.Interop: xamarin/java.interop/d16-6@2cab35c\r\n    ProGuard: xamarin/proguard/master@905836d\r\n    SQLite: xamarin/sqlite/3.31.1@49232bc\r\n    Xamarin.Android Tools: xamarin/xamarin-android-tools/d16-6@bfb66f3\r\n\r\n\r\nXamarin.iOS and Xamarin.Mac SDK   13.18.3.2 (ce0cc74)\r\nXamarin.iOS and Xamarin.Mac Reference Assemblies and MSBuild support.\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\nAndroid Text display on 2.80.1 and then to 2.80.2-preview.9\r\n![image](https://user-images.githubusercontent.com/33708055/88864891-6f096e00-d25a-11ea-9f69-abf58ae37c66.png)\r\n\r\nAndroid Text display on 1.68.3\r\n![image](https://user-images.githubusercontent.com/33708055/88865113-0969b180-d25b-11ea-80d2-182128b99d2f.png)\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "DawidBester",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-30T00:55:22",
+  "updatedAt": "2022-08-19T03:02:22",
+  "closedAt": "2020-08-01T11:15:46",
+  "commentCount": 6,
+  "reactionCount": 0
+}

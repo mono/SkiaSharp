@@ -1,0 +1,18 @@
+{
+  "number": 1349,
+  "type": "issue",
+  "state": "closed",
+  "title": "Is there compatibility with .NET Standard | Class Library (.NET Standard) projects?",
+  "body": "Hello,\r\n\r\nI have a Xamarin.Forms project that had the now deprecated \u0022Shared\u0022 project in the solution. PCL projects are no longer supported either.\r\n\r\nI\u0027ve had to swap the \u0022Shared\u0022 project over to a _.NET Standard | Class Library (.NET Standard) project_ and add all Nuget packages. This targets the .Net Core framework v2.1\r\n\r\nOne of my Forms uses the SKCanvasView where my users do some basic 2d drawing and I load a background image. This WAS all working with the \u0022shared\u0022 project in place.\r\n\r\nSkiaSharp plugin (_version 1.60.3 all the way to 2.80.0 preview 14_), installs, no issue, as does SkiaSharp.Views.Forms.\r\n\r\nHowever, **SkiaSharp.Views** (all versions) cites the following issue and my drawing Form is no longer functional:\r\n_Package \u0027SkiaSharp.Views 2.80.0-preview.14\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETStandard,Version=v2.1\u0027. This package may not be fully compatible with your project._\r\n\r\nThere are no build errors and the app runs but the SKCanvasView no longer displays or is not functional at all.\r\n\r\nAs Microsoft have now forced developers to use  the .Net Standard project as the \u0022shared\u0022 library for Xamarin.Forms, one would think that the SkiaSharp components would follow suit and be compatible with said MS standard, especially if the primary SkiaSharp library and the SkiaSharp.Views.Forms are not citing any compatibility issues.\r\n\r\nCan some please advise on how to resolve this issue?\r\n\r\nThank you",
+  "author": {
+    "login": "blmiles",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-24T02:32:58",
+  "updatedAt": "2022-08-19T03:02:55",
+  "closedAt": "2020-06-29T03:57:16",
+  "commentCount": 11,
+  "reactionCount": 0
+}

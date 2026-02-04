@@ -1,0 +1,22 @@
+{
+  "number": 3211,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] System.TypeInitializationException : .NET Framework",
+  "body": "### Description\n\nIssue:\nSystem.TypeInitializationException : The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\n\nReplication steps:\n1. Create .NET Framework 4.8 console app.\n2. Run the code\n\nNote:\n**This issue not occur in previous Skiasharp version 2.88.8. It seems like breaking issue**\n\n### Code\n\n\n\u0060\u0060\u0060cs\n //Define the image dimensions\n            int width = 800;\n            int height = 600;\n            string base64String;\n\n            //Create a new bitmap\n            using (var bitmap = new SKBitmap(width, height))\n            {\n                // Create a canvas to draw on the bitmap\n                using (var canvas = new SKCanvas(bitmap))\n                {\n                    // Clear the canvas with a white color\n                    canvas.Clear(SKColors.White);\n\n                    // Define the paint for drawing shapes\n                    var paint = new SKPaint\n                    {\n                        Color = SKColors.Blue,\n                        IsAntialias = true,\n                        Style = SKPaintStyle.Stroke,\n                        StrokeWidth = 5\n                    };\n\n                    // Draw a rectangle\n                    var rect = new SKRect(100, 100, 300, 300);\n                    canvas.DrawRect(rect, paint);\n\n                    // Draw a circle\n                    paint.Color = SKColors.Red;\n                    canvas.DrawCircle(400, 400, 100, paint);\n\n                    // Draw a line\n                    paint.Color = SKColors.Green;\n                    canvas.DrawLine(500, 100, 700, 300, paint);\n\n                    // Save the bitmap to a file\n                    using (var image = SKImage.FromBitmap(bitmap))\n                    using (var data = image.Encode(SKEncodedImageFormat.Png, 100))\n\n                    using (var memoryStream = new MemoryStream())\n                    {\n                        data.SaveTo(memoryStream);\n                    }\n                }\n            }\n\n\u0060\u0060\u0060\n\n\n\n### Expected Behavior\n\nWorks properly\n\n### Actual Behavior\n\nUnhandled Exception: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027.\n   at SkiaSharp.LibraryLoader.LoadLocalLibrary[T](String libraryName) in /_/binding/Binding.Shared/LibraryLoader.cs:line 40\n   at SkiaSharp.SkiaApi.\u003C\u003Ec.\u003C.cctor\u003Eb__1741_0() in /_/binding/SkiaSharp/SkiaApi.cs:line 17\n   at System.Lazy\u00601.CreateValue()\n   at System.Lazy\u00601.LazyInitValue()\n   at System.Lazy\u00601.get_Value()\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888() in /_/binding/SkiaSharp/SkiaApi.generated.cs:line 6052\n   at SkiaSharp.SKImageInfo..cctor() in /_/binding/SkiaSharp/SKImageInfo.cs:line 48\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, Boolean isOpaque) in /_/binding/SkiaSharp/SKBitmap.cs:line 33\n\n\n### Version of SkiaSharp\n\n3.116.1\n\n### Last Known Good Version of SkiaSharp\n\n2.88.8 (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n![Image](https://github.com/user-attachments/assets/a4950e48-4b4d-4ffd-b305-d05e4c211a06)\n\n\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MohanaselvamJ",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-20T12:36:18",
+  "updatedAt": "2025-07-26T07:51:36",
+  "commentCount": 2,
+  "reactionCount": 0
+}

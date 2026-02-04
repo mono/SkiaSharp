@@ -1,0 +1,29 @@
+{
+  "number": 1020,
+  "type": "pr",
+  "state": "closed",
+  "title": "Env.Is64BitOperatingSystem isn\u0027t in dotnet build",
+  "body": "**Description of Change**\r\n\r\n\u0060dotnet build\u0060 is not quite the same as \u0060msbuild\u0060 and \u0060[System.Environment]::Is64BitOperatingSystem\u0060 cannot be used. We should use \u0060[System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture\u0060 instead. Unfortunately, that type was added only in later MSBuilds based on net471\u002B. \r\n\r\nHowever, \u0060$(MSBuildRuntimeType)\u0060 was added in MSBuild 15 which is old enough.\r\n\r\n**Bugs Fixed**\r\n\r\n\u0060\u0060\u0060\r\nerror MSB4185: The function \u0022Is64BitOperatingSystem\u0022 on type \u0022System.Environment\u0022 is not available for execution as an MSBuild property function.\r\n\u0060\u0060\u0060\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone. Except that it should now build net45\u002B with dotnet build.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-19T13:42:47",
+  "updatedAt": "2019-11-21T20:33:36",
+  "closedAt": "2019-11-19T15:06:27",
+  "commentCount": 0,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-dotnet-build",
+  "additions": 4,
+  "deletions": 2,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": []
+}

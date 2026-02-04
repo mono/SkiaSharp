@@ -1,0 +1,18 @@
+{
+  "number": 1672,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] GetPixel returns a different ARGB color compared to rendered",
+  "body": "**Description**\r\n\r\nLoading a 32 color PNG file into a SKBitmap returns a different color when using \u0060GetPixel\u0060. The image renders correctly on a SKCanvasView in Xamarin. The image still has 32 colors but they all look different as if they\u0027ve been converted to a different tone.\r\n\r\nAs an example, in the image provided, the yellow color pixel returns as a pastel pink in the ARGB values received.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n var bitmap = SKBitmap.Decode(fileStream);\r\n    \r\n for (int row = 0; row \u003C bitmap.Height; row\u002B\u002B)\r\n for (int col = 0; col \u003C bitmap.Width; col\u002B\u002B)\r\n {\r\n     var pixelColor = bitmap.GetPixel(col, row); \u003C-- this is not the right color\r\n }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nGetPixel returns the same ARGB colors as displayed when rendering the image.\r\n\r\n**Actual Behavior**\r\n\r\nA different tone of the color is returned.\r\nAs an example, in the image provided, the yellow color pixel returns as a pastel pink in the ARGB values received.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \r\nXamarin Essentials 1.6.1\r\nSkiaSharp.Views.Forms 2.80.2\r\n- Last known good version:  Unknown\r\n- IDE:  Visual Studio CE 2019\r\n- Platform Target Frameworks:\r\n  - Android: 10 (Api level 29)\r\n  - Others not tested\r\n- Target Devices:\r\n  - Samsung Galaxy 8\u002B\r\n  \r\n\r\n**Screenshots**\r\n\r\nSample image where the issue occurs:\r\n\r\n![1958358](https://user-images.githubusercontent.com/13695157/112390207-a96fd000-8d41-11eb-86d7-6387366a20c1.png)\r\n\r\n",
+  "author": {
+    "login": "sebandres",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-03-24T22:14:00",
+  "updatedAt": "2022-08-19T00:02:52",
+  "closedAt": "2021-03-28T05:20:57",
+  "commentCount": 1,
+  "reactionCount": 0
+}

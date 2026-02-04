@@ -1,0 +1,29 @@
+{
+  "number": 1389,
+  "type": "pr",
+  "state": "closed",
+  "title": "Create a WASM package",
+  "body": "**Description of Change**\r\n\r\nInstead of having to manually download and update libSkiaSharp.a for WASM, just depend on the \u0060SkiaSharp.NativeAssets.WebAssembly\u0060 package. This doesn\u0027t do anything except expose a path to the actual \u0060libSkiaSharp.a\u0060 which you can then use in whatever tooling you need.\r\n\r\nThere are 2 ways to do this:\r\n - property value \u0060$(SkiaSharpStaticLibraryPath)\u0060\r\n - item group \u0060@(SkiaSharpStaticLibrary)\u0060\r\n\r\n\r\nAnother way to use this package is as a build-time dependency. Since you have the path to the package, you can add it as an embedded resource or copy it to the output as content. To prevent a dependency with \u0060dotnet pack\u0060, just mark the \u0060\u003CPackageReference\u003E\u0060 with a \u0060PrivateAssets=\u0022all\u0022\u0060 property. Then only you will see it in that project.\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-07-08T03:36:59",
+  "updatedAt": "2020-07-09T02:17:48",
+  "closedAt": "2020-07-08T16:08:27",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/wasm-package",
+  "additions": 67,
+  "deletions": 0,
+  "changedFiles": 6,
+  "commits": 7,
+  "reviews": []
+}

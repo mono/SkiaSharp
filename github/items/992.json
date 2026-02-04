@@ -1,0 +1,29 @@
+{
+  "number": 992,
+  "type": "pr",
+  "state": "closed",
+  "title": "Created a P/Invoke Generator",
+  "body": "**Description of Change**\r\n\r\nThis PR is mainly for the addition and usage of a new p/invoke generator, but a little more:\r\n\r\n - The extra work to map the C API to the internal C# API is unnecessary and can be automated. It most often just involves copying the structs and enums across - and then renaming them. Same with the imports, just a matter of copying and fixing up the C-isms.  \r\n   The new generator will be able to do all this work for us, leaving us to focus on a nice C API, and then wrap the generated C# with a beautiful, user-friendly API.\r\n   And, there will be less mistakes because I won\u0027t forget to change member types/names when copying similar code :)\r\n - Also start splitting the build for the native into separate architectures. Instead of building all 4 Windows arches in serial and taking hours, build them in parallel in less than 1 hour.\r\n\r\n**Bugs Fixed**\r\n\r\nN/A\r\n\r\n**API Changes**\r\n\r\nShould be none.\r\n\r\n**Behavioral Changes**\r\n\r\nShould be none.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-03T16:26:13",
+  "updatedAt": "2019-11-21T20:33:33",
+  "closedAt": "2019-11-05T17:38:04",
+  "commentCount": 2,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/generator",
+  "additions": 7968,
+  "deletions": 3968,
+  "changedFiles": 76,
+  "commits": 8,
+  "reviews": []
+}

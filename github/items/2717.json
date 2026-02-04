@@ -1,0 +1,43 @@
+{
+  "number": 2717,
+  "type": "pr",
+  "state": "closed",
+  "title": "Make PlatformConfiguration properties trimmable (fixes tvOS compilation)",
+  "body": "**Description of Change**\r\n\r\nPreviously SkiaSharp used old APIs to conditionally execute platform specific APIs. Specifically, RuntimeInformation.IsOSPlatform is known to be non-trimmable.\r\n\r\nIt caused some Windows PInvokes to be included in the non-windows binaries. For most platform it didn\u0027t really cause any problems, but apparently tvOS linker is more sensitive (see #2715)\r\n\r\nThis PR changes PlatformConfiguration class:\r\n1.  Use newer trimmer friendly \u0060OperatingSystem.IsWindows()\u0060 method instead of non-trimmable \u0060RuntimeInformation.IsOSPlatform (OSPlatform.Windows)\u0060.\r\n2. Remove static ctor, and instead move these checks to the property getters. \r\n\r\nOn .NET6\u002B targets with trimmer enabled these calls will be eliminated and values will be inlined.\r\n\r\nNon trimmed SkiaSharp:\r\n\u003Cimg width=\u0022458\u0022 alt=\u0022Screenshot 2024-01-14 at 10 25 25\u202FPM\u0022 src=\u0022https://github.com/mono/SkiaSharp/assets/3163374/afac94b9-68f4-4fc8-af04-761180e7b458\u0022\u003E\r\n\r\nTrimmed SkiaSharp with \u0022-r tvos-arm64\u0022 (hint for the compiler to replace OperatingSystem.IsWindows with \u0022false\u0022).\r\nAs we can see, windows specific class is completely removed as unused.\r\n\u003Cimg width=\u0022458\u0022 alt=\u0022Screenshot 2024-01-14 at 10 25 35\u202FPM\u0022 src=\u0022https://github.com/mono/SkiaSharp/assets/3163374/473d76dc-1455-437a-a01b-98752404797c\u0022\u003E\r\n\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2715\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n\r\nThis PR should also be backportable with no conflicts.",
+  "author": {
+    "login": "maxkatz6",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backport/release/2.x",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-15T06:27:13",
+  "updatedAt": "2024-02-02T16:04:02",
+  "closedAt": "2024-02-02T16:04:02",
+  "commentCount": 9,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "platform-config-conditional-fixes",
+  "additions": 37,
+  "deletions": 27,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "DISMISSED",
+      "submittedAt": "2024-01-22T14:01:09"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-02-02T16:03:47"
+    }
+  ]
+}

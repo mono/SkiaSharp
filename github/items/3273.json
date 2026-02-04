@@ -1,0 +1,22 @@
+{
+  "number": 3273,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Blazor Wasm [DebugMode]: No canvas element was provided",
+  "body": "### Description\n\nWhen I test my blazor app in debug mode from the ide, the skia content could not work. It shows \u0022No canvas element was provided\u0022 in the browser console. When I use dotnet watch command to run my app, it works all fine. Skiasharp 3.119\n\n### Code\n\nI just use this simple page to test.\n\n\u0060\u0060\u0060razor\n\u003Cdiv class=\u0022graph-container\u0022\u003E\n    \u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022\u003E\u003C/SKCanvasView\u003E\n\u003C/div\u003E\n\n@code\n{\n    private void OnPaintSurface(SKPaintSurfaceEventArgs args)\n    {\n        // My own paint commands\n        GraphPainter.DrawOnCanvas(args.Surface.Canvas);\n    }\n}\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n3.116.0 (Current)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nmacOS\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "syminomega",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-11T08:49:40",
+  "updatedAt": "2025-12-11T05:35:13",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1494,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] [GPU] [Angle] [WPF] Any safe way to FlushAsync() or Flush in other thread?",
+  "body": "Canvas.Flush() is taking a lot of time (up to 2 seconds) in my scenarios with huge amount of elements on a canvas, blocking my render thread.\r\nI want to draw next frame, while i\u0027m waiting for previous frame render. Some kind of double buffer render.\r\nIs anyone faced this type issue and found a good solution?\r\n\r\nI\u0027m trying to launch Flush() in another thread. It works for a while, works perfectly(huge lag reduce), but unsafe, has random crashes on flush and image draw skia calls.\r\n\r\nAFAIK All Flush() is do - is just an endless loop wait for GPU response. So I think I\u0027m doing something wrong and cannot find an obvious solution.",
+  "author": {
+    "login": "Mikolaytis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-08T21:59:04",
+  "updatedAt": "2022-08-19T03:01:54",
+  "closedAt": "2020-09-21T22:49:27",
+  "commentCount": 3,
+  "reactionCount": 0
+}

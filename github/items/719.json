@@ -1,0 +1,18 @@
+{
+  "number": 719,
+  "type": "issue",
+  "state": "closed",
+  "title": "Rotate \u002B draw scaled bitmap clips bad in 1.68",
+  "body": "### Description\r\n\r\nWhen using rotate on canvas the draw bitmap - only when/with scaling - clips to un-rotated bound. This is new in 1.68 vs 1.60. I use this to handle images with EncodedOrigin. \r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060csharp\r\nvar orgW = 600, orgH = 200,\r\n\tnewW =  20, newH =  60\r\n\r\n// .. create canvas with 90 degrees rotated dimension (w = h = 20, h = w = 60).\r\n// Basic rotate\r\ncanvas.Translate(info.Width, 0);\r\ncanvas.RotateDegrees(90);\r\n\r\n// Draw scaled bitmap\r\ncanvas.DrawBitmap(bmp, \r\n  SKRect.Create(0, 0, orgW, orgH),\t\t\t\t\t\t\t\t\t\r\n  SKRect.Create(0, 0, newW, newH), paint);\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nSame as 1.60 - the bitmap is rotate and drawn.\r\n\r\n### Actual Behavior\r\n\r\nThe bitmap is clipped at height 20px as it is the width of the new canvas - as in it clips as it would/should BEFORE the rotate/translate. \r\nSo the clipping happens as if it did not rotate - there the image lay down and the height is the width.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  1.60.3\r\n- IDE:  VS.NET 2017/2019\r\n- Platform Target Frameworks: .NET 4.7.2\r\n- Target Devices: ASP.NET\r\n\r\nOriginal file - use this:\r\n\r\n![left-original](https://user-images.githubusercontent.com/4574570/49798285-309c0400-fd42-11e8-9a9b-2d124333a4bc.jpg)\r\n\r\nSample of rotated - clipped at the bottom:\r\n\r\n![left-rotated](https://user-images.githubusercontent.com/4574570/49798306-40b3e380-fd42-11e8-960e-fc1d5840323f.jpeg)\r\n\r\n",
+  "author": {
+    "login": "AndersMad",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-12-09T01:20:33",
+  "updatedAt": "2022-08-19T12:02:19",
+  "closedAt": "2020-05-03T09:33:29",
+  "commentCount": 3,
+  "reactionCount": 1
+}

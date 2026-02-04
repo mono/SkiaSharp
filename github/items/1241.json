@@ -1,0 +1,18 @@
+{
+  "number": 1241,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Publish SkiaSharp package specifically for use in (ASP).NET Core",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nSkiaSharp package size is MASSIVE. \r\n\r\nAt 88MB \u002B 3MB Linux native package, it\u0027s quite taxing on developer machine and build system (CI/CD), often times causing build times to be delayed due to the package download size AND eating build time quota (e.g. GitHub Actions minutes per month).\r\n\r\nAlso, the final app publish size will also be larger by default, (unless the developer uses self-contained build with explicit Runtime ID) which is not ideal:\r\n\r\n![image](https://user-images.githubusercontent.com/8892187/79643305-94eb9500-81cc-11ea-822b-f37d45540f5a.png)\r\n\r\n\u003E Example above: Tizen folders contains only SkiaSharp native assets!\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nI wish there is another SkiaSharp package by the Mono / SkiaSharp / Microsoft team for use specifically in ASP.NET Core. (e.g. \u0060SkiaSharp.AspNetCore\u0060)\r\n\r\nThis new package should just consist of these native assets:\r\n- win-x64\r\n- win-x86 (optional)\r\n- linux-x64 (from https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux)\r\n- osx\r\n\r\nAnd the package should just target .NET Standard for optimal package size. (No .NET Framework and other junks, since the unified .NET 5 is coming up anyway. In the future change the target to .NET 5)\r\n\r\nI did a rough estimate of the .nupkg size with only those runtime IDs and only .NET Standard. It should come out at only 12MB total \u2757 \u2757 \u2757 \r\n\r\nThis new package should play nicely with .NET Core Runtime Deps for Docker: https://hub.docker.com/_/microsoft-dotnet-core-runtime-deps/ or ASP.NET Core for Docker: https://hub.docker.com/_/microsoft-dotnet-core-aspnet/ images for building general web apps and microservices.\r\n\r\nIt\u0027ll also be nice if this happens, as there will be a image processing library \u0022blessed\u0022 for use in ASP.NET Core apps.\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nMagick.NET offers such package at 21 MB size https://www.nuget.org/packages/Magick.NET-Q8-x64/ or 46 MB size https://www.nuget.org/packages/Magick.NET-Q8-AnyCPU/\r\n\r\n**Additional context**\r\n\r\nRelated issue https://github.com/mono/SkiaSharp/issues/453\r\n",
+  "author": {
+    "login": "ryanelian",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-18T16:31:09",
+  "updatedAt": "2022-08-19T06:01:57",
+  "closedAt": "2020-06-27T22:25:04",
+  "commentCount": 5,
+  "reactionCount": 1
+}

@@ -1,0 +1,28 @@
+{
+  "number": 630,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKTypeface.CharsToGlyphs throws IndexOutOfRangeException when no glyphs are returned",
+  "body": "### Description\r\n\r\n\u0060SKTypeface.CharsToGlyphs()\u0060 calls \u0060sk_typeface_chars_to_glyphs()\u0060 twice: the first time to get the number of matching glyphs (n) and the second time to retrieve these glyphs into an array of length n.\r\n\r\nWhen n == 0, an IndexOutOfRange exception is raised because the code tries to get a pointer to the first element of the (empty) array.\r\n\r\n### Code to reproduce\r\n\r\n\u0060\u0060\u0060csharp\r\nvar typeface = SKTypeface.FromFamilyName(\u0022Calibri\u0022);\r\nushort[] glyphs;\r\n\r\n// try to get the glyph of a character not supported by this typeface\r\nvar n = typeface.CharsToGlyphs(\u0022\u8FD9\u0022, out glyphs);\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\n\u0060\u0060\u0060csharp\r\nn == 0;\r\nglyphs == ushort[0];\r\n\u0060\u0060\u0060\r\n\r\n### Actual Behavior\r\n\r\nAn IndexOutOfRange exception is raised.\r\n\r\n### Suggested fix\r\n\r\nAfter the first call to \u0060sk_typeface_chars_to_glyphs()\u0060, do not call it again if n == 0.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.2\r\n\r\n",
+  "author": {
+    "login": "jpatte",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-09-04T11:32:09",
+  "updatedAt": "2022-08-19T15:01:36",
+  "closedAt": "2018-09-26T05:04:38",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,33 @@
+{
+  "number": 2788,
+  "type": "pr",
+  "state": "closed",
+  "title": "Bring Metal APIs to a common .NET TFM",
+  "body": "**Description of Change**\r\n\r\nCurrently all Metal related APIs are hardcoded to .NET iOS and .NET macOS TFM. \r\nIt makes it a bit more difficult to use these APIs, when consuming library either doesn\u0027t use these targets or just wants to abstract these calls without an extra TFM.\r\n\r\nIn Avalonia, for macOS specifically, we don\u0027t use \u0022net8.0-macos\u0022 target, as all necessary AppKit API we call from our native library. Thus, we don\u0027t have typical .NET IMtlDevice and friends, instead we only have pointers. \r\n\r\nThis caused a problem on our side, but there is no problem that can\u0027t be solved with some reflection:https://github.com/AvaloniaUI/Avalonia/blob/master/src/Skia/Avalonia.Skia/Gpu/Metal/SkiaMetalApi.cs \r\n\r\nFrom the API perspective, I think changes in this PR do make sense:\r\n1. Bringing all metal APIs like CreateContext to common SkiaSharp TFM, but only exposing pointers.\r\n2. Keep old API for backward compatibility.\r\n3. Integrate old typed members with new IntPtr members, reducing chance of making a mistake (though, it\u0027s relatively low).\r\n\r\n**API Changes**\r\n\r\nMetal APIs backported to common TFM, but with IntPtr members.\r\nNote: SkiaSharp.Views package API wasn\u0027t changed, as it would be way more involving.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n\r\nCan be considered a backport candidate, but understandably 2.88 might have API freeze at this point.",
+  "author": {
+    "login": "maxkatz6",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-03-07T06:01:27",
+  "updatedAt": "2024-04-08T19:09:21",
+  "closedAt": "2024-04-08T19:09:21",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "metal-tfm",
+  "additions": 77,
+  "deletions": 24,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-03-28T22:40:10"
+    }
+  ]
+}

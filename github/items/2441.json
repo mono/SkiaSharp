@@ -1,0 +1,18 @@
+{
+  "number": 2441,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] In Blazor, Dispose() of SkCanvasView throws NullReferenceException when parent component shows and hides multiple skia canvas views",
+  "body": "**Description**\r\n\r\nIn Blazor, Dispose() of SkCanvasView throws exception when parent component shows and hides multiple skia canvas views\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\nNo exception when the SkCanvasView is disposed\r\n\r\n**Actual Behavior**\r\n\r\nException in runtime:\r\nblazor.webassembly.js:1 crit: Microsoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]\r\n      Unhandled exception rendering component: Object reference not set to an instance of an object.\r\nSystem.NullReferenceException: Object reference not set to an instance of an object.\r\n   at SkiaSharp.Views.Blazor.SKCanvasView.Dispose()\r\n   at Microsoft.AspNetCore.Components.Rendering.ComponentState.TryDisposeInBatch(RenderBatchBuilder batchBuilder, Exception\u0026 exception)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- the version of SkiaSharp that has the issue --\u003E 2.88.3\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E n/a\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E VS 2022 17.5\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Chrome / Edge\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "jjzhang12",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-04-12T22:15:20",
+  "updatedAt": "2023-07-17T00:00:47",
+  "closedAt": "2023-06-12T23:32:13",
+  "commentCount": 6,
+  "reactionCount": 0
+}

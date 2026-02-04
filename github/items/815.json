@@ -1,0 +1,23 @@
+{
+  "number": 815,
+  "type": "issue",
+  "state": "closed",
+  "title": "Speckles in the canvas",
+  "body": "I have an SKContol in a Windows Form. After drawing the bitmap to the canvas and Invalidating the control, I am often seeing speckles in the image similar to this:\r\n\r\n![image](https://user-images.githubusercontent.com/7605046/54769076-1fc32000-4bc6-11e9-9b65-ed846b2de812.png)\r\n\r\nThis happens on the PaintSurfaceEvent. I also see these random speckles when drawing an empty bitmap to the canvas. Here is the code I use to draw to the bitmap to the canvas in the paint event:\r\n\r\n\u0060\u0060\u0060\r\nDim canvas As SKCanvas = e.Surface.Canvas\r\ncanvas.Clear(SKColors.White)\r\nDim bitmap As New SKBitmap(e.Info.Rect.Width, e.Info.Rect.Height)\r\ncanvas.DrawBitmap(bitmap, 0, 0)\r\n\u0060\u0060\u0060\r\n\r\nI can also verify that the speckles also appear on Android device too, not just windows.\r\nIs there a work around to get rid of this, or is this a problem with drawing?",
+  "author": {
+    "login": "gktval",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-03-21T16:44:00",
+  "updatedAt": "2021-02-08T21:17:53",
+  "closedAt": "2021-02-08T21:17:52",
+  "commentCount": 3,
+  "reactionCount": 0
+}

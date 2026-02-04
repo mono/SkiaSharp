@@ -1,0 +1,36 @@
+{
+  "number": 3358,
+  "type": "pr",
+  "state": "closed",
+  "title": "Migrate API documentation from XML files to inline C# comments for SkiaSharp namespace",
+  "body": "This PR migrates API documentation from legacy XML files in \u0060docs/SkiaSharpAPI\u0060 to inline XML documentation comments in the C# source code for both HarfBuzzSharp and SkiaSharp namespaces. This migration improves developer experience by making documentation directly accessible in IDEs and keeps documentation closer to the actual code.\n\n## Completed Migration\n\n### HarfBuzzSharp Namespace \u2705 FULLY COMPLETE\n\nThe HarfBuzzSharp namespace has been fully migrated, covering all essential text shaping and font handling functionality:\n\n- **Core classes**: \u0060Blob\u0060, \u0060Buffer\u0060, \u0060Face\u0060, \u0060Feature\u0060, \u0060Font\u0060, \u0060FontFunctions\u0060, \u0060Language\u0060, \u0060NativeObject\u0060, \u0060OpenTypeMetrics\u0060, \u0060Tag\u0060, \u0060UnicodeFunctions\u0060, \u0060Variation\u0060 with all their members\n- **Enums**: \u0060BufferDiffFlags\u0060, \u0060BufferFlags\u0060, \u0060ClusterLevel\u0060, \u0060ContentType\u0060, \u0060Direction\u0060, \u0060OpenTypeNameId\u0060, \u0060SerializeFlag\u0060, \u0060SerializeFormat\u0060, \u0060UnicodeCombiningClass\u0060, \u0060UnicodeGeneralCategory\u0060\n- **Script type**: Complete documentation for the \u0060Script\u0060 struct including all methods, properties, and 150\u002B script field constants covering writing systems worldwide (Arabic, Latin, Greek, Han, Hebrew, Cyrillic, Devanagari, etc.)\n- **Delegates**: All font-related delegates and Unicode delegates with their documentation\n- **Internals**: \u0060PlatformConfiguration\u0060 class with platform detection properties\n\n### SkiaSharp Namespace - Core Graphics Types\n\nSuccessfully documented foundational graphics backend infrastructure:\n\n- **SkiaSharp.GRBackend**: 3D API backend enum (Metal, OpenGL, Vulkan, Dawn, Direct3D)\n- **SkiaSharp.GRBackendRenderTarget**: Render target wrapper class with comprehensive documentation including client responsibility remarks, constructor overloads, properties, and methods\n- **SkiaSharp.GRBackendState**: Context reset flags enum\n- **SkiaSharp.GRBackendTexture**: Texture wrapper class with detailed documentation\n- **SkiaSharp.GRGlBackendState**: OpenGL-specific backend state flags enum with all 14 state categories\n- **SkiaSharp.SKAlphaType**: Alpha component interpretation enum with detailed explanations of premultiplied vs non-premultiplied alpha handling\n\n## Generated Code Documentation\n\nAdded documentation to generated code files per maintainer guidance, as the build system will read these docs and re-apply them during code generation.\n\n## Migration Approach\n\n- Preserves original XML text verbatim, including \u0022To be added\u0022 placeholders\n- Only documents existing code members - no new APIs added\n- Generated code types have documentation added directly per maintainer instruction\n- XML comment tags follow standard order: \u0060summary\u0060, \u0060param\u0060, \u0060returns\u0060, \u0060remarks\u0060\n- Systematically tracks obsolete types that have been removed from current implementation\n\n## Missing/Obsolete Types Identified\n\nSeveral types documented in XML have been removed from the current codebase as obsolete:\n- \u0060GRBackendRenderTargetDesc\u0060, \u0060GRBackendTextureDesc\u0060, \u0060GRBackendTextureDescFlags\u0060 and related constructor variants\n- These are properly noted in the migration checklist for reference\n\nThis establishes the foundation for documenting the remaining thousands of SkiaSharp types, with core graphics backend infrastructure now fully documented.\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC Share your feedback on Copilot coding agent for the chance to win a $200 gift card! Click [here](https://survey3.medallia.com/?EAHeSx-AP01bZqG0Ld9QLQ) to start the survey.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-09-04T19:05:26",
+  "updatedAt": "2025-09-05T18:18:00",
+  "closedAt": "2025-09-05T18:17:55",
+  "commentCount": 25,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/fix-3357",
+  "additions": 17159,
+  "deletions": 75,
+  "changedFiles": 42,
+  "commits": 33,
+  "reviews": []
+}

@@ -1,0 +1,19 @@
+{
+  "number": 1187,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Passing null to SkPathMeasure results in AccessViolationException",
+  "body": "**Description**\r\n\r\n\u0060var pathMeasure = new SKPathMeasure(null);\u0060\r\n\r\ncauses \u0060System.AccessViolationException: \u0027Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0060\r\n\r\n**Code**\r\n\r\n\u0060var pathMeasure = new SKPathMeasure(null);\u0060\r\n\r\n**Expected Behavior**\r\n\r\nEither an \u0060ArgumentNullException\u0060, or an empty path measure instance.\r\n\r\n**Actual Behavior**\r\n\r\n\u0060AccessViolationException\u0060 is thrown.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  b2ccb97636e7b42ff97413a76efa1b2bd7c729ce (branch \u0060dev/update-skia\u0060)\r\n- Last known good version:  not sure\r\n- IDE: independent\r\n- Platform Target Frameworks:  .NET Standard 2.0\r\n\r\nThe fix is very simple, it is caused by [this line](https://github.com/mono/SkiaSharp/blob/73bfe5595489ab2b1f3b525712983baefaf58417/binding/Binding/SKPathMeasure.cs#L22), but I\u0027m not sure what the expected behavior is: throw an \u0060ArgumentNullException\u0060, or create an empty path measure? If the latter is allowed, it would make more sense to provide a ctor without args. I\u0027ll make a PR once we agree on this \uD83C\uDF89 \r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-03-24T19:51:25",
+  "updatedAt": "2022-08-19T06:02:16",
+  "closedAt": "2020-04-15T23:12:00",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,24 @@
+{
+  "number": 1052,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKImage.FromEncodedData(String) returns image with broken alpha on GPU backend",
+  "body": "**Description**\r\n\r\nWe are using 1.68.1 and see that SKImage.FromEncodedData(String) loads PNG images with broken alpha when drawn on GPU backend.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nusing (var image = SKImage.FromEncodedData(path))\r\n{\r\n   canvas.DrawImage(image, new SKPoint(400.0f, 100.0f));\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected \u0026 Actual Behavior**\r\n\r\n![image](https://user-images.githubusercontent.com/1189037/70338537-6b4d5500-184d-11ea-9f73-7d9c2b2d07de.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0, 1.68.1\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  Windows10\r\n- Target Devices:   \r\n  - Desktop\r\n\r\n**Reproduction Link**\r\n\r\n[SkiaApp.zip](https://github.com/mono/SkiaSharp/files/3933088/SkiaApp.zip)\r\n\r\n",
+  "author": {
+    "login": "antongit",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-12-06T16:28:02",
+  "updatedAt": "2022-08-19T09:01:48",
+  "closedAt": "2019-12-10T17:42:49",
+  "commentCount": 3,
+  "reactionCount": 2
+}

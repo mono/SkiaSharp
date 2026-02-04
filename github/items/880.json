@@ -1,0 +1,23 @@
+{
+  "number": 880,
+  "type": "issue",
+  "state": "closed",
+  "title": "Add Serialize methods support for SKPicture",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nAdd support for serializing \u0060SKPicture\u0060 as \u0060skp\u0060 stream or \u0060SKData\u0060 object. Currently you can not serialize created SKPictures. For example when loading SVG image from file you can only draw resulting \u0060SKPicture\u0060 and can not save for later use.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nAdd support for the following skia methods:\r\nhttps://github.com/google/skia/blob/90c300fb4ac9421b7274ba7c94c8c90f600766db/include/core/SkPicture.h#L157\r\nhttps://github.com/google/skia/blob/90c300fb4ac9421b7274ba7c94c8c90f600766db/include/core/SkPicture.h#L169\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nDid not find any alternatives in SkiaSharp.\r\n\r\n**Additional context**\r\n\r\nhttps://github.com/google/skia/blob/master/site/user/api/skcanvas_creation.md#skpicture\r\n\r\n\u0060\u0060\u0060C\u002B\u002B\r\n#include \u0022SkPictureRecorder.h\u0022\r\n#include \u0022SkPicture.h\u0022\r\n#include \u0022SkStream.h\u0022\r\nvoid picture(int width, int height,\r\n             void (*draw)(SkCanvas*),\r\n             const char* path) {\r\n    SkPictureRecorder recorder;\r\n    SkCanvas* recordingCanvas = recorder.beginRecording(SkIntToScalar(width),\r\n                                                        SkIntToScalar(height));\r\n    draw(recordingCanvas);\r\n    sk_sp\u003CSkPicture\u003E picture = recorder.finishRecordingAsPicture();\r\n    SkFILEWStream skpStream(path);\r\n    // Open SKP files with \u0060viewer --skps PATH_TO_SKP --slide SKP_FILE\u0060\r\n    picture-\u003Eserialize(\u0026skpStream);\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "wieslawsoltes",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-06-24T09:10:06",
+  "updatedAt": "2022-08-19T12:01:15",
+  "closedAt": "2020-09-30T20:49:56",
+  "commentCount": 16,
+  "reactionCount": 5
+}

@@ -1,0 +1,35 @@
+{
+  "number": 763,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Grayscale font",
+  "body": "**Description**\r\n\r\nI tried drawing a text using [Gilbert](https://www.typewithpride.com) font ([OpenType SVG](https://www.colorfonts.wtf)) but the result is gray-scaled instead of colored. When tried with Xamarin.Forms\u0027 Label, the text is rendered properly.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nvar paint = new SKPaint\r\n{\r\n                IsAntialias = true,\r\n                TextAlign = SKTextAlign.Center,\r\n                TextSize = 32,\r\n                Typeface = SKTypeface.FromFamilyName(\u0022Gilbert Color\u0022)\r\n};\r\ncanvas.DrawText(\u0022Hello\u0022, coord, paint);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe expected result is the same as using Xamarin.Forms :\r\n\u003Cimg width=\u0022121\u0022 alt=\u0022capture d ecran 2019-01-17 a 18 39 19\u0022 src=\u0022https://user-images.githubusercontent.com/3525604/51337770-4c54a180-1a88-11e9-87b2-49a1ebba8c5c.png\u0022\u003E\r\n\r\n**Actual Behavior**\r\n\r\nWhen drawing with SkiaSharp :\r\n\u003Cimg width=\u0022115\u0022 alt=\u0022capture d ecran 2019-01-17 a 18 40 25\u0022 src=\u0022https://user-images.githubusercontent.com/3525604/51337794-5bd3ea80-1a88-11e9-95b1-b1f9e542eb33.png\u0022\u003E\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - macOS:  10.14",
+  "author": {
+    "login": "rozaxe",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/not-supported",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-01-17T17:49:42",
+  "updatedAt": "2022-08-19T12:01:56",
+  "closedAt": "2019-01-19T16:43:36",
+  "commentCount": 3,
+  "reactionCount": 0
+}

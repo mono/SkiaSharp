@@ -1,0 +1,22 @@
+{
+  "number": 2896,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Some fonts in the PDF output are embedded as Font Type 3 instead of TTF",
+  "body": "### Description\n\nRunning this sample https://github.com/mono/SkiaSharp/blob/master/samples/Gallery/Shared/Samples/CreatePdfSample.cs which creates a simple two pages PDF file, the created file (under Windows) has the Arial TTF font embedded as expected. Now, if the text is specified to use the Helvetica font, then the Helvetica TTF is not embedded but instead, Skia creates and embeds a custom Type3 font. This is not just for Helvetica font but for others as well. Not all fonts, but just someones... based on more tests, it seems that if the ttf font file contains \u0022TrueType Outlines\u0022 only then it is converted to Type3 font, but if the ttf file also contains \u0022OpenType Layout\u0022 then it is embedded as TTF.\r\nThe only related issue we have found in the Skia project is this one https://issues.skia.org/issues/40031251\r\nIs correct to state that any TTF files with \u0022TrueType Outlines\u0022 only will never be embedded but converted to Type3 in the output PDF? Or is there any settings to bypass that?\n\n### Code\n\nUsing this sample https://github.com/mono/SkiaSharp/blob/master/samples/Gallery/Shared/Samples/CreatePdfSample.cs just add the following setting to any TTF file that is \u0022TrueType Outlines\u0022 only like \u0022Helvetica\u0022\r\n\r\n\u0060\u0060\u0060cs\r\nusing var paint = new SKPaint\r\n{\r\n    Typeface = SKTypeface.FromFamilyName(\u0022Helvetica\u0022),\r\n    TextSize = 64.0f,\r\n    IsAntialias = true,\r\n    Color = 0xFF9CAFB7,\r\n    IsStroke = true,\r\n    StrokeWidth = 3,\r\n    TextAlign = SKTextAlign.Center\r\n};\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "neodynamic",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-06-11T13:52:59",
+  "updatedAt": "2024-06-11T13:52:59",
+  "commentCount": 0,
+  "reactionCount": 0
+}

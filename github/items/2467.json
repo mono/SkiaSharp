@@ -1,0 +1,34 @@
+{
+  "number": 2467,
+  "type": "pr",
+  "state": "closed",
+  "title": "Improve performance of hex string parsing in SKColor",
+  "body": "**Description of Change**\r\n\r\nImprove performance of hex string parsing in SKColor using spans when available and with fewer allocated strings when spans are not supported.\r\n\r\n### Benchmark\r\n- **ParseOld** is the current implementation for parsing hex strings to SKColor.\r\n- **ParseImproved** is the improved parsing logic for platforms/frameworks that don\u0027t support spans\r\n- **ParseSpan** is the new parsing logic using spans to avoid allocating strings\r\n\u0060\u0060\u0060\r\n|        Method |                  Job |              Runtime |          Mean |      Error |     StdDev | Ratio | RatioSD |  Gen 0 | Allocated |\r\n|-------------- |--------------------- |--------------------- |--------------:|-----------:|-----------:|------:|--------:|-------:|----------:|\r\n|      ParseOld |             .NET 6.0 |             .NET 6.0 | 1,663.7469 ns | 32.9390 ns | 43.9727 ns |  1.00 |    0.00 | 1.8501 |   3,872 B |\r\n| ParseImproved |             .NET 6.0 |             .NET 6.0 |   833.2502 ns | 16.1750 ns | 15.1301 ns |  0.50 |    0.02 | 0.5655 |   1,184 B |\r\n|     ParseSpan |             .NET 6.0 |             .NET 6.0 |   507.7845 ns |  3.4736 ns |  3.2492 ns |  0.31 |    0.01 |      - |         - |\r\n|               |                      |                      |               |            |            |       |         |        |           |\r\n|      ParseOld |        .NET Core 3.1 |        .NET Core 3.1 | 1,981.3356 ns | 18.0860 ns | 16.0328 ns |  1.00 |    0.00 | 1.8501 |   3,872 B |\r\n| ParseImproved |        .NET Core 3.1 |        .NET Core 3.1 | 1,172.5769 ns | 23.1321 ns | 31.6635 ns |  0.60 |    0.02 | 0.5646 |   1,184 B |\r\n|     ParseSpan |        .NET Core 3.1 |        .NET Core 3.1 |   786.5793 ns |  2.1876 ns |  1.8267 ns |  0.40 |    0.00 |      - |         - |\r\n|               |                      |                      |               |            |            |       |         |        |           |\r\n|      ParseOld | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 4,420.4635 ns | 26.6690 ns | 24.9462 ns | 1.000 |    0.00 | 2.1973 |   4,622 B |\r\n| ParseImproved | .NET Framework 4.7.2 | .NET Framework 4.7.2 | 3,542.1632 ns | 23.6055 ns | 22.0806 ns | 0.801 |    0.01 | 0.6943 |   1,460 B |\r\n\u0060\u0060\u0060\r\n\r\nExisting tests for parsing hex strings cover the changes of this PR.\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "jwikberg",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.4",
+  "createdAt": "2023-05-25T15:01:16",
+  "updatedAt": "2023-08-28T12:56:53",
+  "closedAt": "2023-06-19T08:38:51",
+  "commentCount": 3,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "improve-skcolor-parse",
+  "additions": 60,
+  "deletions": 9,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "DISMISSED",
+      "submittedAt": "2023-06-14T10:29:48"
+    }
+  ]
+}

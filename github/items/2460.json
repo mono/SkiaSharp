@@ -1,0 +1,27 @@
+{
+  "number": 2460,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] DrawText with Span\u003C\u003E so we don\u0027t need to GC.",
+  "body": "Be able to draw from the stack via Span. This would result in no extra string allocates on my end, just an internal copy for that string in the stack. I did a heap trace and found I was creating so many new strings per second, and I realized oh yeah, I\u0027m creating a new string each time.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\n\u0060\u0060\u0060csharp\r\nReadOnlySpan\u003Cchar\u003E fpsText = $\u0022{fps}fps\u0022;\r\nDrawText(fpsText, 0, 0, font, paint);\r\n\u0060\u0060\u0060\r\n\r\nBeing able to \u0060DrawText\u0060 like that would be nice.\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nI could cache the fpsText, but it may wildly change on some other systems and need up to MAXFPS strings.\r\n\r\n**Additional context**\r\n\r\nToo much GC\u0027s result in large hiccups, it\u0027d be nice to focus on reducing some of these bottlenecks to result in a smooth experience.\r\n",
+  "author": {
+    "login": "cyraid",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-05-14T12:54:35",
+  "updatedAt": "2023-08-13T12:00:30",
+  "closedAt": "2023-06-26T22:00:50",
+  "commentCount": 8,
+  "reactionCount": 3
+}

@@ -1,0 +1,23 @@
+{
+  "number": 762,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to create typeface for univers-45-light font",
+  "body": "**Description**\r\n\r\nI tried to create font face by passing the fontfamily name \u0022Univers 45 Light\u0022 but skiasharp is creating some other typeface instead of \u0022Univers 45 Light\u0022.\r\n\r\n**Code**\r\n\r\nSKTypeface typeface = SKTypeface.FromFamilyName(\u0022Univers 45 Light\u0022, SKTypefaceStyle.Normal)\r\n\r\n**Expected Behavior**\r\n\r\nTypeface should be created for \u0022Univers 45 Light\u0022.\r\n\r\n**Actual Behavior**\r\n\r\nTypeface should be created for \u0022Segoe UI\u0022.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.59.3\r\n- IDE:  Visual Studio\r\n\r\nAdditional Info.\r\n\r\nI compared the behavior of GetFontFamilies() API in the SKFontManager with the FontFamily.Families property in GDI\u002B.\r\n\r\nPlease find the fonts list returned by both GDI\u002B and SkiaSharp in same machine.\r\n[Skia_getfonts.txt](https://github.com/mono/SkiaSharp/files/2768577/Skia_getfonts.txt)\r\n[GDI_getfonts.txt](https://github.com/mono/SkiaSharp/files/2768578/GDI_getfonts.txt)\r\n\r\nOn further analyzing I found that \u0022Univers 45 Light\u0022 is available as \u0022Univers 45\u0022.  \r\n\r\nIs there a way to get typeface by passing \u0022Univers 45 Light\u0022 just like GDI\u002B?\r\n\r\nFont installed in system.\r\n[univers-45-light.zip](https://github.com/mono/SkiaSharp/files/2768575/univers-45-light.zip)\r\n",
+  "author": {
+    "login": "selvarathinamm",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-01-17T12:27:16",
+  "updatedAt": "2022-08-19T12:01:57",
+  "closedAt": "2019-01-18T03:53:28",
+  "commentCount": 8,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1482,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Am I using the correct FillType for the SKPath?",
+  "body": "Hello all,\r\n\r\nI am currently creating a 2D Library which uses SkiaSharp. It generates an interactive control in which you can click, drag and select several shapes. While the simplest shape is a line, one can also create circles. Their rotation (i.e. mathematically negative -1 or positive 1). Positive circles add area to the path, while negative circles remove area.\r\n\r\nThe drawing of the shapes works just fine. The hatching of the path, however, doesnt work that well. \r\n\r\n\r\nIn this example there is just a square with a hole in it. As seen, the path gets hatched even though the circles rotation is set to -1 (which should create a hole in the path).\r\n\r\n![grafik](https://user-images.githubusercontent.com/13386367/91457952-41c5d500-e885-11ea-9ba7-ae095b36de26.png)\r\n\r\n\r\nOnce I translate the circles center a slight bit off the 0 and 90\u00B0 angles, it suddenly works.\r\n![grafik](https://user-images.githubusercontent.com/13386367/91458048-5f933a00-e885-11ea-9561-fdd5c005915a.png)\r\n\r\n\r\nFor the filling of the path I simply use:\r\n\u0060\u0060\u0060\r\n     Canvas.Save();\r\n     Canvas.ClipPath(path);\r\n     Canvas.DrawRect(path.Bounds, hatchPaint);\r\n     Canvas.Restore();\r\n\u0060\u0060\u0060\r\n\r\nTo create the \u0060path\u0060 I iterate through all lines, using \u0060path.LineTo(destination)\u0060, while for circles I use \u0060path.ArcTo( , , , false)\u0060.\r\n\r\nIs there anything I am missing? Thanks for your help, if more information is needed, I\u0027m happy to provide it.\r\nThanks in advance!",
+  "author": {
+    "login": "leonbohmann",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-27T14:54:39",
+  "updatedAt": "2022-08-19T03:01:57",
+  "closedAt": "2020-09-01T22:18:00",
+  "commentCount": 5,
+  "reactionCount": 0
+}

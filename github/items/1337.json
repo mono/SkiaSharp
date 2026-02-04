@@ -1,0 +1,17 @@
+{
+  "number": 1337,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] libSkiaSharp.so does not enforce full RELRO ",
+  "body": "Hi, \r\n\r\nI have an issue that is not a bug but might be security issue. Hopefully this is correct place to report it (Microsoft Security center forwarded me to lib makers).\r\nThis is quick steps to reproduce:\r\n1. Create new Xamarin.Forms project (any XF, reproduced on 3.3 and on 4.5\u002B)\r\n2. Add Skia Sharp (1.68)\r\n3. Build Android application (locally or in AppCenter) with Xamarin.Android 9.2 (same on other xam.andr versions), both with bundled or without bundling assemblies\r\n4. Test in Ostorlab.co\r\n\r\nAPK that was built contains libSkiaSharp.so. When tested in ostorlab, it returns that libSkiaSharp.so does not enforce full RELRO. This issue is very important for my clients, since it represents security issue on pen test report.\r\n\r\n![image](https://user-images.githubusercontent.com/50732501/84742416-af65a300-afb0-11ea-86a1-4f3412cdb321.png)\r\n\r\nCan you please look into this issue? Is this really security problem? If not, can you please provide me with answer why not. \r\n\r\nThank you,\r\nLamija\r\n",
+  "author": {
+    "login": "LamijaV",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-16T07:12:16",
+  "updatedAt": "2020-07-06T14:18:52",
+  "commentCount": 9,
+  "reactionCount": 0
+}

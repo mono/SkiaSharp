@@ -1,0 +1,18 @@
+{
+  "number": 928,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to allocate pixels for the bitmap. On linux server",
+  "body": "hi i have the same problem, i dowload the from libSkiaSharp.so https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Linux/79/Azure/processDownloadRequest/ArtifactsFor-79/3c31bd5c5701a6eb3651110b4708bb1d0492c7fc/output/native/linux/x64/libSkiaSharp.so.\r\n\r\nMy project is a net core 2.1 project, I include the library into my project with property \u0022copy always\u0022 and alse in my startup.cs, i put context.LoadUnmanagedLibrary(Path.Combine(Directory.GetCurrentDirectory(), \u0022libSkiaSharp.so\u0022)) and i got error:\r\n\r\n\u0060\u0060\u0060\r\nUnable to allocate pixels for the bitmap.\r\n  at SkiaSharp.SKBitmap..ctor(SKImageInfo info, Int32 rowBytes)\r\n  at SkiaSharp.SKBitmap..ctor(SKImageInfo info) \r\n  at SkiaSharp.SKBitmap.Decode(SKCodec codec, SKImageInfo bitmapInfo) \r\n  at SkiaSharp.SKBitmap.Decode(SKCodec codec) \r\n  at SkiaSharp.SKBitmap.Decode(Stream stream)\r\n\u0060\u0060\u0060\r\n\r\nMy deploy machine is an amazon with OS CentOS Linux 7 (Core). I installed libgdiplus and also i install mono-complete.\r\n\r\nI appreciate your help if i need install someting else. I dont know what else i need to install.",
+  "author": {
+    "login": "nelson-fm",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-08-12T14:09:24",
+  "updatedAt": "2022-08-19T09:02:37",
+  "closedAt": "2020-06-10T02:23:55",
+  "commentCount": 1,
+  "reactionCount": 0
+}

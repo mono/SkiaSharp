@@ -1,0 +1,17 @@
+{
+  "number": 1501,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Draw a bitmap decoded from SKCodec performance is poor on UWP",
+  "body": "**Description**\r\n\r\n\u003C!-- a general description goes here --\u003E\r\nDraw a bitmap decoded from \u0060\u0060\u0060SKCodec\u0060\u0060\u0060 performance is poor on UWP, it is much slower than .net core and .net framework.\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\u0060\u0060\u0060C#\r\nvar file = await StorageFile.GetFileFromApplicationUriAsync(new Uri(\u0022ms-appx:///test.png\u0022));\r\nusing (var stream = await file.OpenStreamForReadAsync())\r\n{\r\n    using (var bitmap = new SKBitmap(960, 720))\r\n    {\r\n        using (var canvas = new SKCanvas(bitmap))\r\n        {\r\n            using (var codec = SKCodec.Create(stream))\r\n            {\r\n                using (var decodeBitmap = new SKBitmap(codec.Info))\r\n                {\r\n                    var pointer = decodeBitmap.GetPixels();\r\n                    codec.GetPixels(decodeBitmap.Info, pointer);\r\n\r\n                    var dest = new SKRect(0, 0, 960, 720);\r\n\r\n                    var stopwatch = new Stopwatch();\r\n                    stopwatch.Start();\r\n\r\n                    canvas.DrawBitmap(decodeBitmap, dest);\r\n\r\n                    stopwatch.Stop();\r\n\r\n                    await new MessageDialog($\u0022cost {stopwatch.ElapsedMilliseconds} ms\u0022).ShowAsync();\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\nThe performance should be equals to run on .net core or .net framework.\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\nIt cost 200~300 ms on my computer and the .net core and .net framework version, only takes \u003C10 ms.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- the version of SkiaSharp that has the issue --\u003E2.80.2\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E2.80.2\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003EVisual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E18362\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003EWindows 10\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\nhttps://github.com/h82258652/SKCodecUwpPerformanceRepo",
+  "author": {
+    "login": "h82258652",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-16T13:42:04",
+  "updatedAt": "2020-09-16T14:08:10",
+  "commentCount": 1,
+  "reactionCount": 0
+}

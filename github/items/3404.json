@@ -1,0 +1,51 @@
+{
+  "number": 3404,
+  "type": "pr",
+  "state": "closed",
+  "title": "Enable BufferSecurityCheck for native DLLs to resolve BinSkim BA2007",
+  "body": "This change enables the /GS (Buffer Security Check) compiler flag for three native libraries to resolve BinSkim error BA2007:\r\n\r\n- libHarfBuzzSharp.dll: Added BufferSecurityCheck=true to all configurations in the vcxproj file, including creating the missing Debug|ARM64 ItemDefinitionGroup\r\n- libEGL.dll and libGLESv2.dll: Added /GS flag to extra_cflags in the ANGLE GN build configuration\r\n\r\nThe /GS flag enables compile-time buffer overrun detection, which is an important security feature that helps prevent stack-based buffer overflow attacks.\r\n\r\n## Why\r\n\r\nThe \u0060/GS\u0060 flag enables compile-time buffer overrun detection, which is an important security feature that helps prevent stack-based buffer overflow attacks. This resolves the BinSkim BA2007 security compliance error.\r\n\r\n## Testing\r\n\r\nAfter rebuilding the native libraries with these changes, they should pass BinSkim analysis for the BA2007 check.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes ~20 BinSkim bugs in AzDO. \r\n- \r\n**API Changes**\r\n\r\nNone.\r\n\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "Aguilex",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libHarfBuzzSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-11-04T14:44:53",
+  "updatedAt": "2025-11-04T17:19:41",
+  "closedAt": "2025-11-04T17:19:38",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "fix/binskim-ba2007-buffer-security-check",
+  "additions": 7,
+  "deletions": 1,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2025-11-04T14:57:56"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2025-11-04T15:13:11"
+    }
+  ]
+}

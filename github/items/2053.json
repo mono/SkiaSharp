@@ -1,0 +1,17 @@
+{
+  "number": 2053,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Implement SkiaSharp on Azure Function V3 without publishing.",
+  "body": "I\u0027m currently developing a Azure funtion that generates a PDF file using QuestPDF and SkiaSharp.\r\nBut whenever I try to execute the function without any assembly reference error I still get this issue:\r\n\r\n\u003E SkiaSharp.SKAbstractManagedWStream\u0027 threw an exception\r\n\u003E    at SkiaSharp.SKAbstractManagedWStream..ctor(Boolean owns)\r\n\u003E    at SkiaSharp.SKDocument.CreatePdf(Stream stream, SKDocumentPdfMetadata metadata)\r\n\u003E    at QuestPDF.Drawing.DocumentGenerator.GeneratePdf(Stream stream, IDocument document)\r\n\u003E    at QuestPDF.Fluent.GenerateExtensions.GeneratePdf(IDocument document, Stream stream)\r\n\r\nI wonder, **is there any way to implement SkiaSharp with QuestPDF on a Azure Function V3 on netcore3.1 without using the publish function from VS?**\r\n\r\nI used the .proj file on the function with no positive result.\r\nWhen I try to execute the same code on Visual Studio it does work with no problem at all.\r\n\r\nI don\u0027t get any assembly issues but I do get that exception.\r\n\r\nAny help is appreciated, thanks!!\r\n\r\n[EDIT]: In case that any code is needed I can share some of it!",
+  "author": {
+    "login": "brandonvqz",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-05-20T22:51:47",
+  "updatedAt": "2022-05-21T07:02:00",
+  "commentCount": 2,
+  "reactionCount": 0
+}

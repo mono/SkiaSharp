@@ -1,0 +1,24 @@
+{
+  "number": 245,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to do ExtractSubset",
+  "body": "I\u0027m using a modified version id thumb generator that perform a crop to square using extract subst:\r\nI\u0027ve a Null Exception using the last version: 1.56.1.\r\nThe problem is when I use the **bitmap**, to do the resize.\r\n\r\n       \r\n\u0060\u0060\u0060csharp\r\npublic static void SquareResize(Stream inputStream, int size, Stream outputStream)\r\n{\r\n    using (inputStream)\r\n    {\r\n        using (var managedStream = new SKManagedStream(inputStream))\r\n        {\r\n            using (var original = SKBitmap.Decode(managedStream))\r\n            {\r\n                int x = 0, y = 0, len = 0;\r\n\r\n                if (original.Width \u003E original.Height)\r\n                {\r\n                    x = (original.Width - original.Height) / 2;\r\n                    len = original.Height;\r\n                }\r\n                else\r\n                {\r\n                    y = (original.Height - original.Width) / 2;\r\n                    len = original.Width;\r\n                }\r\n                using (var bitmap = new SKBitmap(new SKImageInfo(len, len)))\r\n                {\r\n                    var ok = original.ExtractSubset(bitmap, SKRectI.Create(x, y, len, len));\r\n                    try\r\n                    {\r\n                        using (var resized = bitmap.Resize(new SKImageInfo(size, size), SKBitmapResizeMethod.Lanczos3))\r\n                        {\r\n                            if (resized == null)\r\n                                return;\r\n\r\n                            using (var image = SKImage.FromBitmap(resized))\r\n                            {\r\n                                using (outputStream)\r\n                                {\r\n                                    image.Encode(SKImageEncodeFormat.Jpeg, Quality).SaveTo(outputStream);\r\n                                }\r\n                            }\r\n                        }\r\n                    }\r\n                    catch(Exception e)\r\n                    {\r\n                        Console.WriteLine(e);\r\n                        throw;\r\n                    }\r\n                }\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAny hint?\r\nThanks",
+  "author": {
+    "login": "payoff",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.56.2",
+  "createdAt": "2017-02-13T19:52:46",
+  "updatedAt": "2022-08-19T21:02:36",
+  "closedAt": "2017-02-17T04:10:03",
+  "commentCount": 1,
+  "reactionCount": 0
+}

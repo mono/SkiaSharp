@@ -1,0 +1,17 @@
+{
+  "number": 2260,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] PDF File Size",
+  "body": "**Description**\r\n\r\nGenerating PDF with multiple calls to draw the same bitmap results in larger file size than previous versions.\r\n\r\n**Code**\r\n\r\nusing SkiaSharp;\r\n\r\nnamespace PDFTest\r\n{\r\n    public class Program\r\n    {\r\n        public static void Main()\r\n        {\r\n            using (var doc = SKDocument.CreatePdf(\u0022TestOut.pdf\u0022, 72.0f)) \r\n            {\r\n                using (var pdf = doc.BeginPage(10, 10))\r\n                {\r\n                    using (SKPaint paint = new SKPaint())\r\n                    {\r\n                        using (FileStream fs = File.Open(\u0022TestIn.png\u0022, FileMode.Open))\r\n                        {\r\n                            using (var stream = new SKManagedStream(fs))\r\n                            {\r\n                                using (SKBitmap bitmap = SKBitmap.Decode(stream))\r\n                                {\r\n                                    var rect = SKRect.Create(new SKPoint(0, 0), new SKSize(10, 10));\r\n\r\n                                    // TODO PDF size baloons with more iterations starting in version 2.88.0 and forward\r\n                                    // prior version stayed about the same\r\n                                    for (int i = 0; i \u003C 10; i\u002B\u002B)\r\n                                    {\r\n                                        pdf.DrawBitmap(bitmap, rect, paint);\r\n                                    }\r\n                                }\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n\r\n            }\r\n        }\r\n    }\r\n}\r\n\r\n**Expected Behavior**\r\n\r\nPrior to version 2.88.0 only a very small increase in output PDF size occurred when drawing the same bitmap resource multiple times\r\n\r\n**Actual Behavior**\r\n\r\nIt appears that the PDF may be serializing the image multiple times instead of using the existing serialized image.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0\r\n- Last known good version:  2.80.4\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: All\r\n- Target Devices:   PCs\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "CodeHill2020",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-09-24T20:28:24",
+  "updatedAt": "2022-09-24T20:29:14",
+  "commentCount": 0,
+  "reactionCount": 0
+}

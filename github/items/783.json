@@ -1,0 +1,23 @@
+{
+  "number": 783,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Loading difficulties for xplat pwsh modules",
+  "body": "Having an issue reliably loading native libraries from Skia within a powershell module on non-Windows platforms.\r\n\r\nThe error we\u0027re getting, predictably, is:\r\n\u0060\u0060\u0060\r\nMessage        : Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help\r\n                 diagnose loading problems, consider setting the DYLD_PRINT_LIBRARIES environment variable:\r\n                 dlopen(liblibSkiaSharp, 1): image not found\r\nTypeName       :\r\nData           : {}\r\nInnerException :\r\nTargetSite     : IntPtr sk_fontmgr_ref_default()\r\nStackTrace     :    at SkiaSharp.SkiaApi.sk_fontmgr_ref_default()\r\n                    at SkiaSharp.SKFontManager.get_Default()\r\n                    at PSWordCloud.WCUtils..cctor() in\r\n                 /Users/****/Documents/Git/PSWordCloud/Cmdlet/src/WCUtils.cs:line 153\r\nHelpLink       :\r\nSource         : SkiaSharp\r\nHResult        : -2146233052\r\n\u0060\u0060\u0060\r\n\r\nSo it seems as though we can work around this just by adding the right folder to the referenced environment variable... however, this doesn\u0027t seem to _work_. Adding the folders containing the native libs to the variable doesn\u0027t let them load.\r\n\r\nFor PowerShell this is a _particular_ problem, because I can\u0027t ship a version of my module for _every_ OS; I have to ship everything together. Well, I suppose I _can_, but that reduces discoverability. \uD83D\uDE41 \r\n\r\nIs there a way we can build Skia to look for the native libraries under different _filenames_? Currently, several of the files that get dropped in \u0060\u003COS\u003E/native\u0060 have identical names, making it impossible for me to put them _all_ in the same folder as the main SkiaSharp.dll. If we could give them discrete names and still have Skia recognise and load the correct one, it\u0027d neatly solve this problem.\r\n\r\n![image](https://user-images.githubusercontent.com/32407840/52502384-9e34a700-2bb0-11e9-84e3-94fbd8867d6f.png)\r\n\r\nThat\u0027s what the structure looks like after a standard \u0060dotnet publish\u0060, but I\u0027m not sure how to go about making sure each native library is accessible on a given platform that may be running pwsh.\r\n",
+  "author": {
+    "login": "vexx32",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-02-08T19:49:15",
+  "updatedAt": "2022-08-19T12:01:51",
+  "closedAt": "2020-04-25T17:48:28",
+  "commentCount": 6,
+  "reactionCount": 0
+}

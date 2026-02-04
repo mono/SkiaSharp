@@ -1,0 +1,18 @@
+{
+  "number": 2526,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SkiaSharp encode to byteArray result is not the same as System.Drawing.Image.Save",
+  "body": "I am now trying to upgrade my project from .net framework 4.7.2 to .net Standard 2.0. Since my project also need to run in Linux, for image processing (ex. Bitmap), I choose SkiaSharp which was also recommended in MSDN.\r\n\r\nMy question now is that when I trying to save bmp as different format (ex. Png or Jpeg) and get byte array, byte array result is different.\r\n\r\nSince compatibility issue, is it possible that the output byte array can be the same?\r\n\r\n**Code used Syste.Drawing**\r\n\r\n\u0060\u0060\u0060cs\r\n....\r\nvar encoder = GetEncoder(imageFormat);\r\nif (encoder == null)\r\n{\r\n    return Array.Empty\u003Cbyte\u003E();\r\n}\r\n\r\nvar myEncoder = Encoder.Quality;\r\nvar myEncoderParameters = new EncoderParameters(1);\r\nvar myEncoderParameter = new EncoderParameter(myEncoder, 50L);\r\nmyEncoderParameters.Param[0] = myEncoderParameter;\r\n\r\nbyte[] byteArray;\r\nusing (var stream = new MemoryStream())\r\n{\r\n    bmp.Save(stream, encoder, myEncoderParameters);\r\n    byteArray = stream.ToArray();\r\n}\r\n....\r\n\r\npublic ImageCodecInfo GetEncoder(ImageFormat format)\r\n{\r\n    try\r\n    {\r\n        var imageDecoders = ImageCodecInfo.GetImageDecoders();\r\n\r\n        return imageDecoders.FirstOrDefault(codec =\u003E codec.FormatID == format.Guid);\r\n    }\r\n    catch (Exception)\r\n    {\r\n        return null;\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Code used SkiaSharp**\r\n\u0060\u0060\u0060cs\r\npublic byte[] BmpToByteArrayByImageFormat(SKBitmap bmp, SKEncodedImageFormat imageFormat)\r\n{\r\n    try\r\n    {\r\n        var data = bmp.Encode(imageFormat, 50);\r\n\r\n        return data.ToArray();\r\n    }\r\n    catch (Exception)\r\n    {\r\n        return Array.Empty\u003Cbyte\u003E();\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "WillisLiou",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-07-18T09:48:59",
+  "updatedAt": "2023-08-19T20:44:44",
+  "closedAt": "2023-08-19T20:44:44",
+  "commentCount": 1,
+  "reactionCount": 0
+}

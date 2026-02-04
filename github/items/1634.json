@@ -1,0 +1,28 @@
+{
+  "number": 1634,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add support for SKXamlCanvas on Uno Platform SkiaSharp backends",
+  "body": "**Description of Change**\r\n\r\nAdd support for \u0060SKXamlCanvas\u0060 on Uno Platform SkiaSharp backends, by using software rendering onto an off-screen surface.\r\n\r\nWhile the \u0060SKSwapChainPanel\u0060 is present (as it is part of the reference API shared with WebAssembly), it is currently not implemented.\r\n\r\nIn order to support this change, the \u0060SKXamlCanvas\u0060 which was incorrectly inheriting from \u0060FrameworkElement\u0060, is now inheriting from \u0060Canvas\u0060, which exposes the \u0060Background\u0060 property. **It is a breaking change**, but all the properties of \u0060FrameworkElement\u0060 are also present on \u0060Canvas\u0060, which will not break existing code.\r\n\r\nNote that non-breaking fixes are needed in Uno for this change to work properly (https://github.com/unoplatform/uno/pull/5266), those will be included as part of Uno 3.5.x and 3.6.\r\n\r\n**API Changes**\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\nList all API changes here (or just put None), example:\r\n--\u003E\r\nChanged:\r\n\r\n - \u0060SKXamlCanvas : FrameworkElement\u0060 -\u003E \u0060SKXamlCanvas : Canvas\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "jeromelaban",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-02-17T22:56:14",
+  "updatedAt": "2021-06-08T13:32:00",
+  "closedAt": "2021-06-08T13:31:59",
+  "commentCount": 5,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "dev/jela/skia-on-skia",
+  "additions": 892,
+  "deletions": 54,
+  "changedFiles": 51,
+  "commits": 14,
+  "reviews": []
+}

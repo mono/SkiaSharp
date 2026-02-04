@@ -1,0 +1,17 @@
+{
+  "number": 1161,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] SKImageFilter detailed documentation?",
+  "body": "I\u0027m trying to get a deep understanding of Skia\u0027s powerful image filter pipeline, but I\u0027m having some trouble.\r\n\r\nI read the nice [SkiaSharp image filter introduction](https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/effects/image-filters), but I miss many details.\r\n\r\nFor example, what is coordinate system used in filters? The [Skia source code](https://github.com/google/skia/blob/master/include/core/SkImageFilter.h) has the following comment:\r\n\r\n\u0060\u0060\u0060C\u002B\u002B\r\n/**\r\n *  Base class for image filters. If one is installed in the paint, then all drawing occurs as\r\n *  usual, but it is as if the drawing happened into an offscreen (before the xfermode is applied).\r\n *  This offscreen bitmap will then be handed to the imagefilter, who in turn creates a new bitmap\r\n *  which is what will finally be drawn to the device (using the original xfermode).\r\n *\r\n *  The local space of image filters matches the local space of the drawn geometry. For instance if\r\n *  there is rotation on the canvas, the blur will be computed along those rotated axes and not in\r\n *  the device space. In order to achieve this result, the actual drawing of the geometry may happen\r\n *  in an unrotated coordinate system so that the filtered image can be computed more easily, and\r\n *  then it will be post transformed to match what would have been produced if the geometry were\r\n *  drawn with the total canvas matrix to begin with.\r\n */\r\n\u0060\u0060\u0060\r\n\r\nThis helps a bit, but the exact definition of the \u0022drawn geometry\u0022 is still obscure. \r\n\r\nFor example, when drawing a cropped image, the \u0022drawn geometry\u0022 seems to be the cropped image, not the original image before cropping. \r\n\r\nAnd indeed, the canvas transformation (\u0060device space\u0060) itself seems to be ignored.\r\n\r\nOther behavior baffles me, for example, the following code fills _the whole canvas_ with an image, not just a single pixel:\r\n\r\n\u0060\u0060\u0060\r\nvar paint = new SKPaint\r\n{\r\n\tColor = 0xFFFFFFFF,\r\n\tStyle = SKPaintStyle.Fill,\r\n\tImageFilter = SKImageFilter.CreateImage(image)\r\n};\r\n\r\ncanvas.DrawRect(0, 0, 1, 1, paint);\r\n\u0060\u0060\u0060\r\n\r\nFurther exploration will most likely raise my more questions ;-) \r\n\r\nI think a great tool to learn Skia image filters would be a graphical pipeline with nodes (e.g. a very simple version of [Blackmagic Design Fusion VFX](https://www.blackmagicdesign.com/products/fusion/)), side-by-side with the source code. Maybe such a tool already exists? \r\n\r\nIn general, any documentation about Skia image filters would be welcome \uD83D\uDE03 \r\n\r\nThanks,\r\nPeter\r\n\r\nPS: Maybe it\u0027s better to ask these questions in the Google Skia mailing list?\r\n\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-03T09:43:06",
+  "updatedAt": "2020-03-03T13:52:10",
+  "commentCount": 5,
+  "reactionCount": 0
+}

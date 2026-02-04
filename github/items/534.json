@@ -1,0 +1,19 @@
+{
+  "number": 534,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKWidget for GTK# (on Linux) is rendering kind of slow",
+  "body": "### Description\r\n\r\nThis is a continuation of #462 .  That ticket\u0027s main issue has been solved, but it\u0027s been reported that the rendering of the \u0060SKWidget\u0060, on such events such as a window/widget resize are slow and produce flickering.  See for example:\r\n![skiasharp-not-so-smooth](https://user-images.githubusercontent.com/4551425/40593046-89891d68-61f3-11e8-8973-80437eceb815.gif)\r\n\r\n(This is using SkiaSharp 1.60.1 off of NuGet, and the linux \u0060.so\u0060 files from this project\u0027s release page).\r\n\r\n### Code\r\n\r\nThe code used is the same one as here: https://github.com/mono/SkiaSharp/blob/master/samples/Basic/Gtk/SkiaSharpSample/MainWindow.cs\r\n\r\nThe only different that I applied to (in that widget) is in the GUI designer, I set the Box Layout child properties of the \u0060SKWidget\u0060 to \u0060auto fill=false, expanding=true, fill=true\u0060.\r\n\r\n### Expected Behavior\r\n\r\nShould be MUCH smoother, such as when using Cairo for rendering.  In fact, Skia typically renders faster than Cairo.\r\n\r\n### Actual Behavior\r\n\r\n[see above GIF]",
+  "author": {
+    "login": "define-private-public",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.60.2",
+  "createdAt": "2018-05-28T14:47:33",
+  "updatedAt": "2022-08-19T15:02:26",
+  "closedAt": "2018-06-14T03:49:58",
+  "commentCount": 12,
+  "reactionCount": 0
+}

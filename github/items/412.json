@@ -1,0 +1,18 @@
+{
+  "number": 412,
+  "type": "issue",
+  "state": "closed",
+  "title": "System.AccessViolationException: \u0027Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0027",
+  "body": "The exception:\r\n\u0060\u0060\u0060\r\nSystem.AccessViolationException: \u0027Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0027\r\n\u0060\u0060\u0060\r\n\r\nLike many others here, I have an ASP.NET Core MVC controller action that generates an image. The last few lines of this action are:\r\n\u0060\u0060\u0060c#\r\nusing (SKImage snapshot = surface.Snapshot())\r\nusing (SKData data = snapshot.Encode())\r\n{\r\n    HttpContext.Response.ContentLength = data.Size;\r\n    return File(data.AsStream(), \u0022image/png\u0022);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe issue is that this sometimes leads to memory corruption and crashes the entire server.\r\n\r\nI don\u0027t have a 100% sure way of reproducing the issue, but it appears the issue goes away when the return statement is changed to use an array instead of SkiaSharp\u0027s stream \u0060data.AsStream()\u0060 -\u003E \u0060data.ToArray()\u0060.\r\n\r\nThis may be because of some backend implementation of MVC that uses async to read\u002Bwrite streams. I\u0027m using the latest version of SkiaSharp 1.59.2.\r\n\r\n**EDIT**: From what I understand reading other issues here, one possible reason for this might be that the \u0060SKData\u0060 object is being disposed before the stream is fully read, leading to bad memory being accessed. But this feels like something SkiaSharp should handle internally.",
+  "author": {
+    "login": "shravan2x",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-12-19T06:19:18",
+  "updatedAt": "2022-08-19T18:01:59",
+  "closedAt": "2017-12-19T12:54:54",
+  "commentCount": 4,
+  "reactionCount": 0
+}

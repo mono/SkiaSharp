@@ -1,0 +1,34 @@
+{
+  "number": 3386,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Unable to load on Azure Container app with Aspire",
+  "body": "### Description\n\nWe are deploying a set of WebAPIs using .NET Aspire. This creates a Linux based Container App. While everything works locally it does not work when deployed in this way.\n\n### Code\n\n\u0060\u0060\u0060xaml\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 /\u003E\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 /\u003E\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nImages should be able to generate.\n\n### Actual Behavior\n\nImages fail to generate\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\n- (Linux) Azure Container App - deployed with .NET Aspire\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nstdout F fail: Microsoft.AspNetCore.Server.Kestrel[13]\nstdout F       Connection id \u00220HNGDGHEEMT83\u0022, Request id \u00220HNGDGHEEMT83:00000004\u0022: An unhandled exception was thrown by the application.\nstdout F       System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception.\nstdout F        ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider using a tool like strace. If you\u0027re using glibc, consider setting the LD_DEBUG environment variable: \nstdout F       libfontconfig.so.1: cannot open shared object file: No such file or directory\nstdout F       /usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.10/libSkiaSharp.so: cannot open shared object file: No such file or directory\nstdout F       /app/liblibSkiaSharp.so: cannot open shared object file: No such file or directory\nstdout F       /usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.10/liblibSkiaSharp.so: cannot open shared object file: No such file or directory\nstdout F       /app/libSkiaSharp: cannot open shared object file: No such file or directory\nstdout F       /usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.10/libSkiaSharp: cannot open shared object file: No such file or directory\nstdout F       /app/liblibSkiaSharp: cannot open shared object file: No such file or directory\nstdout F       /usr/share/dotnet/shared/Microsoft.NETCore.App/9.0.10/liblibSkiaSharp: cannot open shared object file: No such file or directory\nstdout F       \nstdout F          at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\nstdout F          at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\nstdout F          at SkiaSharp.SKAbstractManagedStream..cctor()\nstdout F          --- End of inner exception stack trace ---\nstdout F          at SkiaSharp.SKAbstractManagedStream..ctor(Boolean owns)\nstdout F          at SkiaSharp.SKManagedStream..ctor(Stream managedStream, Boolean disposeManagedStream)\nstdout F          at SkiaSharp.SKCodec.WrapManagedStream(Stream stream)\nstdout F          at SkiaSharp.SKCodec.Create(Stream stream, SKCodecResult\u0026 result)\nstdout F          at SkiaSharp.SKCodec.Create(Stream stream)\nstdout F          at SkiaSharp.SKBitmap.Decode(Stream stream)\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "dansiegel",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/compatibility",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-17T14:21:04",
+  "updatedAt": "2025-10-20T21:25:03",
+  "commentCount": 2,
+  "reactionCount": 0
+}

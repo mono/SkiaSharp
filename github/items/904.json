@@ -1,0 +1,45 @@
+{
+  "number": 904,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update HarfBuzz to v2.5.3",
+  "body": "**Description of Change**\r\n\r\nHarfBuzz is now updated to 2.5.3\r\nUnicodeFunctions are now customizable via delegates like FontFunctions\r\nSome overloads that except int as Unicode codepoint were removed for more consistency\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to issue #894 \r\n\r\n**API Changes**\r\n\r\nAdded: \r\n \r\n- \u0060UnicodeFunctions (UnicodeFunctions parent)\u0060\r\n- \u0060UnicodeFunctions UnicodeFunctions.Parent {get;}\u0060\r\n- \u0060uint UnicodeFunctions.GetMirroring (uint unicode)\u0060\r\n- \u0060bool UnicodeFunctions.TryCompose (uint a, uint b, out uint ab)\u0060\r\n- \u0060bool UnicodeFunctions.TryDecompose (uint ab, out uint a, out uint b) \u0060\r\n- \u0060voidUnicodeFunctions. SetCombiningClassDelegate (CombiningClassDelegate del, ReleaseDelegate destroy = null)\u0060\r\n- \u0060void UnicodeFunctions.SetGeneralCategoryDelegate (GeneralCategoryDelegate del, ReleaseDelegate destroy = null)\u0060\r\n- \u0060void UnicodeFunctions.SetMirroringDelegate (MirroringDelegate del, ReleaseDelegate destroy = null)\u0060\r\n- \u0060void UnicodeFunctions.SetScriptDelegate (ScriptDelegate del, ReleaseDelegate destroy = null)\u0060\r\n- \u0060void UnicodeFunctions.SetComposeDelegate (ComposeDelegate del, ReleaseDelegate destroy = null)\u0060\r\n- \u0060void UnicodeFunctions.SetDecomposeDelegate (DecomposeDelegate del, ReleaseDelegate destroy = null)\u0060\r\n\r\nChanged:\r\n\r\n - \u0060void FontFunctions.SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy) =\u003E void FontFunctions.SetHorizontalFontExtentsDelegate (FontExtentsDelegate del, ReleaseDelegate destroy = null)\u0060 etc.\r\n\r\nRemoved:\r\n- \u0060void FontFunctions.SetHorizontalFontExtentsDelegate (FontExtentsDelegate del)\u0060 etc.\r\n\r\n- \u0060UnicodeCombiningClass UnicodeFunctions.GetCombiningClass (int unicode)\u0060\r\n- \u0060UnicodeGeneralCategory UnicodeFunctions.GetGeneralCategory (int unicode)\u0060\r\n- \u0060Script UnicodeFunctions.GetScript (int unicode)\u0060\r\n\r\n\r\n**Behavioral Changes**\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "Gillibald",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-07-03T13:46:25",
+  "updatedAt": "2019-11-21T20:35:10",
+  "closedAt": "2019-07-13T05:33:15",
+  "commentCount": 12,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "harfbuzzUpdate",
+  "additions": 664,
+  "deletions": 414,
+  "changedFiles": 32,
+  "commits": 15,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-07-03T19:51:15"
+    },
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2019-07-03T20:48:17"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-07-13T03:56:16"
+    }
+  ]
+}

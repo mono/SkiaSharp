@@ -1,0 +1,28 @@
+{
+  "number": 1627,
+  "type": "pr",
+  "state": "closed",
+  "title": "[macOS] Add the arm64 build target",
+  "body": "**Description of Change**\r\n\r\nAdd the targets to build the arm64 architecture into the native binaries for macOS.\r\n\r\nInitial builds from local bits with x64 and arm64:\r\n - [libSkiaSharp.dylib.zip](https://github.com/mono/SkiaSharp/files/5962654/libSkiaSharp.dylib.zip)\r\n - [libHarfBuzzSharp.dylib.zip](https://github.com/mono/SkiaSharp/files/5962655/libHarfBuzzSharp.dylib.zip)\r\n\r\nUsing this with the existing 2.88.0 preview is just a matter of disabling the built in ones:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPropertyGroup\u003E\r\n  \u003CShouldIncludeNativeSkiaSharp\u003EFalse\u003C/ShouldIncludeNativeSkiaSharp\u003E\r\n\u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nThe 2.88.x packages are found on the preview feed: \u0060https://aka.ms/skiasharp-eap/index.json\u0060\r\n\r\n**Bugs Fixed**\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n- Related to  #1575 \r\n\r\n**API Changes**\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n \r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2021-02-11T01:29:08",
+  "updatedAt": "2022-05-22T09:38:40",
+  "closedAt": "2021-03-13T04:03:49",
+  "commentCount": 0,
+  "reactionCount": 4,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/macos-arm64",
+  "additions": 12,
+  "deletions": 4,
+  "changedFiles": 1,
+  "commits": 3,
+  "reviews": []
+}

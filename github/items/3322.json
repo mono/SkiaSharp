@@ -1,0 +1,22 @@
+{
+  "number": 3322,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Unhandled exception in Dispose() when show/hide multiple SKCanvasView in Blazor",
+  "body": "### Description\n\nIt\u0027s not easy to reproduce that in a separated sample application, but it\u0027s consistantly reproducible in our Blaozor application which use multiple SkiaCanvasView to draw graphic. See actual behavior for the exception.\n\nAlso the Dispose() in SKCanvasView() does not follow proper .net Dispose pattern, it lacks a virtual Dispose(bool) method so the exception can be suppressed in the derived class.\n\n### Code\n\nN/A\n\n\n### Expected Behavior\n\nNo exception and error message in Console from Skiasharp.\n\n### Actual Behavior\n\nWhen show and hide multiple SKCanvasView, an exception observed from Dispose() of SKCanvasView:\n\ncrit: Microsoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]\n      Unhandled exception rendering component: TypeError: Failed to execute \u0027unobserve\u0027 on \u0027ResizeObserver\u0027: parameter 1 is not of type \u0027Element\u0027.\nMicrosoft.JSInterop.JSException: TypeError: Failed to execute \u0027unobserve\u0027 on \u0027ResizeObserver\u0027: parameter 1 is not of type \u0027Element\u0027.\n ---\u003E TypeError: Failed to execute \u0027unobserve\u0027 on \u0027ResizeObserver\u0027: parameter 1 is not of type \u0027Element\u0027.\n   --- End of inner exception stack trace ---\n   at Microsoft.JSInterop.WebAssembly.WebAssemblyJSRuntime.InvokeJS(String identifier, String argsJson, JSCallResultType resultType, Int64 targetInstanceId)\n   at Microsoft.JSInterop.JSInProcessRuntime.Invoke[IJSVoidResult](String identifier, Int64 targetInstanceId, Object[] args)\n   at Microsoft.JSInterop.Implementation.JSInProcessObjectReference.Invoke[IJSVoidResult](String identifier, Object[] args)\n   at Microsoft.JSInterop.JSInProcessObjectReferenceExtensions.InvokeVoid(IJSInProcessObjectReference jsObjectReference, String identifier, Object[] args)\n   at SkiaSharp.Views.Blazor.Internal.JSModuleInterop.Invoke(String identifier, Object[] args)\n   at SkiaSharp.Views.Blazor.Internal.SizeWatcherInterop.Stop()\n   at SkiaSharp.Views.Blazor.Internal.SizeWatcherInterop.OnDisposingModule()\n   at SkiaSharp.Views.Blazor.Internal.JSModuleInterop.Dispose()\n   at SkiaSharp.Views.Blazor.SKCanvasView.Dispose()\n   at Microsoft.AspNetCore.Components.Rendering.ComponentState.DisposeAsync()\n   at Microsoft.AspNetCore.Components.Rendering.ComponentState.DisposeInBatchAsync(RenderBatchBuilder batchBuilder)\n   at Microsoft.AspNetCore.Components.RenderTree.Renderer.ProcessDisposalQueueInExistingBatch()\n\n\u003Cimg width=\u0022862\u0022 height=\u002272\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/59b9940f-dd7e-4763-bd78-a45bf2b73f99\u0022 /\u003E\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nOther (Please indicate in the description)\n\n### Platform / Operating System Version\n\n.net 8.0 Blazor.\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "jjzhang12",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-07-31T04:50:56",
+  "updatedAt": "2025-12-03T05:47:47",
+  "commentCount": 1,
+  "reactionCount": 1
+}

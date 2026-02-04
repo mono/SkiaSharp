@@ -1,0 +1,18 @@
+{
+  "number": 2372,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Expose existing RTree optimization option on SkPictureRecorder.BeginRecording()",
+  "body": "We\u0027re looking to pan and zoom some SkiaSharp\u0027s SkPictures that consist of a reasonably large number of simple operations (~25K, text, lines, rect fills). We\u0027re finding a zoomed and translated DrawPicture is rendering on the order of 5 fps on recent model iOS devices, which is clearly unacceptable.\r\n\r\nBut yay! It turns out Skia has had built in support for RTree-based operations culling for a long time, and it looks very promising:\r\n\r\nhttps://groups.google.com/g/skia-discuss/c/EPOuhhloIF4/m/rZyakh1fBwAJ\r\nhttps://bugs.chromium.org/p/chromium/issues/detail?id=485597#c22\r\n\r\nBut oh no! SkiaSharp doesn\u0027t expose this functionality, either in C# or the C wrappers in the Mono fork of Skia.\r\n\r\nBut yay! The fix looks very straightforward - just exposing the constructor of an RTreeFactory instance, and passing it as an extra parameter to BeginRecording().\r\n\r\nI\u0027ve created forks of both SkiaSharp and mono/skia, and implemented a swag at a simple C# api, C wrappers, and some smoke tests. You can find the (fairly small, simple, but unvetted) changes here:\r\n\r\nhttps://github.com/mono/SkiaSharp/compare/main...kcoop:SkiaSharp:kcoop-rtree\r\nhttps://github.com/mono/skia/compare/xamarin-mobile-bindings...kcoop:mono-skia:kcoop-rtree\r\n\r\nThis seems like a valuable, big bang for the buck PR. Very small change, and who wouldn\u0027t want significant rendering improvements for large-ish documents by simply adding a bool? I\u0027m happy to do what\u0027s needed to make this happen.\r\n\r\n[Edited to remove noise - I\u0027ve now discovered this repo uses submodules to build mono/skia]\r\n\r\n",
+  "author": {
+    "login": "kcoop",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-03T19:46:00",
+  "updatedAt": "2024-06-18T09:09:51",
+  "closedAt": "2024-06-18T09:09:51",
+  "commentCount": 5,
+  "reactionCount": 4
+}

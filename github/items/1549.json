@@ -1,0 +1,17 @@
+{
+  "number": 1549,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Getting InvalidInput exception",
+  "body": "I have an image for which I am doing SKCodec.Create. My problem is that I get an exception when accessing the propery \u0060Pixels\u0060 - InvalidInput.\r\n\r\nExample:\r\n\u0060\u0060\u0060\r\nvar result = SKCodec.Create (filename);\r\nvar codecPixels = codec.Pixels; // throw Exception\r\n\u0060\u0060\u0060\r\n\r\nHow can I know that the picture is bad without calling the \u0060Pixels\u0060, since this causes all bytes of the picture to be read (in cause with good picture)? \r\nMaybe I can understand this by some first bytes? Or could you say what exactly wrong with this picture? \r\nhttps://user-images.githubusercontent.com/13122070/98657991-912f8380-2353-11eb-8f18-941bcbd3df38.jpg\r\n\r\nAs I understand, this function is causing the exception https://github.com/google/skia/blob/master/src/codec/SkJpegCodec.cpp#L543",
+  "author": {
+    "login": "vitaliy-orlov",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-11-10T09:54:34",
+  "updatedAt": "2020-11-10T09:54:34",
+  "commentCount": 0,
+  "reactionCount": 0
+}

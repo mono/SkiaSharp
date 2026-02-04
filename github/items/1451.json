@@ -1,0 +1,19 @@
+{
+  "number": 1451,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKMatrix values are changed in the SkiaSharp higher version",
+  "body": "**Description**\r\n\r\nI am using SkiaSharp library to translate the text from the SKMatrix values and I have recently upgraded the SkiaSharp library version [2.80.2-preview.19]. Then I try to translate the text in the Higher version and its text width different from the older version[2.80.0]. kindly provide your suggestion to resolve this issue.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nSKMatrix tempMatrix = SKMatrix.MakeIdentity();\r\n                tempMatrix.Values = new float[] { 1, 0, 0,0, 1, 0, 0, 0, 1 };\r\n                SKMatrix.RotateDegrees(ref tempMatrix, 0);\r\n                tempMatrix.SetScaleTranslate(1.2f, 1.0f, 0, 0);\r\n                Console.WriteLine(tempMatrix.Values[0]);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n1.2\r\n\r\n**Actual Behavior**\r\n\r\n1\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2-preview.19\r\n- Last known good version:  2.80.0\r\n- IDE:  Visual Studio 2017\r\n- Platform Target Frameworks: .NET Core 2.1\r\n",
+  "author": {
+    "login": "MadhanKumarasamy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-08-07T14:55:07",
+  "updatedAt": "2022-08-19T03:02:14",
+  "closedAt": "2020-08-09T19:46:46",
+  "commentCount": 2,
+  "reactionCount": 0
+}

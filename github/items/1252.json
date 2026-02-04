@@ -1,0 +1,19 @@
+{
+  "number": 1252,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Native library name versioning",
+  "body": "Consider the following scenario:\r\n\r\n- an app with plugin architecture like Visual Studio\r\n- extension #1 (strong named) uses SkiaSharp 1.60.0\r\n- extension #2 (strong named) uses SkiaSharp 1.68.0\r\n- both extensions get successfully loaded and have different versions of SkiaSharp in the same process\r\n- both versions of SkiaSharp are P/Invoking with the same library name, but only one native dll will be loaded\r\n- one of the versions of SkiaSharp will blow up spectacularly because of C API incompatibility, potentially with access violation\r\n\r\nSolution: use library name suffix, e. g.:\r\n\u0060libSkiaSharp.1.68.0.dll\u0060\r\n\u0060libSkiaSharp.1.68.0.dylib\u0060\r\n\u0060libSkiaSharp.1.68.0.so\u0060",
+  "author": {
+    "login": "kekekeks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-04-27T18:45:27",
+  "updatedAt": "2022-08-19T06:01:54",
+  "closedAt": "2020-06-25T00:58:03",
+  "commentCount": 17,
+  "reactionCount": 0
+}

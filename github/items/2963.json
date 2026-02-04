@@ -1,0 +1,43 @@
+{
+  "number": 2963,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add compatibility overloads for SKFilterQuality",
+  "body": "Libraries may want to remain supporting both SkiaSharp 2.x and 3.x, as we currently do in Uno Platform.\r\n\r\nWe achieve this by detecting the assembly version and using UnsafeAccessor when needed for APIs that have changed in SkiaSharp 3.\r\n\r\nHowever, there is one remaining issue for Uno Platform, which is SKFilterQuality. As the overloads now take SKSamplingOptions which is a completely new type in SkiaSharp 3, we can\u0027t use UnsafeAccessor to get this to work.\r\n\r\nThis PR adds new obsolete APIs that accepts SKFilterQuality and forwards it to the SKSamplingOptions overload. For Uno Platform, we will use \u0060paint.FilterQuality\u0060 when on 2.x, and use the new shader overloads via UnsafeAccessor when on 3.x\r\n\r\nNOTE: This is applicable for any library that needs to remain on 2.x while allowing consumers to upgrade to 3.x.\r\n\r\n@mattleibow, if you can review please",
+  "author": {
+    "login": "Youssef1313",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-31T10:08:30",
+  "updatedAt": "2024-08-16T17:20:44",
+  "closedAt": "2024-08-16T17:20:06",
+  "commentCount": 8,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "add-compat-skfilterquality",
+  "additions": 24,
+  "deletions": 0,
+  "changedFiles": 3,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "DISMISSED",
+      "submittedAt": "2024-08-14T20:01:37"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-08-16T17:19:52"
+    }
+  ]
+}

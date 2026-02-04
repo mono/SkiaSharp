@@ -1,0 +1,23 @@
+{
+  "number": 2648,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKCanvasView control crashes in .NET 7 and 8 MAUI",
+  "body": "### Description\n\nWhen navigating to a **ContentPage** with an **SKCanvasView** the app will crash. In Windows there is no error message, but debugger throws to the highlighted in \u0060app.g.i.cs\u0060:\r\n\u003Cimg width=\u0022750\u0022 alt=\u0022Unhandled exception when DEBUG and !DISABLE_XAML_GENERATED_BREAK_ON_UNHANDLED_EXCEPTION\u0022 src=\u0022https://github.com/mono/SkiaSharp/assets/3385925/cc3aff31-25a0-4950-a6ea-c9b95909f186\u0022\u003E\r\n\r\n\r\nAnd when launching into the Android emulator, I get the following Unhandled Exception:\r\n\u0060Microsoft.Maui.Platform.HandlerNotFoundException: \u0027Handler not found for view SkiaSharp.Views.Maui.Controls.SKCanvasView.\u0027\u0060\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\r\n\r\nBut, you can also share a short block of code here:\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Maui;\r\n\r\nnamespace SkiaSharpMaui8;\r\n\r\npublic partial class MainPage : ContentPage\r\n{\r\n\tpublic MainPage() =\u003E InitializeComponent();\r\n\r\n\r\n\tprivate void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\r\n\t{\r\n\t\tSKSurface surface = e.Surface;\r\n\t\tSKCanvas canvas = surface.Canvas;\r\n\t\tcanvas.Clear(SKColors.White);\r\n\t\t\r\n\t\tSKPaint paint = new()\r\n\t\t{\r\n\t\t\tStyle = SKPaintStyle.Stroke,\r\n\t\t\tColor = SKColors.Black,\r\n\t\t\tStrokeWidth = 2\r\n\t\t};\r\n\t\tSKRect sKRect = new(20, 20, 360, 360);\r\n\t\tcanvas.DrawRect(sKRect, paint);\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xaml\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\r\n\u003CContentPage xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:skviews=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\r\n             x:Class=\u0022SkiaSharpMaui8.MainPage\u0022\u003E\r\n\r\n    \u003CVerticalStackLayout \u003E\r\n        \u003Cskviews:SKCanvasView PaintSurface=\u0022OnPaintSurface\u0022\r\n                              HeightRequest=\u0022400\u0022 \r\n                              WidthRequest=\u0022400\u0022/\u003E\r\n    \u003C/VerticalStackLayout\u003E\r\n\u003C/ContentPage\u003E\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nI expected to have a canvas with a rectangle drawn on it.\n\n### Actual Behavior\n\nThe application crashed upon loading a page with an SKCanvasView.\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid, Windows\n\n### Platform / Operating System Version\n\n- Windows 11\n\n### Devices\n\n- Android API 33\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "soyfrien",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-16T04:07:21",
+  "updatedAt": "2023-11-15T12:00:27",
+  "closedAt": "2023-10-16T10:49:00",
+  "commentCount": 2,
+  "reactionCount": 0
+}

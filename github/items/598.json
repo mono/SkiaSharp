@@ -1,0 +1,29 @@
+{
+  "number": 598,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix target files for Tizen to use TizenTPKFiles",
+  "body": "Current temprary hacks for tizen-x86 RID are still needed because the Tizen 4.0 platform\r\nincluding .NETCore 2.0 does not understand the tizen-x86 RID.\r\n\r\nIn this changes, Use TizenTPKFiles defined in Tizen.NET.Sdk instead of Link and CopyToOutputDirectory\r\nto solve following problems.\r\n- The linked file (runtime/linux-x86/native/foo.so) is displayed in VS Project tree.\r\n- The linked file is always copied to tpkroot/bin even when RID is specified.\r\n- The linked file can\u0027t be excluded with the file excluding features of Tizen.NET.Sdk.\r\n\r\nThe files added to TizenTPKFiles will be copied to tpkroot by Tizen.NET.Sdk, see\r\nhttps://github.com/Samsung/build-task-tizen/blob/master/src/Tizen.NET.Build.Tasks/build/Tizen.NET.Sdk.Packaging.targets",
+  "author": {
+    "login": "WonyoungChoi",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.60.3",
+  "createdAt": "2018-07-30T01:43:37",
+  "updatedAt": "2018-08-06T20:41:12",
+  "closedAt": "2018-08-06T20:40:40",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "fix_tizen_targets",
+  "additions": 14,
+  "deletions": 16,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": []
+}

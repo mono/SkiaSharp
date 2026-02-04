@@ -1,0 +1,31 @@
+{
+  "number": 1129,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] iOS physical device crash with System.DllNotFoundException when using free Apple developer account",
+  "body": "**Description**\r\nI am trying to instantiate the SkiaSharp.SKPictureRecorder() and I am getting the following DllNotFoundException:\r\n\r\n![image](https://user-images.githubusercontent.com/60756502/73976984-4b362280-48de-11ea-8c0e-3b1f8027a290.png)\r\n\r\n \r\n**Code**\r\n\r\n![image](https://user-images.githubusercontent.com/60756502/73976664-a287c300-48dd-11ea-861b-5591f70b75ba.png)\r\n\r\n**Expected Behavior**\r\nShouldn\u0027t crash\r\n**Actual Behavior**\r\nCrashes on instantiation\r\n**Basic Information**\r\nI stumbled upon this exception when I was trying to use svg images via the FFImageLoading library.\r\nI saw that in the stack trace it was trying to instantiate the SkPictureRecorder object and got the dll not found exception.\r\n\r\nTo reproduce this, I directly installed the skiasharp library and instantiated this object myself and got the same issue\r\n\r\n- Version with issue:  1.68.1.1\r\n- Last known good version:  don\u0027t know\r\n- IDE:  Visual studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - iOS:  13.2\r\n  - Target Devices:   Ipad air 2\r\n  ",
+  "author": {
+    "login": "vtkachen111",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/iOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "status/blocked",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-02-06T20:39:05",
+  "updatedAt": "2022-08-19T06:02:52",
+  "closedAt": "2020-03-13T10:55:54",
+  "commentCount": 16,
+  "reactionCount": 1
+}

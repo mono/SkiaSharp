@@ -1,0 +1,38 @@
+{
+  "number": 3472,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Blob FromStream is not GC safe",
+  "body": "### Description\n\nIf GC runs after the blob is created, the managed array memory might be moved resulting in a crash,\n\n### Code\n\nBy inspection:\n\n\t\tpublic static unsafe Blob FromStream (Stream stream)\n\t\t{\n\t\t\t// TODO: check to see if we can avoid the second copy (the ToArray)\n\n\n\t\t\tusing var ms = new MemoryStream ();\n\t\t\tstream.CopyTo (ms);\n\t\t\tvar data = ms.ToArray ();\n\n\n\t\t\tfixed (byte* dataPtr = data) {\n\t\t\t\treturn new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () =\u003E ms.Dispose ());\n\t\t\t}\n\t\t}\n\n\n### Expected Behavior\n\nShould copy via an UnmanagedMemoryStream:\n\n\u0060\u0060\u0060\n\t\tpublic static unsafe Blob FromStream (Stream stream)\n\t\t{\n\t\t\tvar length = (int)(stream.Length - stream.Position);\n\n\t\t\tvar dataPtr = Marshal.AllocCoTaskMem (length);\n\n\t\t\tusing var ums = new UnmanagedMemoryStream ((byte*)dataPtr, length, length, FileAccess.ReadWrite);\n\t\t\tstream.CopyTo (ums);\n\n\t\t\treturn new Blob (dataPtr, length, MemoryMode.ReadOnly, () =\u003E Marshal.FreeCoTaskMem (dataPtr));\n\t\t}\n\u0060\u0060\u0060\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "jeremy-visionaid",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-28T21:50:32",
+  "updatedAt": "2026-01-28T21:59:50",
+  "commentCount": 2,
+  "reactionCount": 0
+}

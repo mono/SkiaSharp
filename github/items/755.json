@@ -1,0 +1,31 @@
+{
+  "number": 755,
+  "type": "issue",
+  "state": "open",
+  "title": "\u0022SystemAcesssViolation\u0022 when generating offscreeen bitmaps",
+  "body": "This is a follow on from my question #688.  I\u0027m happy to report that we have been successful in generating the GRContexts for both UWP and iOS and with it can create surfaces to generate bitmaps which get supplied as a serve to SKXamlCanvas or SKCanvasView controls.  I have added comments in #688 about further details to help anyone which is interested in doing the same thing.\r\n\r\nThe app using the technology generates complex maps, often with thousands of features in a single bitmap.  The features are built up in layers and come in as tiles.  As tiles arrive, more layers are added to the bitmap, so the generation of the bitmap is like a daisy chain of progressive updates until all the layers have been added in.\r\n\r\nHere is the central method:\r\n![image](https://user-images.githubusercontent.com/1115118/51092996-3a99a280-17d9-11e9-8ff0-9a1f29ce430b.png)\r\n\r\nSo each time tiles arrives, a surface gets created, and its canvas is used to update the latest image through the renderActivity method.  The latest bitmap then gets sent to the control for rendering.  The calls to the Render method happen in a single thread and are sequential.  When the control is heavily used, for instance to when the user is doing a series of quick pans and zooms, occasionally a \u0022SystemAccessViolation exception  occurs - \u0027Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0027 \r\n\r\nAdding in the \u0027surface.Dispose()\u0027 call at the end of the method significantly reduces the number of times this occurs.\r\n\r\nIt seems that something is happening in the snapshotting and bitmap creation which doesn\u0027t close things properly.\r\n\r\nI also noticed that combining the results of surfaces is most commonly the situation where the exception arises.  I keep a bitmap of the features as they get built up and another one for markups.  The tiles and the markup information come in at random times, but they are always processed sequentially in the method above.  So a features bitmap is being generated and a markup bitmap is being generated.  At the end I merge the two bitmaps together.  The requests to the method come in via a queue, so I have some sense of what is going on when the exception happens.  If there is the last update to the feature bitmap, followed by a quite update to the markups layers(which happens very quickly with its bitmap being mostly empty), it is during the merge processing of just drawing the features bitmap, followed by the markups bitmap that the exception arises.  It is like the markups bitmap hasn\u0027t closed yet, and I\u0027m trying to render it to a canvas.  Is there any way to test if a bitmap is finished?  Originally I passed back images to the control instead of bitmaps, but that caused these SystemAccessViolation messages almost continually.  Here is the method that merges the bitmaps:\r\n\r\n![image](https://user-images.githubusercontent.com/1115118/51093460-b3e7c400-17de-11e9-8bf5-603ff3f85168.png)\r\n\r\n\r\nI wonder if it has to do with resources?  I create the surfaces simply, without using the constructor that uses budgeting, or sample count.  The documentation doesn\u0027t really explain what these parameters do or how they should be set.  Could it be that the current settings are reusing a buffer somewhere which causes the conflict?  I do everything in usings, so I thought this wouldn\u0027t be a problem.  I also thought that the flush method would finish guarantee that the GPU has all the instructions it needs to generate the updates to the canvas.\r\n\r\nIn the interim, is there someway to be able to recover from the SystemAcessViolation exception?  I\u0027d really prefer not to have to put timers in things to slow everything down.  The whole point was to make things go fast using the GPU (and when it works it goes really fast :-))\r\n\r\nAny insights would be greatly appreciated,\r\nTom Cuthill\n\n\u003E VS bug [#770228](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/770228)",
+  "author": {
+    "login": "pathw0rk3r",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2019-01-14T01:28:36",
+  "updatedAt": "2019-06-17T16:50:26",
+  "commentCount": 2,
+  "reactionCount": 0
+}

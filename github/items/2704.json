@@ -1,0 +1,31 @@
+{
+  "number": 2704,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] MAUI SKCanvasView.CanvasSize is zero on MacCatalist, and OnPaintSurface not called",
+  "body": "### Description\r\n\r\nWhen I call \u0060PaintCanvas?.InvalidateSurface();\u0060 \u0060OnPaintSurface\u0060 not called.\r\nWhen I looking on \u0060PaintCanvas.CanvasSize\u0060 is \u0060{{Width=0, Height=0}}\u0060.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060C#\r\npublic partial class Plot : ContentView\r\n{\r\n    private readonly Timer _invalidateTimer;\r\n\r\n    public Plot()\r\n    {\r\n        InitializeComponent();\r\n        PaintCanvas.PaintSurface \u002B= OnPaintSurface;\r\n        _invalidateTimer = new Timer(OnInvalidateWatchdog, null, 50, 50);\r\n    }\r\n\r\n    private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs args)\r\n    {\r\n        //    Not called on MacCatalyst\r\n    }\r\n\r\n    private void OnInvalidateWatchdog(object state)\r\n    {\r\n        Dispatcher.Dispatch(() =\u003E\r\n        {\r\n            PaintCanvas?.InvalidateSurface();\r\n        });\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003CContentView xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             x:Class=\u0022Mcs.Maui.EmgPlot.Plot\u0022\r\n             xmlns:skiaSharp=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\u003E\r\n    \u003CGrid\u003E\r\n        \u003CskiaSharp:SKCanvasView x:Name=\u0022PaintCanvas\u0022/\u003E\r\n        \u003CGrid\r\n            x:Name=\u0022Names\u0022\r\n            HorizontalOptions=\u0022Start\u0022 /\u003E\r\n    \u003C/Grid\u003E\r\n\u003C/ContentView\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\n\u0060OnPaintSurface\u0060 is working\r\n\u0060CanvasSize\u0060 has good size\r\n\r\n### Actual Behavior\r\n\r\nI think it is because CanvasSize is zero\r\n\r\n### Version of SkiaSharp\r\n2.88.6\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (macOS)\r\n\r\n### Platform / Operating System\r\n\r\nMac Catalyst\r\n\r\n### Platform / Operating System Version\r\n\r\nmacOS Sonoma 14.2.1\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "npdwc",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-10T18:57:32",
+  "updatedAt": "2024-02-16T01:00:26",
+  "closedAt": "2024-02-16T01:00:25",
+  "commentCount": 2,
+  "reactionCount": 0
+}

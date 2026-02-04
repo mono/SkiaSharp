@@ -1,0 +1,24 @@
+{
+  "number": 2576,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] HarfBuzz CVE-2023-25193 when referencing SkiaSharp.NativeAssets.Linux.NoDependencies",
+  "body": "### Description\r\n\r\nI believe HarfBuzzSharp has a dependency on HarfBuzz looking at some of HarfBuzzApi P/Invoking. We were going to use SkiaSharp on one of our projects, but the [OWASP Dependency Checker](https://owasp.org/www-project-dependency-check/) complained about https://nvd.nist.gov/vuln/detail/CVE-2023-25193.\r\n\r\n\r\n\r\n### Code\r\n\r\nIn your csproj file include: \u0060\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.3\u0022 /\u003E\u0060\r\n\r\n### Expected Behavior\r\n\r\nDependency Check doesn\u0027t fail due to CVE.\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nLinux\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n\u0060\u0060\u0060shell\r\n\u003Ctestsuite failures=\u00221\u0022 errors=\u00220\u0022 time=\u00220\u0022 id=\u002217\u0022\r\n    name=\u0022/source/Something.PdfGenerator/Something.PdfGenerator.csproj\u0022\r\n    package=\u0022HarfBuzzSharp.NativeAssets.Linux:2.8.2.3\u0022 skipped=\u00220\u0022 tests=\u00221\u0022\r\n    timestamp=\u00222023-08-21T11:07:37.227094519\u0022\u003E\r\n    \u003Ctestcase classname=\u0022CVE-2023-25193\u0022 name=\u0022pkg:nuget/HarfBuzzSharp.NativeAssets.Linux@2.8.2.3\u0022\u003E\r\n      \u003Cfailure message=\u0022cvssV3: HIGH, score: 7.5 (CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H)\u0022 /\u003E\r\n      \u003Csystem-out\u003Ehb-ot-layout-gsubgpos.hh in HarfBuzz through 6.0.0 allows attackers to trigger\r\n        O(n^2) growth via consecutive marks during the process of looking back for base glyphs when\r\n        attaching marks.\u003C/system-out\u003E\r\n      \u003Csystem-err\u003Elocation: /source/Something.PdfGenerator/Something.PdfGenerator.csproj,\r\n        project-references: [ ]\u003C/system-err\u003E\r\n    \u003C/testcase\u003E\r\n  \u003C/testsuite\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "wss-jtreher",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.6",
+  "createdAt": "2023-08-22T13:15:27",
+  "updatedAt": "2023-09-28T03:00:29",
+  "closedAt": "2023-08-29T02:22:50",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,38 @@
+{
+  "number": 2232,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add \u0060$schema\u0060 to \u0060cgmanifest.json\u0060",
+  "body": "This pull request adds the JSON schema for \u0060cgmanifest.json\u0060.\r\n\r\n## FAQ\r\n\r\n### Why?\r\n\r\nA JSON schema helps you to ensure that your \u0060cgmanifest.json\u0060 file is valid.\r\nJSON schema validation is a build-in feature in most modern IDEs like Visual Studio and Visual Studio Code.\r\nMost modern IDEs also provide code-completion for JSON schemas.\r\n\r\n### How can I validate my \u0060cgmanifest.json\u0060 file?\r\n\r\nMost modern IDEs like Visual Studio and Visual Studio Code have a built-in feature to validate JSON files.\r\nYou can also use [this small script](https://github.com/JamieMagee/verify-cgmanifest) to validate your \u0060cgmanifest.json\u0060 file.\r\n\r\n### Why does it suggest camel case for the properties?\r\n\r\nComponent Detection is able to read camel case and pascal case properties.\r\nHowever, the JSON schema doesn\u0027t have a case-insensitive mode.\r\nWe therefore suggest camel case as it\u0027s the most common format for JSON.\r\n\r\n### Why is the diff so large?\r\n\r\nTo deserialize the \u0060cgmanifest.json\u0060 file, we use [\u0060JSON.parse()\u0060](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/parse).\r\nHowever, to serialize the JSON again we use [\u0060prettier\u0060](https://prettier.io/).\r\nWe found that, in general, it gave smaller diffs than the default [\u0060JSON.stringify()\u0060](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify) function.",
+  "author": {
+    "login": "JamieMagee",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-09-01T15:56:43",
+  "updatedAt": "2023-06-07T21:12:33",
+  "closedAt": "2023-06-07T21:12:27",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "cgmanifest-schema",
+  "additions": 256,
+  "deletions": 257,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2023-06-07T21:11:28"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "number": 842,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Copy a rectangular area within a bitmap",
+  "body": "I want to copy a rectangular area in my SKBitmap to another position. The simple approach is:\r\n\r\n    using (var canvas = new SKCanvas(Bitmap))\r\n    {\r\n        var sourceRect = new SKRect(sourceLeft, sourceTop, sourceLeft \u002B width, sourceTop \u002B height);\r\n        var targetRect = new SKRect(targetLeft, targetTop, targetLeft \u002B width, targetTop \u002B height);\r\n        canvas.DrawBitmap(Bitmap, sourceRect, targetRect);\r\n        canvas.Flush();\r\n    }\r\n\r\nBut this only works, if the rectangles don\u0027t intersect or if the sourceRect is below the targetRect.\r\n\r\nAs a workaround I check for this and copy the pixels myself starting at the end in this case.\r\n\r\n\tprivate void Copy(int sourceLeft, int sourceTop, int targetLeft, int targetTop, int width, int height)\r\n\t{\r\n\t\tusing (var canvas = new SKCanvas(Bitmap))\r\n\t\t{\r\n\t\t\tvar sourceRect = new SKRect(sourceLeft, sourceTop, sourceLeft \u002B width, sourceTop \u002B height);\r\n\t\t\tvar targetRect = new SKRect(targetLeft, targetTop, targetLeft \u002B width, targetTop \u002B height);\r\n\r\n\t\t\tvar sourceEnd = (sourceTop \u002B height - 1) * Bitmap.Width \u002B sourceLeft \u002B width;\r\n\t\t\tvar targetEnd = (targetTop \u002B height - 1) * Bitmap.Width \u002B targetLeft \u002B width;\r\n\r\n\t\t\tif (sourceRect.IntersectsWith(targetRect)           // it they intersect\r\n\t\t\t\t\u0026\u0026 sourceEnd \u003C targetEnd)                       // and the source should be copied down\r\n\t\t\t{                                                   // then I can\u0027t use DrawBitmap\r\n\t\t\t\tint lineDelta = Bitmap.Width - width;\r\n\t\t\t\tIntPtr pixelsAddr = Bitmap.GetPixels();\r\n\r\n\t\t\t\tif (Bitmap.BytesPerPixel == 4)      // just to be sure, may have to work for other sizes too\r\n\t\t\t\t{\r\n\t\t\t\t\tunsafe\r\n\t\t\t\t\t{\r\n\t\t\t\t\t\tuint* ptr = (uint*)pixelsAddr.ToPointer();\r\n\t\t\t\t\t\tuint* sourcePtr = ptr \u002B sourceEnd;\r\n\t\t\t\t\t\tuint* targetPtr = ptr \u002B targetEnd;\r\n\r\n\t\t\t\t\t\tint x, y = height;\r\n\t\t\t\t\t\twhile (y \u003E 0)\r\n\t\t\t\t\t\t{\r\n\t\t\t\t\t\t\tx = width;\r\n\t\t\t\t\t\t\twhile (x \u003E 0)\r\n\t\t\t\t\t\t\t{\r\n\t\t\t\t\t\t\t\tx--;\r\n\t\t\t\t\t\t\t\tsourcePtr--;\r\n\t\t\t\t\t\t\t\ttargetPtr--;\r\n\t\t\t\t\t\t\t\t*targetPtr = *sourcePtr;\r\n\t\t\t\t\t\t\t}\r\n\t\t\t\t\t\t\tsourcePtr -= lineDelta;\r\n\t\t\t\t\t\t\ttargetPtr -= lineDelta;\r\n\t\t\t\t\t\t\ty--;\r\n\t\t\t\t\t\t}\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tcanvas.DrawBitmap(Bitmap, sourceRect, targetRect);\r\n\t\t\t}\r\n\t\t\tcanvas.Flush();\r\n\t\t}\r\n\t}\r\n\r\nSo before I vectorize this code (which would still not be hardware accelerated) I wanted to ask, if there is an easier way to do this. Can this be considered a bug in Skia(Sharp) or is it simply not meant to copy areas of a bitmap within itself?",
+  "author": {
+    "login": "MichaelRumpler",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-05-14T11:40:02",
+  "updatedAt": "2022-08-19T12:01:27",
+  "closedAt": "2019-06-24T06:00:32",
+  "commentCount": 3,
+  "reactionCount": 0
+}

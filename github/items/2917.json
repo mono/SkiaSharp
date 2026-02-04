@@ -1,0 +1,53 @@
+{
+  "number": 2917,
+  "type": "pr",
+  "state": "closed",
+  "title": "Function pointers and LibraryImport",
+  "body": "**Description of Change**\r\n\r\nThis PR is pretty big. If necessary, I can split HarfBuzz and Skia changes on two PRs. In theory, generated code can be be extracted into a separated PR as well, since all changes should be under conditional compilation.\r\n\r\nWhat was changed step by step:\r\n- Generator was updated to emit LibraryImport instead of DllImport, when USE_LIBRARY_IMPORT is set.\r\n- Generator was updated to emit function pointers instead of managed delegates, when USE_LIBRARY_IMPORT is used.\r\n- Since function pointers can\u0027t be used as generics, every \u0060DelegateProxies.Create\u003CT\u003E\u0060 usage was replaced without generics.\r\n- Since Skia expects \u0060bool\u0060 as 1 byte, and function pointers by default marshal it as 4 bytes, I had to disable runtime marshalling. This change required to replace remaining DllImports with LibraryImport as well. As a bonus - final app size should be smaller without runtime marshalling (assuming other dependencies don\u0027t use it too).\r\n\r\nNote:\r\n- Due to older Mono bug, LibraryImport were defined with \u0060void*\u0060 instead of full function pointer, but it doesn\u0027t seem to cause other issues\r\n- Generated file diffs only have additions and no removals, tried to keep this way to keep less impact.\r\n- For HarfBuss I used 2.8.2 native baseline version, as it seems latest when it was regenerated (to keep diff smaller).\r\n- Tested on Windows and WASM (only .NET 9, but both Mono and LLVM). Will test on mobile and mac once there is any nightly build.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2615\r\n- Fixes #2916 (only reproducible with function pointers)\r\n\r\nNot sure if this PR fixed them, or some another, but these two issues are not reproducible anymore:\r\n- Fixes #1928\r\n- Fixes #1931\r\n\r\n**API Changes**\r\n\r\nNone. Unless I missed any.\r\n\r\n**Behavioral Changes**\r\n\r\nNone. Hopefully.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "maxkatz6",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-03T07:03:10",
+  "updatedAt": "2024-08-21T15:17:05",
+  "closedAt": "2024-08-21T15:16:05",
+  "commentCount": 30,
+  "reactionCount": 10,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "function-pointers-and-library-import",
+  "additions": 7937,
+  "deletions": 536,
+  "changedFiles": 62,
+  "commits": 30,
+  "reviews": [
+    {
+      "author": "filipnavara",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-20T14:23:39"
+    },
+    {
+      "author": "maxkatz6",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-20T18:53:09"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-21T05:04:19"
+    },
+    {
+      "author": "filipnavara",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-21T06:55:45"
+    }
+  ]
+}

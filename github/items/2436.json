@@ -1,0 +1,17 @@
+{
+  "number": 2436,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Skottie animation crash on WPF application",
+  "body": "**Description**\r\n\r\nApplication crashes when trying to draw a Lottie file with Skottie\r\n[lottie file](https://www.dropbox.com/s/nwa3hrjonlaj8vm/test.json?dl=0)\r\n\r\n**Code**\r\n\r\n\u0060using var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);\u0060\r\n \u0060if (Animation.TryCreate(stream, out var _animation))\u0060\r\n \u0060{\u0060\r\n\u0060   _animation.Seek(0);\u0060\r\n\u0060   SkElement.PaintSurface \u002B= (sender, e) =\u003E_animation.Render(e.Surface.Canvas,\u0060\r\n\u0060       new SKRect(0, 0, _animation.Size.Width, _animation.Size.Height));\u0060\r\n \u0060}\u0060\r\n\r\n**Expected Behavior**\r\n\r\nLottie animation is rendered\r\n\r\n**Actual Behavior**\r\n\r\nCrash\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.88.3\r\n- Last known good version: ???\r\n- IDE: Visual Studio\r\n- Platform Target Frameworks\r\n  - Windows Classic: WPF, .NET Framework 4.8 \r\n- Target Devices:\r\n  - Windows PC",
+  "author": {
+    "login": "Mankov-A",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-04-07T09:35:04",
+  "updatedAt": "2023-04-07T09:35:04",
+  "commentCount": 0,
+  "reactionCount": 0
+}

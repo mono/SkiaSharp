@@ -1,0 +1,29 @@
+{
+  "number": 1411,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix issue when creating SKData from a non-seekable stream",
+  "body": "**Description of Change**\r\n\r\n\u0060SKData.Create(Stream)\u0060 throws when the stream is non-seekable. This is because we need the length before we can allocate memory. And, we can\u0027t get the length.\r\n\r\nSo, we create a copy of the stream, get the length and then allocate the memory. \r\n\r\n\u003E It is a double copy, but that is unfortunately what we need to do.\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\nNone.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-15T23:08:09",
+  "updatedAt": "2020-09-11T23:45:36",
+  "closedAt": "2020-07-16T02:40:54",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-data",
+  "additions": 19,
+  "deletions": 1,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": []
+}

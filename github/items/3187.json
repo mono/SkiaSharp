@@ -1,0 +1,27 @@
+{
+  "number": 3187,
+  "type": "pr",
+  "state": "closed",
+  "title": "Exclude code that will never run on Apple",
+  "body": "**Description of Change**\r\n\r\nThese APIs are fine to leave in for most cases, but I see tvOS fails AOT because it can\u0027t find the imports to Win32 things.\r\n\r\nThis PR just removes them entirely from Apple and Android builds as they will never exist. We have to leave it for the others because a net8.0 dll could run on macOS or Windows with GTK things,",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-03-06T18:38:08",
+  "updatedAt": "2025-03-06T18:38:37",
+  "closedAt": "2025-03-06T18:38:34",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/apis",
+  "additions": 11,
+  "deletions": 2,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

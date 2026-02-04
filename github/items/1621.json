@@ -1,0 +1,19 @@
+{
+  "number": 1621,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkBitmap.Decode always fail some images, but using SKImage.FromEncodedData works ",
+  "body": "**Description**\r\n\r\nI am trying to load images in UWP with StorageFile, but some images always fail with a weird error message. \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nusing (var stream = await storageFile.OpenStreamForReadAsync())\r\n{\r\n    SKBitmap bitmap = SKBitmap.Decode(stream);\r\n    // the rest\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nthe image should be loaded\r\n\r\n**Actual Behavior**\r\n\r\nsome pictures fail at the line of calling SKBitmap.Decode, with this error message:\r\n\r\n\u0060\u0060\u0060\r\nValue cannot be null.\r\nParameter name: buffer\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3-preview.24\r\n- Last known good version:  N/A\r\n- IDE:  VS.NET\r\n- Platform Target Frameworks: 10.0.19041.0 - 10.0.17763.0\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Linux:  \u003C!-- The version and distro of linux that you are building for, e.g. Ubuntu 16.04 --\u003E\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.10 --\u003E\r\n  - Tizen:  \u003C!-- the version of the Tizen SDK you are compiling against, e.g. 4.0 --\u003E \r\n  - tvOS:  \u003C!-- the version of the tvOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - UWP:  6.2.10\r\n  - watchOS:  \u003C!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:   x64\r\n  \r\n** Details ** \r\n\r\nThe manifest permission is all opened. For those images that fail, I can call \u0060GetThumbnailAsync\u0060 properly. \r\n\r\nMoreover, the stream is not null, I added the following code: \r\n\r\n\u0060\u0060\u0060\r\n                        if (stream.CanRead \u0026\u0026 stream.CanSeek)\r\n                        {\r\n                            stream.Seek(0, SeekOrigin.Begin);\r\n                        }\r\n\u0060\u0060\u0060\r\n\r\nthese lines pass, and the \u0060Decode\u0060 still failed. \r\n\r\nHowever, if I do this instead: \r\n\r\n\u0060\u0060\u0060\r\nSKImage img = SKImage.FromEncodedData(stream);\r\nSKBitmap bitmap = SKBitmap.FromImage(img);\r\n\u0060\u0060\u0060  \r\n\r\nNow those images can be loaded. \r\n\r\nbut why? \r\n\r\n**Screenshots**\r\n\r\nI uploaded one failed image in SO: \r\nhttps://stackoverflow.com/questions/66096184/why-does-skiasharp-fail-to-load-some-image-in-uwp-when-calling-skbitmap-decode\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "sowenzhang",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.3",
+  "createdAt": "2021-02-09T15:09:58",
+  "updatedAt": "2022-10-29T09:01:17",
+  "closedAt": "2022-09-29T06:55:01",
+  "commentCount": 9,
+  "reactionCount": 9
+}

@@ -1,0 +1,31 @@
+{
+  "number": 2527,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKBitmap.CopyTo leaking memory?",
+  "body": "**Description**\r\n\r\nI have the following code in a Xamarin.iOS application that appears to leak memory according to the Profiler:\r\n\r\n\u0060\u0060\u0060\r\n        public void Render(SKCanvas canvas, float x, float y, float width, float height)\r\n        {\r\n            if (this.disposed)\r\n            {\r\n                throw new ObjectDisposedException(nameof(SmartButton));\r\n            }\r\n\r\n            this.SetRenderArea(x, y, width, height);\r\n            if (this.IsEmpty)\r\n            {\r\n                return;\r\n            }\r\n\r\n            using (SKBitmap renderedBitmap = this.RenderButton(this.bitmap.Copy()))\r\n            {\r\n                // Rendered button is a shadow bitmap buffer to allow overloading.\r\n                canvas.DrawBitmap(renderedBitmap, new SKRect(this.x, this.y, this.x \u002B this.width, this.y \u002B this.height), SmartButton.HighQualiyPaint);\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nI expect that SBBitmaps are not leaked because there should be no remaining reference in my code.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp.Views.Forms 2.88.3\r\n- Last known good version:  NA\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - iOS:  16\r\n- Target Devices:   all devices supporting iOS 16.\r\n\r\nHere is the profiler results on an iPhone 6S: There are more than 76100 SKBitamp objects in memory.\r\n\r\n\u003Cimg width=\u00221083\u0022 alt=\u0022Screenshot 2023-07-18 at 16 50 12\u0022 src=\u0022https://github.com/mono/SkiaSharp/assets/4366356/4df3c52a-024b-4e17-b532-3b1a0cf826fd\u0022\u003E\r\n\r\nAny help appreciated.",
+  "author": {
+    "login": "omatrot",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/needs-repro",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-07-18T14:53:48",
+  "updatedAt": "2023-10-07T03:00:26",
+  "closedAt": "2023-09-07T01:00:24",
+  "commentCount": 3,
+  "reactionCount": 0
+}

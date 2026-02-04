@@ -1,0 +1,29 @@
+{
+  "number": 1361,
+  "type": "pr",
+  "state": "closed",
+  "title": "WASM Unit Tests",
+  "body": "**Description of Change**\r\n\r\nSince we have the WASM library, and we do have the capability of running a headless browser on CI... Why not?\r\n\r\nThis PR does a few things (\u0027cause, bugs) but the main idea is to set up a test platform. Right now, it just p/invokes into the library and checks the version, but that is just a start. In a separate PR, the full test suite can be added. (the main reason for not doing this now is that we need a few things from #1333 that aren\u0027t quite ready yet)\r\n\r\nThe next chunk of work will be to get a NuGet package that can be pulled in by any platform - such as Uno - and then be hooked up with whatever system/scripts/tools that are being used. For example, if Uno.SkiaSharp depended on \u0060SkiaSharp.NativeAssets.Wasm\u0060, all they will need is a custom build of the managed part that works in the way they need. When all the bits are aligned, we can just go ahead and release a \u0060SkiaSharp.Wasm\u0060 - or even merge this if .NET 6 supports it.\r\n\r\nSo far, we have a WASM library building, and this PR spot checks it to make sure it is valid and can be used. The next PR will do full tests and/or NuGets and/or libraries.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-06-28T21:20:53",
+  "updatedAt": "2020-07-09T02:17:45",
+  "closedAt": "2020-06-29T17:28:13",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/wasm-tests",
+  "additions": 583,
+  "deletions": 25,
+  "changedFiles": 22,
+  "commits": 26,
+  "reviews": []
+}

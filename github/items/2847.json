@@ -1,0 +1,23 @@
+{
+  "number": 2847,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp crashes in WebAssembly if building with non-Release/Debug build config",
+  "body": "### Description\n\nNot actually sure if this is specifically a dotnet issue or a Skia issue, but since everything was working until adding Skia, I\u0027m opening an issue in both places.\r\n\r\nEssentially the problem is that you cannot use custom build configurations if using SkiaSharp \u002B WASM or it will mysteriously crash at runtime on \u0060SKPaint\u0060 dispose (after a using block). But it usually doesn\u0027t crash right away, it takes around 79 dispose calls in the repro code before the crash:\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/9853156/ee870050-ecd4-4667-9c3f-c4049c8fea27)\r\n\n\n### Code\n\nRepro repo: https://github.com/RPGillespie6/dotnet_skia_wasm_crash\r\n\r\nBuild with \u0060Release\u0060 build configuration and observe that the code runs to completion. Build with \u0060Release_WASM\u0060 build configuration and observe that the code crashes on \u0060SKPaint\u0060 dispose after 79 iterations. Confirmed this repo reproduces the problem on 2 different PCs (one with Intel i9, one with AMD Ryzen 7).\r\n\r\nWe use custom build configurations to set different \u0060#if\u0060 flags, so it\u0027s kind of annoying to work around.\n\n### Expected Behavior\n\nI expected SkiaSharp not to crash at runtime if using a build config other than \u0060Debug\u0060 or \u0060Release\u0060 in conjunction with webassembly build\n\n### Actual Behavior\n\nSkiaSharp crashes at runtime when using a build config other than \u0060Debug\u0060 or \u0060Release\u0060 in conjunction with webassembly build\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nOther (Please indicate in the description)\n\n### Platform / Operating System Version\n\nWindows 11 \u002B Chrome or Firefox\n\n### Devices\n\nDesktop PC\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "RPGillespie6",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-26T21:34:07",
+  "updatedAt": "2024-04-27T17:00:14",
+  "closedAt": "2024-04-27T16:59:15",
+  "commentCount": 1,
+  "reactionCount": 0
+}

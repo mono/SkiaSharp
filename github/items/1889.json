@@ -1,0 +1,38 @@
+{
+  "number": 1889,
+  "type": "pr",
+  "state": "closed",
+  "title": "[Blazor] prevent infinite loop in SKCanvasView",
+  "body": "**Description of Change**\r\n\r\nPrevents infinite resize loop - i don\u0027t know if this is the most elegant solution, but it works.\r\n\r\nAdded the following line to \u0060OnSizeChanged\u0060 Event of Blazor \u0060SKCanvasView\u0060\r\n\u0060\u0060\u0060csharp\r\nif (Math.Round(canvasSize.Width * dpi) == newSize.Width \u0026\u0026 Math.Round(canvasSize.Height * dpi) == newSize.Height)\r\n    return;\r\n\u0060\u0060\u0060\r\nIf  Monitor scaling is applied in Windows Settings App, the view keeps multiplying the canvas size with the DPI (in my case being 1.25 for 125% scaling) in the \u0060Invalidate\u0060-Method. \r\nThe Canvas will be resized to the new size which results in the \u0060SizeWatcherInterop\u0060 to fire its \u0060OnSizeChanged\u0060 Event which will set \u0060canvasSize\u0060 to \u0060newSize\u0060 and calls \u0060Invalidate\u0060 again to start infinite loop, also mentioned here:\r\nhttps://github.com/mono/SkiaSharp/issues/1838#issuecomment-991914840\r\n\r\n**Bugs Fixed**\r\nhttps://github.com/mono/SkiaSharp/issues/1838\r\n\r\n- Related to issue #1838\r\n\r\n**API Changes**\r\nNone\r\n\r\n**Behavioral Changes**\r\nNone\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "JensKrumsieck",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-12T16:43:28",
+  "updatedAt": "2021-12-14T23:47:20",
+  "closedAt": "2021-12-14T23:47:20",
+  "commentCount": 1,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 2,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2021-12-14T18:55:17"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2021-12-14T19:46:46"
+    }
+  ]
+}

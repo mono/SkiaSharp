@@ -1,0 +1,32 @@
+{
+  "number": 3490,
+  "type": "pr",
+  "state": "open",
+  "title": "Update HarfBuzzSharp binding",
+  "body": "This pull request adds several new features and APIs to the HarfBuzzSharp binding, primarily to improve support for OpenType font features, language matching, and variable font manipulation. It also introduces additional font property controls and minor documentation improvements for SkiaSharp resource and Skottie bindings.\r\n\r\nKey enhancements and new APIs:\r\n\r\n**OpenType and Font Feature Support:**\r\n\r\n* Added the \u0060OpenTypeLayoutTableTag\u0060 enum and \u0060OpenTypeFeatureNameIds\u0060 struct to represent OpenType layout tables and feature name metadata, respectively.\r\n* \u0060Face\u0060 class: Added methods to retrieve OpenType name table entries, script tags, feature tags, and feature name IDs, including \u0060GetName\u0060, \u0060TryGetName\u0060, \u0060GetAllNameEntries\u0060, \u0060GetOpenTypeLayoutScriptTags\u0060, \u0060GetOpenTypeLayoutFeatureTags\u0060, and \u0060TryGetOpenTypeLayoutFeatureNameIds\u0060.\r\n\r\n**Font Variable and Synthetic Properties:**\r\n\r\n* \u0060Font\u0060 class: Added APIs to get/set pixels-per-em (\u0060GetPpem\u0060, \u0060SetPpem\u0060), point size (\u0060Ptem\u0060), synthetic slant (\u0060SyntheticSlant\u0060), synthetic bold (\u0060SetSyntheticBold\u0060, \u0060GetSyntheticBold\u0060), variation axes (\u0060SetVariation\u0060, \u0060SetVariations\u0060), and named instance selection (\u0060NamedInstance\u0060).\r\n\r\n**Buffer and Language Enhancements:**\r\n\r\n* \u0060Buffer\u0060 class: Added \u0060CreateSimilar\u0060 method to create a new buffer with the same settings as an existing one.\r\n* \u0060Language\u0060 class: Added a \u0060Matches\u0060 method to check if one language matches another, considering language subtags.\r\n\r\n**Documentation and Generated Code Updates:**\r\n\r\n* Updated comments in SkiaSharp Resources and Skottie generated bindings for better consistency with C pointer types (no functional changes). [[1]](diffhunk://#diff-e09a6828da6d1e52a97efb5ea91f45a96aae377798cec7556ff16c38c1ff457eL196-R196) [[2]](diffhunk://#diff-e09a6828da6d1e52a97efb5ea91f45a96aae377798cec7556ff16c38c1ff457eL215-R215) [[3]](diffhunk://#diff-e09a6828da6d1e52a97efb5ea91f45a96aae377798cec7556ff16c38c1ff457eL234-R234) [[4]](diffhunk://#diff-e09a6828da6d1e52a97efb5ea91f45a96aae377798cec7556ff16c38c1ff457eL253-R253) [[5]](diffhunk://#diff-e2537912f782e036542ed1f5c9513e861b2291ced3c20b68d9f57b230e6389dcL158-R158) [[6]](diffhunk://#diff-e2537912f782e036542ed1f5c9513e861b2291ced3c20b68d9f57b230e6389dcL177-R177) [[7]](diffhunk://#diff-e2537912f782e036542ed1f5c9513e861b2291ced3c20b68d9f57b230e6389dcL215-R215) [[8]](diffhunk://#diff-e2537912f782e036542ed1f5c9513e861b2291ced3c20b68d9f57b230e6389dcL424-R424) [[9]](diffhunk://#diff-e2537912f782e036542ed1f5c9513e861b2291ced3c20b68d9f57b230e6389dcL443-R443)\r\n\r\nThese changes significantly enhance the HarfBuzzSharp API\u0027s ability to work with advanced font features and variable fonts, making it easier to access and manipulate font metadata and shaping properties.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-02T21:51:49",
+  "updatedAt": "2026-02-02T21:51:49",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "dev/harfbuzz-binding-update",
+  "additions": 5580,
+  "deletions": 1560,
+  "changedFiles": 24,
+  "commits": 19,
+  "reviews": []
+}

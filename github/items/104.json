@@ -1,0 +1,36 @@
+{
+  "number": 104,
+  "type": "issue",
+  "state": "closed",
+  "title": "Design: sk_matrix_t, should it contain fTypeMask?",
+  "body": "The C\u002B\u002B \u0060SkMatrix\u0060 type contains an optimization, whenever a new \u0060SkMatrix\u0060 is created, or modified, the value of fTypeMask is updated to reflect the contents of the Matrix.  This helps quickly decide if a matrix for example only contains translation, or if the matrix represents the identity.   This speeds up various operations in the stack.\n\nThe \u0060sk_matrix_t\u0060 data type that is surfaced on the C API does not include this information.  This means that the code is unable to use the optimizations built into \u0060SkMatrix\u0060, and instead for some operations, the type of the matrix must be computed at runtime.\n\nPerhaps we should extend \u0060sk_matrix_t\u0060 to include this flag, and additionally, we could add assertions to the runtime to ensure that \u0060SkMatrix\u0060 and \u0060sk_matrix_t\u0060 are toll-free bridged, to prevent extra copying of the matrices at runtime (this can also be done for a few other things as well).\n\n\u003E VS bug [#738681](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/738681)",
+  "author": {
+    "login": "migueldeicaza",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2016-06-28T14:53:35",
+  "updatedAt": "2022-08-20T00:02:43",
+  "closedAt": "2020-04-26T06:16:13",
+  "commentCount": 1,
+  "reactionCount": 0
+}

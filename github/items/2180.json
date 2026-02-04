@@ -1,0 +1,18 @@
+{
+  "number": 2180,
+  "type": "issue",
+  "state": "closed",
+  "title": "Enable font subsetting for PDFs through Harfbuzz",
+  "body": "Related issues: #848\r\n\r\nPDFs generated with SkiaSharp are very large in size.\r\nThe root cause of this issue seems to be, that Skia embeds all used fonts inside the document, [as stated here](https://skia.org/docs/dev/design/pdftheory/#fonts).\r\n\r\nFonts contain information for a lot of characters. However most of the time, there is only a small percentage of these characters that is actually needed to display the document correctly.\r\nSubsetting these fonts would reduce the size of the font files drastically, which would result in much smaller PDFs.\r\n\r\nLooking at Skia\u0060s source code ([SkPDFSubsetFont](https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/src/pdf/SkPDFSubsetFont.cpp#L10)) there seems to be a way to automatically subset all used fonts inside a PDF document with harfbuzz (\u0022SK_PDF_USE_HARFBUZZ_SUBSET\u0022). [This line](https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/BUILD.gn#L1114) seems to enable the subsetting support.\r\n\r\nOther Skia binding libraries (Skiko, [Rust-Skia](https://github.com/rust-skia/rust-skia/blob/master/skia-bindings/build_support/skia/config.rs#L157)) seem to enable this flag, which results in a much smaller PDFs. I can provide some example PDF files (with and without subsetting) generated with these libraries if someone wants to take a look at it.\r\n\r\nWould be great if we could enable this for SkiaSharp. I am not familar with the build system, but there should be a way to specify this flag, right? Maybe [here](https://github.com/mono/SkiaSharp/blob/main/native/windows/build.cake#L45)?\r\n\r\n\r\n\r\nBy the way, [QuestPDF](https://github.com/QuestPDF/QuestPDF) uses SkiaSharp for PDF document generation and smaller pdf file sizes is one of the [most requested features](https://github.com/QuestPDF/QuestPDF/issues/31), so it would be great to have this.\r\n",
+  "author": {
+    "login": "bennetbo",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-21T19:14:16",
+  "updatedAt": "2022-09-11T12:01:16",
+  "closedAt": "2022-08-12T10:56:23",
+  "commentCount": 3,
+  "reactionCount": 5
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2433,
+  "type": "issue",
+  "state": "open",
+  "title": "Path effects not working on .NET 5",
+  "body": "**Description**\r\n\r\nPath effects not working on .NET 5\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n SKPaint paint = new SKPaint\r\n    {\r\n        Style = SKPaintStyle.Stroke,\r\n        Color = SKColors.Blue,\r\n        StrokeWidth = 10,\r\n        StrokeCap = (SKStrokeCap)strokeCapPicker.SelectedItem,\r\n        PathEffect = SKPathEffect.CreateDash(GetPickerArray(dashArrayPicker), 20)\r\n    };\r\n\r\n    SKPath path = new SKPath();\r\n    path.MoveTo(0.2f * info.Width, 0.2f * info.Height);\r\n    path.LineTo(0.8f * info.Width, 0.8f * info.Height);\r\n    path.LineTo(0.2f * info.Width, 0.8f * info.Height);\r\n    path.LineTo(0.8f * info.Width, 0.2f * info.Height);\r\n\r\n    canvas.DrawPath(path, paint);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nPaint applies a dash effect.\r\n\r\n**Actual Behavior**\r\n\r\nEvery call gives the following output: \u0060Unsupported path effect in addPaint.\u0060 The path is painted as a solid line.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version:  ???\r\n- IDE:  Visual Studio 2022 17.5.2\r\n- Platform Target Frameworks: \r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "jovinson-ms",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-03-31T04:26:08",
+  "updatedAt": "2023-03-31T04:26:08",
+  "commentCount": 0,
+  "reactionCount": 0
+}

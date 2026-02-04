@@ -1,0 +1,23 @@
+{
+  "number": 2662,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Hard crash when using SkiaSharp 2.88.6 with .Net 8 RC2",
+  "body": "### Description\n\nAs you know, my app has used SkiaSharp to do thumbnail resize ops for years. This week i upgraded from .Net 8 preview 7 to RC2, and as part of that I also upgraded SkiaSharp from 2.88.5 =\u003E 2.88.6. Once I\u0027d done that, the app just crashes *hard* when I try and resize images for thumbnails. No exception, no stack traces, just a hard SIGTERM exit and no more process. \r\n\r\nI\u0027ll try and debug through and see if I can track down the exact op that fails, but there\u0027s definitely something wrong here. :(\n\n### Code\n\nHaven\u0027t tracked it down precisely yet, but it\u0027s one of the Skia method calls in here: https://github.com/Webreaper/Damselfly/blob/master/Damselfly.Core.ImageProcessing/SkiaSharpProcessor.cs#L25\r\n\r\nHard to find because the debugger doesn\u0027t catch the crash. :(\n\n### Expected Behavior\n\nNot crash. ;)\n\n### Actual Behavior\n\nProcess vapourised, debugging session ends (in both VS for Mac, and Rider). if running in docker on Linux, the container is shut down. No logs, no exceptions, no stack trace, nothing. \n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (macOS)\n\n### Platform / Operating System\n\nLinux, macOS\n\n### Platform / Operating System Version\n\nMacOS Sonama\r\nLinux (Ubuntu in docker)\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Webreaper",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-30T23:14:26",
+  "updatedAt": "2023-11-30T18:00:30",
+  "closedAt": "2023-10-31T15:51:25",
+  "commentCount": 3,
+  "reactionCount": 0
+}

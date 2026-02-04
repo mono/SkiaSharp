@@ -1,0 +1,17 @@
+{
+  "number": 902,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKSurface.Snapshot() returns all pixels as #00000000 on UWP",
+  "body": "**Description**\r\n\r\nClearing the canvas with \u0060SKColors.White\u0060 then calling \u0060SKSurface.Snapshot()\u0060 returns all #00000000 pixels on UWP. However, it works properly on Android.\r\n\r\n**Code**\r\n\r\nA solution that reproduces the issue can be found [here](https://github.com/daltonks/SkiaSharp.UwpSnapshotBug).\r\n\r\nThe main part is in the [code-behind](https://github.com/daltonks/SkiaSharp.UwpSnapshotBug/blob/master/SkiaSharp.UwpSnapshotBug/MainPage.xaml.cs) and the [xaml](https://github.com/daltonks/SkiaSharp.UwpSnapshotBug/blob/master/SkiaSharp.UwpSnapshotBug/MainPage.xaml).\r\n\r\n\r\n**Expected Behavior**\r\n\r\nThe sample apps both write \u0060Has non-zero color: True\u0060 to the console.\r\n\r\n**Actual Behavior**\r\n\r\nAndroid writes \u0060Has non-zero color: True\u0060, but UWP writes \u0060Has non-zero color: False\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  Not sure\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Android: 9.0\r\n  - UWP:  16299 \r\n\r\n- Target Devices:\r\n  - Windows 10.0.18362\r\n  - Android Pie on a Samsung Galaxy S8\r\n",
+  "author": {
+    "login": "daltonks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-07-02T02:38:48",
+  "updatedAt": "2019-07-16T12:30:31",
+  "commentCount": 9,
+  "reactionCount": 0
+}

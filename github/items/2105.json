@@ -1,0 +1,19 @@
+{
+  "number": 2105,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp.View.Uno.WinUI incompatible with other NativeReference (here storj_uplink)",
+  "body": "**Description**\r\nI\u0027m developing a Uno-App that uses the Storj-network with an open source library called [uplink.NET](https://github.com/TopperDEL/uplink.net), that needs a specific binary: storj_uplink.framework. If I have both nugets Skiasharp.Views.Uno.WinUI and [uplink.NET.iOs](https://www.nuget.org/packages/uplink.NET.iOS/) in a Mobile-project, I get the following error:\r\n\r\n\u0060\u0060\r\n1\u003EC:\\Users\\Toppe\\.nuget\\packages\\skiasharp.nativeassets.ios\\2.88.1-preview.63\\buildTransitive\\net6.0-ios13.6\\SkiaSharp.NativeAssets.iOS.targets(6,9): error MSB4096: Das Element \u0022C:\\Users\\Toppe\\.nuget\\packages\\uplink.net.ios\\2.9.2659\\build\\net6.0-ios\\storj_uplink.framework\u0022 in der Elementliste \u0022NativeReference\u0022 definiert keinen Wert f\u00FCr die Metadaten \u0022FrameworkFilename\u0022.  Wenn Sie diese Metadaten verwenden m\u00F6chten, qualifizieren Sie sie, indem Sie %(NativeReference.FrameworkFilename) angeben, oder vergewissern Sie sich, dass alle Elemente in der Liste einen Wert f\u00FCr diese Metadaten definieren.\u0060\u0060\r\n\r\nIt basically says, that the storj_uplink.framework within the ElementList \u0022NativeReference\u0022 does not include the Metadata-element \u0022FrameworkFilename\u0022. The error points to the Skiasharp.NativeAssets.iOs.targets-file. If I understand correctly it verifies the native assets from Skiasharp to have a certain naming pattern. But that should not check other native assets, I think. At least I\u0027m not sure how I can overcome this issue.\r\n\r\nThe storj_uplink.framework can be found [here](https://github.com/TopperDEL/uplink.net/tree/master/nuspec/xamarinios).\r\n\r\n\u003C!-- a general description goes here --\u003E\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\nI can use both Nugets together without issues.\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\nThe SkiaSharp-packages cannot work with the uplink.NET-package.\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.1-preview.63\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - iOS:  latest\r\n  \r\n\r\n",
+  "author": {
+    "login": "TopperDEL",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-06-08T13:14:15",
+  "updatedAt": "2022-09-03T12:01:25",
+  "closedAt": "2022-08-04T11:21:35",
+  "commentCount": 7,
+  "reactionCount": 1
+}

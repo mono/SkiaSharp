@@ -1,0 +1,29 @@
+{
+  "number": 386,
+  "type": "pr",
+  "state": "closed",
+  "title": "SKManagedStream Memory Fixes",
+  "body": "This PR addresses #83 and #376\r\n\r\nI believe there is a bug in the native skia that does not dispose properly of the streams passed to \u0060SKTypeface\u0060. As this was where I started working with streams (the loading of fonts) I had written code, that was flawed, to get around the issue. A problem arose when memory was tight or bitmaps were used - sometimes the GC would dispose the stream, when it should have waited for the native side to let it know when to destroy.\r\n\r\n\u0060SKManagedStream\u0060 is a special case in that it\u0027s lifetime is directly managed by the native, and the managed side needs to wait for the dispose event to be triggered from the native destructor. As a result, I keep a strong reference to the managed type to prevent them inadvertently disposing the native side when the GC kicks in.\r\n\r\nAs a result of the bug with \u0060SKTypeface\u0060, managed streams opened sometimes do not get closed and will live forever. This is not a simple case of disposing the streams as internally, the native side will make a copy of the stream reference (a new stream, but the same data). Some of these are the streams that never get disposed.\r\n\r\nThe only suggestion to avoid this is to reduce the number of \u0060SKTypeface\u0060 instances that are created, rather keep a reference around and reuse that. This should not be a big issue as most apps do not use an extraneous amount of fonts - and even if it does, the actual managed data stream only has a single copy, just the native wrappers are copied (and they are quite small).\r\n\r\nOther types, such as \u0060SKBitmap\u0060, \u0060SKCodec\u0060 and others all properly dispose they streams.\r\n\r\nIn addition, the GC will never pick up a \u0060SKManagedStream\u0060 since they are designed to live until they are disposed from the NATVE side. As a result, always make sure to dispose the stream when no longer in use.\r\n\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.59.2",
+  "createdAt": "2017-10-25T14:28:20",
+  "updatedAt": "2017-10-25T14:31:21",
+  "closedAt": "2017-10-25T14:29:52",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/experimental/memory-issues",
+  "additions": 109,
+  "deletions": 94,
+  "changedFiles": 11,
+  "commits": 10,
+  "reviews": []
+}

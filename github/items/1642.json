@@ -1,0 +1,33 @@
+{
+  "number": 1642,
+  "type": "pr",
+  "state": "closed",
+  "title": "avoid issues with failure to create gl surface",
+  "body": "**Avoiding issues with failure to create GL surface in UWP**\r\n\r\nNote, I don\u0027t think this is complete, but I want to demonstrate what seems to be necessary to avoid the UWP issues with having multiple SKSwapChainPanels with interleaved creation/destruction.\r\n*NOTE* for demonstration purposes I removed some cleanup of the GrContext from the panel. This is most likely not valid, but I\u0027m demonstrating what was required to make the behavior correct so that someone with more Skia engine knowledge might use that to find the root cause.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1573 \r\n\r\n**API Changes**\r\n\r\n**Behavioral Changes**\r\n\r\nThere is now some ref-counting and locking around obtaining the display within the GL init. This appears to be required because a shared display handle will be returned, and this should not be cleaned up when one of the panels dies if other panels are still alive. I\u0027m not sure if ref counting is the right approach or if the panels should detect that the display is invalid and re-initalize their graphics contexts.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description) (N/A couln\u0027t find any existing tests relating to Views?)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation (shouldn\u0027t require any new documentation, implementation detail)\r\n",
+  "author": {
+    "login": "gmurray81",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-02-23T22:01:29",
+  "updatedAt": "2021-03-30T16:47:33",
+  "closedAt": "2021-03-30T15:50:53",
+  "commentCount": 21,
+  "reactionCount": 2,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "add-ref-counting-to-display-management",
+  "additions": 43,
+  "deletions": 26,
+  "changedFiles": 3,
+  "commits": 13,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2021-03-30T15:50:21"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "number": 3397,
+  "type": "pr",
+  "state": "closed",
+  "title": "Enable Control Flow Guard for all Windows native DLLs",
+  "body": "Enable Control Flow Guard for all Windows native DLLs: libSkiaSharp.dll, libHarfBuzzSharp.dll, SkiaSharp.Views.WinUI.Native.dll, libEGL.dll, and libGLESv2.dll\r\n\r\n- Add ControlFlowGuard compiler and linker settings to all configurations\r\n- libSkiaSharp: Add /guard:cf to extra_cflags and extra_ldflags in GN build (applies to all Windows variants including nanoserver)\r\n- libHarfBuzzSharp: Add ControlFlowGuard settings to all Debug/Release builds for Win32, x64, and ARM64 platforms\r\n- SkiaSharp.Views.WinUI.Native: Add ControlFlowGuard settings to all WinUI configurations\r\n- libEGL \u0026 libGLESv2: Add /guard:cf to extra_cflags and extra_ldflags in ANGLE GN build for all architectures\r\n- Improves security by preventing ROP/JOP attacks with minimal performance impact\r\n\r\n\r\n\r\n|Library | Purpose | Build System | Architectures | CFG Status |\r\n|-- | -- | -- | -- | --|\r\n|libSkiaSharp.dll | Core 2D Graphics | GN/Ninja (Skia) | Win32, x64, ARM64 | \u2705\u00A0ENABLED |\r\n|libHarfBuzzSharp.dll | Text Shaping | Visual Studio | Win32, x64, ARM64 | \u2705\u00A0ENABLED|\r\n|SkiaSharp.Views.WinUI.Native.dll | WinUI Integration | Visual Studio | Win32, x64, ARM64 | \u2705\u00A0ENABLED|\r\n|libEGL.dll | OpenGL ES Context | GN/Ninja (ANGLE) | x86, x64, arm64 | \u2705\u00A0ENABLED|\r\n|libGLESv2.dll | OpenGL ES Graphics | GN/Ninja (ANGLE) | x86, x64, arm64 | \u2705\u00A0ENABLED|\r\n\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "Aguilex",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libHarfBuzzSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-28T20:06:47",
+  "updatedAt": "2025-10-29T00:20:23",
+  "closedAt": "2025-10-29T00:20:20",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "enable-cfg-harfbuzz",
+  "additions": 19,
+  "deletions": 3,
+  "changedFiles": 4,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2025-10-28T20:37:32"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2025-10-28T22:13:12"
+    }
+  ]
+}

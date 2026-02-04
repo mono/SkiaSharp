@@ -1,0 +1,33 @@
+{
+  "number": 547,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKManagedPixelSerializer does not AOT",
+  "body": "### Description\r\n\r\n\u0060SKManagedPixelSerializer:EncodeInternal\u0060 is using the wrong attribute and thus generated invalid IL when AOT-ing.\r\n\r\n\u0060\u0060\u0060\r\n[MonoPInvokeCallback (typeof (SKBitmapReleaseDelegateInternal))]\r\nprivate static IntPtr EncodeInternal (IntPtr cserializer, IntPtr pixmap)\r\n\u0060\u0060\u0060\r\n\r\nThe correct code should be:\r\n\u0060\u0060\u0060\r\n[MonoPInvokeCallback (typeof (encode_delegate))]\r\nprivate static IntPtr EncodeInternal (IntPtr cserializer, IntPtr pixmap)\r\n\u0060\u0060\u0060\r\n\r\n### Stack Trace\r\n\r\n\u0060\u0060\u0060\r\nUnable to compile method \u0027(wrapper native-to-managed) void SkiaSharp.SKManagedPixelSerializer:EncodeInternal (intptr,intptr)\u0027 due to: \u0027Invalid IL code in (wrapper native-to-managed) SkiaSharp.SKManagedPixelSerializer:EncodeInternal (intptr,intptr): IL_0054: ret       \r\n    \r\n     assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null) signature:\u003Cnone\u003E\u0027.\r\n    Mono Ahead of Time compiler - compiling assembly /Users/minom/develop/xamarin-forms/UAE777v2/iOS/obj/iPhone/Debug/device-builds/iphone5.4-10.3.3/mtouch-cache/Build/SkiaSharp.dll\r\n    AOTID 8A68759C-DD2E-71E6-4401-6B843770FFCF\r\n    Code: 305548(70%) Info: 3947(0%) Ex Info: 92186(21%) Unwind Info: 13673(3%) Class Info: 3595(0%) PLT: 682(0%) GOT Info: 10174(2%) Offsets: 4056(0%) GOT: 6728\r\n    Compiled: 635/636 (99%), No GOT slots: 0 (0%), Direct calls: 193 (36%)\r\n    Output file: \u0027/Users/minom/develop/xamarin-forms/UAE777v2/iOS/obj/iPhone/Debug/device-builds/iphone5.4-10.3.3/mtouch-cache/armv7/SkiaSharp.dll.s\u0027.\r\n    Linking symbol: \u0027_mono_aot_module_SkiaSharp_info\u0027.\r\n    JIT time: 121 ms, Generation time: 121 ms, Assembly\u002BLink time: 0 ms.\r\n\u0060\u0060\u0060\r\n\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.60.2",
+  "createdAt": "2018-06-08T16:56:13",
+  "updatedAt": "2022-08-19T15:02:19",
+  "closedAt": "2018-06-08T19:38:23",
+  "commentCount": 1,
+  "reactionCount": 0
+}

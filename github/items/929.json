@@ -1,0 +1,40 @@
+{
+  "number": 929,
+  "type": "pr",
+  "state": "closed",
+  "title": "HarfBuzzSharp 2.6.1",
+  "body": "**Description of Change**\r\n\r\nThis updates HarfBuzzSharp to version 2.6.1 and has added bindings for introduces OpenType Metrics API\r\nThis also adds some overloads to Buffer.cs that take an integer as codepoint to make the life easier when working with codepoints.\r\n\r\n**API Changes**\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n- Definitions.cs\r\n-- \u0060public enum OpenTypeMetricsTag : uint\u0060\r\n-- \u0060public readonly structs OpenTypeMetrics\u0060\r\n- Font.cs\r\n-- \u0060public OpenTypeMetrics OpenTypeMetrics { get; }\u0060\r\n--- \u0060public bool TryGetPosition (OpenTypeMetricsTag metricsTag, out int position)\u0060\r\n--- \u0060public float GetVariation (OpenTypeMetricsTag metricsTag)\u0060\r\n--- \u0060public int GetXVariation (OpenTypeMetricsTag metricsTag)\u0060\r\n--- \u0060public int GetYVariation (OpenTypeMetricsTag metricsTag)\u0060\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "Gillibald",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-08-14T16:58:24",
+  "updatedAt": "2019-11-21T20:35:12",
+  "closedAt": "2019-09-28T14:19:00",
+  "commentCount": 7,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "harfbuzz26",
+  "additions": 257,
+  "deletions": 34,
+  "changedFiles": 28,
+  "commits": 14,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "DISMISSED",
+      "submittedAt": "2019-09-27T23:30:43"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-09-28T01:01:14"
+    }
+  ]
+}

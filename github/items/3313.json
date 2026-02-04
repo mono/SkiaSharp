@@ -1,0 +1,22 @@
+{
+  "number": 3313,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Blazor - SKImage rendering tanks performance when scaling image in SKCanvasView",
+  "body": "### Description\n\n_**NOTE: We are using SKCanvasView - there are some issues we have using SKGLView - we see terrible performance with some of our rendering, I think aroudn DrawLine calls but SKCanvasView is smooth. This does not appear to be an issue with SKGLView**_\n\nWhen drawing an SKImage in any scale other than 1:1 with the image, the performance in Blazor absolutely tanks (120fps down to sub 20fps) when drawing just a single image.\n\nWe are porting over logic that we run fine on iOS and Android to now also run in the browser with Blazor.\n\nI\u0027ve noticed a single, large image, kills performance.\n\nHere are some basic screenshot below showing a single image being rendered and the FPS displayed.\n\nThe image, is a single SKBitmap loaded in, then a single SKImage is create from that and cached, with the same SKImage being drawn. \n\nThe SKImage is \u0060786 x 1090\u0060 pixels.\n\nWhen drawing in a 800x800 Rect, we get around \u006050fps\u0060\n\n\u003Cimg width=\u00221840\u0022 height=\u00221191\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/085a25a2-0300-4adc-8c6d-343d8e88d898\u0022 /\u003E\n\nWhen drawing in a 1600x1600 Rect, we get around \u006012fps\u0060\n\n\u003Cimg width=\u00221796\u0022 height=\u00221147\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/1cd90261-e281-4d8b-9109-605a28980f6f\u0022 /\u003E\n\nWhen drawing exactly in a 786x1090 Rect, we get the solic \u0060120fps\u0060 (that we get when drawing \u0027nothing\u0027)\n\n\u003Cimg width=\u00221840\u0022 height=\u00221191\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/835f2669-29da-40dc-aa22-98ed79a458f9\u0022 /\u003E\n\n\nIf I then just do a canvas.Scale(2) before drawing in the fixed size rect, we go back to around \u006010fps\u0060\n\n\u003Cimg width=\u00221840\u0022 height=\u00221191\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/5a247fb0-7463-4f0d-a424-4f7e0e5bf2b7\u0022 /\u003E\n\n\nI\u0027ve tried experimenting with different SKSamplingOptions, but none improve it.\n\n**Is there something we should be doing differently for WASM/Blazor?**\n\nI remember we had similar issue on Android but that was when we had a \u0022High\u0022 filter quality (back in 2.88 days) - switching to Medium resolved all issues, but no Filter/Sampling options work for Blazor.\n\n\n\n### Code\n\nBit tricky to share code, but just rendering a large image was causing issues.\n\n\u0060\u0060\u0060cs\n        using (new SKAutoCanvasRestore(canvas))\n        {\n            canvas.ResetMatrix();\n            canvas.Scale(2);\n            canvas.DrawImage(image.Image, new SKRect(0,0, 786, 1090), SKSamplingOptions.Default, theme.BitmapPaint);\n        }\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nSKCanvasView should handle rendering a scaled image similar to other native platforms (iOS/Android/etc) \n\n### Actual Behavior\n\nSKCanvasView tanks performance, SKGLView handles it fine.\n\n### Version of SkiaSharp\n\n3.119.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nmacOS\n\n### Platform / Operating System Version\n\nConfirmed in Chrome, Firefox and Safari running on a Apple M2 Pro macbook\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "IainS1986",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-07-21T10:32:09",
+  "updatedAt": "2025-07-21T11:16:29",
+  "commentCount": 0,
+  "reactionCount": 1
+}

@@ -1,0 +1,22 @@
+{
+  "number": 752,
+  "type": "issue",
+  "state": "open",
+  "title": "measureText method returns different values in windows and linux container",
+  "body": "**Description**\r\n\r\nValues returned by measureText in linux container and in windows are not same.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nSKPaint paint = new SKPaint();\r\npaint.Typeface = SKTypeface.FromFamilyName(\u0022Calibri\u0022, SKTypefaceStyle.Bold);\r\npaint.IsAntialias = true;\r\npaint.TextSize = 19;\r\nSKRect rect = new SKRect();\r\nfloat width = paint.MeasureText(\u0022Progressive Report Template\u0022, ref rect);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nValues should be same\r\n\r\n**Actual Behavior**\r\n\r\nIn windows I\u0027m getting 228.213379 and in linux container the same code returns 231 as width.\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.59.3\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\r\n\r\nI\u0027m using these fonts in both windows and linux container.\r\n[Calibri.zip](https://github.com/mono/SkiaSharp/files/2748183/Calibri.zip)\r\n",
+  "author": {
+    "login": "selvarathinamm",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-01-11T05:28:58",
+  "updatedAt": "2025-08-04T22:18:03",
+  "commentCount": 7,
+  "reactionCount": 0
+}

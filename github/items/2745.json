@@ -1,0 +1,27 @@
+{
+  "number": 2745,
+  "type": "issue",
+  "state": "closed",
+  "title": "System.DllNotFoundException: libSkiaSharp exception is thrown in Blazor WASM .NET 8.0",
+  "body": "### Description\r\nSystem.DllNotFoundException: libSkiaSharp exception is thrown while using SkiaSharp library in Blazor WASM .NET 8.0 and this issue doesn\u0027t occur in Blazor WASM .NET 6.0.\r\n\r\n**Stack trace:**  \r\n\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. \r\n ---\u003E System.DllNotFoundException: libSkiaSharp \r\n    at SkiaSharp.SKImageInfo..cctor() \r\n\r\n**Note:** \r\nWhen trying the same approach in Blazor WASM .NET 6.0, there is no issues. \r\n\r\n### Code\r\n\u0060\u0060\u0060cs\r\ntry \r\n{ \r\n    using (SKBitmap bitmap = new SKBitmap(500, 500, SKImageInfo.PlatformColorType, SKAlphaType.Premul)) \r\n    { \r\n        using (SKSurface sKSurface = SKSurface.Create(bitmap.Info)) \r\n        { \r\n            SKCanvas sKCanvas = sKSurface.Canvas; \r\n            SKPaint sKPaint = new SKPaint(); \r\n            sKPaint.Color = new SKColor(255, 0, 0); \r\n            sKCanvas.DrawText(\u0022Blazor\u0022, new SKPoint(250, 250), sKPaint); \r\n            MemoryStream stream = new MemoryStream(); \r\n            sKSurface.Snapshot().Encode(SKEncodedImageFormat.Png, 100).SaveTo(stream); \r\n        } \r\n    } \r\n} \r\ncatch (Exception ex) \r\n{ \r\n    ex.ToString(); \r\n} \r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nShould draw the text and save as png. \r\n\r\n### Actual Behavior\r\n\r\nThrows the above mentioned exception (System.DllNotFoundException: libSkiaSharp)\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.6\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nNone\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\n.NET 8.0\r\n\r\n**ASP.NET Core .NET 8.0 :** Working fine\r\n\r\n**Blazor server side .NET 8.0 :** Working fine\r\n\r\n**Blazor client side (WASM) .NET 8.0 :** Facing Lib SkiaSharp issue ",
+  "author": {
+    "login": "Akash26Arul",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-07T14:11:29",
+  "updatedAt": "2025-10-10T04:18:10",
+  "closedAt": "2024-11-21T16:34:22",
+  "commentCount": 8,
+  "reactionCount": 0
+}

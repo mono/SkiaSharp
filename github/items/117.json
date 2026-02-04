@@ -1,0 +1,28 @@
+{
+  "number": 117,
+  "type": "issue",
+  "state": "closed",
+  "title": "System.DllNotFoundException: libskia_osx.dylib",
+  "body": "It looks like the NuGet package of SkiaSharp is failing to copy \u0060libskia_osx.dylib\u0060 to Mac applications during the build. To repro:\n1. Create a MonoMac (Open Source) Cocoa Project.\n2. Add the SkiaSharp Nuget package.\n3. Add some code that uses SkiaSharp.\n4. Run the application.\n5. Application crashes with \u0060System.DllNotFoundException: libskia_osx.dylib\u0060.\n\nAfter manually copying \u0060SkiaSharp.1.49.1.0/build/net45/mac/libskia_osx.dylib\u0060 to \u0060bin/Debug/MyApp.app/Contents/MonoBundle/\u0060 the app runs perfectly.\n\nI was able to reproduce in both SkiaSharp.1.49.1.0 and SkiaSharp.1.49.4-beta.\n",
+  "author": {
+    "login": "calder",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2016-07-23T16:48:24",
+  "updatedAt": "2022-08-20T00:02:33",
+  "closedAt": "2016-07-29T17:15:31",
+  "commentCount": 1,
+  "reactionCount": 0
+}

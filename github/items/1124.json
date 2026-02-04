@@ -1,0 +1,18 @@
+{
+  "number": 1124,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] BULK send render calls to canvas",
+  "body": "In my app, I do tons of calls to the \u0060SKCanvas\u0060 to draw hundreds of thousands of elements. Getting some lags and fps drop. After some profiling, I\u0027ve found that a lot of performance is consumed by p/invoke.\r\n\r\nMaybe if there will be a bulk draw method that will take data array with function type and arguments we will be able to achieve a huge performance benefit.\r\n\r\nExample:\r\n\r\n\u0060\u0060\u0060\r\n_canvas.BulkDraw(new DrawOp[]{\r\nDrawOp.CreateDrawRect(args...),\r\nDrawOp.CreateDrawText(args...),\r\n...\r\n});\r\n\u0060\u0060\u0060\r\n\r\nWhat do you think? Am I right that this trick will improve performance or/and latency if draw call count is more than 1000?\r\n\r\nThe issue I see with this approach is memory consumption. We will need to create \u0060SKPaint\u0060 for each \u0060DrawOP\u0060. I see a solution to this problem by the creation of \u0060SKPaintPropChangeOp\u0060, which will change the props of SKPaint.",
+  "author": {
+    "login": "Mikolaytis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-02-04T23:54:46",
+  "updatedAt": "2022-08-19T06:02:54",
+  "closedAt": "2020-02-08T03:02:31",
+  "commentCount": 2,
+  "reactionCount": 0
+}

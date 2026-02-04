@@ -1,0 +1,58 @@
+{
+  "number": 2146,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix load the font which the name contains unicode text",
+  "body": "**Description of Change**\r\n\r\nI change the string input argument from \u0060string\u0060 to IntPtr. The \u0060sk_fontmgr_match_family_style\u0060 should input the \u0060utf8\u0060 encoding string, but we will input the Unicode16 string to it. That is why we can not load the font which the font name contains the unicode text, such as the Chinese font.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1914\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNow, we can load the font which the font name contains unicode text, such as the Chinese font.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "lindexi",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-05T12:15:21",
+  "updatedAt": "2022-08-09T00:46:44",
+  "closedAt": "2022-08-08T22:43:52",
+  "commentCount": 3,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 44,
+  "deletions": 28,
+  "changedFiles": 4,
+  "commits": 4,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2022-07-08T12:47:10"
+    },
+    {
+      "author": "lindexi",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-09T14:39:51"
+    },
+    {
+      "author": "lindexi",
+      "state": "COMMENTED",
+      "submittedAt": "2022-07-09T15:14:11"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-08T22:40:38"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-08-08T22:41:59"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-08-08T22:43:18"
+    }
+  ]
+}

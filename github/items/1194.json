@@ -1,0 +1,18 @@
+{
+  "number": 1194,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Support SkiaSharp as a Blazor Extension",
+  "body": "My understanding is SkiaSharp running on WebAssembly is in progress with a target release of May.  This would allow a \u0022Blazor Client\u0022 application to use SkiaSharp and Skia fully running in a supported client browser.\r\n\r\nOne highly desired feature after that would be supporting the Blazor model of having the option to run the business logic calling SkiaSharp either client or server via a \u0022Blazor Extension\u0022.  Running from the server is important for scenarios of smaller download size, thin client support, taking advantage of server capabilities, etc.  I understand the performance would be quite different in the server scenario, but it would still \u0027work\u0027.\r\n\r\nAn example of this concept used on an HTML5 Canvas API is here:\r\n[https://github.com/BlazorExtensions/Canvas](https://github.com/BlazorExtensions/Canvas)\r\n\r\nThis isn\u0027t rocket science, as the HTML5 canvas is a known API existing in the client browser, and the Blazor Extension wraps the canvas API so when running on the client, the extension simply calls the canvas API directly.  When running on the server, the Extension marshals the API call to the client over the Blazor SignalR connection.  There\u0027s some extra magic in that linked Extension to batch calls for performance, but you get the idea.\r\n\r\nWhile I\u0027m not an expert on the SkiaSharp architecture, my assumption is the only way this would work is have Skia still run in the client browser, and SkiaSharp (or a thin wrapper) run on the server to marshal the calls over SignalR.  Alternatively (but probably impossible for **this repo**) is have Skia marshall the calls over SignalR and have them execute using WebGL or Canvas.\r\n\r\nSo, ultimately the feature request is once SkiaSharp can run in Client Blazor, please support SkiaSharp as a Blazor Extension.",
+  "author": {
+    "login": "RChrisCoble",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2020-03-27T12:46:12",
+  "updatedAt": "2022-09-11T18:31:05",
+  "commentCount": 48,
+  "reactionCount": 19
+}

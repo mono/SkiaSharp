@@ -1,0 +1,19 @@
+{
+  "number": 1759,
+  "type": "issue",
+  "state": "closed",
+  "title": "OSX M1, .NET Core 6 - Unable to load shared library \u0027libHarfBuzzSharp\u0027",
+  "body": "When trying to use any HardBuzzSharp (version 2.6.1.8) I am getting the following at runtime on my MacBook M1:\r\n\r\n\u0060\u0060\u0060\r\nUnhandled exception. System.DllNotFoundException: Unable to load shared library \u0027libHarfBuzzSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the DYLD_PRINT_LIBRARIES environment variable: dlopen(liblibHarfBuzzSharp, 1): image not found\r\n   at HarfBuzzSharp.HarfBuzzApi.hb_blob_create(Void* data, UInt32 length, MemoryMode mode, Void* user_data, DestroyProxyDelegate destroy)\r\n   at HarfBuzzSharp.Blob.Create(IntPtr data, Int32 length, MemoryMode mode, ReleaseDelegate releaseProc) in HarfBuzzSharp.dll:token 0x600005f\u002B0x10\r\n   at HarfBuzzSharp.Blob..ctor(IntPtr data, Int32 length, MemoryMode mode, ReleaseDelegate releaseDelegate) in HarfBuzzSharp.dll:token 0x6000054\u002B0x0\r\n   at HarfBuzzSharp.Blob..ctor(IntPtr data, Int32 length, MemoryMode mode) in HarfBuzzSharp.dll:token 0x6000053\u002B0x0\r\n   at ConsoleApp1.Program.Main(String[] args) in /.../ConsoleApp1/ConsoleApp1/Program.cs:line 32\r\n\u0060\u0060\u0060\r\n\r\nThe same problem exists in e.g. SkiaSharp 2.80.3, but all works fine in SkiaSharp 2.88.0-preview61. The dlopen(liblibHarfBuzzSharp, 1) part looks fishy, but I have no idea what it could indicate. The lib itself is in the correct place (runtimes/osx/native/libHarfBuzzSharp.dylib).\r\n\r\nMy test program really does not do much, this is the code that crashes:\r\n\r\n\u0060var face = new HarfBuzzSharp.Face(new Blob(IntPtr.Zero, 0, MemoryMode.Duplicate), 0);\u0060\r\n\r\nAm I doing something wrong or is this a known issue? Any pointers appreciated!",
+  "author": {
+    "login": "jefim",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2021-08-06T22:29:59",
+  "updatedAt": "2022-08-19T00:02:36",
+  "closedAt": "2021-08-12T06:59:10",
+  "commentCount": 8,
+  "reactionCount": 0
+}

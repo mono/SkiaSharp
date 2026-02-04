@@ -1,0 +1,32 @@
+{
+  "number": 3076,
+  "type": "pr",
+  "state": "open",
+  "title": "Fixed SKGLView on Android not being rendered when using a TabBar",
+  "body": "**Description of Change**\r\n\r\nCurrently an \u0060SKGLView\u0060 on Android will not render when it appears for a second time, such as when the \u0060SKGLView\u0060 is placed on a MAUI Tab Page in a TabBar. The first time the Tab with the \u0060SKGLView\u0060 is displayed it correctly renders, however when switching to a different Tab and then coming back, the \u0060SKGLView\u0060 will not render anymore.\r\n\r\nThis PR solves this issue by constructing the internal \u0060GLThread\u0060 with the current size of the View, instead of relying on Android to call \u0060GLTextureView.OnLayoutChange()\u0060. If the size of the View has not been set yet by Android (which happens when the \u0060SKGLView\u0060 is displayed for the first time), the GLTextureView\u0027s Width and Height are both 0, just as the default of the GLThread used to be, so it is safe to use these values when constructing the \u0060GLThread\u0060.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2550\r\n- Most probably also fixes #2445\r\n- Possibly also fixes Mapsui/Mapsui#1896 which has already been mitigated by Mapsui/Mapsui#1934\r\n\r\n**API Changes**\r\n\r\nNo public API changes.\r\n\r\nPrivate API Change:\r\n\r\n- \u0060SkiaSharp.Views.Android.GLTextureView.GLThread(WeakReference\u003CGLTextureView\u003E glTextureViewWeakRef)\u0060 =\u003E \u0060GLThread(WeakReference\u003CGLTextureView\u003E glTextureViewWeakRef, int initialWidth, int initialHeight)\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "SimonvBez",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-11-24T16:34:29",
+  "updatedAt": "2025-07-20T08:40:11",
+  "commentCount": 2,
+  "reactionCount": 4,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "skglview-android-invisible-fix",
+  "additions": 5,
+  "deletions": 5,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

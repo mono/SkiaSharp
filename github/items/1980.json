@@ -1,0 +1,40 @@
+{
+  "number": 1980,
+  "type": "pr",
+  "state": "open",
+  "title": "Add pen as device type and pressure for iOS touch events",
+  "body": "**Description of Change**\r\n\r\nAs mentioned in https://github.com/mono/SkiaSharp/pull/1191#issuecomment-608457631, add device type support for pen touch events on iOS. Android and UWP are already implemented appropriately.\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to issue #1186\r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\nThe Apple Pencil will now be correctly recognized as pen device type. In addition, the pressure value will also be propagated to the touch event.\r\n\r\nAlthough there is no change in terms of method signatures, I want to point out that the default iOS implementation for pressure reports a value of 0 when the current touch has no pressure information. Before the change it was a fixed value of 1. In my opinion, this also goes along with the Android definition that reads that the value for pressure ranges from 0 (no pressure at all) to 1 (normal pressure). iOS also defines \u0022normal pressure\u0022 as 1, but may also very well go beyond for stronger pressure.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "richirisu",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/macOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/iOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Maui",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-03-22T15:15:38",
+  "updatedAt": "2025-03-05T08:50:11",
+  "commentCount": 1,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "feature-touchdevicetype-ios",
+  "additions": 15,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

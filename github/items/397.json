@@ -1,0 +1,18 @@
+{
+  "number": 397,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to deploy on MVC",
+  "body": "I am trying to draw using SkiaSharp, on the controller so i can return the image.\r\n\r\nBut i get the error:\r\n\r\nAn attempt was made to load a program with an incorrect format. (Exception from HRESULT: 0x8007000B)]\r\n   SkiaSharp.SkiaApi.sk_colortype_get_default_8888() \u002B0\r\n   SkiaSharp.SKImageInfo..cctor() \u002B7\r\n\r\n\r\nI have SkiaSharp referenced. And have even tried adding SkiaSharp.Views.Forms\r\nI have also tried setting targets explicitly to x86, or x64, or AnyCPU. But have had no luck.\r\nIts targetting .Net 4.5.2 \r\n\r\nis MVC just not supported? Surely if its .NET it can do this server side. \r\n\r\n        public ActionResult Index()\r\n        {\r\n            SKBitmap bitmap = new SKBitmap(1000, 1000);\r\n            SKCanvas canvas = new SKCanvas(bitmap);\r\n\r\n            canvas.Clear();\r\n\r\n            SKPaint paint = new SKPaint\r\n            {\r\n                Style = SKPaintStyle.Stroke,\r\n                Color = Color.Red.ToSKColor(),\r\n                StrokeWidth = 25\r\n            };\r\n\r\n            canvas.DrawCircle(500, 500, 100, paint);\r\n            paint.Style = SKPaintStyle.Fill;\r\n            paint.Color = SKColors.Blue;\r\n            canvas.DrawCircle(500, 500, 100, paint);\r\n\r\n            //ViewBag.Bytes = bitmap.Bytes;\r\n            return View();\r\n        }",
+  "author": {
+    "login": "doomsknight",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-11-22T14:16:02",
+  "updatedAt": "2022-08-19T18:02:11",
+  "closedAt": "2017-11-24T08:44:11",
+  "commentCount": 1,
+  "reactionCount": 0
+}

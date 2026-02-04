@@ -1,0 +1,17 @@
+{
+  "number": 2170,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKTypefacefont.FontWeight for Montserrat font not working properly in Linux",
+  "body": "**Description**\r\n\r\nWhen creating a typeface using Montserrat font name and SKFontStyleWeight as normal and save the typeface as stream and then take the typeface from that stream, the font weight is wrong in Linux environment.\r\n\r\n**Code**\r\n\r\n\u0060SKTypeface skTypeFace = SKTypeface.FromFamilyName(\u0022Montserrat\u0022,SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\u0060\r\n\u0060//Check font weight created from name.\u0060\r\n\u0060Console.WriteLine(skTypeFace.FontWeight);\u0060\r\n\u0060SKStreamAsset stream = skTypeFace.OpenStream();\u0060\r\n\u0060SKTypeface sKTypefacefont = SKTypeface.FromStream(stream);\u0060\r\n\u0060//Check font weight created from stream.\u0060\r\n\u0060Console.WriteLine(sKTypefacefont.FontWeight);\u0060\r\n\r\n\r\nFont file:\r\n\r\n[Montserrat-Regular.zip](https://github.com/mono/SkiaSharp/files/9111881/Montserrat-Regular.zip)\r\n\r\n\r\n**Expected Behavior**\r\nWhen creating font using OpenStream(), Font weight should be 400 in Linux as same as Windows.\r\n\r\n**Actual Behavior**\r\n\r\nWhen creating font using OpenStream(), Font weight is 100.\r\nIn windows it is working properly as 400. But in Linux it is not working properly.\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  v2.88.0-preview.209\r\n- IDE:  Microsoft Visual Studio Professional 2019 Version 16.10.3\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  \r\n  - Linux:  docker  Linux container\r\nNuGets used: SkiaSharp.v2.88.0-preview.209, SkiaSharp.NativeAssets.Linux v2.88.0-preview.209\r\n  \r\n\r\n\r\n**Reproduction Link**\r\n\r\nRun the above code snippet in Windows and Linux\r\n\r\n",
+  "author": {
+    "login": "MohanaselvamJ",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-14T12:23:09",
+  "updatedAt": "2022-07-14T15:42:38",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,19 @@
+{
+  "number": 991,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] sk_ipoint_t and sk_isize_t should use integer members",
+  "body": "See: https://github.com/mono/skia/blob/xamarin-mobile-bindings/include/c/sk_types.h\r\n\r\nCurrent code:\r\n\r\n\u0060\u0060\u0060c\r\ntypedef struct {\r\n    float   x;\r\n    float   y;\r\n} sk_ipoint_t;\r\n\r\ntypedef struct {\r\n    float   w;\r\n    float   h;\r\n} sk_isize_t;\r\n\r\ntypedef struct {\r\n    int32_t left;\r\n    int32_t top;\r\n    int32_t right;\r\n    int32_t bottom;\r\n} sk_irect_t;\r\n\u0060\u0060\u0060\r\n\r\nCoincidentally, the size of \u0060float\u0060 is 32.\r\nBut for correctness, \u0060sk_ipoint_t\u0060 and \u0060sk_isize_t\u0060 should use \u0060int32_t\u0060.",
+  "author": {
+    "login": "ngocdaothanh",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-03T12:07:11",
+  "updatedAt": "2022-08-19T09:02:12",
+  "closedAt": "2019-11-04T14:35:03",
+  "commentCount": 1,
+  "reactionCount": 0
+}

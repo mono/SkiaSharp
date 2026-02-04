@@ -1,0 +1,18 @@
+{
+  "number": 1666,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Text rendering and multi threading",
+  "body": "I am porting a tool that uses DirectWrite/SharpDX to SkiaSharp.\r\n\r\nIt just renders text, but the layout of the glyphs is done in C#.\r\n\r\nOn 16 CPU cores I create a new canvas and render text, then I save the canvas as a PNG. Each canvas uses a different font, and runs on its own thread.\r\n\r\nUnfortunately the SkiaSharp version is barely faster when using more threads, while the DirectWrite version speeds up by a factor of 10.\r\n\r\nProfiling seems to reveal dictionary/marshalling/dispose overhead, and it seems a global lock is being used.\r\n\r\nWe moved away from GDI to DirectX in the past to get rid of the global locking, so our server side rendering processes would scale nicely. So I am surprised that SkiaSharp introduces global locking again. \r\n\r\nI also see a draft PR is submitted that should remove locking (because it seems that WM_PAINT messages etc can be dispatched during the lock, nasty!)\r\n\r\nIs it true that SkiaSharp uses a global lock? Or did I misinterpret the profiling results?\r\n\r\nIf the global lock is used to map native and managed objects through a dictionary, would it be a solution to modify the C\u002B\u002B base classes so that these contain a \u0022GCHandle\u0022? Then the dictionary is not needed anymore. \r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-03-19T21:14:46",
+  "updatedAt": "2022-08-19T00:02:53",
+  "closedAt": "2021-03-22T12:55:28",
+  "commentCount": 1,
+  "reactionCount": 0
+}

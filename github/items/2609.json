@@ -1,0 +1,27 @@
+{
+  "number": 2609,
+  "type": "pr",
+  "state": "closed",
+  "title": "Added GetPixelSpan() with offsets",
+  "body": "**Description of Change**\n\nAdded some APIs to help get the span to an offset instead of only allowing the start of the pixmap memory.\n\n**Bugs Fixed**\n\n- Not a bug, but more the replacement for the \u0060GetAddr\u0060 members we removed in 3.0\n\n**API Changes**\n\n\u0060\u0060\u0060cs\n// extensions\nint SKColorType.GetBitShiftPerPixel ();\n\n// members\nSpan\u003Cbyte\u003E SKBitmap.GetPixelSpan (int x, int y);\nint SKImageInfo.BitShiftPerPixel { get; };\nint SKImageInfo.GetPixelBytesOffset (int x, int y);\nint SKPixmap.BitShiftPerPixel { get; };\nint SKPixmap.GetPixelBytesOffset (int x, int y);\nSpan\u003Cbyte\u003E SKPixmap.GetPixelSpan (int x, int y);\nSpan\u003CT\u003E SKPixmap.GetPixelSpan\u003CT\u003E (int x, int y);\n\u0060\u0060\u0060\n\n**Behavioral Changes**\n\nNone.\n\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\n\n**Required skia PR**\n\nNone.\n\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\n\n**PR Checklist**\n\n- [x] Has tests (if omitted, state reason in description)\n- [x] Rebased on top of main at time of PR\n- [x] Merged related skia PRs\n- [x] Changes adhere to coding standard\n- [ ] Updated documentation\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-09-15T00:07:17",
+  "updatedAt": "2023-09-15T15:07:24",
+  "closedAt": "2023-09-15T15:07:20",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/pixels",
+  "additions": 299,
+  "deletions": 56,
+  "changedFiles": 8,
+  "commits": 13,
+  "reviews": []
+}

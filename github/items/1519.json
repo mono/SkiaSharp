@@ -1,0 +1,34 @@
+{
+  "number": 1519,
+  "type": "pr",
+  "state": "closed",
+  "title": "Allow to create Angle GRGlInterface from non UWP environment",
+  "body": "Allow to create Angle \u0060GRGlInterface\u0060 from non UWP environment (WPF for an instance) from a new non deprecated \u0060Create()\u0060 API. Another option will be making \u0060AngleLoader\u0060 public to use a \u0060CreateAngle (GRGlGetProcedureAddressDelegate get)\u0060.\r\n\r\nNow we are using a deprecated method, but I want to be sure that in the next releases we will be able to init Angle without reflection :) :\r\n\u0060\u0060\u0060C#\r\nGrContext = GRContext.CreateGl(GRGlInterface.CreateNativeAngleInterface());\r\n\u0060\u0060\u0060\r\n\r\nWhat I want:\r\n\u0060\u0060\u0060C#\r\nGrContext = GRContext.CreateAngle();\r\n\u0060\u0060\u0060\r\n\r\nbasic \u0060Create()\u0060 call will make an \u0060openGL\u0060 \u0060GRContext\u0060.",
+  "author": {
+    "login": "Mikolaytis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-04T08:00:19",
+  "updatedAt": "2020-10-04T17:01:15",
+  "closedAt": "2020-10-04T17:01:14",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "master",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2020-10-04T11:09:33"
+    }
+  ]
+}

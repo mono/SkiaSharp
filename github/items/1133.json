@@ -1,0 +1,29 @@
+{
+  "number": 1133,
+  "type": "pr",
+  "state": "closed",
+  "title": "Prevent double load issue.",
+  "body": "**Description of Change**\r\n\r\nFor some reason, some controls (such as the \u0060ScrollViewer\u0060\u0027s \u0060LeftHeader\u0060, \u0060TopHeader\u0060 and \u0060TopLeftHeader\u0060) are loaded twice.\r\nWe work around this by just adding a counter.\r\nThis will also fix any other controls that are a bit weird.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1118\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nAny code that relied on the \u0060ScrollViewer\u0060\u0027s \u0060LeftHeader\u0060, \u0060TopHeader\u0060 and \u0060TopLeftHeader\u0060 loading twice and then unloading once will not work as expected. The control still loads twice, but the second (and subsequent) loads are ignored. Similarly, all unloads, except the load, will be ignore.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-02-08T21:55:31",
+  "updatedAt": "2020-04-29T23:48:00",
+  "closedAt": "2020-02-09T18:07:56",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1118",
+  "additions": 12,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

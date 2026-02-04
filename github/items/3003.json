@@ -1,0 +1,68 @@
+{
+  "number": 3003,
+  "type": "pr",
+  "state": "closed",
+  "title": "Supports ScaleFactor for GTK 3",
+  "body": "GTK has a simple mechanism to scale the UI on high dpi screens. It\u0027s just an \u0060int\u0060. On windows if you set the scaling to 200%, \u0060ScaleFactor\u0060 will return 2. At 125%, you still get 1.  (see https://docs.gtk.org/gtk3/method.Widget.get_scale_factor.html)\r\n\r\nI modified the code so that we create a bigger surface and then scale down when we render in the Cairo context. I added a \u0060IgnorePixelScaling\u0060 to mimic what has be done on other views, I set the default to true so that my changes are completely harmless. You need to opt-in to get the new behavior.\r\n\r\nMy GTK skills are pretty close to zero, so please look two times at the proposed changes \uD83D\uDE05\r\n\r\nTested on Windows only on the GTK sample.\r\n\r\nBefore (the text is blurry):  \r\n![image](https://github.com/user-attachments/assets/76715b1d-0a69-40f3-95a7-eab7c1fd63f4)\r\n\r\nAfter (the text is sharp):  \r\n![image](https://github.com/user-attachments/assets/ac8ceed4-291a-42c5-9591-7669c5215b19)\r\n",
+  "author": {
+    "login": "jairbubbles",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-18T15:32:28",
+  "updatedAt": "2024-09-24T08:02:28",
+  "closedAt": "2024-09-24T08:02:28",
+  "commentCount": 8,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "supports-scalefactor-for-gtk-3",
+  "additions": 28,
+  "deletions": 2,
+  "changedFiles": 2,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-09-18T17:32:39"
+    },
+    {
+      "author": "jairbubbles",
+      "state": "COMMENTED",
+      "submittedAt": "2024-09-18T19:27:09"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-09-19T06:01:10"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-09-19T06:01:47"
+    },
+    {
+      "author": "jairbubbles",
+      "state": "COMMENTED",
+      "submittedAt": "2024-09-19T07:32:30"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-09-19T08:15:55"
+    },
+    {
+      "author": "jairbubbles",
+      "state": "COMMENTED",
+      "submittedAt": "2024-09-24T08:02:11"
+    }
+  ]
+}

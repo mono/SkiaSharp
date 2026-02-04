@@ -1,0 +1,23 @@
+{
+  "number": 2973,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] DrawText does render to random locations",
+  "body": "### Description\n\n\u0060SKCanvas.DrawText\u0060 seems to render text wild. Currently I do my first steps with SkiaSharp 2.88.8 (from NuGet) - but I\u0027m pretty sure that the behavior of my example code must be a bug - or am I doing it wrong?\n\n### Code\n\n\u0060\u0060\u0060cs\r\n            using SKPaint paint = new()\r\n            {\r\n                IsAntialias = true,\r\n                Color = SKColors.Black,\r\n                TextSize = 40\r\n            };\r\n            using SKSurface surface = SKSurface.Create(new SKImageInfo(150, 50));\r\n            surface.Canvas.Clear(SKColors.White);\r\n            surface.Canvas.Save();\r\n            float x = 10;\r\n            foreach (char c in \u0022test12\u0022)\r\n            {\r\n                surface.Canvas.Translate(x, 10);\r\n                surface.Canvas.DrawText(c.ToString(), 0, 28, paint);\r\n                surface.Canvas.Restore();\r\n                x \u002B= 20;\r\n            }\r\n            using SKImage img = surface.Snapshot();\r\n            using SKData data = img.Encode(SKEncodedImageFormat.Png, 100);\r\n            File.WriteAllBytes(\u0022test2.png\u0022, data.Span.ToArray());\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nI expect all characters to be rendered at the fixed base line and the correct X coordinate, and I expect no character to disappear.\n\n### Actual Behavior\n\nThe first 2 characters seem to be rendered correctly, while character 3 is lower than expected and at the wrong X coordinate, and all following characters disappear completely.\r\n\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Windows 11\n\n### Devices\n\n- Desktop computer\n\n### Relevant Screenshots\n\n![test2](https://github.com/user-attachments/assets/606493f7-2e9c-4670-8606-dddc89f4d014)\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "nd1012",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-08-16T14:07:00",
+  "updatedAt": "2024-08-17T02:50:56",
+  "closedAt": "2024-08-17T02:50:56",
+  "commentCount": 1,
+  "reactionCount": 0
+}

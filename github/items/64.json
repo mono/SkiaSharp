@@ -1,0 +1,18 @@
+{
+  "number": 64,
+  "type": "issue",
+  "state": "closed",
+  "title": "Access Violation when trying to save as anything but png or jpg",
+  "body": "Trying the following code raises and AV:\n\n\u0060\u0060\u0060\n    class Program\n    {\n        static void Main(string[] args)\n        {\n            SKBitmap bmp = new SKBitmap(10, 10);\n            IntPtr len;\n            SKImage img = SKImage.FromPixels(bmp.Info, bmp.GetPixels(out len), bmp.RowBytes);\n            SKData data = img.Encode(SKImageEncodeFormat.Gif, 10);\n            using (FileStream fs = new FileStream(\u0022..\\\\..\\\\test.gif\u0022, FileMode.Create))\n            {\n                data.SaveTo(fs);\n            }\n\n        }\n    }\n\n\u0060\u0060\u0060\n\nI am not sure if I am doing somehting wrong in the code, but it works with png and jpeg. The others fail with and AV.\n",
+  "author": {
+    "login": "agallero",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-04-17T22:24:41",
+  "updatedAt": "2022-08-20T06:01:34",
+  "closedAt": "2016-05-14T20:31:04",
+  "commentCount": 3,
+  "reactionCount": 0
+}

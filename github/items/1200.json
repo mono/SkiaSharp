@@ -1,0 +1,50 @@
+{
+  "number": 1200,
+  "type": "pr",
+  "state": "closed",
+  "title": "Resolve some concurrency issues",
+  "body": "**Description of Change**\r\n\r\nResolve some concurrency issues. In some cases the construction and/or destruction overlap and this causes invalid states. This PR improves the locking to avoid this, but still preserves the read and write level of locking.\r\n\r\nIt also includes a few other improvements, such as making sure objects that require their \u0022parent\u0022 object to not be GC\u0027ed add a reference to it. In most cases it is simple, such as a canvas being owned by a surface. But, in the case of a pixmap, the ownership is a little different in that they are copies, but actually require the parent object to stick around. So, the ownership is \u0022reversed\u0022.\r\n\r\nThere is also a few other tweaks to improve general GC reliability/interop performance.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1188\r\n- Resolves underlying issue for #1121 #910 #1173 #1168 #1144\r\n- Resolves the underlying issue for the need for #1180\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nLess crashes due to correct object management.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-03-29T22:50:55",
+  "updatedAt": "2020-04-29T23:47:34",
+  "closedAt": "2020-04-03T11:25:21",
+  "commentCount": 11,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1188",
+  "additions": 821,
+  "deletions": 200,
+  "changedFiles": 22,
+  "commits": 23,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-03-29T23:42:31"
+    },
+    {
+      "author": "ziriax",
+      "state": "COMMENTED",
+      "submittedAt": "2020-03-29T23:52:36"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-04-01T16:18:53"
+    }
+  ]
+}

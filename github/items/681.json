@@ -1,0 +1,18 @@
+{
+  "number": 681,
+  "type": "issue",
+  "state": "closed",
+  "title": "Double buffering issue on Android?",
+  "body": "### Description\r\n\r\nThere appears to be an issue with double-buffering on android. When items are drawn within the OnPaintSurface method, as I understand, they should only be rendered once the method has finished. On IOS and UWP, this appears to be the case but not on Android.\r\n\r\n### Code\r\n\r\nThe attached example reproduces the problem. It is a fresh xamarin project with an added class based on SKGLView as the MainForm content. It renders two white \u0022cards\u0022 with code (not shown here) to allow swiping the cards left and right.\r\n\r\nHere is the OnPaintSurface method:\r\n\r\n        protected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            var canvas = e.Surface.Canvas;\r\n            canvas.Clear(Color.DarkBlue.ToSKColor());\r\n\r\n            float h = e.RenderTarget.Height;\r\n            float w = e.RenderTarget.Width;\r\n\r\n            //Left Card\r\n            SimulatedCardPaint(canvas, -AnimationPosition, w, h);\r\n\r\n            //Right Card\r\n            SimulatedCardPaint(canvas, 1 - AnimationPosition, w, h);\r\n        }\r\n\r\n\r\n        public void SimulatedCardPaint(SKCanvas canvas, float TransitionPosition, float w, float h)\r\n        {\r\n            canvas.ResetMatrix();\r\n            canvas.Translate(TransitionPosition * w, 0);\r\n\r\n            using (var paint = new SKPaint()\r\n            {\r\n                Style = SKPaintStyle.Fill,\r\n                Color = Color.White.ToSKColor(),\r\n            })\r\n            {\r\n                var rect = new SKRect(0, 0, w, h);\r\n                rect.Inflate(-20, -20);\r\n                canvas.DrawRect(rect, paint);\r\n            }\r\n            Task.Delay(20).Wait();\r\n        }\r\n\r\nThe delay simulates a more complex drawing operation. The original code had no async methods at all but still had the same results.\r\n\r\n### Expected Behavior\r\n\r\nAs you swipe left and right with your finger on the screen, the \u0022cards\u0022 should move with a dark blue border line between them. The line should always be the same width because the cards are both rendered inside a single call to OnPaintSurface.\r\n\r\n### Actual Behavior\r\n\r\nOn IOS and UWP, the blue line appears to be the same size all the time. \r\nOn Android, the line can be made bigger and smaller depending on the speed of the swipe and there are occasional flickers which appear to be the background being rendered without the cards. Neither of these should be possible as the cards are rendered in the same method. The only way I can see this occurring is if the canvas is rendered in the middle of the drawing. It gives the drawing a flacky feel unlike the solid feel of the UWP and IOS drawing.\r\n\r\n### Basic Information\r\n\r\nThis was based on testing on hardware, not on simulators. The android hardware is the most modern so should not have a performance issue at all.\r\n\r\nThis is using version 1.60.3 of SkiaSharp.\r\n\r\n### Screenshots\r\n\r\nIf necessary, I could provide photographs or video but it is hard to get screenshots as it only happens during motion.\r\n\r\n### Reproduction Link\r\n\r\n[SkiaDoubleBufferTest.zip](https://github.com/mono/SkiaSharp/files/2571718/SkiaDoubleBufferTest.zip)\r\n",
+  "author": {
+    "login": "Rippletank",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-11-12T11:53:11",
+  "updatedAt": "2022-08-19T12:02:44",
+  "closedAt": "2018-12-14T19:41:27",
+  "commentCount": 3,
+  "reactionCount": 0
+}

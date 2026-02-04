@@ -1,0 +1,22 @@
+{
+  "number": 2787,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Encoding an Image from a Source SKImage with ColorType Gray8 returns null",
+  "body": "### Description\n\nDropdown doesn\u0027t have our version so here goes:\r\nOccurs on: SkiaSharp 2.88.6\r\nLast good: Unknown\r\n\r\nThe title pretty much describes the issue, could also be related to the other ticket regarding SKColorType.Gray8 considering sampling the image implies it needs to decode the image aswell.\r\n\r\nWorkaround for anyone who needs it, don\u0027t access the source image but call it on SKImage.Create(sourceImage.Info.WithColorType(someOtherColorType) and use that as your sampling source.\n\n### Code\n\nExample method, obviously neither \u0060\u0060\u0060GetTrimmingRect() (get trimmable area)\u0060\u0060\u0060 or \u0060\u0060\u0060ToSKStream() (wrapper for SKStream with disposeunderlying false)\u0060\u0060\u0060 are part of Skia but these methods have been tested with ungodly amounts of throughput already.\r\n\r\n\u0060\u0060\u0060cs\r\n    /// \u003Cinheritdoc/\u003E\r\n    public Stream TrimImageBorders(Stream imageStream)\r\n    {\r\n        using var headers = SKCodec.Create(imageStream.ToSKStream());\r\n\r\n        using var sourceImage = SKImage.FromEncodedData(imageStream.ToSKStream());\r\n\r\n        using var sourceBitmap = SKBitmap.FromImage(sourceImage);\r\n\r\n        var trimmingRect = GetTrimmingRect(sourceBitmap);\r\n\r\n        // In the unlikely event of a bug, ensure the rectangle can never be greater than the sourceRect\r\n        trimmingRect.Intersect(sourceImage.Info.Rect);\r\n\r\n        // If no trimming would occur, return the original stream seeked to start\r\n        if (trimmingRect == sourceImage.Info.Rect)\r\n        {\r\n            imageStream.Seek(0, SeekOrigin.Begin);\r\n\r\n            return imageStream;\r\n        }\r\n\r\n        using var trimmedImage = sourceImage.Subset(trimmingRect);\r\n\r\n        using var trimmedData = trimmedImage.Encode(headers.EncodedFormat, 100); // Results in null when source has SKColorType.Gray8\r\n\r\n        var memStream = new MemoryStream();\r\n\r\n        trimmedData.AsStream().CopyTo(memStream);\r\n\r\n        imageStream.Seek(0, SeekOrigin.Begin);\r\n\r\n        memStream.Seek(0, SeekOrigin.Begin);\r\n\r\n        return memStream;\r\n    }\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nImage is Encoded correctly correctly\r\n\r\nSkia obviously has the ability to decode Gray8 as sampling the image with another SKColorType that maps the correct bitstep works just fine so i\u0027d expect this is some internal logic glitchy or the source image isn\u0027t what it claims to be and isn\u0027t self-evidently obvious to me from reviewing the input source data\n\n### Actual Behavior\n\nUnable to Encode or otherwise sample an image with Gray8 as it\u0027s SKColorType\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux, Windows\n\n### Platform / Operating System Version\n\nUbuntu 22.04 running in Docker environment with native assets:\r\n\r\n\u0060\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.6\u0022 /\u003E\u0060\n\n### Devices\n\nAny running the above docker image with this code\n\n### Relevant Screenshots\n\n![skiagray8bug](https://github.com/mono/SkiaSharp/assets/70582521/4321c73b-5588-4605-a265-ec03a46135d6)\r\n\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nRelevant logs have far too much sensitive information to effectively sanitize sorry.\r\n\r\nThe StackTrace consists essentially just of the code that has the comment for this issue being null\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "RiversJohn",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-06T14:27:10",
+  "updatedAt": "2024-03-06T14:27:10",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,27 @@
+{
+  "number": 2547,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update google/skia to milestone 115",
+  "body": "**Description of Change**\r\n\r\nThis PR is the main set of changes to update to the latest \u0022stable\u0022 chrome milestone: **\u0060115\u0060**\r\n\r\nThere are going to be several major breaking changes in this PR, but we will re-evaluate them all again once we are fully operational. The https://github.com/mono/SkiaSharp/issues/2544 issue will track that part. Any APIs that are still needed and are within reason will be added in that work. This PR is going to aim for the most up-to-date and the as-clean-as-possible change.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2543\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nThis was a large set of changes, both to the code as well as to new requirements. The changes included:\r\n\r\nMinimum Versions Changes:\r\n\r\n  - Android: 21 (v5.0)\r\n  - macOS: 10.13 (High Sierra)\r\n  - Tizen: 6.0\r\n  - tvOS: 11.0\r\n  - Debian: 10 (Buster)\r\n\r\nTooling Changes:\r\n\r\n  - Updated depot_tools (and this also needed other related changes)\r\n  - Updated macOS build agent to macOS 13 with Xcode 14.3.1\r\n  - Updated the Android NDK to r25c\r\n  - Updated Tizen Studio to 5.1\r\n  - Ninja is now a required dependency and not included in depot_tools\r\n  - Python is now used to run ninja instead of ninja run directly\r\n\r\nCode Changes:\r\n\r\n  - New color types in \u0060SKColorType\u0060\r\n  - New encoder options (\u0060SKJpegEncoderOptions\u0060, \u0060SKPngEncoderOptions\u0060, \u0060SKWebpEncoderOptions\u0060)\r\n  - New sampling/filtering options (\u0060SKSamplingOptions\u0060 instead of \u0060SKFilterQuality\u0060)\r\n  - \u0060SKMatrix44\u0060 is totally new\r\n      - Previously it was a limited class\r\n      - Now it is a fully featured struct\r\n      - Current implementation just wraps Matrix4x4 from System.Numerics\r\n  - \u0060SKRuntimeEffect\u0060 is redesigned\r\n      - Similar API, but far more powerful\r\n      - Granular shader/color filter creation\r\n      - Improved uniforms/children API\r\n      - Comes with a builder\r\n      - Check out this playground: https://shaders.skia.org/\r\n  - \u0060SKFont\u0060 is now a preferred API\r\n      - Font APIs on \u0060SKPaint\u0060 are all deprecated and will be removed\r\n  - \u0060SKDrawable\u0060 now has \u0060GetApproximateBytesUsed()\u0060 which can be overridden\r\n  - Added interop with the System.Numerics APIs\r\n  - Removed types are:\r\n      - \u0060SK3dView\u0060 (this is now all available in the 4x4 matrix \u0060SKMatrix44\u0060)\r\n      - \u0060SKMask\u0060\r\n      - \u0060SKXamlWriter\u0060 \u0026 \u0060SKXmlStreamWriter\u0060 (this was only used by SVG-related things and really just wrapped a stream)\r\n\r\n**Behavioral Changes**\r\n\r\nSeveral changes TBD.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [x] ~Updated documentation~ _(this will be in a separate PR after another API review)_\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-08-02T00:46:19",
+  "updatedAt": "2023-08-17T15:24:08",
+  "closedAt": "2023-08-17T15:24:04",
+  "commentCount": 0,
+  "reactionCount": 32,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/update-skia-2",
+  "additions": 5808,
+  "deletions": 5011,
+  "changedFiles": 200,
+  "commits": 9,
+  "reviews": []
+}

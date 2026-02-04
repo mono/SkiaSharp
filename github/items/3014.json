@@ -1,0 +1,43 @@
+{
+  "number": 3014,
+  "type": "pr",
+  "state": "closed",
+  "title": "Revert SKBitmap.Encode with SKPngEncoderOptions to previous behavior (2.88.8)",
+  "body": "**Description of Change**\r\n\r\nReverts \u0060SKBitmap.Encode\u0060 to previous behavior to use default PNG compression.\r\n\r\nUntil 2.88.8: ZLibLevel 6 is used for PNG compression.\r\nSince 3.0.0:  ZLibLevel 0 is used for PNG compression.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #3013\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nCalling \u0060SKBitmap.Encode\u0060 or \u0060SKPixmap.Encode (SKWStream, SKEncodedImageFormat, int)\u0060 will result in a default PNG compression level (as in 2.88.8). The \u0060SKPngEncoderFilterFlags\u0060 are unchanged.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [X] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "sungaila",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-21T10:22:20",
+  "updatedAt": "2024-10-23T14:40:42",
+  "closedAt": "2024-10-23T12:40:26",
+  "commentCount": 5,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "revert-png-default-compression",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "DISMISSED",
+      "submittedAt": "2024-10-22T10:14:14"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-10-23T12:39:18"
+    }
+  ]
+}

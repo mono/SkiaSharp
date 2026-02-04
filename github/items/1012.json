@@ -1,0 +1,34 @@
+{
+  "number": 1012,
+  "type": "pr",
+  "state": "closed",
+  "title": "netstandard SkiaSharp.Views.Forms.dll should be ref-only",
+  "body": "**Description of Change**\r\n\r\nBecause the SkiaSharp.Views.Forms.WPF NuGet pulls in SkiaSharp.Views.Forms, we will get duplicate SkiaSharp.Views.Forms.dll files (1 from SkiaSharp.Views.Forms and one from SkiaSharp.Views.Forms.WPF).\r\n\r\nThis PR makes the SkiaSharp.Views.Forms version a reference assembly, and will never reach the app.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1011\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nThe SkiaSharp.Views.Forms.dll is moved to the \u0060ref\u0060 folder (from \u0060lib\u0060) in SkiaSharp.Views.Forms.nupkg\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-15T21:55:53",
+  "updatedAt": "2019-11-21T20:33:36",
+  "closedAt": "2019-11-16T03:56:48",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1011",
+  "additions": 7,
+  "deletions": 2,
+  "changedFiles": 1,
+  "commits": 3,
+  "reviews": []
+}

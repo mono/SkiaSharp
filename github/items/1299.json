@@ -1,0 +1,59 @@
+{
+  "number": 1299,
+  "type": "pr",
+  "state": "closed",
+  "title": "Make the SKFont\u0027s public API glyph-only and the others types use it under the hood",
+  "body": "**Description of Change**\r\n\r\nMake \u0060SKFont\u0060 glyph-only:\r\n\r\n- hide the \u0060SKFont\u0060 members that take strings/bytes\r\n- hide the overloads that return arrays (promote the use of the \u0022out span\u0022)\r\n- expose string/byte members on \u0060SKPaint\u0060, and only expose the returning array (for consistency)\r\n- use a single instance of \u0060SKFont\u0060 for \u0060SKTypeface\u0060 glyph members\r\n\r\nThe whole reason for this PR is to help define or direct type usage:\r\n\r\n- \u0060SKFont\u0060  \r\n   - This type is very low level and just works with glyphs and unicode (\u0060ushort\u0060 and \u0060int\u0060).\r\n   - To keep all the text members together, the other overloads are also defined, but are internal.\r\n   - For now, only the overloads that take an \u0022outwards span\u0022 are exposed: \u0060void Get(ReadOnlySpan\u003CT\u003E input, Span\u003CT\u003E output)\u0060\r\n- \u0060SKPaint\u0060  \r\n   - This type is for use with a canvas, so only exposes the string (and sadly, due to bad choices the byte arrays).\r\n   - All members just redirect to the underlying \u0060SKFont\u0060 internal members.\r\n   - For now, only the overloads that return an array are exposed: \u0060T[] Get(ReadOnlySpan\u003CT\u003E input)\u0060\r\n- \u0060SKTypeface\u0060\r\n  - This type is used to get glyph information (in addition to the other members): count, get and contains\r\n  - All members just redirect to an underlying \u0060SKFont\u0060\r\n   - For now, only the overloads that return an array are exposed: \u0060T[] Get(ReadOnlySpan\u003CT\u003E input)\u0060\r\n\r\nTypically, the members on \u0060SKPaint\u0060 and \u0060SKTypeface\u0060 should not really be used as the string logic is dumb and only really understands Latin text. However, it is useful still. The members on \u0060SKFont\u0060 are all the things you would use when doing text shaping. And, that API strongly encourages the use of array pools or other non-allocating operations.\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-05-18T01:03:58",
+  "updatedAt": "2020-07-09T02:18:13",
+  "closedAt": "2020-05-18T19:00:36",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/hide-string-apis",
+  "additions": 265,
+  "deletions": 136,
+  "changedFiles": 4,
+  "commits": 4,
+  "reviews": [
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-18T08:28:11"
+    },
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-18T08:29:46"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-18T08:32:47"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-18T08:44:46"
+    },
+    {
+      "author": "Gillibald",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-18T09:10:13"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2020-05-18T09:39:41"
+    }
+  ]
+}

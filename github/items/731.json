@@ -1,0 +1,35 @@
+{
+  "number": 731,
+  "type": "issue",
+  "state": "open",
+  "title": "Why is SKShader.CreateRadialGradient so slow in 1.68.0?",
+  "body": "### Description\r\n\r\nMy code worked on the previous version SkiaSharp 1.60.3, I tried to test it on the new version 1.68.0 (and 1.68.0-preview28 also) and found that using the SKShader.CreateRadialGradient in paint.Shader leads to very slow work, which was not observed in the version 1.60.3. I tested the SKShader.CreateSweepGradient and SKShader.CreateLinearGradient using them does not slow down. I use CPU drawing. \r\n\r\nHelp to understand the problem. I would like to use the new version SkiaSharp in my project.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060csharp\r\n  using (SKPaint paint = new SKPaint())\r\n  {\r\n    paint.Shader = SKShader.CreateRadialGradient(\r\n        new SKPoint(50, 50),\r\n        100,\r\n        new SKColor[] { SKColors.Black, SKColors.White },\r\n        null,\r\n        SKShaderTileMode.Clamp);\r\n\r\n    canvas.DrawRect(info.Rect, paint);\r\n  }\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nNormal work as in version SkiaSharp 1.60.3\r\n\r\n### Actual Behavior\r\n\r\nSlow work\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  1.60.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: Windows Forms .NET Framework 4.6.1\n\n\u003E VS bug [#752322](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/752322)",
+  "author": {
+    "login": "GalaxyVelocity",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "backend/Raster",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-12-15T02:13:48",
+  "updatedAt": "2019-06-17T16:50:23",
+  "commentCount": 1,
+  "reactionCount": 1
+}

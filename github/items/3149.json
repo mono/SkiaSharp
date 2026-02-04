@@ -1,0 +1,32 @@
+{
+  "number": 3149,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix iOS Simulator performance with Metal",
+  "body": "Had iOS simulator lagging on M1 at 9 fps with SKGLView, so had to adjust its platform-related code for iOS to unlock 60 fps.\r\nJust followed Apple guidelines for simulator:   https://developer.apple.com/documentation/metal/developing-metal-apps-that-run-in-simulator?language=objc\r\n\r\nreplacing \u0060SampleCount = 1;\u0060 (no MSAA) inside \u0060SKMetalView\u0060 with:\r\n\r\n\u0060\u0060\u0060csharp\r\n\t\t\tif (DeviceInfo.Current.DeviceType == DeviceType.Virtual)\r\n\t\t\t{\r\n\t\t\t\tDepthStencilStorageMode = MTLStorageMode.Private;\r\n\t\t\t\tSampleCount = 4;\r\n\t\t\t}\r\n\t\t\telse\r\n\t\t\t{\r\n\t\t\t\tDepthStencilStorageMode = MTLStorageMode.Shared;\r\n\t\t\t\tSampleCount = 2;\r\n\t\t\t}\r\n\u0060\u0060\u0060\r\n \r\nWorks fine in DrawnUi now, wanted to share.\r\n",
+  "author": {
+    "login": "taublast",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-01-30T13:14:55",
+  "updatedAt": "2025-02-06T07:11:33",
+  "closedAt": "2025-02-06T07:08:44",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 10,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 8,
+  "reviews": []
+}

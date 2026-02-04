@@ -1,0 +1,19 @@
+{
+  "number": 135,
+  "type": "issue",
+  "state": "closed",
+  "title": "Setting SKPaint.IsStroke has no effect (1.53 regression)",
+  "body": "I\u0027m seeing what seems like a regression bug. The following code (unless I\u0027m missing something obvious) should not throw an exception:\n\n\u0060\u0060\u0060\nusing (SKPaint p = new SKPaint()) {\n    p.IsStroke = false;\n    if (p.IsStroke != false) {\n        throw new Exception();\n    }\n}\n\u0060\u0060\u0060\n\nBut with SkiaSharp 1.53, I am seeing the exception thrown. When I downgrade to 1.49.1, the bug goes away (no exception thrown). This is on Win7 SP1 with VS 2015 Community Update 2, .NET framework 4.5.2. \n",
+  "author": {
+    "login": "tdenniston",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.1.1",
+  "createdAt": "2016-08-14T16:01:19",
+  "updatedAt": "2022-08-20T00:02:18",
+  "closedAt": "2016-08-17T17:02:12",
+  "commentCount": 8,
+  "reactionCount": 0
+}

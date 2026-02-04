@@ -1,0 +1,29 @@
+{
+  "number": 1014,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add Nano Server to the list",
+  "body": "**Description of Change**\r\n\r\nThis PR should just create 2 new NativeAssets packages for Microsoft Nano Server.\r\n\r\nBecause Nano Server is really just Win32 without some features, you actually can just build it using the same code, but with a few extra args - basically a new \u0060#define SK_BUILD_FOR_NANOSERVER\u0060\r\n\r\n\u0060\u0060\u0060\r\n.\\bootstrapper.ps1 -t externals-windows --buildarch=x64 --additionalGnArgs=\u0022extra_cflags\u002B=[\u0027\u0027\u0027\u0027-DSK_BUILD_FOR_NANOSERVER\u0027\u0027\u0027\u0027]\u0022\r\n\u0060\u0060\u0060\r\n\r\n\u003E all those extra single quotes (4 of them) are required to make sure powershell doesn\u0027t mess up the parameters.\r\n\r\nTODO: \r\n\r\n- [ ] tests \r\n- [ ] some sort of verification like with NoDependencies for linux\r\n\r\n**Bugs Fixed**\r\n\r\n- Resolves #676\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-11-17T03:36:13",
+  "updatedAt": "2019-12-19T19:29:30",
+  "closedAt": "2019-12-03T12:47:48",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/nano-server",
+  "additions": 135,
+  "deletions": 14,
+  "changedFiles": 4,
+  "commits": 10,
+  "reviews": []
+}

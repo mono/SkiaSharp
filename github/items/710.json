@@ -1,0 +1,23 @@
+{
+  "number": 710,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp change the image when a combo is selected Xamarin Forms",
+  "body": "Hello, \r\nThanks for your contributions have served me. I have a small problem that I do not know how to solve. I need to change the image shown in SkiaSharp when I select another image to show from a combobox. I only change that image when I rotate the device or pulse on the image\r\nRegards.\r\n\r\n\u0060\u0060\u0060xml\r\n\u003Cviews:SKCanvasView x:Name=\u0022canvasView\u0022 PaintSurface=\u0022OnPainting\u0022 EnableTouchEvents=\u0022True\u0022 Touch=\u0022OnTouch\u0022\u003E\u003C/views:SKCanvasView\u003E\r\n\u0060\u0060\u0060\r\n or \r\n\r\n\u0060\u0060\u0060xml\r\n\u003Cviews:SKCanvasView x:Name=\u0022canvasView\u0022 PaintSurface=\u0022OnCanvasViewPaintSurface\u0022 EnableTouchEvents=\u0022True\u0022 Touch=\u0022OnTouch\u0022\u003E\u003C/views:SKCanvasView\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)\r\n        {\r\n            SKSurface surface = args.Surface;\r\n            SKCanvas canvas = surface.Canvas;\r\n            canvas.Clear(SKColors.White);\r\n\r\n            if (img != null)\r\n            {\r\n                SKBitmap bmp = SKBitmap.Decode(img);\r\n                canvas.DrawBitmap(bmp, 0, 0);\r\n            }\r\n        }",
+  "author": {
+    "login": "cacfucha",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-11-27T11:11:32",
+  "updatedAt": "2022-08-19T12:02:26",
+  "closedAt": "2018-11-30T18:41:14",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 802,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp views do not emit mouse motion events when a mouse button is not clicked",
+  "body": "On platforms with a mouse, the only way to track mouse motion is through the Touch events and it only happens when a mouse key is pressed. In many uses cases you still need the mouse motion without any of the mouse keys pressed, for example to prelight objects. For now I have reproduce this error in the Forms views.\r\n\r\nFrom the SKTouchEventArgs API I understand this could be achieved emitting the motion event with the InContact property to false, am I correct? Otherwise this would be a feature instead of bug :)",
+  "author": {
+    "login": "ylatuya",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2019-02-28T15:22:14",
+  "updatedAt": "2022-09-11T18:31:02",
+  "commentCount": 3,
+  "reactionCount": 1
+}

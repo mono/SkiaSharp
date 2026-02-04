@@ -1,0 +1,34 @@
+{
+  "number": 3375,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Windows App Crash - only on x86 - v3.116 or newer",
+  "body": "### Description\n\nHi, we delop multiplatform (Windows, macOS) dotnet (9.0) application using Avalonia UI (11.3.6) which loads some DLLs in runtime from subdirectory. One of this DLL use SkiaSharp lib (3.116 or newer) for some image manupulation. When the application is compiled for x64 then everything is ok but when we compile the application for x86 then we are getting app crash (no event log, no dump). In case of x84, when we copy the DLLs from subdirectory to application root directory then the app crash is gone. When we rollback the SkiaSharp nuget to version 2.88.9 then DLLs loading from subdirectory also work as expected (x64, x86). Any ideas?\n\n### Code\n\nNo repro\n\n### Expected Behavior\n\nNo app crash\n\n### Actual Behavior\n\nApp crash\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nMicrosoft Windows 11 Pro (ARM CPU), 23H2 (build 22631) \n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "viktorspacil",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-09-25T20:10:51",
+  "updatedAt": "2025-12-16T12:23:22",
+  "commentCount": 2,
+  "reactionCount": 1
+}

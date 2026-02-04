@@ -1,0 +1,32 @@
+{
+  "number": 3165,
+  "type": "pr",
+  "state": "open",
+  "title": "Make two DrawText methods obsolete because of #3122",
+  "body": "**Description of Change**\r\n\r\nMade two DrawText methods obsolete that use the obsolete SKPaint.TextAlign, which caused a text to disappeared after drawing the same text multiple times. Two other DrawText methods were already obsolete, seemingly also because of the obsolete SKPaint.TextAlign.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes https://github.com/mono/SkiaSharp/issues/3122\r\n\r\n**API Changes**\r\n\r\nUsers will get a warning (or error if WarningAsError is true) when calling these methods.\r\n\r\nMade obsolete:\r\n\r\n- \u0060public void DrawText (string text, SKPoint p, SKFont font, SKPaint paint)\u0060\r\n- \u0060public void DrawText (string text, SKPoint p, SKTextAlign textAlign, SKFont font, SKPaint paint)\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n\r\nPerhaps documentation needs to be updated, not sure what or how.",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-14T13:54:42",
+  "updatedAt": "2025-11-24T13:46:08",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "fix/make-drawtext-methods-obsolete",
+  "additions": 2,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 3,
+  "reviews": []
+}

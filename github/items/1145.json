@@ -1,0 +1,18 @@
+{
+  "number": 1145,
+  "type": "issue",
+  "state": "closed",
+  "title": "EncodedOrigin reporting incorrect value",
+  "body": "**Description**\r\n\r\nAs a result of all pictures captured on iPhone being in the camera\u0027s natural landscape orientation, I\u0027m attempting to rotate these images in order to correct the appearence of non-landscape images. In order to do this, I\u0027m evaluating the EncodedOrigin property on an instance of SKCodec which is associated with the image. Based on the result of the EncodedOrigin, for example, if the result is \u0027BottomRight\u0027 or \u0027RightTop\u0027, I\u0027m rotating the image apporpriately to \u0027correct\u0027 the orientation. Oddly, this worked very well on iOS prior to 13.3. Since 13.3 however, the EncodedOrigin is now returning \u0027Default\u0027 for all images regardless of their orientation. \r\n\r\nI was wondering if anybody else had encountered this issue and whether or not there is a resolution?\r\n\r\nThanks,\r\nSam.\r\n\r\n**Code**\r\n\r\n\u0060using (var stream = new SKManagedStream(fileStream))\u0060\r\n\u0060using (var codec = SKCodec.Create(stream))\u0060\r\n\u0060{\u0060\r\n\u0060\tConsole.WriteLine(\u0022EncodedOrigin = \u0022 \u002B codec.EncodedOrigin);\u0060\r\n\u0060}\u0060\r\n\r\n**Expected Behavior**\r\n\r\nEncodedOrigin should return correct value based on image orientation on all versions of iOS\r\n\r\n**Actual Behavior**\r\n\r\nEncodedOrigin is returning \u0027Default\u0027 regardless of image orientation on iOS 13.3 and above\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp 1.68.0 and iOS 13.3.1\r\n- Last known good version:  SkiaSharp 1.68.0 and prior to iOS 13.3 \r\n- IDE:  Visual Studio 8.4\r\n- Platform Target Frameworks: Xcode Version 11.3.1\r\n  - iOS:  13.3.1\r\n  - macOS:  10.15.2\r\n- Target Devices:   iPhone plus device. eg. iPhone 7\u002B and iPhone 8\u002B\r\n",
+  "author": {
+    "login": "smillershout",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-02-13T10:40:01",
+  "updatedAt": "2022-08-19T06:02:44",
+  "closedAt": "2020-03-05T10:44:37",
+  "commentCount": 5,
+  "reactionCount": 0
+}

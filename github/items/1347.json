@@ -1,0 +1,29 @@
+{
+  "number": 1347,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add version numbers to native libraries",
+  "body": "**Description of Change**\r\n\r\nAdd a \u0022suffix\u0022 to library names:\r\n\r\n\u0060libSkiaSharp_\u003Cmilestone\u003E_\u003Cskiasharp\u003E.\u003Cext\u003E\u0060\r\n\r\nFor example for 1.68.3:\r\n\r\n\u0060libSkiaSharp_68_3.dll\u0060\r\n\r\nAnd for 2.80.0:\r\n\r\n\u0060libSkiaSharp_80_0.dll\u0060\r\n\r\nThis will avoid the cases when older versions are used with newer apps and causing crashes.\r\n\r\nThe reason for the 2 numbers only is the way SkiaSharp is versioned:\r\n\r\n\u0060\u003Cmajor-change-indicator\u003E.\u003Cskia-version\u003E.\u003Cskiasharp-version\u003E.\u003Cbug-or-packaging-fix\u003E\u0060\r\n\r\nSo...\r\n- Going from \u00601.*\u0060 to \u00602.*\u0060 is nothing special - except we may have re-written the library (which we haven\u0027t actually done because we like backwards compatibility)\r\n- Going from \u0060*.1\u0060 to \u0060*.2\u0060 means that Google\u0027s code is new - and may have behavioral changes (which usually doesn\u0027t happen - except for bug fixes)\r\n- Going from \u0060*.*.1\u0060 to \u0060*.*.2\u0060 means that we did a new API or changed some interop code (and thus ABI breaking)\r\n- Going form \u0060*.*.*.1\u0060 to \u0060*.*.*.2\u0060 means that there may have been a docs/packaging/managed-only change (and the native library is still the same version)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-06-23T13:35:54",
+  "updatedAt": "2020-07-09T02:17:44",
+  "closedAt": "2020-06-24T23:40:07",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "dev/library-loading",
+  "headBranch": "dev/library-versioning",
+  "additions": 25,
+  "deletions": 7,
+  "changedFiles": 7,
+  "commits": 3,
+  "reviews": []
+}

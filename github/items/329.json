@@ -1,0 +1,27 @@
+{
+  "number": 329,
+  "type": "issue",
+  "state": "closed",
+  "title": "DrawText doesn\u0027t work on CentOS 7",
+  "body": "I\u0027m developing a .NET Core APP and want to deploy it on CentOS 7. I\u0027m using SkiaSharp to generate a captcha code. \r\n\r\nHere is my references:\r\n\r\n\u0060\u0060\u0060XML\r\n\u003CPackageReference Include=\u0022Avalonia.Skia.Linux.Natives\u0022 Version=\u00221.57.1.4\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00221.57.1\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nHere is my code:\r\n\u0060\u0060\u0060CSharp\r\n        private Task ProcessCaptcha(HttpContext context)\r\n        {\r\n            // CREATING THE DRAWING SURFACE\r\n\r\n            // constract the information describing the desired surface\r\n            var info = new SKImageInfo(100, 20);\r\n            // create the surface using the information\r\n            var surface = SKSurface.Create(info);\r\n\r\n\r\n            // CLEARING THE SURFACE\r\n\r\n            // get the canvas that we can draw on\r\n            var canvas = surface.Canvas;\r\n            // clear the canvas / view\r\n            canvas.Clear(SKColors.Red);\r\n\r\n\r\n            // DRAWING TEXT\r\n\r\n            // create the paint for the text\r\n            var textPaint = new SKPaint\r\n            {\r\n                IsAntialias = true,\r\n                Style = SKPaintStyle.Fill,                \r\n                Color = SKColors.White,\r\n                TextSize = 24\r\n            };\r\n            // draw the text (from the baseline)\r\n            canvas.DrawText(\u0022SkiaSharp\u0022, 0, 18, textPaint);            \r\n\r\n            // ENCODING THE SURFACE\r\n\r\n            // create a raster instance of the surface\r\n            var image = surface.Snapshot();\r\n\r\n            var data = image.Encode(SKEncodedImageFormat.Png, 100);\r\n\r\n            data.SaveTo(context.Response.Body);\r\n\r\n            return Task.FromResult\u003Cobject\u003E(null);\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nWhen I run it on CentOS 7, I can only see an image with red background. Is there anything I\u0027ve missed?",
+  "author": {
+    "login": "scheshan",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2017-06-30T03:12:34",
+  "updatedAt": "2022-08-19T21:01:32",
+  "closedAt": "2018-02-02T20:27:34",
+  "commentCount": 3,
+  "reactionCount": 1
+}

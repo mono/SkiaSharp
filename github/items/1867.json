@@ -1,0 +1,18 @@
+{
+  "number": 1867,
+  "type": "issue",
+  "state": "closed",
+  "title": "Trying ASP.NET Core Blazor WebAssembly with Skiasharp",
+  "body": "Hi \r\nI tried  to use  skiasharp views in Blazor Wasm on Visual Studio 2022 production .\r\nInstalled SkiaSharp.Views.Blazor 2.88.0-preview.155 added \r\n\u0060\u0060\u0060razor\r\n SKCanvasView OnPaintSurface=\u0022@OnPaintSurface\u0022 \r\n\u0060\u0060\u0060\r\n\r\nand \r\n\r\n\u0060\u0060\u0060razor \r\ncode {\r\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n    {\r\n        var canvas = e.Surface.Canvas;\r\n       canvas.Clear(SKColors.White);\r\n       using var paint = new SKPaint\r\n        {\r\n            Color = SKColors.Black,\r\n            IsAntialias = true,\r\n            TextSize = 24\r\n        };\r\n       canvas.DrawText(\u0022SkiaSharp\u0022, 0, 24, paint);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n to razor file\r\nCompiled the projeect ran it but get the following error \r\n\r\n\r\nUnhandled Exception:\r\n\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: libSkiaSharp\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.Views.Blazor.SKCanvasView.CreateBitmap(SKSizeI\u0026 unscaledSize)\r\n   at SkiaSharp.Views.Blazor.SKCanvasView.OnRenderFrame()\r\n   at SkiaSharp.Views.Blazor.Internal.ActionHelper.Invoke()\r\n   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)\r\n--- End of stack trace from previous location ---\r\n   at Microsoft.JSInterop.Infrastructure.DotNetDispatcher.InvokeSynchronously(JSRuntime jsRuntime, DotNetInvocationInfo\u0026 callInfo, IDotNetObjectReference objectReference, String argsJson)\r\n   at Microsoft.JSInterop.Infrastructure.DotNetDispatcher.Invoke(JSRuntime jsRuntime, DotNetInvocationInfo\u0026 invocationInfo, String argsJson)\r\n   at Microsoft.AspNetCore.Components.WebAssembly.Services.DefaultWebAssemblyJSRuntime.InvokeDotNet(String assemblyName, String methodIdentifier, String dotNetObjectId, String argsJson)\r\nUncaught Error: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: libSkiaSharpThe thread 0x5030 has exited with code 0 (0x0).\r\n\r\n\r\nI have probably missed something\r\nAny Idea?\r\nRegards Peder",
+  "author": {
+    "login": "peder1896",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-11-16T14:15:58",
+  "updatedAt": "2024-11-13T17:19:54",
+  "closedAt": "2024-11-13T17:19:53",
+  "commentCount": 3,
+  "reactionCount": 0
+}

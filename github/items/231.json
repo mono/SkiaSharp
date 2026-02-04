@@ -1,0 +1,18 @@
+{
+  "number": 231,
+  "type": "issue",
+  "state": "closed",
+  "title": "SK3dView y axis inverted?",
+  "body": "Hi!\r\n\r\nMy code looks like:\r\n\r\n\u0060\u0060\u0060csharp\r\nSK3dView v = new SK3dView();\r\nv.Translate(10, 10, 0); //x10, y10, z0\r\nusing (SKCanvas canvas = surface.Canvas) {\r\n  canvas.SetMatrix(v.Matrix);\r\n  canvas.DrawRect(new SKRect(0, 0, 100, 100), new SKPaint() { \r\n    Color = new SKColor(255, 0, 0), \r\n    IsAntialias = true, });\r\n}\r\n\u0060\u0060\u0060\r\n\r\nNow the painted rectangle is not on the position x[10], y[10] (as I would expect it), its is on the position x[10], y[-10].\r\nIs this a correct behavior?\r\n\r\n\r\nEDIT:\r\nThe Z-Axis has the same behavior. A negative value makes the rectangle appear greater and a positive value makes the rectangle appear smaller.\r\n\r\nBest regards,\r\nSora",
+  "author": {
+    "login": "KingSora",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-02-03T23:05:20",
+  "updatedAt": "2022-08-19T21:02:43",
+  "closedAt": "2017-02-04T18:55:31",
+  "commentCount": 1,
+  "reactionCount": 0
+}

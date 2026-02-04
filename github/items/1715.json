@@ -1,0 +1,18 @@
+{
+  "number": 1715,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp 2.80.2 upgrade throws TypeInitializationException in SkiaSharpNative.CheckNativeLibraryCompatible",
+  "body": "**Description**\r\nI upgraded SkiaSharp (nuget) for a console .NET (Windows 10) project from 1.x to 2.80.2.\r\n\r\nCalling \u0060Sk* methods\u0060 results in:\r\n\r\n\u0060\u0060\u0060\r\nUnhandled Exception: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception. ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [80.2, 81.0).\r\n   at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\r\n   at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\r\n   at SkiaSharp.SKObject..cctor()\r\n\r\n\u0060\u0060\u0060\r\n\r\nI added \u0060($\u0022SkiaSharp version: {SkiaSharpVersion.Native}; minimum required: {SkiaSharpVersion.NativeMinimum}\u0022);\u0060 to my logging and that prints:\r\n\r\n\u0060\u0060\u0060\r\nSkiaSharp version: 0.0; minimum required: 80.2\r\n\u0060\u0060\u0060\r\n\r\nIt looks like libSkiaSharp.dll is not being copied.\r\nWild conjecture: Using the SkiaSharp sample project as an example, it looks like there needs to be an explicit reference to libSkiaSharp (?).\r\n\r\n**Code**\r\n\r\nAny SkObject code should suffice, here is an example that I am using:\r\n\r\n\u0060\u0060\u0060\r\n          using (var encodedData = skImage.Encode(SKEncodedImageFormat.Webp, webpQuality))\r\n          using (var webpOutStream = File.OpenWrite(outFile))\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nNo TypeInitializationException should be thrown.\r\n\r\n**Actual Behavior**\r\n\r\nTypeInitializationException should not be thrown.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.80.2\r\n- Last known good version:  1.68.2.1\r\n- IDE:  Visual Studio Community\r\n- Platform Target Frameworks: \r\n  - Windows Classic: Windows 10 Pro x64 10.0.19042 \r\n- Target Devices:   Desktop PC\r\n  \r\nEDIT: Updated actual exception (\u0060TypeInitializationException\u0060).\r\n\r\n",
+  "author": {
+    "login": "Peru-S",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-06-04T18:35:55",
+  "updatedAt": "2022-09-11T21:01:18",
+  "closedAt": "2022-08-12T19:37:23",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 375,
+  "type": "issue",
+  "state": "closed",
+  "title": "[iOS] Remotely triggered SKCanvasView.InvalidateSurface does not redraw",
+  "body": "Background and implementation:\r\n\r\nI am currently trying to implement a shared drawing experience using Xamarin.Forms on mobile platforms, i.e. including a page with a SkiaSharp canvas, Touch listeners and a Realtime connection.\r\n\r\nThe drawing itself is basically implemented like this: https://developer.xamarin.com/guides/xamarin-forms/advanced/skiasharp/paths/finger-paint/, sample project here: https://github.com/xamarin/xamarin-forms-samples/tree/master/SkiaSharpForms/SkiaSharpFormsDemos\r\n\r\nAlso I am sending Messages to create a new path / add points to a path / ending a path via peer to peer connection. \r\n\r\nProblem:\r\n\r\nThe messages are coming through and the paths are properly transmitted and created (also verified fully working on Android and UWP). The only thing that is not working is the redrawing trigger.\r\n\r\nDetails:\r\n\r\nI am calling the exact same code, once triggered from my own drawing, once triggered via network message. This code adds points to my paths and then triggers the SKCanvasView.InvalidateSurface() method to trigger a redraw of the canvas. But, this exact part simply does not work on iOS when triggered remotely. Only when I draw another line locally and thus trigger the invalidation again, the view actually refreshes.\r\n\r\nBasically it seems like there are some native checks in place (only on iOS?) that require some changes done via user input before it actually refreshes and seems to block me from triggering this via code. I have verified via debugging that the code actually executes the InvalidateSurface() method, but the redrawing function does not work.\r\n\r\nAny ideas why this is happening? Is there some workaround like faking a change on the canvas?",
+  "author": {
+    "login": "mschlaffer",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-09-22T18:36:48",
+  "updatedAt": "2022-08-19T18:02:31",
+  "closedAt": "2017-09-25T18:42:08",
+  "commentCount": 2,
+  "reactionCount": 0
+}

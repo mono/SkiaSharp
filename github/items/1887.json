@@ -1,0 +1,17 @@
+{
+  "number": 1887,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Setting a shader on a SKPaint could free the old shader while still in use",
+  "body": "**Description**\r\n\r\nThe Shader move operator frees the previous shader, even when the shader is still in use. This operation could even crash when some other operator already freed memory while still in use (see screenshot). \r\n\r\n**Code**\r\n\r\nvar shader = ...;\r\nusing var brush = StyleFactory.Brush(fillStyle, path); // Creates an SKPaint with a brush\r\nbrush.Shader = shader;\r\nDrawPath(brush, path);\r\nbrush.Shader = null;\r\n\r\nThe variable shader cannot be used anymore since sometimes its resources are freed.\r\n\r\n**Expected Behavior**\r\n\r\nNo crash when settings brush.Shader on null \u002B reuse of shaders.\r\n\r\n**Actual Behavior**\r\n\r\nFatal crash.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  20.80.3\r\n- Last known good version:  This is the first version we are using\r\n- IDE:  VS 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  10\r\n  \r\n**Reproduction Link**\r\n\r\nThis is a concurrency issue that only occurs sometimes.\r\n\r\n![image](https://user-images.githubusercontent.com/518177/145419862-3e646124-52ac-4fc5-9bb7-e971c9fc7817.png)\r\n\r\n",
+  "author": {
+    "login": "laurenceSaes",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-09T15:09:43",
+  "updatedAt": "2021-12-09T15:09:43",
+  "commentCount": 0,
+  "reactionCount": 0
+}

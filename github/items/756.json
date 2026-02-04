@@ -1,0 +1,39 @@
+{
+  "number": 756,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG / QUESTION] DrawBitmap with SKFilterQuality.High causes bad performance",
+  "body": "**Description**\r\n\r\nI\u0027m drawing several \u0060SKBitmap\u0060s on a \u0060SKGLView\u0060 on macOS, I\u0027m using \u0060SKFilterQuality.High\u0060 to get the best quality of the images. If the canvas is zoomed in and only one image is visible the performance is okay, but once I zoom out and multiple \u0060SKBitmap\u0060s are visible performance and rendering speed drops. Some of the images are quite big (i.e. 4000*300px) - so I wanted to check if the performance drop is caused by my code or if Skia(Sharp)s performance is limited in this case (even on the GPU)\r\n\r\n**Code**\r\nThis is my \u0060PaintSurface\u0060 method - repro link contains my full source\r\n\u0060\u0060\u0060\r\nvoid CanvasView_PaintSurface(object sender, SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs e)\r\n{\r\n    e.Surface.Canvas.Clear(SKColors.Black);\r\n    e.Surface.Canvas.SetMatrix(_m);\r\n\r\n    for(int i = 0; i \u003C imgs.Count; i\u002B\u002B)\r\n    {\r\n        e.Surface.Canvas.DrawBitmap(imgs.ElementAt(i), rects.ElementAt(i), HighQualityImagePaint);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\nSince drawing is happening on the GPU (SKGLView) i expect smooth rendering and good performance.\r\n\r\n**Actual Behavior**\r\nFramerate drops and panning / zooming feels really slow\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.60.3\r\n- IDE:  \u003C!-- Visual Studio for Mac 7.7.2 (Build 21)\r\n- Platform Target Frameworks: Xamarin.Mac\r\n  - macOS:  10.14.2 (18C54)\r\n- Target Devices:  Macbook Pro 13\u0022 (2018 Touchbar)\r\n\r\n**Screenshots**\r\n\r\n![test](https://user-images.githubusercontent.com/3210391/51100468-872fae80-17d6-11e9-80c8-f107cda7176c.gif)\r\n\r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/nor0x/SkiaSharp_PerfomanceExperiments\n\n\u003E VS bug [#770230](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/770230)",
+  "author": {
+    "login": "nor0x",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2019-01-14T07:37:30",
+  "updatedAt": "2019-12-30T12:42:00",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 1830,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Packing a nupkg with SkiaSharp 2.80.x fails due to some missing manifest file",
+  "body": "**Description**\r\n\r\nI am trying to pack a class library project which references SkiaSharp.Views.Forms.\r\nDoing so via \u0060msbuild -t:pack\u0060 does result in the error shown below, expecting some kind of manifest.\r\nWith version 1.68.3 of SkiaSharp this worked just fine.\r\n\r\nCreating the missing manifest file manually in the expected location fixes the process, but that\u0027s not really a fix.\r\n \r\n**Expected Behavior**\r\n\r\nThe package can be packed just like before.\r\n\r\n**Actual Behavior**\r\n\r\nThe pack process fails in the last step with the following error message:\r\n\r\n\u0060\u0060\u0060shell\r\n\u0022.../SkiaSharpAppiOS/SkiaSharpAppiOS/ClassLibraryiOS/ClassLibraryiOS.csproj\u0022 (pack target) (1) -\u003E\r\n(GenerateNuspec target) -\u003E \r\n  .../.nuget/packages/nuget.build.tasks.pack/5.6.0/build/NuGet.Build.Tasks.Pack.targets(198,5): error : \r\n  The file \u0027.../SkiaSharpAppiOS/SkiaSharpAppiOS/ClassLibraryiOS/bin/iPhoneSimulator/Debug/Native.ClassLibraryiOS.manifest\u0027 to be packed was not found on disk. \r\n  [.../SkiaSharpAppiOS/SkiaSharpAppiOS/ClassLibraryiOS/ClassLibraryiOS.csproj]\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.x\r\n- Last known good version:  1.68.3\r\n- IDE:  Jetbrains Rider\r\n- Platform Target Frameworks: \r\n  - iOS:  Xamarin.iOS\r\n- Target: Nuget package\r\n\r\n**Reproduction Link**\r\n\r\nCreated a minimal setup to test this (see the readme for detailed instructions):\r\nhttps://github.com/samtun/SkiaSharpPack\r\n\r\n",
+  "author": {
+    "login": "samtun",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-14T09:17:21",
+  "updatedAt": "2022-03-01T02:22:22",
+  "commentCount": 1,
+  "reactionCount": 0
+}

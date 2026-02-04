@@ -1,0 +1,18 @@
+{
+  "number": 1725,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] [WASM] HarfBuzzSharp Linker Errors",
+  "body": "**Description**\r\nI\u0027m using SkiaSharp \u002B HarfBuzzSharp in a WebAssembly application. I have disabled the linker to reduce the build time for the project which leads to various issues listed below. With the linker enabled the build works fine but takes significantly longer.\r\n\r\nThis is the setup i\u0027m using:\r\n\r\n- .net5.0\r\n- linker enabled\r\n- \u0060HarfBuzzSharp\u0060 Version 2.88.0-preview.7\r\n- \u0060SkiaSharp\u0060 Version 2.88.0-preview.7\r\n- \u0060HarfBuzzSharp.NativeAssets.WebAssembly\u0060 Version 2.6.1.8-preview.93\r\n\r\n\r\ni\u0027m inspecting the build logs with detailed verbosity and get the following output with \u0060System.Exception: Failed to generate AOT layout\u0060\r\n**Behavior**\r\n\r\n\u0060\u0060\u0060\r\n... linker-out \u003E pinvoke-table.h.tmp (TaskId:779)\r\n[00:01:57.7838172] Unhandled exception. System.Exception: Parameter types of pinvoke callback method \u0027System.IntPtr GetTableDelegateProxyImplementation(System.IntPtr, HarfBuzzSharp.Tag, System.IntPtr)\u0027 needs to be blittable. (TaskId:779)                 \r\n[00:01:57.7839076]    at PInvokeTableGenerator.Error(String msg) in D:\\a\\1\\s\\src\\Uno.Wasm.Tuner\\PInvokeTableGenerator.net5.cs:line 328 (TaskId:779)\r\n\r\n\r\nUnhandled exception. System.Exception: The return type \u0027HarfBuzzSharp.UnicodeCombiningClass\u0027 of pinvoke callback method \u0027HarfBuzzSharp.UnicodeCombiningClass CombiningClassProxyImplementation(System.IntPtr, System.UInt32, System.Void*)\u0027 needs to be blittable.\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0-preview.7\r\n- Last known good version:  x\r\n- IDE:  Visual Studio 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Uno WebAssembly Bootstrapper : 3.0.0-dev.95\r\n- Target Devices:\r\n  - Browser\r\n  \r\n\r\n**Reproduction Link**\r\n\r\n[https://github.com/nor0x/skiasharp-1720](https://github.com/nor0x/skiasharp-1720\r\n)",
+  "author": {
+    "login": "nor0x",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-06-23T08:07:29",
+  "updatedAt": "2022-08-19T00:02:43",
+  "closedAt": "2021-11-09T22:16:27",
+  "commentCount": 20,
+  "reactionCount": 0
+}

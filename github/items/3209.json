@@ -1,0 +1,53 @@
+{
+  "number": 3209,
+  "type": "pr",
+  "state": "closed",
+  "title": "Increase Linux support",
+  "body": "**Description of Change**\r\n\r\nAfter updating all the skia versions, agents and Dpcker files, we ended up on Debian 10 which uses GLIBC 2.31 which broke the support for RHEL 8.\r\n\r\nThis PR drops down the version of the build Docker to Debian 10 which is also still under ELTS.\r\n\r\nOne reason we went to Debian 11 was the depot_tools required Python 3.8, and Debian 10 only went up to Python 3.7. However, I found that there was just a single file that had 3.8 requirements and that was just because they wrote it using a new mechanism. There was a slightly different way in 3.7, so I opened an issue https://issues.chromium.org/issues/403485632 and then also a https://chromium-review.googlesource.com/c/chromium/tools/depot_tools/\u002B/6355868. Once (hopefully) the CL gets merged, I can remove the workaround in the cake files.\n\nThis PR has grown a bit and in an effort to not have many conflicts and double work, I merged in #3200. \n\nThis PR now has arm, arm64, x86, x64, riscv64 builds for glibc and musl, both normal and no-fontconfig. \r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #3201\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-03-18T16:20:37",
+  "updatedAt": "2025-03-25T06:35:21",
+  "closedAt": "2025-03-23T16:47:09",
+  "commentCount": 7,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/linux-versions",
+  "additions": 344,
+  "deletions": 236,
+  "changedFiles": 22,
+  "commits": 32,
+  "reviews": [
+    {
+      "author": "kasperk81",
+      "state": "COMMENTED",
+      "submittedAt": "2025-03-22T18:34:41"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2025-03-23T04:27:52"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2025-03-23T04:28:55"
+    },
+    {
+      "author": "4Darmygeometry",
+      "state": "APPROVED",
+      "submittedAt": "2025-03-23T05:26:53"
+    },
+    {
+      "author": "kasperk81",
+      "state": "COMMENTED",
+      "submittedAt": "2025-03-23T09:45:20"
+    }
+  ]
+}

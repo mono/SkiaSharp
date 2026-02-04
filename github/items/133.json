@@ -1,0 +1,19 @@
+{
+  "number": 133,
+  "type": "issue",
+  "state": "closed",
+  "title": "Canvas rotation does not work correctly",
+  "body": "I just started working with SkiaSharp and I have a problem with canvas rotation.\nThe code below generates the attached image:\n\n\u0060\u0060\u0060\nusing (SKSurface surface = SKSurface.Create(816, 1056, SKColorType.Bgra8888, SKAlphaType.Premul))\n{\n    SKCanvas canvas = surface.Canvas;\n    SKMatrix m = SKMatrix.MakeTranslation(300, 400);\n    canvas.Concat(ref m);\n\n    m = SKMatrix.MakeScale(400, 200);\n    canvas.Concat(ref m);\n\n    using (SKPaint redPaint = new SKPaint())\n    {\n        redPaint.Color = new SKColor(255, 0, 0);\n        canvas.DrawRect(SKRect.Create(0, 0, 1, 1), redPaint);\n    }\n\n    m = SKMatrix.MakeRotationDegrees(45);\n    canvas.Concat(ref m);\n\n    using (SKPaint bluePaint = new SKPaint())\n    {\n        bluePaint.Color = new SKColor(0, 0, 255);\n        canvas.DrawRect(SKRect.Create(0, 0, 1, 1), bluePaint);\n    }\n}\n\u0060\u0060\u0060\n\n![image-816x1056x4-red-blue](https://cloud.githubusercontent.com/assets/20994796/17629430/f85c8b1e-60c2-11e6-9bfa-36326a7f1a93.png)\nThe blue rectangle instead of being scaled like the red one, it is skewed and scaled equally on both axis.\nI\u0027m using the latest version 1.53.0.\n",
+  "author": {
+    "login": "xfiniumpdf-support",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.1",
+  "createdAt": "2016-08-12T16:35:23",
+  "updatedAt": "2022-08-20T00:02:20",
+  "closedAt": "2016-08-15T15:15:57",
+  "commentCount": 2,
+  "reactionCount": 0
+}

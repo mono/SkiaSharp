@@ -1,0 +1,19 @@
+{
+  "number": 108,
+  "type": "issue",
+  "state": "closed",
+  "title": "missing method SKImage.CreateFromBitmap(SKBitmap b)",
+  "body": "Hi!\n\nI am trying to store SKBitmaps that I created with SkiaSharp as PNG files.\n\nMiguel pointed out that:\n\n\u003E If you have an SKBitmap, you can call:\n\u003E \n\u003E var data = bitmap.Encode (SKImageEncodeFormat.Png, quality: 100);\n\u003E using (var f = File.Create (\u0022foo.png\u0022))\n\u003E    data.SaveTo (f);\n\nHowever, SKBitmap has no such \u0022Encode\u0022 method.\nOnly SKImage has.\n\nSo I need this method either in SKBitmap, or a conversion method as the one that exists in Skia:\n\n\u0060static sk_sp\u003CSkImage\u003E MakeFromBitmap(const SkBitmap\u0026);\u0060\n\nsee SKImage.h\nhttps://github.com/google/skia/blob/master/include/core/SkImage.h \n\nI tried to do the conversion in C# code, but failed miserably - you can see a documentation of my attempts in this closed issue:\nhttps://github.com/mono/SkiaSharp/issues/103 \n",
+  "author": {
+    "login": "gentledepp",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.0",
+  "createdAt": "2016-07-07T12:07:17",
+  "updatedAt": "2022-08-20T00:02:39",
+  "closedAt": "2016-07-09T02:50:18",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,19 @@
+{
+  "number": 162,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkRect: Location done incorrectly",
+  "body": "Currently, the binding for \u0060SkRect.Location\u0060 [here](https://github.com/mono/SkiaSharp/blob/5b1d054f88288d9532d91d1639b9c1099d589650/binding/Binding/Definitions.cs#L1668) is given as\n\n\u0060\u0060\u0060\npublic SKPoint Location {\n            get { return new SKPoint (left, top); }\n            set {\n                left = value.X;\n                top = value.Y; \n            }\n        }\n\u0060\u0060\u0060\n\nHowever, this doesn\u0027t just change just the location but also changes the size. So, the ideal one should be offset the bottom and right negatively to make sure the size is the same. \n\n~~The same also applies to \u0060Offset\u0060 by position [here](https://github.com/mono/SkiaSharp/blob/5b1d054f88288d9532d91d1639b9c1099d589650/binding/Binding/Definitions.cs#L1798)~~\n\n~~Because the above should be \u0060Offset(pos.X, pos.Y, -pos.X, -pos.Y)\u0060 . That would be the correct way to offset a rectangle, semantically.~~\n\nBoth of the above are highly misleading currently, and fixing that are breaking changes. So, I\u0027m opening an issue instead of a PR.\n",
+  "author": {
+    "login": "prasannavl",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.55.0",
+  "createdAt": "2016-10-15T05:10:03",
+  "updatedAt": "2022-08-20T00:01:53",
+  "closedAt": "2016-11-08T18:16:27",
+  "commentCount": 11,
+  "reactionCount": 0
+}

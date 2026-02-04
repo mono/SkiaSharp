@@ -1,0 +1,18 @@
+{
+  "number": 305,
+  "type": "issue",
+  "state": "closed",
+  "title": "v1.58.0 crashes android app",
+  "body": "When using https://www.nuget.org/packages/SkiaSharp.Views/1.58.0 and https://www.nuget.org/packages/SkiaSharp/1.58.0.  Attempting to add a new \u0060SKCanvasView\u0060 to a *.axml file, my app crashes as soon as I load the view containing this code:\r\n\r\n\u0060\u0060\u0060\r\n\u003CSkiaSharp.Views.Android.SKCanvasView\r\n        android:layout_width=\u0022match_parent\u0022\r\n        android:layout_height=\u0022wrap_content\u0022\r\n        android:id=\u0022@\u002Bid/sKCanvasView1\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\n- I\u0027m targeting  a minimum android version of 4.0.3\r\n- Downgrading to SkiaSharp 1.57.1 fixes the issue.\r\n- The crash occurs on the emulator (x86 Android 6.0 API 23) and a Pixel phone (Android 7.1 API 25)\r\n\r\nI pulled this from logcat:\r\n\u0060\u0060\u0060\r\n05-26 13:30:21.394\tVisualStudio_android-23_x86_phone\tError\t1252\tDEBUG\tbacktrace:\r\n    #00 pc 000349c9  /data/app/XamarinTOUR.Android-1/lib/x86/libSkiaSharp.so (sk_surface_new_raster_direct\u002B52)\r\n    #01 pc 00018503  \u003Cunknown\u003E\r\n    #02 pc 000114bf  \u003Cunknown\u003E\r\n    #03 pc 00008b13  \u003Cunknown\u003E\r\n    #04 pc 000606b7  \u003Cunknown\u003E\r\n    #05 pc 00011caf  \u003Cunknown\u003E\r\n    #06 pc 00064bd4  /data/app/XamarinTOUR.Android-1/oat/x86/base.odex (offset 0x57000) (void md540a3372efb8e9609e1e7a9eef27b89f4.SKCanvasView.n_onDraw(android.graphics.Canvas)\u002B136)\r\n    #07 pc 00064f20  /data/app/XamarinTOUR.Android-1/oat/x86/base.odex (offset 0x57000) (void md540a3372efb8e9609e1e7a9eef27b89f4.SKCanvasView.onDraw(android.graphics.Canvas)\u002B68)\r\n    #08 pc 744917b9  /data/dalvik-cache/x86/system@framework@boot.oat (offset 0x1eb2000)\r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "wdamien",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-05-26T20:40:52",
+  "updatedAt": "2022-08-19T21:01:48",
+  "closedAt": "2017-05-29T17:40:39",
+  "commentCount": 2,
+  "reactionCount": 0
+}

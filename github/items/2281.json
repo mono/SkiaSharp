@@ -1,0 +1,17 @@
+{
+  "number": 2281,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE]Expose \u0060SKImageInfo\u0060 of \u0060SKCanvas\u0060 and \u0060SKSurface\u0060",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\n\u0060SkSurface.h\u0060 [contains](https://github.com/google/skia/blob/2f0f67b34de8b09b692d03dd135642a0ba9309f2/include/core/SkSurface.h#L526) the API to return an \u0060SKImageInfo\u0060 but this is missing from the C# binding. The actual [implementation](https://github.com/google/skia/blob/2b62c1bf01fa5340e0dd891b0ca3bcb990c0f15f/src/image/SkSurface.cpp#L193) returns it from the canvas, which also [has](https://github.com/google/skia/blob/2f0f67b34de8b09b692d03dd135642a0ba9309f2/include/core/SkCanvas.h#L251) this API but this is also missing from the binding.\r\n\r\nMy problem is that when \u0060SKSurface.PeekPixels\u0060 returns \u0060null\u0060 so I need to use \u0060SKSurface.ReadPixels\u0060 to create a raster copy of the surface I don\u0027t know what size the target pixmap should have.\r\n\r\nThe only workaround is to call \u0060Snaphsot\u0060 first to create a temporary \u0060SKImage\u0060, which means an extra allocation.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nJust like in case of \u0060SKPixmap\u0060, \u0060SKBitmap\u0060 and \u0060SKImage\u0060, add a \u0060public SKImageInfo Info { get; }\u0060 property to \u0060SKSurface\u0060 and \u0060SKCanvas\u0060\r\n\r\n",
+  "author": {
+    "login": "koszeggy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-10-09T19:01:51",
+  "updatedAt": "2022-10-09T19:01:51",
+  "commentCount": 0,
+  "reactionCount": 3
+}

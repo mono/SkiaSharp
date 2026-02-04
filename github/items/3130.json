@@ -1,0 +1,22 @@
+{
+  "number": 3130,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKCanvas.DrawText no longer obeys SKPaint.IsAntialias property",
+  "body": "### Description\n\nThe \u0060SKCanvas.DrawText\u0060 method no longer obeys the \u0060SKPaint.IsAntialias\u0060 property of the provided \u0060SKPaint\u0060 object. Prior to 3.116.0, setting this property to false produces the following image:\r\n![working-no-antialias](https://github.com/user-attachments/assets/a5a60840-186e-4ef9-9ea3-307762f01ce4)\r\nand setting it to true produces:\r\n![working-antialias](https://github.com/user-attachments/assets/9125378f-59df-41e1-93bf-dc6ed743413b)\r\n\r\nOn versions 3.116.0 and 3.116.1, the image produced when \u0060IsAntialias\u0060 is false now looks like this:\r\n![broken-no-antialias](https://github.com/user-attachments/assets/53181c65-8eeb-4d95-8ece-33ac426e3d6d)\r\nand set to true:\r\n![broken-antialias](https://github.com/user-attachments/assets/68275ef5-a74b-4fee-85e8-ca83180c5e71)\r\n\n\n### Code\n\nExample here demonstrating broken and working versions: https://github.com/meridaio/SkiaSharpTextAntialiasing\n\n### Expected Behavior\n\nSetting \u0060SKPaint.IsAntialias = false\u0060 should disable antialiasing for the \u0060SKCanvas.DrawText\u0060 method. \n\n### Actual Behavior\n\nThe \u0060SKPaint.IsAntialias\u0060 property seems to have no effect on the \u0060SKCanvas.DrawText\u0060 method\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "meridaio",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-27T19:11:09",
+  "updatedAt": "2025-07-11T04:43:16",
+  "commentCount": 1,
+  "reactionCount": 1
+}

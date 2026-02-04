@@ -1,0 +1,22 @@
+{
+  "number": 2912,
+  "type": "issue",
+  "state": "open",
+  "title": "[Windows, 3.0 Preview 3.1] Making an SKGLView visible (or a grid with SKGLView visible) sometimes flashes in gray / white",
+  "body": "### Description\n\nSometimes on Windows, if you make an SKGLView visible, or a grid with SKGLView, visible (by changing IsVisible from false to true), the SKGLView randomly flashes in gray / white. This is probably caused by SwapChainPanel\u0027s base color being shown momentarily before the PaintSurface finishes drawing. By contrast, SKCanvasView and SKGLView on Android and iOS all work fine.\n\n### Code\n\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\nOn GamePage, CommandCanvas sometimes flashes if it uses SKGLView on Windows. I now changed it to use SKCanvasView on Windows.\n\n### Expected Behavior\n\nWhen made visible by changing IsVisible to true, SKGLView does not flash in gray when made visible but displays the intended graphics, as per PaintSurface.\n\n### Actual Behavior\n\nWhen changing SKGLView\u0027s IsVisible to true, SKGLView sometimes flashes gray before drawing graphics specified in PaintSurface.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\nWindows PC\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-01T22:17:57",
+  "updatedAt": "2024-07-01T22:17:57",
+  "commentCount": 0,
+  "reactionCount": 0
+}

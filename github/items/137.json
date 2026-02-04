@@ -1,0 +1,18 @@
+{
+  "number": 137,
+  "type": "issue",
+  "state": "closed",
+  "title": "DrawImage on Alpha8 surface",
+  "body": "I create a surface with SKColorType.Alpha8. I can draw vector graphics on it just fine but if I try to draw an image with SKColorType.Gray8 nothing is displayed. \nIf I change the surface type to SKColorType.Bgra8888 the image shows ok.\nThe code to draw the image (Windows Forms app):\n\n\u0060\u0060\u0060\nint imageWidth = 100;\nint imageHeight = 100;\n\n// A black square\nbyte[] imageData = new byte[imageWidth * imageHeight];\nGCHandle imageHandle = GCHandle.Alloc(imageData, GCHandleType.Pinned);\nIntPtr imageDataPtr = Marshal.UnsafeAddrOfPinnedArrayElement(imageData, 0);\n\nSKImageInfo imageInfo = new SKImageInfo(imageWidth, imageHeight, SKColorType.Gray8, SKAlphaType.Opaque);\nusing (SKImage img = SKImage.FromPixels(imageInfo, imageDataPtr, imageWidth))\n{\n    canvas.DrawImage(img, new SKRect(0, 0, imageWidth, imageHeight));\n}\n\nimageHandle.Free();\n\n\u0060\u0060\u0060\n\nIs this a limitation of the Alpha8 surface?\n",
+  "author": {
+    "login": "xfiniumpdf-support",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-08-17T13:47:57",
+  "updatedAt": "2022-08-20T00:02:16",
+  "closedAt": "2016-08-17T20:28:56",
+  "commentCount": 3,
+  "reactionCount": 0
+}

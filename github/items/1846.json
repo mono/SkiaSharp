@@ -1,0 +1,18 @@
+{
+  "number": 1846,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] ArgumentNullException is thrown when decode an image from stream on Linux Docker",
+  "body": "**Description**\r\n\r\nArgumentNullException is thrown when decode an image from stream. The same image can be successfully decoded from file.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nusing (MemoryStream ms = new MemoryStream(File.ReadAllBytes(\u0022/temp/problem.Jpeg\u0022)))\r\n{\r\n    SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(ms);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  The issue is reproducible starting from 2.80.3 version.\r\n- Last known good version:  2.80.2\r\n- IDE:   Visual Studio\r\n- Platform Target Frameworks: \r\n  - Linux:  checked in docker.\r\n \r\nSample project with dockerfile and image are in the attachment.\r\n[Temp.zip](https://github.com/mono/SkiaSharp/files/7441251/Temp.zip)\r\none more problematic image\r\n[out_0.zip](https://github.com/mono/SkiaSharp/files/7441372/out_0.zip)\r\nand one more\r\n[problem_1.zip](https://github.com/mono/SkiaSharp/files/7441439/problem_1.zip)\r\n\r\n",
+  "author": {
+    "login": "AlexNosk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-29T10:39:25",
+  "updatedAt": "2022-11-10T09:00:56",
+  "closedAt": "2022-10-11T06:02:38",
+  "commentCount": 8,
+  "reactionCount": 3
+}

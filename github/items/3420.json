@@ -1,0 +1,38 @@
+{
+  "number": 3420,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Android 16 KB page size support for libSkiaSharp.so",
+  "body": "[16KB_PageSize_Report.txt](https://github.com/user-attachments/files/23669684/16KB_PageSize_Report.txt)\n\n[Android16_PageSize_Issue.pdf](https://github.com/user-attachments/files/23547442/Android16_PageSize_Issue.pdf)\n\n### Description\n\n**Description**\nGoogle Play now requires all 64-bit native libraries to use 16 KB memory page size starting with Android 16\u002B. Currently, libSkiaSharp.so included in SkiaSharp.NativeAssets.Android v2.88.6 has a 4 KB page size, which prevents apps from targeting Android 16\u002B.\n\n**Steps to reproduce**\n1. Create a .NET MAUI Android app targeting Android 16.\n2. Build AAB using current SkiaSharp (v2.88.6) / MAUI workload.\n3. Run page size check on .so files.\n4. libSkiaSharp.so shows 4 KB page size.\n\n**Expected behavior**\nlibSkiaSharp.so should be built with 16 KB page size to comply with Android 16\u002B requirements.\n\n**Environment**\n- SkiaSharp.NativeAssets.Android v2.88.6\n- .NET MAUI 9.0\n- Android 16\u002B target\n\n**References**\n- Google page size guide: https://developer.android.com/guide/practices/page-sizes\n- MAUI discussion: https://github.com/dotnet/maui/discussions/30428\n\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "baharvipin",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/compatibility",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/Android",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-11-14T11:45:15",
+  "updatedAt": "2026-01-31T15:06:07",
+  "commentCount": 3,
+  "reactionCount": 5
+}

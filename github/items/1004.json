@@ -1,0 +1,41 @@
+{
+  "number": 1004,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Memory leak in Android SKCanvasView",
+  "body": "**Description**\r\n\r\nScenario: open 10 times screen with full screen SKCanvasView. App crashes with OutOfMemoryException\r\n\r\n**Reason**\r\n\r\nSKCanvasView doesn\u0027t release captured Bitmap\r\n\r\n**Fix**\r\n\r\nRecycle bitmap on detach from window:\r\n\r\n\u0060\u0060\u0060\r\nSKCanvasView.cs\r\n...\r\n\r\n    protected override void OnDetachedFromWindow()\r\n    {\r\n        FreeBitmap();\r\n\r\n        base.OnDetachedFromWindow();\r\n    }\r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "Kn4av",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/Raster",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-08T08:51:27",
+  "updatedAt": "2022-08-19T09:02:07",
+  "closedAt": "2019-11-11T22:51:43",
+  "commentCount": 1,
+  "reactionCount": 0
+}

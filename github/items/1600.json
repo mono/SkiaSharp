@@ -1,0 +1,17 @@
+{
+  "number": 1600,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] On iOS SKSurface.Snapshot returns null when called from SKGLView",
+  "body": "Snapshot() method of SKSurface always returns null on iOS devices (both physical and virtual) when it\u0027s called inside SKGLView, but it seems to work when it is used from SKCanvasView. Actually it looks exactly like an old issue which was fixed in 1.6, but it works fine on Android devices this time. (https://github.com/mono/SkiaSharp/issues/436).\r\n\u0060\u0060\u0060\r\nprotected override void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\r\n{\r\n   var snapshot = e.Surface.Snapshot();\r\n   if(snapshot == null)\r\n   {\r\n   //code on iOS enters here\r\n   }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nReturns valid SKImage\r\n\r\n**Actual Behavior**\r\n\r\nReturns null\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  1.6\r\n- IDE:  Visual Studio for Mac / Visual Studio\r\n- Platform Target Frameworks: \r\n  - iOS:  12.4\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - iPad Air (4th gen)\r\n  - iPad Pro (4th gen)\r\n  - iPhone 12\r\n\r\n",
+  "author": {
+    "login": "feelIpk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-02-01T23:07:11",
+  "updatedAt": "2022-10-18T14:48:59",
+  "commentCount": 2,
+  "reactionCount": 3
+}

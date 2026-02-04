@@ -1,0 +1,18 @@
+{
+  "number": 2308,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Cleartype / subpixel text rendering still broken?",
+  "body": "**Description**\r\n\r\nCleartype / subpixel text rendering seems to (still) be broken.\r\nLast Update I\u0027ve seen is #830 from August, but the issue was already brought up in January.\r\nAs far as I can tell the entire 2.88.p1 - 2.88.3 version of SkiaSharp is affected.\r\nIs there any news on if / when this issue might get fixed?\r\n\r\n**Very simple WPF Desktop example**\r\n\u0060\u0060\u0060\r\nusing System.Windows;\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Desktop;\r\n\r\nnamespace ClearType\r\n{\r\n    /// \u003Csummary\u003E\r\n    /// Interaction logic for MainWindow.xaml\r\n    /// \u003C/summary\u003E\r\n    public partial class MainWindow : Window\r\n    {\r\n\tpublic MainWindow()\r\n\t{\r\n\t\tInitializeComponent();\r\n\t}\r\n\r\n\tprivate void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\r\n\t{\r\n\t\t// the the canvas and properties\r\n\t\tvar canvas = e.Surface.Canvas;\r\n\r\n\t\t// get the screen density for scaling\r\n\t\tvar scale = 1f;\r\n\t\tvar scaledSize = new SKSize(e.Info.Width / scale, e.Info.Height / scale);\r\n\r\n\t\t// handle the device screen density\r\n\t\tcanvas.Scale(scale);\r\n\r\n\t\t// make sure the canvas is blank\r\n\t\tcanvas.Clear(SKColors.White);\r\n\r\n\t\t// draw some text\r\n\t\tvar paint = new SKPaint\r\n\t\t{\r\n\t\t\tColor = SKColors.Black,\r\n\t\t\tIsAntialias = true,\r\n\t\t\tStyle = SKPaintStyle.Fill,\r\n\t\t\tTextAlign = SKTextAlign.Center,\r\n\t\t\tTextSize = 24\r\n\t\t};\r\n\r\n\t\tvar font = new SKFont\r\n\t\t{\r\n\t\t\tEdging = SKFontEdging.SubpixelAntialias,\r\n\t\t\tSize = 24\r\n\t\t};\r\n\r\n\t\tcanvas.DrawText(\r\n\t\t\t\u0022SkiaSharp\u0022,\r\n\t\t\tscaledSize.Width / 2,\r\n\t\t\t(scaledSize.Height \u002B paint.TextSize) / 2,\r\n\t\t\tfont,\r\n\t\t\tpaint);\r\n\t}\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nWhen I\u0027m running the old UWP example posted by @cilliemalan #830 \r\n(Or if I downgrade my SkiaSharp version to 2.80.4)\r\nSubpixel AA text rendering works as expected. (zoomed in):\r\n![Expected](https://user-images.githubusercontent.com/7701826/201118236-7f474afb-68f6-4bc6-9fe8-6e4d8f43aecd.png)\r\n\r\n**Actual Behavior**\r\n\r\nWhen I\u0027m running my ported WPF example (using the same code above)\r\nText ist rendered using standard AA (zoomed in):\r\n![Result](https://user-images.githubusercontent.com/7701826/201117803-ba5f8e69-faec-4eaa-a501-1a2c9840c51f.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.88.3\r\n- Last known good version: 2.80.4\r\n- IDE: Visual Studio 2022\r\n- Platform Target Frameworks: Windows 10\r\n",
+  "author": {
+    "login": "AquilaAbriel",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-10T15:17:48",
+  "updatedAt": "2023-01-01T18:00:48",
+  "closedAt": "2022-12-02T15:29:00",
+  "commentCount": 6,
+  "reactionCount": 0
+}

@@ -1,0 +1,32 @@
+{
+  "number": 474,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKGLView reports touch position incorrectly on UWP with UI scaling set to higher than 100%",
+  "body": "This can be reproduced with the latest versions of SkiaSharp.Views.Forms 1.60.0 and Xamarin.Forms 2.5.0.280555 running on Windows 10 (FCU) with UI scaling set to more than 100%.\r\n\r\n**Reproduction steps**\r\n1. Set SKGLView.EnableTouchEvents to true.\r\n2. Add an event handler to SKGLView.Touch event and watch reported pointer positions.\r\n3. Event handler is raised only until pointer reaches a certain position relative to window: [width / scale; height / scale]. Event handler is not being raised beyond this point even though the pointer is still located right over the SKGLView rendering area. Moreover, the reported pointer position is at all times scaled by UI scale.\r\n\r\nHere is a simple repro solution.\r\n[SKGLViewBug.zip](https://github.com/mono/SkiaSharp/files/1844404/SKGLViewBug.zip)\r\n",
+  "author": {
+    "login": "VitezslavImrysek",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-03-24T13:11:46",
+  "updatedAt": "2022-08-19T15:02:57",
+  "closedAt": "2018-09-26T04:40:39",
+  "commentCount": 6,
+  "reactionCount": 0
+}

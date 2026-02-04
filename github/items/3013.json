@@ -1,0 +1,23 @@
+{
+  "number": 3013,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] 3.0.0 regression for PNG compression with SKBitmap.Encode",
+  "body": "### Description\r\n\r\nUntil 2.88.8 you will have a default PNG level of compression when calling \u0060SKBitMap.Encode(Stream, SKEncodedImageFormat.Png, int)\u0060. Starting with 3.0.0 no compression is applied when calling this method.\r\n\r\nThis is a regression since the previous behavior is broken (suddenly the encoded images are huge) and there is no way to change the compression level in \u0060SKBitmap.Encode\u0060.\r\n\r\nThe PNG compression itself seems to work fine though, if tested with \u0060SKPixmap.Encode\u0060 and \u0060SKPngEncoderOptions.Default\u0060.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060csharp\r\nusing SkiaSharp;\r\nusing System.Reflection;\r\n\r\nnamespace ConsoleApp1\r\n{\r\n    internal class Program\r\n    {\r\n        static void Main()\r\n        {\r\n            Console.WriteLine($\u0022{typeof(SKImageInfo).Assembly.GetName().Name}, {typeof(SKImageInfo).Assembly.GetCustomAttribute\u003CAssemblyInformationalVersionAttribute\u003E()!.InformationalVersion}\u0022);\r\n\r\n            // create empty 1000x1000 bitmap\r\n            using var bitmap = new SKBitmap(1000, 1000);\r\n\r\n            // encode bitmap with default settings\r\n            using var outputStream = new MemoryStream();\r\n            bitmap.Encode(outputStream, SKEncodedImageFormat.Png, default);\r\n            Console.WriteLine($\u0022SKBitmap.Encode size: {outputStream.Length}\u0022);\r\n\r\n            // get the pixmap\r\n            using var pixmap = new SKPixmap(bitmap.Info, bitmap.GetPixels());\r\n\r\n            // encode it with default SKPngEncoderOptions (that\u0027s ZLibLevel 6)\r\n            using var data = pixmap.Encode(SKPngEncoderOptions.Default)!;\r\n\r\n            Console.WriteLine($\u0022SKPixmap.Encode size: {data.Size}\u0022);\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nCalling \u0060SKBitmap.Encode\u0060 for PNGs should use the default compression as below:\r\n\r\n\u0060\u0060\u0060\r\nSkiaSharp, 2.88.8.0-7af1d0840a381c0ce7ef2877454a88dbb2949686\r\nSKBitmap.Encode size: 3973\r\nSKPixmap.Encode size: 3973\r\n\u0060\u0060\u0060\r\n\r\n### Actual Behavior\r\n\r\nIn SkiaSharp 3.0.0 calling \u0060SKBitmap.Encode\u0060 for PNGs will result in no compression. Using \u0060SKPixmap.Encode\u0060 still works though.\r\n\r\n\u0060\u0060\u0060\r\nSkiaSharp, 3.0.0\u002Brelease-3.0.0-preview.4.f8d5b07f9aa710407097bd4f9321b2da6e269eb3\r\nSKBitmap.Encode size: 4007500\r\nSKPixmap.Encode size: 3973\r\n\u0060\u0060\u0060\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x (Alpha)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nAndroid, Linux, macOS, Windows\r\n\r\n### Platform / Operating System Version\r\n\r\nThis regression was observed on Windows, Linux, macOS and Android.\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "sungaila",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-21T09:27:40",
+  "updatedAt": "2024-10-23T12:40:27",
+  "closedAt": "2024-10-23T12:40:27",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,29 @@
+{
+  "number": 1034,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix issues with harfbuzz strings",
+  "body": "**Description of Change**\r\n\r\nIt appears that \u0060ArrayPool\u003CT\u003E\u0060 does not reset the arrays, C# strings do not have a \u0060\\0\u0060 termination character and \u0060new string(buffer)\u0060 will keep going.\r\n\r\nThis PR adds some cases to test for this, and then fixes it.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1031 \r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\nFixes the case where managed string were not null terminated.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-11-26T07:35:13",
+  "updatedAt": "2019-12-19T19:29:31",
+  "closedAt": "2019-11-27T08:14:47",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1031",
+  "additions": 68,
+  "deletions": 11,
+  "changedFiles": 5,
+  "commits": 3,
+  "reviews": []
+}

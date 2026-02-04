@@ -1,0 +1,23 @@
+{
+  "number": 3117,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] The version of the native libSkiaSharp library (116.0) is incompatible with this version of SkiaSharp.",
+  "body": "### Description\n\nThe version of the native libSkiaSharp library (116.0) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [88.1, 89.0)\n\n### Code\n\n\u0060\u0060\u0060\r\nStream GenerateQr(string text)\r\n{\r\n    using var generator = new QRCodeGenerator();\r\n\r\n    // Generate QrCode\r\n    var qr = generator.CreateQrCode(text, ECCLevel.L);\r\n\r\n    // Render to canvas\r\n    var info = new SKImageInfo(512, 512);\r\n    using var surface = SKSurface.Create(info);\r\n    var canvas = surface.Canvas;\r\n    canvas.Render(qr, info.Width, info.Height);\r\n\r\n    // Output to Stream -\u003E File\r\n    using var image = surface.Snapshot();\r\n    using var data = image.Encode(SKEncodedImageFormat.Png, 100);\r\n\r\n    var img = SKImage.FromPixels(image.PeekPixels());\r\n    // encode the image (defaults to PNG)\r\n    var encoded = image.Encode();\r\n    // get a stream over the encoded data\r\n    return encoded.AsStream();\r\n\r\n}\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n**WORKING VERSION 2.88.9**\r\n\r\n\u0060\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.9\u0022 /\u003E\u0060\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\nDistributor ID: Debian\r\nDescription:    Debian GNU/Linux 12 (bookworm)\r\nRelease:        12\r\nCodename:       bookworm\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\r\n       ---\u003E System.InvalidOperationException: The version of the native libSkiaSharp library (116.0) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [88.1, 89.0).\r\n         at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Version minSupported, Version current, Boolean throwIfIncompatible)\r\n         at SkiaSharp.SkiaSharpVersion.CheckNativeLibraryCompatible(Boolean throwIfIncompatible)\r\n         at SkiaSharp.SKObject..cctor()\r\n         --- End of inner exception stack trace ---\r\n         at SkiaSharp.SKObject..ctor(IntPtr handle, Boolean owns)\r\n         at SkiaSharp.SKSurface..ctor(IntPtr h, Boolean owns)\r\n         at SkiaSharp.SKSurface.GetObject(IntPtr handle)\r\n         at SkiaSharp.SKSurface.Create(SKImageInfo info, Int32 rowBytes, SKSurfaceProperties props)\r\n         at SkiaSharp.SKSurface.Create(SKImageInfo info)\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "bautistavirchar",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-16T04:20:57",
+  "updatedAt": "2025-12-09T18:08:11",
+  "closedAt": "2025-03-20T03:12:55",
+  "commentCount": 32,
+  "reactionCount": 2
+}

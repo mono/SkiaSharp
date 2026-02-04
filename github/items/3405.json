@@ -1,0 +1,37 @@
+{
+  "number": 3405,
+  "type": "pr",
+  "state": "closed",
+  "title": "Merge duplicate Debug|Win32 ItemDefinitionGroup in libHarfBuzzSharp.vcxproj",
+  "body": "Addresses review feedback on #3404 to eliminate duplicate \u0060ItemDefinitionGroup\u0060 sections for the \u0060Debug|Win32\u0060 configuration.\n\n## Changes\n- Consolidated two identical \u0060ItemDefinitionGroup\u0060 blocks with condition \u0060\u0027$(Configuration)|$(Platform)\u0027==\u0027Debug|Win32\u0027\u0060\n- Retained \u0060BufferSecurityCheck\u0060 setting from the second block in the merged section\n- Removed 18 lines of duplicate XML configuration\n\nThe vcxproj now has a single \u0060Debug|Win32\u0060 configuration block that includes both \u0060ObjectFileName\u0060 and \u0060BufferSecurityCheck\u0060 properties.\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC We\u0027d love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-11-04T14:58:05",
+  "updatedAt": "2025-11-04T15:12:26",
+  "closedAt": "2025-11-04T15:12:23",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "fix/binskim-ba2007-buffer-security-check",
+  "headBranch": "copilot/sub-pr-3404",
+  "additions": 0,
+  "deletions": 18,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": []
+}

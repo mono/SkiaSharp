@@ -1,0 +1,23 @@
+{
+  "number": 551,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKColorSpace.CreateIcc() always returns null with CMYK ICC profiles",
+  "body": "### Description\r\n\r\n\u0060SKColorSpace.CreateIcc(Byte[] input)\u0060 returns null when inputting CMYK ICC profiles. Whereas, it works as expected with RGB ICC profiles.\r\n\r\nI suspect SkiaSharp may require this Skia fix: https://bugs.chromium.org/p/chromium/issues/detail?id=727128\r\n\r\n### Code\r\n\r\n\tvar cmykICC_ByteArray = ...; // convert CMYK ICC profile into a byte array\r\n\tvar cmykColorSpace = SKColorSpace.CreateIcc(cmykICC_ByteArray);\r\n\tif (cmykColorSpace == null)\r\n\t{\r\n\t\t// colorspace is null\r\n\t}\r\n\r\n### Expected Behavior\r\n\r\nCMYK \u0060SKColorSpace\u0060 should be created.\r\n\r\n### Actual Behavior\r\n\r\nCMYK \u0060SKColorSpace\u0060 is not created. \u0060SKColorSpace.CreateIcc(cmykICC_ByteArray)\u0060 returns null.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.0\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .NET Core 2.0 (AWS Lambda)\r\n\r\n### ICC Profiles for Testing\r\n\r\nYou can use the two ICC profiles in this zip file, to use with the test code above.\r\n\r\nAdobe ICC profiles (contains RGB and CMYK profiles): \r\n[AdobeICC.zip](https://github.com/mono/SkiaSharp/files/2103035/AdobeICC.zip)\n\n\u003E VS bug [#738680](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/738680)",
+  "author": {
+    "login": "dsyno",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-06-14T15:50:09",
+  "updatedAt": "2022-08-19T15:02:18",
+  "closedAt": "2020-04-26T06:05:10",
+  "commentCount": 3,
+  "reactionCount": 0
+}

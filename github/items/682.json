@@ -1,0 +1,43 @@
+{
+  "number": 682,
+  "type": "issue",
+  "state": "open",
+  "title": "Can\u0027t load Arial Black as SKTypeface on Windows 10 machine",
+  "body": "### Description\r\n\r\nWhen specifying the font family name of \u0022Arial Black\u0022 on a Windows 10 machine (or Windows Server 2016), SkiaSharp selects \u0022Segoe UI\u0022 instead.\r\n\r\n### Code\r\n\r\n    SKTypeface tf = SKTypeface.FromFamilyName(\u0022Arial Black\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n\r\nThe resulting \u0060SKTypeface\u0060 has these properties:\r\n\r\n![image](https://user-images.githubusercontent.com/4692325/48377216-d4868700-e692-11e8-9381-a72d61702c0a.png)\r\n\r\nWhen loading \u0022Arial Black\u0022 as a \u0060System.Drawing.FontFamily\u0060 like this:\r\n\r\n    FontFamily fontFamily = new FontFamily(\u0022Arial Black\u0022);\r\n\r\nIt correctly finds the font:\r\n\r\n![image](https://user-images.githubusercontent.com/4692325/48377370-3cd56880-e693-11e8-8c4a-0bd181bf732c.png)\r\n\r\n### Expected Behavior\r\n\r\nSkiaSharp should be able to find the \u0022Arial Black\u0022 font family.\r\n\r\n### Actual Behavior\r\n\r\nSkiaSharp selects the default \u0022Segoe UI\u0022 font family.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  .NET Framework 4.7.2\r\n\r\n### Additional Information\r\n\r\nWhile browsing the Fonts folder in Windows, I noticed that the only font that appears in the main list is \u0022Arial\u0022:\r\n\r\n![image](https://user-images.githubusercontent.com/4692325/48377565-cab15380-e693-11e8-8771-928f4ef769f9.png)\r\n\r\nBut when you double-click on \u0022Arial,\u0022 it then displays \u0022Arial Black\u0022 in that list:\r\n\r\n![image](https://user-images.githubusercontent.com/4692325/48377596-e3216e00-e693-11e8-8578-5017ca9cc240.png)\r\n\r\nDoes that have something to do with why SkiaSharp can\u0027t find that font? But why can \u0060System.Drawing.FontFamily\u0060 find the font, but SkiaSharp can\u0027t?\n\n\u003E VS bug [#735691](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/735691)",
+  "author": {
+    "login": "washamdev",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-11-12T22:03:57",
+  "updatedAt": "2024-09-11T08:20:27",
+  "commentCount": 9,
+  "reactionCount": 1
+}

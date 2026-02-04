@@ -1,0 +1,22 @@
+{
+  "number": 2692,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Alpha not working with Black color and SKSvgCanvas",
+  "body": "### Description\n\n\u0060Alpha\u0060 channel is not working as expected when \u0060red\u0060, \u0060green\u0060 and \u0060blue\u0060 are 0 with drawing rectangle on \u0060SKSvgCanvas\u0060 but works fine with \u0060SKSurface\u0060.\r\n\r\nI found a workaround for this issue, simple ensure at least one color (\u0060red\u0060, \u0060green\u0060 or \u0060blue\u0060) is greater then 0, then apha is working with \u0060SKSvgCanvas\u0060.\n\n### Code\n\nHere a like code to reproduce the bug:\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\nusing System.IO;\r\n\r\nusing var stream = new FileStream(\u0022Test.svg\u0022, FileMode.Create);\r\nvar rect = new SKRect(0, 0, 100, 100);\r\n\r\nvar rect1 = new SKRect(15, 15, 95, 95);\r\nvar rect2 = new SKRect(10, 10, 80, 80);\r\n\r\nvar info = new SKImageInfo(\r\n                width: 100,\r\n                height: 100,\r\n                colorType: SKColorType.Rgba8888,\r\n                alphaType: SKAlphaType.Premul);\r\n\r\nusing var svg = SKSvgCanvas.Create(rect, stream);\r\nvar surface = SKSurface.Create(info);\r\n\r\nvar color1 = new SKColor(red: 0, green: 0, blue: 0, alpha: 128);\r\nvar color2 = new SKColor(red: 0, green: 0, blue: 0, alpha: 255);\r\n\r\nvar paint1 = new SKPaint() { Color = color1, IsStroke = false, IsAntialias = true };\r\nvar paint2 = new SKPaint() { Color = color2, IsStroke = false, IsAntialias = true };\r\n\r\nsurface.Canvas.DrawRect(rect1, paint1);\r\nsurface.Canvas.DrawRect(rect2, paint2);\r\n\r\nsvg.DrawRect(rect1, paint1);\r\nsvg.DrawRect(rect2, paint2);\r\n\r\nvar image = surface.Snapshot();\r\nvar skData = image.Encode(SKEncodedImageFormat.Png, 100);\r\nFile.WriteAllBytes(\u0022Test.png\u0022, skData.ToArray());\r\n\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nThe \u0060PNG\u0060 output is corrected but on the \u0060SVG\u0060 output, booth rectangle are black!\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "KroMignon",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-08T10:56:49",
+  "updatedAt": "2024-01-08T10:56:49",
+  "commentCount": 0,
+  "reactionCount": 0
+}

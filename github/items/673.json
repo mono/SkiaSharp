@@ -1,0 +1,23 @@
+{
+  "number": 673,
+  "type": "issue",
+  "state": "closed",
+  "title": "FAILED: obj/src/opts/hsw.SkOpts_hsw.o",
+  "body": "I build SkiaSharp on CentOS 7.5. When running:\r\n\u0060\u0060\u0060\r\n\u003E ./bin/gn gen \u0027out/linux/x64\u0027 --args=\u0027\r\n\u003E     is_official_build=true skia_enable_tools=false\r\n\u003E     target_os=\u0022linux\u0022 target_cpu=\u0022x64\u0022\r\n\u003E     skia_use_icu=false skia_use_sfntly=false skia_use_piex=true\r\n\u003E     skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false\r\n\u003E     skia_enable_gpu=true\r\n\u003E     extra_cflags=[ \u0022-DSKIA_C_DLL\u0022 ]\r\n\u003E     linux_soname_version=\u002260.3.0\u0022\u0027, \r\n\u0060\u0060\u0060\r\nI get this error:\r\n\r\nFAILED: obj/src/opts/hsw.SkOpts_hsw.o\r\nc\u002B\u002B -MMD -MF obj/src/opts/hsw.SkOpts_hsw.o.d -DNDEBUG -DSK_SAMPLES_FOR_X -DSK_GAMMA_APPLY_TO_A8 -DSK_ALLOW_STATIC_GLOBAL_INITIALIZERS=0 -DSK_ENABLE_DISCRETE_GPU -DSKIA_IMPLEMENTATION=1 -I../../../include/android -I../../../include/c -I../../../include/codec -I../../../include/config -I../../../include/core -I../../../include/effects -I../../../include/encode -I../../../include/gpu -I../../../include/atlastext -I../../../include/pathops -I../../../include/ports -I../../../include/svg -I../../../include/utils -I../../../include/utils/mac -I../../../include/private -I../../../src/c -I../../../src/codec -I../../../src/core -I../../../src/effects -I../../../src/fonts -I../../../src/image -I../../../src/images -I../../../src/lazy -I../../../src/opts -I../../../src/pathops -I../../../src/pdf -I../../../src/ports -I../../../src/sfnt -I../../../src/shaders -I../../../src/shaders/gradients -I../../../src/sksl -I../../../src/utils -I../../../src/utils/win -I../../../src/xml -I../../../third_party/gif -I../../../src/gpu -march=haswell -fstrict-aliasing -fPIC -fvisibility=hidden -O3 -fdata-sections -ffunction-sections -Wno-unused-parameter -DSKIA_C_DLL -std=c\u002B\u002B11 -fvisibility-inlines-hidden -fno-exceptions -fno-rtti -c ../../../src/opts/SkOpts_hsw.cpp -o obj/src/opts/hsw.SkOpts_hsw.o\r\n../../../src/opts/SkOpts_hsw.cpp:1:0: error: bad value (haswell) for -march= switch\r\n /*\r\n ^\r\n[381/1045] compile ../../../src/sksl/ir/SkSLVariableReference.cpp\r\nninja: build stopped: subcommand failed.\r\n\r\nHow can I solve this problem? I appreciate it!",
+  "author": {
+    "login": "aben1188",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-11-04T16:24:56",
+  "updatedAt": "2022-08-19T12:02:51",
+  "closedAt": "2018-11-07T23:51:31",
+  "commentCount": 3,
+  "reactionCount": 0
+}

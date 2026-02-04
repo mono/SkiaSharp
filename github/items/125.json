@@ -1,0 +1,18 @@
+{
+  "number": 125,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKImage.FromBitmap does not work",
+  "body": "When using \u0022SKImage.FromBitmap\u0022, the resulting image is always completely filled black.\nI added the Binding myself, however I doubt that the problem lies there.\n\nIn order to quickly reproduce this issue, open the \u0022Skia.WindowsDesktop.Demo\u0022 application and add the following code to \u0022SkiaView.cs\u0022\n\n\u0060\u0060\u0060 csharp\nprotected override void OnPaint(PaintEventArgs e)\n{\n    base.OnPaint(e);\n\n    if (sample == null)\n        return;\n\n    var width = Width;\n    var height = Height;\n\n    using (var bitmap = new Bitmap(width, height, PixelFormat.Format32bppPArgb))\n    {\n        var data = bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.WriteOnly, bitmap.PixelFormat);\n        using (var surface = SKSurface.Create(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, data.Scan0, width * 4))\n        {\n            var skcanvas = surface.Canvas;\n            // works\n            sample.Method(skcanvas, width, height);\n            SaveBitmap(\u0022SKSurface.Snapshot() =\u003E works\u0022, surface.Snapshot());\n\n            // does NOT work\n            using (var b = new SKBitmap(width, height))\n            using (var s = SKSurface.Create(b.Info))\n            {\n                sample.Method(s.Canvas, width, height);\n                SaveBitmap(\u0022SKImage.FromBitmap =\u003E empty png file\u0022, SKImage.FromBitmap(b));\n            }\n        }\n        bitmap.UnlockBits(data);\n\n        e.Graphics.DrawImage(bitmap, new Rectangle(0, 0, Width, Height));\n    }\n}\n\nprivate void SaveBitmap(string title, SKImage snapshot)\n{\n    var dlg = new SaveFileDialog();\n    dlg.Title = title;\n    dlg.Filter = \u0022Png Files|*.png;\u0022;\n    var res = dlg.ShowDialog();\n\n    if (res == DialogResult.OK)\n    {\n        using (var stream = File.OpenWrite(dlg.FileName))\n        using (snapshot)\n        {\n            var data = snapshot.Encode(SKImageEncodeFormat.Png, quality: 100);\n            data.SaveTo(stream);\n        }\n    }\n}\n\u0060\u0060\u0060\n\nThis results in two \u0022SaveFileDialogs\u0022 being opened.\nThe first one creates the correct PNG as it uses SKSurface.Snapshot();\nThe second one creates the empty (completely transparent) PNG using SKImage.FromBitmap();\nSo I am assuming that \u0022SKImage.FromBitmap\u0022 has some bug?\n",
+  "author": {
+    "login": "gentledepp",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-08-01T13:14:30",
+  "updatedAt": "2022-08-20T00:02:28",
+  "closedAt": "2016-08-03T21:34:01",
+  "commentCount": 9,
+  "reactionCount": 0
+}

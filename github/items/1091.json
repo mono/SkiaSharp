@@ -1,0 +1,23 @@
+{
+  "number": 1091,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKRegion new/dispose memory leak",
+  "body": "**Description**\r\n\r\nSKRegion constructor leaks memory. The memory is not reclaimed after calling SKRegion.Dispose().\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\nconst int n = 1000000;\r\n\r\nSystem.GC.GetTotalMemory(true);\r\nlong mem_start = System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64;\r\n\r\nfor (var idx = 0; idx \u003C n; idx\u002B\u002B)\r\n{\r\n    using (var r = new SkiaSharp.SKRegion())\r\n    {\r\n        //using r or not doesn\u0027t seem to matter\r\n    }\r\n}\r\n\r\n//does not show leak, leaked memory is unmanaged\r\nlong mem_end_manged = System.GC.GetTotalMemory(true); \r\n\r\nlong mem_end = System.Diagnostics.Process.GetCurrentProcess().PrivateMemorySize64;\r\n\r\nConsole.WriteLine(string.Format(\u0022N: {0}\u0022, n));\r\nConsole.WriteLine(string.Format(\u0022Memory total (managed): {0} kb\u0022, mem_end_manged / 1024d));\r\nConsole.WriteLine(string.Format(\u0022Memory total: {0} kb\u0022, mem_end / 1024d));\r\nConsole.WriteLine(string.Format(\u0022Memory delta: {0} b/iter\u0022, ((double)mem_end - mem_start) / n));\r\nConsole.WriteLine(string.Format(\u0022Memory delta: {0} kb\u0022, ((double)mem_end - mem_start)/1024));\r\n\u0060\u0060\u0060\r\n\r\nOutputs:\r\n\u0060\u0060\u0060\r\nN: 1000000\r\nMemory total (managed): 1617.04296875 kb\r\nMemory total: 110620 kb\r\nMemory delta: 35.65568 b/iter\r\nMemory delta: 34820 kb\r\n\u0060\u0060\u0060\r\n\r\nWith increased N:\r\n\u0060\u0060\u0060\r\nN: 40000000\r\nMemory total (managed): 1590.5 kb\r\nMemory total: 1342928 kb\r\nMemory delta: 33.3193216 b/iter\r\nMemory delta: 1301536 kb\r\n\u0060\u0060\u0060\r\n\r\nWith decreased N:\r\n\u0060\u0060\u0060\r\nN: 10000\r\nMemory total (managed): 1619.0625 kb\r\nMemory total: 433892 kb\r\nMemory delta: 26.2144 b/iter\r\nMemory delta: 256 kb\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nMemory delta to be zero or at least small, and not increase with increasing n.\r\n\r\n**Actual Behavior**\r\n\r\nMemory delta increases without bound with increasing n.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: Skiasharp 1.68.0.0\r\n- IDE:  Visual Studio 2013\r\n- Platform Target Frameworks:  Win10  .net framework 4.5 (32bit)\r\n\r\n",
+  "author": {
+    "login": "bazilshep",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-01-07T20:55:26",
+  "updatedAt": "2022-08-19T09:01:32",
+  "closedAt": "2020-02-05T09:54:52",
+  "commentCount": 4,
+  "reactionCount": 0
+}

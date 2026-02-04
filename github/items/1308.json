@@ -1,0 +1,19 @@
+{
+  "number": 1308,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SIGABRT: Object reference not set to an instance of an object",
+  "body": "**Description**\r\n\r\nHi! I\u0027m using Microcharts library, which uses SkiaSharp under the hood. Occasionally on iOS, I get null reference exception. Here\u0027s all the crash log I get:\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nSKCGSurfaceFactory.CreateSurface (CoreGraphics.CGRect contentsBounds, System.nfloat scale, SkiaSharp.SKImageInfo\u0026 info)\r\nSKCanvasView.Draw (CoreGraphics.CGRect rect)\r\n(wrapper managed-to-native) \r\nUIKit.UIApplication.UIApplicationMain(int,string[],intptr,intptr)\r\nUIApplication.Main (System.String[] args, System.IntPtr principal, System.IntPtr delegate)\r\nUIApplication.Main (System.String[] args, System.String principalClassName, System.String delegateClassName)\r\nApplication.Main (System.String[] args)\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nIt shouldn\u0027t crash.\r\n\r\n**Actual Behavior**\r\n\r\nIt crashes occasionally.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio for Mac \r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - iOS:  13.4\r\n- Target Devices:   iPhone 8 Plus, iPhone XR, iPad (5th gen, Wi-Fi)\r\n\r\nAny ideas why this occurs? \r\nThanks in advance.",
+  "author": {
+    "login": "arashcoder",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.4",
+  "createdAt": "2020-05-25T06:45:46",
+  "updatedAt": "2022-08-19T06:01:33",
+  "closedAt": "2021-09-10T16:43:24",
+  "commentCount": 20,
+  "reactionCount": 0
+}

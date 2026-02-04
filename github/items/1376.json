@@ -1,0 +1,18 @@
+{
+  "number": 1376,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Prebuilt Linux Libraries for SkiaSharp.HarfBuzz",
+  "body": "We have SkiaSharp.NativeAssets.Linux for SkiaSharp. It\u0027d be really nice if there was a prebuilt native library for the libHarfBuzzSharp.so dependency for the SkiaSharp.HarfBuzz package too. They do get generated at the same time in the bootstrapper, after all. \r\n\r\nIt\u0027d also be nice if the wiki page for \u0022Building SkiaSharp\u0022 would list the parameters for the -t targets that are available. It has \u0022everything\u0022 on the page, but it doesn\u0027t mention that you can do \u0022externals-linux\u0022 to just build the linux only. I had to find that by searching through all the issues. \r\n\r\nWith everything, the build fails with tizen, and I\u0027m not sure if I was just having problems finding it, but I don\u0027t think they have a headless installer anymore? Not that it\u0027s your problem :)\r\n\r\n---\r\nTo help anyone else who might want to build them, I kept track of what I did to do it. This is for Ubuntu 18.04. No warranties or guarantees though! \r\n\r\n\u0060\u0060\u0060\r\nsudo apt-get update\r\nwget -q https://packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb\r\nsudo dpkg -i packages-microsoft-prod.deb\r\n\r\nsudo apt install gnupg ca-certificates\r\nsudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF\r\necho \u0022deb https://download.mono-project.com/repo/ubuntu stable-bionic main\u0022 | sudo tee /etc/apt/sources.list.d/mono-official-stable.list\r\nsudo apt update\r\n\r\nsudo apt-get install libfontconfig1-dev apt-transport-https dotnet-sdk-2.2 dotnet-sdk-3.1 mono-devel python2.7 python-pip -y\r\n\r\ngit clone https://github.com/mono/SkiaSharp.git\r\ncd SkiaSharp\r\ngit checkout tags/v1.68.3\r\ngit submodule update --init --recursive\r\n./bootstrapper.sh -t externals-linux\r\n\u0060\u0060\u0060\r\nThe generated files will be found in SkiaSharp/output/native/linux/x64.",
+  "author": {
+    "login": "mlptownsend",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-02T16:14:06",
+  "updatedAt": "2022-08-19T03:02:48",
+  "closedAt": "2020-07-02T16:44:33",
+  "commentCount": 5,
+  "reactionCount": 0
+}

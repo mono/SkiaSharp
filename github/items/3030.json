@@ -1,0 +1,38 @@
+{
+  "number": 3030,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add  SKMatrix.MapPoints/MapVectors, SKPath.AddPoly  overloads with Span\u003CSKPoint\u003E",
+  "body": "**Description of Change**\r\n\r\nWhen you nead maps several points without heap allocation and with only one pInvoke\r\n\r\ncost of pInvoke\r\n\u0060\u0060\u0060\r\np1 = matrix.MapPoint(p1);\r\np2 = matrix.MapPoint(p2);\r\np3 = matrix.MapPoint(p3);\r\n\u0060\u0060\u0060\r\ncost of allocation\r\n\u0060\u0060\u0060\r\nvar points = new [] { p1,  p2,  p3 };\r\nmatrix.MapPoints(points, points);\r\n\u0060\u0060\u0060\r\ndecision\r\n\u0060\u0060\u0060\r\nSpan\u003CSKPoint\u003E points = stackalloc [] { p1,  p2,  p3 };\r\nmatrix.MapPoints(points, points);\r\n\u0060\u0060\u0060\r\n\r\nMiss SKPath.AddPoly tests\r\n\r\n**API Changes**\r\n\r\nAdded: \r\n \r\n- \u0060void SKMatrix.MapPoints(Span\u003CSKPoint\u003E result, ReadOnlySpan\u003CSKPoint\u003E points)\u0060\r\n- \u0060void SKMatrix.MapVectors(Span\u003CSKPoint\u003E result, ReadOnlySpan\u003CSKPoint\u003E points)\u0060\r\n- \u0060void SKPath.AddPoly (ReadOnlySpan\u003CSKPoint\u003E points, bool close = true)\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "alexandrvslv",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-05T06:12:12",
+  "updatedAt": "2024-10-28T11:45:13",
+  "closedAt": "2024-10-28T11:45:12",
+  "commentCount": 6,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 99,
+  "deletions": 0,
+  "changedFiles": 3,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-10-28T04:48:30"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "number": 407,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKBitmap.Decode() not working with WEBP from remote stream",
+  "body": "I try download and  resize a remote image with format WEBP, but i found this issue\r\n\r\n\u0060\u0060\u0060ruby\r\n\r\n            using (var httpClient = new HttpClient())\r\n            using (var stream = await httpClient.GetStreamAsync(new Uri(\u0022http://www.gstatic.com/webp/gallery/2.webp\u0022)))\r\n            using (var skBitmap = SKBitmap.Decode(stream))\r\n            using (var destinationFile = new FileStream(\u0022D:/desktop/teste_webp_format.jpg\u0022, FileMode.OpenOrCreate))\r\n            using (var resized = skBitmap.Resize(new SKImageInfo(100, 100), SKBitmapResizeMethod.Lanczos3))\r\n            using (var image = SKImage.FromBitmap(resized))image.Encode(SKEncodedImageFormat.Jpeg, 100).SaveTo(destinationFile);\r\n\u0060\u0060\u0060\r\n\r\nworking fine with other image formats.\r\n\r\n\u0060\u0060\u0060ruby\r\n\r\n            using (var httpClient = new HttpClient())\r\n            using (var stream = await httpClient.GetStreamAsync(new Uri(\u0022https://www.gstatic.com/webp/gallery/4.sm.jpg\u0022)))\r\n            using (var skBitmap = SKBitmap.Decode(stream))\r\n            using (var destinationFile = new FileStream(\u0022D:/desktop/test_jpg_format.jpg\u0022, FileMode.OpenOrCreate))\r\n            using (var resized = skBitmap.Resize(new SKImageInfo(100, 100), SKBitmapResizeMethod.Lanczos3))\r\n            using (var image = SKImage.FromBitmap(resized)) image.Encode(SKEncodedImageFormat.Jpeg, 100).SaveTo(destinationFile);\u0060\u0060\u0060\r\n\r\n\r\n",
+  "author": {
+    "login": "smartbracker",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.60.0",
+  "createdAt": "2017-12-09T16:12:55",
+  "updatedAt": "2022-08-19T18:02:02",
+  "closedAt": "2017-12-18T00:01:17",
+  "commentCount": 3,
+  "reactionCount": 0
+}

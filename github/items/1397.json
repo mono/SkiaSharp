@@ -1,0 +1,18 @@
+{
+  "number": 1397,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unit test project no longer finding DLL after upgrade from 1.68.3 -\u003E 2.80",
+  "body": "**Description**\r\n\r\nThis was all working fine in 1.68\r\nI have Skia in my Core PCL project and an NUnit project for testing that references this.\r\n\r\nPreviously I had the project properties as follows (as taken from a different issue I saw reported a while back)...\r\n\r\n\u0060\u0060\u0060\r\n\u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enet461\u003C/TargetFramework\u003E \r\n    \u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\r\n    \u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E\r\n\u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nHowever now my tests which touch the areas of code that have usings to SkiaSharp fail with,\r\n\r\n\u0060System.DllNotFoundException libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\u0060\r\n\r\nI\u0027ve tried adding direct reference to the SkiaSharp nuget, and removing the \u0060ShouldIncludeNativeSkiaSharp\u0060 and \u0060PreferredNativeSkiaSharp\u0060 properties above in case they were no longer required. Nothing working though.\r\n\r\nAny pointers on how to get this NUnit project happy?\r\n\r\n",
+  "author": {
+    "login": "IainS1986",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-13T11:23:15",
+  "updatedAt": "2022-08-19T03:02:37",
+  "closedAt": "2020-08-06T11:05:05",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 672,
+  "type": "issue",
+  "state": "closed",
+  "title": "ASP,NET Core 2.1: throws exception System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: Access is denied.",
+  "body": "### Description\r\n\r\nWhen loading image it throws an error:\r\n\r\n{System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: Access is denied.\r\n\r\nIf I run it in console application, it works and I see that there is an libSkiaSharp.dll in the bin folder while\r\nit is missing in bin folder of ASP.NET MVC project\r\n### Code\r\n\r\nstring inputPath = @\u0022C:\\pexels-photo-248797.jpeg\u0022;\r\n                            const int size = 150;\r\n                            const int quality = 75;\r\n\r\n                            using (var input = File.OpenRead(inputPath))\r\n                            {\r\n                                using (var inputStream = new SKManagedStream(input)) // This throws the error\r\n                                {\r\n",
+  "author": {
+    "login": "eddyuk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-11-04T10:12:53",
+  "updatedAt": "2022-08-19T12:02:52",
+  "closedAt": "2018-11-04T13:48:57",
+  "commentCount": 4,
+  "reactionCount": 0
+}

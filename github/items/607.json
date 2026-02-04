@@ -1,0 +1,31 @@
+{
+  "number": 607,
+  "type": "issue",
+  "state": "open",
+  "title": "Feature Request: Implement entered and exited on iOS / Android",
+  "body": "### Description\r\n\r\nCurrently iOS is implemented only on UWP (because it is connected as a passthrough), but it would be useful to have this functionality connected on iOS/Android (not least because their absence isn\u0027t noted and is a bit confusing).  Specifically we are using Skia to generate graphics buttons, and replicating the touch up inside functionality is difficult otherwise.\r\n\r\nThe implementation would be an interception of \u0022moved\u0022, and checking if the touch is inside of the view (and if had previously left). I\u0027m unable to build the repository at the moment, but the implementation would be relatively simple:\r\n\r\n\u0060\u0060\u0060\r\nOn touch started:\r\n  IsInside = true  \r\n\r\nOn Touch moved:\r\n  if touch position is outside view bounds, and IsInside is true\r\n    IsInside = false\r\n    fire touch exited\r\n  else if position is inside view bounds, and IsInside is false\r\n    IsInside = true\r\n    fire touch entered\r\n\u0060\u0060\u0060\n\n\u003E VS bug [#736301](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/736301)",
+  "author": {
+    "login": "pfaucon",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-08-07T14:02:23",
+  "updatedAt": "2019-06-17T16:50:42",
+  "commentCount": 4,
+  "reactionCount": 0
+}

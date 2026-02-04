@@ -1,0 +1,18 @@
+{
+  "number": 1915,
+  "type": "issue",
+  "state": "closed",
+  "title": "DrawText partially shows the last character",
+  "body": "I have the following function where I create a JPEG file from the given TTF font file.\r\nthe image is created but always the last character cut off. I\u0027ve tried increasing the width of SKImageInfo by adding 25, but still didn\u0027t make a difference.\r\nHowever, if I cheat and do this\r\n    var origText = text;\r\n    text \u002B= \u0022A\u0022;\r\n\r\nAnd use the updated text in MeasureText, but use origText in the DrawText then the last character is shown completely. But, this of course is just a hack and I\u0027d like to find the real fix for this.\r\n\r\n    canvas.DrawText(text, -textBounds.Left, -textBounds.Top, textPaint);\r\n\r\n\r\n    public static void CreateSkiaImageFromText(string text, int fontSize, string fontFileName, string sigFilename)\r\n    {\r\n\t// First, find the text bounds.\r\n\tSKRect textBounds = new SKRect();\r\n\tfloat textWidth = 0;\r\n\tusing (var textPaint = new SKPaint())\r\n\t{\r\n\t\tusing (var typeFace = SKTypeface.FromFile(fontFileName))\r\n\t\t{\r\n\t\t\ttextPaint.Typeface = typeFace;\r\n\t\t\ttextPaint.Color = SKColors.Navy;\r\n\t\t\ttextPaint.IsAntialias = true;\r\n\t\t\ttextPaint.TextEncoding = SKTextEncoding.Utf8;\r\n\t\t\ttextPaint.FilterQuality = SKFilterQuality.High;\r\n\r\n\t\t\t// Find the text bounds\r\n\t\t\ttextWidth = textPaint.MeasureText(text, ref textBounds);\r\n\t\t}\r\n\t}\r\n\r\n\tvar imgInfo = new SKImageInfo((int)textBounds.Width, (int)textBounds.Height);\r\n\tusing (var surface = SKSurface.Create(imgInfo))\r\n\t{\r\n\t\tvar canvas = surface.Canvas;\r\n\t\tcanvas.Clear(SKColors.White);\r\n\r\n\t\tusing (var textPaint = new SKPaint())\r\n\t\t{\r\n\t\t\tusing (var typeFace = SKTypeface.FromFile(fontFileName))\r\n\t\t\t{\r\n\t\t\t\ttextPaint.Typeface = typeFace;\r\n\t\t\t\ttextPaint.Color = SKColors.Navy;\r\n\t\t\t\ttextPaint.IsAntialias = true;\r\n\t\t\t\ttextPaint.TextEncoding = SKTextEncoding.Utf8;\r\n\t\t\t\ttextPaint.FilterQuality = SKFilterQuality.High;\r\n\r\n\t\t\t\t// Adjust TextSize property so text is 90% of screen width\r\n\t\t\t\ttextPaint.TextSize = 0.9f * imgInfo.Width * fontSize / textWidth;\r\n\t\t\t\tcanvas.DrawText(text, -textBounds.Left, -textBounds.Top, textPaint);\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\tusing (var image = surface.Snapshot())\r\n\t\t{\r\n\t\t\tusing (var data = image.Encode(SKEncodedImageFormat.Png, 100))\r\n\t\t\t{\r\n\t\t\t\tvar byteArray = data.ToArray();\r\n\t\t\t\tusing (var fs = new FileStream(sigFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.None))\r\n\t\t\t\t{\r\n\t\t\t\t\tfs.Write(byteArray, 0, byteArray.Length);\r\n\t\t\t\t\tfs.Flush();\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n    }",
+  "author": {
+    "login": "ndenkha",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-31T07:31:31",
+  "updatedAt": "2022-08-19T00:02:03",
+  "closedAt": "2022-01-13T00:49:26",
+  "commentCount": 1,
+  "reactionCount": 0
+}

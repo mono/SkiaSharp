@@ -1,0 +1,17 @@
+{
+  "number": 1192,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] MeasureText does not respect alignment",
+  "body": "**Description**\r\n\r\nWhen calling MeastureText with center or right alignment, the resulting bounds still go from \u00600\u0060 to \u0060width\u0060\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060c#\r\nvar paint = new SKPaint()\r\n{\r\n    TextAlign = SKTextAlign.Right\r\n}\r\n\r\nSKRect bounds = default;\r\npaint.MeasureText(\u0022blablabla\u0022, ref bounds);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n\u0060bounds.Right == 0.0f\u0060\r\n\r\n**Actual Behavior**\r\n\r\n\u0060bounds.Left == 0.0f\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  **1.68.1.1**\r\n- Last known good version:  **Unknown**\r\n- IDE:  **Visual Studio 2019**\r\n- Platform Target Frameworks: \r\n  - UWP:  **18326**\r\n- Target Devices: \r\n  - **PC**",
+  "author": {
+    "login": "rick-de-water",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-27T10:57:12",
+  "updatedAt": "2020-03-27T11:44:55",
+  "commentCount": 1,
+  "reactionCount": 0
+}

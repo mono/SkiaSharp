@@ -1,0 +1,35 @@
+{
+  "number": 1242,
+  "type": "pr",
+  "state": "closed",
+  "title": "Expose a generic, writable span for the pixels",
+  "body": "**Description of Change**\r\n\r\nExpose a generic, writable span for the pixels. Also \u0022cache\u0022 the info object in size so we don\u0027 have to hop the interop.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1240\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060csharp\r\nclass SKPixmap {\r\n    public unsafe Span\u003CT\u003E GetPixelSpan\u003CT\u003E () where T : unmanaged;\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-04-19T12:30:10",
+  "updatedAt": "2020-04-29T23:47:38",
+  "closedAt": "2020-04-23T00:02:28",
+  "commentCount": 0,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1240",
+  "additions": 128,
+  "deletions": 6,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "ziriax",
+      "state": "DISMISSED",
+      "submittedAt": "2020-04-19T13:33:18"
+    }
+  ]
+}

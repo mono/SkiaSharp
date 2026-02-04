@@ -1,0 +1,43 @@
+{
+  "number": 2630,
+  "type": "pr",
+  "state": "closed",
+  "title": "Bind Skottie\u0027s Animation Builder",
+  "body": "**Description of Change**\r\n\r\nThis PR adds a few of the essential APIs to enable loading embedded files in the Lottie animation. Currently, there is just the support for file-based and data URI-based assets.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2173\r\n\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cs\r\nclass Animation {\r\n  public static AnimationBuilder CreateBuilder (AnimationBuilderFlags flags = AnimationBuilderFlags.None);\r\n}\r\n\r\npublic sealed unsafe class AnimationBuilder : SKObject, ISKSkipObjectRegistration {\r\n  public AnimationBuilder SetFontManager (SKFontManager fontManager);\r\n  public AnimationBuilder SetResourceProvider (ResourceProvider resourceProvider);\r\n  public AnimationBuilderStats Stats { get; }\r\n  public Animation? Build (Stream stream);\r\n  public Animation? Build (SKStream stream);\r\n  public Animation? Build (SKData data);\r\n  public Animation? Build (string path);\r\n}\r\n\r\npublic struct AnimationBuilderStats {\r\n  public readonly TimeSpan TotalLoadTime { get; }\r\n  public readonly TimeSpan JsonParseTime { get; }\r\n  public readonly TimeSpan SceneParseTime { get; }\r\n  public readonly int JsonSize  { get; }\r\n  public readonly int AnimatorCount  { get; }\r\n}\r\n\r\npublic abstract unsafe class ResourceProvider : SKObject, ISKReferenceCounted, ISKSkipObjectRegistration {\r\n  public SKData? Load (string resourceName);\r\n  public SKData? Load (string resourcePath, string resourceName);\r\n}\r\n\r\npublic class CachingResourceProvider : ResourceProvider {\r\n  public CachingResourceProvider (ResourceProvider resourceProvider);\r\n}\r\n\r\npublic class DataUriResourceProvider : ResourceProvider {\r\n  public DataUriResourceProvider (bool preDecode = false);\r\n  public DataUriResourceProvider (ResourceProvider? fallbackProvider, bool preDecode = false);\r\n}\r\n\r\npublic class FileResourceProvider : ResourceProvider {\r\n  public FileResourceProvider (string baseDirectory, bool preDecode = false);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/114\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "backport/release/2.x",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-09-22T16:39:31",
+  "updatedAt": "2024-04-13T06:58:15",
+  "closedAt": "2024-02-18T15:33:24",
+  "commentCount": 3,
+  "reactionCount": 5,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/skottie-animation-builder",
+  "additions": 1219,
+  "deletions": 26,
+  "changedFiles": 45,
+  "commits": 24,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-02-18T09:59:00"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-02-18T10:03:27"
+    }
+  ]
+}

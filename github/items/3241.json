@@ -1,0 +1,38 @@
+{
+  "number": 3241,
+  "type": "pr",
+  "state": "open",
+  "title": "Enable Windows linker optimizations in Release",
+  "body": "**Description of Change**\r\n\r\nAs per the docs:\r\n\u0060\u0060\u0060\r\n/DEBUG changes the defaults for the /OPT option from REF to NOREF and from ICF to NOICF, so if you want the original defaults, you must explicitly specify /OPT:REF or /OPT:ICF after the /DEBUG option.\r\n\u0060\u0060\u0060\r\nSince the scripts enabled DEBUG even in release, those should be reenabled to reduce binary size.\r\n\r\nNo tests due to being a build configuration only change.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #3240\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nPossibly slightly regressed debugging experience of release binaries.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "MichalPetryka",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-20T19:10:39",
+  "updatedAt": "2026-01-31T15:38:28",
+  "commentCount": 1,
+  "reactionCount": 2,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "patch-1",
+  "additions": 2,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-01-31T15:38:28"
+    }
+  ]
+}

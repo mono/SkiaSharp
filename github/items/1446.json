@@ -1,0 +1,18 @@
+{
+  "number": 1446,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Polygon not being filled in",
+  "body": "**Description**\r\n\r\nI want to fill in a polygon for charting, but it will not fill in.  I was able to fill in a rectangle for comparison.  Below is the sample code.\r\nThis is simplified, I actually found this using the shader property of SKPaint. \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nSKImage image = null;\r\nusing (var surface = SKSurface.Create(new SKImageInfo(867, 220)))\r\n{ \r\n\tSKCanvas canvas = surface.Canvas;\r\n\tcanvas.Clear(new SKColor(Color.Transparent.R, Color.Transparent.G, Color.Transparent.B));\r\n\tstring s = \u00225,210 5,102.62 289,183.81 838.1,68.57 838.1,210 5,210\u0022;\r\n\tvar points = s.Split(new[] { \u0027 \u0027 }, StringSplitOptions.RemoveEmptyEntries)\r\n\t\t.Select(x =\u003E {\r\n\t\t\tstring[] p = x.Split(new[] { \u0027,\u0027 }, StringSplitOptions.RemoveEmptyEntries);\r\n\t\t\treturn new SKPoint(Convert.ToSingle(p[0].Trim()), Convert.ToSingle(p[1].Trim()));\r\n\t\t}).ToArray();\r\n\r\n\tvar polygonPaint = new SKPaint()\r\n\t{\r\n\t\tColor = SKColors.Red,\r\n\t\tStyle = SKPaintStyle.StrokeAndFill,\r\n\t\tIsAntialias = true,\r\n\t\tStrokeJoin = SKStrokeJoin.Round\r\n\t};\r\n\tSKRect r = new SKRect(50, 50, 100, 100);\r\n\tcanvas.DrawRect(r, polygonPaint);\r\n\tcanvas.DrawPoints(SKPointMode.Polygon, points, polygonPaint);\r\n\timage = surface.Snapshot();\r\n}\r\nreturn image;\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\nI would expect the polygon to fill in, it is closed the same way as the rectangle.\r\n\r\n**Actual Behavior**\r\nThe rectangle is filling in and the polygon is not filling\r\n\r\n**Basic Information**\r\n- Version with issue:  2.80.1\r\n- IDE:  Visual Studio 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  Windows 10\r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/26170868/89415118-0d7d4f80-d6f1-11ea-94d4-f3fbba6e1c46.png)\r\n\r\n",
+  "author": {
+    "login": "sremiger1",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-05T12:56:11",
+  "updatedAt": "2022-08-19T03:02:17",
+  "closedAt": "2020-08-06T12:22:01",
+  "commentCount": 3,
+  "reactionCount": 0
+}

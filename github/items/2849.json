@@ -1,0 +1,26 @@
+{
+  "number": 2849,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKBitmap.ColorSpace is always null. Unable to check for CMYK, RGB, etc.",
+  "body": "### Description\n\nOur code needs to check whether an image is CMYK or RGB (and reject any image that is CMYK).\r\n\r\nHowever, @mattleibow \u0022explicitly set the color space to null for backwards compatibility\u0022. That is breaking things, since it now seems to be impossible (without jumping through major hoops) to check whether an image is CMYK or not.\r\n\r\nSolution: Allow ColorSpace to return the correct value. Or provide another method for checking the color space.\n\n### Code\n\n\u0060\u0060\u0060cs\r\nSKBitmap.ColorSpace\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nSKBitmap.ColorSpace should return correct value, instead of null.\n\n### Actual Behavior\n\nSKBitmap.ColorSpace always returns null.\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\nAll\n\n### Devices\n\nAll\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "dsyno",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-27T15:54:00",
+  "updatedAt": "2024-05-31T17:35:33",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 2451,
+  "type": "issue",
+  "state": "closed",
+  "title": "How to automatically include \u0022libSkiaSharp.dll\u0022 when publishing a \u0022Self-contained\u0022 console application?",
+  "body": "Having a .NET 7 Console application that runs on Windows, I publish it in Visual Studio 2022 as \u0022Deployment mode: Self-contained\u0022.\r\n\r\nWhile this produces a large single executable (as expected), the executable fails to run as soon as accessing SkiaSharp functions:\r\n\r\n\u003E The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.        \r\n\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.    at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, Boolean isOpaque)\r\n\u003E Dll was not found.    at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()        \r\n\u003E    at SkiaSharp.SKImageInfo..cctor()           \r\n\u003E    at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, Boolean isOpaque)\r\n\r\nIf I not only ship my executable but also the file \u0022**libSkiaSharp.dll**\u0022, the error goes away and my application runs as expected.\r\n\r\nSince I explicitly configured my publish in Visual Studio to produce a single executable, I do not want to ship an additional DLL file.\r\n\r\n### My question\r\n\r\nIs there any way to tell the build/publish system to also include \u0022libSkiaSharp.dll\u0022 in the single-executable assembly?",
+  "author": {
+    "login": "UweKeim",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-05-03T10:14:29",
+  "updatedAt": "2023-06-09T12:00:48",
+  "closedAt": "2023-05-10T09:52:59",
+  "commentCount": 2,
+  "reactionCount": 1
+}

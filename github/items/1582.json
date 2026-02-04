@@ -1,0 +1,17 @@
+{
+  "number": 1582,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKTypeface.FontWeight is incorrect after loading from a file on macOS",
+  "body": "\u0060\u0060\u0060    \r\nclass Program {\r\n    static void Main(string[] args)\r\n    {\r\n        var typeface = SKTypeface.FromFile(@\u0022metropolis.extra-light.otf\u0022); // metropolis extra light\r\n        var fontWeight = typeface.FontWeight; // equals to 200 on windows (correct), equals 400 of macOS (incorrect)\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n@mattleibow could you please confirm that this is an issue ? if so is it something easy to fix ? Thanks!\r\n[ConsoleApp1.zip](https://github.com/mono/SkiaSharp/files/5844440/ConsoleApp1.zip)\r\n\r\n\r\n",
+  "author": {
+    "login": "sady4850",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-01-20T18:18:47",
+  "updatedAt": "2021-01-20T18:18:47",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,27 @@
+{
+  "number": 3090,
+  "type": "pr",
+  "state": "closed",
+  "title": "Log more information about disk space and skip the MSVC builds on public",
+  "body": "**Description of Change**\r\n\r\nThe public bots are running out of space.\r\n\r\nThe MSVC compiler is so heavy that the outputs are over 10.8GB\r\nwhereas the LLVM compiler is just under 10.1GB.\r\n\r\nThe public agent only starts with 12GB and after the checkout we are\r\nleft with 10.67GB which is smaller than the 10.8GB required. The LLVM\r\ncompiler just manages to pass under the bar with about 600MB spare.\r\n\r\nIf the SkiaSharp artifacts get any bigger, then we will need custom\r\nmachines for the public build.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-11-28T13:52:21",
+  "updatedAt": "2024-12-02T14:44:22",
+  "closedAt": "2024-12-02T14:44:19",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/get-volume",
+  "additions": 79,
+  "deletions": 45,
+  "changedFiles": 3,
+  "commits": 9,
+  "reviews": []
+}

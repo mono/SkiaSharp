@@ -1,0 +1,18 @@
+{
+  "number": 1829,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] On Apple Silicon (M1 Mac/ARM64) use of SkiaSharp.dylib or libHarfBuzzSharp.dylib causes immediate crash due to problem with codesigning",
+  "body": "**Description**\r\n\r\nOn Apple Silicon (M1 Mac/ARM64), App using libSkiaSharp.dylib causes crash with the following info:\r\n\r\n\u0060\u0060\u0060\r\nException Type:        EXC_BAD_ACCESS (Code Signature Invalid)\r\nException Codes:       0x0000000000000032, 0x000000010174c000\r\nException Note:        EXC_CORPSE_NOTIFY\r\n\r\nTermination Reason:    Namespace CODESIGNING, Code 0x2\r\n\r\nkernel messages:\r\n\r\nVM Regions Near 0x10174c000:\r\n    __LINKEDIT                  101378000-10174c000    [ 3920K] r--/r-- SM=COW  /Users/*/AS Native Test.app/Contents/MacOS/AS Native Test\r\n--\u003E mapped file                 10174c000-101750000    [   16K] r--/r-x SM=PRV  Object_id=4bbae3b\r\n    __TEXT                      101990000-101a10000    [  512K] r-x/r-x SM=COW  /usr/lib/dyld\r\n\r\nApplication Specific Information:\r\ndyld: launch, loading dependent libraries\r\nDYLD_FALLBACK_LIBRARY_PATH=/Applications/Visual Studio.app/Contents/Resources/lib/monodevelop/bin:/Applications/Visual Studio.app/Contents/Resources/lib:/Library/Developer/CommandLineTools/usr/lib:/Applications/Xcode.app/Contents/Developer/usr/lib:/Library/Frameworks/Mono.framework/Libraries:/usr/lib:/usr/local/lib\r\n@executable_path/../MonoBundle/libSkiaSharp.dylib\r\n\u0060\u0060\u0060\r\n\r\n**Code**\r\n\r\nTo reproduce, create a new solution using the Cocoa App template. Edit the .csproj file to enable a universal app by adding \r\n\r\n    \u003CXamMacArch\u003Ex86_64,ARM64\u003C/XamMacArch\u003E\r\n\r\ninside the first \u003CPropertyGroup\u003E tag as per https://docs.microsoft.com/en-us/xamarin/mac/release-notes/7/7.13\r\n\r\nYou can now build and run successfully and verify that the .app file is of Kind: Application (Universal) via Finder\u0027s Get Info command.\r\n\r\nAdd the SkiaSharp 2.88.0-preview.150 Nuget package.\r\n\r\nThe build will still succeed but will crash when running.\r\n\r\nI was able to fix this by using Apple\u0027s codesign utility to sign the libSkiaSharp.dylib file inside of the .app/Contents/MonoBundle folder and then running again.\r\n\r\nThis also affects libHarfBuzzSharp.dylib.\r\n\r\n**Expected Behavior**\r\n\r\n.dylib files should be codesigned so the app will run without crashing\r\n\r\n**Actual Behavior**\r\n\r\nCrashes due to an issue related to codesigning\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0-preview.150\r\n- Last known good version:  None\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - macOS:  11.4\r\n- Target Devices:\r\n  - MacBook Air (M1, 2020)\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\nNA\r\n\r\n**Reproduction Link**\r\n\r\nSee above instructions in Code section",
+  "author": {
+    "login": "HarlanHugh",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-14T00:22:12",
+  "updatedAt": "2024-07-23T22:26:25",
+  "closedAt": "2024-07-23T22:26:25",
+  "commentCount": 2,
+  "reactionCount": 0
+}

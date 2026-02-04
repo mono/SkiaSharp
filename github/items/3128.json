@@ -1,0 +1,22 @@
+{
+  "number": 3128,
+  "type": "issue",
+  "state": "open",
+  "title": "SKCanvas.DrawText over a SKBitmap no longer works in Azure App Service for Windows but works for Linux",
+  "body": "### Description\n\nSKCanvas.DrawText cannot write over a SKBitmap in Azure App Service application for Windows but works in the similar application for Azure App Service on Linux. There is no error or exception, it just does not have any effect.\r\nThis is a regression because it was working well in 2.88.9 .\n\n### Code\n\nSKBitmap skBitmap = SKBitmap.FromImage(skImage);\r\nSKCanvas skCanvas = new SKCanvas(skBitmap);\r\nSKFont skFont = new SKFont(SKTypeface.Default, 16);\r\nSKPaint sKPaint = new SKPaint(skFont);\r\nsKPaint.Color = new SKColor(255, 0, 0);\r\nsKPaint.IsAntialias = true;\r\nskCanvas.DrawText(\u0022My Text\u0022, 10, 10, sKPaint);\n\n### Expected Behavior\n\nA text is written over the image\n\n### Actual Behavior\n\nNo text is written and no exception is thrown\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows, Other (Please indicate in the description)\n\n### Platform / Operating System Version\n\nAzure App Service for Windows\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "jasminjasmin2",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-21T20:18:56",
+  "updatedAt": "2024-12-22T12:15:09",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,19 @@
+{
+  "number": 119,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKMatrix.Concat - EntryPointNotFoundException",
+  "body": "Hi!\nI was able to get the latest source to build both on windows and mac.\n\u0022Added image assets for the Windows samples\u0022 \nhash:  22e9da955352c4e78fa2241c603b3759f6cf59bb\n\nHowever, even thought the binding sources are up to date (Definitions.cs, etc.) and the skia/src/c/ stuff is in place as well (sk_matrix.cpp contains all required static functions) I get an \u0022EntryPointNotFoundException\u0022 for the newly added methods of SKMatrix (concat, tryinvert, etc.) and my own one \u0022SKImage.FromBitmap\u0022\n\n\u003E An exception of type \u0027System.EntryPointNotFoundException\u0027 occurred in SkiaSharp.dll but was not handled in user code\n\u003E Additional information: Unable to find an entry point named \u0027sk_matrix_concat\u0027 in DLL \u0027libSkiaSharp.dll\u0027.\n\nSo \n1. my sources are up to date\n2. I did a \u0022./bootstrapper.sp1 -target clean\u0022 and \u0022-target libs\u0022 as well as \u0022-target nuget\u0022 (on Windows and Mac OSX)\n3. I add the new nuget to my solutions (Android and UWP - I did not test on iOS)\n   and still I get this exception.\n\nSo I am obviously missing something. Can you give me a hint please?\n",
+  "author": {
+    "login": "gentledepp",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.0",
+  "createdAt": "2016-07-25T09:33:01",
+  "updatedAt": "2022-08-20T00:02:32",
+  "closedAt": "2016-07-29T16:10:20",
+  "commentCount": 2,
+  "reactionCount": 0
+}

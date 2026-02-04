@@ -1,0 +1,34 @@
+{
+  "number": 2443,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update bitmap SKAlphaType in SKXamlCanvas.Wasm.cs",
+  "body": "To obtain the expected built bitmap by skia, we need to change the SKAlphaType of the build image. Opaque doesn\u0027t give correct results when bluring colors with alpha for example. Premul doesn\u0027t work either for a particular reason: In javascript we use the ImageData API.\r\nThe ImageData API store the pixels as un-premultiplied. So if we use the premultiplied enum value we end up with wrong pixel colors (same result as Opaque in fact). I tested unpremul value in a project that is using blur, and it gives the correct results.",
+  "author": {
+    "login": "roubachof",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.4",
+  "createdAt": "2023-04-18T10:12:58",
+  "updatedAt": "2023-06-19T17:45:13",
+  "closedAt": "2023-06-14T08:26:45",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2023-06-12T22:59:42"
+    }
+  ]
+}

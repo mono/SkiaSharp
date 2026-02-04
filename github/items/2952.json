@@ -1,0 +1,23 @@
+{
+  "number": 2952,
+  "type": "issue",
+  "state": "closed",
+  "title": "Webp files are not animated after cropping",
+  "body": "### Description\n\nI try to crop .webp\r\nBut they down have animation after i finish\r\nCould u please provide an example of croping webp images\n\n### Code\n\n\r\n\u0060\u0060\u0060cs\r\nprivate static Stream GetOutputStream(string name)\r\n{\r\n    return File.Open($\u0022C:\\\\Users\\\\user\\\\Pictures\\\\animate\\\\output_{name}.webp\u0022, FileMode.OpenOrCreate);\r\n}\r\n\r\nprivate static Stream GetStream()\r\n{\r\n    return File.OpenRead(\u0022C:\\\\Users\\\\user\\\\Pictures\\\\animate\\\\2.webp\u0022);\r\n}\r\n\r\npublic ImageCrop() \r\n{\r\n\r\n    const int Width = 1200;\r\n    const int Height = 1200;\r\n\r\n    using var stream = GetStream();\r\n    using var skData = SKData.Create(stream);\r\n    using var codec = SKCodec.Create(skData);\r\n\r\n    var supportedScale = codec\r\n         .GetScaledDimensions((float)Width / codec.Info.Width);\r\n\r\n    var nearest = new SKImageInfo(supportedScale.Width, supportedScale.Height);\r\n    using var destinationImage = SKBitmap.Decode(codec, nearest);\r\n    using var resizedImage = destinationImage.Resize(new SKImageInfo(Width, Height), SKFilterQuality.High);\r\n\r\n    var format = SKEncodedImageFormat.Webp;\r\n    using var outputImage = SKImage.FromBitmap(resizedImage);\r\n    using var data = outputImage.Encode(format, 90);\r\n    using var outputStream = GetOutputStream(\u0022skiasharp\u0022);\r\n    data.SaveTo(outputStream);\r\n\r\n    outputStream.Close();\r\n    stream.Close();\r\n}\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nnew .webp image have animation\n\n### Actual Behavior\n\nnew .webp image dont have animation\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "DrBenvey",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-22T14:24:49",
+  "updatedAt": "2024-09-18T15:41:27",
+  "closedAt": "2024-09-18T15:41:27",
+  "commentCount": 1,
+  "reactionCount": 0
+}

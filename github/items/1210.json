@@ -1,0 +1,17 @@
+{
+  "number": 1210,
+  "type": "issue",
+  "state": "open",
+  "title": "In Android, SKGLView\u0027 PaintSurface occuring after first page render",
+  "body": "Create a Xamarin Form page that contains a SKGlView and a Button with a text.\r\nImplement SKGlView\u0027s PaintSurface, with a simple drawing (like clear in red)\r\nRun\r\n\r\nExpected:\r\nWhen page is rendered for the first time, SKGlView\u0027s PaintSurface has already been called.\r\nSo on first frame, button is shown and SKGLView is all red.\r\n\r\nResult:\r\nWhen page is rendered, SKGlView\u0027s PaintSurface has NOT been called YET.\r\nSo on first frame, button is shown, but SKGLView is still white.\r\nSKGlView will become red (ie PaintSurface called) only after few milliseconds.\r\nAs a result a kind of annoying blinking occures.\r\n\r\nNote : When using a SKCanvasView (instead of SKGlView) , problem does not occure.\r\nSKCanvasView\u0027s PAintSurface is called before page is rendered, which is expected behavior.\r\n\r\nDo you confirm it is an issue?\r\nShould I post some code to make it clearer?\r\n",
+  "author": {
+    "login": "MathieuJack",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-03T21:26:07",
+  "updatedAt": "2020-04-04T21:49:48",
+  "commentCount": 4,
+  "reactionCount": 0
+}

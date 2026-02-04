@@ -1,0 +1,27 @@
+{
+  "number": 721,
+  "type": "issue",
+  "state": "closed",
+  "title": "iOS: SKCanvas.Clear() does nothing",
+  "body": "### Description\r\n\r\nI have an UITableViewCell with an SKCanvasView in it. When I scroll the list, the cells are reused. Thus the canvas already contains an old image. If I do \u0060canvas.Clear()\u0060 without specifying a color, then it should use SKColor.Empty which is transparent. I\u0027d expect an empty transparent canvas at this point, but it seems like the initial contents are opaque black and if the canvas already contained something, these contents are not removed.\r\n\r\nThe same happens if I do \u0060canvas.Clear(SKColors.Transparent)\u0060.\r\n\u0060canvas.Clear(SKColors.White)\u0060 works (but I need to know the page color at this point).\r\nOn Android \u0060canvas.Clear()\u0060 works as expected.\r\n\r\n### Code\r\n\r\n    SKCanvas canvas;\r\n    canvas.Clear();\r\n\r\n### Expected Behavior\r\n\r\nThe canvas\u0027s contents are removed and replaced with a completely transparent color. If I then draw something to it, then I should only see what I drew and the background should be the color of the page.\r\n\r\n### Actual Behavior\r\n\r\nThe background color is black and not transparent. If the canvas already contained something, then these contents are not removed. New content which I draw to the canvas after the Clear call will be upon it.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:  VS2019 Preview 1\r\n- Platform Target Frameworks:\r\n  - iOS:  12.1\r\n- Target Devices:\r\n  -   iPad Pro 9,7\r\n\r\n### Reproduction Link\r\n\r\n[Skia_Svg.zip](https://github.com/mono/SkiaSharp/files/2663528/Skia_Svg.zip)\r\nThe repro project displays some .svg or .png images in a SKCanvasView.\r\nOn iOS the page background color is white, but the SKCanvasView\u0027s are black. If you scroll down and back up, then you see that the old contents are overwritten and not removed.\r\nOn Android this works as expected.\r\n\r\nThe code which does the \u0060canvas.Clear()\u0060 is in the beginning of the \u0060Utils.DrawImage(...)\u0060 method in the iOS and Android projects respectively. The code is the same for both platforms.\r\n",
+  "author": {
+    "login": "MichaelRumpler",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/iOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-12-10T14:52:35",
+  "updatedAt": "2022-08-19T12:02:17",
+  "closedAt": "2018-12-15T04:26:52",
+  "commentCount": 3,
+  "reactionCount": 0
+}

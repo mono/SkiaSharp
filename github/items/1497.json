@@ -1,0 +1,17 @@
+{
+  "number": 1497,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp.Views.Forms adds the linux-x86 folder to Tizen archive, when only tizen-armel is selected",
+  "body": "**Description**\r\n\r\nThere is a problem if you use the SkiaSharp.Views.Forms package 2.80.2 on a Samsung Tizen project, the app cannot be submited to Samsung Store. It fails the pre-certification process. It worked correctly with the previous 1.68.3 version.\r\n\r\n**More info**\r\nWhen you include the SkiaSharp.View.Forms nugget package in the Samsung Tizen Xamarin.Forms project, the libSkiaSharp.so is included in the generated .tpk installation package (/bin/runtimes). By default the tizen-armel and linux-x86 folders are included = you can run the app on the watch, and also in the simulator.\r\n\r\nThe Samsung Store pre-certification process requires to remove the x86 folder from the archive. You can do it by adding the \u0060\u003CRuntimeIdentifier\u003Etizen-armel\u003C/RuntimeIdentifier\u003E\u0060 line in the project .csproj file. This worked corrently in the 1.68.3 version. More info about this: [https://developer.tizen.org/ko/forums/tizen-.net/unable-publish-c-tizen-.net-wearable-tpk-seller-portal?langswitch=ko](https://developer.tizen.org/ko/forums/tizen-.net/unable-publish-c-tizen-.net-wearable-tpk-seller-portal?langswitch=ko)\r\n\r\nIn the 2.80.2 it changed. When I include this line in the .csproj file, it still includes the linux-x86 folder in the archive, and therefore the app cannot be submited to Samsung store. Just removing this folder from the .tpk archive does not work, the certification check will fail.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp.Views.Forms 2.80.2\r\n- Last known good version:  SkiaSharp.Views.Forms 1.68.3\r\n- IDE:  Visual Studio 2017 15.9.20\r\n- Platform Target Frameworks:\r\n  - Tizen:  Tizen.NET 5.0.0.14629, Tizen.NET.API4 4.0.1.14152, Xamarin.Forms 4.8.0.1269\r\n   ",
+  "author": {
+    "login": "tomasslavicek",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-14T15:24:25",
+  "updatedAt": "2020-09-16T11:17:54",
+  "commentCount": 2,
+  "reactionCount": 1
+}

@@ -1,0 +1,37 @@
+{
+  "number": 775,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Crashing on OS X 10.7 (dyld errors)",
+  "body": "**Description**\r\n\r\nApps that use SkiaSharp cannot be run on OS X 10.7. They crash when loading the library:\r\n\r\n\u0060\u0060\u0060\r\nProcess:         iCircuit [172]\r\nPath:            /Users/USER/Desktop/iCircuit.app/Contents/MacOS/iCircuit\r\nIdentifier:      com.kruegersystems.circuitmac\r\nVersion:         1.10 (110001)\r\nCode Type:       X86-64 (Native)\r\nParent Process:  launchd [100]\r\n\r\nDate/Time:       2019-02-01 14:22:38.871 -0800\r\nOS Version:      Mac OS X 10.7 (11A511)\r\nReport Version:  9\r\n\r\nInterval Since Last Report:          178 sec\r\nCrashes Since Last Report:           1\r\nPer-App Crashes Since Last Report:   1\r\nAnonymous UUID:                      CDA1250A-D272-4A3C-AEFB-738C8BC101E3\r\n\r\nCrashed Thread:  0\r\n\r\nException Type:  EXC_BREAKPOINT (SIGTRAP)\r\nException Codes: 0x0000000000000002, 0x0000000000000000\r\n\r\nApplication Specific Information:\r\ndyld: launch, loading dependent libraries\r\n\r\nDyld Error Message:\r\n  Library not loaded: /System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics\r\n  Referenced from: /Users/USER/Desktop/iCircuit.app/Contents/MacOS/../MonoBundle/libSkiaSharp.dylib\r\n  Reason: image not found\r\n\u0060\u0060\u0060\r\n\r\n**Code**\r\n\r\nAny code that uses SkiaSharp.\r\n\r\n**Expected Behavior**\r\n\r\nThe library works.\r\n\r\n**Actual Behavior**\r\n\r\nIt crashes with the above error.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.7 --\u003E\n\n\u003E VS bug [#795469](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/795469)",
+  "author": {
+    "login": "praeclarum",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "os/macOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-02-01T22:28:11",
+  "updatedAt": "2022-08-19T12:01:53",
+  "closedAt": "2019-02-15T17:02:42",
+  "commentCount": 17,
+  "reactionCount": 0
+}

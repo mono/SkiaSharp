@@ -1,0 +1,32 @@
+{
+  "number": 2426,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SKTypeface.FromStream in MAUI",
+  "body": "Hi \r\nI am porting a Xamarin app to Maui.\r\nToday we do it like this in Xamarin. \r\n\u0060\u0060\u0060\r\nvar assembly = IntrospectionExtensions.GetTypeInfo(typeof(SkiaSharpHelper)).Assembly;\r\nStream stream =assembly.GetManifestResourceStream(\u0022LiberoClub.Resources.Fonts.babyplanetregular.otf\u0022);\r\n_babyPlanetRegular = SKTypeface.FromStream(stream);\r\n\u0060\u0060\u0060\r\n\r\nbut this is not working when the font files are of type MauiFont in the projectfile.\r\n\u0060\u0060\u0060\r\n\u003C!-- Fonts --\u003E\r\n\u003CMauiFont Include=\u0022Resources\\Fonts\\*\u0022 /\u003E \r\n\u0060\u0060\u0060\r\n\r\nSo to get this to work I need to add this line for every font in the project. \r\n\u0060\u0060\u0060\r\n\u003CItemGroup\u003E\r\n\t  \u003CEmbeddedResource Include=\u0022Resources\\Fonts\\babyplanetregular.otf\u0022 /\u003E   \r\n\u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nIs there some way to do this where I don\u0027t need to manual add the font twice.\r\n\r\n//Thanks Joacim",
+  "author": {
+    "login": "JoacimWall",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Maui",
+      "color": "0052cc"
+    },
+    {
+      "name": "partner/maui",
+      "color": "A2C0F9"
+    }
+  ],
+  "assignees": [],
+  "milestone": "Backlog",
+  "createdAt": "2023-03-24T07:49:52",
+  "updatedAt": "2025-07-08T16:10:43",
+  "closedAt": "2024-03-01T14:05:35",
+  "commentCount": 10,
+  "reactionCount": 1
+}

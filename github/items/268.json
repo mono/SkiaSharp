@@ -1,0 +1,23 @@
+{
+  "number": 268,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKGLView Blend Mode problems",
+  "body": "I have run into an issue with SKGLView when trying to use BlendMode.Darken to highlight some text in a bitmap. When using SKCanvasView, the output is blended as expected.\r\n\r\nI\u0027ve drawn a bitmap into a SKCanvasView (canvas) using canvas.DrawBitmap:\r\n\u003Cimg width=\u0022286\u0022 alt=\u0022bitmap_on_screen\u0022 src=\u0022https://cloud.githubusercontent.com/assets/53743/24204352/34391ee6-0ee6-11e7-878d-568d0928c9b1.png\u0022\u003E\r\n\r\nI\u0027ve then drawn some boxes over that on the canvas using canvas.DrawRect. These are set to colors with no alpha transparency. I\u0027m using a paint object with the blend mode set to BlendMode.Darken.\r\n\u003Cimg width=\u0022244\u0022 alt=\u0022skcanvasview_darken\u0022 src=\u0022https://cloud.githubusercontent.com/assets/53743/24204522/c3fd0dee-0ee6-11e7-899e-304182bf9f31.png\u0022\u003E\r\n\r\nUpon changing to a SKGLView (which runs much better in my use case), the output changes significantly.\r\n\u003Cimg width=\u0022243\u0022 alt=\u0022skglview_darken\u0022 src=\u0022https://cloud.githubusercontent.com/assets/53743/24204576/ea9b032a-0ee6-11e7-8137-79e04a0ef3d1.png\u0022\u003E\r\n\r\nI\u0027ve also found that if I set my colors used in the DrawRect calls to have some alpha transparency, that is not reflected if the blend mode is set to darken (again, on SKGLView) (I\u0027ve expended the size of the rects during testing here)\r\n\u003Cimg width=\u0022235\u0022 alt=\u0022skglview_darken_with_alpha\u0022 src=\u0022https://cloud.githubusercontent.com/assets/53743/24204725/561538be-0ee7-11e7-8a98-d3e6cf832f9d.png\u0022\u003E\r\n\r\nIf I change the blend mode back to the default, SrcOver, then my alpha is applied and I can at least see through the boxes. Not ideal, but a passable workaround for the moment.\r\n\u003Cimg width=\u0022236\u0022 alt=\u0022skglview_srcover_with_alpha\u0022 src=\u0022https://cloud.githubusercontent.com/assets/53743/24204789/855e1ab4-0ee7-11e7-9c49-f096246afe94.png\u0022\u003E\r\n\r\nThis testing was done on SkiaSharp 1.56.1 using Xamarin.Forms.",
+  "author": {
+    "login": "sdenowh",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2017-03-22T15:09:00",
+  "updatedAt": "2022-08-19T21:02:16",
+  "closedAt": "2017-03-29T19:12:20",
+  "commentCount": 1,
+  "reactionCount": 0
+}

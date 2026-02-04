@@ -1,0 +1,37 @@
+{
+  "number": 3409,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix documentation inaccuracies: C API error handling and parameter naming",
+  "body": "**Description of Change**\n\nDocumentation stated the C API layer \u0022catches exceptions\u0022 and performs \u0022defensive null checks,\u0022 contradicting the actual minimal wrapper implementation. Parameter names in examples didn\u0027t match the codebase.\n\n**Corrections made:**\n\n- **Error handling claims**: Removed 7 incorrect statements about C API catching exceptions or validating parameters. C API is a direct pass-through that trusts C# validation.\n- **Code examples**: Fixed \u0060sk_canvas_draw_circle\u0060 parameter name (\u0060radius\u0060 \u2192 \u0060rad\u0060) across all layers to match actual signatures.\n- **Factory vs constructor behavior**: Clarified factory methods return \u0060null\u0060 on failure (don\u0027t throw), while constructors throw.\n- **Example code**: Updated hypothetical defensive patterns to show actual implementation (no try-catch, no null checks in C API).\n\n**Verification method:**\n\nEvery claim validated against source:\n- Confirmed zero try-catch blocks in C API (\u0060externals/skia/src/c/*.cpp\u0060)\n- Confirmed zero parameter validations in C API\n- Verified factory return behavior (\u0060SKImage.FromEncodedData\u0060 returns null)\n- Verified constructor throw behavior (\u0060SKBitmap\u0060 constructor throws)\n- Confirmed C# validates before P/Invoke (\u0060SKCanvas.DrawRect\u0060)\n\n**Files corrected:**\n- \u0060design/QUICKSTART.md\u0060 (3 fixes)\n- \u0060design/adding-new-apis.md\u0060 (2 fixes)\n- \u0060design/error-handling.md\u0060 (2 fixes)\n- \u0060design/README.md\u0060 (1 fix)\n- \u0060.github/instructions/csharp-bindings.instructions.md\u0060 (1 fix)\n- \u0060.github/instructions/README.md\u0060 (1 fix)\n\n**Bugs Fixed**\n\nNone. Documentation-only changes.\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (if omitted, state reason in description) - Documentation changes, no code changes\n- [x] Rebased on top of main at time of PR\n- [ ] Merged related skia PRs - N/A\n- [x] Changes adhere to coding standard\n- [x] Updated documentation - This PR corrects documentation\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Can you go through all these docs in the .github, design, and AGENTS.md and make sure they are accurate to the code. It is essential that they represent the code and not try make the code match the docs.\n\u003E \n\u003E Please check every statement.\n\u003E \n\u003E Validate assumptions.\n\u003E \n\u003E The project reputation depends on the docs being accurate.\n\u003E \n\u003E If you have questions, doubts or concerns. Validate against the code.\n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-11-08T13:37:28",
+  "updatedAt": "2025-11-13T03:18:09",
+  "closedAt": "2025-11-13T03:18:05",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "dev/ai",
+  "headBranch": "copilot/validate-documentation-accuracy-again",
+  "additions": 48,
+  "deletions": 47,
+  "changedFiles": 6,
+  "commits": 5,
+  "reviews": []
+}

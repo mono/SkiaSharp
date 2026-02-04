@@ -1,0 +1,29 @@
+{
+  "number": 1399,
+  "type": "pr",
+  "state": "closed",
+  "title": "SKTypeface does not count bytes but glyphs",
+  "body": "**Description of Change**\r\n\r\nHistorically, SkTypeface.charsToGlyphs assumed the data was already in glyphs. So a UTF32 data array would pass the number of glyphs. Since that method was removed, we switched to SkFont.textToGlyphs. This worked in bytes. As a result, we need to make sure we convert from glyph count to byte count when we use it.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1398\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\n\u0060SKTypeface.GetGlyphs\u0060 now correctly passes the byte size to the font.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.1",
+  "createdAt": "2020-07-13T17:19:18",
+  "updatedAt": "2020-07-14T07:25:46",
+  "closedAt": "2020-07-14T00:16:51",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/fix-1398",
+  "additions": 50,
+  "deletions": 5,
+  "changedFiles": 4,
+  "commits": 2,
+  "reviews": []
+}

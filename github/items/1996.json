@@ -1,0 +1,17 @@
+{
+  "number": 1996,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] IsAntialias Invalid under Linux",
+  "body": "DrawText IsAntialias Invalid under Linux\r\n\r\nvar paint = new SKPaint()\r\n{\r\n    Color = SKColors.Black,\r\n    IsAntialias = false,\r\n    Typeface = SKTypeface.FromFamilyName(\u0022simsun\u0022, SKFontStyle.Normal),\r\n    TextSize = 14\r\n};\r\n\r\nSKImageInfo imageInfo = new SKImageInfo(400, 300);\r\n\r\nusing (SKSurface surface = SKSurface.Create(imageInfo))\r\n{\r\n    SKCanvas canvas = surface.Canvas;\r\n    canvas.DrawColor(SKColors.White); \r\n\r\n    canvas.DrawText(\u0022\u6D4B\u8BD5\u6D4B\u8BD5\u0022, new SKPoint(10, 10), pain);\r\n}",
+  "author": {
+    "login": "cdpanocom",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-13T10:19:37",
+  "updatedAt": "2022-04-13T10:22:52",
+  "commentCount": 0,
+  "reactionCount": 0
+}

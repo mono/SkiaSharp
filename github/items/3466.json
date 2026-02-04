@@ -1,0 +1,53 @@
+{
+  "number": 3466,
+  "type": "pr",
+  "state": "open",
+  "title": "Don\u0027t dispose SKStreamAsset in ToHarfBuzzBlob",
+  "body": "**Description of Change**\r\n\r\nHarfBuzz Blob should not have dispose ownership of SKStreamAsset as it might still be in use by the caller.\r\n\r\nSKShaper should also deterministically dispose the stream.\r\n\r\n**Bugs Fixed**\r\n\r\nDiscussion https://github.com/mono/SkiaSharp/discussions/3373\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nToHarfBuzzBlob no longer takes dispose ownership of the given SKStreamAsset\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [X] Has tests (if omitted, state reason in description)\r\n- [X] Rebased on top of main at time of PR\r\n- [X] Merged related skia PRs\r\n- [X] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "jeremy-visionaid",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-27T21:20:51",
+  "updatedAt": "2026-01-29T02:02:20",
+  "commentCount": 3,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "fix-skstreamasset-disposal",
+  "additions": 36,
+  "deletions": 4,
+  "changedFiles": 3,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-01-27T22:27:58"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-01-29T01:45:13"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-01-29T01:51:32"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-01-29T02:01:38"
+    }
+  ]
+}

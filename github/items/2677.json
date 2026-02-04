@@ -1,0 +1,22 @@
+{
+  "number": 2677,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkCanvas Crop not Proper Working ? ",
+  "body": "### Description\n\nI give height and width with x and y of my element but Skcanvas doesn\u0027t crop to my values\n\n### Code\n\nframe is a Frame Element in .Net Maui\r\n\r\n Rectangle frameBounds = new Rectangle((int)frame.X, (int)frame.Y, (int)frame.Width, (int)frame.Height);\r\n\r\n croppedImage = ImageUtils.CropImage1(sourceImage,frameBounds);\r\n\r\n\r\npublic static SKBitmap CropImage1(SKBitmap sourceImage, Rectangle frameBounds)\r\n{\r\n    SKBitmap croppedBitmap = new SKBitmap((int)frameBounds.Height, (int)frameBounds.Width);\r\n    SKRect destRect = new SKRect(0, 0, croppedBitmap.Width, croppedBitmap.Height);\r\n    SKRect sourceRect = new SKRect(frameBounds.Left*3, frameBounds.Top*3, frameBounds.Right*3, frameBounds.Bottom*4);\r\n\r\n    using (SKCanvas canvas = new SKCanvas(croppedBitmap))\r\n    {\r\n        canvas.DrawBitmap(sourceImage, sourceRect, destRect);\r\n    }\r\n\r\n    return croppedBitmap;\r\n}\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\nAndroid 13\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Hardikzinzala",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-11-28T05:47:51",
+  "updatedAt": "2024-02-08T09:06:06",
+  "commentCount": 1,
+  "reactionCount": 0
+}

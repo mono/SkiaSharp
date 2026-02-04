@@ -1,0 +1,37 @@
+{
+  "number": 3411,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add comprehensive PR review agent for SkiaSharp",
+  "body": "**Description of Change**\n\nAdds a comprehensive, specialized PR review agent tailored to SkiaSharp\u0027s three-layer architecture (C\u002B\u002B, C API, C#) and memory management requirements. Based on dotnet/maui\u0027s PR reviewer (1,125 lines) and significantly expanded to 1,428 lines (127% of original) with SkiaSharp-specific focus.\n\n**Key Features:**\n\n- **Memory management focus**: Validates three pointer types (raw, owned, ref-counted) across layers\n- **Cross-layer validation**: Ensures C\u002B\u002B \u2192 C API \u2192 C# consistency, exception safety at boundaries\n- **Build integration**: Uses Cake build system (\u0060externals-download\u0060, \u0060libs\u0060, \u0060tests\u0060 targets)\n- **Documentation references**: Links to \u0060AGENTS.md\u0060, \u0060design/memory-management.md\u0060, path-specific instruction files\n- **Review checklists**: Layer-specific criteria (P/Invoke correctness, \u0060sk_ref_sp()\u0060 usage, disposal patterns)\n- **Common issue detection**: Wrong pointer types, memory leaks, exceptions escaping C API, \u0060IntPtr\u0060 in public APIs\n\n**Comprehensive Coverage (1,428 lines):**\n\n**Testing Guidelines (~400 lines):**\n- Fetch PR changes workflow (preserving instruction files)\n- Merge failure handling with templates\n- Setup test environment (native \u002B managed builds)\n- Build and deploy procedures with platform-specific commands\n- Success verification (5-point checklist)\n- Test WITH and WITHOUT PR changes (baseline comparison)\n- Include test results in review with examples\n- Edge case discovery (memory, error handling, platform, API)\n- Cleanup procedures\n\n**Review Process (~350 lines):**\n1. Initial PR Assessment (scope, layers, platforms affected)\n2. Deep Code Analysis (with shallow vs deep review examples)\n3. Test Coverage Review (unit, memory, platform-specific, samples)\n4. Breaking Changes \u0026 API Review (public API, C API, ABI compatibility)\n5. Documentation Review (XML docs, code comments, design docs, samples)\n6. Generated Code Review (generator modification workflow)\n7. Platform-Specific Considerations (all 8\u002B platforms: Windows, macOS, Linux, iOS, Android, WASM, etc.)\n8. Native Code Review (building, testing, ABI compatibility)\n\n**Providing Feedback (~200 lines):**\n- Tone and style guidelines\n- Feedback categories (Critical \uD83D\uDD34, Suggestions \uD83D\uDFE1, Nitpicks \uD83D\uDCA1)\n- Review comment template with full examples\n- PR approval checklist (30\u002B items)\n- Special considerations:\n  - First-time contributors (welcoming, educational)\n  - Complex changes (thorough testing, breaking down feedback)\n  - Bot/automated PRs (verification, pattern checking)\n  - Documentation-only PRs (accuracy, testing examples)\n\n**SkiaSharp-Specific Sections:**\n- Three-layer architecture validation with layer-specific checklists\n- Memory management deep dive (pointer types, disposal, ref counting)\n- Error handling patterns across layers\n- Testing standards (memory, lifecycle, cross-layer)\n- Generated code workflow\n- Build system (Cake commands, native builds)\n- Platform-specific considerations\n- Native interop (P/Invoke, exception safety, ownership)\n\n**Complete Coverage:**\n- \u2705 Interop (P/Invoke, exception safety, ownership, ABI, structure packing)\n- \u2705 Testing (unit, memory, platform, samples, iteration, WITH/WITHOUT comparison)\n- \u2705 Samples (testing procedures, best practices, documentation)\n- \u2705 Platforms (all 8\u002B platforms with specific requirements)\n- \u2705 Docs (XML docs, design docs, samples, README, migration guides)\n- \u2705 Native code (building, testing, 20\u002B min build warnings)\n- \u2705 Iteration (baseline comparison, edge cases, stress tests with 10,000 iteration examples)\n\nThe agent exceeds MAUI reviewer\u0027s thoroughness while maintaining SkiaSharp-specific focus on memory management, cross-layer consistency, and native interop. It provides step-by-step workflows with exact commands, code examples, and educational guidance for contributors.\n\n**Bugs Fixed**\n\nNone.\n\n**API Changes**\n\nNone.\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [x] Has tests (if omitted, state reason in description)\n- [x] Rebased on top of main at time of PR\n- [ ] Merged related skia PRs\n- [x] Changes adhere to coding standard\n- [x] Updated documentation\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E I need to create a PR review agent. Here is a good one from dotnet maui https://raw.githubusercontent.com/dotnet/maui/refs/heads/main/.github/agents/pr-reviewer.md\n\u003E \n\u003E Can you use that to create a SkiaSharp PR review agent. It needs to be just as good, but for this repo. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\u2728 Let Copilot coding agent [set things up for you](https://github.com/mono/SkiaSharp/issues/new?title=\u2728\u002BSet\u002Bup\u002BCopilot\u002Binstructions\u0026body=Configure%20instructions%20for%20this%20repository%20as%20documented%20in%20%5BBest%20practices%20for%20Copilot%20coding%20agent%20in%20your%20repository%5D%28https://gh.io/copilot-coding-agent-tips%29%2E%0A%0A%3COnboard%20this%20repo%3E\u0026assignees=copilot) \u2014 coding agent works faster and does higher quality work when set up for your repo.\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-11-08T18:28:48",
+  "updatedAt": "2026-01-20T19:29:29",
+  "closedAt": "2026-01-20T19:29:03",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "copilot/create-pr-review-agent-skia",
+  "additions": 7486,
+  "deletions": 0,
+  "changedFiles": 19,
+  "commits": 10,
+  "reviews": []
+}

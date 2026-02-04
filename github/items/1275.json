@@ -1,0 +1,18 @@
+{
+  "number": 1275,
+  "type": "issue",
+  "state": "closed",
+  "title": "When use SKPaint.GetTextPath(strText,0f,0f), if strText=\u0022\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66\u0022  or \u0022\u0E22\u0E39\u0E48\u0022, the result is not correct.",
+  "body": "Regarding SKPaint.GetTextPath(strText,0f,0f)\r\nIf the strText is a Ligature, such as \u0022\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66\u0022 or \u0022\u0E22\u0E39\u0E48\u0022, it can not get correct SKPath.\r\n\r\nIn this case\r\n\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66:an Emoji combined from U\u002B1F468, U\u002B200D, U\u002B1F469, U\u002B200D, U\u002B1F467, U\u002B200D, U\u002B1F466\r\n\u0E22\u0E39\u0E48: a Thai character combined from \u0E22 \u002B \u0E39 \u002B \u0E48\r\nIf SKPaint.GetTextPath() full support those cases, it will be powerful tool.\r\n\r\nMore details\r\nWe can use StringInfo.GetTextElementEnumerator() to split string to grapheme clusters.\r\n\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67\u200D\uD83D\uDC66 could be a grapheme cluster.\r\nP.S.  .NET standard 2.1 does not support Emoji, but .NET 5 will support all the Emoji we have.\r\n\r\nI use SKPaint.GetTextPath on a Lettering tool (see https://infbjlettering.azurewebsites.net). Everything\r\nis OK but the combined character.",
+  "author": {
+    "login": "XMTei",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-05-06T23:01:20",
+  "updatedAt": "2022-08-19T06:01:47",
+  "closedAt": "2020-05-08T00:57:14",
+  "commentCount": 2,
+  "reactionCount": 0
+}

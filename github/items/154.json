@@ -1,0 +1,18 @@
+{
+  "number": 154,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKSurface.Create returns null on Android",
+  "body": "I created a new Xamarin.Android application using Visual Studio 2015 (the Blank App template) and added the SkiaSharp nuget package to it (latest version 1.54).\nI modified the Button_Click handler as below:\n\n\u0060\u0060\u0060\n[Activity(Label = \u0022AndroidTestApp2\u0022, MainLauncher = true, Icon = \u0022@drawable/icon\u0022)]\npublic class MainActivity : Activity\n{\n    protected override void OnCreate(Bundle bundle)\n    {\n        base.OnCreate(bundle);\n\n        // Set our view from the \u0022main\u0022 layout resource\n        SetContentView(Resource.Layout.Main);\n\n        // Get our button from the layout resource,\n        // and attach an event to it\n        Button button = FindViewById\u003CButton\u003E(Resource.Id.MyButton);\n\n        button.Click \u002B= Button_Click;\n    }\n\n    private void Button_Click(object sender, EventArgs e)\n    {\n        SKSurface surface = SKSurface.Create(1000, 1000, SKColorType.Bgra8888, SKAlphaType.Premul);\n        SKCanvas canvas = surface.Canvas;\n    }\n}\n\u0060\u0060\u0060\n\nIn the project References section the SkiaSharp entry points to the lib\\MonoAndroid\\SkiaSharp.dll (the 20MB dll).\nThe SKSurface.Create method (the overloads without GRContext parameter) always returns null when running on a Samsung Galaxy S5 with Android 6.0.\nIs there anything else that needs to be added to the project?\n",
+  "author": {
+    "login": "xfiniumpdf-support",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-09-21T10:39:34",
+  "updatedAt": "2022-08-20T00:02:00",
+  "closedAt": "2016-09-21T21:49:49",
+  "commentCount": 2,
+  "reactionCount": 0
+}

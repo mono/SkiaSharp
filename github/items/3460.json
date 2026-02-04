@@ -1,0 +1,40 @@
+{
+  "number": 3460,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update more AI skills",
+  "body": "This pull request introduces a new security audit skill for SkiaSharp\u0027s native dependencies and refines the workflow for updating those dependencies. The main focus is to clearly separate the processes for security auditing (read-only investigation and reporting) and for updating/fixing dependencies. Documentation has been enhanced to guide users on when to use each skill, ensure a more thorough and auditable update process, and prevent common mistakes.\r\n\r\n**Security Audit Skill Addition:**\r\n\r\n- Introduced a new \u0060security-audit\u0060 skill that provides a comprehensive, read-only workflow for auditing SkiaSharp\u0027s native dependencies for CVEs and security issues, including detailed reporting, prioritization, and actionable recommendations.\r\n- Added a reference document listing known false positive CVEs (e.g., MiniZip in zlib) that do not affect SkiaSharp, along with evidence and verification steps.\r\n\r\n**Native Dependency Update Skill Improvements:**\r\n\r\n- Clarified that security audits (CVE checks, PR coverage) should use the new \u0060security-audit\u0060 skill, and removed ambiguous triggers from the update skill documentation.\r\n- Expanded the update workflow to require checking for existing PRs before starting work, evaluating their relevance and currency, and reporting findings to the user before proceeding.\r\n- Improved instructions for verifying current and target dependency versions, and for presenting findings to the user, including existing PRs and reasons for updates.\r\n- Simplified and clarified the process for checking CI status and PR merge state, emphasizing the importance of verifying actual PR state rather than just CI status.\r\n\r\n**Process and Documentation Clarity:**\r\n\r\n- Strengthened language to require following every phase of the update workflow and removed ambiguous language that could be interpreted as permission to skip steps.\r\n- Removed redundant warnings about not pushing directly to main branches, focusing instead on the critical need for PRs and submodule updates. [[1]](diffhunk://#diff-f9c71b6da8951243004ec22339d2de5d5703f868295706fcc613bb26f17365cfL191-L192) [[2]](diffhunk://#diff-f9c71b6da8951243004ec22339d2de5d5703f868295706fcc613bb26f17365cfL203-L204)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-27T17:57:50",
+  "updatedAt": "2026-02-02T21:52:53",
+  "closedAt": "2026-01-27T17:57:59",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/skils",
+  "additions": 428,
+  "deletions": 30,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

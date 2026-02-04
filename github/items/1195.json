@@ -1,0 +1,29 @@
+{
+  "number": 1195,
+  "type": "pr",
+  "state": "closed",
+  "title": "Passing null as path arg to SkPathMeasure ctor throws now",
+  "body": "**Description of Change**\r\n\r\nPassing \u0060null\u0060 for the \u0060path\u0060 argument of the \u0060SkPathMeasure\u0060 constructor now throws an \u0060ArgumentNullException\u0060\r\n\r\nPlus some small tweaks (could do without them, but couldn\u0027t resist :wink:)\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to issue #1187 \r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\nNone\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [?] Changes adhere to coding standard\r\n- [n] Updated documentation\r\n\r\n**Notes**\r\n\r\nNote that I was unable to run all unit tests, even before applying my changes, \u0060dotnet test\u0060 always seems to hang at some point, or randomly crash some tests with access violations. This didn\u0027t happen last week. I lost a couple of hours trying to figure out why, but eventually I threw in the towel... \r\n\r\nThis was the output before it hangs\r\n\u0060\u0060\u0060\r\n[xUnit.net 00:00:01.25]     SkiaSharp.Tests.SKDataTest.DataDisposedReturnsInvalidStream [SKIP]\r\n  ! SkiaSharp.Tests.SKDataTest.DataDisposedReturnsInvalidStream [1ms]\r\n[xUnit.net 00:00:01.27]     SkiaSharp.Tests.SKBitmapTest.ImageScalingMultipleThreadsTest [SKIP]\r\n  ! SkiaSharp.Tests.SKBitmapTest.ImageScalingMultipleThreadsTest [1ms]\r\n[xUnit.net 00:00:01.59]     SkiaSharp.Tests.SKPaintTest.DrawTransparentImageWithHighFilterQualityWithUnpremul [SKIP]\r\n  ! SkiaSharp.Tests.SKPaintTest.DrawTransparentImageWithHighFilterQualityWithUnpremul [1ms]\r\n[xUnit.net 00:00:04.18]     SkiaSharp.Tests.SKCodecTest.DownloadedStream [SKIP]\r\n  ! SkiaSharp.Tests.SKCodecTest.DownloadedStream [1ms]\r\n\u0060\u0060\u0060\r\n\r\nAttaching the VS2019 debugger revealed that \u0060SKImageTest::TextureImageIsValidOnContext()\u0060 hangs, the last managed call was \u0060Wgl.wglChoosePixelFormatARB\u0060. This might be a display driver issue, but I have the latest one. I have 32 hyperthreads, so maybe some tests are not 100% isolated...\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-03-27T20:14:01",
+  "updatedAt": "2020-04-29T23:47:34",
+  "closedAt": "2020-04-02T14:04:18",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "issue/1187",
+  "additions": 23,
+  "deletions": 11,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": []
+}

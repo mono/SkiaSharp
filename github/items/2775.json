@@ -1,0 +1,43 @@
+{
+  "number": 2775,
+  "type": "pr",
+  "state": "closed",
+  "title": "Clean up SKTextBlobBuilder and SKRunBuffer APIs",
+  "body": "**Description of Change**\r\n\r\nThis is sort of inspired by #2664 but also the \u0060SKRunBuffer\u0060 API is a bit weird. In 2.x the skia comments say the text part is not meant to be sued, but it is actually required in some cases.\r\n\r\nI had cleaned up the API a bit before, but I see I still needed some work. \r\n\r\nThen #2664 was asking for less allocations, so I am thinking instead of spans, we just return the struct directly (almost) and then it is up to the caller to do the right thing. \r\n\r\n- Fixes https://github.com/mono/SkiaSharp/issues/2776",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-03-02T00:06:14",
+  "updatedAt": "2024-03-28T22:34:24",
+  "closedAt": "2024-03-28T22:34:20",
+  "commentCount": 6,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/textblobbuilder",
+  "additions": 252,
+  "deletions": 131,
+  "changedFiles": 4,
+  "commits": 4,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-03-02T00:26:29"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-03-02T00:56:32"
+    },
+    {
+      "author": "Youssef1313",
+      "state": "APPROVED",
+      "submittedAt": "2024-03-02T07:51:50"
+    }
+  ]
+}

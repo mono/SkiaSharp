@@ -1,0 +1,29 @@
+{
+  "number": 788,
+  "type": "pr",
+  "state": "closed",
+  "title": "SKRegion: Add constructors and methods for easier interaction with SKRectI and SKPath",
+  "body": "1. Cleaned up SKRegion file in terms of style. Style was inconsistent at best in this file.\r\n    * To assist with this in future, I have added \u0060omnisharp.json\u0060 to the project root, which OmniSharp can utilize to format the C# source files automatically. Nobody should need to deal with repo style on a manual basis where possible.\r\n    * If this file doesn\u0027t quite meet every standard set in the style guide, please feel free to alter the rules laid out therein. I just want to make it as easy as possible for potential contributors to get it right the first time. \uD83D\uDE0A \r\n2. Added some constructors to SKRegion:\r\n    * \u0060new SKRegion(SKRect rect)\u0060 -- creates a new region and calls \u0060SetRect(rect)\u0060\r\n    * \u0060new SKRegion(SKPath path)\u0060 -- creates a new region and calls \u0060SetPath(path)\u0060\r\n3. Altered \u0060SetPath(SKPath path)\u0060 method to utilize \u0060SKRectI.Ceiling()\u0060 method rather than use a custom implementation. It seemed inconsistent and tricky to verify that the existing method would work as intended, and moving to an existing, standardized, and (hopefully) tested method seems like a better move. Let me know if there\u0027s a specific reason it was done the way it was, happy to learn here.\r\n4. Added \u0060Intersects(SKPath path)\u0060 method to complement the existing SKRectI and SKRegion \u0060Intersects\u0060 overloads.\r\n5. Added \u0060Op(SKPath path, SKRegionOperation op)\u0060 method to complement the existing similar methods for \u0060SKRectI\u0060 and \u0060SKRegion\u0060.\r\n\r\nResolves #778 (for the most part... I\u0027d need someone to talk me through the native methods and if/why they demand integer values for SKRegion bounds in order to look at potentially allowing direct use of SKRect with SKRegion without rounding values all over the place.)",
+  "author": {
+    "login": "vexx32",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-02-10T03:46:08",
+  "updatedAt": "2019-11-21T20:35:52",
+  "closedAt": "2019-03-13T21:56:31",
+  "commentCount": 9,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "RegionTools",
+  "additions": 36,
+  "deletions": 11,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}

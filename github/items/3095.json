@@ -1,0 +1,22 @@
+{
+  "number": 3095,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Radial gradient has no effect on SKSvgCanvas",
+  "body": "### Description\r\n\r\nHello,\r\n\r\nThe radial gradient shader is not applied when drawing on \u0060SKSvgCanvas\u0060, but the linear gradient works without issues. There is no error at all, the radial gradient shader is treated as if it wasn\u0027t defined at all.\r\n\r\n### Code\r\n\r\nSample repo: https://github.com/nandor23/skiasharp-gradient-sample\r\n\r\nThe code as well:\r\n\r\n\u0060\u0060\u0060c#\r\nusing SkiaSharp;\r\n\r\nconst float size = 1000;\r\n\r\nLinearGradient();\r\nRadialGradient();\r\n\r\nvoid LinearGradient()\r\n{\r\n    using var fileStream = new FileStream(\u0022linear_gradient.svg\u0022, FileMode.Create);\r\n    using var canvas = SKSvgCanvas.Create(new SKRect(0f, 0f, size, size), fileStream);\r\n    using var paint = new SKPaint\r\n    {\r\n        Shader = SKShader.CreateLinearGradient(\r\n            new SKPoint(0, 0),\r\n            new SKPoint(size, size),\r\n            [SKColors.CornflowerBlue, SKColors.YellowGreen],\r\n            null,\r\n            SKShaderTileMode.Clamp\r\n        )\r\n    };\r\n    canvas.DrawPaint(paint);\r\n    canvas.Flush();\r\n}\r\n\r\n\r\n// Does not work\r\nvoid RadialGradient()\r\n{\r\n    using var fileStream = new FileStream(\u0022radial_gradient.svg\u0022, FileMode.Create);\r\n    using var canvas = SKSvgCanvas.Create(new SKRect(0f, 0f, size, size), fileStream);\r\n    using var paint = new SKPaint\r\n    {\r\n        Shader = SKShader.CreateRadialGradient(\r\n            new SKPoint(size / 2, size / 2),\r\n            size / 2,\r\n            [SKColors.CornflowerBlue, SKColors.YellowGreen],\r\n            null,\r\n            SKShaderTileMode.Clamp\r\n        )\r\n    };\r\n    canvas.DrawPaint(paint);\r\n    canvas.Flush();\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.9 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nNo idea\r\n\r\n### IDE / Editor\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System\r\n\r\nLinux\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\nLinear gradient output:\r\n\r\n![image](https://github.com/user-attachments/assets/02cac177-cfcc-4bdf-b597-f137b0f9c110)\r\n\r\nRadial gradient output:\r\n![image](https://github.com/user-attachments/assets/58e3983d-1f79-4acb-9784-a0d1ea352622)\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "nandor23",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-03T05:19:46",
+  "updatedAt": "2024-12-05T14:32:40",
+  "commentCount": 3,
+  "reactionCount": 0
+}

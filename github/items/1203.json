@@ -1,0 +1,17 @@
+{
+  "number": 1203,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Surface.Canvas.TotalMatrix is doesn\u0027t update on SKGLView ",
+  "body": "**Description**\r\nI\u0027m using gestures to pan and pinch a canvas by modifying it\u0027s matrix. On SKCanvasView everything works fine - but with the switch to SKGLView i noticed that the SKMatrix doesn\u0027t update and is always the identity matrix.\r\n\r\n**Code**\r\ni\u0027m printing all the cells in the \u0060Surface.Canvas.TotalMatrix\u0060 during \u0060PaintSurface\u0060. Here are the results:\r\n\u0060\u0060\u0060\r\nSKCanvasView (scale and translate update fine depending no panning / pinching)\r\nscale:            4.46771144866943 | 4.46771144866943\r\nskew:             0 | 0\r\ntrans:            1068.85974121094 |\u00A0550.498474121094\r\n\r\nSKGLView\r\nscale:             1 | 1\r\nskew:              0 | 0\r\ntrans:             0 |\u00A00\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Expected Behavior**\r\nSurface.Canvas.TotalMatrix should be updated correctly i.e. SKCanvasView\r\n\r\n**Actual Behavior**\r\nSurface.Canvas.TotalMatrix is always\r\n\u0060\u0060\u0060\r\nscale:             1 | 1\r\nskew:              0 | 0\r\ntrans:             0 |\u00A00\r\n\u0060\u0060\u0060\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.2-preview.45\r\n- IDE:  Visual Studio for Mac 8.5 (build 3183)\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Xamarin.Forms\r\n    - macOS: 10.15.3 (19D76)\r\n    - haven\u0027t tested it on other platforms\r\n\r\n\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - MacBook Pro (13-inch, 2018, Four Thunderbolt 3 Ports) | 16 GB 2133 MHz LPDDR3 | 2,3 GHz Quad-Core Intel Core i5 | Intel Iris Plus Graphics 655 1536 MB\r\n",
+  "author": {
+    "login": "nor0x",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-31T09:06:45",
+  "updatedAt": "2020-03-31T09:06:45",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 1058,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG?] SKTypeface.FromFamilyName should not return null... or could?",
+  "body": "**Description**\r\n\r\nNot sure what is going with \u0060SKTypeface.FromFamilyName\u0060. The code docs say it should NEVER return \u0060null\u0060, but does and should in some cases? Those are conflicting statements right there.\r\n\r\nI see this previous issue where I say that there is no guarantee: https://github.com/mono/SkiaSharp/issues/643\r\n\r\nBut, there is in this docs: \r\n\u0060\u0060\u0060\r\n    /** Creates a new reference to the typeface that most closely matches the\r\n        requested familyName and fontStyle. This method allows extended font\r\n        face specifiers as in the SkFontStyle type. Will never return null.\r\n\u0060\u0060\u0060\r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/include/core/SkTypeface.h#L95-L104\r\n\r\nAnd then we go straight into this:\r\n\u0060\u0060\u0060\r\n            // On Android, we must return nullptr when we can\u0027t find the requested\r\n            // named typeface so that the system/app can provide their own recovery\r\n            // mechanism. On other platforms we\u0027d provide a typeface from the\r\n            // default family instead.\r\n\u0060\u0060\u0060\r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/src/ports/SkFontMgr_android.cpp#L475-L484\r\n\r\nFear!\r\n\r\nNever mind the fontconfig variants which basically just return nullptr:\r\nhttps://github.com/google/skia/blob/chrome/m68/src/ports/SkFontMgr_fontconfig.cpp#L894\r\n\r\nWho knows at this point!",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-12-11T01:23:50",
+  "updatedAt": "2019-12-11T11:18:38",
+  "commentCount": 18,
+  "reactionCount": 0
+}

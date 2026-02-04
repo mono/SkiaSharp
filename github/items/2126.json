@@ -1,0 +1,28 @@
+{
+  "number": 2126,
+  "type": "pr",
+  "state": "closed",
+  "title": "[skottie] Handle non-seekable streams",
+  "body": "**Description of Change**\r\n\r\nOn Android, the streams for the Assets are not seekable - and the same with streams from the internet. So in order to actually read those, we first need to read the whole thing into a memory buffer.\r\n\r\nThis is not as expensive as it may sound as this is what happens internally. In C\u002B\u002B, the full stream is read into a SKData instance, so pre-doing it in C# is the same thing. In fact, doing it via a data instance in C# opens up the potential to reduce the number of times we hop the interop boundary.\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cs\r\nclass Animation {\r\n  public static Animation? Create (SKData data);\r\n  public static bool TryCreate (SKData data, out Animation? animation);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\nNon-seekable streams can now be used to create animations.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-06-25T13:56:47",
+  "updatedAt": "2022-08-04T10:59:45",
+  "closedAt": "2022-06-26T02:08:28",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/skottie-nonseekable",
+  "additions": 77,
+  "deletions": 3,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": []
+}

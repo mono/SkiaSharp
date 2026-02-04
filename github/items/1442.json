@@ -1,0 +1,31 @@
+{
+  "number": 1442,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Controlled finalization for GPU-bound objects",
+  "body": "**Problem:**\r\n\r\nWhile most of the SkiaSharp objects can be safely disposed from any thread, GPU bound ones need the corresponding GPU context to be active on disposing thread. It\u0027s fine as long as the object lifetime is controlled by application, but Dispose might be called from the finalizer thread in following cases:\r\n\r\n1) \u0060Main\u0060 has exited\r\n2) \u0060Environment.Exit(...)\u0060 is called\r\n3) Object was somehow leaked and collected by GC without being properly disposed\r\n\r\nLibraries using SkiaSharp can deal with the third one by thoroughly controlling the object lifetimes, but unfortunately have no control over the application control flow. That leads to crashes such as https://github.com/AvaloniaUI/Avalonia/issues/4423\r\n\r\n\r\n**Proposed solution:**\r\n\r\nInstead of calling \u0060Dispose\u0060 directly, call a user-specified callback that could properly enqueue the object for disposal on a proper thread or make the GPU context to be current. Such callback should be specified on object creation, e. g.\r\n\r\n\u0060public static SKSurface Create (GRContext context, bool budgeted, SKImageInfo info, Action\u003CAction\u003E disposeCallback)\u0060\r\n\r\nFinalizer should do something like this:\r\n\r\n\u0060\u0060\u0060cs\r\n~SKSurface()\r\n{\r\n  if(_disposeCallback != null)\r\n    _disposeCallback(() =\u003E Dispose(false));\r\n  else\r\n    Dispose(false);\r\n}\r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "kekekeks",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2020-08-01T19:06:36",
+  "updatedAt": "2022-09-11T18:31:08",
+  "commentCount": 1,
+  "reactionCount": 9
+}

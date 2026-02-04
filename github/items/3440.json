@@ -1,0 +1,38 @@
+{
+  "number": 3440,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Exception: SkiaSharp.Views.WinUI.Native.PropertySetExtensions",
+  "body": "### Description\n\nDeploying a MAUI app with LiveCharts2 that uses SkiaSharp 3.199.1 for drawing on Windows crashes on certain systems with the following exception:\n\n\u0060\u0060\u0060\nSystem.Runtime.InteropServices.COMException: Element not found.\n\n  at void Marshal.ThrowExceptionForHR(int errorCode)() in Marshal.cs:line 856\n  at new BaseActivationFactory(string typeNamespace, string typeFullName)()\n  at static PropertySetExtensions()()\n\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.Views.WinUI.Native.PropertySetExtensions\u0027 threw an exception.\n  at IObjectReference PropertySetExtensions.get__objRef_global__SkiaSharp_Views_WinUI_Native_IPropertySetExtensionsStatics()()\n  at void PropertySetExtensions.AddSingle(PropertySet propertySet, string key, float value)()\n  at void GlesContext.CreateSurface(SwapChainPanel panel, Size? renderSurfaceSize, float? resolutionScale)()\n  at void AngleSwapChainPanel.EnsureRenderSurface()()\n  at void AngleSwapChainPanel.OnLoaded(object sender, RoutedEventArgs e)()\n  at int RoutedEventHandler.Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e)()\n\u0060\u0060\u0060\n\nWe have tried both with HA enabled and disabled but the result is the same. Is there any idea what may cause this issue?\n\n### Code\n\n\u0060\u0060\u0060xaml\n\u003CliveCharts:CartesianChart x:Name=\u0022Graph\u0022\n                                   AbsoluteLayout.LayoutBounds=\u00220,0,1,1\u0022\n                                   AbsoluteLayout.LayoutFlags=\u0022PositionProportional,SizeProportional\u0022\n                                   ZoomMode=\u0022None\u0022\n                                   EasingFunction=\u0022{x:Null}\u0022\n                                   ... /\u003E\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nSkiaSharp should render the graph as intended\n\n### Actual Behavior\n\nSkiaSharp crashes with an exception \n\n\u0060\u0060\u0060\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.Views.WinUI.Native.PropertySetExtensions\u0027 threw an exception.\n  at IObjectReference PropertySetExtensions.get__objRef_global__SkiaSharp_Views_WinUI_Native_IPropertySetExtensionsStatics()()\n  at void PropertySetExtensions.AddSingle(PropertySet propertySet, string key, float value)()\n  at void GlesContext.CreateSurface(SwapChainPanel panel, Size? renderSurfaceSize, float? resolutionScale)()\n  at void AngleSwapChainPanel.EnsureRenderSurface()()\n  at void AngleSwapChainPanel.OnLoaded(object sender, RoutedEventArgs e)()\n  at int RoutedEventHandler.Do_Abi_Invoke(IntPtr thisPtr, IntPtr sender, IntPtr e)()\n\u0060\u0060\u0060\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11 (10.0.26100.7462)\n\n### Devices\n\nLenovo 83C4\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "jo-ruch",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Maui",
+      "color": "0052cc"
+    },
+    {
+      "name": "os/Windows-WinUI",
+      "color": "fbca04"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-19T11:37:02",
+  "updatedAt": "2026-01-19T11:37:49",
+  "commentCount": 1,
+  "reactionCount": 0
+}

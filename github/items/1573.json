@@ -1,0 +1,18 @@
+{
+  "number": 1573,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] In UWP, navigating between two pages containing an SKSwapChainPanel raises exception: Failed to create GL surface",
+  "body": "**Description**\r\n\r\n In UWP, navigating between two pages containing an SKSwapChainPanel raises exception: Failed to create GL surface.\r\nThis could have a timing component, since sometimes it does not occur.\r\n\r\n**Code**\r\n\r\nGiven two pages that contain an SKSwapChainPanel, performaing a simple navigation:\r\n\u0060\u0060\u0060cs\r\nFrame.Navigate(typeof(Page2));\r\n\u0060\u0060\u0060\r\ncan cause this exception (not 100% of the time):\r\n\u0060\u0060\u0060\r\nSystem.Exception: Failed to create EGL surface\r\n   at SkiaSharp.Views.GlesInterop.GlesContext.CreateSurface(SwapChainPanel panel, Nullable\u00601 renderSurfaceSize, Nullable\u00601 resolutionScale)\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.EnsureRenderSurface()\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.OnCompositionChanged(SwapChainPanel sender, Object args)\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Expected Behavior**\r\n\r\nNo exception should be raised.\r\n\r\n**Actual Behavior**\r\n\r\nThe aforementioned exception is raised.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3-preview.18 (but also in latest stable)\r\n- Last known good version:  unknown\r\n- IDE:  Visual Studio 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - Windows 10 PC\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "gmurray81",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-01-04T16:18:03",
+  "updatedAt": "2022-08-19T03:01:22",
+  "closedAt": "2021-03-30T15:50:52",
+  "commentCount": 13,
+  "reactionCount": 0
+}

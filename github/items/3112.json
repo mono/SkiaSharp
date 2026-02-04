@@ -1,0 +1,43 @@
+{
+  "number": 3112,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix regression that breaks projects using .NET Framework/Mono and packages.config",
+  "body": "**Description of Change**\r\n\r\nStarting with SkiaSharp 3.x only the \u0060buildTransitive\u0060 directory is created for the NativeAssets NuGet packages. This breaks older .NET Framework projects that use \u0060packages.config\u0060 instead of the newer \u0060PackageReference\u0060.\r\n\r\nTo retain backwards compatibility this PR copies the \u0060net462\\SkiaSharp.NativeAssets.*.targets\u0060 file into both \u0060build\u0060 and \u0060buildTransitive\u0060 (as it was for before in SkiaSharp 2.x).\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #3111\r\n- Fixes #3107\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [X] Rebased on top of main at time of PR\r\n- [x] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "sungaila",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-10T15:56:51",
+  "updatedAt": "2025-02-26T16:53:39",
+  "closedAt": "2025-02-26T15:23:34",
+  "commentCount": 5,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "packages-config-fix",
+  "additions": 5,
+  "deletions": 0,
+  "changedFiles": 5,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "cardinalip-williamkeller",
+      "state": "APPROVED",
+      "submittedAt": "2025-01-20T14:47:17"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2025-02-21T14:35:37"
+    }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "number": 2669,
+  "type": "pr",
+  "state": "open",
+  "title": "More Span\u003CT\u003E and ReadOnlySpan\u003CT\u003E",
+  "body": "**Description of Change**\r\n\r\nI have add Span overloads to many methods that previously only accepted Arrays, IntPtrs, or Strings.\r\n\r\nSome methods could not be given span overloads because the Array/Strings must be marshaled as null-terminated types. This _could_ be solved by copying the contents of the span into a rented array and filling the rest of the array with \u0060null\u0060, however I wanted to discuss this change before making it.\r\n\r\n_The next changes aren\u0027t strictly related to converting to spans, but I figured they were related enough to include them here. If not, I can move them to a new PR._\r\n\r\nI changed a few \u0060return new T[0]\u0060 to \u0060return Array.Empty\u003CT\u003E ()\u0060 to reduce pointless allocations. As far as I can tell, this does not change the behaviour of dereferencing a pointer to the array.\r\n\r\nI also changed the algorithm of \u0060implicit operator SKRuntimeEffectUniform (float[][] value)\u0060 to make allocations linearly associated with the length of \u0060value\u0060 rather than using a variable length list.\r\n\r\nLastly, I believe I fixed 4 memory leaks in \u0060SKCanvas.DrawVertices\u0060, swapped out 3 \u0060SKTypeFace.ToFont\u0060 calls to \u0060SKTypeFace.GetFont\u0060 in \u0060SKTypeFace.GetGlyphs\u0060, and fixed a potential(?) nullptr dereference in \u0060SKPath.GetPoints\u0060. If any changed behaviour occurs in those methods as a result, that might have been my fault.\r\n\r\n\u003C!-- Describe your changes here. --\u003E\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to #2616 \r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\n* [x]  SKCanvas.cs\r\n* [x]  SKCodec.cs\r\n* [x]  SKColorFilter.cs\r\n* [x]  SKColorSpace.cs\r\n* [x]  SKColorSpaceStructs.cs\r\n* [x]  SKData.cs\r\n* [x]  SKFont.cs\r\n* [x]  SKMaskFilter.cs\r\n* [x]  SKMatrix.cs\r\n* [x]  SKMatrix44.cs\r\n  - Removed some redundant null checks\r\n* [x]  SKPMColor.cs\r\n* [x]  SKPath.cs\r\n* [x]  SKPathEffect.cs\r\n* [x]  SKRoundRect.cs\r\n  - Removed some redundant null checks\r\n* [x]  SKRuntimeEffect.cs\r\n* [x]  SKShader.cs\r\n* [x]  SKString.cs\r\n* [x]  SKTypeface.cs\r\n* [x]  SKVertices.cs\r\n* [x]  Util.cs\r\n  - Swapped \u0060new T[0]\u0060 for \u0060Array.Empty\u003CT\u003E ()\u0060\r\n* [x] SKShaper\r\n* [x] CanvasExtensions\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "ScrubN",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-11-10T09:45:21",
+  "updatedAt": "2025-02-28T04:40:55",
+  "commentCount": 11,
+  "reactionCount": 5,
+  "draft": false,
+  "mergeable": true,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "reduce-arrays",
+  "additions": 773,
+  "deletions": 290,
+  "changedFiles": 33,
+  "commits": 26,
+  "reviews": [
+    {
+      "author": "ScrubN",
+      "state": "COMMENTED",
+      "submittedAt": "2023-11-14T05:19:38"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-11-04T14:07:37"
+    },
+    {
+      "author": "ScrubN",
+      "state": "COMMENTED",
+      "submittedAt": "2024-11-07T05:36:15"
+    },
+    {
+      "author": "ScrubN",
+      "state": "COMMENTED",
+      "submittedAt": "2024-11-07T05:45:34"
+    },
+    {
+      "author": "divay-ironsoftware",
+      "state": "COMMENTED",
+      "submittedAt": "2024-12-02T03:55:22"
+    },
+    {
+      "author": "ScrubN",
+      "state": "COMMENTED",
+      "submittedAt": "2024-12-02T04:08:54"
+    },
+    {
+      "author": "divay-ironsoftware",
+      "state": "APPROVED",
+      "submittedAt": "2024-12-02T04:41:30"
+    }
+  ]
+}

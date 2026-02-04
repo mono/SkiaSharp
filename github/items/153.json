@@ -1,0 +1,18 @@
+{
+  "number": 153,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Win7]: Runtime failure due to native dependencies",
+  "body": "I was testing an application in Win 7 for backward compatibility. So, freshly booted clean install of the latest Win 7 64-bit build 7601 (with SP1) from MSDN. However, I ended up with a strange exception that said \u0060libSkiaSharp.dll could not be found\u0060 even though it was right by the executable. \n\nSo, I had a hunch it was likely that the module couldn\u0027t be loaded successfully, which I was able to confirm after poking into it. Turns out \u0060libSkiaSharp.dll\u0060 that\u0027s packaged with nuget is dynamically linked to the VC\u002B\u002B runtime 2015 - which a clean install of 7 doesn\u0027t have. I guess, this is kind of the usual problems we run into working with native libraries. However, is it possible to statically link, or use a MinGW compilation of Skia that can be done with the nuget? \n\nAlso, it might make sense to document this behavior somewhere that the VC\u002B\u002B 2015 runtime is required, since the \u0060nuget\u0060 version of the build is from the VC2015 compiler.\n\nOr it will fail with a not very helpful \u0060DllNotFoundException\u0060 that may not make much sense right away for people who don\u0027t work with native code.\n",
+  "author": {
+    "login": "prasannavl",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-09-20T19:42:40",
+  "updatedAt": "2022-08-20T00:02:01",
+  "closedAt": "2016-09-20T19:46:56",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,27 @@
+{
+  "number": 1668,
+  "type": "pr",
+  "state": "closed",
+  "title": "Swap the buffers after a resize",
+  "body": "**Description of Change**\r\n\r\nThis swaps to the next buffer which is the new, correct size. When the size or scale changes, the new size is added to a \u0022pending\u0022 variable and only gets pushed on the next frame. For render loop views, this is no problem, but for refresh-when-dirty views, we need to force the update by requesting the new buffer before drawing.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #1377\r\n- Fixes #914\r\n- Fixes #722\r\n\r\n**API Changes**\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n \r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-03-21T21:26:45",
+  "updatedAt": "2021-03-30T15:30:52",
+  "closedAt": "2021-03-30T15:30:48",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/uwp-sizes",
+  "additions": 21,
+  "deletions": 4,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": []
+}

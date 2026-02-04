@@ -1,0 +1,34 @@
+{
+  "number": 2195,
+  "type": "pr",
+  "state": "closed",
+  "title": "Don\u0027t try to enter/exit a critical section that has been deleted",
+  "body": "**Description of Change**\r\n\r\nFix for the \u0060AccessViolationException\u0060 thrown from the finalizer thread when trying to deregister a handle after the \u0060NonAlertableWin32Lock\u0060 has already been finalized.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2194 \r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNo longer throws an uncatchable \u0060AccessViolationException\u0060 from the finalizer thread.\r\n\r\n**Required skia PR**\r\n\r\nNone.",
+  "author": {
+    "login": "RichardD2",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-08-03T11:05:42",
+  "updatedAt": "2022-08-04T10:57:40",
+  "closedAt": "2022-08-04T10:57:34",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 6,
+  "deletions": 2,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-08-03T14:16:00"
+    }
+  ]
+}

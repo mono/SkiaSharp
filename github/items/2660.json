@@ -1,0 +1,22 @@
+{
+  "number": 2660,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] \u003Ctitle\u003E DrawPath cause Memory Leak on GPU context ",
+  "body": "### Description\n\nI have wrote a program could switch to run in GPU context or  CPU context\uFF0C when in CPU context, the memory usage is constant, but in GPU context, memory increase linearly. Finally, when I commented  the canvas.DrawPath code line, the memory usage is constant again.\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\r\n\r\nBut, you can also share a short block of code here:\r\n\u0060\u0060\u0060cs\r\n// some C# code here\r\nusing (var paintFill = new SKPaint { IsAntialias = true })\r\n{\r\n        paintFill.StrokeWidth = 0;\r\n        paintFill.Style = SKPaintStyle.Fill;\r\n        paintFill.PathEffect = null;\r\n        paintFill.Shader = null;\r\n        paintFill.Color = fillColor.ToSkia(opacity);\r\n        canvas.DrawPath(path, paintFill); //this line cause memory leak in GPU context\r\n}\r\n\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xaml\r\n\u003C!-- xaml code here --\u003E\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindow 10\n\n### Devices\n\nPC\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "xiechuanjie",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-25T13:40:41",
+  "updatedAt": "2023-10-25T13:40:41",
+  "commentCount": 0,
+  "reactionCount": 0
+}

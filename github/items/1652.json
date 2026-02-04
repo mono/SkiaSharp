@@ -1,0 +1,19 @@
+{
+  "number": 1652,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] TODO",
+  "body": "**Description**\r\n\r\n\r\n  1. SkCamera.h and SkMatrix44.h are DEPRECATED.\r\n    Use SkM44 if you want to have 3d transformations.\r\n\r\n  2. GrContext::createBackendTexture functions that initialize the texture no longer\r\n    guarantee that all the data has been uploaded and the gpu is done with the texture.\r\n    Instead the client can assume the upload work has been submitted to the gpu and they\r\n    must wait for that work to finish before deleting the texture. This can be done via\r\n    their own synchronization or by passing in a finish proc into the create calls which\r\n    will be called when it is safe to delete the texture (at least in terms of work\r\n    done during the create).\r\n    https://review.skia.org/286517\r\n\r\n  3. Add api on GrContext, updateBackendTexture that will upload new data to a\r\n    GrBackendTexture.\r\n    https://review.skia.org/288909\r\n\r\n  4. Added GrContext::oomed() which reports whether Skia has seen a GL_OUT_OF_MEMORY\r\n    error from Open GL [ES] or VK_ERROR_OUT_OF_*_MEMORY from Vulkan.\r\n    https://review.skia.org/298216\r\n\r\n  5. GrContext::abandoned()",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2021-03-12T03:49:22",
+  "updatedAt": "2024-12-10T12:50:31",
+  "closedAt": "2024-12-10T12:50:30",
+  "commentCount": 4,
+  "reactionCount": 0
+}

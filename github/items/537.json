@@ -1,0 +1,27 @@
+{
+  "number": 537,
+  "type": "issue",
+  "state": "closed",
+  "title": "UWP Touch event with mouse, every time the touch args have an id of 1.",
+  "body": "### Description\r\n\r\nWhen launching the app in UWP and trying to draw on canvas with the mouse, the \u0060Id\u0060 of the \u0060SKTouchEventArgs\u0060 is 1 all the time. Souldn\u0027t it change?  Because now i keep continuing the same path, what I want are some new paths every time when I start drawing by pressing the mouse and moving. Should I make a workaround, because on other devices it works as expected. Only in iOS the id is somehow generated, but android and UWP they have constant values like 0 or 1, or more based on the number of fingers.\r\n\r\n\u003C!-- a general description goes here --\u003E\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060 csharp\r\nprivate void _canvas_Touch(object sender, SKTouchEventArgs e)\r\n{\r\n    switch (e.ActionType)\r\n    {\r\n        case SKTouchAction.Entered:\r\n            break;\r\n        case SKTouchAction.Pressed:\r\n            if(!_inprogressPaths.ContainsKey(e.Id))\r\n            {\r\n                Debug.WriteLine($\u0022Path with Id: {e.Id} added\u0022);\r\n                SKPath newPath = new SKPath();\r\n                newPath.MoveTo(e.Location);\r\n                _inprogressPaths.Add(e.Id, newPath);\r\n            }\r\n            break;\r\n        case SKTouchAction.Moved:\r\n            if(_inprogressPaths.ContainsKey(e.Id))\r\n            {\r\n                Debug.WriteLine($\u0022Path with Id: {e.Id} moving...\u0022);\r\n                switch (e.DeviceType)\r\n                {\r\n                    case SKTouchDeviceType.Touch:\r\n                    case SKTouchDeviceType.Mouse when e.MouseButton == SKMouseButton.Left:\r\n                    case SKTouchDeviceType.Pen:\r\n                        var path = _inprogressPaths[e.Id];\r\n                        path.LineTo(e.Location);\r\n                        _canvas.InvalidateSurface();\r\n                        break;\r\n                    default:\r\n                        break;\r\n                }\r\n            }\r\n            break;\r\n        case SKTouchAction.Released:\r\n            if(_inprogressPaths.ContainsKey(e.Id))\r\n            {\r\n                _canvas.InvalidateSurface();\r\n            }\r\n            break;\r\n        case SKTouchAction.Cancelled:\r\n            break;\r\n        case SKTouchAction.Exited:\r\n            break;\r\n        default:\r\n            break;\r\n    }\r\n\r\n    e.Handled = true;\r\n} \r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nThe Id of the \u0060SKTouchEventArgs\u0060 to change every time i press the mouse button and start drawing.\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n### Actual Behavior\r\n\r\nThe Id of the touch is 1 all the time\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.1\r\n- Last known good version:  none\r\n- IDE: Visual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - UWP:  Build 17134, version 1803",
+  "author": {
+    "login": "aodpi",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/wontfix",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-05-29T20:01:19",
+  "updatedAt": "2022-08-19T15:02:24",
+  "closedAt": "2018-06-25T11:54:24",
+  "commentCount": 4,
+  "reactionCount": 0
+}

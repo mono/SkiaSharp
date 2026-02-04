@@ -1,0 +1,18 @@
+{
+  "number": 1467,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkglView.InvalidateSurface() call causes two calls of SkglView.PaintSurface event handler on Xamarin.Forms for MacOS",
+  "body": "**Code**\r\n\r\nxaml:\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\r\n\u003CContentPage xmlns=\u0022http://xamarin.com/schemas/2014/forms\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:forms=\u0022clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms\u0022\r\n             x:Class=\u0022App1.MainPage\u0022\u003E\r\n    \u003CStackLayout VerticalOptions=\u0022FillAndExpand\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 BackgroundColor=\u0022Goldenrod\u0022\u003E\r\n        \u003Cforms:SKGLView  x:Name=\u0022SkglView\u0022 VerticalOptions=\u0022FillAndExpand\u0022 HorizontalOptions=\u0022FillAndExpand\u0022  PaintSurface=\u0022SKGLView_OnPaintSurface\u0022 /\u003E\r\n        \r\n        \u003CButton  x:Name=\u0022Button1\u0022 Text=\u0022Button1\u0022\r\n                 AnchorX=\u00220\u0022 AnchorY=\u00220\u0022 BackgroundColor=\u0022Cornsilk\u0022\r\n                 Clicked=\u0022Button_OnClicked\u0022\r\n        /\u003E\r\n    \u003C/StackLayout\u003E\r\n\r\n\u003C/ContentPage\u003E\r\n\r\n\u0060\u0060\u0060\r\n\r\ncode behind:\r\n\r\n\u0060\u0060\u0060\r\n\r\n        private void SKGLView_OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            e.Surface.Canvas.Clear();\r\n            \r\n            using var fillPaint = new SKPaint {Style = SKPaintStyle.Fill, Color = SKColors.Gold};\r\n            e.Surface.Canvas.DrawRect(e.Surface.Canvas.LocalClipBounds, fillPaint);\r\n        }\r\n\r\n        private void Button_OnClicked(object sender, EventArgs e)\r\n        {\r\n            SkglView.InvalidateSurface();\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\nXamarin.Forms 4.8.0.1269\r\nSkiaSharp.Views.Forms 2.80.1\r\n\r\n**Reproduction Link**\r\n[AppSkia3.zip](https://github.com/mono/SkiaSharp/files/5076307/AppSkia3.zip)\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "sady4850",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-14T18:11:59",
+  "updatedAt": "2022-08-19T03:02:04",
+  "closedAt": "2020-08-27T19:36:04",
+  "commentCount": 1,
+  "reactionCount": 0
+}

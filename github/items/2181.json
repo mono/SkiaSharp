@@ -1,0 +1,17 @@
+{
+  "number": 2181,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Skiasharp Lock crash on Unity Editor",
+  "body": "On Discord, we fixed this bug by adding this code to my script:\r\n\r\n\u0060\u0060\u0060\r\nclass ReadWriteLock : IPlatformLock\r\n        {\r\n            public void EnterReadLock () =\u003E _lock.EnterReadLock ();\r\n            public void ExitReadLock () =\u003E _lock.ExitReadLock ();\r\n            public void EnterWriteLock () =\u003E _lock.EnterWriteLock ();\r\n            public void ExitWriteLock () =\u003E _lock.ExitWriteLock ();\r\n            public void EnterUpgradeableReadLock () =\u003E _lock.EnterUpgradeableReadLock ();\r\n            public void ExitUpgradeableReadLock () =\u003E _lock.ExitUpgradeableReadLock ();\r\n\r\n            ReaderWriterLockSlim _lock = new ReaderWriterLockSlim ();\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nHere is my stacktrace: https://gist.github.com/craftercis/fe2f72c59d3bbe742b2f94d7cc7ce74f",
+  "author": {
+    "login": "craftercis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-22T19:17:28",
+  "updatedAt": "2022-08-03T15:20:36",
+  "commentCount": 1,
+  "reactionCount": 0
+}

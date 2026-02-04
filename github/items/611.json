@@ -1,0 +1,36 @@
+{
+  "number": 611,
+  "type": "issue",
+  "state": "closed",
+  "title": "One point doesn\u0027t been drawn when SKPath draw to negative horizontal",
+  "body": "### Description\r\nWhen SKPath has a line command of drawing toward negative horizontal, one point doesn\u0027t been drawn\r\n\r\n### Code\r\n\r\n            var bitmap = new SKBitmap(800, 800);\r\n            var canvas = new SKCanvas(bitmap);\r\n            canvas.Clear(SKColors.White);\r\n            var paint = new SKPaint\r\n            {\r\n                Color = SKColors.Red,\r\n                Style = SKPaintStyle.Stroke\r\n            };\r\n            var path = SKPath.ParseSvgPathData(\u0022M 1 0 L 100 0, 100 100, 0 100\u0022);\r\n            canvas.DrawPath(path, paint);\r\n\r\n\r\n### Expected Behavior\r\n\r\n   Expect point(100, 100) been drawn\r\n\r\n### Actual Behavior\r\n\r\n  point(100, 100) doesn\u0027t been drawn\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  none\r\n- Last known good version:  1.60.0.0\r\n- IDE:  VS 2017\r\n- Platform Target Frameworks:  .net framework 4.61\r\n  - Windows Classic:  PC windows 10\r\n- Target Devices: PC\r\n   \r\n\r\n### Screenshots\r\n\r\n![20180808181506](https://user-images.githubusercontent.com/17719459/43831600-3d175c38-9b37-11e8-85ec-6652a442ba18.png)\r\n\r\n\r\n\r\n### Reproduction Link\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\n\n\u003E VS bug [#742853](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/742853)",
+  "author": {
+    "login": "zhouandke",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-08-08T10:17:11",
+  "updatedAt": "2022-08-19T15:01:49",
+  "closedAt": "2020-06-10T23:39:27",
+  "commentCount": 3,
+  "reactionCount": 0
+}

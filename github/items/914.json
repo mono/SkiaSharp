@@ -1,0 +1,18 @@
+{
+  "number": 914,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] AngleSwapChainPanel SizeChanged event handler calls Invalidate before updating back buffer size",
+  "body": "**Description**\r\n\r\nWhen resizing a desktop window filled with a SKGLView I noticed that the far right or bottom edge was sometimes white after the resize. In my OnPaintSurface method the e.BackendRenderTarget.Width/Height are the values from before the window resize. Looking at the implementation of AngleSwapChainPanel.OnSizeChanged() I don\u0027t see the back buffer size being updated before the call to Invalidate().\r\n\r\n**Expected Behavior**\r\n\r\nI would expect the back buffer resize to have happened before the call to OnPaintSurface().\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68\r\n- IDE:  VS2019\r\n- Platform Target Frameworks:\r\n  - UWP:  16299\r\n- Target Devices:\r\n  - Desktop PC\r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/1683504/61475818-7e17c980-a940-11e9-9f60-5f61bb54911a.png)\r\n\r\nNote the white right and bottom edges. This is after the resize.\r\n",
+  "author": {
+    "login": "terriblememory",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-07-18T17:38:32",
+  "updatedAt": "2022-08-19T09:02:42",
+  "closedAt": "2021-03-30T15:30:48",
+  "commentCount": 0,
+  "reactionCount": 0
+}

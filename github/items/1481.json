@@ -1,0 +1,19 @@
+{
+  "number": 1481,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unable to load library \u0027libSkiaSharp\u0027. Web .NET 4.7.2 - Windows \u0026 Azure",
+  "body": "**Description**\r\nI\u0027m sadden I have to open this here, but I have been looking for more than 2 hours and I still can\u0027t find a solution!\r\nWhen using a .NET Framework program or .NET Core program, it works great, however, when I use a Web Application that uses the same code, I get the following message. This is the same thing when deploying on Azure (not as an Azure Function, just a WebApp)\r\n\r\n\u0060\u0060\u0060\r\nUnable to load library \u0027libSkiaSharp\u0027.\r\nat SkiaSharp.LibraryLoader.LoadLocalLibrary[T](String libraryName)\r\n\u21B5   at SkiaSharp.SkiaApi.\u003C\u003Ec.\u003C.cctor\u003Eb__1723_0()\r\n\u21B5   at System.Lazy\u00601.CreateValue()\r\n\u21B5   at System.Lazy\u00601.LazyInitValue()\r\n\u21B5   at System.Lazy\u00601.get_Value()\r\n\u21B5   at SkiaSharp.SkiaApi.GetSymbol[T](String name)\r\n\u21B5   at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\r\n\u21B5   at SkiaSharp.SKAbstractManagedStream..cctor()\u0022\r\n\r\n====\r\n\r\nat SkiaSharp.SKAbstractManagedStream..ctor(Boolean owns)\r\n\u21B5   at SkiaSharp.SKManagedStream..ctor(Stream managedStream, Boolean disposeManagedStream)\r\n\u21B5   at SkiaSharp.SKCodec.WrapManagedStream(Stream stream)\r\n\u21B5   at SkiaSharp.SKBitmap.Decode(Stream stream)\r\n\u0060\u0060\u0060\r\n\r\nThe /bin folder contains SkiaSharp.dll. I included the Nuget package in the Web csproj. I added \u0060    \u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\u0060. Still nothing.\r\n\r\nThis is not the first time it seems to happen, more than one bug report had been opened about this.\r\nBut I see really no easy solution nor documentation about this.\r\nWhat is the correct way to statically link this or make it work :) ?\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.1\r\n- Last known good version:  ?\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  Windows 10\r\n  - Azure: Web App\r\n  \r\n\r\n",
+  "author": {
+    "login": "jsgoupil",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-08-27T13:33:51",
+  "updatedAt": "2022-08-19T03:01:58",
+  "closedAt": "2020-09-03T02:41:54",
+  "commentCount": 8,
+  "reactionCount": 0
+}

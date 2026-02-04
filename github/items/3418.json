@@ -1,0 +1,27 @@
+{
+  "number": 3418,
+  "type": "pr",
+  "state": "open",
+  "title": "Dev/perf testing",
+  "body": "This is a PR to investigate the crazy perf difference found here: https://github.com/wieslawsoltes/FastSkiaSharp\r\n\r\nDiscussion thread: https://x.com/wieslawsoltes/status/1984761177520685154\r\n\r\nThe native code is 120fps, but skiasharp is sub 10fps.\r\n\r\nBy first playing around found that I got to 40fps by using the new opengl flags in the SKGLView.\r\n\r\nThis all appears to be inside the skia code, which appears to be using similar compiler args.\r\n\r\nMy fork which downgrades skia to the same version in skiasharp is a tiny bit slower, 111-119 fps: https://github.com/mattleibow/FastSkiaSharp/tree/main_119\r\n\r\nSo the newer skia _is_ faster, but only a bit. There is still a significant difference between teh code in the c\u002B\u002B and the C#\r\n\r\n\u003Cimg width=\u00222454\u0022 height=\u0022546\u0022 alt=\u0022image\u0022 src=\u0022https://github.com/user-attachments/assets/b4a89a55-21b4-40e6-8222-b7731b43f3d0\u0022 /\u003E\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-11-11T20:45:58",
+  "updatedAt": "2025-12-30T09:59:27",
+  "commentCount": 2,
+  "reactionCount": 2,
+  "draft": true,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "main",
+  "headBranch": "dev/perf-testing",
+  "additions": 6946,
+  "deletions": 288,
+  "changedFiles": 51,
+  "commits": 11,
+  "reviews": []
+}

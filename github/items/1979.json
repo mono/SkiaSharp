@@ -1,0 +1,23 @@
+{
+  "number": 1979,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp crashes application MAUI",
+  "body": "having\r\n\r\n\u0060\u0060\u0060CS\r\nnamespace SkiaUI;\r\n\r\npublic partial class MainPage : ContentPage\r\n{\r\n\tpublic MainPage()\r\n\t{\r\n\t\tInitializeComponent();\r\n\t\tContent = new SkiaSharp.Views.Maui.Controls.SKCanvasView();\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\ncauses MAUI App (Preview) to crash at startup with unhandled exception in debugger\r\n\r\ncommenting out \u0060Content = new SkiaSharp.Views.Maui.Controls.SKCanvasView();\u0060 makes the error go away but then we have no Skia View\r\n\r\nhow can this be worked around?\r\n\r\n[Project That Crashes SkiaUI.zip](https://github.com/mono/SkiaSharp/files/8324617/SkiaUI.zip)\r\n\r\nim using\r\n\r\n\u0060\u0060\u0060\r\nVisual Studio 2022 Windows - Version 17.2.0 Preview 2.0\r\n\r\nC:\\Users\\matthew good\\.nuget\\packages\\microsoft.graphics.win2d\\1.0.0.30\\\r\nC:\\Users\\matthew good\\.nuget\\packages\\microsoft.maui.dependencies\\6.0.200-preview.14.5099\\\r\nC:\\Users\\matthew good\\.nuget\\packages\\microsoft.maui.extensions\\6.0.200-preview.14.5099\\\r\nC:\\Users\\matthew good\\.nuget\\packages\\microsoft.windowsappsdk\\1.0.0\\\r\nC:\\Users\\matthew good\\.nuget\\packages\\skiasharp.views.maui.controls\\2.88.0-preview.232\\\r\n\u0060\u0060\u0060\r\n\r\n\r\n\r\nEDIT:\r\nnow having \u0060SkiaSharp.Views.Maui.Controls.SKGLView\u0060 crashes the application, even if \u0060SKCanvasView\u0060 does not crash",
+  "author": {
+    "login": "mgood7123",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp.Views.Maui",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-03-22T13:25:25",
+  "updatedAt": "2023-10-06T15:00:32",
+  "closedAt": "2023-09-06T14:40:37",
+  "commentCount": 20,
+  "reactionCount": 1
+}

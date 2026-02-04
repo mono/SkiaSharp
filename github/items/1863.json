@@ -1,0 +1,27 @@
+{
+  "number": 1863,
+  "type": "pr",
+  "state": "closed",
+  "title": "Never dispose the native statics",
+  "body": "**Description of Change**\r\n\r\nWhen the AppDomain is unloaded, the runtime will try to dispose all instances, including ones on static fields. This might never happen in a single app, however, during test runs or potentially IDE integrations, the AppDomain is unloaded, the instances are collected and then SkiaSharp statics try to dispose of the native statics.\r\n\r\nI originally had code to prevent the user from disposing the instances, however, the GC still runs and is still able to collect. So, for these few instances we mark it that we do not own the handles (which we don\u0027t) and then never even try clean up the instances. The GC will get to it.\r\n\r\n**Bugs Fixed**\r\n\r\n - Potential crashes when AppDomains are unloaded.\r\n - Appears in #1817 when we get a GC collection out of expected order.\r\n\r\n**API Changes**\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n \r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-11-14T20:58:12",
+  "updatedAt": "2021-11-15T19:24:16",
+  "closedAt": "2021-11-15T19:24:14",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/never-dispose",
+  "additions": 27,
+  "deletions": 9,
+  "changedFiles": 8,
+  "commits": 1,
+  "reviews": []
+}

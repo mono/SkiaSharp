@@ -1,0 +1,17 @@
+{
+  "number": 1576,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Allow non HW accelerated SKGLView",
+  "body": "Currently the view will fail on the \u0022Apple Software Render\u0022 system, via a null ptr exception at\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L79\r\n\r\n**Code**\r\n\r\nthere is a fix noted here\r\nhttps://github.com/xamarin/mac-samples/blob/c9216f3aa482739238254123f81949c63f190f56/GLSLShader/MyOpenGLView.cs#L68\r\n\r\nthat could be applied to here\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L67\r\n\r\n**Expected Behavior**\r\n\r\nit to fall back to none accelerated as needed\r\n\r\n**Actual Behavior**\r\n\r\nnull pointer exception\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.8.0\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - macOS:  10.15\r\n  \r\n",
+  "author": {
+    "login": "meee1",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-01-09T00:17:58",
+  "updatedAt": "2021-01-09T00:17:58",
+  "commentCount": 0,
+  "reactionCount": 0
+}

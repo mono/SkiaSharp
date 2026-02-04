@@ -1,0 +1,29 @@
+{
+  "number": 1186,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] DeviceType Support for SKView Touch Events to support stylus",
+  "body": "SkiaSharp canvas view events always have touch device type even when touched with a pen.\r\n\r\nSkCanvasView.OnTouch() events:\r\nSKTouchEventArgs has a Touch device type which always registers as a \u201Ctouch\u201D event. on Android at\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/b8511b732b77b6e9f3b4929a5fa5598d189adf1d/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/SKTouchHandler.cs\r\n\r\nThe event is being created using the constructor that doesn\u2019t have the device ID :\r\n\r\n\u0060\u0060\u0060\r\nvar args = new SKTouchEventArgs(id, SKTouchAction.Pressed, coords, true);\r\n\u0060\u0060\u0060 \r\n\r\nWhich is then defaulting to touch:\r\n \r\n\u0060\u0060\u0060\r\npublic SKTouchEventArgs(long id, SKTouchAction type, SKPoint location, bool inContact)\r\n    : this(id, type, SKMouseButton.Left, SKTouchDeviceType.Touch, location, inContact, 0)\r\n{\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Describe the solution you\u0027d like**\r\nin the SkTouchHandler.OnTouch, set the SkTouchEventArgs DeviceType based on the MotionEvent device type.\r\nYou can find the type under the motionevent property of the args then calling GetToolType on it \r\nhttps://docs.microsoft.com/en-us/dotnet/api/android.views.motionevent.gettooltype?view=xamarin-android-sdk-9#Android_Views_MotionEvent_GetToolType_System_Int32_\r\n\r\n**Describe alternatives you\u0027ve considered**\r\nnone found\r\n\r\n**Additional context**\r\nnone",
+  "author": {
+    "login": "mscherotter",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-03-24T00:21:11",
+  "updatedAt": "2022-08-19T06:02:17",
+  "closedAt": "2020-03-30T11:02:45",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2385,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Why is SkiaSharp trying to load \u0060liblibSkiaSharp\u0060 library?",
+  "body": "Hello. Thanks for your effort.\r\n\r\nMy question is, why is SkiaSharp trying to load \u0060liblibSkiaSharp\u0060 and is not satisfied with just \u0060libSkiaSharp.so\u0060?\r\n\r\nI\u0027m trying to run an Avalonia app on NixOS via\r\n\u0060\u0060\u0060\r\nLD_DEBUG=libs dotnet run\r\n\u0060\u0060\u0060\r\n\r\nAnd from the report I see:\r\n\u0060\u0060\u0060\r\n    298115:\tfind library=libSkiaSharp.so [0]; searching\r\n    298115:\t search path=a lot of paths\t\t(LD_LIBRARY_PATH)\r\n    298115:\t  trying file=/nix/store/wkmc51s1nyyic7ym9c44k57wk8aqlpp9-icu4c-72.1/lib/libSkiaSharp.so\r\n    298115:\t  trying file=/nix/store/ljd6gmclp24spkhcmw7lqwch4bpbq9zp-skia-sharp/bin/libSkiaSharp.so\r\n    298115:\t\r\n\u0060\u0060\u0060\r\nLooks like it found \u0060libSkiaSharp.so\u0060 file (which I put there \u0022manually\u0022)\r\n\r\nBut then I see\r\n\u0060\u0060\u0060\r\n    298115:\tfind library=liblibSkiaSharp.so [0]; searching\r\n    298115:\t search path=lots of paths here\t\t(LD_LIBRARY_PATH)\r\n    298115:\t  trying file=/nix/store/wkmc51s1nyyic7ym9c44k57wk8aqlpp9-icu4c-72.1/lib/liblibSkiaSharp.so\r\n    298115:\t  trying file=/nix/store/ljd6gmclp24spkhcmw7lqwch4bpbq9zp-skia-sharp/bin/liblibSkiaSharp.so\r\n    298115:\t  trying file=/nix/store/3zk3527zglm18ykrvgjdhgz3a4zrfapr-libX11-1.8.1/lib/liblibSkiaSharp.so\r\n    298115:\t  trying file=/nix/store/h99mc81gcsc6dsa4mfxgwjj812mljnkb-libICE-1.0.10/lib/liblibSkiaSharp.so\r\n    298115:\t  trying file=/nix/store/dqsgifv5pjfja5qzh9rjih1vqmfj86n9-libSM-1.2.3/lib/liblibSkiaSharp.so\r\n    298115:\t  trying file=/nix/store/sgw0sxwx46hqwlcm3d834f10p1qx7c5y-libX11-1.8.1-dev/lib/liblibSkiaSharp.so\r\n\u0060\u0060\u0060\r\nand it tries a lot of other paths, naturally, without success. What is \u0060liblibSkiaSharp.so\u0060, and what\u0027s the difference between \u0060libSkiaSharp.so\u0060 and \u0060liblibSkiaSharp.so\u0060?",
+  "author": {
+    "login": "WhiteBlackGoose",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-14T14:02:22",
+  "updatedAt": "2025-12-01T08:04:15",
+  "commentCount": 7,
+  "reactionCount": 0
+}

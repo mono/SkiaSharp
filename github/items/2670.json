@@ -1,0 +1,22 @@
+{
+  "number": 2670,
+  "type": "issue",
+  "state": "open",
+  "title": "The given key offset wast not present in the dictionary",
+  "body": "### Description\n\nGetting an exception while parsing the following SVG.\r\n![logo-Ponant\u002BMarcel](https://github.com/mono/SkiaSharp/assets/3392986/0d2385c6-be51-40af-86f4-f8ef30366438)\r\n\r\n{System.Collections.Generic.KeyNotFoundException: The given key \u0027offset\u0027 was not present in the dictionary.    at SkiaSharp.Extended.Svg.SKSvg.ReadStops(XElement e)    at SkiaSharp.Extended.Svg.SKSvg.ReadLinearGradient(XElement e)    at SkiaSharp.Extended.Svg.SKSvg.ReadPaints(Dictionary\u00602 style, SKPaint\u0026 strokePaint, SKPaint\u0026 fillPaint, Boolean isGroup)    at SkiaSharp.Extended.Svg.SKSvg.ReadElement(XElement e, SKCanvas canvas, SKPaint stroke, SKPaint fill)    at SkiaSharp.Extended.Svg.SKSvg.ReadElement(XElement e, SKCanvas canvas, SKPaint stroke, SKPaint fill)    at SkiaSharp.Extended.Svg.SKSvg.ReadElement(XElement e, SKCanvas canvas, SKPaint stroke, SKPaint fill)    at SkiaSharp.Extended.Svg.SKSvg.LoadElements(IEnumerable\u00601 elements, SKCanvas canvas, SKPaint stroke, SKPaint fill)    at SkiaSharp.Extended.Svg.SKSvg.Load(XDocument xdoc)    at SkiaSharp.Extended.Svg.SKSvg.Load(Stream stream)    at SkiaSharp.Extended.Svg.SKSvg.Load(String filename)    at DesignTokensParser.Parsers.IconsI\u2026\n\n### Code\n\n  var svgDocument = new SKSvg();\r\n                    svgDocument.Load(imageFile.FullName);\n\n### Expected Behavior\n\nThe svg should be loaded normally\n\n### Actual Behavior\n\nGetting exception\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (macOS)\n\n### Platform / Operating System\n\nmacOS\n\n### Platform / Operating System Version\n\nMacOS Ventura 13.1 (22C65)\n\n### Devices\n\nMac with Apple M1 Max\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "sledderGIT",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-11-13T10:21:16",
+  "updatedAt": "2024-08-27T16:21:54",
+  "commentCount": 1,
+  "reactionCount": 1
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1492,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] The color of a created SKBitmap is wrong as the red and blue channels are messed up",
+  "body": "**Description**\r\n\u003C!-- a general description goes here --\u003E\r\nThe color of a created SKBitmap is wrong as the red and blue channels are messed up. It has this issue on MacOS, iOS and Android. It is correct on Windows and Linux. \r\n\r\n\r\n\r\n**Code**\r\n\r\n        // It\u0027s all you need to recreate this issue. \r\n\r\n        static void Main(string[] args)\r\n        {\r\n            int pixelWidth = 800;\r\n            int pixelHeight = 800;\r\n\r\n            int bytesPerPixel = 4;\r\n            // the image buffer for the final image stream.\r\n            byte[] imageBuffer = new byte[pixelWidth * pixelHeight * bytesPerPixel];\r\n\r\n            for (int y = 0; y \u003C pixelHeight; y\u002B\u002B)\r\n            {\r\n                for (int x = 0; x \u003C pixelWidth; x\u002B\u002B)\r\n                {\r\n                    int offset = (y * pixelWidth \u002B x) * bytesPerPixel;\r\n                    imageBuffer[offset] = 0;\r\n                    imageBuffer[offset \u002B 1] = 100;\r\n                    imageBuffer[offset \u002B 2] = 255;\r\n                    imageBuffer[offset \u002B 3] = 255;\r\n                }\r\n            }\r\n\r\n            // generate the canvas image and save it.\r\n            var bitmap = new SKBitmap(pixelWidth, pixelHeight);\r\n            bitmap.Erase(SKColors.Transparent);\r\n            var intPtr = bitmap.GetPixels();\r\n            Marshal.Copy(imageBuffer, 0, intPtr, imageBuffer.Length);\r\n\r\n            using (FileStream fs = new FileStream(args[0], FileMode.CreateNew, FileAccess.ReadWrite))\r\n            {\r\n                using (SKImage skImage = SKImage.FromBitmap(bitmap))\r\n                {\r\n                    SKData skData = skImage.Encode(SKEncodedImageFormat.Png, 100);\r\n                    skData.SaveTo(fs);\r\n                }\r\n            }\r\n        }\r\n\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\nGenerated a 800*800 orange image. \r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\nIt generated a 800*800 blue image on MacOS. It has the same issue on Android and iOS.  It\u0027s fine on Windows and Linux. \r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- the version of SkiaSharp that has the issue --\u003E2.80.1\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003ENone\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003EVS 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \r\n  - iOS:  \r\n  - macOS:  \r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - iPhone 11\r\n  -  Pixel 3\r\n  - Mac Pro\r\n  \r\n\u003C/details\u003E\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "bymin",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-08T16:42:57",
+  "updatedAt": "2022-08-19T03:01:55",
+  "closedAt": "2020-09-08T19:48:17",
+  "commentCount": 3,
+  "reactionCount": 0
+}

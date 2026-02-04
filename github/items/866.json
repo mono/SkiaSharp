@@ -1,0 +1,17 @@
+{
+  "number": 866,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKMatrixConvolutionTileMode.Clamp not working as expected",
+  "body": "I am trying to implement various matrix convolution filters in my mobile application, but I get some strange borders around the filtered image. Here is the code I use to generate a sharpened version of an image, for example:\r\n\r\n\u0060\u0060\u0060\r\nprivate static SKImage SharpenImage(SKImage image)\r\n{\r\n    var kernel = new float[]\r\n    {\r\n        1.0f,  4.0f,   6.0f,  4.0f, 1.0f,\r\n        4.0f, 16.0f,  24.0f, 16.0f, 4.0f,\r\n        6.0f, 24.0f,-476.0f, 24.0f, 6.0f,\r\n        4.0f, 16.0f,  24.0f, 16.0f, 4.0f,\r\n        1.0f,  4.0f,   6.0f,  4.0f, 1.0f\r\n    };\r\n    var gain = -1.0f / 256.0f;\r\n    var bias = 0.0f;\r\n    var size = new SKSizeI(5, 5);\r\n    var offset = new SKPointI(2, 2);\r\n\r\n    using (var bitmap = new SKBitmap(image.Width, image.Height))\r\n    using (var canvas = new SKCanvas(bitmap))\r\n    using (var paint = new SKPaint())\r\n    using (var filter = SKImageFilter.CreateMatrixConvolution(size, kernel,\r\n        gain, bias, offset, SKMatrixConvolutionTileMode.Clamp, true))\r\n    {\r\n        paint.ImageFilter = filter;\r\n\r\n        canvas.Clear();\r\n        canvas.DrawImage(image, SKPoint.Empty, paint);\r\n\r\n        return SKImage.FromBitmap(bitmap);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe code for the blur filter is very similar. Here are some screenshots of the original image and its blurred and sharpened version:\r\n\r\nOriginal image:\r\n![Original](https://user-images.githubusercontent.com/1614598/59851013-366b4580-9374-11e9-9778-95c38fe67023.png)\r\n\r\nBlurred image:\r\n![Blurred](https://user-images.githubusercontent.com/1614598/59851028-4420cb00-9374-11e9-803c-53d6379b0dd0.png)\r\n\r\nSharpened image:\r\n![Sharpened](https://user-images.githubusercontent.com/1614598/59851047-4be06f80-9374-11e9-84c6-b7d169828970.png)\r\n\r\nAs you can see, there are noticeable borders around the filtered images.\r\n\r\nI am passing \u0060SKMatrixConvolutionTileMode.Clamp\u0060 when creating the \u0060SKImageFilter\u0060. To my understanding, \u0060SKMatrixConvolutionTileMode.Clamp\u0060 is supposed to clamp to image edge\u0027s pixels, thus eliminating any such artifacts. I have tested with the other modes as well, but I cannot see any difference between \u0060SKMatrixConvolutionTileMode.Clamp\u0060 and \u0060SKMatrixConvolutionTileMode.ClampToBlack\u0060 - both modes seem to produce the same result. Only the \u0060SKMatrixConvolutionTileMode.Repeat\u0060 mode makes any difference, but it is not doing what I need for my filters.\r\n\r\nI have also tested the built-in blur filter, i.e. \u0060SKImageFilter.CreateBlur(sigmaX, sigmaY)\u0060, but it seems to suffer from the same problem as well, with no option to pass \u0060SKMatrixConvolutionTileMode\u0060 upon creation.\r\n\r\nI am not certain whether this is a SkiaSharp problem or a Skia problem, so I am posting it here to cover all possibilities.\r\n\r\nEdit: I forgot to mention that I am creating a Xamarin.Forms mobile application for Android and iOS. I am using the latest SkiaSharp NuGet package: 1.68.0. The problem is reproducible on both platforms.",
+  "author": {
+    "login": "vanka78bg",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-06-20T13:00:25",
+  "updatedAt": "2019-11-06T12:26:21",
+  "commentCount": 2,
+  "reactionCount": 0
+}

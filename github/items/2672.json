@@ -1,0 +1,22 @@
+{
+  "number": 2672,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Crash in SKCodec \u003E GetScaledDimensions",
+  "body": "### Description\n\nOn some images, I got crash in SKCodec \u003E GetScaledDimensions with AccessViolation exception.\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/3595443/6f9fbc7b-b4ff-4ebd-b40c-6cbb42968b12)\r\n\r\nThe file content is stored in a memory stream, with using block so the buffer is not disposed.\r\n\r\nIs it a know bug of Skia? Is there something I can do to catch the AccessViolation exception? or avoid the crash?\r\n\r\nThanks.\n\n### Code\n\nusing (var memStream = new MemoryStream())\r\n{\r\n    using (var stream = await storageFile.OpenReadAsync())\r\n    {\r\n        await stream.CopyToAsync(memStream);\r\n        memStream.Seek(0, SeekOrigin.Begin);\r\n    }\r\n\r\n    using (var skStream = new SKManagedStream(memStream))\r\n    {\r\n    using (var skData = SKData.Create(skStream))\r\n    {\r\n    using (var codec = SKCodec.Create(skData))\r\n    {\r\nfloat scale = ... \r\nvar supportedScale = codec.GetScaledDimensions(scale);\r\n                            \r\n                            \n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "dbriard",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-11-15T11:20:17",
+  "updatedAt": "2023-11-15T11:22:32",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,34 @@
+{
+  "number": 2119,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add nullable attributes, TimeSpan and overloads to Skottie",
+  "body": "**Description of Change**\r\n\r\nThis PR just adds some overloads and nullable annotations to the Skottie \u0060Animation\u0060 type.\r\n\r\nWhile working with the new type, I was unsure what the \u0060t\u0060 in all the seek methods were, so I renamed the parameters to be more explicit: percent, frame, seconds. I also added an overload for \u0060SeekFrameTime\u0060 to take a \u0060TimeSpan\u0060 because that was useful.\r\n\r\nI also made a change to make \u0060Duration\u0060 a \u0060TimeSpan\u0060. This was again to reduce confusion about the actual unit, but also keeps all the time concepts as \u0060TimeSpan\u0060 because it feels more accurate?\r\n\r\nI added some \u0022overloads\u0022 for the \u0060TryCreate\u0060 and \u0060TryParse\u0060 to just return null instead (\u0060Create\u0060 and \u0060Parse\u0060). The reason for null and not an exception is that for some reason, null was used to when there was an error reading things. It should have been an exception, but here we are. Skia does not really have \u0022errors\u0022 but more it tries and then says nah, here is a big fat null for you. At least it is mostly consistent.\r\n\r\nIs the SkiaSharp API perfect? Yes. There have been no regrets in the design and naming of this perfect library. _\\*looks for tissue to dry eyes\\*_",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-06-18T00:17:11",
+  "updatedAt": "2022-08-04T10:59:44",
+  "closedAt": "2022-06-20T06:06:56",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/anim-overloads",
+  "additions": 160,
+  "deletions": 114,
+  "changedFiles": 3,
+  "commits": 5,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2022-06-18T00:21:06"
+    }
+  ]
+}

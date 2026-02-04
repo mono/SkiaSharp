@@ -1,0 +1,18 @@
+{
+  "number": 2132,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp decode the png file be blur",
+  "body": "**Description**\r\n\r\nI load the png image file as FileStream and I decode it by \u0060SKBitmap.Decode\u0060. And then I use \u0060DrawBitmap\u0060 to draw it.\r\n\r\n**Code**\r\n\r\nAll the code in: https://github.com/lindexi/lindexi_gd/tree/eb3ac5885becdbcd609b2d9e936ada221e891221/HabicherbalaHallrujemnowaljere\r\n\r\n\u0060\u0060\u0060csharp\r\nusing SkiaSharp;\r\n\r\nvar fileName = $\u0022output.png\u0022;\r\n\r\nvar skImageInfo = new SKImageInfo(1920, 1080, SKColorType.Bgra8888, SKAlphaType.Opaque, SKColorSpace.CreateSrgb());\r\n\r\nusing var skImage = SKImage.Create(skImageInfo);\r\n\r\nusing (SKBitmap skBitmap = SKBitmap.FromImage(skImage))\r\n{\r\n    using (var skCanvas = new SKCanvas(skBitmap))\r\n    {\r\n        skCanvas.Clear(SKColors.White);\r\n\r\n        var inputFile = new FileInfo(\u0022Test.png\u0022);\r\n\r\n        using var fileStream1 = inputFile.OpenRead();\r\n\r\n        using var resourceBitmap1 = SKBitmap.Decode(fileStream1);\r\n\r\n        skCanvas.DrawBitmap(resourceBitmap1, new SKPoint(0, 0));\r\n\r\n        skCanvas.Flush();\r\n\r\n        using (var skData = skBitmap.Encode(SKEncodedImageFormat.Png, 100))\r\n        {\r\n            var file = new FileInfo(fileName);\r\n            using (var fileStream = file.OpenWrite())\r\n            {\r\n                fileStream.SetLength(0);\r\n                skData.SaveTo(fileStream);\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe output.png file is clear as:\r\n\r\n![](https://user-images.githubusercontent.com/16054566/176090656-ccf7b708-923f-4bd0-9589-f5ab51ca0b89.png)\r\n\r\n**Actual Behavior**\r\n\r\nThe output.png file is blur as:\r\n\r\n![](https://user-images.githubusercontent.com/16054566/176090724-1802b6b9-e7ba-4b45-80dc-ae126f0616ca.png)\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio 2022\r\n- Platform Target Frameworks: .NET 6\r\n  - Linux:  Ubuntu 20.04\r\n  - Windows Classic:  Win10 19044\r\n\r\n  \r\n\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "lindexi",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-28T04:15:06",
+  "updatedAt": "2022-09-12T21:01:13",
+  "closedAt": "2022-08-13T19:06:00",
+  "commentCount": 7,
+  "reactionCount": 1
+}

@@ -1,0 +1,22 @@
+{
+  "number": 2837,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKGLElement gives black screen on Intel integrated graphics",
+  "body": "### Description\n\nWe are trying to use the new \u0060SKGLElement\u0060 WPF element for our project to replace the \u0060WinFormsHost\u0060 solution since it has many issues when integrated in a WPF project. The element works fine on a machine with an Nvidia or AMD graphic card. But, when tested on a machine with integrated Intel graphics only (or the other is disabled), it does not work for all graphics cards. On one of the testing machine that have an Intel HDG 4600 graphics card, we have a newly installed Windows 11 on it.\r\n\r\nWhen using \u0060WinFormsHost\u0060 with \u0060SKGLControl\u0060, it works just fine.\r\n\r\n\u0060SKGLElement\u0060 is based on \u0060GLWpfControl\u0060(https://github.com/opentk/GLWpfControl). We did try out this control, and it did result in the same issue. There are others faced the same issue: https://github.com/opentk/GLWpfControl/issues/73.\r\n\r\n@mattleibow @gmurray81 do you have any suggestions on how to resolve such issue. Is it a problem with the control or the machine it self? if so, why  \u0060SKGLControl\u0060 works fine on this machine? Aren\u0027t they both use OpenGL?\n\n### Code\n\n\u0060\u0060\u0060cs\r\ne.Surface.Canvas.Clear(new SKColor(255, 0, 0));\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\nHP Mini PC with Intel HDG 4600\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "AhmedEssoubai",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-16T21:15:46",
+  "updatedAt": "2025-01-06T18:43:38",
+  "commentCount": 2,
+  "reactionCount": 0
+}

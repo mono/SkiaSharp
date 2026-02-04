@@ -1,0 +1,23 @@
+{
+  "number": 2960,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] [Windows, MAUI] SkiaSharp 3.0-Preview4.1 causes an image to be drawn in a wrong size for some first frames on some high DPI screens (works on 3.0-preview3.1)",
+  "body": "### Description\r\n\r\nOn the Windows platform, using .NET MAUI 9.0 Preview 6, SkiaSharp 3.0-preview4.1 has introduced a regression from preview3.1 where SkiaSharp draws images at a wrong size for a few first frames on some high DPI screens.\r\n\r\n#### Screenshots\r\nPlease have a look at these screenshots:\r\n\r\n##### SkiaSharp 3.0-preview4.1\r\n\r\n![vlcsnap-2024-07-29-15h14m04s764](https://github.com/user-attachments/assets/5725ea6d-94a8-48ae-b31e-55cc29c0fc05)\r\n\r\n##### SkiaSharp 3.0-preview3.1\r\n\r\n![vlcsnap-2024-07-29-15h25m38s106](https://github.com/user-attachments/assets/b0f2f817-de55-47ce-af00-20e0c201f855)\r\n\r\n\r\n#### Videos\r\n\r\nPlease have a look at the following videos:\r\n\r\n##### SkiaSharp 3.0-preview4.1\r\n\r\nhttps://github.com/user-attachments/assets/2d2004de-322e-4573-ae9f-06a42e26536a\r\n\r\n1. Download the video.\r\n2. Open the video with VLC Media Player.\r\n3. Move to a place where a window with SkiaSharp background (a scroll) is about to be shown.\r\n4. Press E (move forward one frame) until you see a frame where the background is too small.\r\n\r\n##### SkiaSharp 3.0-preview3.1\r\n\r\nhttps://github.com/user-attachments/assets/e245042f-494a-4f33-b3c0-c0fb783b68d6\r\n\r\n1. Download the video.\r\n2. Open the video with VLC Media Player.\r\n3. Move to a place where a window with SkiaSharp background (a scroll) is about to be shown.\r\n4. Press E (move forward one frame) until you see the first frame rendered with a scroll background. The scroll is of the right size.\r\n\r\n### Public reproduction repository\r\n\r\nDownload a public reproduction repository (.NET MAUI 9.0 Preview 6 with SkiaSharp 3.0-preview 4.1). This will do:\r\nhttps://github.com/hyvanmielenpelit/iOSMauiSkiaSharpMemoryLeak\r\n\r\n\r\n### Expected Behavior\r\n\r\nSkiaSharp will draw all frames in the right size on all high DPI screens. (I have 200% scaling.)\r\n\r\n### Actual Behavior\r\n\r\nSkiaSharp draws some first frames in a wrong size on all high DPI screens. (I have 200% scaling.)\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nProcessor:\t13th Gen Intel(R) Core(TM) i9-13980HX   2.20 GHz\r\nInstalled RAM:\t32,0 GB (31,6 GB usable)\r\nSystem type:\t64-bit operating system, x64-based processor\r\nEdition:\tWindows 11 Pro\r\nVersion:\t23H2\r\nOS build:\t22631.3958\r\nExperience:\tWindows Feature Experience Pack 1000.22700.1026.0\r\n\r\n#### Display\r\n\r\n![image](https://github.com/user-attachments/assets/5e67fc04-17c3-4fe6-9ceb-04c597409c28)\r\n\r\n![image](https://github.com/user-attachments/assets/1f421cac-6b95-473e-b12a-9943d809dc8c)\r\n\r\n#### GPUs\r\n\r\n##### Integrated\r\n![image](https://github.com/user-attachments/assets/e8a0e4fa-d2eb-4c0d-951d-9ab0123abac9)\r\n\r\n##### Dedicated\r\n![image](https://github.com/user-attachments/assets/bf29cae8-def7-4c49-8b8f-027e0475f4cd)\r\n\r\n\r\n### Devices\r\n\r\nAsus ProArt Studiobook H7604JV\r\n\r\n### Relevant Screenshots\r\n\r\n#### From public reproduction repository\r\n![vlcsnap-2024-07-29-15h14m04s764](https://github.com/user-attachments/assets/5725ea6d-94a8-48ae-b31e-55cc29c0fc05)\r\n\r\n#### From GnollHack\r\nI have also a screenshot from our game GnollHack about the problem:\r\n\r\n![vlcsnap-2024-07-29-13h09m04s873](https://github.com/user-attachments/assets/db469a89-e4b3-482f-b31a-c4d40c1d5351)\r\n\r\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "TommiGustafsson-HMP",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-29T12:06:26",
+  "updatedAt": "2024-10-28T19:32:06",
+  "closedAt": "2024-10-28T19:32:05",
+  "commentCount": 2,
+  "reactionCount": 0
+}

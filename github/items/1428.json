@@ -1,0 +1,18 @@
+{
+  "number": 1428,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Where to find methods from SkiaApi",
+  "body": "Xamarin Developer here. I am trying to figure out why \u0060M187.64 365.39a223.41 223.41 0 01-28.95-1.89 10 10 0 012.62-19.92 203.26 203.26 0 0052.39 0 10 10 0 012.6 19.93 222.59 222.59 0 01-28.66 1.88z\u0060 svg path results in null pointer exception when using FFImageLoading library for drawing SVGs. During the debugging process I stopped at call to this line in \u0060SkiaApi.cs\u0060:\r\n\r\n\u0060\u0060\u0060\r\n[DllImport(\u0022@rpath/libSkiaSharp.framework/libSkiaSharp\u0022, CallingConvention = CallingConvention.Cdecl)]\r\n[return: MarshalAs(UnmanagedType.I1)]\r\ninternal static extern bool sk_path_parse_svg_string(IntPtr cpath, [MarshalAs(UnmanagedType.LPStr)] string str);\r\n\u0060\u0060\u0060\r\nWhere can I find the name of the method called in underlying Skia library when \u0060sk_path_parse_svg_string\u0060 is called?\r\n\r\nThank you in advance",
+  "author": {
+    "login": "matibak",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-24T15:57:52",
+  "updatedAt": "2022-08-19T03:02:25",
+  "closedAt": "2020-07-27T17:10:52",
+  "commentCount": 4,
+  "reactionCount": 0
+}

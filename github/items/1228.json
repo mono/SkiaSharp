@@ -1,0 +1,29 @@
+{
+  "number": 1228,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fixed unit tests crashes and a WGL deadlock",
+  "body": "**Description of Change**\r\n\r\nI wasn\u0027t able to run the unit tests in dev/update-skia dbfa12b644099e78cc4e46e226daba332f204f01\r\n\r\nGot random crashes and deadlocks.\r\n\r\n**Bugs Fixed**\r\n\r\nFixed the crashes and the deadlock I encountered.\r\n\r\n- Related to issue #1227 \r\n\r\n**API Changes**\r\n\r\nNo public changes, but I removed the \u0060bool refNew = false\u0060 argument in the \u0060GetObject\u0060 method, since it was always passed as \u0060false\u0060, so it felt redundant. This can of course change, but the \u0060owns\u0060 and \u0060refNew\u0060 arguments felt conflicting: should a reference ever be incremented if the wrapper doesn\u0027t own the object in the first place? Felt wrong.\r\n\r\n**Behavioral Changes**\r\n\r\nIt is possible we now have memory leaks, I didn\u0027t check that...\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of dev/update-skia at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-04-11T13:37:12",
+  "updatedAt": "2020-07-09T02:18:11",
+  "closedAt": "2020-05-12T19:28:30",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "dev/update-skia",
+  "headBranch": "issue/1227",
+  "additions": 13,
+  "deletions": 4,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": []
+}

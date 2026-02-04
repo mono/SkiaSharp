@@ -1,0 +1,60 @@
+{
+  "number": 1039,
+  "type": "pr",
+  "state": "closed",
+  "title": "TryRemove SKObject.instances WeakReferences",
+  "body": "**Description of Change**\r\n\r\n\u0060SKObject.DeregisterHandle(...)\u0060 now uses \u0060TryRemove\u0060 in order to remove handles from the \u0060ConcurrentDictionary\u0060. I kept the logic the same otherwise.\r\n\r\nShould there be tests for this besides those that already exist? I might be able to add something if so. Don\u0027t know the codebase too well.\r\n\r\n**Bugs Fixed**\r\n\r\n- #1032 \u0022Possible Leak with static Dictionary SKObject.instances\u0022\r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\nNone\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [X] Rebased on top of master at time of PR\r\n- [X] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "daltonks",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-12-01T02:31:15",
+  "updatedAt": "2020-01-01T22:57:19",
+  "closedAt": "2019-12-02T00:31:48",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/tryremove-weakreferences",
+  "additions": 8,
+  "deletions": 10,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2019-12-01T12:59:51"
+    },
+    {
+      "author": "daltonks",
+      "state": "COMMENTED",
+      "submittedAt": "2019-12-01T14:55:27"
+    },
+    {
+      "author": "daltonks",
+      "state": "COMMENTED",
+      "submittedAt": "2019-12-01T15:16:02"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2019-12-01T17:27:27"
+    },
+    {
+      "author": "daltonks",
+      "state": "COMMENTED",
+      "submittedAt": "2019-12-01T17:43:40"
+    }
+  ]
+}

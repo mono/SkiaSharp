@@ -1,0 +1,27 @@
+{
+  "number": 2838,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKGLView on .NET MAUI is missing a handler (the return)",
+  "body": "### Description\r\n\r\nThere is no more overload of UseSkiaSharp(true), and the handler for SKGLView is not registered anymore.\r\n\r\nThis is a regression, or is there a breaking change I missed ?\r\n\r\nskiasharp maui 2.88.8   \r\nmy maui ios\u002Bandroid app is net8\r\n\r\nI verified the source code on github, and I do see the handler being registered.\r\n\r\nBut when I decompile UseSkiaSharp with rider on get to the ios source code, there is no such registration.\r\n\r\nBad release ?\r\n\r\nShould be that code instead :(\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/AppHostBuilderExtensions.cs\r\n\r\n\r\n### Code\r\n\r\nDecompiled 2.88.8, not same code as in https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/AppHostBuilderExtensions.cs\r\n\r\n\r\n\u0060\u0060\u0060cs\r\n// Decompiled with JetBrains decompiler\r\n// Type: SkiaSharp.Views.Maui.Controls.Hosting.AppHostBuilderExtensions\r\n// Assembly: SkiaSharp.Views.Maui.Controls, Version=2.88.0.0, Culture=neutral, PublicKeyToken=null\r\n// MVID: 746A20A3-036F-4E0B-9FD2-26297B262D4E\r\n// Assembly location: C:\\Users\\benja_lfpsq1j\\.nuget\\packages\\skiasharp.views.maui.controls\\2.88.8\\lib\\net6.0-ios13.6\\SkiaSharp.Views.Maui.Controls.dll\r\n// XML documentation location: C:\\Users\\benja_lfpsq1j\\.nuget\\packages\\skiasharp.views.maui.controls\\2.88.8\\lib\\net6.0-ios13.6\\SkiaSharp.Views.Maui.Controls.xml\r\n\r\nusing Microsoft.Maui.Hosting;\r\nusing SkiaSharp.Views.Maui.Handlers;\r\nusing System;\r\n\r\n#nullable enable\r\nnamespace SkiaSharp.Views.Maui.Controls.Hosting\r\n{\r\n  public static class AppHostBuilderExtensions\r\n  {\r\n    public static \r\n    #nullable disable\r\n    MauiAppBuilder UseSkiaSharp(this MauiAppBuilder builder)\r\n    {\r\n      return builder.ConfigureMauiHandlers((Action\u003CIMauiHandlersCollection\u003E) (handlers =\u003E handlers.AddHandler\u003CSKCanvasView, SKCanvasViewHandler\u003E())).ConfigureImageSources((Action\u003CIImageSourceServiceCollection\u003E) (sources =\u003E\r\n      {\r\n        sources.AddService\u003CISKImageImageSource, SKImageSourceService\u003E();\r\n        sources.AddService\u003CISKBitmapImageSource, SKImageSourceService\u003E();\r\n        sources.AddService\u003CISKPixmapImageSource, SKImageSourceService\u003E();\r\n        sources.AddService\u003CISKPictureImageSource, SKImageSourceService\u003E();\r\n      }));\r\n    }\r\n  }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\n- iOS \u002B Android\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "softlion",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-18T09:35:16",
+  "updatedAt": "2024-06-04T13:16:15",
+  "closedAt": "2024-06-04T13:15:47",
+  "commentCount": 8,
+  "reactionCount": 0
+}

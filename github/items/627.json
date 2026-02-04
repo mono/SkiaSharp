@@ -1,0 +1,28 @@
+{
+  "number": 627,
+  "type": "issue",
+  "state": "closed",
+  "title": "Do not work properly ImageFilter and SKMatrix [bug]",
+  "body": "### Description\r\n\r\nWhen adding to SKPaint filter: ImageFilter SKImageFilter.CreateDropShadow then using the transformation matrix is incomprehensible. It is expected to see that two rectangles turned and shifted to the desired values, but this does not happen. Rotates and moves only one \u0022rectangle\u0022(SKPath ), which is painted paintFill, the other remains untouched and in the same place.\r\n\r\nCorrect work:\r\nIf you remove \u0022ImageFilter = SKImageFilter.CreateDropShadow....\u0022 then rotate and move both rectangles. \r\n\r\nor\r\n\r\nAnd also if you change the canvas drawing in places. Do this way:\r\n\u0060\u0060\u0060csharp\r\ncanvas.DrawPath(testPath, paintStroke);\r\ncanvas.DrawPath(testPath, paintFill);\r\n\u0060\u0060\u0060\r\nthen everything is reflected normally. both rectangles moved.\r\n\r\nTell me, is this a bug or am I doing something wrong?\r\n\r\n### Code\r\n\r\nIf you run this code, you can see that one rectangle (white with shadow) turned and moved, another rectangle (with a black stroke) stayed in place at 0,0.\r\n\r\n\u0060\u0060\u0060csharp\r\n\r\nSKPaint paintFill = new SKPaint()\r\n{\r\n    Color = SKColors.White,\r\n    Style = SKPaintStyle.Fill,\r\n    ImageFilter = SKImageFilter.CreateDropShadow(5, 5, 15, 15, SKColors.Black, SKDropShadowImageFilterShadowMode.DrawShadowAndForeground)\r\n};\r\n\r\nSKPaint paintStroke = new SKPaint()\r\n{\r\n    Color = SKColors.Black,\r\n    Style = SKPaintStyle.Stroke,\r\n    StrokeWidth = 2,\r\n};\r\n\r\nSKPath testPath = new SKPath();\r\ntestPath.AddRect(SKRect.Create(0, 0, 300, 300));\r\n\r\nSKMatrix matrix = canvas.TotalMatrix;\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(-5f, 150, 150));\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(500, 500));\r\ncanvas.SetMatrix(matrix);\r\n\r\ncanvas.DrawPath(testPath, paintFill);\r\ncanvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\n\r\n\r\n\r\n### Basic Information\r\n\r\n.NET Framework 4.6.1\r\nWindows Forms\r\nSkiaSharp 1.60.3",
+  "author": {
+    "login": "GalaxyVelocity",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-08-31T05:14:27",
+  "updatedAt": "2022-08-19T15:01:39",
+  "closedAt": "2018-12-15T04:31:51",
+  "commentCount": 6,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 416,
+  "type": "issue",
+  "state": "closed",
+  "title": "How to convert byte array to SKBitmap in SkiaSharp?",
+  "body": "SKBitmap.Bytes is read only, any suggestion on how to Marshal.Copy a byte array to the SKBitmap? I am using using below code snippet but it not working. \r\n\r\nCode snippet:\r\n\r\n            SKBitmap bitmap = new SKBitmap((int)Width, (int)Height);\r\n            bitmap.LockPixels();\r\n            byte[] array = new byte[bitmap.RowBytes * bitmap.Height];\r\n            for (int i = 0; i \u003C pixelArray.Length; i\u002B\u002B)\r\n            {\r\n                SKColor color = new SKColor((uint)pixelArray[i]);\r\n                int num = i % (int)Width;\r\n                int num2 = i / (int)Width;\r\n                array[bitmap.RowBytes * num2 \u002B 4 * num] = color.Blue;\r\n                array[bitmap.RowBytes * num2 \u002B 4 * num \u002B 1] = color.Green;\r\n                array[bitmap.RowBytes * num2 \u002B 4 * num \u002B 2] = color.Red;\r\n                array[bitmap.RowBytes * num2 \u002B 4 * num \u002B 3] = color.Alpha;\r\n            }\r\n            Marshal.Copy(array, 0, bitmap.Handle, array.Length);\r\n            bitmap.UnlockPixels();",
+  "author": {
+    "login": "parthipanr",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-12-28T10:53:07",
+  "updatedAt": "2022-08-19T18:01:56",
+  "closedAt": "2018-01-11T14:33:41",
+  "commentCount": 4,
+  "reactionCount": 0
+}

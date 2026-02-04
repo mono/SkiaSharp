@@ -1,0 +1,44 @@
+{
+  "number": 745,
+  "type": "issue",
+  "state": "closed",
+  "title": "GPU-accelerated WPF without WindowsFormsHost",
+  "body": "After reading through many issues mentioning the drawbacks of \u0060WindowsFormsHost\u0060 (no transparency, no event bubbling, no borderless windows), I\u0027ve tried to implement another approach: Do the expensive computing off-screen and copy the result into a (non-GPU-accelerated) \u0060SKElement\u0060.\r\n\r\nAs @mattleibow mentioned in #717, the unit tests\u0027 \u0060WglContext\u0060 should be able to deliver a GPU-accelerated off-screen context. \r\n\r\nMy main view with \u0060SKElement\u0060:\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003CWindow x:Class=\u0022WPF.MainWindow\u0022\r\n        xmlns=\u0022http://schemas.microsoft.com/winfx/2006/xaml/presentation\u0022\r\n        xmlns:x=\u0022http://schemas.microsoft.com/winfx/2006/xaml\u0022\r\n        xmlns:d=\u0022http://schemas.microsoft.com/expression/blend/2008\u0022\r\n        xmlns:mc=\u0022http://schemas.openxmlformats.org/markup-compatibility/2006\u0022\r\n        xmlns:wpf=\u0022clr-namespace:SkiaSharp.Views.WPF;assembly=SkiaSharp.Views.WPF\u0022\r\n        mc:Ignorable=\u0022d\u0022\r\n        Title=\u0022MainWindow\u0022 Height=\u0022450\u0022 Width=\u0022800\u0022\u003E\r\n    \u003CGrid HorizontalAlignment=\u0022Stretch\u0022 VerticalAlignment=\u0022Stretch\u0022\u003E\r\n        \u003Cwpf:SKElement x:Name=\u0022BitmapHost\u0022 PaintSurface=\u0022OnPaintCanvas\u0022 /\u003E\r\n    \u003C/Grid\u003E\r\n\u003C/Window\u003E\r\n\u0060\u0060\u0060\r\nCode behind:\r\n\r\n\u0060\u0060\u0060c#\r\npublic partial class MainWindow : Window\r\n{\r\n\tprivate SKSurface _surface;\r\n\tprivate GRContext _grContext;\r\n\tprivate SKSize _screenCanvasSize;\r\n\r\n\tpublic MainWindow()\r\n\t{\r\n\t\tInitializeComponent();\r\n\r\n\t\tvar glContext = new WglContext();\r\n\t\tglContext.MakeCurrent();\r\n\t}\r\n\r\n\tprivate void OnPaintCanvas(object sender, SKPaintSurfaceEventArgs e)\r\n\t{\r\n\t\tOnPaintSurface(e.Surface.Canvas, e.Info.Width, e.Info.Height);\r\n\t}\r\n\r\n\tprivate void OnPaintSurface(SKCanvas canvas, int width, int height)\r\n\t{\r\n\t\tvar canvasSize = new SKSize(width, height);\r\n\r\n\t\t// check if we need to recreate the off-screen surface\r\n\t\tif (_screenCanvasSize != canvasSize) {\r\n\t\t\t_surface?.Dispose();\r\n\t\t\t_grContext?.Dispose();\r\n\t\t\t_grContext = GRContext.Create(GRBackend.OpenGL);\r\n\t\t\t_surface = SKSurface.Create(_grContext, true, new SKImageInfo(width, height));\r\n\t\t\t_screenCanvasSize = canvasSize;\r\n\t\t}\r\n\r\n\t\t// draw onto off-screen gl context\r\n\t\tDrawOffscreen(_surface.Canvas, width, height);\r\n\r\n\t\t// draw offscreen surface onto screen\r\n\t\tcanvas.DrawSurface(_surface, new SKPoint(0f, 0f));\r\n\t}\r\n\r\n\tprivate void DrawOffscreen(SKCanvas canvas, int width, int height)\r\n\t{\r\n\t\t// will be more expensive in the real world\r\n\t\tusing (var paint = new SKPaint()) {\r\n\t\t\tpaint.TextSize = 64.0f;\r\n\t\t\tpaint.IsAntialias = true;\r\n\t\t\tpaint.Color = 0xFF4281A4;\r\n\t\t\tpaint.IsStroke = false;\r\n\t\t\tcanvas.DrawText(\u0022SkiaSharp\u0022, width / 2f, 64.0f, paint);\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\nThe \u0060WglContext\u0060 class is copied from this repo\u0027s test directory.\r\n\r\nThe problem I\u0027m having is when running this, I\u0027m getting first this:\r\n\r\n\u003E Managed Debugging Assistant \u0027CallbackOnCollectedDelegate\u0027 : \u0027A callback was made on a garbage collected delegate of type \u0027WPF!SkiaSharp.Tests.WNDPROC::Invoke\u0027. This may cause application crashes, corruption and data loss. When passing delegates to unmanaged code, they must be kept alive by the managed application until it is guaranteed that they will never be called.\u0027\r\n\r\nThis is followed by a \u0060System.NullReferenceException\u0060 without any stack trace. So it\u0027s somewhere in a native call, but I can\u0027t figure out where. Any hints or suggestions would be appreciated!\r\n\r\nI\u0027ve created a repo to reproduce: [freezy/wpf-skia-opengl](https://github.com/freezy/wpf-skia-opengl).\r\n\r\nRelated: #213, #622, #688\n\n\u003E VS bug [#776804](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/776804)",
+  "author": {
+    "login": "freezy",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    },
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-12-30T13:50:13",
+  "updatedAt": "2024-03-28T14:11:24",
+  "closedAt": "2024-03-28T14:11:23",
+  "commentCount": 41,
+  "reactionCount": 5
+}

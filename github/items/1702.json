@@ -1,0 +1,18 @@
+{
+  "number": 1702,
+  "type": "issue",
+  "state": "closed",
+  "title": "Can\u0027t build for iOS with Xamarin Forms[BUG] ",
+  "body": "**Description**\r\n\r\nIncluding SkiaSharp in the Xamarin forms project, Windows paired to a Mac, then trying to build yields the following error:\r\n\r\n1\u003EC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Enterprise\\MSBuild\\Xamarin\\iOS\\Xamarin.Shared.targets(975,3): error : DirectoryNotFoundException: Could not find a part of the path \u0027/Users/\u003Cusername\u003E/Library/Caches/Xamarin/mtbs/builds/TestiOSBuildApp.iOS/8c512dc4f4826b88a51c8798b7f65927dc2afe3d8cd845a563df3fddd5f3932e/bin/iPhone/Debug/TestiOSBuildApp.iOS.app/Frameworks/libSkiaSharp.framework/_CodeSignature\u0027.\r\n\r\nwhich means it won\u0027t build the app. \r\n\r\nIt seems this _CodeSignature is not copied from the nuget package for some reason?\r\n\r\n**Code**\r\n\r\nMake a new Xamarin Forms project in Visual Studio, get the SkiaSharp package from Nuget, pair to a mac from your PC, build, see the the failure.\r\n\r\n**Expected Behavior**\r\n\r\nThe _CodeSignature folder should exist.\r\n\r\n**Actual Behavior**\r\n\r\n_CodeSignature folder is missing, and the the build fails.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.80.2\r\n- Last known good version:  2.80.2\r\n- IDE:  Microsoft Visual Studio Enterprise 2019, Version 16.9.5\r\n- Platform Target Frameworks: Xamarin Forms Portable build to iOS.\r\n  - iOS: 11\r\n- Target Devices:   iPhone 7, Software version 14.4.2\r\n  ",
+  "author": {
+    "login": "Pequeno0",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-05-17T06:49:06",
+  "updatedAt": "2022-08-19T00:02:46",
+  "closedAt": "2021-08-19T05:58:50",
+  "commentCount": 61,
+  "reactionCount": 8
+}

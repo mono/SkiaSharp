@@ -1,0 +1,17 @@
+{
+  "number": 1320,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Wrong version of System.Buffers is requested",
+  "body": "**Description**\r\n\r\nI have a .NET 4.8 unit test project that references SkiaSharp 1.68.3.\r\n\r\nSome unit tests fail with:\r\n\r\n\u0060\u0060\u0060\r\nSystem.IO.FileLoadException: Could not load file or assembly \u0027System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51\u0027 or one of its dependencies. The located assembly\u0027s manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)\r\n    at SkiaSharp.SKManagedWStream.OnWrite(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKAbstractManagedWStream.WriteInternal(IntPtr s, Void* context, Void* buffer, IntPtr size)\r\n   at SkiaSharp.SkiaApi.sk_jpegencoder_encode(IntPtr dst, IntPtr src, SKJpegEncoderOptions* options)\r\n   at SkiaSharp.SKPixmap.Encode(SKWStream dst, SKJpegEncoderOptions options)\r\n\u0060\u0060\u0060\r\n\r\nSee also: https://github.com/dotnet/runtime/issues/27117\r\n\r\nNote that I\u0027m also using \u0060SixLabors.ImageSharp\u0060 in this project, and I\u0027m using \u0060System.Numerics\u0060 from .NET 4.8, but that\u0027s about it.\r\n\r\n**Code**\r\n\r\nThis was triggered when saving a pixmap as jpeg or png.\r\n\r\nI don\u0027t have a standalone code yet, working on that.\r\n\r\n**Expected Behavior**\r\n\r\nThe pixmap is saved\r\n\r\n**Actual Behavior**\r\n\r\n\u0060System.IO.FileLoadException\u0060 is thrown\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.3\r\n- Last known good version:  unknown\r\n- IDE:  Visual Studio 2019\r\n- Platform Target Frameworks: Windows 10 2004\r\n\r\n**Workaround**\r\n\r\nFor some reason assembly binding redirects didn\u0027t work for me, I added the following code in a static  constructor as a temporary workaround:\r\n\r\n\u0060\u0060\u0060cs\r\n\t\t\tAppDomain.CurrentDomain.AssemblyResolve \u002B= (sender, args) =\u003E\r\n\t\t\t{\r\n\t\t\t\tswitch (args.Name)\r\n\t\t\t\t{\r\n\t\t\t\t\tcase \u0022System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51\u0022:\r\n\t\t\t\t\t\treturn typeof(System.Buffers.ArrayPool\u003C\u003E).Assembly;\r\n\t\t\t\t\tdefault:\r\n\t\t\t\t\t\treturn null;\r\n\t\t\t\t}\r\n\t\t\t};\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-05T13:37:32",
+  "updatedAt": "2023-09-26T06:05:16",
+  "commentCount": 4,
+  "reactionCount": 4
+}

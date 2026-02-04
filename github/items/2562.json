@@ -1,0 +1,18 @@
+{
+  "number": 2562,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] public readonly SKRectI AspectFill(SKSizeI size) Math Rounding error / Crash",
+  "body": "**Description**\r\n\r\nThe aforementioned method in:\r\n\u0060SKRectI\u0060\r\n\u0060public readonly SKRectI AspectFill(SKSizeI size)\u0060\r\n\r\nCan and will cause rounding errors resulting in exceptions (or even a fatal crash with some native calls) when the AspectFilled rectangle is used in most draw / filter ops\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n[TestClass]\r\npublic class SkiaImageProcessingServiceTests\r\n    {\r\n        [TestMethod]\r\n        public void SkiaSKRectIBug()\r\n        {\r\n            const int targetSize = 1024;\r\n\r\n            var originalRect = new SKRectI(0, 0, targetSize, 767);\r\n\r\n            var aspectFilledRect = originalRect.AspectFill(new SKSizeI(targetSize, targetSize));\r\n\r\n            Assert.IsTrue(aspectFilledRect.Height == targetSize, $\u0022{nameof(aspectFilledRect)} Height should be {targetSize}\u0022);\r\n        }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe returned Rect to have the same size as the input SKSizeI\r\n\r\n**Actual Behavior**\r\n\r\nReturned Rect in the example code has a Size of 1024, 1023\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version:  Unknown, likely does not exist\r\n- IDE:  Visual Studio 2022 17.7\r\n- Platform Target Frameworks:\r\n  - Linux:  Alpine (can\u0027t get the version right now, built via Dockerfile in Visual Studio)\r\n  - Windows Classic:  Windows 11\r\n- Target Devices:   \r\n  - Windows 11 Enterprise Desktop\r\n  - Alpine Kestrel Server\r\n\r\n**Reproduction Link**\r\n\r\nCode Snippet Above is an MSTest unit test that will reproduce the issue.\r\n\r\n",
+  "author": {
+    "login": "RiversJohn",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-08-18T06:56:46",
+  "updatedAt": "2023-09-22T21:00:28",
+  "closedAt": "2023-08-20T15:47:33",
+  "commentCount": 1,
+  "reactionCount": 0
+}

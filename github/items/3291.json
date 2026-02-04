@@ -1,0 +1,53 @@
+{
+  "number": 3291,
+  "type": "pr",
+  "state": "closed",
+  "title": "SKAutoCanvasRestore avoid crash at Dispose when canvas was already disposed",
+  "body": "**Description of Change**\r\n\r\nHave catched this few times myself: might be my bad coding style, but nevertheless \u0060SKAutoCanvasRestore\u0060 should not crash app if the canvas inside was already disposed for any reason whatever. So checking to avoid that inside \u0060SKAutoCanvasRestore\u0060 \u0060Dispose\u0060 method.\r\n\r\n**Bugs Fixed**\r\n\r\n\u0060SKAutoCanvasRestore\u0060 could crash if GC-ed/disposed after the containing canvas native Handler was already released while \u0060canvas\u0060 field still not NULL and \u0060Restore()\u0060 would be called, then crash app accessing Handle 0.\r\n\r\nEDIT: also added safety checks to mappers (second commit), after was running n Debug and catched landing into mapper code with a NULL handler parameter when navigating between pages with accelerated canvases. Would guess there want be any harm for adding those too to solve occasional very rare and random crashes.\r\n\r\n\r\n\r\n\r\n- Fixes\r\n\r\nNo known issues identified, still could be related to some unknown random crashes.\r\n\r\nNo Api changes, a small code change, please see 1 file change below.\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "taublast",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-06-13T10:44:48",
+  "updatedAt": "2025-06-24T19:03:33",
+  "closedAt": "2025-06-24T19:03:33",
+  "commentCount": 7,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 68,
+  "deletions": 10,
+  "changedFiles": 9,
+  "commits": 5,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2025-06-19T17:51:23"
+    },
+    {
+      "author": "taublast",
+      "state": "COMMENTED",
+      "submittedAt": "2025-06-19T18:54:02"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2025-06-24T16:21:39"
+    },
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2025-06-24T19:02:26"
+    }
+  ]
+}

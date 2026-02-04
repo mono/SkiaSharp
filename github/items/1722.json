@@ -1,0 +1,17 @@
+{
+  "number": 1722,
+  "type": "issue",
+  "state": "open",
+  "title": "Add method to auto-orient and DCT decode in one, to save end-users having to write their own. ",
+  "body": "**The Problem**\r\n\r\nLoading an image to resize it with the correct orientation is quite complicated. There\u0027s two choices:\r\n1. Use \u0060SkImage.FromEncodedData\u0060, which handles the auto-orientation, but loads the full-res image, which can be time-consuming for large images. \r\n2. Use the Codec to decode the nearest-size instance of the image, and then manually auto-orient it - per the code [here](https://github.com/mono/SkiaSharp/issues/836#issuecomment-584895517).\r\n\r\nI\u0027ve found that for a 7MB 2952x1944 pixel image, with a target resolution for the thumbnail of just under 800x600, doing the first approach takes an average of about 900ms to load the correctly-oriented image, whereas doing the second approach takes around 150ms (these timings are on my M1 MacBook Pro, so ymmv); so it\u0027s nearly an order of magnitude faster to use the codec\u002Borient method, despite being about 200 lines of code instead of two.\r\n\r\n**The solution**\r\n\r\nAdd a method to SkiaSharp something like \u0060LoadOrientedAndScaled( string fileName, int desiredHeight, int desiredWidth )\u0060 \r\nwhich wraps up all of the load, decode, and orientation code internally so that callers don\u0027t have to implement it themselves, but can take advantage of the performance improvements - as most developers/end users of SkiaSharp are likely to be loading down-scaled images, correctly oriented, for their apps.\r\n\r\n**Additional context**\r\n\r\n@Ziriax Described this much better than me [here](https://github.com/mono/SkiaSharp/issues/1517#issuecomment-863951202) and included some information about the auto-orientation implementation, along with some recommendations on how to use SIMD in-place operations so this could be even faster.\r\n",
+  "author": {
+    "login": "Webreaper",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-06-18T14:02:55",
+  "updatedAt": "2022-05-20T17:15:01",
+  "commentCount": 1,
+  "reactionCount": 4
+}

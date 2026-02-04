@@ -1,0 +1,38 @@
+{
+  "number": 2962,
+  "type": "pr",
+  "state": "closed",
+  "title": "Implement SkCanvas::SaveLayerRec",
+  "body": "**Description of Change**\r\n\r\nImplement SkCanvas::SaveLayerRec\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2773 \r\n\r\n**API Changes**\r\n\r\nAdded: \r\n \r\n\u0060\u0060\u0060cs\r\nclass SKCanvas {\r\n    public int SaveLayer (SKCanvasSaveLayerRec rec)\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\npublic enum SKCanvasSaveLayerRecFlags {\r\n    None = 0,\r\n    PreserveLcdText = 2,\r\n    InitializeWithPrevious = 4,\r\n    F16ColorType = 16,\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\npublic unsafe class SKCanvasSaveLayerRec {\r\n    public SKRect? Bounds { get; set; }\r\n    public SKPaint? Paint { get; set; }\r\n    public SKImageFilter? Backdrop { get; set; }\r\n    public SKCanvasSaveLayerRecFlags Flags { get; set; }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/130\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "ahmed605",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-30T20:20:23",
+  "updatedAt": "2025-03-04T13:07:07",
+  "closedAt": "2025-03-04T13:04:57",
+  "commentCount": 12,
+  "reactionCount": 2,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 166,
+  "deletions": 8,
+  "changedFiles": 5,
+  "commits": 7,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2024-08-20T12:48:00"
+    }
+  ]
+}

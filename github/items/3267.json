@@ -1,0 +1,22 @@
+{
+  "number": 3267,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] \u0060libSkiaSharp.dll\u0060 Requires \u0060d3d12.dll\u0060 in \u00603.119.0\u0060, Causing Crashes on Win7",
+  "body": "### Description\n\nSince \u00603.119.0-preview.1.2\u0060, SkiaSharp supports D3D12 rendering, but not all Windows has D3D12. I update to \u00603.119\u0060 then got a crash on Windows7.\n\nSkiaSharp even doesn\u0027t depend on OpenGL, it can use CPU to render by default, but added a D3D12 dependency, is this a good idea?\n\n\u003Cimg width=\u0022257\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/7cab45c6-fb0e-44bf-bbb3-f14f09906f43\u0022 /\u003E\n\u003Cbr/\u003E\n\u003Cimg width=\u0022329\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/faf1f464-bfc1-4ff0-9dc3-e0bd6334ed00\u0022 /\u003E\n\u003Cbr/\u003E\n\u003Cimg width=\u0022400\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/8f0e8e3a-2e46-430c-aa73-98fdcde89992\u0022 /\u003E\n\n### Code\n\n\u0060\u0060\u0060cs\nusing SkiaSharp;\nnamespace SkiaSharpCrashTest\n{\n   internal class Program\n   {\n      static void Main(string[] args)\n      {\n         Console.WriteLine(\u0022Before\u0022);\n\n         // Force to load libSkiaSharp.dll\n         var fontMgr = SKFontManager.Default;\n\n         Console.WriteLine(\u0022After\u0022);\n      }\n   }\n}\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.119.0-preview.1.2\n\n### Last Known Good Version of SkiaSharp\n\n3.118.0-preview.2.3\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "IDXGI",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-06T04:30:14",
+  "updatedAt": "2026-01-13T12:53:55",
+  "commentCount": 9,
+  "reactionCount": 4
+}

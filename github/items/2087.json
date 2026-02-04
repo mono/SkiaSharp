@@ -1,0 +1,38 @@
+{
+  "number": 2087,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update Generator \u0026 Added Nested Namespace Support",
+  "body": "**Description of Change**\r\n\r\nDependencies need updating as well as more support for \u0022more advanced\u0022 namespaces.\r\n\r\nThe .json file in the bindings folder now supports nested namespaces:\r\n\r\n\u0060\u0060\u0060json\r\n// configuration for the libSkiaSharp binary\r\n{\r\n  \u0022dllName\u0022: \u0022SKIA\u0022,\r\n  // the root namespace\r\n  \u0022namespace\u0022: \u0022SkiaSharp\u0022,\r\n  \u0022namespaces\u0022: {\r\n    // typical prefix replacement using the root namespace\r\n    // implicit \u0060 \u0022cs\u0022: \u0022\u0022 \u0060\r\n    \u0022sk_\u0022: {\r\n      \u0022prefix\u0022: \u0022SK\u0022\r\n    },\r\n    // replacement of using the type suffix for a nested namespace\r\n    \u0022sksg_\u0022: {\r\n      \u0022cs\u0022: \u0022SceneGraph\u0022,\r\n      \u0022prefix\u0022: \u0022\u0022\r\n    },\r\n    \u0022skottie_\u0022: {\r\n      \u0022cs\u0022: \u0022Skottie\u0022,\r\n      \u0022prefix\u0022: \u0022\u0022\r\n    }\r\n  }\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/Build",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-05-30T07:55:55",
+  "updatedAt": "2022-05-30T20:30:43",
+  "closedAt": "2022-05-30T20:30:40",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/update-generator",
+  "additions": 582,
+  "deletions": 432,
+  "changedFiles": 10,
+  "commits": 7,
+  "reviews": []
+}

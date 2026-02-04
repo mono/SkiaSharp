@@ -1,0 +1,22 @@
+{
+  "number": 3159,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKBitmap.ScalePixels - image downsizing. Quality regression.",
+  "body": "### Description\n\nBitmap downsizing using SKBitmap.ScalePixels in version 3.116.1 produces images of a larger size and of a lower quality compared to version 2.88.9\n\nOriginal image (1440X720): https://ptdt.azureedge.net/data/test/large.png\nResized using v2.88.9 (480X240): https://ptdt.azureedge.net/data/test/small_v2.webp\nResized using v3.116.1 (480X240): https://ptdt.azureedge.net/data/test/small_v3.webp\n\n### Code\n\n// version 2.88.9\nbitmapSrc.ScalePixels(bitmapDst, SKFilterQuality.High);\nskDataWebp = bitmapDst.Encode(SKEncodedImageFormat.Webp, 75); // convert to webp format\n\n// version 3.116.1 - SKFilterQuality is obsolete\n// use SKSamplingOptions variant equivalent to SKFilterQuality.High\nSKSamplingOptions samplingOptions = new SKSamplingOptions(resampler: SKCubicResampler.Mitchell);\nbitmapSrc.ScalePixels(bitmapDst, samplingOptions);\nskDataWebp = bitmapDst.Encode(SKEncodedImageFormat.Webp, 75); // convert to webp format\n\n\n### Expected Behavior\n\nThe downsized image is expected to be of the same quality and size.  \n\n### Actual Behavior\n\nThe downsized image is larger and of inferior quality.  \n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows), Visual Studio Code (macOS)\n\n### Platform / Operating System\n\nWindows, Mac Catalyst\n\n### Platform / Operating System Version\n\nWindows 11 24H2, macOS 15.1.1\n\n### Devices\n\nDesktop\n\n### Relevant Screenshots\n\nOriginal image (1440X720): https://ptdt.azureedge.net/data/test/large.png\nResized using v2.88.9 (480X240): https://ptdt.azureedge.net/data/test/small_v2.webp\nResized using v3.116.1 (480X240): https://ptdt.azureedge.net/data/test/small_v3.webp\n\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "paratype-fonts",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-08T01:00:25",
+  "updatedAt": "2025-07-05T05:03:57",
+  "commentCount": 2,
+  "reactionCount": 6
+}

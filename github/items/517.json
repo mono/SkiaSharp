@@ -1,0 +1,18 @@
+{
+  "number": 517,
+  "type": "issue",
+  "state": "closed",
+  "title": "Linux : System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027",
+  "body": "### Description\r\n\r\nI have a .Net Core 2.0 web api running in a linux docker container locally.\r\nIve copied libSkiaSharp  to the /app and /app/bin/.../Debug and Release folders just to be sure.\r\nMy dockerfile installs libfontconfig1.\r\nRunning ldd libSkiaSharp.so I see:\r\n\u0060\u0060\u0060\r\nroot@65c88e99a65f:/app# ldd libSkiaSharp.so\r\n        linux-vdso.so.1 (0x00007ffcd954a000)\r\n        libpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f92d82fc000)\r\n        libdl.so.2 =\u003E /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f92d80f8000)\r\n        libfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007f92d7eba000)\r\n        libm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6 (0x00007f92d7bb6000)\r\n        libgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f92d799f000)\r\n        libc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6 (0x00007f92d7600000)\r\n        /lib64/ld-linux-x86-64.so.2 (0x00007f92d8d90000)\r\n        libfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007f92d7351000)\r\n        libexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1 (0x00007f92d7127000)\r\n        libz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1 (0x00007f92d6f0d000)\r\n        libpng16.so.16 =\u003E /usr/lib/x86_64-linux-gnu/libpng16.so.16 (0x00007f92d6cda000)\r\n\u0060\u0060\u0060\r\n\r\nWhen I call the first action that uses SkiaSharp, I get the dreaded error:\r\n\u0060\u0060\u0060\r\n{System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKAbstractManagedWStream\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module or one of its dependencies could not be found.\r\n (Exception from HRESULT: 0x8007007E)\r\n   at SkiaSharp.SkiaApi.sk_managedwstream_set_delegates(IntPtr pWrite, IntPtr pFlush, IntPtr pBytesWritten, IntPtr pDestroy)\r\n   at SkiaSharp.SKAbstractManagedWStream..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.SKAbstractManagedWStream..ctor(Boolean owns)\r\n   at SkiaSharp.SKManagedWStream..ctor(Stream managedStream)\r\n...\r\n\u0060\u0060\u0060\r\n### Code\r\n\r\nn/a\r\n\r\n### Expected Behavior\r\n\r\nIt should load the so file.\r\n\r\n### Actual Behavior\r\n\r\nIt either cant find the so file or it cant find one of it\u0027s dependencies.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.0\r\n- Last known good version:  ?\r\n- IDE:   Visual Studio\r\n- Platform Target Frameworks: \r\n  - Linux:  asp.netcore 2.08 docker image  which I Debian Jessie - so it that like 16.10?\r\n- Target Devices:\r\n  -   Web app\r\n",
+  "author": {
+    "login": "Jonesie",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-05-11T05:29:47",
+  "updatedAt": "2022-08-19T15:02:34",
+  "closedAt": "2018-11-06T18:00:59",
+  "commentCount": 35,
+  "reactionCount": 0
+}

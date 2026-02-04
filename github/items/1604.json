@@ -1,0 +1,28 @@
+{
+  "number": 1604,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add the SKRuntimeEffect API",
+  "body": "**Description of Change**\r\n\r\nThis was originally merged in a branch that was going to be m84, but the API was going to change so I delayed the release.\r\n\r\n**Bugs Fixed**\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n- Fixes #1319 \r\n\r\n**API Changes**\r\n\r\n~~~csharp\r\nSKCanvas canvas = ...; // GPU canvas\r\n\r\n// input values\r\nfloat threshold = 1.05f;\r\nfloat exponent = 1.5f;\r\n\r\n// image source\r\nusing var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, \u0022blue-shirt.jpg\u0022));\r\nusing var textureShader = blueShirt.ToShader();\r\n\r\n// shader\r\nvar src = @\u0022\r\nuniform shader color_map;\r\nuniform float scale;\r\nuniform half exp;\r\nuniform float3 in_colors0;\r\nhalf4 main(float2 p) {\r\n    half4 texColor = sample(color_map, p);\r\n    if (length(abs(in_colors0 - pow(texColor.rgb, half3(exp)))) \u003C scale)\r\n        discard;\r\n    return texColor;\r\n}\u0022;\r\nusing var effect = SKRuntimeEffect.Create(src, out var errorText);\r\n\r\n// input values\r\nvar uniforms = new SKRuntimeEffectUniforms(effect)\r\n{\r\n\t[\u0022scale\u0022] = threshold,\r\n\t[\u0022exp\u0022] = exponent,\r\n\t[\u0022in_colors0\u0022] = new[] { 1f, 1f, 1f },\r\n};\r\n\r\n// shader values\r\nvar children = new SKRuntimeEffectChildren(effect)\r\n{\r\n\t[\u0022color_map\u0022] = textureShader\r\n};\r\n\r\n// create actual shader\r\nusing var shader = effect.ToShader(true, uniforms, children);\r\n\r\n// draw as normal\r\ncanvas.Clear(SKColors.Black);\r\nusing var paint = new SKPaint { Shader = shader };\r\ncanvas.DrawRect(SKRect.Create(400, 400), paint);\r\n~~~\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of master at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2021-02-03T00:51:43",
+  "updatedAt": "2022-05-22T09:38:39",
+  "closedAt": "2021-02-05T08:43:31",
+  "commentCount": 0,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "develop",
+  "headBranch": "dev/runtime-effects",
+  "additions": 0,
+  "deletions": 0,
+  "changedFiles": 0,
+  "commits": 5,
+  "reviews": []
+}

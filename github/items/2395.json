@@ -1,0 +1,17 @@
+{
+  "number": 2395,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Circular element for image erosion",
+  "body": "Hi, Iwant to erode my black and white image using a disc. My code is currently:\r\n\r\n            using var paint = new SKPaint\r\n            {\r\n                ColorFilter = SKColorFilter.CreateTable(table), // Converts gray to true black/white\r\n                ImageFilter = SKImageFilter.CreateErode(dilationRadius, dilationRadius),\r\n            };\r\n\r\n            var result = new SKBitmap(img.Info.Width, img.Info.Height, SKColorType.Bgra8888, SKAlphaType.Opaque);\r\n            using var canvas = new SKCanvas(result);\r\n            canvas.DrawBitmap(img, 0, 0, paint);\r\n            return result;\r\n\r\nBut the resulting image looks like it was eroded with a square. I have not found any way so far to provide a custom geometry to the CreateErode function. Is there a way to do this?\r\n\r\nI have used MATLAB in the past and that has multiple functions to create a \u0022structuring element\u0022 first and then derives the erosion from that. So one can choose a line, a square or a circle. (Or provide a custom shape). But CreateErode only accepts 2 params for what I guess are the 2 dimensions of a rect.\r\n\r\nThe image still has sharp corners:\r\n\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/5293502/220184021-9a28c850-32db-40be-aa9a-b9a76c3298c3.png\u0022 width=300px\u003E\r\n",
+  "author": {
+    "login": "jfheins",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-20T19:19:05",
+  "updatedAt": "2023-02-20T19:19:05",
+  "commentCount": 0,
+  "reactionCount": 0
+}

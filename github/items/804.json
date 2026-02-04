@@ -1,0 +1,27 @@
+{
+  "number": 804,
+  "type": "issue",
+  "state": "closed",
+  "title": "Save as PNG, where to set DPI ?",
+  "body": "I\u0027m using this code to render a svg into a png of a specific size. The png is then used as a toolbar-button image in a WPF app. \r\n\r\nUnfortunate the resulting png doesn\u0027t have the dpi-tag set properly and I also didn\u0027t find a way to set a value.  It should be set to the current Windows screen-resolution to prevent additional scaling from Windows. But where or how?\r\n\r\n\u0060\u0060\u0060\r\n\r\npublic static byte[] SvgToPngBytes(Stream svgfilestream, int size)\r\n{\r\n\tvar svg = new SkiaSharp.Extended.Svg.SKSvg();\r\n\tsvg.Load(svgfilestream);\r\n\r\n\tvar ii = new SKImageInfo(size, size);\r\n\tusing (var newSurface = SKSurface.Create(ii))\r\n\t{\r\n\t\tusing (var canvas = newSurface.Canvas)\r\n\t\t{\r\n\t\t\tcanvas.Clear(SKColors.Transparent);\r\n\r\n\t\t\t// calculate the scaling need to fit to size\r\n\t\t\tfloat scalew = size / svg.CanvasSize.Width;\r\n\t\t\tfloat scaleh = size / svg.CanvasSize.Height;\r\n\t\t\tvar scale = Math.Min(scalew, scaleh);\r\n                        // scale and center in size\r\n\t\t\tvar matrix = SKMatrix.MakeScale(scale, scale);\r\n\t\t\tmatrix.TransX = (size - svg.CanvasSize.Width * scale) / 2;\r\n\t\t\tmatrix.TransY = (size - svg.CanvasSize.Height * scale) / 2;\r\n\r\n\t\t\tcanvas.DrawPicture(svg.Picture, ref matrix);\r\n\t\t\tcanvas.Flush();\r\n\r\n\t\t\t// https://stackoverflow.com/questions/48372772/saving-canvas-to-device-memory-in-xamarin-forms\r\n\t\t\tvar data = newSurface.Snapshot();\r\n\t\t\tvar pngImage = data.Encode();\r\n\t\t\tusing (var ms = new MemoryStream())\r\n\t\t\t{\r\n\t\t\t\tpngImage.SaveTo(ms);\r\n\t\t\t\treturn ms.ToArray();\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}\r\n\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "TomQv",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    },
+    {
+      "name": "status/not-supported",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-03-03T09:34:03",
+  "updatedAt": "2022-08-19T12:01:45",
+  "closedAt": "2019-03-10T13:46:18",
+  "commentCount": 2,
+  "reactionCount": 0
+}

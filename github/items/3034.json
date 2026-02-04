@@ -1,0 +1,23 @@
+{
+  "number": 3034,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKLottieView: MAUI app crashes on Windows",
+  "body": "### Description\n\nI\u0027m trying to use the lottie view but the windows app crashes without any exception. In Event Viewer I can see the following error:\r\n\r\n\u003E Faulting application name: LottieCrashDemo.exe, version: 1.0.0.0, time stamp: 0x66960000\r\n\u003E Faulting module name: CoreMessagingXP.dll, version: 10.0.26105.1010, time stamp: 0x3cb81cec\r\n\u003E Exception code: 0xe0464645\r\n\u003E Fault offset: 0x000000000000a387\r\n\u003E Faulting process id: 0x0x31D0\r\n\u003E Faulting application start time: 0x0x1DB1BEB0352070A\r\n\u003E Faulting application path: C:\\Users\\jania\\source\\repos\\LottieCrashDemo\\LottieCrashDemo\\bin\\Debug\\net8.0-windows10.0.19041.0\\win10-x64\\AppX\\LottieCrashDemo.exe\r\n\u003E Faulting module path: C:\\Program Files\\WindowsApps\\Microsoft.WindowsAppRuntime.1.5_5001.275.500.0_x64__8wekyb3d8bbwe\\CoreMessagingXP.dll\r\n\u003E Report Id: 72a83609-48cb-4cf1-bb66-7a338dde6494\r\n\u003E Faulting package full name: com.companyname.lottiecrashdemo_1.0.0.1_x64__9zz4h110yvjzm\r\n\u003E Faulting package-relative application ID: App\r\n\r\nIn XAML the \u0027IsVisible=\u0022True\u0022\u0027 triggers the app crash.\r\n\r\nI have tested on Android and it works well.\n\n### Code\n\nDemo GitHub repository: https://github.com/andrasjani/SKLottieViewCrash\r\n\r\n\u0060\u0060\u0060xaml\r\n            \u003Clottie:SKLottieView\r\n                x:Name=\u0022musicNotesLottie\u0022\r\n                Margin=\u00220,-90,0,0\u0022\r\n                HeightRequest=\u0022360\u0022\r\n                IsAnimationEnabled=\u0022True\u0022\r\n                IsVisible=\u0022True\u0022\r\n                RepeatCount=\u0022199\u0022\r\n                RepeatMode=\u0022Restart\u0022\r\n                Source=\u0022musicnotes.json\u0022\r\n                WidthRequest=\u0022216\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nThe SKLottieView should play the note animation\n\n### Actual Behavior\n\nThe app crashes after page initialization\n\n### Version of SkiaSharp\n\n3.x-preview.4 (Current Preview)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.6 (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\nDesktop PC (Intel CPU x64)\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nThere is no error in Visual Studio console log\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "andrasjani",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-11T15:13:13",
+  "updatedAt": "2024-10-29T16:50:18",
+  "closedAt": "2024-10-25T16:30:02",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,27 @@
+{
+  "number": 2829,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update skia to m116",
+  "body": "**Description of Change**\r\n\r\nThe numbers are so close and the API is almost identical. I do see a missing API so we might as well lose it for now since we are breaking and we then have to break less in the next version.\r\n\r\n**API Changes**\r\n\r\nRemoved: \r\n - \u0060SKImageFilter.CreateAlphaThreshold\u0060  \r\n   The image filter \u0060SKImageFilter.CreateAlphaThreshold\u0060 is no longer implemented in native skia and has been removed.  \r\n   According to Google:\r\n   \u003E \u0060SkImageFilters::AlphaThreshold\u0060 has been removed. Its only use was in ChromeOS and that usage has been replaced with a \u0060Blend(kSrcIn, input, Picture(region))\u0060 filter graph to achieve the same effect.  \r\n\r\n   There does not seem to be an equivalent replacement, but also I have not seen any usages of it.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/122\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-04-11T21:45:11",
+  "updatedAt": "2024-04-15T10:28:36",
+  "closedAt": "2024-04-15T10:28:32",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/update",
+  "additions": 7,
+  "deletions": 27,
+  "changedFiles": 4,
+  "commits": 4,
+  "reviews": []
+}

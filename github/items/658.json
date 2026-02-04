@@ -1,0 +1,17 @@
+{
+  "number": 658,
+  "type": "issue",
+  "state": "open",
+  "title": "CanvasSize always empty on SKGLView",
+  "body": "### Description\r\n\r\nI\u0027m using \u0060SKGLView\u0060 on \u0060macOS\u0060 to draw some shapes on the canvas, if I query for the \u0060CanvasSize\u0060 of the \u0060SKGLView \u0060it\u0027s always empty (\u0060Width = 0, Height = 0\u0060). If I use a regular \u0060SKCanvasView\u0060 instead of the \u0060SKGLView \u0060everything works as expected.\r\n\r\n### Code\r\n\u0060\u0060\u0060\r\n[Outlet]\r\nSkiaSharp.Views.Mac.SKGLView CanvasView { get; set; }\r\nCanvasView.PaintSurface \u002B= CanvasView_PaintSurface;\r\n\r\nvoid CanvasView_PaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n{\r\n    Debug.WriteLine(CanvasView.CanvasSize);\r\n    //output: {Width=0, Height=0}\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\nThe \u0060CanvasSize \u0060property should not be empty, instead it should hold the values of the current size of the canvas. It works if a \u0060SKCanvasView \u0060is used instead of \u0060SKGLView\u0060.\r\n\r\n### Actual Behavior\r\n\r\n\u0060CanvasSize \u0060is empty (\u0060Width=0, Height=0\u0060)\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- IDE:  Visual Studio for Mac 7.6.10 (build 27)\r\n- Platform Target Frameworks: macOS\r\n  - macOS: 10.14\r\n- Target Devices:\r\n  -   MacBook Pro 13\u0027\u0027 (2018)\r\n  -   MacBook Pro 15\u0027\u0027 (2016)\r\n",
+  "author": {
+    "login": "nor0x",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-10-25T10:02:35",
+  "updatedAt": "2018-10-25T10:02:35",
+  "commentCount": 0,
+  "reactionCount": 0
+}

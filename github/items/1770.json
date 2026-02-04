@@ -1,0 +1,18 @@
+{
+  "number": 1770,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION]  exception @rpath/libSkiaSharp.framework/libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)",
+  "body": "Hello\r\nSorry for english...\r\nI want to use SkiaSharp in Xamarin project. I decided to compile SkiaSharp from sources.\r\n\r\nMy steps:\r\n1)I clone project:  git clone https://github.com/mono/SkiaSharp\r\n2) Open in VS 2019 CE and build projects:\r\n   SkiaSharp/SkiaSharp\r\n   SkiaSharp.Views/SkiaSharp.Views.iOS\r\n   SkiaSharp.Views.Forms/SkiaSharp.Views.Forms\r\n   SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.iOS\r\n3) Then i add this ( SkiaSharp.dll, SkiaSharp.Views.Forms.dll and SkiaSharp.Views.Forms.iOS ) dll files as reference in my projects:\r\n  Xamarin project:\r\n  ![image](https://user-images.githubusercontent.com/32514002/129094654-ce972103-4162-4f86-833c-9257eb9092ec.png)\r\n  and Xamarin.iOS project:\r\n  ![image](https://user-images.githubusercontent.com/32514002/129094711-00bbfdb0-d508-4c4a-aa48-d581fe5fd209.png)\r\n4) Then i start debugging with my iPhone SE (iOS 14.7.1). \r\n    Build successed\r\n    But, in my project i have code:\r\n  \u0060\u0060\u0060\r\n   try\r\n        {\r\n            SKBitmap bmp = new SKBitmap(100, 100);\r\n            bmp.Dispose();\r\n         }\r\n        catch (Exception exp)\r\n         {\r\n            //exp=DllNotFoundException\r\n            //exp.inner=@rpath/libSkiaSharp.framework/libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\n         }\r\n\u0060\u0060\u0060\r\n   \r\nLook\u0027s like some dll missing, but which?\r\nI don\u0027t understand, look\u0027s like missing some lib file. but how to compile it?\r\nSomebody please help me.\r\n\r\nMy configuration:\r\n1) VS 2019 CE\r\n2) Iphone SE\r\n3) Xamarin :\r\n\r\nXamarin   16.10.000.234 (d16-10@ecaf29b)\r\nXamarin Designer   16.10.0.115 (remotes/origin/c750fbf1bde3c720d077f51640fe197c6dac7cbe@c750fbf1b)\r\nXamarin Templates   16.10.5 (355b57a)\r\nXamarin.Android SDK   11.3.0.4 (d16-10/ae14caf)\r\n    Mono: b4a3858\r\n    Java.Interop: xamarin/java.interop/d16-10@f39db25\r\n    ProGuard: Guardsquare/proguard/v7.0.1@912d149\r\n    SQLite: xamarin/sqlite/3.35.4@85460d3\r\n    Xamarin.Android Tools: xamarin/xamarin-android-tools/d16-10@c5732a0\r\nXamarin.iOS and Xamarin.Mac SDK   14.20.0.24 (c4b89cddb)",
+  "author": {
+    "login": "Aleksey1555",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-08-11T20:13:22",
+  "updatedAt": "2022-08-19T00:02:31",
+  "closedAt": "2021-08-19T06:09:56",
+  "commentCount": 3,
+  "reactionCount": 0
+}

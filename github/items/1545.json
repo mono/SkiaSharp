@@ -1,0 +1,17 @@
+{
+  "number": 1545,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Cubic antialiasing path isn\u0027t draw on OpenGL",
+  "body": "**Description**\r\n\r\nCubic antialiasing path isn\u0027t draw on OpenGL in Windows console project.\r\n\r\n**Code**\r\n\n\u0060\u0060\u0060cs\r\n            var paint = new SKPaint()\r\n            {\r\n                Color = SKColors.White.WithAlpha(100),\r\n                Style = SKPaintStyle.Stroke,\r\n                StrokeWidth = 2,\r\n                IsAntialias = true\r\n            };\r\n\r\n            {\r\n                var path = new SKPath();\r\n                path.MoveTo(0, 0);\r\n                path.LineTo(100, 200);\r\n                canv.DrawPath(path, paint); //is on screen\r\n            }\r\n\r\n            {\r\n                var path = new SKPath();\r\n                path.MoveTo(30, 40);\r\n                path.CubicTo(50, 60, 100, 150, 300, 200);\r\n                canv.DrawPath(path, paint); //is NOT on screen\r\n            }\r\n\u0060\u0060\u0060\n\r\n**Expected Behavior**\r\n\r\nI want to see line and arc on screen. \r\n\r\n**Actual Behavior**\r\n\r\nI see only line, not arc.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio Community 2019 Version 16.7.1\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  Windows 10\r\n  \r\n\r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nGeforce GTX 760\r\nDriver 26.21.14.3200\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\nNO antialiasing, all lines are present\r\n![image](https://user-images.githubusercontent.com/7722773/97773141-62006180-1b5e-11eb-8992-578f9b355241.png)\r\n\r\nWITH antialiasing, it\u0027s only one line\r\n![image](https://user-images.githubusercontent.com/7722773/97773158-7fcdc680-1b5e-11eb-8083-c1f630d37d8c.png)\r\n\r\n\r\n**Reproduction Link**\r\n\r\nhttps://cemm302.visualstudio.com/_git/SkiaTest?path=%2FSkiaTest\r\n\r\n",
+  "author": {
+    "login": "MonahovS",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-31T06:55:44",
+  "updatedAt": "2023-08-29T20:53:32",
+  "commentCount": 4,
+  "reactionCount": 0
+}

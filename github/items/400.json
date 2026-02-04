@@ -1,0 +1,27 @@
+{
+  "number": 400,
+  "type": "issue",
+  "state": "closed",
+  "title": "WPFView bitmap dpi values are wrong",
+  "body": "WPFView bitmap creation uses wrong values for the dpi parameters.\r\n\r\nIn \u0060SkiaSharp/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs\u0060 the bitmap is created with:\r\n\r\n\u0060bitmap = new WriteableBitmap(width, height, dpiX, dpiY, PixelFormats.Pbgra32, null);\u0060\r\n\r\nbut the \u0060dpiX\u0060 and \u0060dpiY\u0060 values are not dpi values, they are scaling factors (equal to 1.0 on my system). \r\n\r\nThis creates problems if you save the View as an image and have tooling that uses the dpi values for processing. \r\n",
+  "author": {
+    "login": "eoner",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/up-for-grabs",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2017-11-24T09:00:27",
+  "updatedAt": "2022-08-19T18:02:08",
+  "closedAt": "2017-12-25T21:00:57",
+  "commentCount": 0,
+  "reactionCount": 0
+}

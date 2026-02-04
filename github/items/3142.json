@@ -1,0 +1,22 @@
+{
+  "number": 3142,
+  "type": "issue",
+  "state": "open",
+  "title": "SKData was incorrect when encoding images in specific formats",
+  "body": "### Description\n\nWe created an SKBitmap and drew a rectangle on it. The SKBitmap was then converted to an SKImage and subsequently to SKData. However, we encountered an issue while converting to SKData for specific formats such as BMP, GIF, ICO, WBMP, PKM, KTX, ASTC, DNG, HEIF, and AVIF. This issue does not occur when using formats such as JPG, PNG, and WEBP.\n \nPlatform: ASP.NET Core\nVisual Studio Version: 2022\n.NET Version: .NET 8\nSkiaSharp Version: 2.88.8\n\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\npublic void Convert()\n{\n    // Example dimensions\n    int width = 200;\n    int height = 100;\n\n    // Create a new SKBitmap instance\n    using (var bitmap = new SKBitmap(width, height))\n    {\n        // Perform operations with the bitmap, such as drawing\n        using (var canvas = new SKCanvas(bitmap))\n        {\n            // Example: draw a red rectangle\n            canvas.Clear(SKColors.White); // Clear with white background\n            using (var paint = new SKPaint())\n            {\n                paint.Color = SKColors.Red;\n                canvas.DrawRect(new SKRect(50, 20, 150, 80), paint);\n            }\n        }\n        Stream stream = new MemoryStream();\n        SKImage image = SKImage.FromBitmap(bitmap);\n        SKData data = image.Encode(SKEncodedImageFormat.Heif, 100);\n        data.SaveTo(stream);\n    }\n}\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nThe program should run without any exceptions in formats such as BMP, GIF, ICO, WBMP, PKM, KTX, ASTC, DNG, HEIF, and AVIF.\n\n### Actual Behavior\n\nGet an exception in specific formats other than formats such as JPG, PNG, and WEBP.\n\n### Version of SkiaSharp\n\n2.88.8 (Deprecated)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.8 (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 10\n\n### Devices\n\nDell 11th Gen Intel(R) Core(TM) i5-1135G7 @ 2.40GHz   1.38 GHz\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Krithika-G",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-01-16T14:25:13",
+  "updatedAt": "2025-01-24T20:26:40",
+  "commentCount": 1,
+  "reactionCount": 1
+}

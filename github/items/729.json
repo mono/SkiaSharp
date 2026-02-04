@@ -1,0 +1,44 @@
+{
+  "number": 729,
+  "type": "issue",
+  "state": "closed",
+  "title": "NotSupportedException when trying to use SKGLView",
+  "body": "### Description\r\n\r\nWhen trying to use SKGLView, application crashes with NotSupportedException. Tested on Android and UWP (desktop Windows)\r\n\r\n### Code\r\n\r\nProblem occurs when we call \u0060glView.InvalidateSurface()\u0060. We\u0027re getting the following message:\r\n\r\n    System.NotSupportedException: Specified method is not supported.\r\n      at SkiaSharp.GRContext.Create(GRBackend backend, GRGIInterface backedContext)\r\n      at SkiaSharp.Views.UWP.SKSwapChainPanel.OnRenderFrame(Rect rect)\r\n      at SkiaSharp.Views.UWP.AngleSwapChainPanel.RenderFrame()\r\n      at SkiaSharp.Views.UWP.AngleSwapChainPanel.Invalidate()\r\n      at SkiaSharp.Views.UWP.AngleSwapChainPanel.CalculateBufferSize()\r\n      at SkiaSharp.Views.UWP.AngleSwapChainPanel.OnSizeChanged(Object sender, SizeChangedEventArg e)\r\n\r\nThe SKGLView is instantiated simply via parameterless constructor. We actually derive our own class from SKGLView to support mouse-wheel handling:\r\n\r\n    public class SKGLViewEx : SKGLView\r\n    {\r\n        public void NotifyMouseWheel(int mouseWheelDelta)\r\n        {\r\n            MouseWheel?.Invoke(this, new MouseWheelEventArgs(mouseWheelDelta));\r\n        }\r\n\r\n        public event EventHandler\u003CMouseWheelEventArgs\u003E MouseWheel;\r\n    }\r\n\r\nExcept from that we introduced no changes to Skia.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  1.60.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Android: 8.1\r\n  - iOS:  (Default)\r\n  - UWP:  17134 \r\n- Target Devices:\r\n  -   Nexus 10\r\n  -   Desktop Windows\r\n\r\n![skiaerror](https://user-images.githubusercontent.com/5938870/49936764-1b0b1380-fed5-11e8-9925-ee96e7bb9278.png)\n\n\u003E VS bug [#752324](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/752324)",
+  "author": {
+    "login": "wojciechsura",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-12-13T11:47:41",
+  "updatedAt": "2022-08-19T12:02:10",
+  "closedAt": "2020-06-10T23:29:42",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 3272,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] libSkiaSharp.so: undefined symbol: uuid_generate_random on Debian Bookworm ARM64",
+  "body": "### Description\n\nUsing any version higher than 3.116.1 of SkiaSharp gives me the above error. I\u0027ve tested with 3.118.* and 3.119, same error.\n\n### Code\n\n\u0060\u0060\u0060cs\nusing System;\nusing SkiaSharp;\n\nclass Program\n{\n    static void Main(string[] args)\n    {\n        Console.WriteLine(\u0022Testing SkiaSharp...\u0022);\n        using (var surface = SKSurface.Create(new SKImageInfo(100, 100)))\n        {\n            Console.WriteLine(\u0022SkiaSharp surface created successfully!\u0022);\n        }\n    }\n}\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n\u0022SkiaSharp surface created successfully!\u0022 should be written to the console\n\n### Actual Behavior\n\nError message: libSkiaSharp.so: undefined symbol: uuid_generate_random\n\n\n### Version of SkiaSharp\n\n3.118.0-preview.2 (Next Preview)\n\n### Last Known Good Version of SkiaSharp\n\n3.116.0 (Current)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\nDebian Bookworm\n\n### Devices\n\nRaspberry Pi 4\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "HakanL",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-09T05:17:41",
+  "updatedAt": "2026-02-03T10:33:31",
+  "closedAt": "2026-02-03T10:33:31",
+  "commentCount": 8,
+  "reactionCount": 7
+}

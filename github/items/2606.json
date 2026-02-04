@@ -1,0 +1,22 @@
+{
+  "number": 2606,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Error decoding large byte array",
+  "body": "### Description\r\n\r\nWhen I take a picture with my native iOS camera with iOS 16.6, when I try to decode the image it returns always null. It seems that the byte[] that I get from the image is around 2 million bytes. It used to be around 700000 bytes.\r\nI upgraded the libraries to 2.88.5 and the problem persist!\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\nusing (var imageStream = new System.IO.MemoryStream(image))\r\n{\r\nvar skData = SKData.Create(imageStream);\r\nvar BitmapSelected = SKBitmap.Decode(skData);\r\n}\r\n\u0060\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\n2.80.x (Deprecated)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.80.x (Deprecated)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (macOS)\r\n\r\n### Platform / Operating System\r\n\r\niOS\r\n\r\n### Platform / Operating System Version\r\n\r\niOS 16.4 and 16.6\r\n\r\n### Devices\r\n\r\niPhone 14 Pro Max\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "nicoteitel",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-09-13T14:09:27",
+  "updatedAt": "2023-09-15T19:24:33",
+  "commentCount": 0,
+  "reactionCount": 0
+}

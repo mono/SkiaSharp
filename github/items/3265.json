@@ -1,0 +1,22 @@
+{
+  "number": 3265,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] font.ContainsGlyphs(text) return false but it has a glyphs on Android",
+  "body": "### Description\n\nuse font outfit.  and text is \u0022hand om mig hela kv\u00E4llen \u2764\uFE0F\u0022\n\nprint the first part with \u0022hand om mig hela kv\u00E4llen \u0022 with the OutFit font. \n\nthen I try to find fallback font for the heart\n\n![Image](https://github.com/user-attachments/assets/8901e9cd-1e8d-4867-95de-ad4470e813cb)\n\nget this\n\n![Image](https://github.com/user-attachments/assets/6c89af37-ba0e-4dbf-9f7d-2efce067fe34)\n\nthen run this on the falpbackfont and get this\n![Image](https://github.com/user-attachments/assets/255a94c5-5612-4a79-b671-f537b5aff379)\n  font.ContainsGlyphs(text)\n  false\n\nbut font.ContainsGlyphs(text.substring(0,1)) returns true.\nbut font.ContainsGlyphs(text.substring(1,1)) returns false.\n\nthe emoji is two or more chars in the string so this result in not emoji get printed on Android. On iOS all work and the fallbackfont is appleEmoji but on android you just get #91Fallback.    \n \n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nmacOS, Android\n\n### Platform / Operating System Version\n\n-all Android versions\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "JoacimWall",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-05T10:28:15",
+  "updatedAt": "2025-05-05T10:28:15",
+  "commentCount": 0,
+  "reactionCount": 0
+}

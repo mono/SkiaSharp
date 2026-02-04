@@ -1,0 +1,31 @@
+{
+  "number": 404,
+  "type": "issue",
+  "state": "open",
+  "title": "Crash on iPad mini with SKGLView",
+  "body": "I got a few crash reports about crashes on iPad mini (A1455) and iPad mini 2 (Wi-Fi).\r\nExample of a crash report on iPad mini 2 (Wi-Fi):\r\n\u003E Incident Identifier: 44FF5E1A-B0B9-4052-8630-A0E05E4E7857\r\n\u003E CrashReporter Key:   AF3F796B-1B6B-46D9-B83B-365BF3405414\r\n\u003E Hardware Model:      iPad4,4\r\n\u003E Process:         [renamed process] [8979]\r\n\u003E Path:            /var/containers/Bundle/Application/A536E6F1-85DA-4908-B52C-0B59CB765790/[renamed path]\r\n\u003E Identifier:      [renamed bundle id]\r\n\u003E Version:         1.6 (1.6)\r\n\u003E Code Type:       ARM-64\r\n\u003E Parent Process:  ??? [1]\r\n\u003E \r\n\u003E Date/Time:       2017-11-24T18:22:20Z\r\n\u003E Launch Time:     2017-11-24T16:45:25Z\r\n\u003E OS Version:      iPhone OS 11.1 (15B93)\r\n\u003E Report Version:  104\r\n\u003E \r\n\u003E Exception Type:  SIGSEGV\r\n\u003E Exception Codes: SEGV_ACCERR at 0x1\r\n\u003E Crashed Thread:  0\r\n\u003E \r\n\u003E Thread 0 Crashed:\r\n\u003E 0   libGPUSupportMercury.dylib           0x00000001a2091efc 0x1a2090000 \u002B 7932\r\n\u003E 1   libGPUSupportMercury.dylib           0x00000001a2092edc 0x1a2090000 \u002B 11996\r\n\u003E 2   AGXGLDriver                          0x00000001a61c1734 0x1a619a000 \u002B 161588\r\n\u003E 3   GLEngine                             0x00000001a71ab01c 0x1a70cd000 \u002B 909340\r\n\u003E 4   OpenGLES                             0x0000000189dcea8c 0x189dc6000 \u002B 35468\r\n\u003E 5   GLKit                                0x0000000193d70988 0x193d4e000 \u002B 141704\r\n\r\niPad mini (A1455) has a similar crash report, it only differs with\r\n\u003E Code Type:       ARM\r\n\u003E OS Version:      iPhone OS 9.2 (13C75)\r\n\r\nAccording to googling it happens when the app uses GPU when minimized.\r\nSo I guess the OpenGL does not get flushed properly on pause event.\r\n\r\nWhen I used raw OpenGL 2.0 so the OpenGLView view I used this in the main render loop and it worked fine:\r\n\u0060\u0060\u0060csharp\r\nif (this.Sleeping) {\r\n\tif (!this.wentSleeping) {\r\n\t\tthis.GameView.HasRenderLoop = false;\r\n\t\tthis.wentSleeping = true;\r\n\t}\r\n\treturn;\r\n} else if (this.wentSleeping) {\r\n\tthis.wentSleeping = false;\r\n}\r\n\u0060\u0060\u0060\r\nBut it was added because it crashed on all iOS devices.\r\nWhen I have migrated to SkiaSharp the problem did not occur at all on all devices, so I thought that is handled on Skia side properly.\r\n\r\nUsed packages:\r\nXamarin.Forms 2.4.0.38779\r\nSkiaSharp.Views.Forms 1.59.2",
+  "author": {
+    "login": "entdark",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2017-11-27T17:02:55",
+  "updatedAt": "2022-09-11T18:31:01",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 1790,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKPaint  System.AccessViolationException",
+  "body": "Hi everyone, I\u0027m facing a very strange behaviour using SKPaint, \r\nI\u0027m developing a desktop app with net framework 4.7.2, WPF and using \r\n\u0060\u003Cwpf:SKElement x:Name=\u0022MySkElement\u0022 PaintSurface=\u0022OnPaintCanvas\u0022 /\u003E\u0060 \r\nin my View part.\r\n\r\nMy target is to have a class that wraps a cubic-bezier curve. so I developed a class Sk0CubicBezier that have a \r\nprivate member variable SKPaint _blueP.\r\nIf I use directly the SKPaint variable, I receive an exception \u0022System.AccessViolationException\u0022. \r\nInstead, if I assign this variable to another public variable called \u0022Paint\u0022 it work ( it work also if the Paint variable is private)\r\n\r\nHere is the code (I removed all not unnecessary code to reproduce):\r\n\r\n\u0060     \r\n  \r\n\tpublic class Sk0CubicBezier : IDisposable {\r\n        public List\u003CSk0CubicBezierSegment\u003E Segments = new List\u003CSk0CubicBezierSegment\u003E();\r\n\r\n        public SKPaint Paint;\r\n\r\n        #region Colors\u0026Brush\r\n\r\n        private readonly SKColor _blueC = new SKColor(0, 0, 255);\r\n\r\n        private SKPaint _blueP;\r\n\r\n        \r\n\r\n        public Sk0CubicBezier() {\r\n            InitSkColorAndBrush();\r\n        }\r\n\r\n        public bool Create(SKPoint[] pts, int touchPointRadius = 20) {\r\n             // miss ...\r\n        }\r\n\r\n        private void InitSkColorAndBrush() {            \r\n          \r\n            _blueP = new SKPaint();  // \u003C---look here\r\n            _blueP.IsAntialias = true;\r\n            _blueP.Color = _blueC;         \r\n            Paint = _blueP; // \u003C---look here\r\n        }\r\n\r\n        #endregion\r\n\r\n\r\n        public void Draw(SKCanvas canvas) {\r\n            // miss code\r\n              ...\r\n\r\n            //draw points\r\n\r\n            var blueP = new SKPaint();\r\n            blueP.IsAntialias = true;\r\n            blueP.Color = _blueC;\r\n            canvas.DrawCircle(P0, 5, blueP); // \u003C---look here -  This not crash\r\n            canvas.DrawCircle(P0, 5, Paint); // \u003C---look here -  This not crash\r\n            canvas.DrawCircle(P0, 5, _blueP) ; // \u003C---look here -  This raise System.AccessViolationException\r\n            \r\n           // miss code\r\n              ...\r\n\r\n        }\r\n\t\t\r\n\t\t...\r\n    }\r\n\u0060\r\n\r\n\r\n",
+  "author": {
+    "login": "ww34ww34ww34",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-08-31T13:53:21",
+  "updatedAt": "2021-08-31T14:07:30",
+  "commentCount": 0,
+  "reactionCount": 0
+}

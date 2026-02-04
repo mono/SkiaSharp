@@ -1,0 +1,23 @@
+{
+  "number": 1174,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Bug] Whether SKTypeface and SKPaint instances are thread safe ?",
+  "body": "I have faced threading issue when I working with SKPaint \u0026 SKTypeface within our application but unable to replicate the same in simple project.\r\n\r\nWhether SKTypeface and SKPaint instances are thread safe? Can we use it multi threading ? Disposing object in one thread affects in another thread?\r\n\r\nEdited:\r\n\r\nAfter some changes, i can reproduce the same issue in simple project. Please find the code from below\r\n\u0060\u0060\u0060\u0060\r\nclass Program\r\n    {\r\n        static void Main(string[] args)\r\n        {\r\n            \r\n            for (int i = 0; i \u003C 50; i\u002B\u002B)\r\n            {\r\n                Console.WriteLine(i);\r\n                Thread thread = new Thread(SkiaTypefaceThreading);\r\n                thread.Name = i.ToString();\r\n                thread.Start();\r\n                \r\n            }\r\n\r\n        }\r\n        private static void SkiaTypefaceThreading()\r\n        {\r\n            string[] fonts = new string[] { \u0022Arial\u0022, \u0022Verdana\u0022, \u0022Calibri\u0022 };\r\n            foreach (string fontName in fonts)\r\n            {\r\n                FontExtension ext = new FontExtension(\u0022Arial\u0022, 12);\r\n                Console.WriteLine(ext.Typeface.FamilyName);\r\n            }\r\n            FontExtension.ClearFontCache();\r\n        }\r\n    }\r\n\r\npublic class FontExtension : SKPaint\r\n    {\r\n        [ThreadStatic]\r\n        private static Dictionary\u003Cstring, SKTypeface\u003E typeFaceCache;\r\n        public static Dictionary\u003Cstring, SKTypeface\u003E TypeFaceCache\r\n        {\r\n            get\r\n            {\r\n                if (typeFaceCache == null)\r\n                    typeFaceCache = new Dictionary\u003Cstring, SKTypeface\u003E();\r\n                return typeFaceCache;\r\n            }\r\n        }\r\n        internal FontExtension(string fontName, float fontSize)\r\n        {\r\n            this.TextEncoding = SKTextEncoding.Utf8;\r\n            this.IsAntialias = true;\r\n            this.SubpixelText = true;\r\n            \r\n            if (TypeFaceCache != null \u0026\u0026 TypeFaceCache.ContainsKey(fontName \u002B \u0022;\u0022))\r\n                this.Typeface = TypeFaceCache[fontName \u002B \u0022;\u0022];\r\n            else\r\n            {\r\n                this.Typeface = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright); ;\r\n                \r\n                TypeFaceCache.Add(fontName \u002B \u0022;\u0022 , this.Typeface);\r\n            }\r\n            this.TextSize = fontSize;\r\n        }\r\n        public static void ClearFontCache()\r\n        {\r\n            \r\n            if(typeFaceCache != null)\r\n            {\r\n                foreach (string key in typeFaceCache.Keys)\r\n                {\r\n                    SKTypeface sKTypeface = typeFaceCache[key];\r\n                    if (sKTypeface != null)\r\n                    {\r\n                        sKTypeface.Dispose();\r\n                        sKTypeface = null;\r\n                    }\r\n                }\r\n\r\n                typeFaceCache.Clear();\r\n                typeFaceCache = null;\r\n            }\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\nPlease check this and provide suggestions to resolve the problem. Thanks in advance.  ",
+  "author": {
+    "login": "VijayRM",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-03-12T10:58:57",
+  "updatedAt": "2022-08-19T06:02:25",
+  "closedAt": "2020-04-15T11:20:02",
+  "commentCount": 3,
+  "reactionCount": 0
+}

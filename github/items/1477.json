@@ -1,0 +1,18 @@
+{
+  "number": 1477,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION]  Another Access Violation error - \u0022Attempted to read or write protected memory\u0022\u0022",
+  "body": "Hi, I know this issue has been dealt with before, but in those cases the solution was relating to using (or not using) async/await operations. In my case, there is no async/await, so I\u0027m not sure where to start to get this working.\r\n\r\nThe code is designed to grab an image resource, change the colour of the image, then return the re-coloured image as an ImageSource. It has never crashed on Android, but regularly occurs when running in UWP.\r\n\r\nI know I\u0027m doing something wrong because sometimes the images are returned looking like fuzzy white noise, so obviously the resource is being created from the wrong memory. Sadly my knowledge stops there. I don\u0027t know which area I\u0027m getting wrong here; any advice would be appreciated. \r\n\r\nThanks!\r\n\r\nThe error is always thrown on the last line.\r\n\r\n\u0060\u0060\u0060 c#\r\n public static ImageSource TintableIconImageFromSource(string source, Assembly assembly)\r\n        {\r\n            string resourceId = $\u0022XamarinFormsGISmapp.Images.Icons.{source}\u0022;\r\n\r\n            SKBitmap resourceBitmap;\r\n\r\n            using (Stream stream = assembly.GetManifestResourceStream(resourceId))\r\n            {\r\n                resourceBitmap = SKBitmap.Decode(stream);\r\n            }\r\n\r\n            SKImageInfo info = new SKImageInfo(resourceBitmap.Height, resourceBitmap.Width);\r\n            SKSurface surface = SKSurface.Create(info);\r\n            SKCanvas canvas = surface.Canvas;\r\n\r\n            using (SKPaint paint = new SKPaint())\r\n            {\r\n                paint.ColorFilter = ColourFilterMatrix(R, G, B, alpha);\r\n\r\n                canvas.DrawBitmap(resourceBitmap, info.Rect, paint);\r\n            }\r\n\r\n            SKImage image = SKImage.FromPixels(surface.PeekPixels());\r\n\r\n            return ImageSource.FromStream(() =\u003E image.Encode().AsStream());\r\n        }\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "Stuart88",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-24T09:52:20",
+  "updatedAt": "2022-08-19T03:02:00",
+  "closedAt": "2020-08-24T16:47:21",
+  "commentCount": 2,
+  "reactionCount": 0
+}

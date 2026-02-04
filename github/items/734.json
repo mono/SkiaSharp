@@ -1,0 +1,33 @@
+{
+  "number": 734,
+  "type": "issue",
+  "state": "closed",
+  "title": "Regression - SKPaint.BreakText crashes for Empty string (\u0022\u0022 - String.Empty) in SkiaSharp 1.68",
+  "body": "### Description\r\n\r\nSKPaint .BreakText throws an exception \u0022System.ArgumentNullException: \u0027Value cannot be null.\r\nParameter name: buffer\u0027\u0022 for String.Empty. In 1.60.3 it works normally.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\n            using (var paint = new SKPaint())\r\n            {\r\n                paint.BreakText(String.Empty, 10);\r\n            }\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nno exception, return 0\r\n\r\n### Actual Behavior\r\n\r\nArgumentNullException\n\n\u003E VS bug [#753281](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/753281)",
+  "author": {
+    "login": "michaldobrodenka",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "v1.68.1",
+  "createdAt": "2018-12-17T10:25:49",
+  "updatedAt": "2022-08-19T12:02:08",
+  "closedAt": "2018-12-17T21:51:18",
+  "commentCount": 1,
+  "reactionCount": 1
+}

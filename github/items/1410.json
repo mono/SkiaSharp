@@ -1,0 +1,35 @@
+{
+  "number": 1410,
+  "type": "pr",
+  "state": "closed",
+  "title": "SKCanvas.DrawTextOnPath can throw NullReferenceException",
+  "body": "**Description of Change**\r\n\r\n\u0060SKFont.GetGlyphPath\u0060 (native code \u0060SkFont::getPath\u0060) can return \u0060null\u0060.\r\n\r\nI didn\u0027t take that into account.\r\n\r\n**Bugs Fixed**\r\n\r\n- Related to issue #1408 \r\n\r\nI still don\u0027t know why \u0060DrawTextOnPath\u0060 fails on iOS, but the code should handle the \u0060null\u0060 case anyway. Hard for me to debug without an iOS device.\r\n\r\n**API Changes**\r\n\r\nNone\r\n\r\n**Behavioral Changes**\r\n\r\n\u0060DrawTextOnPath\u0060 doesn\u0027t throw a \u0060NullReferenceException\u0060 when \u0060SKFont.GetGlyphPath\u0060 returns \u0060null\u0060\r\n\r\n**PR Checklist**\r\n\r\n- [n] Has tests (if omitted, state reason in description)\r\n- [y] Rebased on top of master at time of PR\r\n- [y] Changes adhere to coding standard\r\n- [n] Updated documentation\r\n\r\nI wasn\u0027t able to write a unit test, because I couldn\u0027t find a single font for which \u0060SKFont.GetGlyphPath\u0060 returns \u0060null\u0060.\r\n\r\nHowever, I could include the test, but that is only usefull if the unit tests also run on iOS...\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-15T17:17:23",
+  "updatedAt": "2020-09-11T23:45:35",
+  "closedAt": "2020-07-16T10:44:42",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "issues/1408",
+  "additions": 5,
+  "deletions": 4,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2020-07-16T10:44:12"
+    }
+  ]
+}

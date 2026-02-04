@@ -1,0 +1,22 @@
+{
+  "number": 3213,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKTypeface.CreateDefault(); very slow on Android",
+  "body": "### Description\n\nHello, we just discovered that for some reason \n\n\u0060\u0060\u0060csharp\npublic static SKTypeface CreateDefault ()\n{\n\treturn GetObject (SkiaApi.sk_typeface_create_default ());\n}\n\u0060\u0060\u0060\nlooks to take too much execution time at app startup, might be an explanation or a bug, any thoughts?\n\n![Image](https://github.com/user-attachments/assets/6242c9ce-bdf7-4061-b4fb-9fd46b045c57)\n\n\u0060\u0060\u0060xml\n      \u003CPackageReference Include=\u0022Microsoft.Maui.Controls\u0022 Version=\u00229.0.22\u0022 /\u003E\n      \u003CPackageReference Include=\u0022Microsoft.Maui.Controls.Compatibility\u0022 Version=\u00229.0.22\u0022 /\u003E\n      \u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00223.116.1\u0022 /\u003E\n    \u003CPackageReference Include=\u0022SkiaSharp.Skottie\u0022 Version=\u00223.116.1\u0022 /\u003E\n\u0060\u0060\u0060\n\nInitially was discovered here: https://github.com/taublast/DrawnUi.Maui/issues/159#issuecomment-2746857215\n\n### Code\n\n\u0060\u0060\u0060csharp\npublic static SKTypeface CreateDefault ()\n{\n\treturn GetObject (SkiaApi.sk_typeface_create_default ());\n}\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nTo exec faster\n\n### Actual Behavior\n\nSlow exec\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n3.116.0 (Current)\n\n### IDE / Editor\n\nOther (Please indicate in the description), Visual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "taublast",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-24T04:42:39",
+  "updatedAt": "2025-04-16T18:37:29",
+  "commentCount": 2,
+  "reactionCount": 0
+}

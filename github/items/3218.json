@@ -1,0 +1,22 @@
+{
+  "number": 3218,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] libSkiaSharp.dll does not enable the control flow guard (CFG)",
+  "body": "### Description\n\nAs per the rule [BA2008](https://github.com/microsoft/binskim/blob/main/docs/BinSkimRules.md#rule-BA2008EnableControlFlowGuard), control flow guard needs to be enabled.\n\n**Rule Id**: [BA2008](https://github.com/microsoft/binskim/blob/main/docs/BinSkimRules.md#rule-BA2008EnableControlFlowGuard)\n**Rule Name**: EnableControlFlowGuard\n**Rule Description**: Binaries should enable the compiler control guard feature (CFG) at build time to prevent attackers from redirecting execution to unexpected, unsafe locations. CFG analyzes and discovers all indirect-call instructions at compilation and link time. It also injects a check that precedes every indirect call in code that ensures the target is an expected, safe location. If that check fails at runtime, the operating system will close the program.\n\nSuggestion by Binskim\n\nTo resolve this issue, pass /guard:cf on both the compiler and linker command lines. Binaries also require the /DYNAMICBASE linker option in order to enable CFG.\nFor VC projects use ItemDefinitionGroup - ClCompile - ControlFlowGuard property with \u0027Guard\u0027 value, link CFG property will be set automatically.\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nCFG needs to be enabled\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "bcarthic",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-28T21:59:00",
+  "updatedAt": "2025-12-13T01:01:48",
+  "commentCount": 1,
+  "reactionCount": 1
+}

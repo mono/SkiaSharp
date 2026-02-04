@@ -1,0 +1,27 @@
+{
+  "number": 3042,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] .NET 9 Android: \u0022Assembly \u0027SkiaSharp\u0027 produced trim warnings\u0022",
+  "body": "### Description\r\n\r\nI am seeing build warnings when compiling my app with .NET 9 RC 2 for Android.\r\nExample project: [test.zip](https://github.com/user-attachments/files/17444559/test.zip)\r\n\r\n\r\n### Code\r\n\r\nIn a .NET 9 Android project, add this:\r\n\r\n\u0060\u0060\u0060cs\r\n[Register(\u0022test.ChartView\u0022)]\r\nsealed partial class ChartView : SKCanvasView\r\n{\r\n    public ChartView(Context context, IAttributeSet attributes) : base(context) { }\r\n}\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xml\r\n\u003CItemGroup\u003E\r\n  \u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 Version=\u00223.0.0-preview.4.1\u0022 /\u003E\r\n\u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nNo warnings\r\n\r\n### Actual Behavior\r\n\r\n\u0060\u0060\u0060\r\nC:\\Users\\me\\.nuget\\packages\\skiasharp.views\\3.0.0-preview.4.1\\lib\\net7.0-android33.0\\SkiaSharp.Views.Android.dll : warning IL2104: Assembly \u0027SkiaSharp.Views.Android\u0027 produced trim warnings. For more information see https://aka.ms/dotnet-illink/libraries\r\nC:\\Users\\me\\.nuget\\packages\\skiasharp\\3.0.0-preview.4.1\\lib\\net7.0-android33.0\\SkiaSharp.dll : warning IL2104: Assembly \u0027SkiaSharp\u0027 produced trim warnings. For more information see https://aka.ms/dotnet-illink/libraries\r\n\u0060\u0060\u0060\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x-preview.4.1 (Current Preview)\r\n\r\n### Platform / Operating System\r\n\r\nAndroid\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "tipa",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-19T09:31:35",
+  "updatedAt": "2024-10-30T13:03:58",
+  "closedAt": "2024-10-30T13:03:57",
+  "commentCount": 7,
+  "reactionCount": 0
+}

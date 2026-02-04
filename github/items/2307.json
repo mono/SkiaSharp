@@ -1,0 +1,18 @@
+{
+  "number": 2307,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Build fails for iossimulator-arm64",
+  "body": "**Description**\r\n\r\nSkiaSharp\u0027s native assets for iOS ships as a \u0060.framework\u0060. This only allow an arch, like \u0060arm64\u0060, to be included a single time. This is a problem now that iOS (phones) and iOS simulators both needs \u0060arm64\u0060 _slices_ to build.\r\n\r\nApple\u0027s solution is to use \u0060.xcframework\u0060. This allows a single distribution to cover all (Apple) platforms. This allows shipping arm64 support for both iOS and iOS simulators (and many more) from a single package.\r\n\r\n**Code**\r\n\r\nBuild any app using SkiaSharp for the iOS simulator running on arm64 (Apple Silicon)\r\n\r\n**Expected Behavior**\r\n\r\nA successful build\r\n\r\n**Actual Behavior**\r\n\r\n\u0060\u0060\u0060\r\n DebugMyApp.Mobile -\u003E /Users/poupou/git/uno/uno-debug-test/DebugMyApp/DebugMyApp.Mobile/bin/Debug/net6.0-ios/iossimulator-arm64/DebugMyApp.Mobile.dll\r\n  Optimizing assemblies for size, which may change the behavior of the app. Be sure to test after publishing. See: https://aka.ms/dotnet-illink\r\n  Tool xcrun execution finished (exit code = 1).\r\n          \r\n  ld: building for iOS Simulator, but linking in dylib built for iOS, file \u0027/Users/poupou/.nuget/packages/skiasharp.nativeassets.ios/2.88.3/runtimes/ios/native/libSkiaSharp.framework/libSkiaSharp\u0027 for architecture arm64\r\n  clang: error: linker command failed with exit code 1 (use -v to see invocation)\r\n  \r\n/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk/16.0.523/targets/Xamarin.Shared.Sdk.targets(1222,3): error : clang\u002B\u002B exited with code 1: [/Users/poupou/git/uno/uno-debug-test/DebugMyApp/DebugMyApp.Mobile/DebugMyApp.Mobile.csproj]\r\n/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk/16.0.523/targets/Xamarin.Shared.Sdk.targets(1222,3): error : ld: building for iOS Simulator, but linking in dylib built for iOS, file \u0027/Users/poupou/.nuget/packages/skiasharp.nativeassets.ios/2.88.3/runtimes/ios/native/libSkiaSharp.framework/libSkiaSharp\u0027 for architecture arm64 [/Users/poupou/git/uno/uno-debug-test/DebugMyApp/DebugMyApp.Mobile/DebugMyApp.Mobile.csproj]\r\n/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk/16.0.523/targets/Xamarin.Shared.Sdk.targets(1222,3): error : clang: error: linker command failed with exit code 1 (use -v to see invocation) [/Users/poupou/git/uno/uno-debug-test/DebugMyApp/DebugMyApp.Mobile/DebugMyApp.Mobile.csproj]\r\n\u0060\u0060\u0060\r\n\r\n**Workaround**\r\n\r\nBuild as x86_64 and use Rosetta at runtime. Still, it\u0027s inefficient, slower and might not work if some other dependencies are not available on x86_64.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.88.3 (and previous versions)\r\n- Last known good version:  none, not a regression\r\n- IDE:  all\r\n- Platform Target Frameworks:\r\n  - iOS:  simulator builds / arm64 target\r\n  \r\n",
+  "author": {
+    "login": "spouliot",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-07T21:46:22",
+  "updatedAt": "2023-08-06T03:00:43",
+  "closedAt": "2023-06-19T08:38:29",
+  "commentCount": 9,
+  "reactionCount": 4
+}

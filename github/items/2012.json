@@ -1,0 +1,28 @@
+{
+  "number": 2012,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKBitmap.Resize crashes",
+  "body": "**Description**\r\n\r\nSKBitmap.Resize with negative width/height values crashes the app\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nSKImageInfo info = image.Info;\r\ninfo.Width = -1;\r\ninfo.Height = -1;\r\nSKBitmap skb = SKBitmap.FromImage(image);\r\nSKBitmap skb2 = skb.Resize(info, SKFilterQuality.High); //crash\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nReturns the resized bitmap if the resize operation could be performed, otherwise null. \r\n\r\n**Actual Behavior**\r\n\r\nCrashes while resizing\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0-preview.256\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:  WinUI\r\n\r\n",
+  "author": {
+    "login": "alienghub",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-04-26T18:24:37",
+  "updatedAt": "2022-08-19T00:01:41",
+  "closedAt": "2022-05-26T12:38:28",
+  "commentCount": 0,
+  "reactionCount": 0
+}

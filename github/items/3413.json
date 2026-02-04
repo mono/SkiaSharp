@@ -1,0 +1,36 @@
+{
+  "number": 3413,
+  "type": "pr",
+  "state": "closed",
+  "title": "Attempt to re-enable submodule PR checkout (requires GitHub API access)",
+  "body": "## Checkout Skia PR Feature - Documentation\n\n### Changes:\n- [x] Reverted scripts/checkout-skia.ps1 to original state\n- [x] Reverted scripts/azure-templates-jobs-bootstrapper.yml to original state (feature remains disabled)\n- [x] Added comprehensive documentation in scripts/CHECKOUT_SKIA_README.md\n\n### Summary:\n\nThis PR **does not enable** the checkout-skia feature. Instead, it documents why the feature cannot be enabled and what would be required to make it work.\n\n### Documentation Added\n\nCreated \u0060scripts/CHECKOUT_SKIA_README.md\u0060 with complete documentation including:\n\n1. **How the feature should work** - Complete workflow description\n2. **Why it\u0027s disabled** - Detailed explanation of authentication requirements\n3. **Azure Pipelines authentication** - How checkout works and why that token isn\u0027t accessible\n4. **Why System.AccessToken doesn\u0027t work** - Link to Microsoft docs explaining it\u0027s for Azure DevOps API, not GitHub\n5. **Potential solutions** - Three documented approaches with links to official Microsoft documentation:\n   - GitHub App with elevated permissions\n   - Pipeline variable with GitHub PAT\n   - Azure Key Vault integration\n6. **Current workaround** - Manual process contributors must follow\n7. **Technical details** - Original script logic and pipeline configuration\n8. **References** - Links to all relevant Microsoft and GitHub documentation\n\n### Key Documentation Links Included:\n\n- [Azure Pipelines predefined variables](https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables#systemaccesstoken)\n- [Azure Pipelines GitHub integration](https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/github)\n- [Azure Pipelines resources](https://learn.microsoft.com/en-us/azure/devops/pipelines/yaml-schema/resources-repositories-repository)\n- [Azure Pipelines variables](https://learn.microsoft.com/en-us/azure/devops/pipelines/process/variables)\n- [Use Azure Key Vault secrets](https://learn.microsoft.com/en-us/azure/devops/pipelines/release/azure-key-vault)\n- [GitHub REST API - Pull Requests](https://docs.github.com/en/rest/pulls/pulls#get-a-pull-request)\n- [Service Connections in Azure Pipelines](https://learn.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints)\n\n### Why This Approach:\n\n@mattleibow correctly pointed out that writing code that won\u0027t work serves no purpose. This PR:\n- Reverts all non-working code\n- Provides comprehensive documentation\n- Explains the technical limitations\n- Documents viable solutions (if environment constraints change)\n- Includes all requested documentation links\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E I am having an issue so I disabled the submodule checkout system.\n\u003E \n\u003E This repo is a dotnet binding for a native library. That native library is built from source as a submodule. \n\u003E \n\u003E When someone opens a PR, they are supposed to link to the submodule PR. I had a script before that would read the PR body and then find the submodule PR, check it out and then build. \n\u003E \n\u003E It was using a secret that was blocked on public CI. \n\u003E \n\u003E This is the PR that disabled that feature https://github.com/mono/SkiaSharp/pull/3083\n\u003E \n\u003E I cannot use tokens. All I have is devops and whatever it sets up. \n\u003E \n\u003E Can you help me reenable this feature and remove the need for a token. Maybe we can rewrite the script as we if that is the case. \n\u003E \n\u003E What is the best way to do this. Is there some industry standard. \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC We\u0027d love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-11-08T21:26:56",
+  "updatedAt": "2025-11-13T03:19:09",
+  "closedAt": "2025-11-13T03:19:04",
+  "commentCount": 16,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/re-enable-submodule-checkout",
+  "additions": 131,
+  "deletions": 0,
+  "changedFiles": 1,
+  "commits": 10,
+  "reviews": []
+}

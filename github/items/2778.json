@@ -1,0 +1,23 @@
+{
+  "number": 2778,
+  "type": "issue",
+  "state": "closed",
+  "title": "Investigate the conversion between SKMatrix44 and Matrix4x4",
+  "body": "### Description\r\n\r\nRight now we are creating a new struct each time, but it may be better to use \u0060Unsafe.As\u0060:\r\n\r\n\u0060\u0060\u0060cs\r\nvar m = Unsafe.As\u003CMatrix4x4, SKMatrix44\u003E(ref sys);\r\n\u0060\u0060\u0060\r\n\r\nWe need to benchmark and make sure.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "tenet/performance",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-02T16:30:05",
+  "updatedAt": "2024-03-04T19:42:01",
+  "closedAt": "2024-03-04T19:42:01",
+  "commentCount": 1,
+  "reactionCount": 0
+}

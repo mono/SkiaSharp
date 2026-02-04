@@ -1,0 +1,17 @@
+{
+  "number": 2366,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] implement ICloneable for Skia classes with Clone methods",
+  "body": "SkPaint has a Clone method.  Is there any reason it shouldn\u0027t implement ICloneable?  I would like to use the following generic extension method to improve the interface a bit:\r\n\r\n\u0060\u0060\u0060\r\npublic static T With\u003CT\u003E(this T receiver, Action\u003CT\u003E method) where T : ICloneable {\r\n    var ret = (T) receiver.Clone();\r\n    method.Invoke(receiver);\r\n    return ret;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nWhich allows code like this:\r\n\u0060\u0060\u0060\r\nvar p1 = new SKPaint { StrokeWidth = 2, Color = SKColors.Cyan };\r\nvar p2 = p1.With(p =\u003E p.Color = SKColors.Magenta);\r\n\u0060\u0060\u0060\r\n\r\nOf course, I have implemented a specialized version of the method for now.",
+  "author": {
+    "login": "shanemikel",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-01-24T06:47:58",
+  "updatedAt": "2023-01-24T06:47:58",
+  "commentCount": 0,
+  "reactionCount": 0
+}

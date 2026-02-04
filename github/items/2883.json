@@ -1,0 +1,27 @@
+{
+  "number": 2883,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add more SKPicture APIs",
+  "body": "**Description of Change**\r\n\r\nAdding a few new APIs to help with determining picture and drawable \u0022size\u0022 as well as adding the \u0060Playback\u0060 method to \u0060SKPicture\u0060.\r\n\r\nThe playback method is different to draw in that draw results in a single \u0022draw the picture\u0022 command, but playback effectively replicates what was done to create the picture. There is a small different to the latter in that the picture may optimize/combine commands as well as split commands to best fit into the picture\u0027s storage.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #2881\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cs\r\nclass SKDrawable {\r\n   public int ApproximateBytesUsed { get; }\r\n}\r\n\r\nclass SKPicture {\r\n  public int ApproximateBytesUsed { get; }\r\n  public int ApproximateOperationCount { get; }\r\n  public int GetApproximateOperationCount(bool includeNested);\r\n  public void Playback(SKCanvas canvas);\r\n}\r\n\u0060\u0060\u0060\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/127\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-06-01T08:41:16",
+  "updatedAt": "2024-06-03T15:15:31",
+  "closedAt": "2024-06-03T15:15:28",
+  "commentCount": 0,
+  "reactionCount": 1,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/picture",
+  "additions": 139,
+  "deletions": 1,
+  "changedFiles": 6,
+  "commits": 8,
+  "reviews": []
+}

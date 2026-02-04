@@ -1,0 +1,42 @@
+{
+  "number": 2858,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix the GetKerningPairAdjustments API.",
+  "body": "**Description of Change**\r\n\r\nThe SkTypeface::getKerningPairAdjustments API states:\r\n\r\n\u003E If count is non-zero, then the glyphs parameter must point to at least [count] valid glyph IDs, and the adjustments parameter must be sized to at least [count - 1] entries. If the method returns true, then [count-1] entries in the adjustments array will be set. If the method returns false, then no kerning should be applied, and the adjustments array will be in an undefined state (possibly some values may have been written, but none of them should be interpreted as valid values). \r\n\r\nHowever, \u0060SkTypeface.GetKerningPairAdjustments\u0060 returns \u0060count\u0060 entries _and further_ in the case where \u0060getKerningPairAdjustments\u0060 returns false it may return invalid values to the caller. This PR:\r\n\r\n* Adds a \u0060Span\u0060-based overload of \u0060GetKerningPairAdjustments\u0060 that:\r\n  * correctly expects \u0060glyphs.Length - 1\u0060 output entries (but will accept and ignore more),\r\n  * returns true if \u0060SkTypeface::getKerningPairAdjustments\u0060 wrote valid data into the output span,\r\n  * otherwise clears the output span to zero so that even if invalid data was written, the caller won\u0027t see it and will get sensible results even when ignoring the return value.\r\n* Rewrites the original \u0060GetKerningPairAdjustments\u0060 in terms of the new overload.\r\n  * For backwards compatibility, an extra zero element is returned at the end of the array.\r\n  * However, partial/invalid results will no longer be returned (the caller will receive zeroes instead).\r\n\r\n\u003E Some typefaces are known to never support kerning. Calling this method with all zeros (e.g. getKerningPairAdustments(NULL, 0, NULL)) returns a boolean indicating if the typeface might support kerning. If it returns false, then it will always return false (no kerning) for all possible glyph runs. If it returns true, then it may return true for somne glyph runs.\r\n\r\nThis patch adds a \u0060HasGetKerningPairAdjustments\u0060 that callers can use to query whether the font contains any kerning information or whether \u0060GetKerningPairAdjustments\u0060 will always return zeroes.\r\n\r\n**API Changes**\r\n\r\nAdded: \r\n\r\n- \u0060public bool SkTypeface.HasGetKerningPairAdjustments { get; }\u0060\r\n- \u0060public bool GetKerningPairAdjustments (ReadOnlySpan\u003Cushort\u003E glyphs, Span\u003Cint\u003E adjustments)\u0060\r\n\r\n**Behavioral Changes**\r\n\r\n\u0060public int[] GetKerningPairAdjustments (ReadOnlySpan\u003Cushort\u003E glyphs)\u0060 will now return zeroes in places where it previously returned partial/invalid data that the Skia documentation says to ignore.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Merged related skia PRs\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n\r\nApologies if this isn\u0027t quite up to the project standards. I was initially going to just submit a bug report, but then I thought it might be nicer (and likelier to actually get fixed) if I made a quick PR instead of just complaining. I fully acknowledge that I\u0027m not invested enough in this project to learn all of the conventions _properly_, and I apologize if this wastes anyone\u0027s time cleaning up what I\u0027ve misunderstood. Y\u0027all can do with this patch whatever you will.\r\n\r\nI just think it\u0027d be nice if I could be rid of _this_ abomination:\r\n\u0060\u0060\u0060csharp\r\nprivate unsafe delegate bool SkApi_GetKerningPairAdjustments(IntPtr typeface, UInt16* glyphs, Int32 count, Int32* adjustments);\r\nprivate static SkApi_GetKerningPairAdjustments s_GetKerningPairAdjustments;\r\n\r\nprivate static SkApi_GetKerningPairAdjustments GetKerningPairAdjustmentsFunc()\r\n{\r\n    if (s_GetKerningPairAdjustments == null)\r\n    {\r\n        var apiBindingsType = typeof(SKTypeface).Assembly.GetType(\u0022SkiaSharp.SkiaApi\u0022);\r\n        var apiFunc = apiBindingsType.GetMethod(\u0022sk_typeface_get_kerning_pair_adjustments\u0022, System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);\r\n        s_GetKerningPairAdjustments = apiFunc.CreateDelegate\u003CSkApi_GetKerningPairAdjustments\u003E();\r\n    }\r\n\r\n    return s_GetKerningPairAdjustments;\r\n}\r\n\r\nprivate static unsafe bool HasKerningPairAdjustments(SKTypeface typeface)\r\n{\r\n    var func = GetKerningPairAdjustmentsFunc();\r\n    return func(typeface.Handle, null, 0, null);\r\n}\r\n\r\nprivate static unsafe void GetKerningPairAdjustments(SKTypeface typeface, ReadOnlySpan\u003Cushort\u003E glyphs, Span\u003Cint\u003E adjustments)\r\n{\r\n\tDebug.Assert(glyphs.Length \u003E= 2 \u0026\u0026 adjustments.Length == glyphs.Length - 1);\r\n\r\n\tvar func = GetKerningPairAdjustmentsFunc();\r\n\r\n\tbool res;\r\n\tfixed (ushort* g = glyphs)\r\n\tfixed (int* a = adjustments)\r\n\t\tres = func(typeface.Handle, g, glyphs.Length, a);\r\n\r\n\tif (!res)\r\n\t\tadjustments.Clear();\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "pdjonov",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    },
+    {
+      "name": "backport/release/2.x",
+      "color": "A55E00"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-14T10:48:11",
+  "updatedAt": "2024-06-03T15:36:57",
+  "closedAt": "2024-06-03T15:36:41",
+  "commentCount": 4,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-GetKerningPairAdjustments",
+  "additions": 53,
+  "deletions": 2,
+  "changedFiles": 1,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2024-06-03T11:24:29"
+    }
+  ]
+}

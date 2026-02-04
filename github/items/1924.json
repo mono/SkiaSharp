@@ -1,0 +1,31 @@
+{
+  "number": 1924,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SKGLView in Views.Blazor",
+  "body": "Hi \r\nI have a SKGLView in an razor page (SkiaSharp.Views.Blazor) the page has a SignalR connection and it recieves data and tries to invalidate the SKGLView when data arrives  but OnPaintSurface is not called.\r\n\u0060\u0060\u0060razor\r\n \u003CSKGLView Width=\u0022512px\u0022 Height=\u0022512px\u0022  id=\u0022radarSkiaA\u0022 OnPaintSurface=\u0022OnPaintSurface\u0022/\u003E\r\n\u0060\u0060\u0060\r\n\r\nand\r\nfrom code\r\n\u0060\u0060\u0060cs\r\nradarSkiaA.Invalidate(); // OnPaintSurface is not called\r\n\u0060\u0060\u0060\r\nI have the same type of code in a WPF app, where everything works as ecpected.\r\n\u0060\u0060\u0060razor\r\n \u003CSKElement  x:Name=\u0022BitmapHost\u0022 PaintSurface=\u0022OnPaintCanvas\u0022 /\u003E\r\n\u0060\u0060\u0060\r\nand from code\r\n\u0060\u0060\u0060cs\r\n BitmapHost.InvalidateVisual();\r\n\u0060\u0060\u0060\r\nAny idea?",
+  "author": {
+    "login": "peder1896",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/needs-repro",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/try-latest-version",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-01-14T16:21:42",
+  "updatedAt": "2024-11-25T14:28:46",
+  "closedAt": "2024-11-25T14:28:46",
+  "commentCount": 3,
+  "reactionCount": 1
+}

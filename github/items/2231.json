@@ -1,0 +1,38 @@
+{
+  "number": 2231,
+  "type": "pr",
+  "state": "closed",
+  "title": "fix: Remove unused native library block from SkiaSharp.Views.Uno.UI/WinUI",
+  "body": "**Description of Change**\r\n\r\nFixes this build issue appearing when using \u0060SkiaSharp.Views.Uno.WinUI\u0060 or \u0060SkiaSharp.Views.Uno.UI\u0060:\r\n\u0060\u0060\u0060\r\nMicrosoft.Common.CurrentVersion.targets(5128,5): error MSB3025: \r\nThe source file \u0022.nuget\\packages\\skiasharp.nativeassets.webassembly\\2.88.1\\build\\netstandard1.0\\libSkiaSharp.a\u0022 is actually a directory. \r\n\u0060\u0060\u0060\r\n\r\nwhere \u0060Content\u0060 property is filled regardless of the current target being compiled.\r\n\r\nThis particular block is properly included here:\r\nhttps://github.com/mono/SkiaSharp/blob/2ad29861d5a40d3bf78c28ab0a9cb02a8f0fe437/binding/SkiaSharp/nuget/build/wasm/SkiaSharp.targets#L4-L6\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "jeromelaban",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-09-01T15:16:37",
+  "updatedAt": "2022-09-02T01:32:39",
+  "closedAt": "2022-09-02T01:32:39",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/jela/wasm-views-adjust",
+  "additions": 3,
+  "deletions": 11,
+  "changedFiles": 2,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2022-09-01T16:20:31"
+    }
+  ]
+}

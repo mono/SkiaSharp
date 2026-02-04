@@ -1,0 +1,18 @@
+{
+  "number": 2284,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Drawing a pattern with a path effect is not clipping to the points",
+  "body": "**Description**\r\n\r\nI am drawing a path of points with an inner hatch pattern. However, the pattern is not getting clipped to the interior of the points. Note ( I have also tried g.ClipPath(gp), but it did not affect the results). Below is the path drawn with the inner path and later with the outline of the points in the path. The green hatch is the path effect. (Notice that the hatch is getting drawn beyond the path points.)\r\n\r\n![image](https://user-images.githubusercontent.com/7605046/194938976-12c658e7-01bb-482b-94d5-a7226509cfc6.png)\r\n\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n        Dim hatchMatrix As SKMatrix = SKMatrix.CreateScale(10, 10)\r\n        Dim hatchWidth As Single = 20\r\n\r\n        \u0027 create the path (diagonal hatch) with the center at 0,0\r\n        Dim hatchPath = New SKPath()\r\n        hatchPath.MoveTo(0, hatchWidth)\r\n        hatchPath.LineTo(hatchWidth, 0)\r\n        hatchPath.LineTo(0, -hatchWidth)\r\n        hatchPath.LineTo(-hatchWidth, 0)\r\n        hatchPath.LineTo(0, hatchWidth)\r\n\r\n        Using hatchPaint As New SKPaint\r\n            hatchPaint.PathEffect = SKPathEffect.Create2DPath(hatchMatrix, hatchPath)\r\n            hatchPaint.Color = SKColors.LimeGreen\r\n            hatchPaint.Style = SKPaintStyle.Stroke\r\n            hatchPaint.StrokeWidth = 1\r\n\r\n            g.DrawPath(gp, hatchPaint)\r\n        End Using\r\n \u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\nI would expect that the hatch is getting clipped to the polygon itself, not the outer extents of the polygon.\r\n\r\n**Actual Behavior**\r\n\r\nThe hatch pattern is getting clipped to the extents of the polygon.\r\n\r\n**Basic Information**\r\n net6.0-windows10.0.19041.0\r\nSkiaSharp version 2.88.2\r\n",
+  "author": {
+    "login": "gktval",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-10-10T19:30:23",
+  "updatedAt": "2023-06-08T21:00:48",
+  "closedAt": "2023-05-09T20:36:13",
+  "commentCount": 1,
+  "reactionCount": 0
+}

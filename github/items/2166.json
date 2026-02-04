@@ -1,0 +1,19 @@
+{
+  "number": 2166,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Skottie cannot load animations with a BOM",
+  "body": "**Description**\r\n\r\nIf you try load an animation from a stream/file that has a BOM, the loader just returns null.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nvar stream = await FileSystem.OpenAppPackageFileAsync(\u0022Lottie/trophy.json\u0022);\r\n\r\nvar animation = SkiaSharp.Skottie.Animation.Create(stream);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nAnimation laods.\r\n\r\n**Actual Behavior**\r\n\r\nNull result.\r\n\r\n**Workarounds**\r\n\r\nIf the data is a stream, we can use the stream reader to remove the preamble:\r\n\r\n\u0060\u0060\u0060cs\r\nvar reader = new StreamReader(stream);\r\nvar len = reader.CurrentEncoding.Preamble.Length;\r\nvar pre = new byte[len];\r\nstream.Read(pre, 0, len);\r\n\u0060\u0060\u0060\r\n\r\n\u003E It is more complicated the just setting the \u0060Position = len\u0060 because the stream may be non-seekable or part of a larger stream.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-07-14T00:42:25",
+  "updatedAt": "2022-08-19T00:01:15",
+  "closedAt": "2022-07-14T03:26:52",
+  "commentCount": 0,
+  "reactionCount": 0
+}

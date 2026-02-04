@@ -1,0 +1,23 @@
+{
+  "number": 3035,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] System.DllNotFoundException: libSkiaSharp when using SkiaSharp.Blazor.Views in WASM in .Net 9 RC2",
+  "body": "### Description\r\n\r\nI upgraded my app ([Damselfly](https://github.com/webreaper/Damselfly)) to .Net 9 this week, using 9.0.100-rc2.\r\n\r\nEverything server-side seems to work, but the previously-working [ImageCanvas](https://github.com/Webreaper/Damselfly/blob/develop/Damselfly.Web.Client/Components/ImageViewer/ImageCanvas.razor) class I built to render images directly in the browser using SkiaSharp natively in WASM fails, because it can\u0027t load libSkiaSharp. I see the failure on MacOS and Linux. I have references to the following packages in my Client WASM project:\r\n\r\n\u0060\u0060\u0060\r\n    \u003CPackageVersion Include=\u0022SkiaSharp\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n    \u003CPackageVersion Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n    \u003CPackageVersion Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n    \u003CPackageVersion Include=\u0022SkiaSharp.NativeAssets.macOS\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n    \u003CPackageVersion Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n\u0060\u0060\u0060\r\nThis worked absolutely fine in .Net 8, so it\u0027s some sort of regression with 9. I also see the same thing with \u00603.0.0-preview.4.1\u0060 but had to revert to 2.88.8 as the 3.0.0 preview resulted in some invalid memory access exceptions in WASM (I\u0027ll raise a separate issue for these at some point). \r\n\r\n\u0060\u0060\u0060\r\nMicrosoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]\r\n      Unhandled exception rendering component: Exception has been thrown by the target of an invocation.\r\nSystem.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation.\r\n ---\u003E System.DllNotFoundException: libSkiaSharp\r\n   at SkiaSharp.SKColorFilter.CreateColorMatrix(Single[] matrix)\r\n   at Damselfly.Web.Client.Components.ImageViewer.ImageCanvas..ctor() in /Users/markotway/LocalCloud/Development/Damselfly/Damselfly.Web.Client/Components/ImageViewer/ImageCanvas.razor:line 598\r\n   at System.Reflection.MethodBaseInvoker.InterpretedInvoke_Constructor(Object obj, IntPtr* args)\r\n   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)\r\n   --- End of inner exception stack trace ---\r\n   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)\r\n   at System.RuntimeType.CreateInstanceMono(Boolean nonPublic, Boolean wrapExceptions)\r\n   at System.RuntimeType.CreateInstanceDefaultCtor(Boolean publicOnly, Boolean wrapExceptions)\r\n   at System.Activator.CreateInstance(Type type, Boolean nonPublic, Boolean wrapExceptions)\r\n   at System.Activator.CreateInstance(Type type, Boolean nonPublic)\r\n   at System.Activator.CreateInstance(Type type)\r\n\u0060\u0060\u0060\r\n\r\n### Code\r\n\r\nhttps://github.com/Webreaper/Damselfly/blob/develop (changes are on the \u0060develop\u0060 branch.\r\n\r\n### Expected Behavior\r\n\r\nI don\u0027t expect it to crash with a \u0060DllNotFoundException\u0060, it works in .Net 8. \r\n\r\n### Actual Behavior\r\n\r\nSee exception above.\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.8 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.7 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System\r\n\r\nLinux, macOS\r\n\r\n### Platform / Operating System Version\r\n\r\nUsing Rider on MacOS and see the same behaviour when deployed on Linux.\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Webreaper",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-12T14:29:39",
+  "updatedAt": "2024-10-28T11:48:41",
+  "closedAt": "2024-10-28T11:48:41",
+  "commentCount": 0,
+  "reactionCount": 0
+}

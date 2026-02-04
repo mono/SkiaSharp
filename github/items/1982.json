@@ -1,0 +1,17 @@
+{
+  "number": 1982,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKObject does not dispose or release memory on linux",
+  "body": "**Description**\r\n\r\nWhen I was using SkiaSharp on Linux, I noticed that the memory footprint didn\u0027t go down, it just kept going up with each call. When I tried to reproduce the bug on Windows, the memory usage didn\u0027t go up. \r\n\r\n**Code**\r\nI used following code to test on Windows11 x64, Debian 10 x64, and Debian 11 arm64.\r\n\u0060\u0060\u0060\r\nstatic int Main()\r\n    {\r\n        while (true)\r\n        {\r\n            var key = Console.ReadKey();\r\n            switch (key.Key)\r\n            {\r\n                case ConsoleKey.T:\r\n                    Test();\r\n                    break;\r\n\r\n                case ConsoleKey.D:\r\n                    TestWithDispose();\r\n                    break;\r\n\r\n                case ConsoleKey.G:\r\n                    GC.Collect();\r\n                    break;\r\n\r\n                case ConsoleKey.Q:\r\n                    return 0;\r\n\r\n                default:\r\n                    break;\r\n            }\r\n            Console.WriteLine($\u0022{Environment.WorkingSet / 1024 / 1024} MB\u0022);\r\n        }\r\n    }\r\n\r\n    static void Test()\r\n    {\r\n        SKBitmap bitmap = SKBitmap.Decode(\u0022sample.gif\u0022);\r\n        SKCanvas sKCanvas = new SKCanvas(bitmap);\r\n        return;\r\n    }\r\n\r\n    static void TestWithDispose()\r\n    {\r\n        SKBitmap bitmap = SKBitmap.Decode(\u0022sample.gif\u0022);\r\n        SKCanvas sKCanvas = new SKCanvas(bitmap);\r\n        bitmap.Dispose();\r\n        sKCanvas.Dispose();\r\n        return;\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nAfter every \u0060Test()\u0060 and \u0060GC.collect()\u0060, the memory footprint should be kept low.\r\n\r\n**Actual Behavior**\r\n\r\nOn Windows it works as it should be.\r\nBut on Linux, the memory footprint is always kept at a high level, even when \u0060GC.collect()\u0060 is called.\r\nJust like those objects are always cached and can\u0027t be released.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n\r\n- IDE:  Visual Studio 2022\r\n\r\n- Platform Target Frameworks:\r\n  - Linux:  Debian 10 x64, Debian 11 arm64\r\n  - Windows Classic:  Windows 11 x64\r\n\r\n**Screenshots**\r\nhere is my test on Windows \r\n![\u56FE\u7247](https://user-images.githubusercontent.com/33571798/160692669-d900ac20-4ceb-4a12-b7a4-d8483a254ce3.png)\r\n\r\nand here is my test on Debian 11 (Raspberry Pi 4B)\r\n![\u56FE\u7247](https://user-images.githubusercontent.com/33571798/160692612-fc52b8b2-240e-4925-bb9f-9b7b819b7af0.png)\r\n\r\n",
+  "author": {
+    "login": "ghost",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-03-29T19:33:30",
+  "updatedAt": "2024-06-07T08:38:13",
+  "commentCount": 8,
+  "reactionCount": 0
+}

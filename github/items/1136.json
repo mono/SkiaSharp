@@ -1,0 +1,24 @@
+{
+  "number": 1136,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Antialias not working ",
+  "body": "**Description**\r\n\r\nAntialias for SKPaint does not work since SkiaSharp Version 1.68.1 and up\r\nWorks as expected with SkiaSharp Version 1.68.0\r\n\r\n**Code**\r\n\u0060\u0060\u0060csharp\r\n       SKPaint Paint { get; set; } = new SKPaint\r\n        {\r\n            Color = SKColors.Black,\r\n            Style = SKPaintStyle.Stroke,\r\n            StrokeCap = SKStrokeCap.Round,\r\n            StrokeJoin = SKStrokeJoin.Round,\r\n            StrokeWidth = 1,\r\n            IsAntialias = true,\r\n            FilterQuality = SKFilterQuality.High \r\n        };\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\nAntialias is applied to SKPaint\r\n\r\n**Actual Behavior**\r\nIsAntialias has no effect\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1 and 1.68.1.1\r\n- Last known good version:  1.68.0\r\n- IDE:  Visual Studio 2019 v16.4.3\r\n\r\n- Platform Target Frameworks:  Tested against the following platforms:\r\n  - Android: 9.0 API-Level 21\r\n  - UWP:  1809 (10.0; Build 17763)\r\n  - ( iOS:  Seems to work fine )\r\n\r\n**Screenshots**\r\nSkiaSharp 1.68.1 and up\r\n![SkiaSharp Bug](https://user-images.githubusercontent.com/8405059/74137866-dec66680-4bf0-11ea-9d1f-d0691769d24f.PNG)\r\n\r\nSkiaSharp 1.68.0\r\n![SkiaSharp NoBug](https://user-images.githubusercontent.com/8405059/74138840-96a84380-4bf2-11ea-9f6e-64ad3ee23a0f.PNG)",
+  "author": {
+    "login": "Xyotic",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-02-10T09:48:00",
+  "updatedAt": "2022-08-19T06:02:47",
+  "closedAt": "2020-02-10T20:41:37",
+  "commentCount": 3,
+  "reactionCount": 0
+}

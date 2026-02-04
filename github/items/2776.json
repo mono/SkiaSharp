@@ -1,0 +1,31 @@
+{
+  "number": 2776,
+  "type": "issue",
+  "state": "closed",
+  "title": "Provide allocation-free overloads of methods in SKTextBlobBuilder",
+  "body": "In Uno Platform, we are using \u0060AllocatePositionedRun\u0060, which in some scenarios can be problematic as it\u0027s allocating and it\u0027s in a hot path. See for example this is a case where this was responsible for 11.3% of all allocations.\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/31348972/b3761455-752d-4d65-9a04-48d78b5cd2b5)\r\n\r\nThe idea here is to introduce a new API that won\u0027t allocate \u0060SKPositionedRunBuffer\u0060 and instead give us the \u0060Span\u0060s that we need right away. I have made the same change to APIs other than \u0060AllocatePositionedRun\u0060 for parity.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/performance",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-02T13:27:02",
+  "updatedAt": "2024-03-28T22:34:22",
+  "closedAt": "2024-03-28T22:34:21",
+  "commentCount": 0,
+  "reactionCount": 0
+}

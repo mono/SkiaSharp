@@ -1,0 +1,18 @@
+{
+  "number": 2390,
+  "type": "issue",
+  "state": "closed",
+  "title": "Xamarin SkPaint.Typeface assignment not working, always null",
+  "body": "I have an Xamarin Forms application and I am trying to load and assign a font to a SKPaint.Typeface.  I can can successfully load the font file from embedded resources but after assigning the Typeface.....its still null.  I thought maybe the file was corrupt so I tried multiple different ttf files, but SelectedText.Typeface is always null.  I found a guy having a similar issue on stack overflow, followed the correct answer on there but still not working. \r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\npublic static SKPaint SelectedText =\u003E new SKPaint { Color = SKColors.Black, FakeBoldText = true, Style = SKPaintStyle.Stroke, StrokeWidth = .6f };\r\n\r\nprivate static SKTypeface GetFont()\r\n{\r\n    SKTypeface sKTypeface = null;\r\n            \r\n    using (var resource = Assembly.GetExecutingAssembly().GetManifestResourceStream(\u0022MyApp.Resource.Roboto-Regular.ttf\u0022))\r\n    {\r\n         SKTypeface result = SKTypeface.FromStream(resource);\r\n    }\r\n    return sKTypeface;\r\n}\r\n\r\n// Typeface is always null after assigning GetFont() with the method above \r\nSelectedText.Typeface = GetFont();  \r\n\r\n\r\nI have also tried both of these...and both return sans-serif no matter what font name i reference.  \r\nvar test = SKTypeface.FromFamilyName(SKFontManager.Default.GetFamilyName(1).ToString());\r\nvar test2 = SKFontManager.Default.MatchFamily(\u0022arial\u0022, SKFontStyle.Normal);\r\n\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\nI would expect that SelectedText.Typeface would show the font information not null\r\n\r\n**Actual Behavior**\r\nSelectedText.Typeface shows null after assigning the font\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  Im currently using Skiasharp.Views.Forms 2.80.0.  I tried upgrading but still had the same issue.  The upgraded version has an issue with SVG layout so I have been using an older version.  \r\n- Last known good version:  Unknown\r\n- IDE:  Windows Visual Studio \r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n- Android: 12, I have been using an actual device, Samsung Galaxy S10\u002B, Model number SM-G975U1 \r\n  \r\n\r\n  \r\n\r\n\r\n",
+  "author": {
+    "login": "sisaacks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-16T23:47:19",
+  "updatedAt": "2023-04-09T06:00:50",
+  "closedAt": "2023-03-10T03:08:12",
+  "commentCount": 1,
+  "reactionCount": 0
+}

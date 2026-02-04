@@ -1,0 +1,22 @@
+{
+  "number": 2658,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Issue with HarfBuzzSharp.NativeObject Dispose pattern",
+  "body": "### Description\n\nHarfBuzzSharp.NativeObject doesn\u0027t free native HarfBuzz resources when the Dispose(bool) method is called by the finalizer.\r\n\r\nThe [HarfBuzzSharp.NativeObject.Dispose(bool disposing)](https://github.com/mono/SkiaSharp/blob/main/binding/HarfBuzzSharp/NativeObject.cs#L34) method simply returns if the disposing parameter is false (which will be when the Dispose(bool) method is called by the finalizer) and virtual method DisposeHandler that is responsible for freeing native HarfBuzz resources is not called.\r\n\r\nDocumentation of the [Dispose pattern](https://learn.microsoft.com/en-us/dotnet/standard/garbage-collection/implementing-dispose#the-disposebool-method-overload) says that unmanaged resources should be freed regardless of the value of the disposing parameter.\r\n\r\nThe [SkiaSharp.SKNativeObject.Dispose(bool)](https://github.com/mono/SkiaSharp/blob/main/binding/SkiaSharp/SKObject.cs#L275) method implements the Dispose pattern correctly.\n\n### Code\n\nNo code is provided because the issue is obvious.\n\n### Expected Behavior\n\nIf HarfBuzzSharp.NativeObject-derived instance is not explicitly disposed (via parameterless Dispose method), then GC should free native HarfBuzz resources when running the finalizer of that instance.\n\n### Actual Behavior\n\nIf HarfBuzzSharp.NativeObject-derived instance is not explicitly disposed (via parameterless Dispose method), then GC doesn\u0027t free native HarfBuzz resources when running the finalizer of that instance which results in a memory leak on unmanaged heap.\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "StipoR",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-23T16:56:19",
+  "updatedAt": "2023-10-23T16:56:41",
+  "commentCount": 0,
+  "reactionCount": 0
+}

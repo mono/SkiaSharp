@@ -1,0 +1,29 @@
+{
+  "number": 922,
+  "type": "pr",
+  "state": "closed",
+  "title": "Some of the colorspaces created are just references",
+  "body": "**Description of Change**\r\n\r\nSome of the colorspaces created are just references\r\n - SRGB and sRGB Linear colorspaces are static and should never be disposed\r\n - In some cases, the native object gets created at the same native memory location, without the managed layer knowing. As a result, object disposal now first checks to make sure that the object in the lookup table is the current object.\r\n - **TODO: This needs to be added to the docs because it is unusual behaviour.**\r\n**Bugs Fixed**\r\n\r\n- Related to PR #900\r\n- Fixes #835\r\n\r\n**API Changes**\r\n\r\nThe public api is unchanged.\r\n\r\n**Behavioral Changes**\r\n\r\nIn the past when references to a single sRGB colorspace was disposed, ALL the references (because there was only 1 reference really) were disposed. This PR makes sure that the \u0022static\u0022 objects are not disposed.\r\n\r\nPreviously, if multiple native objects were created and disposed quickly, they may have the same memory location. This should no longer cause exceptions.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Rebased on top of master at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-07-30T17:44:53",
+  "updatedAt": "2022-01-12T08:35:05",
+  "closedAt": "2019-09-23T23:34:45",
+  "commentCount": 15,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "dev/static-colorspaces",
+  "additions": 585,
+  "deletions": 144,
+  "changedFiles": 33,
+  "commits": 134,
+  "reviews": []
+}
