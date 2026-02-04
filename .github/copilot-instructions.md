@@ -87,12 +87,10 @@ src/Dashboard/
     ├── css/         # Stylesheets
     └── images/      # Static images
 
-collectors/
-├── SkiaSharp.Collector/     # .NET CLI for data collection
-│   ├── Commands/            # all, github, nuget, community, issues, pr-triage
-│   ├── Services/            # GitHubService, NuGetService, LabelParser
-│   └── Models/              # Type-safe data models
-└── *.ps1                    # Legacy PowerShell scripts (archived)
+src/SkiaSharp.Collector/     # .NET CLI for data collection
+├── Commands/                # all, github, nuget, community, issues, pr-triage
+├── Services/                # GitHubService, NuGetService, LabelParser
+└── Models/                  # Type-safe data models
 
 .github/workflows/   # CI/CD pipelines
 .ai/                 # AI memory bank (deep context)
@@ -104,13 +102,13 @@ The `SkiaSharp.Collector` .NET console app collects all dashboard data:
 
 ```bash
 # Run all collectors (default)
-dotnet run --project collectors/SkiaSharp.Collector -- all -o src/Dashboard/wwwroot/data
+dotnet run --project src/SkiaSharp.Collector -- all -o src/Dashboard/wwwroot/data
 
 # Run specific collector
-dotnet run --project collectors/SkiaSharp.Collector -- github -o ./data
+dotnet run --project src/SkiaSharp.Collector -- github -o ./data
 
 # NuGet with custom minimum version (for 4.x release)
-dotnet run --project collectors/SkiaSharp.Collector -- nuget --min-version 4 -o ./data
+dotnet run --project src/SkiaSharp.Collector -- nuget --min-version 4 -o ./data
 ```
 
 **Commands**: `all`, `github`, `nuget`, `community`, `issues`, `pr-triage`

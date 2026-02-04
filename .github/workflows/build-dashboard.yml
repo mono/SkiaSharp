@@ -30,7 +30,7 @@ jobs:
       - name: Collect all data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: dotnet run --project collectors/SkiaSharp.Collector -- all -o src/Dashboard/wwwroot/data
+        run: dotnet run --project src/SkiaSharp.Collector -- all -o src/Dashboard/wwwroot/data
 
       # Build and deploy
       - name: Restore dependencies
