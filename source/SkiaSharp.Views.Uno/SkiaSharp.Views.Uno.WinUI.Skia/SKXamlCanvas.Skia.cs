@@ -129,6 +129,6 @@ namespace SkiaSharp.Views.UWP
 			}
 		}
 
-		private void FreeBitmap() => _bitmap = null;
+		private void FreeBitmap() => bitmap = null;
 	}
 }
