@@ -14,11 +14,15 @@
 1. ✅ Implemented 2-step sync with batched engagement
 2. ✅ Added `--items-only` and `--engagement-only` flags
 3. ✅ Fixed Spectre.Console markup escape bug (`[1/25]` → `(1/25)`)
-4. ✅ Added progress indicators with percentage, count, and ETA
-5. ✅ Restructured workflow: NuGet first, then GitHub
-6. ✅ NuGet now syncs every 6 hours (0, 6, 12, 18 UTC)
-7. ✅ Index.json now sorted by number (stable for diffs)
-8. ✅ Updated all documentation
+4. ✅ Restructured workflow: NuGet first, then GitHub
+5. ✅ NuGet now syncs every 6 hours (0, 6, 12, 18 UTC)
+6. ✅ Index.json now sorted by number (stable for diffs)
+7. ✅ **Checkpoint-based engagement sync**:
+   - Default batch size changed from 25 to 100
+   - CLI returns exit code 1 when rate limit hit
+   - Workflow uses while-loop with git checkpoints
+   - Runs until rate limit or all items synced
+8. ✅ Updated all documentation and memory banks
 
 ### 2026-02-04 (Data Cache Architecture - Session 1)
 1. ✅ Branch renamed: `dashboard` → `docs-dashboard`
