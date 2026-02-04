@@ -158,7 +158,10 @@ jobs:
             echo "  Engagement checkpoint $BATCH"
             echo "========================================"
             
-            # Run sync - exit code 1 means rate limit hit
+            # Run sync - exit codes:
+            # 0 = work done, more to do
+            # 1 = rate limit hit
+            # 2 = all done, nothing to sync
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --cache-path .data-cache \
@@ -166,6 +169,12 @@ jobs:
               --engagement-count $ENGAGEMENT_COUNT
             EXIT_CODE=$?
             set -e
+            
+            # Exit code 2 means all engagement is synced
+            if [ $EXIT_CODE -eq 2 ]; then
+              echo "All engagement synced - nothing more to do!"
+              break
+            fi
             
             # Commit and push checkpoint
             cd .data-cache
@@ -182,7 +191,7 @@ jobs:
             cd ..
             
             # Exit if rate limit was hit
-            if [ $EXIT_CODE -ne 0 ]; then
+            if [ $EXIT_CODE -eq 1 ]; then
               echo "Rate limit hit after checkpoint $BATCH - will resume next run"
               break
             fi

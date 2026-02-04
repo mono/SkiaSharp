@@ -98,8 +98,15 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             AnsiConsole.MarkupLine($"[green]✓ Sync complete[/]");
         }
 
-        // Return exit code 1 if rate limited (signals "more work to do")
-        return rateLimitHit ? 1 : 0;
+        // Exit codes:
+        // 0 = work done successfully
+        // 1 = rate limit hit (more work to do)
+        // 2 = nothing to sync (all engagement up to date) - signals "all done"
+        if (rateLimitHit)
+            return 1;
+        if (settings.EngagementOnly && engagementProcessed == 0)
+            return 2; // All engagement synced, nothing more to do
+        return 0;
     }
 
     private async Task<(CacheIndex, SyncMeta, int)> SyncLayer1Async(
