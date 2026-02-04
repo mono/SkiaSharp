@@ -1166,3 +1166,45 @@ h2.category-danger { color: #dc3545; }
     font-weight: 600;
     white-space: nowrap;
 }
+
+/* NuGet Download Trend Charts */
+.nuget-charts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 1200px) {
+    .nuget-charts {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .nuget-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
+.nuget-charts .chart-card {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+}
+
+.nuget-charts .chart-card h4 {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.nuget-charts .no-data {
+    color: #6c757d;
+    font-size: 0.85rem;
+    padding: 1rem;
+    text-align: center;
+}
+

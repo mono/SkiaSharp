@@ -8,6 +8,7 @@ namespace SkiaSharp.Collector.Commands;
 
 /// <summary>
 /// Syncs NuGet data to the cache.
+/// Uses Registration API to get full version history with publish dates.
 /// </summary>
 public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
 {
@@ -33,6 +34,7 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
 
         var indexDict = index.Packages.ToDictionary(p => p.Id, StringComparer.OrdinalIgnoreCase);
         var processed = 0;
+        var totalVersions = 0;
 
         await AnsiConsole.Progress()
             .AutoClear(false)
@@ -54,13 +56,18 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
                     {
                         var stats = await nuget.GetPackageStatsAsync(packageId);
                         
+                        // Store ALL versions with publish dates
+                        var versions = stats.Versions
+                            .Select(v => new PackageVersion(v.Version, v.Downloads, v.Published))
+                            .ToList();
+
                         var cachedPackage = new CachedPackage(
                             stats.Id,
-                            null, // Description not returned by search API
-                            stats.Versions.FirstOrDefault()?.Version,
+                            null, // Description available but not needed
+                            versions.LastOrDefault()?.Version, // Latest = last after sorting
                             stats.TotalDownloads,
                             stats.IsLegacy,
-                            [.. stats.Versions.Select(v => new PackageVersion(v.Version, v.Downloads, null))],
+                            versions,
                             now
                         );
 
@@ -68,13 +75,14 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
 
                         indexDict[packageId] = new NuGetIndexPackage(
                             stats.Id,
-                            stats.Versions.FirstOrDefault()?.Version,
+                            versions.LastOrDefault()?.Version,
                             stats.TotalDownloads,
                             stats.IsLegacy,
                             now
                         );
 
                         processed++;
+                        totalVersions += versions.Count;
                     }
                     catch (Exception ex)
                     {
@@ -107,6 +115,7 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
                 .AddColumn(new TableColumn("Value").RightAligned());
             
             table.AddRow("Packages Synced", $"[green]{processed}[/]");
+            table.AddRow("Total Versions", $"[green]{totalVersions}[/]");
             table.AddRow("Total Downloads", $"[bold green]{totalDownloads:N0}[/]");
             table.AddRow("Supported", $"[green]{supported}[/]");
             table.AddRow("Legacy", $"[yellow]{legacy}[/]");

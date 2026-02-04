@@ -19,6 +19,9 @@ public class DashboardDataService(HttpClient http)
     public async Task<NuGetStats?> GetNuGetStatsAsync() =>
         await http.GetFromJsonAsync<NuGetStats>("data/nuget-stats.json", JsonOptions);
 
+    public async Task<NuGetChartsData?> GetNuGetChartsDataAsync() =>
+        await http.GetFromJsonAsync<NuGetChartsData>("data/nuget-charts.json", JsonOptions);
+
     public async Task<CommunityStats?> GetCommunityStatsAsync() =>
         await http.GetFromJsonAsync<CommunityStats>("data/community-stats.json", JsonOptions);
 

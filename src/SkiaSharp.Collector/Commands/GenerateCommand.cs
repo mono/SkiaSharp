@@ -32,6 +32,9 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         // Generate NuGet stats
         await GenerateNuGetStatsAsync(cache, settings);
 
+        // Generate NuGet chart data
+        await GenerateNuGetChartsAsync(cache, settings);
+
         // Generate community stats
         await GenerateCommunityStatsAsync(cache, settings);
 
@@ -368,7 +371,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 pkg.Id,
                 pkg.TotalDownloads,
                 cachedPkg?.Versions
-                    .Select(v => new VersionInfo(v.Version, v.Downloads))
+                    .Select(v => new VersionInfo(v.Version, v.Downloads, v.Published))
                     .ToList() ?? [],
                 pkg.IsLegacy
             ));
@@ -389,6 +392,83 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 AnsiConsole.MarkupLine($"[dim]    {totalDownloads:N0} total downloads[/]");
             }
         }
+    }
+
+    private async Task GenerateNuGetChartsAsync(CacheService cache, GenerateSettings settings)
+    {
+        if (!settings.Quiet)
+            AnsiConsole.MarkupLine("\n[bold]Generating nuget-charts.json...[/]");
+
+        // Define chart configurations
+        var chartConfigs = new List<(string Title, string[] PackageIds)>
+        {
+            ("SkiaSharp Core", ["SkiaSharp"]),
+            (".NET MAUI Views", ["SkiaSharp.Views.Maui.Core"]),
+            ("HarfBuzzSharp", ["HarfBuzzSharp"]),
+            ("Skottie Animation", ["SkiaSharp.Skottie"]),
+            ("GPU Backends", ["SkiaSharp.Direct3D.Vortice", "SkiaSharp.Vulkan.SharpVk"]),
+            ("Blazor", ["SkiaSharp.Views.Blazor"])
+        };
+
+        var charts = new List<PackageChartData>();
+
+        foreach (var (title, packageIds) in chartConfigs)
+        {
+            var series = new List<PackageSeriesData>();
+
+            foreach (var packageId in packageIds)
+            {
+                var cachedPkg = await cache.LoadPackageAsync(packageId);
+                if (cachedPkg == null) continue;
+
+                // Build cumulative download data points from version history
+                var dataPoints = BuildCumulativeDataPoints(cachedPkg.Versions);
+                
+                if (dataPoints.Count > 0)
+                {
+                    series.Add(new PackageSeriesData(packageId, dataPoints));
+                }
+            }
+
+            if (series.Count > 0)
+            {
+                charts.Add(new PackageChartData(title, series));
+            }
+        }
+
+        var output = new NuGetChartsData(DateTime.UtcNow, charts);
+        var outputPath = Path.Combine(settings.OutputDir, "nuget-charts.json");
+        await OutputService.WriteJsonAsync(outputPath, output);
+
+        if (!settings.Quiet)
+        {
+            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+            AnsiConsole.MarkupLine($"[dim]    {charts.Count} charts generated[/]");
+        }
+    }
+
+    /// <summary>
+    /// Build cumulative download data points from version history.
+    /// Each version adds its downloads to the running total at its publish date.
+    /// </summary>
+    private static List<ChartDataPoint> BuildCumulativeDataPoints(List<Models.PackageVersion> versions)
+    {
+        var dataPoints = new List<ChartDataPoint>();
+        long cumulative = 0;
+
+        // Sort by publish date and build cumulative totals
+        var sortedVersions = versions
+            .Where(v => v.Published.HasValue)
+            .OrderBy(v => v.Published!.Value)
+            .ToList();
+
+        foreach (var version in sortedVersions)
+        {
+            cumulative += version.Downloads;
+            dataPoints.Add(new ChartDataPoint(version.Published!.Value, cumulative));
+        }
+
+        return dataPoints;
     }
 
     private async Task GenerateCommunityStatsAsync(CacheService cache, GenerateSettings settings)

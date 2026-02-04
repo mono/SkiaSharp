@@ -14,4 +14,25 @@ public record PackageInfo(
     bool IsLegacy
 );
 
-public record VersionInfo(string Version, long Downloads);
+public record VersionInfo(string Version, long Downloads, DateTime? Published = null);
+
+// NuGet Charts Data
+public record NuGetChartsData(
+    DateTime GeneratedAt,
+    List<PackageChartData> Charts
+);
+
+public record PackageChartData(
+    string Title,
+    List<PackageSeriesData> Series
+);
+
+public record PackageSeriesData(
+    string PackageId,
+    List<ChartDataPoint> DataPoints
+);
+
+public record ChartDataPoint(
+    DateTime Date,
+    long CumulativeDownloads
+);

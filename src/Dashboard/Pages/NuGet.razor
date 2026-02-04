@@ -1,4 +1,5 @@
 @page "/nuget"
+@using ApexCharts
 @inject DashboardDataService DataService
 
 <PageTitle>NuGet Stats - SkiaSharp Dashboard</PageTitle>
@@ -30,7 +31,43 @@ else
         </div>
     </div>
 
+    <!-- Download Trend Charts -->
+    @if (_chartsData?.Charts?.Any() == true)
+    {
+        <h2>Download Trends</h2>
+        <div class="nuget-charts">
+            @foreach (var chart in _chartsData.Charts)
+            {
+                <div class="chart-card">
+                    <h4>@chart.Title</h4>
+                    @if (chart.Series.Any())
+                    {
+                        <ApexChart TItem="ChartDataPoint"
+                                   Options="GetChartOptions(chart.Title)"
+                                   Height="200">
+                            @foreach (var series in chart.Series)
+                            {
+                                <ApexPointSeries TItem="ChartDataPoint"
+                                                Items="@series.DataPoints"
+                                                Name="@GetShortPackageName(series.PackageId)"
+                                                SeriesType="SeriesType.Area"
+                                                XValue="@(e => e.Date)"
+                                                YValue="@(e => (decimal)e.CumulativeDownloads)"
+                                                OrderBy="@(e => e.X)" />
+                            }
+                        </ApexChart>
+                    }
+                    else
+                    {
+                        <p class="no-data">No version history available</p>
+                    }
+                </div>
+            }
+        </div>
+    }
+
     <!-- Package Groups -->
+    <h2>All Packages</h2>
     <div class="nuget-groups">
         @foreach (var group in GetPackageGroups())
         {
@@ -113,13 +150,71 @@ else
     private bool _loading = true;
     private bool _showLegacy = false;
     private NuGetStats? _stats;
+    private NuGetChartsData? _chartsData;
     private HashSet<string> _expandedGroups = ["SkiaSharp", "SkiaSharp Views", "SkiaSharp Extensions", "HarfBuzzSharp"];
 
     protected override async Task OnInitializedAsync()
     {
-        try { _stats = await DataService.GetNuGetStatsAsync(); }
+        try 
+        { 
+            _stats = await DataService.GetNuGetStatsAsync();
+            _chartsData = await DataService.GetNuGetChartsDataAsync();
+        }
         catch { /* Data not yet available */ }
         _loading = false;
+    }
+
+    private static ApexChartOptions<ChartDataPoint> GetChartOptions(string title) => new()
+    {
+        Chart = new Chart
+        {
+            Toolbar = new Toolbar { Show = false },
+            Animations = new Animations { Enabled = false },
+            Zoom = new Zoom { Enabled = false }
+        },
+        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
+        Fill = new Fill 
+        { 
+            Type = FillType.Gradient,
+            Gradient = new FillGradient
+            {
+                ShadeIntensity = 1,
+                OpacityFrom = 0.4,
+                OpacityTo = 0.1,
+                Stops = [0, 90, 100]
+            }
+        },
+        Xaxis = new XAxis
+        {
+            Type = XAxisType.Datetime,
+            Labels = new XAxisLabels { Format = "yyyy" }
+        },
+        Yaxis =
+        [
+            new YAxis
+            {
+                Labels = new YAxisLabels
+                {
+                    Formatter = "function(val) { return val >= 1000000 ? (val/1000000).toFixed(1) + 'M' : val >= 1000 ? (val/1000).toFixed(0) + 'K' : val; }"
+                }
+            }
+        ],
+        Tooltip = new Tooltip
+        {
+            X = new TooltipX { Format = "MMM yyyy" }
+        },
+        Legend = new Legend { Show = true, Position = LegendPosition.Bottom }
+    };
+
+    private static string GetShortPackageName(string id)
+    {
+        // For chart legends, show short names
+        if (id.Contains(".Direct3D.")) return "Direct3D";
+        if (id.Contains(".Vulkan.")) return "Vulkan";
+        if (id.Contains(".Maui.")) return id.Replace("SkiaSharp.Views.Maui.", "");
+        if (id.StartsWith("SkiaSharp.Views.")) return id.Replace("SkiaSharp.Views.", "");
+        if (id.StartsWith("SkiaSharp.")) return id.Replace("SkiaSharp.", "");
+        return id;
     }
 
     private void ToggleGroup(string group)

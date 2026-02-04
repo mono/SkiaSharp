@@ -15,5 +15,29 @@ public record PackageStats(
 
 public record VersionStats(
     string Version,
-    long? Downloads
+    long? Downloads,
+    DateTime? Published = null
+);
+
+/// <summary>
+/// Chart data for NuGet download trends.
+/// </summary>
+public record NuGetChartsData(
+    DateTime GeneratedAt,
+    List<PackageChartData> Charts
+);
+
+public record PackageChartData(
+    string Title,
+    List<PackageSeriesData> Series
+);
+
+public record PackageSeriesData(
+    string PackageId,
+    List<ChartDataPoint> DataPoints
+);
+
+public record ChartDataPoint(
+    DateTime Date,
+    long CumulativeDownloads
 );
