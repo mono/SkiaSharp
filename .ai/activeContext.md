@@ -5,28 +5,34 @@
 
 ## Current Focus
 
-**Phase**: Phase 2 - Dashboard Restructure COMPLETE ✅
-**Status**: Navigation Fixed & Verified
+**Phase**: Phase 2.7 - NuGet Redesign COMPLETE ✅
+**Status**: Production - All Features Working
 
-All pages working with click navigation AND direct URL access.
+All 5 pages fully functional with charts, filters, and proper navigation.
 
 ## Recent Changes
+
+### 2026-02-04 (NuGet Page Redesign)
+1. ✅ **Dynamic package list**: Collector now fetches VERSIONS.txt from main & release/2.x branches
+2. ✅ **Legacy detection**: Packages without stable 3.x version marked as legacy
+   - Configurable threshold: `$minSupportedMajorVersion = 3` in collector
+   - Future-proof: bump to 4 when ready
+3. ✅ **Grouped layout**: 4 main groups with subgroups:
+   - SkiaSharp (core + 14 NativeAssets)
+   - SkiaSharp Views (5 subgroups: Native, MAUI, Xamarin.Forms, Uno, Web)
+   - SkiaSharp Extensions (3 subgroups: Text, Animation, GPU Backends)
+   - HarfBuzzSharp (core + 11 NativeAssets)
+4. ✅ **Legacy toggle**: Checkbox to show/hide legacy packages (hidden by default)
+5. ✅ **Collapsible sections**: Each group/subgroup collapsible with subtotals
+
+### 2026-02-03 (NuGet Collector Fix)
+1. ✅ NuGet collector switched from Registration API to Search API
+2. ✅ 975M+ total downloads now shown correctly
 
 ### 2026-02-03 (SPA Routing Fix - COMPLETE)
 1. ✅ Reset index.html to clean Blazor template + spa-github-pages script
 2. ✅ Created proper 404.html with segmentCount=2 for nested subdirectory
-3. ✅ Created root-404.html to replace old sessionStorage approach at site root
-4. ✅ **CRITICAL FIX**: Removed leading slash from NavigateTo URLs:
-   - Issues.razor: `/issues` → `issues`
-   - PrTriage.razor: `/pull-requests` → `pull-requests`
-5. ✅ **CRITICAL FIX**: Don't call NavigateTo on initial page load:
-   - Split `ApplyFilters()` into parameterless (for @bind:after) and `ApplyFiltersInternal(updateUrl)`
-   - Call with `updateUrl: false` in OnInitializedAsync
-6. ✅ Updated copilot-instructions.md with comprehensive SPA routing docs + bug fixes table
-
-### 2026-02-03 (Earlier Bug Fixes)
-1. ✅ Fixed model type mismatches (int → double for DaysOpen fields)
-2. ✅ Fixed NuGet model (nullable Downloads)
+3. ✅ spa-github-pages approach working for all navigation scenarios
 
 ### Key Commits
 - `1bb2d910` - Fix method group conversion errors in filter bindings
@@ -90,7 +96,7 @@ Navigation.NavigateTo("./issues");
 | Issues | `/issues` | ✅ Filters, sortable table |
 | Pull Requests | `/pull-requests` | ✅ Triage cards, filters |
 | Community | `/community` | ✅ Repo stats + contributors |
-| NuGet | `/nuget` | ✅ Downloads |
+| NuGet | `/nuget` | ✅ Grouped layout, legacy toggle, 975M+ downloads |
 
 ## Implementation Details
 

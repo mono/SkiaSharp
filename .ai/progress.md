@@ -4,12 +4,13 @@
 
 ## Current Status
 
-**Overall**: ✅ Phase 2 - Dashboard Restructure COMPLETE
+**Overall**: ✅ Phase 2.7 - NuGet Page Redesign COMPLETE
 
 | Area | Status | Notes |
 |------|--------|-------|
 | Phase 1 | ✅ Complete | Initial dashboard |
 | Phase 2 | ✅ Complete | Restructure with charts |
+| Phase 2.7 | ✅ Complete | NuGet grouped layout + legacy toggle |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 
 ## Phase 1 (Completed)
@@ -45,7 +46,7 @@
 | Issues | `/issues` | ✅ Complete |
 | Pull Requests | `/pull-requests` | ✅ Complete |
 | Community | `/community` | ✅ Complete |
-| NuGet | `/nuget` | ✅ No changes needed |
+| NuGet | `/nuget` | ✅ Grouped layout with legacy toggle |
 
 ### Phase 2.1: Data Layer ✅
 - [x] Create `collect-issues.ps1` (paginated, all open issues)
@@ -92,6 +93,27 @@
 
 None! 🎉
 
+## Phase 2.7: NuGet Page Redesign ✅
+
+### Collector Enhancements
+- [x] Dynamic package list from VERSIONS.txt (main + release/2.x branches)
+- [x] Union gives 50 packages total
+- [x] `isLegacy` flag based on configurable `$minSupportedMajorVersion`
+- [x] Switch from Registration API to Search API (better download stats)
+
+### Page Layout
+- [x] Total downloads hero card (975M+)
+- [x] Collapsible group structure:
+  - SkiaSharp (core + NativeAssets)
+  - SkiaSharp Views (5 subgroups)
+  - SkiaSharp Extensions (3 subgroups)
+  - HarfBuzzSharp (core + NativeAssets)
+- [x] "Show legacy packages" checkbox (default off)
+- [x] Group/subgroup subtotals
+- [x] Styled cards with package info
+
+---
+
 ## SPA Routing (SOLVED)
 
 Navigation bugs were fixed by:
@@ -113,6 +135,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.4.0 | 2026-02-04 | NuGet page redesign - grouped layout, legacy toggle, 50 packages |
 | 0.3.2 | 2026-02-03 | NuGet collector fixed - 822M+ downloads now shown |
 | 0.3.1 | 2026-02-03 | SPA routing fix - navigation fully working |
 | 0.3.0 | 2026-02-03 | Phase 2: Charts, filters, restructure |
