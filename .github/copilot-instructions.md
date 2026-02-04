@@ -56,10 +56,11 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 
 ```
 HOURLY + ON PUSH (sync-data-cache.yml):
-  Step 1: NuGet API  ─→ sync nuget  ─→ push (every 6 hours: 0,6,12,18 UTC)
-  Step 2: GitHub API ─→ sync github --items-only ─→ push
-  Step 3: GitHub API ─→ sync github --engagement-only (loop until rate limit)
-          └─→ 100 items per iteration ─→ push (checkpoint) ─→ repeat
+  Step 1a: NuGet API     ─→ sync nuget      ─→ push (every 6 hours)
+  Step 1b: Community API ─→ sync community  ─→ push (every 6 hours)
+  Step 2:  GitHub API    ─→ sync github --items-only ─→ push
+  Step 3:  GitHub API    ─→ sync github --engagement-only (loop until rate limit)
+           └─→ 100 items per iteration ─→ push (checkpoint) ─→ repeat
 
 EVERY 6 HOURS (build-dashboard.yml):  
   docs-data-cache ─→ generate command ─→ dashboard JSON ─→ deploy to docs-live
@@ -70,17 +71,25 @@ EVERY 6 HOURS (build-dashboard.yml):
 docs-data-cache/
 ├── github/
 │   ├── sync-meta.json       # Sync state, rate limits, skip list
+│   ├── repo.json            # Stars, forks, watchers, topics
 │   ├── index.json           # All issues + PRs (sorted by number)
 │   └── items/{number}.json  # Full data + engagement per item
+├── community/
+│   ├── sync-meta.json       # Last sync time
+│   └── contributors.json    # Top 100 contributors with MS flag
 ├── nuget/
 │   ├── sync-meta.json
 │   ├── index.json
 │   └── packages/{id}.json
 ```
 
-### Layered Sync Strategy
-- **Layer 1**: Basic item data (all issues/PRs) - fetches all pages
-- **Layer 2**: Engagement data - 100 items/checkpoint, loops until rate limit hit
+### Sync Commands
+| Command | Schedule | API Calls | Data |
+|---------|----------|-----------|------|
+| `sync nuget` | Every 6h | ~50 | Package downloads |
+| `sync community` | Every 6h | ~21 | Contributors + MS check |
+| `sync github --items-only` | Hourly | ~35 pages | All issues/PRs |
+| `sync github --engagement-only` | Hourly | Until rate limit | Comments, reactions |
 
 ### Checkpoint Strategy (Fault Tolerance)
 ```bash
@@ -90,15 +99,9 @@ while true; do
   if rate_limited or all_done; then break; fi
 done
 ```
-- Crash/failure loses max 100 items of work
-- Next run resumes from last checkpoint
 - Atomic file writes prevent JSON corruption
-
-### Smart Engagement Sync
-Only fetches engagement for items where `UpdatedAt > EngagementSyncedAt`:
-- Skips items that haven't changed since last sync
-- Prioritizes recently active items
-- Skip list excludes failed items with cooldowns
+- Git commits provide checkpoints
+- Crash loses max 100 items of work
 
 ### Engagement Scoring
 Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
@@ -109,11 +112,11 @@ Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinc
 
 | Workflow | File | Triggers | Purpose |
 |----------|------|----------|---------|
-| Sync Data Cache | `sync-data-cache.yml` | Hourly, push to docs-dashboard | Sync GitHub/NuGet → cache branch |
+| Sync Data Cache | `sync-data-cache.yml` | Hourly, push to docs-dashboard | Sync GitHub/NuGet/Community → cache |
 | Build Dashboard | `build-dashboard.yml` | Every 6 hours, manual | Generate JSON + build + deploy |
 
 **Sync workflow steps:**
-1. NuGet (every 6 hours only) → push
+1. NuGet + Community (every 6 hours) → push
 2. GitHub items (Layer 1) → push  
 3. GitHub engagement (Layer 2) → loop: 100 items → push → repeat until rate limit
 
@@ -125,14 +128,17 @@ The `SkiaSharp.Collector` .NET console app has two main modes:
 
 ### Sync Mode (populates cache)
 ```bash
-# Sync GitHub data
+# Sync GitHub data (items + engagement)
 dotnet run -- sync github --cache-path ./cache
 
 # Sync NuGet data
 dotnet run -- sync nuget --cache-path ./cache
 
-# Options
---engagement-count 100    # Items per batch (default: 100 for checkpointing)
+# Sync community data (contributors + MS membership)
+dotnet run -- sync community --cache-path ./cache
+
+# GitHub options
+--engagement-count 100    # Items per batch (default: 100)
 --items-only              # Skip engagement sync (Layer 1 only)
 --engagement-only         # Skip items sync (Layer 2 only)
 --full                    # Force full sync (ignore timestamps)
@@ -162,9 +168,10 @@ dotnet run -- nuget -o ./data         # Just NuGet stats
 # One-time setup: Create worktree for cache
 git worktree add .data-cache docs-data-cache
 
-# Sync data locally
+# Sync data locally (all sources)
 dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
 dotnet run --project src/SkiaSharp.Collector -- sync nuget --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Collector -- sync community --cache-path .data-cache
 
 # Generate dashboard JSON
 dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data

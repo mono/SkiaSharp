@@ -39,24 +39,28 @@
 ## Data Flow (New Cache Architecture)
 
 ```
-┌──────────────────┐     ┌──────────────────┐
-│  GitHub API      │     │  NuGet API       │
-└────────┬─────────┘     └────────┬─────────┘
-         │                        │
-         ▼                        ▼
+┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐
+│  GitHub API      │  │  NuGet API       │  │  Contributors    │
+└────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘
+         │                     │                     │
+         ▼                     ▼                     ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │              sync-data-cache.yml (Hourly + On Push)              │
 │                                                                  │
-│  Step 1: NuGet (every 6 hours only)                             │
+│  Step 1a: NuGet (every 6 hours)                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │ dotnet run -- sync nuget --cache-path $CACHE               │ │
-│  │ → commit & push                                            │ │
+│  │ sync nuget → commit & push                                 │ │
+│  └────────────────────────────────────────────────────────────┘ │
+│                                                                  │
+│  Step 1b: Community (every 6 hours)                             │
+│  ┌────────────────────────────────────────────────────────────┐ │
+│  │ sync community → commit & push (~21 API calls)             │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │                                                                  │
 │  Step 2: GitHub items (Layer 1)                                 │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │ dotnet run -- sync github --items-only --cache-path $CACHE │ │
-│  │ → commit & push                                            │ │
+│  │ sync github --items-only → commit & push                   │ │
+│  │ Also saves repo.json (stars, forks, watchers)              │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │                                                                  │
 │  Step 3: GitHub engagement (Layer 2) - checkpoint loop          │
@@ -71,12 +75,12 @@
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                  docs-data-cache branch                          │
-│  ┌─────────────────┐  ┌─────────────────┐                       │
-│  │ github/         │  │ nuget/          │                       │
-│  │ ├─ sync-meta    │  │ ├─ sync-meta    │                       │
-│  │ ├─ index.json   │  │ ├─ index.json   │                       │
-│  │ └─ items/*.json │  │ └─ packages/*.json                      │
-│  └─────────────────┘  └─────────────────┘                       │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐  │
+│  │ github/         │  │ community/      │  │ nuget/          │  │
+│  │ ├─ repo.json    │  │ └─ contributors │  │ ├─ index.json   │  │
+│  │ ├─ index.json   │  │    .json        │  │ └─ packages/*   │  │
+│  │ └─ items/*.json │  │                 │  │                 │  │
+│  └─────────────────┘  └─────────────────┘  └─────────────────┘  │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
@@ -85,25 +89,22 @@
 │                                                                  │
 │  ┌─────────────────────────────────────────────────────────────┐ │
 │  │ SkiaSharp.Collector generate command                        │ │
-│  │ - Reads cache, transforms to dashboard JSON                 │ │
-│  │ - Calculates engagement scores                              │ │
-│  │ - Identifies hot issues (score trending up)                 │ │
-│  │ - Always writes files (even if empty)                       │ │
+│  │ - Reads repo.json → github-stats.json (stars, forks)       │ │
+│  │ - Reads contributors.json → community-stats.json           │ │
+│  │ - Calculates engagement scores, hot issues                  │ │
 │  └─────────────────────────────────────────────────────────────┘ │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │                    Dashboard JSON Files                          │
-│  github-stats.json │ nuget-stats.json │ issues.json │ pr-triage │
+│  github-stats │ community-stats │ nuget-stats │ issues │ pr-triage
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
 ┌──────────────────────────────────────────────────────────────────┐
 │              peaceiris/actions-gh-pages@v4                       │
-│              - publish_branch: docs-live                         │
-│              - destination_dir: dashboard                        │
-│              - keep_files: true                                  │
+│              → docs-live/dashboard/                              │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │
                                  ▼
@@ -159,8 +160,9 @@
 
 | Command | Purpose | API Calls |
 |---------|---------|-----------|
-| `sync github --items-only` | Layer 1 only | ~35 pages |
-| `sync github --engagement-only` | Layer 2 only | 25×3 per batch |
+| `sync github --items-only` | Layer 1: items + repo.json | ~35 pages |
+| `sync github --engagement-only` | Layer 2: comments/reactions | 100×3 per batch |
+| `sync community` | Contributors + MS membership | ~21 |
 | `sync nuget` | Package downloads | ~50 |
 | `generate` | Cache → dashboard JSON | 0 (file I/O) |
 
@@ -191,14 +193,14 @@
 - Build uses whatever data is available
 - Rate limits don't block dashboard updates
 
-### 3. Layered Sync with Batched Engagement
-**Decision**: Layer 1 (all items) + Layer 2 (engagement, 25/batch × 10 batches).
+### 3. Layered Sync with Checkpoint Loop
+**Decision**: Layer 1 (all items) + Layer 2 (engagement, 100/batch in while loop).
 **Why**:
 - Get full coverage quickly (Layer 1)
 - Build up engagement data over time (Layer 2)
-- Commit after each batch for incremental progress
-- Stay well under rate limits
-- Resume from any point on failure
+- Commit after every 100 items (checkpoint)
+- While loop continues until rate limit or done
+- Exit code 1 signals "more work to do"
 
 ### 4. Smart Engagement Sync
 **Decision**: Only fetch engagement for items where `UpdatedAt > EngagementSyncedAt`.
@@ -215,14 +217,22 @@
 - 403 (forbidden) = 1 day (permissions may change)
 - Other errors = 1 hour (transient)
 
-### 6. Always Write Files
+### 6. Community Sync Separately
+**Decision**: Separate `sync community` command, runs every 6 hours with NuGet.
+**Why**:
+- Contributors list needs ~21 API calls (1 list + 20 MS checks)
+- Doesn't need hourly updates
+- Separate concerns from issue/PR sync
+- Cache stores MS membership to avoid re-checking
+
+### 7. Always Write Files
 **Decision**: Generate always writes JSON, even if cache is empty.
 **Why**:
 - Dashboard reflects actual cache state
 - Supports cache reset scenarios
 - No stale data from previous commits
 
-### 6. Engagement Scoring
+### 8. Engagement Scoring
 **Decision**: Score = `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + freshness bonuses`
 **Why**:
 - Comments show active discussion
@@ -230,7 +240,7 @@
 - Recent activity gets bonus
 - Simple, explainable formula
 
-### 7. Hot Issue Detection
+### 9. Hot Issue Detection
 **Decision**: Hot = current score > historical score AND score > 5
 **Why**:
 - Trending up (not just high absolute score)

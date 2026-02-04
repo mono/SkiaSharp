@@ -10,28 +10,34 @@
 
 ## Recent Changes
 
-### 2026-02-04 (Data Cache Architecture - Session 2)
-1. ✅ Implemented 2-step sync with batched engagement
-2. ✅ Added `--items-only` and `--engagement-only` flags
-3. ✅ Fixed Spectre.Console markup escape bug (`[1/25]` → `(1/25)`)
-4. ✅ Restructured workflow: NuGet first, then GitHub
-5. ✅ NuGet now syncs every 6 hours (0, 6, 12, 18 UTC)
-6. ✅ Index.json now sorted by number (stable for diffs)
-7. ✅ **Checkpoint-based engagement sync**:
-   - Default batch size changed from 25 to 100
-   - CLI returns exit code 1 when rate limit hit
-   - Workflow uses while-loop with git checkpoints
-   - Runs until rate limit or all items synced
-8. ✅ Updated all documentation and memory banks
+### 2026-02-04 (Community Sync & Documentation)
+1. ✅ Updated .ai/techContext.md with CLI commands
+2. ✅ Updated .ai/architecture.md with 4-step workflow
+3. ✅ Updated copilot-instructions.md with cache structure
+4. ✅ Updated progress.md with v0.8.0
 
-### 2026-02-04 (Data Cache Architecture - Session 1)
+### 2026-02-04 (Community Sync Implementation)
+1. ✅ **Community sync feature**:
+   - New `sync community` command
+   - Fetches top 100 contributors (1 API call)
+   - Checks MS membership for top 20 (20 API calls)
+   - Stores in `community/contributors.json`
+2. ✅ **Repo stats in cache**:
+   - GitHub sync saves stars/forks/watchers to `github/repo.json`
+   - Generate reads from cache (no more hardcoded zeros)
+3. ✅ Removed Recent Commits from Community page
+
+### 2026-02-04 (Checkpoint-Based Engagement)
+1. ✅ Changed engagement batch size: 25 → 100
+2. ✅ CLI returns exit code 1 when rate limit hit
+3. ✅ Workflow uses while-loop with checkpoint commits
+4. ✅ Fixed TriageCategory enum (added Untriaged, Draft)
+
+### 2026-02-04 (Data Cache Architecture)
 1. ✅ Branch renamed: `dashboard` → `docs-dashboard`
 2. ✅ Created `docs-data-cache` orphan branch
-3. ✅ Created `sync-data-cache.yml` workflow
-4. ✅ Implemented `sync github` and `sync nuget` commands
-5. ✅ Implemented `generate` command
-6. ✅ Engagement scoring with hot issue detection
-7. ✅ Dashboard UI (hot issues on Home and Issues pages)
+3. ✅ Implemented sync commands (github, nuget)
+4. ✅ Engagement scoring with hot issue detection
 
 ## Architecture Summary
 
@@ -39,48 +45,47 @@
 Push to docs-dashboard
          │
          ▼
-sync-data-cache.yml
+sync-data-cache.yml (hourly + on push)
          │
-         ├─ Step 1: NuGet (every 6 hours only) ──→ push
+         ├─ Step 1a: NuGet (every 6h) ──→ push
+         ├─ Step 1b: Community (every 6h) ──→ push
          │
          ├─ Step 2: GitHub items (Layer 1) ──→ push
          │
          └─ Step 3: GitHub engagement (Layer 2)
-                    │
                     └─ while loop: 100 items ──→ push ──→ repeat until rate limit
-```
-
-### Workflows
-| Workflow | Triggers | Purpose |
-|----------|----------|---------|
-| `sync-data-cache.yml` | Hourly, push to docs-dashboard | Sync APIs → cache |
-| `build-dashboard.yml` | Every 6 hours, manual | Cache → JSON → deploy |
-
-### CLI Commands
-```bash
-# Sync commands (use in workflow)
-dotnet run -- sync github --cache-path ./cache --items-only
-dotnet run -- sync github --cache-path ./cache --engagement-only --engagement-count 100
-dotnet run -- sync nuget --cache-path ./cache
-
-# Generate command
-dotnet run -- generate --from-cache ./cache -o ./data
 ```
 
 ### Cache Structure (`docs-data-cache` branch)
 ```
 docs-data-cache/
 ├── github/
-│   ├── sync-meta.json       # Sync state, rate limits, skip list
-│   ├── index.json           # All issues + PRs (sorted by number)
-│   └── items/{number}.json  # Full data + engagement per item
+│   ├── repo.json           # Stars, forks, watchers
+│   ├── sync-meta.json      # Sync state, rate limits
+│   ├── index.json          # All issues + PRs
+│   └── items/*.json        # Full item + engagement
+├── community/
+│   ├── sync-meta.json
+│   └── contributors.json   # Top 100 with MS flag
 ├── nuget/
 │   ├── sync-meta.json
 │   ├── index.json
-│   └── packages/{id}.json
+│   └── packages/*.json
 ```
 
-### Checkpoint Strategy (Fault Tolerance)
+### CLI Commands
+```bash
+# Sync commands (populate cache)
+dotnet run -- sync github --cache-path ./cache --items-only
+dotnet run -- sync github --cache-path ./cache --engagement-only --engagement-count 100
+dotnet run -- sync community --cache-path ./cache
+dotnet run -- sync nuget --cache-path ./cache
+
+# Generate command (cache → JSON)
+dotnet run -- generate --from-cache ./cache -o ./data
+```
+
+### Checkpoint Strategy
 ```bash
 while true; do
   sync github --engagement-only --engagement-count 100
@@ -90,18 +95,7 @@ done
 ```
 - Atomic file writes prevent JSON corruption
 - Git commits provide checkpoints every 100 items
-- Crash loses max 100 items of work, next run resumes
-
-### Layered Sync Strategy
-- **Layer 1**: Basic item data (all issues/PRs)
-- **Layer 2**: Engagement data - loops until rate limit hit
-
-### Smart Engagement Sync
-Only fetches engagement for items where `UpdatedAt > EngagementSyncedAt`
-
-### Engagement Scoring
-- Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
-- Hot detection: Current score > Historical score (7 days ago) AND score > 5
+- Exit code 1 = rate limit hit (more work to do)
 
 ## Context for Next AI Session
 
@@ -110,7 +104,7 @@ When resuming work:
 2. Branch is `docs-dashboard` (renamed from `dashboard`)
 3. Data cache is `docs-data-cache` branch
 4. Live at https://mono.github.io/SkiaSharp/dashboard/
-5. Sync runs hourly (NuGet every 6h), build runs every 6 hours
+5. Sync runs hourly (NuGet/Community every 6h), build runs every 6 hours
 
 ## Previous Completed Phases
 

@@ -29,40 +29,42 @@
 - [x] `CacheService.cs` - Read/write cache files, atomic writes
 - [x] Skip list management with error types and cooldowns
 - [x] Index.json sorted by item number (stable for diffs)
+- [x] `github/repo.json` - Stars, forks, watchers
+- [x] `community/contributors.json` - Top 100 with MS flag
 
 ### Sync Commands ✅
 - [x] `sync github` - Layer 1 (items) + Layer 2 (engagement)
 - [x] `sync nuget` - Package downloads and versions
+- [x] `sync community` - Contributors + MS membership check
 - [x] `--items-only` flag - Skip engagement (Layer 1 only)
 - [x] `--engagement-only` flag - Skip items (Layer 2 only)
 - [x] `--engagement-count` flag - Batch size (default: 100)
 - [x] Proactive rate limit checking (exit code 1 when hit)
-- [x] Error handling with skip list
 - [x] Smart engagement sync (only items updated since last sync)
 
 ### Generate Command ✅
-- [x] `generate` command reads cache, outputs dashboard JSON
+- [x] Reads repo stats from `github/repo.json`
+- [x] Reads contributors from `community/contributors.json`
 - [x] Engagement scoring with hot issue detection
-- [x] `EngagementCalculator.cs` service
 - [x] Always writes files, even with empty cache
 
 ### Dashboard UI ✅
-- [x] Hot issues section on Issues page (cards with fire gradient)
-- [x] Hot issues card on Home page (top 3 hot issues)
-- [x] Engagement score display with 🔥 badges
+- [x] Hot issues section on Issues page
+- [x] Hot issues card on Home page (top 3)
+- [x] Fixed TriageCategory enum (Untriaged, Draft)
+- [x] Removed Recent Commits section (not needed)
 
 ### Workflow Structure ✅
-- [x] 3-step workflow: NuGet → GitHub items → GitHub engagement
-- [x] NuGet syncs every 6 hours (0, 6, 12, 18 UTC)
+- [x] 4-step workflow: NuGet → Community → GitHub items → GitHub engagement
+- [x] NuGet + Community sync every 6 hours
 - [x] GitHub items sync every hour
-- [x] GitHub engagement: while loop, 100 items/checkpoint, until rate limit
-- [x] Push to `docs-dashboard` triggers sync workflow
-- [x] Concurrency: `cancel-in-progress: false` (queue, don't cancel)
+- [x] GitHub engagement: while loop, 100 items/checkpoint
+- [x] Concurrency: `cancel-in-progress: false`
 
 ### Fault Tolerance ✅
 - [x] Atomic file writes (write to .tmp, then move)
-- [x] Git commits as checkpoints (every 100 engagement items)
-- [x] Exit code 1 on rate limit (signals "more work to do")
+- [x] Git commits as checkpoints
+- [x] Exit code 1 on rate limit
 - [x] Next run resumes from last checkpoint
 
 ---
@@ -217,6 +219,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.8.0 | 2026-02-04 | Community sync: contributors, MS membership, repo stats |
 | 0.7.1 | 2026-02-04 | Checkpoint-based engagement sync (100 items/commit, loop until rate limit) |
 | 0.7.0 | 2026-02-04 | Workflow restructure: NuGet first, batched engagement, 3-step sync |
 | 0.6.1 | 2026-02-04 | Added push trigger to sync workflow |

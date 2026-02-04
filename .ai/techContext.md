@@ -52,26 +52,25 @@ dotnet publish -c Release -o ../../publish
 # One-time setup: Create worktree for cache branch
 git worktree add .data-cache docs-data-cache
 
-# Sync data from APIs to cache
-dotnet run --project src/SkiaSharp.Collector -- sync --cache-path .data-cache
+# Sync all data sources to cache
+dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Collector -- sync nuget --cache-path .data-cache
+dotnet run --project src/SkiaSharp.Collector -- sync community --cache-path .data-cache
 
 # Generate dashboard JSON from cache
-dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
-
-# Full refresh workflow
-dotnet run --project src/SkiaSharp.Collector -- sync --cache-path .data-cache
 dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
 ```
 
 ### Collector CLI Reference
 ```bash
 # Sync commands (populate cache)
-dotnet run -- sync github              # GitHub Layer 1 + Layer 2
-dotnet run -- sync nuget               # NuGet only
+dotnet run -- sync github              # GitHub items + engagement
+dotnet run -- sync nuget               # NuGet packages
+dotnet run -- sync community           # Contributors + MS membership
 dotnet run -- sync github --items-only # Skip engagement (Layer 1 only)
 dotnet run -- sync github --engagement-only  # Skip items (Layer 2 only)
-dotnet run -- sync github --engagement-count 25  # Batch size (default: 25)
-dotnet run -- sync --full              # Ignore timestamps, full sync
+dotnet run -- sync github --engagement-count 100  # Batch size (default: 100)
+dotnet run -- sync github --full       # Ignore timestamps, full sync
 
 # Generate command (cache → JSON)
 dotnet run -- generate --from-cache ./cache -o ./data
@@ -79,8 +78,6 @@ dotnet run -- generate --from-cache ./cache -o ./data
 # Legacy direct-API commands (still work)
 dotnet run -- github -o ./data
 dotnet run -- nuget -o ./data
-dotnet run -- issues -o ./data
-dotnet run -- pr-triage -o ./data
 ```
 
 ## External APIs
@@ -89,7 +86,7 @@ dotnet run -- pr-triage -o ./data
 - **Base URL**: `https://api.github.com`
 - **Auth**: Bearer token (provided by `GITHUB_TOKEN`)
 - **Rate Limit**: 5000/hr authenticated
-- **Used For**: Repository stats, issues, PRs, comments, reactions
+- **Used For**: Repository stats, issues, PRs, comments, reactions, contributors
 
 **Key Endpoints**:
 | Endpoint | Purpose |
@@ -98,6 +95,8 @@ dotnet run -- pr-triage -o ./data
 | `GET /repos/{owner}/{repo}/issues` | Issues and PRs (paginated) |
 | `GET /repos/{owner}/{repo}/issues/{number}/comments` | Comments |
 | `GET /repos/{owner}/{repo}/issues/{number}/reactions` | Reactions |
+| `GET /repos/{owner}/{repo}/contributors` | Top 100 contributors |
+| `GET /orgs/microsoft/members/{user}` | MS membership check |
 | `GET /repos/{owner}/{repo}/pulls/{number}` | PR details |
 | `GET /repos/{owner}/{repo}/pulls/{number}/reviews` | PR reviews |
 
@@ -184,16 +183,20 @@ src/SkiaSharp.Collector/
 └── .github/
     ├── copilot-instructions.md
     └── workflows/
-        ├── sync-data-cache.yml   # Hourly + on push (3-step)
+        ├── sync-data-cache.yml   # Hourly + on push (4-step)
         └── build-dashboard.yml   # Every 6 hours
 ```
 
 ## Workflow Structure
 
-### sync-data-cache.yml (3 steps with checkpoint loop)
+### sync-data-cache.yml (4 steps with checkpoint loop)
 ```yaml
-# Step 1: NuGet (every 6 hours: 0, 6, 12, 18 UTC)
+# Step 1a: NuGet (every 6 hours: 0, 6, 12, 18 UTC)
 - run: dotnet run -- sync nuget --cache-path $CACHE
+- run: git commit && git push  # if changes
+
+# Step 1b: Community (every 6 hours, same schedule as NuGet)
+- run: dotnet run -- sync community --cache-path $CACHE
 - run: git commit && git push  # if changes
 
 # Step 2: GitHub items (every run)
