@@ -1,0 +1,76 @@
+name: Sync Data Cache
+
+on:
+  schedule:
+    - cron: '0 * * * *'  # Every hour
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Data source to sync'
+        type: choice
+        options:
+          - all
+          - github
+          - nuget
+        default: all
+      full:
+        description: 'Force full sync (ignore timestamps)'
+        type: boolean
+        default: false
+      engagement_count:
+        description: 'Number of items to sync engagement for'
+        type: number
+        default: 50
+
+concurrency:
+  group: data-cache-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout docs-dashboard (for collector code)
+        uses: actions/checkout@v4
+        with:
+          ref: docs-dashboard
+
+      - name: Checkout docs-data-cache
+        uses: actions/checkout@v4
+        with:
+          ref: docs-data-cache
+          path: .data-cache
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Sync data
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          SOURCE="${{ inputs.source || 'all' }}"
+          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
+          ENGAGEMENT_COUNT="${{ inputs.engagement_count || '50' }}"
+          
+          dotnet run --project src/SkiaSharp.Collector -- sync $SOURCE \
+            --cache-path .data-cache \
+            --engagement-count $ENGAGEMENT_COUNT \
+            $FULL_FLAG
+
+      - name: Commit and push cache updates
+        working-directory: .data-cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Sync: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi

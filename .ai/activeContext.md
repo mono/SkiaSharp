@@ -5,161 +5,69 @@
 
 ## Current Focus
 
-**Phase**: Phase 3 - Collector CLI Migration COMPLETE ✅
-**Status**: Production - All Features Working
-
-Dashboard app + .NET collector CLI in `src/`, solution uses new `.slnx` format.
+**Phase**: Phase 4 - Data Cache Architecture (IN PROGRESS)
+**Status**: Implementing cache-based sync system
 
 ## Recent Changes
 
-### 2026-02-04 (Collector CLI Migration)
-1. ✅ **New .NET CLI**: `src/SkiaSharp.Collector/` replaces 5 PowerShell scripts
-   - Commands: `all`, `github`, `nuget`, `community`, `issues`, `pr-triage`
-   - Options: `-o/--output`, `--owner`, `--repo`, `-v/--verbose`, `-q/--quiet`
-   - NuGet-specific: `--min-version` (default 3, for legacy detection)
-2. ✅ **Spectre.Console UI**: Progress bars, spinners, colored summary tables
-3. ✅ **Shared services**: GitHubService, NuGetService, LabelParser, OutputService
-4. ✅ **GitHub Actions updated**: Single `dotnet run -- all` instead of 5 `pwsh` calls
-5. ✅ **Project cleanup**: Moved to `src/`, added to solution, deleted PowerShell scripts
-6. ✅ **Solution format**: Converted to `.slnx` (new XML-based format)
+### 2026-02-04 (Data Cache Architecture - IN PROGRESS)
+1. ✅ Branch renamed: `dashboard` → `docs-dashboard`
+2. ✅ Created `docs-data-cache` orphan branch for cached API data
+3. ✅ Updated `build-dashboard.yml` to use `generate --from-cache`
+4. ✅ Created `sync-data-cache.yml` workflow (hourly sync)
+5. 🔄 Implementing `sync` and `generate` commands in collector
+6. ⏳ Engagement scoring (hot issues) - pending
 
-### 2026-02-04 (NuGet Page Redesign)
-1. ✅ **Dynamic package list**: Collector now fetches VERSIONS.txt from main & release/2.x branches
-2. ✅ **Legacy detection**: Packages without stable 3.x version marked as legacy
-   - Configurable threshold: `$minSupportedMajorVersion = 3` in collector
-   - Future-proof: bump to 4 when ready
-3. ✅ **Grouped layout**: 4 main groups, ALL with subgroups:
-   - SkiaSharp (Core + Native Assets)
-   - SkiaSharp Views (Native Platform, .NET MAUI, Xamarin.Forms, Uno Platform, Web)
-   - SkiaSharp Extensions (Text, Animation, GPU Backends)
-   - HarfBuzzSharp (Core + Native Assets)
-4. ✅ **Legacy toggle**: Checkbox to show/hide 9 legacy packages (hidden by default)
-5. ✅ **Collapsible sections**: Each group/subgroup collapsible with subtotals
-6. ✅ **50 packages total**: 41 supported, 9 legacy
+### Architecture Overview
+```
+HOURLY (sync-data-cache.yml):
+  GitHub API → sync command → docs-data-cache branch
+  NuGet API  →
 
-### 2026-02-03 (NuGet Collector Fix)
-1. ✅ NuGet collector switched from Registration API to Search API
-2. ✅ 975M+ total downloads now shown correctly
-
-### 2026-02-03 (SPA Routing Fix - COMPLETE)
-1. ✅ Reset index.html to clean Blazor template + spa-github-pages script
-2. ✅ Created proper 404.html with segmentCount=2 for nested subdirectory
-3. ✅ spa-github-pages approach working for all navigation scenarios
-
-### Key Commits
-- `1e41cbe3` - Add Core and Native Assets subgroups
-- `08c139db` - NuGet page redesign with grouped layout
-- `1bb2d910` - Fix method group conversion errors in filter bindings
-- `e1f5741e` - Fix NavigateTo leading slash
-
-### Verified Working ✅
-- ✅ Click navigation between pages
-- ✅ Direct URL access (e.g., typing `/SkiaSharp/dashboard/issues` directly)
-- ✅ Filter URLs (e.g., `/issues?type=bug`)
-- ✅ Browser back/forward buttons
-
-## ⚠️ CRITICAL: SPA Routing on GitHub Pages
-
-### The Problem
-Blazor WASM apps on GitHub Pages subdirectories have navigation issues because:
-1. GitHub Pages doesn't support server-side URL rewriting
-2. The `<base href>` setting affects how Blazor computes navigation URLs
-3. Root 404.html intercepts ALL 404s site-wide
-
-### The Solution (spa-github-pages approach)
-**Per [MS Learn docs](https://learn.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/webassembly/github-pages)**:
-
-1. **404.html** - Redirects `/SkiaSharp/dashboard/issues` to `/SkiaSharp/dashboard/?p=/issues`
-2. **index.html script** - Restores URL via `history.replaceState` before Blazor loads
-3. **segmentCount=2** - For nested paths like `/SkiaSharp/dashboard/`
-
-### URL Rules (MEMORIZE THESE)
-```csharp
-// ❌ WRONG - Goes to site root /issues
-Navigation.NavigateTo("/issues");
-
-// ✅ CORRECT - Relative to base href
-Navigation.NavigateTo("issues");
-Navigation.NavigateTo("./issues");
-
-// ❌ WRONG - Goes to site root
-<a href="/issues">
-
-// ✅ CORRECT - Relative to base
-<a href="issues">
-<NavLink href="issues">
-
-// ✅ @page routes DO use leading slash
-@page "/issues"
+EVERY 6 HOURS (build-dashboard.yml):
+  docs-data-cache → generate command → dashboard JSON → deploy
 ```
 
-### Files Involved
-| File | Purpose |
-|------|---------|
-| `wwwroot/index.html` | spa-github-pages restore script in `<head>` |
-| `wwwroot/404.html` | Redirect script with segmentCount=2 |
-| `wwwroot/root-404.html` | Deployed to site root to handle all 404s |
-| `.github/workflows/build-dashboard.yml` | Sets base href via sed |
-
-## Current Page Structure
-| Page | Route | Status |
-|------|-------|--------|
-| Home (Insights) | `/` | ✅ Charts, metrics, triage summary |
-| Issues | `/issues` | ✅ Filters, sortable table |
-| Pull Requests | `/pull-requests` | ✅ Triage cards, filters |
-| Community | `/community` | ✅ Repo stats + contributors |
-| NuGet | `/nuget` | ✅ Grouped layout, legacy toggle, 975M+ downloads |
-
-## Implementation Details
-
-### Charts (ApexCharts)
-- Issues by Type (bar)
-- Issues by Age (bar)
-- Issues by Area (horizontal bar)
-- PRs by Size (donut)
-
-### Filters
-- **Issues**: Type, Area, Age, Backend, OS
-- **PRs**: Category (triage), Size, Age, Author Type, Draft
-- All filters use URL query params for shareable links
-
-### Triage Categories (5)
-1. ReadyToMerge - Approved, no changes requested
-2. QuickReview - Small, fresh, no blockers
-3. NeedsReview - Awaiting first review
-4. NeedsAuthor - Changes requested
-5. ConsiderClosing - Very old or stale
-
-## Working Patterns
-
-### Label Handling
-```csharp
-// Strip prefix for display
-"type/bug" → "bug"
-"area/text" → "text"
+### Cache Structure (`docs-data-cache` branch)
+```
+docs-data-cache/
+├── github/
+│   ├── sync-meta.json       # Sync state, rate limits, skip list
+│   ├── index.json           # All issues + PRs (lightweight)
+│   └── items/{number}.json  # Full data + engagement per item
+├── nuget/
+│   ├── sync-meta.json
+│   ├── index.json
+│   └── packages/{id}.json
 ```
 
-### NuGet Package Collector
-- Dynamically builds package list from VERSIONS.txt (main + release/2.x branches)
-- Uses NuGet Search API (`azuresearch-usnc.nuget.org`) - NOT Registration API
-- Legacy = no stable version with major >= `$minSupportedMajorVersion` (default 3)
-- 50 packages total: 41 supported, 9 legacy
+### Layered Sync Strategy
+- **Layer 1**: Basic item data (all issues/PRs) - ~15 API calls
+- **Layer 2**: Engagement data (comments, reactions) - 50 items/run, builds up over time
 
-### JSON Model Types
-PowerShell outputs floats (`5.0`) - use `double` not `int` for DaysOpen fields.
-NuGet API returns `null` for some downloads - use `long?`.
+### Error Handling
+- Proactive rate limit checking (stop if < 100 remaining)
+- Skip list for failed items with cooldown periods
+- Resume from checkpoint on next run
 
 ## Context for Next AI Session
 
 When resuming work:
 1. Read ALL files in `.ai/` folder first
-2. Branch is `dashboard`
-3. Live at https://mono.github.io/SkiaSharp/dashboard/
-4. **CHECK NAVIGATION WORKS** - click Issues/PRs links, verify URL stays correct
+2. Branch is `docs-dashboard` (renamed from `dashboard`)
+3. Data cache is `docs-data-cache` branch
+4. Live at https://mono.github.io/SkiaSharp/dashboard/
+5. **NEXT**: Implement `SyncCommand` and `GenerateCommand` in collector
 
-## Potential Future Work
+## Previous Completed Phases
 
-- Add pagination to Issues/PRs tables for very large lists
-- Add more chart types (trends over time)
-- CI/CD status integration
-- Milestone tracking
+### Phase 3 - Collector CLI (COMPLETE)
+- Converted 5 PowerShell scripts to .NET CLI
+- Commands: `all`, `github`, `nuget`, `community`, `issues`, `pr-triage`
+- Spectre.Console UI with progress bars
+
+### Phase 2 - Dashboard Features (COMPLETE)
+- NuGet page with grouped layout, 50 packages, legacy toggle
+- SPA routing fixed with spa-github-pages approach
+- Charts with ApexCharts
+- Filters with URL query params

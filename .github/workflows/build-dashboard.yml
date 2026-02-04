@@ -2,7 +2,7 @@ name: Build Dashboard
 
 on:
   push:
-    branches: [dashboard]
+    branches: [docs-dashboard]
   schedule:
     - cron: '0 */6 * * *'  # Every 6 hours
   workflow_dispatch:
@@ -18,19 +18,23 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout
+      - name: Checkout docs-dashboard
         uses: actions/checkout@v4
+
+      - name: Checkout docs-data-cache
+        uses: actions/checkout@v4
+        with:
+          ref: docs-data-cache
+          path: .data-cache
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
 
-      # Collect fresh data using .NET CLI
-      - name: Collect all data
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: dotnet run --project src/SkiaSharp.Collector -- all -o src/Dashboard/wwwroot/data
+      # Generate dashboard data from cache
+      - name: Generate dashboard data
+        run: dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
 
       # Build and deploy
       - name: Restore dependencies

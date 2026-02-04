@@ -16,10 +16,10 @@ This ensures continuity across AI sessions. Never end a session without updating
 This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application that displays community metrics, project health, and PR triage for the SkiaSharp library.
 
 - **Live URL**: https://mono.github.io/SkiaSharp/dashboard/
-- **Repository**: mono/SkiaSharp (dashboard branch)
+- **Repository**: mono/SkiaSharp (docs-dashboard branch)
 - **Parent Project**: SkiaSharp is a cross-platform 2D graphics library for .NET
 
-## Current Phase: Production
+## Current Phase: Data Cache Architecture
 
 **Solution**: `SkiaSharp.slnx` (new XML-based format)
 
@@ -49,7 +49,6 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 - **Blazor WebAssembly** (standalone, client-side only)
 - **Blazor-ApexCharts** for charts
 - **Bootstrap 5** for styling
-- **PowerShell** for data collection scripts
 - **GitHub Actions** for CI/CD
 
 ## Code Conventions
@@ -106,70 +105,105 @@ src/SkiaSharp.Collector/     # .NET CLI for data collection
 
 ## Collector CLI
 
-The `SkiaSharp.Collector` .NET console app collects all dashboard data:
+The `SkiaSharp.Collector` .NET console app collects all dashboard data.
 
-```bash
-# Run all collectors (default)
-dotnet run --project src/SkiaSharp.Collector -- all -o src/Dashboard/wwwroot/data
+**Commands**: `sync`, `generate` (new), `github`, `nuget`, `community`, `issues`, `pr-triage` (legacy)
+**Options**: `-o/--output`, `--cache-path`, `--from-cache`, `--engagement-count`
 
-# Run specific collector
-dotnet run --project src/SkiaSharp.Collector -- github -o ./data
-
-# NuGet with custom minimum version (for 4.x release)
-dotnet run --project src/SkiaSharp.Collector -- nuget --min-version 4 -o ./data
-```
-
-**Commands**: `all`, `github`, `nuget`, `community`, `issues`, `pr-triage`
-**Options**: `-o/--output`, `--owner`, `--repo`, `-v/--verbose`, `-q/--quiet`
-
-## Data Architecture
-
-**Key principle**: Data is decoupled from the app.
-- JSON files in `wwwroot/data/` are loaded at runtime
-- Collectors update JSON independently of app builds
-- App can be rebuilt without touching data
-- Data can be refreshed without rebuilding app
-
-### Data Files
-| File | Purpose | Updated By |
-|------|---------|------------|
-| `github-stats.json` | Stars, issues, PRs, commits | `collect-github.ps1` |
-| `nuget-stats.json` | Package downloads (975M+) | `collect-nuget.ps1` |
-| `community-stats.json` | Contributors, activity | `collect-community.ps1` |
-| `pr-triage.json` | AI-analyzed PR recommendations | `collect-pr-triage.ps1` |
-
-### NuGet Collector Details
-The NuGet collector (`collect-nuget.ps1`) has special logic:
-
-1. **Dynamic package list**: Fetches `VERSIONS.txt` from main and release/2.x branches, extracts packages matching `<id> nuget <version>` pattern
-2. **Uses Search API**: `azuresearch-usnc.nuget.org/query` (NOT Registration API which returns null downloads)
-3. **Legacy detection**: Packages without stable version with major >= `$minSupportedMajorVersion` (default 3) are marked `isLegacy: true`
-4. **Future-proof**: When SkiaSharp 4.x releases, just change the threshold to 4
+## Data Files (Generated)
+| File | Purpose |
+|------|---------|
+| `github-stats.json` | Stars, issues, PRs, commits |
+| `nuget-stats.json` | Package downloads |
+| `community-stats.json` | Contributors, activity |
+| `issues.json` | All issues with engagement scores |
+| `pr-triage.json` | PR analysis and recommendations |
 
 ## Branch Strategy
 
-- **dashboard** (this branch): Orphan branch, no history from main
+- **docs-dashboard** (this branch): Dashboard source code (orphan branch)
+- **docs-data-cache**: Cached API data from GitHub/NuGet (hourly sync)
 - **docs-live**: Deployed GitHub Pages site
 - **main**: SkiaSharp library source (different project)
 - **docs**: Documentation source (different project)
 
 **Never commit directly to main or docs-live.**
 
+## Data Architecture
+
+**Key principle**: Data sync is decoupled from dashboard build.
+
+```
+HOURLY (sync-data-cache.yml):
+  GitHub API → sync command → docs-data-cache branch
+  NuGet API  →
+
+EVERY 6 HOURS (build-dashboard.yml):
+  docs-data-cache → generate command → dashboard JSON → deploy to docs-live
+```
+
+### Data Cache Structure (`docs-data-cache` branch)
+```
+docs-data-cache/
+├── github/
+│   ├── sync-meta.json       # Sync state, rate limits, failures
+│   ├── index.json           # All issues + PRs (lightweight)
+│   └── items/{number}.json  # Full data per issue/PR
+├── nuget/
+│   ├── sync-meta.json
+│   ├── index.json
+│   └── packages/{id}.json
+```
+
+### Layered Sync
+- **Layer 1**: Basic item data (all issues/PRs) - ~15 API calls
+- **Layer 2**: Engagement data (comments, reactions) - 50 items/run
+
 ## CI/CD Workflows
 
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
-| `build-dashboard.yml` | Push to dashboard, every 6 hours, manual | Collect data + build + deploy |
+| `sync-data-cache.yml` | Hourly, manual | Sync GitHub/NuGet data to cache branch |
+| `build-dashboard.yml` | Push to docs-dashboard, every 6 hours, manual | Generate JSON from cache + build + deploy |
 
-Deploys to `docs-live/dashboard/` using `keep_files: true` to preserve other content.
+## Collector CLI
+
+The `SkiaSharp.Collector` .NET console app has two modes:
+
+### Sync Mode (populates cache)
+```bash
+# Sync all data sources
+dotnet run -- sync --cache-path ./cache
+
+# Sync specific source
+dotnet run -- sync github --cache-path ./cache
+dotnet run -- sync nuget --cache-path ./cache
+
+# Control engagement sync
+dotnet run -- sync github --cache-path ./cache --engagement-count 100
+dotnet run -- sync github --cache-path ./cache --items-only  # Skip engagement
+```
+
+### Generate Mode (creates dashboard JSON)
+```bash
+# Generate all dashboard data from cache
+dotnet run -- generate --from-cache ./cache -o ./data
+```
 
 ## Local Development
 
 ```bash
-cd src/Dashboard
-dotnet run                    # Runs on http://localhost:5000
-dotnet build                  # Build only
-dotnet publish -c Release     # Production build
+# Setup (one-time): Create worktree for cache
+git worktree add .data-cache docs-data-cache
+
+# Sync data locally
+dotnet run --project src/SkiaSharp.Collector -- sync github --cache-path .data-cache
+
+# Generate dashboard JSON
+dotnet run --project src/SkiaSharp.Collector -- generate --from-cache .data-cache -o src/Dashboard/wwwroot/data
+
+# Run dashboard
+cd src/Dashboard && dotnet run
 ```
 
 **Base href**: Uses `/` locally, CI changes to `/SkiaSharp/dashboard/` via sed.
