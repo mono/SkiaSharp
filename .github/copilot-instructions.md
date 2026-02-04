@@ -104,9 +104,17 @@ collectors/          # PowerShell scripts for data collection
 | File | Purpose | Updated By |
 |------|---------|------------|
 | `github-stats.json` | Stars, issues, PRs, commits | `collect-github.ps1` |
-| `nuget-stats.json` | Package downloads | `collect-nuget.ps1` |
+| `nuget-stats.json` | Package downloads (975M+) | `collect-nuget.ps1` |
 | `community-stats.json` | Contributors, activity | `collect-community.ps1` |
 | `pr-triage.json` | AI-analyzed PR recommendations | `collect-pr-triage.ps1` |
+
+### NuGet Collector Details
+The NuGet collector (`collect-nuget.ps1`) has special logic:
+
+1. **Dynamic package list**: Fetches `VERSIONS.txt` from main and release/2.x branches, extracts packages matching `<id> nuget <version>` pattern
+2. **Uses Search API**: `azuresearch-usnc.nuget.org/query` (NOT Registration API which returns null downloads)
+3. **Legacy detection**: Packages without stable version with major >= `$minSupportedMajorVersion` (default 3) are marked `isLegacy: true`
+4. **Future-proof**: When SkiaSharp 4.x releases, just change the threshold to 4
 
 ## Branch Strategy
 

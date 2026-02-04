@@ -17,13 +17,14 @@ All 5 pages fully functional with charts, filters, and proper navigation.
 2. ✅ **Legacy detection**: Packages without stable 3.x version marked as legacy
    - Configurable threshold: `$minSupportedMajorVersion = 3` in collector
    - Future-proof: bump to 4 when ready
-3. ✅ **Grouped layout**: 4 main groups with subgroups:
-   - SkiaSharp (core + 14 NativeAssets)
-   - SkiaSharp Views (5 subgroups: Native, MAUI, Xamarin.Forms, Uno, Web)
-   - SkiaSharp Extensions (3 subgroups: Text, Animation, GPU Backends)
-   - HarfBuzzSharp (core + 11 NativeAssets)
-4. ✅ **Legacy toggle**: Checkbox to show/hide legacy packages (hidden by default)
+3. ✅ **Grouped layout**: 4 main groups, ALL with subgroups:
+   - SkiaSharp (Core + Native Assets)
+   - SkiaSharp Views (Native Platform, .NET MAUI, Xamarin.Forms, Uno Platform, Web)
+   - SkiaSharp Extensions (Text, Animation, GPU Backends)
+   - HarfBuzzSharp (Core + Native Assets)
+4. ✅ **Legacy toggle**: Checkbox to show/hide 9 legacy packages (hidden by default)
 5. ✅ **Collapsible sections**: Each group/subgroup collapsible with subtotals
+6. ✅ **50 packages total**: 41 supported, 9 legacy
 
 ### 2026-02-03 (NuGet Collector Fix)
 1. ✅ NuGet collector switched from Registration API to Search API
@@ -35,10 +36,10 @@ All 5 pages fully functional with charts, filters, and proper navigation.
 3. ✅ spa-github-pages approach working for all navigation scenarios
 
 ### Key Commits
+- `1e41cbe3` - Add Core and Native Assets subgroups
+- `08c139db` - NuGet page redesign with grouped layout
 - `1bb2d910` - Fix method group conversion errors in filter bindings
 - `e1f5741e` - Fix NavigateTo leading slash
-- `219a9a66` - Root 404.html with spa-github-pages approach
-- `072251ce` - Reset to clean template with spa-github-pages
 
 ### Verified Working ✅
 - ✅ Click navigation between pages
@@ -126,6 +127,12 @@ Navigation.NavigateTo("./issues");
 "type/bug" → "bug"
 "area/text" → "text"
 ```
+
+### NuGet Package Collector
+- Dynamically builds package list from VERSIONS.txt (main + release/2.x branches)
+- Uses NuGet Search API (`azuresearch-usnc.nuget.org`) - NOT Registration API
+- Legacy = no stable version with major >= `$minSupportedMajorVersion` (default 3)
+- 50 packages total: 41 supported, 9 legacy
 
 ### JSON Model Types
 PowerShell outputs floats (`5.0`) - use `double` not `int` for DaysOpen fields.

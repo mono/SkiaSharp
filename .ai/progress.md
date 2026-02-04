@@ -103,11 +103,11 @@ None! 🎉
 
 ### Page Layout
 - [x] Total downloads hero card (975M+)
-- [x] Collapsible group structure:
-  - SkiaSharp (core + NativeAssets)
-  - SkiaSharp Views (5 subgroups)
-  - SkiaSharp Extensions (3 subgroups)
-  - HarfBuzzSharp (core + NativeAssets)
+- [x] Collapsible group structure with subgroups for ALL groups:
+  - SkiaSharp (Core, Native Assets)
+  - SkiaSharp Views (Native Platform, .NET MAUI, Xamarin.Forms, Uno Platform, Web)
+  - SkiaSharp Extensions (Text, Animation, GPU Backends)
+  - HarfBuzzSharp (Core, Native Assets)
 - [x] "Show legacy packages" checkbox (default off)
 - [x] Group/subgroup subtotals
 - [x] Styled cards with package info
