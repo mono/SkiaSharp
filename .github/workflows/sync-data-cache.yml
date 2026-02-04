@@ -20,13 +20,9 @@ on:
         type: boolean
         default: false
       engagement_count:
-        description: 'Items per engagement batch'
+        description: 'Items per engagement checkpoint'
         type: number
-        default: 25
-      engagement_batches:
-        description: 'Number of engagement batches'
-        type: number
-        default: 10
+        default: 100
 
 concurrency:
   group: data-cache-sync
@@ -123,35 +119,50 @@ jobs:
           fi
 
       # ============================================================
-      # Step 3: GitHub engagement (Layer 2) in batches
+      # Step 3: GitHub engagement (Layer 2) with checkpoints
       # ============================================================
-      - name: Sync GitHub engagement (Layer 2 - batched)
+      - name: Sync GitHub engagement (Layer 2 - checkpoint loop)
         if: inputs.source != 'nuget'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ENGAGEMENT_COUNT="${{ inputs.engagement_count || '25' }}"
-          BATCHES="${{ inputs.engagement_batches || '10' }}"
+          ENGAGEMENT_COUNT="${{ inputs.engagement_count || '100' }}"
+          BATCH=1
           
-          for i in $(seq 1 $BATCHES); do
+          while true; do
             echo ""
             echo "========================================"
-            echo "  Engagement batch $i of $BATCHES"
+            echo "  Engagement checkpoint $BATCH"
             echo "========================================"
             
+            # Run sync - exit code 1 means rate limit hit
+            set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --cache-path .data-cache \
               --engagement-only \
               --engagement-count $ENGAGEMENT_COUNT
+            EXIT_CODE=$?
+            set -e
             
+            # Commit and push checkpoint
             cd .data-cache
             git add -A
             if git diff --staged --quiet; then
-              echo "No engagement changes in batch $i"
+              echo "No changes - all engagement synced!"
+              cd ..
+              break
             else
-              git commit -m "Sync: Engagement batch $i $(date -u +%H:%M)"
+              git commit -m "Sync: Engagement checkpoint $BATCH $(date -u +%H:%M)"
               git push
-              echo "Pushed batch $i"
+              echo "Pushed checkpoint $BATCH"
             fi
             cd ..
+            
+            # Exit if rate limit was hit
+            if [ $EXIT_CODE -ne 0 ]; then
+              echo "Rate limit hit after checkpoint $BATCH - will resume next run"
+              break
+            fi
+            
+            BATCH=$((BATCH + 1))
           done

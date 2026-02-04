@@ -43,7 +43,7 @@ sync-data-cache.yml
          │
          └─ Step 3: GitHub engagement (Layer 2)
                     │
-                    └─ 10 batches of 25 items ──→ push each
+                    └─ while loop: 100 items ──→ push ──→ repeat until rate limit
 ```
 
 ### Workflows
@@ -56,7 +56,7 @@ sync-data-cache.yml
 ```bash
 # Sync commands (use in workflow)
 dotnet run -- sync github --cache-path ./cache --items-only
-dotnet run -- sync github --cache-path ./cache --engagement-only --engagement-count 25
+dotnet run -- sync github --cache-path ./cache --engagement-only --engagement-count 100
 dotnet run -- sync nuget --cache-path ./cache
 
 # Generate command
@@ -76,15 +76,24 @@ docs-data-cache/
 │   └── packages/{id}.json
 ```
 
-### Progress Indicators
+### Checkpoint Strategy (Fault Tolerance)
+```bash
+while true; do
+  sync github --engagement-only --engagement-count 100
+  git commit && push  # Checkpoint every 100 items
+  if rate_limited or all_done; then break; fi
+done
 ```
-Fetching... 34% (1,200/3,474) ~1m 42s remaining
-✓ 3,474 items synced in 2m 31s
-```
+- Atomic file writes prevent JSON corruption
+- Git commits provide checkpoints every 100 items
+- Crash loses max 100 items of work, next run resumes
 
 ### Layered Sync Strategy
-- **Layer 1**: Basic item data (all issues/PRs) - ~35 pages
-- **Layer 2**: Engagement data - 25 items/batch, 10 batches/run
+- **Layer 1**: Basic item data (all issues/PRs)
+- **Layer 2**: Engagement data - loops until rate limit hit
+
+### Smart Engagement Sync
+Only fetches engagement for items where `UpdatedAt > EngagementSyncedAt`
 
 ### Engagement Scoring
 - Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`

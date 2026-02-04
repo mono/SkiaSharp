@@ -59,11 +59,12 @@
 │  │ → commit & push                                            │ │
 │  └────────────────────────────────────────────────────────────┘ │
 │                                                                  │
-│  Step 3: GitHub engagement (Layer 2) - 10 batches               │
+│  Step 3: GitHub engagement (Layer 2) - checkpoint loop          │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │ for i in 1..10:                                            │ │
-│  │   dotnet run -- sync github --engagement-only --count 25   │ │
-│  │   → commit & push                                          │ │
+│  │ while true:                                                │ │
+│  │   sync github --engagement-only --engagement-count 100     │ │
+│  │   → commit & push (checkpoint)                             │ │
+│  │   if rate_limited or all_done: break                       │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └────────────────────────────────┬─────────────────────────────────┘
                                  │

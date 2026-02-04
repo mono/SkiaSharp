@@ -35,8 +35,8 @@
 - [x] `sync nuget` - Package downloads and versions
 - [x] `--items-only` flag - Skip engagement (Layer 1 only)
 - [x] `--engagement-only` flag - Skip items (Layer 2 only)
-- [x] `--engagement-count` flag - Batch size (default: 25)
-- [x] Proactive rate limit checking
+- [x] `--engagement-count` flag - Batch size (default: 100)
+- [x] Proactive rate limit checking (exit code 1 when hit)
 - [x] Error handling with skip list
 - [x] Smart engagement sync (only items updated since last sync)
 
@@ -55,9 +55,15 @@
 - [x] 3-step workflow: NuGet → GitHub items → GitHub engagement
 - [x] NuGet syncs every 6 hours (0, 6, 12, 18 UTC)
 - [x] GitHub items sync every hour
-- [x] GitHub engagement in 10 batches of 25, push after each
+- [x] GitHub engagement: while loop, 100 items/checkpoint, until rate limit
 - [x] Push to `docs-dashboard` triggers sync workflow
 - [x] Concurrency: `cancel-in-progress: false` (queue, don't cancel)
+
+### Fault Tolerance ✅
+- [x] Atomic file writes (write to .tmp, then move)
+- [x] Git commits as checkpoints (every 100 engagement items)
+- [x] Exit code 1 on rate limit (signals "more work to do")
+- [x] Next run resumes from last checkpoint
 
 ---
 
@@ -211,6 +217,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.7.1 | 2026-02-04 | Checkpoint-based engagement sync (100 items/commit, loop until rate limit) |
 | 0.7.0 | 2026-02-04 | Workflow restructure: NuGet first, batched engagement, 3-step sync |
 | 0.6.1 | 2026-02-04 | Added push trigger to sync workflow |
 | 0.6.0 | 2026-02-04 | Data cache architecture with engagement scoring |

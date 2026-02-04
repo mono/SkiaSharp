@@ -45,6 +45,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
 
         var itemsProcessed = 0;
         var engagementProcessed = 0;
+        var rateLimitHit = false;
 
         try
         {
@@ -58,11 +59,11 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             // Layer 2: Engagement data
             if (!settings.ItemsOnly)
             {
-                (index, syncMeta, engagementProcessed) = await SyncLayer2Async(
+                (index, syncMeta, engagementProcessed, rateLimitHit) = await SyncLayer2Async(
                     apiClient, cache, index, syncMeta, settings);
             }
 
-            syncMeta = syncMeta with { LastRunStatus = "success" };
+            syncMeta = syncMeta with { LastRunStatus = rateLimitHit ? "rate_limited" : "success" };
         }
         catch (RateLimitExceededException)
         {
@@ -97,7 +98,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             AnsiConsole.MarkupLine($"[green]✓ Sync complete[/]");
         }
 
-        return 0;
+        // Return exit code 1 if rate limited (signals "more work to do")
+        return rateLimitHit ? 1 : 0;
     }
 
     private async Task<(CacheIndex, SyncMeta, int)> SyncLayer1Async(
@@ -213,7 +215,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         return (index, meta, processed);
     }
 
-    private async Task<(CacheIndex, SyncMeta, int)> SyncLayer2Async(
+    private async Task<(CacheIndex, SyncMeta, int, bool)> SyncLayer2Async(
         GitHubClient client,
         CacheService cache,
         CacheIndex index,
@@ -228,6 +230,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var processed = 0;
         var startTime = DateTime.UtcNow;
         var itemTimes = new Queue<double>(); // Rolling average for ETA
+        var rateLimitHit = false;
 
         // Process skip list retries first
         var toRetry = cache.GetItemsToRetry(meta, now);
@@ -278,7 +281,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     var rateLimit = await client.RateLimit.GetRateLimits();
                     if (rateLimit.Resources.Core.Remaining < RateLimitThreshold)
                     {
-                        AnsiConsole.MarkupLine($"[yellow]Rate limit low. Stopping engagement sync.[/]");
+                        AnsiConsole.MarkupLine($"[yellow]Rate limit low ({rateLimit.Resources.Core.Remaining} remaining). Stopping engagement sync.[/]");
+                        rateLimitHit = true;
                         break;
                     }
 
@@ -353,9 +357,11 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             AnsiConsole.MarkupLine($"[green]  ✓ {processed} items with engagement synced in {FormatTime(elapsed)}[/]");
             if (meta.Failures.Count > 0)
                 AnsiConsole.MarkupLine($"[yellow]  ⚠ {meta.Failures.Count} items on skip list[/]");
+            if (rateLimitHit)
+                AnsiConsole.MarkupLine($"[yellow]  ⚠ Rate limit hit - will resume on next run[/]");
         }
 
-        return (index, meta, processed);
+        return (index, meta, processed, rateLimitHit);
     }
 
     private async Task<EngagementData> FetchEngagementAsync(GitHubClient client, SyncGitHubSettings settings, int number)

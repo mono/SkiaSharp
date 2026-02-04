@@ -58,7 +58,8 @@ This is the **SkiaSharp Project Dashboard** - a Blazor WebAssembly application t
 HOURLY + ON PUSH (sync-data-cache.yml):
   Step 1: NuGet API  ─→ sync nuget  ─→ push (every 6 hours: 0,6,12,18 UTC)
   Step 2: GitHub API ─→ sync github --items-only ─→ push
-  Step 3: GitHub API ─→ sync github --engagement-only (10 batches of 25) ─→ push each
+  Step 3: GitHub API ─→ sync github --engagement-only (loop until rate limit)
+          └─→ 100 items per iteration ─→ push (checkpoint) ─→ repeat
 
 EVERY 6 HOURS (build-dashboard.yml):  
   docs-data-cache ─→ generate command ─→ dashboard JSON ─→ deploy to docs-live
@@ -78,14 +79,26 @@ docs-data-cache/
 ```
 
 ### Layered Sync Strategy
-- **Layer 1**: Basic item data (all issues/PRs) - ~35 pages, with progress indicator
-- **Layer 2**: Engagement data (comments, reactions) - 25 items/batch, 10 batches/run
+- **Layer 1**: Basic item data (all issues/PRs) - fetches all pages
+- **Layer 2**: Engagement data - 100 items/checkpoint, loops until rate limit hit
 
-### Progress Indicators
+### Checkpoint Strategy (Fault Tolerance)
+```bash
+while true; do
+  sync github --engagement-only --engagement-count 100
+  git commit && push  # Checkpoint every 100 items
+  if rate_limited or all_done; then break; fi
+done
 ```
-Fetching... 34% (1,200/3,474) ~1m 42s remaining
-✓ 3,474 items synced in 2m 31s
-```
+- Crash/failure loses max 100 items of work
+- Next run resumes from last checkpoint
+- Atomic file writes prevent JSON corruption
+
+### Smart Engagement Sync
+Only fetches engagement for items where `UpdatedAt > EngagementSyncedAt`:
+- Skips items that haven't changed since last sync
+- Prioritizes recently active items
+- Skip list excludes failed items with cooldowns
 
 ### Engagement Scoring
 Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinceActivity) + (1/DaysOpen)`
@@ -102,7 +115,7 @@ Formula: `(Comments × 3) + (Reactions × 1) + (Contributors × 2) + (1/DaysSinc
 **Sync workflow steps:**
 1. NuGet (every 6 hours only) → push
 2. GitHub items (Layer 1) → push  
-3. GitHub engagement (Layer 2, 10 batches) → push each batch
+3. GitHub engagement (Layer 2) → loop: 100 items → push → repeat until rate limit
 
 Both use `concurrency: cancel-in-progress: false` to allow queuing.
 
@@ -119,11 +132,17 @@ dotnet run -- sync github --cache-path ./cache
 dotnet run -- sync nuget --cache-path ./cache
 
 # Options
---engagement-count 25     # Items per engagement batch (default: 25)
+--engagement-count 100    # Items per batch (default: 100 for checkpointing)
 --items-only              # Skip engagement sync (Layer 1 only)
 --engagement-only         # Skip items sync (Layer 2 only)
 --full                    # Force full sync (ignore timestamps)
 ```
+
+### Exit Codes
+| Code | Meaning |
+|------|---------|
+| 0 | Success (batch complete or all done) |
+| 1 | Rate limit hit (commit what we have, retry later) |
 
 ### Generate Mode (cache → dashboard JSON)
 ```bash

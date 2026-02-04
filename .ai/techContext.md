@@ -190,7 +190,7 @@ src/SkiaSharp.Collector/
 
 ## Workflow Structure
 
-### sync-data-cache.yml (3 steps)
+### sync-data-cache.yml (3 steps with checkpoint loop)
 ```yaml
 # Step 1: NuGet (every 6 hours: 0, 6, 12, 18 UTC)
 - run: dotnet run -- sync nuget --cache-path $CACHE
@@ -200,12 +200,22 @@ src/SkiaSharp.Collector/
 - run: dotnet run -- sync github --items-only --cache-path $CACHE
 - run: git commit && git push  # if changes
 
-# Step 3: GitHub engagement (10 batches of 25)
-- for i in {1..10}; do
-    dotnet run -- sync github --engagement-only --engagement-count 25
-    git commit && git push  # if changes
-  done
+# Step 3: GitHub engagement (loop until rate limit)
+- run: |
+    while true; do
+      dotnet run -- sync github --engagement-only --engagement-count 100
+      EXIT_CODE=$?
+      git commit && git push  # Checkpoint every 100 items
+      if [ $EXIT_CODE -ne 0 ]; then break; fi  # Rate limit hit
+      if [ no_changes ]; then break; fi        # All done
+    done
 ```
+
+### Exit Codes
+| Code | Meaning | Workflow Action |
+|------|---------|-----------------|
+| 0 | Batch complete | Continue loop (or exit if no changes) |
+| 1 | Rate limit hit | Commit checkpoint, exit loop |
 
 ## Build Configuration
 

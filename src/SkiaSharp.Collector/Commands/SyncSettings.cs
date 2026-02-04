@@ -47,8 +47,8 @@ public class SyncGitHubSettings : SyncSettings
 {
     [CommandOption("--engagement-count <COUNT>")]
     [Description("Number of items to sync engagement for per batch")]
-    [DefaultValue(25)]
-    public int EngagementCount { get; set; } = 25;
+    [DefaultValue(100)]
+    public int EngagementCount { get; set; } = 100;
 
     [CommandOption("--full")]
     [Description("Force full refresh, ignore timestamps")]
