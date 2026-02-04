@@ -23,7 +23,7 @@
 
 ### 2026-02-04 (NuGet Download Trend Charts - v0.9.0)
 1. ✅ **6 cumulative download charts** on NuGet page:
-   - SkiaSharp Core, .NET MAUI Views, HarfBuzzSharp
+   - SkiaSharp, HarfBuzzSharp, .NET MAUI Views
    - Skottie Animation, GPU Backends (Direct3D + Vulkan), Blazor
 2. ✅ Store ALL versions with publish dates
 3. ✅ New `nuget-charts.json` output file

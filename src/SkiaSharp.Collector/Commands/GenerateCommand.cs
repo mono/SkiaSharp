@@ -402,9 +402,9 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         // Define chart configurations
         var chartConfigs = new List<(string Title, string[] PackageIds)>
         {
-            ("SkiaSharp Core", ["SkiaSharp"]),
-            (".NET MAUI Views", ["SkiaSharp.Views.Maui.Core"]),
+            ("SkiaSharp", ["SkiaSharp"]),
             ("HarfBuzzSharp", ["HarfBuzzSharp"]),
+            (".NET MAUI Views", ["SkiaSharp.Views.Maui.Core"]),
             ("Skottie Animation", ["SkiaSharp.Skottie"]),
             ("GPU Backends", ["SkiaSharp.Direct3D.Vortice", "SkiaSharp.Vulkan.SharpVk"]),
             ("Blazor", ["SkiaSharp.Views.Blazor"])
