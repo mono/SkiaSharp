@@ -81,6 +81,18 @@ else
                 <option value="draft">Draft</option>
             </select>
         </div>
+        <div class="filter-group">
+            <label>Sort By</label>
+            <select @bind="SelectedSort" @bind:after="ApplyFilters">
+                <option value="triage">By Triage Category</option>
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="updated">Recently Updated</option>
+                <option value="smallest">Smallest First</option>
+                <option value="largest">Largest First</option>
+                <option value="files">Most Files</option>
+            </select>
+        </div>
         @if (HasFilters)
         {
             <button class="btn-clear" @onclick="ClearFilters">Clear Filters</button>
@@ -150,6 +162,7 @@ else
     [SupplyParameterFromQuery] public string? Age { get; set; }
     [SupplyParameterFromQuery] public string? Author { get; set; }
     [SupplyParameterFromQuery] public string? Draft { get; set; }
+    [SupplyParameterFromQuery] public string? Sort { get; set; }
 
     private bool _loading = true;
     private PrTriageStats? _data;
@@ -160,6 +173,7 @@ else
     private string SelectedAge { get; set; } = "";
     private string SelectedAuthor { get; set; } = "";
     private string SelectedDraft { get; set; } = "";
+    private string SelectedSort { get; set; } = "triage";
 
     private bool HasFilters => !string.IsNullOrEmpty(SelectedCategory) ||
                                !string.IsNullOrEmpty(SelectedSize) ||
@@ -174,6 +188,7 @@ else
         SelectedAge = Age ?? "";
         SelectedAuthor = Author ?? "";
         SelectedDraft = Draft ?? "";
+        SelectedSort = Sort ?? "triage";
 
         try { _data = await DataService.GetPrTriageStatsAsync(); }
         catch { /* Data not yet available */ }
@@ -194,7 +209,7 @@ else
     {
         if (_data is null) return;
 
-        _filteredPRs = _data.PullRequests.Where(pr =>
+        var filtered = _data.PullRequests.Where(pr =>
             (string.IsNullOrEmpty(SelectedCategory) || GetCategoryKey(pr.Category) == SelectedCategory) &&
             (string.IsNullOrEmpty(SelectedSize) || pr.SizeCategory == SelectedSize) &&
             (string.IsNullOrEmpty(SelectedAge) || pr.AgeCategory == SelectedAge) &&
@@ -202,7 +217,19 @@ else
             (string.IsNullOrEmpty(SelectedDraft) || 
                 (SelectedDraft == "draft" && pr.IsDraft) || 
                 (SelectedDraft == "ready" && !pr.IsDraft))
-        ).OrderBy(pr => GetCategoryOrder(pr.Category)).ThenBy(pr => pr.DaysOpen).ToList();
+        );
+
+        // Apply sorting
+        _filteredPRs = SelectedSort switch
+        {
+            "newest" => filtered.OrderByDescending(pr => pr.CreatedAt).ToList(),
+            "oldest" => filtered.OrderBy(pr => pr.CreatedAt).ToList(),
+            "updated" => filtered.OrderByDescending(pr => pr.UpdatedAt).ToList(),
+            "smallest" => filtered.OrderBy(pr => pr.TotalChanges).ToList(),
+            "largest" => filtered.OrderByDescending(pr => pr.TotalChanges).ToList(),
+            "files" => filtered.OrderByDescending(pr => pr.FilesChanged).ToList(),
+            _ => filtered.OrderBy(pr => GetCategoryOrder(pr.Category)).ThenBy(pr => pr.DaysOpen).ToList() // triage (default)
+        };
 
         if (updateUrl) UpdateUrl();
     }
@@ -215,6 +242,7 @@ else
         if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={SelectedAge}");
         if (!string.IsNullOrEmpty(SelectedAuthor)) query.Add($"author={SelectedAuthor}");
         if (!string.IsNullOrEmpty(SelectedDraft)) query.Add($"draft={SelectedDraft}");
+        if (SelectedSort != "triage") query.Add($"sort={SelectedSort}");
 
         var url = "pull-requests" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
         Navigation.NavigateTo(url, replace: true);
@@ -227,6 +255,7 @@ else
         SelectedAge = "";
         SelectedAuthor = "";
         SelectedDraft = "";
+        SelectedSort = "triage";
         ApplyFilters();
     }
 

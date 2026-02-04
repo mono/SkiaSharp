@@ -99,6 +99,17 @@ else
                 }
             </select>
         </div>
+        <div class="filter-group">
+            <label>Sort By</label>
+            <select @bind="SelectedSort" @bind:after="ApplyFilters">
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="updated">Recently Updated</option>
+                <option value="comments">Most Comments</option>
+                <option value="engagement">Highest Engagement</option>
+                <option value="longest">Longest Open</option>
+            </select>
+        </div>
         @if (HasFilters)
         {
             <button class="btn-clear" @onclick="ClearFilters">Clear Filters</button>
@@ -211,6 +222,7 @@ else
     [SupplyParameterFromQuery] public string? Age { get; set; }
     [SupplyParameterFromQuery] public string? Backend { get; set; }
     [SupplyParameterFromQuery] public string? Os { get; set; }
+    [SupplyParameterFromQuery] public string? Sort { get; set; }
 
     private bool _loading = true;
     private IssuesData? _data;
@@ -222,6 +234,7 @@ else
     private string SelectedAge { get; set; } = "";
     private string SelectedBackend { get; set; } = "";
     private string SelectedOs { get; set; } = "";
+    private string SelectedSort { get; set; } = "newest";
 
     private bool HasFilters => !string.IsNullOrEmpty(SelectedType) || 
                                !string.IsNullOrEmpty(SelectedArea) || 
@@ -237,6 +250,7 @@ else
         SelectedAge = Age ?? "";
         SelectedBackend = Backend ?? "";
         SelectedOs = Os ?? "";
+        SelectedSort = Sort ?? "newest";
 
         try { _data = await DataService.GetIssuesDataAsync(); }
         catch { /* Data not yet available */ }
@@ -251,13 +265,24 @@ else
     {
         if (_data is null) return;
 
-        _filteredIssues = _data.Issues.Where(i =>
+        var filtered = _data.Issues.Where(i =>
             (string.IsNullOrEmpty(SelectedType) || i.Type == SelectedType) &&
             (string.IsNullOrEmpty(SelectedArea) || i.Areas.Contains(SelectedArea)) &&
             (string.IsNullOrEmpty(SelectedAge) || i.AgeCategory == SelectedAge) &&
             (string.IsNullOrEmpty(SelectedBackend) || i.Backends.Contains(SelectedBackend)) &&
             (string.IsNullOrEmpty(SelectedOs) || i.Oses.Contains(SelectedOs))
-        ).OrderByDescending(i => i.CreatedAt).ToList();
+        );
+
+        // Apply sorting
+        _filteredIssues = SelectedSort switch
+        {
+            "oldest" => filtered.OrderBy(i => i.CreatedAt).ToList(),
+            "updated" => filtered.OrderByDescending(i => i.UpdatedAt).ToList(),
+            "comments" => filtered.OrderByDescending(i => i.CommentCount).ToList(),
+            "engagement" => filtered.OrderByDescending(i => i.Engagement?.CurrentScore ?? 0).ToList(),
+            "longest" => filtered.OrderByDescending(i => i.DaysOpen).ToList(),
+            _ => filtered.OrderByDescending(i => i.CreatedAt).ToList() // newest (default)
+        };
 
         if (updateUrl) UpdateUrl();
     }
@@ -270,6 +295,7 @@ else
         if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={Uri.EscapeDataString(SelectedAge)}");
         if (!string.IsNullOrEmpty(SelectedBackend)) query.Add($"backend={Uri.EscapeDataString(SelectedBackend)}");
         if (!string.IsNullOrEmpty(SelectedOs)) query.Add($"os={Uri.EscapeDataString(SelectedOs)}");
+        if (SelectedSort != "newest") query.Add($"sort={SelectedSort}");
         
         var url = "issues" + (query.Count > 0 ? "?" + string.Join("&", query) : "");
         Navigation.NavigateTo(url, replace: true);
@@ -282,6 +308,7 @@ else
         SelectedAge = "";
         SelectedBackend = "";
         SelectedOs = "";
+        SelectedSort = "newest";
         ApplyFiltersInternal(true);
     }
 
