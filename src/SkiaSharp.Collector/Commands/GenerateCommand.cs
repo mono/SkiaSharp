@@ -47,12 +47,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             AnsiConsole.MarkupLine("\n[bold]Generating github-stats.json...[/]");
 
         var index = await cache.LoadGitHubIndexAsync();
-        if (index.Items.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[yellow]  No GitHub data in cache[/]");
-            return;
-        }
-
+        
         var openIssues = index.Items.Where(i => i.Type == "issue" && i.State == "open").ToList();
         var closedIssues = index.Items.Where(i => i.Type == "issue" && i.State == "closed").ToList();
         var openPRs = index.Items.Where(i => i.Type == "pr" && i.State == "open").ToList();
@@ -102,7 +97,12 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         await OutputService.WriteJsonAsync(outputPath, stats);
         
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+        {
+            if (index.Items.Count == 0)
+                AnsiConsole.MarkupLine($"[yellow]  ✓ {outputPath} (empty cache)[/]");
+            else
+                AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+        }
     }
 
     private async Task GenerateIssuesAsync(CacheService cache, GenerateSettings settings)
@@ -115,12 +115,6 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             .Where(i => i.Type == "issue" && i.State == "open")
             .OrderByDescending(i => i.UpdatedAt)
             .ToList();
-
-        if (openIssues.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[yellow]  No issues in cache[/]");
-            return;
-        }
 
         // Calculate engagement scores and build issue list
         var engagementCalculator = new EngagementCalculator();
@@ -212,8 +206,13 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         
         if (!settings.Quiet)
         {
-            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
-            AnsiConsole.MarkupLine($"[dim]    {openIssues.Count} issues, {hotIssues.Count} hot[/]");
+            if (openIssues.Count == 0)
+                AnsiConsole.MarkupLine($"[yellow]  ✓ {outputPath} (empty cache)[/]");
+            else
+            {
+                AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+                AnsiConsole.MarkupLine($"[dim]    {openIssues.Count} issues, {hotIssues.Count} hot[/]");
+            }
         }
     }
 
@@ -227,12 +226,6 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             .Where(i => i.Type == "pr" && i.State == "open")
             .OrderByDescending(i => i.UpdatedAt)
             .ToList();
-
-        if (openPRs.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[yellow]  No PRs in cache[/]");
-            return;
-        }
 
         var triaged = new List<PullRequestInfo>();
         var bySize = new Dictionary<string, int>
@@ -324,7 +317,12 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         await OutputService.WriteJsonAsync(outputPath, output);
         
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+        {
+            if (openPRs.Count == 0)
+                AnsiConsole.MarkupLine($"[yellow]  ✓ {outputPath} (empty cache)[/]");
+            else
+                AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+        }
     }
 
     private static string GetTriageReasoning(string category, List<string> labels, CachedItem? item)
@@ -356,12 +354,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             AnsiConsole.MarkupLine("\n[bold]Generating nuget-stats.json...[/]");
 
         var index = await cache.LoadNuGetIndexAsync();
-        if (index.Packages.Count == 0)
-        {
-            AnsiConsole.MarkupLine("[yellow]  No NuGet data in cache[/]");
-            return;
-        }
-
+        
         var totalDownloads = index.Packages.Sum(p => p.TotalDownloads);
         var packages = new List<PackageInfo>();
 
@@ -385,8 +378,13 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         
         if (!settings.Quiet)
         {
-            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
-            AnsiConsole.MarkupLine($"[dim]    {totalDownloads:N0} total downloads[/]");
+            if (index.Packages.Count == 0)
+                AnsiConsole.MarkupLine($"[yellow]  ✓ {outputPath} (empty cache)[/]");
+            else
+            {
+                AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+                AnsiConsole.MarkupLine($"[dim]    {totalDownloads:N0} total downloads[/]");
+            }
         }
     }
 
