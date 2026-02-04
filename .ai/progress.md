@@ -4,13 +4,14 @@
 
 ## Current Status
 
-**Overall**: ✅ Phase 2.7 - NuGet Page Redesign COMPLETE
+**Overall**: ✅ Phase 3 - Collector CLI Migration COMPLETE
 
 | Area | Status | Notes |
 |------|--------|-------|
 | Phase 1 | ✅ Complete | Initial dashboard |
 | Phase 2 | ✅ Complete | Restructure with charts |
 | Phase 2.7 | ✅ Complete | NuGet grouped layout + legacy toggle |
+| Phase 3 | ✅ Complete | .NET collector CLI replaces PowerShell |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 
 ## Phase 1 (Completed)
@@ -114,6 +115,25 @@ None! 🎉
 
 ---
 
+## Phase 3: Collector CLI Migration ✅
+
+### .NET Console App
+- [x] Create `collectors/SkiaSharp.Collector/` project (.NET 10)
+- [x] Add Spectre.Console.Cli, Octokit, NuGet.Protocol packages
+- [x] Create 6 commands: all, github, nuget, community, issues, pr-triage
+
+### Shared Services
+- [x] GitHubService - API client with rate limiting, MS membership check
+- [x] NuGetService - Search API, dynamic package list, legacy detection
+- [x] LabelParser - Shared label parsing and age/size categories
+- [x] OutputService - JSON serialization
+
+### CI/CD Integration
+- [x] Update workflow: single `dotnet run -- all` instead of 5 `pwsh` calls
+- [ ] Archive PowerShell scripts (keep for reference)
+
+---
+
 ## SPA Routing (SOLVED)
 
 Navigation bugs were fixed by:
@@ -135,6 +155,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.5.0 | 2026-02-04 | .NET collector CLI replaces 5 PowerShell scripts |
 | 0.4.0 | 2026-02-04 | NuGet page redesign - grouped layout, legacy toggle, 50 packages |
 | 0.3.2 | 2026-02-03 | NuGet collector fixed - 822M+ downloads now shown |
 | 0.3.1 | 2026-02-03 | SPA routing fix - navigation fully working |

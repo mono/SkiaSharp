@@ -26,29 +26,11 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # Collect fresh data
-      - name: Collect GitHub Stats
+      # Collect fresh data using .NET CLI
+      - name: Collect all data
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pwsh collectors/collect-github.ps1 -OutputPath src/Dashboard/wwwroot/data/github-stats.json
-
-      - name: Collect NuGet Stats
-        run: pwsh collectors/collect-nuget.ps1 -OutputPath src/Dashboard/wwwroot/data/nuget-stats.json
-
-      - name: Collect Community Stats
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pwsh collectors/collect-community.ps1 -OutputPath src/Dashboard/wwwroot/data/community-stats.json
-
-      - name: Collect Issues Data
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pwsh collectors/collect-issues.ps1 -OutputPath src/Dashboard/wwwroot/data/issues.json
-
-      - name: Collect PR Triage Data
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pwsh collectors/collect-pr-triage.ps1 -OutputPath src/Dashboard/wwwroot/data/pr-triage.json
+        run: dotnet run --project collectors/SkiaSharp.Collector -- all -o src/Dashboard/wwwroot/data
 
       # Build and deploy
       - name: Restore dependencies
