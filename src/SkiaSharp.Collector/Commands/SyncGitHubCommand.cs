@@ -112,9 +112,25 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Layer 1: Basic item data[/]");
 
-        // Get total count for progress
+        // Get repo info (also gives us stars/forks/watchers)
         var repo = await client.Repository.Get(settings.Owner, settings.Repo);
         var totalCount = repo.OpenIssuesCount; // Includes open issues + PRs
+
+        // Save repo stats
+        var repoStats = new RepoStats(
+            repo.StargazersCount,
+            repo.ForksCount,
+            repo.SubscribersCount,
+            repo.Description,
+            repo.License?.Name,
+            repo.Topics?.ToList() ?? [],
+            repo.CreatedAt.DateTime,
+            repo.PushedAt?.DateTime,
+            DateTime.UtcNow
+        );
+        await cache.SaveRepoStatsAsync(repoStats);
+        if (settings.Verbose)
+            AnsiConsole.MarkupLine($"  [dim]Saved repo stats: {repoStats.Stars:N0} stars, {repoStats.Forks:N0} forks[/]");
         
         var since = settings.FullRefresh ? null : meta.Layers.Items.LastSync;
         var itemsDict = index.Items.ToDictionary(i => i.Number);

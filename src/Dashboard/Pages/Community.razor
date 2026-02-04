@@ -131,31 +131,6 @@ else
                     }
                 </div>
             </div>
-
-            <!-- Recent Commits -->
-            <div class="card card-wide">
-                <div class="card-header"><h3>Recent Commits</h3></div>
-                <div class="card-body">
-                    @if (_community.RecentCommits.Count == 0)
-                    {
-                        <p>No recent commits.</p>
-                    }
-                    else
-                    {
-                        <ul class="commit-list">
-                            @foreach (var commit in _community.RecentCommits.Take(10))
-                            {
-                                <li>
-                                    <code>@commit.Sha[..7]</code>
-                                    <span class="commit-message">@commit.Message</span>
-                                    <span class="commit-author">by @commit.Author</span>
-                                    <span class="commit-date">@commit.Date.ToString("MMM dd")</span>
-                                </li>
-                            }
-                        </ul>
-                    }
-                </div>
-            </div>
         }
         else
         {

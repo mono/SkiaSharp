@@ -67,12 +67,15 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             .Take(10)
             .ToList();
 
+        // Load repo stats from cache
+        var repoStats = await cache.LoadRepoStatsAsync();
+
         var stats = new GitHubStats(
             DateTime.UtcNow,
             new RepositoryInfo(
-                0, // Stars not in cache yet
-                0, // Forks not in cache yet
-                0, // Watchers not in cache yet
+                repoStats?.Stars ?? 0,
+                repoStats?.Forks ?? 0,
+                repoStats?.Watchers ?? 0,
                 openIssues.Count + openPRs.Count,
                 closedIssues.Count + closedPRs.Count
             ),
@@ -393,23 +396,43 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Generating community-stats.json...[/]");
 
-        // Community stats require contributors data which isn't in cache yet
-        // For now, generate a minimal placeholder
+        // Load contributors from cache
+        var contributors = await cache.LoadContributorsAsync();
+        
+        var msCount = contributors.Count(c => c.IsMicrosoft == true);
+        var communityCount = contributors.Count - msCount; // Everyone else is community
+
+        // Convert to output format (top 20 for display)
+        var topContributors = contributors
+            .Take(20)
+            .Select(c => new ContributorInfo(
+                c.Login,
+                c.AvatarUrl,
+                c.Contributions,
+                c.IsMicrosoft ?? false
+            ))
+            .ToList();
+
         var output = new CommunityStats(
             DateTime.UtcNow,
-            0,
-            0,
-            0,
-            [],
-            [],
-            []
+            contributors.Count,
+            msCount,
+            communityCount,
+            topContributors,
+            [], // RecentCommits - not needed for now
+            []  // ContributorGrowth - not needed for now
         );
 
         var outputPath = Path.Combine(settings.OutputDir, "community-stats.json");
         await OutputService.WriteJsonAsync(outputPath, output);
         
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+        {
+            if (contributors.Count > 0)
+                AnsiConsole.MarkupLine($"[green]  ✓ {outputPath} ({contributors.Count} contributors, {msCount} MS)[/]");
+            else
+                AnsiConsole.MarkupLine($"[green]  ✓ {outputPath} (empty cache)[/]");
+        }
     }
 }
 

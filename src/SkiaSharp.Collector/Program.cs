@@ -30,6 +30,10 @@ class Program
                 sync.AddCommand<SyncNuGetCommand>("nuget")
                     .WithDescription("Sync NuGet data to cache")
                     .WithExample("sync", "nuget", "-c", "./.data-cache");
+
+                sync.AddCommand<SyncCommunityCommand>("community")
+                    .WithDescription("Sync community data (contributors) to cache")
+                    .WithExample("sync", "community", "-c", "./.data-cache");
             });
 
             config.AddCommand<GenerateCommand>("generate")

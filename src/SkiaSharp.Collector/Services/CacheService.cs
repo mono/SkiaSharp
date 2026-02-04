@@ -261,4 +261,66 @@ public class CacheService
     }
 
     #endregion
+
+    #region Repository Stats
+
+    public string RepoStatsPath => Path.Combine(GitHubPath, "repo.json");
+
+    public async Task<RepoStats?> LoadRepoStatsAsync()
+    {
+        if (!File.Exists(RepoStatsPath))
+            return null;
+
+        var json = await File.ReadAllTextAsync(RepoStatsPath);
+        return JsonSerializer.Deserialize<RepoStats>(json, JsonOptions);
+    }
+
+    public async Task SaveRepoStatsAsync(RepoStats stats)
+    {
+        EnsureDirectoryExists(GitHubPath);
+        var json = JsonSerializer.Serialize(stats, JsonOptions);
+        await WriteAtomicAsync(RepoStatsPath, json);
+    }
+
+    #endregion
+
+    #region Community Cache
+
+    public string CommunityPath => Path.Combine(_cachePath, "community");
+    public string CommunitySyncMetaPath => Path.Combine(CommunityPath, "sync-meta.json");
+    public string ContributorsPath => Path.Combine(CommunityPath, "contributors.json");
+
+    public async Task<CommunitySyncMeta> LoadCommunitySyncMetaAsync()
+    {
+        if (!File.Exists(CommunitySyncMetaPath))
+            return new CommunitySyncMeta(1, null, 0, 0);
+
+        var json = await File.ReadAllTextAsync(CommunitySyncMetaPath);
+        return JsonSerializer.Deserialize<CommunitySyncMeta>(json, JsonOptions) ?? new CommunitySyncMeta(1, null, 0, 0);
+    }
+
+    public async Task SaveCommunitySyncMetaAsync(CommunitySyncMeta meta)
+    {
+        EnsureDirectoryExists(CommunityPath);
+        var json = JsonSerializer.Serialize(meta, JsonOptions);
+        await WriteAtomicAsync(CommunitySyncMetaPath, json);
+    }
+
+    public async Task<List<CachedContributor>> LoadContributorsAsync()
+    {
+        if (!File.Exists(ContributorsPath))
+            return [];
+
+        var json = await File.ReadAllTextAsync(ContributorsPath);
+        return JsonSerializer.Deserialize<List<CachedContributor>>(json, JsonOptions) ?? [];
+    }
+
+    public async Task SaveContributorsAsync(List<CachedContributor> contributors)
+    {
+        EnsureDirectoryExists(CommunityPath);
+        var json = JsonSerializer.Serialize(contributors, JsonOptions);
+        await WriteAtomicAsync(ContributorsPath, json);
+    }
+
+    #endregion
 }

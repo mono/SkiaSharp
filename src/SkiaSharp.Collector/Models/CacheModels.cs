@@ -210,3 +210,39 @@ public record PackageVersion(
     long Downloads,
     DateTime? Published
 );
+
+/// <summary>
+/// Repository-level stats (stars, forks, etc.)
+/// </summary>
+public record RepoStats(
+    int Stars,
+    int Forks,
+    int Watchers,
+    string? Description,
+    string? License,
+    List<string> Topics,
+    DateTime? CreatedAt,
+    DateTime? PushedAt,
+    DateTime SyncedAt
+);
+
+/// <summary>
+/// Community sync metadata
+/// </summary>
+public record CommunitySyncMeta(
+    int Version,
+    DateTime? LastSync,
+    int ContributorsProcessed,
+    int MembershipChecked
+);
+
+/// <summary>
+/// Cached contributor info
+/// </summary>
+public record CachedContributor(
+    string Login,
+    string AvatarUrl,
+    int Contributions,
+    bool? IsMicrosoft,
+    DateTime? MembershipCheckedAt
+);

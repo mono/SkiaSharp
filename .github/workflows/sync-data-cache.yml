@@ -92,6 +92,29 @@ jobs:
           fi
 
       # ============================================================
+      # Step 1b: Community (every 6 hours, with NuGet)
+      # ============================================================
+      - name: Sync Community
+        if: steps.nuget-check.outputs.run == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet run --project src/SkiaSharp.Collector -- sync community \
+            --cache-path .data-cache
+
+      - name: Push Community
+        if: steps.nuget-check.outputs.run == 'true'
+        working-directory: .data-cache
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No Community changes to commit"
+          else
+            git commit -m "Sync: Community $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git push
+          fi
+
+      # ============================================================
       # Step 2: GitHub items (Layer 1)
       # ============================================================
       - name: Sync GitHub items (Layer 1)
