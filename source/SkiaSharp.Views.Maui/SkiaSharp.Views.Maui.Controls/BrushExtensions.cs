@@ -63,6 +63,7 @@ namespace SkiaSharp.Views.Maui.Controls
 		/// <param name="strokeLineJoin">The stroke line join style.</param>
 		/// <param name="strokeDashArray">The stroke dash pattern.</param>
 		/// <param name="strokeDashOffset">The stroke dash offset.</param>
+		/// <param name="strokeMiterLimit">The stroke miter limit.</param>
 		/// <returns>An SKPaint configured for stroking, or null if brush is null.</returns>
 		public static SKPaint? ToSKStrokePaint(
 			this Brush? brush,
@@ -71,7 +72,8 @@ namespace SkiaSharp.Views.Maui.Controls
 			Microsoft.Maui.Controls.Shapes.PenLineCap strokeLineCap = Microsoft.Maui.Controls.Shapes.PenLineCap.Flat,
 			Microsoft.Maui.Controls.Shapes.PenLineJoin strokeLineJoin = Microsoft.Maui.Controls.Shapes.PenLineJoin.Miter,
 			DoubleCollection? strokeDashArray = null,
-			float strokeDashOffset = 0)
+			float strokeDashOffset = 0,
+			float strokeMiterLimit = 10)
 		{
 			var paint = brush.ToSKPaint(bounds);
 			if (paint == null)
@@ -81,6 +83,7 @@ namespace SkiaSharp.Views.Maui.Controls
 			paint.StrokeWidth = strokeWidth;
 			paint.StrokeCap = strokeLineCap.ToSKStrokeCap();
 			paint.StrokeJoin = strokeLineJoin.ToSKStrokeJoin();
+			paint.StrokeMiter = strokeMiterLimit;
 
 			if (strokeDashArray != null && strokeDashArray.Count > 0)
 			{

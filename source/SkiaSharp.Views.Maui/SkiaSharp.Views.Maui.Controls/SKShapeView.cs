@@ -206,6 +206,13 @@ namespace SkiaSharp.Views.Maui.Controls
 			// Calculate bounds for gradient brushes
 			var pathBounds = path.Bounds;
 
+			// Apply opacity if less than 1
+			var opacity = (float)shape.Opacity;
+			if (opacity < 1)
+			{
+				canvas.SaveLayerAlpha((byte)(opacity * 255));
+			}
+
 			// Draw fill
 			using (var fillPaint = shape.Fill?.ToSKPaint(pathBounds))
 			{
@@ -224,12 +231,19 @@ namespace SkiaSharp.Views.Maui.Controls
 					shape.StrokeLineCap,
 					shape.StrokeLineJoin,
 					shape.StrokeDashArray,
-					(float)shape.StrokeDashOffset);
+					(float)shape.StrokeDashOffset,
+					(float)shape.StrokeMiterLimit);
 
 				if (strokePaint != null)
 				{
 					canvas.DrawPath(path, strokePaint);
 				}
+			}
+
+			// Restore opacity layer if applied
+			if (opacity < 1)
+			{
+				canvas.Restore();
 			}
 
 			// Restore canvas state
