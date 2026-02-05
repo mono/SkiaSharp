@@ -5,7 +5,8 @@ using SkiaSharp.Collector.Models;
 namespace SkiaSharp.Collector.Services;
 
 /// <summary>
-/// Service for reading and writing cache files
+/// Service for reading and writing cache files.
+/// Supports per-repo cache structure: repos/{repoKey}/github/, repos/{repoKey}/nuget/
 /// </summary>
 public class CacheService
 {
@@ -17,12 +18,32 @@ public class CacheService
     };
 
     private readonly string _cachePath;
+    private readonly string? _repoKey;
 
-    public CacheService(string cachePath)
+    /// <summary>
+    /// Create a cache service for the root cache path (for discovery/migration).
+    /// </summary>
+    public CacheService(string cachePath) : this(cachePath, null) { }
+
+    /// <summary>
+    /// Create a cache service for a specific repo.
+    /// </summary>
+    public CacheService(string cachePath, string? repoKey)
     {
         _cachePath = Path.GetFullPath(cachePath);
+        _repoKey = repoKey;
         ValidateCachePath();
     }
+
+    /// <summary>
+    /// Get a cache service scoped to a specific repo.
+    /// </summary>
+    public CacheService ForRepo(string repoKey) => new(_cachePath, repoKey);
+
+    /// <summary>
+    /// Get a cache service scoped to a specific repo config.
+    /// </summary>
+    public CacheService ForRepo(RepoConfig repo) => new(_cachePath, repo.Key);
 
     private void ValidateCachePath()
     {
@@ -31,12 +52,38 @@ public class CacheService
             throw new ArgumentException("Cache path cannot contain '..'");
     }
 
+    /// <summary>
+    /// Get the base path for a repo's data.
+    /// New structure: repos/{repoKey}/
+    /// Legacy structure: (root) - used when no repoKey specified
+    /// </summary>
+    private string RepoBasePath => _repoKey is not null
+        ? Path.Combine(_cachePath, "repos", _repoKey)
+        : _cachePath;
+
+    /// <summary>
+    /// Discover all repos in the cache by looking for repos/*/ directories.
+    /// </summary>
+    public List<string> DiscoverRepoKeys()
+    {
+        var reposDir = Path.Combine(_cachePath, "repos");
+        if (!Directory.Exists(reposDir))
+            return [];
+
+        return Directory.GetDirectories(reposDir)
+            .Select(Path.GetFileName)
+            .Where(name => name is not null)
+            .Cast<string>()
+            .ToList();
+    }
+
     #region GitHub Cache
 
-    public string GitHubPath => Path.Combine(_cachePath, "github");
+    public string GitHubPath => Path.Combine(RepoBasePath, "github");
     public string GitHubSyncMetaPath => Path.Combine(GitHubPath, "sync-meta.json");
     public string GitHubIndexPath => Path.Combine(GitHubPath, "index.json");
     public string GitHubItemsPath => Path.Combine(GitHubPath, "items");
+    public string ContributorsPath => Path.Combine(GitHubPath, "contributors.json");
 
     public async Task<SyncMeta> LoadGitHubSyncMetaAsync()
     {
@@ -92,9 +139,69 @@ public class CacheService
 
     #endregion
 
+    #region Repository Stats
+
+    public string RepoStatsPath => Path.Combine(GitHubPath, "repo.json");
+
+    public async Task<RepoStats?> LoadRepoStatsAsync()
+    {
+        if (!File.Exists(RepoStatsPath))
+            return null;
+
+        var json = await File.ReadAllTextAsync(RepoStatsPath);
+        return JsonSerializer.Deserialize<RepoStats>(json, JsonOptions);
+    }
+
+    public async Task SaveRepoStatsAsync(RepoStats stats)
+    {
+        EnsureDirectoryExists(GitHubPath);
+        var json = JsonSerializer.Serialize(stats, JsonOptions);
+        await WriteAtomicAsync(RepoStatsPath, json);
+    }
+
+    #endregion
+
+    #region Contributors (now in github/ folder)
+
+    public string ContributorsSyncMetaPath => Path.Combine(GitHubPath, "contributors-sync-meta.json");
+
+    public async Task<CommunitySyncMeta> LoadCommunitySyncMetaAsync()
+    {
+        if (!File.Exists(ContributorsSyncMetaPath))
+            return new CommunitySyncMeta(1, null, 0, 0);
+
+        var json = await File.ReadAllTextAsync(ContributorsSyncMetaPath);
+        return JsonSerializer.Deserialize<CommunitySyncMeta>(json, JsonOptions) ?? new CommunitySyncMeta(1, null, 0, 0);
+    }
+
+    public async Task SaveCommunitySyncMetaAsync(CommunitySyncMeta meta)
+    {
+        EnsureDirectoryExists(GitHubPath);
+        var json = JsonSerializer.Serialize(meta, JsonOptions);
+        await WriteAtomicAsync(ContributorsSyncMetaPath, json);
+    }
+
+    public async Task<List<CachedContributor>> LoadContributorsAsync()
+    {
+        if (!File.Exists(ContributorsPath))
+            return [];
+
+        var json = await File.ReadAllTextAsync(ContributorsPath);
+        return JsonSerializer.Deserialize<List<CachedContributor>>(json, JsonOptions) ?? [];
+    }
+
+    public async Task SaveContributorsAsync(List<CachedContributor> contributors)
+    {
+        EnsureDirectoryExists(GitHubPath);
+        var json = JsonSerializer.Serialize(contributors, JsonOptions);
+        await WriteAtomicAsync(ContributorsPath, json);
+    }
+
+    #endregion
+
     #region NuGet Cache
 
-    public string NuGetPath => Path.Combine(_cachePath, "nuget");
+    public string NuGetPath => Path.Combine(RepoBasePath, "nuget");
     public string NuGetSyncMetaPath => Path.Combine(NuGetPath, "sync-meta.json");
     public string NuGetIndexPath => Path.Combine(NuGetPath, "index.json");
     public string NuGetPackagesPath => Path.Combine(NuGetPath, "packages");
@@ -262,64 +369,16 @@ public class CacheService
 
     #endregion
 
-    #region Repository Stats
+    #region Legacy Community Cache (for migration)
 
-    public string RepoStatsPath => Path.Combine(GitHubPath, "repo.json");
+    public string LegacyCommunityPath => Path.Combine(_cachePath, "community");
+    public string LegacyContributorsPath => Path.Combine(LegacyCommunityPath, "contributors.json");
 
-    public async Task<RepoStats?> LoadRepoStatsAsync()
+    public bool HasLegacyStructure()
     {
-        if (!File.Exists(RepoStatsPath))
-            return null;
-
-        var json = await File.ReadAllTextAsync(RepoStatsPath);
-        return JsonSerializer.Deserialize<RepoStats>(json, JsonOptions);
-    }
-
-    public async Task SaveRepoStatsAsync(RepoStats stats)
-    {
-        EnsureDirectoryExists(GitHubPath);
-        var json = JsonSerializer.Serialize(stats, JsonOptions);
-        await WriteAtomicAsync(RepoStatsPath, json);
-    }
-
-    #endregion
-
-    #region Community Cache
-
-    public string CommunityPath => Path.Combine(_cachePath, "community");
-    public string CommunitySyncMetaPath => Path.Combine(CommunityPath, "sync-meta.json");
-    public string ContributorsPath => Path.Combine(CommunityPath, "contributors.json");
-
-    public async Task<CommunitySyncMeta> LoadCommunitySyncMetaAsync()
-    {
-        if (!File.Exists(CommunitySyncMetaPath))
-            return new CommunitySyncMeta(1, null, 0, 0);
-
-        var json = await File.ReadAllTextAsync(CommunitySyncMetaPath);
-        return JsonSerializer.Deserialize<CommunitySyncMeta>(json, JsonOptions) ?? new CommunitySyncMeta(1, null, 0, 0);
-    }
-
-    public async Task SaveCommunitySyncMetaAsync(CommunitySyncMeta meta)
-    {
-        EnsureDirectoryExists(CommunityPath);
-        var json = JsonSerializer.Serialize(meta, JsonOptions);
-        await WriteAtomicAsync(CommunitySyncMetaPath, json);
-    }
-
-    public async Task<List<CachedContributor>> LoadContributorsAsync()
-    {
-        if (!File.Exists(ContributorsPath))
-            return [];
-
-        var json = await File.ReadAllTextAsync(ContributorsPath);
-        return JsonSerializer.Deserialize<List<CachedContributor>>(json, JsonOptions) ?? [];
-    }
-
-    public async Task SaveContributorsAsync(List<CachedContributor> contributors)
-    {
-        EnsureDirectoryExists(CommunityPath);
-        var json = JsonSerializer.Serialize(contributors, JsonOptions);
-        await WriteAtomicAsync(ContributorsPath, json);
+        // Check if old structure exists (github/ at root level, not under repos/)
+        return Directory.Exists(Path.Combine(_cachePath, "github")) &&
+               !Directory.Exists(Path.Combine(_cachePath, "repos"));
     }
 
     #endregion
