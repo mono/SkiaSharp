@@ -6,7 +6,7 @@
 ## Current Focus
 
 **Phase**: Multi-Repository Dashboard UI Enhancement ✅ COMPLETE
-**Status**: Repo badges, filters, and all Extended NuGet packages deployed
+**Status**: All phases complete - badges, filters, NuGet grouping deployed
 **Version**: v0.12.0
 
 ## Recent Changes
@@ -14,7 +14,7 @@
 ### 2026-02-05 (UI Enhancements - v0.12.0)
 
 **Repo Badges & Filters ✅**
-- Created `RepoBadge.razor` component (colored pill with repo name)
+- Created `RepoBadge.razor` component (rounded pill with repo name)
 - Added Repository filter dropdown to Issues page
 - Added Repository filter dropdown to PRs page
 - Repo badges display in issue table rows and PR cards
@@ -25,6 +25,11 @@
 - Added `supportedPackages` whitelist for legacy detection
 - Now syncs all 13 Extended packages (was 4)
 - Only Extended + UI.Maui marked as supported, rest are legacy
+
+**NuGet Page Grouping ✅**
+- Added "SkiaSharp.Extended" as new top-level group
+- Subgroups: Core, UI Controls, Iconify
+- All 13 Extended packages properly categorized
 
 **Live Dashboard Stats**:
 | Metric | Total | SkiaSharp | Extended |
