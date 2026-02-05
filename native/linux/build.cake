@@ -110,6 +110,13 @@ Task("libSkiaSharp")
             ? $", '-D__WORDSIZE={wordSize}'"
             : $"";
 
+        // Architecture-specific Spectre mitigation flags
+        var spectreFlags = arch switch {
+            "x64" or "x86" => "'-mretpoline', ",
+            "arm" or "arm64" => "'-mharden-sls=all', ",
+            _ => ""  // RISC-V, LoongArch - no standard flags yet
+        };
+
         GnNinja($"{VARIANT}/{arch}", "SkiaSharp",
             $"target_os='linux' " +
             $"target_cpu='{arch}' " +
@@ -127,7 +134,7 @@ Task("libSkiaSharp")
             $"skia_enable_skottie=true " +
             $"skia_use_vulkan={SUPPORT_VULKAN} ".ToLower() +
             $"extra_asmflags=[] " +
-            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', '-mretpoline' {wordSizeDefine} ] " +
+            $"extra_cflags=[ '-DSKIA_C_DLL', '-DHAVE_SYSCALL_GETRANDOM', '-DXML_DEV_URANDOM', {spectreFlags}{wordSizeDefine} ] " +
             $"extra_ldflags=[ '-static-libstdc++', '-static-libgcc', '-Wl,--version-script={map}' ] " +
             COMPILERS +
             $"linux_soname_version='{soname}' " +
