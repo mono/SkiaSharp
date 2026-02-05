@@ -31,46 +31,6 @@ else
         </div>
     </div>
 
-    <!-- Featured Extended Packages -->
-    @if (_stats.Packages.Any(p => p.Id == "SkiaSharp.Extended"))
-    {
-        var extendedCore = _stats.Packages.FirstOrDefault(p => p.Id == "SkiaSharp.Extended");
-        var extendedMaui = _stats.Packages.FirstOrDefault(p => p.Id == "SkiaSharp.Extended.UI.Maui");
-        <div class="featured-packages">
-            <h3>SkiaSharp.Extended</h3>
-            <div class="featured-cards">
-                @if (extendedCore != null)
-                {
-                    <a href="https://www.nuget.org/packages/SkiaSharp.Extended" target="_blank" class="featured-card">
-                        <div class="featured-icon">📦</div>
-                        <div class="featured-info">
-                            <div class="featured-name">SkiaSharp.Extended</div>
-                            <div class="featured-desc">Additional drawing APIs, utilities, and helpers</div>
-                            <div class="featured-stats">
-                                <span class="featured-downloads">@extendedCore.TotalDownloads.ToString("N0") downloads</span>
-                                <span class="featured-version">v@(extendedCore.Versions.LastOrDefault()?.Version ?? "3.0.0")</span>
-                            </div>
-                        </div>
-                    </a>
-                }
-                @if (extendedMaui != null)
-                {
-                    <a href="https://www.nuget.org/packages/SkiaSharp.Extended.UI.Maui" target="_blank" class="featured-card">
-                        <div class="featured-icon">📱</div>
-                        <div class="featured-info">
-                            <div class="featured-name">SkiaSharp.Extended.UI.Maui</div>
-                            <div class="featured-desc">Additional SkiaSharp controls for .NET MAUI</div>
-                            <div class="featured-stats">
-                                <span class="featured-downloads">@extendedMaui.TotalDownloads.ToString("N0") downloads</span>
-                                <span class="featured-version">v@(extendedMaui.Versions.LastOrDefault()?.Version ?? "3.0.0")</span>
-                            </div>
-                        </div>
-                    </a>
-                }
-            </div>
-        </div>
-    }
-
     <!-- Download Trend Charts -->
     @if (_chartsData?.Charts?.Any() == true)
     {

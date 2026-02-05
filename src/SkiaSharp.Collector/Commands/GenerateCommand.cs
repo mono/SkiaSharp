@@ -440,7 +440,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             ("Skottie Animation", ["SkiaSharp.Skottie"]),
             ("GPU Backends", ["SkiaSharp.Direct3D.Vortice", "SkiaSharp.Vulkan.SharpVk"]),
             ("Blazor", ["SkiaSharp.Views.Blazor"]),
-            ("Extended UI MAUI", ["SkiaSharp.Extended.UI.Maui"])
+            ("SkiaSharp.Extended", ["SkiaSharp.Extended", "SkiaSharp.Extended.UI.Maui"])
         };
 
         var charts = new List<PackageChartData>();
