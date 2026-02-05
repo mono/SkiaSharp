@@ -76,7 +76,7 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
 
                     try
                     {
-                        var stats = await nuget.GetPackageStatsAsync(packageId);
+                        var stats = await nuget.GetPackageStatsAsync(packageId, repoConfig.Nuget.SupportedPackages);
                         
                         // Store ALL versions with publish dates
                         var versions = stats.Versions

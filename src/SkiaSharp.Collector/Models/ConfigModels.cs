@@ -36,5 +36,6 @@ public record NuGetConfig(
     string Source,
     List<string>? Urls = null,
     string? Prefix = null,
-    string? Author = null
+    string? Author = null,
+    List<string>? SupportedPackages = null
 );

@@ -102,14 +102,16 @@ public sealed class NuGetService : IDisposable
                 if (!result.Identity.Id.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                // Filter by author if specified
+                // Filter by author if specified (Microsoft and Xamarin are equivalent)
                 if (!string.IsNullOrEmpty(authorFilter) && result.Authors != null)
                 {
                     var authors = result.Authors.Split(',', StringSplitOptions.RemoveEmptyEntries)
                         .Select(a => a.Trim())
                         .ToList();
 
-                    if (!authors.Any(a => a.Contains(authorFilter, StringComparison.OrdinalIgnoreCase)))
+                    // Accept both Microsoft and Xamarin as valid authors (Xamarin Inc. is part of Microsoft)
+                    var validAuthors = new[] { "Microsoft", "Xamarin" };
+                    if (!authors.Any(a => validAuthors.Any(v => a.Contains(v, StringComparison.OrdinalIgnoreCase))))
                         continue;
                 }
 
@@ -133,7 +135,9 @@ public sealed class NuGetService : IDisposable
     /// Get full version history for a package using the NuGet.Protocol SDK.
     /// Combines PackageSearchResource (downloads) and PackageMetadataResource (publish dates).
     /// </summary>
-    public async Task<PackageSearchResult> GetPackageStatsAsync(string packageId)
+    /// <param name="packageId">The package ID to fetch</param>
+    /// <param name="supportedPackages">Optional whitelist of supported package IDs. If provided, only these are non-legacy.</param>
+    public async Task<PackageSearchResult> GetPackageStatsAsync(string packageId, IReadOnlyCollection<string>? supportedPackages = null)
     {
         try
         {
@@ -154,7 +158,19 @@ public sealed class NuGetService : IDisposable
             
             long totalDownloads = 0;
             var downloadsByVersion = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
-            var isLegacy = true;
+            
+            // Determine legacy status
+            bool isLegacy;
+            if (supportedPackages is { Count: > 0 })
+            {
+                // Use whitelist: only packages in the list are supported
+                isLegacy = !supportedPackages.Contains(packageId, StringComparer.OrdinalIgnoreCase);
+            }
+            else
+            {
+                // Use version-based detection (default)
+                isLegacy = true;
+            }
 
             if (searchPkg != null)
             {
@@ -167,8 +183,8 @@ public sealed class NuGetService : IDisposable
                     var versionStr = v.Version.ToNormalizedString();
                     downloadsByVersion[versionStr] = v.DownloadCount ?? 0;
                     
-                    // Check legacy status
-                    if (!versionStr.Contains('-'))
+                    // Check legacy status via version (only if not using whitelist)
+                    if (supportedPackages is null or { Count: 0 } && !versionStr.Contains('-'))
                     {
                         var major = v.Version.Major;
                         if (major >= _minSupportedMajorVersion)
