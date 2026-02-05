@@ -5,20 +5,26 @@
 
 ## Current Focus
 
-**Phase**: Multi-Repository Dashboard Extension ✅ COMPLETE
-**Status**: Full sync complete, dashboard live with both repos
-**Version**: v0.11.0
+**Phase**: Multi-Repository Dashboard UI Enhancement ✅ COMPLETE
+**Status**: Repo badges, filters, and all Extended NuGet packages deployed
+**Version**: v0.12.0
 
 ## Recent Changes
 
-### 2026-02-05 (Multi-Repository Extension - v0.11.0)
+### 2026-02-05 (UI Enhancements - v0.12.0)
 
-**Data Sync Complete ✅**
-- Migrated existing cache data to `repos/mono-SkiaSharp/` structure
-- Triggered full parallel sync for both repos
-- SkiaSharp: 3,183 issues/PRs, 50 NuGet packages synced
-- Extended: 329 issues/PRs, 4 NuGet packages synced
-- Dashboard build deployed with merged multi-repo data
+**Repo Badges & Filters ✅**
+- Created `RepoBadge.razor` component (colored pill with repo name)
+- Added Repository filter dropdown to Issues page
+- Added Repository filter dropdown to PRs page
+- Repo badges display in issue table rows and PR cards
+- URL query param support: `?repo=mono/SkiaSharp.Extended`
+
+**Extended NuGet Sync Fix ✅**
+- Updated author filter to accept "Xamarin" (Xamarin Inc. is Microsoft)
+- Added `supportedPackages` whitelist for legacy detection
+- Now syncs all 13 Extended packages (was 4)
+- Only Extended + UI.Maui marked as supported, rest are legacy
 
 **Live Dashboard Stats**:
 | Metric | Total | SkiaSharp | Extended |
@@ -26,7 +32,7 @@
 | Stars | 5,514 | 5,257 | 257 |
 | Open Issues | 690 | 658 | 32 |
 | Open PRs | 70 | 52 | 18 |
-| NuGet Downloads | 984M | 50 pkgs | 4 pkgs |
+| NuGet Packages | 63 | 50 | 13 |
 | Contributors | 105 | (merged) | (merged) |
 
 **Phase 1: Cache Restructure ✅**
