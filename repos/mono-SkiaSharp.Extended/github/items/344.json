@@ -1,0 +1,28 @@
+{
+  "number": 344,
+  "type": "pr",
+  "state": "open",
+  "title": "fix: add nuget.org source for MAUI workload installation",
+  "body": "## Problem\n\nThe docs CI workflow was failing because \u0060dotnet workload install maui\u0060 couldn\u0027t find workload packages in the configured NuGet feeds.\n\nError:\n\u0060\u0060\u0060\nVersion 26.2.10191 of package microsoft.ios.runtime.ios-arm64.net10.0_26.2 is not found in NuGet feeds\n\u0060\u0060\u0060\n\n## Solution\n\nExplicitly add the nuget.org source when installing workloads:\n\n\u0060\u0060\u0060yaml\ndotnet workload install maui --source https://api.nuget.org/v3/index.json\n\u0060\u0060\u0060\n\n## Note\n\nI apologize for merging PR #335 with the failing CI - that was a mistake on my part. This PR fixes the underlying issue.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2026-02-05T16:56:34",
+  "updatedAt": "2026-02-05T16:56:34",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "fix/docs-workflow-nuget-source",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": []
+}
