@@ -59,10 +59,19 @@ else
         </div>
 
         <!-- Monthly Activity Chart -->
-        @if (_chartData.Count > 0)
+        @if (_trendData?.MonthlyTrends.Count > 0)
         {
             <div class="trend-chart-section">
-                <h3>PR Activity Over Time</h3>
+                <div class="trend-chart-header">
+                    <h3>PR Activity Over Time</h3>
+                    <select class="time-range-select" @bind="SelectedTimeRange" @bind:after="UpdateChartData">
+                        <option value="6">Last 6 Months</option>
+                        <option value="12">Last Year</option>
+                        <option value="24">Last 2 Years</option>
+                        <option value="60">Last 5 Years</option>
+                        <option value="0">All Time</option>
+                    </select>
+                </div>
                 <ApexChart TItem="ChartPoint"
                            Options="_chartOptions"
                            Height="300">
@@ -236,6 +245,7 @@ else
 
     // Chart data
     private List<ChartPoint> _chartData = [];
+    private int SelectedTimeRange { get; set; } = 24; // Default: 2 years
     private ApexChartOptions<ChartPoint> _chartOptions = new()
     {
         Chart = new Chart { Toolbar = new Toolbar { Show = false } },
@@ -274,19 +284,25 @@ else
         try 
         { 
             _trendData = await DataService.GetTrendDataAsync();
-            if (_trendData is not null)
-            {
-                // Take last 24 months for chart
-                _chartData = _trendData.MonthlyTrends
-                    .TakeLast(24)
-                    .Select(t => new ChartPoint(t.Month, t.PrsCreated, t.PrsMerged))
-                    .ToList();
-            }
+            UpdateChartData();
         }
         catch { /* Trend data not yet available */ }
 
         ApplyFiltersInternal(updateUrl: false); // Don't update URL on initial load
         _loading = false;
+    }
+
+    private void UpdateChartData()
+    {
+        if (_trendData is null) return;
+        
+        var trends = SelectedTimeRange == 0 
+            ? _trendData.MonthlyTrends 
+            : _trendData.MonthlyTrends.TakeLast(SelectedTimeRange);
+            
+        _chartData = trends
+            .Select(t => new ChartPoint(t.Month, t.PrsCreated, t.PrsMerged))
+            .ToList();
     }
 
     private void FilterByCategory(string category)
