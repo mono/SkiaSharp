@@ -435,8 +435,8 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         var chartConfigs = new List<(string Title, string[] PackageIds)>
         {
             ("Core Libraries", ["SkiaSharp", "HarfBuzzSharp"]),
-            ("Native Views", ["SkiaSharp.Views", "SkiaSharp.Views.WPF", "SkiaSharp.Views.WinUI", "SkiaSharp.Views.WindowsForms", "SkiaSharp.Views.Blazor"]),
-            ("Cross-Platform Views", ["SkiaSharp.Views.Forms", "SkiaSharp.Views.Maui.Core", "SkiaSharp.Views.Uno.WinUI"]),
+            ("Native Views", ["SkiaSharp.Views", "SkiaSharp.Views.WPF", "SkiaSharp.Views.WinUI", "SkiaSharp.Views.WindowsForms"]),
+            ("Cross-Platform Views", ["SkiaSharp.Views.Forms", "SkiaSharp.Views.Maui.Core", "SkiaSharp.Views.Uno.WinUI", "SkiaSharp.Views.Blazor"]),
             ("Integrations", ["SkiaSharp.HarfBuzz", "SkiaSharp.Skottie"]),
             ("GPU Backends", ["SkiaSharp.Vulkan.SharpVk", "SkiaSharp.Direct3D.Vortice"]),
             ("Extended", ["SkiaSharp.Extended", "SkiaSharp.Extended.UI.Maui"])

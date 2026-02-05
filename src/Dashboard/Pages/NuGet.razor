@@ -208,10 +208,11 @@ else
 
     private static string GetShortPackageName(string id)
     {
-        // For chart legends, show short names
+        // For chart legends, show friendly names
+        if (id == "SkiaSharp.Views.Maui.Core") return ".NET MAUI";
+        if (id == "SkiaSharp.Views.Uno.WinUI") return "Uno";
         if (id.Contains(".Direct3D.")) return "Direct3D";
         if (id.Contains(".Vulkan.")) return "Vulkan";
-        if (id.Contains(".Maui.")) return id.Replace("SkiaSharp.Views.Maui.", "");
         if (id.StartsWith("SkiaSharp.Views.")) return id.Replace("SkiaSharp.Views.", "");
         if (id.StartsWith("SkiaSharp.")) return id.Replace("SkiaSharp.", "");
         return id;
