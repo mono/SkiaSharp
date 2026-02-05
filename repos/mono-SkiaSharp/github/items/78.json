@@ -1,0 +1,18 @@
+{
+  "number": 78,
+  "type": "issue",
+  "state": "closed",
+  "title": "\u0060SKPaint.MeasureText\u0060 returns incorrect value",
+  "body": "It looks like the \u0060MeasureText\u0060 method is computing the length of strings incorrectly. Here is an example of how the incorrect bounds are computed for text. I\u0027m using the following snippet:\n\n\u0060\u0060\u0060\npaint.Color = SKColors.Black;\npaint.IsAntialias = true;\npaint.TextEncoding = SKTextEncoding.Utf16;\npaint.TextSize = 45;\nSKRect bounds = new SKRect();\npaint.MeasureText(text, ref bounds);\n\u0060\u0060\u0060\n\nAnd the \u0060bounds\u0060 rect is rendered like this, for several strings of differing lengths:\n![text-width-bug](https://cloud.githubusercontent.com/assets/934815/15088086/6989e762-13bd-11e6-8cd5-74c819a4da31.png)\n\nWhen I pad the string with spaces like so:\n\n\u0060\u0060\u0060\npaint.Color = SKColors.Black;\npaint.IsAntialias = true;\npaint.TextEncoding = SKTextEncoding.Utf16;\npaint.TextSize = 45;\nSKRect bounds = new SKRect();\nstring padded = text;\nfor (int i = 0; i \u003C text.Length; i\u002B\u002B) padded \u002B= \u0022 \u0022;\npaint.MeasureText(padded, ref bounds);\n\u0060\u0060\u0060\n\nThe bounds are computed correctly:\n\n![text-width-bug-padded](https://cloud.githubusercontent.com/assets/934815/15088139/da142452-13bd-11e6-9d74-05062ad499eb.png)\n",
+  "author": {
+    "login": "tdenniston",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-05-06T23:08:51",
+  "updatedAt": "2022-08-20T06:01:25",
+  "closedAt": "2016-05-12T14:58:05",
+  "commentCount": 2,
+  "reactionCount": 0
+}

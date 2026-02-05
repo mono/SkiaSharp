@@ -1,0 +1,23 @@
+{
+  "number": 2867,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Replace \u003CPackageLicenseUrl\u003E with \u003CPackageLicenseExpression\u003E",
+  "body": "### Is your feature request related to a problem?\n\nWe are currently adapting a package approval workflow, where packages are approved or blocked based on certain criteria. One very important criterion is the package\u0027s license. There is a list of approved licenses (like MIT, Apache, ...) and a list of licenses that cannot be used (like GPL).\r\n\r\nAlthough your package seems to be under MIT license, it\u0027s hard to auto-approve this package, because it uses a license URL (which is a [deprecated mechanism](https://learn.microsoft.com/en-us/nuget/reference/nuspec#licenseurl)) instead of an SPDX tag (https://spdx.github.io/spdx-spec/v2-draft/SPDX-license-list/). As a result, the license does not show up in the package\u0027s metadata (compare e.g. the \u0022About\u0022 section of https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies with https://www.nuget.org/packages/Microsoft.Data.SqlClient, where the latter clearly states the package\u0027s license, while your package does not).\r\n\n\n### Describe the solution you would like\n\nWould you consider using an SPDX license expression? Basically, all that is needed is replacing the line\r\n\u0060\u003CPackageLicenseUrl\u003Ehttps://go.microsoft.com/fwlink/?linkid=868514\u003C/PackageLicenseUrl\u003E\u0060 (or whatever URL is used)\r\nwith\r\n\u0060\u003CPackageLicenseExpression\u003EMIT\u003C/PackageLicenseExpression\u003E\u0060\r\nin all *.csproj or *.props files (or whatever mechanism generates the corresponding *.nuspec file). An additional LICENSE file can still remain in the package, just the metadata would change. The corresponding .nuspec file should then change the line\r\n\u0060\u003ClicenseUrl\u003Ehttps://go.microsoft.com/fwlink/?linkid=868514\u003C/licenseUrl\u003E\u0060\r\nto\r\n\u0060\u003Clicense type=\u0022expression\u0022\u003EMIT\u003C/license\u003E\u0060\r\n\n\n### Describe alternatives you have considered\n\nThe alternative would be for us to download every package, manually check the context of each embedded LICENSE file or the license URL, make sure that it is in fact an approved license, and then manually allow the package. This would have to be done for every release of every package without an SPDX license tags.\n\n### Additional context\n\nUsing SPDX license identifiers is the recommendation provided in Microsoft\u0027s [.nuspec reference](https://learn.microsoft.com/en-us/nuget/reference/nuspec#license).\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "szimmer-dap",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-23T08:04:33",
+  "updatedAt": "2024-06-03T11:13:16",
+  "closedAt": "2024-06-03T11:13:16",
+  "commentCount": 0,
+  "reactionCount": 0
+}

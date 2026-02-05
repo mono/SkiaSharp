@@ -1,0 +1,22 @@
+{
+  "number": 2714,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Please make SKBitmap.IsDisposed.Get() PUBLIC (instead of \u0027protected internal\u0027).",
+  "body": "### Is your feature request related to a problem?\n\nWhen I mistakenly dispose of an SKBitmap in our code, but someone else has a reference, I don\u0027t have any way (without throwing an exception) to find this out!   So I end up with exceptions randomly for this condition.\r\n\r\nTo prevent these exceptions, for cases where this is possible, it sure would be nice if I could do a safety check with \u0022skbitmap.IsDisposed\u0022 -- but I cannot, because the getter is Protected, instead of Public.\r\n\r\nPlease make this Public!  I would sure appreciate that!\n\n### Describe the solution you would like\n\npublic class SKBitmap\r\n{\r\n\tpublic bool IsDisposed =\u003E isDisposed == 1;   // instead of protected internal\r\n}\n\n### Describe alternatives you have considered\n\nn/a\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "najak3d",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-13T08:43:06",
+  "updatedAt": "2024-09-30T11:25:23",
+  "commentCount": 6,
+  "reactionCount": 0
+}

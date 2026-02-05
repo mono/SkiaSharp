@@ -1,0 +1,31 @@
+{
+  "number": 425,
+  "type": "issue",
+  "state": "open",
+  "title": "Incorrect SKCodecOrigin from dng files",
+  "body": "[APC_0316.zip](https://github.com/mono/SkiaSharp/files/1616452/APC_0316.zip)\r\n[APC_0193.zip](https://github.com/mono/SkiaSharp/files/1616453/APC_0193.zip)\r\n\r\nSample images attached. The following sample code results in SKCodecOrigin.TopLeft, which is incorrect.\r\n\r\n        private static SKBitmap Decode(string path, out SKCodecOrigin origin)\r\n        {\r\n            using (var stream = new SKFileStream(path))\r\n            {\r\n                using (var codec = SKCodec.Create(stream))\r\n                {\r\n                    // create the bitmap\r\n                    var bitmap = new SKBitmap(codec.Info.Width, codec.Info.Height);\r\n\r\n                    origin = codec.Origin;\r\n\r\n                    return bitmap;\r\n                }\r\n            }\r\n        }\r\n\r\nIs this supported for dng files? The chrome browser is able to auto-orient them as expected.\n\n\u003E VS bug [#736302](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/736302)",
+  "author": {
+    "login": "LukePulverenti",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/skia-update-required",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-01-09T20:05:49",
+  "updatedAt": "2019-06-17T16:50:56",
+  "commentCount": 2,
+  "reactionCount": 0
+}

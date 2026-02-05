@@ -1,0 +1,17 @@
+{
+  "number": 1687,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Improve SKVertices API",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nCurrently \u0060SKVertices\u0060 API hides access to specifying vertex/index counts and builder class is not exposed at all.\r\n\r\nhttps://api.skia.org/classSkVertices.html#a526433284b49288ad38cf0f0216fc6f4 - vertex and index counts are not present in the API.\r\nhttps://api.skia.org/classSkVertices_1_1Builder.html - not exposed\r\n\r\nVertex and index counts are needed when a shared array is used or we want to copy only a subset. This forces user to allocate new arrays frequently since copy start and length can\u0027t be controlled.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nBinding builder would allow for more efficient vertex buffer construction.\r\n\r\nTo fix ergonomics of \u0060SKVertices.CreateCopy\u0060 it should allow for using spans as well.\r\nSo a signature will look like \u0060SKVertices.CreateCopy(SKVertexMode mode, ReadOnlySpan\u003CSKPoint\u003E positions, ...)\u0060 which would allow for offseting copy start and controlling length of copied data.\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nCurrent API works but is inefficient.\r\n\r\n**Additional context**\r\n\r\n\u003C!-- Add any other context or screenshots about the feature request here. --\u003E\r\n",
+  "author": {
+    "login": "MarchingCube",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-04-09T09:04:25",
+  "updatedAt": "2021-04-09T09:04:25",
+  "commentCount": 0,
+  "reactionCount": 0
+}

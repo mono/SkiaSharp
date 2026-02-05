@@ -1,0 +1,27 @@
+{
+  "number": 754,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp Gray8 decoding returns null",
+  "body": "**Description**\r\n\r\nIn SkiaSharp \u00601.60.3\u0060 loading an 8bit png would result in a bitmap with \u0060BytesPerPixel == 1\u0060. \r\nIn \u00601.68.0\u0060, \u0060BytesPerPixel == 4\u0060\r\n\r\nApparently now we need to pass in the codec when decoding to tell Skia it is an 8 bit image.\r\nhttps://github.com/mono/SkiaSharp/issues/694#issuecomment-441078401\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n// bytes = File.ReadAllBytes(....)\r\nvar stream = new MemoryStream(bytes);\r\nvar codec = SKCodec.Create(stream);\r\nvar imageInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8);\r\nvar bitmap = SKBitmap.Decode(codec, imageInfo);\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Expected Behavior**\r\n\r\n\u0060BytesPerPixel == 1\u0060\r\n\r\n**Actual Behavior**\r\n\r\n\u0060bitmap == null\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u00601.68.0\u0060\r\n- Last known good version: \u00601.60.3\u0060\r\n- IDE:  \u0060Visual Studio Code\u0060\r\n- Platform Target Frameworks: \u0060netcoreapp3.0\u0060\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\nInput image:\r\n![201812211019388645_validpos_19 19875_21 285_439_12](https://user-images.githubusercontent.com/5593825/51076794-aecf2b80-169d-11e9-9b9b-1c01eeb20467.png)\n\n\u003E VS bug [#770226](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/770226)",
+  "author": {
+    "login": "CoenraadS",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2019-01-12T18:13:35",
+  "updatedAt": "2026-01-29T03:02:28",
+  "commentCount": 4,
+  "reactionCount": 0
+}

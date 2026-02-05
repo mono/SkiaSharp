@@ -1,0 +1,23 @@
+{
+  "number": 1076,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKMatrix.Concat Ambiguity in VB.Net",
+  "body": "The SkMatrix.Concat method has two options: with and without \u0027ref\u0027 values. Unfortunately, I am forced into using VB.Net, which cannot specify which Concat method to use except through reflection. Thus, in VB.Net, I will get a compile error \u0022\u0027Concat\u0027 is ambiguous because multiple kinds of members with this name exist in structure \u0027SKMatrix\u0027.\u0022  Could I kindly ask that two methods be named slightly different to make it more friendly with other languages such as VB.Net? For instance, maybe:\r\n\r\n      public static void Concat(ref SKMatrix target, SKMatrix first, SKMatrix second);\r\n\r\nand\r\n\r\n      public static void ConcatRef(ref SKMatrix target, ref SKMatrix first, ref SKMatrix second);\r\n\r\nOr add a wrapper for VB.Net that calls one of those methods with a different name (This would extend the API without breaking any current functionality). And also make you aware of problems such as this for future design.\r\nThanks",
+  "author": {
+    "login": "gktval",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-12-20T19:17:39",
+  "updatedAt": "2022-08-19T09:01:38",
+  "closedAt": "2019-12-21T03:03:20",
+  "commentCount": 1,
+  "reactionCount": 1
+}

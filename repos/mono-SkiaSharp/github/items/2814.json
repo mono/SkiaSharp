@@ -1,0 +1,23 @@
+{
+  "number": 2814,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] On iOS only, .NET 9.0 / SkiaSharp 3.0 SKCanvasView inside a custom control does not draw itself upon first appearance of the first page",
+  "body": "### Description\n\nOn iOS in .NET 9.0 and SkiaSharp 3.0 Preview 2, in game GnollHack, SKCanvasView inside a custom control (called CustomImageButton) does not invalidate its canvas and draw itself when first entering the app on the first page of the app, resulting in a transparent picture, instead of intended graphics. If I open page on the top of the starting page, or interact with the control, then suddenly it properly draws itself. (Turning the screen from landscape to portrait or vice versa, keeps the transparent button, though.) On Android, the control works just fine. Other such buttons on other pages in iOS seem to work fine, so it seems to be something related to the behavior when entering / starting the app.\n\n### Code\n\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\nHere\u0027s the XAML of CustomImageButton for the sake of ease:\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022UTF-8\u0022?\u003E\r\n\u003CContentView xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022 \r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022 \r\n             xmlns:skia=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\r\n             x:Class=\u0022GnollHackM.CustomImageButton\u0022\u003E\r\n  \u003CContentView.Content\u003E\r\n        \u003CGrid x:Name=\u0022customGrid\u0022\u003E\r\n            \u003Cskia:SKCanvasView x:Name=\u0022customCanvasView\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 VerticalOptions=\u0022FillAndExpand\u0022 EnableTouchEvents=\u0022false\u0022 PaintSurface=\u0022CustomCanvasView_PaintSurface\u0022 /\u003E\r\n            \u003CButton Text=\u0022\u0022 x:Name=\u0022customButton\u0022 Clicked=\u0022CustomButton_Clicked\u0022 BackgroundColor=\u0022Transparent\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 VerticalOptions=\u0022FillAndExpand\u0022 /\u003E\r\n        \u003C/Grid\u003E\r\n    \u003C/ContentView.Content\u003E\r\n\u003C/ContentView\u003E\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nBoth on iOS and Android, SkiaSharp draws intended button graphics for CustomImageButtons instead of a transparent bitmap when entering / starting the app.\n\n### Actual Behavior\n\nOn iOS, none of the background images of CustomImageButtons on MainPage get drawn when entering the page (first page in the app). If a page is opened above the buttons or some interaction with the buttons take place, the background is suddenly drawn. On Android, the controls work fine.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\n2.80.x (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid, iOS\n\n### Platform / Operating System Version\n\nAndroid 14, iOS 17.3.1\n\n### Devices\n\nGoogle Pixel 6a, iPad 11,7\n\n### Relevant Screenshots\n\n![ScreenWhenEnteringTheApp](https://github.com/mono/SkiaSharp/assets/53081197/94e5438f-00bf-4159-9660-bc7b057dc9a6)\r\n![CorrectScreenAfterOpeningSettingsScreenAndComingBack](https://github.com/mono/SkiaSharp/assets/53081197/db329e00-bee8-4712-90d5-0197e14ec162)\r\n\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-28T12:55:32",
+  "updatedAt": "2024-06-08T10:10:18",
+  "closedAt": "2024-06-08T10:10:18",
+  "commentCount": 2,
+  "reactionCount": 0
+}

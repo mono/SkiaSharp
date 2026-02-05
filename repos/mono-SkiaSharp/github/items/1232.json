@@ -1,0 +1,28 @@
+{
+  "number": 1232,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Forms.Android: GPU backed canvas is blank after power off and on ",
+  "body": "**Description**\r\n\r\nIf you use a GPU backed canvas (SKGLView) and power off the device and again on, the canvas is blank. If you than call an \u0060InvalidateSurface()\u0060 or go to home and come back again, the canvas is redrawn correct.\r\n\r\n**Code**\r\n\r\nYou could use my [SkiaTest](https://github.com/charlenni/SkiaTest), where a GPU and a CPU backed canvas could used beside each other.\r\n\r\n**Expected Behavior**\r\n\r\nGPU backed canvas should be redrawn as the CPU backed canvas.\r\n\r\n**Actual Behavior**\r\n\r\nGPU backed canvas isn\u0027t redrawn.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.2-preview.60\r\n- Last known good version:  Didn\u0027t saw any\r\n- IDE:  Visual Studio 16.5.4\r\n- Platform Target Frameworks: In this case Android\r\n  - Android: 9.0 \r\n  - Target Devices:  Huawei P8 lite 2017\r\n  - Target Devices:  Simulator Nexus 4 with Android 5.0 (there even if a go to home and come back)\r\n  - Target Devices:  Simulator Pixel 2 with Android 9.0\r\n\r\n**Screenshots**\r\n\r\nLooks like\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/4381223/79455230-d58cb800-7fec-11ea-85de-206e1fd64a78.png\u0022 width=\u0022300\u0022 /\u003E\r\nbut should look like\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/4381223/79455268-e9381e80-7fec-11ea-9efb-066f2ed5db48.png\u0022 width=\u0022300\u0022 /\u003E\r\nSecond image is created after changing to home and back again\r\n\r\n**Reproduction Link**\r\n\r\nSee [SkiaTest](https://github.com/charlenni/SkiaTest).\r\n",
+  "author": {
+    "login": "charlenni",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-04-16T12:27:03",
+  "updatedAt": "2022-08-19T06:02:00",
+  "closedAt": "2020-04-16T16:07:20",
+  "commentCount": 4,
+  "reactionCount": 0
+}

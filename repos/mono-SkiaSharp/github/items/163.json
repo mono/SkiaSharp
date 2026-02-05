@@ -1,0 +1,18 @@
+{
+  "number": 163,
+  "type": "issue",
+  "state": "closed",
+  "title": "Extracting PathEffect information",
+  "body": "Currently, once you assign a PathEffect to a paint via one of the \u0060SKPathEffect.Create*()\u0060 methods, there\u0027s no way to later tell what type of path effect is applied to a paint, or to extract its information (e.g. for dash effects, I\u0027d like to be able to fetch the interval data from the paint\u0027s path effect property).\n\nI\u0027m not sure if this functionality exists directly on the native Skia side. Certainly there are different subclasses for the different path effect types, so if nothing else the functionality exists via RTTI (though I don\u0027t know if native Skia is built with RTTI enabled). Perhaps the different subclasses could be exposed with managed subclasses, with the various fields exposed as well.\n\nIt\u0027s fine if you decide this issue is out-of-scope for SkiaSharp, just thought it was worth raising.\n",
+  "author": {
+    "login": "tdenniston",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-10-16T21:04:43",
+  "updatedAt": "2022-08-20T00:01:52",
+  "closedAt": "2016-10-19T21:32:31",
+  "commentCount": 2,
+  "reactionCount": 0
+}

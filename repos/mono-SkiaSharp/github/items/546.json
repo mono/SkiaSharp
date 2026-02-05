@@ -1,0 +1,19 @@
+{
+  "number": 546,
+  "type": "issue",
+  "state": "closed",
+  "title": "Layered SKGLViews with Xamarin Forms",
+  "body": "### Description\r\n\r\nMy application uses 2 different SKGLViews stacked on top of each other to separate the drawing of the background from that of the foreground. This has been working in Android up until version 1.59.3 and stopped in version 1.60. It still works in UWP or if I use SKCanvasView.\r\n\r\n### Code\r\n\r\n###### Xaml\r\n\u0060\u0060\u0060\r\n\u003CRelativeLayout HorizontalOptions=\u0022FillAndExpand\u0022 VerticalOptions=\u0022FillAndExpand\u0022\u003E\r\n    \u003Cskia:SKGLView x:Name=\u0022canvasView\u0022\r\n        PaintSurface=\u0022OnPaintSurface\u0022\r\n        RelativeLayout.WidthConstraint=\u0022{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=1}\u0022\r\n        RelativeLayout.HeightConstraint=\u0022{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=1}\u0022\r\n    /\u003E\r\n\r\n    \u003Cskia:SKGLView x:Name=\u0022canvasView2\u0022\r\n        PaintSurface=\u0022OnPaintSurface2\u0022\r\n        RelativeLayout.WidthConstraint=\u0022{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=1}\u0022\r\n        RelativeLayout.HeightConstraint=\u0022{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=1}\u0022\r\n    /\u003E\r\n\u003C/RelativeLayout\u003E\r\n\u0060\u0060\u0060\r\n\r\n###### C#\r\n\u0060\u0060\u0060\r\nprivate void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n{\r\n    e.Surface.Canvas.Clear(SKColors.Blue);\r\n}\r\n\r\nprivate void OnPaintSurface2(object sender, SKPaintGLSurfaceEventArgs e)\r\n{\r\n    e.Surface.Canvas.Clear(SKColors.Transparent);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nThe top view should be rendered transparent and the bottom canvas should be blue.\r\n\r\n### Actual Behavior\r\n\r\nThe top view is black and the bottom view isn\u0027t visible.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60, 1.60.1\r\n- Last known good version:  1.59.3\r\n- IDE:  Visual Studio 2015, 2017\r\n- Platform Target Frameworks:\r\n  - Android: 6.0\r\n- Target Device:\r\n  - Samsung Galaxy Tab S\r\n\r\n### Reproduction Link\r\n\r\nVS2015 Solution @ https://www.dropbox.com/s/qnazdsna10wfer0/TestSkia.zip?dl=0\r\n",
+  "author": {
+    "login": "mgiova",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-06-06T14:58:07",
+  "updatedAt": "2022-08-19T15:02:20",
+  "closedAt": "2018-11-24T12:33:56",
+  "commentCount": 3,
+  "reactionCount": 1
+}

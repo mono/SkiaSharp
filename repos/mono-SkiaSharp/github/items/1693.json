@@ -1,0 +1,17 @@
+{
+  "number": 1693,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] JPEG decoding and encoding 3x slower than libjpeg-turbo?",
+  "body": "I\u0027m running a very simple benchmark with SkiaSharp, see code below. It basically just decodes and encodes a JPEG from and into memory.\r\n\r\nRunning this in a loop in WSL2 or Windows gives the following times:\r\n\r\n\u0060\u0060\u0060\r\nDecoding took 308ms\r\nDecoding \u002B encoding took 738ms. Size=4198568\r\n\u0060\u0060\u0060\r\n\r\nHowever, running libjpeg-turbo  from the command line gives\r\n\r\n\u0060\u0060\u0060\r\npeter@STS-RYZEN:~/photos$ time djpeg ~/photo.jpg \u003E/dev/null\r\nreal    162ms\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\npeter@STS-RYZEN:~/photos$ time (djpeg ~/photo.jpg | cjpeg -q 90 \u003E/dev/null)\r\nreal    245ms\r\n\u0060\u0060\u0060\r\n\r\nSo encoding \u002B decoding is **3 times** slower in SkiaSharp?\r\n\r\nIt tried encoding and decoding to files, but that doesn\u0027t change the factor.\r\n\r\nHow is this possible? Because Skia uses libjpeg-turbo internally no? \r\n\r\nI\u0027m going to try to debug this, but any help is welcome.\r\n\r\n\u0060\u0060\u0060cs\r\nusing System;\r\nusing System.Diagnostics;\r\nusing System.IO;\r\nusing SkiaSharp;\r\n\r\nnamespace JpegEncodingBenchmark\r\n{\r\n\tclass Program\r\n\t{\r\n\t\tstatic void Main(string[] args)\r\n\t\t{\r\n\t\t\tvar sw = new Stopwatch();\r\n\r\n\t\t\tConsole.WriteLine(Environment.OSVersion);\r\n\t\t\t\r\n\t\t\tusing var data = SKData.Create(@\u0022/home/peter/photo.jpg\u0022);\r\n\r\n\t\t\tfor (;;)\r\n\t\t\t{\r\n\t\t\t\tsw.Restart();\r\n\t\t\t\t\r\n\t\t\t\tSKBitmap bitmap = SKBitmap.Decode(data);\r\n\t\t\t\tConsole.WriteLine($\u0022Decoding took {sw.ElapsedMilliseconds}ms\u0022);\r\n\r\n\t\t\t\tvar outputData = bitmap.Encode(SKEncodedImageFormat.Jpeg, 90);\r\n\t\t\t\tConsole.WriteLine($\u0022Decoding \u002B encoding took {sw.ElapsedMilliseconds}ms. Size={outputData.Size}\u0022);\r\n\t\t\t\t\r\n\t\t\t\toutputData.Dispose();\r\n\t\t\t\tbitmap.Dispose();\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-04-15T16:18:14",
+  "updatedAt": "2022-05-25T12:51:10",
+  "commentCount": 5,
+  "reactionCount": 3
+}

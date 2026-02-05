@@ -1,0 +1,23 @@
+{
+  "number": 481,
+  "type": "issue",
+  "state": "closed",
+  "title": "GRContext.Create under Debian always returns null with HW acceleration active (vbox)",
+  "body": "GRContext.Create always returns null. There is no hint what is the error. Through testing I found that if I disable 3D Acceleration for Virtual Box the context gets created. The project uses OpenTK for OpenGL. Under windows the combination works just fine. What makes me wondering is that there is no error message, nothing. The GRContext is just null.\r\n\r\nCode versions i tried:\r\n\r\n\u0060\u0060\u0060\r\nvar glInterface = GRGlInterface.CreateNativeGlInterface();\r\nvar grContext = GRContext.Create(GRBackend.OpenGL, glInterface);\r\n\r\n// or\r\nvar grContext = GRContext.Create(GRBackend.OpenGL);\r\n\r\n// or\r\nOpenTK.Graphics.GraphicsContext.Assert();\r\nvar context = OpenTK.Graphics.GraphicsContext.CurrentContext;\r\nvar internalContext = (OpenTK.Graphics.IGraphicsContextInternal)context;\r\nvar xglinterface = GRGlInterface.AssembleGlInterface((obj, name) =\u003E internalContext.GetAddress(name));\r\nvar grContext = GRContext.Create(GRBackend.OpenGL, xglinterface);\r\n\u0060\u0060\u0060\r\n\r\nVBox 5.2.8\r\nDebian 9\r\nMono 5.10.1.20\r\nNuGet Package of SkiaSharp 1.6.0\r\n\r\n*.so files from SkiaSharp copied.\r\n\r\nOpenTK itself works. Direct rendering is active in OpenTK, same for glxinfo output.",
+  "author": {
+    "login": "danielbisar",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-04-05T12:07:56",
+  "updatedAt": "2022-08-19T15:02:53",
+  "closedAt": "2018-12-23T05:01:35",
+  "commentCount": 8,
+  "reactionCount": 0
+}

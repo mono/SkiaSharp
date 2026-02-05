@@ -1,0 +1,27 @@
+{
+  "number": 2454,
+  "type": "issue",
+  "state": "closed",
+  "title": "Dependency on System.Runtime.CompilerServices.Unsafe didn\u0027t install when using NuGetPackage.[BUG] ",
+  "body": "**Description**\r\n\r\nWhen installing SkiaSharp.Views to a wpf application via NuGet package manager in VS 2019, I tried recreating the WPF gallary example in my project. \r\n\r\nI got error:\r\n\r\nSystem.IO.FileLoadException HResult=0x80131040 Message=Could not load file or assembly \u0027System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 or one of its dependencies. The located assembly\u0027s manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040) Source=System.Memory StackTrace: at System.MemoryExtensions.AsSpan(String text) at SkiaSharp.SKCanvas.DrawText(String text, Single x, Single y, SKFont font, SKPaint paint) at SkiaSharp.SKCanvas.DrawText(String text, Single x, Single y, SKPaint paint) at LabMonsterToolkit.TrainingWindow.OnPaintSurface(SKCanvas canvas, Int32 width, Int32 height) in\r\n...\r\nSkiaSharp.Views.Desktop.SKGLControl.OnPaint(PaintEventArgs e) at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer) at System.Windows.Forms.Control.WmPaint(Message\u0026 m) at System.Windows.Forms.Control.WndProc(Message\u0026 m) at System.Windows.Forms.UserControl.WndProc(Message\u0026 m) at System.Windows.Forms.NativeWindow.DebuggableCallback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam) Inner Exception 1: FileLoadException: Could not load file or assembly \u0027System.Runtime.CompilerServices.Unsafe, Version=4.0.4.1, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 or one of its dependencies. The located assembly\u0027s manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)\r\n\r\nAfter a bit of debugging I realize I needed to install the corresponding NuGet package.\r\n\r\n\r\n**Expected Behavior**\r\n\r\nI expect the NuGet package to install all dependencies required to work with it.\r\n\r\n**Actual Behavior**\r\n\r\nThe package does not work after installing because of the missing dependency.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp.Views V 2.88.3\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:   Visual Studio \r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  10\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "erebuswolf",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-05-09T06:43:24",
+  "updatedAt": "2023-09-23T03:00:25",
+  "closedAt": "2023-08-24T02:00:28",
+  "commentCount": 2,
+  "reactionCount": 0
+}

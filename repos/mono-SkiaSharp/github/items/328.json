@@ -1,0 +1,18 @@
+{
+  "number": 328,
+  "type": "issue",
+  "state": "closed",
+  "title": "WPF SKElement does not call PaintSurface when event attached in Loaded",
+  "body": "I made the mistake of attaching the event in the loaded event of Window. For some reason the SKElement will refuse to draw and call the PaintSurface handler.\r\n\r\n\u0060\u0060\u0060\r\n        public MainWindow()\r\n        {\r\n            InitializeComponent();\r\n            this.Loaded \u002B= MainWindow_Loaded;\r\n        }\r\n\r\n        private void MainWindow_Loaded(object sender, RoutedEventArgs e)\r\n        {\r\n            this.skia.PaintSurface \u002B= this.Skia_PaintSurface;\r\n        }\r\n\r\n        private void Skia_PaintSurface(object sender, SKPaintSurfaceEventArgs args)\r\n        {\r\n            // paint stuff\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n",
+  "author": {
+    "login": "wldevries",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-06-29T15:53:36",
+  "updatedAt": "2022-08-19T21:01:33",
+  "closedAt": "2017-09-15T01:42:06",
+  "commentCount": 1,
+  "reactionCount": 0
+}

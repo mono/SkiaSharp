@@ -1,0 +1,17 @@
+{
+  "number": 1484,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Drawing SKPicture which contains multiple path segments consumes more GPU memory after canvas translation",
+  "body": "I\u0027m working on a UWP app for creating and editing diagrams. I use SKPicture to draw the elements on a SKSwapChainPanel to improve the performance. The app allows the user to pan the view by translating the canvas matrix. It\u0027s weird that every time I translate the canvas, the operation of drawing a SKPicture of a path which contains multiple segments(\u003E=3, CubicTo or multiple LineTo) consumes more GPU memory. I have no idea about what\u0027s going on. So I really need some help for this.\r\n\r\nGPU memory usage at launch:\r\n![](https://github.com/validvoid/Skiasharp_Cubic_Bezier_issue/blob/master/Skiasharp_Cubic_Bezier/skiasharp_1.png?raw=true)\r\n\r\nAfter several translations:\r\n![](https://github.com/validvoid/Skiasharp_Cubic_Bezier_issue/blob/master/Skiasharp_Cubic_Bezier/skiasharp_2.png?raw=true)\r\n\r\n\u0060\u0060\u0060csharp\r\nSKImageInfo info = new SKImageInfo(e.BackendRenderTarget.Width, e.BackendRenderTarget.Height, e.ColorType);\r\nSKSurface surface = e.Surface;\r\nSKCanvas surfaceCanvas = surface.Canvas;\r\n\r\nsurfaceCanvas.Clear();\r\nsurfaceCanvas.SetMatrix(_canvasMatrix);\r\n\r\nif (_picture == null)\r\n{\r\n    using (SKPictureRecorder pictureRecorder = new SKPictureRecorder())\r\n    using (SKCanvas canvas = pictureRecorder.BeginRecording(info.Rect))\r\n    using (SKPath path = new SKPath())\r\n    {\r\n        path.CubicTo(150, 50, 200, 125, 300, 25);\r\n\r\n        canvas.DrawPath(path, _paint);\r\n        \r\n        _picture = pictureRecorder.EndRecording();\r\n    }\r\n}\r\n\r\nsurfaceCanvas.DrawPicture(_picture);\r\n\u0060\u0060\u0060\r\nSample repository:\r\n[Link](https://github.com/validvoid/Skiasharp_Cubic_Bezier_issue)",
+  "author": {
+    "login": "validvoid",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-30T05:59:04",
+  "updatedAt": "2022-11-15T15:09:56",
+  "commentCount": 2,
+  "reactionCount": 0
+}

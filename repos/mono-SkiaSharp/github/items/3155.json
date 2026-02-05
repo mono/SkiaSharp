@@ -1,0 +1,23 @@
+{
+  "number": 3155,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] GRGlInterface.Create() returns null on Windows on Arm",
+  "body": "### Description\n\nI am developing on Arm64 on Windows 11, using the latest version of SkiaSharp. The app is a .NET Framework 4.8 application. We use OpenGL for GPU rendering. \n\nCalling:\nGRGlInterface.Create()\n\nreturns null\n\nThe same code on x64 works correctly.\n\nI have the OpenCL\u2122, OpenGL\u00AE, and Vulkan\u00AE Compatibility Pack installed. https://apps.microsoft.com/detail/9nqpsl29bfff?hl=en-us\u0026gl=US, so would I expect this to work.\n\n### Code\n\nusing (var glInterface = GRGlInterface.Create())\n    _grContext = GRContext.CreateGl(glInterface);\n\nThis is how we get the OpenGL context. On Arm64 glInterface ends up being null which results in a null context as well.\n\n### Expected Behavior\n\nWe expect that OpenGL would work on Arm64 just as it does on x64 with that compatibility pack installed\n\n### Actual Behavior\n\nNull is returned\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nNo known good versions\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11 2H24\nArm64\n.NET Framework 4.8\nOpenCL\u2122, OpenGL\u00AE, and Vulkan\u00AE Compatibility Pack\n\n### Devices\n\nLenovo Yoga Slim 7x\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "peternoyes",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-04T16:54:36",
+  "updatedAt": "2025-03-24T17:01:29",
+  "closedAt": "2025-03-07T16:59:59",
+  "commentCount": 5,
+  "reactionCount": 0
+}

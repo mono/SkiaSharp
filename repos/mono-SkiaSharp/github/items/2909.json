@@ -1,0 +1,22 @@
+{
+  "number": 2909,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] System.AccessViolationException throws randomly at SKImage.Subset(SKRectI subset)",
+  "body": "### Description\r\n\r\nSystem.AccessViolationException throws randomly at SKImage.Subset(SKRectI subset)\r\n\r\nSkia version with issue: 2.88.6\r\nLast known good version: None\r\n\r\n\r\n**Replication steps:**\r\n**Step1**: Install JMeter:\r\nDownload and install Apache JMeter from below\r\n[https://dlcdn.apache.org//jmeter/binaries/apache-jmeter-5.6.3.zip](https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.3.zip) \r\n**Step2**: Open JMeter GUI:\r\nLaunch JMeter by running the jmeter.bat file located in the bin directory.\r\n**Step3**: Run the application:\r\nDownload and run the application form below,\r\n[SkiaTesting.zip](https://www.syncfusion.com/downloads/support/directtrac/general/ze/SkiaTesting1070761165.zip)\r\nProject \u2013 ASP.NET Core\r\nTarget framework - .NET 8.0\r\nTool - apache-jmeter\r\n**Step4**: Run the Test Plan:\r\nOpen and run below test plan by clicking on the green Start button in the JMeter GUI.\r\n[SkiaTesting-TestPlan.zip](https://www.syncfusion.com/downloads/support/directtrac/general/ze/SkiaTesting-TestPlan56415292.zip)\r\n**Step5**:  Issue will occurs:\r\nThe issue will occur around 10 minutes.\r\n\r\n### Code\r\n\r\n\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\n\r\nvar builder = WebApplication.CreateBuilder(args);\r\n\r\n// Add services to the container.\r\n\r\nvar app = builder.Build();\r\n\r\n// Configure the HTTP request pipeline.\r\n\r\napp.UseHttpsRedirection();\r\n\r\n\r\napp.MapGet(\u0022/converter\u0022, () =\u003E\r\n{\r\n    string ImagePath = Path.GetFullPath(@\u0022Data/image1.jpg\u0022);\r\n    using (SKFileStream stream = new SKFileStream(ImagePath))\r\n    {\r\n        SKBitmap bitmap = SKBitmap.Decode(SKData.Create(stream));\r\n        SKImage image = SKImage.FromBitmap(bitmap);\r\n        image = image.Subset(new SKRectI((int)0, (int)0, (int)1306.13, (int)425));\r\n        image.Dispose();\r\n        bitmap.Dispose();\r\n\r\n    }\r\n    return Results.Ok();\r\n});\r\n\r\napp.Run();\r\n\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nNo exception.\r\n\r\n### Actual Behavior\r\n\r\nSystem.AccessViolationException throws randomly at SKImage.Subset(SKRectI subset)\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 10 Enterprise\r\n\r\n### Devices\r\n\r\nWindows\r\n\r\n### Relevant Screenshots\r\n\r\nNone\r\n\r\n### Relevant Log Output\r\n\r\n\u0060\u0060\u0060shell\r\nNone\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Code of Conduct\r\n\r\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "nihil2881998",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-06-26T15:08:36",
+  "updatedAt": "2024-06-28T06:30:38",
+  "commentCount": 0,
+  "reactionCount": 0
+}

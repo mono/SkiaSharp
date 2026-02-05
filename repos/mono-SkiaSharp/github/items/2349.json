@@ -1,0 +1,17 @@
+{
+  "number": 2349,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Family name of type face is empty in AWS Elastic beanstalk.",
+  "body": "**Description**\r\n\r\nFamily name of type face is empty in AWS Elastic beanstalk.\r\n\r\n**Code**\r\n\r\nSKFontStyleWeight sKFontStyleWeight = SKFontStyleWeight.Normal;\r\nSKFontStyleSlant sKFontStyleSlant = SKFontStyleSlant.Upright;\r\nSKFontStyleWidth sKFontStyleWidth = SKFontStyleWidth.Normal;\r\nSKPaint paint = new SKPaint();\r\npaint.TextSize = 11f;\r\npaint.Color = new SKColor(Convert.ToByte(0), Convert.ToByte(0), Convert.ToByte(0));\r\npaint.Typeface = SKTypeface.FromFamilyName(\u0022Times New Roman\u0022, sKFontStyleWeight, sKFontStyleWidth, sKFontStyleSlant); \r\n\r\n\r\n**Expected Behavior**\r\n\r\nFamily name of the typeface is valid font name \r\n\r\n**Actual Behavior**\r\n\r\nFamily name of the typeface  is empty \r\n\r\n**Basic Information**\r\n\r\n- NuGet: **SkiaSharp.NativeAssets.Linux.NoDependencies** \r\n- Version with issue:  **2.88.2**\r\n- IDE:  **Visual Studio 2022**\r\n- Platform Target Frameworks: **ASP.NET Core application with .NET 5.0 framework**\r\n- Environment : **AWS Elastic beanstalk**\r\n  \r\n**Note**\r\n1. This code works properly in windows.\r\n2. If we used SkiaSharp.NativeAssets.Linux (2.88.2 ) NuGet instead of SkiaSharp.NativeAssets.Linux.NoDependencies (2.88.2 ) NuGet ,we faced following exception in AWS Elastic beanstalk\r\n\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies.\r\n\r\n",
+  "author": {
+    "login": "AntonihilSahayaraj",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-12-28T06:42:27",
+  "updatedAt": "2023-05-16T07:48:39",
+  "commentCount": 2,
+  "reactionCount": 0
+}

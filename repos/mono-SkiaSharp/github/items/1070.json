@@ -1,0 +1,18 @@
+{
+  "number": 1070,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Define HAVE_FREETYPE to support fonts loaded by FreeType",
+  "body": "### Problem\r\nFor loading **Adobe Type 1 fonts** I need to load them with **FreeType** first and hand the loaded font over to **HarfBuzz** for layout. HarfBuzz has built-in support for it - if enabled at compile time.\r\n\r\nCurrently \u0060libHarfBuzzSharp.dll\u0060 is built without \u0060HAVE_FREETYPE\u0060 so the function \u0060hb_ft_font_create\u0060 is not available.\r\n\r\n### Desired Change\r\n* Update the config.h files to define \u0060HAVE_FREETYPE\u0060 (like in https://github.com/mono/SkiaSharp/blob/dc9b306e283dcb1eef21458a6fe69d5294ceb369/native/windows/libHarfBuzzSharp/config.h)\r\n* C# bindings to \u0060hb_ft_*\u0060 functions\r\n* An additional \u0060SKShaper\u0060 constructor to directly provide a \u0060HarfBuzzSharp.Font\u0060 instead of just \u0060SKTypeface\u0060\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\u0060SharpFont.HarfBuzz\u0060 would actually provide such functionality but doesn\u0027t integrate with \u0060HarfBuzzSharp\u0060 and therefore SkiaSharp.\r\nAlso it is not compatible with .NET Core 3/.NET Standard.\r\n",
+  "author": {
+    "login": "warappa",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-12-19T23:09:50",
+  "updatedAt": "2022-08-19T09:01:44",
+  "closedAt": "2019-12-24T15:38:43",
+  "commentCount": 9,
+  "reactionCount": 0
+}

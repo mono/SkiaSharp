@@ -1,0 +1,18 @@
+{
+  "number": 355,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKImage.Encode returns null rather than throwing an Exception when wrong paramters are passed.",
+  "body": "I was using version 1.59.1 of the library and tried to create an image passing wrong parameters to the \u0060SKImageInfo\u0060 constructor and when I tried to call \u0060SKImage.Encode\u0060 the returned value was \u0060null\u0060. It took me a while to figure out my mistake and it would be much more helpful if the library would throw an exception on failure explaining what went wrong. I don\u0027t know if this is a Google skia issue or skiasharp issue, but since it occurred with skiasharp for me I thought I should report it here. Below is a code snippet to reproduce the problem.\r\n\r\n\u0060\u0060\u0060csharp\r\nvar pixelData = new byte[width * height];\r\nunsafe\r\n{\r\n\tfixed (byte* pixels = pixelData)\r\n\t{\r\n\t\t// Do something with pixel data (irrelevant to the issue)\r\n\t\t// I meant to pass SKColorType.Gray8 but I made a mistake and passed SKColorType.Alpha8 instead\r\n\t\tvar imageInfo = new SKImageInfo(width, height, SKColorType.Alpha8, SKAlphaType.Opaque);\r\n\t\tusing (var img = SKImage.FromPixels(imageInfo, (IntPtr)pixels))\r\n\t\t{\r\n\t\t\tvar skData = img.Encode();\r\n\t\t\t// skData is null. should throw an exception\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "sherif-elmetainy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-08-18T21:08:58",
+  "updatedAt": "2022-08-19T18:02:48",
+  "closedAt": "2017-08-22T13:15:29",
+  "commentCount": 2,
+  "reactionCount": 1
+}

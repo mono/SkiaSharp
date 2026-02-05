@@ -1,0 +1,23 @@
+{
+  "number": 2991,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] .NET 9 Blazor exception: Could not load type of field \u0027SkiaSharp.Views.Blazor.Internal.JSModuleInterop:moduleTask\u0027 ...",
+  "body": "### Description\n\nThe Blazor sample application is not working with .NET 9 Preview 7. It gives me the following error: \r\n\r\n\u0060\u0060\u0060\r\ncrit: Microsoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]\r\n      Unhandled exception rendering component: Could not set up parent class, due to: Could not load type of field \u0027SkiaSharp.Views.Blazor.Internal.JSModuleInterop:moduleTask\u0027 (0) due to: Could not resolve type with token 0100003b from typeref (expected class \u0027Microsoft.JSInterop.IJSUnmarshalledObjectReference\u0027 in assembly \u0027Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60\u0027) assembly:Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60 type:Microsoft.JSInterop.IJSUnmarshalledObjectReference member:(null) assembly:SkiaSharp.Views.Blazor.dll type:JSModuleInterop member:(null)\r\nSystem.TypeLoadException: Could not set up parent class, due to: Could not load type of field \u0027SkiaSharp.Views.Blazor.Internal.JSModuleInterop:moduleTask\u0027 (0) due to: Could not resolve type with token 0100003b from typeref (expected class \u0027Microsoft.JSInterop.IJSUnmarshalledObjectReference\u0027 in assembly \u0027Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60\u0027) assembly:Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60 type:Microsoft.JSInterop.IJSUnmarshalledObjectReference member:(null) assembly:SkiaSharp.Views.Blazor.dll type:JSModuleInterop member:(null)\r\n   at SkiaSharp.Views.Blazor.SKCanvasView.OnAfterRenderAsync(Boolean firstRender)\r\n\u0060\u0060\u0060\r\n\r\nThis does not happen when targeting .NET 8 (and downgrading the ASP.NET Core Nuget dependencies \u0060Microsoft.AspNetCore.Components.WebAssembly\u0060 and \u0060Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0060 to .NET 8).\r\n\r\nSkia Sharp Version \u00603.0.0-preview.4.1\u0060\n\n### Code\n\n1. Install .NET 9 preview 7 SDK\r\n2. Clone https://github.com/Apollo3zehn/SkiaSharpBlazorIssue\r\n3. Run the application\r\n4. Go to http://localhost:5000/raster\r\n5. Open the Browser developer tools and find the error\n\n### Expected Behavior\n\nI expect the Blazor sample (https://github.com/mono/SkiaSharp/tree/main/samples/Basic/BlazorWebAssembly) to work as it does with .NET 8.\r\n\r\n### Actual behavior\r\n\r\n![grafik](https://github.com/user-attachments/assets/b6c11c34-69c6-44ff-a6ae-bf464e411e6c)\n\n### Actual Behavior\n\nThe error shown in the description above and in the screenshot below appears.\r\n\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio Code (Linux)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\n.NET 9 Preview 7\r\nKubuntu 24.04\r\nx64\r\nFirefox Browser 130.0\r\nEdge Browser 128.0.2739.63\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n![grafik](https://github.com/user-attachments/assets/7304f214-a7b7-447e-af02-395bc88a3614)\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Apollo3zehn",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-06T11:34:03",
+  "updatedAt": "2024-11-25T18:48:22",
+  "closedAt": "2024-11-25T18:48:22",
+  "commentCount": 0,
+  "reactionCount": 1
+}

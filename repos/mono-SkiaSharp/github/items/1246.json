@@ -1,0 +1,17 @@
+{
+  "number": 1246,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKColorType.Rgb888x can\u0027t be saved to JPEG",
+  "body": "**Description**\r\n\r\nIt seems I can\u0027t save bitmaps or images with the \u0060SKColorType.Rgb888x\u0060 pixel format.\r\n\r\nMost likely a Skia bug (happens in both m68 and m80), but reporting it here because I haven\u0027t tested it in native Skia yet. \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nvar bitmap = new SKBitmap(new SKImageInfo(512, 512, SKColorType.Rgb888x));\r\nvar data = bitmap.Encode(SKEncodedImageFormat.Jpeg, 92);\r\nDebug.Assert(data != null);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\u0060data\u0060 is not \u0060null\u0060\r\n\r\n**Actual Behavior**\r\n\u0060data\u0060 is \u0060null\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  m68 and m80\r\n- Last known good version:  unknown\r\n- IDE:  any\r\n- Platform Target Frameworks:  Windows Classic:\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-22T16:56:04",
+  "updatedAt": "2020-08-03T09:58:14",
+  "commentCount": 2,
+  "reactionCount": 0
+}

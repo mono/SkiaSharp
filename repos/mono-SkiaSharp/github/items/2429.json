@@ -1,0 +1,17 @@
+{
+  "number": 2429,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKBitmap.Decode always returns null for a specific image",
+  "body": "**Description**\r\n\r\nCannot create Bitmap or Codec of a specific jpg image (attached).\r\n\r\nThe image is not corrupted, it can be opened in Windows Photos and other image viewers, it can be displayed by browser.\r\n\r\nLooks similar to https://github.com/mono/SkiaSharp/issues/1621 and https://github.com/mono/SkiaSharp/issues/1551. However, this workaround does not work:\r\n\r\n\u0060\u0060\u0060csharp\r\nStream? stream = /*......*/;\r\nusing var inputStream = new SKManagedStream(stream);\r\nusing var inputData = SKData.Create(inputStream);\r\nvar bitmap = SKBitmap.Decode(inputData);\r\nvar image = SKImage.FromBitmap(bitmap);\r\nvar outputData = image.Encode(SKEncodedImageFormat.Png, 100);\r\n\u0060\u0060\u0060\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var bitmap = SKBitmap.Decode(imageContentStream); // Returns null\r\nusing var codec = SKCodec.Create(imageContentStream); // Returns null\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nBitmap and codec are created from a stream.\r\n\r\n**Actual Behavior**\r\n\r\nBitmap and codec creation returns \u0060null\u0060.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.80.4 (also tested on 2.88.3)\r\n- Last known good version:  N/A\r\n- IDE:  Rider\r\n- Platform Target Frameworks:\r\n  - Linux: Debian 11 (bullseye-slim docker image)\r\n  - Windows Classic:  Windows 10 (10.0.19045)\r\n- Target Devices: x64\r\n\r\n**Screenshots**\r\n\r\n**Reproduction Link**\r\n\r\n[image.zip](https://github.com/mono/SkiaSharp/files/11087936/image.zip)\r\n\r\n",
+  "author": {
+    "login": "olegbaslak",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-03-28T10:35:08",
+  "updatedAt": "2024-11-19T12:21:15",
+  "commentCount": 8,
+  "reactionCount": 2
+}

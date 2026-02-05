@@ -1,0 +1,18 @@
+{
+  "number": 2381,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SkiaSharp WASM - SKCanvasView vs SKGLView - fill colors with alpha render differently",
+  "body": "In experimenting with rendering a semi-transparent fill over the top of content, I see markedly different results when using the SKCanvasView vs the SKGLView. \r\n\r\nIn the following image, the top two squares are rendered on an SKCanvasView, the bottom two squares are rendered on the SKGLView.\r\n\r\n![image](https://user-images.githubusercontent.com/1674843/218372651-0379811e-0339-4900-ae09-e6b94ba470cd.png)\r\n\r\nThe color for both of the semi-transparent squares is \u0060SKColor(255, 255, 0, 128)\u0060. Why is there such a difference and am I missing a configuration step? It appears the first is being rendered as if it was on top of a black background, whereas the second is being rendered as if over a white background,\r\n\r\nThe following is the Blazor WebAssembly view:\r\n\u0060\u0060\u0060csharp\r\n@page \u0022/\u0022\r\n@using SkiaSharp\r\n@using SkiaSharp.Views.Blazor\r\n\r\n\u003CPageTitle\u003EIndex\u003C/PageTitle\u003E\r\n\r\n\u003CSKCanvasView OnPaintSurface=\u0022@OnPaintSurface\u0022 style=\u0022width:1000px;height:500;\u0022 /\u003E\r\n\u003CSKGLView OnPaintSurface=\u0022@OnPaintSurface\u0022 style=\u0022width:1000px;height:500;\u0022 /\u003E\r\n\r\n@code {\r\n    protected override Task OnInitializedAsync()\r\n    {\r\n        return base.OnInitializedAsync();\r\n    }\r\n\r\n    private void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n    {\r\n        // SKCanvasView seems to use black as the basis for transparency\r\n\r\n        var canvas = e.Surface.Canvas;\r\n        canvas.Clear();\r\n        canvas.DrawRect(400, 0, 300, 300, new SKPaint() { Color = new SKColor(255, 0, 0, 255) });     \r\n        canvas.DrawRect(50, 50, 300, 300, new SKPaint() { Color = new SKColor(255, 255, 0, 128) });\r\n    }\r\n\r\n    private void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\r\n    {\r\n        // SKGLView seems to use white as the basis ofr the transparency \r\n\r\n        var canvas = e.Surface.Canvas;\r\n        canvas.Clear();\r\n        canvas.DrawRect(400, 0, 300, 300, new SKPaint() { Color = new SKColor(255, 0, 0, 255) });\r\n        canvas.DrawRect(50, 50, 300, 300, new SKPaint() { Color = new SKColor(255, 255, 0, 128) });\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nI am using SkiaSharp in an Uno WebAssembly project and I am seeing the same results with the \u0060SKXamlCanvas\u0060.",
+  "author": {
+    "login": "darenm",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-13T04:50:33",
+  "updatedAt": "2024-01-06T18:00:27",
+  "closedAt": "2023-12-07T15:55:30",
+  "commentCount": 3,
+  "reactionCount": 0
+}

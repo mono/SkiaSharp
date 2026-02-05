@@ -1,0 +1,23 @@
+{
+  "number": 476,
+  "type": "issue",
+  "state": "closed",
+  "title": "Xamarin Forms using FFImageLoading.Svg.Forms and SkiaSharp",
+  "body": "Hi everyone\r\n\r\n\r\nWe have the weirdest of issues with Skia. We use FFImageLoading.Svg.Forms in our Xamarin Forms project (latest version) and SkiaSharp 1.59.1.\r\n\r\nWhen we build our app in some of our custom Debug Modes, the app always works. In *some* release configs, we get a System.DllNotFoundException (Skia Framework). When we use the debug settings in the non-working release configs, or the working release config is copied to a non-working one, it simply does not help. The app always crashes when trying to call a Skia method.\r\n\r\nWe have seen similiar posts but never with a working solution.\r\n\r\nCan anyone help out - the dll is present in the final IPA.\r\n\r\nI have added this to the first screen\u0027s viewmodel\r\n\r\n            LoginPadVisible = true;\r\n            try\r\n            {\r\n                // test an operation that requires the native library\r\n                SKPMColor.PreMultiply(SKColors.Black);\r\n            }\r\n            catch (DllNotFoundException)\r\n            {\r\n                // If we can\u0027t load the native library,\r\n                // we may be in some designer.\r\n                // We can make this assumption since any other member will fail\r\n                // at some point in the draw operation.\r\n                Trace.TraceError(\u0022skia not loaded\u0022);\r\n                LoginPadVisible = false;\r\n            }\r\n\r\nResult: The login touchpad is not visible - so it definitely throws the exception.\r\n\r\n\r\nfyi:\r\n\r\nthis is part of the stacktrace:\r\nImage loading failed: \r\nSystem.DllNotFoundException: @rpath/libSkiaSharp.framework/libSkiaSharp\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi:sk_picture_recorder_new ()\r\n  at SkiaSharp.SKPictureRecorder..ctor () [0x00000] in \u003C60ce313fefca407885b10c0e81558bfa\u003E:0 \r\n  at FFImageLoading.Svg.Platform.SKSvg.Load (System.Xml.Linq.XDocument xdoc) [0x00266] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:185 \r\n  at FFImageLoading.Svg.Platform.SKSvg.Load (System.Xml.XmlReader reader) [0x00000] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:115 \r\n  at FFImageLoading.Svg.Platform.SKSvg.Load (System.IO.Stream stream) [0x00012] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:109 \r\n  at FFImageLoading.Svg.Platform.SvgDataResolver\u002B\u003CResolve\u003Ed__20.MoveNext () [0x00198] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SvgDataResolver.cs:90 \r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\nSimilar to this link: https://github.com/luberda-molinet/FFImageLoading/issues/791\r\n\r\nBut changing the PCL did not help. We upgrade to .NET Standard now and that too, did not help.\r\n\r\n\r\nThanks\r\nThomas",
+  "author": {
+    "login": "thomashoef",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-03-27T10:48:56",
+  "updatedAt": "2022-08-19T15:02:55",
+  "closedAt": "2018-12-12T05:05:27",
+  "commentCount": 6,
+  "reactionCount": 0
+}

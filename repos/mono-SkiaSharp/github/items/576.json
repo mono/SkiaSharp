@@ -1,0 +1,35 @@
+{
+  "number": 576,
+  "type": "issue",
+  "state": "open",
+  "title": "GPU Accelerated SKSurface Memory Leaks on Integrated HD Graphics",
+  "body": "The the issue only occurs when my laptop is attempting to run my application using Intels HD Graphics 520 to render. \r\n\r\n\u0060\u0060\u0060csharp\r\nvar surface = SKSurface.Create(_skiaGlControl.GRContext, false, new SKImageInfo(Width, Height));\r\n//var surface = SKSurface.Create(new SKImageInfo(Width, Height));\r\n_skiaMain.Compose(surface.Canvas, plane);\r\nsurface.Canvas.Flush();\r\n_skiaMain.DisplayImages[plane] = surface.Snapshot();\r\nsurface.Dispose();\r\n_skiaMain.DisplayPlaneRecompose[plane] = false;\r\n\u0060\u0060\u0060\r\n\r\nEvery time I run through this section of code visual studios shows 30-40MB step ups in memory usage until eventually it crashes.  I have desperately used garbage collection as a means to make the program run longer.\r\n\r\n![image](https://user-images.githubusercontent.com/41022806/42469527-fdefdc92-8385-11e8-96d5-cfa8b693ae34.png)\n\n\u003E VS bug [#754180](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/754180)",
+  "author": {
+    "login": "mclose90",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-07-09T18:40:43",
+  "updatedAt": "2019-06-17T16:50:42",
+  "commentCount": 2,
+  "reactionCount": 0
+}

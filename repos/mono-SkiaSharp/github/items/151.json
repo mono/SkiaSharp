@@ -1,0 +1,19 @@
+{
+  "number": 151,
+  "type": "issue",
+  "state": "closed",
+  "title": "missing method: \u0022SKPathOps::TightBounds\u0022",
+  "body": "In our app, we need to calculate the exact bounding box (we call it \u0022visible bounding box\u0022 as it should only enclose all visible paths) of an SKPath.\nHowever, in skia, the SKPath.getBounds() method returns a rectangle that encompasses also the control points of curves (e.g. cubic bezier curve), which returns a \u0022wrong\u0022 result for our use case.\n\nWe filed a bug for this here: https://bugs.chromium.org/p/skia/issues/detail?id=5751\n\nand got the response, that we should consider using SKPathOps \u0022TightBounds\u0022\nsee: \n    /*\\* Set the resulting rectangle to the tight bounds of the path.\n    @param path The path measured.\n    @param result The tight bounds of the path.\n    @return True if the bounds could be computed.\n    /\n    bool SK_API TightBounds(const SkPath\u0026 path, SkRect result);\n\nhttps://github.com/google/skia/blob/master/include/pathops/SkPathOps.h\n\nThe following **skia.fiddle** shows how to use it:\nhttps://fiddle.skia.org/c/5a69132d6477821d124b75d8ec4ee949\n\nCould you bind that to \u0022SKPath\u0022 somehow, please?\nAs it is a static method, I do not know how you\u0027d like to bind it to SkiaSharps API (from a design point of view)\n",
+  "author": {
+    "login": "gentledepp",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.54.0.1",
+  "createdAt": "2016-09-13T12:28:31",
+  "updatedAt": "2022-08-20T00:02:02",
+  "closedAt": "2016-09-14T05:20:36",
+  "commentCount": 2,
+  "reactionCount": 0
+}

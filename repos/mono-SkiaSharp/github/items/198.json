@@ -1,0 +1,19 @@
+{
+  "number": 198,
+  "type": "issue",
+  "state": "closed",
+  "title": "Opaque Forms SKGL/CanvasView on iOS",
+  "body": "Hi,\r\n\r\nWhen trying to draw a simple filled circle, the Forms canvas rendered onto a black square on iOS, while the Android and UWP versions did just fine and were rendered on a transparent background.\r\n\r\nI\u0027m guessing the underlying issue is something along the lines of https://forums.xamarin.com/discussion/37571/problem-with-lost-transparency-using-cgcontext-drawimage.\r\n\r\nFor context, here\u0027s the code for the circle view:\r\n\u0060\u0060\u0060cs\r\n    public class RoundView: SKCanvasView //*/SKGLView\r\n    {\r\n        private SKPaint paint;\r\n\r\n        public static BindableProperty ColorProperty = \r\n            BindableProperty.Create(nameof(Color), typeof(Color), typeof(RoundView), Color.White,\r\n                propertyChanged: (bindable, oldValue, newValue) =\u003E {\r\n                    var ctrl = (RoundView)bindable;\r\n                    ctrl.Color = (Color)newValue;\r\n                });\r\n        public Color Color {\r\n            get{ return (Color)GetValue (ColorProperty); }\r\n            set {\r\n                SetValue (ColorProperty, value);\r\n                // Oddly enough, the constructor doesn\u0027t work in Android !\r\n                SKColor c = SKColor.Empty;\r\n                c = c.WithAlpha((byte)(value.A * 255));\r\n                c = c.WithRed((byte)(value.R * 255));\r\n                c = c.WithGreen((byte)(value.G * 255));\r\n                c = c.WithBlue((byte)(value.B * 255));\r\n                //var c = new SKColor((byte)(value.R * 255), (byte)(value.G * 255), (byte)(value.B * 255), \r\n                paint.Color = c;\r\n            }\r\n        }\r\n\r\n        public RoundView(): base()\r\n        {\r\n            paint = new SKPaint();\r\n            paint.Style = SKPaintStyle.Fill;\r\n        }\r\n\r\n        protected override void OnPaintSurface(SKPaintSurfaceEventArgs args)\r\n        //protected override void OnPaintSurface(SKPaintGLSurfaceEventArgs args)\r\n        {\r\n            base.OnPaintSurface(args);\r\n            var width = args.Info.Width;\r\n            var height = args.Info.Height;\r\n            //var width = args.RenderTarget.Width;\r\n            //var height = args.RenderTarget.Height;\r\n            var canvas = args.Surface.Canvas;\r\n            var opacity = args.Info.IsOpaque;\r\n            canvas.Clear();\r\n            canvas.DrawCircle(width / 2, height / 2, Math.Min(width, height) / 2, paint);\r\n        }\r\n    }\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "laarmen",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.56.0",
+  "createdAt": "2016-11-18T15:12:45",
+  "updatedAt": "2022-08-20T00:01:24",
+  "closedAt": "2016-12-02T01:17:03",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 2534,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp Managed-Only Building does not work, because there is a mix of .NET 7 and .NET 6 assembly references",
+  "body": "**Description**\r\n\r\nI tried building SkiaSharp according to these instructions (Managed-Only Building): https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp\r\nbut I get 4 build errors using \u0060dotnet cake --target=everything --skipExternals=all\u0060 and VS2022 17.7 Preview 4.0.\r\n\r\nExample:\r\n\r\n\u0060\u0060\u0060\r\n\u0022C:\\repos\\mono\\SkiaSharp\\source\\SkiaSharpSource.Windows-net.slnf\u0022 (Build target) (1:2) -\u003E\r\n       \u0022C:\\repos\\mono\\SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj\u0022 (default target) (2:59) -\u003E\r\n       \u0022C:\\repos\\mono\\SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj\u0022 (Build target) (2:66) -\u003E\r\n       (CoreCompile target) -\u003E\r\n         CSC : error CS1705: Assembly \u0027Microsoft.iOS\u0027 with identity \u0027Microsoft.iOS, Version=16.4.0.0, Culture=neutral, PublicKeyToken=84e04ff9cfb79065\u0027 uses \u0027System.Runtime, Version=7.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 which has a higher version than referenced assembly \u0027System.Runtime\u0027 with identity \u0027System.Runtime, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 [C:\\repos\\mono\\SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj::TargetFramework=net6.0-ios]\r\n\u0060\u0060\u0060\r\n\r\nBased on dotnet cake output, CoreCompile is indeed using \u0060/reference:\u0022C:\\Program Files\\dotnet\\packs\\Microsoft.NETCore.App.Ref\\6.0.20\\ref\\net6.0\\System.Runtime.dll\u0022\u0060\r\nWhich is clearly net6.0.\r\n\r\nAnd this is used for Microsoft.iOS: \u0060/reference:C:\\repos\\mono\\SkiaSharp\\externals\\package_cache\\microsoft.ios.ref\\16.4.7090\\ref\\net7.0\\Microsoft.iOS.dll\u0060\r\nWhich is clearly net7.0.\r\n\r\n**Expected Behavior**\r\n\r\nSkiaSharp will compile using dotnet cake.\r\n\r\n**Actual Behavior**\r\n\r\nSkiaSharp does not compile using dotnet cake.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.4-preview, latest code on 24th July 2023. Windows 11.\r\n- Last known good version:  ?\r\n- IDE:  Visual Studio 2022 17.7 Preview 4.0 _(installed)_ but I\u0027m using \u0060dotnet cake\u0060 from the command line prompt.\r\n\r\n_Any way to fix this issue?_\r\n\r\nAlso, it is strange that the target framework is \u0060xamarinios1.0\u0060. I cannot find it here: https://learn.microsoft.com/en-us/dotnet/standard/frameworks.",
+  "author": {
+    "login": "TommiGustafsson-HMP",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-07-25T11:25:46",
+  "updatedAt": "2023-09-21T03:00:27",
+  "closedAt": "2023-08-22T00:10:45",
+  "commentCount": 1,
+  "reactionCount": 0
+}

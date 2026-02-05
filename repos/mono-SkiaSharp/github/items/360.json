@@ -1,0 +1,18 @@
+{
+  "number": 360,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKTypeface.FromFamilyName returns inconsistent result",
+  "body": "I have a service backing a .NET Core Web API that generates images from text (i.e., a picture of the given text).  I have a small method that returns the appropriate SKTypeface, based on the inputs of font family name, bold, and italic.\r\n\r\nThe first few lines of this method are as follows:\r\n\r\n        private static SKTypeface getNewTypeface(FontSettings fontSettings)\r\n        {\r\n            Console.WriteLine(\r\n                $\u0022getNewTypeface (bold: {fontSettings.bold}, italic: {fontSettings.italic})\u0022);\r\n\r\n            if (!string.IsNullOrWhiteSpace(fontSettings.familyName))\r\n            {\r\n                return SKTypeface.FromFamilyName(fontSettings.familyName,\r\n                    fontSettings.bold ? SKFontStyleWeight.Bold : SKFontStyleWeight.Normal,\r\n                    SKFontStyleWidth.Normal,\r\n                    fontSettings.italic ? SKFontStyleSlant.Italic : SKFontStyleSlant.Upright);\r\n            }\r\n\r\n            ...\r\n        }\r\n\r\n\r\n\r\nAfter three or four tries, I encounter the following situation:\r\n- fontSettings.familyName is a valid family name (e.g., \u0022Helvetica\u0022)\r\n- the Console.WriteLine shows \u0022bold: True\u0022 and \u0022italic: True\u0022\r\n- the returned SKTypeface.Style is \u0022Italic\u0022\r\n\r\nAny thoughts on what might be happening?\r\n\r\nThank you...",
+  "author": {
+    "login": "edamron",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-08-30T15:41:22",
+  "updatedAt": "2022-08-19T18:02:43",
+  "closedAt": "2018-01-12T02:01:16",
+  "commentCount": 5,
+  "reactionCount": 0
+}

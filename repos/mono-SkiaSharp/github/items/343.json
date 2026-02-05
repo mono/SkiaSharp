@@ -1,0 +1,18 @@
+{
+  "number": 343,
+  "type": "issue",
+  "state": "closed",
+  "title": "Instance of SKBitMap is null, when i decode a image from project path",
+  "body": "I wanna display image in SkCanvasView. when i tried to change the image into bitmap by using decode, i got a null in Bitmap. Here is my code in ContentPage Constructor\r\n\u0060\u0060\u0060\r\nstring resourceID = \u0022Helloworld.Media.icon.png\u0022;\r\nAssembly assembly = GetType().GetTypeInfo().Assembly;\r\nusing (Stream stream = assembly.GetManifestResourceStream(resourceID)) \r\nusing (SKManagedStream skStream = new SKManagedStream(stream))\r\n  {\r\n   resourceBitmap = SKBitmap.Decode(skStream); // System.NullReference\r\n  }\r\n\u0060\u0060\u0060\r\nAnd below is drawing surface method\r\n\u0060\u0060\u0060\r\nvoid OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)\r\n  {\r\n   SKImageInfo info = args.Info;\r\n   SKSurface surface = args.Surface;\r\n   SKCanvas canvas = surface.Canvas;\r\n   canvas.Clear();\r\n\t\t\tif (resourceBitmap != null)\r\n\t\t\t{\r\n\t\t\tcanvas.DrawBitmap(resourceBitmap,\r\n\t\t\t\t\tnew SKRect(0, info.Height / 3, info.Width, 2 * info.Height / 3));\r\n\t\t\t}\r\n}\r\n\u0060\u0060\u0060\r\nNow, i got a null in SkBitmap.Decode(skStream). I have changed the path also. it doesn\u0027t work well\r\n",
+  "author": {
+    "login": "Padalingam",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-07-25T08:04:02",
+  "updatedAt": "2022-08-19T21:01:19",
+  "closedAt": "2017-09-05T15:47:38",
+  "commentCount": 1,
+  "reactionCount": 0
+}

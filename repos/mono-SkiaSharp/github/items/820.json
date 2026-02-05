@@ -1,0 +1,23 @@
+{
+  "number": 820,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] macOS NullReferenceException when using SKGLView control",
+  "body": "**Description**\r\nThe \u0060SKGLView\u0060 control doesn\u0027t seem to work on macOS. It crashes with a \u0060NullReferenceException\u0060 that narrows down to the platform \u0060SKGLView\u0060 in the \u0060DrawRect\u0060 method. I believe that when you just have a \u0060SKGLView\u0060 control without painting anything on it it would crash.\r\n\r\n***Stacktrace:***\r\n\r\n  \u0060\u0060\u0060\r\nat SkiaSharp.Views.Mac.SKGLView.DrawRect (CoreGraphics.CGRect dirtyRect) [0x000d0] in \u003Cf196d3fbe68d4774a19d9220fd09cf57\u003E:0 \r\n  at (wrapper managed-to-native) AppKit.NSApplication.NSApplicationMain(int,string[])\r\n  at AppKit.NSApplication.Main (System.String[] args) [0x00040] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.16/src/Xamarin.Mac/AppKit/NSApplication.cs:100 \r\n  at TestProject.Mac.MainClass.Main (System.String[] args) [0x00017] in /Users/localusr/Projects/TestProject/TestProject.Mac/Main.cs:11 \r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\nThe \u0060SKGLView\u0060 should work and drawing on it should be supported.\r\n\r\n**Actual Behavior**\r\nThe app crashes whenever you have a \u0060SKGLView\u0060 control in your xamarin.forms app.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  unknown.\r\n- IDE:  Visual Studio for Mac 7.8.3 (build 2)\r\n- Platform Target Frameworks:\r\n  - macOS:  macOS Mojave: 10.14.4\r\n\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - Mac mini (Late 2014)\r\n\r\n**Reproduction Link**\r\n\r\nHere is a sample project:\r\n\r\n[TestProject.zip](https://github.com/mono/SkiaSharp/files/3023046/TestProject.zip)",
+  "author": {
+    "login": "aodpi",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-03-29T14:28:57",
+  "updatedAt": "2022-08-19T12:01:40",
+  "closedAt": "2019-07-23T11:29:06",
+  "commentCount": 10,
+  "reactionCount": 0
+}

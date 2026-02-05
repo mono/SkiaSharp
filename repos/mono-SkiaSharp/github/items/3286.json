@@ -1,0 +1,22 @@
+{
+  "number": 3286,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Debug symbols for 3.119.0 are missing from nuget and ms symbol servers",
+  "body": "### Description\n\nSymbols for 2.88.0 can be downloaded from both https://msdl.microsoft.com/download/symbols/ and https://symbols.nuget.org/download/symbols/. Symbols for 3.119.0 seem to be missing.\n\n### Code\n\n\u0060\u0060\u0060\ndotnet-symbol  ~/.nuget/packages/skiasharp.nativeassets.win32/3.119.0/runtimes/win-x64/native/libSkiaSharp.dll \nDownloading from https://msdl.microsoft.com/download/symbols/\nERROR: Not Found: C:\\a\\_work\\1\\s\\externals\\skia\\out\\windows\\x64\\libSkiaSharp.pdb - \u0027https://msdl.microsoft.com/download/symbols/libskiasharp.pdb/ac13267c46d9bc874c4c44205044422e1/libskiasharp.pdb\u0027\n\u0060\u0060\u0060\n\n\u0060\u0060\u0060\ndotnet-symbol --server-path https://symbols.nuget.org/download/symbols  ~/.nuget/packages/skiasharp.nativeassets.win32/3.119.0/runtimes/win-x64/native/libSkiaSharp.dll \nDownloading from https://symbols.nuget.org/download/symbols/\nERROR: 403 Forbidden: C:\\a\\_work\\1\\s\\externals\\skia\\out\\windows\\x64\\libSkiaSharp.pdb - \u0027https://symbols.nuget.org/download/symbols/libskiasharp.pdb/ac13267c46d9bc874c4c44205044422e1/libskiasharp.pdb\u0027\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nPDB gets downloaded\n\n### Actual Behavior\n\nIt is not\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "kekekeks",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-06-03T05:40:29",
+  "updatedAt": "2025-06-03T05:42:10",
+  "commentCount": 1,
+  "reactionCount": 1
+}

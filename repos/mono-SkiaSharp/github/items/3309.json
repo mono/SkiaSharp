@@ -1,0 +1,22 @@
+{
+  "number": 3309,
+  "type": "issue",
+  "state": "open",
+  "title": "WPF SKGLElement has memory leaks",
+  "body": "### Description\n\n\u0060SKGLElement\u0060 inherits from https://github.com/opentk/GLWpfControl, when the \u0060SKGLElement\u0060 is disposed it does not call the \u0060Dispose\u0060 method of the base class, this causes memory leaks.\n\n### Code\n\nHere you can see the issue:\n\nhttps://github.com/beto-rodriguez/SkiaSharp-wpf-memory-leak\n\nRun the project, click on \u0022click me\u0022, see the memory quickly growing, it never gets cleaned.\n\nWhat i found out, is that older versions of OpenTK have this memory leak: https://github.com/opentk/GLWpfControl/issues/126\n\nOne solution is to update the OpenTK dependency to: (that pair of versions worked for me)\n\n\u0060\u0060\u0060xml\n\u003CPackageReference Include=\u0022OpenTK\u0022 Version=\u00224.9.4\u0022 NoWarn=\u0022NU1701\u0022 /\u003E\n\u003CPackageReference Include=\u0022OpenTK.GLWpfControl\u0022 Version=\u00224.3.3\u0022 /\u003E\n\u0060\u0060\u0060\n\nThose versions already have the fix for https://github.com/opentk/GLWpfControl/issues/126 and also expose the \u0060Dispose\u0060 method, which is not available in the current referenced version of OpenTK.\n\nYou can see the memory leak is gone with #3311.\n\nSkiaSharpVersion with the issue: [3.119.0](https://www.nuget.org/packages/SkiaSharp/3.119.0)\nLast working version: None.\n\n### Expected Behavior\n\nNo leaks.\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "beto-rodriguez",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-07-19T20:12:04",
+  "updatedAt": "2025-07-19T21:33:36",
+  "commentCount": 0,
+  "reactionCount": 1
+}

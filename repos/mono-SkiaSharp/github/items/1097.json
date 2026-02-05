@@ -1,0 +1,18 @@
+{
+  "number": 1097,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] RasterImage has no Pixmap",
+  "body": "**Description**\r\n\r\nIn version 1.68.1.1 PeekPixels() returns \u0060null\u0060 on raster-images.\r\n\r\n**Code**\r\n\r\n            using (var image = SKImage.FromEncodedData(path))\r\n            using (var rasterImage = image.ToRasterImage())\r\n            {\r\n                Debug.Assert(rasterImage.PeekPixels() != null);\r\n            }\r\n**Expected Behavior**\r\n\r\n\u0060image.ToRasterImage()\u0060 should return a raster image.\r\n\u0060 PeekPixels()\u0060 should then return the pixmap of the raster-based image.\r\n\r\n**Actual Behavior**\r\n\r\n\u0060 PeekPixels()\u0060 returns null as if the image returned by \u0060 image.ToRasterImage()\u0060 wouldn\u0027t be raster-based.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1.1\r\n- IDE: Visual Studio\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  Windows 10\r\n\r\n**Reproduction Link**\r\n[PeekPixels.zip](https://github.com/mono/SkiaSharp/files/4048258/PeekPixels.zip)\r\n",
+  "author": {
+    "login": "gregsn",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-01-10T22:08:27",
+  "updatedAt": "2022-08-19T09:01:28",
+  "closedAt": "2020-02-05T20:32:00",
+  "commentCount": 1,
+  "reactionCount": 0
+}

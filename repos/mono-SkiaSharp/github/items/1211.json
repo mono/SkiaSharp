@@ -1,0 +1,18 @@
+{
+  "number": 1211,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Crash bug in SKTouchHandler.OnTouch ",
+  "body": "**Description**\r\n\r\nhttps://github.com/mscherotter/SkiaSharp/blob/master/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Android/SKTouchHandler.cs\r\n\r\n    var toolType = evt.GetToolType(id); \r\n\r\nin line 50 incorrectly passes the pointerID, not the pointer index and causes an exception: pointerIndex out of range\r\n\r\n**Code**\r\nThe line should be \r\n\r\n    var toolType = evt.GetToolType(pointer);\r\n\r\n**Expected Behavior**\r\n\r\nNo exception\r\n\r\n**Actual Behavior**\r\n\r\nAn exception when touching the canvas\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.2-preview.50\r\n- Last known good version:  1.68.2-preview.45\r\n- IDE:   Visual Studio \r\n- Platform Target Frameworks: Android\r\n  - Android: 9.0 \r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - \u003C!-- Google Pixel 4 XL --\u003E\r\n  - \u003C!-- iPhone 11 --\u003E\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n",
+  "author": {
+    "login": "mscherotter",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-04T15:44:22",
+  "updatedAt": "2022-08-19T06:02:09",
+  "closedAt": "2020-04-07T09:10:13",
+  "commentCount": 5,
+  "reactionCount": 0
+}

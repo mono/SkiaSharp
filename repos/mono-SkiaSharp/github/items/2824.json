@@ -1,0 +1,23 @@
+{
+  "number": 2824,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Annoying warning on .NET Framework 4.8 project with SkiaSharp 2.88.6 or 2.88.7",
+  "body": "### Description\n\nCreated a WPF project targeting .NET Framework 4.8 with no additional code, only nuget references to SkiaSharp 2.88.6 and also when upgrading this to 2.88.7\r\n\r\nAt first this builds without any errors but if you then save the project and reopen it later the following warning starts appearing in the Error List:\r\n\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\tDetails\r\nWarning\t\tThe referenced component \u0027C:\\Users\\[*****]\\packages\\SkiaSharp.NativeAssets.macOS.2.88.7\\build\\net462\\..\\..\\runtimes\\osx\\native\\libSkiaSharp.dylib\u0027 could not be found.\tFoo\t\t\t\t\r\n\r\nCan something be done about this, please?\r\n\r\n\r\nAdditional information: Version 2.88.7 of SkiaSharp is presented as \u0022Latest stable\u0022 in nuget. Also, we don\u0027t even use SkiaSharp ourselves; this is included in our project after installing a 3rd party nuget package which depends on SkiaSharp 2.88.6 ... However, even after removing the 3rd party software and leaving only SkiaSharp and its dependencies, the warning persists.\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\r\n\r\nBut, you can also share a short block of code here:\r\n\u0060\u0060\u0060cs\r\n// some C# code here\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xaml\r\n\u003C!-- xaml code here --\u003E\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nProject should simply build without any warnings.\n\n### Actual Behavior\n\nWarning is shown.\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows\n\n### Devices\n\nLaptop\n\n### Relevant Screenshots\n\n![image](https://github.com/mono/SkiaSharp/assets/223879/035d6f78-fa0a-448e-b0c7-f9e11e5f615d)\r\n\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "rozeboosje",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-08T08:35:44",
+  "updatedAt": "2025-03-07T03:37:17",
+  "closedAt": "2024-05-13T12:03:07",
+  "commentCount": 18,
+  "reactionCount": 2
+}

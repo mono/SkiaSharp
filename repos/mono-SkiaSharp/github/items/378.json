@@ -1,0 +1,18 @@
+{
+  "number": 378,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKCanvasView in Viewcell does not redraw automatically when it\u0027s appeared. (iOS)",
+  "body": "Testing enviroment.\r\nXF ver : 2.4.0.280 stable\r\nSkiasharp : 1.59.1\r\nXamarin.iOS : 11.0.0.0\r\n\r\n- ListView.xaml\r\nCachingStrategy=\u0022RecycleElement\u0022 ON\r\n\r\n- ViewCell.xaml\r\n\u0060\u0060\u0060\r\n\u003CViewCell\u003E\r\n  \u003CAbsoluteLayout\u003E\r\n    \u003CStackLayout\u003E\r\n      \u003CSKCanvasView\u003E\r\n    \u003C/StackLayout\u003E\r\n  \u003C/AbsoluteLayout\u003E\r\n\u003C/ViewCell\u003E\r\n\u0060\u0060\u0060\r\n\r\nWhen I scroll down to bottom and back, SKCanvasView does not redraw correctly.\r\n\r\nWorkaround : \r\nIf I call mySKView.InvalidateSurface(); in OnAppearing() in the VIewCell, it works correctly.\r\nBut I don\u0027t know if it\u0027s necessary.",
+  "author": {
+    "login": "benevbright",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-09-29T07:29:18",
+  "updatedAt": "2022-08-19T18:02:28",
+  "closedAt": "2017-10-04T02:16:28",
+  "commentCount": 2,
+  "reactionCount": 0
+}

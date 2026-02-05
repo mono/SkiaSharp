@@ -1,0 +1,31 @@
+{
+  "number": 3464,
+  "type": "issue",
+  "state": "closed",
+  "title": "Enable AVX2 optimizations for libwebp on x86/x64 platforms",
+  "body": "## Summary\n\nEnable AVX2 SIMD optimizations in libwebp for improved WebP encoding/decoding performance on modern x86/x64 CPUs.\n\n## Background\n\nlibwebp 1.6.0 added AVX2 optimizations in two new source files:\n- \u0060src/dsp/lossless_avx2.c\u0060\n- \u0060src/dsp/lossless_enc_avx2.c\u0060\n\n**Upstream commit:** https://github.com/webmproject/libwebp/commit/f2b3f527\n\nDuring the libwebp 1.3.2 \u2192 1.6.0 update (#3461), we had to **disable AVX2** to fix Windows build failures. This issue tracks re-enabling it properly.\n\n## Current Workaround\n\nWe disabled AVX2 using \u0060-mno-avx2\u0060 compiler flag in \u0060third_party/libwebp/BUILD.gn\u0060:\n\n\u0060\u0060\u0060gn\nconfig(\u0022libwebp_no_avx2\u0022) {\n  if (current_cpu == \u0022x86\u0022 || current_cpu == \u0022x64\u0022) {\n    cflags = [ \u0022-mno-avx2\u0022 ]\n  }\n}\n\u0060\u0060\u0060\n\nThis prevents the compiler from defining \u0060__AVX2__\u0060, which would otherwise trigger AVX2 code paths.\n\n## Why Windows Failed (and others did not)\n\nThe AVX2 code path is enabled via preprocessor macros in \u0060src/dsp/cpu.h\u0060:\n\n\u0060\u0060\u0060c\n// Lines 59-62: MSVC-compatible compilers trigger this\n#if defined(_MSC_VER) \u0026\u0026 _MSC_VER \u003E= 1700 \u0026\u0026 \\\n    (defined(_M_X64) || defined(_M_IX86))\n#define WEBP_MSC_AVX2\n#endif\n\n// Lines 88-95: This enables the AVX2 code path\n#if (defined(__AVX2__) || defined(WEBP_MSC_AVX2)) \u0026\u0026 \\\n    (!defined(HAVE_CONFIG_H) || defined(WEBP_HAVE_AVX2))\n#define WEBP_USE_AVX2\n#endif\n\u0060\u0060\u0060\n\n**Why Windows fails:** SkiaSharp uses clang-cl on Windows, which defines \u0060_MSC_VER\u0060 for MSVC compatibility. This triggers \u0060WEBP_MSC_AVX2\u0060 \u2192 \u0060WEBP_HAVE_AVX2\u0060, causing \u0060lossless.c\u0060 and \u0060lossless_enc.c\u0060 to call \u0060VP8LDspInitAVX2()\u0060 and \u0060VP8LEncDspInitAVX2()\u0060. But these functions are defined in the AVX2 source files which are not compiled \u2192 **linker error**.\n\n**Why macOS/Linux x64 works:** Native Clang/GCC does not define \u0060_MSC_VER\u0060, and does not define \u0060__AVX2__\u0060 by default, so AVX2 is not enabled.\n\n**Why ARM works:** AVX2 is an x86 instruction set, ARM platforms have no AVX2 code paths.\n\n## How to Enable AVX2\n\nAdd a new AVX2 target following the existing SSE4.1 pattern:\n\n\u0060\u0060\u0060gn\nthird_party(\u0022libwebp_avx2\u0022) {\n  public_include_dirs = [\n    \u0022../externals/libwebp/src\u0022,\n    \u0022../externals/libwebp\u0022,\n  ]\n  configs = [ \u0022:libwebp_defines\u0022 ]\n  sources = [\n    \u0022../externals/libwebp/src/dsp/lossless_avx2.c\u0022,\n    \u0022../externals/libwebp/src/dsp/lossless_enc_avx2.c\u0022,\n  ]\n  \n  # Enable AVX2 compilation on x86/x64\n  if (current_cpu == \u0022x86\u0022 || current_cpu == \u0022x64\u0022) {\n    if (is_win \u0026\u0026 !is_clang) {\n      # MSVC\n      cflags_c = [ \u0022/arch:AVX2\u0022 ]\n    } else {\n      # Clang (macOS, Linux, Windows clang-cl)\n      cflags_c = [ \u0022-mavx2\u0022 ]\n    }\n  }\n}\n\nthird_party(\u0022libwebp\u0022) {\n  # ...\n  deps = [ \u0022:libwebp_sse41\u0022, \u0022:libwebp_avx2\u0022 ]  # Add AVX2 dependency\n  # ...\n}\n\u0060\u0060\u0060\n\nThen remove the \u0060config(\u0022libwebp_no_avx2\u0022)\u0060 workaround.\n\n### Compiler Flags Summary\n\n| Platform | Compiler | Flag to enable AVX2 |\n|----------|----------|---------------------|\n| Windows (MSVC) | cl.exe | \u0060/arch:AVX2\u0060 |\n| Windows (clang-cl) | clang-cl | \u0060-mavx2\u0060 |\n| macOS | clang | \u0060-mavx2\u0060 |\n| Linux | clang/gcc | \u0060-mavx2\u0060 |\n\n## Safety: Runtime CPU Detection\n\nlibwebp has **runtime CPU detection** - the AVX2 code only runs on CPUs that support it:\n\n\u0060\u0060\u0060c\n// src/dsp/lossless.c lines 658-661\n#if defined(WEBP_HAVE_AVX2)\n  if (VP8GetCPUInfo(kAVX2)) {  // Runtime check!\n    VP8LDspInitAVX2();\n  }\n#endif\n\u0060\u0060\u0060\n\nSo even on older CPUs without AVX2 support, the code safely falls back to SSE/C implementations.\n\n## What AVX2 Does\n\nAVX2 (Advanced Vector Extensions 2) is a SIMD instruction set that processes 256 bits at once (vs 128 bits for SSE). This provides faster:\n- Lossless WebP encoding\n- Lossless WebP decoding  \n- Color space conversions\n\nAvailable on: Intel Haswell (2013\u002B), AMD Excavator (2015\u002B), and newer CPUs.\n\n## Files to Modify\n\n- \u0060externals/skia/third_party/libwebp/BUILD.gn\u0060 - Add AVX2 target, remove \u0060-mno-avx2\u0060 workaround\n\n## References\n\n- [libwebp AVX2 commit](https://github.com/webmproject/libwebp/commit/f2b3f527) - Original upstream commit adding AVX2 support\n- [libwebp 1.6.0 release](https://github.com/webmproject/libwebp/releases/tag/v1.6.0)\n- [PR #3461](https://github.com/mono/SkiaSharp/pull/3461) - libwebp 1.6.0 update",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "tenet/performance",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-27T20:42:38",
+  "updatedAt": "2026-01-31T15:01:31",
+  "closedAt": "2026-01-31T15:01:31",
+  "commentCount": 1,
+  "reactionCount": 0
+}

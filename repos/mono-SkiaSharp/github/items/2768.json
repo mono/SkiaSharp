@@ -1,0 +1,22 @@
+{
+  "number": 2768,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] CaptureAsync produces incorrect image on Android",
+  "body": "### Description\n\nI\u0027m creating a custom control using \u0060SKCanvasView\u0060. Putting this into a view and then using \u0060CaptureAsync\u0060 on the view is producing a wrong image on android. Works on Windows.\r\n\r\nThe top view was captured and the bottom is the captured image:\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/15385931/25b9e651-24c6-4460-b995-33e5c3cc2772)\r\n\r\n\n\n### Code\n\nGitHub repository: https://github.com/Pairoba/CaptureAsyncSkiaSharp\r\n\r\n**CustomView.cs**\r\n\u0060\u0060\u0060cs\r\ninternal class CustomView : SKCanvasView\r\n{\r\n    protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n    {\r\n        base.OnPaintSurface(e);\r\n        var canvas = e.Surface.Canvas;\r\n        var info = e.Info;\r\n\r\n        using var paint = new SKPaint();\r\n        paint.Color = SKColors.Black;\r\n        paint.StrokeWidth = 10;\r\n\r\n        canvas.DrawLine(0, 0, info.Width, info.Height, paint);\r\n        canvas.DrawLine(info.Width, 0, 0, info.Height, paint);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**MainPage.xaml.cs**\r\n\u0060\u0060\u0060cs\r\npublic partial class MainPage : ContentPage\r\n{\r\n    public MainPage()\r\n    {\r\n        InitializeComponent();\r\n    }\r\n\r\n    private async void CaptureAsync(object sender, EventArgs e)\r\n    {\r\n        var snap = await CaptureTarget.CaptureAsync();\r\n        if (snap != null)\r\n        {\r\n            var s = await snap.OpenReadAsync();\r\n            CaptureImageView.Source = ImageSource.FromStream(() =\u003E s);\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**MainPage.xaml**\r\n\u0060\u0060\u0060xaml\r\n\u003CVerticalStackLayout\u003E\r\n    \u003CBorder x:Name=\u0022CaptureTarget\u0022\r\n            HeightRequest=\u0022250\u0022\r\n            WidthRequest=\u0022250\u0022\r\n            StrokeThickness=\u002210\u0022\r\n            Stroke=\u0022Blue\u0022\u003E\r\n        \u003CAbsoluteLayout BackgroundColor=\u0022Green\u0022\u003E\r\n            \u003Clocal:CustomView AbsoluteLayout.LayoutBounds=\u002240, 40, 100, 100\u0022\r\n                              AbsoluteLayout.LayoutFlags=\u0022None\u0022 /\u003E\r\n        \u003C/AbsoluteLayout\u003E\r\n    \u003C/Border\u003E\r\n    \u003CButton Text=\u0022Capture Async\u0022\r\n            Clicked=\u0022CaptureAsync\u0022/\u003E\r\n    \u003CImage x:Name=\u0022CaptureImageView\u0022\r\n           HeightRequest=\u0022250\u0022\r\n           WidthRequest=\u0022250\u0022/\u003E\r\n\u003C/VerticalStackLayout\u003E\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nCorrect generated image\n\n### Actual Behavior\n\nIncorrect generated image\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\n* Android 13\r\n* Android 14\n\n### Devices\n\n* Pixel 5 Emulator\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Pairoba",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-27T17:08:46",
+  "updatedAt": "2024-02-28T13:42:48",
+  "commentCount": 1,
+  "reactionCount": 0
+}

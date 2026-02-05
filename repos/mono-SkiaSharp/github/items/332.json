@@ -1,0 +1,18 @@
+{
+  "number": 332,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp.SkImageInfo threw an exception",
+  "body": "Hi there. Thanks for SkiaSharp. It\u0027s great. I\u0027ve been using it in [Tiled2Unity](http://www.seanba.com/tiled2unity) for a couple months now.\r\n\r\nHowever, I\u0027ve got some Windows users reporting this exception to me:\r\n\r\n\u003E The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n\r\nSometimes this exception goes away for them (maybe after updating their .Net Framework, or OS) but I haven\u0027t been able to pin down much more information than that (sorry, I don\u0027t have access to their workstations and haven\u0027t been able to reproduce the error myself.)\r\n\r\nI wonder if there\u0027s something going on with the static constructor on SKImageInfo? I see some platform specific code there.\r\n\r\n\u0060\u0060\u0060\r\nstatic SKImageInfo ()\r\n{\r\n\tPlatformColorType = SkiaApi.sk_colortype_get_default_8888 ();\r\n\tSkiaApi.sk_color_get_bit_shift (out PlatformColorAlphaShift, out PlatformColorRedShift, out PlatformColorGreenShift, out PlatformColorBlueShift);\r\n}\r\n\u0060\u0060\u0060\r\nBTW, this is appearing on Windows 10 64bit for some users. Other users are reporting it on Win8 64 as well.",
+  "author": {
+    "login": "Seanba",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-07-04T18:22:01",
+  "updatedAt": "2022-08-19T21:01:29",
+  "closedAt": "2017-09-01T19:02:38",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 401,
+  "type": "issue",
+  "state": "closed",
+  "title": "When to support Chinese Text drawing?",
+  "body": "things like this does not work\r\n\u0060\u0060\u0060\r\n        void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args) {\r\n            var info = args.Info;\r\n            var surface = args.Surface;\r\n            var canvas = surface.Canvas;\r\n\r\n            canvas.Clear();\r\n\r\n            string text = \u0022\u4F60\u597D,Skia\u0022;\r\n\r\n            // Create an SKPaint object to display the text\r\n            SKPaint textPaint = new SKPaint {\r\n                Style = SKPaintStyle.Stroke,\r\n                StrokeWidth = 1,\r\n                FakeBoldText = true,\r\n                Color = SKColors.Blue\r\n            };\r\n\r\n            // Adjust TextSize property so text is 95% of screen width\r\n            float textWidth = textPaint.MeasureText(text);\r\n            textPaint.TextSize = 0.95f * info.Width * textPaint.TextSize / textWidth;\r\n\r\n            // Find the text bounds\r\n            SKRect textBounds;\r\n            textPaint.MeasureText(text, ref textBounds);\r\n\r\n            // Calculate offsets to center the text on the screen\r\n            float xText = info.Width / 2 - textBounds.MidX;\r\n            float yText = info.Height / 2 - textBounds.MidY;\r\n\r\n            // And draw the text\r\n            canvas.DrawText(text, xText, yText, textPaint);\r\n        }\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "juepiezhongren",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-11-25T06:02:02",
+  "updatedAt": "2022-08-19T18:02:07",
+  "closedAt": "2017-11-29T01:58:24",
+  "commentCount": 5,
+  "reactionCount": 0
+}

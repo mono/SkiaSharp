@@ -1,0 +1,17 @@
+{
+  "number": 1716,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] iOS SkBitmap.DecodeBounds(png) fails to decode, returns empty image",
+  "body": "**Description**\r\n\r\nA png-based stream fails to decode in latest 2.80.2. It used to work before in 1.68.\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\n            using (SKStream skStream = new SKManagedStream(memoryStream))\r\n            {\r\n              imageInfo = SKBitmap.DecodeBounds(skStream);\r\n              if (imageInfo.IsEmpty)\r\n              {\r\n                Console.WriteLine(\r\n                  $\u0022-- Error: file {name_} is empty; {imageInfo.BytesSize} bytes \u0022 \u002B\r\n                  $\u0022@ {imageInfo.Width}x{imageInfo.Height}\u0022);\r\n\r\n\u0060\u0060\u0060\r\n\r\nreturns \r\n\r\n\u0060\u0060\u0060\r\nError: file a.png is empty; 0 bytes @ 0x0\r\n\u0060\u0060\u0060\r\n\r\nI verified that the a.png exists (File.Exists returns true and the stream itself is fine). I also verified the code works well for webp.\r\nWorks properly Android, WPF/Console. Also tried multiple png files (not an issue with a specific png). The PNG files have alpha channel (32-bit) if that helps.\r\n\r\n**Expected Behavior**\r\n\r\nPNG decode should work.\r\n\r\n**Actual Behavior**\r\n\r\nPNG decode does not work.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.80.2\r\n- Last known good version: 1.68\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks: \r\n  - iOS:  14.4.2\r\n- Target Devices:   Does not work on both iPhone 8 and iPad Mini 2\r\n\r\n",
+  "author": {
+    "login": "Peru-S",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-06-04T20:57:10",
+  "updatedAt": "2021-06-04T20:57:10",
+  "commentCount": 0,
+  "reactionCount": 0
+}

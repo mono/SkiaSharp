@@ -1,0 +1,27 @@
+{
+  "number": 619,
+  "type": "issue",
+  "state": "closed",
+  "title": "Troubles rendering a live video feed",
+  "body": "I\u0027m using SkiaSharp on a Linux/Gtk platform, .NET core 2.1 (and this Gtk binding: https://github.com/gtksharp/gtksharp).\r\n\r\nAt the moment, I\u0027m trying to render a live video feed inside of an \u0060SkWidget\u0060.  At first (to test things out), I was getting my video source when \u0060SkWidget.PaintSurface\u0060 was invoked.  Therefore it was running in the Gtk GUI thread (which is a bad idea), and it worked.  It was able to render video in realtime and retrieve it from the source.\r\n\r\nThe only problem with this was that the video source was from a USB, therefore it was quite slow, and would make the Gtk UI much less responsive (since capture was happing in the GUI thread).\r\n\r\nI tried moving the capture over to a \u0060System.Timers.Timer\u0060 callback, and added in all of the necessary locks/syncing.  This would work for about 10-15 seconds (GUI was response, \u0060SkWiget\u0060 was showing a live feed), the GUI would then freeze up.  I tried using various things, such as Double-Buffered \u0060SkBitmap\u0060s, standard locks, Spin Locks, Reader-Writer locks, etc.\r\n\r\nI\u0027m wondering if there is a proper/recommended way of rendering video w/ Skia.  Is there?",
+  "author": {
+    "login": "define-private-public",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-08-18T18:42:43",
+  "updatedAt": "2022-08-19T15:01:44",
+  "closedAt": "2018-12-01T05:16:48",
+  "commentCount": 2,
+  "reactionCount": 0
+}

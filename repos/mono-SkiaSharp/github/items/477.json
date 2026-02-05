@@ -1,0 +1,18 @@
+{
+  "number": 477,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Question] decode GIF into sequences",
+  "body": "sorry this is not an iusse but wanna know how to decode an GIF into PNG sequences.\r\nI use the code below but it does not seem to work:\r\n\r\n    using (var codec = SKCodec.Create(stream))\r\n            {\r\n                var info = codec.Info;\r\n                stream.Position = 0;\r\n                for (int i = 0; i \u003C codec.FrameCount; i\u002B\u002B) \r\n                {\r\n                    var skbitmap = new SKBitmap(info.Width, info.Height, true);\r\n                    IntPtr length;\r\n                    var result = codec.GetPixels(skbitmap.Info, skbitmap.GetPixels(out length));\r\n                    if (result == SKCodecResult.Success)\r\n                    {\r\n                        resizeAndSaveImage(tempDir \u002B \u0022/\u0022 \u002B i \u002B \u0022.png\u0022, skbitmap, srcRect, dstRect, SKEncodedImageFormat.Png);\r\n                        stream.Position \u002B= skbitmap.ByteCount;    //move to next frame??????\r\n                    }\r\n                    else\r\n                        throw new InvalidDataException();\r\n                }\r\n            }\r\n\r\n\r\nproblems:\r\n1, \u0060codec.FrameCount\u0060 seems always 1 but not the correct gif frame count\r\n2, \u0060codec.GetPixels\u0060 returns \u0060SKCodecResult.IncompleteInput\u0060 I have no idea what does it mean.\r\n3, what is the right way to decode GIF?\r\n\r\nThanks in advance.",
+  "author": {
+    "login": "jcyuan",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-03-29T08:54:30",
+  "updatedAt": "2022-08-19T15:02:54",
+  "closedAt": "2018-03-30T19:33:15",
+  "commentCount": 2,
+  "reactionCount": 0
+}

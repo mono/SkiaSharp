@@ -1,0 +1,23 @@
+{
+  "number": 3168,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG / WinUI] SKXamlCanvas throws an exception on devices without a GPU or with outdated GPU drivers",
+  "body": "### Description\n\nWhen running a **WinUI application** that uses \u0060SKXamlCanvas\u0060, an exception occurs on devices that:  \n- Do **not** have a GPU (e.g., virtual machines, low-end devices)  \n- Have **outdated GPU drivers**, specifically **AMD Radeon drivers from before 2021**  \n\nThe issue originates from **SkiaSharp.Views.WinUI.Native**, where \u0060IBuffer\u0060 is cast to \u0060IBufferByteAccess\u0060.  \nIf the system lacks GPU hardware or uses an outdated driver, **COM fails to locate the required GPU resources**, causing the application to crash.  \n\nThis appears to be the same issue discussed in **[SkiaSharp Issue #3136](https://github.com/mono/SkiaSharp/issues/3136)**.  \n\n**Possible Fix \u0026 PR Proposal** \nI have implemented a workaround that **catches the COMException** and falls back to **software rendering** using \u0060SoftwareBitmap\u0060 and \u0060SoftwareBitmapSource\u0060.  \n\nIf needed, I can **submit a PR** with this fix. Please let me know if this would be helpful.\n\n### Code\n\nThis issue can be reproduced **100% of the time in Windows Sandbox**, as it runs in a virtualized environment with no GPU access.  \n\n1. Create a **WinUI 3** application.  \n2. Install \u0060LiveChartsCore.SkiaSharpView.WinUI\u0060.  \n3. Add the following code to your XAML file:  \n   \u0060\u0060\u0060xml\n   \u003Clvc:CartesianChart /\u003E\n   \u0060\u0060\u0060\n4. Run the application in **Windows Sandbox** or on a **device without a GPU**.  \n5. The application **crashes when rendering the \u0060CartesianChart\u0060**. \n\n### Expected Behavior\n\n- The application should gracefully handle the exception.  \n- If \u0060IBufferByteAccess\u0060 casting fails, the system should **fallback to software rendering** instead of crashing.  \n\n### Actual Behavior\n\n- The application **crashes immediately** when rendering the \u0060CartesianChart\u0060.  \n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- **OS:** Windows 10 / Windows 11  \n- **WinUI Version:** 1.6\n- **SkiaSharp Version:** [2.88.9](https://www.nuget.org/packages/LiveChartsCore.SkiaSharpView.WinUI), [3.116.0](https://github.com/mono/SkiaSharp/issues/3136)\n\n### Devices\n\nWindows devices that \n- Do **not** have a GPU (e.g., virtual machines, low-end devices)  \n- Have **outdated GPU drivers**, specifically **AMD Radeon drivers from before 2021**  \n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n- A full memory dump of the crash can be found here:  \n  [\uD83D\uDD17 Download Dump File](https://nas.kagamine-rin.com/public/8ff1003e1d09)  \n- Related SkiaSharp Issue: **[#3136](https://github.com/mono/SkiaSharp/issues/3136)**\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "airtaxi",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-18T08:27:15",
+  "updatedAt": "2025-08-28T12:23:57",
+  "closedAt": "2025-08-22T23:58:17",
+  "commentCount": 8,
+  "reactionCount": 1
+}

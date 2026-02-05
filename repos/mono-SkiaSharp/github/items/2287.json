@@ -1,0 +1,18 @@
+{
+  "number": 2287,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp in Blazor client side application we are facing libSkiaSharp assembly not found",
+  "body": "**Description :** \r\nWe are using SkiaSharp to measure a string in ASP.NET Core Blazor application. In Blazor server side application, SkiaSharp works fine without any issue. But, when we use SkiaSharp in Blazor client side application we are facing libSkiaSharp assembly not found issue.\r\n\r\n**Code :** \r\n\u0060\u0060\u0060\r\n@page \u0022/DocIO\u0022\r\n@inject Microsoft.JSInterop.IJSRuntime JS\r\n@using System.IO\r\n@using SkiaSharp\r\n\r\n\r\n\u003Cp\u003EClick the button to run the code\u003C/p\u003E\r\n\u003Cbutton class=\u0022btn btn-primary\u0022 @onclick=\u0022@Create\u0022\u003ECreate\u003C/button\u003E\r\n\r\n@code {\r\n    @functions {\r\n\r\n        async void Create()\r\n        {\r\n            float skiaMeasurement = 0;\r\n            SKFontStyleWeight weight = SKFontStyleWeight.Normal;\r\n            SKFontStyleSlant sKFontStyleSlant = SKFontStyleSlant.Upright;\r\n            SKFontStyleWidth sKFontStyleWidth = SKFontStyleWidth.Normal;\r\n            try\r\n            {\r\n                using (SKPaint paint = new SKPaint())\r\n                {\r\n                    paint.Typeface = SKTypeface.FromFamilyName(\u0022Arial\u0022, weight, sKFontStyleWidth, sKFontStyleSlant);\r\n                    paint.Color = SKColors.Black;\r\n                    paint.IsAntialias = true;\r\n                    paint.TextSize = 11;\r\n                    paint.SubpixelText = true;\r\n                    paint.TextAlign = SKTextAlign.Left;\r\n                    paint.TextEncoding = SKTextEncoding.Utf8;\r\n                    string text = \u0022Text\u0022;\r\n                    SKRect rect = new SKRect();\r\n                    skiaMeasurement = paint.MeasureText(text, ref rect);\r\n                }\r\n            }\r\n            catch(Exception ex)\r\n            {\r\n                string msg = ex.ToString();\r\n            }\r\n\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior :** \r\nSkiaSharp should work properly in Blazor client side application.\r\n**Actual Behavior :** \r\nThe following exception is thrown.\r\n_\u0027System.DllNotFoundException: libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_compatpaint_new()\\n  at SkiaSharp.SKPaint..ctor () [0x00000] in D:\\\\a\\\\1\\\\s\\\\binding\\\\Binding\\\\SKPaint.cs:25 \\n  at Client_side_application.Pages.DocIO.CreateWord () [0x0002d] in D:\\\\Blazor\\\\Client-side-application\\\\Pages\\\\DocIO.razor:21 \u0027_\r\n\r\n**Basic Information :** \r\nSkiSharp Version with issue : 2.88.3\r\nIDE : Visual Studio 2019\r\n\r\n\r\n**Reproduction steps:** \r\nRun the above code example\r\n",
+  "author": {
+    "login": "MohanaselvamJ",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-10-17T14:11:38",
+  "updatedAt": "2022-11-16T18:00:51",
+  "closedAt": "2022-10-17T15:15:22",
+  "commentCount": 1,
+  "reactionCount": 0
+}

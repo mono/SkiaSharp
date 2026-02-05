@@ -1,0 +1,18 @@
+{
+  "number": 1272,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to create Euclid Flex Thin font",
+  "body": "Unable to create **Euclid Flex Thin** font. I have used below code.\r\n\u0060SKTypeface typeFace = SKTypeface.FromFamilyName(@\u0022Euclid Flex\u0022, SKFontStyleWeight.Thin, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\u0060\r\n\r\nIf we save the stream as a file, it shows the font name **Euclid Flex Ultralight**.\r\n\r\n\u0060\u0060\u0060\r\nFileStream fontStream = new FileStream(@\u0022D:\\EuclidFont.otf\u0022, FileMode.Create, FileAccess.Write);  \r\n  SKStreamAsset stream = typeFace.OpenStream();\r\n            if (stream != null \u0026\u0026 stream.Length \u003E 0)\r\n            {\r\n                byte[] fontData = new byte[stream.Length - 1];\r\n                stream.Read(fontData, stream.Length);\r\n                stream.Dispose();\r\n                MemoryStream m_stream = new MemoryStream(fontData);\r\n                m_stream.CopyTo(fontStream);\r\n                fontStream.Flush();\r\n            }\r\n\u0060\u0060\u0060\r\n\r\nSkiaSharp version - 1.59.3\r\nNET Core 2.0",
+  "author": {
+    "login": "VijayRM",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-05-05T13:27:13",
+  "updatedAt": "2022-08-19T06:01:49",
+  "closedAt": "2020-05-06T07:37:39",
+  "commentCount": 5,
+  "reactionCount": 0
+}

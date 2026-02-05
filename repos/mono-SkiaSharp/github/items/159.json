@@ -1,0 +1,19 @@
+{
+  "number": 159,
+  "type": "issue",
+  "state": "closed",
+  "title": "Known Issues...",
+  "body": "As of release v1.55.0, there appears to be a few issues that I need to see if the update fixes, since they aren\u0027t reproducible on fiddle.skia.org.\r\n\r\n**Noise Shaders \u0026 GL \u0026 Android**  \r\nFor some reason the noise shaders (CreatePerlinNoiseFractalNoise, CreatePerlinNoiseTurbulence) cause the GL context to crash on my Nexus:\r\n\r\n\u003E [Adreno-GSL] \u003Cgsl_ldd_control:427\u003E: ioctl fd 27 code 0x400c0907 (IOCTL_KGSL_DEVICE_WAITTIMESTAMP_CTXTID) failed: errno 35 Resource deadlock would occur\r\n\u003E [Adreno-GSL] \u003Clog_gpu_snapshot:337\u003E: panel.gpuSnapshotPath is not set.not generating user snapshot\r\n\u003E [Adreno-GSL] \u003Cgsl_umd_context_waittimestamp:266\u003E: error:-12 ctx 00000007 ts 164\r\n\u003E [Adreno-EGLSUB] \u003Cupdater_thread:428\u003E: waitFunc failed\r\n\r\nFreaky thing is, If I draw using one of these shaders and another via a compose shader. there is no problem...\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2016-10-10T22:02:29",
+  "updatedAt": "2022-08-20T00:01:55",
+  "closedAt": "2018-10-16T14:42:24",
+  "commentCount": 1,
+  "reactionCount": 0
+}

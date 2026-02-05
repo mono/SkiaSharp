@@ -1,0 +1,23 @@
+{
+  "number": 3191,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] riscv64 flavor of libSkiaSharp and libHarfBuzzSharp",
+  "body": "### Is your feature request related to a problem?\n\ni want to use skiasharp on ubuntu 24.04 riscv64 desktop\n\n### Describe the solution you would like\n\ne.g. https://nuget.info/packages/SQLitePCLRaw.lib.e_sqlite3/2.1.11 has runtimes/linux-riscv64 and runtimes/linux-musl-riscv64. same thing can be done for SkiaSharp. toolchains are available in modern ubuntu/debian, fedora and alpine.\n\nfor ref\nhttps://github.com/ericsink/cb/commit/fe4e4255c9ccd10e298ed5b0f1f47478fa34982a\nhttps://github.com/ericsink/SQLitePCL.raw/commit/685942a31a9e43db85366a719b3b30547f90ef79\n\nideally infra should be DRY\u0027d so it\u0027s just a matter of adding a single line in shell or cake script for new platform: \u0060define_platform(dotnetArch, nativeArch, osName) {. ... expand ...  }\u0060 which will expand to rubberstamped stuff for \u0060clang -target ...\u0060. e.g.\n\n\u0060\u0060\u0060sh\n# existing\ndefine_platform(\u0022arm64\u0022, \u0022aarch64\u0022, \u0022linux\u0022)\ndefine_platform(\u0022arm64\u0022, \u0022aarch64\u0022, \u0022linux-musl\u0022)\n\n# for this feature request\ndefine_platform(\u0022riscv64\u0022, \u0022riscv64\u0022, \u0022linux\u0022)\ndefine_platform(\u0022riscv64\u0022, \u0022riscv64\u0022, \u0022linux-musl\u0022)\n\u0060\u0060\u0060\n\n### Describe alternatives you have considered\n\nN/A\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "kasperk81",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-08T16:53:22",
+  "updatedAt": "2025-03-25T06:37:59",
+  "closedAt": "2025-03-12T03:01:13",
+  "commentCount": 1,
+  "reactionCount": 0
+}

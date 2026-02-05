@@ -1,0 +1,18 @@
+{
+  "number": 377,
+  "type": "issue",
+  "state": "closed",
+  "title": "Exception using SkiaSharp compiled for Linux",
+  "body": "When we attempt to construct a new SKBitmap on Ubuntu 17.04, we receive the following exception:\r\n\r\n\u0060\u0060\u0060\r\nSystem.Exception: Unable to allocate pixels for the bitmap.\r\n   at SkiaSharp.SKBitmap..ctor(SKImageInfo info, Int32 rowBytes)\r\n\u0060\u0060\u0060\r\nWe are using SkiaSharp 1.59.1 and Avalonia.Skia.Linux.Natives 1.57.1.4. \r\nI initially thought that we may have out of date dependencies or libraries, so I tried to compile SkiaSharp from source, but ran into a bunch of issues with Cake upgrading to .NET Framework 4.6 on all of their nuget packages and compilation issues building Skia. I\u0027m stuck, on that front.\r\n\r\nAny ideas what might be causing our exception, here?",
+  "author": {
+    "login": "callmemorgan",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-09-27T15:10:16",
+  "updatedAt": "2022-08-19T18:02:29",
+  "closedAt": "2017-09-29T20:49:05",
+  "commentCount": 8,
+  "reactionCount": 0
+}

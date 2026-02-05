@@ -1,0 +1,33 @@
+{
+  "number": 482,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp.SKObject.Dispose can throw ArgumentNullException on finalization",
+  "body": "Had a customer complaining about crashes in Visual Studio while using SkiaSharp in the WinForms designer: https://developercommunity.visualstudio.com/content/problem/228761/crashing-when-debugging-a-skiasharp-winforms-app-i.html.\r\n\r\nLooking into his crashes it looks like SkiaSharp.SKObject.Dispose can throw on finalization:\r\n\r\n\u0060\u0060\u0060\r\n   at System.Threading.Monitor.ReliableEnter(System.Object, Boolean ByRef)\r\n   at SkiaSharp.SKObject.Dispose(Boolean)\r\n   at SkiaSharp.SKPaint.Dispose(Boolean)\r\n   at SkiaSharp.SKNativeObject.Finalize()\r\n\u0060\u0060\u0060\r\n\r\nIf you look at Dispose, you can see multiple paths where it attempts to access managed instance and static fields that have no guarantee about already being cleaned up by the time the finalizer has run: https://github.com/mono/SkiaSharp/blob/9a0bff839b2a951334252a18f94cb7367c06c5de/binding/Binding/SKObject.cs#L63 \r\n\r\nAny access to member/static reference fields should be guarded with \u0060if (disposing)\u0060.  Or Better yet, wrap the unmanaged handle in a SafeHandle and let it free it.",
+  "author": {
+    "login": "davkean",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "1.60.1",
+  "createdAt": "2018-04-06T03:08:04",
+  "updatedAt": "2022-08-19T15:02:52",
+  "closedAt": "2018-04-13T12:44:11",
+  "commentCount": 5,
+  "reactionCount": 0
+}

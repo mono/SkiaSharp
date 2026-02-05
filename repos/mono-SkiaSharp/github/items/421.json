@@ -1,0 +1,18 @@
+{
+  "number": 421,
+  "type": "issue",
+  "state": "closed",
+  "title": "Default stroke-width scales incorrectly.",
+  "body": "The line\u0027s stroke-width does not scale correctly when not specified. See example below. The SVG specification indicates stroke-width should default to a value of 1. Setting the \u0060stroke-width=\u00221\u0022\u0060\r\n attribute appears to be working correctly.\r\n\r\n**SVG**\r\n\u0060\u003Csvg viewBox=\u00220 0 20 20\u0022\u003E\u0060\r\n\u0060  \u003Cline x1=\u00220\u0022 y1=\u00220\u0022 x2=\u002220\u0022 y2=\u002220\u0022 stroke=\u0022#000000\u0022 /\u003E\u0060\r\n\u0060  \u003Cline x1=\u002220\u0022 y1=\u00220\u0022 x2=\u00220\u0022 y2=\u002220\u0022 stroke=\u0022#000000\u0022 /\u003E\u0060\r\n\u0060\u003C/svg\u003E\u0060\r\n\r\n**Expected Results**\r\n_20 x 20_\r\n![expected-20](https://user-images.githubusercontent.com/10568040/34496391-3e04d9c0-efae-11e7-9fac-b8f37660d451.png)\r\n_100 x 100_\r\n![expected-100](https://user-images.githubusercontent.com/10568040/34496406-4c2861ca-efae-11e7-8d18-c21534dc5876.png)\r\n\r\nRendered with W3 and Chrome\r\n(https://www.w3schools.com/graphics/tryit.asp?filename=trysvg_stroke0)\r\n\r\n**Actual Results**\r\n_20 x 20_\r\n![actual-20](https://user-images.githubusercontent.com/10568040/34496623-02aad0ea-efaf-11e7-9395-3b806a25fa57.png)\r\n_100 x 100_\r\n![actual-100](https://user-images.githubusercontent.com/10568040/34496629-0a40841c-efaf-11e7-89ed-a41a543fffc9.png)\r\n\r\nRendered with the following code:\r\n\u0060public static SKImage ToSKImage(this SkiaSharp.Extended.Svg.SKSvg svg, SKSizeI size)\u0060\r\n\u0060{\u0060\r\n\u0060    var scaleX = size.Width / svg.CanvasSize.Width;\u0060\r\n\u0060    var scaleY = size.Height / svg.CanvasSize.Height;\u0060\r\n\u0060    var transform = SKMatrix.MakeScale(scaleX, scaleY);\u0060\r\n\u0060    return SKImage.FromPicture(svg.Picture, size, transform);\u0060\r\n\u0060}\u0060\r\n\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "iansteed",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-01-02T19:39:22",
+  "updatedAt": "2022-08-19T18:01:51",
+  "closedAt": "2018-01-04T19:31:44",
+  "commentCount": 2,
+  "reactionCount": 0
+}

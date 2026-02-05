@@ -1,0 +1,17 @@
+{
+  "number": 1543,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Can\u0027t disable decoder color correction anymore in 2.80.2",
+  "body": "**Description**\r\n\r\nIn SkiaSharp 1.68.3, it was possible to disable the color correction during decoding by decoding to a \u0060null\u0060 target colorspace.\r\n\r\nIn SkiaSharp 2.80.2, this doesn\u0027t work anymore.\r\n\r\n**Code**\r\n\u0060\u0060\u0060cs\r\nusing System;\r\nusing System.IO;\r\nusing System.Net.Http;\r\nusing System.Threading.Tasks;\r\nusing SkiaSharp;\r\n\r\nnamespace SkiaSharpProPhotoRegression\r\n{\r\n\tclass Program\r\n\t{\r\n\t\tstatic async Task\u003Cint\u003E Main(string[] args)\r\n\t\t{\r\n\t\t\tawait Recode(\u0022ProPhoto\u0022, \u0022https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Seven_Coloured_Pencils_%28ProPhoto_RGB%29.jpg/375px-Seven_Coloured_Pencils_%28ProPhoto_RGB%29.jpg\u0022);\r\n\t\t\tawait Recode(\u0022AdobeRGB\u0022, \u0022https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Seven_Coloured_Pencils_%28AdobeRGB%29.jpg/375px-Seven_Coloured_Pencils_%28AdobeRGB%29.jpg\u0022);\r\n\t\t\treturn 0;\r\n\t\t}\r\n\r\n\t\tprivate static async Task Recode(string imageName, string inputUrl)\r\n\t\t{\r\n\t\t\tvar skiaVersion = typeof(SKBitmap).Assembly.GetName().Version;\r\n\t\t\tvar nameSuffix = $\u0022{skiaVersion!.Major}-{skiaVersion.Minor}\u0022;\r\n\r\n\t\t\tvar hc = new HttpClient();\r\n\t\t\tawait using var source = await hc.GetStreamAsync(inputUrl);\r\n\r\n\t\t\tawait using var input = File.Create($\u0022{imageName}-input-{nameSuffix}.jpg\u0022);\r\n\t\t\tawait source.CopyToAsync(input);\r\n\t\t\tinput.Seek(0, SeekOrigin.Begin);\r\n\r\n\t\t\tvar codec = SKCodec.Create(input);\r\n\r\n\t\t\tvar info = codec.Info;\r\n\r\n\t\t\t// Disable color space in output image. We expect no color space transformations to be done, as in SkiaSharp 1.68.3\r\n\t\t\tinfo.ColorSpace = null;\r\n\r\n\t\t\tusing var bitmap = SKBitmap.Decode(codec, info);\r\n\r\n\t\t\tawait using var output = File.Create($\u0022{imageName}-output-{nameSuffix}.jpg\u0022);\r\n\t\t\tusing var encodedData = bitmap.Encode(SKEncodedImageFormat.Jpeg, 100);\r\n\t\t\tencodedData.SaveTo(output);\r\n\t\t}\r\n\t}\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe output images looked like this in 1.68.3:\r\n![ProPhoto-output-1-68](https://user-images.githubusercontent.com/2389359/97585892-ebe2ea00-19f9-11eb-9f25-aa2c62e36dc0.jpg)\r\n![AdobeRGB-output-1-68](https://user-images.githubusercontent.com/2389359/97585909-f0a79e00-19f9-11eb-95fc-0a67a4728102.jpg)\r\n\r\n**Actual Behavior**\r\n\r\nThe output images now look like this in 2.80.2:\r\n![ProPhoto-output-2-80](https://user-images.githubusercontent.com/2389359/97586149-36646680-19fa-11eb-9b8e-fbabacd12a0f.jpg)\r\n![AdobeRGB-output-2-80](https://user-images.githubusercontent.com/2389359/97586155-3a908400-19fa-11eb-9225-7bd6177e0492.jpg)\r\n\r\nIt seems in 2.80.2 color conversion is always performed, so can\u0027t be disabled anymore?\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  1.68.3\r\n- Platform Target Frameworks: \r\n- Windows Classic:  Windows 10\r\n  \r\nSee also https://commons.wikimedia.org/wiki/User:Colin/BrowserTest\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-29T14:22:41",
+  "updatedAt": "2020-10-29T14:22:41",
+  "commentCount": 0,
+  "reactionCount": 0
+}

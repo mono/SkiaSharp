@@ -1,0 +1,22 @@
+{
+  "number": 2762,
+  "type": "issue",
+  "state": "open",
+  "title": "SKMetalView unexpectedly draws on a timer",
+  "body": "### Description\r\n\r\nAn SKMetalView takes the Apple native default of \u0022Timed updates\u0022. This draws on a timer and is intended for 3D games. This is not suitable for SkiaSharp, which is not a 3D graphics library and therefore is mainly used by apps not 3D games\r\n\r\nThe appropriate mode for SkiaSharp is \u0022Draw notifications\u0022, which the user needs to manually enable by setting\r\n\r\n\u0060\u0060\u0060csharp\r\nbase.Paused = true;\r\nbase.EnableSetNeedsDisplay = true;\r\n\u0060\u0060\u0060\r\n\r\nWe were getting out of memory crashes that were very hard to detect and diagnose which went away when setting the expected mode in apps.\r\n\r\nI suggest either the default is changed, or documentation needs to be added on the SkiaSharp side indicating that the default needs to be changed by end users.\r\n\r\n### Expected Behavior\r\n\r\n\u003E https://developer.apple.com/documentation/metalkit/mtkview#Configuring-the-Drawing-Behavior\r\n\u003E Draw notifications: The view redraws itself when something invalidates its contents, usually because of a call to [setNeedsDisplay()](https://developer.apple.com/documentation/uikit/uiview/1622437-setneedsdisplay) or some other view-related behavior. In this case, set [isPaused](https://developer.apple.com/documentation/metalkit/mtkview/ispaused) and [enableSetNeedsDisplay](https://developer.apple.com/documentation/metalkit/mtkview/enablesetneedsdisplay) to [true](https://developer.apple.com/documentation/swift/true). Use this mode for apps with a more traditional workflow, where updates happen when data changes, but not on a regular timed interval.\r\n\r\n### Actual Behavior\r\n\r\n\u003E https://developer.apple.com/documentation/metalkit/mtkview#Configuring-the-Drawing-Behavior\r\n\u003E Timed updates: The view redraws its contents based on an internal timer. In this case, which is the default behavior, both [isPaused](https://developer.apple.com/documentation/metalkit/mtkview/ispaused) and [enableSetNeedsDisplay](https://developer.apple.com/documentation/metalkit/mtkview/enablesetneedsdisplay) are set to [false](https://developer.apple.com/documentation/swift/false). Use this mode for games and other animated content that\u2019s regularly updated.\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (macOS)\r\n\r\n### Platform / Operating System\r\n\r\niOS, macOS\r\n\r\n### Platform / Operating System Version\r\n\r\nIOS\r\nMACOS\r\n\r\n### Devices\r\n\r\nCrashes seen on iPhone, iPad\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "charlesroddie",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-20T17:14:08",
+  "updatedAt": "2025-04-29T05:07:58",
+  "commentCount": 3,
+  "reactionCount": 1
+}

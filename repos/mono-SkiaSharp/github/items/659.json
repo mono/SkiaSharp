@@ -1,0 +1,23 @@
+{
+  "number": 659,
+  "type": "issue",
+  "state": "closed",
+  "title": "libSkiaSharp.dll missing when using dotnet publish",
+  "body": "### Description\r\n\r\nI\u0027m using the following command to publish my program:\r\n\u0060dotnet publish -r win-x64\u0060\r\n\r\nWhen I run the resulting exe, I get this exception:\r\n\u0060System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\u0060\r\n\r\nApparently it does not fetch the correct dll from the nuget package when using a [portable RID](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog). If I change to this:\r\n\u0060dotnet publish -r win10-x64\u0060\r\n\r\nIt works just fine.\r\n\r\nThink [this](https://github.com/mono/SkiaSharp/issues/430) is the same problem, but that issue is closed.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- IDE: Visual Studio",
+  "author": {
+    "login": "Ollhax",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-10-25T12:43:38",
+  "updatedAt": "2022-08-19T15:01:21",
+  "closedAt": "2018-10-29T16:33:26",
+  "commentCount": 2,
+  "reactionCount": 0
+}

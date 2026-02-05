@@ -1,0 +1,18 @@
+{
+  "number": 1301,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Remove the non-supported platforms from the runtimes folder",
+  "body": "When doing a \u0060dotnet publish\u0060 on a .NET Core app (for example a console app), the output folder will have _all_ the supported platforms in the output.\r\n\r\nFor now, it is a bit annoying, but once #1296 lands, it will literally have all the platforms there. So, when publishing an ASP.NET Core website, it will have the \u0060libSkiaSharp.framework\u0060 there too. It is a nice thought that we can all can run our websites from our iPhones, but not realistic. The games will be glitchy when the world hits our local blog... anyways. \uD83D\uDE06 \r\n\r\nSince I control the NuGet package... I can actually investigate removing the unsupported platforms. I already do this in part for Tizen (which is .NET Core). When publishing a \u0060netcoreapp3.0\u0060, I can skip all the runtimes for mobile.\r\n\r\nWhat are your thoughts and reasons around this type of inclusion/exclusion of the native runtimes? What are you doing now? What do you want the NuGets to just do for you?\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-05-19T22:48:51",
+  "updatedAt": "2022-08-19T06:01:40",
+  "closedAt": "2020-06-30T15:02:04",
+  "commentCount": 1,
+  "reactionCount": 2
+}

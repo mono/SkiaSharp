@@ -1,0 +1,22 @@
+{
+  "number": 3038,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Regression: libHarfBuzzSharp.so uses symbols from the system libharfbuzz.so.0 which causes SIGSEGV",
+  "body": "This was previously fixed by https://github.com/mono/SkiaSharp/pull/2247, however LibraryLoader is only used for netfx builds, net6.0 build doesn\u0027t contain it anymore.\r\n\r\nAs of the issue details, [see the original PR](https://github.com/mono/SkiaSharp/pull/2247)\r\n\r\n\r\nRepro:\r\n\r\nUse GtkSharp and the following code:\r\n\u0060\u0060\u0060cs\r\nclass Program\r\n{    \r\n    static void Main(string[] args)\r\n    {\r\n        // Causes SIGSEGV\r\n        Gtk.Application.Init();\r\n        var font = new HarfBuzzSharp.Font(new Face((_, _) =\u003E null));\r\n        font.TryGetGlyph(65, out _);\r\n\r\n        Console.WriteLine(\u0022Survived\u0022);\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "kekekeks",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-15T17:56:47",
+  "updatedAt": "2024-10-26T04:17:07",
+  "commentCount": 5,
+  "reactionCount": 0
+}

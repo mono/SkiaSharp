@@ -1,0 +1,18 @@
+{
+  "number": 2211,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp crashes on Google Pixel 6 Pro in certain cases (works on other phones)",
+  "body": "**Description**\r\n\r\nWe have a mobile game that draws its screen using Xamarin.Forms and SKGLView. The game has a zoom-in and zoom-out feature. The Android version of the game works on other Android phones but crashes on Google Pixel 6 Pro (which is using Google Tensor).\r\n\r\nSteps to reproduce:\r\n1. Install GnollHack on Google Pixel 6 Pro: https://play.google.com/store/apps/details?id=com.soundmindentertainment.gnollhack\r\n2. Start the game with any character.\r\n3. Click the world icon in the top-right corner to zoom out.\r\n4. The game immediately crashes.\r\n\r\nThe stack trace in Google Play Console is the following (in Crashes and ANRs):\r\n\u0060\u0060\u0060\r\n  #00  pc 0x000000000004b840  /apex/com.android.runtime/lib64/bionic/libc.so (__memcpy)\r\n  #00  pc 0x0000000000761304  /vendor/lib64/egl/libGLES_mali.so\r\n  #00  pc 0x00000000007886f8  /vendor/lib64/egl/libGLES_mali.so\r\n  #00  pc 0x000000000076880c  /vendor/lib64/egl/libGLES_mali.so\r\n  #00  pc 0x000000000070d5c8  /vendor/lib64/egl/libGLES_mali.so\r\n  #00  pc 0x00000000002a04f0  /data/app/~~oTNqPNewwEuNK1kY9zcycA==/com.soundmindentertainment.gnollhack-0Tl1bC3mrLN6t3tiD-Qkmw==/split_config.arm64_v8a.apk!libSkiaSharp.so\r\n\u0060\u0060\u0060\r\n\r\nYou can deactivate GPU Acceleration in the settings, and then the game uses SKCanvasView for drawing. It works perfectly. So, the problem is apparently the GPU drivers of Google Pixel 6 Pro.\r\n\r\n**Code**\r\n\r\nThe game is open source. You can find its code here:\r\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\nAndroid build instructions are here:\r\nhttps://github.com/hyvanmielenpelit/GnollHack/wiki/Build-Instructions-for-Android-Version-on-Windows\r\n\r\n**Expected Behavior**\r\n\r\nThe game will not crash, when zooming out.\r\n\r\n**Actual Behavior**\r\n\r\nThe game crashes, when zooming out.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3 and 2.80.4\r\n- Last known good version:  -\r\n- IDE:  Visual Studio 2022 Community (Windows) 17.3.0\r\n- Platform Target Frameworks: \r\n  - Android: 11.0 (R)\r\n- Target Devices:  Google Pixel 6 Pro\r\n    ",
+  "author": {
+    "login": "TommiGustafsson-HMP",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-08-10T18:01:54",
+  "updatedAt": "2023-09-15T09:00:28",
+  "closedAt": "2023-08-16T08:34:15",
+  "commentCount": 4,
+  "reactionCount": 0
+}

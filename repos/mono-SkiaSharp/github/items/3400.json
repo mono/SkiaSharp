@@ -1,0 +1,42 @@
+{
+  "number": 3400,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKDocument.CreateXps() incorrectly scales \u003Cimage\u003E elements from SVG, while CreatePdf() renders correctly",
+  "body": "### Description\n\nWhen converting the same SVG content to XPS and PDF using SkiaSharp, \u003Cimage\u003E elements (embedded images) are rendered with incorrect dimensions in XPS output, while they appear correct in PDF output. All other SVG elements (text, barcodes, rectangles, shapes) render correctly in both formats.\n\nSkiaSharp Version: [3.119.1]\nSvg.Skia Version: [3.2.1]\nPlatform: Windows 10/11\nTarget Framework: .NET 9.0\nLanguage: C#\n\nSteps to Reproduce\nLoad an SVG document containing \u003Cimage\u003E elements with Base64-encoded images\nParse the SVG using SKSvg.Load()\nGenerate XPS using SKDocument.CreateXps()\nGenerate PDF using SKDocument.CreatePdf() with the same SVG\nCompare the image dimensions in XPS vs PDF output\n\n### Code\n\nusing SkiaSharp;\nusing Svg.Skia;\nusing System.IO;\nusing System.Text;\n\n// Load SVG\nvar svgContent = File.ReadAllText(\u0022sample.svg\u0022);\nusing var ms = new MemoryStream(Encoding.UTF8.GetBytes(svgContent));\nvar skSvg = new SKSvg();\nvar picture = skSvg.Load(ms);\nvar bounds = picture.CullRect;\n\nconst float DPI = 72f;\nconst float SVG_DPI = 96f;\nconst float contentScale = DPI / SVG_DPI; // 0.75\n\nvar pageWidth = bounds.Width * contentScale;\nvar pageHeight = bounds.Height * contentScale;\n\n// Generate PDF (works correctly)\nusing (var pdfStream = File.OpenWrite(\u0022output.pdf\u0022))\n{\n    using var document = SKDocument.CreatePdf(pdfStream);\n    using var canvas = document.BeginPage(pageWidth, pageHeight);\n    canvas.Clear(SKColors.White);\n    canvas.Scale(contentScale);\n    canvas.DrawPicture(picture);\n    document.EndPage();\n    document.Close();\n}\n\n// Generate XPS (images are incorrectly scaled)\nusing (var xpsStream = File.OpenWrite(\u0022output.xps\u0022))\n{\n    using var document = SKDocument.CreateXps(xpsStream);\n    using var canvas = document.BeginPage(pageWidth, pageHeight);\n    canvas.Clear(SKColors.White);\n    canvas.Scale(contentScale);\n    canvas.DrawPicture(picture);\n    document.EndPage();\n    document.Close();\n}\n\n\n\nSample SVG Structure:\n\u003Csvg width=\u002270mm\u0022 height=\u002250mm\u0022 viewBox=\u00220 0 265 189\u0022 xmlns=\u0022http://www.w3.org/2000/svg\u0022\u003E\n  \u003Cimage href=\u0022data:image/jpeg;base64,/9j/4AAQSkZJRg...\u0022 \n         x=\u002210.388\u0022 y=\u002222.387\u0022 \n         width=\u002239.99997292\u0022 height=\u002220.00001292\u0022 \n         preserveAspectRatio=\u0022xMidYMid meet\u0022/\u003E\n  \u003C!-- Other elements: text, barcode, rectangles, etc. --\u003E\n\u003C/svg\u003E\n\n\n\n### Expected Behavior\n\nImages in XPS output should have the same dimensions and appearance as in PDF output. All SVG elements should render consistently across both formats.\n\n\nThis issue only affects \u003Cimage\u003E elements within SVG\nThe problem appears to be in how SKDocument.CreateXps() handles image rendering from SKPicture\nThe same SKPicture object produces correct output with CreatePdf() and CreateImage()\nThis severely impacts label printing applications that require XPS output for Windows print pipeline\n\n### Actual Behavior\n\nPDF Output: \u2705 Images render correctly with proper dimensions\nXPS Output: \u274C Images are significantly smaller (approximately 30-40% of correct size)\nOther Elements: \u2705 Text, barcodes, shapes render correctly in both PDF and XPS\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "waibuku",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/PDF",
+      "color": "1acea7"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/Xps",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-31T06:48:04",
+  "updatedAt": "2025-10-31T06:48:41",
+  "commentCount": 1,
+  "reactionCount": 0
+}

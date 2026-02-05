@@ -1,0 +1,22 @@
+{
+  "number": 2811,
+  "type": "issue",
+  "state": "open",
+  "title": "Size in OnSizeAllocated of SKCanvasView in .NET 9.0 / SkiaSharp 3.0 Preview 2.1 does not match value returned in MeasureOverride",
+  "body": "### Description\n\nI\u0027m not sure if this is a .NET MAUI or SkiaSharp 3.0 problem, so I post this in both repositories: I have created a custom control called CustomLabel inheriting from SKCanvasView (SkiaSharp 3.0 Preview 2.1), which works great in Xamarin.Forms. It is an auto-sizing special label (like normal label) with some extra features compared to normal label. It uses overriding OnMeasure in Xamarin and MeasureOverride in .NET MAUI (.NET 9.0 Preview 2) to set itself to the right size, based on its contents. In .NET MAUI, however, the Size value result from MeasureOverride (which is correctly calculated) does not match what MAUI allocates as size in OnSizeAllocated (which is how the control in fact looks like), making the control way smaller in height than requested, sometimes even 0 (on iOS). The error may depend on the layout, or the fact that there is new MeasureOverride function in MAUI, but I haven\u0027t figured out the root cause for the bug. In Xamarin, everything works exactly as intended. Tested on Android 14 and iOS 17.3.1.\n\n### Code\n\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\n\n### Expected Behavior\n\nI expected the CustomLabel used in GnollHackM (MAUI) menu titles to draw in full height like it does in GnollHackX (Xamarin).\n\n### Actual Behavior\n\nThe CustomLabel in GnollHackM (.NET MAUI) is drawn in partial height, making it too small and parts of the text being cut off. MeasureOverride calculates the right value, but OnSizeAllocated gets called with the wrong height (and that\u0027s how the label in fact looks in practice). On iOS, the height is even sometimes 0.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\n2.80.x (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid, iOS\n\n### Platform / Operating System Version\n\nAndroid 14, iOS 17.3.1\n\n### Devices\n\nGoogle Pixel 6a, iPad 11,7\n\n### Relevant Screenshots\n\n![Screenshot_20240327-234854](https://github.com/mono/SkiaSharp/assets/53081197/d8011baa-c326-472d-bdb9-b09b477854b9)\r\n![Screenshot_20240327-234739](https://github.com/mono/SkiaSharp/assets/53081197/4a612cfb-ba86-40d2-86d7-bde23fb6e43d)\r\n\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-27T21:53:35",
+  "updatedAt": "2024-03-30T22:18:51",
+  "commentCount": 1,
+  "reactionCount": 0
+}

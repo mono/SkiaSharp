@@ -1,0 +1,19 @@
+{
+  "number": 255,
+  "type": "issue",
+  "state": "closed",
+  "title": "Create a \u0022simple\u0022 picture view",
+  "body": "This view should be able to just have a setter:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar view = new SKImageView();\r\nview.Bitmap = SKBitmap.Decode(myImagePath);\r\n\u0060\u0060\u0060\r\n\r\nAlso, another option would be to create extension methods to convert images to platform images:\r\n\r\n\u0060\u0060\u0060csharp\r\n// bitmaps\r\nSKBitmap bitmap = ...;\r\nvar uiImage = bitmap.ToUIImage();\r\n\r\n// pictures\r\nSKPicture picture = ...;\r\nvar cgImage = picture.ToCGImage(new SKSizeI(100, 100));\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.56.2",
+  "createdAt": "2017-02-23T23:43:05",
+  "updatedAt": "2022-08-19T21:02:27",
+  "closedAt": "2017-02-28T23:31:34",
+  "commentCount": 3,
+  "reactionCount": 2
+}

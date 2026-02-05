@@ -1,0 +1,24 @@
+{
+  "number": 194,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKData.AsStream sometimes returns corrupted image",
+  "body": "\u0060SKData.AsStream\u0060 returns corrupted images, not all the time, but once in a few tries. Tested on iOS (emulator). \r\n\r\n\u0060\u0060\u0060C#\r\nusing (var image = SKImage.FromBitmap(bitmap))\r\nusing (var data = image.Encode(SKImageEncodeFormat.Png, 80))\r\n{\r\n\tvar stream = data?.AsStream();\r\n\t// then process encoded PNG - sometimes is corrupted\r\n}\r\n\u0060\u0060\u0060\r\n\r\nHowever, this is working just fine (without any issues):\r\n\r\n\u0060\u0060\u0060C#\r\nusing (var image = SKImage.FromBitmap(bitmap))\r\nusing (var data = image.Encode(SKImageEncodeFormat.Png, 80))\r\n{\r\n\tvar stream = new MemoryStream();\r\n\tdata.SaveTo(stream);\r\n\tstream.Position = 0;\r\n\t// then process encoded PNG - without any issues\r\n}\r\n\u0060\u0060\u0060\r\n\r\nFull code here: https://github.com/luberda-molinet/FFImageLoading/blob/master/source/FFImageLoading.Svg.Shared/SvgDataResolver.cs#L80-L98",
+  "author": {
+    "login": "daniel-luberda",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.55.1",
+  "createdAt": "2016-11-13T10:50:59",
+  "updatedAt": "2022-08-20T00:01:26",
+  "closedAt": "2016-11-18T00:25:01",
+  "commentCount": 1,
+  "reactionCount": 0
+}

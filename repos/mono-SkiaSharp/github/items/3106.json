@@ -1,0 +1,23 @@
+{
+  "number": 3106,
+  "type": "issue",
+  "state": "closed",
+  "title": "[iOS, 3.116.1, .NET MAUI 9.0] SkiaSharp still has a memory leak in .NET MAUI on iOS",
+  "body": "### Description\r\n\r\nWhen run with .NET MAUI 9.0 and SkiaSharp 3.116.1, my game GnollHack still runs out of memory on iOS when you try to open the game page many times (two is enough on my old iPad). This does not happen in Xamarin with exactly the same code.\r\n\r\n### Code\r\n\r\nhttps://github.com/hyvanmielenpelit/GnollHackMAUIEasyBuild\r\n\r\n### Expected Behavior\r\n\r\nNo matter how many times the game page is being opened by Play Game button, the game or image carousel never runs out of memory, as old pages with no references to are successfully being garbage collected.\r\n\r\n### Actual Behavior\r\n\r\nWhen you start the game, you land on main page, which has an image carousel with three alternating pictures and several buttons. Press Play Game (opens game page), then quit (back to main page), press Play Game again (opens another game page), and quit again (back again to main page). Now, you will see that the image carousel on the main page becomes black, as it runs out of memory. You may need to do the process a few times more on iOS devices with a lot of memory.\r\n\r\nThis means that the memory from the pages is not being released for garbage collection in .NET MAUI 9.0 / SkiaSharp 3.116.1.\r\n\r\n### Version of SkiaSharp\r\n\r\n3.116.0 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.9 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\niOS\r\n\r\n### Platform / Operating System Version\r\n\r\niOS 18.1.1\r\n\r\n### Devices\r\n\r\niPad 11,7\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-06T17:00:53",
+  "updatedAt": "2025-04-21T10:32:10",
+  "closedAt": "2025-04-21T10:32:10",
+  "commentCount": 7,
+  "reactionCount": 0
+}

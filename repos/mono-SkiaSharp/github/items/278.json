@@ -1,0 +1,24 @@
+{
+  "number": 278,
+  "type": "issue",
+  "state": "closed",
+  "title": "Support for Mac app built using Xamarin.Forms",
+  "body": "They released the preview of Xamarin.Forms for macOS apps: https://blog.xamarin.com/preview-bringing-macos-to-xamarin-forms/\r\n\r\nSkiasharp fails when being added as a dependency. The post above mentions \u0027In order to work in a macOS project, packages must target xamarinmac20\u0027.\r\n\r\nCan this be added? Below is the error when adding the SkiaSharp for Xamarin.Forms NuGet package currently.\r\n\r\nThanks!\r\n\r\n\u0060\u0060\u0060\r\nAttempting to gather dependency information for package \u0027SkiaSharp.Views.Forms.1.57.0\u0027 with respect to project \u0027CustomApp.Mac\u0027, targeting \u0027Xamarin.Mac,Version=v2.0\u0027\r\n  GET http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/Packages(Id=\u0027SkiaSharp.Views.Forms\u0027,Version=\u00271.57.0\u0027)\r\n  GET https://api.nuget.org/v3/registration1-gz/skiasharp.views.forms/index.json\r\n  NotFound http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/Packages(Id=\u0027SkiaSharp.Views.Forms\u0027,Version=\u00271.57.0\u0027) 109ms\r\n  GET http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/FindPackagesById()?id=\u0027SkiaSharp.Views.Forms\u0027\r\n  OK https://api.nuget.org/v3/registration1-gz/skiasharp.views.forms/index.json 140ms\r\n  OK http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/FindPackagesById()?id=\u0027SkiaSharp.Views.Forms\u0027 97ms\r\n  GET https://api.nuget.org/v3/registration1-gz/xamarin.forms/index.json\r\n  GET https://api.nuget.org/v3/registration1-gz/skiasharp/index.json\r\n  GET http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/FindPackagesById()?id=\u0027Xamarin.Forms\u0027\r\n  GET http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/FindPackagesById()?id=\u0027SkiaSharp\u0027\r\n  OK https://api.nuget.org/v3/registration1-gz/xamarin.forms/index.json 68ms\r\n  GET https://api.nuget.org/v3/registration1-gz/xamarin.forms/page/1.0.6186/1.4.4.6387.json\r\n  GET https://api.nuget.org/v3/registration1-gz/xamarin.forms/page/1.4.4.6391/2.3.3.180.json\r\n  GET https://api.nuget.org/v3/registration1-gz/xamarin.forms/page/2.3.3.193/2.3.5.233-pre1.json\r\n  OK http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/FindPackagesById()?id=\u0027Xamarin.Forms\u0027 118ms\r\n  OK https://api.nuget.org/v3/registration1-gz/xamarin.forms/page/1.0.6186/1.4.4.6387.json 46ms\r\n  OK https://api.nuget.org/v3/registration1-gz/xamarin.forms/page/1.4.4.6391/2.3.3.180.json 120ms\r\n  OK http://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin/FindPackagesById()?id=\u0027SkiaSharp\u0027 216ms\r\n  OK https://api.nuget.org/v3/registration1-gz/skiasharp/index.json 217ms\r\n  OK https://api.nuget.org/v3/registration1-gz/xamarin.forms/page/2.3.3.193/2.3.5.233-pre1.json 181ms\r\nTotal number of results gathered : 67\r\nGathering dependency information took 731.07 ms\r\nSummary of time taken to gather dependencies per source :\r\nhttps://api.nuget.org/v3/index.json\t-\t913.39 ms\r\n/Users/Source/Work/CustomApp.Mobile/../packages\t-\t41.28 ms\r\nhttp://nuget.syncfusion.com/nuget_xamarin/nuget/getsyncfusionpackages/xamarin\t-\t571.25 ms\r\nAttempting to resolve dependencies for package \u0027SkiaSharp.Views.Forms.1.57.0\u0027 with DependencyBehavior \u0027Lowest\u0027\r\nResolving dependency information took 0 ms\r\nResolving actions to install package \u0027SkiaSharp.Views.Forms.1.57.0\u0027\r\nResolved actions to install package \u0027SkiaSharp.Views.Forms.1.57.0\u0027\r\nFound package \u0027SkiaSharp.Views.Forms 1.57.0\u0027 in \u0027/Users/u0225413/Source/Work/CustomApp.Mobile/../packages\u0027.\r\nFor adding package \u0027SkiaSharp.Views.Forms.1.57.0\u0027 to project \u0027CustomApp.Mac\u0027 that targets \u0027xamarinmac20\u0027.\r\nInstall failed. Rolling back...\r\nPackage \u0027SkiaSharp.Views.Forms.1.57.0 : SkiaSharp [1.57.0, ), Xamarin.Forms [2.3.0, )\u0027 does not exist in project \u0027CustomApp.Mac\u0027\r\nExecuting nuget actions took 305.53 ms\r\nCould not install package \u0027SkiaSharp.Views.Forms 1.57.0\u0027. You are trying to install this package into a project that targets \u0027Xamarin.Mac,Version=v2.0\u0027, but the package does not contain any assembly references or content files that are compatible with that framework. For more information, contact the package author.\r\n\u0060\u0060\u0060\r\n\r\n\r\n",
+  "author": {
+    "login": "renzska",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.57.1",
+  "createdAt": "2017-04-20T21:42:10",
+  "updatedAt": "2022-08-19T21:02:09",
+  "closedAt": "2017-04-24T11:47:13",
+  "commentCount": 3,
+  "reactionCount": 0
+}

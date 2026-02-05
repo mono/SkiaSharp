@@ -1,0 +1,18 @@
+{
+  "number": 500,
+  "type": "issue",
+  "state": "closed",
+  "title": "Blurring Background",
+  "body": "Hi,\r\nI have an App where i use a model popup page with a transparent background, i have a skcanvasview on the bottom of that page and I was trying to apply a blur  with skmaskfilter, but that didnt work. I did it like this:\r\n\u0060\u0060\u0060csharp\r\nSKMaskFilter mask = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 50);\r\n                SKPaint paint = new SKPaint() {\r\n                    Color = new SKColor(0, 0, 0, 200),\r\n                    MaskFilter = mask,\r\n };\r\ncanvas.DrawPaint(paint);\r\n\u0060\u0060\u0060\r\n\r\nThen i thought that I can snapshot the background turn it into a bitmap and blur it using skimagefilter, but that doesnt work eithei, the bitmap is not null but it doesnt display the image on background.\r\n\r\n\u0060\u0060\u0060csharp\r\npublic async void OnPaint(object sender, SKPaintSurfaceEventArgs e) {\r\n    try {\r\n        SKSurface surface = e.Surface;\r\n        SKCanvas canvas = surface.Canvas;\r\n        var data = surface.Snapshot().Encode(SKEncodedImageFormat.Png, 80);\r\n        SKBitmap bitmap = SKBitmap.Decode(data, new SKImageInfo(e.Info.Width, e.Info.Height));\r\n\r\n        SKMaskFilter mask = SKMaskFilter.CreateBlur(SKBlurStyle.Normal, 50);\r\n        SKImageFilter ImageFilter = SKImageFilter.CreateBlur(5, 5);\r\n        SKPaint paint = new SKPaint() {\r\n            ImageFilter = ImageFilter,\r\n            Color = new SKColor(0, 0, 0, 200),\r\n            MaskFilter = mask,\r\n        };\r\n        canvas.DrawRect(new SKRect(0, 0, e.Info.Width, e.Info.Height), paint);\r\n        SKPaint paint1 = new SKPaint() {\r\n            Color = SKColors.Green,\r\n        };\r\n        if (bitmap != null) {\r\n            canvas.DrawBitmap(bitmap, new SKPoint(0, 0), paint);\r\n            Console.WriteLine(\u0022Usou a imagem.\u0022);\r\n        }\r\n        else {\r\n            canvas.DrawPaint(paint1);\r\n            Console.WriteLine(\u0022N\u00E3o usou a imagem.\u0022);\r\n        }\r\n    }\r\n    catch (Exception ex) {\r\n        await DisplayAlert(\u0022erro canvas\u0022, ex.Message, \u0022ok\u0022);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\nI am using a popup page from https://github.com/rotorgames/Rg.Plugins.Popup, all i want to do is blur the background, if somebody has ever faced an issue like this please help me.\r\n",
+  "author": {
+    "login": "masiri201",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-05-04T11:44:22",
+  "updatedAt": "2022-08-19T15:02:41",
+  "closedAt": "2018-05-10T08:40:03",
+  "commentCount": 7,
+  "reactionCount": 0
+}

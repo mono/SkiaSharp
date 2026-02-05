@@ -1,0 +1,18 @@
+{
+  "number": 314,
+  "type": "issue",
+  "state": "closed",
+  "title": "Android MeasureText returns empty Rect",
+  "body": "I\u0027m always getting an empty rectangle as a result fo my calls to MeasureText on Android using Xamarin Forms.\r\n\r\n\u0060\u0060\u0060\r\n\r\n        protected override SizeRequest OnMeasure(double widthConstraint, double heightConstraint)\r\n        {\r\n            if (_LastSize == null \u0026\u0026 HasSomethingToDraw())\r\n            {\r\n                SKRect textBounds = new SKRect();\r\n                Rectangle requestRect;\r\n\r\n                _Paint.MeasureText(Text, ref textBounds);\r\n                requestRect = textBounds.ToFormsRect();\r\n\r\n                requestRect.Height \u002B= _Paint.FontMetrics.Descent;\r\n                requestRect.Width = Math.Ceiling(Math.Min(requestRect.Width, widthConstraint));\r\n                requestRect.Height = Math.Ceiling(Math.Min(requestRect.Height, heightConstraint));\r\n\r\n                _LastSize = new SizeRequest(requestRect.Size);\r\n            }\r\n\r\n            return _LastSize.GetValueOrDefault(new SizeRequest());\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nYou can use this branch for a repro (Check SKLabel class) : https://github.com/LeRondPoint/FormsSkiaBikeTracker/tree/SKCanvasViewBug\r\n\r\n![image](https://user-images.githubusercontent.com/15251145/26985612-4479075c-4d12-11e7-973c-bf04238de399.png)\r\n",
+  "author": {
+    "login": "sgravel-dev",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-06-09T16:51:55",
+  "updatedAt": "2022-08-19T21:01:43",
+  "closedAt": "2017-06-12T16:52:32",
+  "commentCount": 7,
+  "reactionCount": 0
+}

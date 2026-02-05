@@ -1,0 +1,28 @@
+{
+  "number": 284,
+  "type": "issue",
+  "state": "closed",
+  "title": "After updating: Interesting issue with SVG on Android",
+  "body": "Since updating to version 1.57.0 of SkiaSharp, I\u0027m seeing some very weird behavior on Android.\r\n\r\nI have an SVG image (rendered here as PNG, attached in original format in zip):\r\n\r\n![rewards](https://cloud.githubusercontent.com/assets/663094/25546944/5ed9b652-2c22-11e7-85bd-94262174151c.png)\r\n[rewards.svg.zip](https://github.com/mono/SkiaSharp/files/965581/rewards.svg.zip)\r\n\r\nLoading up the image like so:\r\n\u0060\u0060\u0060\r\nvar svg = new SKSvg();\r\nsvg.Load(stream);\r\n\u0060\u0060\u0060\r\n\r\nUsing SkiaSharp.Views to render it:\r\n\u0060\u0060\u0060\r\nprotected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n{\r\n\tvar canvas = e.Surface.Canvas;\r\n\tcanvas.Clear();\r\n\tcanvas.DrawPicture(svg.Picture)\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\nResults in this image (dark background is the page color):\r\n\r\n![screen shot 2017-04-28 at 2 37 58 pm](https://cloud.githubusercontent.com/assets/663094/25547300/bdf9e07a-2c23-11e7-8d52-d36544b989d3.png)\r\n\r\nWhat\u0027s even more interesting is that if I run it by tapping the icon instead of launching it from Xamarin Studio, I get this color:\r\n\r\n![screen shot 2017-04-28 at 2 38 31 pm](https://cloud.githubusercontent.com/assets/663094/25547343/e64f50b4-2c23-11e7-83b2-f46fa1107474.png)\r\n\r\nThese color abnormalities have been 100% reproducible in my tests: every time I run it from XS, I get some shade of purple; when I launch it by tapping the icon, I get some shade of green.\r\n\r\nNote that it doesn\u0027t matter what color the SVG is supposed to be - I always get the same colors after rendering.\r\n\r\nI can also confirm that reverting to 1.56.1 resolves the issue.\r\n\r\nThis only happens on Android, not iOS.",
+  "author": {
+    "login": "drewlederman",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.58.1",
+  "createdAt": "2017-04-28T21:16:55",
+  "updatedAt": "2022-08-19T21:02:04",
+  "closedAt": "2017-05-31T00:16:44",
+  "commentCount": 12,
+  "reactionCount": 0
+}

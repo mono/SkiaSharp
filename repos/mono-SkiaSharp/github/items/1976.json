@@ -1,0 +1,18 @@
+{
+  "number": 1976,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] .net interactive does not work out of the box on macOS",
+  "body": "**Description**\r\n\r\n.net interactive does not work out of the box - at least on macOS\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\n#r \u0022nuget: SkiaSharp\u0022\r\nusing SkiaSharp;\r\n\r\nSKImageInfo info = new SKImageInfo(256, 256);\r\nSKSurface surface = SKSurface.Create(info);\r\nSKCanvas canvas = surface.Canvas;\r\n\r\ncanvas.Clear(SKColors.White);\r\n\r\n// configure our brush\r\nSKPaint redBrush = new SKPaint {\r\n    Color = new SKColor(0xff, 0, 0),\r\n    IsStroke = true\r\n};\r\nSKPaint blueBrush = new SKPaint {\r\n    Color = new SKColor(0, 0, 0xff),\r\n    IsStroke = true\r\n};\r\n\r\nfor (int i = 0; i \u003C 64; i \u002B= 8) {\r\n    SKRect rect = new SKRect(i, i, 256 - i - 1, 256 - i - 1);\r\n    canvas.DrawRect(rect, (i % 16 == 0) ? redBrush : blueBrush);\r\n}\r\n\r\nsurface.Snapshot().Display();\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nAn image\r\n\r\n**Actual Behavior**\r\n\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n\r\n ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the DYLD_PRINT_LIBRARIES environment variable: dlopen(liblibSkiaSharp, 0x0001): tried: \u0027liblibSkiaSharp\u0027 (no such file), \u0027/usr/local/lib/liblibSkiaSharp\u0027 (no such file), \u0027/usr/lib/liblibSkiaSharp\u0027 (no such file), \u0027/Users/poupou/git/aos/liblibSkiaSharp\u0027 (no such file), \u0027/usr/local/lib/liblibSkiaSharp\u0027 (no such file), \u0027/usr/lib/liblibSkiaSharp\u0027 (no such file)\r\n\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n\r\n   --- End of inner exception stack trace ---\r\n\r\n   at SkiaSharp.SKImageInfo..ctor(Int32 width, Int32 height)\r\n\r\n   at Submission#3.\u003C\u003CInitialize\u003E\u003Ed__0.MoveNext()\r\n\r\n--- End of stack trace from previous location ---\r\n\r\n   at Microsoft.CodeAnalysis.Scripting.ScriptExecutionState.RunSubmissionsAsync[TResult](ImmutableArray\u00601 precedingExecutors, Func\u00602 currentExecutor, StrongBox\u00601 exceptionHolderOpt, Func\u00602 catchExceptionOpt, CancellationToken cancellationToken)\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp, 2.80.3\r\n- Last known good version:  unknown, never tried before\r\n- IDE:  vscode\r\n- Platform Target Frameworks: .net interactive on macOS 12.2.1\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nVScode \r\nVersion: 1.65.2 (Universal)\r\nCommit: c722ca6c7eed3d7987c0d5c3df5c45f6b15e77d1\r\nDate: 2022-03-10T14:33:49.188Z (6 days ago)\r\nElectron: 13.5.2\r\nChromium: 91.0.4472.164\r\nNode.js: 14.16.0\r\nV8: 9.1.269.39-electron.0\r\nOS: Darwin arm64 21.3.0\r\n\r\n.NET Interactive Notebooks v1.0.3103010\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "spouliot",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-03-16T17:04:50",
+  "updatedAt": "2022-08-19T00:01:50",
+  "closedAt": "2022-03-18T01:00:26",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 735,
+  "type": "issue",
+  "state": "closed",
+  "title": "Android throws System.ObjectDisposedException: when returning to a page with Skia. UWP and iOS work fine",
+  "body": "### Description\r\n\r\nReturning to a Page with a Skia Canvas in Android causes an exception\r\n System.ObjectDisposedException: Cannot access a disposed object.\r\n Object name: \u0027Xamarin.Forms.Platform.Android.Platform\u002BDefaultRenderer\u0027.\r\nBoth UWP and iOS work fine. I have a Master/Detail app with one page using SkiaSharp for drawing. Sometimes I need to go to a different page to get some info and then return to the drawing to continue with the Sketch. That is when, in Android, I get the Exception.\r\nIt starts with:\r\n12-17 08:37:04.941 I/MonoDroid(12405): System.ObjectDisposedException: Cannot access a disposed object.\r\n12-17 08:37:04.941 I/MonoDroid(12405): Object name: \u0027Xamarin.Forms.Platform.Android.Platform\u002BDefaultRenderer\u0027.\r\n\r\n### Code\r\n\r\nBelow is a link to a repro.\r\n\r\n### Expected Behavior\r\n\r\nTo move successfully between detail pages.\r\n\r\n### Actual Behavior\r\n\r\nUpon returning to the page with Skia I get System.ObjectDisposedException\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  SkiaSharp v 1.68.0\r\n- Last known good version:  new code, never run before\r\n- IDE:  VS 2017 v 15.9.4\r\n- Platform Target Frameworks: \r\n  - Android: 8.1 (Oreo) \r\n\r\n  -   Alcatel 9024O  Android v 7.1.1\r\n - Samsung SM-G960W Android v 8.0\r\n### Screenshots\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n### Reproduction Link\r\n\r\nhttps://bitbucket.org/WillAutio/skiafail\r\n",
+  "author": {
+    "login": "WillAutioItrax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-12-17T17:15:32",
+  "updatedAt": "2022-08-19T12:02:07",
+  "closedAt": "2018-12-18T00:41:53",
+  "commentCount": 3,
+  "reactionCount": 0
+}

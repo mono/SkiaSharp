@@ -1,0 +1,17 @@
+{
+  "number": 1001,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies on Azure Functions ",
+  "body": "**Description**\r\n\r\nI have an AzureFunctions application that is using .netcoreapp3.0 and the v3-preview. It runs perfectly fine locally but when I deploy it to Azure I get the following error as soon as I use Skia:\r\n\r\nException while executing function: \u003C--- The type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception. \u003C--- Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\n\r\nThe only difference I\u0027ve noticed from locally and deployed is locally the runtimes folder which contains libSkiaSharp.dll is within the bin and deployed on Azure it\u0027s on the same file level as bin.\r\n\r\nThe files/folders on the functions app are restricted access so I can\u0027t manually upload the runtimes folder into the bin to see if that helps.\r\n\r\nThoughts?\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 1.68.0\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: .Net Core 3.0\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Linux:  \u003C!-- The version and distro of linux that you are building for, e.g. Ubuntu 16.04 --\u003E\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.10 --\u003E\r\n  - Tizen:  \u003C!-- the version of the Tizen SDK you are compiling against, e.g. 4.0 --\u003E \r\n  - tvOS:  \u003C!-- the version of the tvOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E \r\n  - watchOS:  \u003C!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - \u003C!-- any --\u003E\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n",
+  "author": {
+    "login": "VividDigital",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-11-06T21:38:30",
+  "updatedAt": "2022-06-14T15:25:55",
+  "commentCount": 3,
+  "reactionCount": 2
+}

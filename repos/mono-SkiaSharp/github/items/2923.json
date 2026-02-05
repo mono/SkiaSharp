@@ -1,0 +1,23 @@
+{
+  "number": 2923,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] .Net MAUI SKCanvasView memory leak on IOS",
+  "body": "### Description\n\nIf you place SKCanvasView on Page it cause a memory leak. \r\n\n\n### Code\n\nI create a simple app wich reproduce this leak https://github.com/nevse/maui-tests-SKCanvasViewLeak\r\n\r\nStep to reproduce:\r\n1. Click button \u0022Open Page\u0022\r\n2. Navigate back from page with SKCanvasView\r\n3. Click button \u0022Check Memory Leak\u0022\r\n\r\nI use such code to detect memory leak:\r\n\u0060\u0060\u0060cs\r\nWeakReference pageRef;\r\nvoid OnOpenPage(object sender, EventArgs e)\r\n{\r\n    var page = new SKCanvasViewPage();\r\n    Navigation.PushAsync(page);\r\n    pageRef = new WeakReference(page);\r\n}\r\nvoid OnCheckMemoryLeak(object sender, EventArgs e)\r\n{\r\n    GC.Collect();\r\n    GC.WaitForPendingFinalizers();\r\n    GC.Collect();\r\n    if (pageRef != null \u0026\u0026 pageRef.IsAlive)\r\n    {\r\n        DisplayAlert(\u0022Memory Leak\u0022, \u0022Memory Leak Detected\u0022, \u0022OK\u0022);\r\n    }\r\n    else\r\n    {\r\n        DisplayAlert(\u0022Memory Leak\u0022, \u0022No Memory Leak Detected\u0022, \u0022OK\u0022);\r\n    }\r\n}\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio Code (macOS)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "nevse",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-04T12:42:44",
+  "updatedAt": "2024-07-26T08:14:50",
+  "closedAt": "2024-07-26T08:14:50",
+  "commentCount": 5,
+  "reactionCount": 2
+}

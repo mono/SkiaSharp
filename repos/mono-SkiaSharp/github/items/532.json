@@ -1,0 +1,23 @@
+{
+  "number": 532,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaBitmap.Encode always returns false for certain file types",
+  "body": "### Description\r\n\r\nIf I a either creating a new image or editing and existing file the SkBitmap.Encode method returns false.\r\nThe file that is created cannot be opened and is invalid or corrupt.\r\n\r\n### Code\r\n\r\n            SKImageInfo imageInfo = new SKImageInfo(1000, 800);\r\n            using (SKBitmap bitmap = new SKBitmap(imageInfo))\r\n            {\r\n                SKCanvas canvas = new SKCanvas(bitmap);\r\n                canvas.Clear(SKColors.White);\r\n\r\n                using (SKWStream stream = new SKFileWStream(\u0022[File Path]\u0022))\r\n                {\r\n                    bool results = bitmap.Encode(stream, SKEncodedImageFormat.Gif, 80);\r\n                    // results are always false for GIF, ICO, WBMP\r\n                }\r\n            }\r\n\r\n### Expected Behavior\r\n\r\nThe SkBitmap.Encode should return true and the file created\\edited can be opened and viewed without issue.\r\n\r\n### Actual Behavior\r\n\r\nSkBitmap.Encode returns false and the file is corrupt\\invalid.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.1\r\n- Last known good version:  N\\A\r\n- IDE: VS2017\r\n- Platform Target Frameworks: .NETstandard 2.0\r\n\r\n- Target Devices: N\\A (Library for use on several platforms)\r\n\r\n",
+  "author": {
+    "login": "ghost",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-05-27T00:38:25",
+  "updatedAt": "2022-08-19T15:02:27",
+  "closedAt": "2018-05-27T02:14:22",
+  "commentCount": 3,
+  "reactionCount": 0
+}

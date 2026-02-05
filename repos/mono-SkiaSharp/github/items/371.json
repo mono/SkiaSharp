@@ -1,0 +1,18 @@
+{
+  "number": 371,
+  "type": "issue",
+  "state": "closed",
+  "title": "Drawing Text with SkiaSharp creates ugly artifacts in image",
+  "body": "I created an app in which I want to display text on top of google maps. I chose to use custom markers, but they can only be images, so I decided to create an image from my text utilizing SkiaSharp.\r\n\r\n    private static ImageSource CreateImageSource(string text)\r\n    {\r\n        int numberSize = 20;\r\n        int margin = 5;\r\n        SKBitmap bitmap = new SKBitmap(30, numberSize \u002B margin * 2, SKImageInfo.PlatformColorType, SKAlphaType.Premul);\r\n        SKCanvas canvas = new SKCanvas(bitmap);\r\n\r\n        SKPaint paint = new SKPaint\r\n        {\r\n            Style = SKPaintStyle.StrokeAndFill,\r\n            TextSize = numberSize,\r\n            Color = SKColors.Red,\r\n            StrokeWidth = 1,\r\n        };\r\n\r\n        canvas.DrawText(text.ToString(), 0, numberSize, paint);\r\n        SKImage skImage = SKImage.FromBitmap(bitmap);\r\n        SKData data = skImage.Encode(SKEncodedImageFormat.Png, 100);\r\n        return ImageSource.FromStream(data.AsStream);\r\n    }\r\n\r\nThe images I create however have ugly artifacts on the top of the resulting image and my feeling is that they get worse if I create multiple images.\r\nHere\u0027s an example of the artifacts: https://i.stack.imgur.com/60vC9.png\r\nI built an example app, that shows the artifacts and the code I used to draw the text. It can be found here: https://github.com/hot33331/SkiaSharpExample",
+  "author": {
+    "login": "hot33331",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-09-15T18:12:14",
+  "updatedAt": "2022-08-19T18:02:35",
+  "closedAt": "2017-09-16T18:41:49",
+  "commentCount": 2,
+  "reactionCount": 0
+}

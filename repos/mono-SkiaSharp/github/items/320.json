@@ -1,0 +1,18 @@
+{
+  "number": 320,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKImage.Encode in Bmp returns null",
+  "body": "When trying to encode an image in Bmp, it always returns \u0060null\u0060.\r\n\r\nI tried using different values for the quality from 0 to 100, knowing that anyway it does not make sense to have a quality in bmp, I actually thought it would just ignore it.\r\n\r\nHere\u0027s a sample that returns \u0060null\u0060.\r\n\u0060\u0060\u0060cs\r\nvar bitmap = SKBitmap.Decode(File.OpenRead(filename));\r\nvar image = SKImage.FromBitmap(bitmap);\r\nvar data = image.Encode(SKEncodedImageFormat.Bmp, 100); // null\r\n\u0060\u0060\u0060\r\n\r\nAny idea how to make it work? I would like to avoid using the \u0060Bitmap.Bytes\u0060 as the goal is to be able to also use other encoding format.\r\n\r\nThanks",
+  "author": {
+    "login": "ThmX",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-06-22T11:48:23",
+  "updatedAt": "2022-08-19T21:01:39",
+  "closedAt": "2017-06-27T16:15:39",
+  "commentCount": 9,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 185,
+  "type": "issue",
+  "state": "closed",
+  "title": "Android Bootstrap on Mac - Fails with Import of GYT in Python",
+  "body": "Tonight I was wondering how my Android compiles kept failing with SkiaSharp. I found that when running the command\r\n\r\n\u0060\u0060\u0060./bootstrapper.sh -t externals-android\u0060\u0060\u0060\r\n\r\nThat python was coming back with an error in regards to the gyt module. \r\n\r\nTo start to fix this issue I pulled the latest master branch of Skia and the depot_tools into the proper directories, overwriting the current submodule versions, and found that a command in the bootstrapper script might not be running.\r\n\r\nWhen I went back to the directory that contains the Skia code I ran:\r\n\r\n\u0060\u0060\u0060python bin/fetch-gn\u0060\u0060\u0060\r\n\r\nNow the bootstrapper successfully runs the NDK compiles. I actually now have the CXX program running where as before it would error out and not say about it until all the attempts were made on each architecture.\r\n\r\nSorry for the messy response (late night). If you need any additional help or information let me know.\r\n\r\nIt looks like the bootstrapper.sh is not running the \u0060\u0060\u0060fetch-gn\u0060\u0060\u0060 to generate the compile files correctly for Skia causing the build to error out for Android.\r\n\r\nThanks,\r\nChristopher Zenzel (@CZenzel)\r\nhttps://linkedin.com/in/chriszenzel",
+  "author": {
+    "login": "czenzel",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-11-05T01:22:01",
+  "updatedAt": "2022-08-20T00:01:35",
+  "closedAt": "2017-02-02T11:13:56",
+  "commentCount": 4,
+  "reactionCount": 0
+}

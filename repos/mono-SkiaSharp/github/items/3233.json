@@ -1,0 +1,22 @@
+{
+  "number": 3233,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] An ExecutionEngineException is thrown when an SKGLView is assigned to ContentView.Content",
+  "body": "### Description\n\nWhen a class that is inherited from ContentView assigns an SKGLView to it\u0027s Content field this results in a ExecutionEngineException with the message \u0022Exception of type \u0027System.ExecutionEngineException\u0027 was thrown.\u0022, there is no stack trace and the application shuts down. \n\nIt only occurs when creating a MAUI 9 project. Not when creating a MAUI 8 project.\n\nUsing SkiaSharp 3.116.1.\n\nSteps to reproduce:\n- Create a default MAUI 9 template (with everything updated to the latest to date).\n- Add SkiaSharp reference\n- Add the UseSkiaSharp in MauiProgram\n- Create a class like the \u0027MapControl\u0027 below\n- Assign that class to the MainWindow Content\n- The application will crash.\n\n### Code\n\nHere is a minimal sample to reproduce it:\n\nhttps://github.com/pauldendulk/skiasharpcrash\n\nSome snippets from that repo:\n\u0060\u0060\u0060cs\nusing SkiaSharp.Views.Maui.Controls;\n\nnamespace MauiApp1;\n\npublic class MapControl : ContentView\n{\n    public MapControl()\n    {\n        Content = new SKGLView();\n    }\n}\n\u0060\u0060\u0060\n\n\u0060\u0060\u0060cs\nvar mapControl = new MapControl();\nContent = mapControl;\n\u0060\u0060\u0060\n\n\n\n\n### Expected Behavior\n\nNo crash\n\n### Actual Behavior\n\nAn ExecutionEngineException with the message \u0022Exception of type \u0027System.ExecutionEngineException\u0027 was thrown.\u0022 and the application shuts down.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nI did not test this.\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\nDell laptop\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-13T07:02:53",
+  "updatedAt": "2025-04-16T18:36:13",
+  "commentCount": 5,
+  "reactionCount": 1
+}

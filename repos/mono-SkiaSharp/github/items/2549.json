@@ -1,0 +1,18 @@
+{
+  "number": 2549,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Getting wrong/invalid stream after encoding",
+  "body": "**Description**\r\n\r\n[.Net MAUI] Getting wrong stream after encoding and when binding the stream to image, displays the black image on screen.\r\n\r\n**Code**\r\n\r\n SKBitmap RotateBitmap(SKBitmap bitmap)\r\n    {\r\n        SKBitmap rotatedBitmap = new SKBitmap(bitmap.Height, bitmap.Width);\r\n            using (var surface = new SKCanvas(rotatedBitmap))\r\n            {\r\n                surface.Translate(rotatedBitmap.Width, 0);\r\n                surface.RotateDegrees(90);\r\n                surface.DrawBitmap(bitmap, 0, 0);\r\n            }\r\n        return rotatedBitmap;\r\n    }\r\n\r\n\r\nSKBitmap photoBitmap = RotateBitmap(SKBitmap.Decode(streamimg));\r\nStream rotatedStream = SKImage.FromBitmap(photoBitmap).Encode().AsStream();\r\n\r\n**Expected Behavior**\r\n\r\nAfter encoding, Valid stream should return.\r\n\r\n**Actual Behavior**\r\n\r\nAfter encoding, InValid/InCorrect stream is returning.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.88.3\r\n- Last known good version: \r\n- IDE:  Visual Studio \r\n- Platform Target Frameworks: \r\n  - Android: Android Samsung devices\r\n- Target Devices:   Samsung galaxy A12, s22,  s10\r\n \r\n",
+  "author": {
+    "login": "satya-prismhr",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-08-03T16:45:44",
+  "updatedAt": "2023-09-03T15:00:26",
+  "closedAt": "2023-08-04T12:15:42",
+  "commentCount": 0,
+  "reactionCount": 0
+}

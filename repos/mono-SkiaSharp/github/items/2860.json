@@ -1,0 +1,27 @@
+{
+  "number": 2860,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] \u0022Handler not found for view SkiaSharp.Views.Maui.Controls.SKGLView.\u0022",
+  "body": "### Description\r\n\r\nTarget Windows Machine, get Unhandled Exception:  \r\n\r\n\u0022Handler not found for view SkiaSharp.Views.Maui.Controls.SKGLView.\u0022\r\n\r\n-- Other details --\r\n\r\n.csproj targetframework: net8.0-windows10.0.19041.0\r\n\r\nVS Community 17.9.7 on Windows 11 Home\r\n\r\nTested with Microsoft.Maui.Controls 8.0.40 \u002B\r\n\r\nSkiaSharp.Views \u0026 SkiaSharp.Views.Maui Controls:\r\n\r\n* latest stable 2.88.8, then tried\r\n* latest preview 3.0.0-preview.3.1\r\n\r\n* Did not try on earlier versions of Maui or these SkiaSharp nugets.\r\n* Before Maui, we used OpenTK.GLWpfControl with SkiaSharp.Views.WPF under .Net Framework. That older version of our app builds and runs on this PC without problems.\r\n\r\n### Code\r\n\r\nMaui App template. Modified to add SKGLView. Removed AppShell and other unneeded stuff.\r\n\r\n[ToolmakerSteve/MauiAppWithSKGLView](https://github.com/ToolmakerSteve/MauiAppWithSKGLView)\r\n\r\n\u0060\u0060\u0060cs\r\n        public MainPage()\r\n        {\r\n            InitializeComponent();\r\n\r\n            MainThread.BeginInvokeOnMainThread(async () =\u003E\r\n            {\r\n                await Task.Delay(2000);\r\n                // UNCOMMENT these lines to test adding SKGLView in code.\r\n                //var skv = new SKGLView() { WidthRequest = 300, HeightRequest = 300 };\r\n                // Below line: Exception: \u0022Handler not found for view SkiaSharp.Views.Maui.Controls.SKGLView.\u0022\r\n                //layout.Children.Add(skv);\r\n            });\r\n        }\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xaml\r\n\u003CContentPage\r\n    xmlns:sk=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\r\n    ...\r\n\r\n    \u003CVerticalStackLayout x:Name=\u0022layout\u0022 Padding=\u002230,0\u0022 Spacing=\u002225\u0022\u003E\r\n        \u003C!-- Exception: \u0022Handler not found for view SkiaSharp.Views.Maui.Controls.SKGLView.\u0022  --\u003E\r\n        \u003Csk:SKGLView WidthRequest=\u0022500\u0022 HeightRequest=\u0022300\u0022 BackgroundColor=\u0022Green\u0022 /\u003E\r\n    \u003C/VerticalStackLayout\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nA Window containing an SKGLView.\r\n\r\n### Actual Behavior\r\n\r\nUnhandled Exception:  \r\n\r\n\u0022Handler not found for view SkiaSharp.Views.Maui.Controls.SKGLView.\u0022\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 11 Home.\r\n\r\nDid not test elsewhere.\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ToolmakerSteve",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-16T21:49:17",
+  "updatedAt": "2024-11-22T04:54:59",
+  "closedAt": "2024-05-24T22:14:29",
+  "commentCount": 5,
+  "reactionCount": 0
+}

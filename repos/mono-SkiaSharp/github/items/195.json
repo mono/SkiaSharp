@@ -1,0 +1,18 @@
+{
+  "number": 195,
+  "type": "issue",
+  "state": "closed",
+  "title": "Incorrect GetHashCode implementation for bindings with float/double",
+  "body": "For the binding definition of \u0060SKSize\u0060, \u0060GetHashCode\u0060 is defined as \r\n\r\n\u0060\u0060\u0060\r\n\tpublic override int GetHashCode ()\r\n\t\t{\r\n\t\t\treturn (int) width ^ (int) height;\r\n\t\t}\r\n\u0060\u0060\u0060\r\n\r\nHowever, this is incorrect. \u0060Size(10, 10)\u0060 and \u0060Size(10.99, 10.99)\u0060 will provide the same hash code in this instance.\r\n\r\nI have a PR ready, but I presume, this bug also will remain across the definitions. Will probably give it a glance to see if more changes are required with other binding that accept float/double before submitting.",
+  "author": {
+    "login": "prasannavl",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-11-14T18:22:13",
+  "updatedAt": "2022-08-20T00:01:25",
+  "closedAt": "2016-11-15T02:49:42",
+  "commentCount": 4,
+  "reactionCount": 0
+}

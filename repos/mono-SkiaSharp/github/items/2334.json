@@ -1,0 +1,17 @@
+{
+  "number": 2334,
+  "type": "issue",
+  "state": "open",
+  "title": "Colors are not correct with alpha in WASM",
+  "body": "**Description**\r\n\r\nI need to apply Transparency to SKIA Paint object. This paint object is used to draw text on canvas. I am using below line of code to achieve it.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\ndouble transparency = 0.5;\r\npaint.Color = paint.Color.WithAlpha((byte)(0xFF * transparency));\r\n\u0060\u0060\u0060\r\nand/or\r\n\u0060\u0060\u0060cs\r\npaint.Color = paint.Color.WithAlpha((byte)(0xFF * ((double)paint.Color.Alpha / 255 * transparency)));\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060cs\r\ncanvas.DrawText(\u0022Hello\u0022, X, Y, paint);\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\n\r\nI created a Windows Forms sample and a SKIASharp Blazor WebAssembly sample to run code on browser. \r\nI observed that Transparency works fine in Windows Forms app and renders colours correctly with alpha.\r\nBut in Web app, Transparency is not working as expected. It is changing original colours in display in chrome.\r\nSee difference in colors in screenshots attached. Please throw some light on how to get transparency work in web app.\r\n\r\nSKIA Version 2.8.4\r\nOS: Windows 10 Enterprise\r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/120154182/206619822-5be48705-6a0b-4a27-bad6-4bb73b54ec81.png)\r\n![image](https://user-images.githubusercontent.com/120154182/206619856-0434797c-9879-4164-afa7-f43848def6b0.png)\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "shuchipaharia",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-12-09T03:50:45",
+  "updatedAt": "2024-11-13T17:17:58",
+  "commentCount": 4,
+  "reactionCount": 0
+}

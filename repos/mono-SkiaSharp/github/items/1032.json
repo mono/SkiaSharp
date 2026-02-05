@@ -1,0 +1,19 @@
+{
+  "number": 1032,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Possible Leak with static Dictionary SKObject.instances",
+  "body": "SKObject holds Handled to WeakReferences in an static Dictionary bit never removes entries.\r\n\r\nIn RegisterHandle a new Entry is created with the handle ob object to an WeakReference. In DeregisterHandle, the Entry will only updates with WeakReference(null) but never deleted. This leads to tons of entries with tons of  WeakReferences.\r\n\r\n**Expected Behavior**\r\n\r\nOn Dispose the handle need to be removed from SKObject.instances\r\n\r\n**Actual Behavior**\r\n\r\n- Version with issue:  1.68.1\r\n- Last known good version:  N/A\r\n- Platform Target Frameworks: Xamarin.Android\r\n  - Android: 29\r\n- Target Devices:   Pixel 2 XL\r\n\r\n**Screenshot**\r\n\r\n![skia](https://user-images.githubusercontent.com/58169312/69532581-6ac3dd00-0f76-11ea-922f-a1d1ae68aae9.png)\r\n",
+  "author": {
+    "login": "Knuddlbaer",
+    "type": "Organization"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2019-11-25T10:26:43",
+  "updatedAt": "2022-08-19T09:01:56",
+  "closedAt": "2019-12-02T00:32:15",
+  "commentCount": 7,
+  "reactionCount": 0
+}

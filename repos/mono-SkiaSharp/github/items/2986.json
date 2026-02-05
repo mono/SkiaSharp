@@ -1,0 +1,22 @@
+{
+  "number": 2986,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Passing DrawPoints a Partial Array",
+  "body": "### Is your feature request related to a problem?\n\nSometimes it\u0027s useful to pass an array of points to \u0060SKCanvas.DrawPoints\u0060 but not to draw all of them.  Currently there is no public method of accomplishing a partial array draw.\n\n### Describe the solution you would like\n\nAdd an override to \u0060SKCanvas.DrawPoints\u0060 to allow for passing a count parameter to the \u0060SkiaApi.sk_canvas_draw_points\u0060 method instead of just passing the entire array length as it currently does.\n\n### Describe alternatives you have considered\n\nCurrently the way to get around this is to create an array with the proper size ahead of time and allocate it on the heap but that requires allocation.  It would be even nicer to utilize Spans for this so they can be sliced, but I see multiple PRs #2617 \u0026 #2669 are stalled so I\u0027m not sure about their integration.\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "DJGosnell",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-03T02:22:47",
+  "updatedAt": "2024-09-03T02:23:26",
+  "commentCount": 0,
+  "reactionCount": 0
+}

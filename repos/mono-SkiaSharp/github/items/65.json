@@ -1,0 +1,18 @@
+{
+  "number": 65,
+  "type": "issue",
+  "state": "closed",
+  "title": "Support for more functionality in Typeface",
+  "body": "I need to get the real typeface used by the SKTypeface when you create it, if font substitution happens.\n\nFrom what I see in the Skia C\u002B\u002B docs, I would need to expose the method:\n\n\u0060void SkTypeface::getFamilyName (SkString *     name)   const\u0060\n\nI think it could be added as a method GetFamilyName() in the SKTypeface C# type. It could also be a property FamilyName, but I am not sure about the performance implications if we don\u0027t cache the family name and call getFamilyName each time you call the property.\n\nI would also need to expose a method GetTables() and GetTableTags() which would be wrappers around SKTypeface::getTableTags and SKTypeface::getTableData. \n\nAs none of those methods are in the C wrappers, I would have to also modify the C headers.\n\nIs it ok if I add those methods and make a pull request, or maybe someone else is working on this already?  If I add them myself, I assume I would have to add some tests too, but what about docs?  I don\u0027t see xmldocs used in the binding SKTypeface.cs, so I think you are using a different tool for the docs?\n",
+  "author": {
+    "login": "agallero",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-04-18T01:34:05",
+  "updatedAt": "2022-08-20T06:01:33",
+  "closedAt": "2016-04-20T15:57:57",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,19 @@
+{
+  "number": 219,
+  "type": "issue",
+  "state": "closed",
+  "title": "Extensions.ToSKRect is incorrect",
+  "body": "The constructor\u00A0of SKRect accepts the following parameters:\r\n\r\nSKRect(float left, float top, float right, float bottom);\r\n\r\nIn Extensions.ToSKRect, the\u00A0following line is used to (incorrectly) convert from Xamarin.Forms.Rectangle to\u00A0SKRect:\r\nLine 53:\r\nreturn new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Width, (float)rect.Height);\r\n\r\nThis\u00A0line gives width/height values to the resulting rectangle\u0027s right and bottom properties.\r\n\r\nThe fix would look like this:\r\nreturn new SKRect((float)rect.Left, (float)rect.Top, (float)rect.Right, (float)rect.Bottom);\r\n",
+  "author": {
+    "login": "bugadani",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.56.1-beta",
+  "createdAt": "2017-01-18T17:15:56",
+  "updatedAt": "2022-08-20T00:01:16",
+  "closedAt": "2017-01-19T01:15:22",
+  "commentCount": 0,
+  "reactionCount": 0
+}

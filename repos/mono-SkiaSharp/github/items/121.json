@@ -1,0 +1,18 @@
+{
+  "number": 121,
+  "type": "issue",
+  "state": "closed",
+  "title": "Cannot build on OS X - bootstrapper.sh script is for windows",
+  "body": "I tried to download and build the SkiaSharp library, and run the Xamarin.Forms demo project ( \u0060Skia.Forms.Demo.sln\u0060 ), but when I open it in Xamarin Studio I get this error:\n\n\u0060\u0060\u0060\nRestoring packages...\nUnable to find version \u00271.53.0-beta\u0027 of package \u0027SkiaSharp\u0027.\n\u0060\u0060\u0060\n\nIt seems that there is no up to date Nuget package. \n\nI tried to build the SkiaSharp package myself then.\n\nI followed the Readme, but without success.\n\nThe following are the instructions from the Readme file:\n\n\u0060\u0060\u0060\n## Building SkiaSharp\n\nFirst clone the repository:\n\n    $ git clone https://github.com/mono/SkiaSharp.git\n\nNext, set up the submodules:\n\n    $ cd SkiaSharp\n    $ git submodule init \u0026\u0026 git submodule update\n\nThen follow the platform-specific instructions below.\n\n### Mac OS X\n\nRun from Bash\n\n    $ ./bootstrapper.sh -t libs\n\nThis runs the build process by using the \u0060libs\u0060 build target.\n\u0060\u0060\u0060\n\nThe first steps worked, but the third one gives error:\n\n\u0060\u0060\u0060\nbash-3.2$ ./bootstrapper.sh -t libs\n./bootstrapper.sh: line 42: [: too many arguments\n./bootstrapper.sh: line 47: [: too many arguments\n./bootstrapper.sh: line 57: [: too many arguments\n./bootstrapper.sh: line 84: pushd: /Users/Admin/Projects/XAMARIN: No such file or directory\nCannot open assembly \u0027/Users/Admin/Projects/XAMARIN\u0027: No such file or directory.\nCould not restore NuGet packages.\nbash-3.2$ \n\u0060\u0060\u0060\n\nI checked inside the \u0060bootstrapper.sh\u0060 file, and it seems to me that the script is for Windows, not for OS X as reported in the docs!  There is NO documentation on how to build it on OS X! \n\nPlease help.\n",
+  "author": {
+    "login": "Emasoft",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2016-07-27T03:53:58",
+  "updatedAt": "2022-08-20T00:02:30",
+  "closedAt": "2016-07-29T16:10:42",
+  "commentCount": 1,
+  "reactionCount": 0
+}

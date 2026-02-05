@@ -1,0 +1,27 @@
+{
+  "number": 209,
+  "type": "issue",
+  "state": "open",
+  "title": "Thread Safety in SKBitmap.Decode?",
+  "body": "Hi! I\u0027m using SkiaSharp for server side image generation and have run into an issue when Decoding many bitmaps at once on IIS. \r\n\r\nHere\u0027s the error: \r\n\u0060\u0060\u0060\r\nApplication: w3wp.exe\r\nFramework Version: v4.0.30319\r\nDescription: The process was terminated due to an unhandled exception.\r\nException Info: System.AccessViolationException\r\n   at SkiaSharp.SkiaApi.sk_codec_get_info(IntPtr, SkiaSharp.SKImageInfo ByRef)\r\n   at SkiaSharp.SKBitmap.Decode(SkiaSharp.SKCodec)\r\n   at SkiaSharp.SKBitmap.Decode(SkiaSharp.SKStream)\r\n\u0060\u0060\u0060\r\n\r\nI\u0027m not sure if this is because of memory constraints, because of thread safety or another reason I\u0027m unaware of. \r\n\r\nThe code I have is this:\r\n\r\n\u0060\u0060\u0060c#\r\npublic static async Task LoadBitmap(RenderContext context, ILayoutElementHasUri element, Action\u003CSKBitmap\u003E handleBitmapAction) {\r\n    \r\n    var uri = element.GetUriWithReplacements();\r\n\r\n    var bytes = await new LoadImage(uri, context).Execute();\r\n\r\n    // Limit the number of bitmaps decoding concurrently\r\n    await decodeBitmapThrottler.WaitAsync();\r\n\r\n    try\r\n    {\r\n        var bitmap = SKBitmap.Decode(bytes);\r\n        handleBitmapAction(bitmap);\r\n        if (bitmap != null)\r\n        {\r\n            bitmap.Dispose();\r\n        }\r\n        \r\n    }\r\n    finally\r\n    {\r\n        decodeBitmapThrottler.Release();\r\n    }\r\n}\r\n\u0060\u0060\u0060     \r\n\r\nMy workaround has been to add a SemaphoreSlim, \u0060decodeBitmapThrottler\u0060, with a max count of 1, which increases the stability but sacrifices speed. As soon as I increase the count, I start getting System.AccessViolationException errors. \r\n\r\nAny help or insight is appreciated! I also understand if this case is outside the goals of the project.\n\n\u003E VS bug [#735689](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/735689)",
+  "author": {
+    "login": "abezydar",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2016-12-06T21:24:19",
+  "updatedAt": "2024-02-06T09:41:07",
+  "commentCount": 28,
+  "reactionCount": 0
+}

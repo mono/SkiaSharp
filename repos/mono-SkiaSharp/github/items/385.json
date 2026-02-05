@@ -1,0 +1,18 @@
+{
+  "number": 385,
+  "type": "issue",
+  "state": "closed",
+  "title": "I do not understand how canvas.DrawBitmap work. I want to cut my image into 9 puzzle. here is my code... there is something wrong",
+  "body": "\u0060\u0060\u0060csharp\r\n        Assembly assembly = GetType().GetTypeInfo().Assembly;\r\n        Stream stream = assembly.GetManifestResourceStream(\u0022wallpaper.jpg\u0022);\r\n        SKManagedStream skStream = new SKManagedStream(stream);\r\n        SKBitmap skBitmap = SKBitmap.Decode(skStream);\r\n\r\n        int coordsX = 3;\r\n        int coordsY = 3;\r\n\r\n        int pX = skBitmap.Width / coordsX ;\r\n        int pY = skBitmap.Height / coordsY;\r\n\r\n        int count = 1;\r\n\r\n        for (int i = 0; i \u003C coordsX; i\u002B\u002B)\r\n        {\r\n            for (int j = 0; j \u003C coordsY; j\u002B\u002B)\r\n            {\r\n                SKImageInfo info = new SKImageInfo(pX, pY);\r\n                var pieceBitmap = new SKBitmap(info);\r\n\r\n                using (var canvas = new SKCanvas(pieceBitmap))\r\n                {\r\n                   canvas.DrawBitmap(skBitmap, i * pX, j * pY);\r\n                }\r\n\r\n                SKImage skImg = SKImage.FromBitmap(pieceBitmap);\r\n\r\n                SKData skImgData = skImg.Encode(SKEncodedImageFormat.Png, 100);\r\n\r\n                IFolder rootFolder = FileSystem.Current.LocalStorage;\r\n                IFolder folder = await rootFolder.CreateFolderAsync(\u0022PiecesFolder\u0022, CreationCollisionOption.OpenIfExists);\r\n                IFile file = await folder.CreateFileAsync(string.Concat(\u0022Piece\u0022, count.ToString(),\u0022.png\u0022), CreationCollisionOption.ReplaceExisting);\r\n\r\n                using (Stream streamSave = await file.OpenAsync(FileAccess.ReadAndWrite))\r\n                {\r\n                    skImgData.SaveTo(streamSave);\r\n                }\r\n\r\n                Button btn = this.FindByName\u003CButton\u003E(string.Concat(\u0022button\u0022, count.ToString()));\r\n                btn.Image = (FileImageSource)ImageSource.FromFile(file.Path);\r\n\r\n                count\u002B\u002B;\r\n            }\r\n\u0060\u0060\u0060\r\n        \r\n",
+  "author": {
+    "login": "Urien2017",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-10-24T21:55:08",
+  "updatedAt": "2022-08-19T18:02:21",
+  "closedAt": "2017-12-03T03:44:52",
+  "commentCount": 3,
+  "reactionCount": 0
+}

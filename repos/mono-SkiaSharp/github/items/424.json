@@ -1,0 +1,28 @@
+{
+  "number": 424,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKTouchEventArgs.Handled not working?",
+  "body": "Hi! My first time using github to report :)\r\n\r\nI\u0027m experimenting with the method \u0022SKCanvasView.OnTouch\u0022 under UWP, and it seems like e.Handled is not working.\r\n\r\nI have a SKCanvasView inside a ListView item, and I want it to capture the input events, but they are propagated to the ListView item (and it gets animated and selected if I click in my SKCanvasView).\r\n\r\nAs I see [in this file](https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/SKTouchHandler.cs), it seems that the logic to stop the propagation is not implemented. The method \u0022CommonHandler\u0022 returns the value correctly, but the UWP events ignore it.\r\n\r\nAs I see in the UWP documentation, it should be copied to \u0022PointerRoutedEventArgs.Handled\u0022.\r\n\r\nAm I right or am I missing something?\r\n\r\nThank you!",
+  "author": {
+    "login": "mchiz",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.60.0",
+  "createdAt": "2018-01-08T21:35:41",
+  "updatedAt": "2022-08-19T18:01:48",
+  "closedAt": "2018-01-15T17:39:18",
+  "commentCount": 2,
+  "reactionCount": 0
+}

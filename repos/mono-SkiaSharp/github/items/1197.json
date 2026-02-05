@@ -1,0 +1,18 @@
+{
+  "number": 1197,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Code does not adhere to editorconfig",
+  "body": "When making PRs, I noticed that some of the code gets formatted according to the \u0060.editorconfig\u0060  rules, but the original file wasn\u0027t. This can cause a lot of merge conflicts.\r\n\r\nFor example, it seems the following two formatting options in the \u0060.editorconfig\u0060 are not followed in the source code:\r\n\r\n\u0060\u0060\u0060cs\r\n\t\tpublic SKPaint ()\r\n\t\t\t: this (SkiaApi.sk_compatpaint_new (), true)\r\n\t\t{\r\n\t\t\tif (Handle == IntPtr.Zero) {\r\n\t\t\t\tthrow new InvalidOperationException (\u0022Unable to create a new SKPaint instance.\u0022);\r\n\t\t\t}\r\n\t\t}\r\n\u0060\u0060\u0060\r\n\r\nNotice the space after the \u0060SKPaint\u0060 method declaration and the \u0060sk_paint_new\u0060 method call.\r\n\r\nThe rules in the \u0060.editorconfig\u0060 file however are\r\n\r\n\u0060\u0060\u0060\r\ncsharp_space_between_method_call_name_and_opening_parenthesis = false\r\ncsharp_space_between_method_declaration_name_and_open_parenthesis = false\r\n\u0060\u0060\u0060\r\n\r\nAlso the \u0060csharp_new_line_before_open_brace = all\u0060 is not followed in the above code.\r\n\r\nUnfortunately, not all files are wrong, some indeed follow the rules...\r\n\r\nReformatting the code using Resharper changes a lot of files.\r\n\r\nNot sure what the best approach would be? Should a PR reformat the whole file, applying the editorconfig rules?\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-28T13:01:47",
+  "updatedAt": "2022-08-19T06:02:13",
+  "closedAt": "2020-04-24T21:02:13",
+  "commentCount": 4,
+  "reactionCount": 0
+}

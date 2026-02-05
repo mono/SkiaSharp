@@ -1,0 +1,19 @@
+{
+  "number": 1239,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Allow SKColorF on SKPaint",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nIn the \u0060dev/update-skia\u0060, \u0060SKPaint\u0060 only has a \u0060Color\u0060 property, of type \u0060SKColor\u0060 (8-bit per channel)\r\n\r\nIn the [C\u002B\u002B Skia](https://source.chromium.org/chromium/chromium/src/\u002B/master:third_party/skia/include/core/SkPaint.h;l=270?q=SKPaint\u0026ss=chromium%2Fchromium%2Fsrc:third_party%2Fskia%2F\u0026originalUrl=https:%2F%2Fcs.chromium.org%2F), one can also use floating point colors \u0060ColorF\u0060. Furthermore in the C\u002B\u002B API one can tell the paint what the colorspace of the color is... \r\n\r\nWhen using Skia\u0027s [linear rendering workflow](https://skia.org/user/sample/color?cl=9919), it is important to allow all colors to be specified in higher precision, with a linear transfer function\r\n \r\n**Describe the solution you\u0027d like**\r\n\r\nSomehow expose this linear rendering stuff, still keeping C#\u0027s handy property syntax?\r\n\r\nMaybe create a \u0060PhysicalColor\u0060 struct that holds both a \u0060SKColorF\u0060 and \u0060SKColorSpace\u0060, and add properties like \u0060SKPaint.PhysicalColor\u0060?\r\n\r\n**Additional context**\r\n\r\nI guess in general supporting all the  [linear rendering workflow](https://skia.org/user/sample/color?cl=9919) features in Skia will be a lot of work?\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2020-04-18T14:58:17",
+  "updatedAt": "2022-08-19T06:01:59",
+  "closedAt": "2020-06-10T02:07:45",
+  "commentCount": 9,
+  "reactionCount": 0
+}

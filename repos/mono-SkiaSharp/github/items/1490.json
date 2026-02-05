@@ -1,0 +1,18 @@
+{
+  "number": 1490,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] AccessViolationException in UWP when navigating to a page with SKGLView",
+  "body": "**Description**\r\nUWP app that has a page done in Xamarin.Forms using SkiaSharp.SKGLView\r\nThere are two pages, MainPage(native uwp) and XappWrapper(xamarin.forms)\r\nDrawInBackground is set to  _**true**_\r\nNavigate forward and back a few times.\r\n\r\n**Actual Behavior**\r\nApp crashes with the following Exception:\r\nSystem.AccessViolationException: \u0027Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0027\r\n\r\n**Expected Behavior**\r\nNo exception is thrown\r\nSetting DrawInBackground = _**false**_, fixes the issue, but severely affects performance.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.3 - 2.80.1\r\n- Last known good version:  1.68.0\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:\r\n  - UWP: 16299\r\n- Target Devices:  Windows PC\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\nMicrosoft Windows 2004 (OS Build 19041.450)\r\nMicrosoft Visual Studio Community 2019 Version 16.6.1\r\nXamarin 16.6.000.1061 (d16-6@8e68aa8)\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n**Reproduction Project**\r\n\r\n[MemoryViolationRepro.zip](https://github.com/mono/SkiaSharp/files/5182897/MemoryViolationRepro.zip)\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "kerego",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2020-09-07T11:44:11",
+  "updatedAt": "2025-06-13T17:24:35",
+  "commentCount": 11,
+  "reactionCount": 2
+}

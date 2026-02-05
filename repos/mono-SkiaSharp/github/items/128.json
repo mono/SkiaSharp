@@ -1,0 +1,19 @@
+{
+  "number": 128,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to load PNG bitmap with SKColorType.Index8 color",
+  "body": "Version: 1.53.0, Windows 10 x64, VS2015 Update 3\n\nHi, I have run into issue with \u0060SKBitmap\u0060 in latest \u0060SkiaSharp\u0060, when the source bitmap has \u0060SkiaSharp.SKColorType.Index8\u0060 than I get error as result \u0060SkiaSharp.SKCodecResult.InvalidConversion\u0060.\n\nCode to reproduce:\n\n\u0060\u0060\u0060 C#\n        public IBitmapImpl LoadBitmap(System.IO.Stream stream)\n        {\n            using (var s = new SKManagedStream(stream))\n            {\n                using (var codec = SKCodec.Create(s))\n                {\n                    var info = codec.Info;\n                    var bitmap = new SKBitmap(info.Width, info.Height, info.ColorType /*SKImageInfo.PlatformColorType*/, info.IsOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul);\n\n                    IntPtr length;\n                    var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels(out length));\n                    if (result == SKCodecResult.Success || result == SKCodecResult.IncompleteInput)\n                    {\n                        return new BitmapImpl(bitmap);\n                    }\n                    else\n                    {\n                        throw new ArgumentException(\u0022Unable to load bitmap from provided data\u0022);\n                    }\n                }\n            }\n        }\n\u0060\u0060\u0060\n\nAnd the bitmap:\n![github_icon](https://cloud.githubusercontent.com/assets/2297442/17378234/64eb408e-59bd-11e6-8b5b-81dad488d253.png)\n\nWhen I change from\u0060info.ColorType\u0060 to \u0060SKImageInfo.PlatformColorType\u0060 all works as expected. This image was loading correctly in previous version.\n",
+  "author": {
+    "login": "wieslawsoltes",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.1",
+  "createdAt": "2016-08-03T19:02:39",
+  "updatedAt": "2022-08-20T00:02:25",
+  "closedAt": "2016-08-08T19:43:27",
+  "commentCount": 8,
+  "reactionCount": 0
+}

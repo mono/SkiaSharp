@@ -1,0 +1,22 @@
+{
+  "number": 2790,
+  "type": "issue",
+  "state": "open",
+  "title": "Improve 3.x compatibility with 2.x (or vice versa)",
+  "body": "## Description\r\n\r\nNot sure we can do everything we want and have a perfect world, but we can make things a bit better.\r\n\r\nThere is a summary and diff here that you can read to learn more about the changes that we have: https://github.com/mono/SkiaSharp/blob/main/changelogs/SkiaSharp/3.0.0/SkiaSharp.humanreadable.md\r\n\r\nUsing this list and some community libraries, we have found ways to improve compatibility without much additional effort for you or the maintenance in general.\r\n\r\n### Implementation\r\n\r\nThis work is 2 parts:\r\n\r\n - Add \u0022hidden\u0022 APIs in 3.x that allow for upgrades where API usage is small or restricted to common things. Typically, the APIs that are used in most apps all have overloads, alternatives or other mechanisms that are better.\r\n     - https://github.com/mono/SkiaSharp/pull/2789\r\n - Add new APIs in 2.x so that people can use the new APIs today, and then they can upgrade to 3.x without any changes as they are using it already.\r\n     - https://github.com/mono/SkiaSharp/pull/2810\r\n\r\n### Changes\r\n\r\nHere is a list of PRs that may or may not make it in but cover this area:\r\n\r\n- https://github.com/mono/SkiaSharp/pull/2810\r\n- https://github.com/mono/SkiaSharp/pull/2756\r\n- https://github.com/mono/SkiaSharp/pull/2789\r\n- https://github.com/mono/SkiaSharp/pull/2775\r\n\r\n### Tools\r\n\r\nI have also been working to make a tool that can be used to detect any cases where a breaking will occur, without having to update and hope everything is fine. In some cases, different overloads will resolve, hiding a potential break.\r\n\r\n**Tool**: https://www.nuget.org/packages/api-tools\r\n**Docs**: https://github.com/mattleibow/Mono.ApiTools.NuGetDiff/blob/main/docs/api-tools.md#compat-command\r\n\r\n\u0060\u0060\u0060bat\r\ndotnet api-tools compat Svg.Skia/Svg.Skia.dll SkiaSharp/v3/SkiaSharp.dll\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060xml\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\r\n\u003Cassemblies\u003E\r\n  \u003Cassembly\u003E\r\n    \u003Ctypes\u003E\r\n      \u003Ctype fullname=\u0022SkiaSharp.SKImageFilter/CropRect\u0022 /\u003E\r\n      \u003Ctype fullname=\u0022SkiaSharp.SKCropRectFlags\u0022 /\u003E\r\n    \u003C/types\u003E\r\n    \u003Cmembers\u003E\r\n      \u003Cmember fullname=\u0022System.Void SkiaSharp.SKImageFilter/CropRect::.ctor(SkiaSharp.SKRect,SkiaSharp.SKCropRectFlags)\u0022 /\u003E\r\n      \u003Cmember fullname=\u0022SkiaSharp.SKImageFilter SkiaSharp.SKImageFilter::CreateMerge(SkiaSharp.SKImageFilter[],SkiaSharp.SKImageFilter/CropRect)\u0022 /\u003E\r\n      \u003Cmember fullname=\u0022SkiaSharp.SKImageFilter SkiaSharp.SKImageFilter::CreatePaint(SkiaSharp.SKPaint,SkiaSharp.SKImageFilter/CropRect)\u0022 /\u003E\r\n      \u003C!-- several other items --\u003E\r\n      \u003Cmember fullname=\u0022System.Void SkiaSharp.SKPath::Transform(SkiaSharp.SKMatrix)\u0022 /\u003E\r\n      \u003Cmember fullname=\u0022System.Void SkiaSharp.SKCanvas::SetMatrix(SkiaSharp.SKMatrix)\u0022 /\u003E\r\n    \u003C/members\u003E\r\n  \u003C/assembly\u003E\r\n\u003C/assemblies\u003E\r\n\u0060\u0060\u0060\r\n\r\nFor this result, we have done some things:\r\n - We added overloads to the \u0060SKImageFilter\u0060 type that allow for creating of filters without \u0060SKImageFilter.CropRect\u0060 and instead use \u0060SKRect\u0060. \r\n - We added a hidden API \u0060SKCanvas.SetMatrix\u0060 that matches 2.x, but we cannot add it to the public API as it is ambiguous to VB and not what we want to use going forward.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "tenet/compatibility",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-07T22:59:26",
+  "updatedAt": "2024-04-11T13:59:01",
+  "commentCount": 1,
+  "reactionCount": 1
+}

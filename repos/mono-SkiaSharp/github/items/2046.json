@@ -1,0 +1,22 @@
+{
+  "number": 2046,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Add support for Tagged PDFs",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nI want to produce a tagged PDF document.  A tagged PDF document is a document who contains \u0022tags\u0022, also called bookmarks, which is an accessibility feature (see image below).  When the PDF is read in a compliant reader, there\u0027s a UI that allows the user to jump to the tagged locations in the PDF.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nA solution that supports what the native Skia library supports.  I tried to review the Skia code and found the [following commit from 2018](https://skia-review.googlesource.com/c/skia/\u002B/141138/).  It contains a test as well that describes the usage of the feature. \r\n In particular, the \u0060PDFTag\u0060, \u0060SkPDF::Metadata.fStructureElementTreeRoot\u0060 and \u0060SkPDF::SetNodeId\u0060 were the key pieces.  I think an identical structure in SkiaSharp would be a great starting point.\r\n\r\nOn top of the basic functionality, it would be amazing if there was an option to auto-generate the tags based on the document links already provided in the document rather than manually building it.\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nI didn\u0027t see a way to do this with the current APIs so I do not believe there\u0027s a work around.  You can build document links and generate a TOC for example, but if you want links to all elements of a large PDF, the TOC becomes huge.  It would be better to have a high-level TOC and a fully linked bookmark tree.\r\n\r\n**Additional context**\r\n\r\nFor example:\r\n\r\n![image](https://user-images.githubusercontent.com/81644233/168816293-b8c420db-6685-42a6-a47c-6bc6dfc50129.png)\r\n\r\n",
+  "author": {
+    "login": "wbittlehsl",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2022-05-17T13:02:09",
+  "updatedAt": "2024-10-30T21:35:51",
+  "commentCount": 6,
+  "reactionCount": 11
+}

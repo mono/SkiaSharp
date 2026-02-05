@@ -1,0 +1,18 @@
+{
+  "number": 1516,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] FontSpacing seems to be too small",
+  "body": "This is a follow up to the [twitter discussion](https://twitter.com/BeneStebner/status/1311310716578693121) I had with @mattleibow  and @Gillibald  as Twitter is the wrong medium for this.\r\n\r\nI want to use SkiaSharp to render a console. So I use a monospace font and I get character positions which I need to translate into pixels for SkiaSharp. I used \u0060SKPaint.FontSpacing\u0060 for the height and \u0060SKPaint.MeasureText(\u0022W\u0022)\u0060 for the width of a character.\r\n\r\nThis works fine with \u0060Courier New\u0060, but when I use the font \u0060Cascadia Mono PL\u0060, then \u0060SKPaint.FontSpacing\u0060 is not high enough. [Oh-my-posh (blog by shanselman)](https://www.hanselman.com/blog/HowToMakeAPrettyPromptInWindowsTerminalWithPowerlineNerdFontsCascadiaCodeWSLAndOhmyposh.aspx) uses some glyphs in that font, which go higher up than \u0060SKFontMetrics.Ascent\u0060.\r\n\r\nI wrote a repro project which shows that. The output looks like this:\r\n![image](https://user-images.githubusercontent.com/8309363/94916934-db4d5b80-04af-11eb-9347-436431ece38d.png)\r\n\r\nAs you can see the arrow is higher than \u0060Ascent\u0060. If I use \u0060Ascent\u0060 and \u0060FontSpacing\u0060 to position things, then this does not work. This is the code I use for drawing text, but it is wrong:\r\n\r\n\t// clear background with height FontSpacing\r\n\tcanvas.DrawRect(x, y, text.Length * charWidth, foreground.FontSpacing, background);\r\n\t// DrawText needs the baseline and Ascent is the (negative) offset\r\n\tcanvas.DrawText(text, x, y - foreground.FontMetrics.Ascent, foreground);\r\n\r\n\r\nIs this a bug in SkiaSharp, Skia or the Cascadia font? I can easily workaround when I use \u0060Top\u0060 instead of \u0060Ascent\u0060 for the distance to the baseline and \u0060Descent - Top\u0060 for the line height. But is this really the intended solution? What are \u0060Top\u0060 and \u0060Bottom\u0060 intended for anyway and why are they different than \u0060Ascent/Descent\u0060?\r\n\r\n\u0060Top\u0060 also does not seem to be 100% correct. You can see that the glyphs don\u0027t go all the way to \u0060Top\u0060. They are a bit shorter. Can I somehow measure how tall the highest glyph in the font is? Even if I use \u0060Top\u0060, the arrows don\u0027t look as good as in the Windows Terminal. You can see that in the following screenshot at the top right corner of every second arrow.\r\n![image](https://user-images.githubusercontent.com/8309363/94918725-6da32e80-04b3-11eb-9771-16eccaacd8b0.png)\r\n\r\n[Skia_Cascadia.zip](https://github.com/mono/SkiaSharp/files/5317517/Skia_Cascadia.zip)\r\n",
+  "author": {
+    "login": "MichaelRumpler",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-02T11:35:44",
+  "updatedAt": "2022-08-19T03:01:44",
+  "closedAt": "2020-10-03T08:55:10",
+  "commentCount": 5,
+  "reactionCount": 0
+}

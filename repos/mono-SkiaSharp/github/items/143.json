@@ -1,0 +1,19 @@
+{
+  "number": 143,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKPaint.Color property on Android emulators",
+  "body": "All the examples, I have checked, appear to draw the correct graphics colors on an Android emulator. However, Visual Studio shows strange values on SKPaint Color property.\n\nSample code\n\n\u0060\u0060\u0060\n    public static void TestPaintColor(SKCanvas canvas, int width, int height)\n    {\n        SKColor color = SKColors.Red;\n        SKPaint paint = new SKPaint();\n        paint.Color = color;\n\n        if (!paint.Color.Equals(color))\n        {\n            System.Diagnostics.Debug.WriteLine(\u0022SKPaint.Color issue (\u0022 \u002B paint.Color \u002B \u0022 != \u0022 \u002B color \u002B \u0022)\u0022);\n        }\n    }\n\u0060\u0060\u0060\n\nVIsual Studio output:\n\n[0:] SKPaint.Color issue (#a3c3f220 != #ffff0000)\n\nRegards,\nOlli Raisa\n",
+  "author": {
+    "login": "ollira",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.1.2",
+  "createdAt": "2016-08-23T08:37:01",
+  "updatedAt": "2022-08-20T00:02:10",
+  "closedAt": "2016-08-23T23:46:23",
+  "commentCount": 3,
+  "reactionCount": 0
+}

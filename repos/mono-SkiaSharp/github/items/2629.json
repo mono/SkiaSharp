@@ -1,0 +1,23 @@
+{
+  "number": 2629,
+  "type": "issue",
+  "state": "closed",
+  "title": "Issue with ICC Profile Loss in .Resize() Function - Version 2.88.0",
+  "body": "### Description\n\nWe have encountered an issue with the \u0060.Resize()\u0060 function in our software. It appears that, starting from version \u00602.88.0\u0060, images lose their ICC profile after passing through this function. Prior to version 2.88.0, this functionality was working as expected, including in version \u00602.80.4\u0060 and earlier.\n\n### Code\n\nWe\u0027re using images on this [site](https://displaycal.net/icc-color-management-test/). All the test cases were negatives using the \u0022newer\u0022 versions\r\n\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\n\r\ntry\r\n{\r\n    // Load an image with an ICC profile\r\n    using SKBitmap originalImage = SKBitmap.Decode(\u0022pathToImage.jpg\u0022);\r\n\r\n    // Resize the image\r\n    int newWidth = 200;\r\n    int newHeight = 200;\r\n\r\n    // Resize the original image using SkiaSharp\r\n    using SKBitmap skiaResizedBitmap = originalImage.Resize(new SKImageInfo(newWidth, newHeight), SKFilterQuality.High);\r\n\r\n    var ms = new MemoryStream();\r\n    skiaResizedBitmap.Encode(ms, SKEncodedImageFormat.Png, 100);\r\n    ms.Position = 0;\r\n    File.WriteAllBytes(\u0022resized_image.jpg\u0022, ms.ToArray());\r\n}\r\ncatch (Exception ex)\r\n{\r\n    Console.WriteLine(\u0022An error occurred: \u0022 \u002B ex.Message);\r\n}\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nAll ICC tests cases should be positives when resizing with SkiaSharp.\n\n### Actual Behavior\n\nAll ICC test cases are actually negatives when using \u0060.Resize()\u0060 with SkiaSharp\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.80.x (Deprecated)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "IAMManuel",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-09-22T16:03:22",
+  "updatedAt": "2024-08-16T15:12:29",
+  "closedAt": "2024-08-16T15:12:29",
+  "commentCount": 4,
+  "reactionCount": 0
+}

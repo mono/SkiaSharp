@@ -1,0 +1,19 @@
+{
+  "number": 591,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp does not work in Docker Windows Container.",
+  "body": "### Description\r\n\r\nSkiaSharp throws when run in Windows container.\r\n\r\n### Code\r\n\r\nSteps to reproduce:\r\n1.\tCreate a simple Console application that uses SkiaSharp\r\n\r\n\u003Eusing SkiaSharp;\r\n\u003Eusing System;\r\n\u003E\r\n\u003Enamespace SkiaSharpDockerTest\r\n\u003E{\r\n\u003E    class Program\r\n\u003E    {\r\n\u003E        static void Main(string[] args)\r\n\u003E        {\r\n\u003E            Console.WriteLine(Environment.OSVersion);\r\n\u003E\r\n\u003E            try\r\n\u003E            {\r\n\u003E                using (SKBitmap bmp = new SKBitmap(100, 100))\r\n\u003E                using (SKCanvas canvas = new SKCanvas(bmp))\r\n\u003E                using (SKPaint p = new SKPaint())\r\n\u003E                {\r\n\u003E                    p.Color = SKColors.Red;\r\n\u003E                    canvas.DrawCircle(50, 50, 50, p);\r\n\u003E\r\n\u003E                    using (SKFileWStream fs = new SKFileWStream(\u0022out.png\u0022))\r\n\u003E                        bmp.Encode(fs, SKEncodedImageFormat.Png, 100);\r\n\u003E                }\r\n\u003E            }\r\n\u003E            catch (Exception ex)\r\n\u003E            {\r\n\u003E                Console.WriteLine(ex.Message);\r\n\u003E                Console.WriteLine(ex.StackTrace);\r\n\u003E            }\r\n\u003E    }\r\n\u003E}\r\n\r\n2.\tCreate a Dokerfile\r\n\r\n\u003EFROM microsoft/dotnet:2.0-sdk\r\n\u003EWORKDIR /app\r\n\u003ECOPY . ./\r\n\u003ERUN dotnet publish -c Release -o out\r\n\u003EENTRYPOINT [\u0022dotnet\u0022, \u0022out/SkiaSharpDockerTest.dll\u0022]\r\n\r\n3.\tBuild and run image\r\n\u003E docker build -t skiasharptest .\r\n\u003E docker run --rm skiasharptest SkiaSharpDockerTest from Docker\r\n\r\nAs a result exception is thrown\r\nThe type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n   at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, Boolean isOpaque)\r\n   at AsposeWordsDockerTest.Program.Main(String[] args) in C:\\app\\Program.cs:line 15\r\n\r\n\r\n### Expected Behavior\r\n\r\nRed circle image should be created\r\n\r\n### Actual Behavior\r\n\r\nthrows an exception\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.2\r\n- Last known good version:  none\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .NET Core 2.0\r\n- Target Devices: Docker Windows container\r\n\r\n",
+  "author": {
+    "login": "AlexNosk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1.1",
+  "createdAt": "2018-07-25T07:19:16",
+  "updatedAt": "2022-08-19T15:01:58",
+  "closedAt": "2018-11-06T17:56:13",
+  "commentCount": 23,
+  "reactionCount": 0
+}

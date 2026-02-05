@@ -1,0 +1,23 @@
+{
+  "number": 2813,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKCanvasView\u0027s PaintSurface is being called even when hidden from view upon invalidating surface of another SKCanvasView",
+  "body": "### Description\n\nI\u0027m working with a game, GnollHack, that uses several SKCanvasView elements. Currently we are porting it to .NET MAUI using .NET 9.0 Preview 2 and SkiaSharp 3.0 Preview 2.1 (other versions of MAUI and SkiaSharp are pretty hopeless). I have a few of SKCanvasViews on start screen (MainPage.xaml) and then one such canvas on GamePage (which opens in the navigation stack on the top of the MainPage): MainPage has SKCanvasView inside a custom control called ImageCarousel and GamePage inside a custom control called SwitchableCanvasView that can be toggled to use either normal SKCanvasView or SKGLView. Both MainPage and GamePage have their own animation timers to update the relevant SKCanvasViews. When I start the game, and GamePage goes on the top of the navigation stack, animation timer on MainPage is stopped, and the SKCanvasView should not update anymore to save resources, also since the whole page is hidden under the GamePage. This works in Xamarin, which does not update anything on MainPage when it is not visible, but in .NET MAUI all SKCanvasViews on MainPage (hidden below the GamePage in the navigation stack) get updated (resulting in a call to PaintSurface) every time SwitchableCanvasView\u0027s InvalidateSurface is being called (60 times per second). \r\n\r\nThis results in noticeable performance degradation, because unnecessary drawing operations on large bitmaps are being called on a page that is hidden from view. In Xamarin, all of this works as intended, and only SwitchableCanvasView on GamePage gets updated. In any case, since nothing new is being drawn on MainPage, its SKCanvasViews should either (1) realise that they are not visible and do nothing or (2) use cached images.\r\n\r\nThis may be related to an earlier problem in .NET 8.0 (fixed in .NET 9.0) where a SKCanvasView drew a grey box instead of intended graphics when being disabled or when the page started disappear. If so, perhaps some additional work is needed to make sure that a cached image is being used when the control is not visible (and drawing the graphics only once if there is no cached image, and saving that image to cache).\n\n### Code\n\nhttps://github.com/hyvanmielenpelit/GnollHack\n\n### Expected Behavior\n\nPaintSurface method of a hidden SKCanvasView is NOT called when another, visible SKCanvasView draws itself via PaintSurface (due to an earlier InvalidateSurface call on it and not on the hidden SKCanvasView).\n\n### Actual Behavior\n\nPaintSurface method of a hidden SKCanvasView is called when another, visible SKCanvasView draws itself via PaintSurface (due to an earlier InvalidateSurface call on it and not on the hidden SKCanvasView).\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\n2.80.x (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid, iOS\n\n### Platform / Operating System Version\n\nAndroid 14, iOS 17.3.1\n\n### Devices\n\nGoogle Pixel 6a, iPad 11,7\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-28T12:29:09",
+  "updatedAt": "2024-04-21T16:02:30",
+  "closedAt": "2024-04-21T16:02:30",
+  "commentCount": 4,
+  "reactionCount": 0
+}

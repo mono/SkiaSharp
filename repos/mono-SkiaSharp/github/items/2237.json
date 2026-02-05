@@ -1,0 +1,27 @@
+{
+  "number": 2237,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Skottie Animation not created when running MAUI targeting Android",
+  "body": "**Description**\r\n\r\nI am creating a Lottie animation in my MAUI app, and it works correctly targeting Windows, but when I target Android, I get the exception:  \u0022Method not found: System.TimeSpan SkiaSharp.Skottie.Animation.get_Duration()\u0027\u0022\r\n\r\n**Code**\r\n\r\nvar stream = await FileSystem.OpenAppPackageFileAsync(Source);\r\nstring data = (new System.IO.StreamReader(stream)).ReadToEnd();\r\n// load Lottie animation\r\nSkiaSharp.Skottie.Animation.TryParse(data, out animation);\r\n\r\n// Read important values\r\nvar duration = animation.Duration.TotalSeconds;\r\n\r\n**Expected Behavior**\r\n\r\nWork the same on Android as it does Windows\r\n\r\n**Actual Behavior**\r\n\r\nWhen I remove the reference to animation.Duration, I don\u0027t get the exception, but the app crashes when it tries to parse the animation json data.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.1\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - Target Devices:   Samsung S21 Ultra\r\n  \r\n",
+  "author": {
+    "login": "bluechiperic",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-09-03T21:02:11",
+  "updatedAt": "2022-10-19T03:01:19",
+  "closedAt": "2022-09-19T00:01:18",
+  "commentCount": 2,
+  "reactionCount": 0
+}

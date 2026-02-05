@@ -1,0 +1,22 @@
+{
+  "number": 3235,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG]  The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception in AWS .NET 6.0",
+  "body": "### Description\n\nSystem.TypeInitializationException : The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\n\n**Basic Information**\n\u2022\tNuGet: SkiaSharp.NativeAssets.Linux.NoDependencies\n\u2022\tVersion with issue: v3.116.1\n\u2022\tIDE: Visual Studio 2022\n\u2022\tPlatform Target Frameworks: ASP.NET Core application with .NET 6.0\n\u2022\tEnvironment : AWS Elastic beanstalk\n\n**Additional Information**\nThis issue not occur in .NET8.0 application\n\n**Replication steps:**\nPublish .NET 8.0 ASP.NET Core application in AWS Elastic beanstalk with given code\n\n\n### Code\n\n\u0060\u0060\u0060\nint width = 800;\nint height = 600;\nstring base64String;\n \n//Create a new bitmap\nusing (var bitmap = new SKBitmap(width, height))\n{\n    // Create a canvas to draw on the bitmap\n    using (var canvas = new SKCanvas(bitmap))\n    {\n        // Clear the canvas with a white color\n        canvas.Clear(SKColors.White); \n \n        // Define the paint for drawing shapes\n        var paint = new SKPaint\n        {\n            Color = SKColors.Blue,\n            IsAntialias = true,\n            Style = SKPaintStyle.Stroke,\n            StrokeWidth = 5\n        }; \n \n        // Draw a rectangle\n        var rect = new SKRect(100, 100, 300, 300);\n        canvas.DrawRect(rect, paint); \n \n        // Draw a circle\n        paint.Color = SKColors.Red;\n        canvas.DrawCircle(400, 400, 100, paint); \n \n        // Draw a line\n        paint.Color = SKColors.Green;\n        canvas.DrawLine(500, 100, 700, 300, paint); \n \n        // Save the bitmap to a file\n        using (var image = SKImage.FromBitmap(bitmap))\n        using (var data = image.Encode(SKEncodedImageFormat.Png, 100)) \n \n        using (var memoryStream = new MemoryStream())\n        {\n            data.SaveTo(memoryStream);\n        }\n    }\n}\n\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nShould working fine\n\n### Actual Behavior\n\nException\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory at SkiaSharp.SkiaApi.sk_colortype_get_default_8888() at SkiaSharp.SKImageInfo..cctor() --- End of inner exception stack trace --- at SkiaSharp.SKBitmap..ctor(Int32 width, Int32 height, Boolean isOpaque) at Convert_Word_Document_to_PDF.Controllers.HomeController.SimpleSkiasharp() in\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MohanaselvamJ",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-16T14:45:18",
+  "updatedAt": "2025-09-16T23:13:37",
+  "commentCount": 4,
+  "reactionCount": 1
+}

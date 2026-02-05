@@ -1,0 +1,27 @@
+{
+  "number": 381,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKPaint.BreakText returns wrong number of characters for special unicode characters",
+  "body": "Hi matthew,\r\n\r\ni noticed that the BreakText method returns the wrong number of character for special unicode characters like german umlaute. \r\nSome examples:\r\n\u0060\u0060\u0060\r\npaint.TextEncoding = SKTextEncoding.Utf8;\r\npaint.BreakText(\u0022\u00E4\u0022, 50.0f); =\u003E returns 2\r\npaint.BreakText(\u0022a\u0022, 50.0f); =\u003E returns 1\r\n\r\npaint.TextEncoding = SKTextEncoding.Utf16;\r\npaint.BreakText(\u0022\u00E4\u0022, 50.0f); =\u003E returns 2\r\npaint.BreakText(\u0022a\u0022, 50.0f); =\u003E returns 2\r\n\r\npaint.TextEncoding = SKTextEncoding.Utf32;\r\npaint.BreakText(\u0022\u00E4\u0022, 50.0f); =\u003E returns 4\r\npaint.BreakText(\u0022a\u0022, 50.0f); =\u003E returns 4\r\n\u0060\u0060\u0060\r\n\r\nBest regards\r\nFred",
+  "author": {
+    "login": "bay0fred",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2017-10-17T09:21:35",
+  "updatedAt": "2022-08-19T18:02:25",
+  "closedAt": "2017-12-19T23:56:22",
+  "commentCount": 3,
+  "reactionCount": 0
+}

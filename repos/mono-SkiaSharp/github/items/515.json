@@ -1,0 +1,35 @@
+{
+  "number": 515,
+  "type": "issue",
+  "state": "closed",
+  "title": "[UWP] touch event bug when pixels \u2260 device independent pixels",
+  "body": "### Description\r\n\r\nOn UWP, when \u0060scale\u0060 = (pixels / device independent pixels) \u2260 1.\r\nThe Touch event fires within a subset of the View (1/scale in each dimension), but Location reports numbers that are too large, by a factor of \u0060scale\u0060.\r\n\r\nThe possible Location values correctly correspond to the view area in pixels, but they are realized on a subset of the view only.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.0\r\n- IDE:  VS 15.7.0\r\n- Platform Target Frameworks: UWP (other platforms not tested)\r\n  - UWP:  16299 \r\n\r\n### Screenshots\r\n\r\n\u003Cimg width=\u0022938\u0022 alt=\u0022skiasharptouchproblem\u0022 src=\u0022https://user-images.githubusercontent.com/19760720/39871868-1e62ffc4-545e-11e8-9320-1fe79b359024.png\u0022\u003E",
+  "author": {
+    "login": "charlesroddie",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-05-10T13:26:48",
+  "updatedAt": "2022-08-19T15:02:35",
+  "closedAt": "2018-05-10T13:46:31",
+  "commentCount": 2,
+  "reactionCount": 0
+}

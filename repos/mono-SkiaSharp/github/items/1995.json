@@ -1,0 +1,18 @@
+{
+  "number": 1995,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SKBitmap.GetGenerationId()",
+  "body": "how would i obtain or call the SKBitmap.GetGenerationId() for the skia SkBitmap ?\r\n\r\ni am porting https://cs.android.com/android/platform/superproject/\u002B/master:frameworks/base/graphics/java/android/graphics/Bitmap.java to C# https://github.com/mgood7123/AndroidUI\r\n\r\nhowever it requires access to the SKBitmap GetGenerationId method\r\n\r\n\u0060\u0060\u0060C\u002B\u002B\r\n    uint32_t getGenerationID() const {\r\n        if (mBitmap) {\r\n            return mBitmap-\u003EgetGenerationID();\r\n        }\r\n        return mGenerationId;\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060C\u002B\u002B\r\nstatic jint Bitmap_getGenerationId(JNIEnv* env, jobject, jlong bitmapHandle)\r\n{\r\n    LocalScopedBitmap bitmap(bitmapHandle);\r\n    return static_cast\u003Cjint\u003E(bitmap-\u003EgetGenerationID());\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060{   \u0022nativeGenerationId\u0022,       \u0022(J)I\u0022, (void*)Bitmap_getGenerationId}, \u0060\r\n\r\n\u0060\u0060\u0060Java\r\n/**\r\n    * Returns the generation ID of this bitmap. The generation ID changes\r\n    * whenever the bitmap is modified. This can be used as an efficient way to\r\n    * check if a bitmap has changed.\r\n    *\r\n    * @return The current generation ID for this bitmap.\r\n    */\r\npublic int getGenerationId()\r\n{\r\n    if (mRecycled)\r\n    {\r\n        Log.w(TAG, \u0022Called getGenerationId() on a recycle()\u0027d bitmap! This is undefined behavior!\u0022);\r\n    }\r\n    return nativeGenerationId(mNativePtr);\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "mgood7123",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-09T12:27:17",
+  "updatedAt": "2022-08-19T00:01:45",
+  "closedAt": "2022-06-04T05:03:21",
+  "commentCount": 3,
+  "reactionCount": 0
+}

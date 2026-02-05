@@ -1,0 +1,18 @@
+{
+  "number": 2037,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] error building UWP",
+  "body": "error 1\r\n\r\n\u0060\u0060\u0060\r\n       \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharpSource.Windows-netfx.slnf\u0022 (Build target) (1:2) -\u003E\r\n       \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views.UWP\\SkiaSharp.Views.UWP.csproj\u0022 (default target) (\r\n       11:7) -\u003E\r\n       \u0022K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp.UWP\\SkiaSharp.UWP.csproj\u0022 (default target) (6:22) -\u003E\r\n       (CoreCompile target) -\u003E\r\n         K:\\AndroidUI-SkiaSharp\\binding\\Binding.Shared\\PlatformConfiguration.cs(37,15): error CS0103: The name \u0027Package\u0027\r\n        does not exist in the current context [K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp.UWP\\SkiaSharp.UWP.csproj]\r\n\u0060\u0060\u0060\r\n\r\nerror 2\r\n\u0060\u0060\u0060\r\n         K:\\AndroidUI-SkiaSharp\\binding\\Binding.Shared\\PlatformConfiguration.cs(38,10): error CS0731: The type forwarder\r\n        for type \u0027Windows.System.ProcessorArchitecture\u0027 in assembly \u0027Windows\u0027 causes a cycle [K:\\AndroidUI-SkiaSharp\\bin\r\n       ding\\SkiaSharp.UWP\\SkiaSharp.UWP.csproj]\r\n         K:\\AndroidUI-SkiaSharp\\binding\\Binding.Shared\\PlatformConfiguration.cs(38,10): error CS1069: The type name \u0027Pro\r\n       cessorArchitecture\u0027 could not be found in the namespace \u0027Windows.System\u0027. This type has been forwarded to assembl\r\n       y \u0027Windows, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null, ContentType=WindowsRuntime\u0027 Consider a\r\n       dding a reference to that assembly.\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060\r\n    30 Warning(s)\r\n    17 Error(s)\r\n\r\nTime Elapsed 00:00:46.11\r\nAn error occurred when executing task \u0027libs\u0027.\r\n\u0060\u0060\u0060\r\n\r\n\r\n\r\nfor the first i found\r\n\r\nhttps://docs.microsoft.com/en-us/uwp/api/windows.applicationmodel.packageid.architecture?view=winrt-16299\r\n\r\nfor \u0060var arch = Package.Current.Id.Architecture\u0060\r\n\r\nfor the second i found https://stackoverflow.com/questions/51876536/type-forwarded-to-assembly-windows-version-255-255-255-255-when-trying-to-us\r\n\r\nwhich apparently fixes it\r\n\r\nim not sure if it is safe to apply these and i am not sure how to apply the latter via command-line",
+  "author": {
+    "login": "mgood7123",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-05-12T10:39:43",
+  "updatedAt": "2022-08-19T00:01:29",
+  "closedAt": "2022-05-13T03:36:06",
+  "commentCount": 3,
+  "reactionCount": 0
+}

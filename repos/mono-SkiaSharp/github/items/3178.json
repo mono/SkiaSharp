@@ -1,0 +1,23 @@
+{
+  "number": 3178,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] iOS: Crash when GC collects SKMetalView resources",
+  "body": "### Description\n\nSkiaSharp v3.116.1\n.Net 9\nmaui                       9.0.0/9.0.100         SDK 9.0.100  \nmaui-ios                   9.0.0/9.0.100         SDK 9.0.100  \nIDE: JetBrains Rider\n\nIn our app we have several views, one of which contains an SKMetalView. Every time the GC runs to collect resources, the app crashes with the following stack:\n\n\u0060\u0060\u0060\nat \u003Cunknown\u003E \u003C0xffffffff\u003E\n\t  at SkiaSharp.SkiaApi:gr_direct_context_abandon_context \u003C0x00007\u003E\n\t  at SkiaSharp.GRContext:AbandonContext \u003C0x0010f\u003E\n\t  at SkiaSharp.GRContext:DisposeNative \u003C0x00083\u003E\n\t  at SkiaSharp.SKNativeObject:Dispose \u003C0x001c3\u003E\n\t  at SkiaSharp.SKObject:Dispose \u003C0x0007b\u003E\n\t  at SkiaSharp.GRContext:Dispose \u003C0x0007b\u003E\n\t  at SkiaSharp.SKNativeObject:Finalize \u003C0x000a7\u003E\n\t  at System.Object:runtime_invoke_virtual_void__this__ \u003C0x00087\u003E\n\u0060\u0060\u0060\n\n\n### Code\n\nTo reproduce the issue [SkiaSharpSample:](https://github.com/AlisiaNew/SkiaSharpSample)\n1. Click Open Skia Screen, then go back\n2. Click Open Text Screen, then go back\n3. Repeat steps 1 and 2 and the app will crash\n\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\niOS 17.5\niOS 18.2\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nat \u003Cunknown\u003E \u003C0xffffffff\u003E\n\t  at SkiaSharp.SkiaApi:gr_direct_context_abandon_context \u003C0x00007\u003E\n\t  at SkiaSharp.GRContext:AbandonContext \u003C0x0010f\u003E\n\t  at SkiaSharp.GRContext:DisposeNative \u003C0x00083\u003E\n\t  at SkiaSharp.SKNativeObject:Dispose \u003C0x001c3\u003E\n\t  at SkiaSharp.SKObject:Dispose \u003C0x0007b\u003E\n\t  at SkiaSharp.GRContext:Dispose \u003C0x0007b\u003E\n\t  at SkiaSharp.SKNativeObject:Finalize \u003C0x000a7\u003E\n\t  at System.Object:runtime_invoke_virtual_void__this__ \u003C0x00087\u003E\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "AlisiaNew",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-28T19:13:03",
+  "updatedAt": "2025-08-22T20:40:53",
+  "closedAt": "2025-08-22T20:40:53",
+  "commentCount": 26,
+  "reactionCount": 3
+}

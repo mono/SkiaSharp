@@ -1,0 +1,22 @@
+{
+  "number": 3327,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG / WinUI] SkiaSharp is not trimming-safe",
+  "body": "### Description\n\nI use \u0060SkiaSharp.Views.WinUI\u0060 3.119.0 in my WinUI3 app, which I publish using NativeAOT (\u0060PublishAot=true\u0060) - this implicitly enabled (as requires) full trimming.\n\n\n\n### Code\n\nI am using \u0060SKXamlCanvas\u0060 and the \u0060PaintSurface\u0060 event handler in several places in my app\n\n### Expected Behavior\n\nNo warnings, trimming-safe library\n\n### Actual Behavior\n\nWhen building the app in Release mode, I am seeing this warning:\n\n\u0060...\\.nuget\\packages\\skiasharp.nativeassets.winui\\3.119.0\\runtimes\\win-x64\\lib\\net8.0-windows10.0.19041.0\\SkiaSharp.Views.WinUI.Native.Projection.dll : warning IL2104: Assembly \u0027SkiaSharp.Views.WinUI.Native.Projection\u0027 produced trim warnings. For more information see https://aka.ms/il2104\n\u0060\n\nWhen also seting \u0060TrimmerSingleWarn=false\u0060, I get this more detailed warning breakdown:\n\n\u0060\u0060\u0060\nILC : Trim analysis warning IL2026: WinRT.WinrtModule.GetActivationFactory(String): Using member \u0027WinRT.ComWrappersSupport.GetObjectReferenceForInterface\u003CIActivationFactoryVftbl\u003E(IntPtr)\u0027 which has \u0027RequiresUnreferencedCodeAttribute\u0027 can break functionality when trimming application code. This method is not trim-safe, and is only supported for use when not using trimming (or AOT).\nILC : Trim analysis warning IL2026: WinRT.DllModule.GetActivationFactory(String): Using member \u0027WinRT.ComWrappersSupport.GetObjectReferenceForInterface\u003CIActivationFactoryVftbl\u003E(IntPtr)\u0027 which has \u0027RequiresUnreferencedCodeAttribute\u0027 can break functionality when trimming application code. This method is not trim-safe, and is only supported for use when not using trimming (or AOT).\n\u0060\u0060\u0060\n\nWhile can not reproduce any crashes myself (yet), I am seeing a lot of crash reports that might be related to these warnings.\n\n### Version of SkiaSharp\n\n3.119.0 (Current)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "tipa",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-08-04T14:56:21",
+  "updatedAt": "2025-08-26T15:35:35",
+  "commentCount": 1,
+  "reactionCount": 1
+}

@@ -1,0 +1,22 @@
+{
+  "number": 2967,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Multiple Unloaded events in WinUI causes empty SKXamlCanvas",
+  "body": "### Description\n\nI\u0027m displaying different SKXamlCanvas controls in separate WinUI TabView tabs. When I remove multiple tabs, the currently selected tab drops its rendered content. I found that this is really a WinUI issue, https://github.com/microsoft/microsoft-ui-xaml/issues/9880, where multiple Unloaded events are triggered on the wrong FrameworkElement. In the SKXamlCanvas code I can see that the backgound is cleared on Unloaded events, so that\u0027s why my content disappears. I also found my way to https://github.com/mono/SkiaSharp/issues/1118 where you seem to have fixed a somewhat related issue.\r\n\r\nIt seems like WinUI has an erratic Load/Unload behavior in other circumstances as well, and that you maybe cannot rely on them coming in correct order.\r\nhttps://github.com/microsoft/microsoft-ui-xaml/issues/1900\r\nhttps://github.com/microsoft/microsoft-ui-xaml/issues/8342\r\n\r\nWhen debugging this, I noticed that when the SKXamlCanvas recieves incorrect Unloaded events it actually has IsLoaded == true. Maybe the current fix with the loadUnloadCounter could be replaced with a private isLoaded flag which can be set in OnLoaded, and then prevent multiple Loaded events to be processed? The flag should then only get reset in OnUnloaded if IsLoaded actually is false.\n\n### Code\n\nSee https://github.com/microsoft/microsoft-ui-xaml/issues/9880\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Mangepange",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-08-07T14:51:43",
+  "updatedAt": "2024-08-07T14:51:43",
+  "commentCount": 0,
+  "reactionCount": 0
+}

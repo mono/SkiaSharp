@@ -1,0 +1,18 @@
+{
+  "number": 1520,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Y axis is inverted",
+  "body": "**Description**\r\n\r\nI saw this existing issue https://github.com/mono/SkiaSharp/issues/231 but not sure if it is related. Basically when I draw a simple Path, the more increase the Y axis, path is moving down not to the upper direction as i would expect. Here is the code sample.\r\n\r\n\u0060\u0060\u0060\r\n\r\n   var  indicatorStrokePaint = new SKPaint\r\n            {\r\n                Style = SKPaintStyle.Stroke,\r\n                StrokeWidth = 6,\r\n                Color = strokeColor,\r\n                IsAntialias = true\r\n            };\r\n\r\n               var start = new SKPoint(500, 70);\r\n                var end = new SKPoint(500, 100);\r\n\r\n                canvas.DrawLine(start, end, indicatorStrokePaint);\r\n\r\n\u0060\u0060\u0060\r\n\r\nScreenshot for above code red line is the path I am drawing\r\n\r\n![image](https://user-images.githubusercontent.com/10422347/95019861-172b2100-0668-11eb-99e9-f8528dd18f5b.png)\r\n\r\nif i increase those numbers like \r\n\r\n\u0060\u0060\u0060\r\n   var start = new SKPoint(500, 100);\r\n                var end = new SKPoint(500, 130);\r\n\u0060\u0060\u0060\r\n\r\nyou can see below that red path was drawn more below than the gauge. \r\n![image](https://user-images.githubusercontent.com/10422347/95019925-7ee16c00-0668-11eb-8769-7aeb813b535a.png)\r\n\r\n\r\n**Expected Behavior**\r\n\r\nI would expect that the more i increase the y axis, it should draw more upper.\r\n\r\n**Actual Behavior**\r\n\r\ngoes down\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:   skiasharp.views.forms 2.80.1\r\n \r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: 9.0\r\n  ",
+  "author": {
+    "login": "EmilAlipiev",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-04T15:42:10",
+  "updatedAt": "2022-08-19T03:01:42",
+  "closedAt": "2020-10-04T16:32:17",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 273,
+  "type": "issue",
+  "state": "closed",
+  "title": "System.AccessViolationException inside libskiasharp",
+  "body": "Hi!\r\nI\u0027m trying to perform conversion from SKImage to pixels array, but sometimes it falls with \u0060System.AccessViolationException\u0060.\r\nMay be it is because of multi-threading processing - I try to process all  images from folder using Thread pool. Could you advice something?\r\n\r\nUsing the latest \u0060SkiaSharp\u0060 package available (\u00601.56.2\u0060)\r\n\r\nThe code below contains exception:\r\n\u0060\u0060\u0060csharp\r\n//image is SKImage\r\nvar pixels = image.PeekPixels();\r\nif (pixels == null)\r\n    throw new ArgumentException($\u0022Can not get pixels from image {source}\u0022);\r\ntry\r\n{\r\n    if (pixels.BytesPerPixel != 1)\r\n    {\r\n        using (var grayImage = _grayConverter.Convert(source, PixelFormat.Format8bppIndexed))\r\n        {\r\n            pixels.Dispose();\r\n            pixels = ((SkiaImageImpl)grayImage).Image.PeekPixels();\r\n        }\r\n    }\r\n    \r\n    var imageInfo = new ImageInfo(pixels.Width, pixels.Height, PixelFormat.Format8bppIndexed);\r\n    \r\n    var data = new byte[imageInfo.Stride * pixels.Height];\r\n    var ptr = pixels.GetPixels();\r\n    if (ptr == IntPtr.Zero)\r\n    {\r\n        throw new ArgumentException($\u0022Can not get pixels from image {source}\u0022);\r\n    }\r\n\r\n    // ERROR IS HERE:\r\n    Marshal.Copy(ptr, data, 0, data.Length);\r\n    var result = new RawImage(\r\n        data,\r\n        imageInfo);\r\n    return result;\r\n\r\n}\r\nfinally\r\n{\r\n    pixels.Dispose();\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "Sergey-Terekhin",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-04-03T09:23:50",
+  "updatedAt": "2022-08-19T21:02:12",
+  "closedAt": "2017-04-04T19:25:13",
+  "commentCount": 2,
+  "reactionCount": 0
+}

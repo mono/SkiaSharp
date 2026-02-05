@@ -1,0 +1,18 @@
+{
+  "number": 1822,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKRuntimeEffect doesn\u0027t work on Bitmap Canvas",
+  "body": "**Description**\r\n\r\nWhen attempting to use SKSL effects on bitmap canvases, there is a native exception raised.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nvar bitmap = new SKBitmap(100, 100, false);\r\nusing var canvas = new SKCanvas(bitmap);\r\n\r\nvar src = @\u0022\r\nhalf4 main(float2 fragCoord) {\r\n  return half4(0.5, 0.5, 0.5, 1);\r\n}\u0022;\r\n\r\nusing var effect = SKRuntimeEffect.Create(src, out var error);\r\n\r\nusing (SKPaint bgPaint = new SKPaint { IsAntialias = true, Shader = effect.ToShader(false) })\r\n    canvas.DrawRoundRect(0, 0, 100, 100, 15, 15, bgPaint); // This raises an exception\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nSKSL runtime effect is successfully used on drawing operation.\r\n\r\n**Actual Behavior**\r\n\r\nAn exception occurs on attempting a draw operation:\r\n\u0060\u0060An unhandled exception of type \u0027System.Runtime.InteropServices.SEHException\u0027 occurred in SkiaSharp.dll\u0060\u0060\r\n\u0060\u0060External component has thrown an exception.\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.88.0-preview.145\r\n- Last known good version: None that I\u0027m aware of\r\n- IDE: Visual Studio\r\n- Platform Target Frameworks: \r\n  - Windows 10 (21H1 19043.1237) running .NET 6.0.0-rc.1.21451.13",
+  "author": {
+    "login": "substanc3-dev",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-04T11:58:03",
+  "updatedAt": "2024-01-10T20:59:39",
+  "closedAt": "2023-08-17T15:24:06",
+  "commentCount": 12,
+  "reactionCount": 0
+}

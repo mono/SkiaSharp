@@ -1,0 +1,36 @@
+{
+  "number": 432,
+  "type": "issue",
+  "state": "closed",
+  "title": "Large Gray8 Bitmaps don\u0027t interpolate ",
+  "body": "Bitmaps larger than 2^14 (16384) in width (and possibly height) are not interpolating when drawn at a smaller size. I noticed this with Gray8 bitmaps and Alpha8 image shaders, but I assume it happens with larger pixel formats too. \r\n\r\nHere is a fiddle where it is working in skia: https://fiddle.skia.org/c/374657f33d440c8f81390d9f50a9374a\r\nI ran the test on my computer with the latest Skia code and it worked as well. I tried to build SkiaSharp\u0027s fork of Skia but failed, so I wasn\u0027t able to test it there.\r\n\r\nhere is some SkiaSharp code which reproduces it:\r\n\r\n            var surfaceWidth = 500;\r\n            var surfaceHeight = 300;\r\n            var surface = SKSurface.Create(surfaceWidth, surfaceHeight, SKColorType.Bgra8888, SKAlphaType.Premul);\r\n            var canvas = surface.Canvas;\r\n            canvas.Clear(new SKColor(255, 255, 255));\r\n\r\n            var bitmapWidth = 16384;\r\n            var bitmapHeight = 10;\r\n            var pixels = Marshal.AllocHGlobal(new IntPtr(bitmapWidth * bitmapHeight));\r\n            unsafe\r\n            {\r\n                var bytes = (byte*) pixels;\r\n                for(long y = 0; y \u003C bitmapHeight; y\u002B\u002B)\r\n                for (long x = 0; x \u003C bitmapWidth; x\u002B\u002B)\r\n                {\r\n                    var index = y * bitmapWidth \u002B x;\r\n                    if (x / 3 == y)\r\n                        bytes[index] = 0;\r\n                    else\r\n                        bytes[index] = 255;\r\n                }\r\n            }\r\n\r\n            var info = new SKImageInfo(bitmapWidth, bitmapHeight, SKColorType.Gray8, SKAlphaType.Premul);\r\n            var image = SKImage.FromPixels(info, pixels);\r\n\r\n            var scale = .66f;\r\n            canvas.Scale(scale, scale);\r\n\r\n            var paint = new SKPaint();\r\n            paint.FilterQuality = SKFilterQuality.High;\r\n            canvas.DrawImage(image, SKRect.Create(bitmapWidth, bitmapHeight), paint);\r\n\r\n            using (var stream = new FileStream(\u0022renderout.png\u0022, FileMode.OpenOrCreate, FileAccess.Write))\r\n            using (var outimage = surface.Snapshot())\r\n            using (var data = outimage.Encode(SKEncodedImageFormat.Png, 100))\r\n                data.SaveTo(stream);\r\n\r\n![renderout](https://user-images.githubusercontent.com/1078789/35350108-db34f046-010a-11e8-8ed6-0b3f663eac00.png)\r\n\r\nchanging the image width to 16383 interpolates as expected:\r\n![renderout](https://user-images.githubusercontent.com/1078789/35350192-28f9fe16-010b-11e8-8855-ee07f1cd8cbb.png)\n\n\u003E VS bug [#738683](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/738683)",
+  "author": {
+    "login": "jackkutilek",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "status/try-latest-version",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-01-24T18:38:46",
+  "updatedAt": "2024-10-30T12:39:20",
+  "closedAt": "2024-10-30T12:39:20",
+  "commentCount": 3,
+  "reactionCount": 0
+}

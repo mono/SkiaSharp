@@ -1,0 +1,26 @@
+{
+  "number": 2653,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKiaSharp on linux can\u0027t find liblibSkiaSharp.so",
+  "body": "### Description\n\nI\u0027m trying to use SkiaSharp on .net core 7.0 to validate an image size. The app is running on a docker container on alpine linux.\n\nI\u0027ve installed the package \u0060SkiaSharp.NativeAssets.Linux\u0060 in my project. After building the libSkiaSharp.so is present in the folder \u0060runtimtes/linux-musl-x64/native/\u0060 so it should work fine.\n\n But for some reason .net is trying to load a file called \u0060liblibSkiaSharp.so\u0060 in that folder. Is it a naming issue or something, where does the second \u0060lib\u0060 word come from ?\n\nThe version of SkiaSharp I\u0027m using is: 2.88.6\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\nusing var imageStream = file.OpenReadStream();\nusing var bitmap = SKBitmap.Decode(imageStream);\n\nif (bitmap == null)\n{\n    return new ValidationResult(\u0022The image could not be decoded.\u0022);\n}\n\nvar size = bitmap.Info.Size;\n\nif (size.Width \u003E 512 || size.Height \u003E 512)\n{\n    return new ValidationResult(\u0022The image dimensions are too large.\u0022);\n}\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nThe image should be loaded successfully.\n\n### Actual Behavior\n\nTrying to decode an image throws an exception\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nError loading shared library libSkiaSharp: No such file or directory\nError loading shared library /app/runtimes/linux-musl-x64/native/liblibSkiaSharp: No such file or directory\nError loading shared library /usr/share/dotnet/shared/Microsoft.NETCore.App/7.0.12/liblibSkiaSharp: No such file or directory\nError loading shared library /app/liblibSkiaSharp: No such file or directory\nError loading shared library liblibSkiaSharp: No such file or directory\n\n   at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\n   at SkiaSharp.SKAbstractManagedStream..cctor()\n   --- End of inner exception stack trace ---\n   at SkiaSharp.SKAbstractManagedStream..ctor(Boolean owns)\n   at SkiaSharp.SKManagedStream..ctor(Stream managedStream, Boolean disposeManagedStream)\n   at SkiaSharp.SKCodec.WrapManagedStream(Stream stream)\n   at SkiaSharp.SKCodec.Create(Stream stream, SKCodecResult\u0026 result)\n   at SkiaSharp.SKCodec.Create(Stream stream)\n   at SkiaSharp.SKBitmap.Decode(Stream stream)\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "aodpi",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-19T11:33:30",
+  "updatedAt": "2025-10-01T10:43:09",
+  "commentCount": 43,
+  "reactionCount": 8
+}

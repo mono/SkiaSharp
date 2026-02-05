@@ -1,0 +1,23 @@
+{
+  "number": 2657,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKRuntimeEffect doesn\u0027t work on Bitmap Canvas",
+  "body": "### Description\r\n\r\nWhen attempting to use SKSL effects on bitmap canvases, there is a native exception raised.\r\n\r\nSame of https://github.com/mono/SkiaSharp/issues/1822\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060cs\r\nvar bitmap = new SKBitmap(100, 100, false);\r\nusing var canvas = new SKCanvas(bitmap);\r\n\r\nvar src = @\u0022\r\nhalf4 main(float2 fragCoord) {\r\n  return half4(0.5, 0.5, 0.5, 1);\r\n}\u0022;\r\n\r\nusing var effect = SKRuntimeEffect.Create(src, out var error);\r\n\r\nusing (SKPaint bgPaint = new SKPaint { IsAntialias = true, Shader = effect.ToShader(false) })\r\n    canvas.DrawRoundRect(0, 0, 100, 100, 15, 15, bgPaint); // This raises an exception\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xaml\r\n\u003C!-- xaml code here --\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\nAn exception occurs on attempting a draw operation:\r\nAn unhandled exception of type \u0060System.Runtime.InteropServices.SEHException\u0060 occurred in SkiaSharp.dll\r\nExternal component has thrown an exception.\r\n\r\n### Version of SkiaSharp\r\n\r\n**2.88.3**  and **2.88.6**\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "workgroupengineering",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-21T17:57:54",
+  "updatedAt": "2024-02-09T21:00:27",
+  "closedAt": "2024-01-10T20:59:49",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,32 @@
+{
+  "number": 338,
+  "type": "issue",
+  "state": "closed",
+  "title": "Failed to create EGL surface",
+  "body": "Hi!\r\n\r\nSo I\u0027m not sure if this is a bug somewhere in Skia/Skiasharp or in windows 10 mobile, but today I was hit with a \u0022Failed to create EGL surface\u0022 exception, out of nowhere. Unfortunately the phone wasn\u0027t attached to the debugger so only my custom logging caught the exception, with the following trace:\r\n\r\n   at SkiaSharp.Views.UWP.GlesContext.CreateSurface(SwapChainPanel panel, Int32 rbWidth, Int32 rbHeight, GlesBackingOption backingOption, GlesMultisampling multisampling, GlesRenderTarget renderTarget)\r\n   at SkiaSharp.Views.UWP.GlesContext.SetSurface(SwapChainPanel swapChainPanel, Int32 rbWidth, Int32 rbHeight, GlesBackingOption backingOption, GlesMultisampling multisampling, GlesRenderTarget renderTarget)\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.UpdateBuffers()\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.RenderFrame()\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.Invalidate()\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.CalculateBufferSize()\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.OnCompositionChanged(SwapChainPanel sender, Object args)\r\n\r\nI\u0027m not sure how this can happen and what can be done to avoid it happening again in the future.\r\nThe phone is a Lumia 950XL running W10M build 10.0.15228.0 (feature2) and the issue can\u0027t be reproduced by any consistent way I\u0027m aware of.\r\n",
+  "author": {
+    "login": "bugadani",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2017-07-12T10:12:24",
+  "updatedAt": "2022-08-19T21:01:23",
+  "closedAt": "2018-09-26T04:20:26",
+  "commentCount": 3,
+  "reactionCount": 0
+}

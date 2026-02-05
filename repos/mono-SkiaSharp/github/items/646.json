@@ -1,0 +1,36 @@
+{
+  "number": 646,
+  "type": "issue",
+  "state": "closed",
+  "title": "Xamarin Forms SKGLView not rendering on iOS",
+  "body": "Hi\r\n\r\nI have a Xamarin.Forms project that renders a 2D map inside a container. The map itself uses an SKCanvasView control to do its drawing, and this works well on iOS, Android and UWP. \r\n\r\nI want to switch to an SKGLView to improve performance. The two APIs are almost identical so it\u0027s easy to swap in one for the other, and this works on Android and UWP to good effect. The performance boost on Android is particularly significant. \r\n\r\nHowever when I run the same code on iOS I get a black screen and the following error:\r\n\r\n\u003E Failed to bind EAGLDrawable: \u003CCAEAGLLayer: 0x1c2a3b840\u003E to GL_RENDERBUFFER 1\r\n\u003E Failed to make complete multisample framebuffer object 8cd6\r\n\u003E Failed to make complete framebuffer object 8cd6\r\n\r\nAs far as I can tell, this has something to do with rendering on a view that isn\u0027t visible, so I\u0027ve hooked in to Xamarin.Forms OnAppearing and OnDisappearing events to attempt the render only when the view is visible, however it doesn\u0027t help. \r\n\r\nI don\u0027t know if my understanding of the problem is correct, or if it is, are there better ways to solve it. Could you perhaps suggest something?\r\n\r\nThanks\n\n\u003E VS bug [#770232](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/770232)",
+  "author": {
+    "login": "freever",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-09-28T07:58:16",
+  "updatedAt": "2025-12-05T08:30:14",
+  "closedAt": "2024-11-08T11:19:59",
+  "commentCount": 6,
+  "reactionCount": 0
+}

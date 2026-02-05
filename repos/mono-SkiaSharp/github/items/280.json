@@ -1,0 +1,27 @@
+{
+  "number": 280,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKBitmap.Decode (SkiaSharp 1.57.0) fails for some type of images ",
+  "body": "I\u0027m using Montemagnos CrossMedia plugin to pick a photo from my camera roll.\r\nThen I create a byte[] of the photo and use that byte[] to breate a SKBitmap.\r\n\r\nvar mf = await CrossMedia.Current.PickPhotoAsync();\r\nbyte[] bytes;\r\nvar s = new MemoryStream()\r\nmf.GetStream().CopyTo(s);\r\nmf.Dispose();\r\nbytes = s.ToArray();\r\nvar bm = SKBitmap.Decode(bytes);\r\n\r\nThis worked perfect in version 1.56.x of SkiaSharp. (On both Android, UWP and iOS).\r\nAfter updating to 1.57.0 this still works for iOS and UWP.\r\n\r\nHowever, for some images, on Android, it fails with the dump shown below\r\n\r\nThis seems to be VERY dependent of witch photo I use. I took a photo with my Samsung S7. Worked fine!\r\nMade the photo a bit brighter (in the phone) and saved a copy. The copy DOES NOT work.\r\nBoth photos work if I downgrade SkiaSharp to 1.56.x\r\n\r\n\r\n----\r\nStacktrace:\r\nat \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n04-26 08:30:18.756 E/mono-rt (28205):   at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_codec_get_pixels (intptr,SkiaSharp.SKImageInfo\u0026,intptr,intptr,SkiaSharp.SKCodecOptionsInternal\u0026,intptr,int\u0026) \u003C0x00007\u003E\r\n04-26 08:30:18.756 E/mono-rt (28205):   at SkiaSharp.SKCodec.GetPixels (SkiaSharp.SKImageInfo,intptr,int,SkiaSharp.SKCodecOptions,intptr,int\u0026) [0x00097] in \u003Cf4b7f147247f4a9789d4dbaebc5c8b24\u003E:0\r\n04-26 08:30:18.757 E/mono-rt (28205):   at SkiaSharp.SKCodec.GetPixels (SkiaSharp.SKImageInfo,intptr,int,SkiaSharp.SKCodecOptions,SkiaSharp.SKColorTable,int\u0026) [0x00020] in \u003Cf4b7f147247f4a9789d4dbaebc5c8b24\u003E:0\r\n04-26 08:30:18.757 E/mono-rt (28205):   at SkiaSharp.SKCodec.GetPixels (SkiaSharp.SKImageInfo,intptr,SkiaSharp.SKColorTable,int\u0026) [0x00012] in \u003Cf4b7f147247f4a9789d4dbaebc5c8b24\u003E:0\r\n04-26 08:30:18.757 E/mono-rt (28205):   at SkiaSharp.SKBitmap.Decode (SkiaSharp.SKCodec,SkiaSharp.SKImageInfo) [0x0003d] in \u003Cf4b7f147247f4a9789d4dbaebc5c8b24\u003E:0\r\n04-26 08:30:18.757 E/mono-rt (28205):   at SkiaSharp.SKBitmap.Decode (SkiaSharp.SKCodec) [0x00018] in \u003Cf4b7f147247f4a9789d4dbaebc5c8b24\u003E:0\r\n04-26 08:30:18.757 E/mono-rt (28205):   at SkiaSharp.SKBitmap.Decode (SkiaSharp.SKStream) [0x00026] in \u003Cf4b7f147247f4a9789d4dbaebc5c8b24\u003E:0\r\n04-26 08:30:18.757 E/mono-rt (28205):   at SkiaSharp.SKBitmap.Decode (byte[]) [0x00017] in \u003Cf4b7f147247f4a9789d4dbaebc5c8b24\u003E:0\r\n04-26 08:30:18.757 E/mono-rt (28205):   at Sketching.Renderer.BackgroundImageRenderer.ResizeBitmap",
+  "author": {
+    "login": "Brosten",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2017-04-26T09:10:46",
+  "updatedAt": "2022-08-19T21:02:08",
+  "closedAt": "2017-09-15T01:43:36",
+  "commentCount": 6,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 1157,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Could not load file or assembly \u0027libSkiaSharp\u0027 or one of its dependencies. The module was expected to contain an assembly manifest.",
+  "body": "Using SkiaSharp from NuGet, version 1.68.1.1, I was getting a BadImageFormat exception when running my ASP.NET (standard) server, which referenced a PCL using SkiaSharp. I added at one point \r\n\r\n\u0060\u0060\u0060\r\n  \u003CTarget Name=\u0022CopyRequiredNativeAssets\u0022 AfterTargets=\u0022_FunctionsPostPublish\u0022\u003E\r\n    \u003CItemGroup\u003E\r\n      \u003CNativeAssetToCopy Include=\u0022$(PublishDir)runtimes\\win-x64\\native\\libSkiaSharp.dll\u0022 /\u003E\r\n    \u003C/ItemGroup\u003E\r\n    \u003CCopy SourceFiles=\u0022@(NativeAssetToCopy)\u0022 DestinationFolder=\u0022$(PublishDir)bin\u0022 /\u003E\r\n  \u003C/Target\u003E\r\n\u0060\u0060\u0060\r\n\r\nwhich came from another bug report here. I now get this assembly manifest error, and I\u0027m out of ideas and things to search for. In my unit test project, I had no issues loading and using SkiaSharp in the PCL. Everything is set to \u0060AnyCPU\u0060, which I thought was fixed in the targets file.\r\n\r\nWhat am I missing, and is there more I can try to fix this?\r\n",
+  "author": {
+    "login": "Drise13",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-02-27T22:51:36",
+  "updatedAt": "2022-08-19T06:02:36",
+  "closedAt": "2020-06-25T01:08:35",
+  "commentCount": 5,
+  "reactionCount": 0
+}

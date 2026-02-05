@@ -1,0 +1,32 @@
+{
+  "number": 893,
+  "type": "issue",
+  "state": "closed",
+  "title": "Split the SkiaSharp.Views package for desktop",
+  "body": "**Is your feature request related to a problem?**\r\n\r\nCurrently, the SkiaSharp.Views NuGet package includes all the UI controls for all the native platforms. This is typically fine, except for desktop platforms (Windows, macOS, Linux) as there are MULTIPLE frameworks for each:\r\n\r\n - Windows\r\n    - Windows Forms\r\n    - WPF\r\n    - GTK# (both v2 and v3)\r\n - macOS\r\n    - Cocoa/AppKit\r\n    - GTK# (both v2 and v3)\r\n    - *Potentially UIKit*\r\n - Linux\r\n    - GTK# (both v2 and v3)\r\n    - *Potentially others*\r\n\r\nIn addition to this, there is the whole .NET Core world where WPF and WinForms works on both Full Framework (eg: net45) and Core (eg: netcoreapp3.0).\r\n\r\nAt this point in time, it is a very messy package and is going to be causing all sorts of issues later.\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\n\u003E \u26A0 WARNING: BREAKING CHANGE \u26A0\r\n\r\nWe are looking to move the desktop views out into separate packages:\r\n\r\n - SkiaSharp.Views       *(existing core package with iOS, Android, etc)*\r\n - SkiaSharp.Views.WinForms\r\n - SkiaSharp.Views.WPF\r\n - SkiaSharp.Views.Mac\r\n - SkiaSharp.Views.Gtk2\r\n - SkiaSharp.Views.Gtk3\r\n\r\nAs a result of this, we will change the core SkiaSharp.Views package to rather show a set of warnings when it detects that it was installed, but does not have the correct platform packages. \r\n\r\nFor example, if you install the core package onto net47 and it detects a reference to WPF, it will ask you to install the SkiaSharp.Views.WPF package. Or, if you have a netcoreapp3.0 and it dtects a reference to GtkSharp3, then it will suggest installing the SkiaSharp.Views.Gtk3 package.\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "type/breaking-change",
+      "color": "fc6f94"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-06-27T17:49:04",
+  "updatedAt": "2022-08-19T09:02:52",
+  "closedAt": "2019-07-23T01:02:21",
+  "commentCount": 4,
+  "reactionCount": 6
+}

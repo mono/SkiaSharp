@@ -1,0 +1,23 @@
+{
+  "number": 1226,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] If SKCanvasView is inside CollectionView, PaintSurface is not called upon reusing CollectionView DataTemplate",
+  "body": "**Description**\r\n\r\nHaving SKCanvasView in CollectionView in Xamarin.Forms causing not all items are displayed properly: when they are reused, InvalidateSurface() is not being called.\r\n\r\nIt happens only on iOS (tested on 13.4), on Android, it seems to work ok.\r\nTested on XF 4.5.0.617 and 4.5.0.530- both same\r\nSkiaSharp.Views.Forms 1.68.1.1\r\n\r\n**Code**\r\n\r\nOpen attached project, and run on iOS\r\n[CollectionViewBug.zip](https://github.com/mono/SkiaSharp/files/4462946/CollectionViewBug.zip)\r\n\r\nIf you see the debug output log, you could also see that on iOS, after you scroll out the first page, it does not call SKCanvasViewIconListItem_PaintSurface to paint the new items scrolled into the view.\r\nOn Android, you could see that SKCanvasViewIconListItem_PaintSurface is called for every item as you scroll.\r\n\r\n**Expected Behavior**\r\n\r\nTo display all items in CollectionView properly by calling SKCanvasViewIconListItem_PaintSurface  even on the reused items.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1.1\r\n- IDE:  Visual Studio 16.5.3\r\n- Platform Target Frameworks: \r\n  - iOS:  13.4\r\n\r\n**Screenshots**\r\n\r\nAndroid: OK, numbers are 1..150\r\n\r\n![android](https://user-images.githubusercontent.com/9251057/79015206-9f72b280-7b6c-11ea-9195-bb982d06f874.png)\r\n\r\n---------------------\r\n\r\niOS: NOT OK, after scrolling out first page and reaching number 40th, listitems are being reused, PaintSurface() is not called on them - so they display \u0022old\u0022 drawings.\r\n\r\n![ios](https://user-images.githubusercontent.com/9251057/79015264-baddbd80-7b6c-11ea-9ab4-d2e74497cdb1.png)\r\n\r\n\r\n",
+  "author": {
+    "login": "zoli13",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/wontfix",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-04-10T18:51:39",
+  "updatedAt": "2022-08-19T06:02:03",
+  "closedAt": "2020-04-11T17:44:23",
+  "commentCount": 4,
+  "reactionCount": 0
+}

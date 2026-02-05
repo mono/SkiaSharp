@@ -1,0 +1,22 @@
+{
+  "number": 2659,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkPaint is not affecting SKPicture when drawing on canvas",
+  "body": "### Description\r\n\r\nHI Matthew @mattleibow ,\r\nApparently SkPaint is not affecting SKPicture when drawing on canvas.\r\nWhat I\u0027m trying to do is scale picture without changing it\u0027s stroke.\r\nI found out that in order to do this I\u0027m supposed to define SkPaint with style Stroke or StrokeAndFill and set StrokeWidth=0.\r\nHere is sample of my code:\r\n\r\n\r\nIs it possible to scale svg without changing it\u0027s edges thickness?\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\nusing (SKCanvas canvas = new SKCanvas(bitmap))\r\n {\r\n            var paint = new SKPaint\r\n            { \r\n                IsAntialias = true,\r\n                Style = SKPaintStyle.Stroke,\r\n                StrokeWidth = 0,\r\n            };\r\n            canvas.Scale(4);\r\n            canvas.DrawPicture(svg.Picture, paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nStroke of the picture is not getting bigger \r\n\r\n### Actual Behavior\r\n\r\nStroke of the picture is getting bigger \r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nLinux, Windows\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "desc3nd",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-25T12:55:53",
+  "updatedAt": "2023-10-28T16:10:59",
+  "commentCount": 1,
+  "reactionCount": 0
+}

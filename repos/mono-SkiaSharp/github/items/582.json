@@ -1,0 +1,19 @@
+{
+  "number": 582,
+  "type": "issue",
+  "state": "closed",
+  "title": "ArgumentException: The parameter is incorrect. pixelWidth, in SkiaSharp.Views.UWP SKXamlCanvas DoInvalidate()",
+  "body": "### Description\r\n\r\nAfter a recent update to all of our third party nuget packages, we started getting this exception from SkiaSharp on UWP:\r\n\r\nSystem.ArgumentException: The parameter is incorrect. pixelWidth\r\n\r\nCall Stack:\r\nSkiaSharp.Views.UWP.SKXamlCanvas.CreateBitmap(SkiaSharp.SKImageInfo info)\r\nSkiaSharp.Views.UWP.SKXamlCanvas.DoInvalidate()\r\n\r\nI tracked the cause down this check here:\r\nhttps://github.com/mono/SkiaSharp/blob/b8511b732b77b6e9f3b4929a5fa5598d189adf1d/source/SkiaSharp.Views/SkiaSharp.Views.UWP/SKXamlCanvas.cs#L94\r\n\r\nSkiaSharp is correctly checking that ActualWidth and ActualHeight are valid, but only *before* multiplying them by the dpi, so the exception is likely being caused by somebody else setting the dpi to zero or some other invalid value.  As a test, I explicitly turned on IgnorePixelScaling in my control, and it successfully avoided the exception, proving that the bad value is coming from dpi.\r\n\r\nA simple fix would be to move this check to after the \u0022width\u0022 and \u0022height\u0022 are calculated, and to validate those values instead of \u0022ActualWidth\u0022 and \u0022ActualHeight\u0022\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.2\r\n- IDE:  Visual Studio 15.7.5\r\n- Platform Target Frameworks: \r\n  - UWP:  10.0.16299\r\n",
+  "author": {
+    "login": "jalbertSyncroTech",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.60.3",
+  "createdAt": "2018-07-19T18:38:49",
+  "updatedAt": "2022-08-19T15:02:01",
+  "closedAt": "2018-07-24T01:33:07",
+  "commentCount": 6,
+  "reactionCount": 1
+}

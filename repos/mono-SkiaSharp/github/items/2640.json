@@ -1,0 +1,23 @@
+{
+  "number": 2640,
+  "type": "issue",
+  "state": "closed",
+  "title": "Blazor Client (WASM): unable to use SkiaSharp in .NET 6",
+  "body": "### Description\n\nWith the recent versions of .NET 6, it seems that something has changed and it is not possible to use SkiaSharp anymore.\r\nExisting application that were previously running, once rebuild with latest versions of .NET 6 SDK, give errors at runtime (unable to load the SkiaSharp DLL).\n\n### Code\n\nI attach a POC project that reproduces the problem.\r\n\r\nNote: it works with .NET 7 SDK\r\nIf using the global.config to force to use the .NET 6 SDK, we get the wrong behavior\r\n\r\n[BlazorApp2.zip](https://github.com/mono/SkiaSharp/files/12818166/BlazorApp2.zip)\r\n\n\n### Expected Behavior\n\nI would expect to compile existing applications even from later versions of .NET 6\n\n### Actual Behavior\n\nInstead we get this error in the browser console:\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/18611507/3f987377-cb48-4593-b028-d5b27070599e)\r\n\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Windows 11\r\n- Browser: Chrome\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "curia-damiano",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-05T12:14:30",
+  "updatedAt": "2023-12-01T09:00:29",
+  "closedAt": "2023-11-01T07:44:21",
+  "commentCount": 15,
+  "reactionCount": 0
+}

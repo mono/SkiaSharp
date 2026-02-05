@@ -1,0 +1,23 @@
+{
+  "number": 685,
+  "type": "issue",
+  "state": "closed",
+  "title": "Bug in MeasureText?",
+  "body": "### Description\r\n\r\nI am trying to draw a grid with text inside each cell.  The text does NOT seem to line up vertically.  I created a test program which shows the issue.  I print out the numbers 0 through 9.  I use their measured widths to space them horizontally and I use their measured heights to place them vertically.  All of the numbers use the same font size and do not have anything that should be drawn below the baseline.  Therefore, I would expect every number to measures exactly the same in height.  But the output of the code below shows that 3, 6, 8, and 9 all measure slightly bigger than the others.  and I use the measurements from number 0 to draw horizontal red lines for visual comparison.  Surprisingly, even 0 doesn\u0027t line up correctly with the red lines even though the red lines are calculated from number 0.\r\n\r\n### Code\r\n\r\n\t\tprivate void HandlePaintCanvas(object sender, SKPaintSurfaceEventArgs e)\r\n\t\t{\r\n\t\t\tSKSizeI canvasSize = e.Info.Size;\r\n            e.Surface.Canvas.DrawColor(SKColors.White);\r\n            using (SKPaint p = new SKPaint { IsAntialias = true, StrokeWidth = 2, Typeface = SKTypeface.FromFamilyName(\u0022sans-serif\u0022), TextSize = 150, TextAlign = SKTextAlign.Center }) {\r\n                float left = 40;\r\n                float midCanvasY = canvasSize.Height / 2;\r\n                float zeroHeight = 0;\r\n                for (int i = 0; i \u003C 10; i\u002B\u002B) {\r\n                    string text = \u0022\u0022 \u002B i;\r\n                    SKRect textBounds = SKRect.Empty;\r\n                    p.Color = SKColors.Black;\r\n                    p.Style = SKPaintStyle.Fill;\r\n                    p.MeasureText(text, ref textBounds);\r\n                    if (i == 0)\r\n                        zeroHeight = textBounds.Height;\r\n                    Console.WriteLine(\u0022\u0022 \u002B i \u002B \u0022: \u0022 \u002B textBounds.Height);\r\n                    SKPoint textLoc = new SKPoint(left, midCanvasY);\r\n                    e.Surface.Canvas.DrawText(text, textLoc.X, textLoc.Y \u002B textBounds.Height / 2, p);\r\n                    left \u002B= textBounds.Width;\r\n                }\r\n                float topZeroY = midCanvasY - zeroHeight / 2;\r\n                float bottomZeroY = midCanvasY \u002B zeroHeight / 2;\r\n                p.Color = SKColors.Red;\r\n                p.Style = SKPaintStyle.Stroke;\r\n                e.Surface.Canvas.DrawLine(0, topZeroY, canvasSize.Width, topZeroY, p);\r\n                e.Surface.Canvas.DrawLine(0, midCanvasY, canvasSize.Width, midCanvasY, p);\r\n                e.Surface.Canvas.DrawLine(0, bottomZeroY, canvasSize.Width, bottomZeroY, p);\r\n            }\r\n        }\r\n\r\n\r\n### Expected Behavior\r\n\r\nI expect all of the numbers to line up vertically AND within the red lines.\r\n\r\n### Actual Behavior\r\n\r\nsee attached picture and console output here showing the different calculated heights for each number:\r\n\r\n0: 110\r\n1: 107\r\n2: 108\r\n3: 111\r\n4: 108\r\n5: 109\r\n6: 111\r\n7: 106\r\n8: 112\r\n9: 111\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- Last known good version:  none\r\n- IDE:  Visual Studio for Mac 7.6.11.9\r\n  - iOS:  12.2.1.10\r\n- Target Devices:\r\n  -   iPhone 8 12.1 simulator\r\n  -   iPhone X device\r\n\r\n### Screenshots\r\n\r\n![simulator screen shot - iphone 8 - 2018-11-14 at 14 20 37](https://user-images.githubusercontent.com/4534494/48513215-7edbe700-e818-11e8-85e8-3c711d5cf1e9.png)\r\n",
+  "author": {
+    "login": "scastria",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-11-14T21:21:52",
+  "updatedAt": "2022-08-19T12:02:41",
+  "closedAt": "2018-11-15T03:34:48",
+  "commentCount": 2,
+  "reactionCount": 0
+}

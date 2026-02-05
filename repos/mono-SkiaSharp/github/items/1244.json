@@ -1,0 +1,19 @@
+{
+  "number": 1244,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] System.AccessViolationException. GPU Memory Leaks ??",
+  "body": "**Description**\r\n\r\nI am trying to make some sort of animation on an SkElement in wpf, for that :\r\nFirst - I create a surface with GrContext set on OpenGL ( For the OpenGL context I Used The GLControl context with the method MakeCurrent()\u003C-- only issue for 64 bits ? ).\r\nSecond - I Draw offscreen with this GPU acceleration configuration on a canvas initiated as a Local Variable as much as the surface with the GrContext.\r\nThird - I start InvalidateVisual() for the SkElement every 1/30 seconds, all runs perfectly until at some random( or more some sort of range like 300 ) number of iteration it gives me : System.AccessViolationException: \u0027Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0027\r\n\r\nI Tried canvas flush, clear ...\r\nBut I Looked up at the GrContext MemoryCache available ( the default limit for it is :100 000 000  )\r\nAnd I saw that they are some sort of memory leaks on the Gpu side , I made some graphically discussable representation here : \r\n![image](https://user-images.githubusercontent.com/44734791/79917276-771b6b80-842a-11ea-9e1c-7a8f59548cd3.png)\r\n\r\n\r\nThe White number on the right represent the memory used ( 100 000 000 is the limit by default )\r\nAnd when I upgrade the memory limit that it can use , the program crashes after way more iterations processed but the problem is still here, they are some strange memory leaks on the GPU side for which I tryed  nearly everything to solve, the only issue is to look up at the memory used and once it\u0027s too high, i abandon the gr context and set it up again but i loose a lot of time with this way\r\n\r\nAnd also, when this message \u0022System.AccessViolationException...\u0022 appear, it doesn\u0027t tell me which line it is\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\n             cnt = new SKGLControl();\r\n            /*glControl.PaintSurface \u002B= OnPaintGL;\r\n            glControl.Dock = System.Windows.Forms.DockStyle.Fill;\r\n            glControl.Click \u002B= OnSampleClicked;*/\r\n            cnt.Width = 1920;\r\n            cnt.Height = 1080;\r\n            cnt.MakeCurrent();\r\n\r\n            interf = GRGlInterface.CreateNativeGlInterface();\r\n            _context = GRContext.Create(GRBackend.OpenGL, interf);\r\n            _context.SetResourceCacheLimits(100, 1000000000);\r\n            // create the surface (UPDATED)\r\n            var glInfo = new GRGlFramebufferInfo(\r\n                fboId: 0,\r\n                format: SKColorType.Rgba8888.ToGlSizedFormat());\r\n\r\n            var renderTarget = new GRBackendRenderTarget(\r\n                width: 1920,\r\n                height: 1080,\r\n                sampleCount: 0,\r\n                stencilBits: 0,\r\n                glInfo: glInfo\r\n                );\r\n            \r\n\r\n            Surface = SKSurface.Create(\r\n                _context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);\r\n\r\n\u0060\u0060\u0060\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.2 60 preview\r\n- Last known good version:  None\r\n- IDE:  Visual Studio 2019\r\n- Platform Target Frameworks: I personnaly am on 4.7.2\r\n \r\n\r\n\r\n",
+  "author": {
+    "login": "axel578",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-04-21T21:53:02",
+  "updatedAt": "2022-08-19T06:01:56",
+  "closedAt": "2020-04-29T10:04:19",
+  "commentCount": 6,
+  "reactionCount": 0
+}

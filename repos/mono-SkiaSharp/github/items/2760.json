@@ -1,0 +1,17 @@
+{
+  "number": 2760,
+  "type": "issue",
+  "state": "open",
+  "title": "SKDrawable sometimes crashes",
+  "body": "I notice that the fact I override the \r\n\r\n\u0060\u0060\u0060cpp\r\nsk_sp\u003CSkPicture\u003E SkDrawable::onMakePictureSnapshot()\r\n\u0060\u0060\u0060\r\n\r\nfunction in C\u002B\u002B for the managed drawable is causing a crash. If i change it to\r\n\r\n\u0060\u0060\u0060cpp\r\nSkPicture* SkDrawable::onMakePictureSnapshot()\r\n\u0060\u0060\u0060\r\n\r\nstops the crash. I noticed this locally on macOS. Not sure why it passes on CI.\r\n\r\n_Originally posted by @mattleibow in https://github.com/mono/SkiaSharp/pull/2630#discussion_r1493718896_\r\n            ",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2024-02-18T09:59:27",
+  "updatedAt": "2024-02-18T09:59:27",
+  "commentCount": 0,
+  "reactionCount": 0
+}

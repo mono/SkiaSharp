@@ -1,0 +1,17 @@
+{
+  "number": 2136,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Unable to allocate pixels for the bitmap in Azure App service",
+  "body": "**Description**\r\n\r\n**\u0022Unable to allocate pixels for the bitmap in Azure App service\u0022** exception throws, while decoding specific image multiple times using SkiaSharp library in Azure App service\r\n\r\n**Code**\r\n\r\n                \u0060\u0060\u0060\r\n                FileStream fileStream = new FileStream(Environment.CurrentDirectory \u002B \u0022/wwwroot/images/image126.png\u0022, FileMode.Open);\r\n                MemoryStream imageStream = new MemoryStream();\r\n                fileStream.CopyTo(imageStream);\r\n                fileStream.Dispose();\r\n                for (int i = 0; i \u003C= 20; i\u002B\u002B)\r\n                {\r\n                    imageStream.Position = 0;\r\n                    SkiaSharp.SKData skData = SkiaSharp.SKData.Create(imageStream);\r\n                    SkiaSharp.SKBitmap.Decode(skData);\r\n                    skData.Dispose();\r\n                }\r\n                \u0060\u0060\u0060\r\n               \r\n**Expected Behavior**\r\n\r\nImage should be decoded properly \r\n\r\n**Actual Behavior**\r\n\r\nThrows **Unable to allocate pixels for the bitmap** exception in Azure App service\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  **2.88.0-preview.209**\r\n- Last known good version:  **2.88.1-preview.79**\r\n- IDE:  **Visual Studio 2019**\r\n- Framework details: **ASP.NET Core application with .NET Core 2.1 framework**\r\n- Azure App service details: **P1v2 Plan**\r\n\r\n**StackTrace:**\r\n\r\n\u0060\u0060\u0060\r\nSystem.Exception: Unable to allocate pixels for the bitmap. \r\nat SkiaSharp.SKBitmap.Decode(SKCodec codec, SKImageInfo bitmapInfo) \r\nat SkiaSharp.SKBitmap.Decode(SKCodec codec) \r\nat SkiaSharp.SKBitmap.Decode(SKData data) \r\nat AzureAppSeviceLinux.Controllers.HomeController.DecodeImage(String button) \r\n\u0060\u0060\u0060\r\n **Note: This code works properly in windows**\r\n\r\n\r\n**Reproduction Link**\r\n\r\nPlease deploy the below sample in Azure app service to replicate the issue,\r\n\r\n[AzureAppSeviceLinux-543651564.zip](https://github.com/mono/SkiaSharp/files/9019402/AzureAppSeviceLinux-543651564.zip)\r\n\r\n",
+  "author": {
+    "login": "DharanitharanA",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-30T11:41:10",
+  "updatedAt": "2023-07-24T15:29:45",
+  "commentCount": 11,
+  "reactionCount": 1
+}

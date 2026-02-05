@@ -1,0 +1,17 @@
+{
+  "number": 2446,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Memory leak occurs while measuring the text using font stream",
+  "body": "**Description**\r\n\r\nMemory keep on increasing while measuring the text using font stream\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nfor (int i = 0; true; i\u002B\u002B)\r\n{\r\n    Console.WriteLine(i);\r\n    // Memory leak occurs while measuring the text using font stream.\r\n    MeasureTextUsingFontStream();\r\n}\r\n\r\n// Measure the text using font stream\r\nstatic void MeasureTextUsingFontStream() {\r\n    using (var stream = File.OpenRead(@\u0022../../../arial.ttf\u0022)) {\r\n        using (var typeface = SKTypeface.FromStream(stream)) {\r\n            using (var paint = new SKPaint { Typeface = typeface }) {\r\n                // Issue doesn\u0027t occur if we commented the below line.\r\n                var width = paint.MeasureText(\u0022Hello, world!\u0022);\r\n                paint.Dispose();\r\n            }\r\n            typeface.Dispose();\r\n        }\r\n        stream.Dispose();\r\n    }    \r\n    GC.Collect();\r\n    GC.WaitForPendingFinalizers();\r\n}\r\n\u0060\u0060\u0060\r\n**_Note: You can use any available TTF font to replicate this problem._**\r\n\r\n**Expected Behavior**\r\n\r\nAllocated memory should be disposed properly\r\n\r\n**Actual Behavior**\r\n\r\nMemory allocation increasing rapidly without any disposal\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- Last known good version: None\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:\r\n  - Windows Classic:  Windows 10\r\n  \r\n\u003Cdetails\u003E\r\n**IDE:**\r\nMicrosoft Visual Studio Professional 2022 (64-bit) - Preview\r\nVersion 17.6.0 Preview 1.0\r\n\r\n**OS:**\r\nOS\t\t- Windows 10 Pro\r\nProcessor\t- Intel(R) Core(TM) i5-7200U CPU @ 2.50GHz   2.71 GHz\r\nInstalled RAM\t- 16.0 GB (15.9 GB usable)\r\nSystem type\t- 64-bit operating system, x64-based processor\r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n**Measuring the text using font stream:** (Memory keep on increasing here)\r\n\r\n![image](https://user-images.githubusercontent.com/93113962/233086270-1fb5b85a-d5e0-4758-8ff0-1737f3593a55.png)\r\n\r\n**Measuring the text using installed font:** (Memory disposed properly here and it\u0027s maintained in same level)\r\n\r\n![image](https://user-images.githubusercontent.com/93113962/233086612-91c672a0-e8e0-41a1-8079-7974cb324fe0.png)\r\n\r\n**Reproduction Link**\r\n\r\nPlease use the attached sample to replicate the same problem,\r\n[SkiaSharpTesting.zip](https://github.com/mono/SkiaSharp/files/11273548/SkiaSharpTesting.zip)\r\n\r\n",
+  "author": {
+    "login": "Ramaraj-Marimuthu",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-04-19T13:20:25",
+  "updatedAt": "2024-09-19T14:01:22",
+  "commentCount": 9,
+  "reactionCount": 0
+}

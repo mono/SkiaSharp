@@ -1,0 +1,18 @@
+{
+  "number": 410,
+  "type": "issue",
+  "state": "closed",
+  "title": "Remove transparency from the image in PNG format",
+  "body": "Can u tell me how i can remove transparency from the image in PNG format in .NET Core 2.0?\r\nI do something like this, but as a result, the picture is obtained with serrated edges and doesn\u0027t look beautiful \u002B this operation takes a very long time\r\n\u0060\u0060\u0060\r\nvar original = SKBitmap.Decode(inputStream);\r\nif (original.ColorType == SKColorType.Index8)\r\n{\r\n    original.CopyTo(original, SKImageInfo.PlatformColorType);\r\n}\r\n\r\nfor (int i = 0; i \u003C original.Width; i\u002B\u002B)\r\n{\r\n    for (int j = 0; j \u003C original.Height; j\u002B\u002B)\r\n    {\r\n        if (original.GetPixel(i, j) == SKColors.Empty)\r\n        {\r\n            original.SetPixel(i, j, SKColors.White);\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\nCan u help me?\r\nThanks in advance for the answer.",
+  "author": {
+    "login": "VladimirLuzhin",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-12-18T02:07:41",
+  "updatedAt": "2022-08-19T18:02:01",
+  "closedAt": "2017-12-19T00:52:43",
+  "commentCount": 2,
+  "reactionCount": 0
+}

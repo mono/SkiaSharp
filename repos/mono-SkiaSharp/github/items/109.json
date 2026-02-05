@@ -1,0 +1,24 @@
+{
+  "number": 109,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to load DLL \u0027libSkiaSharp.dll\u0027 under Windows 7 SP1",
+  "body": "Version: 1.49.4-beta via NuGet\n\n\u0060\u0060\u0060\nUnable to load DLL \u0027libSkiaSharp.dll\u0027: Nie mo\u017Cna odnale\u017A\u0107 okre\u015Blonego modu\u0142u. (Exception from HRESULT: 0x8007007E)\n   at SkiaSharp.SkiaApi.sk_filewstream_new(String path)\n   at SkiaSharp.SKFileWStream..ctor(String path)\n   at SkiaSharpDemo.Window1.SkiaCreatePdf() \n\u0060\u0060\u0060\n\nCode to reproduce: https://github.com/wieslawsoltes/SkiaSharpDemo\n\n\u0060\u0060\u0060 C#\nusing System;\nusing System.Collections.Generic;\nusing System.Diagnostics;\nusing System.Globalization;\nusing System.Text;\nusing System.Threading;\nusing System.Windows;\nusing System.Windows.Controls;\nusing System.Windows.Data;\nusing System.Windows.Documents;\nusing System.Windows.Input;\nusing System.Windows.Media;\nusing SkiaSharp;\n\nnamespace SkiaSharpDemo\n{\n    public partial class Window1 : Window\n    {\n        public Window1()\n        {\n            InitializeComponent();\n            Thread.CurrentThread.CurrentUICulture = new CultureInfo(\u0022en-US\u0022);\n        }\n\n        void Button_Click(object sender, RoutedEventArgs e)\n        {\n            try\n            {\n                SkiaCreatePdf();\n            }\n            catch (Exception ex)\n            {\n                Debug.Print(ex.Message);\n                Debug.Print(ex.StackTrace);\n            }\n        }\n\n        private void SkiaCreatePdf()\n        {\n            float width = 800f;\n            float height = 600f;\n            using (var stream = new SKFileWStream (\u0022document.pdf\u0022))\n            {\n                using (var document = SKDocument.CreatePdf (stream)) \n                {\n                    // the first page\n                    using (var canvas = document.BeginPage (width, height)) \n                    {\n                        using (var paint = new SKPaint ()) \n                        {\n                            canvas.DrawText (\u0022...PDF...\u0022, 10f, 100f, paint); \n                            document.EndPage ();\n                        }\n                    }\n\n                    // the second page\n                    using (var canvas = document.BeginPage (width, height)) \n                    {\n                        using (var paint = new SKPaint ()) \n                        {\n                            canvas.DrawText (\u0022...PDF...\u0022, 10f, 100f, paint); \n                            document.EndPage ();\n                        }\n                    }\n\n                    // all done\n                    document.Close ();\n                }\n            }\n        }\n    }\n}\n\u0060\u0060\u0060\n",
+  "author": {
+    "login": "wieslawsoltes",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/duplicate",
+      "color": "cccccc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.53.1",
+  "createdAt": "2016-07-07T12:16:09",
+  "updatedAt": "2022-08-20T00:02:38",
+  "closedAt": "2016-08-15T15:39:54",
+  "commentCount": 14,
+  "reactionCount": 0
+}

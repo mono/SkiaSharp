@@ -1,0 +1,18 @@
+{
+  "number": 1131,
+  "type": "issue",
+  "state": "closed",
+  "title": "Can\u0027t draw text using default typeface on Linux",
+  "body": "**Description**\r\n\r\nCan\u0027t draw text using \u0060SKTypeface.Default\u0060 under WSL (Debian) or Docker, .NET Core 3.1, host Windows 10 Pro x64 1903.\r\n\r\nPackages used are \u0060SkiaSharp\u0060 and \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060, 1.68.2-preview.29 or older versions.\r\n\r\nExplicitly loading a typeface fixes the problem.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060CS\r\n\tusing var surface = SKSurface.Create(new SKImageInfo(256, 256));\r\n\tusing var canvas = surface.Canvas;\r\n\tcanvas.Clear(SKColors.SkyBlue);\r\n\r\n\tusing var paint = new SKPaint\r\n\t{\r\n\t\tColor = SKColors.Yellow, \r\n\t\tTextAlign = SKTextAlign.Center, \r\n\t\tTextSize = 64,\r\n\t\tTypeface = SKTypeface.Default\r\n\t};\r\n\r\n\tcanvas.DrawText(\u0022foobar\u0022, 128, 128, paint);\r\n\r\n\tusing var image = surface.Snapshot();\r\n\timage.SaveAs(\u0022test.png\u0022, SKPngEncoderOptions.Default);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe output should contain the text \u0022foobar\u0022 on a skyblue background.\r\n\r\n**Actual Behavior**\r\n\r\nThe output doesn\u0027t contain any text, but the background is skyblue, so rendering did take place.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.2 preview\r\n- Last known good version:  Can\u0027t find any version that works.\r\n- IDE:  Visual Studio 2019 Enterprise\r\n- Platform Target Frameworks: \r\n  - Linux:  WSL/Debian/10.2 or Docker mcr.microsoft.com/dotnet/core/sdk:3.1-buster\r\n\r\n**Reproduction Link**\r\n\r\nThis [commit](https://github.com/Ziriax/SkiaBugs/commit/d1779e809acbe5a478213fb4053cfd9cefc6f751) shows the problem\r\n\r\nThis [commit](https://github.com/Ziriax/SkiaBugs/commit/1f47b9835b03a68aa0cda489cc73add5ce89279e) shows that loading a specific typeface solves the problem, but I guess the default typeface should work or at least throw an exception, so I consider this a bug\r\n\r\nMaybe using the package \u0060SkiaSharp.NativeAssets.Linux\u0060 that requires FontConfig etc also fixes this, but I haven\u0027t tested that yet.\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-02-07T13:25:17",
+  "updatedAt": "2022-08-19T06:02:50",
+  "closedAt": "2020-02-08T18:38:09",
+  "commentCount": 16,
+  "reactionCount": 0
+}

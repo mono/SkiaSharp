@@ -1,0 +1,22 @@
+{
+  "number": 3288,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Measuring Text Width for Chinese Characters \u2013 Error",
+  "body": "### Description\n\nMeasuring Text Width for Chinese Characters \u2013 Error\n\nVersion: \u0022skia-canvas\u0022: \u0022^2.0.2\u0022\n\nI have two sentences that are nearly the same length\u2014one in Chinese and one in English:\n\nChinese:\n\u0022\u5728\u7F8E\u56FD\u603B\u7EDF\u5DDD\u666E\u4E0E\u7535\u52A8\u8F66\u5927\u5382\u7279\u65AF\u62C9\u6267\u884C\u957F\u9A6C\u65AF\u514B\u95F9A\u7FFB\u540E\uFF0C\u767D\u5BAB\u5B98\u5458\u4ECA\u5929\u8868\u793A\uFF0C\u5DDD\u666E\u53EF\u80FD\u8F6C\u3002\u0022\n\nEnglish:\n\u0022abc browsrs- and Blink browsers -based browsers, the non-st42andard. \u0022\n\nWhen I measure these two sentences, the result for the Chinese sentence is incorrect.\nI used this line:\nctx.measureText(fullText, 952);\n\nPlease note the width for each line in the results. The first line of the Chinese sentence is already significantly beyond the specified maximum width of 952. The result of Egnlish sentence seems to be right.\n\nChinese sentence:\n\u0060\u0060\u0060\n0 = {x: 1.1399999856948853, y: -25.44325828552246, width: 1654.2899169921875, height: 28.6200008392334, baseline: -0.000001430511474609375, \u2026}\n1 = {x: 1.2599999904632568, y: 16.706737518310547, width: 279.1499938964844, height: 28.470001220703125, baseline: 42, \u2026}\n\u0060\u0060\u0060\n\nEnglish sentence:\n\u0060\u0060\u0060\n0 = {x: 1.7699999809265137, y: -23.913259506225586, width: 818.519775390625, height: 29.579999923706055, baseline: -0.000001430511474609375, \u2026}\n1 = {x: 0.9600000381469727, y: 18.08673858642578, width: 163.5900115966797, height: 24.270000457763672, baseline: 42, \u2026}\n\u0060\u0060\u0060\n\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio Code (macOS)\n\n### Platform / Operating System\n\nmacOS\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "chriswang-",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-06-06T19:47:11",
+  "updatedAt": "2025-06-06T19:54:56",
+  "commentCount": 1,
+  "reactionCount": 0
+}

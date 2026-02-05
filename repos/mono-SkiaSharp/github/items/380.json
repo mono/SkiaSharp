@@ -1,0 +1,18 @@
+{
+  "number": 380,
+  "type": "issue",
+  "state": "closed",
+  "title": "How cant convert ImageSource to FileImageSource",
+  "body": "            Assembly assembly = GetType().GetTypeInfo().Assembly;\r\n            Stream stream = assembly.GetManifestResourceStream(\u0022TicTacToe.wallpaper.jpg\u0022);\r\n            SKManagedStream skStream = new SKManagedStream(stream);\r\n            SKBitmap skBitmap = SKBitmap.Decode(skStream);\r\n\r\n            SKImageInfo info = new SKImageInfo(200, 200);\r\n            var pieceBitmap = new SKBitmap(info);\r\n\r\n            using (var canvas = new SKCanvas(pieceBitmap))\r\n            {\r\n                canvas.DrawBitmap(skBitmap, 0, 0);\r\n            }\r\n\r\n            var streamPiece = new MemoryStream();\r\n\r\n            try\r\n            {\r\n                pieceBitmap.LockPixels();\r\n                IntPtr p;\r\n                IntPtr pixels = pieceBitmap.GetPixels(out p); \r\n                using (var img = SKImage.FromPixels(pieceBitmap.Info, pixels, pieceBitmap.Width * pieceBitmap.BytesPerPixel))\r\n                {\r\n                    var data = img.Encode(SKEncodedImageFormat.Png,300);\r\n                    data.SaveTo(streamPiece);\r\n                    imageSource = ImageSource.FromStream(() =\u003E streamPiece);\r\n                }\r\n            }\r\n            finally\r\n            {\r\n                pieceBitmap.UnlockPixels();\r\n            }\r\n            buttonA.Image = (FileImageSource)imageSource; // InvalidCastException in this line ",
+  "author": {
+    "login": "Urien2017",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-10-16T19:09:11",
+  "updatedAt": "2022-08-19T18:02:26",
+  "closedAt": "2017-10-24T15:10:15",
+  "commentCount": 5,
+  "reactionCount": 0
+}

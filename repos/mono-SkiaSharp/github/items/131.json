@@ -1,0 +1,19 @@
+{
+  "number": 131,
+  "type": "issue",
+  "state": "closed",
+  "title": "NullReferenceException in SKCodec.Create()",
+  "body": "With SkiaSharp HEAD, I am trying to create an \u0060SKBitmap\u0060 from a \u0060System.Drawing.Bitmap\u0060 instance like this:\n\n\u0060\u0060\u0060\npublic static SKBitmap SKBitmapFromBitmap(System.Drawing.Bitmap bitmap) {\n    using (System.IO.MemoryStream memstr = new System.IO.MemoryStream()) {\n        bitmap.Save(memstr, bitmap.RawFormat);\n        using (var s = new SKManagedStream(memstr)) {\n            using (var codec = SKCodec.Create(s)) {\n                var info = codec.Info;\n                var skbitmap = new SKBitmap(info.Width, info.Height, SKImageInfo.PlatformColorType, info.IsOpaque ? SKAlphaType.Opaque : SKAlphaType.Premul);\n                IntPtr length;\n                var result = codec.GetPixels(skbitmap.Info, skbitmap.GetPixels(out length));\n                if (result == SKCodecResult.Success) {\n                    return skbitmap;\n                } else {\n                    throw new ArgumentException();\n                }\n            }\n        }\n    }\n}\n\u0060\u0060\u0060\n\nBut during the \u0060SKCodec.Create(s)\u0060 call I am getting a NullReferenceException at SKCodec.cs [line 142](https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKCodec.cs#L142). Stepping through in the debugger, it appears \u0060GetObject\u003CSKCodec\u003E(...)\u0060 is returning null. Note that \u0060stream.Handle\u0060 is 0, presumably because it\u0027s a managed stream.\n\nAm I doing something wrong in creating the SKBitmap? I\u0027m basing my code off of the sample code [BitmapDecoder](https://github.com/mono/SkiaSharp/blob/master/samples/SharedDemo/SkiaSharp.Demos.cs#L499).\n",
+  "author": {
+    "login": "tdenniston",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.53.1",
+  "createdAt": "2016-08-10T16:39:09",
+  "updatedAt": "2022-08-20T00:02:22",
+  "closedAt": "2016-08-11T16:32:05",
+  "commentCount": 3,
+  "reactionCount": 0
+}

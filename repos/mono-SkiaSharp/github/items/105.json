@@ -1,0 +1,29 @@
+{
+  "number": 105,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp from NuGet not work with UWP",
+  "body": "This line\n\u0060var canvas = SKSurface.Create(100, 100, SKColorType.N_32, SKAlphaType.Premul);\u0060\n\nthrows \n\u0060\u0027System.BadImageFormatException\u0027 in Unknown Module.\u0060\n\nSteps to reproduce:\n-  Update to VS 2015 update 3.\n- Make Blank UWP project\n- Install SkiaSharp from NuGet\n- add button and onclick handler:\n\n\u0060\u0060\u0060\nbutton.Click \u002B= delegate (object sender, RoutedEventArgs e){\n     var canvas = SKSurface.Create(100, 100, SKColorType.N_32, SKAlphaType.Premul);\n};\n\u0060\u0060\u0060\n- launch in Debug x86 / x64 mode\n",
+  "author": {
+    "login": "tower120",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "milestone": "1.53.0",
+  "createdAt": "2016-06-29T19:46:55",
+  "updatedAt": "2022-08-20T00:02:42",
+  "closedAt": "2016-07-29T16:11:28",
+  "commentCount": 4,
+  "reactionCount": 0
+}

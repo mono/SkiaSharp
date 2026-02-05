@@ -1,0 +1,19 @@
+{
+  "number": 1168,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG]  Random segfaults on Android",
+  "body": "**Description**\r\n\r\nI use a mapping library Mapsui, which uses SkiaSharp 1.68.1.1 in my Xamarin.Android app. When zooming in/out or moving around the map, or sometimes even doing nothing, the app crashes. I was able to recover following report from Logcat. \r\n\r\nMy app is using AOT compilation.\r\n\r\nI was wondering, if you could decode the message using addr2line and find the problem. I\u0027m not entirely sure that it\u0027s SkiaSharp error, but I don\u0027t know, how to know for sure anyway. I\u0027m using only mono .so libraries besides Skia. \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n03-06 10:45:44.549 10828 11427 F libc    : Fatal signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x1130 in tid 11427 (GLThread 25266), pid 10828 (proplamobilenet)\r\n\r\n03-06 10:45:44.777 11508 11508 I crash_dump64: obtaining output fd from tombstoned, type: kDebuggerdTombstone\r\n03-06 10:45:44.781  1067  1067 I /system/bin/tombstoned: received crash request for pid 11427\r\n03-06 10:45:44.784 11508 11508 I crash_dump64: performing dump of process 10828 (target tid = 11427)\r\n03-06 10:45:44.807 11508 11508 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\r\n03-06 10:45:44.808 11508 11508 F DEBUG   : Build fingerprint: \u0027xiaomi/jasmine/jasmine_sprout:9/PKQ1.180904.001/V10.0.17.0.PDIMIXM:user/release-keys\u0027\r\n03-06 10:45:44.808 11508 11508 F DEBUG   : Revision: \u00270\u0027\r\n03-06 10:45:44.808 11508 11508 F DEBUG   : ABI: \u0027arm64\u0027\r\n03-06 10:45:44.808 11508 11508 F DEBUG   : pid: 10828, tid: 11427, name: GLThread 25266  \u003E\u003E\u003E eu.pds.proplamobilenet \u003C\u003C\u003C\r\n\r\nsignal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x1130\r\nx0  0000000000000000  x1  0000000000000001  x2  00000078d1e32d38  x3  00000078d401d678\r\nx4  00000078dbc00000  x5  00000078ce2a2e00  x6  00000078d939b770  x7  00000000038a4ae8\r\nx8  00000000ffffffff  x9  0000000000000001  x10 0000000000000001  x11 00000078e1e70238\r\nx12 0000000000000361  x13 0000000000000001  x14 0000000000000000  x15 00000078efbedd68\r\nx16 00000078ec27d000  x17 000000797c8a7894  x18 00000078d0b21208  x19 0000000000000000\r\nx20 00000078d4638da0  x21 0000000012f81ba8  x22 00000078d9958410  x23 0000000000000000\r\nx24 0000000000000000  x25 0000000000000000  x26 00000078dc400470  x27 0000000000000000\r\nx28 0000000000000000  x29 00000078d939c3b0\r\nsp  00000078d939c380  lr  00000078d08821b4  pc  00000078d1e40a78\r\n\u0060\u0060\u0060\r\n\r\n- Version with issue:  1.68.1.1\r\n- Last known good version:  probably 1.60.3 (but they made a switch from SKCanvas to SKGL recently)\r\n- IDE:   Visual Studio\r\n- Platform Target Frameworks: \r\n  - Android:  \r\n\r\n- Target Devices:  \r\n  - Xiaomi Mi A2\r\n",
+  "author": {
+    "login": "hajmajeboss",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-03-06T11:26:55",
+  "updatedAt": "2022-08-19T06:02:30",
+  "closedAt": "2020-03-06T12:31:03",
+  "commentCount": 11,
+  "reactionCount": 1
+}

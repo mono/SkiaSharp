@@ -1,0 +1,19 @@
+{
+  "number": 215,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKCanvasView (in Forms) does not resize correctly when in a StackLayout on iOS.",
+  "body": "First: Thanks for a great library. We are in the process of replacing our old implementation for sketching on images with SkiaSharp. So far, works like a charm. \r\n\r\nWhen having a Forms SKCanvasView in a StackLayout, the canvas view does not seem to resize as it should when rotating the device, at least not on iOS. \r\nSay we have a simple page like this:\r\n\u0060\u0060\u0060\r\npublic class MainPage : ContentPage\r\n{\r\n   public MainPage()\r\n   {\r\n      BackgroundColor = Color.Red;\r\n      Padding = new Thickness(10, 10, 10, 10);\r\n      var canvas = new SkiaSharp.Views.Forms.SKCanvasView {\r\n         HorizontalOptions = LayoutOptions.FillAndExpand,\r\n         VerticalOptions = LayoutOptions.FillAndExpand\r\n      };\r\n      canvas.PaintSurface \u002B= PaintSurface;\r\n      Content = new StackLayout {\r\n         HorizontalOptions = LayoutOptions.FillAndExpand,\r\n         VerticalOptions = LayoutOptions.FillAndExpand,\r\n         BackgroundColor = Color.Blue,\r\n         Padding = new Thickness(10, 10, 10, 10),\r\n         Children = { canvas }\r\n      };\r\n   }\r\n   void PaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e)\r\n   {\r\n      e.Surface.Canvas.Clear(SkiaSharp.SKColors.AliceBlue);\r\n      e.Surface.Canvas.DrawText(\r\n         \u0022This is the Skia View\u0022, 100, 100,\r\n         new SkiaSharp.SKPaint {\r\n            IsStroke = false,\r\n            IsAntialias = true,\r\n            TextSize = 30,\r\n            Color = SkiaSharp.SKColors.Black\r\n         });\r\n   }\r\n}\r\n\u0060\u0060\u0060\r\nIt looks ok in portrait, but when rotating the device to landscape the skia view stretches outside the bounds of the layout, even outside the bounds of the page.\r\nSample images:\r\nPortrait:\r\n![portrait](https://cloud.githubusercontent.com/assets/7112456/21853077/ec7b83fc-d815-11e6-9999-94d2e8d46959.png)\r\n\r\nLandscape:\r\n![landscape](https://cloud.githubusercontent.com/assets/7112456/21853052/cc943066-d815-11e6-998b-5c0e257dcff6.png)\r\n\r\nAs far as I know, it\u0027s an iOS issue. It seems to work fine on Droid. I haven\u0027t tried it on UWP. \r\n\r\nWrapping the canvas in a Grid instead of StackLayout does work as intended. I haven\u0027t tried any other layouts. \r\n\r\nRegards...",
+  "author": {
+    "login": "xeterixon",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "1.57.0",
+  "createdAt": "2017-01-11T15:08:47",
+  "updatedAt": "2022-08-20T00:01:18",
+  "closedAt": "2017-03-26T15:19:53",
+  "commentCount": 5,
+  "reactionCount": 0
+}

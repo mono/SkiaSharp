@@ -1,0 +1,23 @@
+{
+  "number": 626,
+  "type": "issue",
+  "state": "closed",
+  "title": "[UWP\u002BAndroid] wildly alternating touch co-ordinates",
+  "body": "### Description\r\n\r\nDuring a single move operation, I start to get alternating touch co-ordinates like this:\r\n\r\n    pt={X=156.8584, Y=207.1211}\r\n    pt={X=170.8299, Y=225.1194}\r\n    pt={X=157.8608, Y=208.1281}\r\n    pt={X=170.8504, Y=226.1232}\r\n    pt={X=157.8608, Y=209.132}\r\n    pt={X=171.8323, Y=227.1271}\r\n    pt={X=157.8435, Y=210.1358}\r\n    pt={X=171.8323, Y=228.1309}\r\n    pt={X=156.8616, Y=210.1185}\r\n    pt={X=170.8299, Y=229.1521}\r\n    pt={X=155.8592, Y=210.139}\r\n    pt={X=170.8472, Y=230.1355}\r\n    pt={X=154.8396, Y=210.1216}\r\n    pt={X=170.8267, Y=231.1566}\r\n\r\nThis is unfiltered, as it comes in via \u0060SKTouchEventArgs\u0060. It visibly alternates between two, parallel moving values.\r\n\r\nThe strange thing is that nearly two years ago, in a completely unrelated theme (but, obviously, calling the same underlying platform services as you do), I already saw some very similar behavior: https://forums.xamarin.com/discussion/74168/full-screen-image-viewer-with-pinch-to-zoom-pan-to-move-tap-to-show-captions-for-xamarin-forms It\u0027s mentioned in the accepted answer, it was observed in scaling back then but the mechanism was the same.\r\n\r\nI tried \u0060IgnorePixelScaling\u0060 but it isn\u0027t any different. The actual values differ, the jumping around is still there. This was logical, after all.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- Platform Target Frameworks:\r\n  - Android: ???\r\n  - UWP: 16299",
+  "author": {
+    "login": "deakjahn",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-08-30T09:49:31",
+  "updatedAt": "2022-08-19T15:01:39",
+  "closedAt": "2018-11-27T15:58:35",
+  "commentCount": 6,
+  "reactionCount": 0
+}

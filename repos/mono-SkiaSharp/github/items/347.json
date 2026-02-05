@@ -1,0 +1,18 @@
+{
+  "number": 347,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKSurface.Create returns null in 1.59.1",
+  "body": "SKSurface.Create started to return null in 1.59.1, but worked fine in 1.57.1\r\n\r\n\u0060\u0060\u0060csharp\r\nint w = 1968;\r\nint h = 1412;\r\ndouble dpi = 2.5;\r\n\r\nWriteableBitmap bmp = new WriteableBitmap(w, h, dpi, dpi, PixelFormats.Pbgra32, null);\r\nbmp.Lock();\r\n\r\nusing (var surface = SKSurface.Create(\r\n              width: w,\r\n              height: h,\r\n              colorType: SKColorType.Bgra8888,\r\n              alphaType: SKAlphaType.Premul,\r\n              pixels: bmp.BackBuffer,\r\n              rowBytes: w * 4))\r\n            {\r\n                SKCanvas canvas = surface.Canvas;   //surface is null at this point\r\n            }\r\n\r\nbmp.Unlock();\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "maxwell313",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-07-31T18:49:14",
+  "updatedAt": "2022-08-19T21:01:14",
+  "closedAt": "2017-09-12T21:01:04",
+  "commentCount": 7,
+  "reactionCount": 0
+}

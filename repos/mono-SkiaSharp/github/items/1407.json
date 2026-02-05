@@ -1,0 +1,17 @@
+{
+  "number": 1407,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] paint.GetTextPath() doesn\u0027t respect paint.TextAlign property",
+  "body": "**Description**\r\nHalo Text position doesn\u0027t match with actual text if paint.TextAlign property different than SKTextAlign.Left\r\n\r\nI think the reason is that paint.TextAlign property not been included in the paint.GetTextPath() method.\r\n\r\n**Code**\r\n\r\n SKPaint paint = new SKPaint();\r\npaint.TextAlign = SKTextAlign.Center;\r\n// Draw Halo\r\ncanvas.DrawPath(paint.GetTextPath(\u0022Test Text\u0022, 0, 0), haloPaint);\r\n// Draw text\r\ncanvas.DrawText(\u0022Test Text\u0022, 0, 0, paint);\r\n\r\n\r\nAttached a screenshot of red text with blue halo underneath (using above code), the halo was off because the text Align is Center, but Halo seems still using TextAlign.Left\r\n\r\n**Actual Behavior**\r\n\r\n  \r\n![Halo offset issue](https://user-images.githubusercontent.com/63121477/87454665-e8059600-c5c9-11ea-8426-81ec935e470e.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.1\r\n- Last known good version:  1.68.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:  tested in Windows, but I believe applies to all platforms\r\n ",
+  "author": {
+    "login": "JackLi-tg",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-14T17:04:12",
+  "updatedAt": "2020-07-14T18:02:52",
+  "commentCount": 1,
+  "reactionCount": 0
+}

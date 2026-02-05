@@ -1,0 +1,22 @@
+{
+  "number": 2835,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Build outputs duplicate native libraries",
+  "body": "### Description\r\n\r\nOn .NET Framework 4.8 when this nuget package is referenced as part of an ASP.NET MVC application upon build (with msbuild) it outputs the native libraries into the OutputPath in both the root directory and the bin directory duplicating them all.\r\n\r\n### Code\r\n\r\nNot applicable\r\n\r\n### Expected Behavior\r\n\r\nsingle copy of dylib, x86, x64, and arm64 native libraries under bin/ (it would be extremely nice if we could just exclude platforms we don\u0027t want either, like dylibs/arm64).\r\n\r\n### Actual Behavior\r\n\r\nThe following files are generated on build -\r\n\r\nlibHarfBuzzSharp.dylib\r\nlibSkiaSharp.dylib\r\narm64/libHarfBuzzSharp.dll\r\narm64/libSkiaSharp.dll\r\nx64/libHarfBuzzSharp.dll\r\nx64/libSkiaSharp.dll\r\nx86/libHarfBuzzSharp.dll\r\nx86/libSkiaSharp.dll\r\n\r\nbin/libHarfBuzzSharp.dylib\r\nbin/libSkiaSharp.dylib\r\nbin/arm64/libHarfBuzzSharp.dll\r\nbin/arm64/libSkiaSharp.dll\r\nbin/x64/libHarfBuzzSharp.dll\r\nbin/x64/libSkiaSharp.dll\r\nbin/x86/libHarfBuzzSharp.dll\r\nbin/x86/libSkiaSharp.dll\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nAll\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "nneitzke",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-15T22:40:39",
+  "updatedAt": "2024-04-24T08:51:23",
+  "commentCount": 2,
+  "reactionCount": 2
+}

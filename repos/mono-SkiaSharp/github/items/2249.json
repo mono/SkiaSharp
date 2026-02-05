@@ -1,0 +1,17 @@
+{
+  "number": 2249,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Corrupted Image when loading from network stream, with 2.88.2.",
+  "body": "**Description**\r\n\r\nIt rendered corrupted image when loading from network stream. It works fine in 2.80.2, not working in the current one 2.88.2. The following code can simply recreate it. \r\n\r\n**Code**\r\n // Below is the complete test code in VS2022 on .NET 6\r\n\r\n using System.Net;\r\n using SkiaSharp;\r\n\r\n await DownloadTile(\u0022https://tile.openstreetmap.org/1/0/0.png\u0022, @\u0022d:\\test\\test.png\u0022);\r\n\r\n static async Task DownloadTile(string uri, string path)\r\n  {\r\n\r\n  HttpWebRequest request = (HttpWebRequest)WebRequest.Create(uri);\r\n  request.Method = \u0022GET\u0022;\r\n  request.UserAgent = \u0022agent\u0022;\r\n\r\n  using var webResponse = await request.GetResponseAsync();\r\n  await using var input = webResponse.GetResponseStream();\r\n\r\n  await using var output = File.Create(path);\r\n  var bitmap = SKBitmap.Decode(input);\r\n\r\n  using var skImage = SKImage.FromBitmap(bitmap);\r\n  var skData = skImage.Encode(SKEncodedImageFormat.Png, 80);\r\n  skData.SaveTo(output);\r\n }\r\n\r\n**Expected Behavior**\r\n\r\nThe tile https://tile.openstreetmap.org/1/0/0.png is saved to d:\\test\\test.png\r\n\r\n**Actual Behavior**\r\n\r\nThe tile generated in d:\\test\\test.png is corrupted, only part of the image can be seen. V2.80.2 doesn\u0027t have this issue.\r\n\r\n**Basic Information**\r\nVersion with issue: 2.88.2\r\nLast known good version: 2.80.2\r\nIDE: Visual Studio 2022\r\nPlatform Target Frameworks: Tested in .NET Framework 4.8 and .NET 6\r\nTarget Devices: Windows Console.\r\n  \r\n**Screenshots**\r\n\u003Cimg width=\u0022289\u0022 alt=\u0022image\u0022 src=\u0022https://user-images.githubusercontent.com/15203030/189432370-d0d2e12b-f146-4564-8886-f249ff14b7ae.png\u0022\u003E\r\n\r\n\r\n",
+  "author": {
+    "login": "bymin",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-09-09T19:53:50",
+  "updatedAt": "2023-05-11T21:22:32",
+  "commentCount": 7,
+  "reactionCount": 0
+}

@@ -1,0 +1,28 @@
+{
+  "number": 327,
+  "type": "issue",
+  "state": "closed",
+  "title": "ASP.NET builds fail due to libSkiaSharp.dll being locked",
+  "body": "It appears that libSkiaSharp.dll is copied over to bin on each build, after the first build and use of SkiaSharp the dll becomes locked and future builds will fail with the following:\r\n\r\n\u003E Unable to copy file \u0022\\packages\\SkiaSharp.1.58.0\\runtimes\\win7-x64\\native\\libSkiaSharp.dll\u0022 to \u0022bin\\libSkiaSharp.dll\u0022. The process cannot access the file \u0027bin\\libSkiaSharp.dll\u0027 because it is being used by another process.\r\n\r\nYou have to kill w3wp.exe process to remove the lock and build project again. \r\n\r\nIf I add \r\n\u0060\u0060\u0060\r\n \u003CShouldIncludeNativeSkiaSharp\u003EFalse\u003C/ShouldIncludeNativeSkiaSharp\u003E \r\n\u0060\u0060\u0060\r\nthe issue goes away however you will soon run into issues where you need the dlls copied to the bin again as they have been removed (say from a clean solution, or source control operation).\r\n\r\nLooking for a better approach, is there a way to ensure the lock on libSkiaSharp.dll is released? Or does it have to do with x86/x64/AnyCpu platform build logic?\r\n\r\n**Update**\r\nI moved SkiaSharp logic to a new Class Library project and set the project\u0027s Platform Target to x64. When the ASP.NET application builds the file is still locked in the bin folder, however, the build no longer errors out trying to copy the libSkiaSharp.dll. This is an acceptable workaround. If the project\u0027s Platform Target is set to AnyCPU the error will occur.",
+  "author": {
+    "login": "cs-NET",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.58.1",
+  "createdAt": "2017-06-28T14:54:51",
+  "updatedAt": "2022-08-19T21:01:34",
+  "closedAt": "2017-06-30T10:50:44",
+  "commentCount": 3,
+  "reactionCount": 0
+}

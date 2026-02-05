@@ -1,0 +1,18 @@
+{
+  "number": 433,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKBitmap.Decode() fails on .tiff file formats",
+  "body": "I\u0027m running SkiaSharp 1.59.2 in production on Linux (Ubuntu 16.04) using .NET Core 2.0.4 and I\u0027m running into an issue with decoding .tiff source files in memory. Here\u0027s my code (nothing fancy):\r\n\r\n\u0060\u0060\u0060\r\nusing (var original = SKBitmap.Decode(originalBytes))\r\n            {\r\n                int width, height;\r\n\r\n                request.Width = (request.Width == 0) ? original.Width : request.Width; // original\r\n                width = request.Width;\r\n                height = original.Height * request.Width / original.Width;\r\n                SKBitmap toResize;\r\n                if (original.ColorType == SKColorType.Gray8 || original.ColorType == SKColorType.Index8)\r\n                {\r\n                    toResize = new SKBitmap();\r\n                    original.CopyTo(toResize, SKImageInfo.PlatformColorType);\r\n                }\r\n                else\r\n                {\r\n                    toResize = original;\r\n                }\r\n\r\n                using (var resized = toResize.Resize(new SKImageInfo(width, height), SKBitmapResizeMethod.Lanczos3))\r\n                {\r\n                    var surface = SKSurface.Create(width, height, resized.ColorType, resized.AlphaType);\r\n                    var canvas = surface.Canvas;\r\n                    var paint = new SKPaint();\r\n\r\n                    if (request.IsGrayScale)\r\n                    {\r\n                        paint.ColorFilter = SKColorFilter.CreateBlendMode(SKColors.Gray, SKBlendMode.Color);\r\n                    }\r\n\r\n                    paint.FilterQuality = SKFilterQuality.High;\r\n                    canvas.DrawBitmap(resized, 0, 0, paint);\r\n                    canvas.Flush();\r\n                    paint.Dispose();\r\n                    \r\n                    var contentType = MimeTypes.GetMimeType(request.Format);\r\n                    var newBytes = surface.Snapshot().Encode(ConvertFileFormat(request.Format), request.Quality).ToArray();\r\n\r\n                    surface.Dispose(); \r\n\r\n                    newContentType = contentType;\r\n                    finalWidth = width;\r\n                    finalHeight = height;\r\n                    return newBytes;\r\n                }\r\n            }\r\n\u0060\u0060\u0060\r\nThe \u0060original\u0060 variable always returns null with no other useful inner exception. Is this a known limitation? Could I be missing dependant libraries on the Linux level?",
+  "author": {
+    "login": "acornies",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-01-26T02:22:41",
+  "updatedAt": "2022-08-19T18:01:43",
+  "closedAt": "2018-01-31T21:50:36",
+  "commentCount": 1,
+  "reactionCount": 0
+}

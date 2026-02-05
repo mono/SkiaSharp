@@ -1,0 +1,23 @@
+{
+  "number": 93,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKPaint with more font weights such as a Thin, Light, Heavy, etc",
+  "body": "Hi again!  I am wondering if SkiaSharp can support more font weights? SKTypefaceStyle seems to only support normal, bold, italic and bolditalic.  Have I missed something?\n\nI think this is an important capability for modern apps as we have moved past the days of \u0027bold\u0027 and \u0027not bold\u0027 being enough choice for our user interfaces.\n\niOS has good native support:\n\n\u0060\u0060\u0060 C#\npublic enum UIFontWeight\n{\n  UltraLight = 0,\n  Thin = 1,\n  Light = 2,\n  Regular = 3,\n  Medium = 4,\n  Semibold = 5,\n  Bold = 6,\n  Heavy = 7,\n  Black = 8,\n}\n\u0060\u0060\u0060\n\nAndroid native support is (a bit weird) via the family name:\n\n\u0060\u0060\u0060 C#\nvar Thin = Android.Graphics.Typeface.Create(\u0022sans-serif-thin\u0022, Android.Graphics.TypefaceStyle.Normal);\nvar Light = Android.Graphics.Typeface.Create(\u0022sans-serif-light\u0022, Android.Graphics.TypefaceStyle.Normal);\netc\n\u0060\u0060\u0060\n\nWpf has good native support:\n\n\u0060\u0060\u0060 C#\nSystem.Windows.FontWeights.Thin;\nSystem.Windows.FontWeights.ExtraBold;\netc\n\u0060\u0060\u0060\n\nWinRT (UWP) also has good native support:\n\n\u0060\u0060\u0060 C#\nWindows.UI.Text.FontWeights.Thin;\nWindows.UI.Text.FontWeights.ExtraBold;\netc\n\u0060\u0060\u0060\n",
+  "author": {
+    "login": "callanh",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2016-06-27T02:52:15",
+  "updatedAt": "2022-08-20T00:02:54",
+  "closedAt": "2016-06-28T03:32:40",
+  "commentCount": 4,
+  "reactionCount": 0
+}

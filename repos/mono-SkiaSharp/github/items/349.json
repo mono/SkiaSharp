@@ -1,0 +1,18 @@
+{
+  "number": 349,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp.Views.Forms crashes on Android x86 on startup",
+  "body": "Hello.\r\nAn app with SkiaSharp.Views.Forms crashes on Android x86 on startup with the following messages:\r\n\r\n\u0060\u0060\u0060\r\nTime\tDevice Name\tType\tPID\tTag\tMessage\r\n08-02 11:46:07.558\tAsus _T00I\tInfo\t574\tActivityManager\tProcess com.companyname.Mobile (pid 19455) has died.\r\n08-02 11:46:07.548\tAsus _T00I\tError\t19455\tmonodroid\tshared runtime initialization error: Cannot load library: \r\n08-02 11:46:07.548\tAsus _T00I\tWarning\t19455\tmonodroid\tTrying to load sgen from: /data/data/com.companyname.Mobile/files/.__override__/libmonosgen-2.0.so\r\n08-02 11:46:07.548\tAsus _T00I\tWarning\t19455\tmonodroid\tTrying to load sgen from: /data/data/com.companyname.Mobile/files/.__override__/links/libmonosgen-2.0.so\r\n08-02 11:46:07.548\tAsus _T00I\tWarning\t19455\tmonodroid\tTrying to load sgen from: /storage/emulated/0/Android/data/com.companyname.Mobile/files/.__override__/libmonosgen-2.0.so\r\n08-02 11:46:07.548\tAsus _T00I\tWarning\t19455\tmonodroid\tUsing override path: /storage/emulated/0/Android/data/com.companyname.Mobile/files/.__override__\r\n08-02 11:46:07.548\tAsus _T00I\tWarning\t19455\tmonodroid\tTrying to load sgen from: /data/app-lib/com.companyname.Mobile-1/libmonosgen-2.0.so\r\n08-02 11:46:07.548\tAsus _T00I\tWarning\t19455\tmonodroid\tUsing override path: /data/data/com.companyname.Mobile/files/.__override__\r\n08-02 11:46:07.538\tAsus _T00I\tWarning\t19455\tmonodroid\tCreating public update directory: \u0060/data/data/com.companyname.Mobile/files/.__override__\u0060\r\n08-02 11:46:07.348\tAsus _T00I\tDebug\t19455\tdalvikvm\tAdded shared lib /data/app-lib/com.companyname.Mobile-1/libmonodroid.so 0x438f7b10\r\n08-02 11:46:07.338\tAsus _T00I\tDebug\t19455\tdalvikvm\tTrying to load lib /data/app-lib/com.companyname.Mobile-1/libmonodroid.so 0x438f7b10\r\n\u0060\u0060\u0060\r\nWhen SkiaSharp.Views.Forms is unloaded then it loads the app fine.\r\n\r\nI\u0027ve tried it with both shared (SkiaSharp.Views.Forms is added to Android project) and PCL (SkiaSharp.Views.Forms is added to PCL project only) projects.\r\n\r\nModel: ASUS Zenfone 4\r\nVersion: Android 4.4.2\r\nCPU: Intel Atom x86\r\n\r\nMaybe it\u0027s related to Android version but I think the reason is the ABI x86.",
+  "author": {
+    "login": "entdark",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-08-02T07:20:32",
+  "updatedAt": "2022-08-19T18:02:54",
+  "closedAt": "2018-02-08T17:31:46",
+  "commentCount": 20,
+  "reactionCount": 0
+}

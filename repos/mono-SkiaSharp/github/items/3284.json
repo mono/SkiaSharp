@@ -1,0 +1,23 @@
+{
+  "number": 3284,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKMetalView issues on older hardware (iOS 15)",
+  "body": "### Description\n\nCommit c2a1fde introduced changes related to simulator performance by including calls to DepthStencilStorageMode setter. DepthStencilStorageMode was added in iOS 16.0, which means older systems we\u0027d like to support will crash on initializing this control.\n\nAdditionaly, with the said changes to the simulator performance, the class now calls to an obsoleted GRBackendRenderTarget constructor, which is weird.\n\n### Code\n\nProgram crashes immediately on instancing the SKMetalView class.\n\n### Expected Behavior\n\nProgram starts and renders things correctly in SKMetalView.\n\n### Actual Behavior\n\nProgram crashes on startup with initialization of SKMetalView\n\n### Version of SkiaSharp\n\n3.119.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.8 (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\niOS 15\n\n### Devices\n\niPhone SE\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\u0060ObjCRuntime.ObjCException: \u0027Objective-C exception thrown.  Name: NSInvalidArgumentException Reason: -[SKMetalView setDepthStencilStorageMode:]: unrecognized selector sent to instance 0x10a255a80\nNative stack trace:\n\t0   CoreFoundation                      0x00000001821a7c74 EEC1287D-059B-38C8-9BC1-58A0C8B1E6C2 \u002B 601204\n\t1   libobjc.A.dylib                     0x00000001999d7ee4 objc_exception_throw \u002B 56\n\t2   CoreFoundation                      0x00000001822786e8 EEC1287D-059B-38C8-9BC1-58A0C8B1E6C2 \u002B 1455848\n\t3   UIKitCore                           0x00000001852ff20c 9D301877-2593-385C-8F72-F075AA0B48FA \u002B 15397388\n\t4   CoreFoundation                      0x000000018214154c EEC1287D-059B-38C8-9BC1-58A0C8B1E6C2 \u002B 181580\n\t5   CoreFoundation                      0x000000018214075c _CF_forwarding_prep_0 \u002B 92\n\t6   XXXXXXXXXXXXXXXXXXX                 0x0000000104c56a7c xamarin_dyn_objc_msgSendSuper \u002B 164\n\t7   XXXXXXXXXXXXXXXXXXX                 0x0000000104c0bee0 wrapper_managed_to_native_ObjCRuntime_Messaging_void_objc_msgSendSuper_UIntPtr_intptr_intptr_uintptr \u002B 160\n\t8   XXXXXXXXXXXXXXXXXXX                 0x0000000104b4d524 MetalKit_MTKView_set_DepthStencilStorageMode_Metal_MTLStorageMode \u002B 148\n\t9   XXXXXXXXXXXXXXXXXXX                 0x0000000102c3fdd4 SkiaSharp_Views_iOS_SKMetalView_Initialize \u002B 964\n\t10  XXXXXXXXXXXXXXXXXXX                 0x0000000102c3f6ec SkiaSharp_Views_iOS_SKMetalView__ctor_CoreGraphics_CGRect \u002B 252\n\t11  XXXXXXXXXXXXXXXXXXX                 0x00000001038d13d4 Sitana_iOS_SitanaViewController_ViewDidLoad \u002B 836\n\t12  XXXXXXXXXXXXXXXXXXX                 0x00000001038d4a9c Sitana_iOS_SitanaViewController___Registrar_Callbacks___callback_91_Sitana_iOS_SitanaViewController_ViewDidLoad_intptr_intptr_intptr_ \u002B 220\n\t13  XXXXXXXXXXXXXXXXXXX                 0x00000001038f5218 wrapper_native_to_managed_Sitana_iOS_SitanaViewController___Registrar_Callbacks___callback_91_Sitana_iOS_SitanaViewController_ViewDidLoad_intptr_intptr_intptr_ \u002B 200\n\t14  XXXXXXXXXXXXXXXXXXX                 0x0000000104f10b04 -[Sitana_iOS_SitanaViewController viewDidLoad] \u002B 40\u0060\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "pancirno",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-06-02T09:32:25",
+  "updatedAt": "2025-08-22T23:56:22",
+  "closedAt": "2025-08-22T23:56:22",
+  "commentCount": 4,
+  "reactionCount": 0
+}

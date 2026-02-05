@@ -1,0 +1,18 @@
+{
+  "number": 523,
+  "type": "issue",
+  "state": "closed",
+  "title": "Processing CMYK skews colors",
+  "body": "### Description\r\n\r\nProcessing a CMYK image (in this case, resizing it) drastically skews the colors. Most likely occurring when it\u0027s converted to RGB.\r\n\r\nIs there a way to resize a CMYK image while keeping the colors as similar as possible?\r\n\r\n### Code\r\n\r\n\tSKBitmap srcBitmap = ...\r\n\t// Use an CMYK image\r\n\tint resizedWidth = 510, resizedHeight = 720; // random dimensions\r\n\t\r\n\t// resize and save\r\n\tSKImageInfo resizeInfo = new SKImageInfo(resizedWidth, resizedHeight);\r\n\tusing (SKBitmap resizedSKBitmap = srcBitmap.Resize(resizeInfo, SKBitmapResizeMethod.Lanczos3))\r\n\tusing (SKImage newImg = SKImage.FromPixels(resizedSKBitmap.PeekPixels()))\r\n\tusing (SKData data = newImg.Encode(SKEncodedImageFormat.Jpeg, jpegQuality))\r\n\tusing (Stream imgStream = data.AsStream())\r\n\t{\r\n\t\t// save the stream and look at the image. e.g. \u0022After-resize.jpg\u0022\r\n\t}\r\n\r\n### Expected Behavior\r\n\r\nConversion from CMYK to RGB should convert to fairly similar colors.\r\n\r\n### Actual Behavior\r\n\r\nDrastic color difference when CMYK gets converted to RGB.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.0\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .NET Core 2.0 (AWS Lambda)\r\n\r\n### Screenshots\r\n\r\n![compare](https://user-images.githubusercontent.com/7843827/40198158-94e0ecf8-59e3-11e8-8ede-7e3420ab3385.jpg)\r\n\r\n\r\n",
+  "author": {
+    "login": "dsyno",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-05-17T19:05:00",
+  "updatedAt": "2022-08-19T15:02:30",
+  "closedAt": "2018-11-27T17:09:13",
+  "commentCount": 6,
+  "reactionCount": 0
+}

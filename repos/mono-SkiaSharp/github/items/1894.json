@@ -1,0 +1,22 @@
+{
+  "number": 1894,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] MAUI.iOS app with SkiaSharp package is crashed while deploying from Visual Studio for Mac 2022",
+  "body": "**Description**\r\n\r\nSimple MAUI.iOS app with [SkiaSharp](https://www.nuget.org/packages/SkiaSharp/) package is crashed with below error message, when deploying it from Visual Studio for Mac 2022.\r\n\r\n**_Note: Same MAUI.iOS application working properly, if we deployed it from Visual Studio for Windows 2022_**\r\n\r\n**Error Message:**\r\n\r\n\u0060System.DllNotFoundException: @rpath/libSkiaSharp.framework/libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\u0060\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0-preview.155\r\n- Last known good version:  None\r\n- IDE:  Visual Studio 2022 for Mac (Preview)\r\n- Platform Target Frameworks: net6.0-ios\r\n  - macOS:  12.0.1\r\n- Target Devices:   iPhone 13 Pro Max iOS 15.0 (Simulator)\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nSimple MAUI.iOS app with [SkiaSharp](https://www.nuget.org/packages/SkiaSharp/) package is crashed with below error message, when deploying it from Visual Studio for Mac 2022.\r\n\r\n**_Note: Same MAUI.iOS application working properly, if we deployed it from Visual Studio for Windows 2022_**\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/93113962/146522891-0e1c2032-4222-4c55-88f3-472d5725fbdf.png)\r\n\r\n\r\n**Reproduction Link**\r\n\r\n1. Create simple MAUI application by referring below link,\r\nhttps://docs.microsoft.com/en-us/dotnet/maui/get-started/first-app\r\n2. Mention **net6.0-ios** (any iOS simulator) as your target platform.\r\n3. Add **SkiaSharp** package version 2.88.0-preview.155 in your application.\r\n4. Deploy your sample and try to open it.\r\n5. Now app crashed with libSkiaSharp missing error.\r\n\r\n**Note:** \r\n\r\n1. This sample is working properly in all other MAUI environments such as Windows, Android, and iOS (if deployed from Windows machine).\r\n2. Without a SkiaSharp package application working properly in iOS simulator.\r\n\r\nAttached a simple sample for references.\r\n[MauiAppSkia.zip](https://github.com/mono/SkiaSharp/files/7734122/MauiAppSkia.zip)\r\n\r\n",
+  "author": {
+    "login": "Ramaraj-Marimuthu",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp.Views.Maui",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2021-12-17T09:50:15",
+  "updatedAt": "2022-11-03T12:43:53",
+  "commentCount": 4,
+  "reactionCount": 0
+}

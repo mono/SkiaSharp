@@ -1,0 +1,22 @@
+{
+  "number": 2848,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Canvas.DrawPath Cause Memory Leak on Windows 11 ",
+  "body": "### Description\n\nLast bug Report \u003CDrawPath cause Memory Leak on GPU context  #2660\u003E had fixed on Windows 10, But not fixed on windows 11.\r\nWhen the program run in windows 10, the momery usage is constant, but the same program run in windows 11, the memory increase linearly, when commented the canvas.DrawPath line out, momery usage is constant again. The SkiaSharp Version 2.88.8 is used.\n\n### Code\n\n\u0060\u0060\u0060cs\r\n// some C# code here\r\nusing (var paintFill = new SKPaint { IsAntialias = true })\r\n{\r\n        paintFill.StrokeWidth = 0;\r\n        paintFill.Style = SKPaintStyle.Fill;\r\n        paintFill.PathEffect = null;\r\n        paintFill.Shader = null;\r\n        paintFill.Color = fillColor.ToSkia(opacity);\r\n        canvas.DrawPath(path, paintFill); //this line cause memory leak in GPU context on Windows 11\r\n}\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\nx64 desktop \n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "xiechuanjie",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-27T11:06:47",
+  "updatedAt": "2024-12-30T00:07:55",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 469,
+  "type": "issue",
+  "state": "closed",
+  "title": "Set binding property for Text value drawn using SkiaSharp",
+  "body": "I have drawn a text at a given coordinate using SkiaSharp library. That text represents the timer count value in \u0022hh:mm\u0022 format. How to update the text value as per timer count.\r\n\r\nMy Code:\r\n\r\nTimer.cs\r\n\r\n\u0060\u0060\u0060\r\npublic class Timer\r\n    {\r\n        private readonly TimeSpan _timeSpan;\r\n        private readonly Action _callback;\r\n\r\n        private static CancellationTokenSource _cancellationTokenSource;\r\n\r\n        public Timer(TimeSpan timeSpan, Action callback)\r\n        {\r\n            _timeSpan = timeSpan;\r\n            _callback = callback;\r\n            _cancellationTokenSource = new CancellationTokenSource();\r\n        }\r\n        public void Start()\r\n        {\r\n            CancellationTokenSource cts = _cancellationTokenSource; // safe copy\r\n            Device.StartTimer(_timeSpan, () =\u003E\r\n            {\r\n                if (cts.IsCancellationRequested)\r\n                {\r\n                    return false;\r\n                }\r\n                _callback.Invoke();\r\n                return true; //true to continuous, false to single use\r\n            });\r\n        }\r\n\r\n        public void Stop()\r\n        {\r\n            Interlocked.Exchange(ref _cancellationTokenSource, new CancellationTokenSource()).Cancel();\r\n        }\r\n    }\r\n\r\n\u0060\u0060\u0060\r\nMainPage.xaml.cs\r\n\r\n\u0060\u0060\u0060\r\npublic partial class MainPage : ContentPage,INotifyPropertyChanged\r\n{\r\n    private Timer _timer;\r\n    private TimeSpan _totalSeconds = new TimeSpan(0, 0, 0, 10);\r\n    public TimeSpan TotalSeconds\r\n    {\r\n        get { return _totalSeconds; }\r\n        set \r\n        {\r\n            _totalSeconds = value;\r\n            OnPropertyChanged(\u0022TotalSeconds\u0022);\r\n        }\r\n    }\r\n\r\n    public TableLayoutView()\r\n    {\r\n        InitializeComponent();\r\n\r\n        _timer = new Timer(TimeSpan.FromSeconds(1), CountDown);\r\n        TotalSeconds = _totalSeconds;\r\n    }\r\n\r\n    private void CountDown()\r\n    {\r\n        if (_totalSeconds.TotalSeconds == 0)\r\n        {\r\n            //do something after hitting 0, in this example it just stops/resets the timer\r\n            StopTimerCommand();\r\n        }\r\n        else\r\n        {\r\n            TotalSeconds = _totalSeconds.Subtract(new TimeSpan(0, 0, 0, 1));\r\n        }\r\n    }\r\n\r\n    public void OnPainting(object sender, SKPaintSurfaceEventArgs e)\r\n    {\r\n        var surface = e.Surface;\r\n        var canvas = surface.Canvas;\r\n        canvas.Clear(SKColors.White);\r\n\r\n        // create the paint for the text\r\n        var textPaint = new SKPaint\r\n        {\r\n            IsAntialias = true,\r\n            Style = SKPaintStyle.Fill,\r\n            Color = SKColors.Black,\r\n            TextSize = 80\r\n        };\r\n        // draw the text (from the baseline)\r\n        canvas.DrawText(TotalSeconds.ToString(@\u0022hh\\:mm\u0022), 60, 160 \u002B 80, textPaint);\r\n\r\n        _timer.Start();\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\nHow to bind the property for the text drawn using SkiaSharp at runtime as an independent thread, likewise I may have multiple text with different timer count and they should run as a thread without blocking other. ",
+  "author": {
+    "login": "himanshudwd765",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-03-15T17:02:08",
+  "updatedAt": "2022-08-19T18:01:16",
+  "closedAt": "2018-03-23T06:03:00",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 427,
+  "type": "issue",
+  "state": "closed",
+  "title": "Problems constructing a long image",
+  "body": "I have a use case along these lines\r\n- I have to obtain a png representing a floor map where an asset is located by asking where the asset is\r\n- The above operation is required to work for multiple assets in one go but grouped, such that if two or more assets are in the same floor, the png will be obtained twice but rendered once\r\n- If there are multiple distinct floor maps obtained (not every asset is on the same floor), then the floor maps should be rendered one below the other and a single image consisting of all the floor maps should be returned\r\n\r\nNow, I tried the following approach... (warning, the code is in F# not C#, so apologies if you are not comfortable with F#, but hopefully you can make out the logic)\r\n\u0060\u0060\u0060fsharp\r\n// renderPositionGroups takes a sequence of byte arrays \r\nlet renderPositionGroups (maps: Byte array seq) =\r\n\r\n    // get the image infos ahead of time in order to set the boundaries of the surface\r\n    let mapBitmaps = maps |\u003E Seq.map (fun m -\u003E SKBitmap.Decode(m))\r\n\r\n    // get the max width in order to set the width of the surface\r\n    let mapMaxWidth = mapBitmaps |\u003E Seq.map (fun m -\u003E m.Width) |\u003E Seq.max\r\n\r\n    // get the total of all maps in order to set the height of the surface\r\n    let mapTotalHeight = mapBitmaps |\u003E Seq.sumBy (fun m -\u003E m.Height)\r\n    \r\n    // initialize the surface with the max width and total height\r\n    use surface = SKSurface.Create(mapMaxWidth, mapTotalHeight, SKColorType.RgbaF16, SKAlphaType.Unpremul)\r\n\r\n    // get the canvas to draw on\r\n    use canvas = surface.Canvas\r\n    \r\n    // fold over the maps, passing through the accumulated height of the past images in order to vertically offset the next image\r\n    mapBitmaps\r\n    |\u003E Seq.fold (fun offset mapBitmap -\u003E\r\n        // draw the map on the canvas horizontally flush but vertically offset by the accumulated height so far\r\n        canvas.DrawBitmap(mapBitmap, 0.0f, offset)\r\n\r\n        // will eventually render some stuff on the floor map itself\r\n        // ...\r\n\r\n        // return the offset plus the height of the current map\r\n        offset \u002B (float32 mapBitmap.Height)\r\n    ) 0.0f // starting offset is 0\r\n    |\u003E ignore\r\n\r\n    surface.Snapshot().Encode().ToArray()\r\n\u0060\u0060\u0060\r\n\r\nNow, the approach seems to work with small test images, but as soon as I pass in the floor maps which are larger (around the 5000x5000 pixel range) the surface initialization starts resulting in null once the heights (or even widths) go past the low 10,000s. In other words, after the following expression \u0060use surface = SKSurface.Create(mapMaxWidth, mapTotalHeight, SKColorType.RgbaF16, SKAlphaType.Unpremul)\u0060 is evaluated, the value of \u0060surface\u0060 is \u0060null\u0060.\r\n\r\nI assume there must be a size limit of some kind? If so, are there any alternative techniques to merging/combining/appending images? I did consider shrinking the images before combining them but I don\u0027t think that is a scalable technique as with many small images you might still hit the size limit. And I was not able to grok any way to resize the surface itself. And I could not pick out any other append like operation in the docs so any help would be appreciated.",
+  "author": {
+    "login": "lambdakris",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-01-16T20:34:28",
+  "updatedAt": "2022-08-19T18:01:47",
+  "closedAt": "2018-03-07T23:23:41",
+  "commentCount": 5,
+  "reactionCount": 0
+}

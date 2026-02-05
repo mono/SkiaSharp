@@ -1,0 +1,18 @@
+{
+  "number": 2404,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] - Draw a text line with words having different colors",
+  "body": "Hi,\r\n\r\nI\u0027m looking into how to draw a single text line with multiple colors / styles with as high performance and low memory consumption as possible.\r\n\r\nI\u0027ve achieved \u0022good enough\u0022 performance with the actual drawing / rendering - using a **Canvas.DrawText(...)** method call.\r\n\r\nHowever, I\u0027m struggling to keep the memory consumption down of the **TextBlob** objects.\r\n\r\nCurrently I generate one TextBlob per line of text.\r\n\r\nI\u0027m using a single **SKTextBlobBuilder** for each line of text, and disposing it after the **TextBlob** has been generated.\r\n\r\nThis yields the following approximate memory consumption:\r\n\r\n\u0060\u0060\u0060\r\n// 100 lines of the following sample text\r\n\u0022This is a sample line text for line number X\u0022\r\n\r\n// memory consumption:\r\n~ 10 mb\r\n\u0060\u0060\u0060\r\nI find this totally \u0022reasonable\u0022.\r\n\r\nHowever, the problem I\u0027m having is when I now want to colorize each word of the sample text with a different color.\r\n\u0060\u0060\u0060\r\n// 100 lines of the following sample text where each of the words is styled with a different color\r\n\u0022This is a sample line text for line number X\u0022\r\n\r\n// memory consumption:\r\n~ 70 mb\r\n\u0060\u0060\u0060\r\n\r\nI find this increase a bit high to my liking, but can\u0027t find a way to decrease it.\r\n\r\nThe problem seems to be that with this second scenario, I \u0022have\u0022 to split each line into a separate **TextBlob** per word, in other words each TextBlob seems to be quite heavy in memory overhead.\r\n\r\nI\u0027ve been looking around if there is some way to use a single TextBlob and then just have multiple **Canvas.DrawText(...)** to style the font color differently, but I haven\u0027t been able to find any method of doing this...\r\n\r\nI\u0027m probably missing something here, does anyone know how I can achieve this? - is there really no way of using a single \u0022shaped\u0022 TextBlob and then \u0022Draw\u0022 ranges from that blob with different Color configuration?\r\n\r\nOn a sidenote - I\u0027ve able to use the **SKTextBlobBuilder** with the **AllocatePositionedRun(font, textLen)** method to render a single **TextBlob** with ranges having different Fonts, but no color configuration there.\r\n\r\nAny input / suggestions are appreciated,\r\n\r\nThanks\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "bilsaboob",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-03-05T21:23:18",
+  "updatedAt": "2023-04-05T00:00:46",
+  "closedAt": "2023-03-05T22:32:14",
+  "commentCount": 1,
+  "reactionCount": 0
+}

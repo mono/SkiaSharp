@@ -1,0 +1,22 @@
+{
+  "number": 2766,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKGLSurfaceView - Cannot stop Motion Blur Effect",
+  "body": "### Description\r\n\r\nWe are using our SKGLSurfaceView to render a map that can be panned smoothly.\r\n\r\nThe issue we\u0027re having here is what is rendered is a blending of the previous 2-3 frames!   Nothing we do seems to be able to stop this.   I even tried \u0022RenderMode = WhenDirty\u0022, to see if that stopped it (it did not).\r\n\r\nSo as we\u0027re rendering here at 60 FPS, a simple Animation of a Circle being drawn each frame (onPaint)... and moving it from Left to Right.  As you can see below, there are two copies of this circle showing at the same time.   This is NOT what we want to be seeing here.   This is an unwanted MotionBlur effect, essentially.\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/10914515/81e552a3-f631-4660-8f3a-6edecc28b90b)\r\n\r\nIs there any trick to make SKGLSurfaceView ONLY render the most recently drawn Canvas output? \r\n\r\nNote, for the paint, I tried various BlendModes:  Src, SrcIn, SrcOver, SrcATop.    All produced the same blurred double-images.\r\n\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060cs\r\nprivate int _xOfs;\r\nprivate SKPaint _paint = new SKPaint() { Color = SKColors.DarkRed, StrokeWidth = 3, \r\n                                                                Style = SKPaintStyle.Stroke, BlendMode = SKBlendMode.SrcOver };\r\n\r\nprivate void _sImgView_PaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n{\r\n\t\t\t\tSKPoint pt = new SKPoint(180 \u002B _xOfs, 200);\r\n\t\t\t\t_xOfs \u002B= 20;\r\n\t\t\t\tif (_xOfs \u003E 500)\r\n\t\t\t\t\t_xOfs = 0;\r\n\r\n\t\t\t\te.Surface.Canvas.DrawCircle(pt, 77, _paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nSingle solid-line Circle.\r\n\r\n### Actual Behavior\r\n\r\nTwo-Blurred Circles!\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nAndroid\r\n\r\n### Platform / Operating System Version\r\n\r\nAndroid 12\r\n\r\n### Devices\r\n\r\nAll of my devices.\r\n\r\n### Relevant Screenshots\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/10914515/dba32ff4-2c9b-47f8-a971-12695672fab9)\r\n\r\nIt should look more like this one (but solid, not blurred):\r\n![image](https://github.com/mono/SkiaSharp/assets/10914515/0516615b-07d7-4e64-952f-946b72aa0e77)\r\n\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "najak3d",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-26T06:20:53",
+  "updatedAt": "2024-02-26T20:21:54",
+  "commentCount": 2,
+  "reactionCount": 0
+}

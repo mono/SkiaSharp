@@ -1,0 +1,39 @@
+{
+  "number": 310,
+  "type": "issue",
+  "state": "open",
+  "title": "Resizing the view while painting: A generic error occurred in GDI\u002B",
+  "body": "I have come across a reproducible issue which results in the following exception occuring in the Views.Desktop.SKControl class\r\n\r\nSystem.Runtime.InteropServices.ExternalException (0x80004005): A generic error occurred in GDI\u002B.\r\n   at System.Drawing.Bitmap.UnlockBits(BitmapData bitmapdata)\r\n   at SkiaSharp.Views.Desktop.SKControl.OnPaint(PaintEventArgs e)\r\n   at System.Windows.Forms.Control.PaintWithErrorHandling(PaintEventArgs e, Int16 layer)\r\n   at System.Windows.Forms.Control.WmPaint(Message\u0026 m)\r\n   at System.Windows.Forms.Control.WndProc(Message\u0026 m)\r\n   at System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)\r\n\r\nThe scenario for my use case is that i have an SKControl as a child of a DevExpress XtraScrollableControl. The XtraScrollableControl basically gives you a touch scrollable canvas of windows controls in a desktop form. \r\n\r\nMy SKControl resizes based on the content im rendering, sometimes this content exceeds the window size and the XtraScrollableControl allows me to scroll down to view more (think of it like a scrollable list). \r\n\r\nEverything works fine under normal use, but the problem occurs 100% of the time if i have scrolled the XtraScrollableControl canvas down to view the bottom parts of the SKControl then I change the height of the SKControl (due to a content change) which results in it being completely offscreen.\r\n\r\nI can solve the problem in this case easily enough by resetting my XtraScrollableControl scroll position to the top so the SKControl will be visible regardless of size whenever a content change occurs (which i was supposed to be doing originally anyway), however I am reporting this problem as there may be a deeper issue here which could crop up in other situations.\n\n\u003E VS bug [#735692](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/735692)",
+  "author": {
+    "login": "Craig-TSS",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "status/low-priority",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2017-06-07T02:25:49",
+  "updatedAt": "2019-06-17T16:50:55",
+  "commentCount": 5,
+  "reactionCount": 0
+}

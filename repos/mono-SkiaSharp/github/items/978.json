@@ -1,0 +1,32 @@
+{
+  "number": 978,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] [WPF] System.NullReferenceException throwed in listview while mouse hover on cell",
+  "body": "**Description**\r\n\r\nWPF: System.NullReferenceException throwed in listview while mouse hover on cell. \r\nsteps:\r\n1. click \u0022Load Data\u0022 button\r\n2. move mouse over the listview in one second\r\n\r\n**attached is test solution code.**\r\n\r\n**Code**\r\n\r\n**XAML**\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003CContentPage xmlns=\u0022http://xamarin.com/schemas/2014/forms\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:d=\u0022http://xamarin.com/schemas/2014/forms/design\u0022\r\n             xmlns:mc=\u0022http://schemas.openxmlformats.org/markup-compatibility/2006\u0022\r\n             xmlns:boxviewclock=\u0022clr-namespace:BoxViewClock\u0022\r\n             mc:Ignorable=\u0022d\u0022\r\n             x:Class=\u0022BoxViewClock.TestListViewPage\u0022\u003E\r\n    \u003CContentPage.Content\u003E\r\n        \u003CGrid\u003E\r\n            \u003CGrid.ColumnDefinitions\u003E\r\n                \u003CColumnDefinition Width=\u00223*\u0022 /\u003E\r\n                \u003CColumnDefinition Width=\u00227*\u0022 /\u003E\r\n            \u003C/Grid.ColumnDefinitions\u003E\r\n            \u003CButton Text=\u0022Load Data\u0022 Clicked=\u0022Button_Clicked\u0022 /\u003E\r\n            \u003CListView x:Name=\u0022listView\u0022 Grid.Column=\u00221\u0022 RowHeight=\u002260\u0022 \u003E\r\n                \u003CListView.ItemTemplate\u003E\r\n                    \u003CDataTemplate\u003E\r\n                        \u003CViewCell\u003E\r\n                            \u003Cboxviewclock:TestSkiaView  /\u003E\r\n                        \u003C/ViewCell\u003E\r\n                    \u003C/DataTemplate\u003E\r\n                \u003C/ListView.ItemTemplate\u003E\r\n            \u003C/ListView\u003E\r\n        \u003C/Grid\u003E\r\n    \u003C/ContentPage.Content\u003E\r\n\u003C/ContentPage\u003E\r\n\u0060\u0060\u0060\r\n\r\n**CS**\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Forms;\r\nusing System;\r\nusing System.Collections.Generic;\r\nusing System.Diagnostics;\r\nusing System.Linq;\r\nusing System.Text;\r\nusing System.Threading.Tasks;\r\nusing Xamarin.Forms;\r\nusing Xamarin.Forms.Xaml;\r\n\r\nnamespace BoxViewClock\r\n{\r\n    [XamlCompilation(XamlCompilationOptions.Compile)]\r\n    public partial class TestListViewPage : ContentPage\r\n    {\r\n        public TestListViewPage()\r\n        {\r\n            InitializeComponent();\r\n            ReloadData();\r\n        }\r\n\r\n        public void ReloadData()\r\n        {\r\n            var exampleData = new List\u003CSimpleItem\u003E();\r\n\r\n            var howMany = 120;\r\n\r\n            for (int i = 0; i \u003C howMany; i\u002B\u002B)\r\n            {\r\n                exampleData.Add(new SimpleItem() { Title = DateTime.Now.ToString() });\r\n            }\r\n\r\n            listView.ItemsSource = exampleData;\r\n        }\r\n\r\n        private async void Button_Clicked(object sender, EventArgs e)\r\n        {\r\n            await Task.Delay(1000);\r\n            ReloadData();\r\n        }\r\n    }\r\n\r\n    public class TestSkiaView : SKCanvasView\r\n    {\r\n        public TestSkiaView()\r\n        {\r\n            this.EnableTouchEvents = true;\r\n        }\r\n\r\n        protected override void OnTouch(SKTouchEventArgs e)\r\n        {\r\n            base.OnTouch(e);\r\n            //Debug.WriteLine(e.ToString());\r\n            this.InvalidateSurface();\r\n        }\r\n\r\n        protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n        {\r\n            base.OnPaintSurface(e);\r\n            e.Surface.Canvas.Clear(SkiaSharp.SKColors.Red);\r\n            SimpleItem item = this.BindingContext as SimpleItem;\r\n            if (item != null)\r\n                e.Surface.Canvas.DrawText(item.Title, 0, 15, new SKPaint());\r\n        }\r\n    }\r\n\r\n    public class SimpleItem\r\n    {\r\n        string title;\r\n        public string Title\r\n        {\r\n            get { return title; }\r\n            set { title = value; }\r\n        }\r\n\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n\r\n\r\n**Basic Information**\r\n\r\nXamarin.Forms: 4.3.0.851321-pre3\r\nXamarin.Forms.Platform.WPF: 4.3.0.851321-pre3\r\nWPF target framework: .Net Framework  4.7.2\r\n\r\n[wpf.zip](https://github.com/mono/SkiaSharp/files/3723320/wpf.zip)\r\n\r\n",
+  "author": {
+    "login": "pardont",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2019-10-14T07:09:52",
+  "updatedAt": "2022-08-19T09:02:17",
+  "closedAt": "2020-02-13T12:25:32",
+  "commentCount": 6,
+  "reactionCount": 0
+}

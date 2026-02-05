@@ -1,0 +1,22 @@
+{
+  "number": 2644,
+  "type": "issue",
+  "state": "open",
+  "title": "Overlay Text Color is not changing",
+  "body": "### Description\n\nI am trying to write overlay text on images using Skiasharp and it\u0027s working but I am not able to change the text color from white to any other colors.\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\r\n\r\nBut, you can also share a short block of code here:\r\n\u0060\u0060\u0060cs\r\nvoid OverlayImage(string? path)\r\n        {\r\n            var resizeFactor = 0.9f;\r\n            var bitmap = SKBitmap.Decode(path);\r\n\r\n            var toBitmap = new SKBitmap((int)Math.Round(bitmap.Width * resizeFactor), (int)Math.Round(bitmap.Height * resizeFactor), bitmap.ColorType, bitmap.AlphaType);\r\n\r\n            var canvas = new SKCanvas(toBitmap);\r\n            // Draw a bitmap rescaled\r\n            canvas.SetMatrix(SKMatrix.CreateScale(resizeFactor, resizeFactor));\r\n            canvas.DrawBitmap(bitmap, 0, 0);\r\n            canvas.ResetMatrix();\r\n            float textSize = 12;\r\n            \r\n            var font = SKTypeface.FromFamilyName(\u0022Arial\u0022);\r\n            var brush = new SKPaint\r\n            {\r\n                Typeface = font,\r\n                TextSize = textSize,\r\n                IsAntialias = true,\r\n                Color = SKColor.Parse(\u0022#39FF14\u0022)\r\n            };\r\n            string drawText = $\u0022Test Text: ABCD132456\u0022;\r\n            canvas.DrawText(drawText, 10, 15, brush);\r\n            canvas.DrawText(\u0022www.nidoworld.com\u0022, 10, bitmap.Height - (bitmap.Height * 13 / 100), brush);\r\n\r\n            canvas.Flush();\r\n\r\n            var image = SKImage.FromBitmap(toBitmap);\r\n            var data = image.Encode(SKEncodedImageFormat.Jpeg, 90);\r\n          \r\n            var stream = new MemoryStream();\r\n            data.SaveTo(stream);\r\n\r\n            if (_isImageSave == true)\r\n            {\r\n                string? filePath = \u0022some path\u0022;\r\n                using FileStream file = new(filePath, FileMode.Create, FileAccess.Write);\r\n                stream.WriteTo(file);\r\n            }\r\n\r\n            var bytesString = Convert.ToBase64String(stream.ToArray());\r\n            data.Dispose();\r\n            image.Dispose();\r\n            canvas.Dispose();\r\n            brush.Dispose();\r\n            font.Dispose();\r\n            toBitmap.Dispose();\r\n            bitmap.Dispose();\r\n            stream.Dispose();\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n\n\n### Expected Behavior\n\nText Color must be in green.\n\n### Actual Behavior\n\nText color is always white\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\nUbuntu 22.04\r\nUbuntu 20.04\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "PKYADAV",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-12T07:47:31",
+  "updatedAt": "2023-11-29T07:22:49",
+  "commentCount": 1,
+  "reactionCount": 0
+}

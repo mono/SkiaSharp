@@ -1,0 +1,18 @@
+{
+  "number": 468,
+  "type": "issue",
+  "state": "closed",
+  "title": "Snapshot from Canvas",
+  "body": "Hi\r\nI\u0027m trying to create an image from canvas. Don\u0027t know how to extract surface from canvas to do it, so i   do:\r\n\r\n        SKSurface surface = null;\r\n        private void OnPaint(object sender, SkiaSharp.Views.Forms.SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            mapDrawing.DrawSample(e.Surface.Canvas, e.RenderTarget.Width, e.RenderTarget.Height);\r\n\r\n            surface = e.Surface;\r\n        }\r\n\r\nAnd then try to extract the snapshot from surface in another method after the first paint occurence:\r\n\r\n        if (surface == null)\r\n            return null;\r\n  \r\n                var snap = surface.Snapshot();\r\n                var data = snap.Encode();\r\n                byte[] bytearray = data.ToArray();\r\n        }\r\n\r\nand I get the expection when invoking surface.Snapshot();\r\n\r\n\u0060\u0060\u0060\r\n03-14 22:11:05.294 D/Mono    (12013): Found as \u0027sk_surface_new_image_snapshot\u0027.\r\n03-14 22:11:05.294 E/mono-rt (12013): Stacktrace:\r\n03-14 22:11:05.294 E/mono-rt (12013): \r\n03-14 22:11:05.302 E/mono-rt (12013):   at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n03-14 22:11:05.302 E/mono-rt (12013):   at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_surface_new_image_snapshot (intptr) \u003C0x00037\u003E\r\n03-14 22:11:05.302 E/mono-rt (12013):   at SkiaSharp.SKSurface.Snapshot () [0x00006] in \u003C5a812555f55f40c0a29350793a12a8ac\u003E:0\r\n\u0060\u0060\u0060\r\nCan you give ma a hand with this?\r\nThanks :)",
+  "author": {
+    "login": "Azmarel",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-03-14T21:22:22",
+  "updatedAt": "2022-08-19T18:01:18",
+  "closedAt": "2018-03-24T00:04:36",
+  "commentCount": 1,
+  "reactionCount": 0
+}

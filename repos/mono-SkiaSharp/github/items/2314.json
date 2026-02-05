@@ -1,0 +1,17 @@
+{
+  "number": 2314,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Replace \u0060ref\u0060 parameters by \u0060in\u0060 parameters where applicable",
+  "body": "**Problem**\r\n\r\nAs an example, \u0060SKCanvas.Concat\u0060 is declared as \u0060public void Concat (ref SKMatrix m)\u0060. This does not let me write\r\n\u0060\u0060\u0060\r\ncanvas.Concat(ref obj.Matrix); // Where Matrix is a readonly field.\r\n\u0060\u0060\u0060\r\nI get\r\n\u003ECS0192\tA readonly field cannot be used as a ref or out value (except in a constructor)\r\n\r\nI have to create a local copy of the \u0060SKMatrix\u0060 struct first. But copying the struct is precisely what the \u0060ref\u0060 keyword is supposed to avoid and is not good for **performance**.\r\n\r\n**Proposed solution**\r\n\r\nReplace the \u0060ref\u0060 keyword with the \u0060in\u0060 keyword (in all methods where this applies).\r\n\u0060\u0060\u0060\r\npublic void Concat (in SKMatrix m)\r\n\u0060\u0060\u0060\r\n\r\n**Additional context**\r\n\r\nThe documentation for [in parameter modifier (C# Reference)](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/in-parameter-modifier) says\r\n\u003EThe in keyword causes arguments to be passed by reference but ensures the argument is not modified.\r\n",
+  "author": {
+    "login": "OJacot-Descombes",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-11-17T13:55:57",
+  "updatedAt": "2023-04-04T16:05:06",
+  "commentCount": 5,
+  "reactionCount": 2
+}

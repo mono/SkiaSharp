@@ -1,0 +1,32 @@
+{
+  "number": 292,
+  "type": "issue",
+  "state": "closed",
+  "title": "(XF/Android) Exception occurs when GC collects : \u0022System.ObjectDisposedException: Cannot access a disposed object.\u0022",
+  "body": "Hi Matthew, \r\nCould you look this exception?\r\nWhen GC collects to make a room (automatically), this exception occurs and app crashes only on XF/Android.\r\n\r\nI\u0027m using SKCanvasView at many places.\r\nI found this because the crash report tool received this crash from many users since I released new update SEVERAL DAYS ago. (It\u0027s released with SkiaSharp.1.57.0, and before release was on Feb)\r\n\r\n\r\nskiasharp ver : 1.57.1\r\nXF ver : 2.3.4.231 \r\n\r\n(UPDATE)\r\nUnfortunately, I tested with 1.56.0 which was included on my Feb release, but the same exception occurs. I guess XF changed how GC handles or other problem.\r\n\r\nIn my new update, SkCanvas Views are used at many more places, where ListViewCell, ModalPage, CarouselView on Modal, etc.\r\nAnd Xamarin.Android and I changed even Android SDK since Feb release, so many things are changed.\r\nIt\u0027s hard to find the reason.\r\n\r\n\u0060\u0060\u0060\r\n[mono] Unhandled Exception:\r\n[mono] System.ObjectDisposedException: Cannot access a disposed object.\r\n[mono] Object name: \u0027Android.Graphics.Bitmap\u0027.\r\n[mono]   at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00030] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.cs:153 \r\n[mono]   at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeAbstractVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00002] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods_Invoke.cs:11 \r\n[mono]   at Android.Graphics.Bitmap.Recycle () [0x00000] in /Users/builder/data/lanes/4468/b16fb820/source/monodroid/src/Mono.Android/platforms/android-25/src/generated/Android.Graphics.Bitmap.cs:975 \r\n[mono]   at SkiaSharp.Views.Android.SKCanvasView.FreeBitmap () [0x0000b] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono]   at SkiaSharp.Views.Android.SKCanvasView.Dispose (System.Boolean disposing) [0x00007] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono]   at Java.Lang.Object.Finalize () [0x00051] in /Users/builder/data/lanes/4468/b16fb820/source/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:67 \r\n[mono-rt] [ERROR] FATAL UNHANDLED EXCEPTION: System.ObjectDisposedException: Cannot access a disposed object.\r\n[mono-rt] Object name: \u0027Android.Graphics.Bitmap\u0027.\r\n[mono-rt]   at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00030] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.cs:153 \r\n[mono-rt]   at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeAbstractVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00002] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods_Invoke.cs:11 \r\n[mono-rt]   at Android.Graphics.Bitmap.Recycle () [0x00000] in /Users/builder/data/lanes/4468/b16fb820/source/monodroid/src/Mono.Android/platforms/android-25/src/generated/Android.Graphics.Bitmap.cs:975 \r\n[mono-rt]   at SkiaSharp.Views.Android.SKCanvasView.FreeBitmap () [0x0000b] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono-rt]   at SkiaSharp.Views.Android.SKCanvasView.Dispose (System.Boolean disposing) [0x00007] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono-rt]   at Java.Lang.Object.Finalize () [0x00051] in /Users/builder/data/lanes/4468/b16fb820/source/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:67 \r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "benevbright",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "1.59.2",
+  "createdAt": "2017-05-09T07:55:31",
+  "updatedAt": "2022-08-19T21:01:58",
+  "closedAt": "2017-09-12T15:10:09",
+  "commentCount": 13,
+  "reactionCount": 0
+}

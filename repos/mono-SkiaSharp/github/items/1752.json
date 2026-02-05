@@ -1,0 +1,19 @@
+{
+  "number": 1752,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKManagedStream crash loading bmp files introduced in 2.80.3",
+  "body": "**Description**\r\n\r\nWe use C# streams to load BMP images from disk, and hand those streams directly to SKBitmap.Decode(). \r\nAfter updating from 2.80.2 to 2.80.3 this pattern is now crashing with the exception:\r\nSystem.ArgumentNullException: \u0027Value cannot be null. Parameter name: buffer\u0027\r\n\r\nI\u0027ve tracked it down to loading BMPs (JPG loading with the same code works fine) and only when the load pathway goes through SKManagedStream. Any method that uses this class to load this type of file (whether I make the SKManagedStream from the C# stream and give it to the Decode() function, or hand the Decode() function the C# stream directly) crashes loading BMPs.\r\n\r\nHere is the stack track:\r\n\r\n\u0060\u0060\u0060\r\n \tSkiaSharp.dll!SkiaSharp.SKManagedStream.OnReadManagedStream(System.IntPtr buffer, System.IntPtr size)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKAbstractManagedStream.ReadInternal(System.IntPtr s, void* context, void* buffer, System.IntPtr size)\tUnknown\r\n \t[Native to Managed Transition]\t\r\n \t[Managed to Native Transition]\t\r\n \tSkiaSharp.dll!SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo info, System.IntPtr pixels, int rowBytes, SkiaSharp.SKCodecOptions options)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo info, System.IntPtr pixels)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKBitmap.Decode(SkiaSharp.SKCodec codec, SkiaSharp.SKImageInfo bitmapInfo)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKBitmap.Decode(SkiaSharp.SKCodec codec)\tUnknown\r\n \tSkiaSharp.dll!SkiaSharp.SKBitmap.Decode(SkiaSharp.SKStream stream)\tUnknown\r\n\u0060\u0060\u0060\r\n\r\nNotably, if I either read the BMP into a byte array or an SDKData first the same file decodes fine (using the following code)\r\nSKData fileSKData = SKData.Create(fileStream);\r\nSKBitmap returnBitmap = SKBitmap.Decode(fileSKData);\r\n\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\n// This throws the exception System.ArgumentNullException: \u0027Value cannot be null. Parameter name: buffer\u0027\r\nusing (SKManagedStream sKManagedStream = new SKManagedStream(fileStream))\r\n{\r\n    // This crashes before returning from Decode()\r\n    SKBitmap returnBitmap = SKBitmap.Decode(sKManagedStream);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nA bitmap can be loaded via a C# stream \r\n\r\n**Actual Behavior**\r\n\r\nThe code crashes when loading a bmp but only through SKManagedStream\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n- Last known good version:  2.80.2\r\n- IDE:  MSVC 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - UWP:  19041\r\n  - Windows Classic:  Version\t10.0.19043 Build 19043\r\n- Target Devices:   Windows Desktop\r\n",
+  "author": {
+    "login": "jermarti",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.3",
+  "createdAt": "2021-07-29T18:53:06",
+  "updatedAt": "2022-10-29T09:01:16",
+  "closedAt": "2022-09-29T06:55:01",
+  "commentCount": 7,
+  "reactionCount": 10
+}

@@ -1,0 +1,34 @@
+{
+  "number": 2616,
+  "type": "issue",
+  "state": "open",
+  "title": "Switch to \u0060Span\u003CT\u003E\u0060 or \u0060ReadOnlySpan\u003CT\u003E\u0060",
+  "body": "## Description\r\n\r\nPart of #2615\r\n\r\nThe SkiaSharp codebase is quite old and existed before the introduction of spans. (See more https://learn.microsoft.com/en-us/dotnet/standard/memory-and-spans/memory-t-usage-guidelines)\r\n\r\nCurrent files in the core binding using arrays:\r\n\r\n - [ ] Definitions.cs\r\n - [ ] GRGlInterface.cs\r\n - [ ] GRVkExtensions.cs\r\n - [ ] SKBitmap.cs\r\n - [ ] SKCanvas.cs\r\n - [ ] SKCodec.cs\r\n - [ ] SKColorFilter.cs\r\n - [ ] SKColorSpace.cs\r\n - [ ] SKColorSpaceStructs.cs\r\n - [x] SKData.cs\r\n     - https://github.com/mono/SkiaSharp/pull/2617\r\n     - \u0060public byte[] ToArray ()\u0060 is intentially an array, there is:\r\n        - \u0060public ReadOnlySpan\u003Cbyte\u003E AsSpan ()\u0060\r\n        - \u0060public Span\u003Cbyte\u003E Span { get; }\u0060\r\n - [ ] SKFont.cs\r\n - [ ] SKFontManager.cs\r\n - [ ] SKFrontBufferedManagedStream.cs\r\n - [ ] SKFrontBufferedStream.cs\r\n - [x] SKImage.cs\r\n     - https://github.com/mono/SkiaSharp/pull/2617\r\n - [ ] SKManagedStream.cs\r\n - [ ] SKManagedWStream.cs\r\n - [ ] SKMaskFilter.cs\r\n - [ ] SKMatrix.cs\r\n - [ ] SKMatrix44.cs\r\n - [ ] SKObject.cs\r\n - [ ] SKPMColor.cs\r\n - [ ] SKPaint.cs\r\n - [ ] SKPath.cs\r\n - [x] SKPathEffect.cs\r\n     - https://github.com/mono/SkiaSharp/pull/2617\r\n - [x] SKRoundRect.cs\r\n      - https://github.com/mono/SkiaSharp/pull/2617\r\n      - \u0060public SKPoint[] Radii { get; }\u0060 still exists as it is a convenience and this is accessible using non-arrays by querying each corner individually (which is what this property does)\r\n - [ ] SKRuntimeEffect.cs\r\n - [ ] SKShader.cs\r\n - [ ] SKStream.cs\r\n - [ ] SKString.cs\r\n - [ ] SKTextBlob.cs\r\n - [ ] SKTypeface.cs\r\n - [ ] SKVertices.cs\r\n - [ ] SkiaApi.generated.cs\r\n - [ ] Util.cs\r\n\r\n\u003E NOTE: not all usages are bad. There are cases where returning an array is acceptable because we have span alternatives, or the data is best contained in an array. \r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "status/up-for-grabs",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/performance",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-09-18T19:27:41",
+  "updatedAt": "2025-02-26T08:48:47",
+  "commentCount": 2,
+  "reactionCount": 0
+}
