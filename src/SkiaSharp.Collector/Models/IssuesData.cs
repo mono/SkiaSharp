@@ -1,6 +1,6 @@
 namespace SkiaSharp.Collector.Models;
 
-// Issues Data
+// Issues Data - Multi-repo version
 public record IssuesData(
     DateTime GeneratedAt,
     int TotalCount,
@@ -10,7 +10,9 @@ public record IssuesData(
     List<LabelCount> ByOs,
     List<AgeCount> ByAge,
     List<IssueInfo> Issues,
-    List<IssueInfo>? HotIssues = null
+    List<IssueInfo>? HotIssues = null,
+    List<RepoSummary>? Repos = null,
+    Dictionary<string, int>? ByRepo = null
 );
 
 public record AgeCount(string Label, string Display, int Count);
@@ -32,7 +34,10 @@ public record IssueInfo(
     List<string> Oses,
     List<string> OtherLabels,
     string Url,
-    IssueEngagementScore? Engagement = null
+    IssueEngagementScore? Engagement = null,
+    string? Repo = null,
+    string? RepoSlug = null,
+    string? RepoColor = null
 );
 
 public record IssueEngagementScore(

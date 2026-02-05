@@ -1,6 +1,36 @@
 namespace SkiaSharp.Collector.Models;
 
-// GitHub Stats
+// GitHub Stats - Multi-repo version
+public record MultiRepoGitHubStats(
+    DateTime GeneratedAt,
+    Dictionary<string, RepoGitHubStats> Repos,
+    TotalGitHubStats Total
+);
+
+public record RepoGitHubStats(
+    string DisplayName,
+    string Slug,
+    string Color,
+    int Stars,
+    int Forks,
+    int Watchers,
+    int OpenIssues,
+    int ClosedIssues,
+    int OpenPRs,
+    int ClosedPRs
+);
+
+public record TotalGitHubStats(
+    int Stars,
+    int Forks,
+    int Watchers,
+    int OpenIssues,
+    int ClosedIssues,
+    int OpenPRs,
+    int ClosedPRs
+);
+
+// Legacy single-repo types kept for backward compatibility
 public record GitHubStats(
     DateTime GeneratedAt,
     RepositoryInfo Repository,
@@ -46,3 +76,11 @@ public record CommitInfo(
 );
 
 public record LabelCount(string Label, int Count);
+
+// Repo summary for UI dropdown
+public record RepoSummary(
+    string FullName,
+    string Slug,
+    string DisplayName,
+    string Color
+);

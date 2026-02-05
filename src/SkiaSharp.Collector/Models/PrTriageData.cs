@@ -1,13 +1,15 @@
 namespace SkiaSharp.Collector.Models;
 
-// PR Triage Data
+// PR Triage Data - Multi-repo version
 public record PrTriageData(
     DateTime GeneratedAt,
     int TotalCount,
     TriageSummary Summary,
     List<SizeCount> BySize,
     List<AgeCount> ByAge,
-    List<PullRequestInfo> PullRequests
+    List<PullRequestInfo> PullRequests,
+    List<RepoSummary>? Repos = null,
+    Dictionary<string, int>? ByRepo = null
 );
 
 public record TriageSummary(
@@ -43,5 +45,8 @@ public record PullRequestInfo(
     List<string> Backends,
     List<string> Oses,
     List<string> OtherLabels,
-    string Url
+    string Url,
+    string? Repo = null,
+    string? RepoSlug = null,
+    string? RepoColor = null
 );

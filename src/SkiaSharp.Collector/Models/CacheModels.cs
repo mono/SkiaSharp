@@ -259,7 +259,8 @@ public record TrendData(
     DateTime GeneratedAt,
     TrendSummary Issues,
     TrendSummary PullRequests,
-    List<MonthlyTrend> MonthlyTrends
+    List<MonthlyTrend> MonthlyTrends,
+    List<RepoSummary>? Repos = null
 );
 
 public record TrendSummary(
@@ -281,5 +282,10 @@ public record MonthlyTrend(
     int IssuesClosed,
     int PrsCreated,
     int PrsClosed,
-    int PrsMerged
+    int PrsMerged,
+    Dictionary<string, int>? IssuesCreatedByRepo = null,
+    Dictionary<string, int>? IssuesClosedByRepo = null,
+    Dictionary<string, int>? PrsCreatedByRepo = null,
+    Dictionary<string, int>? PrsClosedByRepo = null,
+    Dictionary<string, int>? PrsMergedByRepo = null
 );

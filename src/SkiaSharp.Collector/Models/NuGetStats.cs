@@ -1,17 +1,20 @@
 namespace SkiaSharp.Collector.Models;
 
-// NuGet Stats
+// NuGet Stats - Multi-repo version
 public record NuGetStats(
     DateTime GeneratedAt,
     long TotalDownloads,
-    List<PackageInfo> Packages
+    List<PackageInfo> Packages,
+    List<RepoSummary>? Repos = null,
+    Dictionary<string, long>? ByRepo = null
 );
 
 public record PackageInfo(
     string Id,
     long TotalDownloads,
     List<VersionInfo> Versions,
-    bool IsLegacy
+    bool IsLegacy,
+    string? Repo = null
 );
 
 public record VersionInfo(string Version, long Downloads, DateTime? Published = null);
