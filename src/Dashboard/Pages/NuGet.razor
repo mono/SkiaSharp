@@ -38,14 +38,15 @@ else
         <div class="nuget-charts">
             @foreach (var chart in _chartsData.Charts)
             {
-                <div class="chart-card">
-                    <h4>@chart.Title</h4>
-                    @if (chart.Series.Any())
-                    {
+                var visibleSeries = chart.Series.Where(s => _showLegacy || !IsLegacyPackage(s.PackageId)).ToList();
+                @if (visibleSeries.Any())
+                {
+                    <div class="chart-card">
+                        <h4>@chart.Title</h4>
                         <ApexChart TItem="ChartDataPoint"
                                    Options="GetChartOptions(chart.Title)"
                                    Height="200">
-                            @foreach (var series in chart.Series)
+                            @foreach (var series in visibleSeries)
                             {
                                 <ApexPointSeries TItem="ChartDataPoint"
                                                 Items="@series.DataPoints"
@@ -56,12 +57,8 @@ else
                                                 OrderBy="@(e => e.X)" />
                             }
                         </ApexChart>
-                    }
-                    else
-                    {
-                        <p class="no-data">No version history available</p>
-                    }
-                </div>
+                    </div>
+                }
             }
         </div>
     }
@@ -217,6 +214,13 @@ else
         if (id.StartsWith("SkiaSharp.")) return id.Replace("SkiaSharp.", "");
         return id;
     }
+
+    private static readonly HashSet<string> LegacyChartPackages = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "SkiaSharp.Views.Forms"
+    };
+
+    private static bool IsLegacyPackage(string packageId) => LegacyChartPackages.Contains(packageId);
 
     private void ToggleGroup(string group)
     {
