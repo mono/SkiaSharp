@@ -12,22 +12,44 @@ namespace SkiaSharp.Collector.Commands;
 /// </summary>
 public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
 {
+    private readonly ConfigService _configService = new();
+
     public override async Task<int> ExecuteAsync(CommandContext context, SyncNuGetSettings settings)
     {
-        if (!settings.Quiet)
-            AnsiConsole.MarkupLine("[bold blue]Syncing NuGet data...[/]");
+        // Parse repository and get config
+        var (owner, name) = settings.ParseRepository();
+        var repoConfig = await _configService.GetRepoByFullNameAsync(owner, name);
+        
+        if (repoConfig is null)
+        {
+            AnsiConsole.MarkupLine($"[red]Repository {owner}/{name} not found in config.json[/]");
+            return 1;
+        }
 
-        var cache = new CacheService(settings.CachePath);
+        if (repoConfig.Nuget is null)
+        {
+            if (!settings.Quiet)
+                AnsiConsole.MarkupLine($"[yellow]No NuGet config for {owner}/{name}, skipping[/]");
+            return 0;
+        }
+
+        if (!settings.Quiet)
+            AnsiConsole.MarkupLine($"[bold blue]Syncing NuGet data for {repoConfig.DisplayName}...[/]");
+
+        // Use per-repo cache path
+        var rootCache = new CacheService(settings.CachePath);
+        var cache = rootCache.ForRepo(repoConfig);
         using var nuget = new NuGetService(settings.MinSupportedVersion, settings.Verbose);
 
         var syncMeta = await cache.LoadNuGetSyncMetaAsync();
         var index = await cache.LoadNuGetIndexAsync();
         var now = DateTime.UtcNow;
 
-        // Get package list from VERSIONS.txt
+        // Discover packages using repo-specific config
         var packages = await AnsiConsole.Status()
             .Spinner(Spinner.Known.Dots)
-            .StartAsync("Fetching package list...", async _ => await nuget.GetPackageListAsync());
+            .StartAsync("Discovering packages...", async _ => 
+                await nuget.DiscoverPackagesAsync(repoConfig.Nuget));
 
         if (!settings.Quiet)
             AnsiConsole.MarkupLine($"[dim]Found {packages.Count} packages to sync[/]");
@@ -114,6 +136,7 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
                 .AddColumn("Metric")
                 .AddColumn(new TableColumn("Value").RightAligned());
             
+            table.AddRow("Repository", $"[bold]{repoConfig.DisplayName}[/]");
             table.AddRow("Packages Synced", $"[green]{processed}[/]");
             table.AddRow("Total Versions", $"[green]{totalVersions}[/]");
             table.AddRow("Total Downloads", $"[bold green]{totalDownloads:N0}[/]");

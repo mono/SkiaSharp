@@ -13,7 +13,7 @@ public class SyncSettings : CommandSettings
     [DefaultValue("./.data-cache")]
     public string CachePath { get; set; } = "./.data-cache";
 
-    [CommandOption("-r|--repo <OWNER/NAME>")]
+    [CommandOption("-r|--repo <REPO>")]
     [Description("Repository in owner/name format (e.g., mono/SkiaSharp)")]
     public string? Repository { get; set; }
 

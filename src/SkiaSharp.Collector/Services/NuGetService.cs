@@ -2,6 +2,7 @@ using System.Text.RegularExpressions;
 using NuGet.Common;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
+using SkiaSharp.Collector.Models;
 using Spectre.Console;
 
 namespace SkiaSharp.Collector.Services;
@@ -20,8 +21,6 @@ public sealed class NuGetService : IDisposable
     private readonly bool _verbose;
 
     private const string NuGetV3Url = "https://api.nuget.org/v3/index.json";
-    private const string MainVersionsUrl = "https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/VERSIONS.txt";
-    private const string ReleaseVersionsUrl = "https://raw.githubusercontent.com/mono/SkiaSharp/release/2.x/VERSIONS.txt";
 
     public NuGetService(int minSupportedMajorVersion = 3, bool verbose = false)
     {
@@ -33,15 +32,28 @@ public sealed class NuGetService : IDisposable
     }
 
     /// <summary>
-    /// Fetch package IDs from VERSIONS.txt files in the SkiaSharp repo.
+    /// Discover package IDs using the configured discovery method.
     /// </summary>
-    public async Task<List<string>> GetPackageListAsync()
+    public async Task<List<string>> DiscoverPackagesAsync(NuGetConfig nugetConfig)
+    {
+        return nugetConfig.Source switch
+        {
+            "versions-txt" => await GetPackagesFromVersionsTxtAsync(nugetConfig.Urls ?? []),
+            "nuget-search" => await SearchPackagesAsync(nugetConfig.Prefix ?? "", nugetConfig.Author),
+            _ => throw new ArgumentException($"Unknown NuGet source type: {nugetConfig.Source}")
+        };
+    }
+
+    /// <summary>
+    /// Fetch package IDs from VERSIONS.txt files.
+    /// </summary>
+    public async Task<List<string>> GetPackagesFromVersionsTxtAsync(IEnumerable<string> urls)
     {
         var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var pattern = new Regex(@"^\s*((?:SkiaSharp|HarfBuzzSharp)[^\s]*)\s+nuget\s+", 
             RegexOptions.Multiline);
 
-        foreach (var url in new[] { MainVersionsUrl, ReleaseVersionsUrl })
+        foreach (var url in urls)
         {
             try
             {
@@ -55,11 +67,66 @@ public sealed class NuGetService : IDisposable
             }
             catch (Exception ex)
             {
-                AnsiConsole.MarkupLine($"[yellow]Warning: Failed to fetch {url}: {ex.Message}[/]");
+                if (_verbose)
+                    AnsiConsole.MarkupLine($"[yellow]Warning: Failed to fetch {url}: {ex.Message}[/]");
             }
         }
 
-        return packages.OrderBy(p => p).ToList();
+        return [.. packages.OrderBy(p => p)];
+    }
+
+    /// <summary>
+    /// Search NuGet for packages matching a prefix, optionally filtering by author.
+    /// </summary>
+    public async Task<List<string>> SearchPackagesAsync(string prefix, string? authorFilter)
+    {
+        var packages = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        try
+        {
+            var searchResource = await _repository.GetResourceAsync<PackageSearchResource>();
+            var searchFilter = new SearchFilter(includePrerelease: false);
+
+            // Search for packages starting with prefix
+            var results = await searchResource.SearchAsync(
+                prefix,
+                searchFilter,
+                skip: 0,
+                take: 100, // Should be enough for Extended packages
+                NullLogger.Instance,
+                CancellationToken.None);
+
+            foreach (var result in results)
+            {
+                // Check if package ID matches the prefix
+                if (!result.Identity.Id.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                // Filter by author if specified
+                if (!string.IsNullOrEmpty(authorFilter) && result.Authors != null)
+                {
+                    var authors = result.Authors.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(a => a.Trim())
+                        .ToList();
+
+                    if (!authors.Any(a => a.Contains(authorFilter, StringComparison.OrdinalIgnoreCase)))
+                        continue;
+                }
+
+                packages.Add(result.Identity.Id);
+                if (_verbose)
+                    AnsiConsole.MarkupLine($"[dim]Found package: {result.Identity.Id}[/]");
+            }
+
+            if (_verbose)
+                AnsiConsole.MarkupLine($"[dim]Found {packages.Count} packages matching '{prefix}' by '{authorFilter}'[/]");
+        }
+        catch (Exception ex)
+        {
+            AnsiConsole.MarkupLine($"[yellow]Warning: NuGet search failed: {ex.Message}[/]");
+        }
+
+        return [.. packages.OrderBy(p => p)];
     }
 
     /// <summary>

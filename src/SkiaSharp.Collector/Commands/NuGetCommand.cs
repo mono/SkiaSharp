@@ -5,8 +5,19 @@ using Spectre.Console.Cli;
 
 namespace SkiaSharp.Collector.Commands;
 
+/// <summary>
+/// Legacy direct-to-output NuGet command. 
+/// Prefer using 'sync nuget' + 'generate' for cache-based workflow.
+/// </summary>
 public class NuGetCommand : AsyncCommand<NuGetSettings>
 {
+    // Default VERSIONS.txt URLs for legacy command
+    private static readonly string[] DefaultVersionsUrls =
+    [
+        "https://raw.githubusercontent.com/mono/SkiaSharp/main/scripts/VERSIONS.txt",
+        "https://raw.githubusercontent.com/mono/SkiaSharp/release/2.x/scripts/VERSIONS.txt"
+    ];
+
     public override async Task<int> ExecuteAsync(CommandContext context, NuGetSettings settings)
     {
         if (!settings.Quiet)
@@ -14,12 +25,12 @@ public class NuGetCommand : AsyncCommand<NuGetSettings>
 
         using var nuget = new NuGetService(settings.MinSupportedVersion, settings.Verbose);
 
-        // Get package list
+        // Get package list using versions-txt discovery (legacy behavior)
         var packages = await AnsiConsole.Status()
             .Spinner(Spinner.Known.Dots)
             .StartAsync("Fetching package list from VERSIONS.txt...", async _ =>
             {
-                return await nuget.GetPackageListAsync();
+                return await nuget.GetPackagesFromVersionsTxtAsync(DefaultVersionsUrls);
             });
 
         if (!settings.Quiet)
