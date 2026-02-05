@@ -5,10 +5,27 @@
 
 ## Current Focus
 
-**Phase**: Phase 4 - Data Cache Architecture (COMPLETE ✅)
-**Status**: All infrastructure complete, sync runs hourly + on push
+**Phase**: Phase 5 - Issue/PR Trend Charts (v0.10.0)
+**Status**: UI complete, awaiting full sync to populate merged data
 
 ## Recent Changes
+
+### 2026-02-05 (Issue/PR Trend Charts - v0.10.0)
+1. ✅ **Added `Merged` and `MergedAt` fields to PR sync**:
+   - Updated CacheModels with new fields
+   - Updated SyncGitHubCommand to fetch from API
+   - Added `ClosedAt` to IndexItem for trend calculations
+2. ✅ **New `github-trends.json` output**:
+   - Issue stats: total, closed, open, closure rate, avg days to close
+   - PR stats: total, merged, closed, open, merge rate, avg days to merge
+   - Monthly trends (all-time history, ~120 months)
+3. ✅ **Issues page enhancements**:
+   - 6 stats cards (total created, closed, open, rate, avg days, oldest)
+   - Monthly activity line chart (created vs closed)
+4. ✅ **PRs page enhancements**:
+   - 6 stats cards (total opened, merged, closed, open, rate, avg days)
+   - Monthly activity line chart (opened vs merged)
+5. ⏳ **Pending**: Run `sync github --items-only --full` to backfill data
 
 ### 2026-02-04 (NuGet.Protocol SDK Refactor - v0.9.1)
 1. ✅ **Refactored to NuGet.Protocol SDK**:
@@ -30,23 +47,6 @@
 4. ✅ Sorting filters on Issues page (6 options)
 5. ✅ Sorting filters on PRs page (7 options)
 6. ✅ Fixed engagement loop infinite commits (exit code 2)
-
-### 2026-02-04 (Community Sync & Documentation)
-1. ✅ Updated .ai/techContext.md with CLI commands
-2. ✅ Updated .ai/architecture.md with 4-step workflow
-3. ✅ Updated copilot-instructions.md with cache structure
-4. ✅ Updated progress.md with v0.8.0
-
-### 2026-02-04 (Community Sync Implementation)
-1. ✅ **Community sync feature**:
-   - New `sync community` command
-   - Fetches top 100 contributors (1 API call)
-   - Checks MS membership for top 20 (20 API calls)
-   - Stores in `community/contributors.json`
-2. ✅ **Repo stats in cache**:
-   - GitHub sync saves stars/forks/watchers to `github/repo.json`
-   - Generate reads from cache (no more hardcoded zeros)
-3. ✅ Removed Recent Commits from Community page
 
 ### 2026-02-04 (Checkpoint-Based Engagement)
 1. ✅ Changed engagement batch size: 25 → 100
