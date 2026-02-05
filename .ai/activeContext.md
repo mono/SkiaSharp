@@ -5,139 +5,123 @@
 
 ## Current Focus
 
-**Phase**: Phase 5 - Issue/PR Trend Charts (v0.10.0) ✅ COMPLETE
-**Status**: All features deployed and working
+**Phase**: Multi-Repository Dashboard Extension ✅ COMPLETE (Core)
+**Status**: All 5 phases implemented, basic multi-repo support working
 
 ## Recent Changes
 
-### 2026-02-05 (Issue/PR Trend Charts - v0.10.0) ✅
-1. ✅ **Added `Merged` and `MergedAt` fields to PR sync**:
-   - Updated CacheModels with new fields
-   - Updated SyncGitHubCommand to fetch from API
-   - Added `ClosedAt` to IndexItem for trend calculations
-2. ✅ **New `github-trends.json` output**:
-   - Issue stats: total, closed, open, closure rate, avg days to close
-   - PR stats: total, merged, closed, open, merge rate, avg days to merge
-   - Monthly trends (all-time history, ~120 months)
-3. ✅ **Issues page enhancements**:
-   - 6 stats cards (total created, closed, open, rate, avg days, oldest)
-   - Monthly activity line chart (created vs closed)
-   - Time range dropdown (6mo, 1yr, 2yr, 5yr, all time)
-4. ✅ **PRs page enhancements**:
-   - 6 stats cards (total opened, merged, closed, open, rate, avg days)
-   - Monthly activity line chart (opened vs merged)
-   - Time range dropdown (6mo, 1yr, 2yr, 5yr, all time)
-5. ✅ **Full sync completed**: 941 merged PRs, 2,472 items with closedAt
+### 2026-02-05 (Multi-Repository Extension - v0.11.0)
 
-### 2026-02-04 (NuGet.Protocol SDK Refactor - v0.9.1)
-1. ✅ **Refactored to NuGet.Protocol SDK**:
-   - Replaced raw HTTP calls with official NuGet SDK
-   - PackageSearchResource: All versions + download counts
-   - PackageMetadataResource: All versions + publish dates
-   - Cleaner, more maintainable code
-2. ✅ **All versions now have downloads**:
-   - 145 SkiaSharp versions (was 5)
-   - Previews now show real download counts
-   - No more 0-download entries
+**Phase 1: Cache Restructure ✅**
+- Created `config.json` with repo list (SkiaSharp + Extended)
+- Created `ConfigModels.cs` and `ConfigService.cs`
+- Updated `CacheService` for per-repo paths: `repos/{key}/github/`, `repos/{key}/nuget/`
+- Contributors moved to `github/` folder (it's GitHub API data)
 
-### 2026-02-04 (NuGet Download Trend Charts - v0.9.0)
-1. ✅ **6 cumulative download charts** on NuGet page:
-   - SkiaSharp, HarfBuzzSharp, .NET MAUI Views
-   - Skottie Animation, GPU Backends (Direct3D + Vulkan), Blazor
-2. ✅ Store ALL versions with publish dates
-3. ✅ New `nuget-charts.json` output file
-4. ✅ Sorting filters on Issues page (6 options)
-5. ✅ Sorting filters on PRs page (7 options)
-6. ✅ Fixed engagement loop infinite commits (exit code 2)
+**Phase 2: Multi-Repo Sync ✅**
+- Updated all sync commands to accept `--repo owner/name` argument
+- `SyncGitHubCommand`, `SyncCommunityCommand`: per-repo cache paths
+- `NuGetService`: Added `DiscoverPackagesAsync()` with two strategies:
+  - `versions-txt`: Parse VERSIONS.txt files for SkiaSharp
+  - `nuget-search`: Search NuGet API for `SkiaSharp.Extended*` by Microsoft
+- `SyncNuGetCommand`: Uses per-repo config and cache paths
 
-### 2026-02-04 (Checkpoint-Based Engagement)
-1. ✅ Changed engagement batch size: 25 → 100
-2. ✅ CLI returns exit code 1 when rate limit hit
-3. ✅ Workflow uses while-loop with checkpoint commits
-4. ✅ Fixed TriageCategory enum (added Untriaged, Draft)
+**Phase 3: Parallel Workflow ✅**
+- Split `sync-data-cache.yml` into parallel jobs:
+  - `sync-skiasharp`: Syncs mono/SkiaSharp
+  - `sync-extended`: Syncs mono/SkiaSharp.Extended
+- Added rebase-retry push logic (different folders = no conflicts)
+- Added `--repo` filter in workflow_dispatch for testing
 
-### 2026-02-04 (Data Cache Architecture)
-1. ✅ Branch renamed: `dashboard` → `docs-dashboard`
-2. ✅ Created `docs-data-cache` orphan branch
-3. ✅ Implemented sync commands (github, nuget)
-4. ✅ Engagement scoring with hot issue detection
+**Phase 4: Generate Consolidation ✅**
+- Updated `GenerateCommand` to discover repos from `repos/*/` structure
+- Added `repo`, `repoSlug`, `repoColor` fields to issues/PRs
+- Merged contributors (deduplicate by login, track per-repo contributions)
+- Per-repo breakdown in all stats (byRepo dictionaries)
+- MonthlyTrend includes per-repo breakdown for stacked charts
+
+**Phase 5: Dashboard UI ✅**
+- Updated all service models for multi-repo fields
+- `MultiRepoGitHubStats` replaces `GitHubStats` with `Repos` + `Total`
+- Home/Community pages use `Total` stats
+- All models backward compatible (new fields optional)
 
 ## Architecture Summary
 
 ```
-Push to docs-dashboard
-         │
-         ▼
-sync-data-cache.yml (hourly + on push)
-         │
-         ├─ Step 1a: NuGet (every 6h) ──→ push
-         ├─ Step 1b: Community (every 6h) ──→ push
-         │
-         ├─ Step 2: GitHub items (Layer 1) ──→ push
-         │
-         └─ Step 3: GitHub engagement (Layer 2)
-                    └─ while loop: 100 items ──→ push ──→ repeat until rate limit
+docs-dashboard/                      # SOURCE CODE BRANCH
+├── src/SkiaSharp.Collector/
+│   ├── config.json                  # Repo list + NuGet discovery settings
+│   └── ...
+
+docs-data-cache/                     # DATA CACHE BRANCH
+└── repos/
+    ├── mono-SkiaSharp/
+    │   ├── github/
+    │   │   ├── sync-meta.json
+    │   │   ├── repo.json
+    │   │   ├── contributors.json
+    │   │   ├── index.json
+    │   │   └── items/*.json
+    │   └── nuget/
+    │       ├── sync-meta.json
+    │       ├── index.json
+    │       └── packages/*.json
+    └── mono-SkiaSharp.Extended/
+        └── ... (same structure)
 ```
 
-### Cache Structure (`docs-data-cache` branch)
-```
-docs-data-cache/
-├── github/
-│   ├── repo.json           # Stars, forks, watchers
-│   ├── sync-meta.json      # Sync state, rate limits
-│   ├── index.json          # All issues + PRs
-│   └── items/*.json        # Full item + engagement
-├── community/
-│   ├── sync-meta.json
-│   └── contributors.json   # Top 100 with MS flag
-├── nuget/
-│   ├── sync-meta.json
-│   ├── index.json
-│   └── packages/*.json
+### Parallel Sync with Rebase-Retry
+```yaml
+jobs:
+  sync-skiasharp:
+    # Syncs to repos/mono-SkiaSharp/*
+    # Uses rebase-retry for push conflicts
+    
+  sync-extended:  # Runs in PARALLEL
+    # Syncs to repos/mono-SkiaSharp.Extended/*
+    # Different folders = no git conflicts on rebase
 ```
 
-### CLI Commands
-```bash
-# Sync commands (populate cache)
-dotnet run -- sync github --cache-path ./cache --items-only
-dotnet run -- sync github --cache-path ./cache --engagement-only --engagement-count 100
-dotnet run -- sync community --cache-path ./cache
-dotnet run -- sync nuget --cache-path ./cache
-
-# Generate command (cache → JSON)
-dotnet run -- generate --from-cache ./cache -o ./data
-```
-
-### Checkpoint Strategy
-```bash
-while true; do
-  sync github --engagement-only --engagement-count 100
-  git commit && push  # Checkpoint every 100 items
-  if rate_limited or all_done; then break; fi
-done
-```
-- Atomic file writes prevent JSON corruption
-- Git commits provide checkpoints every 100 items
-- Exit code 1 = rate limit hit (more work to do)
+### NuGet Discovery
+| Repo | Method | Details |
+|------|--------|---------|
+| mono/SkiaSharp | versions-txt | Parse VERSIONS.txt from main + release/2.x |
+| mono/SkiaSharp.Extended | nuget-search | Search `SkiaSharp.Extended*` by Microsoft |
 
 ## Context for Next AI Session
 
 When resuming work:
 1. Read ALL files in `.ai/` folder first
-2. Branch is `docs-dashboard` (renamed from `dashboard`)
-3. Data cache is `docs-data-cache` branch
+2. Branch is `docs-dashboard`
+3. Data cache is `docs-data-cache` branch with `repos/` structure
 4. Live at https://mono.github.io/SkiaSharp/dashboard/
-5. Sync runs hourly (NuGet/Community every 6h), build runs every 6 hours
+5. Multi-repo sync runs in parallel (two jobs)
+
+## Remaining Enhancements (Future)
+
+- [ ] Repo filter dropdown on Issues/PRs pages
+- [ ] Repo color badges on issue/PR table rows
+- [ ] Stacked area charts for trends (using per-repo breakdown)
+- [ ] Per-repo breakdown cards on Home page
 
 ## Previous Completed Phases
 
-### Phase 3 - Collector CLI (COMPLETE)
-- Converted 5 PowerShell scripts to .NET CLI
-- Commands: `github`, `nuget`, `community`, `issues`, `pr-triage`
-- Spectre.Console UI with progress bars
+### Phase 5 - Issue/PR Trend Charts (v0.10.0) ✅
+- Monthly activity charts with time range dropdown
+- Stats cards for issues and PRs
+- Merged/MergedAt fields for PR tracking
 
-### Phase 2 - Dashboard Features (COMPLETE)
-- NuGet page with grouped layout, 50 packages, legacy toggle
-- SPA routing fixed with spa-github-pages approach
+### Phase 4 - Data Cache Architecture ✅
+- Separate cache branch with sync commands
+- Engagement scoring with hot issue detection
+- Checkpoint-based sync with rate limit handling
+
+### Phase 3 - Collector CLI ✅
+- .NET CLI replaces PowerShell scripts
+- Commands: sync github/nuget/community, generate
+
+### Phase 2 - Dashboard Features ✅
+- NuGet page with grouped layout
+- SPA routing fixed
 - Charts with ApexCharts
-- Filters with URL query params

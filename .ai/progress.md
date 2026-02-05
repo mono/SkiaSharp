@@ -4,7 +4,7 @@
 
 ## Current Status
 
-**Overall**: ✅ Phase 4 - Data Cache Architecture COMPLETE
+**Overall**: ✅ Phase 5 - Multi-Repository Extension COMPLETE (Core)
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -13,59 +13,42 @@
 | Phase 2.7 | ✅ Complete | NuGet grouped layout + legacy toggle |
 | Phase 3 | ✅ Complete | .NET collector CLI replaces PowerShell |
 | Phase 4 | ✅ Complete | Data cache with engagement scoring |
+| Phase 5 | ✅ Complete | Multi-repo extension |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
 
 ---
 
-## Phase 4: Data Cache Architecture ✅ (Complete)
+## Phase 5: Multi-Repository Extension ✅ (Complete)
 
-### Branch Setup ✅
-- [x] Rename `dashboard` → `docs-dashboard`
-- [x] Create `docs-data-cache` orphan branch
-- [x] Update workflows for new architecture
+### Cache Restructure ✅
+- [x] Create `config.json` with repo list and NuGet discovery settings
+- [x] Create `ConfigModels.cs` and `ConfigService.cs`
+- [x] Update `CacheService` for per-repo paths: `repos/{key}/github/`, `repos/{key}/nuget/`
+- [x] Contributors moved to `github/` folder
 
-### Cache Infrastructure ✅
-- [x] `CacheModels.cs` - All cache record types
-- [x] `CacheService.cs` - Read/write cache files, atomic writes
-- [x] Skip list management with error types and cooldowns
-- [x] Index.json sorted by item number (stable for diffs)
-- [x] `github/repo.json` - Stars, forks, watchers
-- [x] `community/contributors.json` - Top 100 with MS flag
+### Multi-Repo Sync ✅
+- [x] Update `SyncGitHubCommand` with `--repo owner/name` argument
+- [x] Update `SyncCommunityCommand` for per-repo
+- [x] Add `DiscoverPackagesAsync()` to `NuGetService` (versions-txt + nuget-search)
+- [x] Update `SyncNuGetCommand` for per-repo config
 
-### Sync Commands ✅
-- [x] `sync github` - Layer 1 (items) + Layer 2 (engagement)
-- [x] `sync nuget` - Package downloads and versions
-- [x] `sync community` - Contributors + MS membership check
-- [x] `--items-only` flag - Skip engagement (Layer 1 only)
-- [x] `--engagement-only` flag - Skip items (Layer 2 only)
-- [x] `--engagement-count` flag - Batch size (default: 100)
-- [x] Proactive rate limit checking (exit code 1 when hit)
-- [x] Smart engagement sync (only items updated since last sync)
+### Parallel Workflow ✅
+- [x] Split sync into parallel jobs (sync-skiasharp, sync-extended)
+- [x] Add rebase-retry push logic for conflict resolution
+- [x] Add `--repo` filter in workflow_dispatch
 
-### Generate Command ✅
-- [x] Reads repo stats from `github/repo.json`
-- [x] Reads contributors from `community/contributors.json`
-- [x] Engagement scoring with hot issue detection
-- [x] Always writes files, even with empty cache
+### Generate Consolidation ✅
+- [x] Update `GenerateCommand` to discover repos from `repos/*/`
+- [x] Add `repo`, `repoSlug`, `repoColor` fields to issues/PRs/packages
+- [x] Merge contributors (deduplicate by login, track per-repo)
+- [x] Per-repo breakdown in all stats
+- [x] MonthlyTrend with per-repo breakdown dictionaries
 
 ### Dashboard UI ✅
-- [x] Hot issues section on Issues page
-- [x] Hot issues card on Home page (top 3)
-- [x] Fixed TriageCategory enum (Untriaged, Draft)
-- [x] Removed Recent Commits section (not needed)
-
-### Workflow Structure ✅
-- [x] 4-step workflow: NuGet → Community → GitHub items → GitHub engagement
-- [x] NuGet + Community sync every 6 hours
-- [x] GitHub items sync every hour
-- [x] GitHub engagement: while loop, 100 items/checkpoint
-- [x] Concurrency: `cancel-in-progress: false`
-
-### Fault Tolerance ✅
-- [x] Atomic file writes (write to .tmp, then move)
-- [x] Git commits as checkpoints
-- [x] Exit code 1 on rate limit
-- [x] Next run resumes from last checkpoint
+- [x] Update all service models for multi-repo fields
+- [x] `MultiRepoGitHubStats` with `Repos` + `Total`
+- [x] Home/Community pages use `Total` stats
+- [x] All models backward compatible (new fields optional)
 
 ---
 
@@ -219,6 +202,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
+| 0.11.0 | 2026-02-05 | Multi-repository extension: per-repo cache, parallel sync, merged stats |
 | 0.10.0 | 2026-02-05 | Issue/PR trend charts: stats cards, monthly activity, time range dropdown |
 | 0.9.1 | 2026-02-04 | Refactor to NuGet.Protocol SDK, all versions have downloads |
 | 0.9.0 | 2026-02-04 | NuGet charts, sorting filters, engagement loop fix |
