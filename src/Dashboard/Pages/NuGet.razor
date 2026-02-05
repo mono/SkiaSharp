@@ -34,8 +34,17 @@ else
     <!-- Download Trend Charts -->
     @if (_chartsData?.Charts?.Any() == true)
     {
-        <h2>Download Trends</h2>
-        <div class="nuget-charts" @key="_showLegacy">
+        <div class="trend-chart-header">
+            <h2>Download Trends</h2>
+            <select class="time-range-select" @bind="_selectedTimeRange">
+                <option value="6">Last 6 Months</option>
+                <option value="12">Last Year</option>
+                <option value="24">Last 2 Years</option>
+                <option value="60">Last 5 Years</option>
+                <option value="0">All Time</option>
+            </select>
+        </div>
+        <div class="nuget-charts" @key="@($"{_showLegacy}-{_selectedTimeRange}")">
             @foreach (var chart in _chartsData.Charts)
             {
                 var visibleSeries = chart.Series.Where(s => _showLegacy || !IsLegacyPackage(s.PackageId)).ToList();
@@ -49,7 +58,7 @@ else
                             @foreach (var series in visibleSeries)
                             {
                                 <ApexPointSeries TItem="ChartDataPoint"
-                                                Items="@series.DataPoints"
+                                                Items="@FilterByTimeRange(series.DataPoints)"
                                                 Name="@GetShortPackageName(series.PackageId)"
                                                 SeriesType="SeriesType.Area"
                                                 XValue="@(e => e.Date)"
@@ -146,6 +155,7 @@ else
 @code {
     private bool _loading = true;
     private bool _showLegacy = false;
+    private int _selectedTimeRange = 24; // Default: 2 years
     private NuGetStats? _stats;
     private NuGetChartsData? _chartsData;
     private HashSet<string> _expandedGroups = ["SkiaSharp", "SkiaSharp Views", "SkiaSharp Extensions", "HarfBuzzSharp", "SkiaSharp.Extended"];
@@ -159,6 +169,13 @@ else
         }
         catch { /* Data not yet available */ }
         _loading = false;
+    }
+
+    private List<ChartDataPoint> FilterByTimeRange(List<ChartDataPoint> dataPoints)
+    {
+        if (_selectedTimeRange == 0) return dataPoints;
+        var cutoff = DateTime.UtcNow.AddMonths(-_selectedTimeRange);
+        return dataPoints.Where(p => p.Date >= cutoff).ToList();
     }
 
     private static ApexChartOptions<ChartDataPoint> GetChartOptions(string title) => new()
