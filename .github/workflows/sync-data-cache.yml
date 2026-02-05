@@ -15,6 +15,14 @@ on:
           - github
           - nuget
         default: all
+      repo:
+        description: 'Repository to sync (blank for all)'
+        type: choice
+        options:
+          - all
+          - mono/SkiaSharp
+          - mono/SkiaSharp.Extended
+        default: all
       full:
         description: 'Force full sync (ignore timestamps)'
         type: boolean
@@ -28,8 +36,15 @@ concurrency:
   group: data-cache-sync
   cancel-in-progress: false
 
+env:
+  DOTNET_VERSION: '10.0.x'
+
 jobs:
-  sync:
+  # ============================================================
+  # Sync SkiaSharp (main repo)
+  # ============================================================
+  sync-skiasharp:
+    if: inputs.repo != 'mono/SkiaSharp.Extended'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -46,10 +61,10 @@ jobs:
           ref: docs-data-cache
           path: .data-cache
 
-      - name: Setup .NET 10
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
 
       - name: Configure git
         working-directory: .data-cache
@@ -57,15 +72,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # ============================================================
-      # Step 1: NuGet (every 6 hours: 0, 6, 12, 18 UTC)
-      # ============================================================
+      # NuGet (every 6 hours: 0, 6, 12, 18 UTC)
       - name: Check if NuGet sync needed
         id: nuget-check
         run: |
           HOUR=$(date -u +%H)
           SOURCE="${{ inputs.source || 'all' }}"
-          # Run NuGet if: source is 'all' or 'nuget', AND (manual trigger OR hour is 0,6,12,18)
           if [[ "$SOURCE" == "nuget" ]] || [[ "$SOURCE" == "all" && ("${{ github.event_name }}" != "schedule" || "$HOUR" == "00" || "$HOUR" == "06" || "$HOUR" == "12" || "$HOUR" == "18") ]]; then
             echo "run=true" >> $GITHUB_OUTPUT
           else
@@ -77,54 +89,44 @@ jobs:
         if: steps.nuget-check.outputs.run == 'true'
         run: |
           dotnet run --project src/SkiaSharp.Collector -- sync nuget \
+            --repo mono/SkiaSharp \
             --cache-path .data-cache
 
-      - name: Push NuGet
-        if: steps.nuget-check.outputs.run == 'true'
-        working-directory: .data-cache
-        run: |
-          git add -A
-          if git diff --staged --quiet; then
-            echo "No NuGet changes to commit"
-          else
-            git commit -m "Sync: NuGet $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git push
-          fi
-
-      # ============================================================
-      # Step 1b: Community (every 6 hours, with NuGet)
-      # ============================================================
       - name: Sync Community
         if: steps.nuget-check.outputs.run == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dotnet run --project src/SkiaSharp.Collector -- sync community \
+            --repo mono/SkiaSharp \
             --cache-path .data-cache
 
-      - name: Push Community
+      - name: Push NuGet + Community
         if: steps.nuget-check.outputs.run == 'true'
         working-directory: .data-cache
         run: |
           git add -A
           if git diff --staged --quiet; then
-            echo "No Community changes to commit"
+            echo "No NuGet/Community changes to commit"
           else
-            git commit -m "Sync: Community $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git push
+            git commit -m "Sync: SkiaSharp NuGet+Community $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            for i in 1 2 3 4 5; do
+              git push && break
+              echo "Push failed, rebasing (attempt $i)..."
+              git pull --rebase
+              sleep $((i * 2))
+            done
           fi
 
-      # ============================================================
-      # Step 2: GitHub items (Layer 1)
-      # ============================================================
-      - name: Sync GitHub items (Layer 1)
+      # GitHub items (Layer 1)
+      - name: Sync GitHub items
         if: inputs.source != 'nuget'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
-          
           dotnet run --project src/SkiaSharp.Collector -- sync github \
+            --repo mono/SkiaSharp \
             --cache-path .data-cache \
             --items-only \
             $FULL_FLAG
@@ -137,14 +139,17 @@ jobs:
           if git diff --staged --quiet; then
             echo "No GitHub item changes to commit"
           else
-            git commit -m "Sync: GitHub items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            git push
+            git commit -m "Sync: SkiaSharp GitHub items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            for i in 1 2 3 4 5; do
+              git push && break
+              echo "Push failed, rebasing (attempt $i)..."
+              git pull --rebase
+              sleep $((i * 2))
+            done
           fi
 
-      # ============================================================
-      # Step 3: GitHub engagement (Layer 2) with checkpoints
-      # ============================================================
-      - name: Sync GitHub engagement (Layer 2 - checkpoint loop)
+      # GitHub engagement (Layer 2 - checkpoint loop)
+      - name: Sync GitHub engagement (checkpoint loop)
         if: inputs.source != 'nuget'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -155,44 +160,195 @@ jobs:
           while true; do
             echo ""
             echo "========================================"
-            echo "  Engagement checkpoint $BATCH"
+            echo "  SkiaSharp Engagement checkpoint $BATCH"
             echo "========================================"
             
-            # Run sync - exit codes:
-            # 0 = work done, more to do
-            # 1 = rate limit hit
-            # 2 = all done, nothing to sync
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
+              --repo mono/SkiaSharp \
               --cache-path .data-cache \
               --engagement-only \
               --engagement-count $ENGAGEMENT_COUNT
             EXIT_CODE=$?
             set -e
             
-            # Exit code 2 means all engagement is synced
             if [ $EXIT_CODE -eq 2 ]; then
-              echo "All engagement synced - nothing more to do!"
+              echo "All engagement synced!"
               break
             fi
             
-            # Commit and push checkpoint
             cd .data-cache
             git add -A
             if git diff --staged --quiet; then
-              echo "No changes - all engagement synced!"
+              echo "No changes - done!"
               cd ..
               break
             else
-              git commit -m "Sync: Engagement checkpoint $BATCH $(date -u +%H:%M)"
-              git push
-              echo "Pushed checkpoint $BATCH"
+              git commit -m "Sync: SkiaSharp engagement checkpoint $BATCH $(date -u +%H:%M)"
+              for i in 1 2 3 4 5; do
+                git push && break
+                echo "Push failed, rebasing (attempt $i)..."
+                git pull --rebase
+                sleep $((i * 2))
+              done
             fi
             cd ..
             
-            # Exit if rate limit was hit
             if [ $EXIT_CODE -eq 1 ]; then
-              echo "Rate limit hit after checkpoint $BATCH - will resume next run"
+              echo "Rate limit hit - will resume next run"
+              break
+            fi
+            
+            BATCH=$((BATCH + 1))
+          done
+
+  # ============================================================
+  # Sync SkiaSharp.Extended (parallel job)
+  # ============================================================
+  sync-extended:
+    if: inputs.repo != 'mono/SkiaSharp'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout docs-dashboard
+        uses: actions/checkout@v4
+        with:
+          ref: docs-dashboard
+
+      - name: Checkout docs-data-cache
+        uses: actions/checkout@v4
+        with:
+          ref: docs-data-cache
+          path: .data-cache
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Configure git
+        working-directory: .data-cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # NuGet (every 6 hours)
+      - name: Check if NuGet sync needed
+        id: nuget-check
+        run: |
+          HOUR=$(date -u +%H)
+          SOURCE="${{ inputs.source || 'all' }}"
+          if [[ "$SOURCE" == "nuget" ]] || [[ "$SOURCE" == "all" && ("${{ github.event_name }}" != "schedule" || "$HOUR" == "00" || "$HOUR" == "06" || "$HOUR" == "12" || "$HOUR" == "18") ]]; then
+            echo "run=true" >> $GITHUB_OUTPUT
+          else
+            echo "run=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Sync NuGet
+        if: steps.nuget-check.outputs.run == 'true'
+        run: |
+          dotnet run --project src/SkiaSharp.Collector -- sync nuget \
+            --repo mono/SkiaSharp.Extended \
+            --cache-path .data-cache
+
+      - name: Sync Community
+        if: steps.nuget-check.outputs.run == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet run --project src/SkiaSharp.Collector -- sync community \
+            --repo mono/SkiaSharp.Extended \
+            --cache-path .data-cache
+
+      - name: Push NuGet + Community
+        if: steps.nuget-check.outputs.run == 'true'
+        working-directory: .data-cache
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Sync: Extended NuGet+Community $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            for i in 1 2 3 4 5; do
+              git push && break
+              git pull --rebase
+              sleep $((i * 2))
+            done
+          fi
+
+      # GitHub items
+      - name: Sync GitHub items
+        if: inputs.source != 'nuget'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
+          dotnet run --project src/SkiaSharp.Collector -- sync github \
+            --repo mono/SkiaSharp.Extended \
+            --cache-path .data-cache \
+            --items-only \
+            $FULL_FLAG
+
+      - name: Push GitHub items
+        if: inputs.source != 'nuget'
+        working-directory: .data-cache
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Sync: Extended GitHub items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            for i in 1 2 3 4 5; do
+              git push && break
+              git pull --rebase
+              sleep $((i * 2))
+            done
+          fi
+
+      # GitHub engagement (checkpoint loop - Extended is small, should finish quickly)
+      - name: Sync GitHub engagement
+        if: inputs.source != 'nuget'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ENGAGEMENT_COUNT="${{ inputs.engagement_count || '100' }}"
+          BATCH=1
+          
+          while true; do
+            echo "Extended engagement checkpoint $BATCH"
+            
+            set +e
+            dotnet run --project src/SkiaSharp.Collector -- sync github \
+              --repo mono/SkiaSharp.Extended \
+              --cache-path .data-cache \
+              --engagement-only \
+              --engagement-count $ENGAGEMENT_COUNT
+            EXIT_CODE=$?
+            set -e
+            
+            if [ $EXIT_CODE -eq 2 ]; then
+              echo "All done!"
+              break
+            fi
+            
+            cd .data-cache
+            git add -A
+            if git diff --staged --quiet; then
+              cd ..
+              break
+            else
+              git commit -m "Sync: Extended engagement $BATCH $(date -u +%H:%M)"
+              for i in 1 2 3 4 5; do
+                git push && break
+                git pull --rebase
+                sleep $((i * 2))
+              done
+            fi
+            cd ..
+            
+            if [ $EXIT_CODE -eq 1 ]; then
               break
             fi
             
