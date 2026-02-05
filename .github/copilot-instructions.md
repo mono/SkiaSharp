@@ -336,7 +336,10 @@ When the user mentions a GitHub issue number OR describes a bug/crash/problem:
 
 1. **Fetch issue details** — Get the issue title, body, and labels from GitHub
 2. **Classify** — Based on **ISSUE CONTENT**, not user's words (see table below)
-3. **Invoke skill** — The skill handles all investigation, reproduction, and fixing
+3. **Invoke skill** — Call the skill tool to load the skill context
+4. **READ SKILL.md FIRST** — **MANDATORY BLOCKING STEP:** Immediately read `.github/skills/{skill-name}/SKILL.md` before ANY other action. Do NOT proceed based on assumptions or general knowledge.
+
+> **🛑 NEVER SKIP READING SKILL.md:** Skills exist because project-specific procedures differ from general patterns. Your assumptions about how to perform a task are likely WRONG. The skill file is the source of truth — read it, follow it exactly.
 
 > **CRITICAL:** Classify based on what the ISSUE describes, not what the USER says.
 > - User says "investigate" but issue says "crash" → It's a bug → invoke `bug-fix`
