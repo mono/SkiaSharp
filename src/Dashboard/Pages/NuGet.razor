@@ -151,7 +151,7 @@ else
     private bool _showLegacy = false;
     private NuGetStats? _stats;
     private NuGetChartsData? _chartsData;
-    private HashSet<string> _expandedGroups = ["SkiaSharp", "SkiaSharp Views", "SkiaSharp Extensions", "HarfBuzzSharp"];
+    private HashSet<string> _expandedGroups = ["SkiaSharp", "SkiaSharp Views", "SkiaSharp Extensions", "HarfBuzzSharp", "SkiaSharp.Extended"];
 
     protected override async Task OnInitializedAsync()
     {
@@ -233,7 +233,8 @@ else
         ["SkiaSharp"] = ["Core", "Native Assets"],
         ["SkiaSharp Views"] = ["Native Platform", ".NET MAUI", "Xamarin.Forms", "Uno Platform", "Web"],
         ["SkiaSharp Extensions"] = ["Text", "Animation", "GPU Backends"],
-        ["HarfBuzzSharp"] = ["Core", "Native Assets"]
+        ["HarfBuzzSharp"] = ["Core", "Native Assets"],
+        ["SkiaSharp.Extended"] = ["Core", "UI Controls", "Iconify"]
     };
 
     private List<PackageStats> GetPackagesForGroup(string group)
@@ -251,6 +252,8 @@ else
                      or "SkiaSharp.Resources" or "SkiaSharp.Vulkan.SharpVk" or "SkiaSharp.Direct3D.Vortice").ToList(),
             "HarfBuzzSharp" => _stats.Packages.Where(p => 
                 p.Id.StartsWith("HarfBuzzSharp")).ToList(),
+            "SkiaSharp.Extended" => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.Extended")).ToList(),
             _ => []
         };
     }
@@ -288,6 +291,12 @@ else
                 p.Id == "HarfBuzzSharp").ToList(),
             ("HarfBuzzSharp", "Native Assets") => _stats.Packages.Where(p => 
                 p.Id.StartsWith("HarfBuzzSharp.NativeAssets.")).ToList(),
+            ("SkiaSharp.Extended", "Core") => _stats.Packages.Where(p => 
+                p.Id == "SkiaSharp.Extended").ToList(),
+            ("SkiaSharp.Extended", "UI Controls") => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.Extended.UI")).ToList(),
+            ("SkiaSharp.Extended", "Iconify") => _stats.Packages.Where(p => 
+                p.Id.StartsWith("SkiaSharp.Extended.Iconify")).ToList(),
             _ => []
         };
     }
@@ -295,7 +304,10 @@ else
     private static string GetShortName(string id)
     {
         // Remove common prefixes for cleaner display
-        if (id == "SkiaSharp" || id == "HarfBuzzSharp") return id;
+        if (id == "SkiaSharp" || id == "HarfBuzzSharp" || id == "SkiaSharp.Extended") return id;
+        if (id.StartsWith("SkiaSharp.Extended.Iconify.")) return id.Replace("SkiaSharp.Extended.Iconify.", "");
+        if (id.StartsWith("SkiaSharp.Extended.UI.")) return id.Replace("SkiaSharp.Extended.UI.", "UI.");
+        if (id.StartsWith("SkiaSharp.Extended.")) return id.Replace("SkiaSharp.Extended.", "");
         if (id.StartsWith("SkiaSharp.NativeAssets.")) return id.Replace("SkiaSharp.NativeAssets.", "");
         if (id.StartsWith("SkiaSharp.Views.")) return id.Replace("SkiaSharp.Views.", "");
         if (id.StartsWith("SkiaSharp.")) return id.Replace("SkiaSharp.", "");
