@@ -2,6 +2,31 @@
 
 Quick reference for common errors and fixes.
 
+## Package Resolution Errors
+
+### Packages appear missing but CI succeeded
+
+**Symptom:** CI shows success, but package search seems to find wrong version or nothing matching your release.
+
+**Cause:** Using `.latestVersion` from the JSON instead of `.version`. The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so `.latestVersion` returns the wrong one.
+
+**Fix:** Use `.version` and filter by base version + label from the release branch:
+
+```bash
+dotnet package search SkiaSharp \
+  --source "https://aka.ms/skiasharp-eap/index.json" \
+  --exact-match --prerelease --format json \
+  | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
+  | grep "^3.119.2-preview.3\."
+```
+
+| ❌ Wrong | ✅ Correct |
+|----------|-----------|
+| `.latestVersion` | `.version` |
+| No filtering | Filter by `{base}-{label}.*` |
+
+---
+
 ## Build Errors
 
 | Error | Cause | Fix |

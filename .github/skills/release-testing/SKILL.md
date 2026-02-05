@@ -83,22 +83,39 @@ Example: `#3.119.2-preview.2.3+3.119.2-preview.2 succeeded`
    - `HarfBuzzSharp ... nuget` line → base version (e.g., `8.3.1.3`)
    - `PREVIEW_LABEL` → label (e.g., `preview.2` or `stable`)
 
-2. Search preview feed:
+2. **Search and filter for the SPECIFIC version:**
+
    ```bash
-   dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json
+   # Get ALL versions, then filter to match {base}-{label}.*
+   dotnet package search SkiaSharp \
+     --source "https://aka.ms/skiasharp-eap/index.json" \
+     --exact-match --prerelease --format json \
+     | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
+     | grep "^{base}-{label}\."
+   
+   # Example: Find 3.119.2-preview.3.* versions
+   dotnet package search SkiaSharp \
+     --source "https://aka.ms/skiasharp-eap/index.json" \
+     --exact-match --prerelease --format json \
+     | jq -r '.searchResult[].packages[] | select(.id == "SkiaSharp") | .version' \
+     | grep "^3.119.2-preview.3\."
    ```
 
-3. Filter versions matching `{base}-{preview-label}.{build}`, pick latest
+   ⚠️ **CRITICAL:** Use `.version` to get ALL versions, NOT `.latestVersion` which only returns the newest.
+   The feed contains multiple version streams (e.g., 3.119.2 AND 3.119.3), so you MUST filter
+   by the base version and preview label from the release branch.
+
+3. Pick the highest build number from matching versions (e.g., `3.119.2-preview.3.1`)
 
 4. Report to user:
    ```
    Resolved versions:
-     SkiaSharp:     3.119.2-preview.2.3
-     HarfBuzzSharp: 8.3.1.3-preview.2.3
-     Build number:  3
+     SkiaSharp:     3.119.2-preview.3.1
+     HarfBuzzSharp: 8.3.1.3-preview.3.1
+     Build number:  1
    ```
 
-**No packages found?** CI build hasn't completed. Check CI status, wait 2-4 hours.
+**No packages found?** CI build hasn't completed. See [troubleshooting.md](references/troubleshooting.md#package-resolution-errors).
 
 ---
 
