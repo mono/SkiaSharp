@@ -45,6 +45,24 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
     protected virtual string? CanRunOnCurrentMachine() => null;
     
     /// <summary>
+    /// Perform preflight checks before running tests.
+    /// Override in platform tests to validate device availability.
+    /// </summary>
+    protected virtual Task PerformPreflightChecks() => Task.CompletedTask;
+    
+    /// <summary>
+    /// Get the device version/API level for screenshot naming.
+    /// Override in platform tests to return the actual device version.
+    /// </summary>
+    protected virtual Task<string?> GetDeviceVersionAsync() => Task.FromResult<string?>(null);
+    
+    /// <summary>
+    /// Validate that the connected device matches expected configuration.
+    /// Override in platform tests to verify API level, etc.
+    /// </summary>
+    protected virtual Task ValidateDeviceAsync() => Task.CompletedTask;
+    
+    /// <summary>
     /// Configure platform-specific Appium options.
     /// </summary>
     protected abstract void ConfigureAppiumOptions(AppiumOptions options, string appPath, string bundleId);
@@ -114,6 +132,9 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         
         Output.WriteLine($"Testing SkiaSharp {SkiaVersion} in MAUI {PlatformName} ({canvasView})");
         
+        // Perform preflight checks (device availability, API level validation, etc.)
+        await PerformPreflightChecks();
+        
         var projectName = $"Maui{PlatformName.Replace(" ", "")}{canvasView}";
         var projectDir = await CreateMauiProject(projectName, canvasView, eventArgsType);
         
@@ -128,7 +149,18 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         Output.WriteLine($"App path: {appPath}");
         Output.WriteLine($"Bundle ID: {bundleId}");
         
-        await VerifyWithAppiumAndRetry(appPath, bundleId, $"maui-{PlatformName.ToLowerInvariant().Replace(" ", "")}-{canvasView}");
+        // Get device version for screenshot naming
+        var deviceVersion = await GetDeviceVersionAsync();
+        var timestamp = DateTime.Now.ToString("yyyyMMdd-HHmmss");
+        var platformLower = PlatformName.ToLowerInvariant().Replace(" ", "");
+        
+        // Build screenshot name with version and timestamp
+        // e.g., maui-android-api23-20260205-161500-SKCanvasView
+        var screenshotName = deviceVersion != null
+            ? $"maui-{platformLower}-{deviceVersion}-{timestamp}-{canvasView}"
+            : $"maui-{platformLower}-{timestamp}-{canvasView}";
+        
+        await VerifyWithAppiumAndRetry(appPath, bundleId, screenshotName);
         
         Output.WriteLine($"✅ MAUI {PlatformName} ({canvasView}) passed");
     }
@@ -293,8 +325,12 @@ public abstract class MauiTestBase(ITestOutputHelper output) : PlatformTestBase(
         {
             Output.WriteLine($"Connecting to Appium at port {AppiumPort}...");
             driver = CreateDriver(options);
-            Output.WriteLine("Driver connected, waiting for app to render...");
+            Output.WriteLine("Driver connected, validating device...");
+            
+            // Validate device matches expected configuration
+            await ValidateDeviceAsync();
 
+            Output.WriteLine("Waiting for app to render...");
             await Task.Delay(5000);
             
             // Capture diagnostics FIRST before trying to find elements

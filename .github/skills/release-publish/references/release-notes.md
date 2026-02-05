@@ -85,7 +85,7 @@ For each PR line (format: `* Description by @author in URL`):
 
 ```bash
 # Extract PR number from URL and fetch details
-gh pr view {number} --json labels,author
+gh pr view {number} --json labels,author,title,body
 ```
 
 Determine:
@@ -93,6 +93,36 @@ Determine:
 - **Contributor** — add ❤️ if author is not `mattleibow`
 - **Breaking change** — title contains `BREAKING`, removes API
 - **New feature** — title contains `Add`, `Support`, `Enable`, `Implement`, or bumps Skia/HarfBuzz
+- **Backport** — title starts with `[release/{version}]` prefix (see below)
+
+### 2a. Handle Backport PRs
+
+Backport PRs have titles prefixed with `[release/{version}]` and are created by `@github-actions`. These should be traced back to the original PR for proper attribution.
+
+**Identifying backports:**
+- Title starts with `[release/...]`
+- Author is `github-actions[bot]`
+- Has `backport` label
+
+**Tracing to original:**
+```bash
+# Get backport PR body - contains reference to original
+gh pr view {backport-number} --json body -q '.body'
+# Output: "Backport of {commit} from #{original-pr-number}."
+
+# Get original PR details
+gh pr view {original-pr-number} --json author,title,labels
+```
+
+**Annotation format for backports:**
+```
+* {emoji}{❤️} {clean title} (originally by @{original-author} in #{original-pr}) by @github-actions in {backport-url}
+```
+
+- Remove the `[release/{version}]` prefix from the title
+- Add `(originally by @{author} in #{number})` before `by @github-actions`
+- Use the **original author** to determine ❤️ (not github-actions)
+- Use the **original PR** title/labels for platform emoji
 
 ### 3. Build Sections
 
@@ -150,3 +180,23 @@ gh release edit {tag} --notes-file /tmp/release-body.md
 * 🎨❤️ Fix the incorrect call in SafeRef by @kkwpsv in https://github.com/mono/SkiaSharp/pull/3143
 * 📦 Adding the initial set of AI docs by @mattleibow in https://github.com/mono/SkiaSharp/pull/3406
 ```
+
+---
+
+## Backport Example
+
+**Original (auto-generated backport):**
+```
+* [release/3.119.2-preview.2] Add Spectre mitigation flag for libSkiaSharp.dll. by @github-actions in https://github.com/mono/SkiaSharp/pull/3497
+```
+
+**After tracing and annotation:**
+```
+* 🪟❤️ Add Spectre mitigation flag for libSkiaSharp.dll. (originally by @sshumakov in #3496) by @github-actions in https://github.com/mono/SkiaSharp/pull/3497
+```
+
+Key changes:
+1. Removed `[release/3.119.2-preview.2]` prefix
+2. Added `(originally by @sshumakov in #3496)` attribution
+3. Added 🪟 (Windows) based on original PR content
+4. Added ❤️ because @sshumakov is a community contributor

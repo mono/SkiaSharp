@@ -27,6 +27,12 @@ public class MauiiOSTests(ITestOutputHelper output) : MauiTestBase(output)
     protected override string? CanRunOnCurrentMachine() =>
         OperatingSystem.IsMacOS() ? null : "iOS requires macOS (hardware requirement)";
 
+    /// <summary>
+    /// Get the iOS version for screenshot naming.
+    /// </summary>
+    protected override Task<string?> GetDeviceVersionAsync() =>
+        Task.FromResult<string?>(PlatformVersion);
+
     protected override void ConfigureAppiumOptions(AppiumOptions options, string appPath, string bundleId)
     {
         Output.WriteLine($"iOS Device: {DeviceName}, Version: {PlatformVersion}");

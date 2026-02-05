@@ -151,6 +151,28 @@ Proceed with this matrix?
 
 ## Step 4: Run Integration Tests
 
+### Pre-Test Cleanup (REQUIRED)
+
+⚠️ **CRITICAL:** These steps MUST be done before ANY integration tests:
+
+```bash
+# 1. Clear screenshot folder to ensure fresh results
+rm -rf output/logs/testlogs/integration/*
+mkdir -p output/logs/testlogs/integration
+
+# 2. Kill any running Android emulators
+adb devices | grep emulator | awk '{print $1}' | while read emu; do
+  adb -s $emu emu kill 2>/dev/null
+done
+sleep 5
+
+# 3. Verify clean state
+adb devices -l  # Should show NO emulators
+ls output/logs/testlogs/integration/  # Should be empty
+```
+
+### Run Tests
+
 ```bash
 cd tests/SkiaSharp.Tests.Integration
 dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
@@ -165,12 +187,59 @@ dotnet test --filter "FullyQualifiedName~ConsoleTests" ...
 dotnet test --filter "FullyQualifiedName~BlazorTests" ...
 dotnet test --filter "FullyQualifiedName~MauiiOSTests" ... -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2"
 dotnet test --filter "FullyQualifiedName~MauiMacCatalystTests" ...
-dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ...
+
+# Android: specify device ID and expected API level for validation
+dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ... \
+  -p:AndroidDeviceId="emulator-5554" \
+  -p:AndroidApiLevel="23"
 ```
 
-### Start Emulators First
+### Android Emulator Workflow
 
-Start Android emulator before running tests. See [setup.md](references/setup.md) for SDK location and emulator commands.
+⚠️ **CRITICAL:** Run only ONE Android emulator at a time to avoid device confusion.
+
+1. **Verify no emulators running:**
+   ```bash
+   adb devices -l  # Should show empty or only physical devices
+   ```
+
+2. **Start emulator with WIPE and boot verification:**
+   ```bash
+   # Start emulator with -wipe-data to ensure clean state (use mode="async" to keep it running)
+   emulator -avd Pixel_API_23 -wipe-data -no-snapshot -no-audio
+   
+   # Wait for boot (check every 10s until returns "1")
+   # This can take 60-120s for a fresh wipe
+   adb shell getprop sys.boot_completed
+   
+   # Verify correct API level
+   adb shell getprop ro.build.version.sdk  # Should match expected (e.g., "23")
+   ```
+
+   ⚠️ **The `-wipe-data` flag is REQUIRED** to ensure a clean emulator state. Without it,
+   cached apps or system state from previous runs may interfere with tests.
+
+3. **Run tests with device validation:**
+   ```bash
+   DEVICE_ID=$(adb devices | grep emulator | awk '{print $1}')
+   API_LEVEL=$(adb -s $DEVICE_ID shell getprop ro.build.version.sdk | tr -d '\r')
+   
+   dotnet test --filter "FullyQualifiedName~MauiAndroidTests" \
+     -p:AndroidDeviceId="$DEVICE_ID" \
+     -p:AndroidApiLevel="$API_LEVEL" \
+     -p:SkiaSharpVersion={version} \
+     -p:HarfBuzzSharpVersion={hb-version}
+   ```
+
+4. **Shut down emulator before next test:**
+   ```bash
+   adb -s $DEVICE_ID emu kill
+   # Wait for it to stop
+   sleep 5
+   adb devices -l  # Verify empty
+   ```
+
+5. **Repeat for next API level** (start from step 1)
 
 ### Test Execution Order
 
