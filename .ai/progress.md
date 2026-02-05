@@ -4,7 +4,7 @@
 
 ## Current Status
 
-**Overall**: ✅ Phase 4 - Data Cache Architecture COMPLETE
+**Overall**: 🚧 Phase 6 - Multi-Repository Support IN PROGRESS
 
 | Area | Status | Notes |
 |------|--------|-------|
@@ -13,7 +13,50 @@
 | Phase 2.7 | ✅ Complete | NuGet grouped layout + legacy toggle |
 | Phase 3 | ✅ Complete | .NET collector CLI replaces PowerShell |
 | Phase 4 | ✅ Complete | Data cache with engagement scoring |
+| Phase 5 | ✅ Complete | Issue/PR trend charts |
+| Phase 6 | 🚧 In Progress | Multi-repository support |
 | Deployment | ✅ Working | https://mono.github.io/SkiaSharp/dashboard/ |
+
+---
+
+## Phase 6: Multi-Repository Support 🚧 (In Progress)
+
+### Cache Structure ✅
+- [x] New `ReposConfig` model with list of `RepoDefinition` entries
+- [x] Cache uses repo-scoped folders: `mono-SkiaSharp/`, `mono-SkiaSharp.Extended/`, `mono-skia/`
+- [x] `CacheService.ForRepo()` factory method for repo-scoped cache access
+- [x] Default config includes SkiaSharp (primary), SkiaSharp.Extended, skia
+
+### Model Updates ✅
+- [x] `IssueInfo` includes `Repo` and `RepoShortName` fields
+- [x] `PullRequestInfo` includes `Repo` and `RepoShortName` fields
+- [x] Added `RepoCount` record for aggregation
+- [x] `IssuesData` and `PrTriageData` include `ByRepo` list
+
+### Sync Commands ✅
+- [x] All sync commands use repo-scoped cache paths
+- [x] `--owner` and `--repo` flags work with new structure
+
+### Generate Command ✅
+- [x] Loads repos from config
+- [x] Merges issues/PRs from all repos with repo field
+- [x] Aggregates stats across repos
+- [x] Community contributors deduplicated across repos
+
+### Dashboard UI ✅
+- [x] Repository filter dropdown on Issues page
+- [x] Repository filter dropdown on Pull Requests page
+- [x] Filter logic and URL query params updated
+
+### Workflow Updates ✅
+- [x] Syncs GitHub items from all 3 repos
+- [x] Syncs community from SkiaSharp and SkiaSharp.Extended
+- [x] Syncs NuGet from SkiaSharp only
+- [x] Engagement sync from primary repo (SkiaSharp) only
+
+### Pending
+- [ ] Code review
+- [ ] Testing
 
 ---
 

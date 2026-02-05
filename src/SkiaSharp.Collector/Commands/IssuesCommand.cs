@@ -79,7 +79,9 @@ public class IssuesCommand : AsyncCommand<CommonSettings>
                 parsed.Backends,
                 parsed.Oses,
                 parsed.Other,
-                issue.HtmlUrl
+                issue.HtmlUrl,
+                $"{settings.Owner}/{settings.Repo}",
+                settings.Repo
             ));
 
             // Aggregate by type
@@ -111,6 +113,7 @@ public class IssuesCommand : AsyncCommand<CommonSettings>
                 new AgeCount("stale", "90-365 days", byAge["stale"]),
                 new AgeCount("ancient", "> 1 year", byAge["ancient"])
             ],
+            [new RepoCount($"{settings.Owner}/{settings.Repo}", settings.Repo, allIssues.Count)],
             processedIssues
         );
 

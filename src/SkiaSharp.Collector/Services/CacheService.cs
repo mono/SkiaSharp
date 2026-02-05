@@ -5,7 +5,8 @@ using SkiaSharp.Collector.Models;
 namespace SkiaSharp.Collector.Services;
 
 /// <summary>
-/// Service for reading and writing cache files
+/// Service for reading and writing cache files.
+/// Supports both legacy flat structure and new repo-scoped structure.
 /// </summary>
 public class CacheService
 {
@@ -16,13 +17,43 @@ public class CacheService
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private readonly string _cachePath;
+    /// <summary>
+    /// Default repository configuration for the SkiaSharp ecosystem
+    /// </summary>
+    public static readonly ReposConfig DefaultReposConfig = new(
+        Version: 1,
+        Repos:
+        [
+            new RepoDefinition("mono", "SkiaSharp", "SkiaSharp", SyncIssues: true, SyncCommunity: true, SyncNuGet: true, IsPrimary: true),
+            new RepoDefinition("mono", "SkiaSharp.Extended", "SkiaSharp.Extended", SyncIssues: true, SyncCommunity: true, SyncNuGet: false, IsPrimary: false),
+            new RepoDefinition("mono", "skia", "Skia", SyncIssues: true, SyncCommunity: false, SyncNuGet: false, IsPrimary: false)
+        ],
+        UpdatedAt: DateTime.UtcNow
+    );
 
-    public CacheService(string cachePath)
+    private readonly string _cachePath;
+    private readonly string? _repoFolder;
+
+    /// <summary>
+    /// Creates a cache service for the root cache path (for loading config, generating output)
+    /// </summary>
+    public CacheService(string cachePath) : this(cachePath, null) { }
+
+    /// <summary>
+    /// Creates a cache service scoped to a specific repo
+    /// </summary>
+    public CacheService(string cachePath, string? repoFolder)
     {
         _cachePath = Path.GetFullPath(cachePath);
+        _repoFolder = repoFolder;
         ValidateCachePath();
     }
+
+    /// <summary>
+    /// Creates a cache service scoped to a specific repo definition
+    /// </summary>
+    public static CacheService ForRepo(string cachePath, RepoDefinition repo)
+        => new(cachePath, repo.FolderName);
 
     private void ValidateCachePath()
     {
@@ -31,9 +62,53 @@ public class CacheService
             throw new ArgumentException("Cache path cannot contain '..'");
     }
 
+    /// <summary>
+    /// Gets the base path for data (either repo-scoped or root)
+    /// </summary>
+    private string DataPath => _repoFolder != null 
+        ? Path.Combine(_cachePath, _repoFolder) 
+        : _cachePath;
+
+    #region Repos Configuration
+
+    public string ReposConfigPath => Path.Combine(_cachePath, "repos.json");
+
+    public async Task<ReposConfig> LoadReposConfigAsync()
+    {
+        if (!File.Exists(ReposConfigPath))
+            return DefaultReposConfig;
+
+        var json = await File.ReadAllTextAsync(ReposConfigPath);
+        return JsonSerializer.Deserialize<ReposConfig>(json, JsonOptions) ?? DefaultReposConfig;
+    }
+
+    public async Task SaveReposConfigAsync(ReposConfig config)
+    {
+        EnsureDirectoryExists(_cachePath);
+        var json = JsonSerializer.Serialize(config, JsonOptions);
+        await WriteAtomicAsync(ReposConfigPath, json);
+    }
+
+    /// <summary>
+    /// Gets all repo folder names that exist in the cache
+    /// </summary>
+    public List<string> GetRepoFolders()
+    {
+        if (!Directory.Exists(_cachePath))
+            return [];
+            
+        return Directory.GetDirectories(_cachePath)
+            .Select(Path.GetFileName)
+            .Where(name => name != null && name.Contains('-') && !name.StartsWith('.'))
+            .Cast<string>()
+            .ToList();
+    }
+
+    #endregion
+
     #region GitHub Cache
 
-    public string GitHubPath => Path.Combine(_cachePath, "github");
+    public string GitHubPath => Path.Combine(DataPath, "github");
     public string GitHubSyncMetaPath => Path.Combine(GitHubPath, "sync-meta.json");
     public string GitHubIndexPath => Path.Combine(GitHubPath, "index.json");
     public string GitHubItemsPath => Path.Combine(GitHubPath, "items");
@@ -94,7 +169,7 @@ public class CacheService
 
     #region NuGet Cache
 
-    public string NuGetPath => Path.Combine(_cachePath, "nuget");
+    public string NuGetPath => Path.Combine(DataPath, "nuget");
     public string NuGetSyncMetaPath => Path.Combine(NuGetPath, "sync-meta.json");
     public string NuGetIndexPath => Path.Combine(NuGetPath, "index.json");
     public string NuGetPackagesPath => Path.Combine(NuGetPath, "packages");
@@ -286,7 +361,7 @@ public class CacheService
 
     #region Community Cache
 
-    public string CommunityPath => Path.Combine(_cachePath, "community");
+    public string CommunityPath => Path.Combine(DataPath, "community");
     public string CommunitySyncMetaPath => Path.Combine(CommunityPath, "sync-meta.json");
     public string ContributorsPath => Path.Combine(CommunityPath, "contributors.json");
 

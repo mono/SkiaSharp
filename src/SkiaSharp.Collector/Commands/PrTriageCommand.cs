@@ -96,7 +96,9 @@ public class PrTriageCommand : AsyncCommand<CommonSettings>
                         parsed.Backends,
                         parsed.Oses,
                         parsed.Other,
-                        pr.HtmlUrl
+                        pr.HtmlUrl,
+                        $"{settings.Owner}/{settings.Repo}",
+                        settings.Repo
                     ));
 
                     summary[category]++;
@@ -134,6 +136,7 @@ public class PrTriageCommand : AsyncCommand<CommonSettings>
                 new AgeCount("stale", "90-365 days", byAge["stale"]),
                 new AgeCount("ancient", "> 1 year", byAge["ancient"])
             ],
+            [new RepoCount($"{settings.Owner}/{settings.Repo}", settings.Repo, openPRs.Count)],
             triagedPRs
         );
 

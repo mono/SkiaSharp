@@ -121,6 +121,16 @@ else
     <!-- Filter Row -->
     <div class="filter-row">
         <div class="filter-group">
+            <label>Repository</label>
+            <select @bind="SelectedRepo" @bind:after="ApplyFilters">
+                <option value="">All Repos</option>
+                @foreach (var repo in _data.ByRepo)
+                {
+                    <option value="@repo.RepoId">@repo.DisplayName (@repo.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
             <label>Type</label>
             <select @bind="SelectedType" @bind:after="ApplyFilters">
                 <option value="">All Types</option>
@@ -288,6 +298,7 @@ else
 }
 
 @code {
+    [SupplyParameterFromQuery] public string? Repo { get; set; }
     [SupplyParameterFromQuery] public string? Type { get; set; }
     [SupplyParameterFromQuery] public string? Area { get; set; }
     [SupplyParameterFromQuery] public string? Age { get; set; }
@@ -315,6 +326,7 @@ else
 
     private record ChartPoint(string Month, int Created, int Closed);
 
+    private string SelectedRepo { get; set; } = "";
     private string SelectedType { get; set; } = "";
     private string SelectedArea { get; set; } = "";
     private string SelectedAge { get; set; } = "";
@@ -322,7 +334,8 @@ else
     private string SelectedOs { get; set; } = "";
     private string SelectedSort { get; set; } = "newest";
 
-    private bool HasFilters => !string.IsNullOrEmpty(SelectedType) || 
+    private bool HasFilters => !string.IsNullOrEmpty(SelectedRepo) ||
+                               !string.IsNullOrEmpty(SelectedType) || 
                                !string.IsNullOrEmpty(SelectedArea) || 
                                !string.IsNullOrEmpty(SelectedAge) ||
                                !string.IsNullOrEmpty(SelectedBackend) ||
@@ -331,6 +344,7 @@ else
     protected override async Task OnInitializedAsync()
     {
         // Read initial filters from URL
+        SelectedRepo = Repo ?? "";
         SelectedType = Type ?? "";
         SelectedArea = Area ?? "";
         SelectedAge = Age ?? "";
@@ -375,6 +389,7 @@ else
         if (_data is null) return;
 
         var filtered = _data.Issues.Where(i =>
+            (string.IsNullOrEmpty(SelectedRepo) || i.Repo == SelectedRepo) &&
             (string.IsNullOrEmpty(SelectedType) || i.Type == SelectedType) &&
             (string.IsNullOrEmpty(SelectedArea) || i.Areas.Contains(SelectedArea)) &&
             (string.IsNullOrEmpty(SelectedAge) || i.AgeCategory == SelectedAge) &&
@@ -399,6 +414,7 @@ else
     private void UpdateUrl()
     {
         var query = new List<string>();
+        if (!string.IsNullOrEmpty(SelectedRepo)) query.Add($"repo={Uri.EscapeDataString(SelectedRepo)}");
         if (!string.IsNullOrEmpty(SelectedType)) query.Add($"type={Uri.EscapeDataString(SelectedType)}");
         if (!string.IsNullOrEmpty(SelectedArea)) query.Add($"area={Uri.EscapeDataString(SelectedArea)}");
         if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={Uri.EscapeDataString(SelectedAge)}");
@@ -412,6 +428,7 @@ else
 
     private void ClearFilters()
     {
+        SelectedRepo = "";
         SelectedType = "";
         SelectedArea = "";
         SelectedAge = "";

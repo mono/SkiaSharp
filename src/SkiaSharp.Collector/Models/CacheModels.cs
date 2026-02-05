@@ -11,6 +11,39 @@ public record CacheMeta(
 );
 
 /// <summary>
+/// Configuration for multiple repositories to track
+/// </summary>
+public record ReposConfig(
+    int Version,
+    List<RepoDefinition> Repos,
+    DateTime UpdatedAt
+);
+
+/// <summary>
+/// Definition of a single repository to track
+/// </summary>
+public record RepoDefinition(
+    string Owner,
+    string Name,
+    string? DisplayName,
+    bool SyncIssues,
+    bool SyncCommunity,
+    bool SyncNuGet,
+    bool IsPrimary
+)
+{
+    /// <summary>
+    /// Returns the full repo identifier (owner/name)
+    /// </summary>
+    public string FullName => $"{Owner}/{Name}";
+    
+    /// <summary>
+    /// Returns a safe folder name (owner-name)
+    /// </summary>
+    public string FolderName => $"{Owner}-{Name}";
+};
+
+/// <summary>
 /// Sync metadata for a specific data source (GitHub, NuGet)
 /// </summary>
 public record SyncMeta(

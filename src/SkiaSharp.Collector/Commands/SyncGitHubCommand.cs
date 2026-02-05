@@ -21,7 +21,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine($"[bold blue]Syncing GitHub data for {settings.Owner}/{settings.Repo}...[/]");
 
-        var cache = new CacheService(settings.CachePath);
+        // Use repo-scoped cache path
+        var repoFolder = $"{settings.Owner}-{settings.Repo}";
+        var cache = new CacheService(settings.CachePath, repoFolder);
         using var github = new GitHubService(settings.Owner, settings.Repo, settings.Verbose);
         var apiClient = CreateOctokitClient();
 

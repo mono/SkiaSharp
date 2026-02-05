@@ -19,7 +19,9 @@ public class SyncCommunityCommand : AsyncCommand<SyncCommunitySettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine($"[bold blue]Syncing community data for {settings.Owner}/{settings.Repo}...[/]");
 
-        var cache = new CacheService(settings.CachePath);
+        // Use repo-scoped cache path
+        var repoFolder = $"{settings.Owner}-{settings.Repo}";
+        var cache = new CacheService(settings.CachePath, repoFolder);
         using var github = new GitHubService(settings.Owner, settings.Repo, settings.Verbose);
         var client = CreateOctokitClient();
 

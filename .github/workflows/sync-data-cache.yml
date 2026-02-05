@@ -28,6 +28,11 @@ concurrency:
   group: data-cache-sync
   cancel-in-progress: false
 
+# Repos to sync (owner/repo format)
+env:
+  REPOS: "mono/SkiaSharp mono/SkiaSharp.Extended mono/skia"
+  PRIMARY_REPO: "mono/SkiaSharp"
+
 jobs:
   sync:
     runs-on: ubuntu-latest
@@ -58,7 +63,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
       # ============================================================
-      # Step 1: NuGet (every 6 hours: 0, 6, 12, 18 UTC)
+      # Step 1: NuGet (every 6 hours: 0, 6, 12, 18 UTC) - Primary repo only
       # ============================================================
       - name: Check if NuGet sync needed
         id: nuget-check
@@ -73,11 +78,12 @@ jobs:
             echo "Skipping NuGet sync (only runs at 0, 6, 12, 18 UTC)"
           fi
 
-      - name: Sync NuGet
+      - name: Sync NuGet (SkiaSharp)
         if: steps.nuget-check.outputs.run == 'true'
         run: |
           dotnet run --project src/SkiaSharp.Collector -- sync nuget \
-            --cache-path .data-cache
+            --cache-path .data-cache \
+            --owner mono --repo SkiaSharp
 
       - name: Push NuGet
         if: steps.nuget-check.outputs.run == 'true'
@@ -92,15 +98,25 @@ jobs:
           fi
 
       # ============================================================
-      # Step 1b: Community (every 6 hours, with NuGet)
+      # Step 1b: Community (every 6 hours, with NuGet) - Primary repos only
       # ============================================================
-      - name: Sync Community
+      - name: Sync Community (SkiaSharp)
         if: steps.nuget-check.outputs.run == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           dotnet run --project src/SkiaSharp.Collector -- sync community \
-            --cache-path .data-cache
+            --cache-path .data-cache \
+            --owner mono --repo SkiaSharp
+
+      - name: Sync Community (SkiaSharp.Extended)
+        if: steps.nuget-check.outputs.run == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          dotnet run --project src/SkiaSharp.Collector -- sync community \
+            --cache-path .data-cache \
+            --owner mono --repo SkiaSharp.Extended
 
       - name: Push Community
         if: steps.nuget-check.outputs.run == 'true'
@@ -115,9 +131,9 @@ jobs:
           fi
 
       # ============================================================
-      # Step 2: GitHub items (Layer 1)
+      # Step 2: GitHub items (Layer 1) - All repos
       # ============================================================
-      - name: Sync GitHub items (Layer 1)
+      - name: Sync GitHub items (Layer 1) - SkiaSharp
         if: inputs.source != 'nuget'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -126,6 +142,33 @@ jobs:
           
           dotnet run --project src/SkiaSharp.Collector -- sync github \
             --cache-path .data-cache \
+            --owner mono --repo SkiaSharp \
+            --items-only \
+            $FULL_FLAG
+
+      - name: Sync GitHub items (Layer 1) - SkiaSharp.Extended
+        if: inputs.source != 'nuget'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
+          
+          dotnet run --project src/SkiaSharp.Collector -- sync github \
+            --cache-path .data-cache \
+            --owner mono --repo SkiaSharp.Extended \
+            --items-only \
+            $FULL_FLAG
+
+      - name: Sync GitHub items (Layer 1) - skia
+        if: inputs.source != 'nuget'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
+          
+          dotnet run --project src/SkiaSharp.Collector -- sync github \
+            --cache-path .data-cache \
+            --owner mono --repo skia \
             --items-only \
             $FULL_FLAG
 
@@ -137,12 +180,12 @@ jobs:
           if git diff --staged --quiet; then
             echo "No GitHub item changes to commit"
           else
-            git commit -m "Sync: GitHub items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            git commit -m "Sync: GitHub items - all repos $(date -u +%Y-%m-%dT%H:%M:%SZ)"
             git push
           fi
 
       # ============================================================
-      # Step 3: GitHub engagement (Layer 2) with checkpoints
+      # Step 3: GitHub engagement (Layer 2) - Primary repo only (rate limit friendly)
       # ============================================================
       - name: Sync GitHub engagement (Layer 2 - checkpoint loop)
         if: inputs.source != 'nuget'
@@ -155,7 +198,7 @@ jobs:
           while true; do
             echo ""
             echo "========================================"
-            echo "  Engagement checkpoint $BATCH"
+            echo "  Engagement checkpoint $BATCH (SkiaSharp)"
             echo "========================================"
             
             # Run sync - exit codes:
@@ -165,6 +208,7 @@ jobs:
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --cache-path .data-cache \
+              --owner mono --repo SkiaSharp \
               --engagement-only \
               --engagement-count $ENGAGEMENT_COUNT
             EXIT_CODE=$?

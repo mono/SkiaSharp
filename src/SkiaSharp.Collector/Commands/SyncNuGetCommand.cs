@@ -17,7 +17,10 @@ public class SyncNuGetCommand : AsyncCommand<SyncNuGetSettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("[bold blue]Syncing NuGet data...[/]");
 
-        var cache = new CacheService(settings.CachePath);
+        // NuGet is synced at the primary repo level (SkiaSharp)
+        // It contains all SkiaSharp-related packages
+        var repoFolder = $"{settings.Owner}-{settings.Repo}";
+        var cache = new CacheService(settings.CachePath, repoFolder);
         using var nuget = new NuGetService(settings.MinSupportedVersion, settings.Verbose);
 
         var syncMeta = await cache.LoadNuGetSyncMetaAsync();

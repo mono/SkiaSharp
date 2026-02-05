@@ -170,6 +170,8 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 parsed.Oses,
                 parsed.Other,
                 $"https://github.com/mono/SkiaSharp/issues/{issue.Number}",
+                "mono/SkiaSharp",
+                "SkiaSharp",
                 engagement
             ));
 
@@ -206,6 +208,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 new AgeCount("stale", "90-365 days", byAge["stale"]),
                 new AgeCount("ancient", "> 1 year", byAge["ancient"])
             ],
+            [new RepoCount("mono/SkiaSharp", "SkiaSharp", openIssues.Count)],
             issueInfos,
             hotIssues
         );
@@ -287,7 +290,9 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 parsed.Backends,
                 parsed.Oses,
                 parsed.Other,
-                $"https://github.com/mono/SkiaSharp/pull/{pr.Number}"
+                $"https://github.com/mono/SkiaSharp/pull/{pr.Number}",
+                "mono/SkiaSharp",
+                "SkiaSharp"
             ));
 
             // Aggregations
@@ -319,6 +324,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 new AgeCount("stale", "90-365 days", byAge["stale"]),
                 new AgeCount("ancient", "> 1 year", byAge["ancient"])
             ],
+            [new RepoCount("mono/SkiaSharp", "SkiaSharp", triaged.Count)],
             triaged
         );
 

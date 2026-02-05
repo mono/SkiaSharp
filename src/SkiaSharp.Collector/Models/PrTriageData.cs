@@ -7,6 +7,7 @@ public record PrTriageData(
     TriageSummary Summary,
     List<SizeCount> BySize,
     List<AgeCount> ByAge,
+    List<RepoCount> ByRepo,
     List<PullRequestInfo> PullRequests
 );
 
@@ -43,5 +44,7 @@ public record PullRequestInfo(
     List<string> Backends,
     List<string> Oses,
     List<string> OtherLabels,
-    string Url
+    string Url,
+    string Repo,           // e.g., "mono/SkiaSharp"
+    string RepoShortName   // e.g., "SkiaSharp"
 );

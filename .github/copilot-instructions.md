@@ -67,21 +67,38 @@ EVERY 6 HOURS (build-dashboard.yml):
 ```
 
 ### Cache Structure (`docs-data-cache` branch)
+
+The cache is organized by repository (multi-repo support):
+
 ```
 docs-data-cache/
-├── github/
-│   ├── sync-meta.json       # Sync state, rate limits, skip list
-│   ├── repo.json            # Stars, forks, watchers, topics
-│   ├── index.json           # All issues + PRs (sorted by number)
-│   └── items/{number}.json  # Full data + engagement per item
-├── community/
-│   ├── sync-meta.json       # Last sync time
-│   └── contributors.json    # Top 100 contributors with MS flag
-├── nuget/
-│   ├── sync-meta.json
-│   ├── index.json
-│   └── packages/{id}.json
+├── repos.json                  # Repository configuration (optional)
+├── mono-SkiaSharp/             # Primary repo
+│   ├── github/
+│   │   ├── sync-meta.json      # Sync state, rate limits, skip list
+│   │   ├── repo.json           # Stars, forks, watchers, topics
+│   │   ├── index.json          # All issues + PRs (sorted by number)
+│   │   └── items/{number}.json # Full data + engagement per item
+│   ├── community/
+│   │   ├── sync-meta.json      # Last sync time
+│   │   └── contributors.json   # Top 100 contributors with MS flag
+│   └── nuget/
+│       ├── sync-meta.json
+│       ├── index.json
+│       └── packages/{id}.json
+├── mono-SkiaSharp.Extended/    # Extension repo
+│   ├── github/
+│   └── community/
+└── mono-skia/                  # Upstream Skia mirror
+    └── github/
 ```
+
+### Tracked Repositories
+| Repository | Issues | Community | NuGet | Primary |
+|------------|--------|-----------|-------|---------|
+| mono/SkiaSharp | ✅ | ✅ | ✅ | ✅ |
+| mono/SkiaSharp.Extended | ✅ | ✅ | ❌ | ❌ |
+| mono/skia | ✅ | ❌ | ❌ | ❌ |
 
 ### Sync Commands
 | Command | Schedule | API Calls | Data |

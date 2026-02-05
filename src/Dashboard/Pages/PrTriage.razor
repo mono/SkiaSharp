@@ -119,6 +119,16 @@ else
     <!-- Filter Row -->
     <div class="filter-row">
         <div class="filter-group">
+            <label>Repository</label>
+            <select @bind="SelectedRepo" @bind:after="ApplyFilters">
+                <option value="">All Repos</option>
+                @foreach (var repo in _data.ByRepo)
+                {
+                    <option value="@repo.RepoId">@repo.DisplayName (@repo.Count)</option>
+                }
+            </select>
+        </div>
+        <div class="filter-group">
             <label>Size</label>
             <select @bind="SelectedSize" @bind:after="ApplyFilters">
                 <option value="">All Sizes</option>
@@ -231,6 +241,7 @@ else
 }
 
 @code {
+    [SupplyParameterFromQuery] public string? Repo { get; set; }
     [SupplyParameterFromQuery] public string? Category { get; set; }
     [SupplyParameterFromQuery] public string? Size { get; set; }
     [SupplyParameterFromQuery] public string? Age { get; set; }
@@ -257,6 +268,7 @@ else
 
     private record ChartPoint(string Month, int Opened, int Merged);
 
+    private string SelectedRepo { get; set; } = "";
     private string SelectedCategory { get; set; } = "";
     private string SelectedSize { get; set; } = "";
     private string SelectedAge { get; set; } = "";
@@ -264,7 +276,8 @@ else
     private string SelectedDraft { get; set; } = "";
     private string SelectedSort { get; set; } = "triage";
 
-    private bool HasFilters => !string.IsNullOrEmpty(SelectedCategory) ||
+    private bool HasFilters => !string.IsNullOrEmpty(SelectedRepo) ||
+                               !string.IsNullOrEmpty(SelectedCategory) ||
                                !string.IsNullOrEmpty(SelectedSize) ||
                                !string.IsNullOrEmpty(SelectedAge) ||
                                !string.IsNullOrEmpty(SelectedAuthor) ||
@@ -272,6 +285,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        SelectedRepo = Repo ?? "";
         SelectedCategory = Category ?? "";
         SelectedSize = Size ?? "";
         SelectedAge = Age ?? "";
@@ -322,6 +336,7 @@ else
         if (_data is null) return;
 
         var filtered = _data.PullRequests.Where(pr =>
+            (string.IsNullOrEmpty(SelectedRepo) || pr.Repo == SelectedRepo) &&
             (string.IsNullOrEmpty(SelectedCategory) || GetCategoryKey(pr.Category) == SelectedCategory) &&
             (string.IsNullOrEmpty(SelectedSize) || pr.SizeCategory == SelectedSize) &&
             (string.IsNullOrEmpty(SelectedAge) || pr.AgeCategory == SelectedAge) &&
@@ -349,6 +364,7 @@ else
     private void UpdateUrl()
     {
         var query = new List<string>();
+        if (!string.IsNullOrEmpty(SelectedRepo)) query.Add($"repo={Uri.EscapeDataString(SelectedRepo)}");
         if (!string.IsNullOrEmpty(SelectedCategory)) query.Add($"category={SelectedCategory}");
         if (!string.IsNullOrEmpty(SelectedSize)) query.Add($"size={SelectedSize}");
         if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={SelectedAge}");
@@ -362,6 +378,7 @@ else
 
     private void ClearFilters()
     {
+        SelectedRepo = "";
         SelectedCategory = "";
         SelectedSize = "";
         SelectedAge = "";

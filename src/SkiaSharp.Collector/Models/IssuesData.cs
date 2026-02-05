@@ -9,11 +9,14 @@ public record IssuesData(
     List<LabelCount> ByBackend,
     List<LabelCount> ByOs,
     List<AgeCount> ByAge,
+    List<RepoCount> ByRepo,
     List<IssueInfo> Issues,
     List<IssueInfo>? HotIssues = null
 );
 
 public record AgeCount(string Label, string Display, int Count);
+
+public record RepoCount(string RepoId, string DisplayName, int Count);
 
 public record IssueInfo(
     int Number,
@@ -32,6 +35,8 @@ public record IssueInfo(
     List<string> Oses,
     List<string> OtherLabels,
     string Url,
+    string Repo,           // e.g., "mono/SkiaSharp"
+    string RepoShortName,  // e.g., "SkiaSharp"
     IssueEngagementScore? Engagement = null
 );
 

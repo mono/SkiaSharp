@@ -5,10 +5,38 @@
 
 ## Current Focus
 
-**Phase**: Phase 5 - Issue/PR Trend Charts (v0.10.0) ✅ COMPLETE
-**Status**: All features deployed and working
+**Phase**: Phase 6 - Multi-Repository Support (v0.11.0)
+**Status**: In Progress - Core implementation complete
 
 ## Recent Changes
+
+### 2026-02-05 (Multi-Repository Support - v0.11.0)
+1. ✅ **Extended cache to support multiple repositories**:
+   - New `ReposConfig` model with list of `RepoDefinition` entries
+   - Cache now uses repo-scoped folders: `mono-SkiaSharp/`, `mono-SkiaSharp.Extended/`, `mono-skia/`
+   - `CacheService` updated to support repo scoping via `ForRepo()` factory method
+2. ✅ **Updated models with repo field**:
+   - `IssueInfo` now includes `Repo` and `RepoShortName` fields
+   - `PullRequestInfo` now includes `Repo` and `RepoShortName` fields
+   - Added `RepoCount` record for aggregation
+   - `IssuesData` and `PrTriageData` now include `ByRepo` for filtering
+3. ✅ **Updated sync commands**:
+   - `SyncGitHubCommand` uses repo-scoped cache path
+   - `SyncCommunityCommand` uses repo-scoped cache path
+   - `SyncNuGetCommand` uses repo-scoped cache path (primary repo only)
+4. ✅ **Updated GenerateCommand**:
+   - Loads repos from config (defaults to SkiaSharp, SkiaSharp.Extended, skia)
+   - Merges issues/PRs from all repos with repo field
+   - Aggregates stats across repos
+5. ✅ **Updated Dashboard UI**:
+   - Added Repository filter dropdown to Issues page
+   - Added Repository filter dropdown to Pull Requests page
+   - Updated filter logic and URL query params
+6. ✅ **Updated sync workflow**:
+   - Syncs GitHub items from all 3 repos
+   - Syncs community from SkiaSharp and SkiaSharp.Extended
+   - Syncs NuGet from SkiaSharp only
+   - Engagement sync from primary repo (SkiaSharp) due to rate limits
 
 ### 2026-02-05 (Issue/PR Trend Charts - v0.10.0) ✅
 1. ✅ **Added `Merged` and `MergedAt` fields to PR sync**:
