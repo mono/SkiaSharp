@@ -189,7 +189,7 @@ namespace SkiaSharp.Views.Maui.Controls
 				case PolyBezierSegment polyBezier:
 					if (polyBezier.Points != null && polyBezier.Points.Count >= 3)
 					{
-						for (int i = 0; i + 2 < polyBezier.Points.Count; i += 3)
+						for (int i = 0; i <= polyBezier.Points.Count - 3; i += 3)
 						{
 							path.CubicTo(
 								(float)polyBezier.Points[i].X, (float)polyBezier.Points[i].Y,
@@ -202,7 +202,7 @@ namespace SkiaSharp.Views.Maui.Controls
 				case PolyQuadraticBezierSegment polyQuadratic:
 					if (polyQuadratic.Points != null && polyQuadratic.Points.Count >= 2)
 					{
-						for (int i = 0; i + 1 < polyQuadratic.Points.Count; i += 2)
+						for (int i = 0; i <= polyQuadratic.Points.Count - 2; i += 2)
 						{
 							path.QuadTo(
 								(float)polyQuadratic.Points[i].X, (float)polyQuadratic.Points[i].Y,
