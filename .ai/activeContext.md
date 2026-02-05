@@ -5,12 +5,12 @@
 
 ## Current Focus
 
-**Phase**: Phase 5 - Issue/PR Trend Charts (v0.10.0)
-**Status**: UI complete, awaiting full sync to populate merged data
+**Phase**: Phase 5 - Issue/PR Trend Charts (v0.10.0) ✅ COMPLETE
+**Status**: All features deployed and working
 
 ## Recent Changes
 
-### 2026-02-05 (Issue/PR Trend Charts - v0.10.0)
+### 2026-02-05 (Issue/PR Trend Charts - v0.10.0) ✅
 1. ✅ **Added `Merged` and `MergedAt` fields to PR sync**:
    - Updated CacheModels with new fields
    - Updated SyncGitHubCommand to fetch from API
@@ -22,10 +22,12 @@
 3. ✅ **Issues page enhancements**:
    - 6 stats cards (total created, closed, open, rate, avg days, oldest)
    - Monthly activity line chart (created vs closed)
+   - Time range dropdown (6mo, 1yr, 2yr, 5yr, all time)
 4. ✅ **PRs page enhancements**:
    - 6 stats cards (total opened, merged, closed, open, rate, avg days)
    - Monthly activity line chart (opened vs merged)
-5. ⏳ **Pending**: Run `sync github --items-only --full` to backfill data
+   - Time range dropdown (6mo, 1yr, 2yr, 5yr, all time)
+5. ✅ **Full sync completed**: 941 merged PRs, 2,472 items with closedAt
 
 ### 2026-02-04 (NuGet.Protocol SDK Refactor - v0.9.1)
 1. ✅ **Refactored to NuGet.Protocol SDK**:

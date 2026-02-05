@@ -219,7 +219,7 @@ See `.github/copilot-instructions.md` for full documentation.
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 0.10.0 | 2026-02-05 | Issue/PR trend charts with stats cards and monthly activity |
+| 0.10.0 | 2026-02-05 | Issue/PR trend charts: stats cards, monthly activity, time range dropdown |
 | 0.9.1 | 2026-02-04 | Refactor to NuGet.Protocol SDK, all versions have downloads |
 | 0.9.0 | 2026-02-04 | NuGet charts, sorting filters, engagement loop fix |
 | 0.8.0 | 2026-02-04 | Community sync: contributors, MS membership, repo stats |
