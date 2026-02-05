@@ -1,0 +1,36 @@
+{
+  "number": 3498,
+  "type": "pr",
+  "state": "open",
+  "title": "Add SKShapeView: MAUI shapes rendered via SkiaSharp",
+  "body": "**Description of Change**\n\nAdds \u0060SKShapeView\u0060, a canvas control that accepts MAUI \u0060Shape\u0060 children and renders them with SkiaSharp. XAML-first design similar to WPF/UWP Canvas\u2014define shapes declaratively, everything flattens to pixels.\n\n**New types:**\n- \u0060SKShapeView\u0060 \u2014 Canvas control with \u0060Children\u0060 collection and \u0060Left\u0060/\u0060Top\u0060 attached properties\n- \u0060GeometryExtensions\u0060 \u2014 MAUI geometry \u2192 \u0060SKPath\u0060 (ellipse, rect, line, path, arc segments, beziers, etc.)\n- \u0060BrushExtensions\u0060 \u2014 MAUI brush \u2192 \u0060SKPaint\u0060 (solid, linear gradient, radial gradient, stroke/dash)\n\n**Supported:**\n- All MAUI shapes: Rectangle, RoundRectangle, Ellipse, Line, Polyline, Polygon, Path\n- All transforms: Rotate, Scale, Skew, Translate, Composite, TransformGroup, Matrix\n- Stroke: thickness, dash patterns, line caps, line joins, miter limit\n- Per-shape opacity\n\n\u0060\u0060\u0060xml\n\u003Cskia:SKShapeView HeightRequest=\u0022200\u0022\u003E\n    \u003Cshapes:Rectangle \n        skia:SKShapeView.Left=\u002210\u0022 skia:SKShapeView.Top=\u002210\u0022\n        WidthRequest=\u002280\u0022 HeightRequest=\u002260\u0022\n        Fill=\u0022CornflowerBlue\u0022 Stroke=\u0022DarkBlue\u0022 StrokeThickness=\u00222\u0022 /\u003E\n    \u003Cshapes:Ellipse \n        skia:SKShapeView.Left=\u0022100\u0022 \n        WidthRequest=\u002280\u0022 HeightRequest=\u002280\u0022\n        Fill=\u0022{StaticResource GradientBrush}\u0022 /\u003E\n\u003C/skia:SKShapeView\u003E\n\u0060\u0060\u0060\n\nSee \u0060documentation/maui-shape-api-comparison.md\u0060 for full MAUI/WPF/UWP coverage matrix.\n\n**Bugs Fixed**\n\nNone \u2014 new feature.\n\n**API Changes**\n\nAdded:\n\n- \u0060SKShapeView\u0060 \u2014 View implementing \u0060ISKCanvasView\u0060\n- \u0060SKShapeView.LeftProperty\u0060, \u0060SKShapeView.TopProperty\u0060 \u2014 attached properties\n- \u0060SKShapeView.Children\u0060 \u2014 \u0060IList\u003CShape\u003E\u0060\n- \u0060GeometryExtensions.ToSKPath(Geometry)\u0060, \u0060GeometryExtensions.ToSKPath(Shape)\u0060\n- \u0060BrushExtensions.ToSKPaint(Brush, SKRect)\u0060, \u0060BrushExtensions.ToSKStrokePaint(...)\u0060\n- \u0060BrushExtensions.ToSKStrokeCap(PenLineCap)\u0060, \u0060BrushExtensions.ToSKStrokeJoin(PenLineJoin)\u0060\n\n**Behavioral Changes**\n\nNone.\n\n**Required skia PR**\n\nNone.\n\n**PR Checklist**\n\n- [ ] Has tests (MAUI workloads unavailable in CI; sample page added for manual verification)\n- [x] Rebased on top of main at time of PR\n- [x] Merged related skia PRs\n- [x] Changes adhere to coding standard\n- [x] Updated documentation\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E I want to add a feature to skiasharop for maui where people can just drop in the skcanvasview and then drop in maui geometry or shapes and use that to draw. Same with brusehs. If the user drops in xaml controls as children of a canvas, it should DRAW that control using the brushes and styles and animations of maui. We want to effectively suppoert maui geometry and shanpes as children in xaml. This should be a xaml first design where we imitate the xaml canvas conterols of WPF andUWP. We can put any geometry in there. At the end, there is just a canvas with pixels at a color and not layers of nested things.\n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCAC We\u0027d love your input! Share your thoughts on Copilot coding agent in our [2 minute survey](https://gh.io/copilot-coding-agent-survey).\n",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-05T02:46:53",
+  "updatedAt": "2026-02-05T03:10:24",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "merged": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/add-maui-support-for-skcanvasview",
+  "additions": 1723,
+  "deletions": 6,
+  "changedFiles": 11,
+  "commits": 6,
+  "reviews": []
+}
