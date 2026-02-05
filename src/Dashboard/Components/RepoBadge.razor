@@ -1,0 +1,34 @@
+@* Displays a colored badge for a repository *@
+
+@if (!string.IsNullOrEmpty(RepoSlug))
+{
+    <span class="repo-badge" style="background-color: @(RepoColor ?? "#6c757d");">
+        @DisplayName
+    </span>
+}
+
+@code {
+    /// <summary>
+    /// The repository slug (e.g., "skiasharp", "extended")
+    /// </summary>
+    [Parameter]
+    public string? RepoSlug { get; set; }
+
+    /// <summary>
+    /// The display name (e.g., "SkiaSharp", "Extended")
+    /// </summary>
+    [Parameter]
+    public string? DisplayName { get; set; }
+
+    /// <summary>
+    /// The color for the badge (hex format)
+    /// </summary>
+    [Parameter]
+    public string? RepoColor { get; set; }
+
+    /// <summary>
+    /// Full repo name (e.g., "mono/SkiaSharp")
+    /// </summary>
+    [Parameter]
+    public string? Repo { get; set; }
+}

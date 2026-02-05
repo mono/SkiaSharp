@@ -120,6 +120,20 @@ else
 
     <!-- Filter Row -->
     <div class="filter-row">
+        @if (_data.Repos?.Count > 1)
+        {
+            <div class="filter-group">
+                <label>Repository</label>
+                <select class="repo-filter" @bind="SelectedRepo" @bind:after="ApplyFilters">
+                    <option value="">All Repos (@_data.TotalCount)</option>
+                    @foreach (var repo in _data.Repos)
+                    {
+                        var count = _data.ByRepo?.GetValueOrDefault(repo.FullName, 0) ?? 0;
+                        <option value="@repo.FullName">@repo.DisplayName (@count)</option>
+                    }
+                </select>
+            </div>
+        }
         <div class="filter-group">
             <label>Type</label>
             <select @bind="SelectedType" @bind:after="ApplyFilters">
@@ -215,6 +229,12 @@ else
                     <tr @onclick="() => ExpandIssue(issue.Number)" class="@(ExpandedIssue == issue.Number ? "expanded" : "")">
                         <td class="col-number">
                             @issue.Number
+                            @if (_data.Repos?.Count > 1 && !string.IsNullOrEmpty(issue.RepoSlug))
+                            {
+                                <RepoBadge RepoSlug="@issue.RepoSlug" 
+                                           DisplayName="@GetRepoDisplayName(issue.Repo)" 
+                                           RepoColor="@issue.RepoColor" />
+                            }
                             @if (issue.Engagement?.IsHot == true)
                             {
                                 <span class="hot-badge" title="Trending">🔥</span>
@@ -294,6 +314,7 @@ else
     [SupplyParameterFromQuery] public string? Backend { get; set; }
     [SupplyParameterFromQuery] public string? Os { get; set; }
     [SupplyParameterFromQuery] public string? Sort { get; set; }
+    [SupplyParameterFromQuery] public string? Repo { get; set; }
 
     private bool _loading = true;
     private IssuesData? _data;
@@ -321,12 +342,14 @@ else
     private string SelectedBackend { get; set; } = "";
     private string SelectedOs { get; set; } = "";
     private string SelectedSort { get; set; } = "newest";
+    private string SelectedRepo { get; set; } = "";
 
     private bool HasFilters => !string.IsNullOrEmpty(SelectedType) || 
                                !string.IsNullOrEmpty(SelectedArea) || 
                                !string.IsNullOrEmpty(SelectedAge) ||
                                !string.IsNullOrEmpty(SelectedBackend) ||
-                               !string.IsNullOrEmpty(SelectedOs);
+                               !string.IsNullOrEmpty(SelectedOs) ||
+                               !string.IsNullOrEmpty(SelectedRepo);
 
     protected override async Task OnInitializedAsync()
     {
@@ -337,6 +360,7 @@ else
         SelectedBackend = Backend ?? "";
         SelectedOs = Os ?? "";
         SelectedSort = Sort ?? "newest";
+        SelectedRepo = Repo ?? "";
 
         try { _data = await DataService.GetIssuesDataAsync(); }
         catch { /* Data not yet available */ }
@@ -375,6 +399,7 @@ else
         if (_data is null) return;
 
         var filtered = _data.Issues.Where(i =>
+            (string.IsNullOrEmpty(SelectedRepo) || i.Repo == SelectedRepo) &&
             (string.IsNullOrEmpty(SelectedType) || i.Type == SelectedType) &&
             (string.IsNullOrEmpty(SelectedArea) || i.Areas.Contains(SelectedArea)) &&
             (string.IsNullOrEmpty(SelectedAge) || i.AgeCategory == SelectedAge) &&
@@ -399,6 +424,7 @@ else
     private void UpdateUrl()
     {
         var query = new List<string>();
+        if (!string.IsNullOrEmpty(SelectedRepo)) query.Add($"repo={Uri.EscapeDataString(SelectedRepo)}");
         if (!string.IsNullOrEmpty(SelectedType)) query.Add($"type={Uri.EscapeDataString(SelectedType)}");
         if (!string.IsNullOrEmpty(SelectedArea)) query.Add($"area={Uri.EscapeDataString(SelectedArea)}");
         if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={Uri.EscapeDataString(SelectedAge)}");
@@ -412,6 +438,7 @@ else
 
     private void ClearFilters()
     {
+        SelectedRepo = "";
         SelectedType = "";
         SelectedArea = "";
         SelectedAge = "";
@@ -428,6 +455,12 @@ else
 
     private string GetOldest() => _filteredIssues.MaxBy(i => i.DaysOpen)?.DaysOpen is double d ? $"{(int)d} days" : "";
     private string GetNewest() => _filteredIssues.MinBy(i => i.DaysOpen)?.DaysOpen is double d ? $"{(int)d} days" : "";
+
+    private string GetRepoDisplayName(string? repo)
+    {
+        if (repo is null || _data?.Repos is null) return "";
+        return _data.Repos.FirstOrDefault(r => r.FullName == repo)?.DisplayName ?? repo.Split('/').Last();
+    }
 
     private static string GetAgeClass(string ageCategory) => ageCategory switch
     {

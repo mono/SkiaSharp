@@ -118,6 +118,20 @@ else
 
     <!-- Filter Row -->
     <div class="filter-row">
+        @if (_data.Repos?.Count > 1)
+        {
+            <div class="filter-group">
+                <label>Repository</label>
+                <select class="repo-filter" @bind="SelectedRepo" @bind:after="ApplyFilters">
+                    <option value="">All Repos (@_data.TotalCount)</option>
+                    @foreach (var repo in _data.Repos)
+                    {
+                        var count = _data.ByRepo?.GetValueOrDefault(repo.FullName, 0) ?? 0;
+                        <option value="@repo.FullName">@repo.DisplayName (@count)</option>
+                    }
+                </select>
+            </div>
+        }
         <div class="filter-group">
             <label>Size</label>
             <select @bind="SelectedSize" @bind:after="ApplyFilters">
@@ -188,6 +202,12 @@ else
                     <a href="@pr.Url" target="_blank" class="pr-title">
                         #@pr.Number: @pr.Title
                     </a>
+                    @if (_data.Repos?.Count > 1 && !string.IsNullOrEmpty(pr.RepoSlug))
+                    {
+                        <RepoBadge RepoSlug="@pr.RepoSlug" 
+                                   DisplayName="@GetRepoDisplayName(pr.Repo)" 
+                                   RepoColor="@pr.RepoColor" />
+                    }
                     @if (pr.IsDraft)
                     {
                         <span class="badge-draft">Draft</span>
@@ -237,6 +257,7 @@ else
     [SupplyParameterFromQuery] public string? Author { get; set; }
     [SupplyParameterFromQuery] public string? Draft { get; set; }
     [SupplyParameterFromQuery] public string? Sort { get; set; }
+    [SupplyParameterFromQuery] public string? Repo { get; set; }
 
     private bool _loading = true;
     private PrTriageStats? _data;
@@ -263,12 +284,14 @@ else
     private string SelectedAuthor { get; set; } = "";
     private string SelectedDraft { get; set; } = "";
     private string SelectedSort { get; set; } = "triage";
+    private string SelectedRepo { get; set; } = "";
 
     private bool HasFilters => !string.IsNullOrEmpty(SelectedCategory) ||
                                !string.IsNullOrEmpty(SelectedSize) ||
                                !string.IsNullOrEmpty(SelectedAge) ||
                                !string.IsNullOrEmpty(SelectedAuthor) ||
-                               !string.IsNullOrEmpty(SelectedDraft);
+                               !string.IsNullOrEmpty(SelectedDraft) ||
+                               !string.IsNullOrEmpty(SelectedRepo);
 
     protected override async Task OnInitializedAsync()
     {
@@ -278,6 +301,7 @@ else
         SelectedAuthor = Author ?? "";
         SelectedDraft = Draft ?? "";
         SelectedSort = Sort ?? "triage";
+        SelectedRepo = Repo ?? "";
 
         try { _data = await DataService.GetPrTriageStatsAsync(); }
         catch { /* Data not yet available */ }
@@ -322,6 +346,7 @@ else
         if (_data is null) return;
 
         var filtered = _data.PullRequests.Where(pr =>
+            (string.IsNullOrEmpty(SelectedRepo) || pr.Repo == SelectedRepo) &&
             (string.IsNullOrEmpty(SelectedCategory) || GetCategoryKey(pr.Category) == SelectedCategory) &&
             (string.IsNullOrEmpty(SelectedSize) || pr.SizeCategory == SelectedSize) &&
             (string.IsNullOrEmpty(SelectedAge) || pr.AgeCategory == SelectedAge) &&
@@ -349,6 +374,7 @@ else
     private void UpdateUrl()
     {
         var query = new List<string>();
+        if (!string.IsNullOrEmpty(SelectedRepo)) query.Add($"repo={Uri.EscapeDataString(SelectedRepo)}");
         if (!string.IsNullOrEmpty(SelectedCategory)) query.Add($"category={SelectedCategory}");
         if (!string.IsNullOrEmpty(SelectedSize)) query.Add($"size={SelectedSize}");
         if (!string.IsNullOrEmpty(SelectedAge)) query.Add($"age={SelectedAge}");
@@ -362,6 +388,7 @@ else
 
     private void ClearFilters()
     {
+        SelectedRepo = "";
         SelectedCategory = "";
         SelectedSize = "";
         SelectedAge = "";
@@ -420,4 +447,10 @@ else
         "ancient" => "age-ancient",
         _ => ""
     };
+
+    private string GetRepoDisplayName(string? repo)
+    {
+        if (repo is null || _data?.Repos is null) return "";
+        return _data.Repos.FirstOrDefault(r => r.FullName == repo)?.DisplayName ?? repo.Split('/').Last();
+    }
 }
