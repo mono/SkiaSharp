@@ -13,15 +13,9 @@ public class SyncSettings : CommandSettings
     [DefaultValue("./.data-cache")]
     public string CachePath { get; set; } = "./.data-cache";
 
-    [CommandOption("--owner <OWNER>")]
-    [Description("GitHub repository owner")]
-    [DefaultValue("mono")]
-    public string Owner { get; set; } = "mono";
-
-    [CommandOption("--repo <REPO>")]
-    [Description("GitHub repository name")]
-    [DefaultValue("SkiaSharp")]
-    public string Repo { get; set; } = "SkiaSharp";
+    [CommandOption("-r|--repo <OWNER/NAME>")]
+    [Description("Repository in owner/name format (e.g., mono/SkiaSharp)")]
+    public string? Repository { get; set; }
 
     [CommandOption("-v|--verbose")]
     [Description("Show detailed progress")]
@@ -38,6 +32,22 @@ public class SyncSettings : CommandSettings
     [CommandOption("--engagement-only")]
     [Description("Only sync engagement data (Layer 2)")]
     public bool EngagementOnly { get; set; }
+
+    /// <summary>
+    /// Parse repository into owner and name components.
+    /// Falls back to defaults if not specified.
+    /// </summary>
+    public (string Owner, string Name) ParseRepository()
+    {
+        if (string.IsNullOrEmpty(Repository))
+            return ("mono", "SkiaSharp"); // Default
+
+        var parts = Repository.Split('/');
+        if (parts.Length != 2)
+            throw new ArgumentException($"Invalid repository format: {Repository}. Expected owner/name.");
+
+        return (parts[0], parts[1]);
+    }
 }
 
 /// <summary>

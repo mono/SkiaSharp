@@ -20,8 +20,7 @@ public class SyncCommand : AsyncCommand<SyncSettings>
         var githubSettings = new SyncGitHubSettings
         {
             CachePath = settings.CachePath,
-            Owner = settings.Owner,
-            Repo = settings.Repo,
+            Repository = settings.Repository,
             Verbose = settings.Verbose,
             Quiet = settings.Quiet,
             ItemsOnly = settings.ItemsOnly,
@@ -42,8 +41,7 @@ public class SyncCommand : AsyncCommand<SyncSettings>
             var nugetSettings = new SyncNuGetSettings
             {
                 CachePath = settings.CachePath,
-                Owner = settings.Owner,
-                Repo = settings.Repo,
+                Repository = settings.Repository,
                 Verbose = settings.Verbose,
                 Quiet = settings.Quiet
             };

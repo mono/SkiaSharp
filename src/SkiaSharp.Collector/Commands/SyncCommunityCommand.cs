@@ -13,14 +13,27 @@ public class SyncCommunityCommand : AsyncCommand<SyncCommunitySettings>
 {
     private const int TopContributorsToCheck = 20;
     private const int MaxContributors = 100;
+    
+    private string _owner = "";
+    private string _repoName = "";
 
     public override async Task<int> ExecuteAsync(CommandContext context, SyncCommunitySettings settings)
     {
+        (_owner, _repoName) = settings.ParseRepository();
+        
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[bold blue]Syncing community data for {settings.Owner}/{settings.Repo}...[/]");
+            AnsiConsole.MarkupLine($"[bold blue]Syncing community data for {_owner}/{_repoName}...[/]");
 
-        var cache = new CacheService(settings.CachePath);
-        using var github = new GitHubService(settings.Owner, settings.Repo, settings.Verbose);
+        // Load config to get repo key for cache path
+        var configService = new ConfigService();
+        var repoConfig = await configService.GetRepoByFullNameAsync(_owner, _repoName);
+        var repoKey = repoConfig?.Key ?? $"{_owner}-{_repoName}";
+
+        // Use per-repo cache path
+        var rootCache = new CacheService(settings.CachePath);
+        var cache = rootCache.ForRepo(repoKey);
+
+        using var github = new GitHubService(_owner, _repoName, settings.Verbose);
         var client = CreateOctokitClient();
 
         var syncMeta = await cache.LoadCommunitySyncMetaAsync();
@@ -37,7 +50,7 @@ public class SyncCommunityCommand : AsyncCommand<SyncCommunitySettings>
                 // Fetch contributors from GitHub
                 ctx.Status("Fetching contributor list...");
                 var repoContributors = await client.Repository.GetAllContributors(
-                    settings.Owner, settings.Repo,
+                    _owner, _repoName,
                     new ApiOptions { PageSize = MaxContributors });
 
                 if (!settings.Quiet)

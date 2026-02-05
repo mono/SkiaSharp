@@ -16,13 +16,27 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
 {
     private const int RateLimitThreshold = 100;
     
+    // These are set by ExecuteAsync and used by helper methods
+    private string _owner = "";
+    private string _repoName = "";
+    
     public override async Task<int> ExecuteAsync(CommandContext context, SyncGitHubSettings settings)
     {
+        (_owner, _repoName) = settings.ParseRepository();
+        
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[bold blue]Syncing GitHub data for {settings.Owner}/{settings.Repo}...[/]");
+            AnsiConsole.MarkupLine($"[bold blue]Syncing GitHub data for {_owner}/{_repoName}...[/]");
 
-        var cache = new CacheService(settings.CachePath);
-        using var github = new GitHubService(settings.Owner, settings.Repo, settings.Verbose);
+        // Load config to get repo key for cache path
+        var configService = new ConfigService();
+        var repoConfig = await configService.GetRepoByFullNameAsync(_owner, _repoName);
+        var repoKey = repoConfig?.Key ?? $"{_owner}-{_repoName}";
+
+        // Use per-repo cache path
+        var rootCache = new CacheService(settings.CachePath);
+        var cache = rootCache.ForRepo(repoKey);
+
+        using var github = new GitHubService(_owner, _repoName, settings.Verbose);
         var apiClient = CreateOctokitClient();
 
         var syncMeta = await cache.LoadGitHubSyncMetaAsync();
@@ -120,7 +134,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             AnsiConsole.MarkupLine("\n[bold]Layer 1: Basic item data[/]");
 
         // Get repo info (also gives us stars/forks/watchers)
-        var repo = await client.Repository.Get(settings.Owner, settings.Repo);
+        var repo = await client.Repository.Get(_owner, _repoName);
         var totalCount = repo.OpenIssuesCount; // Includes open issues + PRs
 
         // Save repo stats
@@ -175,7 +189,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     };
 
                     var issues = await client.Issue.GetAllForRepository(
-                        settings.Owner, settings.Repo, request,
+                        _owner, _repoName, request,
                         new ApiOptions { PageSize = 100, PageCount = 1, StartPage = page });
 
                     if (issues.Count == 0)
@@ -390,11 +404,11 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
     private async Task<EngagementData> FetchEngagementAsync(GitHubClient client, SyncGitHubSettings settings, int number)
     {
         // Fetch issue-level reactions
-        var reactions = await client.Reaction.Issue.GetAll(settings.Owner, settings.Repo, number);
+        var reactions = await client.Reaction.Issue.GetAll(_owner, _repoName, number);
         await Task.Delay(50);
 
         // Fetch comments
-        var comments = await client.Issue.Comment.GetAllForIssue(settings.Owner, settings.Repo, number);
+        var comments = await client.Issue.Comment.GetAllForIssue(_owner, _repoName, number);
         await Task.Delay(50);
 
         var commentInfos = new List<CommentInfo>();
@@ -404,7 +418,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         {
             try
             {
-                var commentReactions = await client.Reaction.IssueComment.GetAll(settings.Owner, settings.Repo, comment.Id);
+                var commentReactions = await client.Reaction.IssueComment.GetAll(_owner, _repoName, comment.Id);
                 commentInfos.Add(new CommentInfo(
                     comment.Id,
                     comment.User?.Login ?? "unknown",
@@ -450,8 +464,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         {
             try
             {
-                pr = await client.PullRequest.Get(settings.Owner, settings.Repo, issue.Number);
-                var prReviews = await client.PullRequest.Review.GetAll(settings.Owner, settings.Repo, issue.Number);
+                pr = await client.PullRequest.Get(_owner, _repoName, issue.Number);
+                var prReviews = await client.PullRequest.Review.GetAll(_owner, _repoName, issue.Number);
                 reviews = [.. prReviews.Select(r => new ReviewInfo(
                     r.User?.Login ?? "unknown",
                     r.State.StringValue,
