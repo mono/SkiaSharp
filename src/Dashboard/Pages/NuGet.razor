@@ -35,7 +35,7 @@ else
     @if (_chartsData?.Charts?.Any() == true)
     {
         <h2>Download Trends</h2>
-        <div class="nuget-charts">
+        <div class="nuget-charts" @key="_showLegacy">
             @foreach (var chart in _chartsData.Charts)
             {
                 var visibleSeries = chart.Series.Where(s => _showLegacy || !IsLegacyPackage(s.PackageId)).ToList();
