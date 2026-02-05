@@ -38,6 +38,9 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         // Generate community stats
         await GenerateCommunityStatsAsync(cache, settings);
 
+        // Generate trend data
+        await GenerateTrendDataAsync(cache, settings);
+
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("[green]✓ All dashboard files generated[/]");
 
@@ -513,6 +516,145 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             else
                 AnsiConsole.MarkupLine($"[green]  ✓ {outputPath} (empty cache)[/]");
         }
+    }
+
+    private async Task GenerateTrendDataAsync(CacheService cache, GenerateSettings settings)
+    {
+        if (!settings.Quiet)
+            AnsiConsole.MarkupLine("\n[bold]Generating github-trends.json...[/]");
+
+        var index = await cache.LoadGitHubIndexAsync();
+        var now = DateTime.UtcNow;
+
+        // Separate issues and PRs
+        var issues = index.Items.Where(i => i.Type == "issue").ToList();
+        var prs = index.Items.Where(i => i.Type == "pr").ToList();
+
+        // Calculate issue stats
+        var openIssues = issues.Where(i => i.State == "open").ToList();
+        var closedIssues = issues.Where(i => i.State == "closed").ToList();
+        var issueCloseTimes = closedIssues
+            .Where(i => i.ClosedAt.HasValue)
+            .Select(i => (i.ClosedAt!.Value - i.CreatedAt).TotalDays)
+            .ToList();
+        var oldestOpenIssue = openIssues.OrderBy(i => i.CreatedAt).FirstOrDefault();
+
+        var issueSummary = new TrendSummary(
+            TotalCreated: issues.Count,
+            TotalClosed: closedIssues.Count,
+            CurrentlyOpen: openIssues.Count,
+            ClosureRate: issues.Count > 0 ? Math.Round(closedIssues.Count * 100.0 / issues.Count, 1) : 0,
+            AvgDaysToClose: issueCloseTimes.Count > 0 ? Math.Round(issueCloseTimes.Average(), 1) : null,
+            OldestOpenDays: oldestOpenIssue != null ? (int)(now - oldestOpenIssue.CreatedAt).TotalDays : null,
+            TotalMerged: null,
+            MergeRate: null,
+            AvgDaysToMerge: null
+        );
+
+        // Calculate PR stats
+        var openPrs = prs.Where(i => i.State == "open").ToList();
+        var closedPrs = prs.Where(i => i.State == "closed").ToList();
+        var mergedPrs = closedPrs.Where(i => i.Merged == true).ToList();
+        var prMergeTimes = mergedPrs
+            .Where(i => i.MergedAt.HasValue)
+            .Select(i => (i.MergedAt!.Value - i.CreatedAt).TotalDays)
+            .ToList();
+        var oldestOpenPr = openPrs.OrderBy(i => i.CreatedAt).FirstOrDefault();
+
+        var prSummary = new TrendSummary(
+            TotalCreated: prs.Count,
+            TotalClosed: closedPrs.Count,
+            CurrentlyOpen: openPrs.Count,
+            ClosureRate: prs.Count > 0 ? Math.Round(closedPrs.Count * 100.0 / prs.Count, 1) : 0,
+            AvgDaysToClose: null, // Use merge time instead for PRs
+            OldestOpenDays: oldestOpenPr != null ? (int)(now - oldestOpenPr.CreatedAt).TotalDays : null,
+            TotalMerged: mergedPrs.Count,
+            MergeRate: closedPrs.Count > 0 ? Math.Round(mergedPrs.Count * 100.0 / closedPrs.Count, 1) : null,
+            AvgDaysToMerge: prMergeTimes.Count > 0 ? Math.Round(prMergeTimes.Average(), 1) : null
+        );
+
+        // Build monthly trends
+        var monthlyTrends = BuildMonthlyTrends(issues, prs);
+
+        var output = new TrendData(
+            GeneratedAt: now,
+            Issues: issueSummary,
+            PullRequests: prSummary,
+            MonthlyTrends: monthlyTrends
+        );
+
+        var outputPath = Path.Combine(settings.OutputDir, "github-trends.json");
+        await OutputService.WriteJsonAsync(outputPath, output);
+
+        if (!settings.Quiet)
+        {
+            AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
+            AnsiConsole.MarkupLine($"    Issues: {issueSummary.TotalCreated:N0} total, {issueSummary.ClosureRate}% closed");
+            AnsiConsole.MarkupLine($"    PRs: {prSummary.TotalCreated:N0} total, {prSummary.MergeRate ?? 0}% merged");
+            AnsiConsole.MarkupLine($"    Monthly data points: {monthlyTrends.Count}");
+        }
+    }
+
+    private static List<MonthlyTrend> BuildMonthlyTrends(List<IndexItem> issues, List<IndexItem> prs)
+    {
+        var trends = new Dictionary<string, MonthlyTrend>();
+
+        // Find date range (all time)
+        var allItems = issues.Concat(prs).ToList();
+        if (allItems.Count == 0)
+            return [];
+
+        var minDate = allItems.Min(i => i.CreatedAt);
+        var maxDate = DateTime.UtcNow;
+
+        // Initialize all months
+        var current = new DateTime(minDate.Year, minDate.Month, 1);
+        var end = new DateTime(maxDate.Year, maxDate.Month, 1);
+        while (current <= end)
+        {
+            var key = current.ToString("yyyy-MM");
+            trends[key] = new MonthlyTrend(key, 0, 0, 0, 0, 0);
+            current = current.AddMonths(1);
+        }
+
+        // Count issues created/closed by month
+        foreach (var issue in issues)
+        {
+            var createdKey = issue.CreatedAt.ToString("yyyy-MM");
+            if (trends.TryGetValue(createdKey, out var t))
+                trends[createdKey] = t with { IssuesCreated = t.IssuesCreated + 1 };
+
+            if (issue.ClosedAt.HasValue)
+            {
+                var closedKey = issue.ClosedAt.Value.ToString("yyyy-MM");
+                if (trends.TryGetValue(closedKey, out var tc))
+                    trends[closedKey] = tc with { IssuesClosed = tc.IssuesClosed + 1 };
+            }
+        }
+
+        // Count PRs created/closed/merged by month
+        foreach (var pr in prs)
+        {
+            var createdKey = pr.CreatedAt.ToString("yyyy-MM");
+            if (trends.TryGetValue(createdKey, out var t))
+                trends[createdKey] = t with { PrsCreated = t.PrsCreated + 1 };
+
+            if (pr.ClosedAt.HasValue)
+            {
+                var closedKey = pr.ClosedAt.Value.ToString("yyyy-MM");
+                if (trends.TryGetValue(closedKey, out var tc))
+                    trends[closedKey] = tc with { PrsClosed = tc.PrsClosed + 1 };
+            }
+
+            if (pr.Merged == true && pr.MergedAt.HasValue)
+            {
+                var mergedKey = pr.MergedAt.Value.ToString("yyyy-MM");
+                if (trends.TryGetValue(mergedKey, out var tm))
+                    trends[mergedKey] = tm with { PrsMerged = tm.PrsMerged + 1 };
+            }
+        }
+
+        return [.. trends.Values.OrderBy(t => t.Month)];
     }
 }
 

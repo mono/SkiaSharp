@@ -85,6 +85,7 @@ public record IndexItem(
     string Author,
     DateTime CreatedAt,
     DateTime UpdatedAt,
+    DateTime? ClosedAt,
     List<string> Labels,
     int CommentCount,
     int ReactionCount,
@@ -93,6 +94,8 @@ public record IndexItem(
     // PR-specific fields
     bool? Draft,
     bool? Mergeable,
+    bool? Merged,
+    DateTime? MergedAt,
     string? BaseBranch,
     string? HeadBranch,
     // Status tracking
@@ -121,6 +124,8 @@ public record CachedItem(
     // PR-specific fields
     bool? Draft,
     bool? Mergeable,
+    bool? Merged,
+    DateTime? MergedAt,
     string? MergeableState,
     string? BaseBranch,
     string? HeadBranch,
@@ -245,4 +250,36 @@ public record CachedContributor(
     int Contributions,
     bool? IsMicrosoft,
     DateTime? MembershipCheckedAt
+);
+
+/// <summary>
+/// Trend data for issues and PRs over time
+/// </summary>
+public record TrendData(
+    DateTime GeneratedAt,
+    TrendSummary Issues,
+    TrendSummary PullRequests,
+    List<MonthlyTrend> MonthlyTrends
+);
+
+public record TrendSummary(
+    int TotalCreated,
+    int TotalClosed,
+    int CurrentlyOpen,
+    double ClosureRate,
+    double? AvgDaysToClose,
+    int? OldestOpenDays,
+    // PR-specific
+    int? TotalMerged,
+    double? MergeRate,
+    double? AvgDaysToMerge
+);
+
+public record MonthlyTrend(
+    string Month,  // "2025-01"
+    int IssuesCreated,
+    int IssuesClosed,
+    int PrsCreated,
+    int PrsClosed,
+    int PrsMerged
 );

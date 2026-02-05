@@ -30,4 +30,7 @@ public class DashboardDataService(HttpClient http)
 
     public async Task<IssuesData?> GetIssuesDataAsync() =>
         await http.GetFromJsonAsync<IssuesData>("data/issues.json", JsonOptions);
+
+    public async Task<TrendData?> GetTrendDataAsync() =>
+        await http.GetFromJsonAsync<TrendData>("data/github-trends.json", JsonOptions);
 }

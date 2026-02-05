@@ -1,4 +1,5 @@
 @page "/issues"
+@using ApexCharts
 @inject DashboardDataService DataService
 @inject NavigationManager Navigation
 
@@ -17,6 +18,67 @@ else if (_data is null)
 }
 else
 {
+    <!-- Trend Stats Cards -->
+    @if (_trendData is not null)
+    {
+        <div class="trend-stats-row">
+            <div class="trend-stat-card">
+                <div class="trend-stat-value">@_trendData.Issues.TotalCreated.ToString("N0")</div>
+                <div class="trend-stat-label">Total Created</div>
+            </div>
+            <div class="trend-stat-card">
+                <div class="trend-stat-value">@_trendData.Issues.TotalClosed.ToString("N0")</div>
+                <div class="trend-stat-label">Total Closed</div>
+            </div>
+            <div class="trend-stat-card">
+                <div class="trend-stat-value">@_trendData.Issues.CurrentlyOpen.ToString("N0")</div>
+                <div class="trend-stat-label">Currently Open</div>
+            </div>
+            <div class="trend-stat-card">
+                <div class="trend-stat-value">@_trendData.Issues.ClosureRate%</div>
+                <div class="trend-stat-label">Closure Rate</div>
+            </div>
+            @if (_trendData.Issues.AvgDaysToClose.HasValue)
+            {
+                <div class="trend-stat-card">
+                    <div class="trend-stat-value">@_trendData.Issues.AvgDaysToClose.Value.ToString("N0")</div>
+                    <div class="trend-stat-label">Avg Days to Close</div>
+                </div>
+            }
+            @if (_trendData.Issues.OldestOpenDays.HasValue)
+            {
+                <div class="trend-stat-card">
+                    <div class="trend-stat-value">@(_trendData.Issues.OldestOpenDays.Value / 365)y</div>
+                    <div class="trend-stat-label">Oldest Open</div>
+                </div>
+            }
+        </div>
+
+        <!-- Monthly Activity Chart -->
+        @if (_chartData.Count > 0)
+        {
+            <div class="trend-chart-section">
+                <h3>Issue Activity Over Time</h3>
+                <ApexChart TItem="ChartPoint"
+                           Options="_chartOptions"
+                           Height="300">
+                    <ApexPointSeries TItem="ChartPoint"
+                                     Items="_chartData"
+                                     Name="Created"
+                                     SeriesType="SeriesType.Line"
+                                     XValue="@(p => p.Month)"
+                                     YValue="@(p => p.Created)" />
+                    <ApexPointSeries TItem="ChartPoint"
+                                     Items="_chartData"
+                                     Name="Closed"
+                                     SeriesType="SeriesType.Line"
+                                     XValue="@(p => p.Month)"
+                                     YValue="@(p => p.Closed)" />
+                </ApexChart>
+            </div>
+        }
+    }
+
     <!-- Hot Issues Section -->
     @if (_data.HotIssues?.Count > 0)
     {
@@ -226,8 +288,21 @@ else
 
     private bool _loading = true;
     private IssuesData? _data;
+    private TrendData? _trendData;
     private List<IssueInfo> _filteredIssues = [];
     private int? ExpandedIssue;
+
+    // Chart data
+    private List<ChartPoint> _chartData = [];
+    private ApexChartOptions<ChartPoint> _chartOptions = new()
+    {
+        Chart = new Chart { Toolbar = new Toolbar { Show = false } },
+        Stroke = new Stroke { Curve = Curve.Smooth, Width = 2 },
+        Colors = ["#0d6efd", "#198754"],
+        Xaxis = new XAxis { TickAmount = 12 }
+    };
+
+    private record ChartPoint(string Month, int Created, int Closed);
 
     private string SelectedType { get; set; } = "";
     private string SelectedArea { get; set; } = "";
@@ -254,6 +329,20 @@ else
 
         try { _data = await DataService.GetIssuesDataAsync(); }
         catch { /* Data not yet available */ }
+        
+        try 
+        { 
+            _trendData = await DataService.GetTrendDataAsync();
+            if (_trendData is not null)
+            {
+                // Take last 24 months for chart
+                _chartData = _trendData.MonthlyTrends
+                    .TakeLast(24)
+                    .Select(t => new ChartPoint(t.Month, t.IssuesCreated, t.IssuesClosed))
+                    .ToList();
+            }
+        }
+        catch { /* Trend data not yet available */ }
         
         ApplyFiltersInternal(updateUrl: false); // Don't update URL on initial load
         _loading = false;
