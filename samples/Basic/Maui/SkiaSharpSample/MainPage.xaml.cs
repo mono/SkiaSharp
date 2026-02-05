@@ -53,5 +53,10 @@ namespace SkiaSharpSample
 			// draw some text
 			canvas.DrawText("SkiaSharp", coord, SKTextAlign.Center, font, paint);
 		}
+
+		private async void OnShapesDemoClicked(object sender, System.EventArgs e)
+		{
+			await Navigation.PushAsync(new ShapesPage());
+		}
 	}
 }

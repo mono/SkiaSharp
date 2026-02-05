@@ -14,6 +14,8 @@ namespace SkiaSharp.Views.Maui.Controls.Hosting
 				{
 					handlers.AddHandler<SKCanvasView, SKCanvasViewHandler>();
 					handlers.AddHandler<SKGLView, SKGLViewHandler>();
+					// SKShapeView uses the same handler as SKCanvasView since it implements ISKCanvasView
+					handlers.AddHandler<SKShapeView, SKCanvasViewHandler>();
 				})
 				.ConfigureImageSources(sources =>
 				{

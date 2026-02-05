@@ -5,10 +5,18 @@
              BackgroundColor="White"
              Title="SkiaSharp Sample">
 
-    <skia:SKCanvasView x:Name="skiaView"
-                       PaintSurface="OnPaintSurface"
-                       EnableTouchEvents="True"
-                       Touch="OnTouch"
-                       IgnorePixelScaling="True" />
+    <Grid RowDefinitions="*,Auto">
+        <skia:SKCanvasView x:Name="skiaView"
+                           Grid.Row="0"
+                           PaintSurface="OnPaintSurface"
+                           EnableTouchEvents="True"
+                           Touch="OnTouch"
+                           IgnorePixelScaling="True" />
+
+        <Button Grid.Row="1"
+                Text="View SKShapeView Demo"
+                Margin="20"
+                Clicked="OnShapesDemoClicked" />
+    </Grid>
 
 </ContentPage>

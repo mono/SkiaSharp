@@ -14,7 +14,7 @@ namespace SkiaSharpSample
 			new Window
 			{
 				Title = "SkiaSharp Sample",
-				Page = new MainPage()
+				Page = new NavigationPage(new MainPage())
 			};
 	}
 }
