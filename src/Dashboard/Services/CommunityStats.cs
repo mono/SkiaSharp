@@ -7,14 +7,16 @@ public record CommunityStats(
     int CommunityContributors,
     List<ContributorInfo> TopContributors,
     List<CommitInfo> RecentCommits,
-    List<GrowthPoint> ContributorGrowth
+    List<GrowthPoint> ContributorGrowth,
+    List<RepoSummary>? Repos = null
 );
 
 public record ContributorInfo(
     string Login,
     string AvatarUrl,
     int Contributions,
-    bool IsMicrosoft
+    bool IsMicrosoft,
+    Dictionary<string, int>? ContributionsByRepo = null
 );
 
 public record GrowthPoint(

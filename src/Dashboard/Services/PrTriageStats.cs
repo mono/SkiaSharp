@@ -6,7 +6,9 @@ public record PrTriageStats(
     TriageSummary Summary,
     List<AgeCount> BySize,
     List<AgeCount> ByAge,
-    List<TriagedPullRequest> PullRequests
+    List<TriagedPullRequest> PullRequests,
+    List<RepoSummary>? Repos = null,
+    Dictionary<string, int>? ByRepo = null
 );
 
 public record TriageSummary(
@@ -40,7 +42,10 @@ public record TriagedPullRequest(
     List<string> Backends,
     List<string> Oses,
     List<string> OtherLabels,
-    string Url
+    string Url,
+    string? Repo = null,
+    string? RepoSlug = null,
+    string? RepoColor = null
 );
 
 public enum TriageCategory

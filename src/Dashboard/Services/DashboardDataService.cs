@@ -13,8 +13,8 @@ public class DashboardDataService(HttpClient http)
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
     };
 
-    public async Task<GitHubStats?> GetGitHubStatsAsync() =>
-        await http.GetFromJsonAsync<GitHubStats>("data/github-stats.json", JsonOptions);
+    public async Task<MultiRepoGitHubStats?> GetGitHubStatsAsync() =>
+        await http.GetFromJsonAsync<MultiRepoGitHubStats>("data/github-stats.json", JsonOptions);
 
     public async Task<NuGetStats?> GetNuGetStatsAsync() =>
         await http.GetFromJsonAsync<NuGetStats>("data/nuget-stats.json", JsonOptions);

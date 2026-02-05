@@ -20,15 +20,15 @@ else
                 <div class="card-header"><h3>Repository</h3></div>
                 <div class="card-body stats-grid-3">
                     <div class="stat">
-                        <span class="stat-value">@_github.Repository.Stars.ToString("N0")</span>
+                        <span class="stat-value">@_github.Total.Stars.ToString("N0")</span>
                         <span class="stat-label">Stars ⭐</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-value">@_github.Repository.Forks.ToString("N0")</span>
+                        <span class="stat-value">@_github.Total.Forks.ToString("N0")</span>
                         <span class="stat-label">Forks 🍴</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-value">@_github.Repository.Watchers.ToString("N0")</span>
+                        <span class="stat-value">@_github.Total.Watchers.ToString("N0")</span>
                         <span class="stat-label">Watchers 👀</span>
                     </div>
                 </div>
@@ -38,20 +38,12 @@ else
                 <div class="card-header"><h3>Issues</h3></div>
                 <div class="card-body stats-grid">
                     <div class="stat">
-                        <span class="stat-value">@_github.Issues.Open.ToString("N0")</span>
+                        <span class="stat-value">@_github.Total.OpenIssues.ToString("N0")</span>
                         <span class="stat-label">Open</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-value">@_github.Issues.Closed.ToString("N0")</span>
+                        <span class="stat-value">@_github.Total.ClosedIssues.ToString("N0")</span>
                         <span class="stat-label">Closed</span>
-                    </div>
-                    <div class="stat stat-success">
-                        <span class="stat-value">+@_github.Issues.OpenedLast30Days</span>
-                        <span class="stat-label">Opened (30d)</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-value">-@_github.Issues.ClosedLast30Days</span>
-                        <span class="stat-label">Closed (30d)</span>
                     </div>
                 </div>
             </div>
@@ -60,20 +52,12 @@ else
                 <div class="card-header"><h3>Pull Requests</h3></div>
                 <div class="card-body stats-grid">
                     <div class="stat">
-                        <span class="stat-value">@_github.PullRequests.Open.ToString("N0")</span>
+                        <span class="stat-value">@_github.Total.OpenPRs.ToString("N0")</span>
                         <span class="stat-label">Open</span>
                     </div>
                     <div class="stat">
-                        <span class="stat-value">@_github.PullRequests.Merged.ToString("N0")</span>
-                        <span class="stat-label">Merged</span>
-                    </div>
-                    <div class="stat">
-                        <span class="stat-value">@_github.PullRequests.Closed.ToString("N0")</span>
+                        <span class="stat-value">@_github.Total.ClosedPRs.ToString("N0")</span>
                         <span class="stat-label">Closed</span>
-                    </div>
-                    <div class="stat stat-success">
-                        <span class="stat-value">+@_github.PullRequests.MergedLast30Days</span>
-                        <span class="stat-label">Merged (30d)</span>
                     </div>
                 </div>
             </div>
@@ -155,7 +139,7 @@ else
 @code {
     private bool _loading = true;
     private CommunityStats? _community;
-    private GitHubStats? _github;
+    private MultiRepoGitHubStats? _github;
 
     protected override async Task OnInitializedAsync()
     {

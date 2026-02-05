@@ -1,5 +1,36 @@
 namespace SkiaSharp.Dashboard.Services;
 
+// Multi-repo GitHub stats (new format)
+public record MultiRepoGitHubStats(
+    DateTime GeneratedAt,
+    Dictionary<string, RepoGitHubStats> Repos,
+    TotalGitHubStats Total
+);
+
+public record RepoGitHubStats(
+    string DisplayName,
+    string Slug,
+    string Color,
+    int Stars,
+    int Forks,
+    int Watchers,
+    int OpenIssues,
+    int ClosedIssues,
+    int OpenPRs,
+    int ClosedPRs
+);
+
+public record TotalGitHubStats(
+    int Stars,
+    int Forks,
+    int Watchers,
+    int OpenIssues,
+    int ClosedIssues,
+    int OpenPRs,
+    int ClosedPRs
+);
+
+// Legacy single-repo format (kept for compatibility)
 public record GitHubStats(
     DateTime GeneratedAt,
     RepositoryInfo Repository,

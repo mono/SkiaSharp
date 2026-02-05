@@ -1,5 +1,13 @@
 namespace SkiaSharp.Dashboard.Services;
 
+// Repo summary for filter dropdown
+public record RepoSummary(
+    string FullName,
+    string Slug,
+    string DisplayName,
+    string Color
+);
+
 public record IssuesData(
     DateTime GeneratedAt,
     int TotalCount,
@@ -9,7 +17,9 @@ public record IssuesData(
     List<LabelCount> ByOs,
     List<AgeCount> ByAge,
     List<IssueInfo> Issues,
-    List<IssueInfo>? HotIssues = null
+    List<IssueInfo>? HotIssues = null,
+    List<RepoSummary>? Repos = null,
+    Dictionary<string, int>? ByRepo = null
 );
 
 public record AgeCount(
@@ -35,7 +45,10 @@ public record IssueInfo(
     List<string> Oses,
     List<string> OtherLabels,
     string Url,
-    EngagementScore? Engagement = null
+    EngagementScore? Engagement = null,
+    string? Repo = null,
+    string? RepoSlug = null,
+    string? RepoColor = null
 );
 
 public record EngagementScore(

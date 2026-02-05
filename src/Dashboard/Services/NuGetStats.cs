@@ -3,14 +3,17 @@ namespace SkiaSharp.Dashboard.Services;
 public record NuGetStats(
     DateTime GeneratedAt,
     long TotalDownloads,
-    List<PackageStats> Packages
+    List<PackageStats> Packages,
+    List<RepoSummary>? Repos = null,
+    Dictionary<string, long>? ByRepo = null
 );
 
 public record PackageStats(
     string Id,
     long TotalDownloads,
     List<VersionStats> Versions,
-    bool IsLegacy = false
+    bool IsLegacy = false,
+    string? Repo = null
 );
 
 public record VersionStats(

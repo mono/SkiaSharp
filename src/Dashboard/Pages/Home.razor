@@ -24,7 +24,7 @@ else
             <span class="metric-label">Open PRs</span>
         </div>
         <div class="metric-card">
-            <span class="metric-value">@(_github?.Repository.Stars.ToString("N0") ?? "—")</span>
+            <span class="metric-value">@(_github?.Total.Stars.ToString("N0") ?? "—")</span>
             <span class="metric-label">Stars</span>
         </div>
         <div class="metric-card">
@@ -195,7 +195,7 @@ else
 
 @code {
     private bool _loading = true;
-    private GitHubStats? _github;
+    private MultiRepoGitHubStats? _github;
     private CommunityStats? _community;
     private IssuesData? _issues;
     private PrTriageStats? _prs;
