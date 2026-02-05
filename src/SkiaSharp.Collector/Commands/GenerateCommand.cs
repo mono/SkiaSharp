@@ -15,31 +15,82 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("[bold blue]Generating dashboard data from cache...[/]");
 
-        var cache = new CacheService(settings.CachePath);
+        var rootCache = new CacheService(settings.CachePath);
+
+        // Load repos configuration
+        var reposConfig = await rootCache.LoadReposConfigAsync();
+        var repos = reposConfig.Repos;
+
+        // Build combined list of all items from all repos
+        var allItems = new List<(RepoDefinition Repo, IndexItem Item)>();
+        var allContributors = new List<CachedContributor>();
+        CacheService? primaryCache = null;
+        RepoStats? primaryRepoStats = null;
+
+        foreach (var repo in repos)
+        {
+            var repoCache = CacheService.ForRepo(settings.CachePath, repo);
+            
+            // Load GitHub index for this repo
+            var index = await repoCache.LoadGitHubIndexAsync();
+            foreach (var item in index.Items)
+            {
+                allItems.Add((repo, item));
+            }
+
+            // Collect contributors from repos with SyncCommunity = true
+            if (repo.SyncCommunity)
+            {
+                var contributors = await repoCache.LoadContributorsAsync();
+                allContributors.AddRange(contributors);
+            }
+
+            // Store primary repo cache for NuGet/chart generation
+            if (repo.IsPrimary)
+            {
+                primaryCache = repoCache;
+                primaryRepoStats = await repoCache.LoadRepoStatsAsync();
+            }
+        }
+
+        // Merge contributors by login (keep highest contribution count and MS status)
+        var mergedContributors = allContributors
+            .GroupBy(c => c.Login)
+            .Select(g => new CachedContributor(
+                g.Key,
+                g.First().AvatarUrl,
+                g.Sum(c => c.Contributions),
+                g.Any(c => c.IsMicrosoft == true),
+                g.Max(c => c.MembershipCheckedAt)
+            ))
+            .OrderByDescending(c => c.Contributions)
+            .ToList();
 
         // Ensure output directory exists
         Directory.CreateDirectory(settings.OutputDir);
 
         // Generate GitHub stats
-        await GenerateGitHubStatsAsync(cache, settings);
+        await GenerateGitHubStatsAsync(allItems, primaryRepoStats, settings);
 
         // Generate issues data
-        await GenerateIssuesAsync(cache, settings);
+        await GenerateIssuesAsync(repos, allItems, settings);
 
         // Generate PR triage data
-        await GeneratePrTriageAsync(cache, settings);
+        await GeneratePrTriageAsync(repos, allItems, settings);
 
-        // Generate NuGet stats
-        await GenerateNuGetStatsAsync(cache, settings);
+        // Generate NuGet stats (primary repo only)
+        if (primaryCache != null)
+            await GenerateNuGetStatsAsync(primaryCache, settings);
 
-        // Generate NuGet chart data
-        await GenerateNuGetChartsAsync(cache, settings);
+        // Generate NuGet chart data (primary repo only)
+        if (primaryCache != null)
+            await GenerateNuGetChartsAsync(primaryCache, settings);
 
         // Generate community stats
-        await GenerateCommunityStatsAsync(cache, settings);
+        await GenerateCommunityStatsAsync(mergedContributors, settings);
 
         // Generate trend data
-        await GenerateTrendDataAsync(cache, settings);
+        await GenerateTrendDataAsync(allItems, settings);
 
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("[green]✓ All dashboard files generated[/]");
@@ -47,22 +98,20 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         return 0;
     }
 
-    private async Task GenerateGitHubStatsAsync(CacheService cache, GenerateSettings settings)
+    private async Task GenerateGitHubStatsAsync(List<(RepoDefinition Repo, IndexItem Item)> allItems, RepoStats? primaryRepoStats, GenerateSettings settings)
     {
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Generating github-stats.json...[/]");
 
-        var index = await cache.LoadGitHubIndexAsync();
-        
-        var openIssues = index.Items.Where(i => i.Type == "issue" && i.State == "open").ToList();
-        var closedIssues = index.Items.Where(i => i.Type == "issue" && i.State == "closed").ToList();
-        var openPRs = index.Items.Where(i => i.Type == "pr" && i.State == "open").ToList();
-        var closedPRs = index.Items.Where(i => i.Type == "pr" && i.State == "closed").ToList();
+        var openIssues = allItems.Where(i => i.Item.Type == "issue" && i.Item.State == "open").Select(i => i.Item).ToList();
+        var closedIssues = allItems.Where(i => i.Item.Type == "issue" && i.Item.State == "closed").Select(i => i.Item).ToList();
+        var openPRs = allItems.Where(i => i.Item.Type == "pr" && i.Item.State == "open").Select(i => i.Item).ToList();
+        var closedPRs = allItems.Where(i => i.Item.Type == "pr" && i.Item.State == "closed").Select(i => i.Item).ToList();
 
         var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
         var recentOpenedIssues = openIssues.Count(i => i.CreatedAt >= thirtyDaysAgo);
         var recentClosedIssues = closedIssues.Count(i => i.UpdatedAt >= thirtyDaysAgo);
-        var recentOpenedPRs = index.Items.Count(i => i.Type == "pr" && i.CreatedAt >= thirtyDaysAgo);
+        var recentOpenedPRs = allItems.Count(i => i.Item.Type == "pr" && i.Item.CreatedAt >= thirtyDaysAgo);
 
         // Get top labels
         var labelCounts = openIssues
@@ -73,15 +122,12 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             .Take(10)
             .ToList();
 
-        // Load repo stats from cache
-        var repoStats = await cache.LoadRepoStatsAsync();
-
         var stats = new GitHubStats(
             DateTime.UtcNow,
             new RepositoryInfo(
-                repoStats?.Stars ?? 0,
-                repoStats?.Forks ?? 0,
-                repoStats?.Watchers ?? 0,
+                primaryRepoStats?.Stars ?? 0,
+                primaryRepoStats?.Forks ?? 0,
+                primaryRepoStats?.Watchers ?? 0,
                 openIssues.Count + openPRs.Count,
                 closedIssues.Count + closedPRs.Count
             ),
@@ -107,22 +153,21 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         
         if (!settings.Quiet)
         {
-            if (index.Items.Count == 0)
+            if (allItems.Count == 0)
                 AnsiConsole.MarkupLine($"[yellow]  ✓ {outputPath} (empty cache)[/]");
             else
                 AnsiConsole.MarkupLine($"[green]  ✓ {outputPath}[/]");
         }
     }
 
-    private async Task GenerateIssuesAsync(CacheService cache, GenerateSettings settings)
+    private async Task GenerateIssuesAsync(List<RepoDefinition> repos, List<(RepoDefinition Repo, IndexItem Item)> allItems, GenerateSettings settings)
     {
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Generating issues.json...[/]");
 
-        var index = await cache.LoadGitHubIndexAsync();
-        var openIssues = index.Items
-            .Where(i => i.Type == "issue" && i.State == "open")
-            .OrderByDescending(i => i.UpdatedAt)
+        var openIssues = allItems
+            .Where(i => i.Item.Type == "issue" && i.Item.State == "open")
+            .OrderByDescending(i => i.Item.UpdatedAt)
             .ToList();
 
         // Calculate engagement scores and build issue list
@@ -136,10 +181,12 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         {
             ["fresh"] = 0, ["recent"] = 0, ["aging"] = 0, ["stale"] = 0, ["ancient"] = 0
         };
+        var byRepo = new Dictionary<string, int>();
 
-        foreach (var issue in openIssues)
+        foreach (var (repo, issue) in openIssues)
         {
-            var cachedItem = await cache.LoadItemAsync(issue.Number);
+            var repoCache = CacheService.ForRepo(settings.CachePath, repo);
+            var cachedItem = await repoCache.LoadItemAsync(issue.Number);
             var daysOpen = (DateTime.UtcNow - issue.CreatedAt).TotalDays;
             var daysSinceActivity = (DateTime.UtcNow - issue.UpdatedAt).TotalDays;
             var ageCategory = LabelParser.GetAgeCategory((int)daysOpen);
@@ -169,9 +216,9 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 parsed.Backends,
                 parsed.Oses,
                 parsed.Other,
-                $"https://github.com/mono/SkiaSharp/issues/{issue.Number}",
-                "mono/SkiaSharp",
-                "SkiaSharp",
+                $"https://github.com/{repo.FullName}/issues/{issue.Number}",
+                repo.FullName,
+                repo.DisplayName ?? repo.Name,
                 engagement
             ));
 
@@ -185,6 +232,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             foreach (var os in parsed.Oses)
                 byOs[os] = byOs.GetValueOrDefault(os) + 1;
             byAge[ageCategory]++;
+            byRepo[repo.FullName] = byRepo.GetValueOrDefault(repo.FullName) + 1;
         }
 
         // Get hot issues
@@ -192,6 +240,12 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             .Where(i => i.Engagement?.IsHot == true)
             .OrderByDescending(i => i.Engagement?.CurrentScore ?? 0)
             .Take(10)
+            .ToList();
+
+        // Build repo counts from repos list
+        var repoCounts = repos
+            .Where(r => r.SyncIssues)
+            .Select(r => new RepoCount(r.FullName, r.DisplayName ?? r.Name, byRepo.GetValueOrDefault(r.FullName)))
             .ToList();
 
         var output = new IssuesData(
@@ -208,7 +262,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 new AgeCount("stale", "90-365 days", byAge["stale"]),
                 new AgeCount("ancient", "> 1 year", byAge["ancient"])
             ],
-            [new RepoCount("mono/SkiaSharp", "SkiaSharp", openIssues.Count)],
+            repoCounts,
             issueInfos,
             hotIssues
         );
@@ -228,15 +282,14 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         }
     }
 
-    private async Task GeneratePrTriageAsync(CacheService cache, GenerateSettings settings)
+    private async Task GeneratePrTriageAsync(List<RepoDefinition> repos, List<(RepoDefinition Repo, IndexItem Item)> allItems, GenerateSettings settings)
     {
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Generating pr-triage.json...[/]");
 
-        var index = await cache.LoadGitHubIndexAsync();
-        var openPRs = index.Items
-            .Where(i => i.Type == "pr" && i.State == "open")
-            .OrderByDescending(i => i.UpdatedAt)
+        var openPRs = allItems
+            .Where(i => i.Item.Type == "pr" && i.Item.State == "open")
+            .OrderByDescending(i => i.Item.UpdatedAt)
             .ToList();
 
         var triaged = new List<PullRequestInfo>();
@@ -248,11 +301,13 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         {
             ["fresh"] = 0, ["recent"] = 0, ["aging"] = 0, ["stale"] = 0, ["ancient"] = 0
         };
+        var byRepo = new Dictionary<string, int>();
         var summary = new int[5]; // ready, quick, review, author, close
 
-        foreach (var pr in openPRs)
+        foreach (var (repo, pr) in openPRs)
         {
-            var cachedItem = await cache.LoadItemAsync(pr.Number);
+            var repoCache = CacheService.ForRepo(settings.CachePath, repo);
+            var cachedItem = await repoCache.LoadItemAsync(pr.Number);
             var parsed = LabelParser.Parse(pr.Labels);
             var daysOpen = (DateTime.UtcNow - pr.CreatedAt).TotalDays;
             var ageCategory = LabelParser.GetAgeCategory((int)daysOpen);
@@ -290,14 +345,15 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 parsed.Backends,
                 parsed.Oses,
                 parsed.Other,
-                $"https://github.com/mono/SkiaSharp/pull/{pr.Number}",
-                "mono/SkiaSharp",
-                "SkiaSharp"
+                $"https://github.com/{repo.FullName}/pull/{pr.Number}",
+                repo.FullName,
+                repo.DisplayName ?? repo.Name
             ));
 
             // Aggregations
             bySize[sizeCategory] = bySize.GetValueOrDefault(sizeCategory) + 1;
             byAge[ageCategory]++;
+            byRepo[repo.FullName] = byRepo.GetValueOrDefault(repo.FullName) + 1;
 
             var catIndex = category switch
             {
@@ -305,6 +361,12 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
             };
             summary[catIndex]++;
         }
+
+        // Build repo counts from repos list
+        var repoCounts = repos
+            .Where(r => r.SyncIssues)
+            .Select(r => new RepoCount(r.FullName, r.DisplayName ?? r.Name, byRepo.GetValueOrDefault(r.FullName)))
+            .ToList();
 
         var output = new PrTriageData(
             DateTime.UtcNow,
@@ -324,7 +386,7 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
                 new AgeCount("stale", "90-365 days", byAge["stale"]),
                 new AgeCount("ancient", "> 1 year", byAge["ancient"])
             ],
-            [new RepoCount("mono/SkiaSharp", "SkiaSharp", triaged.Count)],
+            repoCounts,
             triaged
         );
 
@@ -480,14 +542,11 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         return dataPoints;
     }
 
-    private async Task GenerateCommunityStatsAsync(CacheService cache, GenerateSettings settings)
+    private async Task GenerateCommunityStatsAsync(List<CachedContributor> contributors, GenerateSettings settings)
     {
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Generating community-stats.json...[/]");
 
-        // Load contributors from cache
-        var contributors = await cache.LoadContributorsAsync();
-        
         var msCount = contributors.Count(c => c.IsMicrosoft == true);
         var communityCount = contributors.Count - msCount; // Everyone else is community
 
@@ -524,17 +583,16 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
         }
     }
 
-    private async Task GenerateTrendDataAsync(CacheService cache, GenerateSettings settings)
+    private async Task GenerateTrendDataAsync(List<(RepoDefinition Repo, IndexItem Item)> allItems, GenerateSettings settings)
     {
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Generating github-trends.json...[/]");
 
-        var index = await cache.LoadGitHubIndexAsync();
         var now = DateTime.UtcNow;
 
         // Separate issues and PRs
-        var issues = index.Items.Where(i => i.Type == "issue").ToList();
-        var prs = index.Items.Where(i => i.Type == "pr").ToList();
+        var issues = allItems.Where(i => i.Item.Type == "issue").Select(i => i.Item).ToList();
+        var prs = allItems.Where(i => i.Item.Type == "pr").Select(i => i.Item).ToList();
 
         // Calculate issue stats
         var openIssues = issues.Where(i => i.State == "open").ToList();

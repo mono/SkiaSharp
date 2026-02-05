@@ -37,12 +37,12 @@
 - [x] All sync commands use repo-scoped cache paths
 - [x] `--owner` and `--repo` flags work with new structure
 
-### Generate Command 🚧
+### Generate Command ✅
 - [x] Models support repo field
-- [ ] Loads repos from config and iterates all folders
-- [ ] Merges issues/PRs from all repos with repo field
-- [ ] Aggregates stats across repos
-- [ ] Community contributors deduplicated across repos
+- [x] Loads repos from config and iterates all folders
+- [x] Merges issues/PRs from all repos with repo field
+- [x] Aggregates stats across repos
+- [x] Community contributors deduplicated across repos
 
 ### Dashboard UI ✅
 - [x] Repository filter dropdown on Issues page
@@ -56,9 +56,8 @@
 - [x] Engagement sync from primary repo (SkiaSharp) only
 
 ### Pending
-- [ ] Refactor GenerateCommand to merge data from all repo folders
-- [ ] Code review
 - [ ] Testing
+- [ ] Final verification
 
 ---
 
