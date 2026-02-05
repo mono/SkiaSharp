@@ -434,13 +434,12 @@ public class GenerateCommand : AsyncCommand<GenerateSettings>
 
         var chartConfigs = new List<(string Title, string[] PackageIds)>
         {
-            ("SkiaSharp", ["SkiaSharp"]),
-            ("HarfBuzzSharp", ["HarfBuzzSharp"]),
-            (".NET MAUI Views", ["SkiaSharp.Views.Maui.Core"]),
-            ("Skottie Animation", ["SkiaSharp.Skottie"]),
-            ("GPU Backends", ["SkiaSharp.Direct3D.Vortice", "SkiaSharp.Vulkan.SharpVk"]),
-            ("Blazor", ["SkiaSharp.Views.Blazor"]),
-            ("SkiaSharp.Extended", ["SkiaSharp.Extended", "SkiaSharp.Extended.UI.Maui"])
+            ("Core Libraries", ["SkiaSharp", "HarfBuzzSharp"]),
+            ("Native Views", ["SkiaSharp.Views", "SkiaSharp.Views.WPF", "SkiaSharp.Views.WinUI", "SkiaSharp.Views.WindowsForms", "SkiaSharp.Views.Blazor"]),
+            ("Cross-Platform Views", ["SkiaSharp.Views.Forms", "SkiaSharp.Views.Maui.Core", "SkiaSharp.Views.Uno.WinUI"]),
+            ("Integrations", ["SkiaSharp.HarfBuzz", "SkiaSharp.Skottie"]),
+            ("GPU Backends", ["SkiaSharp.Vulkan.SharpVk", "SkiaSharp.Direct3D.Vortice"]),
+            ("Extended", ["SkiaSharp.Extended", "SkiaSharp.Extended.UI.Maui"])
         };
 
         var charts = new List<PackageChartData>();
