@@ -1,0 +1,27 @@
+{
+  "number": 23,
+  "type": "issue",
+  "state": "closed",
+  "title": "SVG Rendering Issue",
+  "body": "I\u0027m attempting to replace our SVG rendering w/ skia sharp\u0027s and I ran into an issue.\r\n\r\nSource SVG: https://cdn.rawgit.com/chocolatey/chocolatey-coreteampackages/edba4a5849ff756e767cba86641bea97ff5721fe/icons/chrome.svg\r\n\r\nExpected Render: \r\n\u003Cimg width=\u0022193\u0022 alt=\u0022chrome_corrnt\u0022 src=\u0022https://user-images.githubusercontent.com/2391878/31511196-91a24452-af4c-11e7-9b54-3d1f5f559710.PNG\u0022\u003E\r\n\r\nActual Render:\r\n\u003Cimg width=\u0022200\u0022 alt=\u0022chrome_incorrect\u0022 src=\u0022https://user-images.githubusercontent.com/2391878/31511225-b1809ad0-af4c-11e7-914e-5cae0b583d36.PNG\u0022\u003E\r\n\r\nIt looks like there\r\n\r\nRendering Code:\r\n\u0060\u0060\u0060c#\r\n                using (var stream = imageStream.OpenRead())\r\n                {\r\n                    var svg = new SKSvg(new SKSize());\r\n                    svg.Load(stream);\r\n\r\n                    var canvasMin = Math.Min(e.Info.Width, e.Info.Height);\r\n                    var svgMax = Math.Max(svg.Picture.CullRect.Width, svg.Picture.CullRect.Height);\r\n                    var scale = canvasMin / svgMax;\r\n                    var matrix = SKMatrix.MakeScale(scale, scale);\r\n\r\n                    e.Surface.Canvas.Clear(SKColor.Empty);\r\n                    e.Surface.Canvas.DrawPicture(svg.Picture, ref matrix);\r\n                    return;\r\n                }\r\n\u0060\u0060\u0060\r\n\r\nWhere \u0060e.Surface\u0060 is the rendering surface of a WPF SKElement.\r\n\r\nIt looks like \u0060\u003Ccircle cx=\u002250%\u0022 cy=\u002250%\u0022 r=\u002241\u0022 fill=\u0022url(#a)\u0022 /\u003E\u0060  isn\u0027t getting relatively positioned properly.\r\n",
+  "author": {
+    "login": "RichiCoder1",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area-Svg",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2017-10-12T17:56:57",
+  "updatedAt": "2020-08-15T00:23:22",
+  "closedAt": "2020-08-15T00:23:22",
+  "commentCount": 3,
+  "reactionCount": 0
+}

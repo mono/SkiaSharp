@@ -1,0 +1,26 @@
+{
+  "number": 311,
+  "type": "issue",
+  "state": "open",
+  "title": "Issue: First Lottie Animation Not Displaying in .NET MAUI CarouselView",
+  "body": "Moved Issue From https://github.com/dotnet/maui/issues/29650\n\n### Description\n\nI\u2019m using .NET MAUI with SkiaSharp.Extended.UI.Maui 2.0.0 and trying to show a Lottie animation inside a CarouselView. My code works correctly for every item except the first one\u2014the animation does not show at all. Only the text shows.\n\nIf I change the CarouselView.Position to 1, then the second item\u2019s animation disappears instead. It seems like whichever item is initially rendered does not show the animation, while all others do.\n\nHere\u0027s a simplified version of the setup:\n\n\u0060\u0060\u0060\n   \u003CCarouselView\n      x:Name=\u0022WalkthroughCarousel\u0022\n      ItemsSource=\u0022{Binding WalkthroughItems}\u0022\n      VerticalOptions=\u0022FillAndExpand\u0022\u003E\n     \u003CCarouselView.ItemTemplate\u003E\n        \u003CDataTemplate x:DataType=\u0022uiEntities:WalkthroughItem\u0022\u003E\n            \u003CStackLayout Padding=\u002220\u0022 Spacing=\u002220\u0022\u003E\n                \u003Cskia:SKLottieView\n                    HeightRequest=\u0022300\u0022\n                    WidthRequest=\u0022300\u0022\n                    Source=\u0022{Binding AnimationFile}\u0022\n                    IsAnimationEnabled=\u0022True\u0022\n                    RepeatCount=\u0022-1\u0022\n                    RepeatMode=\u0022Restart\u0022 /\u003E\n                \u003CLabel Text=\u0022{Binding Title}\u0022 FontSize=\u002224\u0022 /\u003E\n                \u003CLabel Text=\u0022{Binding Description}\u0022 FontSize=\u002216\u0022 /\u003E\n            \u003C/StackLayout\u003E\n        \u003C/DataTemplate\u003E\n    \u003C/CarouselView.ItemTemplate\u003E\n   \u003C/CarouselView\u003E\n\u0060\u0060\u0060\n\u0060\u0060\u0060\npublic partial class MainPageViewModel : ViewModelBase\n{\n    private int currentIndex = 0;\n\n    [ObservableProperty]\n    private ObservableCollection\u003CWalkthroughItem\u003E walkthroughItems = [];\n\n    public MainPageViewModel()\n    {\n        \n        WalkthroughItems = [\n\n            new WalkthroughItem\n            {\n                AnimationFile = SKLottieImageSource.FromFile(\u0022woman_feelings_flowing.json\u0022),\n                Title = \u0022Talk it Out\u0022,\n                Description = \u0022Reflect on your feelings through safe conversations.\u0022\n            },\n            new WalkthroughItem\n            {\n                AnimationFile = SKLottieImageSource.FromFile(\u0022tallman.json\u0022),\n                Title = \u0022Name the Feeling\u0022,\n                Description = \u0022Track emotional reactions with a single tap.\u0022\n            },\n            new WalkthroughItem\n            {\n                AnimationFile = SKLottieImageSource.FromFile(\u0022thinkinglamp.json\u0022),\n                Title = \u0022Understand Yourself\u0022,\n                Description = \u0022Gain insights and make peace with your emotions.\u0022\n            }\n        ];\n    }\n}\n\u0060\u0060\u0060\n\n\n\u0060\u0060\u0060\npublic class WalkthroughItem\n{\n    public object AnimationFile { get; set; }\n    public string Title { get; set; } = string.Empty;\n    public string Description { get; set; } = string.Empty;\n}\n\u0060\u0060\u0060\n### Steps to Reproduce\n\n_No response_\n\n### Link to public reproduction project repository\n\n_No response_\n\n### Version with bug\n\n9.0.0 GA\n\n### Is this a regression from previous behavior?\n\nNot sure, did not test other versions\n\n### Last version that worked well\n\n_No response_\n\n### Affected platforms\n\nAndroid, I was *not* able test on other platforms\n\n### Affected platform versions\n\nAndroid 14 API 34\n\n### Did you find any workaround?\n\nNot yet I even tried to change positions and played around like added a dummy item and then removed it and still didn\u0027t work.\n\n### Relevant log output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060",
+  "author": {
+    "login": "PureWeen",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-06-26T19:17:52",
+  "updatedAt": "2026-02-05T03:10:29",
+  "commentCount": 1,
+  "reactionCount": 1
+}

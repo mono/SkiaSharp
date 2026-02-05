@@ -1,0 +1,23 @@
+{
+  "number": 263,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Integrating SKLottieView into a UIViewController?",
+  "body": "Hello,\r\n\r\nI\u0027m currently working on integrating Lottie animations into my iOS application using SKLottieView. However, I\u0027m facing some challenges in properly displaying the SKLottieView within a UIViewController/UIView. I am looking for guidance on how to use  SKLottieView in the context of a UIViewController.\r\n\r\nBefore I dive into creating my own bindings for Lottie.iOS, I thought about giving SKLottieView a try. However, it\u0027s not as straightforward as I had hoped, especially since SKLottieView isn\u0027t exactly a drop-in replacement for UIView.\r\n\r\nHas anybody tried this so far?\r\n\r\n\r\n\u0060\u0060\u0060\r\n[Register(\u0022SplashController\u0022)]\r\npublic partial class SplashController : UIViewController\r\n{\r\n    private SKLottieView _skLottieView;\r\n    \r\n    public SplashController() : base(\u0022SplashController\u0022, null)\r\n    {\r\n    }\r\n    \r\n    public override void ViewDidLoad()\r\n    {\r\n        base.ViewDidLoad();\r\n\r\n        _skLottieView = new SKLottieView();\r\n        _skLottieView.Source = new SKFileLottieImageSource()\r\n        {\r\n            File = \u0022splash_animation_ios.json\u0022\r\n        };\r\n        \r\n        View?.AddSubview(); // SKLottieView should be added here\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "ValonK",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "question",
+      "color": "cc317c"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-31T15:35:09",
+  "updatedAt": "2024-03-31T21:17:26",
+  "closedAt": "2024-03-31T21:17:26",
+  "commentCount": 0,
+  "reactionCount": 0
+}

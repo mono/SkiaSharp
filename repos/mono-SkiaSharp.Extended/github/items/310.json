@@ -1,0 +1,31 @@
+{
+  "number": 310,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Lotie Animation Completed does not work",
+  "body": "**Description**\n\nI am using mvvm to navigate when the animation is completed and does not work\n\n**Code**\n\n\u0060   \u003Cskia:SKLottieView\n       AnimationCompleted=\u0022SKLottieView_AnimationCompleted\u0022\n       Source=\u0022wait.json\u0022\u003E\n       \u003Cskia:SKLottieView.Behaviors\u003E\n           \u003Ctoolkit:EventToCommandBehavior\n               Command=\u0022{Binding CheckAuthCommand}\u0022\n               EventName=\u0022AnimationCompleted\u0022 /\u003E\n       \u003C/skia:SKLottieView.Behaviors\u003E\n\u0060\n\n\n\u0060public partial class WelcomePageViewModel : ObservableObject {\n\n\n    [RelayCommand]\n    async Task CheckAuth() {\n        await Shell.Current.GoToAsync($\u0022//{nameof(LoginPage)}\u0022);\n    }\n\n}\n\u0060\n\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\n\n**Expected Behavior**\n\nTo be able no navigate\n\n**Actual Behavior**\n\ndoes not trigger \n\n**Basic Information**\n\nVS 2022\n.Net 9\nAndroid\nLotie package 2.0\n  \n\u003Cdetails\u003E\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\n  \n\u0060\u0060\u0060\n\nPASTE ANY DETAILED VERSION INFO HERE\n\n\u0060\u0060\u0060\n2.0.0\n\n\n**Screenshots**\n\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\n\n**Reproduction Link**\n\nhttps://github.com/eduardoagr/MauiSamples\n\n",
+  "author": {
+    "login": "eduardoagr",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-05-10T22:26:30",
+  "updatedAt": "2026-02-05T03:10:29",
+  "commentCount": 0,
+  "reactionCount": 2
+}

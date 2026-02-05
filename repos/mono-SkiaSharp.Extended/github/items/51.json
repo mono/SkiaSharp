@@ -1,0 +1,32 @@
+{
+  "number": 51,
+  "type": "issue",
+  "state": "closed",
+  "title": "Cannot render properly",
+  "body": "Tried with several SVGs:\r\n\r\n[Sample svg](https://raw.githubusercontent.com/mono/SkiaSharp.Extended/master/SkiaSharp.Extended.Svg/samples/SkiaSharpDemo/SkiaSharpDemo/images/logos.svg)\r\n![image](https://user-images.githubusercontent.com/1234569/45263343-85686f80-b41f-11e8-9e8f-aef5689577cc.png)\r\n\r\nGets rendered as:\r\n![image](https://user-images.githubusercontent.com/1234569/45263351-acbf3c80-b41f-11e8-8c0a-b0d12119fb09.png)\r\n\r\nAnd\r\n[Sample svg](https://upload.wikimedia.org/wikipedia/commons/e/ed/Compact_Disc_wordmark.svg)\r\n![image](https://user-images.githubusercontent.com/1234569/45263367-daa48100-b41f-11e8-96a5-90160a47aef5.png)\r\n\r\nIs completely invisible.\r\n\r\nCode:\r\n\u0060\u0060\u0060\r\n            SKSvg                svg      = new SKSvg();\r\n            SKEncodedImageFormat skFormat = SKEncodedImageFormat.Png;\r\n            svg.Load(svgStream);\r\n            //SKRect   svgSize   = svg.Picture.CullRect;\r\n            float canvasMin = Math.Min(svg.Picture.CullRect.Width, svg.Picture.CullRect.Height);\r\n            float svgMax = Math.Max(svg.Picture.CullRect.Width, svg.Picture.CullRect.Height);\r\n            float scale = canvasMin / svgMax;\r\n            var matrix = SKMatrix.MakeScale(scale, scale);\r\n            SKBitmap bitmap    = new SKBitmap((int)svg.Picture.CullRect.Width, (int)svg.Picture.CullRect.Height);\r\n            SKCanvas canvas    = new SKCanvas(bitmap);\r\n            canvas.DrawPicture(svg.Picture, ref matrix);\r\n            canvas.Flush();\r\n            SKImage      image = SKImage.FromBitmap(bitmap);\r\n            SKData       data  = image.Encode(skFormat, 100);\r\n            MemoryStream outMs = new MemoryStream();\r\n            data.SaveTo(outMs);\r\n            cachedRender = outMs.ToArray();\r\n            base.Image   = new Bitmap(cachedRender);\r\n            FileStream foo = new FileStream(\u0022/mnt/datos/foo.png\u0022, FileMode.Create);\r\n            foo.Write(cachedRender, 0, cachedRender.Length);\r\n            foo.Close();\r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "claunia",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "duplicate",
+      "color": "cccccc"
+    },
+    {
+      "name": "area-Svg",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "Version 1.68.0",
+  "createdAt": "2018-09-09T10:04:58",
+  "updatedAt": "2019-02-10T04:18:20",
+  "closedAt": "2018-10-04T12:37:23",
+  "commentCount": 2,
+  "reactionCount": 0
+}

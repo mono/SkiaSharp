@@ -1,0 +1,29 @@
+{
+  "number": 98,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add a BlurHash Implementation",
+  "body": "**Description of Change**\r\n\r\nAdd a BlurHash implementation using SkiaSharp. This follows the same algorithm and is compatible with the original:\r\n\r\n - https://github.com/woltapp/blurhash\r\n - https://blurha.sh/\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static class SKBlurHash\r\n{\r\n    // Deserialize\r\n    public static SKBitmap DeserializeBitmap(string blurHash, int width, int height, float punch = 1f);\r\n    public static SKBitmap DeserializeBitmap(ReadOnlySpan\u003Cchar\u003E blurHash, int width, int height, float punch = 1f);\r\n    public static SKImage DeserializeImage(string blurHash, int width, int height, float punch = 1f);\r\n    public static SKImage DeserializeImage(ReadOnlySpan\u003Cchar\u003E blurHash, int width, int height, float punch = 1f);\r\n\r\n    // Serialize\r\n    public static string Serialize(SKBitmap bitmap, int componentsX, int componentsY);\r\n    public static string Serialize(SKImage image, int componentsX, int componentsY);\r\n    public static string Serialize(SKPixmap pixmap, int componentsX, int componentsY);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Has samples (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-08T03:34:19",
+  "updatedAt": "2020-09-08T04:01:22",
+  "closedAt": "2020-09-08T04:01:18",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2020-09-08T04:01:18",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/blurhash",
+  "additions": 1093,
+  "deletions": 0,
+  "changedFiles": 26,
+  "commits": 4,
+  "reviews": []
+}

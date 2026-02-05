@@ -1,0 +1,43 @@
+{
+  "number": 339,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add Copilot instructions and setup workflow",
+  "body": "Extracts Copilot setup files from PR #326 into a standalone PR with fixes.\n\n## Changes\n\n### \u0060.github/copilot-instructions.md\u0060\n- Repository structure, coding conventions, control patterns\n- Build instructions for multi-platform MAUI development\n- Common issues and troubleshooting\n\n### \u0060.github/workflows/copilot-setup.yml\u0060\n- Triggers: \u0060push\u0060 (main branch) \u002B \u0060workflow_dispatch\u0060\n- Path filters: only runs on changes to source/tests/copilot files\n- Multi-platform matrix: Ubuntu (Android), Windows, macOS\n- Verifies build and runs tests\n\n### Fixes from original PR #326\n- Added missing \u0060push\u0060 trigger\n- Normalized \u0060dotnet-version\u0060 format across jobs\n- Removed \u0060--no-restore\u0060 from test step (restore runs in prior step)\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E Can you extract th. Copilot instructions and setup workflows in https://github.com/mono/SkiaSharp.Extended/pull/326 and make a standalone PR. Identiftly issues with thos files and fix. We need to have a workflow that sets things up for Copilot and allows copilot to just start working. Make sure the workflow is also dispatch able. Also, make it run on  push.\n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-05T03:24:45",
+  "updatedAt": "2026-02-05T15:00:08",
+  "closedAt": "2026-02-05T15:00:03",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "merged": false,
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "copilot/setup-copilot-workflows",
+  "additions": 335,
+  "deletions": 0,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "APPROVED",
+      "submittedAt": "2026-02-05T03:36:07"
+    }
+  ]
+}

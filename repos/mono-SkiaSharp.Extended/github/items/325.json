@@ -1,0 +1,29 @@
+{
+  "number": 325,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update the docs and the tests",
+  "body": "This pull request makes significant updates to the documentation generation workflow and the structure of the documentation files for SkiaSharp.Extended. It switches the build system to .NET 9, migrates documentation to a new layout, and updates the DocFX configuration for improved API reference generation. The changes also clean up legacy files and update image/link paths for consistency.\r\n\r\n**Documentation system migration and cleanup:**\r\n\r\n* Migrated documentation files from \u0060docs/api/\u0060 to \u0060docs/docs/\u0060, removing legacy overview and table of contents files, and updating all image and link paths for the new structure. [[1]](diffhunk://#diff-e81d7b498d2901d01c01be12076de7d259166d39a4f4ca0a5801a49f228f258eL1-L29) [[2]](diffhunk://#diff-bf9b3b2671548178b76e4f6e1c0e565715b8e59478da6e48dbd585fb9fce3d98L1-L8) [[3]](diffhunk://#diff-363e82493e2e04f41b234969fa9b7e9fe40d2a09b746ff381162a71206632657L1-L32) [[4]](diffhunk://#diff-7c840e8e4a5359058ae97221f0c0243d7d2fe27576f4c8f6df86390885cce16bL1-L22) [[5]](diffhunk://#diff-bf41362c8cd47c34cf6506db9069a9cf0aaba0e2cfed330d60a50df06195ab93L1-L6) [[6]](diffhunk://#diff-6a8c621113885baffecdc6243ddf0c930771a85a53802a1816ada288ddf62bb4L20-R21) [[7]](diffhunk://#diff-a81215298ad9d2f8316174a41eac999a9c14ea273a2e57153edd41d0eeaaa334L44-R44) [[8]](diffhunk://#diff-a81215298ad9d2f8316174a41eac999a9c14ea273a2e57153edd41d0eeaaa334L129-R131) [[9]](diffhunk://#diff-45ca874b1b7b45bdd3e4c95aeb5bfe944fb4642e2ece89c79559989b448b3ecdL7-R15) [[10]](diffhunk://#diff-47b4544672ca60c90a2204e0ed250c3520fc7357f4c191ac937e81f4afc42684L27-R27)\r\n* Added new markdown-based table of contents files (\u0060docs/docs/toc.yml\u0060, \u0060docs/toc.yml\u0060) to match the new documentation layout and navigation. [[1]](diffhunk://#diff-8d3a7ab84c025528a92ed9c982d8eb6328211ebea9ae6d708a10c6cff39aea88R1-R18) [[2]](diffhunk://#diff-8762905fa91074c951a7b405c32efd6a876513d520d419a00e622046259b68c0R1-R8)\r\n\r\n**DocFX configuration and API reference improvements:**\r\n\r\n* Overhauled \u0060docs/docfx.json\u0060 to use the latest schema, generate API documentation from \u0060net9.0\u0060 assemblies, and simplify content selection and output settings. [[1]](diffhunk://#diff-0d22bca8ec985c6e42cb6720020214761043aa01e31809480b96759d6cebe7f5R2-R26) [[2]](diffhunk://#diff-0d22bca8ec985c6e42cb6720020214761043aa01e31809480b96759d6cebe7f5L22-R37) [[3]](diffhunk://#diff-0d22bca8ec985c6e42cb6720020214761043aa01e31809480b96759d6cebe7f5L41-L44)\r\n* Replaced YAML-based API TOC (\u0060docs/api/toc.yml\u0060) with DocFX-generated TOC that lists all API types and members for SkiaSharp.Extended and SkiaSharp.Extended.UI.Controls.\r\n\r\n**Build and workflow updates:**\r\n\r\n* Updated the GitHub Actions workflow in \u0060.github/workflows/builds-docs.yml\u0060 to use .NET 9, add an explicit assembly build step, and ensure docs are built against the latest assemblies.\r\n* Updated \u0060.gitignore\u0060 to exclude the new \u0060api/\u0060 output folder from version control.\r\n\r\n**Sample project and build props adjustments:**\r\n\r\n* Improved cross-platform build logic in \u0060samples/SkiaSharpDemo/SkiaSharpDemo.csproj\u0060 to conditionally include platform targets and mark the project as non-packable and non-test. [[1]](diffhunk://#diff-4b37a16b2fa957d78e31c181c800be2510203174717f40d689e775873d3bda33L4-R5) [[2]](diffhunk://#diff-4b37a16b2fa957d78e31c181c800be2510203174717f40d689e775873d3bda33R32-R35)\r\n* Cleaned up \u0060source/Directory.Build.props\u0060 by removing platform detection code and simplifying property groups.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-10-15T23:16:46",
+  "updatedAt": "2025-10-16T21:17:32",
+  "closedAt": "2025-10-16T21:17:28",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2025-10-16T21:17:28",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/docs",
+  "additions": 128,
+  "deletions": 212,
+  "changedFiles": 26,
+  "commits": 5,
+  "reviews": []
+}

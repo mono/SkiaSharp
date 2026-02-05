@@ -1,0 +1,18 @@
+{
+  "number": 88,
+  "type": "issue",
+  "state": "closed",
+  "title": "Incorrect rendering of svg if SkiaSharp.svg is referenced from nuget instead of project",
+  "body": "1. [Clicked](https://github.com/mono/SkiaSharp.Extended) on \u0022Clone or download\u0022 \u003E Download ZIP, unzip\r\n2. Replace SkiaSharp.Extended.Svg\\samples\\SkiaSharpDemo\\images\\opacity.svg with the attached opacity.svg\r\n[opacity.zip](https://github.com/mono/SkiaSharp.Extended/files/4258056/opacity.zip)\r\n3. load SkiaSharp.Extended.Svg\\SkiaSharp.Extended.Svg.sln in VS2019\r\n4. Compile (Android only) and run SkiaSharp.Extended.Svg\\samples\\SkiaSharpDemo\r\n5. It works fine\r\n\r\n![Screenshot_1582747682](https://user-images.githubusercontent.com/9251057/75385452-0cddc300-58e0-11ea-91b7-b013ad316ae1.png)\r\n\r\n- Now delete project dependency of SkiaSharpDemo: Dependencies\u003EProjects\u003ESkiaSharp.Extended.svg\r\n- Add nuget package SkiaSharp.svg (1.60.0 - latest) for SkiaSharpDemo\u002BSkiaSharpDemo.Droid\r\n- Compile (you have to change \u0027SKSvg\u0027 -\u003E \u0027SkiaSharp.Extended.Svg.SKSvg\u0027 in MainPage.xaml.cs) and run (Android).\r\n\r\n**Result:**\r\nUnlike before (when SkiaSharp.Extended was referenced from the project), the new opacity.svg is rendered incorrectly: sort of transparent.\r\n\r\n![Screenshot_1582748642](https://user-images.githubusercontent.com/9251057/75385453-0d765980-58e0-11ea-911e-ff053e8093b9.png)\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "zoli13",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-02-26T20:34:07",
+  "updatedAt": "2020-08-15T00:06:59",
+  "closedAt": "2020-08-15T00:06:59",
+  "commentCount": 2,
+  "reactionCount": 0
+}

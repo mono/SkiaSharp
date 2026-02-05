@@ -1,0 +1,29 @@
+{
+  "number": 200,
+  "type": "pr",
+  "state": "closed",
+  "title": "Allow for a slightly delayed theme registration",
+  "body": "**Description of Change**\r\n\r\nIn some cases, the view can be constructed during the app creating, and as a result the app is not actually ready yet. This occurs when passing the page as a constructor argument - the page is created before the app, and thus the view is created before the app and when it tries to register with the app it skips.\r\n\r\nThis PR is going to wait until there is a window and try again. At that point there should be an app and a window. There is the case where the app may get a window before the app - if the window is a constructor parameter - but this is not really useful in maui as apps may have multiple windows.\r\n\r\n**Bugs Fixed**\r\n\r\n\u003C!-- Provide links to issues here. Ensure that a GitHub issue was created for your feature or bug fix before sending PR. --\u003E\r\n\r\n- Fixes #147 \r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-08-22T23:17:15",
+  "updatedAt": "2023-08-23T00:00:42",
+  "closedAt": "2023-08-23T00:00:35",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2023-08-23T00:00:35",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/fix-147",
+  "additions": 29,
+  "deletions": 15,
+  "changedFiles": 5,
+  "commits": 4,
+  "reviews": []
+}

@@ -1,0 +1,23 @@
+{
+  "number": 250,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] MAUI SKLottieView causes cascading memory leak",
+  "body": "**Description**\r\n\r\nAdding an \u0060SKLottieView\u0060 to any MAUI page introduces a memory leak that will cause the SKLottieView _and the containing page_ to never be garbage collected. This is especially problematic as it has a cascading effect that prevents _anything else_ on the page from being collected, as well as anything else the page might be referencing.\r\n\r\n**Code**\r\n\r\n\u003Csk:SKLottieView /\u003E\r\n\r\nI\u0027m omitting the rest of the standard bug report because I\u0027ve isolated the culprit code, and the issue should be self-evident:\r\n\r\nhttps://github.com/mono/SkiaSharp.Extended/blob/93efd2d38783d6d8f638623327e7f9749cea70e2/source/SkiaSharp.Extended.UI/Controls/SKAnimatedSurfaceView.shared.cs#L76-L83\r\n\r\nThe callback passed into \u0060StartTimer\u0060 captures a reference to the current class instance. It is only terminated when \u0060IsAnimationEnabled\u0060 is false. With the dispatcher referencing the class instance, the class instance, in turn, references its parent page (either directly or indirectly) through the \u0060.Parent\u0060 property, so the leak propagates.\r\n\r\nI haven\u0027t put much thought into an appropriate fix, but my first thought is that this code should use a weak reference to prevent the dispatcher from capturing the instance.\r\n\r\n",
+  "author": {
+    "login": "AdamEssenmacher",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-05T06:16:24",
+  "updatedAt": "2024-04-08T08:48:50",
+  "closedAt": "2024-04-08T08:48:50",
+  "commentCount": 5,
+  "reactionCount": 2
+}

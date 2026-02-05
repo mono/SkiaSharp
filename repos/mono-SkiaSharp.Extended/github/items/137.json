@@ -1,0 +1,29 @@
+{
+  "number": 137,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add an a image comparer",
+  "body": "**Description of Change**\r\n\r\nAdd an API to generate image diffs. This is pretty basic with just a difference being used in each channel, but is surprisingly simple and accurate.\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cs\r\npublic static class SKPixelComparer\r\n{\r\n\tpublic static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second);\r\n\tpublic static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second);\r\n\tpublic static SKPixelComparisonResult Compare(SKImage first, SKImage second);\r\n\tpublic static SKPixelComparisonResult Compare(SKBitmap first, SKBitmap second, SKBitmap mask);\r\n\tpublic static SKPixelComparisonResult Compare(SKPixmap first, SKPixmap second, SKPixmap mask);\r\n\tpublic static SKPixelComparisonResult Compare(SKImage first, SKImage second, SKImage mask);\r\n\tpublic static SKImage GenerateDifferenceMask(SKBitmap first, SKBitmap second);\r\n\tpublic static SKImage GenerateDifferenceMask(SKPixmap first, SKPixmap second);\r\n\tpublic static SKImage GenerateDifferenceMask(SKImage first, SKImage second);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\npublic class SKPixelComparisonResult\r\n{\r\n\tpublic SKPixelComparisonResult(int totalPixels, int errorPixelCount, int absoluteError);\r\n\tpublic int TotalPixels { get; }\r\n\tpublic int ErrorPixelCount { get; }\r\n\tpublic double ErrorPixelPercentage { get; }\r\n\tpublic int AbsoluteError { get; }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone. All new APIs.\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [ ] Has samples (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-08-30T04:21:08",
+  "updatedAt": "2022-08-30T15:59:19",
+  "closedAt": "2022-08-30T15:59:16",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2022-08-30T15:59:16",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/image-compare",
+  "additions": 440,
+  "deletions": 5,
+  "changedFiles": 19,
+  "commits": 1,
+  "reviews": []
+}

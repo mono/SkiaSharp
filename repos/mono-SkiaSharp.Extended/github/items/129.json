@@ -1,0 +1,29 @@
+{
+  "number": 129,
+  "type": "pr",
+  "state": "closed",
+  "title": "Revert \u0022Rename IsCompleted to IsRunning\u0022",
+  "body": "Reverts mono/SkiaSharp.Extended#127\r\n\r\nI am reverting this because I am noticing an ambiguous state.\r\n\r\nIf I have a lottie/confetti view that is disabled, the IsRunning will still be true (based on implementation logic) because it was originally designed to represent whether the animation is complete or not. For example, if you have a lottie that is 2 seconds long and you are at 1s - you are not complete and you are running. If you are to disable the view at this point, you are still running and still not complete. Using the IsRunning terminology, you would sort of expect it to be false because it is not moving. However, with the IsComplete terminology, this is not expected.\r\n\r\nThe first PR with IsAnimationEnabled is still a much better term, so that is staying.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-13T22:55:18",
+  "updatedAt": "2022-07-13T23:25:27",
+  "closedAt": "2022-07-13T23:25:24",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2022-07-13T23:25:24",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "revert-127-feature/rename-iscompleted",
+  "additions": 95,
+  "deletions": 167,
+  "changedFiles": 17,
+  "commits": 1,
+  "reviews": []
+}

@@ -1,0 +1,18 @@
+{
+  "number": 26,
+  "type": "issue",
+  "state": "closed",
+  "title": "fill-rule is not being applied correctly.",
+  "body": "The fill-rule property is not being applied correctly.\r\n\r\n[http://www.w3.org/TR/SVG2/painting.html#FillRuleProperty](http://www.w3.org/TR/SVG2/painting.html#FillRuleProperty)\r\n\r\nThere are two example svg files provided by w3.\r\n\r\n**fillrule = evenodd**\r\n![fill-rule evenodd svg](https://www.w3.org/TR/SVG2/images/painting/fillrule-evenodd.svg)\r\nSource: [https://www.w3.org/TR/SVG2/images/painting/fillrule-evenodd.svg](https://www.w3.org/TR/SVG2/images/painting/fillrule-evenodd.svg)\r\n\r\n**fillrule = nonzero**\r\n![fill-rule nonzero svg](https://www.w3.org/TR/SVG2/images/painting/fillrule-nonzero.svg)\r\nSource: [https://www.w3.org/TR/SVG2/images/painting/fillrule-nonzero.svg](https://www.w3.org/TR/SVG2/images/painting/fillrule-nonzero.svg)\r\n\r\nThey should look like:\r\n\r\n**fillrule = evenodd**\r\n![fill-rule evenodd png](https://www.w3.org/TR/SVG2/images/painting/fillrule-evenodd.png)\r\nSource: [https://www.w3.org/TR/SVG2/images/painting/fillrule-evenodd.png](https://www.w3.org/TR/SVG2/images/painting/fillrule-evenodd.png)\r\n\r\n**fillrule = nonzero**\r\n![fill-rule nonzero png](https://www.w3.org/TR/SVG2/images/painting/fillrule-nonzero.png)\r\nSource: [https://www.w3.org/TR/SVG2/images/painting/fillrule-nonzero.png](https://www.w3.org/TR/SVG2/images/painting/fillrule-nonzero.png)\r\n\r\nWhen they are loaded using SKSvg.Load they are both using a Winding FillType and look like \u0022fill-rule = nonzero\u0022\r\n\r\n\u0060\u0060\u0060\r\nvar svg = new SKSvg();\r\nsvg.Load(fillruleImage);\r\ncanvas.DrawPicture(svg.Picture);\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "justinjedlicka",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2017-11-17T15:01:09",
+  "updatedAt": "2020-08-15T00:23:36",
+  "closedAt": "2020-08-15T00:23:35",
+  "commentCount": 1,
+  "reactionCount": 1
+}

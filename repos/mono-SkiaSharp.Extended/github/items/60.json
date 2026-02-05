@@ -1,0 +1,23 @@
+{
+  "number": 60,
+  "type": "issue",
+  "state": "closed",
+  "title": "Xamarin.iOS. Not correct showing svg image",
+  "body": "### Description\r\n\r\nHello guys. I try to use skiasharp for showing svg on iPad or iPadSimulator. There are  example of svg images [Archive.zip](https://github.com/mono/SkiaSharp/files/2218722/Archive.zip). Archive has two svg images. 1.svg is image was drawn in Adobe Illustrator. 2.svg is image was drawn in Adobe Illustrator and was optimised on service of optimising svg.\r\nIn the browser those images shows correctly, but on the iPad Air 2 and iPadAir2Simulator this image shows not correctly. On the iPadSimulator the same.\r\n\r\n\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\n        public override void ViewDidLoad()\r\n        {\r\n            base.ViewDidLoad();\r\n\r\n            // adding svg image without optimize\r\n            var path = NSBundle.MainBundle.PathForResource(\u0022Assets/1\u0022, \u0022svg\u0022);\r\n            var rect = new CGRect(0, 100, 200, 200);\r\n            AddSvgImage(path, rect);\r\n\r\n            // adding svg optimized image\r\n            path = NSBundle.MainBundle.PathForResource(\u0022Assets/2\u0022, \u0022svg\u0022);\r\n            rect = new CGRect(0, 300, 200, 200);\r\n            AddSvgImage(path, rect);\r\n        }\r\n\r\n        private void AddSvgImage(string path, CGRect rect)\r\n        {\r\n            var imageBuffer = File.ReadAllBytes(path);\r\n            var svg = new SkiaSharp.Extended.Svg.SKSvg();\r\n            using (var stream = new MemoryStream(imageBuffer))\r\n            {\r\n                svg.Load(stream);\r\n            }\r\n\r\n            var canvasView = new SKCanvasView\r\n            {\r\n                Frame = rect,\r\n                BackgroundColor = UIColor.Clear\r\n            };\r\n\r\n            canvasView.PaintSurface \u002B= (sender, e) =\u003E\r\n            {\r\n                var canvas = e.Surface.Canvas;\r\n                using (SKPaint paint = new SKPaint())\r\n                {\r\n                    canvas.Clear(SKColors.Transparent);\r\n\r\n\r\n                    var width = e.Info.Width;\r\n                    var height = e.Info.Height;\r\n                    float canvasMin = Math.Min(width, height);\r\n                    float svgMax = Math.Max(svg.Picture.CullRect.Width, svg.Picture.CullRect.Height);\r\n                    float scale = canvasMin / svgMax;\r\n                    var matrix = SKMatrix.MakeScale(scale, scale);\r\n\r\n                    canvas.DrawPicture(svg.Picture, ref matrix);\r\n                }\r\n            };\r\n\r\n            View.Add(canvasView);\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n### Basic Information\r\n\r\n- Version with issue: 1.60.0\r\n- IDE: Visual Studio for Mac 7.5.3.7\r\n- iOS:  Version: 11.12.0.4 (Visual Studio Community)\r\n- macOS:  10.13.5\r\n- Target Devices:\r\n  - iPadAir2Simulator\r\n  - iPad Air 2\r\n\r\n### Screenshots\r\n\r\n**Excepted Behavior**\r\n![screen shot 2018-07-23 at 12 04 03](https://user-images.githubusercontent.com/2940479/43067629-8ed81dba-8e70-11e8-8ab8-88a103a7d8a4.png)\r\n\r\n\r\n**Actual Behavior**\r\n![screen shot 2018-07-23 at 12 32 59](https://user-images.githubusercontent.com/2940479/43068963-933b4df6-8e74-11e8-8000-dcaee99a60b2.png)\r\n\r\n\r\n### Reproduction Link\r\nhttps://github.com/MazZilaaaa/XamarinSvg",
+  "author": {
+    "login": "MazZilaaaa",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area-Svg",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-07-23T09:57:41",
+  "updatedAt": "2020-08-15T00:19:32",
+  "closedAt": "2020-08-15T00:19:32",
+  "commentCount": 2,
+  "reactionCount": 0
+}

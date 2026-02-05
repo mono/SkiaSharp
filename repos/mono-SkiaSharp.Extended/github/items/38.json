@@ -1,0 +1,56 @@
+{
+  "number": 38,
+  "type": "pr",
+  "state": "closed",
+  "title": "Linear \u0026 Radial gradient / style handling fixes / default stroke-width value fixes",
+  "body": "1. Percentage stops support. Allows to render this SVG correctly: \r\n\r\n\u0060\u0060\u0060XML\r\n\u003C?xml version=\u00221.0\u0022 standalone=\u0022no\u0022 ?\u003E\r\n\u003Csvg width=\u0022120\u0022 height=\u0022240\u0022 xmlns=\u0022http://www.w3.org/2000/svg\u0022\u003E\r\n    \u003Cdefs\u003E\r\n        \u003ClinearGradient id=\u0022a\u0022\u003E\r\n            \u003Cstop offset=\u00220%\u0022 stop-color=\u0022red\u0022 /\u003E\r\n            \u003Cstop offset=\u002250%\u0022 stop-opacity=\u00220\u0022 /\u003E\r\n            \u003Cstop offset=\u0022100%\u0022 stop-color=\u0022#00f\u0022 /\u003E\r\n        \u003C/linearGradient\u003E\r\n        \u003ClinearGradient id=\u0022b\u0022 x2=\u00220\u0022 y2=\u00221\u0022\u003E\r\n            \u003Cstop offset=\u00220%\u0022 stop-color=\u0022red\u0022 /\u003E\r\n            \u003Cstop offset=\u002250%\u0022 stop-opacity=\u00220\u0022 /\u003E\r\n            \u003Cstop offset=\u0022100%\u0022 stop-color=\u0022#00f\u0022 /\u003E\r\n        \u003C/linearGradient\u003E\r\n    \u003C/defs\u003E\r\n    \u003Crect x=\u002210\u0022 y=\u002210\u0022 rx=\u002215\u0022 ry=\u002215\u0022 width=\u0022100\u0022 height=\u0022100\u0022 fill=\u0022url(#a)\u0022 /\u003E\r\n    \u003Crect x=\u002210\u0022 y=\u0022120\u0022 rx=\u002215\u0022 ry=\u002215\u0022 width=\u0022100\u0022 height=\u0022100\u0022 fill=\u0022url(#b)\u0022 /\u003E\r\n\u003C/svg\u003E\r\n\u0060\u0060\u0060\r\n\r\n2. Fixes https://github.com/mono/SkiaSharp.Extended/issues/25\r\n\r\n3. Set \u0060stroke-width\u0060 value to 1 by default (according to specs). Allows to render this correctly: \r\n\r\n\u0060\u0060\u0060XML\r\n\u003Csvg xmlns=\u0022http://www.w3.org/2000/svg\u0022 viewBox=\u00220 0 30 30\u0022\u003E\r\n  \u003Cg data-name=\u0022Ebene 2\u0022\u003E\r\n    \u003Cg data-name=\u0022Ebene 1\u0022\u003E\r\n      \u003Cpath fill=\u0022#0096cf\u0022 d=\u0022M15 1A14 14 0 1 1 1 15 14 14 0 0 1 15 1m0-1a15 15 0 1 0 15 15A15 15 0 0 0 15 0z\u0022/\u003E\r\n      \u003Cpath fill=\u0022none\u0022 stroke=\u0022#0096cf\u0022 stroke-miterlimit=\u002210\u0022 d=\u0022M15.18 15.79a.52.52 0 0 1-.38-.17L8.57 8.43a.49.49 0 0 1 0-.7.51.51 0 0 1 .71 0l6 6.9 5.2-2.45a.49.49 0 0 1 .66.24.5.5 0 0 1-.24.67l-5.54 2.61a.49.49 0 0 1-.18.09z\u0022/\u003E\r\n      \u003Cpath fill=\u0022#0096cf\u0022 d=\u0022M4 15.75H2.62a.5.5 0 0 1-.5-.5.5.5 0 0 1 .5-.5H4a.5.5 0 0 1 .5.5.5.5 0 0 1-.5.5zm23.57 0h-1.38a.5.5 0 0 1-.5-.5.5.5 0 0 1 .5-.5h1.38a.5.5 0 0 1 .5.5.5.5 0 0 1-.5.5zM15.1 4.66a.5.5 0 0 1-.5-.5V2.78a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v1.38a.5.5 0 0 1-.5.5zm0 23.57a.5.5 0 0 1-.5-.5v-1.38a.5.5 0 0 1 .5-.5.5.5 0 0 1 .5.5v1.38a.51.51 0 0 1-.5.5z\u0022/\u003E\r\n    \u003C/g\u003E\r\n  \u003C/g\u003E\r\n\u003C/svg\u003E\r\n\u0060\u0060\u0060\r\n\r\n4. Added stroke-linecap, stroke-linejoin, stroke-miterlimit support\r\n5. Improved \u0060use\u0060 element support (copying attributes)",
+  "author": {
+    "login": "daniel-luberda",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area-Svg",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "Version 1.68.0",
+  "createdAt": "2018-05-28T10:41:51",
+  "updatedAt": "2019-02-10T04:18:35",
+  "closedAt": "2018-11-12T20:01:01",
+  "commentCount": 9,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": false,
+  "merged": false,
+  "mergeableState": "dirty",
+  "baseBranch": "master",
+  "headBranch": "master",
+  "additions": 317,
+  "deletions": 68,
+  "changedFiles": 3,
+  "commits": 20,
+  "reviews": [
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2018-05-29T22:38:26"
+    },
+    {
+      "author": "mattleibow",
+      "state": "COMMENTED",
+      "submittedAt": "2018-05-29T22:39:06"
+    },
+    {
+      "author": "daniel-luberda",
+      "state": "COMMENTED",
+      "submittedAt": "2018-05-30T00:43:06"
+    },
+    {
+      "author": "daniel-luberda",
+      "state": "COMMENTED",
+      "submittedAt": "2018-10-31T11:26:17"
+    }
+  ]
+}

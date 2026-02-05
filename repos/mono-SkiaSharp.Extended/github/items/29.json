@@ -1,0 +1,18 @@
+{
+  "number": 29,
+  "type": "issue",
+  "state": "closed",
+  "title": "Rendering of \u003Ctspan\u003E element not working...",
+  "body": "Hi,\r\nI just tested a SVG produced by SVGMaker from a Microstation file. The file has produced the piece of following SVG...\r\n\u003Ctext font-family=\u0022Arial\u0022 font-size=\u002246\u0022 fill=\u0022#000000\u0022 font-weight=\u0022700\u0022 font-style=\u0022italic\u0022\u003E\r\n\u003Ctspan x=\u00227212,7243,7268,7296,7321,7339,7364\u0022 y=\u00223561\u0022\u003ERep\u00E8re \u003C/tspan\u003E\r\n...\r\n\u003C/text\u003E\r\nThe \u003Ctspan\u003E element is conform to SVG sp\u00E9cification, but the format of x coordinate is not taken into account in SkiaSharp SVG and is set to 0 (normal as far I saw in the source code). So all the texts defined are put at the left side of the SVG drawing....\r\n\r\nI have a temporary solution as I can force SVGMaker to draw text whether to use text, but I think it would be good to add implementation of the specification for text/tspan in the library.\r\n\r\nRegards.\r\n\r\nEric.\r\n",
+  "author": {
+    "login": "educos35",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-02-19T15:56:31",
+  "updatedAt": "2020-08-15T00:24:09",
+  "closedAt": "2020-08-15T00:24:09",
+  "commentCount": 1,
+  "reactionCount": 0
+}

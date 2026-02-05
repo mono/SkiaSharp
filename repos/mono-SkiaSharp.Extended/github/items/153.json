@@ -1,0 +1,23 @@
+{
+  "number": 153,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Lottie Animation Not Playing on Second Load",
+  "body": "**Description**\r\n\r\nI am using the package with a Xamarin Forms app and am using a Lottie animation on the loading page when logging in. The animation works great the first time I log in. But if I log out and log back in, the animation does not appear.\r\n\r\n**Code**\r\n\r\nLoading Page:\r\n\r\n\u003CContentPage.Content\u003E\r\n        \u003CGrid\r\n\t\t\tVerticalOptions=\u0022Center\u0022\r\n\t\t\tPadding=\u002210\u0022\u003E\r\n            \u003CGrid.RowDefinitions\u003E\r\n                \u003CRowDefinition\r\n\t\t\t\t\tHeight=\u0022200\u0022 /\u003E\r\n\t\t\t\t\u003CRowDefinition\r\n\t\t\t\t\tHeight=\u0022*\u0022 /\u003E\r\n\t\t\t\u003C/Grid.RowDefinitions\u003E\r\n            \u003CImage x:Name=\u0022imgLogo\u0022\r\n                WidthRequest=\u0022380\u0022\r\n                IsVisible=\u0022False\u0022\r\n                HeightRequest=\u0022380\u0022\r\n                HorizontalOptions=\u0022Center\u0022\r\n                Source=\u0022logo.png\u0022 /\u003E\r\n\r\n            \u003Ccontrols:SKLottieView x:Name=\u0022lottieView\u0022\r\n                                   AnimationLoaded=\u0022LottieView_AnimationLoaded\u0022\r\n                                   Source=\u0022brush-loader.json\u0022  \r\n                                   HeightRequest=\u0022200\u0022\r\n                                   WidthRequest=\u0022200\u0022\r\n                                   HorizontalOptions=\u0022Center\u0022\r\n                                   VerticalOptions=\u0022Center\u0022\r\n                                   IsAnimationEnabled=\u0022True\u0022/\u003E\r\n\r\n            \u003CLabel\r\n\t\t\t\tGrid.Row=\u00222\u0022\r\n\t\t\t\tHorizontalTextAlignment=\u0022Center\u0022\r\n                FontSize=\u002220\u0022\r\n\t\t\t\tText=\u0022{ grial:Translate StringLoading }\u0022 /\u003E\r\n\t\t\u003C/Grid\u003E\r\n\t\u003C/ContentPage.Content\u003E\r\n\r\n**Expected Behavior**\r\n\r\nThe animation should play every time the page is displayed on the app.\r\n\r\n**Actual Behavior**\r\n\r\nThe animation does not appear on future page loads after the animation has fully played once.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.0.0-preview.61\r\n- Last known good version:  Unsure\r\n- IDE:  Visual Studio 2022\r\n- Platform Target Frameworks: \r\n  - Android: 13\r\n  - iOS:  12.0\r\n- Target Devices:   Both iPhone and Android devices\r\n \r\n\u003C/details\u003E\r\n\r\n",
+  "author": {
+    "login": "Colipe1",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-11-03T19:37:03",
+  "updatedAt": "2022-11-04T21:20:47",
+  "closedAt": "2022-11-04T21:20:47",
+  "commentCount": 1,
+  "reactionCount": 0
+}

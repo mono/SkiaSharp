@@ -1,0 +1,31 @@
+{
+  "number": 282,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] MAUI SKLottieView doesn\u0027t get enabled",
+  "body": "**Description**\r\n\r\nIf you create a SKLottieView with IsAnimationEnabled=\u0022False\u0022, it won\u0027t get enabled even if you set IsAnimationEnabled=\u0022True\u0022 later from code behind.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n\u003Cskia:SKLottieView\r\n  x:Name=\u0022animationView\u0022\r\n  Source=\u0022animation.json\u0022\r\n  HeightRequest=\u002260\u0022\r\n  WidthRequest=\u002260\u0022\r\n  Progress=\u00220\u0022\r\n  IsAnimationEnabled=\u0022False\u0022\r\n  VerticalOptions=\u0022Center\u0022\r\n  HorizontalOptions=\u0022Center\u0022\u003E\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe animation status should be mutable. You should be able to set it to True/False to play/stop the animation. In Android works as expected.\r\n\r\n**Actual Behavior**\r\n\r\nIn iOS once animation created with IsAnimationEnabled=\u0022False\u0022, won\u0027t play again even after setting IsAnimationEnabled=\u0022True\u0022 from code behind.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp.Extended.UI.Maui 2.0.0 (Tried 3.0.0-preview.7 but my application just crashes)\r\n- Last known good version:  ?\r\n- IDE:  Microsoft Visual Studio 17.10.1\r\n- Platform Target Frameworks: \r\n  - Android: 28.0\r\n  - iOS:  14.0\r\n- Target Devices: \r\n  - Device iPhone 15 Plus iOS 17.4\r\n  - Simulator iPhone 15 Plus iOS 17.4\r\n  ",
+  "author": {
+    "login": "nk-alex",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2024-06-14T14:24:27",
+  "updatedAt": "2026-02-05T03:10:27",
+  "commentCount": 0,
+  "reactionCount": 1
+}

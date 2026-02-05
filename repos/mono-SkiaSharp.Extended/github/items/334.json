@@ -1,0 +1,37 @@
+{
+  "number": 334,
+  "type": "pr",
+  "state": "open",
+  "title": "[WIP] Fix performance issues with animations in Maui app",
+  "body": "Thanks for assigning this issue to me. I\u0027m starting to work on it and will keep this PR\u0027s description up to date as I form a plan and make progress.\n\n\u003C!-- START COPILOT ORIGINAL PROMPT --\u003E\n\n\n\n\u003Cdetails\u003E\n\n\u003Csummary\u003EOriginal prompt\u003C/summary\u003E\n\n\u003E \n\u003E ----\n\u003E \n\u003E *This section details on the original issue you should resolve*\n\u003E \n\u003E \u003Cissue_title\u003EVery poor performance with certain animations[BUG] \u003C/issue_title\u003E\n\u003E \u003Cissue_description\u003E**Description**\r\n\u003E \r\n\u003E I am porting a Xamarin.Forms App to Maui and therefor switched from the xamarin lottie plugin to SKottie. All animations are the same as in the Xamarin App but on some animations the screen rendering goes from 60 down to 12 fps or even lower. I uploaded one of those animations to test it yourself.\r\n\u003E \r\n\u003E The only thing I found so far is that it might have something to do with embedded images in those animations. Which has only been added recently so maybe there are still issues because of it. Those very same animations however run perfectly fine in my old App.\r\n\u003E \r\n\u003E I might have also found animations without embedded images that are causing issues like this but im still testing those. It is slowing down my Apps UI so much though that the user experience is heavily reduced due to these slow animations.\r\n\u003E Edit: Yes I did find one of my animations with multiples gradients but no embedded images to cause very poor performance too.\r\n\u003E \r\n\u003E **Expected Behavior**\r\n\u003E \r\n\u003E Animations should run smoothly without affecting the UI of the App.\r\n\u003E \r\n\u003E **Actual Behavior**\r\n\u003E Screen rendering goes way below 60 fps (on a 60Hz phone) and the whole UI feels sluggish. I measured as low is 6 fps.\r\n\u003E \r\n\u003E **Basic Information**\r\n\u003E \r\n\u003E - Version with issue: \r\n\u003E    - SkiaSharp(3.0.0-preview.3.1), \r\n\u003E    - SkiaSharp.Extended.UI.Maui(3.0.0-preview.7), \r\n\u003E    - SkiaSharp.Skottie(3.0.0-preview.3.1), \r\n\u003E    - SkiaSharp.Views.Maui.Controls(3.0.0-preview.3.1)\r\n\u003E - Last known good version:  none\r\n\u003E - IDE:  Visual Studio Professional 2022 v17.10.2\r\n\u003E - Platform Target Frameworks: \r\n\u003E   - Android: 34 \r\n\u003E   - iOS:  16\r\n\u003E - Target Devices: Tested on:\r\n\u003E   - Samsung Galaxy S9\r\n\u003E   - iPhone X\r\n\u003E   \r\n\u003E **Reproduction Link**\r\n\u003E \r\n\u003E Simplified Testproject: Press the button to get to the most problematic animations. All of this runs absolutely flawlessly in Xamarin, even on older Android Devices:\r\n\u003E \r\n\u003E https://github.com/Glomby/Maui-Skottie-Performance-Test\r\n\u003E \r\n\u003E https://app.lottiefiles.com/share/a34d4778-b012-4ca9-911c-5b45ea19788f\r\n\u003E \r\n\u003E \u003C/issue_description\u003E\n\u003E \n\u003E ## Comments on the Issue (you are @copilot in this section)\n\u003E \n\u003E \u003Ccomments\u003E\n\u003E \u003C/comments\u003E\n\u003E \n\n\n\u003C/details\u003E\n\n\n\n\u003C!-- START COPILOT CODING AGENT SUFFIX --\u003E\n\n- Fixes mono/SkiaSharp.Extended#283\n\n\u003C!-- START COPILOT CODING AGENT TIPS --\u003E\n---\n\n\uD83D\uDCA1 You can make Copilot smarter by setting up custom instructions, customizing its development environment and configuring Model Context Protocol (MCP) servers. Learn more [Copilot coding agent tips](https://gh.io/copilot-coding-agent-tips) in the docs.",
+  "author": {
+    "login": "Copilot",
+    "type": "Bot"
+  },
+  "labels": [],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2026-02-05T03:10:33",
+  "updatedAt": "2026-02-05T03:11:08",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": true,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "copilot/fix-slow-animations-performance",
+  "additions": 0,
+  "deletions": 0,
+  "changedFiles": 0,
+  "commits": 1,
+  "reviews": []
+}

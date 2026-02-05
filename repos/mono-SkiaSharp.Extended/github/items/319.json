@@ -1,0 +1,29 @@
+{
+  "number": 319,
+  "type": "pr",
+  "state": "closed",
+  "title": "Refactor GitHub Actions for GitHub Pages deployment",
+  "body": "This pull request updates the GitHub Actions workflow for documentation deployment, modernizing the process and improving security and reliability. The workflow now uses updated actions, sets explicit permissions for the GitHub token, and streamlines deployment to GitHub Pages.\r\n\r\n**Workflow modernization and deployment improvements:**\r\n\r\n* Updated the workflow to use newer versions of actions, including \u0060actions/checkout@v3\u0060 and \u0060actions/setup-dotnet@v3\u0060, and replaced the deprecated \u0060peaceiris/actions-gh-pages\u0060 with \u0060actions/deploy-pages@v4\u0060 for GitHub Pages deployment.\r\n* Added explicit permissions for the GitHub token to restrict access and enhance security during deployment (\u0060actions: read\u0060, \u0060pages: write\u0060, \u0060id-token: write\u0060).\r\n* Introduced concurrency control to ensure only one deployment runs at a time, preventing overlapping deployments but allowing in-progress runs to finish.\r\n* Changed the job name from \u0060deploy\u0060 to \u0060publish-docs\u0060 and set up the deployment environment for GitHub Pages, including the deployment URL output.\r\n* Updated the steps to install .NET 8.x, update the \u0060docfx\u0060 tool, build documentation, upload the artifact, and deploy to GitHub Pages using the latest recommended approach.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2025-10-13T21:28:09",
+  "updatedAt": "2025-10-13T21:42:32",
+  "closedAt": "2025-10-13T21:42:29",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2025-10-13T21:42:29",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "mattleibow-patch-1",
+  "additions": 231,
+  "deletions": 342,
+  "changedFiles": 7,
+  "commits": 3,
+  "reviews": []
+}

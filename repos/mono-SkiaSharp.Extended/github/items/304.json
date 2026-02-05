@@ -1,0 +1,22 @@
+{
+  "number": 304,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Trim warnings in XAML Compilation",
+  "body": "**Is there an existing issue for this?**\n- [x] I have searched the existing issues\n\n**Did you read the \u0022Reporting a bug\u0022 section on Contributing file?**\n- [x] I have read the \u0022Reporting a bug\u0022 section on Contributing file:\n  [https://github.com/CommunityToolkit/Maui/blob/main/CONTRIBUTING.md#reporting-a-bug](url)\n\n\n\n**Actual Behavior**\nWhen publishing an app there are severals Trim warnings related to XAML Compilation in SKConfettiViewResources, SKLottieViewResources and SKSurfaceViewResources in SkiaSharp.Extended\n\n**Expected Behavior**\nWhen publishing an app there are no Trims related to SKConfettiViewResources, SKLottieViewResources and SKSurfaceViewResources\n\n\n\n**Reproduction steps**\n1.  Download reproduction sample\n2. Publish for iOS using dotnet publish: \n \u0060\u0060\u0060\n   dotnet publish -f net9.0-ios -c Release -p:ArchiveOnBuild=true -p:RuntimeIdentifier=ios-arm64 SkiaSharp-TrimWarnings-3.116.0.csproj\n \u0060\u0060\u0060\n3. The Trim warnings should be generated.\n4. Attached the file with all the warnings generated during publish: [skia_trim_warnings_build.log](https://github.com/user-attachments/files/18883585/skia_trim_warnings_build.log)\n\n**Link to public project of reproduction**\n[https://github.com/mirekjuszczak/SkiaSharp-TrimWarnings-3.116.0](https://github.com/mirekjuszczak/SkiaSharp-TrimWarnings-3.116.0)\n  \n**Environment**\n  \n\u0060\u0060\u0060\n- .NET MAUI CommunityToolkit: 11.1.0\n- OS: MacOS 14.5 \n- .NET MAUI: 9.0.3\n\n\u0060\u0060\u0060\n\n**Anything else?**\n*No response*\n\n",
+  "author": {
+    "login": "mirekjuszczak",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-20T09:02:19",
+  "updatedAt": "2025-02-20T09:14:28",
+  "commentCount": 0,
+  "reactionCount": 0
+}

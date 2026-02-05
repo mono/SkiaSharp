@@ -1,0 +1,31 @@
+{
+  "number": 283,
+  "type": "issue",
+  "state": "open",
+  "title": "Very poor performance with certain animations[BUG] ",
+  "body": "**Description**\r\n\r\nI am porting a Xamarin.Forms App to Maui and therefor switched from the xamarin lottie plugin to SKottie. All animations are the same as in the Xamarin App but on some animations the screen rendering goes from 60 down to 12 fps or even lower. I uploaded one of those animations to test it yourself.\r\n\r\nThe only thing I found so far is that it might have something to do with embedded images in those animations. Which has only been added recently so maybe there are still issues because of it. Those very same animations however run perfectly fine in my old App.\r\n\r\nI might have also found animations without embedded images that are causing issues like this but im still testing those. It is slowing down my Apps UI so much though that the user experience is heavily reduced due to these slow animations.\r\nEdit: Yes I did find one of my animations with multiples gradients but no embedded images to cause very poor performance too.\r\n\r\n**Expected Behavior**\r\n\r\nAnimations should run smoothly without affecting the UI of the App.\r\n\r\n**Actual Behavior**\r\nScreen rendering goes way below 60 fps (on a 60Hz phone) and the whole UI feels sluggish. I measured as low is 6 fps.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: \r\n   - SkiaSharp(3.0.0-preview.3.1), \r\n   - SkiaSharp.Extended.UI.Maui(3.0.0-preview.7), \r\n   - SkiaSharp.Skottie(3.0.0-preview.3.1), \r\n   - SkiaSharp.Views.Maui.Controls(3.0.0-preview.3.1)\r\n- Last known good version:  none\r\n- IDE:  Visual Studio Professional 2022 v17.10.2\r\n- Platform Target Frameworks: \r\n  - Android: 34 \r\n  - iOS:  16\r\n- Target Devices: Tested on:\r\n  - Samsung Galaxy S9\r\n  - iPhone X\r\n  \r\n**Reproduction Link**\r\n\r\nSimplified Testproject: Press the button to get to the most problematic animations. All of this runs absolutely flawlessly in Xamarin, even on older Android Devices:\r\n\r\nhttps://github.com/Glomby/Maui-Skottie-Performance-Test\r\n\r\nhttps://app.lottiefiles.com/share/a34d4778-b012-4ca9-911c-5b45ea19788f\r\n\r\n",
+  "author": {
+    "login": "Glomby",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2024-06-20T13:39:09",
+  "updatedAt": "2026-02-05T03:10:28",
+  "commentCount": 1,
+  "reactionCount": 1
+}

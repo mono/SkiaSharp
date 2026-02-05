@@ -1,0 +1,18 @@
+{
+  "number": 91,
+  "type": "issue",
+  "state": "closed",
+  "title": "SVG not handing \u003Cg\u003E tag attributes correctly.",
+  "body": "Example SVG:\r\n\u0060\u0060\u0060\r\n\u003Csvg xmlns=\u0022http://www.w3.org/2000/svg\u0022\u003E\r\n \u003Cdefs\u003E\r\n  \u003ClinearGradient id=\u0022colorSea\u0022\u003E\u003Cstop offset=\u00220\u0022 stop-color=\u0022#C7E6FC\u0022/\u003E\u003C/linearGradient\u003E\r\n  \u003ClinearGradient id=\u0022colorForest\u0022\u003E\u003Cstop offset=\u00220\u0022 stop-color=\u0022#CCE699\u0022/\u003E\u003C/linearGradient\u003E\r\n  \u003ClinearGradient id=\u0022colorForestBorder\u0022\u003E\u003Cstop offset=\u00220\u0022 stop-color=\u0022#66CC00\u0022/\u003E\u003C/linearGradient\u003E\r\n \u003C/defs\u003E\r\n \u003Crect x=\u00220\u0022 y=\u00220\u0022 height=\u00221000\u0022 width=\u00221000\u0022 fill=\u0022url(#colorSea)\u0022/\u003E\r\n \u003Cg id=\u0022forests\u0022 fill=\u0022url(#colorForest)\u0022\u003E\r\n  \u003Cpolygon points=\u00220,0 0,500 500,500 500,000\u0022/\u003E\r\n  \u003Cg id=\u0022forestBorder\u0022 stroke=\u0022url(#colorForestBorder)\u0022\u003E\r\n   \u003Cline x1=\u0022000\u0022 y1=\u0022000\u0022 x2=\u0022000\u0022 y2=\u0022500\u0022/\u003E\r\n   \u003Cline x1=\u0022000\u0022 y1=\u0022500\u0022 x2=\u0022500\u0022 y2=\u0022500\u0022/\u003E\r\n   \u003Cline x1=\u0022500\u0022 y1=\u0022500\u0022 x2=\u0022500\u0022 y2=\u0022000\u0022/\u003E\r\n   \u003Cline x1=\u0022500\u0022 y1=\u0022000\u0022 x2=\u0022000\u0022 y2=\u0022000\u0022/\u003E\r\n  \u003C/g\u003E\r\n \u003C/g\u003E\r\n\u003C/svg\u003E\r\n\u0060\u0060\u0060\r\n\r\nThe polygon should get the attribute \u0060fill=\u0022url(#colorForest)\u0022\u0060 and the lines should get the attributes \u0060fill=\u0022url(#colorForest)\u0022 stroke=\u0022url(#colorForestBorder)\u0022\u0060\r\ng attributes should propagate down.\r\n\r\nExpected as rendered in webbrowser on the left, actual SkiaSharp on the right\r\n\r\n![firefox_2020-08-09_21-10-13](https://user-images.githubusercontent.com/3768165/89739895-bbd41c80-da84-11ea-8167-fb81cc85607f.png)\r\n\r\n",
+  "author": {
+    "login": "dedmen",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-09T19:10:22",
+  "updatedAt": "2020-08-15T00:07:22",
+  "closedAt": "2020-08-15T00:07:21",
+  "commentCount": 5,
+  "reactionCount": 0
+}

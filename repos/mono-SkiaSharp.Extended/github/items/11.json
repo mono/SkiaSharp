@@ -1,0 +1,23 @@
+{
+  "number": 11,
+  "type": "issue",
+  "state": "closed",
+  "title": "Strange rendering of text and tspan when using text-anchor and baseline-shift",
+  "body": "I am currently using SkiaSharp.SVG 1.59.0 and observed some rendering problems with respect to text-anchor and baseline-shift properties.\r\n\r\nSee the following example svg:\r\n\u0060\u0060\u0060xml\r\n\u003C?xml version=\u00221.0\u0022 standalone=\u0022no\u0022 ?\u003E\r\n\u003Csvg xmlns=\u0022http://www.w3.org/2000/svg\u0022 fill=\u0022white\u0022 version=\u00221.1\u0022\u003E\r\n\r\n    \u003Ctext x=\u0022350\u0022 y=\u002250\u0022 style=\u0022fill: #000000; font-size: 24px; text-anchor: start; \u0022\u003ENormal \u003Ctspan style=\u0022baseline-shift: -12px;\u0022\u003Esub\u003C/tspan\u003E NORMAL \u003Ctspan style=\u0022baseline-shift: 12px;\u0022\u003Esuper\u003C/tspan\u003E\u003C/text\u003E\r\n    \r\n    \u003Ctext x=\u0022350\u0022 y=\u0022100\u0022 style=\u0022fill: #000000; font-size: 24px; text-anchor: middle; \u0022\u003ENormal \u003Ctspan style=\u0022baseline-shift: -12px;\u0022\u003Esub\u003C/tspan\u003E NORMAL \u003Ctspan style=\u0022baseline-shift: 12px;\u0022\u003Esuper\u003C/tspan\u003E\u003C/text\u003E\r\n    \r\n    \u003Ctext x=\u0022350\u0022 y=\u0022150\u0022 style=\u0022fill: #000000; font-size: 24px; text-anchor: end; \u0022\u003ENormal \u003Ctspan style=\u0022baseline-shift: -12px;\u0022\u003Esub\u003C/tspan\u003E NORMAL \u003Ctspan style=\u0022baseline-shift: 12px;\u0022\u003Esuper\u003C/tspan\u003E\u003C/text\u003E\r\n    \r\n    \u003Cline x1=\u0022350\u0022 x2 =\u0022 350\u0022 y1=\u002250\u0022 y2=\u0022150\u0022 stroke=\u0022black\u0022 stroke-width=\u00221\u0022/\u003E\r\n\u003C/svg\u003E\r\n\u0060\u0060\u0060\r\n\r\nWhen you open this svg in a brrowser (I used Chrome here), you see the following result:\r\n\r\n![image](https://user-images.githubusercontent.com/2646473/28825001-dc1a2402-76c4-11e7-8619-5093cad34b48.png)\r\n\r\nWhen you render it using SKSvg class (I used WPF here), you get this result:\r\n![image](https://user-images.githubusercontent.com/2646473/28825075-12832444-76c5-11e7-8c3b-b2e684201508.png)\r\n\r\nIt seems like the text-anchor attribute is only working as expected, if its value is \u0027start\u0027. The baseline-shift seems to be ignored completely. \r\n\r\nI had a look in the source code and for me it seems, that SKTextAlignment does not correspond to svg text-anchor positions (as mapped in [ReadTextAlignment](https://github.com/mono/SkiaSharp.Extended/blob/master/SkiaSharp.Extended.Svg/source/SkiaSharp.Extended.Svg.Shared/SKSvg.cs#L976)).\r\nBaseline-Shift seems to be not implemented at all. \r\n\r\nAny idea on how to improve things? I\u0027d be happy to send a PR, as soon as it is clear what to do.",
+  "author": {
+    "login": "codedevote",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area-Svg",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2017-08-01T12:34:09",
+  "updatedAt": "2020-08-15T00:23:48",
+  "closedAt": "2020-08-15T00:20:54",
+  "commentCount": 4,
+  "reactionCount": 2
+}

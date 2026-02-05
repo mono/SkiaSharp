@@ -1,0 +1,29 @@
+{
+  "number": 209,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add AnimationFinished event to SKLottieView",
+  "body": "**Description of Change**\r\n\r\nThis PR adds an \u0060AnimationCompleted\u0060 event to \u0060SKLottieView\u0060 to indicate when the animation is no longer playing.\r\n\r\nThis event fires after the \u0060IsComplete\u0060 is set to \u0060true\u0060 and thus means that it only fires after all the repeats are finished. So an infinite repeating animation will never be complete nor will the event fire. But for a X repeat (including 0 repeats) animation, the event will fire after all the repeats have happened.\r\n\r\n**Bugs Fixed**\r\n\r\n- Fixes #161\r\n\r\n**API Changes**\r\n\r\nAdded:\r\n\r\n\u0060\u0060\u0060cs\r\nclass SKLottieView {\r\n    event EventHandler AnimationCompleted;\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Behavioral Changes**\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [x] Has tests (if omitted, state reason in description)\r\n- [x] Has samples (if omitted, state reason in description)\r\n- [x] Rebased on top of main at time of PR\r\n- [x] Changes adhere to coding standard\r\n- [x] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-09-01T15:50:16",
+  "updatedAt": "2023-09-01T18:36:48",
+  "closedAt": "2023-09-01T18:36:44",
+  "commentCount": 0,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2023-09-01T18:36:44",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/anim-finished",
+  "additions": 67,
+  "deletions": 9,
+  "changedFiles": 7,
+  "commits": 3,
+  "reviews": []
+}

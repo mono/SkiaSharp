@@ -1,0 +1,29 @@
+{
+  "number": 118,
+  "type": "pr",
+  "state": "closed",
+  "title": "Add a SKLottieView to play Lottie animations",
+  "body": "**Description of Change**\r\n\r\nThis is the initial set of views and types needed to play Lottie animations from just a single line of XAML:\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003Ccontrols:SKLottieView Source=\u0022Lottie/trophy.json\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\n**API Changes**\r\n\r\n\u0060\u0060\u0060cs\r\npublic class SKLottieView : SKAnimatedSurfaceView\r\n{\r\n    public static readonly BindableProperty SourceProperty;\r\n    public static readonly BindableProperty DurationProperty;\r\n    public static readonly BindableProperty ProgressProperty;\r\n    public static readonly BindableProperty IsCompleteProperty;\r\n\r\n    public SKLottieView();\r\n\r\n    public SKLottieImageSource? Source { get; set; }\r\n    public TimeSpan Duration { get; }\r\n    public TimeSpan Progress { get; set; }\r\n    public bool IsComplete { get; }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\npublic class SKLottieImageSource : Element\r\n{\r\n    public bool IsEmpty { get; }\r\n}\r\n\r\npublic class SKFileLottieImageSource : SKLottieImageSource\r\n{\r\n    public string? File { get; set; }\r\n}\r\n\r\npublic class SKStreamLottieImageSource : SKLottieImageSource\r\n{\r\n    public Func\u003CCancellationToken, Task\u003CStream?\u003E\u003E? Stream { get; set; }\r\n}\r\n\r\npublic class SKUriLottieImageSource : SKLottieImageSource\r\n{\r\n    public Uri? Uri { get; set; }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Has samples (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-19T15:14:01",
+  "updatedAt": "2023-04-15T21:07:19",
+  "closedAt": "2022-06-29T00:20:25",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2022-06-29T00:20:25",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/lottie",
+  "additions": 1400,
+  "deletions": 7,
+  "changedFiles": 54,
+  "commits": 19,
+  "reviews": []
+}

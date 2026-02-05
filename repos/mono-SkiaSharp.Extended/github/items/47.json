@@ -1,0 +1,31 @@
+{
+  "number": 47,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to center icons within a view (possible error with measure/draw text?)",
+  "body": "I\u0027m trying to create a view which will allow me to put a single glyph, centered, on the screen.  My goal then is to determine where I should tell SkiaSharp to begin drawing the glyph, which has consumed significantly more time than I had expected.  It is entirely possible that I misunderstand how SkiaSharp is working, but I suspect that there is something wrong with the values being provided.  Below is my OnPaintSurface, and the project itself is attached below.\r\n\r\nThe 2 phenomenon that make me believe it is a problem with SkiaSharp itself are:\r\n\r\n1) inconsistent math: In the image below (the code is below) I draw a circle at the center of the view. I draw a box representing the width and height of the measured text, and then I draw the text.  My math seems correct for making the box offsets, but the text doesn\u0027t even hit the box at all, seeming to be inconsistently attached to it.  My understanding of the input parameters seems to suggest that at the very least the icon should begin drawing at the bottom-left corner of the rectangle, but I seem to drastically misunderstand something.\r\n![image](https://user-images.githubusercontent.com/3473919/43509934-5b59896e-9574-11e8-909d-2e9b13b01de7.png)\r\n\r\n2) Failed lookups: On the right side there is a globe icon with no box, this is because {{fa-globe}} seems to have no bounding box (the SKTextRunLookup comes up with a 0 bounding box both for the pre-icon and the icon itself). It is worth noting that when I remove \u0022TextEncoding = SKTextEncoding.GlyphId\u0022 the globe gets a bounding box, and all the bounding boxes change, but they are all still wrong.\r\n\r\n\r\nI then have 2 questions:\r\n1) is there something dumb that I am doing here?\r\n2) is there a way that I can \u0022drawtext\u0022 specifying the center instead of the start position?\r\n\r\n    public class SKIconLabel : SKCanvasView\r\n    {\r\n\r\n        protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n        {\r\n            base.OnPaintSurface(e);\r\n\r\n            var w = e.Info.Width;\r\n            var h = e.Info.Height;\r\n            var midX = e.Info.Rect.MidX;\r\n            var midY = e.Info.Rect.MidY;\r\n            var canvas = e.Surface.Canvas;\r\n            canvas.Clear();\r\n\r\n            var ScaledTextSize = Math.Min(w, h) * (float).4;\r\n\r\n\r\n            SKPaint outlinePaint = new SKPaint\r\n            {\r\n                IsStroke = true,\r\n                Color = SKColors.Red\r\n            };\r\n\r\n            SKPaint iconPaint = new SKPaint\r\n            {\r\n                TextSize = ScaledTextSize,\r\n                IsAntialias = true,\r\n                TextEncoding = SKTextEncoding.GlyphId\r\n            };\r\n\r\n            float textWidth = 0;\r\n            float textHeight = 0;\r\n            var runs = SKTextRun.Create(Icon, SKTextRunLookup.Instance);\r\n\r\n            var hasBounds = false;\r\n            foreach (var rn in runs)\r\n            {\r\n                var bounds = new SKRect();\r\n                var sz = iconPaint.MeasureText(rn.Text, ref bounds);\r\n\r\n                textWidth \u002B= bounds.Width;\r\n                textHeight \u002B= bounds.Height;\r\n\r\n                if (bounds.Height \u003E 0)\r\n                {\r\n                    canvas.DrawRect(midX - textWidth/2, midY - textHeight/2, textWidth, textHeight, outlinePaint);\r\n                    hasBounds = true;\r\n                }\r\n            }\r\n            if (!hasBounds)\r\n            {\r\n                Debug.WriteLine($\u0022Failed to find bounds for {this.Icon}\u0022);\r\n            }\r\n\r\n            canvas.DrawIconifiedText(Icon, midX - textWidth/2, midY - textHeight/2, iconPaint);\r\n\r\n            outlinePaint.IsStroke = false;\r\n            canvas.DrawCircle(midX, midY, 5, outlinePaint);\r\n        }\r\n\r\n        public static BindableProperty IconProperty =\r\n            BindableProperty.Create(nameof(Icon), typeof(string), typeof(SKIconLabel), \u0022{{fa-plus color=000000}}\u0022,\r\n                BindingMode.OneWay, null, (bindable, oldValue, newValue) =\u003E\r\n                {\r\n                    var ctrl = (SKIconLabel)bindable;\r\n                    ctrl.Icon = (string)newValue;\r\n                });\r\n        public string Icon\r\n        {\r\n            get { return (string)GetValue(IconProperty); }\r\n            set\r\n            {\r\n                if (value == null) return;\r\n\r\n                SetValue(IconProperty, value);\r\n                InvalidateSurface();\r\n            }\r\n        }\r\n    }\r\n\r\nAttached project, relevant sources are Controls/SKIconLabel and AboutPage.xaml\r\n[IconTest.zip](https://github.com/mono/SkiaSharp.Extended/files/2248635/IconTest.zip)",
+  "author": {
+    "login": "pfaucon",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area-Iconify",
+      "color": "0052cc"
+    },
+    {
+      "name": "azdo-sync",
+      "color": "ffffff"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-08-01T08:31:43",
+  "updatedAt": "2020-08-15T00:28:19",
+  "closedAt": "2020-08-15T00:28:19",
+  "commentCount": 3,
+  "reactionCount": 0
+}

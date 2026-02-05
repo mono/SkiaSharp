@@ -1,0 +1,23 @@
+{
+  "number": 141,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Empty transparent PNG while working on a big SVG file.",
+  "body": "**Description**\r\n\r\nUnable to load and crop a big svg picture to a png rectangle image.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nprivate string ConvertSVGToPNGRectangleWithSkiaSharpExtended(string path, int leftMargin, int topMargin, int rightMargin, int bottomMargin)\r\n{\r\n    var svg = new SkiaSharp.Extended.Svg.SKSvg();\r\n    svg.Load(path);\r\n\r\n    // build image from picture\r\n    var imageInfo = new SKImageInfo((int)svg.Picture.CullRect.Width, (int)svg.Picture.CullRect.Height);\r\n    using (var surface = SKSurface.Create(imageInfo))\r\n    using (var canvas = surface.Canvas)\r\n    {\r\n        canvas.DrawPicture(svg.Picture);\r\n        canvas.Flush();\r\n\r\n        // create another image with cropped size\r\n        using (var svgImage = surface.Snapshot())\r\n        {\r\n            var croppedImageInfo = new SKImageInfo(\r\n                (int)(svg.Picture.CullRect.Width - leftMargin - rightMargin),\r\n                (int)(svg.Picture.CullRect.Height - topMargin - bottomMargin));\r\n            using (var croppedSurface = SKSurface.Create(croppedImageInfo))\r\n            using (var croppedCanvas = croppedSurface.Canvas)\r\n            {\r\n                // draw the svg image into this cropped image size\r\n                croppedCanvas.DrawImage(svgImage, new SKRect(leftMargin, topMargin, croppedImageInfo.Width, croppedImageInfo.Height), croppedImageInfo.Rect);\r\n                path = Path.ChangeExtension(path, \u0022.png\u0022);\r\n                using (var bmp = croppedSurface.Snapshot())\r\n                using (var pngImage = bmp.Encode(SKEncodedImageFormat.Png, 100))\r\n                using (var stream = File.OpenWrite(path))\r\n                {\r\n                    pngImage.SaveTo(stream);\r\n                }\r\n            }\r\n        }\r\n    }\r\n    return path;\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nA rectangle with the drawing on a transparent background.\r\n\r\n**Actual Behavior**\r\n\r\nAn empty rectangle with a transparent background.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: \r\n\r\n\u0060\u0060\u0060\r\n#region assembly SkiaSharp.Extended.Svg, Version=1.60.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756\r\n// C:\\Users\\olivier.matrot\\.nuget\\packages\\skiasharp.svg\\1.60.0\\lib\\netstandard2.0\\SkiaSharp.Extended.Svg.dll\r\n// Decompiled with ICSharpCode.Decompiler 7.1.0.6543\r\n#endregion\r\n\u0060\u0060\u0060\r\n\r\n- Last known good version:  \r\n- IDE:  Visual Studio. \r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  11. \r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\nI can allow you access to a private repo to get access to my big svg file. Just send me an email to **omatrot_arobase_free.fr**.\r\n\r\n",
+  "author": {
+    "login": "omatrot",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-09-02T06:44:13",
+  "updatedAt": "2023-09-01T18:57:45",
+  "closedAt": "2023-09-01T18:57:45",
+  "commentCount": 1,
+  "reactionCount": 0
+}

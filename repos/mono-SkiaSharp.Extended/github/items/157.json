@@ -1,0 +1,17 @@
+{
+  "number": 157,
+  "type": "issue",
+  "state": "open",
+  "title": "Programmatically Create SKLottieView in MAUI",
+  "body": "All of the examples I have seen assign the source in XAML; I have tried to do it in code without success:\r\n\r\n\u0060\u0060\u0060\r\n            var source = new SKFileLottieImageSource()\r\n            { \r\n                File = String.Format(\u0022{0}.json\u0022, Name)\r\n            };\r\n            \r\n            var view = new SKLottieView()\r\n            {\r\n                Source = source,\r\n                WidthRequest = 400,\r\n                HeightRequest = 400,\r\n                BackgroundColor = Colors.Red,\r\n                RepeatMode = SKLottieRepeatMode.Restart,\r\n                RepeatCount = Loop ? -1 : 0,\r\n                //Scale = Scale,\r\n                StyleId = ID\r\n            };\r\n\u0060\u0060\u0060\r\n\r\nThe view renders to the screen but the animation does not appear.\r\n\r\nI see in the source that the file is ultimately loaded using _FileSystem.OpenAppPackageFileAsync_ and so I tested that with the file path I used in SKFileLottieImageSource, and it worked.\r\n\r\nAlso, I know the Lottie file I am using works, as it did fine in the Xamarin Forms app that we are attempting to migrate to MAUI.\r\n",
+  "author": {
+    "login": "heiser",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-12-09T19:06:41",
+  "updatedAt": "2024-08-02T18:22:55",
+  "commentCount": 10,
+  "reactionCount": 5
+}

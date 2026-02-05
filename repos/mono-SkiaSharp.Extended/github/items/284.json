@@ -1,0 +1,23 @@
+{
+  "number": 284,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Fails to load the animation after the resource dictionary is switched",
+  "body": "**Description**\r\n\r\nAfter switching theme with .Net Maui causes the animation to no longer work but after an app restart it works.\r\n\r\nWhere the lottie animation should render there is just a blank space but there are no errors or no crashes.\r\n\r\nIOS appears to be ok and it is just Android with the issue.\r\n\r\n**Code**\r\nAll the code does is switch out the ResourceDictionary that is used.\r\n\u0060\u0060\u0060csharp\r\nApplication.Current!.Resources = themeSwitch.IsToggled ? new DarkTheme() : new LightTheme();\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nWould still expect the lottie animation to play after changing the theme.\r\n\r\n**Actual Behavior**\r\n\r\nWhere the lottie animation should render there is just a blank space but there are no errors or no crashes.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.0.0\r\n- Last known good version:  unknown\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Android: 13\r\n  - iOS:  17.5\r\n- Target Devices:   \r\n  - Device Samsung Galaxy S20\r\n  - Device iPhone 11 Pro\r\n  \r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/kycuff/LottieIssueApp\r\n\r\n",
+  "author": {
+    "login": "kycuff",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-18T14:49:36",
+  "updatedAt": "2024-11-05T14:43:36",
+  "closedAt": "2024-11-05T14:43:36",
+  "commentCount": 0,
+  "reactionCount": 1
+}

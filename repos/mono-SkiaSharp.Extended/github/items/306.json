@@ -1,0 +1,31 @@
+{
+  "number": 306,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] .net 9 MAUI SkiaSharp.SKMatrix SkiaSharp.SKMatrix.MakeTranslation(single,single) missing",
+  "body": "I am not sure if this is a bug or not....\n\nI upgraded to .net 9 MAUI.\nThen I updated the nugets based on this information: https://learn.microsoft.com/en-us/dotnet/maui/migration/skiasharp?view=net-maui-9.0\n\nI am trying to open an SVG and now when I call svgLoad(stream) below I am getting the following error:\n\nSystem.MissingMethodException: Method not found: SkiaSharp.SKMatrix SkiaSharp.SKMatrix.MakeTranslation(single,single)\nat SkiaSharp.Extended.Svg.SKSvg.LoadElements(IEnumerable\u00601 elements, SKCanvas canvas, SKPaint stroke, SKPaint fill)\nat SkiaSharp.Extended.Svg.SKSvg.Load(XDocument xdoc)\nat SkiaSharp.Extended.Svg.SKSvg.Load(XmlReader reader)\nat SkiaSharp.Extended.Svg.SKSvg.Load(Stream stream)\nat Myproject.Views.MyView.CanvasView_PaintSurface\n\nI am not sure what I am doing wrong or how to fix this. I have spent hours looking on google and cannot find the correct answer. I had updated to the latest nugets but thats when the problems started. So I downgraded and I am still having issues. I am hoping someone can point me on the right direction or explain what I need to do\n\nBelow are the nugets I am using and my current code\n\n\u0060 SKSvg? svg = new();\n\nusing (Stream? stream = GetType().Assembly.GetManifestResourceStream(resourceId))\n{\nif (stream != null)\n{\ntry\n{\nsvg.Load(stream);\n}\ncatch (Exception ex)\n{\n\n     var message = ex;\n }\n\n \n ReticleLayoutUtility.DrawLayout(info, _canvas, svg, _vm);\n _vm.UpdateProperties();\n}\n}\u0060\n",
+  "author": {
+    "login": "sisaacks",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "question",
+      "color": "cc317c"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-02-22T18:07:00",
+  "updatedAt": "2026-02-05T03:10:28",
+  "commentCount": 3,
+  "reactionCount": 1
+}

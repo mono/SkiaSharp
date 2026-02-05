@@ -1,0 +1,18 @@
+{
+  "number": 77,
+  "type": "issue",
+  "state": "closed",
+  "title": "Material Icons not working",
+  "body": "I am trying to get material icons showing in SkiSharp using the \u0060DrawIconifiedText\u0060 method, unfortunately nothing is showing for material icon but I\u0027m just getting an exception that is below:  \r\n\r\n\u0060\u0060\u0060csharp\r\n  at SkiaSharp.SKPaint.MeasureText (System.Byte[] text) [0x00035] in \u003C7b3361fea08e47bfab3c9b5b39496736\u003E:0 \r\n  at SkiaSharp.Extended.Iconify.SKCanvasExtensions.DrawText (SkiaSharp.SKCanvas canvas, System.Collections.Generic.IEnumerable\u00601[T] runs, System.Single x, System.Single y, SkiaSharp.SKPaint paint) [0x00101] in \u003C95817d3483074abe9d3f681eaac00888\u003E:0 \r\n  at SkiaSharp.Extended.Iconify.SKCanvasExtensions.DrawIconifiedText (SkiaSharp.SKCanvas canvas, System.String text, System.Single x, System.Single y, SkiaSharp.Extended.Iconify.SKTextRunLookup lookup, SkiaSharp.SKPaint paint) [0x00034] in \r\n\u003C95817d3483074abe9d3f681eaac00888\u003E:0 \r\n  at SkiaSharp.Extended.Iconify.SKCanvasExtensions.DrawIconifiedText (SkiaSharp.SKCanvas canvas, System.String text, System.Single x, System.Single y,\r\n SkiaSharp.SKPaint paint) [0x00009] in \u003C95817d3483074abe9d3f681eaac00888\u003E:0 \r\n  at MyApp.PageModels.DashboardPageModel.drawCheckInGauge (System.Int32 todaysExpectedCheckIn, System.Int32 actualCheckins, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs sKPaintSurfaceEventArgs) [0x0031e] in C:\\Users\\Admin\\Xenia\\Client\\MyApp\\MyApp\\MyApp\\PageModels\\DashboardPageModel.cs:469 06-05 21:01:56.437 D/Mono    (29993): Searching for \u0027sk_paint_measure_text\u0027.\r\n\u0060\u0060\u0060\r\n\r\nMy code is:\r\n\r\n\u0060\u0060\u0060csharp\r\n                using (SKPaint skPaint = new SKPaint())\r\n                {\r\n                    skPaint.IsAntialias = true;\r\n                    skPaint.TextAlign = SKTextAlign.Center;\r\n                    skPaint.TextSize = 33;\r\n\r\n                    // Drawing image over Radial Gauge\r\n                    canvas.DrawIconifiedText(\u0022{{arrow-collapse-right}}\u0022, Xc, Yc \u002B _progressUtils.getFactoredHeight(lineHeight3), skPaint);\r\n                }\r\n\u0060\u0060\u0060\r\n\r\nI\u0027ve also added in my App.css in the\r\n\r\n\u0060\u0060\u0060csharp\r\n           // Register the font\r\n            SKTextRunLookup.Instance.AddMaterialIcons();\r\n            SKTextRunLookup.Instance.AddMaterialDesignIcons();\r\n\u0060\u0060\u0060\r\n\r\nUsing XF: 4.0.0.482894\r\nSkiaSharp.Extended.Iconify 1.60.0\r\nSkiaSharp.Extended.Iconify.MaterialDesignIcons 2.0.0\r\nSkiaSharp.Extended.Iconify.MaterialIcons 4.0.0\r\nSkiaSharp.Views.Forms 1.68.0\r\n\r\nAny help is appreciated as I have checked other sample that were using FontAwesome and it looks like I\u0027m following the same approach.",
+  "author": {
+    "login": "LeoJHarris",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-06-05T22:14:01",
+  "updatedAt": "2019-06-17T06:05:09",
+  "closedAt": "2019-06-17T06:05:08",
+  "commentCount": 2,
+  "reactionCount": 0
+}

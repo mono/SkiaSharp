@@ -1,0 +1,22 @@
+{
+  "number": 289,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Lottie crashes when starting in Windows",
+  "body": "**Description**\r\n\r\nWhen you start an application, with a lottie file, this happens \r\n\r\n\u003Cimg width=\u0022661\u0022 alt=\u0022image\u0022 src=\u0022https://github.com/user-attachments/assets/2b0cc9c2-e550-4cea-ab38-3c4373f71472\u0022\u003E\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003CGrid RowDefinitions=\u0022Auto,*,*\u0022\u003E\r\n    \u003CImage\r\n        Margin=\u002240\u0022\r\n        Aspect=\u0022Center\u0022\r\n        Source=\u0022metro_wind_200.png\u0022\r\n        VerticalOptions=\u0022Start\u0022 /\u003E\r\n    \u003Cskia:SKLottieView\r\n        Grid.Row=\u00221\u0022\r\n        HeightRequest=\u0022300\u0022\r\n        HorizontalOptions=\u0022Center\u0022\r\n        Source=\u0022metrowind.json\u0022\r\n        VerticalOptions=\u0022Start\u0022\r\n        WidthRequest=\u0022400\u0022\u003E\r\n        \u003Cskia:SKLottieView.Behaviors\u003E\r\n            \u003Cmct:EventToCommandBehavior\r\n                Command=\u0022{Binding GotoHomeCommand}\u0022\r\n                EventName=\u0022AnimationCompleted\u0022 /\u003E\r\n        \u003C/skia:SKLottieView.Behaviors\u003E\r\n    \u003C/skia:SKLottieView\u003E\r\n    \u003CLabel\r\n        Grid.Row=\u00222\u0022\r\n        FontAttributes=\u0022Bold\u0022\r\n        FontSize=\u002218\u0022\r\n        HorizontalOptions=\u0022Center\u0022\r\n        Text=\u0022{x:Static rex:AppResource.Energy}\u0022\r\n        VerticalOptions=\u0022Start\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\n        public static MauiApp CreateMauiApp() {\r\n            var builder = MauiApp.CreateBuilder();\r\n            builder\r\n                .UseMauiApp\u003CApp\u003E()\r\n#if WINDOWS\r\n                .UseMauiCommunityToolkitMaps(\u0022xxx\u0022)\r\n#elif ANDROID || IOS\r\n           .UseMauiMaps()\r\n#endif\r\n                .UseSkiaSharp()\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe app would start normally\r\n\r\n**Actual Behavior**\r\n\r\nThe app crashes\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  latest\r\n- Last known good version:  latest\r\n- IDE:  Visual Studio 2022 17.11.5\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows10.0.19041.0\r\n- Target Devices:   Windows 11\r\n  - Device Windows 11\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nNet 8\r\nMaui 8.0.1\r\nEdition\tWindows 11 Education\r\nVersion\t23H2\r\nInstalled on\t\u200E10/\u200E24/\u200E2022\r\nOS build\t22631.4317\r\nExperience\tWindows Feature Experience Pack 1000.22700.1041.0\r\n\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n![image](https://github.com/user-attachments/assets/1dc65c54-90f3-4faf-860a-a6e3b2f8e278)\r\n\r\n\r\n**Reproduction Link**\r\n\r\n(https://github.com/eduardoagr/PopUpError)\r\n\r\n",
+  "author": {
+    "login": "eduardoagr",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-10-10T07:27:56",
+  "updatedAt": "2024-11-11T18:54:19",
+  "commentCount": 3,
+  "reactionCount": 0
+}

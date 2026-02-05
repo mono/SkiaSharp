@@ -1,0 +1,18 @@
+{
+  "number": 27,
+  "type": "issue",
+  "state": "closed",
+  "title": "Default stroke-width scales incorrectly.",
+  "body": "The line\u0027s stroke-width does not scale correctly when not specified. See example below. The SVG specification indicates stroke-width should default to a value of 1. Setting the stroke-width=\u00221\u0022\r\nattribute appears to be working correctly.\r\n\r\n**SVG**\r\n\u0060\u003Csvg viewBox=\u00220 0 20 20\u0022\u003E\u0060\r\n\u0060\u003Cline x1=\u00220\u0022 y1=\u00220\u0022 x2=\u002220\u0022 y2=\u002220\u0022 stroke=\u0022#000000\u0022 /\u003E\u0060\r\n\u0060\u003Cline x1=\u002220\u0022 y1=\u00220\u0022 x2=\u00220\u0022 y2=\u002220\u0022 stroke=\u0022#000000\u0022 /\u003E\u0060\r\n\u0060\u003C/svg\u003E\u0060\r\n\r\n**Expected Results**\r\n_20 x 20_\r\n![expected-20](https://user-images.githubusercontent.com/10568040/34580642-8c1dc4ba-f142-11e7-978d-d900800a77ac.png)\r\n_100 x 100_\r\n![expected-100](https://user-images.githubusercontent.com/10568040/34580650-902403f8-f142-11e7-9e4b-eb3892618dce.png)\r\n\r\n\r\nRendered with W3 and Chrome\r\n(https://www.w3schools.com/graphics/tryit.asp?filename=trysvg_stroke0)\r\n\r\n**Actual Results**\r\n_20 x 20_\r\n![actual-20](https://user-images.githubusercontent.com/10568040/34580652-944d29be-f142-11e7-9699-4409fbdd9e63.png)\r\n_100 x 100_\r\n![actual-100](https://user-images.githubusercontent.com/10568040/34580659-98554f00-f142-11e7-8432-cb2ca9eb9898.png)\r\n\r\nRendered with the following code:\r\n\u0060public static SKImage ToSKImage(this SkiaSharp.Extended.Svg.SKSvg svg, SKSizeI size)\u0060\r\n\u0060{\u0060\r\n\u0060var scaleX = size.Width / svg.CanvasSize.Width;\u0060\r\n\u0060var scaleY = size.Height / svg.CanvasSize.Height;\u0060\r\n\u0060var transform = SKMatrix.MakeScale(scaleX, scaleY);\u0060\r\n\u0060return SKImage.FromPicture(svg.Picture, size, transform);\u0060\r\n\u0060}\u0060",
+  "author": {
+    "login": "iansteed",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-01-04T19:31:07",
+  "updatedAt": "2022-02-05T09:53:18",
+  "closedAt": "2020-08-15T00:23:40",
+  "commentCount": 3,
+  "reactionCount": 0
+}

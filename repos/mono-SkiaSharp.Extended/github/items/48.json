@@ -1,0 +1,23 @@
+{
+  "number": 48,
+  "type": "issue",
+  "state": "closed",
+  "title": "rendering svg in xamarin form resulting in black square",
+  "body": "I am trying to print svg pictures on my xamarin forms app. I am using SkiaSharp. I implemented a component using a Bindable property to get the byte[] of the svg and I draw it in the component.\r\n\r\n    public static readonly BindableProperty ImageProperty = BindableProperty.Create(nameof(Image), typeof(byte[]), typeof(SvgCanvas));\r\n    public byte[] Image\r\n       {\r\n          get =\u003E (byte[])GetValue(ImageProperty);\r\n          set\r\n         {\r\n            if (Image == value)\r\n            {\r\n                return;\r\n            }\r\n\r\n            SetValue(ImageProperty, value);\r\n\r\n            CanvasView.InvalidateSurface();\r\n         }\r\n    }\r\n\r\n     private void OnPainting(object sender, SKPaintSurfaceEventArgs args)\r\n     {\r\n        SKSurface surface = args.Surface;\r\n        SKCanvas canvas = surface.Canvas;\r\n\r\n        int width = args.Info.Width;\r\n        int height = args.Info.Height;\r\n\r\n        // clear the surface\r\n        canvas.Clear(SKColors.White);\r\n\r\n        // the page is not visible yet\r\n        if (Image == null)\r\n        {\r\n            return;\r\n        }\r\n\r\n        SKSvg svg = new SKSvg(new SKSize(width, height));\r\n        using (MemoryStream ms = new MemoryStream(Image))\r\n        {\r\n            svg.Load(ms);\r\n        }\r\n\r\n        // draw the svg\r\n       // canvas.DrawPicture(svg.Picture, ref matrix);\r\n        canvas.DrawPicture(svg.Picture);\r\n     }\r\n\r\nIt looks like the Picture is loaded but only a black square is displayed on my view...\r\n\r\nMy component is called like this in my page: (Picture is a byte[])\r\n\r\n     \u003Ccontrols:SvgCanvas Image=\u0022{Binding Picture}\u0022 /\u003E\r\n\r\nDid somebody had the same issue? Maybe an encoding problem?\r\n\r\nI am kind of lost..",
+  "author": {
+    "login": "Cheelax",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area-Svg",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-08-22T11:49:46",
+  "updatedAt": "2021-10-06T20:56:03",
+  "closedAt": "2020-08-15T00:20:12",
+  "commentCount": 11,
+  "reactionCount": 4
+}

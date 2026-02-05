@@ -1,0 +1,23 @@
+{
+  "number": 160,
+  "type": "issue",
+  "state": "closed",
+  "title": "Bind Lottie Image Source",
+  "body": "I\u0027m writing a game where I want to show a random Lottie image when a child gets a question right.\r\n\r\nI\u0027m trying to do something like this to auto trigger the animation when the \u0027source\u0027 is set (in this example via \u0027LottieImage\u0027.\r\n\r\nThe AnimationLoaded never seems to trigger.  Am I approaching this wrong?\r\n\r\n\u0060\u0060\u0060\r\n            \u003Cskia:SKLottieView\r\n                  IsVisible=\u0022{Binding Path=LottieImage, Converter={StaticResource TextNotNullOrEmptyToBool}}\u0022\r\n                  Source=\u0022{Binding Path=LottieImage}\u0022\r\n                  RepeatCount=\u0022-1\u0022\r\n                  HorizontalOptions=\u0022Fill\u0022\r\n                  VerticalOptions=\u0022Fill\u0022\u003E\r\n            \u003C/skia:SKLottieView\u003E\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\n    public class AnimationOnLoad : Behavior\u003CSKLottieView\u003E\r\n    {\r\n        protected override void OnAttachedTo(SKLottieView control)\r\n        {\r\n            control.AnimationLoaded \u002B= Control_AnimationLoaded;\r\n            base.OnAttachedTo(control);\r\n        }\r\n\r\n        protected override void OnDetachingFrom(SKLottieView control)\r\n        {\r\n            control.AnimationLoaded -= Control_AnimationLoaded;\r\n            base.OnDetachingFrom(control);\r\n        }\r\n\r\n        private void Control_AnimationLoaded(object sender, EventArgs e)\r\n        {\r\n            var control = sender as SKLottieView;\r\n\r\n            if (control != null)\r\n            {\r\n                control.IsAnimationEnabled = true;\r\n            }\r\n        }\r\n    }\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "pvoelker",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "question",
+      "color": "cc317c"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-01-22T00:10:41",
+  "updatedAt": "2023-11-02T05:14:28",
+  "closedAt": "2023-01-23T22:08:00",
+  "commentCount": 11,
+  "reactionCount": 0
+}
