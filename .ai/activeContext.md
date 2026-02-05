@@ -6,7 +6,7 @@
 ## Current Focus
 
 **Phase**: Phase 6 - Multi-Repository Support (v0.11.0)
-**Status**: In Progress - Core implementation complete
+**Status**: In Progress - Infrastructure complete, GenerateCommand needs update
 
 ## Recent Changes
 
@@ -24,10 +24,10 @@
    - `SyncGitHubCommand` uses repo-scoped cache path
    - `SyncCommunityCommand` uses repo-scoped cache path
    - `SyncNuGetCommand` uses repo-scoped cache path (primary repo only)
-4. ✅ **Updated GenerateCommand**:
-   - Loads repos from config (defaults to SkiaSharp, SkiaSharp.Extended, skia)
-   - Merges issues/PRs from all repos with repo field
-   - Aggregates stats across repos
+4. 🚧 **GenerateCommand** (partial):
+   - Currently processes primary repo only (mono/SkiaSharp)
+   - Models include repo field set to "mono/SkiaSharp"
+   - **TODO**: Refactor to load data from all repo folders and merge
 5. ✅ **Updated Dashboard UI**:
    - Added Repository filter dropdown to Issues page
    - Added Repository filter dropdown to Pull Requests page
@@ -37,6 +37,13 @@
    - Syncs community from SkiaSharp and SkiaSharp.Extended
    - Syncs NuGet from SkiaSharp only
    - Engagement sync from primary repo (SkiaSharp) due to rate limits
+
+### Next Steps
+1. Refactor `GenerateCommand` to:
+   - Load repos config
+   - Iterate through all repo folders
+   - Merge issues/PRs with correct repo field from each folder
+   - Aggregate stats across repos
 
 ### 2026-02-05 (Issue/PR Trend Charts - v0.10.0) ✅
 1. ✅ **Added `Merged` and `MergedAt` fields to PR sync**:
