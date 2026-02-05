@@ -72,7 +72,7 @@ else
                         <option value="0">All Time</option>
                     </select>
                 </div>
-                <ApexChart TItem="ChartPoint"
+                <ApexChart @ref="_chart" TItem="ChartPoint"
                            Options="_chartOptions"
                            Height="300">
                     <ApexPointSeries TItem="ChartPoint"
@@ -244,6 +244,7 @@ else
     private List<TriagedPullRequest> _filteredPRs = [];
 
     // Chart data
+    private ApexChart<ChartPoint>? _chart;
     private List<ChartPoint> _chartData = [];
     private int SelectedTimeRange { get; set; } = 24; // Default: 2 years
     private ApexChartOptions<ChartPoint> _chartOptions = new()
@@ -284,7 +285,7 @@ else
         try 
         { 
             _trendData = await DataService.GetTrendDataAsync();
-            UpdateChartData();
+            await UpdateChartData();
         }
         catch { /* Trend data not yet available */ }
 
@@ -292,7 +293,7 @@ else
         _loading = false;
     }
 
-    private void UpdateChartData()
+    private async Task UpdateChartData()
     {
         if (_trendData is null) return;
         
@@ -303,6 +304,9 @@ else
         _chartData = trends
             .Select(t => new ChartPoint(t.Month, t.PrsCreated, t.PrsMerged))
             .ToList();
+        
+        if (_chart is not null)
+            await _chart.UpdateSeriesAsync(true);
     }
 
     private void FilterByCategory(string category)
