@@ -30,5 +30,78 @@
   "deletions": 37,
   "changedFiles": 22,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:28:04.6605402Z",
+    "reactions": [
+      {
+        "user": "daltonks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:28:04.660544Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:28:04.6605446Z"
+      },
+      {
+        "user": "agneszitte",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:28:04.6605449Z"
+      },
+      {
+        "user": "carldebilly",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:28:04.6605452Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 685260798,
+        "author": "ghost",
+        "body": "[![CLA assistant check](https://cla.opensource.microsoft.com/pull/badge/signed)](https://cla.opensource.microsoft.com/mono/SkiaSharp?pullRequest=1487) \u003Cbr/\u003EAll CLA requirements met.",
+        "createdAt": "2020-09-02T03:07:56",
+        "reactions": []
+      },
+      {
+        "id": 685285584,
+        "author": "mattleibow",
+        "body": "Very nice! Thanks! \n\nWhat is the reason for switching from the Marshal to the managed array? I have no problem just wondering the reason. ",
+        "createdAt": "2020-09-02T04:22:54",
+        "reactions": []
+      },
+      {
+        "id": 685675814,
+        "author": "jeromelaban",
+        "body": "\u003E Very nice! Thanks!\r\n\u003E \r\n\u003E What is the reason for switching from the Marshal to the managed array? I have no problem just wondering the reason.\r\n\r\nThis is for two reasons. The first is because the array needs to be memset to zero, and the second is looping in managed code can be quite slow with the interpreter, even when using pointers. Pinning the managed array and providing it to Skia is very fast.\r\n\r\nAlso the build is failing, but I cannot see the errors. What are they ?",
+        "createdAt": "2020-09-02T11:42:16",
+        "reactions": []
+      },
+      {
+        "id": 686798945,
+        "author": "mattleibow",
+        "body": "\u003E Also the build is failing, but I cannot see the errors. What are they ?\r\n\r\nOh, nothing special... just the bot losing connection to the internet \uD83D\uDE06 Nothing weird for a cloud machine. One might think these are real physical servers \uD83E\uDD14 ",
+        "createdAt": "2020-09-03T22:37:37",
+        "reactions": []
+      },
+      {
+        "id": 686814033,
+        "author": "mattleibow",
+        "body": "@jeromelaban thanks for this PR!\r\n\r\nI have merged it into a local branch (#1489) so that CI gets more power \uD83D\uDE04 \r\nThings are looking good and it should be all good to merge into master when CI finishes.",
+        "createdAt": "2020-09-03T23:26:18",
+        "reactions": [
+          {
+            "user": "agneszitte",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:28:04.610309Z"
+          },
+          {
+            "user": "agneszitte",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:28:04.6103094Z"
+          }
+        ]
+      }
+    ]
+  }
 }

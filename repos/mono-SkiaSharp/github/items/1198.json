@@ -77,5 +77,121 @@
       "state": "COMMENTED",
       "submittedAt": "2020-04-15T12:50:16"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:28:46.7797066Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 608142608,
+        "author": "mattleibow",
+        "body": "Also with the docs, we can do that in separate PR because I have to generate it \u0022manually\u0022... I don\u0027t think I got it going perfect just yet. ",
+        "createdAt": "2020-04-02T23:22:12",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:28:43.5280127Z"
+          }
+        ]
+      },
+      {
+        "id": 611242843,
+        "author": "ziriax",
+        "body": "You told me to wait a bit with this PR, you had to fix some things with text alignment.\r\n\r\nI am not exactly sure how this impacts this PR, but whenever you think I can make progress on this, please ping.\r\n",
+        "createdAt": "2020-04-08T23:19:59",
+        "reactions": []
+      },
+      {
+        "id": 611285116,
+        "author": "mattleibow",
+        "body": "@Ziriax terribly sorry, that was a separate thing that your PR made me notice while reviewing. Go right ahead with this. Sorry for the confusion. \r\n\r\nI have no idea why I was thinking aloud in my comment. I think sometimes I type what my brain is thinking when it is just an internal discussion.",
+        "createdAt": "2020-04-09T02:00:00",
+        "reactions": []
+      },
+      {
+        "id": 614057897,
+        "author": "ziriax",
+        "body": "I think I resolved all requests, but I\u0027m not able to run any unit tests, see #1227.\r\n\r\nThe PR to fix that doesn\u0027t seem to work anymore with the latest changes\r\n\r\n\r\n",
+        "createdAt": "2020-04-15T14:00:00",
+        "reactions": []
+      },
+      {
+        "id": 614190117,
+        "author": "mattleibow",
+        "body": "Awesome, I\u0027ll have a look at all this goodness!\r\n\r\nCould I ask that you enable commits to your PR from the contributors? This way I don\u0027t have to bother you when merging from master or any trivial changes needed to merge.\r\nhttps://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork\r\n\r\nBasically, I\u0027ll be able to add a commit to the PR without having to do a PR on your branch.",
+        "createdAt": "2020-04-15T17:59:39",
+        "reactions": []
+      },
+      {
+        "id": 614216597,
+        "author": "ziriax",
+        "body": "\u003E Awesome, I\u0027ll have a look at all this goodness!\r\n\u003E \r\n\u003E Could I ask that you enable commits to your PR from the contributors? This way I don\u0027t have to bother you when merging from master or any trivial changes needed to merge.\r\n\u003E https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/allowing-changes-to-a-pull-request-branch-created-from-a-fork\r\n\u003E \r\n\u003E Basically, I\u0027ll be able to add a commit to the PR without having to do a PR on your branch.\r\n\r\nStrange, I can\u0027t find the checkbox \u0060Allow edits from maintainers\u0060 anywhere... \r\n\r\nI just gave you global write access to the fork, hope that helps for now.\r\n",
+        "createdAt": "2020-04-15T18:50:34",
+        "reactions": []
+      },
+      {
+        "id": 619415435,
+        "author": "mattleibow",
+        "body": "@Ziriax I just want to check before I start reviewing and merging that you are happy with the overall features and functionality at this point? ie: are you working on any local changes?",
+        "createdAt": "2020-04-25T17:41:10",
+        "reactions": []
+      },
+      {
+        "id": 619430305,
+        "author": "ziriax",
+        "body": "\u003E @Ziriax I just want to check before I start reviewing and merging that you are happy with the overall features and functionality at this point? ie: are you working on any local changes?\r\n\r\nYes, I think it is a good starting point. One extra handy parameter could be an \u0060otherSide\u0060 parameter, that picks the other side of the path. But that can be handled by reversing the path itself. So I think we\u0027re okay.\r\n\r\nSo no I\u0027m not doing any work on this PR.\r\n\r\nI\u0027m almost ready with the first PR for the image resampler. Thanks for the \u0060System.Numerics\u0060 nuget tip. Would be nice if Microsoft also released a stub package for \u0060System.Runtime.Intrinsics\u0060 that just returned \u0060false\u0060 for every possible SIMD architecture, just avoid having to use \u0060#ifdef\u0060 stuff :)\r\n\r\n",
+        "createdAt": "2020-04-25T19:36:18",
+        "reactions": []
+      },
+      {
+        "id": 621347901,
+        "author": "mattleibow",
+        "body": "@Ziriax I can\u0027t seem to push to your branch or fork, but I created a PR: https://github.com/smartphoto-group/SkiaSharp/pull/1\r\n\r\nAlso, I merged in from the \u0022develop\u0022  branch, so after you merge this PR, you can also change the base to \u0022develop\u0022. This is the new, official v2 branch for releasing.\r\n\r\n- I quite liked the \u0060FromArrayPool\u0060 helper you added, so I moved it to the \u0060Utils\u0060 class and then went and changed existing code to use it.\r\n- I took the two extension methods and moved it into the respective classes. The one that returns a path went into \u0060SKFont\u0060 alongside the \u0060GetTextPath\u0060 as \u0060GetTextPathOnPath\u0060. The \u0060SKTextBlob\u0060 one moved into that class as \u0060CreatePathPositioned\u0060.\r\n- I renamed a few members from \u0060GetPath\u0060 to \u0060GetTextPath\u0060 and \u0060GetGlyphPath\u0060, so now things fit nicely together. \r\n\r\nOnce you merge that PR, CI can run the last tests and we can merge this in! \r\n\r\nThanks for the work! This brings the backwards compat of v2 to 100% (less the 3 missing color types)",
+        "createdAt": "2020-04-29T17:16:54",
+        "reactions": []
+      },
+      {
+        "id": 621412704,
+        "author": "ziriax",
+        "body": "Seems to a bug in Github, I am the owner of the fork, but the \u0060\u0060[x] allow edits from maintainers\u0060  is simply missing. Github seems to think I\u0027m not the owner for some reason. I\u0027ll check your PR. I gave you read/write access, but maybe that was not enough, I lifted the permissions to \u0022maintainer\u0022\r\n",
+        "createdAt": "2020-04-29T19:22:12",
+        "reactions": []
+      },
+      {
+        "id": 621416300,
+        "author": "ziriax",
+        "body": "I merged your PR and changed the base to \u0060develop\u0060. Thanks for the kind words for \u0060FromArrayPool\u0060 \uD83D\uDE09 That was just because I often forget to use a \u0060finally\u0060. Note that in the old days, the mono compiler didn\u0027t like a \u0060struct\u0060 that was \u0060IDisposable\u0060 (I noticed that in Unity3D), the struct got boxed, but maybe that is improved now. ",
+        "createdAt": "2020-04-29T19:29:42",
+        "reactions": []
+      },
+      {
+        "id": 621456616,
+        "author": "mattleibow",
+        "body": "Oh, that is a new feature of C# 8.0!\r\nhttps://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#disposable-ref-structs\r\n\r\n",
+        "createdAt": "2020-04-29T20:50:25",
+        "reactions": []
+      },
+      {
+        "id": 621465148,
+        "author": "ziriax",
+        "body": "\u003E Oh, that is a new feature of C# 8.0!\r\n\u003E https://docs.microsoft.com/en-us/dotnet/csharp/whats-new/csharp-8#disposable-ref-structs\r\n\r\nOh, amazing, thanks for the tip! I\u0027m going to take a closer look at your code, I can learn from it. \r\n\r\nI haven\u0027t been doing a lot of C# during a year or so, mostly C\u002B\u002B and Typescript, so I have catching up to do \uD83D\uDE09 ",
+        "createdAt": "2020-04-29T21:08:36",
+        "reactions": []
+      },
+      {
+        "id": 628336396,
+        "author": "mattleibow",
+        "body": "I think this is finally ready to merge! Just waiting on CI and then we will be good to go!",
+        "createdAt": "2020-05-14T01:45:32",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:28:46.7301645Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -62,5 +62,154 @@
       "state": "COMMENTED",
       "submittedAt": "2020-04-02T23:14:09"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:28:28.6415949Z",
+    "reactions": [
+      {
+        "user": "AndersMad",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.6415976Z"
+      },
+      {
+        "user": "ziriax",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.6415982Z"
+      },
+      {
+        "user": "kekekeks",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.6415985Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.641599Z"
+      },
+      {
+        "user": "xqrzd",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.6415993Z"
+      },
+      {
+        "user": "juanpaexpedite",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.6415996Z"
+      },
+      {
+        "user": "CodingBlob",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.6415998Z"
+      },
+      {
+        "user": "hawkerm",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:28:28.6416Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 608139230,
+        "author": "mattleibow",
+        "body": "Due to \u0060SKCanvas.DrawTextOnPath\u0060 being dropped from the native code, it has to be added back. Thanks to @Ziriax, we have a good implementation in https://github.com/mono/SkiaSharp/pull/1198",
+        "createdAt": "2020-04-02T23:13:06",
+        "reactions": []
+      },
+      {
+        "id": 612028334,
+        "author": "ziriax",
+        "body": "Is it expected that I can\u0027t run the unit tests? \r\n\r\nI get undeterministic crashes with the latest version #dbfa12b644099e78cc4e46e226daba332f204f01 in \u0060dev/update-skia\u0060 branch. \r\n\r\nSince the downloadable externals don\u0027t seem to be compatible, I compiled the native bits myself. \r\n\r\nI\u0027m on Windows 10 x64.\r\n\r\nI use \u0060dotnet test\u0060 to run the .NET Core unit tests.\r\n\r\nAter some random number of tests I get \u0060\u0060\u0060The active test run was aborted. Reason: Test host process crashed Test Run Aborted.\u0060\u0060\u0060. Sometimes I immediately get an access violation exception.\r\n\r\nI\u0027m running this on an AMD CPU with 16 cores / 32 hyperthreads, so maybe this triggers a race condition?\r\n\r\nOr maybe I compiled the native bits incorrectly (although I didn\u0027t get any errors)\r\n",
+        "createdAt": "2020-04-10T13:28:27",
+        "reactions": []
+      },
+      {
+        "id": 612058122,
+        "author": "mattleibow",
+        "body": "There is sometimes a concurrency issue. This is also in master - which is why there is no stable of 1.68.2 yet.\r\n\r\nIs there a stack trace or anything to indicate which one?",
+        "createdAt": "2020-04-10T14:40:12",
+        "reactions": []
+      },
+      {
+        "id": 612423648,
+        "author": "ziriax",
+        "body": "\u003E There is sometimes a concurrency issue. This is also in master - which is why there is no stable of 1.68.2 yet.\r\n\u003E \r\n\u003E Is there a stack trace or anything to indicate which one?\r\n\r\nMy specific problems were related to #1227 \r\n\r\nI provided a PR #1228   for this.\r\n\r\nThese were not multi-threaded related, except the WGL deadlock I always have on all my machines, but that might be an driver bug on Windows...\r\n",
+        "createdAt": "2020-04-11T13:39:58",
+        "reactions": []
+      },
+      {
+        "id": 612938321,
+        "author": "Gillibald",
+        "body": "I gave this a try with current Avalonia master and it worked out well with software rendering. Only \u0060SKPaint.BreakText\u0060 didn\u0027t work but that\u0027s not an issue. I had no luck with the GPU backend.",
+        "createdAt": "2020-04-13T15:06:19",
+        "reactions": []
+      },
+      {
+        "id": 612945663,
+        "author": "mattleibow",
+        "body": "\u003E I gave this a try with current Avalonia master and it worked out well with software rendering. \r\n\r\nAWESOME! Was this the preview NuGet or did you build your own?\r\n\r\n\u003E Only \u0060SKPaint.BreakText\u0060 didn\u0027t work but that\u0027s not an issue. \r\n\r\nYes, This and a few others members are no longer around. But this will be added back soon. Already have a PR for another missing member #1198 \r\n\r\n\u003E I had no luck with the GPU backend.\r\n\r\nCrashes? Exceptions? No rendering?\r\n\r\n",
+        "createdAt": "2020-04-13T15:22:07",
+        "reactions": []
+      },
+      {
+        "id": 612947297,
+        "author": "Gillibald",
+        "body": "My own build. I tried the m83 branch. That probably needs some updates to the enum mappings. I will try the older branch soon.",
+        "createdAt": "2020-04-13T15:25:51",
+        "reactions": []
+      },
+      {
+        "id": 612947724,
+        "author": "Gillibald",
+        "body": "Had no issues building with Clang 10",
+        "createdAt": "2020-04-13T15:26:48",
+        "reactions": []
+      },
+      {
+        "id": 613064103,
+        "author": "mattleibow",
+        "body": "@Gillibald  yeah, the m38 was just hacked together to test the \u0060SKPlatformEffect\u0060 on the GPU. Very specific case. Seems we might be getting a nice fragment shader support in that one. Looks to be \u0022working\u0022 so far, just needs a bit more love on the API. And then fix the enums since they changed things again there... But, it compiled without too much hassle.\r\n\r\nAnd nice to see clang 10 is working. ",
+        "createdAt": "2020-04-13T19:47:43",
+        "reactions": []
+      },
+      {
+        "id": 619074020,
+        "author": "Gillibald",
+        "body": "In my opinion SKFont should only measure and break spans of glyphs. Supplying a string to these methods leads to errors. This only works for text that doesn\u0027t need extra shaping when you supply a string. ",
+        "createdAt": "2020-04-24T15:16:58",
+        "reactions": []
+      },
+      {
+        "id": 619079195,
+        "author": "mattleibow",
+        "body": "@Gillibald I agree. I just have to add it back for backwards compat \uD83D\uDE22 \r\n\r\nHowever... I can just keep SKFont to be glyph-only... \r\n\r\nDoesn\u0027t the \u0060MeasureText\u0060 fall into the same category as \u0060GetGlyphWidths\u0060 and \u0060CountGlyphs\u0060? They also take strings.\r\n\r\nFinally, even though you and I know that we need to get glyphs, many people just want to use simple .NET strings as text...",
+        "createdAt": "2020-04-24T15:25:41",
+        "reactions": []
+      },
+      {
+        "id": 619081160,
+        "author": "Gillibald",
+        "body": "Y all these methods should follow this logic. I consider SKFont a low level component. SKPaint can expose overloads that take a string. SKFont doesn\u0027t need that and should do better. Maybe we should document it somehow that this only works for basic scenarios and link to the SkShaper component.\r\n\r\nEdit: This also doesn\u0027t handle surrogate pairs if I am not mistaken but that might be wrong. ",
+        "createdAt": "2020-04-24T15:29:05",
+        "reactions": []
+      },
+      {
+        "id": 619089540,
+        "author": "mattleibow",
+        "body": "@Gillibald \r\n\u003E This also doesn\u0027t handle surrogate pairs\r\n\r\nI think it does, which is actually quite nice (or maybe I am mistaken): https://github.com/google/skia/blob/chrome/m80/src/utils/SkUTF.cpp#L70-L94\r\n\r\nAnd I think I agree with that logic of keeping \u0060SKFont\u0060 low-level and \u0060SKPaint\u0060 as the \u0022more general\u0022 usage.",
+        "createdAt": "2020-04-24T15:43:20",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:28:28.5913702Z"
+          },
+          {
+            "user": "hypeartist",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:28:28.5913706Z"
+          }
+        ]
+      }
+    ]
+  }
 }

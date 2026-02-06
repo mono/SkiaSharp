@@ -13,5 +13,101 @@
   "createdAt": "2020-04-18T14:21:38",
   "updatedAt": "2020-09-16T10:57:16",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:27:35.351961Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 615911717,
+        "author": "mattleibow",
+        "body": "This is interesting... I\u0027ll investigate. But this might also be a question for https://groups.google.com/forum/#!forum/skia-discuss as they may now of any internal changes.\r\n\r\nMaybe it is the codec? Maybe it is the pixel data?\r\nMight be interesting to draw this with v1 and then save the raw bytes to a file and then upgrade to v2 and compare. If they are different, it may be how the conversions work in the pixel writing... But, the fact that you say that it works in modern browsers makes me wonder if something in the encoded file has changed. Maybe only now they included the colorspace and only the new browsers can see it. Or it might actually be the png. Did you try the others, like webp and jpeg?\r\n\r\nBut thanks for the issue. If it is a new \u0022feature\u0022 then at least we have a heads up. And if it is a bug, then we can track any changes.",
+        "createdAt": "2020-04-18T17:49:52",
+        "reactions": []
+      },
+      {
+        "id": 616081458,
+        "author": "ziriax",
+        "body": "Yes, the first thing I did was to compare both PNG files. These are very different. Strangely enough, copying the color space data from the correct PNG to the bad one didn\u0027t fix this... But I have to dig deeper, and indeed ask in Skia because this is not a SkiaSharp issue it seems.\r\n\r\nJPEG and WebP seem to work, and copying the PNG to a F16 sRGB bitmap and then saving also works.\r\n\r\nBut I think you are right, most likely they now copy the linear colorspace info to the PNG, and WIC most likely doesn\u0027t understand this.  \r\n\r\nSo this seems like a Windows bug :-)\r\n\r\n\r\n ",
+        "createdAt": "2020-04-19T09:06:06",
+        "reactions": []
+      },
+      {
+        "id": 616191256,
+        "author": "mattleibow",
+        "body": "Oh... Did you actually test on other platforms? Maybe attach the png and then I can test if you don\u0027t have all the bits.",
+        "createdAt": "2020-04-19T17:34:32",
+        "reactions": []
+      },
+      {
+        "id": 616201517,
+        "author": "ziriax",
+        "body": "No I only tested this on Windows. I\u0027m trying to reproduce it via remote desktop, but I can\u0027t, the PNG that looked too dark yesterday looks fine via remote desktop! So maybe this is because of color profiles on my monitors. Will know as soon as I go back to the office.\r\n",
+        "createdAt": "2020-04-19T18:26:01",
+        "reactions": []
+      },
+      {
+        "id": 617619142,
+        "author": "ziriax",
+        "body": "This the PNG that is too dark on Windows (it will display correctly in your browser).\r\n\r\n![output](https://user-images.githubusercontent.com/2389359/79956284-38180500-8480-11ea-801c-81dd44f98d81.png)\r\n\r\nI\u0027m trying to encode this on Linux too, but having a hard time building the latest version.\r\n\r\n\r\n",
+        "createdAt": "2020-04-22T08:02:14",
+        "reactions": []
+      },
+      {
+        "id": 617707244,
+        "author": "mattleibow",
+        "body": "\u003E This the PNG that is too dark on Windows (it will display correctly in your browser).\r\n\r\nI see the difference... crazy!\r\n\r\n\u003E I\u0027m trying to encode this on Linux too, but having a hard time building the latest version.\r\n\r\nJust open another issue if you are having problems building... Maybe I need to update docs or maybe there is a bug somewhere in my script.",
+        "createdAt": "2020-04-22T10:59:43",
+        "reactions": []
+      },
+      {
+        "id": 617707527,
+        "author": "mattleibow",
+        "body": "Ooh, GIMP popped this up when opening:\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/79974446-a5845f80-8499-11ea-8b9e-f8815d59858b.png)\r\n",
+        "createdAt": "2020-04-22T11:00:23",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:27:34.3580543Z"
+          }
+        ]
+      },
+      {
+        "id": 617713099,
+        "author": "ziriax",
+        "body": "I was about to try the same, lol. \r\n\r\nI\u0027m now opening this image with WIC, to see what it reports...\r\n\r\n\r\n",
+        "createdAt": "2020-04-22T11:13:55",
+        "reactions": []
+      },
+      {
+        "id": 617715987,
+        "author": "ziriax",
+        "body": "Okay, when I try to create a WIC color space transform from the embedded PNG color profile to sRGB, I get the exception:\r\n\r\n\u0060HRESULT: [0x800707DB], Message: The specified color profile is invalid.\u0060\r\n\r\nI will ask around in the Google Skia mailing list.\r\n\r\n",
+        "createdAt": "2020-04-22T11:19:50",
+        "reactions": []
+      },
+      {
+        "id": 617952775,
+        "author": "mattleibow",
+        "body": "FYI: https://groups.google.com/forum/#!topic/skia-discuss/b8JtsaOw7_o",
+        "createdAt": "2020-04-22T18:29:10",
+        "reactions": []
+      },
+      {
+        "id": 693321107,
+        "author": "ziriax",
+        "body": "FYI: The \u0060in.jpeg\u0060 image is a four channel image, most likely either CMYK or YCCK.\r\n\r\nIt can\u0027t be decoded into RGB with the \u0022official\u0022 JPEG decoder from either libjpeg9 or libjpegturbo.\r\n\r\nSo I guess what happens is that Skia, GIMP and Chrome decode this into a 4 channel RGBA, and when saving, A is lost. Could you try to save as PNG and see if the image indeed contains alpha?\r\n\r\nIt seems the JPEG decoders need to be modified to understand special markers exported by software like Adobe Illustrator etc (as is the case with this \u0060in.jpeg\u0060)\r\n\r\nA related very old related heated discussion: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=718604\r\n\r\n\r\n",
+        "createdAt": "2020-09-16T10:35:44",
+        "reactions": []
+      },
+      {
+        "id": 693330793,
+        "author": "ziriax",
+        "body": "FYI: This is the exif info of \u0060in.jpeg\u0060\r\n\r\n\u0060\u0060\u0060\r\nExifTool Version Number         : 10.80\r\nFile Name                       : in.jpeg\r\nDirectory                       : .\r\nFile Size                       : 227 kB\r\nFile Modification Date/Time     : 1979:12:31 22:00:00\u002B01:00\r\nFile Access Date/Time           : 2020:09:16 12:35:01\u002B02:00\r\nFile Inode Change Date/Time     : 2020:09:16 12:07:55\u002B02:00\r\nFile Permissions                : rwxrwxrwx\r\nFile Type                       : JPEG\r\nFile Type Extension             : jpg\r\nMIME Type                       : image/jpeg\r\nX Resolution                    : 600\r\nDisplayed Units X               : inches\r\nY Resolution                    : 600\r\nDisplayed Units Y               : inches\r\nXMP Toolkit                     : Adobe XMP Core 5.0-c060 61.134777, 2010/02/12-17:32:00\r\nFormat                          : image/jpeg\r\nTitle                           : Print\r\nMetadata Date                   : 2014:02:04 10:33:21-05:00\r\nModify Date                     : 2014:02:04 15:33:48Z\r\nCreate Date                     : 2014:02:04 10:33:21-05:00\r\nCreator Tool                    : Adobe Illustrator CS5\r\nThumbnail Width                 : 256\r\nThumbnail Height                : 64\r\nThumbnail Format                : JPEG\r\nThumbnail Image                 : (Binary data 7764 bytes, use -b option to extract)\r\nInstance ID                     : xmp.iid:95B457A4CE8CE311BFA184FB07A8BCEC\r\nDocument ID                     : xmp.did:95B457A4CE8CE311BFA184FB07A8BCEC\r\nOriginal Document ID            : uuid:5D20892493BFDB11914A8590D31508C8\r\nRendition Class                 : proof:pdf\r\nDerived From Instance ID        : xmp.iid:19CC85F7493AE31180E9B4424EB11E91\r\nDerived From Document ID        : xmp.did:19CC85F7493AE31180E9B4424EB11E91\r\nDerived From Original Document ID: uuid:5D20892493BFDB11914A8590D31508C8\r\nDerived From Rendition Class    : proof:pdf\r\nHistory Action                  : saved, saved, converted, converted, saved\r\nHistory Instance ID             : xmp.iid:17CC85F7493AE31180E9B4424EB11E91, xmp.iid:19CC85F7493AE31180E9B4424EB11E91, xmp.iid:95B457A4CE8CE311BFA184FB07A8BCEC\r\nHistory When                    : 2013:10:22 13:09:03-04:00, 2013:10:22 13:10:05-04:00, 2014:02:04 10:33:21-05:00\r\nHistory Software Agent          : Adobe Illustrator CS6 (Windows), Adobe Illustrator CS6 (Windows), Adobe Illustrator CS5\r\nHistory Changed                 : /, /, /\r\nHistory Parameters              : from application/postscript to application/vnd.adobe.illustrator, from application/postscript to application/vnd.adobe.illustrator\r\nStartup Profile                 : Print\r\nProducer                        : Adobe PDF library 10.01\r\nDCT Encode Version              : 100\r\nAPP14 Flags 0                   : Encoded with Blend=1 downsampling\r\nAPP14 Flags 1                   : (none)\r\nColor Transform                 : Unknown (RGB or CMYK)\r\nImage Width                     : 1352\r\nImage Height                    : 327\r\nEncoding Process                : Baseline DCT, Huffman coding\r\nBits Per Sample                 : 8\r\nColor Components                : 4\r\nImage Size                      : 1352x327\r\nMegapixels                      : 0.442\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2020-09-16T10:57:16",
+        "reactions": []
+      }
+    ]
+  }
 }

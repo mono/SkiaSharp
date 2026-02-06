@@ -27,5 +27,69 @@
   "deletions": 1,
   "changedFiles": 4,
   "commits": 4,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:28:19.5784513Z",
+    "reactions": [
+      {
+        "user": "Gillibald",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:28:19.5784538Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 552262531,
+        "author": "mattleibow",
+        "body": "This is very weird. I got a 32-bit build locally, now I can\u0027t. Seems to have issues with 64-bit and the linker. CI has all sorts of weird issues, and now I have those same issues. How did I get a working build locally? I know it was a real build because I saw a massive change in the performance of drawing. NICE!",
+        "createdAt": "2019-11-11T01:53:25",
+        "reactions": []
+      },
+      {
+        "id": 552340350,
+        "author": "Gillibald",
+        "body": "Maybe we should check out the original build file https://github.com/google/skia/blob/master/gn/BUILD.gn",
+        "createdAt": "2019-11-11T08:22:50",
+        "reactions": []
+      },
+      {
+        "id": 552446394,
+        "author": "mattleibow",
+        "body": "I don\u0027t think I changed anything around clang - I have been trying to make sure I make minimal changes. I updated to Clang 9 and it seemed to build locally. Just updating my agents to that and we shall see. I did a test a local build and ran the benchmarks for #758 - I saw MASSIVE improvements. Instead of taking 50000us, it took 900us - and the unrotated canvas was 200us. I think we got ourselves a winner. As soon as CI is green, then I\u0027ll post the binaries here for testing - it is the new version though. And, I\u0027ll see what it takes to get the currently released version using clang so we can get these same improvements there.",
+        "createdAt": "2019-11-11T13:30:33",
+        "reactions": [
+          {
+            "user": "jmacato",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:28:18.9704787Z"
+          },
+          {
+            "user": "wieslawsoltes",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:28:18.970479Z"
+          }
+        ]
+      },
+      {
+        "id": 552448986,
+        "author": "mattleibow",
+        "body": "Trying to get m68 (the current version) using clang in #1007",
+        "createdAt": "2019-11-11T13:38:31",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:28:19.2929886Z"
+          }
+        ]
+      },
+      {
+        "id": 552597981,
+        "author": "mattleibow",
+        "body": "Clang works, so merging all the PRs into branches. \uD83C\uDF89",
+        "createdAt": "2019-11-11T20:17:46",
+        "reactions": []
+      }
+    ]
+  }
 }

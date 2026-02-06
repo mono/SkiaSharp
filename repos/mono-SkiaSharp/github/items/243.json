@@ -32,5 +32,166 @@
   "createdAt": "2017-02-13T11:32:34",
   "updatedAt": "2020-09-20T15:40:33",
   "commentCount": 19,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:27:30.2441017Z",
+    "reactions": [
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:27:30.2441066Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:27:30.244107Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:27:30.2441074Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 279375894,
+        "author": "mattleibow",
+        "body": "@kekekeks the simple reason that it wasn\u0027t available as a pre-build library. Right nor for UWP I use the MS NuGet. I just haven\u0027t gotten round to adding the build steps for ANGLE.\r\n\r\nDo you know of a download location for a pre-build library? Or will I be building it from source?",
+        "createdAt": "2017-02-13T12:30:19",
+        "reactions": []
+      },
+      {
+        "id": 279393110,
+        "author": "kekekeks",
+        "body": "https://www.dropbox.com/s/ayi8ill098jxh1d/angle-d3d9.zip?dl=0 \r\nVersion might be a bit outdated ([chromium/2550](https://github.com/google/angle/tree/chromium/2550)) but it targets D3D9 and compatible with WinXP. I had to make few adjustments to VS project files to achieve that.",
+        "createdAt": "2017-02-13T13:32:06",
+        "reactions": []
+      },
+      {
+        "id": 444175956,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:02:13",
+        "reactions": []
+      },
+      {
+        "id": 619240013,
+        "author": "mattleibow",
+        "body": "I am actually a bit concerned about this... If I include this, what happens if the user installs another library that uses it?\r\n\r\nRight now, UWP does this and I guess I am lucky... _Technically_ the API is consistent, but still - there may be clashes. There really should be a separate NuGet that everyone can reference...",
+        "createdAt": "2020-04-24T21:10:03",
+        "reactions": []
+      },
+      {
+        "id": 619337744,
+        "author": "kekekeks",
+        "body": "Please, don\u0027t. We are shipping a patched version of ANGLE that is capable of running properly on top of Microsoft Basic Render Driver (the default one doesn\u0027t provide a depth buffer).",
+        "createdAt": "2020-04-25T07:49:47",
+        "reactions": []
+      },
+      {
+        "id": 619337798,
+        "author": "kekekeks",
+        "body": "Is it OK to close this issue?",
+        "createdAt": "2020-04-25T07:50:12",
+        "reactions": []
+      },
+      {
+        "id": 619368636,
+        "author": "mattleibow",
+        "body": "What about UWP? Do you use ANGLE there?\r\n\r\nAlso, at some point I will need ANGLE. For example, WPF does not play well with hosting a GL control and the best way is to use a DX view - using ANGLE.\r\n\r\nMaybe skia will get a DX backend - I see some work on that now...  \r\nhttps://source.chromium.org/search?q=kDirect3D\u0026sq=\u0026ss=chromium%2Fchromium%2Fsrc:third_party%2Fskia%2F\u0026originalUrl=https:%2F%2Fcs.chromium.org%2F",
+        "createdAt": "2020-04-25T12:00:21",
+        "reactions": []
+      },
+      {
+        "id": 619369518,
+        "author": "mattleibow",
+        "body": "On a totally separate note... Since the ANGLE context is assembled, any dll could be used - it does not have to be named the same...\r\n\r\nBut, on another note... If you already have ANGLE with desktop, have you tried skia with an ANGLE context? Or, is that how you are currently drawing things?",
+        "createdAt": "2020-04-25T12:07:10",
+        "reactions": []
+      },
+      {
+        "id": 619369905,
+        "author": "mattleibow",
+        "body": "But now I am thinking... if I include ANGLE, it should not conflict.\r\n\r\nI will only include it with my WPF and/or WinForms views. So, if you are using WPF, then you are not using Avalonia...\r\n\r\nAnd, if I make a separate NuGet package that is referenced, any potential conflicts can be removed by using ExcludeAssets=\u0022all\u0022 for the ANGLE package...\r\n\r\nWhat is your bundling process for ANGLE and how does it play with WPF/WinForms?",
+        "createdAt": "2020-04-25T12:10:39",
+        "reactions": []
+      },
+      {
+        "id": 619371050,
+        "author": "kekekeks",
+        "body": "Packaging ANGLE as a separate package and referencing it from WPF/Winforms views should work.",
+        "createdAt": "2020-04-25T12:19:37",
+        "reactions": []
+      },
+      {
+        "id": 619371154,
+        "author": "mattleibow",
+        "body": "Is this your package: https://www.nuget.org/packages/Avalonia.Angle.Windows.Natives",
+        "createdAt": "2020-04-25T12:20:25",
+        "reactions": []
+      },
+      {
+        "id": 619371173,
+        "author": "kekekeks",
+        "body": "Also, consider including [this patch](https://github.com/AvaloniaUI/angle/commit/80a0d41305f513ac933672b4c065db122d573e97), it enables depth buffer for Microsoft Basic Render Device.",
+        "createdAt": "2020-04-25T12:20:36",
+        "reactions": []
+      },
+      {
+        "id": 619371360,
+        "author": "kekekeks",
+        "body": "@mattleibow that package doesn\u0027t include any patches. Patch is required for [gl-control](https://github.com/AvaloniaUI/Avalonia/pull/3386) branch.",
+        "createdAt": "2020-04-25T12:22:15",
+        "reactions": []
+      },
+      {
+        "id": 619371671,
+        "author": "kekekeks",
+        "body": "Also, keep in mind that some graphics drivers (e. g. AMD) ship their own libEGL.dll in system32. So including ANGLE with Skia will break users who are using AMD EGL implementation.",
+        "createdAt": "2020-04-25T12:24:37",
+        "reactions": []
+      },
+      {
+        "id": 619371886,
+        "author": "mattleibow",
+        "body": "\u003E Also, consider including this patch, it enables depth buffer for Microsoft Basic Render Device.\r\n\r\nYou could PR a patch to vcpkg: https://github.com/microsoft/vcpkg/tree/master/ports/angle\r\nThen you can just bump that and not maintain your own fork.\r\n\r\n\u003E Also, keep in mind that some graphics drivers (e. g. AMD) ship their own libEGL.dll in system32\r\n\r\nYeah, that might be an issue... How do you handle this? Do you look up in special places first?",
+        "createdAt": "2020-04-25T12:26:28",
+        "reactions": []
+      },
+      {
+        "id": 619372105,
+        "author": "kekekeks",
+        "body": "Our current EglDisplay.cs explicitly checks if EGL implementation is provided by ANGLE and skips EGL initialization otherwise, since we don\u0027t support running with AMD EGL implementation. But that might be not the case for other users of SkiaSharp.",
+        "createdAt": "2020-04-25T12:28:07",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:27:29.5842244Z"
+          }
+        ]
+      },
+      {
+        "id": 619372649,
+        "author": "mattleibow",
+        "body": "I see your discussion on https://groups.google.com/forum/#!topic/angleproject/moZvbwUeAHU\r\n\r\nDid you ever submit a patch to ANGLE?",
+        "createdAt": "2020-04-25T12:32:17",
+        "reactions": []
+      },
+      {
+        "id": 619373148,
+        "author": "kekekeks",
+        "body": "Nope, gl-control work got kinda frozen since then. Will probably continue soon-ish as we are getting closer to 0.10. The patch should probably explicitly check for the device name, so it won\u0027t affect other drivers.",
+        "createdAt": "2020-04-25T12:36:22",
+        "reactions": []
+      },
+      {
+        "id": 695801214,
+        "author": "msmshazan",
+        "body": "@kekekeks ANGLE has an extension to use swiftshader backend (https://chromium.googlesource.com/angle/angle/\u002B/76e90947a8e421308dff9d00c4955717c6667f12/extensions/EGL_ANGLE_platform_angle_device_type_swiftshader.txt) wouldn\u0027t it be better to use that instead of using \u0027Microsoft Basic Render Device\u0027 when running on VMware ?\r\n",
+        "createdAt": "2020-09-20T15:40:33",
+        "reactions": []
+      }
+    ]
+  }
 }

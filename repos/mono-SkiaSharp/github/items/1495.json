@@ -13,5 +13,18 @@
   "createdAt": "2020-09-10T11:54:00",
   "updatedAt": "2020-10-12T22:55:21",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:27:08.0151278Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 707385221,
+        "author": "mattleibow",
+        "body": "This is because the \u0060SKImageInfo\u0060 has several other properties that are required. (I probably need better exception messages)\r\n\r\nThe most essential are:\r\n- \u0060Width\u0060 (defaults to 0)\r\n- \u0060Height\u0060 (defaults to 0)\r\n- \u0060ColorType\u0060 (defaults to \u0060Unknown\u0060)\r\n- \u0060AlphaType\u0060 (defaults to \u0060Unknown\u0060)\r\n\r\nThe recommended platform color type can be found on \u0060SKImageInfo.PlatformColorType\u0060. The recommended alpha type is \u0060SKAlphaType.Premul\u0060.\r\n\r\nHowever, these are really just \u0022typical defaults\u0022 as a bitmap/surface in SkiaSharp can be whatever you want it to be.\r\n\r\nThe constructors set those defaults because most of the time you just want to change the width and height, but again, they are just the typical defaults and sometimes you actually want other values.",
+        "createdAt": "2020-10-12T22:55:21",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -13,5 +13,24 @@
   "createdAt": "2020-07-14T17:04:12",
   "updatedAt": "2020-07-14T18:02:52",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:28:14.3785147Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 658327253,
+        "author": "ziriax",
+        "body": "I think \u0060SKPaint.GetTextPath\u0060 should be deprecated, because it is actually defined on the new \u0060SKFont\u0060, and that calls the native \u0060SkTextUtils::GetPath\u0060 function.  Neither  \u0060SKFont\u0060 nor that native \u0060SkTextUtils::GetPath\u0060 have alignment...\r\n\r\nYou can align the path yourself with e.g.\r\n\r\n\u0060path.Transform(SKMatrix.CreateTranslation(-path.Bounds.Width / 2f, 0));\u0060\r\n\r\nor by applying a transform to the canvas.\r\n\r\nI agree that if \u0060GetTextPath\u0060 is kept on \u0060SKPaint\u0060, that is should take text alignment into account, maybe just calling \u0060Transform\u0060 for you...\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-07-14T18:01:47",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:28:14.3282862Z"
+          }
+        ]
+      }
+    ]
+  }
 }

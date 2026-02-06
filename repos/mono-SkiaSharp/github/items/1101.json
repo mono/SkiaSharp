@@ -33,5 +33,38 @@
       "state": "COMMENTED",
       "submittedAt": "2020-01-14T02:32:45"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:28:42.4631619Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 573997441,
+        "author": "Gillibald",
+        "body": "Looks very promising. I think we should use SKFont in combination with SKTextBlobBuilder from the beginning to make sure both work well with each other and are easy to use.\r\n\r\nPassing a string to SKFont to get corresponding glyphs always needs to allocate. Being in control of the allocation is always a good option.\r\n\r\nSometimes users just want the data and don\u0027t want to deal with creating buffers and sometimes reusing a buffer is the best perfoming option. Not easy to design an API around these requirements. \r\n\r\nWill add more comments in a bit. ",
+        "createdAt": "2020-01-14T04:40:46",
+        "reactions": []
+      },
+      {
+        "id": 574019474,
+        "author": "Gillibald",
+        "body": "Your overloads let you pass a pre-allocated buffer and also provide a way to let SkiaSharp allocate everything for you. All variants cover most possible scenarios. \r\n\r\nIn general, if SkiaSharp allocates it should return an array if the consumer of the API allocates a buffer the parameter should be of type Span\u003CT\u003E. \r\n\r\nSo I think we agree here.",
+        "createdAt": "2020-01-14T06:10:56",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:28:42.1717376Z"
+          }
+        ]
+      },
+      {
+        "id": 574021830,
+        "author": "Gillibald",
+        "body": "In general, we will not work with these methods directly and instead \u0060SkiaSharp.HarfBuzz\u0060 will interact with SKFont to get the required information for shaping etc.\r\n\r\n\u0060\u0060\u0060\r\nvar text = \u0022MyText\u0022.AsSpan();\r\n\r\nvar textBlob = skFont.GetTextBlob(text);\r\npaint.DrawText(textBlob);\r\n\r\nvar shapedTextBlob = skFont.GetShapedTextBlob(text); // This could be an extention method\r\npaint.DrawText(shapedTextBlob);\r\n\u0060\u0060\u0060\r\n\r\nBoth need to have some font fallback to produce desired results.\r\n\r\nAfter the mapping step, we have to look for unmapped characters and match a fallback font for each range that wasn\u0027t mapped. Each sequence of mapped character is added to a SKTextBlobBuilder. The build SKTextBlob is then used to draw the glyphs.\r\n\r\nSKTextBlobBuilder should be used to allocate the buffer it will allocate anyways so we should reuse this buffer. \u0060builder.AllocateRun(glyphCount) -\u003E GetGlyphs(text, run.GlyphSpan) -\u003E Build() -\u003E Draw(textBlob)\u0060",
+        "createdAt": "2020-01-14T06:19:42",
+        "reactions": []
+      }
+    ]
+  }
 }

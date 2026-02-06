@@ -13,5 +13,47 @@
   "createdAt": "2020-09-14T15:24:25",
   "updatedAt": "2020-09-16T11:17:54",
   "commentCount": 2,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:27:32.2666293Z",
+    "reactions": [
+      {
+        "user": "EmilAlipiev",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:27:32.2666323Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 692137963,
+        "author": "mattleibow",
+        "body": "Thanks for bringing that up. I did not know about that issue.\r\n\r\nI have a targets file that includes everything: \r\n - https://github.com/mono/SkiaSharp/blob/master/binding/SkiaSharp.Tizen/nuget/build/tizen40/SkiaSharp.targets\r\n - https://github.com/mono/SkiaSharp/blob/master/binding/HarfBuzzSharp.Tizen/nuget/build/tizen40/HarfBuzzSharp.targets\r\n\r\nThere might be a way to do this properly by being more explicit about what to add when... @rookiejava, is there some way to do this correctly?\r\n\r\nI can\u0027t use the default runtimes folder as the \u0060linux-x86\u0060 path conflicts with Linux desktop.",
+        "createdAt": "2020-09-14T15:34:54",
+        "reactions": []
+      },
+      {
+        "id": 693339924,
+        "author": "rookiejava",
+        "body": "Hi @tomasslavicek! Thank you for sharing issue with us. \r\n\r\nAs you can see, it seems that there have been some changes to the old(e.g., 1.63.x) and newer versions(e.g., 2.80.x) of SkiaSharp, as well as the old and newer versions of TIzen.NET.SDK. Against this background, when using SkiaSharp v2.80.3, I\u0027ve confirmed the problem that the \u0060linux-x86\u0060 folder is included in the tpk, as you said.\r\n\r\nTo solve this problem, I think we need to modify the target files, but it will take more time. (Of course we have right person to fix this. @WonyoungChoi will you fix this? hehe.... \u2764\uFE0F )\r\n\r\nAt the moment, I\u0027d like to tell you how to exclude the \u0060linux-x86\u0060 folder from tpk to register your beautiful app in the Samsung Store. You can explicitly exclude \u0060linux-x86\u0060 from .tpk by adding the target below to your csproj.\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CTarget Name=\u0022__RemoveLinuxX86Asset\u0022 AfterTargets=\u0022TizenResolveTpkPackageFiles\u0022 Condition=\u0022\u0027$(RuntimeIdentifier)\u0027 == \u0027tizen-armel\u0027\u0022\u003E\r\n    \u003CItemGroup\u003E\r\n      \u003CTizenResolvedFileToTpk Remove=\u0022@(TizenResolvedFileToTpk)\u0022 Condition=\u0022$([System.String]::Copy(\u0027%(TizenTpkSubPath)\u0027).StartsWith(\u0027bin\\runtimes\\linux-x86\\native\\\u0027))\u0022 /\u003E\r\n    \u003C/ItemGroup\u003E\r\n  \u003C/Target\u003E\r\n\u0060\u0060\u0060\r\nThe task above is to ensure that \u0060linux-x86\u0060 related assets are not included in tpk when \u0060RuntimeIdentifier\u0060 is specified as \u0060tizen-armel\u0060. You can see that the \u0060linux-x86\u0060 folder is no longer included in the tpk as shown below.\r\n\r\n\u0060\u0060\u0060\r\n.\r\n\u2514\u2500\u2500 tpkroot\r\n    \u251C\u2500\u2500 bin\r\n    \u2502\u00A0\u00A0 \u2514\u2500\u2500 runtimes\r\n    \u2502\u00A0\u00A0     \u2514\u2500\u2500 tizen-armel\r\n    \u2502\u00A0\u00A0         \u2514\u2500\u2500 native\r\n    \u251C\u2500\u2500 lib\r\n    \u251C\u2500\u2500 res\r\n    \u2514\u2500\u2500 shared\r\n        \u2514\u2500\u2500 res\r\n\u0060\u0060\u0060\r\n\r\nEnjoy Tizen!",
+        "createdAt": "2020-09-16T11:17:14",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:27:32.2164195Z"
+          },
+          {
+            "user": "EmilAlipiev",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:27:32.2164199Z"
+          },
+          {
+            "user": "Horcrux82",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:27:32.216433Z"
+          }
+        ]
+      }
+    ]
+  }
 }

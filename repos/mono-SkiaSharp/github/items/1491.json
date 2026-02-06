@@ -13,5 +13,53 @@
   "createdAt": "2020-09-07T17:55:03",
   "updatedAt": "2020-10-14T00:55:54",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:27:02.9589916Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 688474915,
+        "author": "mattleibow",
+        "body": "It might be because you are drawing on the surface using a different thread that you created the buffer?\r\n\r\nI am not exactly sure how GL works, but I don\u0027t think you can create and use a FBO from different threads? Or, you may be conflicting with multiple calls and such. Finally, is the GLES context set to be the current?\r\n\r\nAre you able to replace all the drawing code and say clear with red? Does that crash?\r\nYou can also try using the same background thread to create and draw, that might show where the issue is happening.\r\n\r\nFinally, are you able to provide a small repro case?",
+        "createdAt": "2020-09-07T18:56:02",
+        "reactions": []
+      },
+      {
+        "id": 688488359,
+        "author": "axel578",
+        "body": "Yeah, seems it\u0027s that, Is there any way to give access to drawing on the SkElement directly rather than doing it through the event Scene_PaintSurface ?\r\nIs there also any way to implement A GrContext from open gl 64 bits and not 32bits or something different from open gl ?  because skiasharp works really well with gpu ",
+        "createdAt": "2020-09-07T19:43:44",
+        "reactions": []
+      },
+      {
+        "id": 688503691,
+        "author": "mattleibow",
+        "body": "I am assuming you are using https://github.com/l3m/wpf-gles?\r\n\r\nThat code doesn\u0027t seem to be 32/64 bit specific. It might just be the binaries or target you are compiling?\r\n\r\nFor UWP I actually \u0022cheat\u0022 a bit and don\u0027t actually follow the same pattern. I have a render thread that runs and when the view is \u0022invalidated\u0022 a simple raise an event from the background thread. \r\n\r\nAlso, that Gles is a view... Can you not use that directly? Basically create your own \u0022paint\u0022 event? Effectively, create a new control that inherits from GlesImage and then creates and draws via a internal renderer? The you don\u0027t need an SKElement at all.",
+        "createdAt": "2020-09-07T20:39:22",
+        "reactions": []
+      },
+      {
+        "id": 689556486,
+        "author": "axel578",
+        "body": "Okay I\u0027ll give a try on that, I used the SkElement because it\u0027s the fastest way to render from my test, thanks again for your answer",
+        "createdAt": "2020-09-09T13:16:38",
+        "reactions": []
+      },
+      {
+        "id": 689702207,
+        "author": "mattleibow",
+        "body": "Let me know how it goes.\r\n\r\nSKElement is not the most exciting things, but it will always come back to the UI thread - which may not be what you want: https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs\r\n\r\nIf you get  nice working example of GLES and SkiaSharp, then I\u0027ll have a look at merging it into this repo so you won\u0027t have to maintain it. If you are interested in that sort of thing \uD83D\uDE04 ",
+        "createdAt": "2020-09-09T17:14:39",
+        "reactions": []
+      },
+      {
+        "id": 708089388,
+        "author": "mattleibow",
+        "body": "There is also the #1521  PR which has some things that is related to this one. And #745",
+        "createdAt": "2020-10-14T00:55:27",
+        "reactions": []
+      }
+    ]
+  }
 }
