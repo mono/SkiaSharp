@@ -13,5 +13,260 @@
   "createdAt": "2020-02-05T20:51:29",
   "updatedAt": "2023-02-09T19:22:51",
   "commentCount": 25,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:11:03.6345893Z",
+    "reactions": [
+      {
+        "user": "samsosa",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:11:03.6345926Z"
+      },
+      {
+        "user": "ziriax",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:11:03.6345935Z"
+      },
+      {
+        "user": "ziriax",
+        "content": "hooray",
+        "createdAt": "2026-02-06T13:11:03.6345939Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 584578993,
+        "author": "ziriax",
+        "body": "I already made a .net standard wrapper for it, and added some high speed 8-bit gamma correction code, would it be useful if I published this?",
+        "createdAt": "2020-02-11T10:55:25",
+        "reactions": []
+      },
+      {
+        "id": 584585958,
+        "author": "mattleibow",
+        "body": "Oh, yes! SkiaSharp is very much a library to create graphics to display on screen. One of the main \u0022limitations\u0022 (or rather just a non-requirement) is that the saving to disk is pretty much PNG and JPEG. So this would be VERY useful.",
+        "createdAt": "2020-02-11T11:13:07",
+        "reactions": []
+      },
+      {
+        "id": 584592188,
+        "author": "ziriax",
+        "body": "Okay, I\u0027ll publish it on github then, if I get the green light from my customer. It is rough around the edges, not yet ready to publish on nuget, but I did get it working on both Windows and Linux, so a good start. \r\n\r\nI would love to tweak this library, supporting 16-bit floats to improve memory bandwidth, using ISPC to target any SIMD ISA, using the write combine buffer to avoid cache population, etc, but I\u0027m not sure if I can find the time for this ;-) The AVIR author (Aleksey Vaneev, @avaneev) already did an incredible job providing fast SIMD implementations, so I\u0027m not sure if further optimizations are needed.\r\n",
+        "createdAt": "2020-02-11T11:30:18",
+        "reactions": []
+      },
+      {
+        "id": 585129971,
+        "author": "ziriax",
+        "body": "Okay, I got approval, I will publish the wrapper asap.",
+        "createdAt": "2020-02-12T10:09:03",
+        "reactions": []
+      },
+      {
+        "id": 585131449,
+        "author": "mattleibow",
+        "body": "Once you get it out there, the community will help. I\u0027ll share links to it as well, because this is actually a pretty common request.",
+        "createdAt": "2020-02-12T10:12:25",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:10:59.7614712Z"
+          }
+        ]
+      },
+      {
+        "id": 616208086,
+        "author": "ziriax",
+        "body": "It seems the author of PhotoSauce always has his pipeline ready for doing this:\r\nhttps://github.com/saucecontrol/PhotoSauce/issues/16#issuecomment-616182080\r\n\r\nSo no need to wrap AVIR anymore I guess, PhotoSauce gives much more options, is 100% .NET, and it even uses optimized SIMD intristics these days\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-19T19:03:15",
+        "reactions": []
+      },
+      {
+        "id": 618735989,
+        "author": "ziriax",
+        "body": "PhotoSauce certainly looks great, but it offers some overlap with Skia. Nevertheless, a very good candidate.\r\n\r\nYesterday I also started writing my own C# high quality downscaler, that can target fractional pixel sizes. Having fun with C# SIMD AVX2 instristics ;-)\r\n\r\nFirst results with my code, downscaling [this 30MP photo](https://c1.staticflickr.com/5/4202/34144634313_dde6fc1676_o.jpg) in tiny steps using a Lancos filter:\r\n\r\nhttps://www.youtube.com/watch?v=VTr1ud4dGLY\r\n\r\nBest watched at 1080p@60Hz\r\n\r\nOf course Youtube\u0027s compression creates a lower quality image.\r\n\r\n On my old i7 7700K it takes about 80ms to heavily downsample the image (excluding decoding the JPEG), but I haven\u0027t further optimized anything\r\n\r\nI\u0027m not sure what option would be best for users:\r\n- Just use PhotoSauce or another external library.\r\n- Add minimal code to SkiaSharp to support HQ downsampling.\r\n- Convince Google Skia to integrate a high quality scaler\r\n",
+        "createdAt": "2020-04-24T00:21:47",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:00.1394978Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:11:00.1394983Z"
+          },
+          {
+            "user": "Gillibald",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:11:00.1394984Z"
+          },
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:00.1394985Z"
+          }
+        ]
+      },
+      {
+        "id": 618750233,
+        "author": "mattleibow",
+        "body": "Awesome!\r\n\r\nIn all honesty, having a separate library that is .net standard only might be the best. PhotoSource is nice and all, but is fairly large and does things. If you have this tiny library that just resizes something, then maybe a small nuget will be great. You can even make the library not actually depend on SkiaSharp but just take some Span or IntPtr. Maybe add an extensions method for a few types. Then your logic can be used on ANY bitmap anywhere.\r\n\r\nYou can fix bugs and release at your own pace without waiting for SkiaSharp or Google.\r\n\r\nPeople either like huge monolithic libraries that do EVERYTHING or lots of tiny ones that gust do that one thing they really want it for.",
+        "createdAt": "2020-04-24T01:20:30",
+        "reactions": []
+      },
+      {
+        "id": 618903991,
+        "author": "ziriax",
+        "body": "Thanks! \r\n\r\nIf this becomes a tiny standalone nuget, then I think it makes more sense to use Intel\u0027s ISPC compiler, and make it a native library, with a tiny .NET Standard wrapper. Because all this C# SIMD is ubercool, but \r\n\r\n1. is .NET Core 3 only \r\n2. you have to manually write optimized code for each SIMD architecture\r\n3. .NET doesn\u0027t handle 16-bit floats, the best format for the linear rendering workflow my customer needs, and the best format according to Google for this...\r\n\r\nIntel\u0027s ISPC is amazing in that you write your code once in a C-like language, and then it generates AOT optimized code for each architecture that you care about. Then at runtime, it efficiently picks the function matching the runtime CPU.\r\n\r\n",
+        "createdAt": "2020-04-24T09:23:16",
+        "reactions": []
+      },
+      {
+        "id": 618912660,
+        "author": "Gillibald",
+        "body": "\u003EIntel\u0027s ISPC is amazing in that you write your code once in a C-like language, and then it generates AOT optimized code for each architecture that you care about. Then at runtime, it efficiently picks the function matching the runtime CPU.\r\n\r\nThat sounds great.",
+        "createdAt": "2020-04-24T09:42:45",
+        "reactions": []
+      },
+      {
+        "id": 618913183,
+        "author": "ziriax",
+        "body": "@mattleibow  Do you have good refereences on how to make a nuget package containing a .NET Standard native wrapper (like SkiaSharp) from scratch? I never did that before. Would you use CMake, or Cake as you do? Ninja/GN or just Visual Studio 2019\u0027s cross platform native toolchain? \r\n\r\nI do have experience making native wrappers  for .NET Standard, just not with packaging it for nuget, targetting all platforms, etc... \r\n\r\n",
+        "createdAt": "2020-04-24T09:43:57",
+        "reactions": []
+      },
+      {
+        "id": 618988596,
+        "author": "ziriax",
+        "body": "Did some further experiments and contrary to what I\u0027ve read on the net, the good old \u0060System.Numerics.Vectors\u0060 also gives very good performance on my PC! \r\n\r\nSo to get started, this can become a really tiny pure .NET NuGet package, or I can just provide a PR for SkiaSharp (that is the easiest for me \uD83D\uDE09). The API can be as simple as \u0060SKPixMap SKPixMap.ResampleTo(float width, float height, int kernelSize = 2)\u0060\r\n\r\nFurther optimization is always possible afterwards.\r\n\r\nPS: As the author of PhotoSauce cleverly pointed out, one can use Skia\u0027s JPEG decoder to request an already downscaled-by-power-of-two image, and start the HQ downsampler from that (good old JPEG DCT decoding trick). But that of course doesn\u0027t work with PNGs etc, so should be kept outside of the downsampler logic.\r\n\r\n",
+        "createdAt": "2020-04-24T12:49:25",
+        "reactions": []
+      },
+      {
+        "id": 619030380,
+        "author": "mattleibow",
+        "body": "A PR will be good too! Right now our scaling options are pretty much \u0022eh\u0022. So, it will be really nice to get this in.\r\n\r\nHow (are?) are you handling different color types and alpha types? There is also the case where the endianness of the CPU mixes up the pixels... \r\n\r\nWhat is the code actually doing? A resize or a resample? Right now, the current APIs for this are a bit messy... \uD83D\uDE22 I have started on the path to unifying them with a \u0060Resize\u0060 returning a new object and \u0060ScalePixels\u0060 resizing the pixels into a destination object:\r\n\r\n\u0060\u0060\u0060csharp\r\nSKBitmap Resize();\r\nvoid ScalePixels(SKBitmap destination);\r\n\u0060\u0060\u0060\r\n\r\n_(this is probably bad names, but it is what we there in the native code at the start)_\r\n\r\nWith \u0060SKPixmap\u0060, there is no actual backing memory, so typically you only have \u0060ScalePixels\u0060 for that one - because you need to provide a destination object. But this is obviously not the same for \u0060SKBitmap\u0060 or \u0060SKImage\u0060 - you can just new up a fresh object any day.",
+        "createdAt": "2020-04-24T14:04:07",
+        "reactions": []
+      },
+      {
+        "id": 619067123,
+        "author": "ziriax",
+        "body": "Well, my first version will be really simple: always resample RGBA channels, and use Skia whenever possible.  Further optimizations are possible when the alpha channel is known to be opaque, or for gray-scaling images, etc...\r\n\r\nSo I don\u0027t care if the layout is RGBA or BGRA, each channel is treated the same.\r\n\r\nAnd I use Skia to do the linear color space conversion, basically all pixel formats are converted by Skia\u0027s \u0060SKPixmap.ReadPixels\u0060. The tricky part is tweaking how many rows to keep in memory, as a trade-off between the overhead of calling the Skia API and CPU cache usage. I my current experiments I don\u0027t use Skia yet for doing this, so it remains to be seen how fast this will be.\r\n\r\nYou\u0027re right, I can\u0027t return an \u0060SKPixmap\u0060, that should be an \u0060SKImage\u0060 or \u0060SKBitmap\u0060... And the user should be able to specify the pixel format of the output too...\r\n\r\nI\u0027m doing resampling. I made this reference image for myself. Basically multiply the input (orange) pixel values with weights from the Lanczos kernel, and add them all up, to get the output (green) pixel.  In other words, a large **dot product**.\r\n![Resampling](https://user-images.githubusercontent.com/2389359/80226942-4bc49680-864d-11ea-86de-dbabdf8a8929.gif)\r\n\r\nBut it is explained in nice detail here:\r\nhttps://entropymine.com/imageworsener/resample\r\n\r\nSo the bulk of the CPU operations are the large dot products that need to be made between the kernel weights and source pixel values, but the bottleneck is the RAM... In my AVX2 experiments I tried all kinds of bulk operations before writing the output (tried aligned non-temporal writes). But we really need 16-bit floats (\u0022brain floats\u0022) to make this really fast IMO. Or the GPU of course, that will make it near real-time ;-)\r\n\r\nI\u0027ll have a PR ready soon, we can discuss code then.\r\n\r\nPS: One thing crossed my mind: deep learning networks use exactly the same algorithm to combine input values with weights, so image resampling is going to become faster and faster since CPU and GPU makers are spending a lot of money on making AI faster :)\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-24T15:05:14",
+        "reactions": []
+      },
+      {
+        "id": 619072377,
+        "author": "mattleibow",
+        "body": "Looking forward to that PR!",
+        "createdAt": "2020-04-24T15:14:07",
+        "reactions": []
+      },
+      {
+        "id": 619223993,
+        "author": "ziriax",
+        "body": "Oh well, so far my plan to use Skia for doing the pixel conversions...\r\n\r\nMy original \u0060AVX2\u0060 code that starts from an 30MP 8888 bitmap, converts to linear space 32-bit floats, and does a huge convolution to create a 192px thumbnail takes 60ms\r\n\r\nThe \u0060System.Numerics.Vectors\u0060 code that does the same, not using any intrinsics, takes 80ms.\r\n\r\nSo I tried to replace the linear color space conversion with Skia\u0027s native code, but... just doing that conversion **alone** already takes **90ms**!!!\r\n\r\nI will first debug the native code, because this is simply impossible, unless Skia is not using a lookup table... \r\n\r\nBummer. \r\n\r\nSince loading JPEGs, downscaling these, and rendering them is a hot path for most users, this scenario must be made fast IMHO...  \r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-24T20:27:31",
+        "reactions": []
+      },
+      {
+        "id": 619326107,
+        "author": "entdark",
+        "body": "Isn\u0027t AVX2 limited to x86 and x86_64 while skia targets other ABIs as well?",
+        "createdAt": "2020-04-25T05:44:52",
+        "reactions": []
+      },
+      {
+        "id": 619340101,
+        "author": "ziriax",
+        "body": "Sure, but even a simple for loop with a lookup table is much faster... And Skia should be using SIMD too according to their mailing list feedback. I am going to debug this to figure out the bottleneck. ",
+        "createdAt": "2020-04-25T08:10:27",
+        "reactions": []
+      },
+      {
+        "id": 619350532,
+        "author": "ziriax",
+        "body": "Indeed the pipeline uses SIMD, but is very generic: it first loads the \u0060byte4\u0060 into \u0060float4\u0060, then swaps two channels (because by default, JPEGS are loaded in BGRA and not RGBA it seems), and then converts the \u0060float4\u0060 into linear colors \u0060float4\u0060 using heavy math.\r\n\r\nI asked the Skia team for advice: https://groups.google.com/forum/#!topic/skia-discuss/zOWhMHONG98\r\n\r\nFor now I\u0027m going to ignore this, and get a working PR out first ;-)\r\n\r\nPS: Having debugged the pipeline, obviously it feels this image resampler should be something that is native to Skia. Actually, the \u0060SkBlurImageFilter\u0060 is a special case of such a resampler...\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-25T09:31:22",
+        "reactions": []
+      },
+      {
+        "id": 619388854,
+        "author": "ziriax",
+        "body": "@mattleibow  Is the upcoming beta SkiaSharp going to be a .NET Standard 2.1 library, or will it remain to be a .NET Standard 1.0/2.0 assembly?  Because only .NET Standard 2.1 has goodies like \u0060Vector4\u0060 it seems\r\n",
+        "createdAt": "2020-04-25T14:35:48",
+        "reactions": []
+      },
+      {
+        "id": 619414496,
+        "author": "mattleibow",
+        "body": "I am planning on 2.0, but we can always 2.1 as another target. The we can have a \u0022slow\u0022 version in 2.0 and the \u0022fast\u0022 version in 2.1. This should be fine since we will be able to use 2.1 bits in iOS and Android and netcoreapp3.1.\r\n\r\nIn fact, we might just be good to install this NuGet: https://www.nuget.org/packages/System.Numerics.Vectors/ That brings things to netstandard2.0. I already am using the System.IO.UnmanagedMemoryStream and System.Memory packages. Just add that package reference to the csproj: https://github.com/mono/SkiaSharp/blob/master/binding/SkiaSharp/SkiaSharp.csproj#L18",
+        "createdAt": "2020-04-25T17:34:18",
+        "reactions": []
+      },
+      {
+        "id": 620572606,
+        "author": "ziriax",
+        "body": "Just lost hours trying to find the reason why my resampled images had color banding...\r\n\r\nTurns out that no images viewer besides GIMP can display the HQ PNGs saved by Skia correctly ;-) Even Chrome doesn\u0027t display it correctly.\r\n\r\n~~As a rule of thumb, the images should be converted to sRGB 8-bit per channel before saving...~~\r\nNope, the above doesn\u0027t seem to help...\r\n\r\nUnfortunately, Skia doesn\u0027t support dithering yet, so banding is still visible in some cases for 8-bit color channels, but that is another issue.",
+        "createdAt": "2020-04-28T12:25:12",
+        "reactions": []
+      },
+      {
+        "id": 620730610,
+        "author": "ziriax",
+        "body": "Good news and bad news.\r\n\r\n**Good news: I\u0027m ready with the PR of the HQ image resampler, pushing it asap **\r\n\r\nBad (well) news:  **Skia m80 already contains a reasonable quality downsampler**! It uses mip-maps to downsample using a box filter first, then it uses a high quality filter to resize that mip-map. That gives reasonable results.\r\n\r\nOf course for images with a lot of high frequencies, or for [artificially generated images](https://github.com/SixLabors/ImageSharp/issues/428), Skia can generate bad results, as this video I made shows (left side is my resampler, right side is Skia\u0027s)\r\n\r\nhttps://www.youtube.com/watch?v=KNzMj7frzcE\r\n\r\nBut compared to m68, m80 is already a lot better it seems.\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-04-28T16:55:30",
+        "reactions": []
+      },
+      {
+        "id": 620796948,
+        "author": "ziriax",
+        "body": "Well, the difference can be rather large with e.g. the baboon in the samples gallery:\r\n\r\n![Capture2](https://user-images.githubusercontent.com/2389359/80528662-979d7580-8996-11ea-981d-4e5c7740a99a.PNG)\r\n\r\n![Capture1](https://user-images.githubusercontent.com/2389359/80528668-98cea280-8996-11ea-9bc9-c0fe957ddcdb.PNG)\r\n\r\nThe whiskers and overall sharpness of the resampled photo is much higher IMHO (note that on high-dpi screens your browser will unfortunately also scale these images, making them fuzzy).\r\n\r\nPushing the PR now.",
+        "createdAt": "2020-04-28T19:03:25",
+        "reactions": []
+      },
+      {
+        "id": 1424697947,
+        "author": "runxc1",
+        "body": "So is there some sample code that shows a way to get a higher quality Resizing of an image?  I\u0027m converting some code from System.Drawing to SkiaSharp that primarily created multiple smaller versions of an uploaded image and have just used SKBitmap.Resize and am finding the quality to be a little lower than what I had before.",
+        "createdAt": "2023-02-09T19:22:51",
+        "reactions": [
+          {
+            "user": "kiddailey",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:03.5841562Z"
+          },
+          {
+            "user": "romen-h",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:03.5841567Z"
+          },
+          {
+            "user": "AntiPasha",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:03.5841568Z"
+          },
+          {
+            "user": "seruss",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:03.584157Z"
+          },
+          {
+            "user": "AntHillOracle",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:03.5841571Z"
+          },
+          {
+            "user": "7702244",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:11:03.5841572Z"
+          }
+        ]
+      }
+    ]
+  }
 }

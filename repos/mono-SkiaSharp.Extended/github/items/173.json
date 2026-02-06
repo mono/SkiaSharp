@@ -19,5 +19,53 @@
   "updatedAt": "2023-08-23T22:50:42",
   "closedAt": "2023-08-23T22:50:42",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:10:27.0310449Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1625111096,
+        "author": "techscx",
+        "body": "I can confirm, that lottie does not render - without any exception to be thrown - in IOS using Visual Studio Windows as build host and debugging on a local IOS device connected to the Windows computer (IOS local device \u0026 hot reload).\r\n\r\nBut:\r\nLottie renders on IOS, when using a Mac as build host. This can be done either by using Visual Studio Windows -\u003E IOS Simulator or IOS Remote Device or compiling and debugging directly on Visual Studio Mac. ",
+        "createdAt": "2023-07-07T09:14:57",
+        "reactions": []
+      },
+      {
+        "id": 1627601121,
+        "author": "developer9969",
+        "body": "I can confirm too that lottie does not work on windows host!\r\n\r\nAnd does not work in iOS using mac either if you using a service provider to hook a viewmodel - page\r\n\r\nhttps://github.com/mono/SkiaSharp.Extended/issues/147\r\n\r\nI will test on popups but dont think it works there either..  \r\n\r\nThis seems to have been a known bug for months , and the main coder of this library he is probably too busy firefighting Maui bigger issues...",
+        "createdAt": "2023-07-09T04:26:22",
+        "reactions": []
+      },
+      {
+        "id": 1633969084,
+        "author": "mattleibow",
+        "body": "Try updating skiasharp and skiasharp.views to the latest preview.\n\n\nIf you have a sample app lying around then it will help with testing. Maybe rename this issue as well to be more descriptive. I am looking at a bunch of skia things to go out with net8 this year. ",
+        "createdAt": "2023-07-13T10:20:55",
+        "reactions": []
+      },
+      {
+        "id": 1634197284,
+        "author": "TedMobile",
+        "body": "@mattleibow  \r\nI will try to update and see if makes a difference you can easily replicate the issue if you use any of the below \r\nand you use a windows machine running iOS device phisical\r\n\r\n1. https://github.com/jfversluis/MauiLottieAnimationsSample  \r\n2. https://github.com/mono/SkiaSharp.Extended/issues/147  (raised by pureween)  **does not work with service provider**\r\n3. https://github.com/mono/SkiaSharp.Extended/issues/142 (Add  a popup and put a lottie there and run again in windows against a ios phone)\r\n\r\nWould be nice if we can finally use lottie in maui in both iOS and android!\r\n\r\nthanks\r\n",
+        "createdAt": "2023-07-13T12:56:17",
+        "reactions": []
+      },
+      {
+        "id": 1641575065,
+        "author": "TedMobile",
+        "body": "@mattleibow  hi - wondering if you had any change to look at why lottie does not work in the mentioned scenarios, \r\nAny updates on this nuget soon?\r\n\r\nmany thanks",
+        "createdAt": "2023-07-19T07:36:50",
+        "reactions": []
+      },
+      {
+        "id": 1690745445,
+        "author": "mattleibow",
+        "body": "I have had a chance to look. I fixed the one and the other is an issue in the MCT that I believe they have fixed: https://github.com/CommunityToolkit/Maui/pull/1342. I see this issue is more of a duplication of other issues, so I will close this. \r\n\r\nWith regards to support, this library is not 100% an official, supported product and is more like cool things the skiasharp team does and will release. Think community toolkit, but for skia. Maybe at some point I will see about merging this under the community toolkit org before 2.x goes stable. ",
+        "createdAt": "2023-08-23T22:50:42",
+        "reactions": []
+      }
+    ]
+  }
 }

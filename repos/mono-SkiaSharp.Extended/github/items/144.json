@@ -18,5 +18,25 @@
   "createdAt": "2022-09-26T18:19:58",
   "updatedAt": "2023-09-19T20:37:48",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:10:12.7703875Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1305574064,
+        "author": "KlaasTroost",
+        "body": "the same problem on ios\r\n",
+        "createdAt": "2022-11-07T12:55:22",
+        "reactions": []
+      },
+      {
+        "id": 1726430551,
+        "author": "vikher",
+        "body": " a demo of the issue is available at the following link:\r\n\r\nhttps://github.com/mono/SkiaSharp.Extended/assets/3643619/aeb0ebb4-9869-4b6d-8e19-27fe0194a376\r\n\r\nDescription:\r\n\r\nWhen using SKLottieView within a CarouselView on both Android and iOS platforms, we are encountering several issues:\r\n\r\nAndroid:\r\n\r\nThe animations are not playing consistently when cycling through the views in the CarouselView.\r\nAll Lottie files seem to be loaded at once.\r\n\r\niOS:\r\n\r\nThe first Lottie file doesn\u0027t load correctly.\r\nWhen scrolling left in the CarouselView, it sometimes breaks the animation.\r\nAnimation behavior is inconsistent compared to Android, where animations do not play every time you scroll.\r\n\r\nBasic Information:\r\n\r\nPackage Version with the issue: \u0022SkiaSharp.Extended.UI.Maui\u0022 Version=\u00222.0.0-preview.83\u0022\r\nLast known good version: Unknown\r\nIDE: Visual Studio for Mac 2022\r\nPlatform Target Frameworks: Android and iOS\r\n\r\nSteps to Reproduce:\r\n\r\nCreate a Xamarin MAUI application.\r\nAdd a CarouselView to a page.\r\nUse SKLottieView within the CarouselView.ItemTemplate.\r\nBind SKLottieView properties such as Source to Lottie animation files.\r\nPopulate the CarouselView with multiple items containing SKLottieView elements.\r\nRun the application on both Android and iOS devices.\r\nObserve the described issues during the carousel scrolling and animation playback.\r\n\r\nExpected Behavior:\r\n\r\nWe expect the SKLottieView animations to play consistently on both Android and iOS platforms as the user scrolls through the CarouselView. The animations should load correctly, and there should be no noticeable issues with animation playback.\r\n\r\nIt has come to our attention that this issue has been open for a year now. We would like to inquire whether it has already been added to the backlog. We look forward to your support in resolving these issues promptly.\r\n\r\nCode snippet:\r\n\r\n            \u003CCarouselView.ItemTemplate\u003E\r\n                \u003CDataTemplate x:DataType=\u0022viewModels:FlashCardViewModel\u0022 \u003E\r\n                    \u003CGrid   RowDefinitions=\u002260*,40*\u0022\r\n                            ColumnDefinitions=\u0022*\u0022 \r\n                            ColumnSpacing=\u00220\u0022\r\n                            HorizontalOptions=\u0022Fill\u0022\r\n                            RowSpacing=\u00220\u0022\r\n                            VerticalOptions=\u0022Fill\u0022\u003E\r\n                        \u003CVerticalStackLayout\r\n                                Grid.Row=\u00220\u0022\r\n                                Grid.Column=\u00220\u0022\r\n                                HeightRequest=\u0022440\u0022\r\n                                WidthRequest=\u0022440\u0022 \u003E\r\n                            \u003Cskia:SKLottieView\r\n                                x:Name=\u0022LottieAnimationView\u0022\r\n                                HorizontalOptions=\u0022Center\u0022\r\n                                BackgroundColor=\u0022{Binding AnimationBackgroundColor}\u0022\r\n                                Source=\u0022{Binding AnimationFileName}\u0022\r\n                                RepeatCount=\u00220\u0022\r\n                                HeightRequest=\u0022440\u0022\r\n                                WidthRequest=\u0022440\u0022 /\u003E\r\n                        \u003C/VerticalStackLayout\u003E\r\n                    \u003C/Grid\u003E\r\n                \u003C/DataTemplate\u003E\r\n            \u003C/CarouselView.ItemTemplate\u003E\r\n        \u003C/CarouselView\u003E\r\n\r\n\r\n",
+        "createdAt": "2023-09-19T20:35:01",
+        "reactions": []
+      }
+    ]
+  }
 }
