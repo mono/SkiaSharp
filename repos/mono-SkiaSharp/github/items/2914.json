@@ -18,5 +18,45 @@
   "createdAt": "2024-07-02T03:08:29",
   "updatedAt": "2025-01-24T04:51:40",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:47:35.6168942Z",
+    "reactions": [
+      {
+        "user": "xackus",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:47:35.6173225Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2202697110,
+        "author": "mattleibow",
+        "body": "Are you able to attach a sample project? I want to see if there is some random project setting or something. ",
+        "createdAt": "2024-07-02T10:38:13",
+        "reactions": []
+      },
+      {
+        "id": 2205189636,
+        "author": "Costigan",
+        "body": "[Bug1.zip](https://github.com/user-attachments/files/16077894/Bug1.zip)\r\n\r\nThis sample project shows an error, although the symptoms are different from my bug report, because, here, I\u0027m starting a fresh project and trying to create a new form and then adding an SKGLControl to it.  In my bug report, I have several existing forms that have controls subclassed from SKGLControl that now won\u0027t load into the designer (and which worked in v2.88.8).  I believe the underlying cause is the same, but as I don\u0027t understand it, I don\u0027t really know.\r\n\r\nUsing Visual Studio Community 2022 (64-bit) Version 17.9.6 and Microsoft .NET Framework Version 4.8.09037\r\n\r\n1. Create a new Windows Forms App (.NET Framework)\r\n2. Using the Manage NuGET Packages for Solution windows in visual studio\r\n   a. Installed SkiaSharp by Microsoft (the one with 98.1M downloads), version 3.0.0-preview.3.1\r\n\r\n   See Capture1.PNG in the project.  This dialog warned me about PackageReference.  In this case, I selected that option rather than Packages.config, and it installed SkiaSharp and the native assets.\r\n\r\n   b. Installed SkiaSharp.Views.WindowsForms by Microsoft, 528K downloads.  (Should I use SkiaSharp.Views.Desktop.Common?  What\u0027s the difference?)\r\n\r\n3. Tried to drag SKGLControl out from the toolbox.  This failed, generating the dialog in Capture2.PNG.\r\n\r\n4. Tried to drag out SKControl from the toolbox.  This failed, generating Capture3.PNG\r\n\r\n5. Added an SKGLControl in the main form\u0027s constructor with a PaintSurface event handler and ran th eprogram using the Any CPU platform.  This worked, generating Capture4.PNG.\r\n\r\n6. I added an x64 platform, compiled again and ran it.  This worked too, generating the same output.\r\n\r\n----------------------------------------\r\n\r\nIn a second attempt (I haven\u0027t zipped this project), I selected Packages.config for the package manager format.  In this case, dragging an SKGLControl from the toolbox to the main form succeeded, but the app failed at runtime.  See Capture5.PNG.\r\n\r\n----------------------------------------\r\n\r\nIn a third attempt (I haven\u0027t zipped this project), I used SkiaSharp v2.88.8 and Packages.config for the package manager format.  In this case, everything worked as expected.  Selecting PackageReference also worked.\r\n",
+        "createdAt": "2024-07-03T06:26:35",
+        "reactions": []
+      },
+      {
+        "id": 2205201752,
+        "author": "Costigan",
+        "body": "I should have explicitly said that I deleted the obj and bin directories from the solution to get it under the upload file size limit and that dotnet restore restores the packages.  After doing that, this project works, but dragging SKGLControl from the toolbox still doesn\u0027t work, that is, the symptom is the same.",
+        "createdAt": "2024-07-03T06:36:06",
+        "reactions": []
+      },
+      {
+        "id": 2611586032,
+        "author": "dzhydaniel",
+        "body": "![Image](https://github.com/user-attachments/assets/18e442d0-1b1b-4dd8-8088-44f2d504b0b7)\n\nI think you should copy libSkiaSharp.dll from nuget packages to you project debug directory X64 and X32 both.\nAfter you install Skiasharp by  nuget\n\n\n\n",
+        "createdAt": "2025-01-24T04:51:39",
+        "reactions": []
+      }
+    ]
+  }
 }

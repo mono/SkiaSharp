@@ -26,5 +26,74 @@
   "createdAt": "2024-10-04T15:57:39",
   "updatedAt": "2024-11-27T13:03:04",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:48:57.5062298Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2396195541,
+        "author": "cho-trackman",
+        "body": "I\u0027ve just added a CoreGraphics part to test repo (https://github.com/cho-trackman/SkiaIos18Bug), but also realized that maybe it should have been done in CoreText to reflect how Skia is drawing (I don\u0027t know).",
+        "createdAt": "2024-10-07T08:00:02",
+        "reactions": []
+      },
+      {
+        "id": 2396357726,
+        "author": "cho-trackman",
+        "body": "Sample project updated with CoreText as well.\r\n\r\n## iOS 17.5\r\n![Simulator Screenshot - iPad Pro 11-inch (M4) - 2024-10-07 at 11 09 04](https://github.com/user-attachments/assets/2610085e-7a5e-44ff-9fd4-0d88e8f5d91a)\r\n\r\n\r\n## iOS 18.0.1\r\n![IMG_72A203CE458B-1](https://github.com/user-attachments/assets/2098ee41-13be-4c38-a371-737afc59f9f1)\r\n\r\n\r\n\r\n",
+        "createdAt": "2024-10-07T09:10:25",
+        "reactions": []
+      },
+      {
+        "id": 2468125986,
+        "author": "mattleibow",
+        "body": "Can you try the latest preview 3.118? I wonder if there has been an update in the engine.\r\n\r\nAre you able to also try Mac Catalyst and see if this is an iOS vs Apple issue. Also, was this a device or a simulator?\r\n\r\nCan you try using [SkiaSharp.HarfBuzz](https://www.nuget.org/packages/SkiaSharp.HarfBuzz) and see if shaping makes a difference? Maybe even have a look at [RichTextKit](https://github.com/toptensoftware/RichTextKit). I know this is not ideal, but it will help narrow down where the issue is coming from. Maybe it is the fact that iOS 18 does not like something, or maybe there is some other issue that the other 2 libraries work around because they do more advanced text processing (more similar to the UILabel and CoreGraphics)\r\n\r\nAlso, what happens if you remove the Chinese character? The character might be causing an issue somehow.",
+        "createdAt": "2024-11-11T13:00:49",
+        "reactions": []
+      },
+      {
+        "id": 2469682528,
+        "author": "taublast",
+        "body": "If you ask me, what is to investigate here is how the PingFang SC font changed, the one shipped with iOS 18.\r\nThe fact that UILabel/Core-libs-whatever render that symbol means absolutely nothing in that regard, personally I would expect them to find the appropriate font for every glyph inside the text to render. While in the repro we look for appropriate font for the symbol \u0060\u5355\u0060 only.\r\n\r\nAn example of this is when you pass an emojy to a system label and specify a font where it doesn\u0027t exist. A normal behavior for such control would be to find an installed font where this glyph is present and render it. If you do same with skia low-level \u0060DrawText\u0060 you won\u0027t get it rendered correctly if it\u0027s missing. It\u0027s by design, it\u0027s okay, low-level renderers dont have to provide hi-level logic for you.\r\n\r\nSo one probability is if that glyph is missing from PingFang SC shipped with iOS 18 this issue is to be closed.\r\n\r\nTo be able to render complex text with emojies and such glyphs without worrying about what font to use when glyph is missing some would use [RichTextKit](https://github.com/toptensoftware/RichTextKit), some would use DrawnUI \u0060SkiaMarkdownLabel\u0060 [see example](https://github.com/taublast/DrawnUi.Maui.Demo/blob/cc06ec81b7a7fc374e90c401ccabb6c15ec2569d/src/Usual/MainPage.xaml#L166).",
+        "createdAt": "2024-11-12T06:06:24",
+        "reactions": []
+      },
+      {
+        "id": 2470054998,
+        "author": "cho-trackman",
+        "body": "Just tested on \u00603.118.0-preview.1.2\u0060 and the issue is still there. I will look into your other suggestions and come back with more info.",
+        "createdAt": "2024-11-12T09:42:46",
+        "reactions": []
+      },
+      {
+        "id": 2470061373,
+        "author": "cho-trackman",
+        "body": "\u003E Also, what happens if you remove the Chinese character? The character might be causing an issue somehow.\r\n\r\nThe degree char gets drawn as below, removing it removes the rectangle with the circle inside.\r\n![image](https://github.com/user-attachments/assets/f78dea2d-2e59-43f5-99f0-cf0e63c1921e)\r\n",
+        "createdAt": "2024-11-12T09:45:35",
+        "reactions": []
+      },
+      {
+        "id": 2470077574,
+        "author": "cho-trackman",
+        "body": " \u003E So one probability is if that glyph is missing from PingFang SC shipped with iOS 18 this issue is to be closed.\r\n\r\nDon\u0027t mix up Unicode and ASCII.",
+        "createdAt": "2024-11-12T09:52:47",
+        "reactions": []
+      },
+      {
+        "id": 2470083266,
+        "author": "cho-trackman",
+        "body": "I just stumbled upon this thread https://forums.developer.apple.com/forums/thread/758189.\r\n~~An Apple dev claims:~~\r\n\u003E ~~PingFang.ttc is no longer in /System/Library/Fonts/Core. iOS 18 has a new Chinese UI font.~~\r\n\r\n~~That is crazy news to me :O~~\r\nUpdate: The font is there, but has been moved and changed to a new undocumented format (see below post).",
+        "createdAt": "2024-11-12T09:55:22",
+        "reactions": []
+      },
+      {
+        "id": 2470129526,
+        "author": "cho-trackman",
+        "body": "This must be the issue:\r\n![image](https://github.com/user-attachments/assets/8e58daef-3833-4e39-93cb-a97e6010fd99)\r\nhttps://forums.developer.apple.com/forums/thread/758189?answerId=811700022#811700022",
+        "createdAt": "2024-11-12T10:15:39",
+        "reactions": []
+      }
+    ]
+  }
 }

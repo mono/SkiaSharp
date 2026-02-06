@@ -23,5 +23,46 @@
   "updatedAt": "2024-11-22T04:54:59",
   "closedAt": "2024-05-24T22:14:29",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:49:12.1846245Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2120921578,
+        "author": "mattleibow",
+        "body": "I downloaded your sample and noticed the \u0060.UseSkiaSharp()\u0060 line is missing from your MauiProgram.cs:\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/1096616/d9f0b7c8-2936-4c0c-9d6c-92553f6e8e48)\r\n",
+        "createdAt": "2024-05-20T17:50:31",
+        "reactions": []
+      },
+      {
+        "id": 2127644177,
+        "author": "daltzctr",
+        "body": "Nevermind. Needs preview version to work",
+        "createdAt": "2024-05-23T16:58:24",
+        "reactions": []
+      },
+      {
+        "id": 2130432140,
+        "author": "ToolmakerSteve",
+        "body": "\u003E I downloaded your sample and noticed the \u0060.UseSkiaSharp()\u0060 line is missing from your MauiProgram.cs:\r\n\r\nThat fixes it. I completely forgot about that.\r\n\r\nSorry about the false alarm. \r\n\r\nHopefully this will help others who make a similar mistake.",
+        "createdAt": "2024-05-24T22:14:29",
+        "reactions": []
+      },
+      {
+        "id": 2133561830,
+        "author": "mattleibow",
+        "body": "I need to put this in the docs... Not sure if there are any docs for setting up a maui with skia app.",
+        "createdAt": "2024-05-27T14:07:57",
+        "reactions": []
+      },
+      {
+        "id": 2176580713,
+        "author": "tmijieux",
+        "body": "Indeed the latest stable nuget  2.88.8 still has this problem (as we can see in the source code\r\nhttps://github.com/mono/SkiaSharp/blob/release/2.88.8/source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Controls/AppHostBuilderExtensions.cs#L25\r\n)\r\nI currently had to switch the UseSkiaSharp(bool)overload  with true argument if i wanted it to work on ios with latest nuget(2.88.8) version (from Compatibility Nuget i guess?)\r\n\r\nthe doc i found on this was that:\r\nhttps://learn.microsoft.com/en-us/dotnet/maui/migration/skiasharp?view=net-maui-8.0#initialize-skiasharp\r\n (as i was migrating  from a xamarin application, this is what I naturally  found)\r\n \r\n This thing is , i think the doc will be ok by the time you release the next version...\r\n\r\n (one thing i dont understand is why i had no problem on android)",
+        "createdAt": "2024-06-18T17:05:52",
+        "reactions": []
+      }
+    ]
+  }
 }

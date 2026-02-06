@@ -18,5 +18,42 @@
   "createdAt": "2024-06-04T12:20:38",
   "updatedAt": "2024-12-16T18:21:48",
   "commentCount": 2,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:48:08.7173711Z",
+    "reactions": [
+      {
+        "user": "enusbaum",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:48:08.7173757Z"
+      },
+      {
+        "user": "jlidbeck",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:48:08.7173764Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2147649085,
+        "author": "SeppPenner",
+        "body": "I worked around this by following https://learn.microsoft.com/en-us/answers/questions/1282529/does-anybody-know-if-maui-has-a-utility-or-package:\r\n\r\n\u0060\u0060\u0060csharp\r\n#if ANDROID\r\nglobal using AndroidBitmapFactory = Android.Graphics.BitmapFactory;\r\nglobal using AndroidBitmap = Android.Graphics.Bitmap;\r\n#endif\r\n\r\n#if IOS\r\nglobal using IoSNSData = Foundation.NSData;\r\nglobal using IoSUIImage = UIKit.UIImage;\r\n#endif\r\n\r\npublic static class ImageHelper\r\n{\r\n    try\r\n    {\r\n        var originalFilePath = await SavePhotoToCache(photo);\r\n\r\n        // Don\u0027t convert a JPG / JPEG file.\r\n        var filePathLowerCase = originalFilePath.ToLowerInvariant();\r\n\r\n        if (filePathLowerCase.EndsWith(\u0022.jpg\u0022) || filePathLowerCase.EndsWith(\u0022.jpeg\u0022))\r\n        {\r\n            return originalFilePath;\r\n        }\r\n\r\n        var jpegFilePath = Path.Combine(FileSystem.CacheDirectory, $\u0022{Path.GetFileNameWithoutExtension(photo.FileName)}.jpg\u0022);\r\n#if IOS\r\n        using var data = IoSNSData.FromFile(originalFilePath);\r\n        using var image = IoSUIImage.LoadFromData(data);\r\n\r\n        if (image is null)\r\n        {\r\n            return null;\r\n        }\r\n\r\n        using var jpegData = image.AsJPEG();\r\n\r\n        if (jpegData is null)\r\n        {\r\n            return null;\r\n        }\r\n\r\n        if (jpegData.Save(jpegFilePath, false, out var error))\r\n        {\r\n            FileHelper.TryDeleteFile(originalFilePath);\r\n            return jpegFilePath;\r\n        }\r\n        else\r\n        {\r\n            return null;\r\n        }\r\n#endif\r\n\r\n#if ANDROID\r\n        var image = await AndroidBitmapFactory.DecodeFileAsync(originalFilePath);\r\n        var compressionFormat = AndroidBitmap.CompressFormat.Jpeg;\r\n\r\n        if (image is null || compressionFormat is null)\r\n        {\r\n            return null;\r\n        }\r\n\r\n        using var ms = new MemoryStream();\r\n        image.Compress(compressionFormat, 100, ms);\r\n        await File.WriteAllBytesAsync(jpegFilePath, ms.ToArray());\r\n        FileHelper.TryDeleteFile(originalFilePath);\r\n        return jpegFilePath;\r\n#endif\r\n    }\r\n    catch\r\n    {\r\n        return null;\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe code takes the photo that comes from the MAUI media picker or camera as \u0060FileResult\u0060, saves it to the cache directory first and afterwards tries to convert and save the file as JPG format. I have tested this on Android (Not yet for iOS), and it works with .heic files.\r\n\r\nNote: I have left the deletion of the cached file(s) here for simplicity reasons. In my code, the files get deleted properly once not needed anymore, of course.\r\n\r\n**EDIT**: The new version is tested with iOS as well now.",
+        "createdAt": "2024-06-04T14:13:54",
+        "reactions": []
+      },
+      {
+        "id": 2546334967,
+        "author": "nandor23",
+        "body": "Encoding does not work either, it would be great if it were supported too.",
+        "createdAt": "2024-12-16T18:21:46",
+        "reactions": [
+          {
+            "user": "meritonferati",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:08.6671958Z"
+          }
+        ]
+      }
+    ]
+  }
 }

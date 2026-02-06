@@ -27,5 +27,82 @@
   "updatedAt": "2024-11-04T03:35:50",
   "closedAt": "2024-11-04T03:35:50",
   "commentCount": 7,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:49:48.6127956Z",
+    "reactions": [
+      {
+        "user": "2mik",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:49:48.6128002Z"
+      },
+      {
+        "user": "iharmaiseyeu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:49:48.6128011Z"
+      },
+      {
+        "user": "Soundman32",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:49:48.6128013Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2271582872,
+        "author": "2mik",
+        "body": "Got the same issue on Debian GNU/Linux 12 (bookworm), .NET8, and SkiaSharp 2.88.6.",
+        "createdAt": "2024-08-06T15:33:59",
+        "reactions": []
+      },
+      {
+        "id": 2272706974,
+        "author": "2mik",
+        "body": "In my case \u0060sudo apt install libfontconfig1\u0060 solved the issue. But the error message (in the page title) is not clear for that purpose. See [this](https://github.com/mono/SkiaSharp/issues/1341) thread.",
+        "createdAt": "2024-08-07T06:22:30",
+        "reactions": [
+          {
+            "user": "jxingnet",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:49:47.6001961Z"
+          }
+        ]
+      },
+      {
+        "id": 2310428495,
+        "author": "iharmaiseyeu",
+        "body": "I have the same issue after moving Linux Azure Functions to .NET 8. Everything works perfectly fine on .NET 6. \r\n\r\nBecause it is Azure Function I cannot use \u0060sudo apt install libfontconfig1\u0060 to install additional dependencies. \r\n\r\nThe following packages were installed:\r\n\u0060\u0060\u0060\r\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.88.8\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nThere is the [solution](https://github.com/mono/SkiaSharp/issues/1341#issuecomment-1172472310) in the thread #1341 but it looks mostly like a workaround, not like a real fix.",
+        "createdAt": "2024-08-26T15:00:27",
+        "reactions": []
+      },
+      {
+        "id": 2388552485,
+        "author": "Soundman32",
+        "body": "Same issue on AWS Lambda with .NET8.  Haven\u0027t tried .NET6.",
+        "createdAt": "2024-10-02T12:43:34",
+        "reactions": []
+      },
+      {
+        "id": 2439585128,
+        "author": "mattleibow",
+        "body": "I am testing here with AWS and it works for me: https://github.com/mattleibow/SkiaSharpAwsLambda\r\n\r\nI am using the \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 package to avoid having to install OS dependencies. If you don\u0027t want this one, then you will have to use the docker containers.\r\n\r\nI have included both examples in the repo.",
+        "createdAt": "2024-10-26T13:29:40",
+        "reactions": []
+      },
+      {
+        "id": 2439600645,
+        "author": "dotnet-policy-service[bot]",
+        "body": "Hi @pandi123. We have added the \u0060status/needs-info\u0060 label to this issue, which indicates that we have an open question for you before we can take further action. This issue will be closed automatically in 7 days if we do not hear back from you by then - please feel free to re-open it if you come back to this issue after that time.\n\u003C!-- Policy app identification https://img.shields.io/static/v1?label=PullRequestIssueManagement. --\u003E",
+        "createdAt": "2024-10-26T14:22:52",
+        "reactions": []
+      },
+      {
+        "id": 2449515326,
+        "author": "dotnet-policy-service[bot]",
+        "body": "This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.\n\u003C!-- Policy app identification https://img.shields.io/static/v1?label=PullRequestIssueManagement. --\u003E",
+        "createdAt": "2024-10-31T10:22:49",
+        "reactions": []
+      }
+    ]
+  }
 }

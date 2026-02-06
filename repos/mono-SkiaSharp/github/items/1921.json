@@ -14,5 +14,50 @@
   "updatedAt": "2024-11-13T17:24:13",
   "closedAt": "2024-11-13T17:24:13",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:49:24.9854763Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1006726226,
+        "author": "RChrisCoble",
+        "body": "I\u0027ve been discussing this support with @mattleibow and @danroth27 for probably close to a year.  \r\n\r\nThey understand the UC and it\u0027s _technically_ feasible, but probably requires SkiaSharp on both ends (WebAssembly and server) with the server packaging up the draw calls to send to the client for rendering.  That being said, I\u0027ve asked that this be supported over in the [Microsoft.MAUI.Graphics](https://github.com/dotnet/Microsoft.Maui.Graphics) repo instead of SkiaSharp so it\u0027s in the core 2D .Net drawing API directly.  Note: MAUI.Graphics is slated to support Blazor Client in the first release of MAUI timeframe (June).\r\n\r\nPerhaps there\u0027s an architecture which can provide this functionality in SkiaSharp directly then it\u0027s consumed in MAUI.Graphics so both benefit, although in MAUI.Graphics supports a variety of backend drawing API\u0027s besides SkiaSharp, so it probably makes more sense to support Blazor Server in MAUI.Graphics.",
+        "createdAt": "2022-01-06T16:28:24",
+        "reactions": [
+          {
+            "user": "Code-Chops",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:49:24.3079501Z"
+          },
+          {
+            "user": "EdgarLiebold",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:49:24.3079508Z"
+          }
+        ]
+      },
+      {
+        "id": 1013064053,
+        "author": "gmurray81",
+        "body": "Would be curious about your use case. I think the bigger problem and what makes this scenario uninteresting to me, is latency. Let\u0027s say your round trip time to the server gets upward of 200ms, this means if you are rendering as a direct response to user input there would be a very perceivable delay between when you interact with some interactive graphics and when they actually update. \r\n\r\nFurthermore that rtt isn\u0027t even stable and could spike up and down. For video delivery, the usual strategy is to delay the content enough that you can eat ping spikes and keep things appearing to happen in real time, but this is why live video streaming usually has such large inherent delay between when the content is being generated and when it is being delivered.\r\n\r\nOne solution for that is just to have a ton of servers in different regions and try to ensure that rtt is always as low as possible (e.g. streaming game services). \r\n\r\nThis leads me to believe that the main use cases for this would be for scenarios where a perceived delay between input and graphics reacting wouldn\u0027t be important.",
+        "createdAt": "2022-01-14T12:07:57",
+        "reactions": []
+      },
+      {
+        "id": 1013068845,
+        "author": "Code-Chops",
+        "body": "Yes you are right that is not really feasible/necessary in production. But it would be easy for faster debugging. Blazor WebAssembly takes more time to debug. But you are right; the use-case is not important to implement this feature :)",
+        "createdAt": "2022-01-14T12:15:25",
+        "reactions": []
+      },
+      {
+        "id": 2474273511,
+        "author": "mattleibow",
+        "body": "Duplicate of https://github.com/mono/SkiaSharp/issues/1194",
+        "createdAt": "2024-11-13T17:24:11",
+        "reactions": []
+      }
+    ]
+  }
 }

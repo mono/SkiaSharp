@@ -27,5 +27,355 @@
   "updatedAt": "2025-01-07T19:57:32",
   "closedAt": "2024-12-02T14:49:12",
   "commentCount": 26,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:47:51.0587892Z",
+    "reactions": [
+      {
+        "user": "elepner",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:47:51.0587951Z"
+      },
+      {
+        "user": "Kochkin",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:47:51.0587957Z"
+      },
+      {
+        "user": "IngweLand",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:47:51.0587961Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2479185421,
+        "author": "similar-issues-ai[bot]",
+        "body": "We\u0027ve found some similar issues:\n\n\n- #3035 , similarity score: 83%\n- #3037 , similarity score: 83%\n  \n\nIf any of the above are duplicates, please consider closing this issue out and adding additional context in the original issue.\n\n\u003E Note: You can give me feedback by \uD83D\uDC4D or \uD83D\uDC4E this comment.",
+        "createdAt": "2024-11-15T15:33:09",
+        "reactions": []
+      },
+      {
+        "id": 2480732364,
+        "author": "ghost",
+        "body": "I also tried \u00603.118.0-preview.1.2\u0060 and had the same issue.\r\n\r\n\u0060\u0060\u0060cs\r\nUnhandled Exception:\r\nSystem.DllNotFoundException: libSkiaSharp\r\n   at SkiaSharp.SKData..cctor()\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-11-16T18:43:05",
+        "reactions": [
+          {
+            "user": "devmasonz",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.2051915Z"
+          },
+          {
+            "user": "TRSkillman",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.2051919Z"
+          }
+        ]
+      },
+      {
+        "id": 2481851790,
+        "author": "qwertzou",
+        "body": ".NET9 I encountered this problem\uFF1AMicrosoft.AspNetCore.Components.WebAssembly.Rendering.WebAssemblyRenderer[100]\r\n      Unhandled exception rendering component: Could not set up parent class, due to: Could not load type of field \u0027SkiaSharp.Views.Blazor.Internal.JSModuleInterop:moduleTask\u0027 (0) due to: Could not resolve type with token 01000039 from typeref (expected class \u0027Microsoft.JSInterop.IJSUnmarshalledObjectReference\u0027 in assembly \u0027Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60\u0027) assembly:Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60 type:Microsoft.JSInterop.IJSUnmarshalledObjectReference member:(null) assembly:SkiaSharp.Views.Blazor.dll type:JSModuleInterop member:(null)\r\nSystem.TypeLoadException: Could not set up parent class, due to: Could not load type of field \u0027SkiaSharp.Views.Blazor.Internal.JSModuleInterop:moduleTask\u0027 (0) due to: Could not resolve type with token 01000039 from typeref (expected class \u0027Microsoft.JSInterop.IJSUnmarshalledObjectReference\u0027 in assembly \u0027Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60\u0027) assembly:Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60 type:Microsoft.JSInterop.IJSUnmarshalledObjectReference member:(null) assembly:SkiaSharp.Views.Blazor.dll type:JSModuleInterop member:(null)\r\n   at SkiaSharp.Views.Blazor.SKCanvasView.OnAfterRenderAsync(Boolean firstRender)",
+        "createdAt": "2024-11-18T03:08:47",
+        "reactions": [
+          {
+            "user": "mdubey82",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.4327993Z"
+          },
+          {
+            "user": "TRSkillman",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.4327996Z"
+          },
+          {
+            "user": "le-nn",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.4327997Z"
+          },
+          {
+            "user": "haslingerm",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.4327998Z"
+          },
+          {
+            "user": "IngweLand",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.4327999Z"
+          }
+        ]
+      },
+      {
+        "id": 2482399782,
+        "author": "capdiem",
+        "body": "I also have this issue using 3.116.0-preview.6.1\r\n\u0060\u0060\u0060cs\r\nvar imageInfo = new SKImageInfo(...)\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: libSkiaSharp\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-11-18T09:27:11",
+        "reactions": []
+      },
+      {
+        "id": 2493259357,
+        "author": "TRSkillman",
+        "body": "This is quite a serious issue for us too as we couldn\u0027t get 2.88.9 or 3.118.0-preview.1.2 working in .NET 9 using Blazor WASM.  \r\nWe had to roll-back to .NET 8.  \r\nI hope this gets fixed soon!",
+        "createdAt": "2024-11-22T09:08:00",
+        "reactions": [
+          {
+            "user": "jahnotto",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.8008822Z"
+          },
+          {
+            "user": "harveytriana",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.8008826Z"
+          },
+          {
+            "user": "rafalmaciag",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:46.8008827Z"
+          }
+        ]
+      },
+      {
+        "id": 2495497194,
+        "author": "jahnotto",
+        "body": "I don\u0027t know if it\u0027s related, but fo-dicom has some issues with loading plugins because .NET 9 has issues figuring out which architecture the CPU is. I don\u0027t know any more details -- but perhaps that\u0027s what\u0027s happening here as well as the dll can\u0027t be loaded.\r\n\r\nIt would be good to be able to upgrade to .NET 9 for sure.",
+        "createdAt": "2024-11-23T14:28:45",
+        "reactions": []
+      },
+      {
+        "id": 2495888064,
+        "author": "LucaCris",
+        "body": "A free sunday morning to upgrade my Blazor/SkiaSharp project to NET9 and... DllNotFoundException: libSkiaSharp \uD83D\uDCA9",
+        "createdAt": "2024-11-24T09:25:00",
+        "reactions": []
+      },
+      {
+        "id": 2498169213,
+        "author": "thomasstockermc",
+        "body": "This pull request should fix this. The underlying issue is a Bug in the .NET 9 Framework.\r\n\r\nhttps://github.com/mono/SkiaSharp/pull/3064",
+        "createdAt": "2024-11-25T14:28:04",
+        "reactions": []
+      },
+      {
+        "id": 2501813640,
+        "author": "mattleibow",
+        "body": "This may be fixed with https://github.com/mono/SkiaSharp/pull/3064\r\n\r\nCan you try the nightly on the preview feed: \u00603.118.0-nightly.27\u0060\r\n\r\n\u0060\u0060\u0060\r\nhttps://aka.ms/skiasharp-eap/index.json\r\n\u0060\u0060\u0060\r\n\r\nLet me know if this fixes it and I will push out the 3.x release.\r\n",
+        "createdAt": "2024-11-26T20:02:21",
+        "reactions": []
+      },
+      {
+        "id": 2502394492,
+        "author": "capdiem",
+        "body": "@mattleibow \u00603.118.0-nightly.27\u0060 is working, thanks! When will version 3.x be released?",
+        "createdAt": "2024-11-27T01:12:50",
+        "reactions": [
+          {
+            "user": "LucaCris",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:47:47.8380145Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:47:47.838015Z"
+          },
+          {
+            "user": "manu-aesim",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:47:47.8380151Z"
+          },
+          {
+            "user": "AtharvDusane",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:47:47.8380152Z"
+          }
+        ]
+      },
+      {
+        "id": 2504017542,
+        "author": "mattleibow",
+        "body": "I am hoping that I can release this week.",
+        "createdAt": "2024-11-27T14:26:46",
+        "reactions": [
+          {
+            "user": "haslingerm",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:48.0258205Z"
+          },
+          {
+            "user": "jahnotto",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:48.025821Z"
+          },
+          {
+            "user": "KaFo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:48.0258211Z"
+          },
+          {
+            "user": "harveytriana",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:48.0258212Z"
+          }
+        ]
+      },
+      {
+        "id": 2504303773,
+        "author": "jahnotto",
+        "body": "\u003E I am hoping that I can release this week.\r\n\r\nAwesome. Thank you! \r\n",
+        "createdAt": "2024-11-27T16:27:55",
+        "reactions": []
+      },
+      {
+        "id": 2504582971,
+        "author": "manu-aesim",
+        "body": "\u003E @mattleibow \u00603.118.0-nightly.27\u0060 is working, thanks! When will version 3.x be released?\r\n\r\nI had a similar issue, and this nightly build resolved it for me as well. Thanks!",
+        "createdAt": "2024-11-27T18:49:57",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:47:48.4373396Z"
+          }
+        ]
+      },
+      {
+        "id": 2506947272,
+        "author": "qwertzou",
+        "body": "\u003E This may be fixed with #3064\r\n\u003E \r\n\u003E Can you try the nightly on the preview feed: \u00603.118.0-nightly.27\u0060\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E https://aka.ms/skiasharp-eap/index.json\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Let me know if this fixes it and I will push out the 3.x release.\r\n\r\nUsing version 3.118.0-nightly.27, an issue was found. If there is a BasePath path, the SKHtmlCanvas.js file will not be loaded.Error 404 is reported\u3002This issue does not occur in version 2.88.9 \r\nIs it related to here?   \u0022/\u0022 \u002B moduleUrl\r\n\u0060\u0060\u0060\r\npublic JSModuleInterop(IJSRuntime js, string moduleName, string moduleUrl)\r\n\t\t{\r\n                       #if NET7_0_OR_GREATER\r\n\t\t\tmoduleTask = JSHost.ImportAsync(moduleName, \u0022/\u0022 \u002B moduleUrl);\r\n                        #else\r\n\t\t\tif (js is not IJSInProcessRuntime)\r\n\t\t\t\tthrow new NotSupportedException(\u0022SkiaSharp currently only works on Web Assembly.\u0022);\r\n\r\n\t\t\tmoduleTask = js.InvokeAsync\u003CJSObject\u003E(\u0022import\u0022, moduleUrl).AsTask();\r\n                        #endif\r\n\t\t}\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-11-29T02:01:07",
+        "reactions": []
+      },
+      {
+        "id": 2506997018,
+        "author": "qwertzou",
+        "body": "![a84a031f-8bce-4d18-a0d4-cc72fafa9e9e](https://github.com/user-attachments/assets/d411e9f5-f4de-4465-b78c-1271b71d832d)\r\n![a08b628a-037b-45fc-8427-9f175864d834](https://github.com/user-attachments/assets/5f912509-1467-4e0b-80ec-48f580a63609)\r\n",
+        "createdAt": "2024-11-29T02:44:14",
+        "reactions": []
+      },
+      {
+        "id": 2508952052,
+        "author": "mattleibow",
+        "body": "@18779758522 can you add a sample so I can investigate? ",
+        "createdAt": "2024-11-30T12:49:08",
+        "reactions": []
+      },
+      {
+        "id": 2511499043,
+        "author": "mattleibow",
+        "body": "@18779758522 this PR should fix it for you: https://github.com/mono/SkiaSharp/pull/3092",
+        "createdAt": "2024-12-02T13:09:18",
+        "reactions": []
+      },
+      {
+        "id": 2511745021,
+        "author": "mattleibow",
+        "body": "Closing this as all the issues mentioned in here have been fixed by one PR or another. Hopefully once CI is finished I can release. It has been a long time.",
+        "createdAt": "2024-12-02T14:49:10",
+        "reactions": [
+          {
+            "user": "haslingerm",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:49.4154378Z"
+          }
+        ]
+      },
+      {
+        "id": 2513417470,
+        "author": "qwertzou",
+        "body": "\u003E @18779758522 this PR should fix it for you: #3092\r\n\r\nIs there a release preview? I\u0027d love to test it out",
+        "createdAt": "2024-12-03T02:35:53",
+        "reactions": [
+          {
+            "user": "IngweLand",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:49.6290039Z"
+          },
+          {
+            "user": "heartacker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:49.6290047Z"
+          }
+        ]
+      },
+      {
+        "id": 2515965764,
+        "author": "mattleibow",
+        "body": "This should be on nuget.org now",
+        "createdAt": "2024-12-04T01:29:29",
+        "reactions": []
+      },
+      {
+        "id": 2525211235,
+        "author": "harveytriana",
+        "body": "Update to 3.118.0-preview.2.3\r\n\r\nStart Without Debbuging: OK!\r\nStart With Debbuging: *No canvas element was provided.*\r\n\r\nMinimal sample: https://github.com/harveytriana/BlazorMinimalSS9",
+        "createdAt": "2024-12-07T15:35:18",
+        "reactions": [
+          {
+            "user": "LucaCris",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:50.0552252Z"
+          },
+          {
+            "user": "xela-trawets",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:50.0552259Z"
+          },
+          {
+            "user": "syminomega",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:50.055226Z"
+          }
+        ]
+      },
+      {
+        "id": 2525416895,
+        "author": "mattleibow",
+        "body": "@harveytriana thanks for letting me know, can you try 3.116.0?\n\nAlso, please open a new issue with your findings. Thanks! ",
+        "createdAt": "2024-12-08T04:46:58",
+        "reactions": [
+          {
+            "user": "harveytriana",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:50.2623744Z"
+          }
+        ]
+      },
+      {
+        "id": 2525572848,
+        "author": "LucaCris",
+        "body": "I can confirm the \u0022random appearing\u0022 canvas.",
+        "createdAt": "2024-12-08T10:08:41",
+        "reactions": []
+      },
+      {
+        "id": 2525575802,
+        "author": "haslingerm",
+        "body": "I got \u0060No canvas element was provided\u0060 after upgrading until I cleared the browser cache (in Firefox the one that does _not_ go away with Ctrl\u002BF5, but has to be deleted in \u0060about:preferences#privacy \u003E Clear Data\u0060) and it worked since then, debug or not.\r\nIf you guys can repro it then there must be another error somewhere, but maybe this helps track it down.",
+        "createdAt": "2024-12-08T10:18:12",
+        "reactions": [
+          {
+            "user": "mennowo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:47:50.6488866Z"
+          }
+        ]
+      },
+      {
+        "id": 2527055731,
+        "author": "mattleibow",
+        "body": "Hmmm, I wonder if I need to make the js files not cached. I thought it was, but I guess not. ",
+        "createdAt": "2024-12-09T06:32:46",
+        "reactions": []
+      },
+      {
+        "id": 2575762428,
+        "author": "xela-trawets",
+        "body": "In ScottPlot \r\nunder dotnet 8, ScottPlot using  \u0060\u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.118.0-preview.2.3\u0022 /\u003E\u0060\r\n@harveytriana HarveyTriana\u0027s observation holds in the blazor demo code - also mouse events are disconnected- interop maybe?\r\n[https://github.com/ScottPlot/ScottPlot/issues/4584](url)\r\n\r\nOn dotnet 9, the (scottplot) canvas shows up in both release and debug, \r\nAlso in both dotnet 8 and dotnet 9 the mouse interaction seems to be disconnected, but that maybe \u0022old\u0022 blazor js interop.\r\n\r\n\r\n\u003E Update to 3.118.0-preview.2.3\r\n\u003E Start Without Debbuging: OK! Start With Debbuging: _No canvas element was provided._\r\n\u003E Minimal sample: https://github.com/harveytriana/BlazorMinimalSS9\r\n\r\n",
+        "createdAt": "2025-01-07T16:42:07",
+        "reactions": []
+      }
+    ]
+  }
 }

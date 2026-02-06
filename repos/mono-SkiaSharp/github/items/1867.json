@@ -14,5 +14,38 @@
   "updatedAt": "2024-11-13T17:19:54",
   "closedAt": "2024-11-13T17:19:53",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:49:26.2524336Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 991840540,
+        "author": "artemiusgreat",
+        "body": "Try this as an example. You may need to downgrade the package version in csproj file and add additional nuget sources in nuget.config \r\n[https://github.com/mattleibow/SkiaSharpBlazorWebAssembly](https://github.com/mattleibow/SkiaSharpBlazorWebAssembly) ",
+        "createdAt": "2021-12-12T06:03:18",
+        "reactions": []
+      },
+      {
+        "id": 992719461,
+        "author": "peder1896",
+        "body": "Thank you artemiusgreat i did as you suggested and downloaded the project, it worked perfect.\r\nI  then took a look in the csproj file and realised i had not included the following  in the PropertyGroup\r\n\r\n    \u003CTargetFramework\u003Enet6.0\u003C/TargetFramework\u003E\r\n\t  \u003CNullable\u003Eenable\u003C/Nullable\u003E\r\n\t  \u003CWasmBuildNative\u003Etrue\u003C/WasmBuildNative\u003E\r\n\r\nand this in the ItemGroup\r\n\r\n\t\t\u003CNativeFileReference Include=\u0022$(SkiaSharpStaticLibraryPath)\\2.0.23\\*.a\u0022 /\u003E\r\n\r\n\r\nNow it works in my own project \r\nGreat",
+        "createdAt": "2021-12-13T17:46:27",
+        "reactions": [
+          {
+            "user": "Ramaraj-Marimuthu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:49:26.0267712Z"
+          }
+        ]
+      },
+      {
+        "id": 2474263777,
+        "author": "mattleibow",
+        "body": "The new blazor packages now automatically include the binaries.",
+        "createdAt": "2024-11-13T17:19:53",
+        "reactions": []
+      }
+    ]
+  }
 }

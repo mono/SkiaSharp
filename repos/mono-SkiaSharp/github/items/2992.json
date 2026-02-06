@@ -18,5 +18,39 @@
   "createdAt": "2024-09-09T11:28:55",
   "updatedAt": "2025-01-19T09:09:55",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:47:39.3821273Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2373579395,
+        "author": "TomEdwardsEnscape",
+        "body": "I dug into things and found that the non-exported method isn\u0027t a decision made by the SkiaSharp team, but a result of the mono/skia repo missing this upsteam bug fix: google/skia@ec70dfbaa2e99ae34cc40bebe7c59e3b87d31eaf",
+        "createdAt": "2024-09-25T09:39:34",
+        "reactions": []
+      },
+      {
+        "id": 2444864758,
+        "author": "mattleibow",
+        "body": "How would the perfect C# API look?\r\n\r\nIn my tired brain, it came up with this:\r\n\r\n\u0060\u0060\u0060cs\r\n\r\nvoid Test()\r\n{\r\n\tRegisterDecoder(\u0022png\u0022, new PngDecoder());\r\n}\r\n\r\nvoid RegisterDecoder(string id, ISKCodecDecoder decoder)\r\n{\r\n}\r\n\r\ninterface ISKCodecDecoder\r\n{\r\n\tbool CanDecode(ReadOnlySpan\u003Cbyte\u003E data);\r\n\r\n\tSKCodec Decode(SKStream stream, out SKCodecResult result);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nNot sure we need to expose the exact same API that skia uses.",
+        "createdAt": "2024-10-29T17:04:20",
+        "reactions": []
+      },
+      {
+        "id": 2446953114,
+        "author": "mattleibow",
+        "body": "Looking at the code for \u0060SKCodec\u0060, there are quite a few things that we will need to first expose before you can possibly inherit from \u0060SKCodec\u0060.",
+        "createdAt": "2024-10-30T12:20:52",
+        "reactions": []
+      },
+      {
+        "id": 2454059473,
+        "author": "TomEdwardsEnscape",
+        "body": "Our use case also requires encoding. It\u0027s reasonable to separate the two interfaces, but having them merged and throwing \u0060NotSupportedException\u0060 is also OK.\n\nA way to retrieve a codec by name is required, since the current \u0060Encode\u0060 methods use the \u0060SKEncodedImageFormat\u0060 enum, which cannot be extended. We don\u0027t need to do anything special for the decoder as Skia automatically finds the correct one.\n\nThe ideal interface would bypass the \u0060SKCodec\u0060 type entirely, and just convert between a stream and an image, or vice versa. However there are a lot of fiddly methods on the native \u0060SKCodec\u0060 class, and some (or even most) may need to be implemented in C# too.\n\n\u0060\u0060\u0060C#\n\npublic static class SKCodec\n{\n\tpublic static ISKCodecEncoder GetEncoder(string extension) {}\n\n\tvoid RegisterEncoder(string id, ISKCodecEncoder encoder) {}\n\tvoid RegisterDecoder(string id, ISKCodecDecoder decoder) {}\n\n\tpublic static void Encode(this SKImage, string extension, SKStream destination) {}\n\tpublic static SKData Encode(this SKImage image, string extension) {}\n}\n\ninterface ISKCodecEncoder\n{\n\tvoid Encode(SKImage image, SKStream destination);\n\tSKData Encode(SKImage image);\n}\n\ninterface ISKCodecDecoder\n{\n\tbool CanDecode(ReadOnlySpan\u003Cbyte\u003E data);\n\tSKImage Decode(SKStream source);\n}\n\u0060\u0060\u0060",
+        "createdAt": "2024-11-04T08:14:40",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -32,5 +32,45 @@
   "updatedAt": "2024-10-30T12:55:04",
   "closedAt": "2024-10-30T12:55:04",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:49:57.0987362Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 441807395,
+        "author": "mattleibow",
+        "body": "I am not sure exactly what is happening here, but I think it may have to do with text hinting and other text properties. However, while looking at this issue, I found that Google has deprecated the ability to draw text on a path: https://bugs.chromium.org/p/skia/issues/detail?id=7554\r\n\r\nThey have moved all the code out of the main library into the utilities: https://github.com/google/skia/blob/c5fe15dd4dcf8ede8d1651f8d39dbd1754ad9646/src/utils/SkTextOnPath.cpp\r\n\r\nI am not yet sure what this means for the next version as I am unsure if Google is planning on maintaining these utilities. They sometimes tweak a few things, so I will have to ask them about these.\r\nhttps://github.com/google/skia/tree/master/include/utils\r\n\r\nIn the meantime, try enabling antialliasing and text hinting as this should fix the problem. Also, since you are drawing straight text, it might be better to rotate the canvas as this can make use of all the drawing techniques without having to process the text on the straight path.\r\n\r\nLet me know if these options work, and maybe provide more info. I do know that Google is deprecating most non-horizontal text drawing as you can either rotate the canvas or they want you to transform the characters yourself - which I need to have a look and see what this means.",
+        "createdAt": "2018-11-26T21:35:12",
+        "reactions": []
+      },
+      {
+        "id": 441811349,
+        "author": "mattleibow",
+        "body": "I asked a question on this in the groups: https://groups.google.com/forum/#!topic/skia-discuss/qRARbUW2qhw",
+        "createdAt": "2018-11-26T21:47:16",
+        "reactions": [
+          {
+            "user": "f2calv",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:49:56.6391674Z"
+          }
+        ]
+      },
+      {
+        "id": 2447048381,
+        "author": "mattleibow",
+        "body": "One thing that can actually be done is to rotate the canvas, draw the text, and then rotate back.\r\n\r\nFor example, in your scenario, replace the path run with \r\n\r\n\u0060\u0060\u0060cs\r\ncanvas.RotateDegrees(-90, 50, 50);\r\ncanvas.DrawText(text, 0, 95, paint);\r\n\u0060\u0060\u0060\r\n\r\nText rendering in SkiaSharp is not really meant to be used directly as it is just the base APIs without shaping or layout or fallback. Maybe use something like [RichTextKit](https://github.com/toptensoftware/RichTextKit).",
+        "createdAt": "2024-10-30T12:53:36",
+        "reactions": []
+      },
+      {
+        "id": 2447051877,
+        "author": "mattleibow",
+        "body": "Closing this issue for now since those APIs are now obsolete.",
+        "createdAt": "2024-10-30T12:54:58",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -27,5 +27,39 @@
   "updatedAt": "2024-10-30T12:57:01",
   "closedAt": "2024-10-30T12:57:00",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:49:55.5179949Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 292957109,
+        "author": "bugadani",
+        "body": "I\u0027ve run into this today.\r\n\r\nMy setup is a charting control that draws in PaintSurface handler. I implemented panning and pinch to zoom that update actual drawing parameters in PaintSurface handler. My first resuts yielded normal-ish performance for panning, and variable, slow performance while zooming (slow framerates, only refreshed while slowly pinching). Turns out, calling Debug.WriteLine in PinchUpdated handler is a bad idea - the handler should be as short as possible because it takes priority over PaintSurface.\r\n\r\n@mgierlasinski you may have better results if you separate bitmap drawing out of the gesture event handlers.\r\n",
+        "createdAt": "2017-04-10T13:58:04",
+        "reactions": []
+      },
+      {
+        "id": 325801679,
+        "author": "mattleibow",
+        "body": "I had a look at this, and the reason is that the OpenGL for UWP is not quite perfect yet when it comes to the view.\r\n\r\nI need to go back and investigate the correct (or better) way to get the scaling correct. Currently, to preserve the quality of high density screens, I am rendering the large framebuffer. However, there is some disconnect with the framebuffer and the view, so I am having to scale the view down using a \u0060ScaleTransform\u0060:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.UWP/SKSwapChainPanel.cs#L46-L50\r\n\r\nAs a result of the scaling, the actual view is (on my Lumia 950 XL) only a third of the total visible view. Thus, it gives the impression that the gestures aren\u0027t working at all, but in fact they do work, but only in the top left third of the screen.",
+        "createdAt": "2017-08-29T20:56:47",
+        "reactions": []
+      },
+      {
+        "id": 356205167,
+        "author": "jross100",
+        "body": "Hi @mattleibow \r\n\r\nI\u0027ve run into this bug too with touch events and the SKGLView. \r\n\r\nI think this could be solved by setting the scale when creating the surface. See here for info:\r\n\r\nhttps://github.com/Microsoft/angle/issues/29#issuecomment-116840213\r\n\r\nIt looks like the information that Dmitry wrote might be relevant as well:  \r\n\r\nhttps://developernote.com/2015/11/combining-opengl-and-xaml-together-in-a-windows-store-app-uwp/ \r\n",
+        "createdAt": "2018-01-09T07:45:45",
+        "reactions": []
+      },
+      {
+        "id": 2447060756,
+        "author": "mattleibow",
+        "body": "This way of rendering should now be fixed. And, we are not really supporting UWP anymore, WinUI is the way to go. That has a totally new implementation, so I am going to close this for now.\r\n\r\nFor any similar issues, please open a new issue.",
+        "createdAt": "2024-10-30T12:57:01",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -18,5 +18,25 @@
   "createdAt": "2024-05-27T11:11:18",
   "updatedAt": "2025-01-06T13:47:36",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:47:53.8617822Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2134445094,
+        "author": "BadaPZ",
+        "body": "Is there anything wrong with not having LoadLibraryW and CharSet = CharSet.Unicode implemented here?\r\n\r\n\t\tprivate static class Win32\r\n\t\t{\r\n\t\t\tprivate const string SystemLibrary = \u0022Kernel32.dll\u0022;\r\n\r\n\t\t\t[DllImport (SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]\r\n\t\t\tpublic static extern IntPtr LoadLibrary (string lpFileName);\r\n\r\n\t\t\t[DllImport (SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]\r\n\t\t\tpublic static extern IntPtr GetProcAddress (IntPtr hModule, string lpProcName);\r\n\r\n\t\t\t[DllImport (SystemLibrary, SetLastError = true, CharSet = CharSet.Ansi)]\r\n\t\t\tpublic static extern void FreeLibrary (IntPtr hModule);\r\n\t\t}\r\n",
+        "createdAt": "2024-05-28T06:33:18",
+        "reactions": []
+      },
+      {
+        "id": 2573147522,
+        "author": "EugeneZaitsev",
+        "body": "Confirming an issue. Any non-unicode character path on Windows causes loading fails.",
+        "createdAt": "2025-01-06T13:47:34",
+        "reactions": []
+      }
+    ]
+  }
 }

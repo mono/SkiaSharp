@@ -18,5 +18,223 @@
   "createdAt": "2022-04-15T08:26:00",
   "updatedAt": "2024-12-20T09:40:47",
   "commentCount": 17,
-  "reactionCount": 5
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:48:04.4405095Z",
+    "reactions": [
+      {
+        "user": "saamerm",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:48:04.4405146Z"
+      },
+      {
+        "user": "ibocon",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:48:04.4405156Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:48:04.4405159Z"
+      },
+      {
+        "user": "sps014",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:48:04.4405162Z"
+      },
+      {
+        "user": "Stxtics",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:48:04.4405324Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1100179324,
+        "author": "mattleibow",
+        "body": "What version of Visual Studio are you using?",
+        "createdAt": "2022-04-15T15:32:24",
+        "reactions": []
+      },
+      {
+        "id": 1100180311,
+        "author": "SailDev",
+        "body": "Microsoft Visual Studio Community 2022 (64-bit) - Preview\r\nVersion 17.2.0 Preview 3.0\r\n",
+        "createdAt": "2022-04-15T15:34:09",
+        "reactions": []
+      },
+      {
+        "id": 1150635875,
+        "author": "naweed",
+        "body": "I have the same issue. I am using VS for Mac 17.3 Preview. It works fine for Android and it correctly fires OnPaintSurface on InvalidateSurface, but on iOS, it is not calling OnPaintSurface.",
+        "createdAt": "2022-06-09T03:44:09",
+        "reactions": []
+      },
+      {
+        "id": 1151083675,
+        "author": "naweed",
+        "body": "Strangely, it works from my M1 Mac. I have the issue with Intel Mac. May be this is an Intel x86 architecture thing.",
+        "createdAt": "2022-06-09T12:54:20",
+        "reactions": []
+      },
+      {
+        "id": 1151452748,
+        "author": "egvijayanand",
+        "body": "It\u0027s not getting invoked on any of the platforms (tried iOS, Android, and Windows) with both the recent stable ([2.88.0](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls/2.88.0)) and preview ([2.88.1-preview.63](https://www.nuget.org/packages/SkiaSharp.Views.Maui.Controls/2.88.1-preview.63)) release versions.\r\n\r\nTried with both XAML and C# definitions, there is no change in the result.\r\n\r\nWorking with .NET MAUI GA and VS2022 for Windows ver. 17.3.0 Preview 1.1",
+        "createdAt": "2022-06-09T18:21:41",
+        "reactions": [
+          {
+            "user": "F-Goncalves",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:01.9914125Z"
+          }
+        ]
+      },
+      {
+        "id": 1333386532,
+        "author": "ibocon",
+        "body": "### Operating System\r\nWindows 11 Pro 21H2\r\n![image](https://user-images.githubusercontent.com/9730869/204999628-b21eb923-35e5-4f0d-8ecc-75c140b8e358.png)\r\n\r\n### Visual Stuido\r\nMicrosoft Visual Studio Enterprise 2022 (64-bit) Version 17.4.1\r\n![image](https://user-images.githubusercontent.com/9730869/204999519-1850758e-4c36-4a98-b02c-c888ad732dda.png)\r\n\r\n### CS Project\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\r\n\t\u003CPropertyGroup\u003E\r\n\t\t\u003CTargetFrameworks\u003Enet7.0-ios\u003C/TargetFrameworks\u003E\r\n\t\t\u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00222.88.3\u0022 /\u003E\r\n\t\u003C/ItemGroup\u003E\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n### Windows \r\n![windows](https://user-images.githubusercontent.com/9730869/206090800-7db14bda-c062-4f9c-8fe7-3e88e04d25bf.png)\r\n\r\n### Android\r\n![android](https://user-images.githubusercontent.com/9730869/206090823-c239bb40-cca9-4021-b28d-2df413755827.png)\r\n\r\n### iOS\r\n\r\n#### Windows\r\n![ios](https://user-images.githubusercontent.com/9730869/206090836-69a9c7b9-c3fe-4b36-843f-2a575537d8f2.png)\r\n\r\n#### macOS\r\n![macOS - iOS (1)](https://user-images.githubusercontent.com/9730869/206104471-2bc0f798-d42a-4db3-8de4-f0b7441bf99f.jpg)\r\n\r\n### Mac Catalyst\r\n![macOS - mac catalyst (1)](https://user-images.githubusercontent.com/9730869/206104495-49fb3d55-33fb-44ca-96c2-d009077dcf24.jpg)\r\n\r\n\r\n### Source Code\r\n\r\n\u0060\u0060\u0060cs\r\npublic sealed class PreviewView\r\n\t: SKCanvasView\r\n{\r\n\tprotected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n\t{\r\n\t\tbase.OnPaintSurface(e);\r\n\r\n\t\tusing SKCanvas skCanvas = e.Surface.Canvas;\r\n\t\tskCanvas.Clear();\r\n\t\tskCanvas.DrawColor(SKColors.Wheat);\r\n\t\t\r\n\t\tSKBitmap bitmap = _canvas.Paint(_paper);\r\n\t\tskCanvas.DrawBitmap(bitmap, new SKPoint(0, 0));\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2022-12-01T08:22:11",
+        "reactions": []
+      },
+      {
+        "id": 1384269960,
+        "author": "yoshiask",
+        "body": "I am also seeing this issue with 2.88.3, built with .NET MAUI 7 and Rider 2022.3.1. I can only test on Windows and Android, but \u0060OnPaintSurface\u0060 is never called on either platform.",
+        "createdAt": "2023-01-16T16:14:20",
+        "reactions": []
+      },
+      {
+        "id": 1384347226,
+        "author": "yoshiask",
+        "body": "It looks like this issue may be caused by placing the \u0060SKCanvasView\u0060 inside a \u0060StackLayout\u0060. Placing it directly inside a \u0060ScrollView\u0060, while of course doesn\u0027t scroll, does fire the \u0060PaintSurface\u0060 event and renders.",
+        "createdAt": "2023-01-16T17:14:20",
+        "reactions": []
+      },
+      {
+        "id": 1625284033,
+        "author": "Niv2023",
+        "body": "Had same issue now (VS 2022 17.6.3 and SkiaSharp 2.88.3)\r\nSpent quite some time to get it figured out. Herewith my finds\r\n-\tSKCanvasView indeed doesn\u2019t work as a StackLayout child\r\n-\tIt does work under a ScrollView, but the scrollview impacts the gesture events passed to the SKcanvasView (events gets \u0027cancelled\u0027 when \u0027dragging\u0027 vertically)\r\n-\tThan I\u2019ve placed under a FlexLayout which works great on Android (touch events properly passed to the child)\u2026. But then it doesn\u0027t work on IOS \u2639\r\n-\tI have finally placed under a \u003CContentView\u003E with seems to work with both Android and IOS\r\n",
+        "createdAt": "2023-07-07T11:38:50",
+        "reactions": []
+      },
+      {
+        "id": 1625285667,
+        "author": "Niv2023",
+        "body": "I have placed under a ContentView.... \r\n",
+        "createdAt": "2023-07-07T11:40:17",
+        "reactions": [
+          {
+            "user": "mackayn",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:02.9212748Z"
+          }
+        ]
+      },
+      {
+        "id": 1735002330,
+        "author": "JoacimWall",
+        "body": "Any solution for this have the same problem on 8 rc1 and Mac m1 and on release off app to App Store.\r\nSame code work onAndriod\r\n\r\n//Joacim",
+        "createdAt": "2023-09-26T07:43:26",
+        "reactions": [
+          {
+            "user": "ibocon",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:48:03.1201153Z"
+          }
+        ]
+      },
+      {
+        "id": 1797933538,
+        "author": "sps014",
+        "body": "Same issue in MAUI .NET 8 rc 2 on Windows and Android also with StackLayout.",
+        "createdAt": "2023-11-07T07:11:50",
+        "reactions": [
+          {
+            "user": "ibocon",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:48:03.3331929Z"
+          }
+        ]
+      },
+      {
+        "id": 1839367040,
+        "author": "VNGames",
+        "body": "For me on Android it doesn\u0027t work when it is inside a grid and I set HorizontalOptions=\u0022center\u0022. Without it it works.\r\nIf I try to wrap it into contentview or another grid to center it by centering a wrapper it also doesn\u0027t work.\r\nI use MeasureOverride to calculate size. It may affect.\r\nOverall it seems very unstable. I don\u0027t know whether the problem is in MAUI or SkiaSharp but this is a critical bug.",
+        "createdAt": "2023-12-04T19:49:08",
+        "reactions": [
+          {
+            "user": "ibocon",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:48:03.5344333Z"
+          },
+          {
+            "user": "curtiscali",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:48:03.5344338Z"
+          }
+        ]
+      },
+      {
+        "id": 1848944079,
+        "author": "VNGames",
+        "body": "I solved all my problems on Android where OnPaintSurface wasn\u0027t called. Haven\u0027t tried iOS yet.\r\nI use MeasureOverride to calculate the size of the control based on some properties and available height. OnPaintSurface isn\u0027t called when HorizontalOptions=\u0022Center\u0022.\r\nAlso it isn\u0027t called/or it is but calculation is wrong (I forgot) if you want for example to have a HeightRequest=\u0022200\u0022 on the control but Width being calculated based on Height inside MeasureOverride. MAUI will just call MeasureOverride with infinite constraint for both width and height instead of (Double.Infinite, 200)\r\nTo solve this I have to wrap control into ContentView and set HeightRequest=\u0022200\u0022 for ContentView. If I want to center the control I also should center this ContentView instead of control itself.\r\n\r\nIt is like returning back 8 years when Xamarin was a chaos and such kind of hacks were needed for everything.",
+        "createdAt": "2023-12-10T11:58:18",
+        "reactions": [
+          {
+            "user": "SailDev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:03.7460032Z"
+          },
+          {
+            "user": "ibocon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:03.7460037Z"
+          },
+          {
+            "user": "curtiscali",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:03.7460038Z"
+          }
+        ]
+      },
+      {
+        "id": 2126457108,
+        "author": "vladtrabl",
+        "body": "I had the same problem. I called InvalidateSurface intermittently with System.Timer and on IOS it doesn\u0027t call OnPaintSurface. MainThread.BeginInvokeOnMainThread(InvalidateSurface) solves this problem.",
+        "createdAt": "2024-05-23T07:50:41",
+        "reactions": [
+          {
+            "user": "ibocon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:03.9483836Z"
+          },
+          {
+            "user": "vchelaru",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:03.9483842Z"
+          },
+          {
+            "user": "curtiscali",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:48:03.9483842Z"
+          }
+        ]
+      },
+      {
+        "id": 2298272591,
+        "author": "5CoJL",
+        "body": "I\u0027m facing the same issue, solely for iOS as well, and none of the workarounds here work.\r\nI am building with Pair to Mac using the Remote Device. I have tried MainThread.BeginInvokeOnMainThread(() =\u003E mySkCanvasView.InvalidateSurface()); to no avail.\r\n\r\nAndroid works perfectly fine.\r\n\r\nEdit: Removing VerticalOptions and HorizontalOptions in the XAML of my SKCanvasView worked, my bad.",
+        "createdAt": "2024-08-20T08:25:53",
+        "reactions": []
+      },
+      {
+        "id": 2556629903,
+        "author": "mackayn",
+        "body": "\u003E I have placed under a ContentView....\r\n\r\nCan confirm that this workaround worked for me on Android \u0026 iOS with .NET8 MAUI 8.0.100",
+        "createdAt": "2024-12-20T09:40:45",
+        "reactions": []
+      }
+    ]
+  }
 }
