@@ -13,5 +13,204 @@
   "createdAt": "2019-05-31T17:55:21",
   "updatedAt": "2021-03-17T13:23:43",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:40.6705301Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 497803854,
+        "author": "HugoTruffe",
+        "body": "In other chat, I found\r\n\r\nhttps://github.com/xamarin/xamarin-macios/issues/5265",
+        "createdAt": "2019-05-31T17:56:19",
+        "reactions": [
+          {
+            "user": "AndreaGobs",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:37.9039024Z"
+          },
+          {
+            "user": "bdgza",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:37.9039029Z"
+          },
+          {
+            "user": "GaboBrandX",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:37.903903Z"
+          }
+        ]
+      },
+      {
+        "id": 498240913,
+        "author": "AndreaGobs",
+        "body": "I\u0027m having the same issue. Xamarin Forms 4.0.0, Visual Studio 2019 for Windows, SkiaSharp.Views.Forms 1.68.0. The workaround of # 5265 to switch from x64 to Any CPU temporally resolve the issue.",
+        "createdAt": "2019-06-03T12:44:35",
+        "reactions": []
+      },
+      {
+        "id": 500958837,
+        "author": "amirvenus",
+        "body": "I am having the same issue. \r\n\r\nHow would I change to Any CPU on VS for Mac?",
+        "createdAt": "2019-06-11T18:07:19",
+        "reactions": [
+          {
+            "user": "wickedw",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.3453625Z"
+          },
+          {
+            "user": "marcelom56",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.345363Z"
+          }
+        ]
+      },
+      {
+        "id": 507250903,
+        "author": "bdgza",
+        "body": "Any more info on this issue? I have the same problem. Can not make an iOS build with SkiaSharp 1.68.0.",
+        "createdAt": "2019-07-01T12:49:50",
+        "reactions": [
+          {
+            "user": "wickedw",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.5470227Z"
+          },
+          {
+            "user": "jeremymarabel",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.5470232Z"
+          },
+          {
+            "user": "marcelom56",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.5470233Z"
+          },
+          {
+            "user": "GO74",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.5470234Z"
+          },
+          {
+            "user": "karls4",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.5470235Z"
+          }
+        ]
+      },
+      {
+        "id": 517281663,
+        "author": "jeremymarabel",
+        "body": "Any news on this issue ?",
+        "createdAt": "2019-08-01T13:11:26",
+        "reactions": [
+          {
+            "user": "wickedw",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.7509744Z"
+          },
+          {
+            "user": "marcelom56",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.7509749Z"
+          },
+          {
+            "user": "GO74",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.7509787Z"
+          },
+          {
+            "user": "karls4",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:38.7509788Z"
+          }
+        ]
+      },
+      {
+        "id": 528415211,
+        "author": "GO74",
+        "body": "I\u0027m struggeling with this issue as well. As soon as I upgrade to 1.68.0 it cannot load the assemblie. I\u0027ve tried many suggestions, none solved the problem so far.",
+        "createdAt": "2019-09-05T15:06:21",
+        "reactions": []
+      },
+      {
+        "id": 540499043,
+        "author": "NehaGawri",
+        "body": "I am facing the same issue with Xamarin Forms 4.2.0.848062 and SkiaSharp 1.68.0\r\nError Details : MTOUCH : error MT0009: Error while loading assemblies:\r\n\r\nIs there any fix provided for this issue ",
+        "createdAt": "2019-10-10T10:08:07",
+        "reactions": []
+      },
+      {
+        "id": 608461997,
+        "author": "michaelstonis",
+        "body": "If you are still hitting this issue, it is likely due to a configuration on your csproj file for your iOS project that looks similar to the following.\r\n\r\n\u0060\u0060\u0060\r\n\u003CPropertyGroup Condition=\u0022 \u0027$(Configuration)|$(Platform)\u0027 == \u0027Release|iPhone\u0027 \u0022\u003E\r\n    \u003CDebugType\u003Enone\u003C/DebugType\u003E\r\n    \u003COptimize\u003Etrue\u003C/Optimize\u003E\r\n    \u003COutputPath\u003Ebin\\iPhone\\Release\u003C/OutputPath\u003E\r\n    \u003CDefineConstants\u003E__IOS__;__MOBILE__;__UNIFIED__;Release;\u003C/DefineConstants\u003E\r\n    \u003CErrorReport\u003Eprompt\u003C/ErrorReport\u003E\r\n    \u003CWarningLevel\u003E4\u003C/WarningLevel\u003E\r\n    \u003CMtouchArch\u003EARM64\u003C/MtouchArch\u003E\r\n    \u003CCodesignKey\u003EiPhone Distribution\u003C/CodesignKey\u003E\r\n    \u003CMtouchUseLlvm\u003Etrue\u003C/MtouchUseLlvm\u003E\r\n    \u003CMtouchFloat32\u003Etrue\u003C/MtouchFloat32\u003E\r\n    \u003CMtouchEnableSGenConc\u003Etrue\u003C/MtouchEnableSGenConc\u003E\r\n    \u003CMtouchLink\u003ESdkOnly\u003C/MtouchLink\u003E\r\n    \u003CMtouchHttpClientHandler\u003ENSUrlSessionHandler\u003C/MtouchHttpClientHandler\u003E\r\n    \u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\r\n\u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\nRemove the \u0060\u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\u0060 and you should be good to to go. Make sure that you do this for all of your \u0060iPhone\u0060 release configurations, likely \u0060Release\u0060, \u0060Ad-Hoc\u0060 and \u0060AppStore\u0060.",
+        "createdAt": "2020-04-03T14:23:31",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:39.4368977Z"
+          },
+          {
+            "user": "juanagu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:39.4368981Z"
+          },
+          {
+            "user": "eman1986",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:39.4368983Z"
+          },
+          {
+            "user": "mpnow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:39.4368984Z"
+          }
+        ]
+      },
+      {
+        "id": 637079499,
+        "author": "juanagu",
+        "body": "\u003E If you are still hitting this issue, it is likely due to a configuration on your csproj file for your iOS project that looks similar to the following.\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \u003CPropertyGroup Condition=\u0022 \u0027$(Configuration)|$(Platform)\u0027 == \u0027Release|iPhone\u0027 \u0022\u003E\r\n\u003E     \u003CDebugType\u003Enone\u003C/DebugType\u003E\r\n\u003E     \u003COptimize\u003Etrue\u003C/Optimize\u003E\r\n\u003E     \u003COutputPath\u003Ebin\\iPhone\\Release\u003C/OutputPath\u003E\r\n\u003E     \u003CDefineConstants\u003E__IOS__;__MOBILE__;__UNIFIED__;Release;\u003C/DefineConstants\u003E\r\n\u003E     \u003CErrorReport\u003Eprompt\u003C/ErrorReport\u003E\r\n\u003E     \u003CWarningLevel\u003E4\u003C/WarningLevel\u003E\r\n\u003E     \u003CMtouchArch\u003EARM64\u003C/MtouchArch\u003E\r\n\u003E     \u003CCodesignKey\u003EiPhone Distribution\u003C/CodesignKey\u003E\r\n\u003E     \u003CMtouchUseLlvm\u003Etrue\u003C/MtouchUseLlvm\u003E\r\n\u003E     \u003CMtouchFloat32\u003Etrue\u003C/MtouchFloat32\u003E\r\n\u003E     \u003CMtouchEnableSGenConc\u003Etrue\u003C/MtouchEnableSGenConc\u003E\r\n\u003E     \u003CMtouchLink\u003ESdkOnly\u003C/MtouchLink\u003E\r\n\u003E     \u003CMtouchHttpClientHandler\u003ENSUrlSessionHandler\u003C/MtouchHttpClientHandler\u003E\r\n\u003E     \u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\r\n\u003E \u003C/PropertyGroup\u003E\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Remove the \u0060\u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\u0060 and you should be good to to go. Make sure that you do this for all of your \u0060iPhone\u0060 release configurations, likely \u0060Release\u0060, \u0060Ad-Hoc\u0060 and \u0060AppStore\u0060.\r\n\r\nThanks! Works for me!",
+        "createdAt": "2020-06-01T20:16:58",
+        "reactions": []
+      },
+      {
+        "id": 645462654,
+        "author": "chrisfoulds",
+        "body": "I don\u0027t have that platform target line and still hitting this error",
+        "createdAt": "2020-06-17T15:57:29",
+        "reactions": []
+      },
+      {
+        "id": 676518711,
+        "author": "DeerSteak",
+        "body": "I can build locally, because I do not have the PlatformTarget line, but I cannot build via App Center. It\u0027s pulling the win-64 version of SkiaSharp:\r\n\r\n\u003E /Users/runner/work/1/s/iOS/myProject.iOS.csproj\u0022 (Rebuild target) (1) -\u003E\r\n\u003E (_CompileToNative target) -\u003E \r\n\u003E   MTOUCH : error MT0009: Error while loading assemblies: /Users/runner/.nuget/packages/skiasharp/2.80.1/runtimes/win-x64/native/libSkiaSharp.dll [/Users/runner/work/1/s/iOS/myProject.iOS.csproj]\r\n\u003E \r\n\u003E     0 Warning(s)\r\n\u003E     1 Error(s)\r\n\u003E \r\n\u003E Time Elapsed 00:05:49.82\r\n\u003E ##[error]Xamarin.iOS task failed with error Error: /Library/Frameworks/Mono.framework/Versions/6_8_1/bin/msbuild failed with return code: 1. For guidance on setting up the build definition, see https://go.microsoft.com/fwlink/?LinkId=760847.\r\n\r\nThe link is about building apps with AppCenter. This was working great until I needed SkiaSharp for something and had to add it. ",
+        "createdAt": "2020-08-19T16:08:05",
+        "reactions": []
+      },
+      {
+        "id": 676568096,
+        "author": "mattleibow",
+        "body": "I saw you posed here too: https://github.com/xamarin/xamarin-macios/issues/5265\r\n\r\nI\u0027ll see what I can do, but maybe you can try adding \u0060ExcludeAssets=\u0022runtimes\u0022\u0060:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.1\u0022 ExcludeAssets=\u0022runtimes\u0022 /\u003E\r\n\u0060\u0060\u0060 \r\n\r\nThis should _force_ the files to not even be loaded. \r\n\r\nBut, could you try out the v2.80.2 preview, that _might_ fix it.\r\n\r\nAlso, make sure you add it to the final app project as well.",
+        "createdAt": "2020-08-19T17:45:07",
+        "reactions": []
+      },
+      {
+        "id": 706767495,
+        "author": "blmiles",
+        "body": "Hello,\r\n\r\nI\u0027m having the same problem here after updating SkiaSharp from 1.60.3 to 2.80.2\r\nSolution is Xamarin.Forms (shared) and an iOS project and Android project. Android works just fine.\r\n\r\nHere\u0027s the error in iOS build:\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tError while loading assemblies: /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/bin/iPhoneSimulator/Debug/libSkiaSharp.dll.\t[mycompany].iOS\t\t\r\n\r\n\r\n2\u003E  /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mtouch @/Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhoneSimulator/Debug/response-file.rsp \u0022--gcc_flags=-Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhoneSimulator/Debug/Entitlements.xcent\u0022 \r\n2\u003EC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\MSBuild\\Xamarin\\iOS\\Xamarin.iOS.Common.targets(885,3): error MT0009: Error while loading assemblies: /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/bin/iPhoneSimulator/Debug/libSkiaSharp.dll.\r\n\r\n\r\nI have tried removin gthis from the iOS .proj file: \u0060\u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\u0060\r\n\r\nAnd I\u0027ve tried adding this to the .proj file: \u0060ExcludeAssets=\u0022runtimes\u0022\u0060 in the skiaSharp reference(s).\r\n\r\nIf I regress to 1.60.3 it works just fine.\r\n\r\nAny other potential fixes?\r\n\r\nThanks",
+        "createdAt": "2020-10-11T21:00:20",
+        "reactions": []
+      },
+      {
+        "id": 801065743,
+        "author": "neminush",
+        "body": "I ran into a similar problem with Visual Studio for Mac 8.9.2 (build 0) and early versions.\r\n\r\n/Users/Neocriss/Documents/iLive.Mobile/ILive/ILive.iOS/MTOUCH: Error MT0009: Error while loading assemblies: /Users/Neocriss/.nuget/packages/harfbuzzsharp/2.6.1.7/runtimes/win-x86/native/libHarfBuzzSharp.dll. (MT0009) (ILive.iOS)\r\n\r\nI added the following lines to the file \u0027ILive.iOS.csproj\u0027:\r\n\u0060\u0060\u0060\r\n\u003CRuntimeIdentifiers\u003Eosx;osx-x86;osx-x64\u003C/RuntimeIdentifiers\u003E\r\n\u003CNuGetRuntimeIdentifier\u003Eosx\u003C/NuGetRuntimeIdentifier\u003E\r\n\u0060\u0060\u0060\r\nthen the problem disappeared.\r\n\r\nBut now there is another problem.\r\nMy app crashes at runtime with exception (when \u0027Linker behavior\u0027 set to \u0027Don\u0027t Link\u0027):\r\n\u0060\u0060\u0060\r\nSystem.MissingMethodException: Method not found: System.Span\u00601\u003Cuint16\u003E SkiaSharp.SKRunBuffer.GetGlyphSpan()\r\n\u0060\u0060\u0060\r\nAnd my app crashes at runtime with exception (when \u0027Linker behavior\u0027 set to \u0027Link SDK assemblies only\u0027):\r\n\u0060\u0060\u0060\r\nSystem.ExecutionEngineException: Attempting to JIT compile method \u0027void SkiaSharp.HarfBuzz.CanvasExtensions:DrawShapedText (SkiaSharp.SKCanvas,SkiaSharp.HarfBuzz.SKShaper,string,single,single,SkiaSharp.SKPaint)\u0027 while running in aot-only mode\r\n\u0060\u0060\u0060\r\n\r\nAnd this is only reproduced in Visual Studio for Mac 8.9.1 (build 34) and 8.9.2 (build 0) versions.",
+        "createdAt": "2021-03-17T13:06:23",
+        "reactions": []
+      }
+    ]
+  }
 }

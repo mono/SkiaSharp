@@ -14,5 +14,39 @@
   "updatedAt": "2021-02-22T03:58:14",
   "closedAt": "2021-02-22T03:58:13",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:52.0736396Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 782855519,
+        "author": "ziriax",
+        "body": "I\u0027m doing exactly the same, with way larger images, and I don\u0027t see any issue.\r\n\r\nI only noticed that quality degrades when downscaling images more than 50%, not when saving a large canvas.\r\n\r\nCan you share code?\r\n\r\n",
+        "createdAt": "2021-02-21T13:08:19",
+        "reactions": []
+      },
+      {
+        "id": 782860610,
+        "author": "EPRmdr",
+        "body": "I saw that the image is saved according to the device screen size, so if the image size is more than 50% of the screen size, the quality decreases? (my device size: 1146x750), and how can I fix it?",
+        "createdAt": "2021-02-21T13:45:04",
+        "reactions": []
+      },
+      {
+        "id": 782866023,
+        "author": "ziriax",
+        "body": "If you want a large canvas, then create one. For example:\r\n\r\n\u0060\u0060\u0060CS\r\nusing System;\r\nusing System.Diagnostics;\r\nusing System.IO;\r\nusing System.Net;\r\nusing SkiaSharp;\r\n\r\npublic class Program\r\n{\r\n\tpublic static void Main()\r\n\t{\r\n\t\tConsole.WriteLine(\u0022Downloading photo...\u0022);\r\n\t\tusing var wc = new WebClient();\r\n\t\tusing var stream = wc.OpenRead(\u0022https://upload.wikimedia.org/wikipedia/commons/4/47/Colletes_inaequalis%2C_female%2C_back1_2012-08-10-15.38.49_ZS_PMax_%287918574678%29.jpg\u0022);\r\n\t\tusing var photo = SKBitmap.Decode(stream);\r\n\r\n\t\tConsole.WriteLine(\u0022Drawing photo at 50%..\u0022);\r\n\t\tusing var target = new SKBitmap(photo.Width / 2, photo.Height / 2);\r\n\t\tusing var canvas = new SKCanvas(target);\r\n\t\tusing var paint = new SKPaint\r\n\t\t{\r\n\t\t\tFilterQuality = SKFilterQuality.Low\r\n\t\t};\r\n\t\tcanvas.DrawBitmap(photo, new SKRect(0, 0, target.Width, target.Height), paint);\r\n\r\n\t\tConsole.WriteLine(\u0022Saving photo...\u0022);\r\n\t\tusing var data = target.Encode(SKEncodedImageFormat.Jpeg, 92);\r\n\t\tusing var output = File.Create(Path.Combine(Path.GetTempPath(), \u0022output.jpg\u0022));\r\n\t\tdata.SaveTo(output);\r\n\t\toutput.Close();\r\n\r\n\t\tConsole.WriteLine(\u0022Opening photo...\u0022);\r\n\t\tProcess.Start(new ProcessStartInfo(output.Name) { UseShellExecute = true });\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2021-02-21T14:24:10",
+        "reactions": []
+      },
+      {
+        "id": 782866247,
+        "author": "ziriax",
+        "body": "But yet, IMHO Skia makes photos blurry when downscaling \u003E50%, but that is subjective.\r\n\r\nTo work around this, I created a high quality downscaler, that is slower than Skia, but higher quality.",
+        "createdAt": "2021-02-21T14:25:42",
+        "reactions": []
+      }
+    ]
+  }
 }

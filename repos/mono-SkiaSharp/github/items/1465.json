@@ -13,5 +13,38 @@
   "createdAt": "2020-08-14T07:15:22",
   "updatedAt": "2021-03-15T09:53:57",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:42.8087321Z",
+    "reactions": [
+      {
+        "user": "maiad",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:25:42.8087367Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 722402188,
+        "author": "gmurray81",
+        "body": "@mattleibow was there any progress on this? This makes it a bit difficult to render into the GL views on android from logic that requires serialized access, would be nice if there was an option for SKGLView to just marshal all the rendering onto the UI thread. I\u0027ve achieved this, but in a way that makes me feel pretty unclean.",
+        "createdAt": "2020-11-05T14:11:04",
+        "reactions": []
+      },
+      {
+        "id": 734679251,
+        "author": "maiad",
+        "body": "Hallo, I am in the same situation with my UI. **Is it possible to synchronize PaintSurface with the main UI thread in Android ?**\r\nI have tried SKGLSurfaceView \u0026 SKGLTextureView, both are rendering in the separate thread. When I use this thread I get many problems, because I cannot directly use AndroidActivity and Views, I cannot use awaitng tasks,  because there is no task sheduler in the render task. \r\nI split the UI to animation part(on main UI thread) and paint part (on render thread) but there are so many complications with this...\r\n\r\n........\r\nUpdate ...\r\n\r\nI have changed my UI. It can be painted inside another thread. \r\n\r\n\r\n",
+        "createdAt": "2020-11-27T07:00:26",
+        "reactions": []
+      },
+      {
+        "id": 799277533,
+        "author": "tmijieux",
+        "body": "Any update on this ? I understand that drawing on another thread could maybe help the rest of xamarin forms draw other things while the SKGLView thread is drawing on its surface, but the main thread should definitely not let the control back to user code before the drawing is finished\r\n\r\nHere is a small reproduction that illustrate the problem https://github.com/tmijieux/TestForMapsui/tree/skglview-thread-android\r\n\r\nexpected behavior: after tapping any of the button no NullReferenceException happens(after 5secs)\r\nactual behavior: there is a NullReferenceException",
+        "createdAt": "2021-03-15T09:46:44",
+        "reactions": []
+      }
+    ]
+  }
 }

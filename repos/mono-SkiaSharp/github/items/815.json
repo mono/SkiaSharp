@@ -19,5 +19,32 @@
   "updatedAt": "2021-02-08T21:17:53",
   "closedAt": "2021-02-08T21:17:52",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:26:04.763489Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 493714168,
+        "author": "mattleibow",
+        "body": "This is because both the surface canvas an the bitmap needs to be cleared. In you code, you are clearing the canvas, and then drawing a uninitialized bitmap.\r\n\r\nThis may just be because this is just a snippet, but what is the reason for creating the bitmap?\r\n\r\nIf the drawing in the bitmap is not transparent, such as with clear white, then you don\u0027t need to clear the surface - saving on that processing.",
+        "createdAt": "2019-05-18T23:22:09",
+        "reactions": []
+      },
+      {
+        "id": 495291584,
+        "author": "gktval",
+        "body": "Thanks for the reply. The reason for creating the bitmap is so that I can draw multiple images and vectors to it. Think of a map, where the user loads and elevation layer, then an aerial image, the some vector layers such as a boundary or a road. On top of that, another bitmap is drawn with the gps cursor (see example above in my previous post) which gets refreshed every second depending on how far the user has moved.\r\n\r\nIn my actual code, I initialize the bitmap separately and then draw all the map layers to it, Then I draw the final bitmap to the canvas. I apologize for not showing the entire code above, but I can reproduce the same results with the code below:\r\n\r\n    \u0060Protected Overrides Sub OnPaintSurface(e As SKPaintSurfaceEventArgs)\r\n        Dim clip As New Rectangle(e.Info.Rect.Location.X, e.Info.Rect.Location.Y,\r\n                                  e.Info.Rect.Size.Width, e.Info.Rect.Size.Height)\r\n        If clip.Width \u003C 1 OrElse clip.Height \u003C 1 Then Return \u0027Nothing to paint\r\n\r\n        Dim bitmap As New SKBitmap(clip.Width, clip.Height)\r\n        Dim canvas As SKCanvas = e.Surface.Canvas\r\n        canvas.Clear(SKColors.White)\r\n        canvas.DrawBitmap(bitmap, 0, 0)\r\n\r\n        MyBase.OnPaintSurface(e)\r\n    End Sub\u0060\r\n\r\nI did a bitmap.Erase(SkColors.White) and it does seem to help considerably. But this also seems a bit redundant to have to do this on a newly created bitmap.\r\n\r\nAfter further testing, the issue is better with bitmap.Erase method, but I still see some subtle speckles near the top of the canvas\r\n![image](https://user-images.githubusercontent.com/7605046/58269960-de75fa80-7d45-11e9-92c3-8572236a23c1.png)\r\n",
+        "createdAt": "2019-05-23T16:31:13",
+        "reactions": []
+      },
+      {
+        "id": 635350459,
+        "author": "claunia",
+        "body": "Hi, I confirm this issue as explained in https://github.com/wieslawsoltes/Svg.Skia/issues/28\r\n\r\nWhile it is expected a newly initialized element in C contains random memory you expect the contrary in C#, SKCanvas should be clear on \u0060new\u0060.\r\n\r\nRegards",
+        "createdAt": "2020-05-28T13:28:53",
+        "reactions": []
+      }
+    ]
+  }
 }

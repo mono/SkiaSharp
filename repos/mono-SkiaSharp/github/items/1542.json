@@ -13,5 +13,31 @@
   "createdAt": "2020-10-28T14:15:42",
   "updatedAt": "2020-11-17T15:01:37",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:26:47.5833644Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 718078188,
+        "author": "mattleibow",
+        "body": "That is very weird... There shouldn\u0027t be any cycles, and you can even see that there are none on nuget:\r\nhttps://www.nuget.org/packages/skiasharp\r\n\r\nWhat you can maybe try is deleting all the skiasharp folders in your nuget cache - or just clear everything (as there is probably like 50 GB there by now)\r\n\r\nhttps://docs.microsoft.com/en-us/nuget/reference/cli-reference/cli-ref-locals\r\n\r\n\u0060\u0060\u0060\r\nnuget locals all -clear\r\n\u0060\u0060\u0060\r\n\r\nYou might have a bad package for some reason. Unless you have a project in your solution named SkiaSharp? Maybe VS is getting confused?",
+        "createdAt": "2020-10-28T17:07:31",
+        "reactions": []
+      },
+      {
+        "id": 728986120,
+        "author": "bsweb",
+        "body": "Hi Matthew,\r\n\r\nI think there is a bug with VS as I just experienced the same with FormFactory as my scratch pad project was called the same as the package and I got the same error. I had called the project I reported to you SkiaSharp.\r\n\r\nHave reported bug to MS.\r\n\r\nCheers\r\nChris\r\n\r\nFrom: Matthew Leibowitz \u003Cnotifications@github.com\u003E\r\nSent: 28 October 2020 17:08\r\nTo: mono/SkiaSharp \u003CSkiaSharp@noreply.github.com\u003E\r\nCc: Chris Mortimer \u003Cchris@blacksnow.co.uk\u003E; Author \u003Cauthor@noreply.github.com\u003E\r\nSubject: Re: [mono/SkiaSharp] Unable to install via Nuget (#1542)\r\n\r\n\r\nThat is very weird... There shouldn\u0027t be any cycles, and you can even see that there are none on nuget:\r\nhttps://www.nuget.org/packages/skiasharp\r\n\r\nWhat you can maybe try is deleting all the skiasharp folders in your nuget cache - or just clear everything (as there is probably like 50 GB there by now)\r\n\r\nhttps://docs.microsoft.com/en-us/nuget/reference/cli-reference/cli-ref-locals\r\n\r\nnuget locals all -clear\r\n\r\nYou might have a bad package for some reason. Unless you have a project in your solution named SkiaSharp? Maybe VS is getting confused?\r\n\r\n\u2014\r\nYou are receiving this because you authored the thread.\r\nReply to this email directly, view it on GitHub\u003Chttps://github.com/mono/SkiaSharp/issues/1542#issuecomment-718078188\u003E, or unsubscribe\u003Chttps://github.com/notifications/unsubscribe-auth/ABEERO5ZEIGZX64D66EY7KDSNBFWHANCNFSM4TCMIULA\u003E.\r\n",
+        "createdAt": "2020-11-17T15:01:37",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:26:47.5329682Z"
+          }
+        ]
+      }
+    ]
+  }
 }

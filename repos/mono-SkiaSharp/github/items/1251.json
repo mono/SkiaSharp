@@ -26,5 +26,39 @@
   "createdAt": "2020-04-27T13:43:53",
   "updatedAt": "2021-03-21T21:25:13",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:33.1270615Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 620120853,
+        "author": "mattleibow",
+        "body": "We can most definitely have a look at the disposable structs - or actually not use it at all. All it does is a \u0060Restore\u0060\r\n\r\nWe can\u0027t reuse the args as this is a breaking change. For some reason, the developer may store a reference to the object and changing it may be unexpected. You shouldn\u0027t, but someone might...",
+        "createdAt": "2020-04-27T17:19:48",
+        "reactions": []
+      },
+      {
+        "id": 620165742,
+        "author": "akater320",
+        "body": "Fair enough.\r\nIs there any option get a no-garbage path? (Maybe it already exists somewhere else?)\r\nCertainly not the most elegant, but maybe add a second PaintSuface type event to SKSwapChainPanel with a new signature. At the same time make it possible to get a reference to the SKCanvas without using SKPaintGLSurfaceEventArgs.Surface.Canvas{get;} (which, rather surprisingly, makes a managed heap allocation). \r\nI\u0027d be happy to submit a PR if it fits the project.",
+        "createdAt": "2020-04-27T18:48:02",
+        "reactions": []
+      },
+      {
+        "id": 620193024,
+        "author": "mattleibow",
+        "body": "I see the two allocations per frame... We can totally replace the \u0060SKAutoCanvasRestore\u0060 with a \u0060canvas.RestoreToCount(0);\u0060 after the draw. We just need to do this to \u0022reset\u0022 the canvas each frame.\r\n\r\nWe _could_ potentially add a property to the view to actually opt-into a zero allocation loop. If you are really looking for this perf, then set the prop and the args will be re-used....\r\n\r\nI am thinking that \u0060SKPaintGLSurfaceEventArgs.Surface.Canvas\u0060 allocation is now fixed on the later previews. I now cache everything since they stay valid. If you are not able to upgrade, then I think you might be fine to just cache the value of that property and make sure to only use it in the draw frame.",
+        "createdAt": "2020-04-27T19:41:07",
+        "reactions": []
+      },
+      {
+        "id": 620203766,
+        "author": "akater320",
+        "body": "Awesome. Thanks!",
+        "createdAt": "2020-04-27T20:03:53",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,59 @@
   "updatedAt": "2021-02-08T21:15:57",
   "closedAt": "2021-02-08T21:15:55",
   "commentCount": 6,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:26:06.82026Z",
+    "reactions": [
+      {
+        "user": "daltonks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:26:06.8202654Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 753303898,
+        "author": "charlesroddie",
+        "body": "The \u0060SKSwapChainPanel\u0060 doesn\u0027t suffer from the memory problems, but does have some update slowness when dragging, resulting in some temporary and permanent visual glitches.",
+        "createdAt": "2021-01-01T11:21:40",
+        "reactions": []
+      },
+      {
+        "id": 766819356,
+        "author": "charlesroddie",
+        "body": "@mattleibow are you able to reproduce this?",
+        "createdAt": "2021-01-25T13:34:00",
+        "reactions": []
+      },
+      {
+        "id": 775455467,
+        "author": "mattleibow",
+        "body": "I had a look and there are some interesting things that happen. For a start, I create the page and resize it as small as it can go. After a few minutes, the GC kicks in and reduces the memory usage to 36 MB.\r\n\r\nFrom this base point, I maximize to a full screen: 3840x2160 at 250% scaling. \r\n\r\nA few things happen:\r\n1. The canvas triggers a draw with a view size of 1536x798. This results in a new WriteableBitmap with pixel dimensions of 3840x1995. This is expected with a 2.5 scale from the view(due to screen scaling). This means there are 30,643,200 pixel or 29.22MB. \r\n2. Immediately afterwards, UWP triggers a new size event, but with slightly different dimensions of 1536x792. This again triggers another new bitmap with pixel dimensions of 3840x1980. This is 30,412,800 pixels or another 29MB.\r\n\r\nIn total, there is an additional 58.22MB from the base 36MB bringing the total to 94.22MB.\r\n\r\nI tried again after doing things and it went from 110MB to 176MB (\u002B66MB) and after a second, down to 147MB (-29MB).\r\n\r\nWhen drag-resizing, there also seems to be this double render issue. At this point, it appears that due to scaling, the view\u0027s size is getting the decimal point sizes due to scaling, but then settles down to integer values when you release.\r\n\r\nHowever, after a few minutes the GC will kick in and release the backing bitmaps and the usage drops down to the starting value. This also happens on WPF due to the fact that I actually do not control the bitmap, it is the framework that does it. And, unfortunately, there does not appear to be a way to request that the bitmaps be disposed immediately. ",
+        "createdAt": "2021-02-08T20:56:03",
+        "reactions": []
+      },
+      {
+        "id": 775461544,
+        "author": "RChrisCoble",
+        "body": "Not recommended, but you can try:\r\n\r\nSystem.GC.Collect();\r\nSystem.GC.WaitForPendingFinalizers();\r\n\r\n",
+        "createdAt": "2021-02-08T21:05:55",
+        "reactions": []
+      },
+      {
+        "id": 775462982,
+        "author": "RChrisCoble",
+        "body": "Or if you really want to get nasty:\r\n\r\n        public class MemoryManagement\r\n        {\r\n            [DllImport(\u0022kernel32.dll\u0022)]\r\n            public static extern bool SetProcessWorkingSetSize(IntPtr proc, int min, int max);\r\n\r\n            public static void FlushMemory()\r\n            {\r\n                GC.Collect();\r\n                GC.WaitForPendingFinalizers();\r\n                if (Environment.OSVersion.Platform == PlatformID.Win32NT)\r\n                {\r\n                    SetProcessWorkingSetSize(System.Diagnostics.Process.GetCurrentProcess().Handle, -1, -1);\r\n                }\r\n            }\r\n        } ",
+        "createdAt": "2021-02-08T21:08:33",
+        "reactions": []
+      },
+      {
+        "id": 775466548,
+        "author": "mattleibow",
+        "body": "I got a basic sample here and tried something bad. When you start the app, spam the GC. It drops to 36MB. I then resize like crazy and get it up to 700MB. After spamming the GC, it drops right down to 36MB again.\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/107281854-e9fddd80-6a62-11eb-91c6-c257e8713bd1.png)\r\n\r\nAnother thing is that the GC seems to be some sort of tiered or slow async version. If you watch the GC collect, it is going in steps. Even between manual GCs.\r\n\r\nI have a stack of RAM (32GB) and I wonder what the difference would be on a 2 or 4GB machine. Will the GC be more aggressive? If you think about it, my GC does not have to be too aggressive because the big 700MB is just 2% of the available. On a 4 GB machine, it will be a 17%, so maybe it will be more aggressive and keep lower?",
+        "createdAt": "2021-02-08T21:14:48",
+        "reactions": []
+      }
+    ]
+  }
 }

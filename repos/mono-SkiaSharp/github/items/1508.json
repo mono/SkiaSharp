@@ -14,5 +14,36 @@
   "updatedAt": "2021-02-03T20:13:08",
   "closedAt": "2021-02-03T20:13:07",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:26:16.2113536Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 698730675,
+        "author": "Gillibald",
+        "body": "SkiaSharp.dll -\u003E 400KB\r\nlibSkiaSharp.so ~ 8MB\r\nlibSkiaSharp (iOS) ~ 21MB\r\n\r\nRemoving some code from the native bits will not change much. Looks like the iOS build statically links a lot into the binary.",
+        "createdAt": "2020-09-25T05:38:16",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:26:15.9453307Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:26:15.9453312Z"
+          }
+        ]
+      },
+      {
+        "id": 698832605,
+        "author": "mattleibow",
+        "body": "I wonder what else we can remove that is taking up space. At 21 MB for ios means that each arch is about 5 MB.\n\nI suppose we could flip bits all over, but is there a more scientific way to see which symbols are the ones pulling in the most bits?\n\nIt might be the external dependencies as well. I am linking it, but we might be able to see if we can dynamically link with libs in the NDK... But then we run into issues with compatibility.\n\nAn option would be to both dynamically and statically link for iOS and then pick dynamic for debug and static for release. I need to check, but I don\u0027t think much was saved when I did this a few months back... ",
+        "createdAt": "2020-09-25T09:41:01",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -31,5 +31,175 @@
       "state": "APPROVED",
       "submittedAt": "2021-03-30T15:50:21"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:25.807307Z",
+    "reactions": [
+      {
+        "user": "mattleibow",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:25:25.8073138Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:25:25.8073146Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 784761860,
+        "author": "gmurray81",
+        "body": "Maybe this could be using some sort of ref counting already happening at the skia level?",
+        "createdAt": "2021-02-24T04:57:13",
+        "reactions": []
+      },
+      {
+        "id": 785121863,
+        "author": "gmurray81",
+        "body": "BTW, the ref counting seems to completely avoid the error with not being able to create the surface. That appears to be driven by the fact that the shared display was terminated while a panel was still running. When it got a composition scale change it would try to reacquire a surface and its display would be cleaned up, I gather.\r\n\r\nThe remaining issue is that it seems like calling AbandonContext(true) (or Dispose without any context abandonment) results in some sort of resource being cleaned up that another context from the same display needs. I suspect it might be disconnection from the GPU? But I\u0027m uncertain how to detect things have wound up in a bad state to recover.\r\n\r\nCalling AbandonContext(false) avoids the issue, but I\u0027m not sure what the difference is between:\r\n\r\n\u0060abandonContext\u0060 and \u0060releaseResourcesAndAbandonContext\u0060\r\n\r\n",
+        "createdAt": "2021-02-24T14:40:03",
+        "reactions": []
+      },
+      {
+        "id": 787199679,
+        "author": "gmurray81",
+        "body": "![pressure](https://user-images.githubusercontent.com/4264873/109402448-f23f8f00-7923-11eb-96d5-6d59c2063281.PNG)\r\n\r\nI don\u0027t think its leaking without that call, because it seems like the memory gets reclaimed, but maybe there\u0027s more memory pressure. I didn\u0027t grab a graph before the change though. ",
+        "createdAt": "2021-02-27T22:49:24",
+        "reactions": []
+      },
+      {
+        "id": 788974677,
+        "author": "gmurray81",
+        "body": "I tried with AbandonContext(true) and the memory pressure didn\u0027t seem to perform any differently.",
+        "createdAt": "2021-03-02T15:06:13",
+        "reactions": []
+      },
+      {
+        "id": 798841831,
+        "author": "mattleibow",
+        "body": "Thanks for keeping up with this. Since my GL knowledge is a tad bit low, I see where I went wrong based on what you did here. Looking at the docs:\r\n\r\n\u003E Multiple calls made to eglGetPlatformDisplay with the same parameters will return the same EGLDisplay handle\r\n\r\nhttps://khronos.org/registry/EGL/sdk/docs/man/html/eglGetPlatformDisplay.xhtml\r\n\r\nSo we do need to actually track these... Might just be able to put all this in some ConcurrentDictionary so we don\u0027t have to deal with locks and whatnot. I\u0027ll have a closer look and see if there is a better way.\r\n\r\nWith regards to \u0060abandonContext\u0060 vs \u0060releaseResourcesAndAbandonContext\u0060, it looks like we are supposed to \u0060AbandonContext(true)\u0060 the context before we destroy the surface so it can clean up things. If we are running afterwards, then we need to use \u0060AbandonContext(false)\u0060 because we have no context anymore. Looking at my code it seems the \u0060OnDestroyingContext\u0060 is being called before the \u0060GlesContext\u0060 is disposed... But, since the \u0060OnUnloaded\u0060 event may be firing after the real view surface has been cleaned up inside ANGLE so we cannot release anything.\r\n\r\n\u003E \u0060\u0060\u0060cpp\r\n\u003E /**\r\n\u003E  * Abandons all GPU resources and assumes the underlying backend 3D API context is no longer\r\n\u003E  * usable. Call this if you have lost the associated GPU context, and thus internal texture,\r\n\u003E  * buffer, etc. references/IDs are now invalid. Calling this ensures that the destructors of the\r\n\u003E  * GrContext and any of its created resource objects will not make backend 3D API calls. Content\r\n\u003E  * rendered but not previously flushed may be lost. After this function is called all subsequent\r\n\u003E  * calls on the GrContext will fail or be no-ops.\r\n\u003E  *\r\n\u003E  * The typical use case for this function is that the underlying 3D context was lost and further\r\n\u003E  * API calls may crash.\r\n\u003E  */\r\n\u003E void abandonContext() override;\r\n\u003E\r\n\u003E /**\r\n\u003E  * This is similar to abandonContext() however the underlying 3D context is not yet lost and\r\n\u003E  * the GrContext will cleanup all allocated resources before returning. After returning it will\r\n\u003E  * assume that the underlying context may no longer be valid.\r\n\u003E  *\r\n\u003E  * The typical use case for this function is that the client is going to destroy the 3D context\r\n\u003E  * but can\u0027t guarantee that GrContext will be destroyed first (perhaps because it may be ref\u0027ed\r\n\u003E  * elsewhere by either the client or Skia objects).\r\n\u003E  */\r\n\u003E virtual void releaseResourcesAndAbandonContext();\r\n\u003E \u0060\u0060\u0060",
+        "createdAt": "2021-03-14T06:17:26",
+        "reactions": []
+      },
+      {
+        "id": 798843570,
+        "author": "mattleibow",
+        "body": "In fact, looking at the implementation of \u0060EAGLContext\u0060 from WinObjC, it seems the display is a static, one-time thing:\r\n\r\nhttps://github.com/microsoft/WinObjC/blob/develop/Frameworks/OpenGLES/EAGLContext.mm#L44\r\n\r\nSince this represents a hardware thing and not windows of physical displays, we can probably do the same thing. Especially since if the smarter people on the WinObjC side used one display, who are we to doubt? Unless in your testing you got more than one display?\r\n\r\n\u003E \u201DIn reality most environments have only one EGLDisplay even when multiple physical screens are supported. [...]\u0022\r\n\r\nhttps://www.khronos.org/registry/implementers_guide.html#negldisplay",
+        "createdAt": "2021-03-14T06:36:36",
+        "reactions": []
+      },
+      {
+        "id": 798843747,
+        "author": "mattleibow",
+        "body": "Overall, good work and I am moving this to the next release so we can have a better UWP experience.",
+        "createdAt": "2021-03-14T06:38:29",
+        "reactions": [
+          {
+            "user": "gmurray81",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:22.1908489Z"
+          }
+        ]
+      },
+      {
+        "id": 798958994,
+        "author": "gmurray81",
+        "body": "Hmm... from what I could tell though, is that if we had two \u0060GrContex\u0060t alive, calling releaseResourcesAndAbandonContext on one of them (\u0060AbandonContext(true)\u0060) seemed to be doing something that made the other GrContext which was still supposed to be alive no longer valid (we continue trying to render to it, but it seems internally to be dead, and no longer produces content on the surface) but there didn\u0027t seem to be a way to detect that we had gotten into this state. So it seemed like some sort of shared resource between the two GrContext was being released and not re-acquired. Perhaps if we were to call \u0060abandoned()\u0060 on the GrContext, we could detect if it had lost some shared resource?",
+        "createdAt": "2021-03-14T18:51:05",
+        "reactions": []
+      },
+      {
+        "id": 798960132,
+        "author": "gmurray81",
+        "body": "For the display, I was just coding defensively since I wasn\u0027t sure if the handle would be the same in all scenarios. Sounds like it could be static or a singleton then.",
+        "createdAt": "2021-03-14T18:58:41",
+        "reactions": []
+      },
+      {
+        "id": 798979604,
+        "author": "gmurray81",
+        "body": "Ok @mattleibow I changed display to static and I was able to revert to \u0060AbandonContext(true)\u0060 it seems. I haven\u0027t been able to reproduce a scenario yet where an existing GrContext moves into a state where it can no longer render, it seems. So it may have had to do with the display being terminated and restarted?\r\n\r\nNote, though, that with this change the display will never get terminated, although they didn\u0027t seem to be doing that in WinObjC",
+        "createdAt": "2021-03-14T21:05:02",
+        "reactions": []
+      },
+      {
+        "id": 798986876,
+        "author": "gmurray81",
+        "body": "Hmm... I\u0027ll have to double check this later. Find it a bit odd that it worked with true... Maybe the dependency wasn\u0027t updating in my sample.",
+        "createdAt": "2021-03-14T21:54:25",
+        "reactions": []
+      },
+      {
+        "id": 798997521,
+        "author": "gmurray81",
+        "body": "yeah, I was right, there is still an issue with AbandonContext(true), seems to be cleaning up something that kills other existing GrContext.",
+        "createdAt": "2021-03-14T23:09:30",
+        "reactions": []
+      },
+      {
+        "id": 799019228,
+        "author": "mattleibow",
+        "body": "What happens if you don\u0027t call abandon?\r\n\r\nLooking at the comment closer, it says this:\r\n\r\n\u003E The typical use case for this function is that the client is going to destroy the 3D context but can\u0027t guarantee that GrContext will be destroyed first\r\n\r\nThis is not the case for our views. We are disposing \u0060GRContext\u0060 before we dispose the GPU objects. If you remove that line, do we leak anything? Also, check to see if there is a difference between managed and native memory usage.",
+        "createdAt": "2021-03-15T00:50:31",
+        "reactions": []
+      },
+      {
+        "id": 799428840,
+        "author": "gmurray81",
+        "body": "If I skip calling \u0060AbandonContext(true)\u0060 in \u0060OnDestroyingContext\u0060 then I get the same broken behavior where it seems like it can invalidate _other_ \u0060GrContext\u0060 which are still supposed to be alive. I have to skip both \u0060AbandonContext(true)\u0060 and the \u0060Dispose\u0060 of the context in order to avoid the problem. I\u0027m guessing that may not be valid though, because if left up to the finalizer queue it may not be disposed before the other GPU stuff? ",
+        "createdAt": "2021-03-15T13:41:32",
+        "reactions": []
+      },
+      {
+        "id": 799445171,
+        "author": "gmurray81",
+        "body": "Interestingly, all initially seems well with the Abandon dropped, but the Dispose retained, until you change the composition scale by applying a render transform (see my repro code). I\u0027m betting that is causing the interleaved timing again that I described in the bug #1573 \r\n\r\n",
+        "createdAt": "2021-03-15T14:02:51",
+        "reactions": []
+      },
+      {
+        "id": 799724158,
+        "author": "gmurray81",
+        "body": "@mattleibow is there a special trick to getting it to download the externals as of your change to add the \u0060IsAbandoned\u0060 property? I wanted to see if at least that could be used to detect a GrContext that\u0027s gone sour and recover it. However, I\u0027m a bit concerned that disposing the sour GrContext, and if the GlInterface perhaps needs to be discarded also, perhaps it will end up souring the other GrContexts that happen to be alive, so perhaps it wont end up being a good solution :)",
+        "createdAt": "2021-03-15T20:20:14",
+        "reactions": []
+      },
+      {
+        "id": 799970038,
+        "author": "mattleibow",
+        "body": "@gmurray81 I was just tweaking the build script to support a better way of downloading the native bits. However, once CI is green again for main (in a few minutes) then you can run:\r\n\r\n\u0060\u0060\u0060\r\n./bootstrapper.ps1 -t externals-download \r\n\u0060\u0060\u0060\r\n\r\nThis will pull the latest native artifacts from the last green build of \u0060main\u0060.\r\n\r\nThere are also args to control which branch or sha to use:\r\n\r\n\u0060\u0060\u0060\r\n./bootstrapper.ps1 -t externals-download  [--gitSha=\u003Cgit-sha-to-pull\u003E]  [--gitBranch=\u003Cgit-branch-to-pull\u003E]\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2021-03-16T05:45:21",
+        "reactions": []
+      },
+      {
+        "id": 803611325,
+        "author": "mattleibow",
+        "body": "I see what you mean with things looking like they still work when using \u0060AbandonContext(true)\u0060. When the composition changes, then things break... I am going to stick a few breakpoints in the ANGLE code now and see what is happening. Could very well be the cases that destructors are being called in there so the \u0060Unloading\u0060 even is actually far too late to do anything and everything needs to be abandoned - even the cleanup.\r\n\r\nI am also building a Debug skia to see if there are any errors/asserts being thrown from that side.",
+        "createdAt": "2021-03-21T16:05:52",
+        "reactions": []
+      },
+      {
+        "id": 803620253,
+        "author": "gmurray81",
+        "body": "Sounds good. I had tried to use IsAbandoned to see if anything was possible at that end, but I don\u0027t think the downloaded externals included it yet. Still, as I was saying, I would be somewhat concerned that you may have two swap chain panels warring over destroying the resources if we tried to just recover the resources if destroyed, so may be better to just make sure the cleanup happens in the right sequence.",
+        "createdAt": "2021-03-21T16:48:40",
+        "reactions": []
+      },
+      {
+        "id": 803649987,
+        "author": "mattleibow",
+        "body": "The externals should have it now. There was a problem with CI a few days ago, but that is all fixed now. \r\n\r\nBut with regards to this issue, if these changes in this PR are working for you, then I think I will merge until there is a better fix. I am not quite sure what is going on yet since none of the other platforms need \u0060AbandonContext\u0060. As far as I can see, an \u0060AbandonContext(false)\u0060 is required and \u0060IsAbandoned\u0060 doesn\u0027t really do anything because it really is a new \u0060GRContext\u0060 each time. It might be an issue with ANGLE. Maybe it is the swap chain setup. But, if this fixes things - and it looks like it does - then we can see if any other issues arise later.",
+        "createdAt": "2021-03-21T19:57:28",
+        "reactions": []
+      },
+      {
+        "id": 803684085,
+        "author": "gmurray81",
+        "body": "Yeah, I\u0027d say it may make sense to merge it until something better is found.",
+        "createdAt": "2021-03-21T23:56:10",
+        "reactions": []
+      }
+    ]
+  }
 }

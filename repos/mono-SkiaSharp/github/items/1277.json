@@ -33,5 +33,76 @@
       "state": "COMMENTED",
       "submittedAt": "2020-05-08T01:19:02"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:15.2339977Z",
+    "reactions": [
+      {
+        "user": "Gillibald",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:25:15.2342862Z"
+      },
+      {
+        "user": "charlesroddie",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:25:15.2342876Z"
+      },
+      {
+        "user": "iamcarbon",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:25:15.2342879Z"
+      },
+      {
+        "user": "Mikolaytis",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:25:15.234288Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 625706542,
+        "author": "Gillibald",
+        "body": "This is doing what I wanted. Avoiding the redundant overhead. Some managed objects should be lightweight enough to always create a new instance instead of caching.",
+        "createdAt": "2020-05-08T08:34:05",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:14.3700844Z"
+          },
+          {
+            "user": "MarchingCube",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:14.3702125Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:14.370215Z"
+          }
+        ]
+      },
+      {
+        "id": 805131518,
+        "author": "ziriax",
+        "body": "This might be a silly question, but would be a possible to use a \u0060struct\u0060 wrapper from some objects? E.g. would it make sense to make \u0060SkPaint\u0060 etc an immutable struct, with operator overloading so that two structs are equal when their internal native pointer equals?",
+        "createdAt": "2021-03-23T18:27:41",
+        "reactions": []
+      },
+      {
+        "id": 819170852,
+        "author": "mattleibow",
+        "body": "@Ziriax could you maybe start a discussion on this and why it will help? Almost lost your comment as it was on a closed issue. ",
+        "createdAt": "2021-04-14T02:13:19",
+        "reactions": []
+      },
+      {
+        "id": 819410349,
+        "author": "ziriax",
+        "body": "@mattleibow Sorry, indeed, I shouldn\u0027t comment on closed issues. But no need to start a discussion, my question was silly. Using \u0060struct\u0060 for wrappers will only work if the SkiaSharp user carefully manually manages ownership, calling \u0060Dispose\u0060 as needed. Like in the \u0022good\u0022 old days of C... It would be very fast, but not very .NET friendly; users expect garbage collection to take place. If C# had an automatic RAII pattern, like C\u002B\u002B scoped constructors/destructors, then it would be a nice option IMHO. ",
+        "createdAt": "2021-04-14T10:24:11",
+        "reactions": []
+      }
+    ]
+  }
 }

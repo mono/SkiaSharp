@@ -13,5 +13,80 @@
   "createdAt": "2021-02-18T09:15:05",
   "updatedAt": "2021-03-29T06:41:19",
   "commentCount": 5,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:28.3950844Z",
+    "reactions": [
+      {
+        "user": "RamarajMarimuthu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:25:28.3950887Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 790479661,
+        "author": "MohanaselvamJ",
+        "body": "Any update would be really helpful?",
+        "createdAt": "2021-03-04T09:42:37",
+        "reactions": []
+      },
+      {
+        "id": 798896169,
+        "author": "mattleibow",
+        "body": "Are you installing fontconfig one the AWS side?\r\n\r\nMaybe you meant to use the NoDependencies version of the package? https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies/2.80.3-preview.40\r\n",
+        "createdAt": "2021-03-14T12:08:52",
+        "reactions": [
+          {
+            "user": "RamarajMarimuthu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:27.7195913Z"
+          }
+        ]
+      },
+      {
+        "id": 802542634,
+        "author": "MohanaselvamJ",
+        "body": "I have removed SkiaSharp.NativeAssets.Linux from my project\r\n\r\nThen installed Sharp.NativeAssets.Linux.NoDependencies v2.80.2\r\n\r\n\r\nNow working fine.\r\n\r\nThanks.",
+        "createdAt": "2021-03-19T04:21:06",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:27.9246897Z"
+          },
+          {
+            "user": "RamarajMarimuthu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:27.9246903Z"
+          }
+        ]
+      },
+      {
+        "id": 806505876,
+        "author": "RamarajMarimuthu",
+        "body": "Hi @mattleibow,\r\n\r\nAfter installing a **SkiaSharp.NativeAssets.Linux.NoDependencies v2.80.2** package in **.NET Core 2.1** targeted AWS lambda function, SkiaSharp library performs text measuring properly by using default SkTypeface \u0022**DejaVu Sans**\u0022. When we try to perform a same measuring in **.NET Core 3.1** targeted AWS lambda function, it always returns a width of input text as 0.\r\n\r\nPlease find the below code snippet that we used to measure a text using SkiaSharp,\r\n\r\n\u0060\u0060\u0060\r\n// Returns width as \u002240\u0022 in .NET Core 2.1 and returns width as \u00220\u0022 in .NET Core 3.1.\r\nSKPaint paint = new SKPaint();\r\nreturn paint.MeasureText(\u0022Simple\u0022);\r\n\u0060\u0060\u0060\r\n\r\nFrom further investigation, we found default SkTypeface seems empty in a **.NET Core 3.1** targeted AWS lambda function. **Could you please let us know, how we can able to measure a text in **.NET Core 3.1** targeted AWS lambda function using SkiaSharp** ?\r\n\r\nPlease refer the below code snippet,\r\n\u0060\u0060\u0060\r\n// Returns FamilyName as \u0022DejaVu Sans\u0022 in .NET Core 2.1 and returns FamilyName as \u0022\u0022 in .NET Core 3.1.\r\nSKTypeface typeface = SKTypeface.Default;\r\nreturn typeface.FamilyName;\r\n\u0060\u0060\u0060\r\n\r\n**Additional Information:**\r\n\r\nWhile trying to retrieve a available font families of **.NET Core 2.1** targeted AWS lambda function using SKFontManager, it returns below font family names. But **.NET Core 3.1** targeted AWS lambda function returns 0 font familes.\r\n\r\n****.NET Core 2.1** font families:**\r\n\r\n1. DejaVu Sans, \r\n2. DejaVu Serif, \r\n3. URW Bookman L, \r\n4. URW Palladio L, \r\n5. Nimbus Sans L, \r\n6. Century Schoolbook L, \r\n7. Nimbus Roman No9 L, \r\n8. URW Gothic L, \r\n9. Nimbus Mono L, \r\n10. URW Chancery L, \r\n11. Dingbats, \r\n12. Standard Symbols L\r\n\r\nPlease find the below code snippet that we used to retrieve a available font families,\r\n\u0060\u0060\u0060\r\n            SKFontManager fontManager = SKFontManager.Default;\r\n            string[] fonts = fontManager.GetFontFamilies();\r\n\u0060\u0060\u0060\r\n\r\nAlso, we like to know, when we should prefer **SkiaSharp.NativeAssets.Linux.NoDependencies** and **SkiaSharp.NativeAssets.Linux** packages. Is there any documentation available to refer ? \r\n\r\nThanks in advance.",
+        "createdAt": "2021-03-25T09:40:10",
+        "reactions": [
+          {
+            "user": "VijayRM",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:28.1409506Z"
+          },
+          {
+            "user": "MohanaselvamJ",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:25:28.1409511Z"
+          }
+        ]
+      },
+      {
+        "id": 809113598,
+        "author": "RamarajMarimuthu",
+        "body": "@mattleibow - Could you please help us to resolve this ?",
+        "createdAt": "2021-03-29T06:41:18",
+        "reactions": []
+      }
+    ]
+  }
 }

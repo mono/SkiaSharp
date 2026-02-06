@@ -14,5 +14,68 @@
   "updatedAt": "2021-02-08T23:10:21",
   "closedAt": "2021-02-08T23:10:18",
   "commentCount": 5,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:26:03.4378909Z",
+    "reactions": [
+      {
+        "user": "SithRaven",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:26:03.4378974Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 644978546,
+        "author": "mattleibow",
+        "body": "What version of SkiaSharp are you using? Is this .NET Core or Full Framework?\r\n\r\nAlso, is it possible to attach a sample that I can have a look at?\r\n\r\nYou code n this issue seems to be correct, so I can\u0027t say what might be causing the issue. What I can say is try not disposing and recreating the \u0060GRContext\u0060 - that is fine to reuse as long as you are still using the same OpenGL context. You just need to re-create the surface.\r\n\r\nWhat happens if you also just draw a blank screen for the GPU - say clear with red. Does it still leak?",
+        "createdAt": "2020-06-16T19:52:38",
+        "reactions": []
+      },
+      {
+        "id": 645439235,
+        "author": "pilotshamn",
+        "body": "Hi Matthew\r\nThank you for you answer\r\n\r\nIt is a .NET Core 3.1 \r\nSkiaSharp.Views.WPF v1.68.3\r\nSkiaSharp.Views.WindowsForms v1.68.3\r\nSkiaSharp.Views v1.68.3\r\nSkiaSharp.Svg v1.60.0\r\nSkiaSharp.Extended v1.60.0\r\n\r\nIt\u0027s a bit complex aplication, but i will include the code section that causes the trouble. The memory consumption is really fast!\r\nit is really obvious where memory consumes. If I comment out the line in the code surface.Canvas.DrawCircle((int)x, (int)y, 1f, paint); memory is not consumed.\r\nAnd if i include the above line and call canvas.DrawSurface(_surface, new SKPoint(0f, 0f)); after the call to Skia_PaintSurfaceCommonNeWMinimal it is not consumed.\r\nIf i replace the line surface.Canvas.DrawCircle((int)x, (int)y, 1f, paint); with surface.Canvas.Clear( SKColors.Red); memory is NOT consumed\r\n\r\nThank You Peder\r\nI get the _grContext from SkiaOpengl (.NET Framework 4.7.2) like this:  private readonly WglContext _glContext = new WglContext();\r\nThe SkiaOpengl is part of the soulution and also use the latest SkiaSharp nugets and latest OpenTK 3.2.0.\r\n\r\n        public static void Skia_PaintSurfaceCommonNeWMinimal( SKSurface surface, bool highResolution, ref bool isFirstPaint, ConcurrentQueue\u003CdrawingDataNew\u003E queuDrawings, ref float range, ref DateTime lastSend, HubConnection signalrConnection, TimeSpan sendSpan, bool brodcast = false, bool UseRotateXY = false, List\u003CWeatherObject\u003E weather = null)\r\n        {\r\n            lock (LockingPaintThread)\r\n            {\r\n                //    var canvas = surface.Canvas;\r\n                int width, height;\r\n                bool retValue;\r\n                drawingDataNew drawdata;\r\n\r\n                if (highResolution)\r\n                {\r\n                    height = 2048;\r\n                    width = 2048;\r\n                }\r\n                else\r\n                {\r\n                    height = 1024;\r\n                    width = 1024;\r\n                }\r\n\r\n                float canvasHeight = surface.Canvas.LocalClipBounds.Height;\r\n                float canvasWidth = surface.Canvas.LocalClipBounds.Width;\r\n\r\n                if (isFirstPaint)\r\n                {\r\n   \r\n                    isFirstPaint = false;\r\n                }\r\n\r\n                {\r\n\r\n\r\n                    int oldzoom = 0;\r\n                    int oldangle = 0;\r\n                    int imgw = 1024;\r\n                    int imgh = 1024;\r\n                    int midx, midy;\r\n                    float scale = 1;\r\n                    int[] pixel = new int[3];\r\n                    midx = width / 2 \u002B xOffset;\r\n                    midy = height / 2 \u002B yOffset;\r\n \r\n                        while (queuDrawings.Count \u003E 0)\r\n                        {\r\n                            retValue = queuDrawings.TryDequeue(out drawdata);     \r\n                            if (retValue)\r\n                            {\r\n                                if (range != drawdata.range)\r\n                                {\r\n                                    surface.Canvas.DrawCircle(width / 2f \u002B xOffset, height / 2f \u002B yOffset, width / 2, radarBackGroundPaint);\r\n                                    surface.Canvas.DrawCircle(width / 2f \u002B xOffset, height / 2f \u002B yOffset, 2f, blue);\r\n                                    Skia_WriteRange(surface.Canvas, (int)drawdata.range, \u0022Aldrich-Regular.ttf\u0022, new SKPoint(100, 20));\r\n                                    range = drawdata.range;\r\n                                }\r\n                                byte[] spoke = new byte[512];\r\n                                if (highResolution)\r\n                                    spoke = drawdata.dataHighRes;\r\n                                else\r\n                                    spoke = drawdata.data;\r\n                                var angle = drawdata.degree;\r\n                                double rad = ToRadian(angle);\r\n                                double radcos = Math.Cos(rad);\r\n                                double radsin = Math.Sin(rad);\r\n                                int dataLength = 512;\r\n                                if (highResolution)\r\n                                    dataLength = 1024;\r\n                                for (int k = 0; k \u003C dataLength; k\u002B\u002B)\r\n                                {\r\n                                    int valpunkt = spoke[k];\r\n                                    {\r\n                                        var paint = theColorWeak;\r\n                                        if (valpunkt == 0)\r\n                                            paint = radarBackGroundPaint;\r\n                                        else if (valpunkt \u003E ThresholdRed)\r\n                                            paint = theColorStrong;\r\n                                        else if (valpunkt \u003E ThresholdGreen)\r\n                                            paint = theColorIntermediate;\r\n                                        float r = k;//*scale;\r\n                                        float x = (float)(midx \u002B radcos * r);\r\n                                        float y = (float)(midy \u002B radsin * r);\r\n                                        paint.IsAntialias = true;\r\n                                             surface.Canvas.DrawCircle((int)x, (int)y, 1f, paint); //// Comment out and memory stops beeing consumed\r\n                                    }\r\n\r\n                                }\r\n    \r\n                                spoke = null;\r\n                            }\r\n                            drawdata = null;                         \r\n                        }\r\n                }\r\n            }\r\n        }\r\n",
+        "createdAt": "2020-06-17T15:17:33",
+        "reactions": [
+          {
+            "user": "axel578",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:26:02.7395888Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:26:02.7395893Z"
+          },
+          {
+            "user": "SithRaven",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:26:02.7395894Z"
+          }
+        ]
+      },
+      {
+        "id": 649707142,
+        "author": "axel578",
+        "body": "I have the same issue",
+        "createdAt": "2020-06-25T17:07:51",
+        "reactions": []
+      },
+      {
+        "id": 667943638,
+        "author": "SithRaven",
+        "body": "Same issue here: and found out that calling \u0060DrawText\u0060 seems fine, calling \u0060DrawPath\u0060 causes memory leak. ",
+        "createdAt": "2020-08-03T10:24:30",
+        "reactions": []
+      },
+      {
+        "id": 775524733,
+        "author": "mattleibow",
+        "body": "I wonder if this can be investigated using the new SKGraphics types that were added. Maybe the path is being cached or something? Maybe have a look at playing with those values will turn up something?\r\n\r\n",
+        "createdAt": "2021-02-08T23:09:58",
+        "reactions": []
+      }
+    ]
+  }
 }

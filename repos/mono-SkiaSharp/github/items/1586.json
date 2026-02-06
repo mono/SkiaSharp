@@ -14,5 +14,46 @@
   "updatedAt": "2021-02-03T20:09:52",
   "closedAt": "2021-02-03T20:09:51",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:26:19.2836746Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 765468852,
+        "author": "mattleibow",
+        "body": "\u0060USE_DELEGATES\u0060 is used to switch between using the p/invokes and using lazy loaded delegates:\r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SkiaApi.generated.cs#L95-L106\r\n\r\nThe reason for this is mostly for working with the logic to load the native library. In the case of Android/iOS, there is only ever one libSkiaSharp to load, so we can just use the default lookup for native libraries. On Windows, there may be several libSkiaSharp libraries in memory, so we have to manually look up each function pointer.\r\n\r\nOne use case was for VS. Multiple extensions can be installed, each with a different version of SkiaSharp. To avoid crashes, we have to explicitly load the functions for the specific binaries in the extension package. If we used normal p/invokes, then it would pick the one that was already loaded, and might crash.\r\n\r\nSkiaSharp also only is really supporting net462 as we needed some features that came there. If you need to support NETFX, you will have to update to 4.6.2.",
+        "createdAt": "2021-01-22T15:07:21",
+        "reactions": []
+      },
+      {
+        "id": 766691747,
+        "author": "stepangovorko",
+        "body": "@mattleibow Thanks for your answer. But I still have some questions:\r\n1. You told SkiaSharp is needed some features that came in net462. I tried to check these specific features building Windows managed part targeting net461. But on compile time I see no issues (but I can miss something and my experiment can be not fully correct). Could you specify at least several such features or short guide how can I check it on my side?\r\n2. In our application we builds on net461. We use Avalonia which uses ShiaSharp. Because minimum .NET Framework version supported is 4.6.2 we have to reference netstandard2.0 version. And it looks like here are no issues (both at compile time and at runtime). But at the same time ShiaSharp is using p/invokes for native API. Does it look like an issue on your side? Why lazy loaded delegates are not used in case of netstadard2.0?\r\n3. In case of working on Linux there can be also a situation when the user application can be shipped both for x86 and x64. Why don\u0060t you use lazy loading delegates for all platforms (As I see LibraryLoader is designed for all platforms)? Is there some benefits of using p/invokes in your case?",
+        "createdAt": "2021-01-25T09:47:51",
+        "reactions": []
+      },
+      {
+        "id": 767163942,
+        "author": "mattleibow",
+        "body": "1. Technically, net461 can work, but to be consistent with everything, I set everyone to net462. This is also the latest version of net46. \r\n2. Is there no way you can bump your app to use net462? P/invokes are actually better as there is less intermediate code, the reason for the delegates is, as I mentioned before, so that VS can load two versions of SkiaSharp. Unless you are supporting a plug-in architecture where two versions of skia are required to be in memory, either way will work fine.\r\n3. Linux is also net462, so it also uses the delegates. Unless you are building a .NET Core app, then .NET core manages the native bits for you and you don\u0027t have to worry about which arch it is loading as the runtime does it for you.",
+        "createdAt": "2021-01-25T22:50:08",
+        "reactions": []
+      },
+      {
+        "id": 768238823,
+        "author": "ww898",
+        "body": "Hi @mattleibow,\r\n\r\nI want to connect to the discussion because I see some technical troubles with using SkiaSharp under platform with different architectures. The library is using PInvoke as simple and fast method to call native libraries. However, there is set of problem with it:\r\n- the principle \u0022write once, run anywhere\u0022 (WORA) doesn\u0027t work for SkiaSharp because for example I need four different \u0060.so\u0060 for Linux \u0060x64\u0060 / \u0060arm64\u0060 / \u0060musl-x64\u0060 / \u0060musl-arm64\u0060 but SkiaSharp uses only one place for \u0060.so\u0060. Same bad situation with Windows \u0060x64\u0060 / \u0060x86\u0060 / \u0060arm64\u0060 / \u0060arm\u0060 - only one place for all \u0060.dll\u0060.\r\n- PInvoke isn\u0027t a gold bullet. The main issue you can\u0027t control the library:\r\n  - it is impossible to unload the native library\r\n  - it will use already loaded library, but which of them if you have two in memory with different versions :-)\r\n  - You can\u0027t simply specify different subfolders for you native library if you have different version for different architectures. You should implement copy of the PInvoke interface for every combination of OS and architecture. It\u0027s a pain...\r\n  - It is strongly required using \u0060@rpath/...\u0060 for macOS because it some cases macOS processes will not find SkiaSharp library for loading.\r\n\r\nOn my opinion, using PInvoke works correctly only for system wide libraries such as \u0060dlopen\u0060 / \u0060libc\u0060 / \u0060libobjc\u0060 / \u0060kernel32\u0060 / ... . I would recommend to use delegates in other cases.",
+        "createdAt": "2021-01-27T12:01:09",
+        "reactions": []
+      },
+      {
+        "id": 768657606,
+        "author": "mattleibow",
+        "body": "That is what I am saying with the reason for the delegates AND the pinvokes.\r\n\r\nOn Android/iOS/UWP, we use pinvokes because we can ever only have a single libSkiaSharp. Each architecture is placed in special location, and then the OS knows which one to load. If there are duplicates, then there will be a compile time exception about duplicate symbols.\r\n\r\nIn the middle we have .NET Core which also uses the RIDs to determine which native library to load. That is why if you create a netcoreapp project now, it works across all architectures. The .NET Core runtime picks the correct architecture. If you want to support things like musl, all you have to do is just add it into the correct folder in a nuget package and let the runtime do the work: https://github.com/mono/SkiaSharp/blob/master/nuget/SkiaSharp.NativeAssets.Linux.nuspec#L50\r\n\r\nFor things like net4xx, we use delegates because there is no packaging system and we could potentially load an arbitrary number of libSkiaSharp - as is the case with several VS extensions. We have our own folder structure that the internal library loader looks at. This way, you can have all the libSkiaSharp in folders and the managed library will load: https://github.com/mono/SkiaSharp/blob/master/binding/Binding.Shared/LibraryLoader.cs#L36\r\n\r\nWith the pinvoke APIs, we can use the same API for all the architectures and OS because we make sure to use the same types in both the managed and native worlds. This means that all the things, such as the size of pointers, also change. \r\n\r\n",
+        "createdAt": "2021-01-27T23:58:12",
+        "reactions": []
+      }
+    ]
+  }
 }

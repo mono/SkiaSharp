@@ -13,5 +13,34 @@
   "createdAt": "2020-04-01T10:48:22",
   "updatedAt": "2021-03-25T02:50:43",
   "commentCount": 1,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:25:29.3388166Z",
+    "reactions": [
+      {
+        "user": "daltonks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:25:29.3388223Z"
+      },
+      {
+        "user": "notanaverageman",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:25:29.3388229Z"
+      },
+      {
+        "user": "ttrinidad",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:25:29.3388233Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 806323742,
+        "author": "daltonks",
+        "body": "I\u0027d like this as well, especially for path iterators. This seems really expensive when it\u0027s applied to every path verb:\r\n\r\n\u0060\u0060\u0060cs\r\n      public unsafe SKPathVerb Next(Span\u003CSKPoint\u003E points)\r\n      {\r\n        if (points == (Span\u003CSKPoint\u003E) (SKPoint[]) null)\r\n          throw new ArgumentNullException(nameof (points));\r\n        if (points.Length != 4)\r\n          throw new ArgumentException(\u0022Must be an array of four elements.\u0022, nameof (points));\r\n        fixed (SKPoint* points1 = \u0026points.GetPinnableReference())\r\n          return SkiaApi.sk_path_rawiter_next(this.Handle, points1);\r\n      }\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-03-25T02:50:43",
+        "reactions": []
+      }
+    ]
+  }
 }
