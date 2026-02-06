@@ -49,6 +49,7 @@ Publish packages to NuGet.org and finalize releases.
 **Preview vs Stable differences:**
 | Step | Preview | Stable |
 |------|---------|--------|
+| 1. NuGet version | `X.Y.Z-preview.N.{build}` | `X.Y.Z` (no build number) |
 | 2. Pipeline checkbox | "Push Preview" | "Push Stable" |
 | 4. Tag format | `vX.Y.Z-preview.N.{build}` | `vX.Y.Z` |
 | 5. GitHub Release | `--prerelease` flag | No flag, attach samples |
@@ -68,14 +69,20 @@ When identifying which version to publish, use **semver ordering**, not alphabet
 **Prerequisite:** release-testing must have passed. Versions should be known from testing.
 
 The user should provide:
-- SkiaSharp version (e.g., `3.119.2-preview.2.3`)
-- HarfBuzzSharp version (e.g., `8.3.1.4-preview.2.3`)
+- **Preview:** SkiaSharp version with build number (e.g., `3.119.2-preview.2.3`)
+- **Stable:** SkiaSharp base version only (e.g., `3.119.2`) — no build number
+
+⚠️ **Stable versions never include a build number.** The build number only appears in the prerelease component (e.g., `3.119.2-preview.2.3`) or in the internal stable tag (e.g., `3.119.2-stable.3`). It is never appended to the base version directly.
 
 If not provided, ask for them using `ask_user`.
 
 **Quick verification** — confirm packages exist on preview feed:
 ```bash
-dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-skia-version}"
+# Preview: search for the exact NuGet version
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "{expected-version}"
+
+# Stable: search for internal stable builds (NuGet version is just the base, e.g., 3.119.2)
+dotnet package search SkiaSharp --source "https://aka.ms/skiasharp-eap/index.json" --exact-match --prerelease --format json | jq -r '.searchResult[].packages[].version' | grep "^{base}-stable\."
 ```
 
 If missing, STOP and ask user to verify testing was completed.
