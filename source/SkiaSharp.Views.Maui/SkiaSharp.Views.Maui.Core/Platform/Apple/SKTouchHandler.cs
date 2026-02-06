@@ -104,7 +104,18 @@ namespace SkiaSharp.Views.Maui.Platform
 			var cgPoint = touch.LocationInView(View);
 			var point = scalePixels(cgPoint.X, cgPoint.Y);
 
-			var args = new SKTouchEventArgs(id, actionType, point, inContact);
+			SKMouseButton mouse = SKMouseButton.Left;
+			SKTouchDeviceType device = touch.Type switch
+			{
+				UITouchType.IndirectPointer => SKTouchDeviceType.Mouse,
+				UITouchType.Indirect => SKTouchDeviceType.Mouse,
+				UITouchType.Stylus => SKTouchDeviceType.Pen,
+				UITouchType.Direct => SKTouchDeviceType.Touch,
+				_ => SKTouchDeviceType.Touch
+
+			};
+
+			var args = new SKTouchEventArgs(id, actionType, mouse, device, point, inContact, 0);
 			onTouchAction(args);
 			return args.Handled;
 		}
