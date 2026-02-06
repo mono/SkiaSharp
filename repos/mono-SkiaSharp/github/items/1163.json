@@ -1,0 +1,19 @@
+{
+  "number": 1163,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Using source bitmap for CreateMerge image filter throws NullReferenceExceptions",
+  "body": "**Description**\r\n\r\nPassing \u0060null\u0060 for any filter argument to [\u0060SKImageFilter.CreateMerge\u0060](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skimagefilter.createmerge?view=skiasharp-1.68.1#SkiaSharp_SKImageFilter_CreateMerge_SkiaSharp_SKImageFilter___SkiaSharp_SKImageFilter_CropRect_) will throw a \u0060NullReferenceException\u0060\r\n\r\nThe Skia documentation for the [merge image filter](https://api.skia.org/classSkImageFilters.html#ae4968f3a314d892e22b89dd50d24781f) is:\r\n\r\n\u0060\u0060\u0060C\u002B\u002B\r\n/**\r\n     *  Create a filter that merges the \u0027count\u0027 filters together by drawing their results in order\r\n     *  with src-over blending.\r\n     *  @param filters  The input filter array to merge, which must have \u0027count\u0027 elements. Any null\r\n     *                  filter pointers will use the source bitmap instead.\r\n     *  @param count    The number of input filters to be merged.\r\n     *  @param cropRect Optional rectangle that crops all input filters and the output.\r\n     */\r\n    static sk_sp\u003CSkImageFilter\u003E Merge(sk_sp\u003CSkImageFilter\u003E* const filters, int count,\r\n                                      const SkIRect* cropRect = nullptr);\r\n\u0060\u0060\u0060\r\n\r\nNote the comment \u0060Any null filter pointers will use the source bitmap instead\u0060.\r\n\r\nSo it should be allowed to pass \u0060null\u0060 for any input filter.\r\n\r\nChanging [this line](https://github.com/mono/SkiaSharp/blob/ee0e6682356fa8b27967a9327eda269f6b7a4291/binding/Binding/SKImageFilter.cs#L171) into\r\n\r\n\u0060\u0060\u0060\r\nhandles[i] = filters[i]?.Handle ?? IntPtr.Zero;\r\n\u0060\u0060\u0060\r\n\r\nseems to fix this\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-03-04T18:20:15",
+  "updatedAt": "2022-08-19T06:02:34",
+  "closedAt": "2020-03-21T19:26:55",
+  "commentCount": 3,
+  "reactionCount": 0
+}

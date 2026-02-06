@@ -1,0 +1,28 @@
+{
+  "number": 1011,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp.Views.Forms.WPF nuget Package does not work out of the Box",
+  "body": "**Description**\r\n\r\nhttps://www.nuget.org/packages/SkiaSharp.Views.Forms.WPF/1.68.1-rc.169 does not work out of the box. The Xamarin WPF Application crashes with an SKCanvasViewRenderer does not implement IRegistrable\r\n\r\n**Code**\r\n\u0060\u003CPackageReference Include=\u0022SkiaSharp.Views.Forms.WPF\u0022 Version=\u00221.68.1-rc.169\u0022 /\u003E\u0060\r\n\r\n**Expected Behavior**\r\n\r\nXamarin WPF Application works without issues.\r\n\r\n**Actual Behavior**\r\n\r\nXamarin WPF Application with Skiasharp crashes.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1-rc.169\r\n- Last known good version:  Not applicable\r\n- IDE:  Visual Studio 2019 16.3.9\r\n- Platform Target Frameworks: 4.7.1\r\n  - Windows Classic: Windows 10 1909\r\n- Target Devices:   Desktop WPF Application\r\n\r\n**Screenshots**\r\nNone\r\n\r\n\r\n**Reproduction Link**\r\nNone\r\n\r\n**Workaround**\r\nAdding this Package Reference fixed it for me.\r\n\u0060\u0060\u0060\r\n\u003CPackageReference Include=\u0022SkiaSharp.Views.Forms\u0022\u003E\r\n      \u003CVersion\u003E1.68.1-rc.169\u003C/Version\u003E\r\n      \u003CExcludeAssets\u003Eall\u003C/ExcludeAssets\u003E\r\n    \u003C/PackageReference\u003E\r\n\u0060\u0060\u0060\r\n\r\nBecause during compilation it took the dll from SkiaSharp.Views.Forms \r\ninstead of SkiaSharp.Views.Forms.WPF. \r\nI think the error is that SkiaSharp.Views.Forms.WPF has a dependency on SkiaSharp.Views.Forms. (which it shouldn\u0027t have because both \r\nSkiaSharp.Views.Forms.WPF \r\nand \r\nSkiaSharp.Views.Forms provide SkiaSharp.Views.Forms.dll).\r\nAnd nuget decides in my case to use the SkiaSharp.Views.Forms nuget package dll which does not work on WPF.\r\n\r\n",
+  "author": {
+    "login": "inforithmics",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-11-15T16:54:44",
+  "updatedAt": "2022-08-19T09:02:05",
+  "closedAt": "2019-11-16T03:56:47",
+  "commentCount": 9,
+  "reactionCount": 0
+}

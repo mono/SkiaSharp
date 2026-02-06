@@ -1,0 +1,18 @@
+{
+  "number": 1348,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Sweep Gradient doesn\u0027t honor caps when added to an arc",
+  "body": "**Description**\r\n\r\nSweep Gradient doesn\u0027t honor caps when added to an arc\r\n\r\n\t\t\t// set up the gradient colors\r\n\t\t\tSKColor[] colors = new SKColor[2] { this.ArcColor1.ToSKColor(), this.ArcColor2.ToSKColor() };\r\n\r\n\t\t\tfloat sweep = (this.Value1 % this.Value2 / 100F) * 360.0F;\r\n\r\n\t\t\t// draw the arc\r\n\t\t\tusing (SKPath path = new SKPath())\r\n\t\t\t{\r\n\t\t\t\tusing (SKPaint arcPaint = new SKPaint { Style = SKPaintStyle.Stroke, Color = this.ArcColor1.ToSKColor() })\r\n\t\t\t\t{\r\n\t\t\t\t\tarcPaint.StrokeWidth = this.ArcLineWidth;\r\n\t\t\t\t\tarcPaint.StrokeCap = SKStrokeCap.Round;\r\n\t\t\t\t\tarcPaint.IsAntialias = true;\r\n\t\t\t\t\tarcPaint.Shader = SKShader.CreateSweepGradient( this.Origin, colors, new Single[] {0, 1}, SKShaderTileMode.Clamp, 0, sweep );\r\n\r\n\t\t\t\t\t// create an arc to sweep along\r\n\t\t\t\t\tpath.AddArc( this.OuterRect, 0, sweep );\r\n\t\t\t\t\tcanvas.DrawPath( path, arcPaint );\r\n\t\t\t\t}\r\n\t\t\t}\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\nThe cap at the start of the arc should be the color of the starting color defined at position 0\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\nStarting cap is the color at the ending position. Play around with cap styles and TileMode and there is no good solution.\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.3\r\n- Last known good version:  none\r\n- IDE:  isual Studio for Mac\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - iPhone 11 \r\n**Screenshots**\r\n\r\n![Screen Shot 2020-06-23 at 4 44 48 PM](https://user-images.githubusercontent.com/17300872/85468028-88d7d700-b571-11ea-9185-d1ad1de6c67e.png)\r\n\r\nOr allow setting caps on both start and end independent of the other",
+  "author": {
+    "login": "GrumpyCockatiel",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-23T21:50:20",
+  "updatedAt": "2022-08-19T03:02:56",
+  "closedAt": "2020-06-26T14:12:48",
+  "commentCount": 6,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 1238,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Linear PNG colors too dark in dev/update-skia in most image viewers",
+  "body": "**Description**\r\n\r\nWhen I switch existing code that uses 1.68 to the \u0060dev/update-skia\u0060 branch, the PNGs that are saved are too dark.\r\n\r\nWe are rendering in linear color space, using 16-bit floats.\r\n\r\nIf we convert the PNGs to sRGB before saving, we get the same colors.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nconst int width = 512;\r\nconst int height = 512;\r\nvar imageInfo = new SKImageInfo(width, height, SKColorType.RgbaF16, SKAlphaType.Premul, SKColorSpace.CreateSrgbLinear());\r\nusing var bitmap = new SKBitmap(imageInfo);\r\nusing var canvas = new SKCanvas(bitmap);\r\nusing var paint = new SKPaint { Color = SKColors.Purple};\r\ncanvas.DrawRect(0,0,width,height, paint);\r\nusing var data = bitmap.PeekPixels().Encode(new SKPngEncoderOptions());\r\nusing var stream = File.Create(\u0022output.png\u0022);\r\ndata.SaveTo(stream);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nWhen opening the \u0060output.png\u0060 image on Windows, in e.g. IrfanView, Paint, Photo Viewer, Visual Studio 2019, Paint.NET, etc.., the colors should be purple.\r\n\r\n**Actual Behavior**\r\n\r\nWhen opening the \u0060output.png\u0060 image, the colors are very dark purple.\r\n\r\nNote that the colors are correcty displayed in modern browsers, but since the behavior changed, I felt like reporting this.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1590d7e1e815\r\n- Last known good version:  1.68.2-preview.60\r\n- IDE:  any\r\n- Platform Target Frameworks: \u003C\r\n  - Windows Classic\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-18T14:21:38",
+  "updatedAt": "2020-09-16T10:57:16",
+  "commentCount": 12,
+  "reactionCount": 0
+}

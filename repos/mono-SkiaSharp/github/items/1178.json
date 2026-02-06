@@ -1,0 +1,18 @@
+{
+  "number": 1178,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkBitmap constructor with IntPtr",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\n\r\nRight now I am trying to wrap an already allocated memory block with SkBitmap, and I\u0027m doing it like this:\r\n\r\n\u0060\u0060\u0060c#\r\nbmp = new SKBitmap(bmpInfo, byteStride);\r\nbmp.SetPixels(memoryPointer);\r\n\u0060\u0060\u0060\r\n\r\nThe problem is that the constructor is already allocating memory even if I am not going to use it.\r\n\r\nFurthermore, the SetPixels method is intended to replace the internal memory allocation with an external memory pointer... but, does that mean the internally allocated memory is freed?\r\n\r\n**Describe the solution you\u0027d like**\r\n\r\nI would like to have a constructor that would allow to pass the external memory pointer, which would avoid the wasteful internal memory allocation, something like this:\r\n\r\n\u0060public SKBitmap(SKImageInfo info, IntPtr pixels, int rowBytes);\u0060\r\n\r\nor the \u0060SkBitmap \u0060equivalent of \u0060SkImage.FromPixels((SKImageInfo info, IntPtr pixels, int rowBytes)\u0060\r\n\r\n**Describe alternatives you\u0027ve considered**\r\n\r\nI need an \u0060SKBitmap \u0060so I can use it with a \u0060SKCanvas\u0060... so, if SKCanvas would have a \u0060SKCanvas .FromPixels((SKImageInfo info, IntPtr pixels, int rowBytes)\u0060 it would be even better.\r\n",
+  "author": {
+    "login": "vpenades",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-18T10:27:28",
+  "updatedAt": "2022-08-19T06:02:22",
+  "closedAt": "2020-03-18T10:43:13",
+  "commentCount": 1,
+  "reactionCount": 0
+}

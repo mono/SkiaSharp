@@ -1,0 +1,24 @@
+{
+  "number": 1432,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Exception occurs while try to measure the Unicode Text",
+  "body": "**Description**\r\n\r\nI am using a SkiaSharp library for measuring the text and I have recently upgraded the SkiaSharp library version [2.80.0]. Then exception occurs while measuring the Unicode text and this exception are not comes from the older version [1.59.3].\r\nkindly provide your suggestion to resolve this issue.\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\nstring text1 = \u0022\\ud83c\u0022;\r\n                string text2 = \u0022\\ud835\u0022;\r\n                float fontsize = 12;\r\n                float skiaMeasurement = 0;\r\n                using (SKPaint paint = new SKPaint())\r\n                    {\r\n                        paint.Typeface = SKTypeface.FromFamilyName(\u0022Arial\u0022);\r\n                        paint.Color = SKColors.Black;\r\n                        paint.IsAntialias = true;   \r\n                        paint.TextSize = fontsize;\r\n                        paint.SubpixelText = true;\r\n                        paint.TextAlign = SKTextAlign.Left;\r\n                        paint.TextEncoding = SKTextEncoding.Utf8;\r\n                        SKRect rect = new SKRect();\r\n                        skiaMeasurement = paint.MeasureText(text2, ref rect);\r\n                        Console.WriteLine(\u0022SKia Width = \u0022 \u002B skiaMeasurement);\r\n                    }\r\n\u0060\u0060\u0060\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\nSKia Width = 9\r\n\r\n**Actual Behavior**\r\n\r\nException occurs.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.0\r\n- Last known good version:  1.59.3\r\n- IDE:  Visual Studio 2017\r\n- Platform Target Frameworks: .NET Core 2.1\r\n  \r\n\r\n**Exception Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/48026813/88637704-2033cb00-d0d8-11ea-9b18-80b4466ad959.png)\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "MadhanKumarasamy",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-28T08:12:51",
+  "updatedAt": "2022-08-19T03:02:23",
+  "closedAt": "2020-07-31T11:57:23",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1307,
+  "type": "issue",
+  "state": "closed",
+  "title": "Xamarin.Mac SkiaSharp Resolution",
+  "body": "Hello there. I\u0027m sizing a picture with the Cocoa app. Everything is very beautiful. but it lowers the dpi of the picture very much. The image, which should normally be 300 dpi, drops to 96 dpi when resized. is there anything you can suggest here? The function I use is below. Thank you very much for your help.\r\n\r\n\u0060\u0060\u0060cs\r\n        public void PfImageResize(string inputPath)\r\n        {\r\n            int imageWidth = 2000;\r\n            int iamgeHeight = 1333;\r\n            int quality = 90;\r\n            string outputPath = \u0022\u0022;\r\n\r\n            using (var input = File.OpenRead(inputPath))\r\n            {\r\n                using (var inputStream = new SKManagedStream(input))\r\n                {\r\n                    using (var original = SKBitmap.Decode(inputStream))\r\n                    {\r\n                        int width, height;\r\n                        if (original.Width \u003E original.Height)\r\n                        {\r\n                            width = imageWidth;\r\n                            height = iamgeHeight;\r\n                        }\r\n                        else\r\n                        {\r\n                            width = iamgeHeight;\r\n                            height = imageWidth;\r\n                        }\r\n\r\n                        using (var resized = original.Resize(new SKImageInfo(width, height), SKFilterQuality.High))\r\n                        {\r\n                            if (resized == null) return;\r\n\r\n                            using (var image = SKImage.FromBitmap(resized))\r\n                            {\r\n                                using (var output = File.OpenWrite(outputPath))\r\n                                {\r\n                                    image.Encode(SKEncodedImageFormat.Jpeg, quality)\r\n                                        .SaveTo(output);\r\n                                }\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        }\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "admcicek",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-05-23T19:34:08",
+  "updatedAt": "2022-08-19T06:01:34",
+  "closedAt": "2020-06-11T11:50:18",
+  "commentCount": 1,
+  "reactionCount": 0
+}

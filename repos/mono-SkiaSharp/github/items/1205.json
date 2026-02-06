@@ -1,0 +1,17 @@
+{
+  "number": 1205,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Expose SkiaApi class",
+  "body": "SkObject initialization and housekeeping is quite costly in both CPU and allocations. On hot code paths it\u0027s desirable to just deal with raw \u0060IntPtr\u0060\u0027s and Skia C API and manage those manually. \r\n\r\nPerformance benefits far outweigh the loss of object-oriented API and backwards compatibility with previous SkiaSharp versions.\r\n\r\nSince \u0060SkObject\u0060 already exposes \u0060Handle\u0060 property the only change that is needed is to make \u0060SkiaApi\u0060 class to be public rather than internal.\r\n\r\n",
+  "author": {
+    "login": "kekekeks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-01T10:48:22",
+  "updatedAt": "2021-03-25T02:50:43",
+  "commentCount": 1,
+  "reactionCount": 3
+}

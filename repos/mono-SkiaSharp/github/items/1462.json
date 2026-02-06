@@ -1,0 +1,18 @@
+{
+  "number": 1462,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Is there a generic way to create a list of items to draw?",
+  "body": "I see there are different types of renderable objects in SkiaSharp like SKBitmap, SKTextBlob and SKVertices but I don\u0027t see them inheriting from a base class or interface that represents something that can be displayed on screen. I see they inherit from SKObject but that seems to also represent non-display objects.\r\n\r\nI\u0027m wondering whether there is a way to reference some basic properties or methods of SkiaSharp renderable objects in a generic way.\r\n\r\nWhat I am looking for is types like \u0060SKBitmap\u0060 and \u0060SKTextBlob\u0060 having some basic methods like \u0060GetBounds()\u0060 or \u0060ApplyTransformation()\u0060 on a common base class, so that you could mix them and iterate over them.\r\n\r\nThe usecase for this is that I\u0027m trying to create an \u0022image composer\u0022 with several image layers (1 renderable item per layer) which allows the user to select the active layer and drag the renderable item of the active layer around.\r\n\r\nThe MVVM viewmodel for the page would contain a collection of image layers, like:\r\n\u0060\u0060\u0060csharp\r\nObservableCollection\u003CLayerModel\u003E Layers {get;set;}\r\nLayerModel SelectedLayer {get;set;}\r\n\u0060\u0060\u0060\r\n\r\nThe \u0060LayerModel\u0060 class could then have\r\n\u0060\u0060\u0060csharp\r\nstring Name {get;set;}\r\nISKRenderable RenderItem {get;set;}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "hansmbakker",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-12T21:55:46",
+  "updatedAt": "2022-08-19T03:02:08",
+  "closedAt": "2020-08-13T09:04:06",
+  "commentCount": 9,
+  "reactionCount": 0
+}

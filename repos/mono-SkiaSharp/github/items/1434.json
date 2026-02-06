@@ -1,0 +1,19 @@
+{
+  "number": 1434,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Image color brightness are not applied in the SkiaSharp higher version",
+  "body": "**Description**\r\n\r\nI am using SkiaSharp library to reduce the image brightness and it works properly in the older SkiaSharp version [1.59.3] and I am currently upgrading the SKiaSharp version to 2.80.0. I am trying to reduce the image brightness in the higher version but it doesn\u0027t look great. Kindly provide any suggestion to resolve this issue. \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\n            using (Stream destination = new FileStream(\u0022dest_image.png\u0022, FileMode.OpenOrCreate, FileAccess.ReadWrite))\r\n            {\r\n                Stream source = new FileStream(@\u0022source.png\u0022, FileMode.OpenOrCreate, FileAccess.ReadWrite);\r\n                SKBitmap bitmap = new SKBitmap(1, 1);\r\n                bitmap = SKBitmap.Decode(source);\r\n                float correctionFactor = 0.80f;\r\n                //Reduce the picture color brightness\r\n                for (int i = 0; i \u003C bitmap.Width; i\u002B\u002B)\r\n                {\r\n                    for (int j = 0; j \u003C bitmap.Height; j\u002B\u002B)\r\n                    {\r\n                        SKColor color = bitmap.GetPixel(i, j);\r\n                        float red = (float)color.Red;\r\n                        float green = (float)color.Green;\r\n                        float blue = (float)color.Blue;\r\n                        red = (255 - red) * correctionFactor \u002B red;\r\n                        green = (255 - green) * correctionFactor \u002B green;\r\n                        blue = (255 - blue) * correctionFactor \u002B blue;\r\n                        bitmap.SetPixel(i, j, new SKColor((byte)red, (byte)green, (byte)blue, color.Alpha));\r\n                    }\r\n                }\r\n                Stream temp = SKImage.FromBitmap(bitmap).Encode(SKEncodedImageFormat.Png, 100).AsStream();\r\n                temp.CopyTo(destination);\r\n            }\r\n\u0060\u0060\u0060\r\n\r\n**Source Image:**\r\n![source](https://user-images.githubusercontent.com/48026813/88921405-19e65000-d28c-11ea-8fbc-7858121056b1.png)\r\n\r\n**Expected Behavior**\r\n\r\n![image](https://user-images.githubusercontent.com/48026813/88921445-2ec2e380-d28c-11ea-9af9-76602b7a42a1.png)\r\n\r\n\r\n**Actual Behavior**\r\n\r\n![image](https://user-images.githubusercontent.com/48026813/88921500-44d0a400-d28c-11ea-929f-e1c09f961536.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.0\r\n- Last known good version:  1.59.3\r\n- IDE:   Visual Studio 2017\r\n- Platform Target Frameworks: .NET Core 2.1\r\n  ",
+  "author": {
+    "login": "MadhanKumarasamy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-30T12:18:02",
+  "updatedAt": "2022-08-19T03:02:21",
+  "closedAt": "2020-08-11T13:13:38",
+  "commentCount": 3,
+  "reactionCount": 0
+}

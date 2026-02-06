@@ -1,0 +1,31 @@
+{
+  "number": 1377,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKGLView UWP. PaintSurface event fires with the old size after window resize.",
+  "body": "**Description**\r\n\r\nPaintSurface event fires with old size after window maximizing/restoring.\r\nOn version 1.60 this event fires twice: with the old and new size. But after upgrade to 1.68.X only on\u0441e, with old size only.\r\n\r\n**Code**\r\n\r\nXamarin Forms app for UWP\r\n\r\n\u0060\u0060\u0060\r\nusing SkiaSharp.Views.Forms;\r\nusing Xamarin.Forms;\r\n\r\nnamespace App3\r\n{\r\n    public class MainPage : ContentPage\r\n    {\r\n        public MainPage()\r\n        {\r\n            var SKGLView = new SKGLView();\r\n            SKGLView.PaintSurface \u002B= SKGLView_PaintSurface;\r\n            Content = SKGLView;\r\n        }\r\n\r\n        private void SKGLView_PaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n        {\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nEvent fires twice with the old and new size. Or on\u0441e with the new size.\r\n\r\n**Actual Behavior**\r\n\r\nEvent fires with the old size.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  v1.68.X\r\n- Last known good version:  v.1.60.X\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:\r\n  - UWP:  16299\r\n",
+  "author": {
+    "login": "vpapenko",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-07-02T22:15:39",
+  "updatedAt": "2022-08-19T03:02:47",
+  "closedAt": "2021-03-30T15:30:48",
+  "commentCount": 3,
+  "reactionCount": 1
+}

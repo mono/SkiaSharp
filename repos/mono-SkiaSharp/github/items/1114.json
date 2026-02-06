@@ -1,0 +1,19 @@
+{
+  "number": 1114,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp.Views.Forms Nuget file error - invalid check for GTK project",
+  "body": "The SkiaSharp.Views.Forms.WPF package needs to be installed in addition to the SkiaSharp.Views.Forms package in order to support Xamarin.Forms with WPF.\tProject.GTK\t\t\r\n\r\n\r\n## Steps to reproduce\r\n1. Create default net471 project\r\n2. \r\n\u0060\u0060\u0060\r\n\u003CReference Include=\u0022System.Web\u0022 /\u003E\r\n    \u003CReference Include=\u0022Mono.Posix\u0022 /\u003E\r\n    \u003CReference Include=\u0022gtk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f\u0022 /\u003E\r\n    \u003CReference Include=\u0022gdk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f\u0022 /\u003E\r\n    \u003CReference Include=\u0022glib-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f\u0022 /\u003E\r\n    \u003CReference Include=\u0022glade-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f\u0022 /\u003E\r\n    \u003CReference Include=\u0022pango-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f\u0022 /\u003E\r\n    \u003CReference Include=\u0022atk-sharp, Version=2.12.0.0, Culture=neutral, PublicKeyToken=35e10195dab3c99f\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Forms.GTK\u0022 Version=\u00221.68.2-preview.21\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022Xamarin.Forms.Platform.GTK\u0022 Version=\u00224.6.0.191-nightly\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n3. Build application.\r\n\r\n## Result\r\nBuild error\r\n\r\nThe issue is in SkiaSharp.Views.Forms.targets:\r\n_RequiredWPFReferences is true.",
+  "author": {
+    "login": "VladislavAntonyuk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-01-24T18:48:46",
+  "updatedAt": "2022-08-19T09:01:17",
+  "closedAt": "2020-01-30T17:21:33",
+  "commentCount": 4,
+  "reactionCount": 0
+}

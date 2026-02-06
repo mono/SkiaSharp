@@ -1,0 +1,17 @@
+{
+  "number": 1381,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKSurface.ReadPixels is super slow",
+  "body": "**Description**\r\n\r\nI\u0027m using SkiaSharp with a OpenGL backend and I\u0027m drawing on a \u0060SkSurface\u0060 wich is super fast, took around 0.25ms.\r\nTo get the rendered pixel data I\u0027m using \u0060SkSurface.ReadPixels\u0060 to copy the data to a buffer. But this calls are super slow ~30ms.\r\nIs there any chance to speed it up? Or getting a direct pointer to the pixeldata?\r\n\r\n\r\n\r\n**Code**\r\nvar _info = new SKImageInfo(1920, 1080, SKColorType.Bgra8888);\r\nvar _glContext = GlContext.Create();\r\nvar _glContext.MakeCurrent();\r\nvar _glInterface = GRGlInterface.Create();\r\nvar _context = GRContext.CreateGl(_glInterface);\r\nvar _buffer = Marshal.AllocHGlobal(_info.BytesSize);\r\n_surface = SKSurface.Create(_context, true, _info);\r\n\r\n// doing the actual drawing like _surface.Canvas.Draw...\r\n\r\n_surface.ReadPixels(_info, _buffer, _info.RowBytes, 0, 0));\r\n\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.80.0-preview.24\r\n- IDE: Rider 2020.1\r\n- Platform Target Frameworks: .Net Core 3.1\r\n  - macOS 10.15.5 (currently only tested here)\r\n\r\n",
+  "author": {
+    "login": "joa77",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-03T16:48:40",
+  "updatedAt": "2021-09-04T11:53:36",
+  "commentCount": 28,
+  "reactionCount": 1
+}

@@ -1,0 +1,19 @@
+{
+  "number": 1319,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SkRuntimeEffect and making the image background transparent.",
+  "body": "Hi,\r\n\r\nI wish to make an image background transparent and have the following solution as suggested on the Skia Google group:\r\n\r\nhttps://jsfiddle.skia.org/canvaskit/12da8034d9fbf655956ba745d76acc9b9dc053ae78e468256624400b8a1015cb\r\n\r\nhttps://groups.google.com/forum/#!topic/skia-discuss/gjr5-ZpSX80\r\n\r\nThis solution works very well and I am in the process of converting this to use SkiaSharp.\r\n\r\nI ran into a problem with SkRuntimeEffect  as it does not seem to be available?\r\n\r\nMy question\u0027s are as follows:\r\n\r\n1. Is SkRuntimeEffect  available and if not is their an alternative?\r\n2. Is there an existing SkiaSharp solution for doing this? Simply put I want to pick a color in an image and replace it with transparency. \r\n\r\nHere is the Skia code:\r\n\r\n\u0060\u0060\u0060js\r\n// #slider0:threshold #slider1:exponent\r\n// Format Code shortcut (Shift \u002B Alt \u002B F) \r\n\r\nconst surface = CanvasKit.MakeCanvasSurface(canvas.id);\r\nif (!surface) {\r\n    throw \u0027Could not make surface\u0027;\r\n}\r\n\r\nslider1.value = 0.2\r\nslider0.value = 0.4\r\n\r\nconst getExponent = () =\u003E slider1.valueAsNumber * 15;\r\nconst getThreshold = () =\u003E slider0.valueAsNumber * 3;\r\n\r\nconst skcanvas = surface.getCanvas();\r\nconst paint = new CanvasKit.SkPaint();\r\n\r\n\r\nconst prog = \u0060\r\n in fragmentProcessor color_map;\r\n uniform float scale;\r\n uniform half exp;\r\n uniform float3 in_colors0;\r\n\r\n void main(float2 p, inout half4 color) {\r\n    half4 texColor = sample(color_map, p);\r\n    if(length(abs(in_colors0 - pow(texColor.rgb, half3(exp) ) )) \u003C scale) discard;\r\n    color = texColor;\r\n }\u0060;\r\n\r\nfunction main(textureImgData) {\r\n    const context = CanvasKit.currentContext();\r\n    const textureShader = CanvasKit.MakeImageFromEncoded(textureImgData).makeShader(\r\n        CanvasKit.TileMode.Clamp, CanvasKit.TileMode.Clamp);\r\n\r\n    const fact = CanvasKit.SkRuntimeEffect.Make(prog);\r\n\r\n    function drawFrame() {\r\n        CanvasKit.setCurrentContext(context);\r\n        skcanvas.clear(CanvasKit.BLACK);\r\n\r\n        const shader = fact.makeShaderWithChildren([getThreshold(), getExponent(), 1.0, 1.0, 1.0], true, [textureShader]);\r\n        paint.setShader(shader);\r\n\r\n        skcanvas.drawRect(CanvasKit.LTRBRect(0, 0, 400, 400), paint);\r\n        surface.flush();\r\n        requestAnimationFrame(drawFrame);\r\n        shader.delete();\r\n    }\r\n    requestAnimationFrame(drawFrame);\r\n\r\n}\r\n\r\n\r\nconst loadBrick = fetch(\r\n\r\n    \u0027https://cdn.shopify.com/s/files/1/0161/0482/products/AyeGear_T5_tshirt_with_pockets_clothing_fashion_style_hiking_fishing_cycling_scottevest_pickpocket_proof_concealed5.jpg?v=1502127434\u0027)\r\n    .then((response) =\u003E response.arrayBuffer())\r\n    .then(main);\r\n\u0060\u0060\u0060\r\n\r\nThanks\r\n\r\nMark.\r\n\r\n\r\n",
+  "author": {
+    "login": "Surfrat",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.0",
+  "createdAt": "2020-06-05T12:59:22",
+  "updatedAt": "2022-08-19T06:01:24",
+  "closedAt": "2021-07-12T01:45:08",
+  "commentCount": 10,
+  "reactionCount": 0
+}

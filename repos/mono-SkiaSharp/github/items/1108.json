@@ -1,0 +1,19 @@
+{
+  "number": 1108,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Can not show UI elements on top of XF WPF SKGLView",
+  "body": "**Description**\r\n\r\nWhen a class is derived from SKGLView UI elements on top of that element are not shown in XF WPF\r\n\r\n**Code**\r\n\r\nThe custom SKGLView is created like this:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Forms;\r\n\r\nnamespace Mapsui.UI.Forms\r\n{\r\n    public class MyCustomView : SKGLView\r\n    {\r\n        public MyCustomView()\r\n        {\r\n            PaintSurface \u002B= MyCustomView_PaintSurface;\r\n        }\r\n\r\n        private void MyCustomView_PaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            e.Surface.Canvas.Clear(new SKColor(255, 128, 128));\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nPut it in a page and put a button on top like this:\r\n\u0060\u0060\u0060xaml\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\r\n\u003CContentPage xmlns=\u0022http://xamarin.com/schemas/2014/forms\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n\t\t\t xmlns:mapsui=\u0022clr-namespace:Mapsui.UI.Forms;assembly=Mapsui.UI.Forms\u0022\r\n             x:Class=\u0022Mapsui.Samples.Forms.MainPageLarge\u0022\u003E\r\n    \u003CContentPage.Content\u003E\r\n            \u003CGrid\r\n                VerticalOptions=\u0022FillAndExpand\u0022\r\n                HorizontalOptions=\u0022FillAndExpand\u0022\u003E\r\n            \u003Cmapsui:MyCustomView x:Name=\u0022mapView\u0022\r\n    \t\t    VerticalOptions=\u0022FillAndExpand\u0022\r\n                HorizontalOptions=\u0022FillAndExpand\u0022\r\n\t\t        BackgroundColor=\u0022Gray\u0022 \r\n\t\t        Margin=\u00220\u0022 /\u003E\r\n                \u003CButton \r\n                    WidthRequest=\u0022160\u0022 \r\n                    HeightRequest=\u0022160\u0022 \r\n                    HorizontalOptions=\u0022Center\u0022 \r\n                    VerticalOptions=\u0022Center\u0022 \r\n                    Text=\u0022Hello\u0022\u003E\u003C/Button\u003E\r\n            \u003C/Grid\u003E\r\n    \u003C/ContentPage.Content\u003E\r\n\u003C/ContentPage\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Expected Behavior**\r\n\r\nThe button is visible as in XF UWP:\r\n![image](https://user-images.githubusercontent.com/963462/72649654-8a77f000-397e-11ea-965f-346de09502a5.png)\r\n\r\n**Actual Behavior**\r\n\r\nThe button is not visible in XF WPF\r\n\r\n![image](https://user-images.githubusercontent.com/963462/72649714-b004f980-397e-11ea-8cb4-35eb5fcef78a.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.2-preview.17\r\n- Last known good version:  wpf did not work at all in the previous version we used.\r\n- IDE: VS 2019 professional\r\n- Platform Target Frameworks: XF WPF\r\n- Target Devices: Windows desktop\r\n\r\n**Related reports**\r\nMapsui got a bug reported [here](https://github.com/Mapsui/Mapsui/issues/775). Alerts are also not shown on top of the map.",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2020-01-17T22:16:55",
+  "updatedAt": "2024-05-31T16:19:53",
+  "closedAt": "2024-05-31T16:19:53",
+  "commentCount": 9,
+  "reactionCount": 0
+}

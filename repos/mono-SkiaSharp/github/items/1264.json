@@ -1,0 +1,17 @@
+{
+  "number": 1264,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] iOS physical device crash with System.DllNotFoundException when using Enterprise Certificate Signing Identity",
+  "body": "**Description**\r\n\r\nI am able to build and run my project fine when I run with my Apple Developer Account.  However, when I use my Enterprise Distribution Profile to sign, I receive a runtime exception on first access to SkiaSharp libraries. \r\n\r\nExactly like this issue, except that it occurs with Enterprise Certificate instead of Developer Certificate:\r\n[https://github.com/mono/SkiaSharp/issues/1129](https://github.com/mono/SkiaSharp/issues/1129)\r\n\r\n**Code**\r\n\r\n*First access of Skia Sharp\r\n\r\n**Expected Behavior**\r\n\r\nPage should display normally.\r\n\r\n**Actual Behavior**\r\n\r\niOS app Crash on exception: Dll Not found Exception.\r\nSymptoms and error similar to \r\n[https://github.com/mono/SkiaSharp/issues/1129](https://github.com/mono/SkiaSharp/issues/1129)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1.1\r\n- Last known good version:  Did not work in 1.68 either. \r\n- IDE:  Visual Studio for Mac 8.5.4\r\n- Platform Target Frameworks: \r\n  - iOS:  13.4 \r\n  - macOS:  10.15.3\r\n- Target Devices:   \r\n  - iPhone X\r\n  - iPhone 11\r\n  - iPhone 7\r\n  - iPhone 8 \r\niOS versions 13.3.x - 13.4.1, 13.4.5 beta\r\n\r\n** Discussion ** \r\nWe have another developer workstation that can deploy a version that does not crash from the exact same code base to the same devices.  I have been unable to figure out what it is about this Mac that causes this issue.  I have tried removing certs from Keychain and adding again, reinstalling Provisioning Profiles, upgrading XCode and Visual Studio.  \r\n\r\n",
+  "author": {
+    "login": "AlexanderPBrown",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-30T00:16:36",
+  "updatedAt": "2020-11-27T21:12:42",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1507,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKTypeface.GetGlyphs problems...",
+  "body": "**Description**\r\n\r\nTo determine the number of glyphs in text, the following code is used in SkiaSharp 1.68.3:\r\n\r\n\u0060\u0060\u0060CS\r\nvar n = SkiaApi.sk_typeface_chars_to_glyphs (Handle, (void*)text, encoding.ToEncoding (), null, length);\r\n\u0060\u0060\u0060\r\n\r\n\u0060length\u0060 is number of bytes in the \u0060text\u0060.\r\n\r\n\u0060sk_typeface_chars_to_glyphs\u0060 passes the \u0060length\u0060 as-is to \u0060SkTypefaceXXX::charsToGlyphs\u0060 as the \u0060glyphCount\u0060 parameter...\r\n\r\nThis can result in an access violation before the \u0060charsToGlyphs\u0060 native code can read beyond the data boundary:\r\n\r\n\u0060\u0060\u0060C\r\n        EncodingProc next_ucs4_proc = find_encoding_proc(encoding);\r\n        for (int i = 0; i \u003C glyphCount; \u002B\u002Bi) {\r\n            const SkUnichar c = next_ucs4_proc(\u0026chars);\r\n            BOOL exists;\r\n            fDWriteFont-\u003EHasCharacter(c, \u0026exists);\r\n            if (!exists) {\r\n                return i;\r\n            }\r\n        }\r\n        return glyphCount;\r\n\u0060\u0060\u0060\r\n\r\nPS: Another problem with this Skia code is that this stops counting at the first unsupported character... I was expecting it to count all characters, and just return 0 as the glyph id for unsupported chars?\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nvar data= Encoding.UTF32.GetBytes(\u0022X\u0022);\r\nvar slice= new Span\u003Cbyte\u003E(testData, 0, 4);\r\nvar glyphs = _typeface.GetGlyphs(testSlice, SKTextEncoding.Utf32);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nOne glyph id should be returned.\r\n\r\n**Actual Behavior**\r\n\r\nFour glyph ids are be returned, or an access violation is raised.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.3\r\n- Last known good version:  none\r\n- Platform Target Frameworks:  all\r\n  \r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-23T18:29:44",
+  "updatedAt": "2022-08-19T03:01:47",
+  "closedAt": "2021-08-24T15:59:33",
+  "commentCount": 2,
+  "reactionCount": 0
+}

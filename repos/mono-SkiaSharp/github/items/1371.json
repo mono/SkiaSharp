@@ -1,0 +1,17 @@
+{
+  "number": 1371,
+  "type": "issue",
+  "state": "open",
+  "title": "Building release version for android failed",
+  "body": "**Description**\r\nI have an error when compiling in Release and generating the APK, in Debug mode if it compiles and it works, in Release I have the following error: The \u0022LinkAssemblies\u0022 task failed unexpectedly.\r\n\r\n\u0060\u0060\u0060\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tThe \u0022LinkAssemblies\u0022 task failed unexpectedly.\r\nMono.Linker.MarkException: Error processing method: \u0027SkiaSharp.SKImageInfo SkiaSharp.SKBitmap::DecodeBounds(System.ReadOnlySpan\u00601\u003CSystem.Byte\u003E)\u0027 in assembly: \u0027SkiaSharp.dll\u0027 ---\u003E Mono.Cecil.ResolutionException: Failed to resolve !0\u0026 modreq(System.Runtime.InteropServices.InAttribute) System.ReadOnlySpan\u00601\u003CSystem.Byte\u003E::GetPinnableReference()\r\n   at Mono.Linker.Steps.MarkStep.HandleUnresolvedMethod(MethodReference reference)\r\n   at Mono.Linker.Steps.MarkStep.MarkMethod(MethodReference reference)\r\n   at Mono.Linker.Steps.MarkStep.MarkInstruction(Instruction instruction)\r\n   at Mono.Linker.Steps.MarkStep.MarkMethodBody(MethodBody body)\r\n   at Mono.Linker.Steps.MarkStep.ProcessMethod(MethodDefinition method)\r\n   at Mono.Linker.Steps.MarkStep.ProcessQueue()\r\n   --- End of inner exception stack trace ---\r\n   at Mono.Linker.Steps.MarkStep.ProcessQueue()\r\n   at Mono.Linker.Steps.MarkStep.ProcessPrimaryQueue()\r\n   at Mono.Linker.Steps.MarkStep.Process()\r\n   at MonoDroid.Tuner.MonoDroidMarkStep.Process(LinkContext context)\r\n   at Mono.Linker.Pipeline.Process(LinkContext context)\r\n   at MonoDroid.Tuner.Linker.Process(LinkerOptions options, ILogger logger, LinkContext\u0026 context)\r\n   at Xamarin.Android.Tasks.LinkAssemblies.Execute(DirectoryAssemblyResolver res)\r\n   at Xamarin.Android.Tasks.LinkAssemblies.Execute()\r\n   at Microsoft.Build.BackEnd.TaskExecutionHost.Microsoft.Build.BackEnd.ITaskExecutionHost.Execute()\r\n   at Microsoft.Build.BackEnd.TaskBuilder.\u003CExecuteInstantiatedTask\u003Ed__26.MoveNext()\tDuren.Android\t\t\t\r\n\u0060\u0060\u0060\r\n\r\n\u003C!-- a general description goes here --\u003E\r\nLinker configured for Sdk Assemblies Only in Android build options\r\n\r\n**Information**\r\nTarget framework - Android 9 ( Pie )\r\nVisual Studio 2017 - v15.9.24\r\nSkiasharp.Views.Forms - 1.68.3\r\nSkiasharp 1.68.3\r\nXamarin.Forms - v4.5.0.725\r\nXamarin.Android SDK   9.1.7.0 \r\n\r\n\r\n\r\nLink\r\n[App5.zip](https://github.com/mono/SkiaSharp/files/4856763/App5.zip)\r\n\r\nThanks,\r\nCristover\r\n",
+  "author": {
+    "login": "xDaijobu",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-01T09:09:55",
+  "updatedAt": "2020-07-24T01:01:20",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1454,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Struggling to Build on Windows or Mac",
+  "body": "Hi, \r\nI\u0027m struggling to build Skia Sharp. I\u0027ve tried following the instructions in https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp but I get stuck and I\u0027m not sure what I\u0027m missing. I\u0027m working on Mobile Blazor Bindings which is built on Xamarin Forms so I\u0027ll only need to work with managed code.\r\n\r\nI\u0027ve included details below, I\u0027m not sure how much of it is relevant or if I\u0027m missing anything. Any tips would be much appreciated.\r\n\r\n##Windows\r\nOn windows I\u0027m running VS 2019 16.7, I\u0027ve installed GTK 2.12.\r\n\r\nWhen I tried to run \u0060.\\bootstrapper.ps1 -t externals-download\u0060 I initially had an error \u0060You cannot run this script on the current system\u0060, which I fixed by changing the Execution Policy.\r\n\r\nAfter that I tried running again and it got stuck at \u0060Running Build script...\u0060, after about half an hour I cancelled it with \u0060control \u002B c\u0060, I ran it again and it got further but get\u0027s stuck at \u0060externals-downloaded\u0060.\r\n\r\n![Screen Shot 2020-08-09 at 2 55 35 pm](https://user-images.githubusercontent.com/29908924/89727717-a651f900-da6a-11ea-8b35-c5a0b8b8f010.png)\r\n\r\nWhen I open the source solution in VS Windows I can\u0027t build the SkiaSharp projects due to MSB3073, which is probably something to do with build order but I\u0027m not sure where to go from there.\r\n\r\n![Screen Shot 2020-08-09 at 6 04 24 pm](https://user-images.githubusercontent.com/29908924/89727807-5aec1a80-da6b-11ea-804a-e78e5e7918c3.png)\r\n\r\nI\u0027ve tried adding a NetStandard project to the solution to add new code in, strangely enough it always succeeds building or doesn\u0027t build due to being up to date, even with blatant syntax errors.\r\n\r\n## Mac\r\nI\u0027ve also tried on Mac and running \u0060./bootstrapper.sh -t externals-download \u0060 got stuck at \u0060externals-download\u0060 which I eventually cancel with \u0060control \u002B c\u0060\r\n\r\nWhen I try to build a new .Net Standard library in the solution I get these errors, even before I\u0027ve added any code.\r\n\r\n\u0060\u0060\u0060\r\nobj/Debug/netstandard2.0/Test.Version.cs(2,50,2,52): warning CS7035: The specified version string does not conform to the recommended format - major.minor.build.revision\r\nobj/Debug/netstandard2.0/Test.Version.cs(1,46,1,48): error CS7034: The specified version string does not conform to the required format - major[.minor[.build[.revision]]]\r\n\u0060\u0060\u0060\r\n\r\n \r\n",
+  "author": {
+    "login": "lachlanwgordon",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-09T08:31:33",
+  "updatedAt": "2022-08-19T03:02:13",
+  "closedAt": "2020-08-21T20:34:13",
+  "commentCount": 9,
+  "reactionCount": 0
+}

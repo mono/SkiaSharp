@@ -1,0 +1,30 @@
+{
+  "number": 1251,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] (Performance) SkSwapChaninPanel makes unnecessary per-frame heap allocations",
+  "body": "SkSwapChainPanel::OnRenderFrame(Rect) makes 2 heap allocations. It would be preferable to not have any allocations in the hot path.\r\n\r\n1. SkAutoCanvasRestore(...), The RAII semantics are neat, but maybe this could be changed to one of the new disposable stack-scoped structs?\r\n2. Can SKPaintGLSurfaceEventArgs be reused rather than allocated each frame? \r\n\r\nhttps://github.com/mono/SkiaSharp/blob/354d85d129e898071e002a3157e7fcba1d7830a7/source/SkiaSharp.Views/SkiaSharp.Views.UWP/SKSwapChainPanel.cs#L85\r\n\r\n",
+  "author": {
+    "login": "akater320",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/enhancement",
+      "color": "84b6eb"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-04-27T13:43:53",
+  "updatedAt": "2021-03-21T21:25:13",
+  "commentCount": 4,
+  "reactionCount": 0
+}

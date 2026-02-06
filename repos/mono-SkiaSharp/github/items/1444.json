@@ -1,0 +1,19 @@
+{
+  "number": 1444,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKSwapChainPanel not working with Uno WASM",
+  "body": "**Description**\r\n\r\nWhen trying to use SKSwapChainPanel in both my own app and the Uno samples on this repo, nothing is displayed and we get an error in the browser console.\r\n\r\n***Repro Steps***\r\n- Open SkiaSharp\\samples\\Gallery\\Uno\\SkiaSharpSample.sln\r\n- Replace the project dependencies by nuget dependencies in the Wasm project\r\n- Set the wasm project as starter project\r\n- Run the samples\r\n- Swith to OpenGL using the top right icon\r\n\r\n**Expected Behavior**\r\n\r\nUsing the GPUView shouldn\u0027t crash, and produce the same results as UWP.\r\n\r\n**Actual Behavior**\r\n\r\nThe sample panel becomes blank and the following error is displayed in the console\r\n\r\n\u0060\u0060\u0060\r\nUncaught Error: System.NullReferenceException: Object reference not set to an instance of an object.\r\n  at :63559/SkiaSharp.Vie\u2026ilename unknown\u003E:0 \r\n  at :63559/SkiaSharp.Vie\u2026ilename unknown\u003E:0 \r\n  at SkiaSharp.Views.UWP.SKSwapChainPanel\u002BSKSwapChainPanelJsInterop.Uno.Foundation.Interop.IJSObjectMetadata.InvokeManaged (:63559/System.Object\u2026m.String parameters) \u003C0x6e7bf20 \u002B 0x00026\u003E in \u003Cfilename unknown\u003E:0 \r\n  at Uno.Foundation.Interop.JSObject.Dispatch (:63559/System.String\u2026m.String parameters) [0x0009b] in D:\\a\\1\\s\\src\\Uno.Foundation\\Interop\\JSObject.wasm.cs:47 \r\n    at Object.call_method (dotnet.js:12321)\r\n    at Function.dispatchMethod (dotnet.js:12395)\r\n    at Function.dispatch (Uno.UI.js:2421)\r\n    at SkiaSharp.Views.Uno.Wasm.js:62\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2-preview.18\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - WebAssembly (Uno)\r\n- Target Devices:   \r\n  - Browser (Firefox and Chredge)\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\nWe can reproduce the issue using the Uno Samples.\r\n\r\n",
+  "author": {
+    "login": "MakanWG",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-08-04T03:57:12",
+  "updatedAt": "2022-08-19T03:02:18",
+  "closedAt": "2020-08-04T13:40:13",
+  "commentCount": 2,
+  "reactionCount": 0
+}

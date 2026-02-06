@@ -1,0 +1,18 @@
+{
+  "number": 1027,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] \u0060SKImage.FromBitmap(someBitmap)\u0060 returns null (on macOS) with SkiaSharp 1.68.0 and 1.68.1",
+  "body": "**Description**\r\n\r\n\u0060SKImage.FromBitmap(someBitmap)\u0060 returns null, on macOS (with a someBitmap variable that is not null). Strangely enough, this happens when upgrading Xamarin.Forms from 3.0 (3.0.0.446417) to the latest 4.3 (4.3.0.991211). [Been bisecting this, and regression seems to happen somewhere between 3.6.709228, the last v3.6.x, and 4.0.0.425677, the first v4.0.x]\r\n\r\n**Code**\r\n\r\nhttps://github.com/knocte/geewallet/blob/b0dcca50c1fab8010e8376afea566763a1b5b8ec/src/GWallet.Frontend.XF/Controls/DonutChartView.fs#L252\r\n\r\n**Expected Behavior**\r\n\r\nThis method shouldn\u0027t return null (it doesn\u0027t with XamarinForms 3.6).\r\n\r\n**Actual Behavior**\r\n\r\nIt returns null, so my app ends up crashing with a NullReferenceException.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0 (tried upgrading to SkiaSharp.1.68.1 but it doesn\u0027t fix it).\r\n- Last known good version:  1.68.0 along with Xamarin.Forms 3.6\r\n- IDE:  Visual Studio for Mac 8.3.9.2\r\n- Platform Target Frameworks: \r\n  - macOS:  Catalina 10.15.1\r\n- Target Devices:  macBook\r\n\r\n**Reproduction Link**\r\n\r\nRun the macOS app in this branch: https://github.com/knocte/geewallet/commits/experiments/xf4\r\n",
+  "author": {
+    "login": "knocte",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-11-21T17:38:44",
+  "updatedAt": "2022-08-19T09:02:00",
+  "closedAt": "2019-11-25T14:50:43",
+  "commentCount": 12,
+  "reactionCount": 0
+}

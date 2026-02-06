@@ -1,0 +1,19 @@
+{
+  "number": 1398,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKTypeface.GetGlyphs has changed meaning in v2.80",
+  "body": "**Description**\r\n\r\nPreviously, calling \u0060SKTypeface.GetGlyphs(...)\u0060 would basically _cast_ the incoming pointer to the type specified by the encoding. So, for a UTF32 encoding, it took the pointer and cast to \u0060uint32_t*\u0060. The new way is to \u0022convert\u0022 to UTF32.\r\n\r\nThis is a breaking change and needs to be fixed.\r\n\r\nOld: https://github.com/mono/skia/blob/v1.68.3/src/ports/SkFontHost_win.cpp#L2044\r\nNew: https://github.com/mono/skia/blob/v2.80.0/src/ports/SkFontHost_win.cpp#L1897\r\n\r\nWhat actually happened under the hood was that the typeface handed all encodings. However, in v2, this was changed and only handles UTF32, so I redirected the logic to \u0060SKFont\u0060 which does the conversion. This was incorrect.\r\n\r\n**Code**\r\n\r\nSee code in: https://github.com/toptensoftware/RichTextKit/issues/15\r\n\r\n**Expected Behavior**\r\n\r\n\u0060GetGlyphs(int*, Utf32)\u0060 should not convert the data to UTF32.\r\n\r\n**Actual Behavior**\r\n\r\nConversion.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80\r\n- Last known good version:  1.68.3\r\n\r\n**Screenshots**\r\n\r\nN/A\r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/toptensoftware/RichTextKit/issues/15\r\n",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.1",
+  "createdAt": "2020-07-13T15:54:28",
+  "updatedAt": "2022-08-19T03:02:36",
+  "closedAt": "2020-07-14T00:16:51",
+  "commentCount": 0,
+  "reactionCount": 0
+}

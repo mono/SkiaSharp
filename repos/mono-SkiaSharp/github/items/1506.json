@@ -1,0 +1,18 @@
+{
+  "number": 1506,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] WPF SKElement does not call PaintSurface when inside a Panel",
+  "body": "WPF under Windows 10.\r\n\r\nI have this layout\r\n\r\nWindow -\u003E WrapPanel -\u003E UserControl -\u003E SKElement.\r\n\r\nWith this hiearchy, the PaintSurface event attached to the SKElement never gets called.\r\n\r\nIf I pull the SKElement \u0022one level up\u0022 (i.e. get rid of the WrapPanel)\r\nWindow -\u003E UserControl -\u003E SKElement\r\n\r\nThe PaintSurface event is called again.\r\nI expected it to work, instead it is never called. Calling InvalidateVisual on the SKElement does not help either: when outside the panel it triggers a call to PaintSurface, when inside a panel it does nothing.\r\n",
+  "author": {
+    "login": "ldematte",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-23T17:37:15",
+  "updatedAt": "2022-08-19T03:01:48",
+  "closedAt": "2020-09-23T17:39:24",
+  "commentCount": 2,
+  "reactionCount": 0
+}
