@@ -75,6 +75,13 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (rateLimit.Resources.Core.Remaining < RateLimitThreshold)
         {
             AnsiConsole.MarkupLine($"[yellow]Rate limit low ({rateLimit.Resources.Core.Remaining} remaining). Exiting gracefully.[/]");
+            syncMeta = syncMeta with 
+            { 
+                LastRun = now,
+                LastRunStatus = "rate_limited",
+                RateLimit = new RateLimitInfo(rateLimit.Resources.Core.Remaining, rateLimit.Resources.Core.Reset.DateTime)
+            };
+            await cache.SaveGitHubSyncMetaAsync(syncMeta);
             return 1;
         }
 
@@ -172,14 +179,20 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         // Exit codes:
         // 0 = work done successfully (batch complete, more to do)
         // 1 = rate limit hit
-        // 2 = all done (items complete AND engagement complete)
+        // 2 = all done (items complete AND engagement complete or nothing pending)
         if (rateLimitHit)
             return 1;
+        
+        // Check if there's actually pending work (excluding cooldown items)
+        var pendingEngagement = index.Items.Count(i => 
+            !syncMeta.Failures.ContainsKey(i.Number.ToString()) &&
+            (i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt));
+        
         if (settings.ItemsOnly && itemsComplete)
             return 2;
-        if (settings.EngagementOnly && engagementProcessed == 0)
+        if (settings.EngagementOnly && engagementProcessed == 0 && pendingEngagement == 0)
             return 2;
-        if (syncMeta.InitialSyncComplete && itemsComplete && engagementProcessed == 0)
+        if (itemsComplete && engagementProcessed == 0 && pendingEngagement == 0)
             return 2;
         return 0;
     }
