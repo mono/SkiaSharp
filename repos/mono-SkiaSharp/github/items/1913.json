@@ -1,0 +1,17 @@
+{
+  "number": 1913,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Why is SKSurface.Create returning null? (OpenGL)",
+  "body": "I\u0027m trying to understand why surface creation is failing. \r\n\r\nI\u0027m trying to use SkiaSharp without relying on OpenTK, or WinForms or the built-in views. \r\n\r\n\u003Ccode\u003E\r\nsurface = SKSurface.Create(grContext, renderTarget, surfaceOrigin, colorType);\r\n\u003C/code\u003E\r\nreturns null. - but why? \r\n\r\nThe OpenGL Context looks valid. I have a valid GRContext. The Width and Height are not negative (which apparently tripped up a few people). I am using the platform color type static enum reference as required. [ SKImageInfo.PlatformColorType ]\r\n\r\nLooking at the output produced in Immediate Window below, is there anything suspect to look into? \r\n\r\n\r\ncolorType\r\nBgra8888\r\nsurfaceOrigin\r\nBottomLeft\r\nrenderTarget\r\n{SkiaSharp.GRBackendRenderTarget}\r\n    Backend: OpenGL\r\n    Handle: 0x00000285eeb22ca0\r\n    Height: 720\r\n    IgnorePublicDispose: false\r\n    IsDisposed: false\r\n    IsValid: true\r\n    OwnsHandle: true\r\n    Rect: {{Left=0,Top=0,Width=1280,Height=720}}\r\n    SampleCount: 1\r\n    Size: {{Width=1280, Height=720}}\r\n    StencilBits: 8\r\n    Width: 1280\r\ngrContext\r\n{SkiaSharp.GRContext}\r\n    Backend (SkiaSharp.GRRecordingContext): OpenGL\r\n    Backend: OpenGL\r\n    Handle: 0x00000285f1783eb0\r\n    IgnorePublicDispose: false\r\n    IsAbandoned: false\r\n    IsDisposed: false\r\n    OwnsHandle: true\r\n",
+  "author": {
+    "login": "ShadowMarker789",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-30T06:04:20",
+  "updatedAt": "2021-12-30T08:52:08",
+  "commentCount": 1,
+  "reactionCount": 0
+}

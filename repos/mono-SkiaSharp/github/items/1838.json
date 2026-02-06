@@ -1,0 +1,18 @@
+{
+  "number": 1838,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Blazor Wasm runs out of memory trying to resize HTML canvas",
+  "body": "Trying to create a new Blazor Wasm app using Skia similar to this sample. \r\nhttps://github.com/mattleibow/SkiaSharpBlazorWebAssembly\r\n\r\nThe result is here. \r\nhttps://github.com/artemiusgreat/SkiaBlazorWasmIssue \r\n\r\nThe sample app is running fine, but the new app keeps reloading page (notice the scrollbars) until it runs out of memory. There might be an issue with Blazor template, because new Blazor app created in VS specified port 5060 and 5061 as target but was still running on 5000 and 5001, so I copied files like \u0060launch.json\u0060, \u0060nuget\u0060 packages in \u0060proj\u0060 file and \u0060index.razor\u0060 component from the sample app into new app.  I tried both, new app and the sample in the same environment, the same nuget version, the same .NET version, but only new app is failing.\r\n\r\n* Windows 10 x64 \r\n* .NET 6.0.100-rc.2.21505.57 \r\n* VS 2022 Preview 3 \r\n* SkiaSharp 2.88.0-preview.152\r\n\r\n![Error](https://user-images.githubusercontent.com/5140879/138571526-5fd7fe83-96a7-4d8a-b0dc-a083a35fb71d.png)\r\n\r\nI think I should add some config or additional dependency in the new app to make it work, but can\u0027t understand which exactly. \r\nCould somebody possibly take a look at the second link above and tell what is missing?",
+  "author": {
+    "login": "artemiusgreat",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-23T21:09:59",
+  "updatedAt": "2022-08-19T00:02:14",
+  "closedAt": "2022-03-19T12:52:56",
+  "commentCount": 8,
+  "reactionCount": 2
+}

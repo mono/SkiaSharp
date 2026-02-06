@@ -1,0 +1,18 @@
+{
+  "number": 1614,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Random app crashes ",
+  "body": "**Description**\r\n\r\nApp randomly crashes with the below stacktrace\r\n\r\n\u0060\u0060\u0060\r\nSKTouchHandler.SetEnabled (Android.Views.View view, System.Boolean enableTouchEvents)\r\nSystem.ObjectDisposedException: Cannot access a disposed object. Object name: \u0027SkiaSharp.Views.Android.SKCanvasView\u0027.\r\n\u0060\u0060\u0060\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\npublic class TestView: SKCanvasView\r\n{\r\n    public TestView()\r\n    {\r\n        ....\r\n\r\n        PaintSurface \u002B= HandlePaintSurface;\r\n        EnableTouchEvents = true;\r\n        Touch \u002B= HandleTouch;\r\n        \r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe underling code should properly be able to set EnabledTouchEvent (or whatever platform-specific equivalent exists) without crashing.\r\n\r\n**Actual Behavior**\r\n\r\nCrash randomly by navigating through the app\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  N/A\r\n- IDE:  Visual Studio \r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: 10.0\r\n  - iOS:  11\r\n \r\n- Target Devices:   \r\n  - Samsung Galaxy A1\r\n  - Hauwei P20 Pro\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nSKTouchHandler.SetEnabled (Android.Views.View view, System.Boolean enableTouchEvents)\r\nSystem.ObjectDisposedException: Cannot access a disposed object. Object name: \u0027SkiaSharp.Views.Android.SKCanvasView\u0027.\r\n\r\n\u0060\u0060\u0060\r\nJniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self)\r\nJniPeerMembers\u002BJniInstanceMethods.InvokeVirtualVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters)\r\nView.SetOnTouchListener (Android.Views.View\u002BIOnTouchListener l)\r\nView\u002B\u003C\u003Ec__DisplayClass2803_0.\u003Cremove_Touch\u003Eb__0 (Android.Views.View\u002BIOnTouchListener __v)\r\nEventHelper.RemoveEventHandler[TInterface,TImplementor] (System.WeakReference\u0026 implementor, System.Func\u00602[T,TResult] empty, System.Action\u00601[T] unsetListener, System.Action\u00601[T] remove)\r\nView.remove_Touch (System.EventHandler\u00601[TEventArgs] value)\r\nSKTouchHandler.SetEnabled (Android.Views.View view, System.Boolean enableTouchEvents)\r\nSKTouchHandler.Detach (Android.Views.View view)\r\nSKCanvasViewRendererBase\u00602[TFormsView,TNativeView].Dispose (System.Boolean disposing)\r\nObject.Finalize ()\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "oridotaoyebode",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-02-06T15:02:09",
+  "updatedAt": "2023-07-13T12:00:42",
+  "closedAt": "2023-06-12T23:10:17",
+  "commentCount": 6,
+  "reactionCount": 1
+}

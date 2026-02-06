@@ -1,0 +1,18 @@
+{
+  "number": 1569,
+  "type": "issue",
+  "state": "closed",
+  "title": "Memory leak on UWP",
+  "body": "Tested on latest SkiaSharp release, on fresh blank UWP app with:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar skv = new SkiaSharp.Views.UWP.SKXamlCanvas\r\n{\r\n    HorizontalAlignment = HorizontalAlignment.Stretch,\r\n    VerticalAlignment = VerticalAlignment.Stretch\r\n};\r\nskv.PaintSurface \u002B= (_, ea) =\u003E\r\n{\r\n    ea.Surface.Canvas.Clear(SkiaSharp.SKColors.Orange);\r\n};\r\n\r\n// Create a Frame to act as the navigation context and navigate to the first page\r\nrootFrame = new Frame\r\n{\r\n    Content = skv\r\n};\r\n\u0060\u0060\u0060\r\n\r\n- Open the UWP app. Task manager shows 25MB used.\r\n- Resize it to fill a 1440p screen It notw takes 700MB. Sometimes this drops back down to 200MB and sometimes it stays in place. \r\n- When the window is resized to be small again, memory goes down to 400MB.\r\n\r\nThe numbers are variable and the high memory usage depends on gradual resizing.\r\n\r\nI would expect a SkiaSharp view filling a 1440p screen to take 15MB at most (n. of pixels * 4 bytes).",
+  "author": {
+    "login": "charlesroddie",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-12-30T14:40:39",
+  "updatedAt": "2021-02-08T21:15:57",
+  "closedAt": "2021-02-08T21:15:55",
+  "commentCount": 6,
+  "reactionCount": 1
+}

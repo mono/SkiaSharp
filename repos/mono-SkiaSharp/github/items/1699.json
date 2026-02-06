@@ -1,0 +1,17 @@
+{
+  "number": 1699,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp color filters not works in the latest version(2.80.2) in iOS 14.5",
+  "body": "**Description**\r\n\r\nWhen I was uing **[CreateColorMatrix](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skcolorfilter.createcolormatrix?view=skiasharp-2.80.2)** method, if the fifth column of color-transform matrix has value, it will occur the wrong phenomenon in the latest version (2.80.2). However, the version of  1.68.3 works.\r\n\r\n**Code**\r\n\r\nFor example the **Matrix** as follows:\r\n\r\n\u0060\u0060\u0060\r\n    paint.ColorFilter = SKColorFilter.CreateColorMatrix(new float[] {\r\n        1.0546f,0,0,0,40.578f,\r\n        0,1.445f,0,0,-88.57f,\r\n        0,0,1.0546f,0,-28.42f,\r\n        0,0,0,1.0f,0\r\n    });\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n![image](https://user-images.githubusercontent.com/81734605/117910425-7d6ad700-b30e-11eb-8fc2-ed70da858d2f.png)\r\n\r\n\r\n**Actual Behavior**\r\n\r\n![image](https://user-images.githubusercontent.com/81734605/117910531-ad19df00-b30e-11eb-8bf5-6baf85581d48.png)\r\n\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n**SkiaSharp.Views.Forms**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  1.68.3\r\n- IDE:  Visual Studio For Mac 8.9.8(Buidl 7)\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - iOS:  14.5\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "Jiang-Junjie",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-05-12T02:45:16",
+  "updatedAt": "2021-11-19T00:32:24",
+  "commentCount": 2,
+  "reactionCount": 0
+}

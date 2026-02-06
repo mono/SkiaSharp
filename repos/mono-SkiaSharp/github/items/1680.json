@@ -1,0 +1,17 @@
+{
+  "number": 1680,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Suspect memory leak with SKPath on SKCanvas",
+  "body": "**Description**\r\n\r\nWhen I trigger the Draw by resizing the page by constantly dragging to resize, the memory use goes up lots.  This is a cut down version and this almost doubles its memory usage.  The main app grows by hundreds of mb.\r\n\r\nRemoving the SKCanvas from the form releases all the memory leaked.\r\n\r\n**Code**\r\n\r\n[Leak2.zip](https://github.com/mono/SkiaSharp/files/6242492/Leak2.zip)\r\n\r\n**Expected Behavior**\r\n\r\nA small amount of growth would be ok, and then the GC cleans up to roughly where it was.\r\n\r\n**Actual Behavior**\r\n\r\nThe memory grows to about double the size.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  ?\r\n- IDE:  VS 2019 Latest\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - UWP:  19041\r\n- Target Devices\r\n  - UPW: Local machine\r\n\r\n**Screenshots**\r\n\r\n![Screenshot 2021-04-01 201545](https://user-images.githubusercontent.com/45887081/113274396-61484300-9329-11eb-9376-bb857c3b936e.png)\r\n\r\nI have also been using the Skiasharp.SVG which also does the same.\r\n\r\nThankyou.",
+  "author": {
+    "login": "radev8",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-04-01T09:36:41",
+  "updatedAt": "2025-03-08T14:57:43",
+  "commentCount": 5,
+  "reactionCount": 4
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1605,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] NRE in SKElement when PresentationSource.FromVisual(this) returns null",
+  "body": "**Description**\r\n\r\nIf an SKElement is added to the presentation hierarchy before that hierarchy is visible, SKElement.OnRender is still called in some cases and an NRE results.\r\n\r\n**Code**\r\n\r\nI don\u0027t know of a simple way to reproduce this as it happens when using SkiaSharp in combination with XWT and even then only in rare circumstances.\r\n\r\n**Expected Behavior**\r\n\r\nSKElement.OnRender should do nothing\r\n\r\n**Actual Behavior**\r\n\r\nSKElement.OnRender proceeds to call CreateSize, which causes an NRE at the following line when PresentationSource.FromVisual(this) returns null:\r\nvar m = PresentationSource.FromVisual(this).CompositionTarget.TransformToDevice;\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  N/A\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:\r\n  - Windows Classic:  Windows 10\r\n- Target Devices: N/A\r\n ",
+  "author": {
+    "login": "HarlanHugh",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-02-03T08:10:33",
+  "updatedAt": "2022-08-19T03:01:17",
+  "closedAt": "2021-02-04T02:25:05",
+  "commentCount": 0,
+  "reactionCount": 0
+}

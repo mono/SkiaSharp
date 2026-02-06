@@ -1,0 +1,17 @@
+{
+  "number": 1814,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Pen Pressure always 1",
+  "body": "**Description**\r\n\r\nI creating a vector drawing app, and while testing on my MS Surface I cannot get the pen pressure to work at all.\r\n\r\n**Code**\r\n\r\nI use the \u0060Touch\u0060 Event of \u0060SKCanvasView\u0060 \r\n\r\n\u0060\u0060\u0060csharp\r\n\r\nprivate void OnTouch(object sender, SKTouchEventArgs args)\r\n{\r\n    var penIsUsed = args.DeviceType == SKTouchDeviceType.Pen;\r\n    float pressure = 10;\r\n    \r\n    if (penIsUsed)\r\n    {\r\n        pressure = args.Pressure * 10;\r\n    }\r\n[...]\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\n\r\nThe pressure varies between 0 and 1\r\n\r\n**Actual Behavior**\r\n\r\nThe pressure is always at 1 even when an actual pen is used and even recognised as \u0060SKTouchDeviceType.Pen\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n- Last known good version:  none\r\n- IDE:  Visual Studio\r\n\r\n- Platform Target Frameworks:\r\n  - UWP:  19041\r\n  \r\n- Target Devices:\r\n  - Windows Tablets and PCs with Tablets \r\n  - Android\r\n  - iOS\r\n\r\n**Screenshots**\r\n\r\nFirst I draw in PaintToolSai2 to prove that pressure works, then in my App which should react to pressure, but doesn\u0027t.\r\n\r\n![pen](https://user-images.githubusercontent.com/5176531/134356865-b2a0f4f5-6f84-412e-a97a-7e95a87bad4f.gif)\r\n\r\n\r\n**Reproduction Link**\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003Cskia:SKCanvasView x:Name=\u0022canvasView\u0022\r\n     PaintSurface=\u0022OnCanvasViewPaintSurface\u0022 \r\n     EnableTouchEvents=\u0022True\u0022\r\n     Touch=\u0022OnTouch\u0022\r\n\u0060\u0060\u0060\r\n\r\nwith\r\n\r\n\u0060\u0060\u0060csharp\r\nprivate void OnTouch(object sender, SKTouchEventArgs args)\r\n{\r\n    var penIsUsed = args.DeviceType == SKTouchDeviceType.Pen;\r\n    float pressure = 10;\r\n  \r\n    if (penIsUsed)\r\n    {\r\n        pressure = args.Pressure * 10;\r\n    }\r\n[...]\r\n    args.Handled = true;\r\n}\r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "hrkrx",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-09-22T13:56:59",
+  "updatedAt": "2025-12-09T21:20:22",
+  "commentCount": 5,
+  "reactionCount": 0
+}

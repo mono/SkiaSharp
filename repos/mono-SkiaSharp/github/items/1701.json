@@ -1,0 +1,18 @@
+{
+  "number": 1701,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] [iOS] XCode 12.5 not signing app as libSkiaSharp.framework is not signed",
+  "body": "Hi, \r\n\r\nHad no problems at all before upgraded XCode to 12.5, now just cannot sign any iOS app containing SkiaSharp nuget. \r\nIt throws a nice\r\n\r\n\u003E MessagingRemoteException: An error occurred on client Build169000292 while executing a reply for topic xvs/build/execute-task/XamarinTestApp.iOS/31c782e002fCodesign\r\n\u003E AggregateException: One or more errors occurred.\r\n\u003E DirectoryNotFoundException: Could not find a part of the path \u0027/Users/Airboom/Library/Caches/Xamarin/mtbs/builds/XamarinTestApp.iOS/31c782e90715fd993ed01e15963fc6f699e2dc9661442e7b92edfc01c6ad08cb/bin/iPhoneSimulator/Debug/XamarinTestApp.iOS.app/Frameworks/libSkiaSharp.framework/_CodeSignature\u0027.\tXamarinTestApp.iOS\t\t\t\r\n\u003E \r\n\r\nAs you can see the \u0060libSkiaSharp.framework\u0060 is not containing a \u0060_CodeSignature \u0060 subfolder as it is not signed. I cannot understand does this come from a new apple move requiring third-party libs to be signed, or it is a VS or Xcode bug not signing the lib with same keys as the containing app. \r\n\r\nAny help would be much appreciated, totally blocked.\r\n",
+  "author": {
+    "login": "taublast",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-05-16T13:22:03",
+  "updatedAt": "2022-08-19T00:02:47",
+  "closedAt": "2021-05-16T14:13:29",
+  "commentCount": 4,
+  "reactionCount": 1
+}

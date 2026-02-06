@@ -1,0 +1,18 @@
+{
+  "number": 1947,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Memory Leak with GRContext.SetResourceCacheLimit",
+  "body": "**Description**\r\n\r\nI am using an SKGLControl in my Windows Forms app to draw sections of a Bitmap. It all works fine but I get really low FPS in my app when the bitmap sizes are big (5000x5000 or higher dimensions, sometimes 25MB\u002B size. I instantiate the bitmap(s) once for the life of the application, so this is not the source of the mem leak.\r\n\r\n**Code**\r\n\r\nI used the following code to help with the larger bitmap files, and I instantly went from 10 fps to 60\u002B fps. This really helps. Except it causes a mem leak.\r\n\r\n\u0060\u0060\u0060csharp\r\n// This runs once during application startup\r\nwhile (mapCanvas.GRContext is null) await Task.Delay(1); // wait for GRContext to be set\r\nmapCanvas.GRContext.SetResourceCacheLimit(1500 * 1000 * 1000); // Gives a big FPS boost on bigger bitmaps\r\n\u0060\u0060\u0060\r\nbitmap drawing code\r\n\u0060\u0060\u0060csharp\r\n        private readonly SKPaint _mapPaint = new SKPaint() // Removing this = no change\r\n        {\r\n            IsAntialias = true,\r\n            FilterQuality = SKFilterQuality.Medium\r\n        };\r\n~snip~\r\n\r\ncanvas.DrawBitmap(bitmap, bounds, dest, _mapPaint);\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\n\r\nI expect that this wouldn\u0027t leak memory.\r\n\r\n**Actual Behavior**\r\n\r\nIf I comment out this line of code: \r\n\u0060\u0060\u0060csharp\r\nmapCanvas.GRContext.SetResourceCacheLimit(1500 * 1000 * 1000); // Gives a big FPS boost on bigger bitmaps\r\n\u0060\u0060\u0060\r\nthere is no leak. If I uncomment this line of code, there IS a leak.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n- Last known good version:  unknown\r\n- IDE:  VS2022 Latest version\r\n- Platform Target Frameworks: \r\n  - Windows Classic:  .NET6 x64\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003ERunning memory profile shows the memory steadily increasing until it reaches ~95% memory used on the system (9GB\u002B). Managed Memory shows no leaks, it appears to be in unmanaged memory. When i comment out the line of code above, I stay under ~1.5GB memory used.\u003C/summary\u003E\r\n  \r\n\r\n",
+  "author": {
+    "login": "ghost",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-02-10T02:05:46",
+  "updatedAt": "2022-08-19T00:02:01",
+  "closedAt": "2022-05-22T00:36:54",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1586,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] What is the point of using USE_DELEGATES in SkiaApi.cs?",
+  "body": "I found the code to dynamically load the native lib \u0027libSkiaSharp.*\u0027. \r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SkiaApi.cs\r\nThis is required for products are shipped for multiple platforms. But at the same time, dynamic loading is used only for the full .NET Framework, and in fact only starting from version 4.6.2.\r\nhttps://github.com/mono/SkiaSharp/blob/e8869d17a62dc4ca985a55a63cd2a90f4a15f5f5/binding/SkiaSharp/SkiaSharp.csproj#L11-L13\r\nhttps://github.com/mono/SkiaSharp/blob/e8869d17a62dc4ca985a55a63cd2a90f4a15f5f5/binding/SkiaSharp/SkiaSharp.csproj#L3\r\nAt the moment I have a project that is built for .NET Framework 4.6.1 and is shipped for Windows (both x86 and x64). As a result, in my case, the managed SkiaSharp.dll compiled for netstandard2.0 is referenced (with static loading of the native libSkiaSharp.dll, because USE_DELEGATES = false).\r\n\r\nCould you please explain me what is the point of using USE_DELEGATES and why is it only applied to the full .NET Framework?\r\nHow is \u0027libSkiaSharp.*\u0027 supposed to load for solutions shipped for multiple platforms on non-Windows OS?",
+  "author": {
+    "login": "stepangovorko",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-01-22T09:19:39",
+  "updatedAt": "2021-02-03T20:09:52",
+  "closedAt": "2021-02-03T20:09:51",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 1948,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Images cannot be saved in SkiaSharp",
+  "body": "Hi,\r\nI created android application using Xamarin forms and SkiaSharp\r\nI\u0027ve tested the app on some devices,\r\nSome reviews say: The image cannot be saved.\r\n\r\n\r\n \r\nThis is my code from [SkiaSharp doc][1]:\r\n\r\n            private async Task SaveImageAsync()\r\n            {\r\n                using (SKImage image = SKImage.FromBitmap(bitmap))\r\n                {\r\n                    SKData snap = image.Encode();\r\n                    SKData data = image.Encode();\r\n                    DateTime dt = DateTime.Now;\r\n    \r\n                    string filename = String.Format(\u0022imag-{0:D4}{1:D2}{2:D2}-{3:D2}{4:D2}{5:D2}{6:D3}.png\u0022,\r\n                                                   dt.Year, dt.Month, dt.Day, dt.Hour, dt.Minute, dt.Second, dt.Millisecond);\r\n                    IPhotoLibrary photoLibrary = DependencyService.Get\u003CIPhotoLibrary\u003E();\r\n                    bool result = await photoLibrary.SavePhotoAsync(snap.ToArray(), \u0022folder name\u200F\u0022, filename);\r\n    \r\n                    if (!result)\r\n                    {\r\n                        infoLabel.Text = \u0022....\u0022;\r\n                    }\r\n                    else\r\n                    {\r\n                        infoLabel.Text = \u0022....\u0022;\r\n    \r\n                    }\r\n    \r\n                }\r\n    \r\n            }\r\n    \r\nOne user wrote that he was able to save the image by creating the folder in the image folder\r\n\r\nThanks\r\n\r\n  [1]: https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/bitmaps/saving\r\n",
+  "author": {
+    "login": "devenv2",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2022-02-10T03:26:22",
+  "updatedAt": "2022-08-19T00:02:00",
+  "closedAt": "2022-05-17T16:06:04",
+  "commentCount": 2,
+  "reactionCount": 0
+}

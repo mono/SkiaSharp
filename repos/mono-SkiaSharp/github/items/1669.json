@@ -1,0 +1,17 @@
+{
+  "number": 1669,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Supbixel Rendering does not work on Linux",
+  "body": "**Description**\r\n\r\nSubpixel rendering does not work on Linux. The equivalent C\u002B\u002B does work as expected.\r\n\r\n**Code**\r\n\r\nC#\r\n\u0060\u0060\u0060c#\r\nvar imageInfo = new SKImageInfo(\r\n    width: 100, 40,\r\n    colorType: SKColorType.Bgra8888,\r\n    alphaType: SKAlphaType.Premul);\r\nvar props = new SKSurfaceProperties(SKSurfacePropsFlags.None, SKPixelGeometry.BgrHorizontal);\r\nvar surface = SKSurface.Create(imageInfo, props);\r\nvar canvas = surface.Canvas;\r\n\r\nvar paint = new SKPaint();\r\nvar font = new SKFont {Subpixel = true, Edging = SKFontEdging.SubpixelAntialias, Size = 12};\r\ncanvas.Clear(SKColors.White);\r\ncanvas.DrawText(\u0022Hello World\u0022, 10, 20, font, paint);\r\nusing (var image = surface.Snapshot())\r\nusing (var data = image.Encode())\r\n{\r\n    File.WriteAllBytes(\u0022b.png\u0022, data.ToArray());\r\n}\r\n\u0060\u0060\u0060\r\n\r\nC\u002B\u002B\r\n\u0060\u0060\u0060c\u002B\u002B\r\nauto info = SkImageInfo::Make(100, 40,\r\n                              SkColorType::kBGRA_8888_SkColorType,\r\n                              SkAlphaType::kPremul_SkAlphaType);\r\nSkSurfaceProps props {0, SkPixelGeometry::kBGR_H_SkPixelGeometry};\r\nauto surface = SkSurface::MakeRaster(info, \u0026props);\r\nauto *canvas = surface-\u003EgetCanvas();\r\n\r\nSkPaint paint;\r\nSkFont font;\r\nfont.setSubpixel(true);\r\nfont.setEdging(SkFont::Edging::kSubpixelAntiAlias);\r\nfont.setSize(12);\r\ncanvas-\u003Eclear(SK_ColorWHITE);\r\ncanvas-\u003EdrawString(\u0022Hello World\u0022, 10, 20, font, paint);\r\n\r\nauto img = surface-\u003EmakeImageSnapshot();\r\nauto data = img-\u003EencodeToData();\r\n\r\nstd::ofstream fout;\r\nfout.open(\u0022a.png\u0022, std::ios::binary | std::ios::out);\r\nfout.write(static_cast\u003Cconst char *\u003E(data-\u003Edata()), data-\u003Esize());\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nOutput from from C\u002B\u002B (with subpixel AA):\r\n\r\n![a](https://user-images.githubusercontent.com/10325838/111989784-83181d80-8b12-11eb-9e11-b64755ee754a.png)\r\n\r\n\r\n**Actual Behavior**\r\n\r\nOutput From C# (no subpixel AA):\r\n\r\n![test](https://user-images.githubusercontent.com/10325838/111989926-b064cb80-8b12-11eb-8b7e-224a998cd58f.png)\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3-preview.40\r\n- Last known good version:  Not known; tested also 1.68.3, which had the same problem\r\n  - Works correctly on Windows\r\n- IDE:  Rider\r\n- Target Devices:  Arch Linux PC\r\n\r\nCode for 1.68.3:\r\n\r\n\u0060\u0060\u0060C#\r\npaint.SubpixelText = true;\r\npaint.LcdRenderText = true;\r\npaint.IsAntialias = true;\r\ncanvas.Clear(SKColors.White);\r\ncanvas.DrawText(\u0022Hello World\u0022, 10, 20, paint);\r\n\u0060\u0060\u0060\r\n  \r\n\r\n\r\n",
+  "author": {
+    "login": "DorianRudolph",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-03-22T12:40:18",
+  "updatedAt": "2021-03-22T17:26:43",
+  "commentCount": 4,
+  "reactionCount": 0
+}

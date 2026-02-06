@@ -1,0 +1,17 @@
+{
+  "number": 1826,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Progressive JPEGs that are missing the JPEG EOF bytes can\u0027t be decoded",
+  "body": "Most software like browsers, paint, etc will decode these files correctly, but no version of Skia nor SkiaSharp can.\r\n\r\nThis is actually a Skia bug, but could be fixed in the older Skia forks of this project too ~(it\u0027s a one line change)~? \r\n\r\nEDIT: It seems \u0060jpeg_start_decompress\u0060 *does not* return \u0060false\u0060 in the \u0060djpeg\u0060 program for this JPEG, but does in Skia, so more research is needed.\r\n\r\nSee https://bugs.chromium.org/p/skia/issues/detail?id=12511 for my bug-report.\r\n\r\nThe fix is to just remove the check on the result of \u0060jpeg_start_decompress\u0060, [see here](https://source.chromium.org/chromium/chromium/src/\u002B/main:third_party/skia/src/codec/SkJpegCodec.cpp;l=543?q=SkJpegCodec\u0026ss=chromium%2Fchromium%2Fsrc:third_party%2Fskia%2F)\r\n\r\nprogressive JPEG with eof bytes: ![progressive_kitten_with_eof](https://user-images.githubusercontent.com/2389359/136824447-437842bc-9777-4cca-aeb3-4696f7e7828b.jpg)\r\n\r\nprogressive JPEG without eof bytes: ![progressive_kitten_missing_eof](https://user-images.githubusercontent.com/2389359/136824449-407b2abe-8f74-42d5-b58f-c6d9fc2b2567.jpg)\r\n\r\n[original photo and credits](https://commons.wikimedia.org/wiki/File:Siberian_tabby_kitten.jpg)\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-11T16:36:55",
+  "updatedAt": "2025-04-07T22:09:22",
+  "commentCount": 1,
+  "reactionCount": 0
+}

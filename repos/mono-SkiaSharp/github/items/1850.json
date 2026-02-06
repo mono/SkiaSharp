@@ -1,0 +1,18 @@
+{
+  "number": 1850,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Mangling error when trying to connect wasm .a library",
+  "body": "Hi, I am still trying to build wasm to make it available in Unity3d.\r\nFirst I hade some conflicts with function namings, cause Unity3d had the same (libjpg, libpng, freetype). I fixed it by renaming them with regex. Now wasm builds, but it gives error on linking:\r\n\r\n\r\nLibrary/Bee/artifacts/WebGL/build/debug_WebGL_wasm/build.js: undefined symbol: _ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_externalEPKcm (referenced by top-level compiled C/C\u002B\u002B code)\r\nUnityEditor.BuildPlayerWindow:BuildPlayerAndRun () (at /Users/bokken/buildslave/unity/build/Editor/Mono/BuildPlayerWindow.cs:179)\r\n\r\nLibrary/Bee/artifacts/WebGL/build/debug_WebGL_wasm/build.js: undefined symbol: _ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_no_aliasILb0EEERS5_PKcm (referenced by top-level compiled C/C\u002B\u002B code)\r\nUnityEditor.BuildPlayerWindow:BuildPlayerAndRun () (at /Users/bokken/buildslave/unity/build/Editor/Mono/BuildPlayerWindow.cs:179)\r\n\r\nLibrary/Bee/artifacts/WebGL/build/debug_WebGL_wasm/build.js: undefined symbol: _ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE25__init_copy_ctor_externalEPKcm (referenced by top-level compiled C/C\u002B\u002B code)\r\nUnityEditor.BuildPlayerWindow:BuildPlayerAndRun () (at /Users/bokken/buildslave/unity/build/Editor/Mono/BuildPlayerWindow.cs:179)\r\n\r\nCan OS be the reason of it? I switched off .WithCriteria(IsRunningOnLinux())\r\nMaybe I should try it on linux? I will be grateful for any help",
+  "author": {
+    "login": "dr-vij",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-10-31T16:30:36",
+  "updatedAt": "2022-08-19T00:02:10",
+  "closedAt": "2021-11-02T15:33:37",
+  "commentCount": 11,
+  "reactionCount": 0
+}

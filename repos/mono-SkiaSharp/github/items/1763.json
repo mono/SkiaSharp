@@ -1,0 +1,18 @@
+{
+  "number": 1763,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Why does SKFontStyleWidth not work correctly with some fonts?",
+  "body": "I am using SkiaSharp 2.80.2 on Windows 10 with a .NET Core project.\r\n\r\nI am running into a weird issue where it appears that \u0060SKFontStyleWidth\u0060 does not change a font\u0027s width at all once it\u0027s written out on a canvas. I am attempting to write using the Century Gothic font, and I noticed this issue when I used \u0060SKTypeface.FromFamilyName\u0060 to create a \u0060SKTypeface\u0060 using \u0060SKFontStyleWidth.UltraCondensed\u0060 first, then \u0060SKFontStyleWidth.UltraExpanded\u0060 after, and both times, the \u0060FontWidth\u0060 property is set to 5 (which if that maps to the \u0060SKFontStyleWidth\u0060 enum, would be \u0060Normal\u0060, instead of what I specified):\r\n\r\n\u0060\u0060\u0060\r\nfontFamily = SKTypeface.FromFamilyName(\u0022Century Gothic\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.UltraCondensed, SKFontStyleSlant.Italic);\r\n{SkiaSharp.SKTypeface}\r\n    FamilyName: \u0022Century Gothic\u0022\r\n    FontSlant: Italic\r\n    FontStyle: {SkiaSharp.SKFontStyle}\r\n    FontWeight: 700\r\n    FontWidth: 5\r\n    GlyphCount: 666\r\n    Handle: 0x000002b080612d50\r\n    IgnorePublicDispose: true\r\n    IsBold: true\r\n    IsDisposed: false\r\n    IsFixedPitch: false\r\n    IsItalic: true\r\n    OwnsHandle: true\r\n    Style: BoldItalic\r\n    TableCount: 18\r\n    UnitsPerEm: 2048\r\nfontFamily = SKTypeface.FromFamilyName(\u0022Century Gothic\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.UltraExpanded, SKFontStyleSlant.Italic);\r\n{SkiaSharp.SKTypeface}\r\n    FamilyName: \u0022Century Gothic\u0022\r\n    FontSlant: Italic\r\n    FontStyle: {SkiaSharp.SKFontStyle}\r\n    FontWeight: 700\r\n    FontWidth: 5\r\n    GlyphCount: 666\r\n    Handle: 0x000002b080612d50\r\n    IgnorePublicDispose: true\r\n    IsBold: true\r\n    IsDisposed: false\r\n    IsFixedPitch: false\r\n    IsItalic: true\r\n    OwnsHandle: true\r\n    Style: BoldItalic\r\n    TableCount: 18\r\n    UnitsPerEm: 2048\r\n\u0060\u0060\u0060\r\n\r\nI also tried using the Arial font. In that font\u0027s case, \u0060SKFontStyleWidth.UltraCondensed\u0060 resulted in a \u0060FontWidth\u0060 of 3, while \u0060SKFontStyleWidth.UltraExpanded\u0060 resulted in 5. I would have expected a much wider variance between 3 and 5.\r\n\r\nCan someone help me understand what\u0027s going on here, or if I\u0027m doing something wrong in my attempt to change letter spacing for a font?",
+  "author": {
+    "login": "washamdev",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-08-09T02:49:56",
+  "updatedAt": "2022-08-19T00:02:35",
+  "closedAt": "2021-08-09T18:41:11",
+  "commentCount": 6,
+  "reactionCount": 0
+}

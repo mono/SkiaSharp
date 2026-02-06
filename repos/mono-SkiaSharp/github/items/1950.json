@@ -1,0 +1,17 @@
+{
+  "number": 1950,
+  "type": "issue",
+  "state": "open",
+  "title": "Colour scheme differs when converting tiff to jpeg",
+  "body": "I\u0027m working on converting tif images to jpg. Images which have a white background and have some graphs convert OK, but the colours are slightly different.\r\nThe  images that are kind of monochrome (e.g. pictures of X-Rays) are totally black when converted.\r\n\r\nI would like to know how to ensure the color scheme of the converted image matches the original  image.\r\n\r\nBelow is the conversion code:\r\n\r\n\u0060\u0060\u0060\r\nvar filenameWithNewExt = fileName.Replace(\u0022.tif\u0022, \u0022.jpg\u0022);\r\n\r\nusing (Tiff tif = Tiff.ClientOpen(\u0022in-memory\u0022, \u0022r\u0022, ms, new TiffStream()))\r\n{\r\n    if (tif == null)\r\n    {\r\n        throw new InvalidOperationException($\u0022File {fileName} not valid\u0022);\r\n    }                        \r\n\r\n    // read the dimensions\r\n    var width = tif.GetField(TiffTag.IMAGEWIDTH)[0].ToInt();\r\n    var height = tif.GetField(TiffTag.IMAGELENGTH)[0].ToInt();\r\n\r\n    // Read the image into the memory buffer\r\n    int[] raster = new int[height * width];\r\n\r\n    // create the bitmap\r\n    var bitmap = new SKBitmap();\r\n    var info = new SKImageInfo(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul, SKColorSpace.CreateSrgb());\r\n    //have also tried var info = new SKImageInfo(width, height);\r\n\r\n    // get a pointer to the buffer, and give it to the bitmap\r\n    var ptr = GCHandle.Alloc(raster, GCHandleType.Pinned);\r\n    bitmap.InstallPixels(info, ptr.AddrOfPinnedObject(), info.RowBytes, null, null);\r\n\r\n    if (!tif.ReadRGBAImageOriented(width, height, raster, Orientation.TOPLEFT))\r\n    {\r\n        throw new Exception($\u0022Failed to read image {fileName}\u0022);\r\n    }\r\n\r\n    using (SKImage image = SKImage.FromBitmap(bitmap))\r\n    {\r\n        SKData data = image.Encode(SKEncodedImageFormat.Jpeg, 100);\r\n        byte[] byteArray = data.ToArray();\r\n\r\n        //this is for testing when you actually want to save a jpg file to disk\r\n        File.WriteAllBytes($\u0022{fileName.Replace(\u0022.tif\u0022,\u0022.jpg\u0022)}\u0022, byteArray);\r\n        return new MemoryStream(byteArray);\r\n    }\r\n}\r\n\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "OksanaH",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-02-11T17:05:38",
+  "updatedAt": "2022-02-14T08:51:43",
+  "commentCount": 0,
+  "reactionCount": 0
+}

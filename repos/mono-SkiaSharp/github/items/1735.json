@@ -1,0 +1,18 @@
+{
+  "number": 1735,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Support for RGB/BGR 24 bytes per pixel format?",
+  "body": "I am trying to get some pixel data into an \u0060SKImage\u0060 or \u0060SKBitmap\u0060 for drawing it to a canvas without having to perform an expensive copy to a 4 channel format or encoding/decoding the image. This pixel data is the same format that a \u0060System.Drawing.Bitmap\u0060 with \u0060PixelFormat.Format24bppRgb\u0060 uses. It seems that \u0060SKImageInfo\u0060 is not able to represent this pixel format though.\r\n\r\nHere is the line I\u0027m using to make my SKImageInfo:\r\n\u0060\u0060\u0060csharp\r\nSKImageInfo info = new SKImageInfo(myImage.Width, myImage.Height, SKColorType.Rgb888x, SKAlphaType.Opaque);\r\n\u0060\u0060\u0060\r\n\r\nThis results in an SKImageInfo that has \u0060BytesPerPixel = 4\u0060.  \r\nI can\u0027t find any other color type that would match this pixel format with 3 bytes per pixel, even though this is a very common format that .bmp files store internally. (BGR vs RGB aside)\r\n\r\nAre 24bpp RGB/BGR bitmaps not supported?  \r\nIs there a way to construct an SKImageInfo that has \u0060BytesPerPixel = 3\u0060 and its other properties with the specific values I need?\r\n",
+  "author": {
+    "login": "romen-h",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-07-07T17:35:49",
+  "updatedAt": "2021-08-19T06:19:37",
+  "closedAt": "2021-08-19T06:19:37",
+  "commentCount": 2,
+  "reactionCount": 0
+}
