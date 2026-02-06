@@ -1,0 +1,23 @@
+{
+  "number": 3337,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] \u003Ctitle\u003E",
+  "body": "### Description\n\nIn Visual Studio, adding the NuGet package SkiaSharp.Views.WindowsForms to a newly created windows forms project targeting .NET 8.0 triggers the following warning with code 1701:\n\u0060Package \u0027SkiaSharp.Views.WindowsForms 3.119.0\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1\u0027 instead of the project target framework \u0027net6.0-windows7.0\u0027. This package may not be fully compatible with your project.\n\u0060\n\nConsequently, no SKGLControl is found in the toolbox.\n\nI noticed that the compile time assembly points to (...)\\.nuget\\packages\\skiasharp.views.windowsforms\\3.119.0\\lib\\net462\\SkiaSharp.Views.WindowsForms.dll\n\nI also tried SkiaSharp version 2.88.9 which didn\u0027t work as well\n\n### Target framework\n.NET 8.0\nI tried also .NET 6.0\n\n\n### Code\n\nCreate a blank windows forms project targeting .NET 8.0\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "mbrachner",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-08-18T20:28:09",
+  "updatedAt": "2025-08-18T20:36:37",
+  "closedAt": "2025-08-18T20:36:37",
+  "commentCount": 2,
+  "reactionCount": 1
+}

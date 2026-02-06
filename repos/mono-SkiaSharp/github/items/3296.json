@@ -1,0 +1,22 @@
+{
+  "number": 3296,
+  "type": "issue",
+  "state": "open",
+  "title": "[iOS, 3.116.1] SKGLView and SKCanvasView generate a canvas at different scale with the same settings on some iOS devices",
+  "body": "### Description\n\nNot sure if this is intended, but on iOS, SKCanvasView seems to always use scaling factor equal to \u0060DeviceDisplay.Current.MainDisplayInfo.Density\u0060, while SKGLView seems to use on some devices something a bit different when drawing with the exact same settings. This is the scaling between \u0060SKCanvasView/SKGLView.Width\u0060 and \u0060e.Info.Width\u0060 in PaintSurface. I believe they should both use the same scaling factor, possibly equal to \u0060MainDisplayInfo.Density\u0060. This seems at least to be the case on Android and Windows on all devices. On iPhone 11, \u0060e.Info.Width\u0060 is a bit bigger for SKGLView than it is for SKCanvasView (where the scaling is equal to \u0060MainDisplayInfo.Density\u0060).\n\n### Code\n\nNo code, we observed this behavior on iPhone 11.\n\n### Expected Behavior\n\nAll iOS devices use the same scaling factor equal to \u0060DeviceDisplay.Current.MainDisplayInfo.Density\u0060 with both SKCanvasView and SKGLView.\n\n### Actual Behavior\n\nSKGLView on some iOS devices (iPhone 11 for example) uses a scaling factor different from \u0060DeviceDisplay.Current.MainDisplayInfo.Density\u0060.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\niOS 18.5\n\n### Devices\n\niPhone 11\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-06-20T11:42:27",
+  "updatedAt": "2025-06-20T11:42:27",
+  "commentCount": 0,
+  "reactionCount": 0
+}

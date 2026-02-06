@@ -1,0 +1,31 @@
+{
+  "number": 3369,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Hard crash on Linux ARM64 on 3.119.0",
+  "body": "### Description\n\nWe upgraded our application from .NET 6 to .NET 9. Some external dependencies use SkiaSharp version 3.119.0. The application crashes, but only on Linux ARM64. It works correctly on Windows. I tested this on our device with an IMX8 processor and on a Raspberry Pi 5. In both cases, the application closes and does not leave any trace in the logs. It worked on 2.88.8 and .Net 6. I already tested preview version of 3.119.1 and the same thing happens. \n\nI have prepared a test application to reproduce this issue. For testing, you need, for example, an RP5, and it is enough to build the project in VS2022 for .NET 9 with the Blazor workload. After launching, simply go to localhost:8841 in the browser and press the button. The code is in the Home.razor file. \n\nI know the crash is caused by SkiaSharp, but I have no idea why, so I am unable to help further in this matter. I have no clue if .Net 9 is to blame or rather SkiaSharp itself.\n\nUse publish profile to publish app on ARM64.\n\n\n### Code\n\n[SkiaCrashTest.zip](https://github.com/user-attachments/files/22273530/SkiaCrashTest.zip)\n\n\n### Expected Behavior\n\nApplication shoud generate red circle.\n\n### Actual Behavior\n\nApplication have a hard crash.\n\n### Version of SkiaSharp\n\n3.119.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.8 (Deprecated)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\n- LInux with ARM64 CPU\n\n### Devices\n\n- Toradex IMX8\n- RPI5 \n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Swordancer",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-09-11T10:48:33",
+  "updatedAt": "2026-02-03T10:33:31",
+  "closedAt": "2026-02-03T10:33:31",
+  "commentCount": 2,
+  "reactionCount": 1
+}

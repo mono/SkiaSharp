@@ -1,0 +1,38 @@
+{
+  "number": 3430,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Resources are not freed correctly in Uno Platform\u0027s \u0060SKXamlCanvas\u0060",
+  "body": "### Description\n\n[https://github.com/mono/SkiaSharp/blob/fbd27f7ec2e2ad8bd0f0f0484dd467c5d8395ae1/source/SkiaSharp.Views.Uno/SkiaSharp.Views.Uno.WinUI.Skia/SKXamlCanvas.Skia.cs#L72](This line) of code may throw NRE if the canvas changed its size, because the \u0060FreeBitmap\u0060 method may have reset \u0060bitmap\u0060 field to \u0060null\u0060.\n\n### Code\n\nN/A\n\n\n### Expected Behavior\n\nShould not throw NRE\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MartinZikmund",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/WASM",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Uno",
+      "color": "0052cc"
+    },
+    {
+      "name": "os/Windows-WinUI",
+      "color": "fbca04"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-12-15T13:33:51",
+  "updatedAt": "2025-12-15T13:34:41",
+  "commentCount": 1,
+  "reactionCount": 0
+}

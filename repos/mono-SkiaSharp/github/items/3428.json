@@ -1,0 +1,34 @@
+{
+  "number": 3428,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Failed to bind EAGLDrawable on .NET 10 in MAUI iOS",
+  "body": "### Description\n\nWe got a bug report with this error using the Mapsui MapControl with the latest SkiaSharp in MAUI running on .NET 10 (not in .NET 9).\n\nI did not investigate this myself but there is not a lot of our own code involved. This is our Mapsui MapControl with all relevant code: https://github.com/Mapsui/Mapsui/blob/main/Mapsui.UI.Maui/MapControl.cs\n\n### Code\n\nSome code from our MapControl.\n\u0060\u0060\u0060\n    private void OnGLPaintSurface(object? sender, SKPaintGLSurfaceEventArgs args)\n    {\n        if (_glView?.GRContext is null)\n        {\n            // Could this be null before Home is called? If so we should change the logic.\n            Logger.Log(LogLevel.Warning, \u0022Refresh can not be called because GRContext is null\u0022);\n            return;\n        }\n\n        // Called on UI thread\n        PaintSurface(args.Surface.Canvas);\n    }\n\n    private void OnPaintSurface(object? sender, SKPaintSurfaceEventArgs args)\n    {\n        // Called on UI thread\n        PaintSurface(args.Surface.Canvas);\n    }\n\n    private void PaintSurface(SKCanvas canvas)\n    {\n        if (GetPixelDensity() is not float pixelDensity)\n            return;\n\n        canvas.Scale(pixelDensity, pixelDensity);\n\n        _renderController?.Render(canvas);\n    }\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nNo error and something rendered.\n\n### Actual Behavior\n\nNo error and a white canvas.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (macOS)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\niOS.\n\n### Devices\n\nDunno\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/iOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Maui",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-12-05T08:36:32",
+  "updatedAt": "2025-12-05T09:19:46",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,22 @@
+{
+  "number": 3287,
+  "type": "issue",
+  "state": "open",
+  "title": "[REGRESSION, 3.116.1, Android] SKGLView PaintSurface event is not always on the main thread in .NET MAUI",
+  "body": "### Description\n\nOn Android using SkiaSharp 3.116.1 and .NET MAUI 9.0.50, SKCanvasView seems to always call PaintSurface event from the main thread, but SKGLView does not: SKGLView\u0027s PaintSurface method seems to be quite often on a thread other than the main thread. In Xamarin with SkiaSharp 2.88.8, the PaintSurface seemed to be always called from the main thread with both SKGLView and SKCanvasView.  Not sure if this is an intended feature or change in MAUI, but it can cause unexpected crashes if the PaintSurface method utilizes information from UI components or resources shared with the UI or main thread. In any case, this makes using SKGLView much harder than SKCanvasView in MAUI, compared to the situation in Xamarin.\n\n### Code\n\nThis relates to SKGLView in general, so no code here.\n\n### Expected Behavior\n\nWhen using SKGLView, PaintSurface is always called from the MainThread.\n\n### Actual Behavior\n\nWhen using SKGLView, PaintSurface is called from other threads than the MainThread.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\nAndroid 15\n\n### Devices\n\nGoogle Pixel 6a, Samsung SM-P615\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\nI just tested the situation with \u0060MainThread.IsMainThread\u0060 function and it returns \u0060false\u0060.\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-06-04T18:42:16",
+  "updatedAt": "2025-06-27T06:25:35",
+  "commentCount": 6,
+  "reactionCount": 0
+}

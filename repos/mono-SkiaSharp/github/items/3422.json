@@ -1,0 +1,38 @@
+{
+  "number": 3422,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Blazor WASM NET10 -",
+  "body": "### Description\n\nPer Microsoft Learn example: https://learn.microsoft.com/en-us/aspnet/core/blazor/webassembly-native-dependencies?view=aspnetcore-10.0\u0026utm_source=chatgpt.com\n\nNavigate to a page with the component on it and receive error.\nSkiaSharp version 3.119.2-preview.1  (also tried 3.118.0-preview.2.3 and 3.119.1)\n\n### Code\n\nProject file:\n\u0060\u0060\u0060xaml\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\n\t\u003CPropertyGroup\u003E\n\t\t\u003CTargetFramework\u003Enet10.0\u003C/TargetFramework\u003E\n\t\t\u003CNullable\u003Eenable\u003C/Nullable\u003E\n\t\t\u003CImplicitUsings\u003Eenable\u003C/ImplicitUsings\u003E\n\t\t\u003COverrideHtmlAssetPlaceholders\u003Etrue\u003C/OverrideHtmlAssetPlaceholders\u003E\n\t\u003C/PropertyGroup\u003E\n\t\u003CItemGroup\u003E\n\t\t\u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u002210.0.0\u0022 /\u003E\n\t\t\u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u002210.0.0\u0022 PrivateAssets=\u0022all\u0022 /\u003E\n\t\t\u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00223.119.2-preview.1\u0022 /\u003E\n\t\u003C/ItemGroup\u003E\n\u003C/Project\u003E\n\u0060\u0060\u0060\n(same issue with release build)\n\nRazor component:\n\u0060\u0060\u0060cs\n@using SkiaSharp\n@using SkiaSharp.Views.Blazor\n\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022 IgnorePixelScaling=\u0022true\u0022 /\u003E\n\n@code {\n    private void OnPaintSurface(SKPaintSurfaceEventArgs args)\n    {\n        var canvas = args.Surface.Canvas;\n        canvas.Clear(SkiaSharp.SKColors.White);\n        using var paint = new SkiaSharp.SKPaint\n        {\n            Color = SkiaSharp.SKColors.Black,\n            IsAntialias = true,\n            Style = SkiaSharp.SKPaintStyle.Fill\n        };\n        using var font = new SkiaSharp.SKFont { Size = 24 };\n        var coord = new SkiaSharp.SKPoint(args.Info.Width / 2, (args.Info.Height \u002B font.Size) / 2);\n        canvas.DrawText(\u0022SkiaSharp\u0022, coord, font, paint);\n    }\n}\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nDisplay the barcode in a canvas.\n\n### Actual Behavior\n\n\u0060\u0060\u0060\nManagedError: TypeInitialization_Type, SkiaSharp.SKImageInfo\n\u0060\u0060\u0060\n\n### Version of SkiaSharp\n\n3.118.0-preview.2 (Next Preview)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11 Pro\nVS 2026\n.net 10\nEdge/Chrome\n\n### Devices\n\nAll\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "NetRushJacob",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/WASM",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Blazor",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-11-24T19:39:36",
+  "updatedAt": "2026-01-12T16:54:47",
+  "commentCount": 8,
+  "reactionCount": 0
+}
