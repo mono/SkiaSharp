@@ -208,9 +208,10 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (settings.Verbose)
             AnsiConsole.MarkupLine($"  [dim]Saved repo stats: {repoStats.Stars:N0} stars, {repoStats.Forks:N0} forks[/]");
         
-        // Initial sync: Created ASC with since=HighestCreatedAt (for resume)
+        // Initial sync: Created ASC, no since filter (paginate through all)
         // Incremental: Updated DESC with since=LastSync (for recent changes)
-        DateTimeOffset? since = isInitialSync ? meta.HighestCreatedAt : meta.Layers.Items.LastSync;
+        // Note: GitHub's 'since' filters by UpdatedAt, not CreatedAt, so it doesn't work for resume
+        DateTimeOffset? since = isInitialSync ? null : meta.Layers.Items.LastSync;
         
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
@@ -223,8 +224,15 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var allDone = false;
         var highestCreatedAt = meta.HighestCreatedAt;
 
-        if (isInitialSync && highestCreatedAt.HasValue && !settings.Quiet)
-            AnsiConsole.MarkupLine($"[dim]  Resuming from {highestCreatedAt:yyyy-MM-dd HH:mm}[/]");
+        // For initial sync resume: skip pages we've already processed
+        // Calculate starting page based on items already in cache
+        if (isInitialSync && itemsDict.Count > 0)
+        {
+            // Each page has ~100 items, so start from next page after what we have
+            page = (itemsDict.Count / 100) + 1;
+            if (!settings.Quiet)
+                AnsiConsole.MarkupLine($"[dim]  Resuming from page {page} ({itemsDict.Count} items in cache)[/]");
+        }
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Dots)
