@@ -28,5 +28,79 @@
   "updatedAt": "2022-08-19T21:02:45",
   "closedAt": "2018-01-10T23:32:28",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:02.4919267Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 277305327,
+        "author": "rufusl",
+        "body": "I\u0027m facing the same issue on Android emulators on Windows (on a real device it works).\r\nWhen loading an SKGLView in a Xamarin Forms App, I get the following exception:\r\n\u0060\u0060\u0060\r\nandroid.runtime.JavaProxyThrowable: System.NullReferenceException: Object reference not set to an instance of an object\r\nat SkiaSharp.SKSurface.Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTargetDesc desc) [0x00000] in \u003C087d0388435e4cd4ad8ad2862d6df448\u003E:0 \r\nat SkiaSharp.Views.Android.SKGLSurfaceViewRenderer.OnDrawFrame (Javax.Microedition.Khronos.Opengles.IGL10 gl) [0x0000a] in \u003C6ce3918488584aadaec5804bc552de4c\u003E:0 \r\nat Android.Opengl.GLSurfaceView\u002BIRendererInvoker.n_OnDrawFrame_Ljavax_microedition_khronos_opengles_GL10_ (System.IntPtr jnienv, System.IntPtr native__this, System.IntPtr native_gl) [0x00011] in \u003C160ba97e03fe445783263e418f95ab21\u003E:0 \r\nat (wrapper dynamic-method) System.Object:ca2dddba-5388-417b-b50a-03c33314115e (intptr,intptr,intptr)\r\nat md50da5022b67416fd2ee3728f02525aaf6.SKGLSurfaceViewRenderer.n_onDrawFrame(Native Method)\r\nat md50da5022b67416fd2ee3728f02525aaf6.SKGLSurfaceViewRenderer.onDrawFrame(SKGLSurfaceViewRenderer.java:32)\r\nat android.opengl.GLSurfaceView$GLThread.guardedRun(GLSurfaceView.java:1523)\r\nat android.opengl.GLSurfaceView$GLThread.run(GLSurfaceView.java:1240)\r\n\u0060\u0060\u0060\r\nAs the exception comes from \u0060SkiaSharp.SKSurface.Create\u0060, maybe it\u0027s the \u0060context\u0060 that is not initialized yet?",
+        "createdAt": "2017-02-03T17:12:16",
+        "reactions": []
+      },
+      {
+        "id": 326410632,
+        "author": "thisisthekap",
+        "body": "The issue (surface null in emulator on mac) is still present in 1.59.1.\r\n\r\nAny update on this?",
+        "createdAt": "2017-08-31T20:24:35",
+        "reactions": []
+      },
+      {
+        "id": 336865471,
+        "author": "thisisthekap",
+        "body": "@mattleibow Is there already a schedule for this issue?",
+        "createdAt": "2017-10-16T12:00:17",
+        "reactions": []
+      },
+      {
+        "id": 343020155,
+        "author": "daltonks",
+        "body": "@mattleibow,\r\nIf there isn\u0027t a schedule for this issue atm, what would you consider the best workaround to be?\r\nDo you think we\u0027d be able to catch the exception somewhere, then swap out the SKGLView for an SKCanvasView?",
+        "createdAt": "2017-11-09T01:41:08",
+        "reactions": []
+      },
+      {
+        "id": 344927019,
+        "author": "bpater-tp",
+        "body": "I have similar problem. In \u0060SKGLView\u0060 after upgrading to Xamarin.Forms 2.5. When \u0060OnCanvasViewPaintSurface\u0060 is called on android the \u0060args.Surface = null\u0060. It also works fine on the real device - only emulator has problems (it has GL enabled). It worked fine with Forms 2.3 and 2.4.",
+        "createdAt": "2017-11-16T13:46:34",
+        "reactions": []
+      },
+      {
+        "id": 345226392,
+        "author": "thisisthekap",
+        "body": "As a \u0022workaround\u0022, we are now using \u0060SKCanvasView\u0060 instead of \u0060SKGLView\u0060 when we detect an android emulator.\r\n\r\nThat one would be much easier, if \u0060SKCanavsView\u0060 and \u0060SKGLView\u0060 would share a decent base class or at least interface (if anyone knows some decent base class or interface that both share, please let me know).\r\n\r\nThe good thing is, that SKGLView and SKCanvasView can be easily exchanged, because methods and properties are (almost) compatible.\r\n\r\n#### EDIT:\r\n\r\nThis workaround should only be considered as a temporary solution to at least be able to view the rendered canvas. This should definitely not be the solution to go for permanently.",
+        "createdAt": "2017-11-17T12:03:39",
+        "reactions": [
+          {
+            "user": "daltonspillman",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:01.9897046Z"
+          }
+        ]
+      },
+      {
+        "id": 356773303,
+        "author": "mattleibow",
+        "body": "I managed to locate the cause of the issue. It appears that GLES 2.0 sometimes does not support the RGBA8888 color format on some older emulators. Typically the devices have the extension to support this (and I found the new Google emulators now do). If the device has GLES 3.0 then this is not an issue.\r\n\r\nSo the bottom line, the older emulators did not support the color format.\r\n\r\nFrom https://developer.android.com/guide/topics/graphics/opengl.html:\r\n\u003E OpenGL ES 1.0 and 1.1 - This API specification is supported by Android 1.0 and higher.\r\n\u003E OpenGL ES 2.0 - This API specification is supported by Android 2.2 (API level 8) and higher.\r\n\u003E OpenGL ES 3.0 - This API specification is supported by Android 4.3 (API level 18) and higher.\r\n\u003E OpenGL ES 3.1 - This API specification is supported by Android 5.0 (API level 21) and higher.\r\n\r\nBasically, Android 4.3\u002B should never have any issues, and below that should be just a few emulators. I updated to the latest HAXM and now all my emulators are good.",
+        "createdAt": "2018-01-10T23:32:27",
+        "reactions": [
+          {
+            "user": "daltonspillman",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:02.2305315Z"
+          }
+        ]
+      },
+      {
+        "id": 356783045,
+        "author": "daltonspillman",
+        "body": "Thanks for looking into this! I\u0027ll see if we need to update emulators over here.",
+        "createdAt": "2018-01-11T00:23:09",
+        "reactions": []
+      }
+    ]
+  }
 }

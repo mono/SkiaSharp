@@ -20,5 +20,18 @@
   "updatedAt": "2022-08-19T21:02:36",
   "closedAt": "2017-02-17T04:10:03",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:18.8694987Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 279524828,
+        "author": "mattleibow",
+        "body": "I think I have found the problem and a solution (both temporary and permanent)\r\n\r\nThe problem is that the resize is trying to resize the bitmap\u0027s pixmap, and that is the null problem.\r\n\r\nBefore explaining the why, let me explain the parts. First, there is the \u0060ExtractSubset\u0060. This does not actually always make a copy of the pixels, but rather has a reference to the previous bitmap. This saves lots of space in memory.\r\n\r\nSecond, the resize actually happens with the bitmaps pixmap (the container for the pixels). Since the bitmap is now re-using the previous bitmap\u0027s pixels, it doesn\u0027t have its own pixmap yet.\r\n\r\nYou can force a bitmap to have it\u0027s own pixels by locking the pixels (this is the temporary solution):\r\n\r\n\u0060\u0060\u0060csharp\r\nbitmap.LockPixels();\r\nusing (var resized = bitmap.Resize(...))\r\n{\r\n    // ...\r\n}\r\nbitmap.UnlockPixels();\r\n\u0060\u0060\u0060\r\n\r\nIt may even be better to use the auto locker in case of exceptions:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (new SKAutoLockPixels(bitmap))\r\nusing (var resized = bitmap.Resize(...))\r\n{\r\n    // ...\r\n}\r\n\u0060\u0060\u0060\r\n\r\nNow that we have the temporary solution, the real fix will be to first lock the bitmap in my resize method.\r\n\r\nPS: I noticed another potential issue with the code:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (outputStream)\r\n{\r\n    // ...\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThat will dispose the output stream. This may be desired, but if not, you can rather just flush it:\r\n\r\n\u0060\u0060\u0060csharp\r\noutputStream.Flush();\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-02-13T21:16:18",
+        "reactions": []
+      }
+    ]
+  }
 }

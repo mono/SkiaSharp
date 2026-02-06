@@ -14,5 +14,45 @@
   "updatedAt": "2022-08-20T00:01:25",
   "closedAt": "2016-11-15T02:49:42",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:32.8788786Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 260489246,
+        "author": "mattleibow",
+        "body": "@prasannavl, thanks for pointing this out.\n\nI had a look at the MS reference source, and they do this:\n\n\u0060\u0060\u0060 csharp\npublic override int GetHashCode() {\n    return base.GetHashCode();\n}\n\u0060\u0060\u0060\n\nhttps://referencesource.microsoft.com/#System.Drawing/commonui/System/Drawing/Advanced/SizeF.cs,232\n\nBut in the case of RectangleF:\n\n\u0060\u0060\u0060 csharp\npublic override int GetHashCode() {\n    return unchecked((int)((UInt32)X ^\n        (((UInt32)Y \u003C\u003C 13) | ((UInt32)Y \u003E\u003E 19)) ^\n        (((UInt32)Width \u003C\u003C 26) | ((UInt32)Width \u003E\u003E  6)) ^\n        (((UInt32)Height \u003C\u003C  7) | ((UInt32)Height \u003E\u003E 25))));\n}\n\u0060\u0060\u0060\n\nhttps://referencesource.microsoft.com/#System.Drawing/commonui/System/Drawing/Advanced/RectangleF.cs,345\n\nInteresting... I am not sure what the best thing is, or even why they differ.\n",
+        "createdAt": "2016-11-14T22:49:37",
+        "reactions": []
+      },
+      {
+        "id": 260489687,
+        "author": "mattleibow",
+        "body": "Mono, on the other had just casts to an int (I think I copied the mono format):\nhttps://github.com/mono/mono/blob/master/mcs/class/System.Drawing/System.Drawing/SizeF.cs#L263\n\nThe rectangle is even more conflicting, they just add all the fields together:\nhttps://github.com/mono/mono/blob/master/mcs/class/System.Drawing/System.Drawing/RectangleF.cs#L502\n\nThe question I as is... What should it be?\n",
+        "createdAt": "2016-11-14T22:51:27",
+        "reactions": []
+      },
+      {
+        "id": 260532301,
+        "author": "prasannavl",
+        "body": "Interesting! In retrospect, for some reason, it eluded me that hash code need not be different for different values. It is a 4-byte number after all. It can\u0027t be. The only requirement being it has to be the same for the same set of values.\n\nMS\u0027s \u0060base.GetHashCode\u0060 supposedly XORed the entire memory block 32-bytes at a time, which is technically what mono\u0027s implementation does (though I found the results of both to be different - I\u0027m guessing the native implementation does more than just XOR - perhaps changed over time). \n\nFor what it\u0027s worth, I think MS\u0027s implementation should have slightly better distribution since it takes a piece of every field rather than adding them together, and also be faster on systems without hardware floating point operations (since mono actually adds them as floating-point ops), instead of a simple XORs, bitshifts, and reintrepret casts with the MS implementations, though it\u0027s largely irrelevant today.\n\nThis is an interesting tid-bit, though looking back now, this clearly isn\u0027t really a bug. I apologize, if I had wasted your time unintentionally. Closing this. \n",
+        "createdAt": "2016-11-15T02:49:42",
+        "reactions": []
+      },
+      {
+        "id": 260909526,
+        "author": "mattleibow",
+        "body": "@prasannavl No problem and no waste. We all learned something - I had to look up these things. The community is what keeps it real!\n",
+        "createdAt": "2016-11-16T10:25:15",
+        "reactions": [
+          {
+            "user": "prasannavl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:32.8286854Z"
+          }
+        ]
+      }
+    ]
+  }
 }

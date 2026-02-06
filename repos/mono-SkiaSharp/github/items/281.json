@@ -20,5 +20,95 @@
   "updatedAt": "2022-08-19T21:02:07",
   "closedAt": "2017-05-01T18:31:35",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:19.5767396Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 297793830,
+        "author": "mattleibow",
+        "body": "I have not been able to repro this. Can you attach a test case or some code?\r\n\r\nHere is my sample: https://github.com/mattleibow/SkiaSharpXamarinFormsDemo\r\n\r\nTo demonstrate the transparency, I set a background color for the root \u0060StackLayout\u0060 in the \u0060MainPage.xaml\u0060:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CStackLayout ... BackgroundColor=\u0022Fuchsia\u0022\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-04-27T18:07:03",
+        "reactions": []
+      },
+      {
+        "id": 297797049,
+        "author": "benevbright",
+        "body": "Hi, \r\nDid you also try to redraw? \r\nIt does not clear the previous bitmap when I need to clear previous one.\r\n\r\nI will make repro project and attach it.",
+        "createdAt": "2017-04-27T18:18:53",
+        "reactions": []
+      },
+      {
+        "id": 297813873,
+        "author": "benevbright",
+        "body": "Hm. It DOES clear the view on the sample repro project I made.\r\nI will try it on the ViewCell of ListView again and will share the result here.",
+        "createdAt": "2017-04-27T19:22:28",
+        "reactions": []
+      },
+      {
+        "id": 297823086,
+        "author": "benevbright",
+        "body": "Yes. I could reproduce it on the ViewCell. \r\nDon\u0027t know why this makes different behavior.",
+        "createdAt": "2017-04-27T20:00:56",
+        "reactions": []
+      },
+      {
+        "id": 297827913,
+        "author": "benevbright",
+        "body": "[test_skiasharp_clearTransparent.zip](https://github.com/mono/SkiaSharp/files/962808/test_skiasharp_clearTransparent.zip)\r\n\r\nHi, Matthew. \r\n\r\nI made repro project. \r\ntested on iOS.\r\nIt happens when I use SKCanvasView on the ViewCell. \r\nIf you have any workaround, please let me know.\r\nThanks.\r\n\r\nIt\u0027s working fine on XF/Android.",
+        "createdAt": "2017-04-27T20:20:13",
+        "reactions": []
+      },
+      {
+        "id": 297828172,
+        "author": "benevbright",
+        "body": "I understand that this could be XF\u0027s problem.",
+        "createdAt": "2017-04-27T20:21:17",
+        "reactions": []
+      },
+      {
+        "id": 298309926,
+        "author": "mattleibow",
+        "body": "I had a look, and I think the issue in the attached sample may be with the fact that the cell *is* transparent, but we are seeing the *background of the list view*. The list view has a white background by default.\r\n\r\nIf you want the page to show through, you first have to set the list view\u0027s \u0060BackgroundColor\u0060 to \u0060Transparent\u0060.\r\n\r\nLet me know if this solves it for you, or if this is not the issue you are having.",
+        "createdAt": "2017-05-01T09:22:04",
+        "reactions": []
+      },
+      {
+        "id": 298313117,
+        "author": "benevbright",
+        "body": "Hi Matthew. \r\nNo, That\u0027s not the problem I found. \r\nIf you scroll down and up again on the ListView, you will see the new line cross the previous line which should have been removed. \r\n\r\nBut The canvasView on the first Tab which is not on the ListView.\r\nIt\u0027s working fine and new line does not cross the previous line because it\u0027s cleared when you press the button. ",
+        "createdAt": "2017-05-01T09:54:14",
+        "reactions": []
+      },
+      {
+        "id": 298320960,
+        "author": "mattleibow",
+        "body": "I found the issue. Thanks for reporting this. There is a bug in the Xamarin.Forms renderer where it is adding the native view multiple times when you start to scroll.\r\n\r\nThis will be fixed in the next release, but in the meantime a solution is to use the recycle the elements of the list using the \u0060CachingStrategy=\u0022RecycleElement\u0022\u0060 property in the XAML. Not only is this generally a good idea as the number of views is less overall, but it will also allow for smoother scrolling. \r\n\r\nYou could use a cell like this:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic class MyViewCell : ViewCell\r\n{\r\n    private SKCanvasView skiaview;\r\n\r\n    public MyViewCell()\r\n    {\r\n        // crate the canvas\r\n        skiaview = new SKCanvasView();\r\n\r\n        // do the drawing\r\n        skiaview.PaintSurface \u002B= (object sender, SKPaintSurfaceEventArgs e) =\u003E\r\n        {\r\n        };\r\n\r\n        // assign the canvas to the cell\r\n        View = skiaview;\r\n    }\r\n\r\n    protected override void OnBindingContextChanged()\r\n    {\r\n        base.OnBindingContextChanged();\r\n\r\n        // update the canvas when the data changes\r\n        skiaview.InvalidateSurface();\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nDoes this help?",
+        "createdAt": "2017-05-01T11:26:52",
+        "reactions": []
+      },
+      {
+        "id": 298321844,
+        "author": "benevbright",
+        "body": "Thanks Matthew, It works like a charm.\r\nThanks again for your kind help.",
+        "createdAt": "2017-05-01T11:37:29",
+        "reactions": []
+      },
+      {
+        "id": 298396007,
+        "author": "mattleibow",
+        "body": "Fixed in commit: a2a4576597c53a17330b548b7f5cdb0211e20393",
+        "createdAt": "2017-05-01T18:31:35",
+        "reactions": []
+      },
+      {
+        "id": 479860108,
+        "author": "mycybersiara",
+        "body": "@mattleibow can i make canvas view with smooth scrolling.\r\ni\u0027m using skia skcanvasview but as i told that is not scrolling smoothly so if you can please help me with this.\r\n\r\nThanks...:)",
+        "createdAt": "2019-04-04T11:31:32",
+        "reactions": []
+      }
+    ]
+  }
 }

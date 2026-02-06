@@ -15,5 +15,60 @@
   "updatedAt": "2022-08-19T21:02:03",
   "closedAt": "2017-05-08T19:32:28",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:28.784178Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 298232583,
+        "author": "salamoun",
+        "body": "If I call:\r\n\u0060\u0060\u0060\r\nSKImage image = SKImage.FromBitmap(pageBitmap);\r\nSKData data = image.Encode();\r\n\u0060\u0060\u0060\r\n\r\nIt works even with SkiaSharp 1.57.0, but image has very low quality.",
+        "createdAt": "2017-04-30T13:33:51",
+        "reactions": []
+      },
+      {
+        "id": 298311208,
+        "author": "mattleibow",
+        "body": "I am not able to repro this one...\r\n\r\nThis is my code:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar bitmap = new SKBitmap(new SKImageInfo(100, 100));\r\nvar image = SKImage.FromBitmap(bitmap);\r\nvar data = image.Encode(SKEncodedImageFormat.Jpeg, 100);\r\n\u0060\u0060\u0060\r\n\r\nFor me, \u0060data\u0060 is not \u0060null\u0060. However, I am using the default color type and alpha type for the bitmap. It may be the case that you are using something different. \r\n\r\nAre you decoding a bitmap before trying to save it? If so, your in-memory bitmap may have some unusual color type that is not supported by the JPEG encoder. When you use the parameter-less \u0060Encode()\u0060 method, the encoder is the PNG encoder.\r\n\r\nIf this is the case, you can try decoding into a platform color type and alpha type:\r\n\r\n\u0060\u0060\u0060csharp\r\n// create a codec to read the image\r\nvar codec = SKCodec.Create(...);\r\n\r\n// create the bitmap using the dimensions in the codec\r\nvar bitmap = new SKBitmap(codec.Info.Width, codec.Info.Height);\r\n\r\n// decode the image into the bitmap\r\ncodec.GetPixels(bitmap.Info, bitmap.GetPixels());\r\n\u0060\u0060\u0060\r\n\r\nIf at all possible, if this doesn\u0027t help, could you attach the image that you are possibly decoding or some sample code that I could run and see what is up?",
+        "createdAt": "2017-05-01T09:34:56",
+        "reactions": []
+      },
+      {
+        "id": 299653064,
+        "author": "daniel-luberda",
+        "body": "The same issue here. Somehow only parameterless method override works correctly in the newest SkiaSharp release.\r\n\r\nIf you want a working reproduction see this: https://github.com/luberda-molinet/FFImageLoading/blob/master/source/FFImageLoading.Svg.Shared/SvgDataResolver.cs#L148-L149 (Please uncomment line with methods which contains quality parameters as the parameterless works fine)\r\n\r\nYou can run \u0060ImageLoading.Forms.Sample\u0060 sample and choose \u0060SVG example\u0060 in a demo list. \r\n\r\nTested on iOS emulator.",
+        "createdAt": "2017-05-06T17:05:03",
+        "reactions": []
+      },
+      {
+        "id": 299942068,
+        "author": "mattleibow",
+        "body": "@daniel-luberda Thanks for the repro.\r\n\r\nI have managed to find out why things are breaking. Basically with v1.56, \u0060SKImage.Encode\u0060 accepted a value of \u0060SKImageEncodeFormat.Png\u0060 which had an integer value of \u00605\u0060. And, then Google went and changed code and now that method does not take that value anymore (they actually removed that type entirely). Now, it takes \u0060SKEncodedImageFormat.Png\u0060 which has an integer value of \u00604\u0060.\r\n\r\nI added a mapping function, but I made the mistake of not checking the values:\r\nhttps://github.com/mono/SkiaSharp/blob/v1.57.1/binding/Binding/SKImage.cs#L14-L24\r\n\r\nRelease Notes:\r\nhttps://github.com/mono/SkiaSharp/releases/tag/v1.57.0\r\n\r\nI will see about getting a fix out ASAP.\r\n\r\nTypically, SkiaSharp is not backwards compatible as I have no control over the API, which is quite fluid. I am working on an update to v1.58, and they have gone and removed a few more types. Thankfully they are not too big, but still annoying. Their reasoning is that it is not used by Chrome and Android, thus not needed.",
+        "createdAt": "2017-05-08T17:59:28",
+        "reactions": []
+      },
+      {
+        "id": 299943009,
+        "author": "mattleibow",
+        "body": "@daniel-luberda You can work around this by making sure that you are building against v1.57.0 with all your libraries. Currently you have these three projects still using the old version:\r\n\r\n - FFImageLoading.Svg.Droid\r\n - FFImageLoading.Svg.Touch\r\n - FFImageLoading.Svg.Windows\r\n\r\nhttps://github.com/luberda-molinet/FFImageLoading/search?l=XML\u0026q=1.56.1\u0026type=\u0026utf8=%E2%9C%93\r\n\r\nAfter updating, the sample works.",
+        "createdAt": "2017-05-08T18:02:38",
+        "reactions": []
+      },
+      {
+        "id": 299945526,
+        "author": "daniel-luberda",
+        "body": "@mattleibow Thanks for the info! I suppose that was quite difficult to debug. \r\n\r\n\u003E You can work around this by making sure that you are building against v1.57.0 with all your libraries. \r\n\r\nThe workaround I used is to simply use parameterless method override, it works fine. It encodes as PNG by default anyway. I also updated dependencies to \u00601.57\u0060 in the newest prerelease, so it should work now :)",
+        "createdAt": "2017-05-08T18:10:59",
+        "reactions": []
+      },
+      {
+        "id": 300516718,
+        "author": "salamoun",
+        "body": "@mattleibow @daniel-luberda  Thanks for greate support.",
+        "createdAt": "2017-05-10T15:20:30",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,66 @@
   "updatedAt": "2022-08-19T21:02:41",
   "closedAt": "2017-04-26T03:53:34",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:10.3662059Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 285945104,
+        "author": "mattleibow",
+        "body": "Right now there are a few issues when the previewer tries to load a view that uses an underlying native (.so/.jar/.a) library: https://bugzilla.xamarin.com/show_bug.cgi?id=47865",
+        "createdAt": "2017-03-12T13:37:56",
+        "reactions": []
+      },
+      {
+        "id": 296827451,
+        "author": "renzska",
+        "body": "Any update on this? I\u0027m running into the same issue.\r\n\r\nThanks!",
+        "createdAt": "2017-04-24T21:28:12",
+        "reactions": []
+      },
+      {
+        "id": 297230677,
+        "author": "mattleibow",
+        "body": "Just tested in Xamarin Studio and Visual Studio 2017. The previewer no longer crashes. Due to limitations in the previewers with native assets, the paint events are not invoked (the views will be blank).",
+        "createdAt": "2017-04-26T03:53:34",
+        "reactions": []
+      },
+      {
+        "id": 299680591,
+        "author": "renzska",
+        "body": "Thanks for fixing the crashes. That helps in being able to see the rest of the UI.\r\n\r\nCan you describe what the limitations are? Is there a possibility of overcoming these limitations in the future? It would be a tremendous help when developing apps to be able to see what\u0027s going on using the Xamarin Forms Previewer. As of right now, it makes it quite difficult.",
+        "createdAt": "2017-05-07T03:49:26",
+        "reactions": []
+      },
+      {
+        "id": 299737544,
+        "author": "mattleibow",
+        "body": "Great to hear that the fixes are working for you.\r\n\r\nThe current limitation is that at this time, the designers and previewer is unable to load native C/C\u002B\u002B libraries. As SkiaSharp is basically a thin wrapper for a native library, SkiaSharp cannot really be used to view drawings inside a designer. The view itself can still be seen and manipulated, but the painting is not available.\r\n\r\nThis is purely a designer/previewer issue, and we are working with the respective teams to resolve this - not only for SkiaSharp, but for other native libraries as well.\r\n\r\nAre you having specific issues? If you need to preview drawings I sometimes use the Xamarin Workbooks to help out: \r\n\r\n - Workbooks: https://developer.xamarin.com/guides/cross-platform/workbooks/\r\n - SkiaSharp Workbook: https://developer.xamarin.com/workbooks/graphics/skiasharp/introduction/introduction.workbook\r\n\r\nWe have also been working on a drawing designer that allows you to manipulate shapes as you would with a graphics program, but then export as SkiaSharp code:\r\n\r\n - Kimono Designer: https://github.com/xamarin/KimonoDesigner\r\n\r\nI hope these will help make things easier, but please let me know if you are having specific issues.\r\n",
+        "createdAt": "2017-05-07T21:50:06",
+        "reactions": [
+          {
+            "user": "tomgilder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:09.9365669Z"
+          }
+        ]
+      },
+      {
+        "id": 299966700,
+        "author": "renzska",
+        "body": "So my desire for SkiaSharp to be able to render in the designer/previewer has to do with controls that have been built using SkiaSharp. My quick example is a passcode screen where I have multiple CircleView objects built using SkiaSharp and I need to see how all the controls look together when applying my grid layout and sizing, etc. I currently have to run the app in the simulator to see how they look after each XAML change.\r\n\r\nI actually found the Kimono Designer earlier this week and that looks to be a great tool to build out the graphics pieces, but again, my desire is to see how they look when Xamarin.Forms lays out my pages.\r\n\r\nThanks for the detailed response and the hope that this functionality may come in the future. \r\n\r\nAs a side, NControls (https://github.com/chrfalch/NControl) is trying to gauge the desire for using SkiaSharp instead of NGraphics: https://github.com/chrfalch/NControl/issues/75",
+        "createdAt": "2017-05-08T19:29:37",
+        "reactions": []
+      },
+      {
+        "id": 401402187,
+        "author": "eltiare",
+        "body": "I\u0027m getting this error on MacOS: \r\n![image](https://user-images.githubusercontent.com/3036/42103023-0bf4bb90-7b85-11e8-81f9-be8ea98555a3.png)\r\n",
+        "createdAt": "2018-06-29T16:13:30",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -20,5 +20,83 @@
   "updatedAt": "2022-08-19T21:02:19",
   "closedAt": "2017-04-21T06:36:36",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:53.9029914Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 286882054,
+        "author": "ncthbrt",
+        "body": "@drayfar I worked around this problem by specifying the  following in my fsproj file (probably csproj in your case):\r\n\r\n\u0060\u0060\u0060\r\n\u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enetcoreapp1.0\u003C/TargetFramework\u003E    \r\n    \u003CBaseNuGetRuntimeIdentifier\u003Ewin7-x64\u003C/BaseNuGetRuntimeIdentifier\u003E\r\n    \u003CRuntimeIdentifier\u003Ewin7-x64\u003C/RuntimeIdentifier\u003E    \r\n  \u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nAs far as I can tell, this error is caused by Win10 native lib sandboxing. Note this probably isn\u0027t a sustainable solution",
+        "createdAt": "2017-03-15T21:16:36",
+        "reactions": []
+      },
+      {
+        "id": 291000744,
+        "author": "sakopov",
+        "body": "Same issue. The workaround made the project unusable (I\u0027ll blame this on VS tooling).",
+        "createdAt": "2017-04-02T17:26:34",
+        "reactions": []
+      },
+      {
+        "id": 294262542,
+        "author": "markblank05",
+        "body": "i also have same issue running in vs2015 in windows 10, I tried the workaround but it doesn\u0027t work. I tried to run similar code in vs2017 and it\u0027s working properly.  Visual C\u002B\u002B Redistributable for Visual Studio 2015 is already installed.",
+        "createdAt": "2017-04-15T01:02:02",
+        "reactions": []
+      },
+      {
+        "id": 294454840,
+        "author": "mattleibow",
+        "body": "I investigated this, and I found the cause of the issue. I am building a Universal Windows C\u002B\u002B dll, but this is not really universal. The \u0022universal\u0022 actually only applies to UWP apps, not even Windows (Win32) apps. As a result, this issue.\r\n\r\nAt this time, I am unsure if there is an option to use a universal dll for non-UWP apps. This causes issues because if I build a new dll for \u0060win10\u0060 .NET Core, I get issue with UWP apps. What is happening right now is that when you install a NuGet that has a \u0060win10\u0060 native dll into a UWP app, NuGet adds the native dll to the app. Unless the native dll is a universal dll (eg: it may be Win32), it will cause issues at runtime for UWP. If the dll is a universal dll, then it has issues with Win32.\r\n\r\nThis appears to be a no-win situation, sine both UWP and .NET Core use the same \u0060win10\u0060 runtime directory, but they each require a different dll.\r\n\r\nI will investigate further, and I hope to have a resolution soon.",
+        "createdAt": "2017-04-17T11:07:47",
+        "reactions": [
+          {
+            "user": "ncthbrt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:53.1047289Z"
+          },
+          {
+            "user": "jkoritzinsky",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:53.1047292Z"
+          },
+          {
+            "user": "GuiTeK",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:53.1047293Z"
+          }
+        ]
+      },
+      {
+        "id": 294561421,
+        "author": "sakopov",
+        "body": "I think what\u0027s resolved it for me was updating to NetStandard 1.6.1 from i believe 1.6.0 and adding win7-x64 runtime.",
+        "createdAt": "2017-04-17T19:04:21",
+        "reactions": []
+      },
+      {
+        "id": 295673530,
+        "author": "mattleibow",
+        "body": "After discussing this with the NuGet team, there is a solution for this: https://github.com/NuGet/Home/issues/5042",
+        "createdAt": "2017-04-20T10:30:27",
+        "reactions": []
+      },
+      {
+        "id": 298717204,
+        "author": "cassrauch",
+        "body": "Hi.  I\u0027m still getting the error \u0022Unable to load DLL \u0027libSkiaSharp\u0027: This operation is only valid in the context of an app container.\u0022 in .net core when trying to use skiasharp in an aws lambda.   I\u0027ve made sure to have the C\u002B\u002B dlls installed and have made sure I\u0027m using the 3.5 nuget as well but still no go.  Any ideas?",
+        "createdAt": "2017-05-02T18:16:28",
+        "reactions": []
+      },
+      {
+        "id": 298722647,
+        "author": "mattleibow",
+        "body": "@cassrauch it is because we haven\u0027t released that fix just yet. It is coming soon, but in the mean time is specify the \u0060win7\u0060 target: https://github.com/mono/SkiaSharp/issues/264#issuecomment-286882054\r\n",
+        "createdAt": "2017-05-02T18:36:03",
+        "reactions": []
+      }
+    ]
+  }
 }

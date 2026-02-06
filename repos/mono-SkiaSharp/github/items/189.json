@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-20T00:01:31",
   "closedAt": "2017-01-06T16:49:45",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:21.0600543Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 264344600,
+        "author": "mattleibow",
+        "body": "I think this might be an issue with skia: https://bugs.chromium.org/p/skia/issues/detail?id=6025\r\n\r\nI tried setting the stencil buffer, but this just adds artifacts:\r\n\r\n\u0060\u0060\u0060csharp\r\nprivate void Initialize()\r\n{\r\n\tWantsBestResolutionOpenGLSurface = true;\r\n\r\n\tvar attrs = new object[]\r\n\t{\r\n\t\t//NSOpenGLPixelFormatAttribute.OpenGLProfile, (NSOpenGLPixelFormatAttribute)NSOpenGLProfile.VersionLegacy,\r\n\t\tNSOpenGLPixelFormatAttribute.Accelerated,\r\n\t\tNSOpenGLPixelFormatAttribute.DoubleBuffer,\r\n\t\tNSOpenGLPixelFormatAttribute.Multisample,\r\n\r\n\t\tNSOpenGLPixelFormatAttribute.ColorSize, (NSOpenGLPixelFormatAttribute)32,\r\n\t\tNSOpenGLPixelFormatAttribute.AlphaSize, (NSOpenGLPixelFormatAttribute)8,\r\n\t\tNSOpenGLPixelFormatAttribute.DepthSize, (NSOpenGLPixelFormatAttribute)24,\r\n\t\tNSOpenGLPixelFormatAttribute.StencilSize, (NSOpenGLPixelFormatAttribute)8,\r\n\t\tNSOpenGLPixelFormatAttribute.SampleBuffers, (NSOpenGLPixelFormatAttribute)1,\r\n\t\tNSOpenGLPixelFormatAttribute.Samples, (NSOpenGLPixelFormatAttribute)4,\r\n\t\t(NSOpenGLPixelFormatAttribute)0,\r\n\t};\r\n\tPixelFormat = new NSOpenGLPixelFormat(attrs);\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2016-12-02T01:06:58",
+        "reactions": []
+      },
+      {
+        "id": 270807955,
+        "author": "mattleibow",
+        "body": "As mentioned by the skia guys, it has to do with a dirty stencil buffer.",
+        "createdAt": "2017-01-06T01:32:44",
+        "reactions": []
+      },
+      {
+        "id": 270946462,
+        "author": "mattleibow",
+        "body": "Fixed in https://github.com/mono/SkiaSharp/commit/b53c882f5f84d14699dc13dae7b32c1be2efdf14#diff-d0833452943d0d16c21f4df6d349835a\r\n\r\nI had to clear the stencil buffer and use \u0060OpenGLContext.FlushBuffer\u0060 for a double buffered view:\r\n\r\n\u0060\u0060\u0060csharp\r\nGles.glClear(Gles.GL_STENCIL_BUFFER_BIT);\r\nOpenGLContext.FlushBuffer();\r\n\u0060\u0060\u0060\u0060",
+        "createdAt": "2017-01-06T16:47:13",
+        "reactions": []
+      }
+    ]
+  }
 }

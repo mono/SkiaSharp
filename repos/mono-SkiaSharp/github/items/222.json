@@ -15,5 +15,66 @@
   "updatedAt": "2022-08-19T21:02:52",
   "closedAt": "2017-03-24T16:07:10",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:50.5764077Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 274066812,
+        "author": "mattleibow",
+        "body": "I also noticed that, and I think it has to do with the way the GPU is handled. I need to confirm, but I think the bitmap is only passed once to the GPU, so when the next frame is decoded into the bitmap, it is not pushed to the GPU.\r\n\r\nI was able to get it going when I created multiple bitmaps, and drew each one. I must check to see if there is a way to mark the bitmap as invalidated.",
+        "createdAt": "2017-01-20T13:00:56",
+        "reactions": []
+      },
+      {
+        "id": 274085478,
+        "author": "DeanClaes",
+        "body": "Thanks for your reply.\r\n\r\nBefore, I used to make multiple bitmaps as well but I found your solution to be more elegant (and it\u0027s probably more performant as well).",
+        "createdAt": "2017-01-20T14:31:51",
+        "reactions": []
+      },
+      {
+        "id": 274114137,
+        "author": "mattleibow",
+        "body": "Did the animation play when you had separate bitmaps? I must ask on the Google skia forums to see how to do this properly.",
+        "createdAt": "2017-01-20T16:24:08",
+        "reactions": []
+      },
+      {
+        "id": 274286440,
+        "author": "DeanClaes",
+        "body": "Well it was only me messing around but instead of directly playing the gif I had made 10 seperate images (I had them saved as heart1.png heart2.png). Next I just put them all in a list and I looped over them. I had the RefreshSamples method on a loop and in the onDrawSample it would just call canvas.DrawBitmap. This did work but it\u0027s not a proper solution.",
+        "createdAt": "2017-01-21T20:32:20",
+        "reactions": []
+      },
+      {
+        "id": 289066580,
+        "author": "mattleibow",
+        "body": "\u0022Fixed\u0022 in a3979a262fa87ab54962d5236bb7a6302226853c\r\n\r\nBasically, the bitmap has no way of knowing that the pixels have changed, and when drawing to the GPU, the bitmap is cached. So to tell the GPU that it needs to get the new pixel data, we invoke the \u0060NotifyPixelsChanged()\u0060 method.",
+        "createdAt": "2017-03-24T16:07:10",
+        "reactions": [
+          {
+            "user": "DeanClaes",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:50.092764Z"
+          }
+        ]
+      },
+      {
+        "id": 295632354,
+        "author": "DeanClaes",
+        "body": "Hello @mattleibow \r\n\r\nFirst of all thanks for having taken a look at this. I have just tested the new changes but I was a little bit suprised to find out that the OpenGL backed was showing the frames slower than the memory backend.\r\nWhen testing I found out that the memory backend interval between each DrawSample() call was about 100 ms, whereas it was about 160-180ms for the OpenGL backend. \r\nEven when not drawing anything the AnimatedSampleBase takes quite a chunck of cpu. The thing that seems to be causing this are the repeated calls to {CanvasForBackend}.InvalidateSurface in the AnimatedSampleBase.\r\n\r\nSo I was just wondering if this is expected behavior? If so would you suggest using the Memory backend instead for displaying gifs?\r\n\r\nThank you",
+        "createdAt": "2017-04-20T08:29:23",
+        "reactions": []
+      },
+      {
+        "id": 296069340,
+        "author": "mattleibow",
+        "body": "This may be the case since the bitmap has to be copied to the GPU for each frame. What you may want to do is either create multiple images for each frame, which can be copied once to the GPU. \r\n\r\nAlso, you might want to actually use a \u0060SKImage\u0060 that is backed by the GPU, thus nothing has to be copied when drawing.",
+        "createdAt": "2017-04-21T05:14:04",
+        "reactions": []
+      }
+    ]
+  }
 }

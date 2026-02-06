@@ -14,5 +14,31 @@
   "updatedAt": "2022-08-19T21:02:05",
   "closedAt": "2017-05-01T18:50:56",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:23.4017095Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 297998699,
+        "author": "mattleibow",
+        "body": "There are two parts to this:\r\n\r\n1. Make sure you have a typeface that has the character:\r\n   Basically, use this to get a typeface: \u0060SKFontManager.MatchCharacter(...)\u0060\r\n   https://github.com/mono/SkiaSharp/issues/232#issuecomment-277458753\r\n2. Supporting right-to-left and top-to-bottom strings:\r\n   See more info on issue #272 ",
+        "createdAt": "2017-04-28T13:32:55",
+        "reactions": []
+      },
+      {
+        "id": 298400965,
+        "author": "mattleibow",
+        "body": "@SteaI My bad. I thought Korean was part of the RTL issue, but it appears that it was just a typeface issue. \r\n\r\nI think the default typefaces do not actually have any Korean characters, thus it will draw blocks. The correct way to find a typeface on the device is to use the \u0060SKFontManager\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\n// find a typeface that has the characters\r\nvar tf = SKFontManager.Default.MatchCharacter(\u0027\uD5EC\u0027);\r\n\r\n// create a paint\r\nvar paint = new SKPaint { Typeface = tf };\r\n\r\n// draw the text\r\ncanvas.DrawText(\u0022\uD5EC\uB85C\uC6B0 \uC6D4\uB4DC\u0022, ...);\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-01T18:50:56",
+        "reactions": [
+          {
+            "user": "WongWeiLoon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:23.3515088Z"
+          }
+        ]
+      }
+    ]
+  }
 }

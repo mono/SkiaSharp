@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-19T21:02:53",
   "closedAt": "2017-01-19T19:23:55",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:48.2443324Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 273618113,
+        "author": "Tylerflick",
+        "body": "PR\u0027s submitted for support (https://github.com/mono/SkiaSharp/pull/221, https://github.com/mono/skia/pull/46)",
+        "createdAt": "2017-01-18T22:11:28",
+        "reactions": []
+      },
+      {
+        "id": 274070510,
+        "author": "mattleibow",
+        "body": "@Tylerflick I made a small change to the \u0060SKMask\u0060. Because a struct is not so great with native objects (the GC will not dispose the struct, as it doesn\u0027t have a finalizer), I updated the type to not automatically create/dispose the image. The type now just holds a plain \u0060IntPtr\u0060. I added a \u0060Create\u0060 method that will copy the bytes into an unmanaged memory location. The user will also have to manually destroy the memory.\r\n\r\nBasically, instead of \u0060new SKMask(bytes)\u0060, which called \u0060AllocImage()\u0060, you need to use \u0060SKMask.Create(bytes)\u0060. Then, you need to call \u0060mask.FreeImage()\u0060 to release the memory.\r\n\r\nThis is also good for managed interop which has no need to free the memory:\r\n\r\n\u0060\u0060\u0060\r\nfixed (void* ptr = bytes) {\r\n    mask = new SKMask(ptr, ...);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nIf you want the nice dispose pattern with \u0060using\u0060 blocks, you can make use of \u0060SKAutoMaskFreeImage\u0060 (I copied the logic from the C\u002B\u002B code):\r\n\r\n\u0060\u0060\u0060\r\nvar mask = new SKMask(ptr, ...);\r\nusing (new SKAutoMaskFreeImage(mask.Image)) {\r\n    // do stuff\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAgain, you won\u0027t use the \u0060using\u0060 statement if you are using interop with the \u0060fixed\u0060 block as you don\u0027t need to free memory - the GC will get to it.",
+        "createdAt": "2017-01-20T13:20:58",
+        "reactions": []
+      },
+      {
+        "id": 274091666,
+        "author": "Tylerflick",
+        "body": "Thanks for doing this. I was having a bit of trouble figuring out how to handle that native buffer.",
+        "createdAt": "2017-01-20T14:57:26",
+        "reactions": []
+      }
+    ]
+  }
 }

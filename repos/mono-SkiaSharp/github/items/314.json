@@ -14,5 +14,66 @@
   "updatedAt": "2022-08-19T21:01:43",
   "closedAt": "2017-06-12T16:52:32",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:18.4275335Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 307448062,
+        "author": "sgravel-dev",
+        "body": "Shoudl have expanded FontMetrics, they are all set at 0...",
+        "createdAt": "2017-06-09T17:18:28",
+        "reactions": []
+      },
+      {
+        "id": 307538951,
+        "author": "mattleibow",
+        "body": "This is an interesting issue in that it appears to just be this font, and just for Android. I tried a new font, and your code (almost) works.\r\n\r\nThere is another issue in that you are disposing the stream. When passing the stream to \u0060SKTypeface\u0060 it may or may not be finished using it when the method returns, so you have to leave it up to \u0060SKTypeface\u0060 to manage the lifetime of the stream. According to the docs:\r\n\u003E Returns a new typeface given a stream. **Ownership of the stream is transferred, so the caller must not reference it again.**\r\n\u003E https://developer.xamarin.com/api/member/SkiaSharp.SKTypeface.FromStream/p/SkiaSharp.SKStreamAsset/System.Int32/\r\n\r\n_This is why the \u0060FontMetrics\u0060 were all \u00600\u0060._\r\n\r\nBut, even when we no longer dispose the stream, the font still does nothing. I have a very strong feeling that this is either a bug in Android, but more likely an issue with the font (in some way). That file works on macOS, iOS, and Windows - but not Android???\r\n\r\nI have attached proof that this is failing even with normal Android.\r\nXamarin.Android: [Archive.zip](https://github.com/mono/SkiaSharp/files/1065569/Archive.zip)\r\n\r\n_I am going to create a Java Android test app just to confirm that this is in no way something to do with Xamarin - which I don\u0027t believe it is._\r\n",
+        "createdAt": "2017-06-10T03:30:58",
+        "reactions": []
+      },
+      {
+        "id": 307539677,
+        "author": "mattleibow",
+        "body": "Just did a test with Java, same thing: [JavaAndroidFonts.zip](https://github.com/mono/SkiaSharp/files/1065579/JavaAndroidFonts.zip)\r\n\r\nI am not sure what to do from here... The easiest would be to just get a new font, but if you can\u0027t do that, then maybe ask on StackOverflow - you can just use the attached sample if people want to use Java instead of C# to answer your question. Or you can ask on the Xamarin Forums as well.",
+        "createdAt": "2017-06-10T03:48:17",
+        "reactions": []
+      },
+      {
+        "id": 307564558,
+        "author": "sgravel-dev",
+        "body": "Wow I\u0027m a lucky guy selecting the only problematic font in the universe and thanks for your thorouh investigation!  I\u0027m just building a demo for a 100% shared UI code app so I\u0027ll pick another font.",
+        "createdAt": "2017-06-10T13:18:03",
+        "reactions": []
+      },
+      {
+        "id": 307564789,
+        "author": "sgravel-dev",
+        "body": "Apparently it is somewhat widespread... https://stackoverflow.com/questions/27269264/custom-fonts-not-working-in-lollipop\r\nSo Skia uses the platform font loading underneath?  It certainly is not the case on iOS since the font is not in the info.plist, which is precisely what I was demoing with this label.",
+        "createdAt": "2017-06-10T13:22:45",
+        "reactions": []
+      },
+      {
+        "id": 307849253,
+        "author": "sgravel-dev",
+        "body": "I converted the font to OTF and it works fine now!",
+        "createdAt": "2017-06-12T16:52:32",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:18.1751239Z"
+          }
+        ]
+      },
+      {
+        "id": 307889571,
+        "author": "mattleibow",
+        "body": "Great to hear!\r\n\r\nIt does not use the system font loading mechanism - we can provide custom font streams, but we are limited to what the OS can render. I think in this case, Android cannot understand this font file for some reason.",
+        "createdAt": "2017-06-12T19:08:17",
+        "reactions": []
+      }
+    ]
+  }
 }

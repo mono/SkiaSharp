@@ -14,5 +14,24 @@
   "updatedAt": "2022-08-19T21:02:48",
   "closedAt": "2017-02-01T23:31:40",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:55.5198464Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 276185552,
+        "author": "mattleibow",
+        "body": "It may be because the libraries were built on a previous run? The native bits take a long time to build, so I skip them on consecutive runs. To force a rebuild of them, there are a few things you can do:\r\n\r\n1. clean: \u0060./bootstrapper.ps1 -Target clean\u0060\r\n2. just delete the final libs: \u0060native-builds\\lib\\\u003Cplatform\u003E\\\u003Carch\u003E\u0060\r\n\r\nIf you are working on the native bits, I find it quicker to just temporarily comment out the check (the same for any platform):\r\nhttps://github.com/mono/SkiaSharp/blob/6c235df4c8b92078a4cac8b1397e51a6002ab79c/cake/BuildExternals.cake#L152-L154\r\n\r\nAnd, you can also just do all your testing on a single arch by commenting out a few lines:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/6c235df4c8b92078a4cac8b1397e51a6002ab79c/cake/BuildExternals.cake#L179 or for UWP https://github.com/mono/SkiaSharp/blob/6c235df4c8b92078a4cac8b1397e51a6002ab79c/cake/BuildExternals.cake#L216-L217\r\n\r\nThis way you only build one arch and the project files aren\u0027t rebuilt each time. This allows the project to be built with just the code changes, and not a full rebuild. (If you are making changes to the gyp, gypi or gn files, then you need to rebuild the projects.)",
+        "createdAt": "2017-01-30T20:47:46",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:55.4696501Z"
+          }
+        ]
+      }
+    ]
+  }
 }

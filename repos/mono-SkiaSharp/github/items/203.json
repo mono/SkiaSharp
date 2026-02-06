@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-20T00:01:23",
   "closedAt": "2016-11-21T21:27:42",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:35.2394253Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 261809889,
+        "author": "RudolfKurka",
+        "body": "To clarify, I\u0027m trying to set a default color for picture rendering (that comes from svg file) ie. my svg files don\u0027t have any colors set and are rendered black which is not very flexible, I can of course set color in svg source file but I was hoping I can achieve same result programatically (without messing with source files).\n",
+        "createdAt": "2016-11-20T22:10:23",
+        "reactions": []
+      },
+      {
+        "id": 262072552,
+        "author": "mattleibow",
+        "body": "You can do this by painting the picture with a color filter:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var paint = new SKPaint()) {\r\n    paint.ColorFilter = SKColorFilter.CreateXferMode(SKColors.Red, SKXferMode.SrcIn);\r\n    canvas.DrawPicture(svg.Picture, paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n(You can re-open the issue if this is not the result that you are looking for.)",
+        "createdAt": "2016-11-21T21:27:42",
+        "reactions": []
+      },
+      {
+        "id": 439616129,
+        "author": "hwd71",
+        "body": "This works great for Android, but doesn\u0027t work on Desktop for me. Or the newer\r\npaint.ColorFilter = SKColorFilter.CreateBlendMode(SKColor.Red, SKBlendMode.SrcIn);\r\nI\u0027m using an fa.solid SVG. \r\n",
+        "createdAt": "2018-11-17T13:16:12",
+        "reactions": []
+      },
+      {
+        "id": 441472641,
+        "author": "hwd71",
+        "body": "Apologies, having moved up versions, confirmed working on desktop and android.",
+        "createdAt": "2018-11-25T20:58:12",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T21:02:14",
   "closedAt": "2017-03-30T20:30:10",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:01.5541274Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 290534921,
+        "author": "mattleibow",
+        "body": "This is working as expected.\r\n\r\nIn order to reduce the size of the native archive, the libSkiaSharp.framework is stripped of everything.\r\n\r\nYou can see this in the build log that it is just for the libSkiaSharp:\r\n\r\n\u0060\u0060\u0060\r\nDSymUtil Task\r\n      AppBundleDir: bin/iPhone/Release/SkiaSharpSampleFormsSampleiOS.app\r\n      Architectures: \u003Cnull\u003E\r\n      DSymDir: bin/iPhone/Release/SkiaSharpSampleFormsSampleiOS.app/../libSkiaSharp.framework.dSYM\r\n      Executable: bin/iPhone/Release/SkiaSharpSampleFormsSampleiOS.app/Frameworks/libSkiaSharp.framework/libSkiaSharp\r\n    Tool /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/dsymutil execution started with arguments: -t 4 -z -o bin/iPhone/Release/SkiaSharpSampleFormsSampleiOS.app/../libSkiaSharp.framework.dSYM bin/iPhone/Release/SkiaSharpSampleFormsSampleiOS.app/Frameworks/libSkiaSharp.framework/libSkiaSharp \r\n    warning: no debug symbols in executable (-arch armv7)\r\n    warning: no debug symbols in executable (-arch arm64)\r\n\u0060\u0060\u0060\r\n\r\nAnd, the next task which generates the symbols for the app, does not give any warnings.",
+        "createdAt": "2017-03-30T20:28:03",
+        "reactions": []
+      },
+      {
+        "id": 290535480,
+        "author": "mattleibow",
+        "body": "I am closing this as it is not really an \u0022issue\u0022, but feel free to re-open if this is a bug or causing problems.",
+        "createdAt": "2017-03-30T20:30:10",
+        "reactions": []
+      },
+      {
+        "id": 290644292,
+        "author": "PatrickRyder",
+        "body": "Hi, Matthew,\n\n\nNo problem about closing it.  I raised it because my company has a policy of zero errors, zero warnings in builds.  Maybe I can find a way to turn it off.\n\n\nSorry to have wasted your time.\n\n\n\nKind wishes - Patrick Ryder\n\nAuthor of \u0027Spiders in Your Mind\u0027, a collection of new short stories for those of you who like a scare and \u0027Crossed Shadows\u0027, a novel unlike any you will have read before.  A bold claim, I know.\n\u0027Crossed Shadows\u0027 available at Amazon: http://goo.gl/48d7LD.\u003Chttp://goo.gl/48d7LD\u003E\nCrossed Shadows eBook: Patrick Ryder: Amazon.co.uk: Kindle Store\nCrossed Shadows eBook: Patrick Ryder: Amazon.co.uk: Kindle Store\nRead more...\u003Chttp://goo.gl/48d7LD\u003E\n\nRemove preview\n\u0027Spiders in Your Mind\u0027 available at Amazon: http://www.amazon.co.uk/Patrick-Ryder/e/B00ANLOWR8/ref=ntt_athr_dp_pel_pop_1.\nAll other e-reader formats??available (e.g. Nook) at Smashwords: http://www.smashwords.com/profile/view/PatrickRyder\nAlso available in Apple iStore and Barnes \u0026 Noble.\nMy work is free for members of the armed forces. I also have some free copies to give away. Please drop me a line if you would like one. I\u0027d love to hear from you anyway.\n\n\n________________________________\nFrom: Matthew Leibowitz \u003Cnotifications@github.com\u003E\nSent: 30 March 2017 21:30:12\nTo: mono/SkiaSharp\nCc: PatrickRyder; Author\nSubject: Re: [mono/SkiaSharp] Build warning on Xamarin.iOS when building for physical device (#271)\n\n\nI am closing this as it is not really an \u0022issue\u0022, but feel free to re-open if this is a bug or causing problems.\n\n\u2014\nYou are receiving this because you authored the thread.\nReply to this email directly, view it on GitHub\u003Chttps://github.com/mono/SkiaSharp/issues/271#issuecomment-290535480\u003E, or mute the thread\u003Chttps://github.com/notifications/unsubscribe-auth/AM5lMxAFrcHqxJeHgyveBHHDNSlf1Pgxks5rrBDUgaJpZM4MuDRj\u003E.\n",
+        "createdAt": "2017-03-31T08:00:23",
+        "reactions": []
+      },
+      {
+        "id": 290771509,
+        "author": "mattleibow",
+        "body": "@PatrickRyder \r\n\r\nNo waste of time.\r\n\r\nIs this an actual build warning? I wasn\u0027t able to get a warning in the MSBuild results, but this was just visible in the build log. And, this is a warning from Xcode\u0027s dsymutil tool. If you set the options in Xcode to strip release builds (a yes/no option) then you will also get this warning.\r\n\r\nMay this helps with any arguments :)",
+        "createdAt": "2017-03-31T17:08:51",
+        "reactions": []
+      }
+    ]
+  }
 }

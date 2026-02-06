@@ -15,5 +15,66 @@
   "updatedAt": "2022-08-20T00:01:34",
   "closedAt": "2016-11-17T23:18:54",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:16.6938111Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 260425237,
+        "author": "Tylerflick",
+        "body": "Opened a [PR](https://github.com/mono/skia/pull/36) on mono/Skia to add support for the fix.\n",
+        "createdAt": "2016-11-14T18:50:48",
+        "reactions": []
+      },
+      {
+        "id": 261256779,
+        "author": "mattleibow",
+        "body": "@Tylerflick I just was thinking, since we don\u0027t support setting a specific pixel color for Index8, maybe we should throw (in managed code) an exception if someone calls set pixel with an Index8 color type.\n\nIf support is added, we just need to remember to remove that check. What do you think?\n",
+        "createdAt": "2016-11-17T14:15:08",
+        "reactions": []
+      },
+      {
+        "id": 261261277,
+        "author": "Tylerflick",
+        "body": "I like that idea.\n\nWe should also probably add a guard to \u0060SetColorTable(SKColorTable ct)\u0060 if the ColorType isn\u0027t Index8.\n\nI also need to add some documentation to these new methods.\n",
+        "createdAt": "2016-11-17T14:32:30",
+        "reactions": []
+      },
+      {
+        "id": 261306039,
+        "author": "mattleibow",
+        "body": "to update the docs - it will fail because you need to be running on CI (both mac and Windows bits), but you can still generate the things for SkiaSharp.dll (where we are working). Basically, run this target:\n\n\u0060\u0060\u0060\n.\\bootstrapper.ps1 -Target update-docs\n\u0060\u0060\u0060\n\nThis will mostly work, but you can just use the bits that you added inside the xml docs. This is a bit complicated to explain, but if you aren\u0027t running this for all the platforms, then it removes those types. So for you, run the command and then just add the \u0060/docs/en/SkiaSharp/*.xml\u0060. The other files will all be messed up because some types aren\u0027t there - so just revert them.\n\nThe final result will be a fairly small diff with new sections like this:\n\n\u0060\u0060\u0060 xml\n    \u003CMember MemberName=\u0022ColorTable\u0022\u003E\n      \u003CMemberSignature Language=\u0022C#\u0022 Value=\u0022public SkiaSharp.SKColorTable ColorTable { get; }\u0022 /\u003E\n      \u003CMemberSignature Language=\u0022ILAsm\u0022 Value=\u0022.property instance class SkiaSharp.SKColorTable ColorTable\u0022 /\u003E\n      \u003CMemberType\u003EProperty\u003C/MemberType\u003E\n      \u003CAssemblyInfo\u003E\n        \u003CAssemblyVersion\u003E1.53.0.0\u003C/AssemblyVersion\u003E\n        \u003CAssemblyVersion\u003E1.54.0.0\u003C/AssemblyVersion\u003E\n        \u003CAssemblyVersion\u003E1.54.0.0\u003C/AssemblyVersion\u003E\n        \u003CAssemblyVersion\u003E1.55.0.0\u003C/AssemblyVersion\u003E\n      \u003C/AssemblyInfo\u003E\n      \u003CReturnValue\u003E\n        \u003CReturnType\u003ESkiaSharp.SKColorTable\u003C/ReturnType\u003E\n      \u003C/ReturnValue\u003E\n      \u003CDocs\u003E\n        \u003Csummary\u003EGets the color table\u00A0of the bitmap.\u003C/summary\u003E\n        \u003Cvalue\u003E\n          \u003Cpara\u003E\u003C/para\u003E\n        \u003C/value\u003E\n        \u003Cremarks\u003E\n          \u003Cpara\u003E\u003C/para\u003E\n        \u003C/remarks\u003E\n      \u003C/Docs\u003E\n    \u003C/Member\u003E\n\u0060\u0060\u0060\n\nThat is what the docs really are. In you case, with the PR, there should be about 3 members. \n\nGood Luck \uD83D\uDE38 \n",
+        "createdAt": "2016-11-17T17:06:38",
+        "reactions": []
+      },
+      {
+        "id": 261338972,
+        "author": "Tylerflick",
+        "body": "Docs and guard clauses added to the new methods \uD83D\uDC4D.\n",
+        "createdAt": "2016-11-17T19:09:05",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:55:16.2587019Z"
+          }
+        ]
+      },
+      {
+        "id": 261351986,
+        "author": "mattleibow",
+        "body": "I just caused a conflict, sorry :) Should be safe to just use both \n",
+        "createdAt": "2016-11-17T19:56:50",
+        "reactions": []
+      },
+      {
+        "id": 261356696,
+        "author": "mattleibow",
+        "body": "I merged the native mono/skia bits. Just a small thing for the managed bits: https://github.com/mono/SkiaSharp/pull/196#pullrequestreview-9104423\n",
+        "createdAt": "2016-11-17T20:14:25",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T21:02:26",
   "closedAt": "2017-05-19T21:07:07",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:37.5016864Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 283147990,
+        "author": "mattleibow",
+        "body": "Hi @AiCraft, I had a look, and I think the main \u0022issue\u0022 is that you are doing too much in the paint method.\r\n\r\nhttps://github.com/AiCraft/XFImageCroper/blob/master/CustomRendererDemo/CustomRendererDemo/MainPage.xaml.cs#L226-L228\r\n\u0060\u0060\u0060csharp\r\nStream FileStream = DependencyService.Get\u003CImageFile\u003E().readFile(\u0022Assets/flower.jpg\u0022);\r\nusing (var stream = new SKManagedStream(FileStream))\r\nusing (var _bitmap = SKBitmap.Decode(stream))\r\n\u0060\u0060\u0060\r\n\r\nBasically, on each paint, you are doing I/O and accessing the file on disk. And then, you decode and render. I would strongly suggest moving this to a startup place - maybe on appearing? Then you can even do this async.",
+        "createdAt": "2017-02-28T20:10:50",
+        "reactions": []
+      },
+      {
+        "id": 283148353,
+        "author": "mattleibow",
+        "body": "Also, I notice in your draw method, you are using the same paint all over - and re-setting the same values. What you could do is to construct the paint object once in the startup, and then just reuse them. Although this is not going to be a bit performance boost, this will reduce any overhead that there might be.\r\n",
+        "createdAt": "2017-02-28T20:12:41",
+        "reactions": []
+      },
+      {
+        "id": 283148569,
+        "author": "mattleibow",
+        "body": "I see you also init twice:\r\nhttps://github.com/AiCraft/XFImageCroper/blob/master/CustomRendererDemo/CustomRendererDemo/MainPage.xaml.cs#L38-L39",
+        "createdAt": "2017-02-28T20:13:38",
+        "reactions": []
+      },
+      {
+        "id": 283278686,
+        "author": "KalpeshChheda",
+        "body": "@mattleibow Hi Sir,\r\nI have done that changes but improvements are not much on Phone(Tried on WinPhone).\r\nI have fix the issue regrading touch also. Problem was with the Canvas Scaling. I was touching somewhere and point was appearing somewhere else.\r\n\r\n\r\n",
+        "createdAt": "2017-03-01T08:40:10",
+        "reactions": []
+      }
+    ]
+  }
 }

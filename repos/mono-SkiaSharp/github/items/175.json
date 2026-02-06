@@ -20,5 +20,64 @@
   "updatedAt": "2022-08-20T00:01:43",
   "closedAt": "2016-11-18T00:34:53",
   "commentCount": 5,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:02.9337585Z",
+    "reactions": [
+      {
+        "user": "jasonCodesAway",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:55:02.9337607Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 258639433,
+        "author": "jasonCodesAway",
+        "body": "Definitely looking forward to this feature. I couldn\u0027t figure out why my sketch wasn\u0027t taking up the full size of its parent component. I think this feature will fix that for me. Thanks for the awesome code!\n",
+        "createdAt": "2016-11-05T20:44:54",
+        "reactions": []
+      },
+      {
+        "id": 259338618,
+        "author": "mattleibow",
+        "body": "I want to look at this some more in the next release, but for this release I decided to expose the current canvas size as a property. Although we still can\u0027t control the scaling to be used, we can calculate the scaling:\n\n\u0060\u0060\u0060 csharp\nfloat scaling = view.CanvasSize.Width / view.Width;\n\u0060\u0060\u0060\n\nThis will get the canvas size from the last draw operation. If anything changes, such as the view\u0027s size, pixel density or scaling, then the canvas size will be recalculated on the next draw cycle. The update is not immediate. In the next release we could see about immediate updates, but for this release I am actually reading the values from the last canvas.\n",
+        "createdAt": "2016-11-09T05:48:19",
+        "reactions": []
+      },
+      {
+        "id": 261414515,
+        "author": "mattleibow",
+        "body": "I have now also added a property (to the bitmap-based views) that can be used to disable automatic scaling:\n\n\u0060\u0060\u0060\n// assume view.Size == (100, 100)\n// assume iPhone retina (2x)\n\n// a larger canvas on hi-res displays\nview.IgnorePixelScaling = false;\n// view.CanvasSize == (200, 200)\n\n// the canvas size is directly related to display independent view size\nview.IgnorePixelScaling = true;\n// view.CanvasSize == (100, 100)\n\u0060\u0060\u0060\n\nI only added this to raster-based views as this was a difference that might not be default for all platforms. GL-based views actually use the framebuffer dimensions and then is scaled to fit anyway. If this feature is desired on GL views for some reason, I can add it there. But right now, since scaling doesn\u0027t look so great, this is just for \u0022compatibility\u0022 (if you can use that word).\n",
+        "createdAt": "2016-11-18T00:34:53",
+        "reactions": []
+      },
+      {
+        "id": 261415253,
+        "author": "mattleibow",
+        "body": "@jasonCodesAway, remember you can also just scale your drawings up using the canvas matrix. In the latest released version (v1.55.0) I added a property called \u0060CanvasSize\u0060 which you can use to detect the actual size of the canvas:\n\n\u0060\u0060\u0060 csharp\nvar scale = view.CanvasSize.Width / view.Width;\n\u0060\u0060\u0060\n\nThis scale can also be used to scale up the canvas before drawing:\n\n\u0060\u0060\u0060 csharp\nSKCanvas canvas = ...;\ncanvas.Scale(scale);\n\u0060\u0060\u0060\n\nIn order to use other matrix translations, you can save and restore matrix state:\n\n\u0060\u0060\u0060 csharp\ncanvas.Save();\n// . . . \ncanvas.Restore();\n\u0060\u0060\u0060\n\nIn the next version (probably v1.55.1) I added a property to disable screen scaling. But, this does not look so great as the image is just stretched. The best way to do this is to scale the canvas up, and draw to that. Then, when it is displayed, the image is still sharp. The reason this works is that it is just a matrix, and all drawing operations are scaled on the fly.\n",
+        "createdAt": "2016-11-18T00:39:29",
+        "reactions": [
+          {
+            "user": "imuller",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:55:02.6494551Z"
+          }
+        ]
+      },
+      {
+        "id": 261418149,
+        "author": "jasonCodesAway",
+        "body": "Awesome! Thank you. I\u0027m making good use of SkiaSharp in our Xamarin Forms app :) \uD83D\uDC4D \n",
+        "createdAt": "2016-11-18T00:57:13",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:55:02.8835519Z"
+          }
+        ]
+      }
+    ]
+  }
 }

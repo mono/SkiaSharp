@@ -20,5 +20,94 @@
   "updatedAt": "2022-08-20T00:01:30",
   "closedAt": "2017-02-04T20:29:58",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:24.4635821Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 259787835,
+        "author": "mattleibow",
+        "body": "@JakeLange Thanks for giving SkiaSharp a go! \r\n\r\nThis is working as designed. The reason for this is because some class libraries may be built as AnyCPU, and there is no native libSkiaSharp for this.\r\n\r\nCurrent (designed) functionality:\r\n- only include the native library in the app builds\r\n- to force a copy, add \u0060\u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\u0060 to the csproj\r\n\r\nThe main reason for not copying by default is that typically the app will install the NuGet as well, and the fact that the actual managed assembly is AnyCPU. If you were building an AnyCPU class library, you would get a compile error saying that it can\u0027t copy the native bit. Which should it copy anyway?\r\n\r\nI do admit that there is room for improvement. Maybe we can copy the native bits for ARM/x86/x64 and do nothing for AnyCPU?\r\n\r\nAll this logic is in the targets file:\r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/SkiaSharp.Desktop/SkiaSharp.Desktop.targets\r\n\r\nAny feedback is welcome!\r\n",
+        "createdAt": "2016-11-10T19:44:03",
+        "reactions": []
+      },
+      {
+        "id": 274828333,
+        "author": "tdctaz",
+        "body": "@mattleibow I really think that for AnyCPU it should copy both and keep them in subfolders, something like what \u0060System.Data.SQLite\u0060 does. Also instead of \u0060$(Platform)\u0060 it should check \u0060$(PlatformTarget)\u0060 instead because that is where the final platform is assigned for the project.",
+        "createdAt": "2017-01-24T15:01:29",
+        "reactions": [
+          {
+            "user": "branko-d",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:22.2083364Z"
+          }
+        ]
+      },
+      {
+        "id": 275712071,
+        "author": "johnslaby",
+        "body": "Thanks for the info. I was having a similar problem with an integration test project. By changing the platform to x86 and adding \u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E I was able to run my integration tests again. BTW, in you notes above, you suggested setting the ShouldIncludeNativeSkiaSharp property to False. I think you meant True.",
+        "createdAt": "2017-01-27T16:44:57",
+        "reactions": []
+      },
+      {
+        "id": 277474935,
+        "author": "mattleibow",
+        "body": "I have changed the rules for this as @tdctaz suggested. Thanks!\r\n\r\nThis is the commit: 8ecf8370eadea17e0690207e3714ab16d1fa498c  (@jonhslaby, note the same mistake in the commit message)\r\n\r\nThis should go out with the next release.",
+        "createdAt": "2017-02-04T20:29:51",
+        "reactions": []
+      },
+      {
+        "id": 281176489,
+        "author": "dylanvdmerwe",
+        "body": "I\u0027m using 1.56.1 with Any CPU and I keep on getting a DLLNotFoundException on net461. Unit tests also not happy and throw this exception. Tried to get this to work and used \u0060ShouldIncludeNativeSkiaSharp\u0060 but it didn\u0027t help. \r\n\r\nI like this library and was excited to use based on some awesome things I\u0027ve heard, but will wait until this works properly. ",
+        "createdAt": "2017-02-20T20:39:31",
+        "reactions": []
+      },
+      {
+        "id": 281180986,
+        "author": "mattleibow",
+        "body": "@dylanvdmerwe You need to test with x86/x64. The current nuget does not have the bits for AnyCPU, or rather selects no native library for AnyCPU. Your libraries can be AnyCPU, but the test needs to be one or the other.",
+        "createdAt": "2017-02-20T21:04:36",
+        "reactions": []
+      },
+      {
+        "id": 281181233,
+        "author": "mattleibow",
+        "body": "This will be in the next release v1.56.2. I am cleaning up and prepping for release as we type.",
+        "createdAt": "2017-02-20T21:06:06",
+        "reactions": []
+      },
+      {
+        "id": 500966704,
+        "author": "amirvenus",
+        "body": "I have this issue as well\r\n\r\nApp.iOS/MTOUCH: Error MT0009: Error while loading assemblies: /Users/amir/.nuget/packages/skiasharp/1.68.0-preview28/runtimes/win-x64/native/libSkiaSharp.dll (MT0009) \r\n\r\nTried with pre-release and stable to no avail",
+        "createdAt": "2019-06-11T18:28:25",
+        "reactions": []
+      },
+      {
+        "id": 515602089,
+        "author": "mattleibow",
+        "body": "@amirvenus your issue is another is a bug in the way mono builds mac/ios. https://github.com/xamarin/xamarin-macios/issues/5265\r\n\r\nWhat platform are you building for? is it mac? When I had this issue, I either build for Any CPU or remove the \u0060PlatformTarget\u0060 elements in the csproj.",
+        "createdAt": "2019-07-26T21:16:23",
+        "reactions": []
+      },
+      {
+        "id": 525815475,
+        "author": "renzska",
+        "body": "@mattleibow I\u0027m getting this issue today on an iOS project. I have the iOS project for iPhoneSimulator set to AnyCPU (tried x86 as well) and I\u0027m getting the same error. I also tried removing the PlatformTarget without success. I also tried setting the runtime identifiers referenced here: https://github.com/xamarin/xamarin-macios/issues/5265\r\n\r\n\u0060\u0060\u0060\r\nError MT0009: Error while loading assemblies: /Users/u0225413/.nuget/packages/skiasharp/1.68.0/runtimes/win-x86/native/libSkiaSharp.dll (MT0009) (SafeUT.iOS)\r\n\u0060\u0060\u0060\r\n\r\nAny ideas on how to workaround this issue?\r\n",
+        "createdAt": "2019-08-28T16:12:41",
+        "reactions": []
+      },
+      {
+        "id": 542490686,
+        "author": "mattleibow",
+        "body": "@renzska I would ask on that iOS issue just so there are more numbers.\r\n\r\nBut, Is there a \u0060PlatformTarget\u0060 property in the csproj? Maybe see if removing that helps.",
+        "createdAt": "2019-10-16T03:09:20",
+        "reactions": []
+      }
+    ]
+  }
 }

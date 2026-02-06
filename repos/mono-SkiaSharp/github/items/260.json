@@ -15,5 +15,100 @@
   "updatedAt": "2022-08-19T21:02:22",
   "closedAt": "2017-04-23T18:05:35",
   "commentCount": 8,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:44.8460795Z",
+    "reactions": [
+      {
+        "user": "pnp0a03",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:56:44.8460816Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 285007510,
+        "author": "mattleibow",
+        "body": "Thanks for this! I will get this in for the next release. I am just about to release v1.56.2, so I don\u0027t want to change too much at this point. Thanks again.\r\n\r\nAbout building on Windows, I left a comment on your other issue. I want to get this all smooth!",
+        "createdAt": "2017-03-08T10:40:33",
+        "reactions": []
+      },
+      {
+        "id": 285008331,
+        "author": "gentledepp",
+        "body": "Ok, but if you let your \u0022SKCanvasViewRenderer\u0022 inherit from \u0022SKCanvasViewRendererBase\u003CTForms,TNative\u003E\u0022 then this is even downwardly compatible ;-)",
+        "createdAt": "2017-03-08T10:44:04",
+        "reactions": []
+      },
+      {
+        "id": 285009503,
+        "author": "mattleibow",
+        "body": "That is what I will probably do.\r\n\r\nIs there a reason you didn\u0027t just inherit from my Forms \u0060SKCanvasView\u0060? Did you really need access to one of the members of the \u0060ISKCanvasViewController\u0060 interface, or was it just as a result of creating a new type?",
+        "createdAt": "2017-03-08T10:49:41",
+        "reactions": []
+      },
+      {
+        "id": 285009671,
+        "author": "gentledepp",
+        "body": "Yes: \u0060SKCanvasView \u0060has the interface \u0060ISKCanvasViewController  \u0060internal\r\nwhich in turn is required for the \u0060SKCanvasViewRenderer\u0060\r\n\r\nso that is the only reason.\r\n\r\nHad I had been able to compile SkiaSharp, I would just have \r\n\r\n1.  created that SKCanvasViewRendererBase \r\n2.  let SKCanvasViewRenderer inherit from it\r\n3.  and implement the IPaintSurface interface in all native view classes (which is needed to get rid of your internal \u0022NativeView\u0022 and allow for using our custom native views)",
+        "createdAt": "2017-03-08T10:50:34",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:44.0332353Z"
+          }
+        ]
+      },
+      {
+        "id": 285051930,
+        "author": "gentledepp",
+        "body": "Still have some problems building, but I hope I will eventually be able to solve that.\r\nMeanwhile I had a closer look at the SKGLView and its renderers and as it looks, the renderers could be equally refactored to support custom native views using the following no-brainer interface:\r\n\u0060\u0060\u0060\r\n\r\nusing System;\r\nusing SkiaSharp;\r\n#if WINDOWS_UWP\r\nusing SkiaSharp.Views.UWP;\r\n#elif PLATFORM_ANDROID\r\nusing SkiaSharp.Views.Android;\r\n#else\r\nusing SkiaSharp.Views.iOS;\r\n#endif\r\n\r\nnamespace SkiaSharp.Views\r\n{\r\n    public interface IPaintSurface\r\n    {\r\n        event EventHandler\u003CSKPaintGLSurfaceEventArgs\u003E PaintSurface;\r\n    }\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\nSo it would be reeeeeally great if that could be implemented some time. Maybe I will even be able to create a PR for this \uD83D\uDC4D ",
+        "createdAt": "2017-03-08T14:17:20",
+        "reactions": []
+      },
+      {
+        "id": 288550490,
+        "author": "mattleibow",
+        "body": "@gentledepp I am still working on this, but here is what I have so far: PR #269\r\n\r\nI have basically created a base type for the renderers (one for GL and one for Raster). This base does nothing except hook up events.\r\n\r\nThen, for each Raster platform there can be some customization. Right now there is none, except for iOS which changes the opacity.\r\n\r\nFor the GL platforms, I hook up the render loops.\r\n\r\nFor extension purposes, you can inherit from the base renderer and this gives you the \u0022factory\u0022 state  for your own view. If you use the \u0022platform\u0022 renderer type, then you will get some \u0022consistency\u0022 (iOS opacity) changes and the render loop.\r\n\r\nIn each case, all you should have to do is to implement the \u0060CreateNativeControl\u0060 method:\r\n\r\n\u0060\u0060\u0060csharp\r\nprotected override SKCanvasView CreateNativeControl()\r\n{\r\n    // use the base / default type\r\n    //var view = base.CreateNativeControl();\r\n    \r\n    // use a custom type\r\n    return new MyCustomCanvasView();\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-03-22T21:48:05",
+        "reactions": []
+      },
+      {
+        "id": 288927892,
+        "author": "mattleibow",
+        "body": "Moving to the next release so we can get the new skia out.",
+        "createdAt": "2017-03-24T04:02:55",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:56:44.6040249Z"
+          },
+          {
+            "user": "gentledepp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:44.6040252Z"
+          },
+          {
+            "user": "pnp0a03",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:44.6040253Z"
+          },
+          {
+            "user": "pnp0a03",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:56:44.6040254Z"
+          }
+        ]
+      },
+      {
+        "id": 296469238,
+        "author": "mattleibow",
+        "body": "Closed after #269 merged.",
+        "createdAt": "2017-04-23T18:05:35",
+        "reactions": []
+      }
+    ]
+  }
 }

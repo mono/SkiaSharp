@@ -15,5 +15,54 @@
   "updatedAt": "2022-08-19T21:02:27",
   "closedAt": "2017-02-28T23:31:34",
   "commentCount": 3,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:35.950678Z",
+    "reactions": [
+      {
+        "user": "AwsomeCode",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:56:35.9506837Z"
+      },
+      {
+        "user": "mgnslndh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:56:35.9506846Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 283195746,
+        "author": "mattleibow",
+        "body": "I decided against creating a custom image view just for SkiaSharp for several reasons:\r\n - re-doing the work of every platform out there\r\n - too many features, for too many platforms\r\n - existing infrastructure/extensions (loaders/effects) won\u0027t work\r\n\r\nHowever... I have provided a way to convert from SkiaSharp types (\u0060SkBitmap\u0060, \u0060SKPicture\u0060, \u0060SKImage\u0060 and \u0060SKPixmap\u0060) into platform types (\u0060CGImage\u0060, \u0060CIImage\u0060, \u0060UIImage\u0060, \u0060NSImage\u0060, \u0060System.Drawing.Bitmap\u0060, \u0060Android.Graphics.Bitmap\u0060, \u0060WriteableBitmap\u0060).\r\n\r\nThese are basic extension methods that take a copy of the pixels and hand it over to the OS. Then, these can be used in any UI picture view on the platform - and any custom ones that are in use:\r\n\r\n\u0060\u0060\u0060csharp\r\nmyNativeImageView.Image = viewModel.AwesomeImage.ToUIImage();\r\n\u0060\u0060\u0060\r\n\r\nI have also created a set of \u0060ImageSource\u0060 types for Xamarin.Forms (\u0060SKBitmapImageSource\u0060, \u0060SKImageImageSource\u0060, \u0060SKPictureImageSource\u0060 and \u0060SKPixmapImageSource\u0060). These are used as \u0022normal\u0022 in XAML:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CImage WidthRequest=\u0022100\u0022 HeightRequest=\u0022100\u0022\u003E\r\n    \u003CImage.Source\u003E\r\n        \u003Cskiasharp:SKImageImageSource Image=\u0022{Binding AwesomeImage}\u0022 /\u003E\r\n    \u003C/Image.Source\u003E\r\n\u003C/Image\u003E\r\n\u0060\u0060\u0060\r\n\r\nOr in C#\r\n\r\n\u0060\u0060\u0060csharp\r\nvar image = new Image {\r\n    Source = new SKImageImageSource {\r\n        Image = viewModel.AwesomeImage\r\n    }\r\n}\r\n\r\n// or with the nice implicit cast\r\nvar image = new Image {\r\n    Source = (SKImageImageSource) viewModel.AwesomeImage\r\n}\r\n\u0060\u0060\u0060\r\n\r\nI am closing this now as I think I have something that will help everyone :) But, feel free to re-open if you need/prefer something else:\r\n - you really need a custom image view...\r\n - you want some extension method that does NOT copy the pixels (you will have to manage the lifetime of the SkiaSharp instance) - this is also not always possible on some of the platforms\r\n - another idea based on displaying a SkiaSharp image in some native way",
+        "createdAt": "2017-02-28T23:31:34",
+        "reactions": [
+          {
+            "user": "AwsomeCode",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:35.4448822Z"
+          },
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:35.4448825Z"
+          }
+        ]
+      },
+      {
+        "id": 317138402,
+        "author": "nathanielcook",
+        "body": "I see here and also [here](https://forums.xamarin.com/discussion/comment/235304/#Comment_235304) that there is a way to use SkiaSharp from XAML (Xamarin Forms), but what about AXML (native Android) layouts?",
+        "createdAt": "2017-07-22T00:04:33",
+        "reactions": []
+      },
+      {
+        "id": 317174917,
+        "author": "mattleibow",
+        "body": "You can use:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003Cskiasharp.views.android.SKCanvasView\r\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0android:layout_width=\u0022match_parent\u0022\r\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0android:layout_height=\u0022match_parent\u0022\r\n\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0android:id=\u0022@\u002Bid/canvasView\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nhttps://github.com/mattleibow/SkiaSharpDemo/blob/master/SkiaSharpNativeDemo/SkiaSharpNativeDemo.Android/Resources/layout/main.axml",
+        "createdAt": "2017-07-22T10:43:22",
+        "reactions": []
+      }
+    ]
+  }
 }

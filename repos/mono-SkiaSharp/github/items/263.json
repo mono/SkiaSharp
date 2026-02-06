@@ -24,5 +24,113 @@
   "updatedAt": "2022-08-19T21:02:20",
   "closedAt": "2018-02-05T20:08:25",
   "commentCount": 10,
-  "reactionCount": 5
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:51.4793377Z",
+    "reactions": [
+      {
+        "user": "DeanClaes",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:56:51.4793427Z"
+      },
+      {
+        "user": "yinyue200",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:56:51.4793434Z"
+      },
+      {
+        "user": "yinyue200",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:56:51.4793486Z"
+      },
+      {
+        "user": "yinyue200",
+        "content": "hooray",
+        "createdAt": "2026-02-06T13:56:51.4793489Z"
+      },
+      {
+        "user": "michaelstonis",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:56:51.4793491Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 300481289,
+        "author": "DeanClaes",
+        "body": "Hello @mattleibow \r\n\r\nDo you have any idea on when this might be implemented?\r\nI have a feeling that this will perform better than the current underlying View when doing animations of any sort (like animated frame images). Right now simply calling InvalidateSurface (without rendering anything) in a loop seems to strain the CPU quite a bit. I supsect that this would not be the case with a TextureView.",
+        "createdAt": "2017-05-10T13:27:09",
+        "reactions": []
+      },
+      {
+        "id": 357469873,
+        "author": "michaelstonis",
+        "body": "I assume this will need an implementation like this https://raw.githubusercontent.com/romannurik/muzei/master/main/src/main/java/com/google/android/apps/muzei/render/GLTextureView.java? Do you know if this was ported, it it would be a drop-in kind of replacement? I am willing to give it a shot",
+        "createdAt": "2018-01-13T21:50:13",
+        "reactions": []
+      },
+      {
+        "id": 357547045,
+        "author": "mattleibow",
+        "body": "@michaelstonis thanks for the offer. I managed to find a port already: [GLTextureView.cs](https://github.com/pikkart-support/Pikkart-AR-SDK-ARLogo-Xamarin.Android-Sample/blob/master/PikkartSample/PikkartSample.Droid/GLTextureView.cs) (I went on a GitHub search for GLTextureView and C# - you can find everything on GitHub nowadays) \r\n\r\nI had to make a few tweaks to fix a bug and some Java-to-C# not-quite-rights, but I am mostly done. Just got to clean up the code, remove bad things and make sure I conform to the (attempt) at code styling. I threw up the code here so long: https://github.com/mono/SkiaSharp/pull/426 \r\n\r\nYou can have a look, and give any feedback. As soon as this is \u0022stable\u0022 I am going to switch out the \u0060SKGLView\u0060 for the forms renderer and use this instead. Hopefully I don\u0027t break every app out there, but I shall test! This will fix the two original issues that started this thread.\r\n\r\nLet me know what you think, and a very special thanks to @pikkart-support or [@Pikkart_AR](https://twitter.com/Pikkart_AR) for doing all the hard work!",
+        "createdAt": "2018-01-14T22:13:58",
+        "reactions": [
+          {
+            "user": "michaelstonis",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:56:50.006365Z"
+          }
+        ]
+      },
+      {
+        "id": 357561706,
+        "author": "michaelstonis",
+        "body": "Is this by chance available via the jenkins builds? For whatever reason, I can\u0027t get it to compile locally.",
+        "createdAt": "2018-01-15T01:33:42",
+        "reactions": []
+      },
+      {
+        "id": 358678247,
+        "author": "mattleibow",
+        "body": "I am still working on getting CI to build this - there are a few changes happing to the bots. But, you should be able to just take the 3 files and add them to your project. This just uses the public APIs - I actually worked on this in a small sample app using v1.59.3",
+        "createdAt": "2018-01-18T15:18:29",
+        "reactions": []
+      },
+      {
+        "id": 359639966,
+        "author": "mattleibow",
+        "body": "@michaelstonis Have you had an opportunity to try out the texture view? Any feedback?",
+        "createdAt": "2018-01-23T01:32:41",
+        "reactions": []
+      },
+      {
+        "id": 359815696,
+        "author": "michaelstonis",
+        "body": "Unfortunately not yet. I am primarily using the Android components via Xamarin.Forms and it looks like there will need to be some underneath the sheets switching to get the TextureView registered as the default GL Surface. I will try to take a look into this soon though.",
+        "createdAt": "2018-01-23T14:56:28",
+        "reactions": []
+      },
+      {
+        "id": 359865603,
+        "author": "mattleibow",
+        "body": "Ah, I will try and get that working too so you can just swap out the dll",
+        "createdAt": "2018-01-23T17:23:42",
+        "reactions": []
+      },
+      {
+        "id": 363205850,
+        "author": "mattleibow",
+        "body": "Just merged the changes. I have switched the default platform renderer for android to the texture view - this should fix all issues :)",
+        "createdAt": "2018-02-05T20:08:25",
+        "reactions": []
+      },
+      {
+        "id": 364183377,
+        "author": "mattleibow",
+        "body": "@michaelstonis @DeanClaes I have reached what I think is good to go...\r\n\r\n - [SkiaSharp.1.60.0-beta.nupkg](https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/lastSuccessfulBuild/Azure/processDownloadRequest/ArtifactsFor-319/eb629db98be18a73870fcab33b677512ec6bc02a/output/SkiaSharp.1.60.0-beta.nupkg)\r\n - [SkiaSharp.Views.1.60.0-beta.nupkg](https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/lastSuccessfulBuild/Azure/processDownloadRequest/ArtifactsFor-319/eb629db98be18a73870fcab33b677512ec6bc02a/output/SkiaSharp.Views.1.60.0-beta.nupkg)\r\n - [SkiaSharp.Views.Forms.1.60.0-beta.nupkg](https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/lastSuccessfulBuild/Azure/processDownloadRequest/ArtifactsFor-319/eb629db98be18a73870fcab33b677512ec6bc02a/output/SkiaSharp.Views.Forms.1.60.0-beta.nupkg)\r\n\r\nGive that a whirl and let me know what happens. The Xamarin.Forms view should now be using the TextureView under the hood.",
+        "createdAt": "2018-02-08T17:17:20",
+        "reactions": []
+      }
+    ]
+  }
 }

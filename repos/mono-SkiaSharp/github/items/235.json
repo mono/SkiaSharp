@@ -14,5 +14,69 @@
   "updatedAt": "2022-08-19T21:02:40",
   "closedAt": "2017-02-09T05:33:02",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:12.1653014Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 278373295,
+        "author": "mattleibow",
+        "body": "It is the await... you can\u0027t await in the paint method as the entire method needs to happen in a single go. If it awaits, then the canvas will be destroyed before the await is finished.\r\n\r\nBasically, the paint operation is a UI step, and the await part causes the control to leave the UI, during which the paint is seen as done by the OS.\r\n\r\nFor this type of operation - animation - you might have to have a state and a collection of circles:\r\n\r\n\u0060\u0060\u0060csharp\r\n// to start the animation (field)\r\nint counter = 0;\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060csharp\r\n// then start the animation\r\nTask.Run(async () =\u003E\r\n{\r\n\t// loop through the points\r\n\twhile (points.Count \u003E counter)\r\n\t{\r\n\t\tawait Task.Delay(500);\r\n\r\n\t\t// ask the UI to repaint\r\n\t\tDevice.BeginInvokeOnMainThread(() =\u003E\r\n\t\t{\r\n\t\t\tcounter\u002B\u002B;\r\n\t\t\tcanvasView.InvalidateSurface();\r\n\t\t});\r\n\t}\r\n});\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060csharp\r\n// change the for loop to do this (note the .Take method)\r\nforeach (var point in points.Take(counter))\r\n{\r\n\t...\r\n}\r\n\u0060\u0060\u0060\r\n\r\nWhat you are doing here is to actually \u0022perform the animation\u0022 in a counter, and then only drawing the dots so far. This way the paint method runs to completion. After each \u0022animation\u0022 step, request a repaint.",
+        "createdAt": "2017-02-08T16:11:23",
+        "reactions": [
+          {
+            "user": "AwsomeCode",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:11.3029536Z"
+          },
+          {
+            "user": "artemious7",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:11.3029539Z"
+          }
+        ]
+      },
+      {
+        "id": 278397223,
+        "author": "AwsomeCode",
+        "body": "I have started using this library from today only and it\u0027s looks promising. Is it completed for using in Xamarin Forms? Because I am having difficulty finding small examples/tutorials for Xamarin Forms.\r\nThanks.",
+        "createdAt": "2017-02-08T17:21:57",
+        "reactions": []
+      },
+      {
+        "id": 278468700,
+        "author": "mattleibow",
+        "body": "It is fully functional in Forms. There is a \u0022big\u0022 forms sample here: https://github.com/mono/SkiaSharp/tree/master/samples/FormsSample\r\n\r\nThis particular issue has nothing to do with SkiaSharp directly, it is more the actual memory you are writing to is being discarded when you await. If you were using the native platform bits, this will still occur.\r\n\r\nThe difficulty is that this is a fairly new library - the managed binding. As time goes on, more and more tutorials will appear.",
+        "createdAt": "2017-02-08T21:34:05",
+        "reactions": [
+          {
+            "user": "AwsomeCode",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:11.7203587Z"
+          }
+        ]
+      },
+      {
+        "id": 278468978,
+        "author": "mattleibow",
+        "body": "There is also this simple app: https://github.com/mattleibow/SkiaSharpDemo\r\n\r\nAnd the blog to go with it: https://blog.xamarin.com/drawing-with-skiasharp/",
+        "createdAt": "2017-02-08T21:35:14",
+        "reactions": [
+          {
+            "user": "AwsomeCode",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:11.9085737Z"
+          }
+        ]
+      },
+      {
+        "id": 278551653,
+        "author": "AwsomeCode",
+        "body": "@mattleibow Thanks for the samples. Its like magic added to Xamarin Forms. So many design possibility\u0027s are open. \r\nhttps://github.com/mono/SkiaSharp/tree/master/samples/FormsSample\r\nhttps://github.com/mattleibow/SkiaSharpDemo.\r\n\r\n",
+        "createdAt": "2017-02-09T05:32:59",
+        "reactions": []
+      }
+    ]
+  }
 }

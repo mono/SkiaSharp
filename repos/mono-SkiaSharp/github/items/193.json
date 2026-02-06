@@ -15,5 +15,108 @@
   "updatedAt": "2022-08-20T00:01:27",
   "closedAt": "2016-11-16T08:56:53",
   "commentCount": 13,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:30.1590291Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 260164223,
+        "author": "mattleibow",
+        "body": "@jaladaGmbH Sorry about that. You were right, there was an issue. (for future reference, if I close an issue that is still an issue, feel free to re-open)\n\nBasically, I was linking the Kernel32.lib (which is not needed) and I think that was causing issues on the emulator and Xbox. I uploaded a fixed version here: https://1drv.ms/f/s!AtbUuIrDNX_5acTHJGWlH8FYzeM\n\nLet me know if this deploys to the Xbox. I was on the Xbox preview program, and it appears that I can\u0027t use dev program if I have the preview. I am waiting for it to in-enrol me (if it ever decides to). If it works on the Xbox, please let me know. It works on my 10586 and 14393 Windows 10 Mobile Emulators.\n\nAbout the \u0060eglGetProcAddress\u0060 and certification. I haven\u0027t had any issues - I actually have an app on the store that passed. Right now I updated the SkiaSharp sample app on the store to use the v1.55.0 NuGet. It passed my local certification test, and I am waiting on a response from the store.\n",
+        "createdAt": "2016-11-13T03:16:12",
+        "reactions": []
+      },
+      {
+        "id": 260266754,
+        "author": "jaladaGmbH",
+        "body": "Hello @mattleibow, thank you very much for your support. I will check it and will give you a feedback afterwards.\n",
+        "createdAt": "2016-11-14T07:33:51",
+        "reactions": []
+      },
+      {
+        "id": 260577169,
+        "author": "mattleibow",
+        "body": "@jaladaGmbH Just to confirm, the v1.55 release was accepted by the Windows Store:\nhttps://www.microsoft.com/en-za/store/p/skiasharp-for-xamarinforms/9nblggh51856\n",
+        "createdAt": "2016-11-15T08:23:07",
+        "reactions": []
+      },
+      {
+        "id": 260602264,
+        "author": "jaladaGmbH",
+        "body": "Hello @mattleibow, your fixed version works great on Xbox One. Thank you very much.\n\nAlso, we will try v1.55 for our next Windows Store release. However, we use v1.54 at the moment, so if it is possible, please add your fix to that version as well. \n",
+        "createdAt": "2016-11-15T10:16:38",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:55:28.1978691Z"
+          }
+        ]
+      },
+      {
+        "id": 260889649,
+        "author": "mattleibow",
+        "body": "@jaladaGmbH Thanks for the great news! I will se about getting a fix in for v1.54.\n",
+        "createdAt": "2016-11-16T08:56:53",
+        "reactions": []
+      },
+      {
+        "id": 261055254,
+        "author": "mattleibow",
+        "body": "@jaladaGmbH Here is the build for v1.54.1.1 with the fix: https://1drv.ms/u/s!AtbUuIrDNX_5p6l2Z-sJluo56Q4UfQ\n",
+        "createdAt": "2016-11-16T20:01:39",
+        "reactions": []
+      },
+      {
+        "id": 261785819,
+        "author": "czanbaka",
+        "body": "Hi Gents. I\u0027m running into this issue on UWP as well only when using an emulator and I\u0027m using the latest nuget (v.1.55.0). Any ideas? Here is the exception I was able to dig up:\n\n\u0060\u0060\u0060\nSystem.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp.dll\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\n   at SkiaSharp.SkiaApi.sk_surface_new_raster_direct(SKImageInfo\u0026 info, IntPtr pixels, IntPtr rowBytes, IntPtr propsZero)\n   at SkiaSharp.SKSurface.Create(SKImageInfo info, IntPtr pixels, Int32 rowBytes)\n   at SkiaSharp.Views.UWP.SKXamlCanvas.Invalidate()\n   at SkiaSharp.Views.UWP.SKXamlCanvas.OnSizeChanged(Object sender, SizeChangedEventArgs e)\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-11-20T15:47:00",
+        "reactions": []
+      },
+      {
+        "id": 262059216,
+        "author": "mattleibow",
+        "body": "@czanbaka The fix was in the update v1.55.1. I just released that right now: https://github.com/mono/SkiaSharp/releases/tag/v1.55.1\r\n\r\nIf you have any issue with the update, please let me know.",
+        "createdAt": "2016-11-21T20:34:58",
+        "reactions": []
+      },
+      {
+        "id": 318891555,
+        "author": "mchiz",
+        "body": "Hi!\r\n\r\nI have to reopen this, because I found this problem in version 1.59.1. The same exception is raising on my Windows 10 Mobile, but is working perfectly in Desktop.\r\n\r\nI have installed version 1.55.1, and it works fine in my phone!\r\n\r\nIf you need something to thelp you track this down, please, tell me! :)\r\n\r\nThank you!",
+        "createdAt": "2017-07-30T10:08:34",
+        "reactions": []
+      },
+      {
+        "id": 319300434,
+        "author": "mchiz",
+        "body": "I just realized that I had to mention @mattleibow. I\u0027m new to this :)",
+        "createdAt": "2017-08-01T08:11:57",
+        "reactions": []
+      },
+      {
+        "id": 319377492,
+        "author": "mattleibow",
+        "body": "Hi @mchiz, are you able to provide the full stack trace?\r\n\r\nAlso, if you run SkiaSharpDemo or SkiaSharpNativeDemo from this repo, does it run at all?\r\nhttps://github.com/mattleibow/SkiaSharpDemo",
+        "createdAt": "2017-08-01T13:57:17",
+        "reactions": []
+      },
+      {
+        "id": 319598030,
+        "author": "mchiz",
+        "body": "Both projects are working correctly in my mobile, using Visual Studio 2017 Community. I\u0027m using Visual Studio 2015 in my project, which is where I\u0027m seeing the error. I will try my project using Visual Studio 2017, just in case.\r\n\r\nHow can I get a full stack trace that I can send to you?\r\n\r\nThanks for your help, @mattleibow !",
+        "createdAt": "2017-08-02T07:58:48",
+        "reactions": []
+      },
+      {
+        "id": 319704146,
+        "author": "mchiz",
+        "body": "@mattleibow I can confirm that my project works with Visual Studio 2017, but not with Visual Studio 2015.\r\n\r\nDo you have any clue about it or can you point me to some resources to help me find the problem?\r\n\r\nThanks a lot!",
+        "createdAt": "2017-08-02T15:16:31",
+        "reactions": []
+      }
+    ]
+  }
 }

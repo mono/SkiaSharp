@@ -14,5 +14,51 @@
   "updatedAt": "2022-08-19T21:01:54",
   "closedAt": "2017-09-25T19:44:42",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:48.9824748Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 303230221,
+        "author": "mattleibow",
+        "body": "I had a look at this, and I can repro this in your sample. However, this may be a Xamarin.Forms or most probably an Android bug. \r\n\r\nI have re-attached your sample, but this time using the Xamarin.Forms \u0060OpenGLView\u0060 instead:\r\n[Archive.zip](https://github.com/mono/SkiaSharp/files/1020302/Archive.zip)\r\n\r\nThe same thing occurs. When I \u0022disabled\u0022 the splash screen style, the problem went away. This may have to do with either Xamarin.Forms or the way Android works with OpenGL.\r\n\r\nIt might be better to ask on the forums.",
+        "createdAt": "2017-05-22T21:53:05",
+        "reactions": [
+          {
+            "user": "yinyue200",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:57:48.2014401Z"
+          }
+        ]
+      },
+      {
+        "id": 303278159,
+        "author": "yinyue200",
+        "body": "@mattleibow Thanks",
+        "createdAt": "2017-05-23T03:09:42",
+        "reactions": []
+      },
+      {
+        "id": 304329221,
+        "author": "mattleibow",
+        "body": "I will close this issue as it appears to be a issue relating to Xamarin.Forms and OpenGL. If you have created a new issue somewhere, feel free to link that here.",
+        "createdAt": "2017-05-26T16:35:53",
+        "reactions": []
+      },
+      {
+        "id": 331990904,
+        "author": "mattleibow",
+        "body": "I found the solution to the problem. There is a specific attribute that is set in the splash screen style, but is not unset (for some reason) when the style is changed.\r\n\r\nIn the \u0060splashscreen\u0060 style, note this:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003Citem name=\u0022android:backgroundDimEnabled\u0022\u003Etrue\u003C/item\u003E\r\n\u0060\u0060\u0060\r\nDocs: https://developer.xamarin.com/api/field/Android.Resource\u002BAttribute.BackgroundDimEnabled/\r\n\r\nThis is not unset when the style is switched. So, to fix this, just set it to false:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003Citem name=\u0022android:backgroundDimEnabled\u0022\u003Efalse\u003C/item\u003E\r\n\u0060\u0060\u0060\r\n\r\nHere is a repository that demonstrates this: https://github.com/mattleibow/AndroidGLSurfaceViewTests",
+        "createdAt": "2017-09-25T19:44:42",
+        "reactions": [
+          {
+            "user": "ned13",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:57:48.931952Z"
+          }
+        ]
+      }
+    ]
+  }
 }

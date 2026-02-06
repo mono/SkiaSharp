@@ -20,5 +20,440 @@
   "updatedAt": "2022-08-20T00:01:44",
   "closedAt": "2017-02-01T22:51:16",
   "commentCount": 49,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:00.5810611Z",
+    "reactions": [
+      {
+        "user": "Pangamma",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:55:00.5812818Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 256876195,
+        "author": "djcparker",
+        "body": "same question from me.  20MB for Android is pretty heavy.\nbtw; Matt - loving SkiaSharp - awesome job!\n\nthanks \nDave\n",
+        "createdAt": "2016-10-28T09:25:47",
+        "reactions": []
+      },
+      {
+        "id": 256969066,
+        "author": "mattleibow",
+        "body": "Just to note the average sizes per platform architecture:\n- iOS/tvOS: ~8MB\n- Android: ~14MB\n- macOS: ~21MB\n- Windows: ~5MB\n- UWP: ~4MB\n",
+        "createdAt": "2016-10-28T16:41:59",
+        "reactions": []
+      },
+      {
+        "id": 256969890,
+        "author": "mattleibow",
+        "body": "I think, after looking at this, the Android is a bit large. I must have a look at what gyp is doing when it generates the project. It might be the case that the build is wrong as with Windows: https://github.com/mono/skia/pull/25\n",
+        "createdAt": "2016-10-28T16:45:32",
+        "reactions": []
+      },
+      {
+        "id": 257046952,
+        "author": "mattleibow",
+        "body": "I tried a few things, but I can\u0027t seem to reduce the size at all. Right now, it IS building release with optimizations, yet it is 15MB vs Windows\u0027s 5MB and iOS\u0027s 8MB\n",
+        "createdAt": "2016-10-28T22:49:19",
+        "reactions": []
+      },
+      {
+        "id": 257151285,
+        "author": "djcparker",
+        "body": "it is a big difference. \n\nThe realm.io guys had an interesting post on native sizes: [reducing apk size](https://realm.io/news/reducing-apk-size-native-libraries/), not sure if it is relevant as I haven\u0027t pulled the apk apart..\n\nFor me, between skia and a few other packages my app is a 40MB download.  \n",
+        "createdAt": "2016-10-30T13:34:23",
+        "reactions": []
+      },
+      {
+        "id": 257313558,
+        "author": "mattleibow",
+        "body": "@djcparker Thanks for those links, trying some options now.\nI\u0027ll see if I can get a doc together to help with ideas for reducing apk sizes\n",
+        "createdAt": "2016-10-31T14:47:42",
+        "reactions": [
+          {
+            "user": "djcparker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:50.9576636Z"
+          }
+        ]
+      },
+      {
+        "id": 263814730,
+        "author": "laarmen",
+        "body": "While researching the subject, I saw this: https://groups.google.com/forum/#!topic/skia-discuss/5hNRcmERVSI",
+        "createdAt": "2016-11-30T08:39:41",
+        "reactions": []
+      },
+      {
+        "id": 264349858,
+        "author": "mattleibow",
+        "body": "@laarmen, thanks for that link. It was very helpful in confirming some not-so-great news. The NDK build already strips the output \uD83D\uDE1E \r\n\r\nThe actual size before stripping is ~35-40 MB and this gets stripped to ~13-16. I tried re-stripping the builds, and stripping all debug and other unused symbols, but was unable to reduce the size.",
+        "createdAt": "2016-12-02T01:39:41",
+        "reactions": []
+      },
+      {
+        "id": 275514154,
+        "author": "kekekeks",
+        "body": "@mattleibow \r\nTry to compile with \u0060-ffunction-sections -fdata-sections -fno-rtti\u0060, link with \u0060-gc-sections\u0060. ",
+        "createdAt": "2017-01-26T21:08:24",
+        "reactions": []
+      },
+      {
+        "id": 275698900,
+        "author": "mattleibow",
+        "body": "I changed the build scripts, and managed to get an overall reduction of about 4MB on Android, 2.5MB on iOS, 2.5MB on macOS and 1MB for tvOS.\r\n\r\nNot a big drop, but the new sizes are:\r\n - Android: 59.9MB (4 arch)\r\n - iOS: 45.5MB (5 arch)\r\n - macOS: 44.2MB (2 arch)\r\n - tvOS: 19.4MB (2 arch)\r\n - Windows 7: 13.4MB (2 arch)\r\n - Windows 10: 15.4 (3 arch)\r\n\r\n@kekekeks have you been able to get smaller files? I am building and linking almost everything in: core, pdf, svg, codecs, intrinsics.",
+        "createdAt": "2017-01-27T15:54:53",
+        "reactions": []
+      },
+      {
+        "id": 275705677,
+        "author": "kekekeks",
+        "body": "The smallest of my buillds was 1.7MB for arm32 Android. I was not *explicitly* excluding anything from build, just linked unused stuff away.",
+        "createdAt": "2017-01-27T16:19:49",
+        "reactions": []
+      },
+      {
+        "id": 275725012,
+        "author": "mattleibow",
+        "body": "Let me look some more... i think i found that if I run strip after the build, then i can get an iOS arch from 11.5MB to 7.5MB. I need check that all works still, and nothing is getting stripped away.",
+        "createdAt": "2017-01-27T17:37:27",
+        "reactions": []
+      },
+      {
+        "id": 275847345,
+        "author": "mattleibow",
+        "body": "I have managed to drop iOS/tvOS quite a bit to ~5MB per arch - which is the same as Windows/UWP. macOS is a bit smaller at ~15MB per arch and Android is ~12MB per arch. As I am looking at Linux as well (#90) I notice that it is also ~16MB per arch. I still want to see why Linux/Android/macOS are so much larger, even with the same strict compile/link flags. I even made everything private and am just keeping the C API public (size did drop a bit).\r\n\r\nBasically, everything is ~5MB, except the macOS/Android/Linux builds which are ~15MB.\r\n\r\n@kekekeks were you linking in the GPU bits \u0060skgpu=1\u0060. \r\nAnd, are you able to see what size your build is when you link this stuff in: [native-builds/libSkiaSharp_android/jni/SkiaSharp.mk](https://github.com/mono/SkiaSharp/blob/master/native-builds/libSkiaSharp_android/jni/SkiaSharp.mk) (also not that those flags in the makefile only apply to the final library, not all the others)",
+        "createdAt": "2017-01-28T13:10:03",
+        "reactions": []
+      },
+      {
+        "id": 275862497,
+        "author": "kekekeks",
+        "body": "My ogirinal Linux build with GPU support was 2.6MB.",
+        "createdAt": "2017-01-28T17:43:26",
+        "reactions": []
+      },
+      {
+        "id": 275863063,
+        "author": "kekekeks",
+        "body": "I\u0027m not sure that PDF was linked in. You see, I wasn\u0027t actually exposing Skia API itself, but implementing our own drawing API using Skia. So I\u0027m sure that rendering, GPU support and font/image loading was included, but at least PDF wasn\u0027t included. On Linux I was also linking to *external* ZLib and libpng instead of including static ones.",
+        "createdAt": "2017-01-28T17:52:03",
+        "reactions": []
+      },
+      {
+        "id": 275877337,
+        "author": "rocuh",
+        "body": "I\u0027m no expert on elf format by any means, but i did take a quick look at the .so file for android and noticed that the .rodata section was the largest at around 7MB and code (.text) was around 4.8MB .\r\n\r\n\u0060\u0060\u0060\r\n  [Nr] Name              Type            Addr     Off    Size   ES Flg Lk Inf Al\r\n  [ 8] .text             PROGBITS        00191ed0 191ed0 497748 00  AX  0   0 16\r\n  [11] .rodata           PROGBITS        00639c70 639c70 6a4df0 00   A  0   0 16\r\n\u0060\u0060\u0060\r\n\r\nThat seems a lot of constant data, it only looked like a few KB of text at the start of the .rodata section, no idea what the rest of it is.",
+        "createdAt": "2017-01-28T21:53:27",
+        "reactions": []
+      },
+      {
+        "id": 275879479,
+        "author": "kekekeks",
+        "body": "Could you guys upload an *unstripped* android build somewhere? I don\u0027t have a mac machine nearby.",
+        "createdAt": "2017-01-28T22:32:51",
+        "reactions": []
+      },
+      {
+        "id": 275905760,
+        "author": "rocuh",
+        "body": "\u0060 .rodata        0x000000000057b480   0x642520 jni/../../../externals/skia/out/config/android-x86_64/Release/obj/gyp/libicuuc.a(jni/../../../externals/skia/out/config/android-x86_64/Release/obj/gyp/../third_party/externals/icu/android/icuuc.icudtl_dat.o)\r\n\u0060\r\n\r\nIt looks like on linux, mac and android there is a file linked in which is 6.5MB. I assume it is something do with with unicode formatting (\u0022externals/skia/third_party/externals/icu/android/icudtl.dat \u0022).\r\n",
+        "createdAt": "2017-01-29T10:35:11",
+        "reactions": []
+      },
+      {
+        "id": 275908321,
+        "author": "rocuh",
+        "body": "Maybe this can be used to create a more compact icu data file:\r\n\r\nhttp://apps.icu-project.org/datacustom/",
+        "createdAt": "2017-01-29T11:35:55",
+        "reactions": []
+      },
+      {
+        "id": 275908873,
+        "author": "rocuh",
+        "body": "Actually i think that online tool is for ICU57 and skia uses 56.1 currently, so this one is the correct one:\r\n\r\nhttp://apps.icu-project.org/datacustom/ICUData56.html\r\n\r\nThere is also a project that can be used:\r\n\r\nhttp://download.icu-project.org/files/icu4c/56.1/icu4c-56_1-data.zip\r\n\r\n",
+        "createdAt": "2017-01-29T11:48:54",
+        "reactions": []
+      },
+      {
+        "id": 275913259,
+        "author": "mattleibow",
+        "body": "@roceh Thanks for this info, I also determined that it was the icu bits. My method was: link nothing and then add bits until is jumps :) Real scientific.\r\n\r\nAnyway, I am looking at Linux right now and I think I can get a nice small build there if I use the system version.\r\n\r\nWhat I might do is to not include the font subsetters on the mobile devices (\u0060skia_pdf_use_sfntly=0\u0060). This is only used by the PDF bits, and may not be too essential. The UWP actually doesn\u0027t have the subsetters due to there being an issue during compilation (I don\u0027t think the icu builds for UWP yet).",
+        "createdAt": "2017-01-29T13:18:59",
+        "reactions": []
+      },
+      {
+        "id": 275915338,
+        "author": "mattleibow",
+        "body": "@roceh I am having a look and I think the size of the icu data is about 10MB (give or take). The reason I was able to shrink the Windows/UWP/iOS/tvOS to ~5MB was because they don\u0027t include the subsetter. The macOS/Android/Linux builds do.\r\n\r\nI can\u0027t use the system icu on linux as the version is not available via apt-get, so i will have to link it in. However, I don\u0027t think the size matters here since both macOS and linux are desktops, thus an extra 10MB might not be a problem.",
+        "createdAt": "2017-01-29T13:56:17",
+        "reactions": []
+      },
+      {
+        "id": 275916707,
+        "author": "rocuh",
+        "body": "I think like you said it is better to remove the font subsetter, the large apk size is a large price to pay for slightly smaller PDFs, and if the iOS builds are not doing it anyway probably best to be consistent as well.",
+        "createdAt": "2017-01-29T14:19:38",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:54.7411443Z"
+          }
+        ]
+      },
+      {
+        "id": 276038171,
+        "author": "kekekeks",
+        "body": "\u003Ethus an extra 10MB might not be a problem.\r\n\r\n.NET core\u0027s footprint is only 50MB, so additional 10MB might be huge.\r\n\r\nIt would be nice to introduce some kind of pay-for-play system where PDF support lives in a separate package, but I\u0027m not sure that it\u0027s even possible to build libskia that way.\r\n\r\nBut linking system libecu is probably a bad idea from portability point of view anyway.",
+        "createdAt": "2017-01-30T11:21:25",
+        "reactions": []
+      },
+      {
+        "id": 276221421,
+        "author": "mattleibow",
+        "body": "After all the changes and linking, I have a result of:\r\n - removed the public C\u002B\u002B API (each arch dropped about 1MB)\r\n   *origionally both the C and C\u002B\u002B was visible, now just C*\r\n - stricter stripping of Android, iOS, tvOS and macOS\r\n   *strip all, instead of just debug symbols*\r\n - removed the PDF font subsetter for Android and macOS\r\n   *the other platforms don\u0027t have it, except for Windows which has only an extra 1MB overhead*\r\n\r\nThe new sizes are:\r\n - **Android** (total: 22.4MB for 4 arch =\u003E **~5.6MB** per arch)\r\n - **iOS** (total: 24.8MB for 5 arch =\u003E **~4.96MB** per arch)\r\n - **macOS** (total: 10.4MB for 2 arch =\u003E **~5.2MB** per arch)\r\n - **tvOS** (total: 10.4MB for 2 arch =\u003E **~5.2MB** per arch)\r\n - **Windows** (total: ~13.4MB~ 12.9MB for 2 arch =\u003E ~**~6.7MB**~ **6.4MB** per arch)\r\n - **UWP** (total: ~15.4MB~ 14.2MB for 3 arch =\u003E ~**~5.1MB**~ **4.7MB** per arch)\r\n - **Linux** (total: 5.4MB for 1 arch =\u003E **~5.4MB** per arch) *[in progress]* https://github.com/mono/SkiaSharp/issues/90\r\n\r\nAll the platforms include the core, the codecs, the GPU and the PDF bits.\r\n\r\nThese should be the sizes of the native bits in the next release. And, the NuGet should be smaller even more since I am avoiding native files. I added the mac bits twice to reduce configuration, now this is no longer the case.\r\n\r\nI\u0027ll see if I can get a beta out soon so that you can give it a go before it goes stable. Just in case you are using something that somehow got linked out when it shouldn\u0027t. But I think it is all good.",
+        "createdAt": "2017-01-30T23:08:09",
+        "reactions": [
+          {
+            "user": "djcparker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:55.1633544Z"
+          },
+          {
+            "user": "djcparker",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:54:55.1633547Z"
+          },
+          {
+            "user": "kekekeks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:55.1633549Z"
+          },
+          {
+            "user": "kekekeks",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:54:55.1633555Z"
+          },
+          {
+            "user": "daniel-luberda",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:55.1633565Z"
+          },
+          {
+            "user": "daniel-luberda",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:54:55.1633566Z"
+          },
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:55.1633567Z"
+          }
+        ]
+      },
+      {
+        "id": 276222471,
+        "author": "kentcb",
+        "body": "\u003E It would be nice to introduce some kind of pay-for-play system\r\n\r\nAgreed, but wouldn\u0027t it be \uD83D\uDCAF if the platform tooling supported linking both managed _and_ unmanaged code? For example, Xamarin\u0027s linker is totally OK linking out the unused managed SkiaSharp code for me, but imagine if it spelunked into the native code and did the same thing? Since I only call a handful of APIs, I could imagine my APK dropping from 40MB to maybe 15MB!",
+        "createdAt": "2017-01-30T23:13:18",
+        "reactions": []
+      },
+      {
+        "id": 276809173,
+        "author": "mattleibow",
+        "body": "I am closing this as I think this is \u0022solved\u0022 for now. We should probably open a new issue for things like builds without GPU/PDF.",
+        "createdAt": "2017-02-01T22:51:16",
+        "reactions": []
+      },
+      {
+        "id": 276809518,
+        "author": "kentcb",
+        "body": "@mattleibow awesome! Looking forward to this.\r\n\r\nAny idea when 1.56.1 will be shipping?",
+        "createdAt": "2017-02-01T22:52:50",
+        "reactions": []
+      },
+      {
+        "id": 276819192,
+        "author": "mattleibow",
+        "body": "@kentcb Sometime real soon, like when CI finishes. :) Well actually, it is going to take 2 hours, but I need to sleep (for 6 hours). So, if all goes well, I\u0027ll wake up to a green build and then release.\r\n\r\nIt is going to be marked beta, but this is just because I want to make sure that the changes to the packaging for .net core and .net standard didn\u0027t break anyone (it shouldn\u0027t) and the the stricter linking for smaller sizes didn\u0027t exclude anything (it shouldn\u0027t have). If no-one complains in a day or so, I\u0027ll release stable - this\u0027ll also give me time to finish up the API docs for intellisense and all that.\r\n\r\nHere are some of the big and cool things from the release notes:\r\n\u003E  - Support for **.NET Standard 1.3** project types\r\n\u003E  - Support for **.NET Core** (win7, win10, osx)\r\n\u003E  - Reduced native library sizes to **~5MB** per platform architecture (#174)\r\n\u003E  - _Partial work to get a .NET Core Linux build._ (#90)",
+        "createdAt": "2017-02-01T23:38:10",
+        "reactions": [
+          {
+            "user": "kentcb",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:56.3409015Z"
+          },
+          {
+            "user": "kentcb",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:54:56.3409019Z"
+          },
+          {
+            "user": "djcparker",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:54:56.3409021Z"
+          },
+          {
+            "user": "djcparker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:54:56.3409023Z"
+          }
+        ]
+      },
+      {
+        "id": 276939722,
+        "author": "mattleibow",
+        "body": "@kentcb Should be usable right now!\r\n\r\nRelease Notes: https://github.com/mono/SkiaSharp/releases/tag/v1.56.1-beta\r\nNuGet: https://www.nuget.org/packages/SkiaSharp/1.56.1-beta",
+        "createdAt": "2017-02-02T12:03:09",
+        "reactions": [
+          {
+            "user": "djcparker",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:54:56.5775844Z"
+          },
+          {
+            "user": "kentcb",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:54:56.5775846Z"
+          }
+        ]
+      },
+      {
+        "id": 304572880,
+        "author": "kentcb",
+        "body": "FYI, my APK has bloated again by ~10MB changing nothing but Xamarin tooling from pre 15.2 (cycle 9?) to 15.2.2:\r\n\r\n![image](https://cloud.githubusercontent.com/assets/1901832/26537077/77dc6bba-447b-11e7-80af-13e4fc8f4ab5.png)\r\n\r\nChasing up with Xamarin, but thought I\u0027d mention here too.",
+        "createdAt": "2017-05-29T05:01:30",
+        "reactions": []
+      },
+      {
+        "id": 304574291,
+        "author": "kentcb",
+        "body": "With 15.2.2, the native bits are being embedded as a resource in the SkiaSharp assembly:\r\n\r\n\u0060\u0060\u0060\r\n// 0x0000224C: __AndroidNativeLibraries__.zip\u200E (9526790 bytes, Embedded, Public)\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-29T05:17:13",
+        "reactions": []
+      },
+      {
+        "id": 304652027,
+        "author": "djcparker",
+        "body": "@kentcb - the size bloat is mentioned in #259 and links to [https://bugzilla.xamarin.com/show_bug.cgi?id=53250](https://bugzilla.xamarin.com/show_bug.cgi?id=53250) which is still showing as \u0022confirmed\u0022 suggesting it hasn\u0027t been included yet... which is a right pain as my apps have bloated and I can\u0027t get the linker workaround to work properly yet...\r\n\r\n",
+        "createdAt": "2017-05-29T12:40:37",
+        "reactions": []
+      },
+      {
+        "id": 304699927,
+        "author": "mattleibow",
+        "body": "I can\u0027t say for sure right now, but I think this was fixed in 15.3. The regression came in due to a bug in Mono.Cecil, which was then updated for 15.3.\r\n\r\nYou can try the alpha channel and test it out (and switch back if need be).",
+        "createdAt": "2017-05-29T16:51:06",
+        "reactions": []
+      },
+      {
+        "id": 304702150,
+        "author": "djcparker",
+        "body": "@mattleibow nice one! Will do that when I get some time.",
+        "createdAt": "2017-05-29T17:08:09",
+        "reactions": []
+      },
+      {
+        "id": 304745808,
+        "author": "kentcb",
+        "body": "Ah, thanks @djcparker @mattleibow! I\u0027ve made Jon Douglas (Xamarin) aware of this because I was liaising with him yesterday on this issue. I\u0027ll report back if I can get a confirmation it\u0027s fixed in alpha.",
+        "createdAt": "2017-05-30T00:00:02",
+        "reactions": []
+      },
+      {
+        "id": 304754425,
+        "author": "kentcb",
+        "body": "OK, tried switching Bitrise to alpha channel and rebuilding. Unfortunately, it still produces a bloated APK :(",
+        "createdAt": "2017-05-30T01:39:56",
+        "reactions": []
+      },
+      {
+        "id": 304791500,
+        "author": "djcparker",
+        "body": "@kentcb :( not good.",
+        "createdAt": "2017-05-30T07:00:17",
+        "reactions": []
+      },
+      {
+        "id": 304889224,
+        "author": "mattleibow",
+        "body": "I am sure this was fixed. You should try archiving your app. It may not reduce the app size if you are running in Debug to reduce compile times, but I am able to get my app reduced if I Archive, even when I just set the linker to \u0022Link SDK assemblies only\u0022.\r\n\r\nThis is my test app: https://github.com/mattleibow/SkiaSharpDemo",
+        "createdAt": "2017-05-30T14:07:03",
+        "reactions": []
+      },
+      {
+        "id": 304993021,
+        "author": "djcparker",
+        "body": "Hmmm, ok.  Will try the latest alpha :)",
+        "createdAt": "2017-05-30T20:08:21",
+        "reactions": []
+      },
+      {
+        "id": 305045085,
+        "author": "kentcb",
+        "body": "@mattleibow I am building with Bitrise. Prior to 15.2 my APK was ~30MB. With 15.2 and no code changes, it\u0027s now ~40MB. Cracking open the APK and looking inside shows that the native code is in two places: inside lib and also embedded as a resource inside SkiaSharp.dll. This is true of both stable Xamarin and alpha Xamarin. The [bug report](https://bugzilla.xamarin.com/show_bug.cgi?id=53250) is CONFIRMED with no mention of a fix being in place in any channel yet.",
+        "createdAt": "2017-05-31T00:16:20",
+        "reactions": []
+      },
+      {
+        "id": 305194941,
+        "author": "mattleibow",
+        "body": "@kentcb If you build my sample app (https://github.com/mattleibow/SkiaSharpDemo) does the same thing happen? I can\u0027t seem to reproduce when running \u0022Archive for Publishing\u0022.\r\n\r\nWhat is your IDE and your version numbers?\r\n\r\nMine are: https://gist.github.com/mattleibow/bff95014b9cee90c828a67f1ed335fc7",
+        "createdAt": "2017-05-31T13:58:18",
+        "reactions": []
+      },
+      {
+        "id": 305338989,
+        "author": "kentcb",
+        "body": "@mattleibow I work locally with VS, but I don\u0027t use that to produce productions APKs/IPAs - they always come through Bitrise. So I\u0027d be comparing apples to oranges if I looked at my VS output.\r\n\r\nHmmm, I wonder whether it has to do with the Bitrise images. They\u0027ve upgraded to 15.2.2, but they do not yet include VS4Mac, only XS. There\u0027s a small chance that\u0027s a factor. Bitrise plan to include VS4Mac in their images sometime in the next week or two. Once they\u0027ve done that, I\u0027ll report back here as to whether that rectifies the problem.\r\n\r\nAll the same, Xamarin have confirmed it is an issue, so I assume it still is.",
+        "createdAt": "2017-05-31T22:43:26",
+        "reactions": []
+      },
+      {
+        "id": 305514227,
+        "author": "mattleibow",
+        "body": "@kentcb I just built Release of my sample app using the stable VS and everything appears to be fine. No need for anything fancy, I just did a plain old Release build on Any CPU. I will point out that the SkiaSharp.dll in the bin folder STILL has the embedded native libraries (9MB), but the one in the .apk does not (200KB).\r\n\r\nDoes my sample work for you locally in VS? And in your Bitrise build, could you send (maleib@microsoft.com) the build log? I will have a look and see what is up.\r\n\r\nHere is my VS config:\r\nhttps://gist.github.com/mattleibow/8395177ffec5f0ef61d95ccf0eb0dfe3\r\n",
+        "createdAt": "2017-06-01T14:40:41",
+        "reactions": []
+      },
+      {
+        "id": 310306152,
+        "author": "kentcb",
+        "body": "@mattleibow interestingly, my APK dropped from 45MB to 35MB again today when I merged my branch to switch us to netstandard and SDK-style csproj \uD83E\uDD14 ",
+        "createdAt": "2017-06-22T08:00:54",
+        "reactions": []
+      },
+      {
+        "id": 401633414,
+        "author": "EmilAlipiev",
+        "body": "Hello, this is crazy. using version 1.60.0, it ads 3,8 mb size while 1.60.1 adds 9mb.. what has changed in between? you didnt even increase major version number. it cant be such a big difference. see this issue\r\n\r\nhttps://github.com/luberda-molinet/FFImageLoading/issues/893",
+        "createdAt": "2018-07-01T21:11:13",
+        "reactions": []
+      },
+      {
+        "id": 402169949,
+        "author": "mattleibow",
+        "body": "@EmilAlipiev thanks for reporting this. The build system changed a fair bit and the stripping may have fallen back to the original settings. I opened a new issue #573 and I will see if I can get this resolved ASAP.",
+        "createdAt": "2018-07-03T14:07:15",
+        "reactions": []
+      },
+      {
+        "id": 402170244,
+        "author": "mattleibow",
+        "body": "Could all new comments be made on the new issue so we can track them with the next release.",
+        "createdAt": "2018-07-03T14:08:15",
+        "reactions": []
+      },
+      {
+        "id": 735507369,
+        "author": "EmilAlipiev",
+        "body": "I think that size was increased also from 3mb to 5mb between 1.6x version to 2.8x version. it is not a big number but i want to just inform you :)",
+        "createdAt": "2020-11-30T02:19:25",
+        "reactions": []
+      }
+    ]
+  }
 }

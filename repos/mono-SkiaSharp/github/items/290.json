@@ -28,5 +28,59 @@
   "updatedAt": "2022-08-19T21:02:00",
   "closedAt": "2017-09-15T01:40:04",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:37.8766356Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 299593142,
+        "author": "mattleibow",
+        "body": "I am not able to reproduce this. All my rectangles are drawn.\r\n\r\nCan you provide a sample? You can use this simple demo app as a base and then just fork/branch or just zip up and attach: https://github.com/mattleibow/SkiaSharpDemo",
+        "createdAt": "2017-05-05T22:50:30",
+        "reactions": []
+      },
+      {
+        "id": 299603429,
+        "author": "kowalej",
+        "body": "\u0060\u0060\u0060csharp\r\nvoid OnGLViewPaintSurface(object sender, SKPaintGLSurfaceEventArgs args)\r\n{\r\n    Draw(args.Surface, args.RenderTarget.Width, args.RenderTarget.Height);\r\n}\r\n\r\nvoid Draw(SKSurface surface, int width, int height)\r\n{\r\n\r\n    int N = 75;\r\n    int M = 100;\r\n\r\n    var canvas = surface.Canvas;\r\n    canvas.Clear(SKColors.White);\r\n\r\n    using (var paint = new SKPaint())\r\n    {\r\n        paint.Style = SKPaintStyle.Fill;\r\n        using (var path = new SKPath())\r\n        {\r\n            //path.FillType = SKPathFillType.EvenOdd;\r\n\r\n            SKRect rect = new SKRect();\r\n            Color densityColor;\r\n            float xCord = 0;\r\n            float yCord = 0;\r\n            float xInc, yInc;\r\n            float colorScale = 1.0f;\r\n            float density;\r\n\r\n            xInc = width / (float)N;\r\n            yInc = height / (float)M;\r\n\r\n            // Loop through, match simulation format of first cell (0,0) at bottom left.\r\n            for (int i = 1; i \u003C= N; i\u002B\u002B)\r\n            {\r\n                yCord = height;\r\n                for (int j = 1; j \u003C= M; j\u002B\u002B)\r\n                {\r\n                    // Set bounds of rectangle.\r\n                    rect.Top = yCord;\r\n                    rect.Bottom = yCord - yInc;\r\n                    rect.Left = xCord;\r\n                    rect.Right = xCord \u002B xInc;\r\n\r\n                    // Draw.\r\n                    //path.Reset();\r\n                    //path.AddRect(rect); \r\n                    //canvas.DrawPath(path, paint);\r\n                    paint.Color = SKColors.Aqua;\r\n                    canvas.DrawRect(rect, paint);\r\n\r\n                    // Decrement y for next rectangle.\r\n                    yCord -= yInc;\r\n                }\r\n\r\n                // Increment x for next rectangle.\r\n                xCord \u002B= xInc;\r\n            }\r\n        }\r\n        canvas.Flush();\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-06T00:32:09",
+        "reactions": []
+      },
+      {
+        "id": 299640081,
+        "author": "mattleibow",
+        "body": "@kowalej I think I have found the issue. You are drawing a rectangle with a negative height. I am not sure if this is a bug or not, but here is the official repro:\r\n\r\nhttps://fiddle.skia.org/c/52470c4a7b325a2719069d8d9e031ee3\r\n\r\nAnd here is some C# code to confirm:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.Clear(SKColors.White);\r\n\r\nvar paint = new SKPaint { Color = SKColors.Aqua };\r\n\r\ncanvas.DrawRect(SKRect.Create(100, 100, 200, -50), paint);\r\n\u0060\u0060\u0060\r\n\r\nI also opened a bug for skia: https://bugs.chromium.org/p/skia/issues/detail?id=6596\r\n\r\nA work around is to just swap the top and bottom coordinates so that this is no longer a negative rectangle.",
+        "createdAt": "2017-05-06T13:30:16",
+        "reactions": [
+          {
+            "user": "kowalej",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:37.1887686Z"
+          }
+        ]
+      },
+      {
+        "id": 299656224,
+        "author": "kowalej",
+        "body": "@mattleibow thanks for tracking this down, I see now my drawing routine was a bit flawed, I was mixing up the top and bottom co-ordinates. With that said, I would say there is still a bug here, or some inconsistency at least. The core issue is that DrawRect cannot seem to handle negative width or height values on the GPU, however it can handle them on the CPU. DrawRoundRect can handle negative width or height on both the CPU and GPU unless you set a radius to 0, which then creates the same issue as with DrawRect.\r\n\r\nHere is a demo of the scenarios: https://fiddle.skia.org/c/10dca95ed90ba97dad4a07d98f6e1d03\r\n",
+        "createdAt": "2017-05-06T17:59:52",
+        "reactions": []
+      },
+      {
+        "id": 299996861,
+        "author": "mattleibow",
+        "body": "An update: under investigation by the GPU team at Google.",
+        "createdAt": "2017-05-08T21:31:12",
+        "reactions": []
+      },
+      {
+        "id": 329653866,
+        "author": "mattleibow",
+        "body": "Final update: this has been fixed in m60 and will go out with the v1.60.0 release.",
+        "createdAt": "2017-09-15T01:40:04",
+        "reactions": []
+      }
+    ]
+  }
 }

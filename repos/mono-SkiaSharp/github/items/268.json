@@ -19,5 +19,18 @@
   "updatedAt": "2022-08-19T21:02:16",
   "closedAt": "2017-03-29T19:12:20",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:58.1480745Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 288926940,
+        "author": "mattleibow",
+        "body": "I am having a look at this and I can\u0027t seem to repro it:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.Clear(SKColors.White);\r\n\r\nvar text = new SKPaint\r\n{\r\n\tTextSize = 50,\r\n\tIsAntialias = true\r\n};\r\ncanvas.DrawText(\u0022Hello World!\u0022, 100, 100, text);\r\n\r\nvar darken = new SKPaint\r\n{\r\n\tColor = SKColors.Blue,\r\n\tStyle = SKPaintStyle.Fill,\r\n\tIsAntialias = true,\r\n\tBlendMode = SKBlendMode.Darken\r\n};\r\ncanvas.DrawRect(SKRect.Create(150, 50, 100, 100), darken);\r\n\u0060\u0060\u0060\r\n\r\nAre you able to share some code or sample?",
+        "createdAt": "2017-03-24T03:54:11",
+        "reactions": []
+      }
+    ]
+  }
 }

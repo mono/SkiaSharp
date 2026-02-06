@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-20T00:01:19",
   "closedAt": "2017-01-19T01:13:02",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:42.4419442Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 273653055,
+        "author": "mattleibow",
+        "body": "This was added in commit 39de359bfebdc0b4bdcfe1d19214a4dedfac2286",
+        "createdAt": "2017-01-19T01:13:02",
+        "reactions": []
+      },
+      {
+        "id": 273663947,
+        "author": "KingSora",
+        "body": "If I\u0027m trying to initialize a new  SK3dView, I get a \u0022System.EntryPointNotFoundException\u0022.\r\n\r\nThe line of code looks like this:\r\n\r\n\u0060\u0060\u0060\r\nSK3dView v = new SK3dView();\r\n\u0060\u0060\u0060\r\n\r\nI\u0027ve updated SkiaShap as follows:\r\n1. git submodule init \u0026\u0026 git submodule update\r\n2. git pull\r\n\r\nThen I ran the script:\r\n\u0022.\\bootstrapper.ps1 -Target externals\u0022\r\n\u0022.\\bootstrapper.ps1 -Target libs\u0022\r\n\r\nDid I miss something or did I something wrong?\r\n\r\nBest regards,\r\nSora\r\n",
+        "createdAt": "2017-01-19T02:23:23",
+        "reactions": []
+      },
+      {
+        "id": 274068198,
+        "author": "mattleibow",
+        "body": "@KingSora you need to clean first. Probably the old native outputs are being used.\r\n\r\n\u0060\u0060\u0060\r\n.\\bootstrapper.ps1 -Target clean\r\n\u0060\u0060\u0060\r\n\r\nThe build script checks the \u0060native-builds/lib\u0060 directory for compiled outputs.",
+        "createdAt": "2017-01-20T13:08:38",
+        "reactions": []
+      }
+    ]
+  }
 }

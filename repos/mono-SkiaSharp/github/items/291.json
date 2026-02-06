@@ -14,5 +14,45 @@
   "updatedAt": "2022-08-19T21:01:59",
   "closedAt": "2017-05-19T04:22:02",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:39.5274521Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 300458071,
+        "author": "DeanClaes",
+        "body": "Hello,\r\n\r\nHave you tried calling NotifyPixelsChanged() on the SKBitmap?",
+        "createdAt": "2017-05-10T11:48:43",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:38.8526926Z"
+          }
+        ]
+      },
+      {
+        "id": 300692687,
+        "author": "typehm",
+        "body": "Hello DeanClaes,\r\nI try to called NotifyPixelsChanged() on the SKBitmap with you answer, but not helps.\r\nThanks for your reply.",
+        "createdAt": "2017-05-11T06:12:55",
+        "reactions": []
+      },
+      {
+        "id": 302604934,
+        "author": "typehm",
+        "body": "Solved. Change bitmap format from BGRA8888 to RGBA8888 will work properly.",
+        "createdAt": "2017-05-19T04:21:55",
+        "reactions": []
+      },
+      {
+        "id": 302759958,
+        "author": "mattleibow",
+        "body": "@typehm As the color format changes on each platform, you may want to use the \u0060SKImageInfo.PlatformColorType\u0060. On each platform, the color type will be the correct type that the various bitmaps and surfaces can work best with.\r\n\r\nhttps://developer.xamarin.com/api/field/SkiaSharp.SKImageInfo.PlatformColorType",
+        "createdAt": "2017-05-19T17:13:07",
+        "reactions": []
+      }
+    ]
+  }
 }

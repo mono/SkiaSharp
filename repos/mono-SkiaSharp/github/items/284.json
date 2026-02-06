@@ -24,5 +24,117 @@
   "updatedAt": "2022-08-19T21:02:04",
   "closedAt": "2017-05-31T00:16:44",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:26.6758349Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 298689620,
+        "author": "bmarchionni",
+        "body": "I\u0027m seeing the same behavior at 1.57.0, reverting all Skia libraries to 1.56.1 resolved the issue.\r\n\r\nOnly on Android",
+        "createdAt": "2017-05-02T16:36:17",
+        "reactions": []
+      },
+      {
+        "id": 299986932,
+        "author": "mattleibow",
+        "body": "Hi @drewlederman and @bmarchionni, unfortunately, I am unable to reproduce this.\r\nI have attached a zip with a sample app that works for me in both Debug and Release, and on both Android and iOS.\r\n\r\nAre you able to reproduce your issue with this sample? Or, can you provide a sample that I can investigate?\r\n\r\nAre you using any image filters or color filters? Or, maybe you set a blend mode?\r\n\r\n[Archive.zip](https://github.com/mono/SkiaSharp/files/984813/Archive.zip)\r\n",
+        "createdAt": "2017-05-08T20:50:24",
+        "reactions": []
+      },
+      {
+        "id": 299989246,
+        "author": "mattleibow",
+        "body": "Also, I have different colors... They appear to be a plain, darker blue: \u0060#0000FF\u0060\r\n\r\nHere is a screenshot of the svg in chrome: \r\n\r\n\u003Cimg width=\u0022187\u0022 src=\u0022https://cloud.githubusercontent.com/assets/1096616/25824990/3658356a-340f-11e7-9cd1-05ac37fbd0d2.png\u0022\u003E\r\n\r\nHere is the same on my device\r\n\r\n\u003Cimg width=\u0022300\u0022 src=\u0022https://cloud.githubusercontent.com/assets/1096616/25825092/9d1b282a-340f-11e7-8ff0-37ac01bc33b3.png\u0022\u003E\r\n\r\n",
+        "createdAt": "2017-05-08T20:59:37",
+        "reactions": []
+      },
+      {
+        "id": 300208711,
+        "author": "drewlederman",
+        "body": "Hi @mattleibow,\r\n\r\nThanks for looking into this. I was able to reproduce the issue with your sample.\r\n\r\nHere\u0027s a screenshot after being launched by XS:\r\n![nexus 5 lollipop screenshot 2](https://cloud.githubusercontent.com/assets/663094/25858070/0ac69a16-3498-11e7-8f8e-ca60773298b8.png)\r\n\r\nAnd here\u0027s one after being launched by tapping the launcher icon:\r\n![nexus 5 lollipop screenshot 1](https://cloud.githubusercontent.com/assets/663094/25858074/0daf9336-3498-11e7-9996-da3daf0b2b2e.png)\r\n\r\nThe image didn\u0027t appear at all (perhaps transparent?) the first time I launched it by tapping the icon.\r\n\r\nThe fact that I get reliably different results when launching from XS vs tapping makes absolutely no sense to me, but maybe it\u0027s a clue?\r\n\r\nThe screenshots were taken on XAP Nexus 5 (Lollipop). I also tested with XAP Nexus 7 (Marshmallow) and and XAP Nexus S (KitKat) and got different colors.\r\n\r\nIf you\u0027re still unable to reproduce this, I\u0027d be happy to help any way I can.\r\n\r\nThanks.",
+        "createdAt": "2017-05-09T15:51:39",
+        "reactions": []
+      },
+      {
+        "id": 300255496,
+        "author": "rhussell",
+        "body": "I found the same issue in VS emulator.  In android devices it\u0027s ok. ",
+        "createdAt": "2017-05-09T18:15:19",
+        "reactions": []
+      },
+      {
+        "id": 300290292,
+        "author": "mattleibow",
+        "body": "Ah! That might be it. Are you able to try different emulators? The best ones to try are the ones that come with the Android SDK. If you run them with HAXM, they should be very fast. \r\n\r\nHere are some docs to help setup the official emulators:\r\nhttps://developer.xamarin.com/guides/android/getting_started/installation/accelerating_android_emulators/\r\n\r\nThese are probably the best to use since, not only can you make use of the Google Play Services, but they are always the latest and most accurate.",
+        "createdAt": "2017-05-09T20:23:51",
+        "reactions": []
+      },
+      {
+        "id": 300292106,
+        "author": "drewlederman",
+        "body": "I\u0027ll check it out as soon as I can. Seems weird that older versions of SkiaSharp work fine on the simulator though, doesn\u0027t it?",
+        "createdAt": "2017-05-09T20:30:46",
+        "reactions": []
+      },
+      {
+        "id": 300324478,
+        "author": "drewlederman",
+        "body": "Okay, so I tried running your sample again on an emulator created per the instructions you gave and was still able to reproduce...",
+        "createdAt": "2017-05-09T22:52:59",
+        "reactions": []
+      },
+      {
+        "id": 300340645,
+        "author": "mattleibow",
+        "body": "There is something super-weird going on. I changed my sample code to:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.Clear(SKColors.Red);\r\n\r\ncanvas.Translate(100, 100);\r\n\r\nvar matrix = SKMatrix.MakeScale(4, 4);\r\ncanvas.DrawPicture(svg.Picture, ref matrix);\r\n\r\ncanvas.DrawRect(SKRect.Create(100, 100, 50, 50), new SKPaint { Color = 0xFF0000FF });\r\n\u0060\u0060\u0060\r\n\r\nand the background and the rectangle draws fine... it is just the SVG...\r\n",
+        "createdAt": "2017-05-10T00:40:10",
+        "reactions": []
+      },
+      {
+        "id": 300341039,
+        "author": "mattleibow",
+        "body": "\u0060SKSvg\u0060 is a thin wrapper that just draws to a \u0060SKPicture\u0060... So I tried to create my own:\r\n\r\n\u0060\u0060\u0060csharp\r\n\r\nvar recorder = new SKPictureRecorder();\r\nvar cnv = recorder.BeginRecording(SKRect.Create(0, 0, 100, 100));\r\ncnv.DrawRect(SKRect.Create(20, 20, 60, 60), new SKPaint { Color = 0xFF0000FF });\r\nvar pic = recorder.EndRecording();\r\n\u0060\u0060\u0060\r\n\r\nBut that also works fine... Super weird!",
+        "createdAt": "2017-05-10T00:43:33",
+        "reactions": []
+      },
+      {
+        "id": 305045148,
+        "author": "mattleibow",
+        "body": "I found out why this was going all wonky on Android. It may have just been the emulators, or the fact that the emulators were x86 and not ARM.\r\n\r\nBut, the cause appeared to be with the fact that the C code returned a \u0060uint\u0060, but then the managed code had a \u0060struct\u0060. \r\n\r\n\u0060\u0060\u0060cpp\r\ntypedef uint32_t sk_color_t;\r\nsk_color_t sk_paint_get_color(const sk_paint_t*);\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060csharp\r\npublic struct SKColor {\r\n    private uint color;\r\n}\r\npublic extern static SKColor sk_paint_get_color(sk_paint_t t);\r\n\u0060\u0060\u0060\r\n\r\nAlthough this cast appears to work in most cases, it does not for Android, when it is a return type. The reason I want to do this is so that I don\u0027t have to keep converting back and forth between a \u0060struct\u0060 and a \u0060uint\u0060. It *should* work as they are the same size, but unmanaged return types are a bit more touchy.\r\n\r\nThis fix is just to change the return types to the \u0060UInt32\u0060 type, and then do a cast to \u0060SKColor\u0060 or \u0060SKPMColor\u0060.",
+        "createdAt": "2017-05-31T00:16:44",
+        "reactions": [
+          {
+            "user": "phamthanhtong",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:26.3803296Z"
+          },
+          {
+            "user": "michelmoorlag",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:26.3803299Z"
+          },
+          {
+            "user": "aschuhardt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:26.38033Z"
+          }
+        ]
+      },
+      {
+        "id": 312385474,
+        "author": "mattleibow",
+        "body": "Just pushed out a release that should resolve this: https://github.com/mono/SkiaSharp/releases/tag/v1.58.1",
+        "createdAt": "2017-06-30T22:22:00",
+        "reactions": [
+          {
+            "user": "drewlederman",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:26.6256044Z"
+          }
+        ]
+      }
+    ]
+  }
 }

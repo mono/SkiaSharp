@@ -19,5 +19,190 @@
   "updatedAt": "2022-08-19T21:02:01",
   "closedAt": "2018-02-21T15:02:48",
   "commentCount": 23,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:35.8106112Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 299992655,
+        "author": "mattleibow",
+        "body": "Could this be a result of differing architectures? The library could be x86 but the machine is x64, or vice versa. \r\n\r\nThe only real requirement for linux is that \u0060libSkiaSharp.so\u0060 be in the same directory as \u0060SkiaSharp.dll\u0060. \r\n\r\nIf you run \u0060./bootstrapper.sh -t tests\u0060 on your build machine, does that work?",
+        "createdAt": "2017-05-08T21:13:18",
+        "reactions": []
+      },
+      {
+        "id": 300001128,
+        "author": "wcrooy",
+        "body": "Hi @mattleibow I was always using the X64 version, the same way I used the 1.56.2 build. \r\n\r\nThis is the output for the unit test. (It seems that only the X tests failed. Since it\u0027s a Linux box without X installed.)\r\n\r\n\u0060\u0060\u0060\r\nTest Files\r\n    /home/ubuntu/Projects/SkiaSharp/tests/SkiaSharp.NetCore.Tests.Runner/artifacts/SkiaSharp.NetCore.Tests.dll\r\n\r\nTests Not Run\r\n\r\n1) Ignored : SkiaSharp.Tests.SKBitmapTest.ImageScalingMultipleThreadsTest\r\nThis test takes a long time (~3mins), so ignore this most of the time.\r\n\r\n2) Ignored : SkiaSharp.Tests.SKDataTest.DataDisposedReturnsInvalidStream\r\nDoesn\u0027t work as it relies on memory being overwritten by an external process.\r\n\r\n3) Ignored : SkiaSharp.Tests.SKPathTest.TightBoundsForEnclosedPathIsNotZero\r\nKnown to fail, see: https://groups.google.com/forum/#!topic/skia-discuss/bhQCWsmARzo\r\n\r\nErrors, Failures and Warnings\r\n\r\n1) Error : SkiaSharp.Tests.GRContextTest.CreateDefaultContextIsValid\r\nSystem.Exception : Failed to open X display.\r\n   at SkiaSharp.Tests.GlxContext..ctor() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GlContexts/Glx/GlxContext.cs:line 43\r\n   at SkiaSharp.Tests.SKTest.CreateGlContext() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/SKTest.cs:line 95\r\n   at SkiaSharp.Tests.GRContextTest.CreateDefaultContextIsValid() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GRContextTest.cs:line 13\r\n\r\n2) Error : SkiaSharp.Tests.GRContextTest.CreateSpecificContextIsValid\r\nSystem.Exception : Failed to open X display.\r\n   at SkiaSharp.Tests.GlxContext..ctor() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GlContexts/Glx/GlxContext.cs:line 43\r\n   at SkiaSharp.Tests.SKTest.CreateGlContext() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/SKTest.cs:line 95\r\n   at SkiaSharp.Tests.GRContextTest.CreateSpecificContextIsValid() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GRContextTest.cs:line 25\r\n\r\n3) Error : SkiaSharp.Tests.GRGlInterfaceTest.AssembleInterfaceIsValid\r\nSystem.Exception : Failed to open X display.\r\n   at SkiaSharp.Tests.GlxContext..ctor() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GlContexts/Glx/GlxContext.cs:line 43\r\n   at SkiaSharp.Tests.SKTest.CreateGlContext() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/SKTest.cs:line 95\r\n   at SkiaSharp.Tests.GRGlInterfaceTest.AssembleInterfaceIsValid() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GRGlInterfaceTest.cs:line 27\r\n\r\n4) Error : SkiaSharp.Tests.GRGlInterfaceTest.CreateDefaultInterfaceIsValid\r\nSystem.Exception : Failed to open X display.\r\n   at SkiaSharp.Tests.GlxContext..ctor() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GlContexts/Glx/GlxContext.cs:line 43\r\n   at SkiaSharp.Tests.SKTest.CreateGlContext() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/SKTest.cs:line 95\r\n   at SkiaSharp.Tests.GRGlInterfaceTest.CreateDefaultInterfaceIsValid() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/GRGlInterfaceTest.cs:line 14\r\n\r\n5) Error : SkiaSharp.Tests.SKTypefaceTest.TestFontManagerMatchCharacter\r\nSystem.NullReferenceException : Object reference not set to an instance of an object.\r\n   at SkiaSharp.Tests.SKTypefaceTest.TestFontManagerMatchCharacter() in /home/ubuntu/Projects/SkiaSharp/tests/Tests/SKTypefaceTest.cs:line 108\r\n\r\nRun Settings\r\n    Work Directory: /home/ubuntu/Projects/SkiaSharp\r\n    Internal Trace: Off\r\n\r\nTest Run Summary\r\n  Overall result: Failed\r\n  Test Count: 94, Passed: 86, Failed: 5, Warnings: 0, Inconclusive: 0, Skipped: 3\r\n    Failed Tests - Failures: 0, Errors: 5, Invalid: 0\r\n    Skipped Tests - Ignored: 3, Explicit: 0, Other: 0\r\n  Start time: 2017-05-08 21:49:21Z\r\n    End time: 2017-05-08 21:49:27Z\r\n    Duration: 5.359 seconds\r\n\r\nResults (nunit3) saved as /home/ubuntu/Projects/SkiaSharp/TestResult.xml\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-08T21:50:23",
+        "reactions": []
+      },
+      {
+        "id": 300344949,
+        "author": "mattleibow",
+        "body": "This is totally weird. Basically, this is a .NET Core app that is being published - and it runs.\r\n\r\nThis folder: /home/ubuntu/Projects/SkiaSharp/tests/SkiaSharp.NetCore.Tests.Runner/artifacts/ should contain a executable along with SkiaSharp.dll and libSkiaSharp.so (and stacks of other .NET assemblies). If you run the executable (I think it is ./SkiaSharp.NetCore.Tests.Runner), then the test should run - this is a plain old .NET app.\r\n\r\nIf you take the output SkiaSharp.dll and libSkiaSharp.so files and write your own app, it should run on the same machine - because it just did. But if you create a new app, and then just reference the managed assembly and copy the native, does that work?",
+        "createdAt": "2017-05-10T01:08:02",
+        "reactions": []
+      },
+      {
+        "id": 300549862,
+        "author": "kekekeks",
+        "body": "@wcrooy Try build from this package - https://www.nuget.org/packages/Avalonia.Skia.Linux.Natives\r\nIt works for me on Ubuntu 15.10. Also try to use \u0060ldd\u0060 to check if there is some missing native dependency.",
+        "createdAt": "2017-05-10T17:10:30",
+        "reactions": []
+      },
+      {
+        "id": 300653021,
+        "author": "mattleibow",
+        "body": "@kekekeks thanks for your effort in getting the builds out!\r\n\r\n@wcrooy I forgot to ask, are you using .NET Core to run your app, or is this the Full Mono stack?",
+        "createdAt": "2017-05-11T00:59:20",
+        "reactions": []
+      },
+      {
+        "id": 300653296,
+        "author": "mattleibow",
+        "body": "@kekekeks it is strange that his machine can run the .NET Core tests, but his app does not work... Technically, if this is a dependency issue, nothing should have worked.",
+        "createdAt": "2017-05-11T01:01:37",
+        "reactions": []
+      },
+      {
+        "id": 300746224,
+        "author": "wcrooy",
+        "body": "@kekekeks I\u0027ll try that one as well.\r\n\r\n@mattleibow I\u0027m using .NET Core 1.0.x\r\n\r\nI\u0027ll try to create a small reproduceable package/console app asap.",
+        "createdAt": "2017-05-11T10:13:07",
+        "reactions": []
+      },
+      {
+        "id": 301296869,
+        "author": "shravan2x",
+        "body": "@wcrooy @kekekeks I can confirm I have the same issue. The Avalonia compiled natives for linux x64 don\u0027t help; they used to.",
+        "createdAt": "2017-05-14T07:52:10",
+        "reactions": []
+      },
+      {
+        "id": 301606404,
+        "author": "mattleibow",
+        "body": "@shravan2x @wcrooy I am not able to repro this. I am running Ubuntu 14.04 and this works.\r\n[AvaloniaTest.zip](https://github.com/mono/SkiaSharp/files/1002488/AvaloniaTest.zip)\r\n\r\nI just did \u0060dotnet restore \u0026\u0026 dotnet run\u0060. \r\n\r\n@kekekeks I had a look at your dependencies, and you have this:\r\n\r\n\u0060\u0060\u0060\r\n    libpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0\r\n    libdl.so.2 =\u003E /lib/x86_64-linux-gnu/libdl.so.2\r\n    libfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1\r\n        libfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6\r\n            libz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1\r\n            libpng12.so.0 =\u003E /lib/x86_64-linux-gnu/libpng12.so.0\r\n        libexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1\r\n    libm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6\r\n    libgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1\r\n    libc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6\r\n    ld-linux-x86-64.so.2 =\u003E /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\r\n\u0060\u0060\u0060\r\n\r\nAnd, I have this:\r\n\u0060\u0060\u0060\r\n    libpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0\r\n        ld-linux-x86-64.so.2 =\u003E /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\r\n    libdl.so.2 =\u003E /lib/x86_64-linux-gnu/libdl.so.2\r\n    libfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1\r\n        libfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6\r\n            libz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1\r\n            libpng12.so.0 =\u003E /lib/x86_64-linux-gnu/libpng12.so.0\r\n        libexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1\r\n    libstdc\u002B\u002B.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libstdc\u002B\u002B.so.6\r\n    libm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6\r\n    libgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1\r\n    libc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6\r\n\u0060\u0060\u0060\r\n\r\nThe difference is that you have a direct dependency on \u0060ld-linux-x86-64.so.2\u0060, but I do not. Instead I reference \u0060libstdc\u002B\u002B.so.6\u0060.\r\n",
+        "createdAt": "2017-05-15T21:12:31",
+        "reactions": []
+      },
+      {
+        "id": 301608559,
+        "author": "shravan2x",
+        "body": "I\u0027m on Ubuntu 16.04.2 LTS\r\n\r\nThis is the stack trace:\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found.\r\n (Exception from HRESULT: 0x8007007E)\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n   --- End of inner exception stack trace ---\r\n\u0060\u0060\u0060\r\n\r\n@mattleibow Why can\u0027t we have Linux natives baked into the library? If a separate library can support it, surely the SkiaSharp package can?",
+        "createdAt": "2017-05-15T21:21:22",
+        "reactions": []
+      },
+      {
+        "id": 302618624,
+        "author": "dvdobrovolskiy",
+        "body": "I have Unable to load DLL \u0026#x27;libSkiaSharp.dll\u0026#x27;: The specified module could not be found. in Net core Web app running on Windows 2012 R2.\r\n\r\nSkiaSharp installed via Nuget. 1.57.1\r\n\r\nlibSkiaSharp.dll present in app directory on server\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKManagedStream\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp.dll\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\r\n\r\n   at SkiaSharp.SkiaApi.sk_managedstream_set_delegates(IntPtr pRead, IntPtr pPeek, IntPtr pIsAtEnd, IntPtr pRewind, IntPtr pGetPosition, IntPtr pSeek, IntPtr pMove, IntPtr pGetLength, IntPtr pCreateNew, IntPtr pDestroy)\r\n\r\n   at SkiaSharp.SKManagedStream..cctor()\r\n\r\n   --- End of inner exception stack trace ---\r\n\r\n   at SkiaSharp.SKManagedStream..ctor(Stream managedStream)\r\n\r\n   at TNPK.Controllers.FormController.GenerateZip(Organization organization)\r\n\r\n   at TNPK.Controllers.FormController.\u003CSend\u003Ed__15.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ObjectMethodExecutor.\u003CCastToObject\u003Ed__38\u00601.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.\u003CInvokeActionMethodAsync\u003Ed__27.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.\u003CInvokeNextActionFilterAsync\u003Ed__25.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.Rethrow(ActionExecutedContext context)\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.Next(State\u0026 next, Scope\u0026 scope, Object\u0026 state, Boolean\u0026 isCompleted)\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.\u003CInvokeNextResourceFilter\u003Ed__22.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.Rethrow(ResourceExecutedContext context)\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.Next(State\u0026 next, Scope\u0026 scope, Object\u0026 state, Boolean\u0026 isCompleted)\r\n\r\n   at Microsoft.AspNetCore.Mvc.Internal.ControllerActionInvoker.\u003CInvokeAsync\u003Ed__20.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Builder.RouterMiddleware.\u003CInvoke\u003Ed__4.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Localization.RequestLocalizationMiddleware.\u003CInvoke\u003Ed__4.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at Microsoft.AspNetCore.Authentication.AuthenticationMiddleware\u00601.\u003CInvoke\u003Ed__18.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore.MigrationsEndPointMiddleware.\u003CInvoke\u003Ed__5.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore.DatabaseErrorPageMiddleware.\u003CInvoke\u003Ed__6.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore.DatabaseErrorPageMiddleware.\u003CInvoke\u003Ed__6.MoveNext()\r\n\r\n--- End of stack trace from previous location where exception was thrown ---\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.ThrowForNonSuccess(Task task)\r\n\r\n   at System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)\r\n\r\n   at Microsoft.AspNetCore.Diagnostics.DeveloperExceptionPageMiddleware.\u003CInvoke\u003Ed__7.MoveNext()\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-19T06:17:08",
+        "reactions": []
+      },
+      {
+        "id": 303623714,
+        "author": "shravan2x",
+        "body": "As an update to this, the Avalonia 1.57.4 natives work with 1.57. @kekekeks Is there there a Github page for the natives?",
+        "createdAt": "2017-05-24T05:45:37",
+        "reactions": []
+      },
+      {
+        "id": 303639499,
+        "author": "kekekeks",
+        "body": "Nope, I\u0027m building that library using unmodified script from this repo.",
+        "createdAt": "2017-05-24T07:19:06",
+        "reactions": []
+      },
+      {
+        "id": 358793434,
+        "author": "dtarczynski",
+        "body": "Case: Works on Windows\r\nFails on Linux docker container.\r\nSkiaSharp installed from Nuget: \u0060Install-Package SkiaSharp -Version 1.59.3\u0060\r\n\r\nGuys, is there any workaround to this issue? Im getting the same error:\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module or one of its dependencies could not be found.\r\n (Exception from HRESULT: 0x8007007E)\r\nat SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\nat SkiaSharp.SKImageInfo..cctor()\r\n--- End of inner exception stack trace ---\r\n\u0060\u0060\u0060\r\nMy project works on Windows, but when I try to run it from docker container on linux (runtime is on Heroku platform if that matters) I\u0027m receiving above exception.\r\nWhat I did so far:\r\nFirst, I tried to change target platform:\r\n\r\n\u003E dotnet publish --configuration Release **--target linux-x64** Solution.sln\r\n- But, indeed, there is no libSkiaSharp.dll being copied anywhere\r\n\r\nI noticed that this file goes to publish folder only when I build from Windows machine (Iin \u0060bin\\Release\\netcoreapp2.0\\publish\\runtimes\\win7-x64\\native\u0060 folder)\r\n\r\nI even tried to make this using Makefile executed from Ubuntu machine using files from native folder, but I gave up with solving missing *.h files during make proces :(\r\n\r\nI\u0027m wondering if there are already compiled libSkiaSharp linux_x64 bits somewhere that I can grab and reference to project?",
+        "createdAt": "2018-01-18T21:51:39",
+        "reactions": []
+      },
+      {
+        "id": 358802803,
+        "author": "kekekeks",
+        "body": "@dtarczynski https://www.nuget.org/packages/Avalonia.Skia.Linux.Natives",
+        "createdAt": "2018-01-18T22:27:43",
+        "reactions": []
+      },
+      {
+        "id": 358808825,
+        "author": "dtarczynski",
+        "body": "@kekekeks Indeed now I see libSkiaSharp.so file in output directory but exception still occurs.... Should I do something more?\r\n\r\nOk, found that I need to apt-install libfontconfig1 to my container. Thanks.\r\n",
+        "createdAt": "2018-01-18T22:53:19",
+        "reactions": [
+          {
+            "user": "ataeoalii",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:34.3662627Z"
+          }
+        ]
+      },
+      {
+        "id": 358813184,
+        "author": "shravan2x",
+        "body": "@kekekeks Could you update the Avalonia natives package to 1.59.3?",
+        "createdAt": "2018-01-18T23:10:23",
+        "reactions": []
+      },
+      {
+        "id": 359108061,
+        "author": "kekekeks",
+        "body": "@dtarczynski you are probably missing \u0060libfontconfig2\u0060 in your docker image\r\n@shravan2x our process of building the portable binary is a bit tedious and takes quite a bit of time, so I avoid doing that unless absolutely necessary.",
+        "createdAt": "2018-01-19T22:31:56",
+        "reactions": []
+      },
+      {
+        "id": 359183535,
+        "author": "mattleibow",
+        "body": "@shravan2x we are experimenting with a Linux binary. As it is still in preview, we have just attached it to the release:\r\nhttps://github.com/mono/SkiaSharp/releases/tag/v1.59.3\r\n\r\nLet me know how it goes so that once we feel certain that it will work in most cases, we can add it to the NuGet package.",
+        "createdAt": "2018-01-20T16:29:23",
+        "reactions": []
+      },
+      {
+        "id": 359196254,
+        "author": "shravan2x",
+        "body": "@mattleibow That\u0027s really good to hear. I\u0027ll try using this for a while and post back.",
+        "createdAt": "2018-01-20T19:32:10",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:35.1867152Z"
+          }
+        ]
+      },
+      {
+        "id": 367172127,
+        "author": "shravan2x",
+        "body": "I\u0027ve been using it for about a month, haven\u0027t had any issues yet. I\u0027ll keep this issue updated if I encounter any problems.",
+        "createdAt": "2018-02-21T00:36:06",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:57:35.3841925Z"
+          }
+        ]
+      },
+      {
+        "id": 367346311,
+        "author": "mattleibow",
+        "body": "@shravan2x thanks for the feedback!",
+        "createdAt": "2018-02-21T14:38:19",
+        "reactions": []
+      },
+      {
+        "id": 367354631,
+        "author": "mattleibow",
+        "body": "I am going to close this as I believe that the pre-built native library works (it was built on Ubunto 14.04). Custom Linux distros might need to rebuild.",
+        "createdAt": "2018-02-21T15:02:48",
+        "reactions": []
+      }
+    ]
+  }
 }

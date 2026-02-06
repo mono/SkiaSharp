@@ -24,5 +24,453 @@
   "updatedAt": "2022-08-19T21:01:45",
   "closedAt": "2018-10-15T11:08:12",
   "commentCount": 45,
-  "reactionCount": 8
+  "reactionCount": 8,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:14.577307Z",
+    "reactions": [
+      {
+        "user": "CShepartd",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.5773128Z"
+      },
+      {
+        "user": "derwasp",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.5773137Z"
+      },
+      {
+        "user": "j-hudecek",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.577314Z"
+      },
+      {
+        "user": "andrii-litvinov",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.5773143Z"
+      },
+      {
+        "user": "y2k",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.5773144Z"
+      },
+      {
+        "user": "Myszax",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.5773145Z"
+      },
+      {
+        "user": "ignas-sakalauskas-cko",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.5773146Z"
+      },
+      {
+        "user": "edamtoft",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:14.5773147Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 307172723,
+        "author": "kekekeks",
+        "body": "For people looking for prebuilt binaries: there is [a prebuilt nuget package](https://www.nuget.org/packages/Avalonia.Skia.Linux.Natives/) maintained by AvaloniaUI team. Despite the name it only contains \u0060libSkiaSharp.so\u0060. For docker images provided by microsoft you need to install \u0060libfontconfig1\u0060 package via apt-get.\r\n\r\n------------\r\n\r\nRegarding providing prebuilt binaries in official package:\r\n\r\nPlease, link libstdc\u002B\u002B statically and use something with sufficiently old GLIBC as your build machine. This will allow to produce a single binary for almost every modern distro.\r\n\r\nUbuntu 14.04 is a good candidate for that since it  has GLIBC 2.19 and modern compiler toolchain available from official repositories",
+        "createdAt": "2017-06-08T17:30:10",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.4403185Z"
+          },
+          {
+            "user": "ryanelian",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.4403189Z"
+          },
+          {
+            "user": "jkoritzinsky",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.440319Z"
+          },
+          {
+            "user": "CShepartd",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.4403191Z"
+          },
+          {
+            "user": "derwasp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.4403192Z"
+          },
+          {
+            "user": "d-kr",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.4403193Z"
+          },
+          {
+            "user": "aleksamagicka",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.4403194Z"
+          }
+        ]
+      },
+      {
+        "id": 331706882,
+        "author": "andrii-litvinov",
+        "body": "@kekekeks, I am trying to use this package with .NET Core 2.0 in linux in a container based on https://hub.docker.com/r/microsoft/aspnetcore/ and get runtime exception\r\n\r\n\u0060\u0060\u0060\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module or one of its dependencies could not be found.\r\n\u0060\u0060\u0060\r\n\r\nthough I can see the file in the output folder \u0060runtimes\\linux-x64\\native\\libSkiaSharp.so\u0060 .  I am new to linux and not sure where to look for a solution. Do you know what I might be doing wrong? Or do you have any manual on how to use it? I have only installed the package.",
+        "createdAt": "2017-09-24T12:26:26",
+        "reactions": []
+      },
+      {
+        "id": 331728674,
+        "author": "kekekeks",
+        "body": "Try to use self-contained deployment, something like:\r\n\u0060\u0060\u0060\r\ndotnet restore -r debian.8-x64\r\ndotnet publish -r debian.8-x64 -o publish-dir\r\n\u0060\u0060\u0060\r\n\r\nIt should properly pack all dependencies for you.\r\n\r\nYou can also use \u0060microsoft/dotnet:2.0-runtime-deps-jessie\u0060 as your base docker image in that case.",
+        "createdAt": "2017-09-24T18:17:00",
+        "reactions": [
+          {
+            "user": "daniel-lerch",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:05.8872396Z"
+          }
+        ]
+      },
+      {
+        "id": 331825052,
+        "author": "andrii-litvinov",
+        "body": "@kekekeks thank you for your response! I have tried different docker packages and different runtime configurations like \u0060debian.8-x64\u0060 and \u0060linux-x64\u0060. I can see \u0060libSkiaSharp.so\u0060 in startup folder, but still get same exception.  Probably I should wait for official support on Linux.",
+        "createdAt": "2017-09-25T09:20:09",
+        "reactions": []
+      },
+      {
+        "id": 331886198,
+        "author": "kekekeks",
+        "body": "Check if you have all dependencies in your docker image. You can find them using \u0060lddtree libSkiaSharp.so\u0060. You image probably doesn\u0027t have \u0060libfontconfig1\u0060 package installed.\r\n\r\nYou can also try \u0060 /lib/ld-linux.so.2 --verify ./libSkiaSharp.so\u0060 or [this simple utility](https://github.com/kekekeks/dlwat) to check for loader errors.",
+        "createdAt": "2017-09-25T13:47:14",
+        "reactions": []
+      },
+      {
+        "id": 331892155,
+        "author": "andrii-litvinov",
+        "body": "@kekekeks I run \u0060ldd libSkiaSharp.so\u0060 because it looks like that my image does not have \u0060lddtree\u0060. And it indeed says that it cannot find it: \u0060libfontconfig.so.1 =\u003E not found\u0060.",
+        "createdAt": "2017-09-25T14:06:46",
+        "reactions": []
+      },
+      {
+        "id": 331901468,
+        "author": "andrii-litvinov",
+        "body": "I have done \u0060RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0060 in my Dockerfile and and it worked \uD83D\uDE04, thanks for the hints!",
+        "createdAt": "2017-09-25T14:36:03",
+        "reactions": [
+          {
+            "user": "f2calv",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:06.6463667Z"
+          }
+        ]
+      },
+      {
+        "id": 346268949,
+        "author": "Myszax",
+        "body": "Isn\u0027t https://www.nuget.org/packages/Avalonia.Skia.Linux.Natives/ outdated?",
+        "createdAt": "2017-11-22T07:46:17",
+        "reactions": []
+      },
+      {
+        "id": 346273240,
+        "author": "kekekeks",
+        "body": "Do you need any particular feature of the recent SkiaSharp? It\u0027s kinda troublesome to build portable Linux binaries, so we avoid updating it unless it\u0027s really required.",
+        "createdAt": "2017-11-22T08:07:47",
+        "reactions": []
+      },
+      {
+        "id": 346286831,
+        "author": "Myszax",
+        "body": "No, it was just a question.\r\nI\u0027ve download libSkiaSharp.so from 1.59.2 release and it works,\r\nAnyway I am working on mono, still need to migrate to .NET Core.",
+        "createdAt": "2017-11-22T09:05:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:07.2247979Z"
+          }
+        ]
+      },
+      {
+        "id": 347675999,
+        "author": "DanWBR",
+        "body": "What about a native library for Raspberry Pi (Raspbian)? Any news on the Linux ARM front?",
+        "createdAt": "2017-11-28T21:53:25",
+        "reactions": []
+      },
+      {
+        "id": 347886701,
+        "author": "kekekeks",
+        "body": "You need to build it manually. I think @mterwoord had some success with ARM",
+        "createdAt": "2017-11-29T15:01:29",
+        "reactions": []
+      },
+      {
+        "id": 347931686,
+        "author": "mterwoord",
+        "body": "See https://github.com/terwoord/skiasharp-raspberry for my script.\r\nI think, it currently only requires debian-based operating system. The script currently is hardcoded at (at least) one spot t o a specific base directory (/home/matthijs/skiasharp-raspberry).\r\n\r\nPR\u0027s are welcome!\r\n",
+        "createdAt": "2017-11-29T17:18:46",
+        "reactions": []
+      },
+      {
+        "id": 347938738,
+        "author": "DanWBR",
+        "body": "@mterwoord thanks for the information. So this is a cross-compilation, right? Would it be possible to compile skia/skiasharp on an actual Raspberry Pi? Did you try it?",
+        "createdAt": "2017-11-29T17:42:31",
+        "reactions": []
+      },
+      {
+        "id": 347939001,
+        "author": "mterwoord",
+        "body": "This is cross-compilation, correct. I think I tried it, but the google tooling isn\u0027t available on arm. \r\nWhy would you want to compile on the actual pi?\r\n",
+        "createdAt": "2017-11-29T17:43:25",
+        "reactions": []
+      },
+      {
+        "id": 347939408,
+        "author": "DanWBR",
+        "body": "@mterwoord nothing special, just out of curiosity. It is actually much easier and faster on an Ubuntu VM for me...",
+        "createdAt": "2017-11-29T17:44:49",
+        "reactions": []
+      },
+      {
+        "id": 347940276,
+        "author": "mterwoord",
+        "body": "That\u0027s my whole point.. ;)\r\nIf you have improvements for my script, please make PR! Thanks! :)\r\n",
+        "createdAt": "2017-11-29T17:47:50",
+        "reactions": []
+      },
+      {
+        "id": 347948704,
+        "author": "DanWBR",
+        "body": "@mterwoord it seems I need something on the \u0027rpi\u0027 directory. Could you add instructions on your readme file on how to configure your \u0027skiasharp-raspberry\u0027 base directory?",
+        "createdAt": "2017-11-29T18:17:09",
+        "reactions": []
+      },
+      {
+        "id": 347950290,
+        "author": "mterwoord",
+        "body": "Edit build.sh, fix the BASE_DIR.\r\nthen run build.sh, possibly as admin (due to chroot usage)\r\n",
+        "createdAt": "2017-11-29T18:22:47",
+        "reactions": []
+      },
+      {
+        "id": 347951909,
+        "author": "DanWBR",
+        "body": "Ok, this wont\u0027 work with an empty base directory. I think you need to describe what goes on your base directory. An empty one won\u0027t work, obviously:\r\n\r\n\u0060\u0060\u0060\r\n\u002B export BASE_DIR=/home/parallels/Desktop/skia-rasp/skiasharp-raspberry\r\n \u002B BASE_DIR=/home/parallels/Desktop/skia-rasp/skiasharp-raspberry\r\n \u002B export BUILD_DIR=/home/parallels/Desktop/skia-rasp/skiasharp-raspberry/build\r\n \u002B BUILD_DIR=/home/parallels/Desktop/skia-rasp/skiasharp-raspberry/build\r\n \u002B export RPI_ROOT=/home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi\r\n \u002B RPI_ROOT=/home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi\r\n \u002B true\r\n \u002B rm -Rf /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi\r\n \u002B mkdir -p /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi\r\n \u002B cd /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi\r\n \u002B qemu-debootstrap --foreign --arch armhf jessie /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi http://ftp.debian.org/debian\r\n ./build.sh: line 17: qemu-debootstrap: command not found\r\n \u002B chroot /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi apt -q -y --force-yes install build-essential\r\n chroot: failed to run command \u2018apt\u2019: No such file or directory\r\n \u002B chroot /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi apt -q -y --force-yes install gcc-multilib g\u002B\u002B-multilib\r\n chroot: failed to run command \u2018apt\u2019: No such file or directory\r\n \u002B chroot /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi apt -q -y --force-yes install \r\n libstdc\u002B\u002B-4.8-dev\r\n chroot: failed to run command \u2018apt\u2019: No such file or directory\r\n \u002B chroot /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/rpi apt -q -y --force-yes install \r\nlibfontconfig1-dev\r\n chroot: failed to run command \u2018apt\u2019: No such file or directory\r\n \u002B true\r\n \u002B rm -Rf /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/build\r\n \u002B mkdir -p /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/build\r\n \u002B cd /home/parallels/Desktop/skia-rasp/skiasharp-raspberry/build\r\n \u002B git clone https://github.com/mono/SkiaSharp.git skia\r\n Cloning into \u0027skia\u0027...\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-11-29T18:28:24",
+        "reactions": []
+      },
+      {
+        "id": 347952230,
+        "author": "mterwoord",
+        "body": "Start off with installing qemu-debootstrap. ",
+        "createdAt": "2017-11-29T18:29:32",
+        "reactions": []
+      },
+      {
+        "id": 347952953,
+        "author": "DanWBR",
+        "body": "I\u0027ve already installed all the prerequisites as per your README file.",
+        "createdAt": "2017-11-29T18:32:07",
+        "reactions": []
+      },
+      {
+        "id": 347953079,
+        "author": "mterwoord",
+        "body": "Well, my readme may be out of date. qemu-debootstrap isn\u0027t installed as it seems.",
+        "createdAt": "2017-11-29T18:32:32",
+        "reactions": []
+      },
+      {
+        "id": 347956750,
+        "author": "DanWBR",
+        "body": "Ok, you need to add \u0027qemu-user-static\u0027 as a prerequisite, qemu-debootstrap is on it (ubuntu 16.04). I also had to install \u0027apt\u0027. Couldn\u0027t you add the install commands of all prerequisites to the script itself?",
+        "createdAt": "2017-11-29T18:45:07",
+        "reactions": []
+      },
+      {
+        "id": 348099728,
+        "author": "mterwoord",
+        "body": "Could you make a PR for that please? :)",
+        "createdAt": "2017-11-30T06:57:42",
+        "reactions": []
+      },
+      {
+        "id": 348109983,
+        "author": "toburger",
+        "body": "When I run the chroot line\r\n\u0060\u0060sudo chroot $RPI_ROOT apt -q -y --force-yes install build-essential\u0060\u0060\r\nI get the following error:\r\n\u0060\u0060chroot: failed to run command \u2018apt\u2019: No such file or directory\u0060\u0060\r\n\r\n\u003E note: apt is installed on my system\r\n\r\nDon\u0027t know if this is relevant: the preceding qemu-debootstrap runs successfully, but at the beginning it shows the following message\r\n\u0060\u0060W: Cannot check Release signature; keyring file not available /usr/share/keyrings/debian-archive-keyring.gpg\u0060\u0060",
+        "createdAt": "2017-11-30T07:54:48",
+        "reactions": []
+      },
+      {
+        "id": 348110454,
+        "author": "mterwoord",
+        "body": "Interesting. I\u0027m happy to help out, but am not too familiar with debootstrap, chrooting and stuff. I\u0027m a Windows-based .NET developer. Was very proud of myself when I got this script working..\r\n",
+        "createdAt": "2017-11-30T07:57:14",
+        "reactions": []
+      },
+      {
+        "id": 348111211,
+        "author": "toburger",
+        "body": "I have the same background as you, so I\u0027m pretty unfamiliar with all this low level linux stuff too. ;)",
+        "createdAt": "2017-11-30T08:00:59",
+        "reactions": []
+      },
+      {
+        "id": 348111740,
+        "author": "mterwoord",
+        "body": "See https://wiki.debian.org/EmDebian/CrossDebootstrap#Installing_required_packages\r\nThat\u0027s the process I used.. \r\n\r\n",
+        "createdAt": "2017-11-30T08:03:28",
+        "reactions": []
+      },
+      {
+        "id": 348113644,
+        "author": "mattleibow",
+        "body": "We have been building a release for Linux on Ubuntu 14.04:\r\nhttps://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp-Linux/89\r\n\r\nCurrently we just do a release for x64: https://github.com/mono/SkiaSharp/releases/download/v1.59.2/libSkiaSharp.so\r\n\r\nRelease:\r\nhttps://github.com/mono/SkiaSharp/releases/tag/v1.59.2\r\n\r\n",
+        "createdAt": "2017-11-30T08:13:00",
+        "reactions": []
+      },
+      {
+        "id": 348150346,
+        "author": "toburger",
+        "body": "Got it working with ubuntu 17.10 on a separate VM (WSL didn\u0027t work).\r\nFor those who are insterested in a pre built binary: https://github.com/toburger/skiasharp-raspberry/releases/tag/arm",
+        "createdAt": "2017-11-30T10:39:58",
+        "reactions": []
+      },
+      {
+        "id": 348170317,
+        "author": "DanWBR",
+        "body": "@mterwoord @toburger I was also able to compile the library successfully. I modified the script a little bit and will make a PR soon. I found it strange that the compiled library is a 32-bit one, I thought that Raspbian was a 64-bit OS...",
+        "createdAt": "2017-11-30T12:08:15",
+        "reactions": []
+      },
+      {
+        "id": 348170809,
+        "author": "mterwoord",
+        "body": "Any reason why you want 64-bit apps? They consume more memory...\n\n2017-11-30 13:08 GMT\u002B01:00 Daniel Medeiros \u003Cnotifications@github.com\u003E:\n\n\u003E @mterwoord \u003Chttps://github.com/mterwoord\u003E I was also able to compile the\n\u003E library successfully. I modified the script a little bit and will make a PR\n\u003E soon. I found it strange that the compiled library is a 32-bit one, I\n\u003E thought that Raspbian was a 64-bit OS...\n\u003E\n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/312#issuecomment-348170317\u003E, or mute\n\u003E the thread\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/AAG9301aQ14pTCYB8_1o5CLUf5xI-KK0ks5s7pqxgaJpZM4N0Mhv\u003E\n\u003E .\n\u003E\n",
+        "createdAt": "2017-11-30T12:10:22",
+        "reactions": []
+      },
+      {
+        "id": 348171354,
+        "author": "DanWBR",
+        "body": "@mterwoord nothing special, I just thought that raspbian was 64-bit and was unconsciously expecting a 64-bit library.",
+        "createdAt": "2017-11-30T12:12:54",
+        "reactions": []
+      },
+      {
+        "id": 348180361,
+        "author": "DanWBR",
+        "body": "@mterwoord I\u0027ve submitted a PR, please take a look.",
+        "createdAt": "2017-11-30T12:55:48",
+        "reactions": []
+      },
+      {
+        "id": 348738451,
+        "author": "migueldeicaza",
+        "body": "For Linux, I suggest that we package/distribute independently the unmanaged bits using the proper system packaging tool, and not try to solve the problem with NuGet.\r\n\r\nDetails here: https://github.com/mono/SkiaSharp/issues/365",
+        "createdAt": "2017-12-03T03:54:42",
+        "reactions": []
+      },
+      {
+        "id": 348756668,
+        "author": "DanWBR",
+        "body": "I\u0027ve tested the arm native library with my rasp 2, it worked on Ubuntu MATE normally. On Raspbian Stretch, it seems that the g\u002B\u002B4.8-multilib library is missing from the default apt-get repository. I didn\u0027t try to find one and went back to Ubuntu. ",
+        "createdAt": "2017-12-03T11:11:12",
+        "reactions": []
+      },
+      {
+        "id": 348757283,
+        "author": "mterwoord",
+        "body": "Curious, what behavior do you see on raspbian?\r\n",
+        "createdAt": "2017-12-03T11:24:21",
+        "reactions": []
+      },
+      {
+        "id": 348831857,
+        "author": "DanWBR",
+        "body": "@mterwoord nevermind, I was putting an unnecessary dependency on g\u002B\u002B4.8-multilib, which doesn\u0027t exist on Raspbian. The library worked fine on it too once I removed the dependency. ",
+        "createdAt": "2017-12-04T00:06:05",
+        "reactions": []
+      },
+      {
+        "id": 367368706,
+        "author": "mattleibow",
+        "body": "Just asking this question in multiple places:\r\n\r\nRight now I have a x64 build for Linux that was compiled on Ubuntu 14.04. I am thinking of adding a few more to help the average dev use SkiaSharp without having to build their own. What other distros or CPUs would be helpful?\r\n\r\nLeave a comment on this issue and track progress: https://github.com/mono/SkiaSharp/issues/453",
+        "createdAt": "2018-02-21T15:43:54",
+        "reactions": []
+      },
+      {
+        "id": 367370137,
+        "author": "kekekeks",
+        "body": "As long as you are linking libfreetype and libstdc\u002B\u002B statically, that x64 library should work across all modern glibc-based distros.",
+        "createdAt": "2018-02-21T15:48:07",
+        "reactions": []
+      },
+      {
+        "id": 367373521,
+        "author": "mattleibow",
+        "body": "@kekekeks Thanks for your continual support. I hope to get the best out for everyone.\r\n\r\nI created an issue to help track requests and implementations: https://github.com/mono/SkiaSharp/issues/453",
+        "createdAt": "2018-02-21T15:57:34",
+        "reactions": []
+      },
+      {
+        "id": 375963238,
+        "author": "mattleibow",
+        "body": "To make life easier for everyone, I moved code around and added a new target to the GN files. Now, the native \u0060libSkiaSharp\u0060 build is done with GN and ninja directly: https://github.com/mono/SkiaSharp/wiki/Building-on-Linux",
+        "createdAt": "2018-03-25T11:27:51",
+        "reactions": []
+      },
+      {
+        "id": 427607910,
+        "author": "mattleibow",
+        "body": "All right folks, I have been doing some work and I think I am able to meet you in the middle of \u0022we don\u0027t really support Linux as it is not a priority\u0022 and \u0022using Linux is a real pain because of X\u0022. Let me know what you think of this:\r\n\r\nI have created a new package \u0060SkiaSharp.NativeAssets.Linux\u0060 that will be going out with v1.68.0 that I would like to try. It will just contain the various Linux binaries that I have built and tested on. Right now, this is just going to be the binary I build on Ubuntu 16.04 amd64. I have done some testing and it appears to work on several distros (Ubuntu 14, OpenSUSe and CentOS), so I am going to put it in the \u0060linux-x64\u0060 runtime folder. _(This may not work on alpine just yet - haven\u0027t tested - but I can always add a more specific build when I can.)_\r\n\r\nThe overall result of this is that you will do everything as usual, but in the \u0022app\u0022 part of the solution, just add the package. You should not release a NuGet to nuget.org that depends on this directly as you will then force all your uses to use my binary.\r\n\r\nAn example of a use case where a separate package is useful is this:\r\n - Matthew builds \u0060SkiaSharp\u0060 and a binary for Ubuntu 16.\r\n - John builds an Ubuntu app and includes the \u0060SkiaSharp\u0060 and \u0060SkiaSharp.NativeAssets.Linux\u0060 packages. John is very happy.\r\n - Janet builds an Alpine app and includes \u0060SkiaSharp\u0060 and her custom build of \u0060libSkiaSharp.so\u0060. Janet is not as happy as John. Janet has SKILLZ and can build for Alpine.\r\n - Joe is a great guy. Joe likes community. Joe likes Alpine Linux. Joe builds \u0060libSkiaSharp.so\u0060 for Alpine. Joe creates a new NuGet package (\u0060JoesCodes.SkiaSharp.NativeAssets.Alpine\u0060) that just contains the Alpine binary.\r\n - Jane is also building for Alpine. Jane uses the \u0060JoesCodes.SkiaSharp.NativeAssets.Alpine\u0060 package. Jane is happy.\r\n - Matthew has a look at \u0060JoesCodes.SkiaSharp.NativeAssets.Alpine\u0060 and sees **1 million downloads**! Matthew is blown away. Matthew knows everyone is using Alpine. Matthew has a chat to Big Boss: \u0022We NEED Alpine\u0022. Big Boss has a look. Big Boss agrees. Matthew builds for Alpine and adds it to the \u0060SkiaSharp.NativeAssets.Linux\u0060 package. Everyone is happy.\r\n - Janet and Jane now have options: use \u0022official\u0022 or use \u0022community\u0022. Janet is very happy. Jane is very happy.\r\n    - Janet is Matthew\u0027s friend. Janet decides to use \u0060SkiaSharp.NativeAssets.Linux\u0060. Janet and Matthew are happy.\r\n    - Jane is happy with \u0060JoesCodes.SkiaSharp.NativeAssets.Alpine\u0060. Jane is Joe\u0027s friend. Jane does not change.\r\n - Joe also has options: keep independent and free, or, update \u0060JoesCodes.SkiaSharp.NativeAssets.Alpine\u0060 to be an empty shell package with a dependency.\r\n    - Joe decides to update to depend on Matthew.\r\n       - Janet updates. Janet is happy.\r\n       - Jane updates. Jane gets the new package that gets Matthew\u0027s build. Jane is happy.\r\n    - Joe stays free and builds the next version.\r\n       - Janet updates. Janet is happy.\r\n       - Jane updates. Jane gets Joe\u0027s new package. Jane is happy.\r\n\r\n_(Hope you folks like my story about Matthew and the Big Boss working to make life better for John, Janet, Joe and Jane. I had fun.)_",
+        "createdAt": "2018-10-06T21:32:36",
+        "reactions": [
+          {
+            "user": "kekekeks",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:14.3291365Z"
+          },
+          {
+            "user": "pritchin",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:14.3291367Z"
+          },
+          {
+            "user": "chances",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:14.3291368Z"
+          },
+          {
+            "user": "MatthewForrester",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:58:14.3291369Z"
+          }
+        ]
+      },
+      {
+        "id": 429808020,
+        "author": "mattleibow",
+        "body": "Closing this as it is going out. Although it just has a single debian-based binary, more can be added if there is a demand. Since .NET Core is on Alpine, that will be the next build most likely.\r\n\r\nTo request a particular build of Linux to be included in the NuGet, just add a vote/comment to this issue and I will make sure to keep adding the most popular ones to the package: https://github.com/mono/SkiaSharp/issues/453\r\n\r\nIf there are any issues with the new Linux bits, just open a new issue and let me know.",
+        "createdAt": "2018-10-15T11:08:12",
+        "reactions": [
+          {
+            "user": "toburger",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:14.5270755Z"
+          },
+          {
+            "user": "IvanJosipovic",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:58:14.5270758Z"
+          }
+        ]
+      }
+    ]
+  }
 }

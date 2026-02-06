@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T21:01:51",
   "closedAt": "2017-05-26T16:41:29",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:53.5884331Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 304017670,
+        "author": "ahilsing",
+        "body": "Some more info:\r\nI use Visual Studio 2017 Community Edition and all the latest assemblies from SkiaSharp and Xamarin Forms. SkiaSharp: 1.58, Xamarin Forms: 2.3.4.247",
+        "createdAt": "2017-05-25T14:02:40",
+        "reactions": []
+      },
+      {
+        "id": 304140517,
+        "author": "mattleibow",
+        "body": "\u003E It seems that I cannot preserve the SKSurface object during application lifetime.\r\n\r\nThat is correct.\r\n\r\nThe \u0060SKSurface\u0060 and \u0060SKCanvas\u0060 objects from the paint event only live as long as the paint event is firing. As soon as the method is complete, the surface is discarded. The reason for this is that the \u0060SKSurface\u0060 is really just a wrapper around the underlying surface - which could be a GPU FBO, a memory block or some other imaging source. \r\n\r\nThe reason for this is that the underlying surface may be destroyed by the operating system at any time. \r\n\r\nWhat are you trying to do here? There may be another way to achieve the same thing.",
+        "createdAt": "2017-05-25T22:22:09",
+        "reactions": []
+      },
+      {
+        "id": 304230933,
+        "author": "ahilsing",
+        "body": "I have a grid formed by a bunch of SKRect objects. When I tap on the surface of the grid, I want to do something with the located SKRect object. Set a new background, for instance. Or draw an image within the frame of the rect.\r\nApart from implementing a special canvas view with touch events, what would be the best approach to do that?\r\n",
+        "createdAt": "2017-05-26T09:03:05",
+        "reactions": []
+      },
+      {
+        "id": 304330537,
+        "author": "mattleibow",
+        "body": "I am closing this issue as I think it is resolved... But your next question may be better answered on the forums.\r\n\r\nThe first problem that you need to pass is the ability to get the tap coordinates from the user. Once you have that, you can then start. If you are using Xamarin.Forms, you may have to create some effect: https://developer.xamarin.com/guides/xamarin-forms/advanced/skiasharp/paths/finger-paint/\r\n\r\nAs the paint loop can be called at ANY time (by the OS or programmer), the best option will be to have some sort of backing array or object that manages the state. Then in the paint loop, just draw that out. If you do this, you can directly respond to the tap event buy updating the backing object, and trigger a refresh of the UI.\r\n\r\nI would recommend creating a backing object that can be manipulated, and the paint loop with just draw the backing object to the screen.",
+        "createdAt": "2017-05-26T16:41:28",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -19,5 +19,158 @@
   "updatedAt": "2022-08-19T21:02:39",
   "closedAt": "2018-11-14T19:06:33",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:15.5921024Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 278650960,
+        "author": "mattleibow",
+        "body": "It might be the case that the PNG decoder can\u0027t actually do downscaling during the load operation. So, to scale an image you will have to load it and then resize it:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar bitmap = SKBitmap.Decode(\u0022file.png\u0022);\r\nvar scaled = bitmap.Resize(new SKImageInfo(newWidth, newHeight), SKBitmapResizeMethod.Lanczos3);\r\n\u0060\u0060\u0060\r\n\r\nThere is more info on the docs website:\r\nhttps://developer.xamarin.com/api/member/SkiaSharp.SKBitmap.Resize/p/SkiaSharp.SKImageInfo/SkiaSharp.SKBitmapResizeMethod/",
+        "createdAt": "2017-02-09T14:09:50",
+        "reactions": [
+          {
+            "user": "vlkam",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.1673269Z"
+          },
+          {
+            "user": "jonsagara",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.1673273Z"
+          }
+        ]
+      },
+      {
+        "id": 278661761,
+        "author": "AwsomeCode",
+        "body": "@mattleibow are this resized images can be saved to disk also?",
+        "createdAt": "2017-02-09T14:45:07",
+        "reactions": []
+      },
+      {
+        "id": 278692303,
+        "author": "mattleibow",
+        "body": "@AwsomeCode  Yes:\r\n\r\n\u0060\u0060\u0060csharp\r\nSKBitmap bitmap = ...;\r\nSKImage image = SKImage.FromBitmap(bitmap);\r\nSKData png = image.Encode(SKImageEncodeFormat.Png, 100);\r\n\r\n// save\r\nusing (var filestream = File.OpenWrite(\u0022image.png\u0022)) {\r\n    png.SaveTo(filestream);\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-02-09T16:22:50",
+        "reactions": [
+          {
+            "user": "AwsomeCode",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.5879731Z"
+          },
+          {
+            "user": "valentasm1",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.5879734Z"
+          },
+          {
+            "user": "xuezhen",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.5879735Z"
+          },
+          {
+            "user": "xuezhen",
+            "content": "laugh",
+            "createdAt": "2026-02-06T13:56:13.5879737Z"
+          },
+          {
+            "user": "gbjbaanb",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.5879738Z"
+          },
+          {
+            "user": "shubhamsharma12147",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.5879739Z"
+          },
+          {
+            "user": "vlkam",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.587974Z"
+          },
+          {
+            "user": "jonsagara",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:13.5879741Z"
+          }
+        ]
+      },
+      {
+        "id": 278886522,
+        "author": "JessieZM",
+        "body": "@mattleibow \r\nThanks for your reply.\r\nBut what I want is loading a scale down image into memory.\r\nIf I do as you said\r\n\u0022var bitmap = SKBitmap.Decode(\u0022file.png\u0022);\r\nvar scaled = bitmap.Resize(new SKImageInfo(newWidth, newHeight), SKBitmapResizeMethod.Lanczos3);\u0022\r\nand if the png file is very big, it may cause \u0022OutOfMemoryException \u0022\r\n\r\nCould you please have a look at this article [https://developer.xamarin.com/recipes/android/resources/general/load_large_bitmaps_efficiently/](url)\r\n\r\n\r\n",
+        "createdAt": "2017-02-10T08:32:52",
+        "reactions": []
+      },
+      {
+        "id": 279168310,
+        "author": "mattleibow",
+        "body": "I just want to put this here for the record. This is how you can scale some codecs (.ico, .jpg, .raw, .webp) when loading:\r\n\r\n\u0060\u0060\u0060csharp\r\nint desiredWidth = 200;\r\n\r\n// create the codec\r\nSKCodec codec = SKCodec.Create(stream);\r\nSKImageInfo info = codec.Info;\r\n\r\n// get the scale that is nearest to what we want (eg: jpg returned 512)\r\nSKSizeI supportedScale = codec.GetScaledDimensions((float)desiredWidth / info.Width);\r\n\r\n// decode the bitmap at the nearest size\r\nSKImageInfo nearest = new SKImageInfo(supportedScale.Width, supportedScale.Height);\r\nSKBitmap bmp = SKBitmap.Decode(codec, nearest);\r\n\r\n// now scale that to the size that we want\r\nfloat realScale = (float)info.Height / info.Width;\r\nSKImageInfo desired = new SKImageInfo(desiredWidth, (int)(realScale * desiredWidth);\r\nbmp = bmp.Resize(desired), SKBitmapResizeMethod.Lanczos3);\r\n\u0060\u0060\u0060\r\n\r\n@JessieZM I am still looking to see what can be done, but I am not too hopeful since it has to be supported by the underlying image and the codec.",
+        "createdAt": "2017-02-11T19:07:28",
+        "reactions": []
+      },
+      {
+        "id": 279169393,
+        "author": "mattleibow",
+        "body": "@JessieZM I am going to as on the forums: https://groups.google.com/forum/#!forum/skia-discuss\r\n\r\nBut I don\u0027t think this is possible for .png as not even Android does it. My code:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar input = Assets.Open(\u0022baboon.png\u0022);\r\nvar reqHeight = 100;\r\nvar reqWidth = 200;\r\n\r\nBitmapFactory.Options options = new BitmapFactory.Options();\r\noptions.InJustDecodeBounds = true;\r\n\r\nBitmapFactory.DecodeStream(input, null, options);\r\nint height = options.OutHeight;\r\nint width = options.OutWidth;\r\n\r\nint inSampleSize = 1;\r\n\r\nif (height \u003E reqHeight || width \u003E reqWidth)\r\n{\r\n\r\n\tint halfHeight = height / 2;\r\n\tint halfWidth = width / 2;\r\n\r\n\twhile ((halfHeight / inSampleSize) \u003E= reqHeight \u0026\u0026 (halfWidth / inSampleSize) \u003E= reqWidth)\r\n\t{\r\n\t\tinSampleSize *= 2;\r\n\t}\r\n}\r\n\r\noptions.InSampleSize = inSampleSize;\r\noptions.InJustDecodeBounds = false;\r\nvar bitmap = BitmapFactory.DecodeStream(input, null, options);\r\n\u0060\u0060\u0060\r\nAndroid docs: https://developer.android.com/topic/performance/graphics/load-bitmap.html\r\n",
+        "createdAt": "2017-02-11T19:24:45",
+        "reactions": []
+      },
+      {
+        "id": 279169938,
+        "author": "mattleibow",
+        "body": "@JessieZM I created a post here: https://groups.google.com/forum/#!topic/skia-discuss/_sfXByrGL08\r\n\r\nWatch that and see what the experts say. I will of course bind any members that you need.",
+        "createdAt": "2017-02-11T19:33:13",
+        "reactions": []
+      },
+      {
+        "id": 290194867,
+        "author": "migueldeicaza",
+        "body": "From that thread, it looks like Android\u0027s Codec has an option to limit the sampling on decoding for PNG:\r\n\r\n\u003ESkCodec supports scaled jpeg and webp decodes because the native decoding libraries (libjpeg-turbo, libwebp) support downscaling.  Ex: the jpeg library can perform a faster decode when downscaling because it will drop some of the DCT coefficients.  There\u0027s no similar option for png.\r\n\r\n\u003E However, SkAndroidCodec (wraps SkCodec) allows for decoding any format with a fSampleSize specified in AndroidOptions.  fSampleSize=N instructs the codec to sample every Nth pixel as it decodes.  This should do what you want. https://github.com/google/skia/blob/master/include/codec/SkAndroidCodec.h\r\n",
+        "createdAt": "2017-03-29T19:11:24",
+        "reactions": []
+      },
+      {
+        "id": 402568943,
+        "author": "deakjahn",
+        "body": "Is this supposed to still work in the current version? With\r\n\r\n    var bitmap = SKBitmap.Decode(path, new SKImageInfo(256, 256));\r\n\r\nall I get is a null for bitmap. Without the extra info, it works all right. Images are JPGs in the 3,000-4,000 pixel wide range.",
+        "createdAt": "2018-07-04T22:51:13",
+        "reactions": []
+      },
+      {
+        "id": 433527285,
+        "author": "newky2k",
+        "body": "@deakjahn  This is due to the limitations of some of the codec decoding processes not being able to resize the image at the same time.  @mattleibow  is going to investigate change the decode to apply the resize after the image is decoded.\r\n\r\nRegards",
+        "createdAt": "2018-10-26T20:03:35",
+        "reactions": []
+      },
+      {
+        "id": 433551022,
+        "author": "deakjahn",
+        "body": "Ohh, that was some time ago. I switched to only using the dimensions returned by \u0060codec.GetScaledDimensions()\u0060 and those always work. Not necessarily the same 256\u00D7256 or whatever I originally wanted, but close enough for me.\r\n\r\nThe point of the process is to have a cheaper decoding process (less time, less memory), so doing a full decode and then resize is not something Matthew should do, I guess. That goes against the benefit we can get from the process.",
+        "createdAt": "2018-10-26T21:40:52",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:15.3406294Z"
+          },
+          {
+            "user": "xtuzy",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:15.3406297Z"
+          }
+        ]
+      },
+      {
+        "id": 438780784,
+        "author": "newky2k",
+        "body": "Seems to be resolved now",
+        "createdAt": "2018-11-14T19:06:33",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T21:02:15",
   "closedAt": "2017-03-29T02:02:49",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:59.9109332Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 289456676,
+        "author": "mattleibow",
+        "body": "Hi @ststeiger, thanks for reporting this. There are several things here that might need addressing:\r\n\r\n1. Deployment to \u0060win81-x64\u0060 will be addressed in the next release. This is because \u0060win8\u0060 does not derive from \u0060win7\u0060, but rather from \u0060win\u0060 in the RID hierarchy. In the meantime, deploy to \u0060win7\u0060 will resolve the issue. \r\n2. The current setup with .NET Core is to deploy to \u0060win7\u0060 when running on Windows 7\u002B. \u0060win10\u0060 is not supported on versions prior to Windows 10.\r\n3. At this point, we don\u0027t statically link the C runtime in any of the builds. See reasons and more info on #109 and #136 \r\n4. As a result of no static C library, the MSVCRT for VS 2015 has to be installed first: https://www.microsoft.com/en-us/download/details.aspx?id=48145\r\n\r\nSo, as an action, is it possible to install the C runtime (https://www.microsoft.com/en-us/download/details.aspx?id=48145) and try running a deploy to Windows 7? If that doesn\u0027t work, then there is a bug. Deploying to Windows 8.x should be fixed in the next release.",
+        "createdAt": "2017-03-27T13:41:59",
+        "reactions": []
+      },
+      {
+        "id": 289469244,
+        "author": "mattleibow",
+        "body": "I just did some tests and It appears that \u0060win8\u0060 does inherit from \u0060win7\u0060: https://github.com/dotnet/corefx/blob/master/pkg/Microsoft.NETCore.Platforms/runtime.json#L50-L74\r\n\r\nThus, it may just be the case that the C runtime is not installed. I would first install the runtime and see if the issue goes away.",
+        "createdAt": "2017-03-27T14:24:10",
+        "reactions": []
+      },
+      {
+        "id": 289737447,
+        "author": "ststeiger",
+        "body": "I don\u0027t have administrator rights on this machine, so I can\u0027t install it. \r\nBut I copied the api-ms-win-crt* from c:\\program files (x86)\\windows kits\\10\\redist\\ucrt\\dlls\\x64 from my windows 10 machine to the Win81 machine, but that didn\u0027t work. \r\n\r\nI tried again with *.dll from AgentRansack from the Windows 10 machine to the win81 machine, **and that worked.**  So I think it\u0027s safe to assume it\u0027s the C runtime.\r\n\r\nI tested further, and narrowed it down. \r\nIt\u0027s msvcp140.dll and vcruntime140.dll that\u0027s missing. \r\nIt needs both of the files - and these are the only files needed - if I copy just one, then the dll won\u0027t load. \r\nIf I copy these two files from AgentRansack, then it works. \r\nSo yes, it\u0027s definitely the VC runtime that\u0027s missing. \r\n\r\nIt sounds unreasonable to not statically link the dlls. \r\nParticularly, requiring admin rights for the provisioning of an application is stupid. Not even Google-Chrome does it, and that\u0027s an entire browser. Not requiring an installation is the whole point of .NET-Core self-contained deployment. Maybe it would be wiser to deploy libSkiaSharp.dll as part of .NET Core itselfs. If you wouldn\u0027t need the runtime for each platform in there, you could drastically reduce the file\u0027s size. I think that would be the proper way forward. In order to avoid different version conflicts, you just need to make sure everything is compiled with the same C/C\u002B\u002B-runtime. Since .NET Core has to statically links its C-runtime, it\u0027s necessary to use that one for SkiaSharp.\r\n\r\nNote that Windows Server 2012 R2 is based on Windows 8.1.",
+        "createdAt": "2017-03-28T11:12:03",
+        "reactions": []
+      },
+      {
+        "id": 289956842,
+        "author": "mattleibow",
+        "body": "Great to know that you managed to get your app working.\r\n\r\nAnd, you raise a good point about the fact that .NET Core is self contained. I\u0027ll leave this issue open and see what we can do about getting this issue off the table.",
+        "createdAt": "2017-03-29T01:44:19",
+        "reactions": []
+      },
+      {
+        "id": 289959575,
+        "author": "mattleibow",
+        "body": "I think I\u0027ll rather re-open the other issue for discussion.",
+        "createdAt": "2017-03-29T02:02:49",
+        "reactions": []
+      }
+    ]
+  }
 }

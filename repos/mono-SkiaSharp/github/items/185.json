@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-20T00:01:35",
   "closedAt": "2017-02-02T11:13:56",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:14.4827809Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 258582723,
+        "author": "czenzel",
+        "body": "Spoke too soon. I am now receiving this error for x86:\n\nAndroid NDK: Could not find platform files (headers and libraries)\nAndroid NDK: Please run build/tools/gen-platforms.sh to build the corresponding directory.\n/Users/[]/Library/Developer/Xamarin/android-ndk/build/core/init.mk:467: **\\* Android NDK: Aborting    .  Stop.\n",
+        "createdAt": "2016-11-05T01:33:58",
+        "reactions": []
+      },
+      {
+        "id": 258616177,
+        "author": "czenzel",
+        "body": "I used the process of the import like above with a fresh pull of the GIT source for SkiaSharp. I found another issue were the Android NDK/SDK installed with Xamarin was not working with the SkiaSharp build.\n\nTo fix it I used the following after installing the latest of Android Studio, opening the program, and installing the SDKs and NDK Bundle.\n\nMy next error was just about a version of the SDK the compiler wishes to use but I can fix that.\n\nSo my steps to sync are still required for me to prevent the \u0060ImportError\u0060.\n\nTo compile (bootstrap):\n\n\u0060ANDROID_SDK_HOME=/Users/[User]/Library/Android/sdk ANDROID_NDK_HOME=/Users/[User]/Library/Android/sdk/ndk-bundle ./bootstrapper.sh -t libs\u0060\n",
+        "createdAt": "2016-11-05T14:46:31",
+        "reactions": []
+      },
+      {
+        "id": 258854409,
+        "author": "mattleibow",
+        "body": "@czenzel Have you managed to get things going yet?\n\nJust some things that might help:\n- make sure to check out the \u0060master\u0060 of SkiaSharp\n- make sure to clone submodules: \u0060git submodule update --init --recursive\u0060\n- the skia branch will be the \u0060mono\u0060 fork \u0060xamarin-mobile-bindings\u0060\n- you may have to set the env vars for the Android and skia tools:\n  - Android SDK: \u0060ANDROID_HOME\u0060 = \u0060/Users/[User]/Library/Developer/Xamarin/android-sdk-macosx\u0060\n  - Android SDK: \u0060ANDROID_SDK_ROOT\u0060 = \u0060/Users/[User]/Library/Developer/Xamarin/android-sdk-macosx\u0060\n  - Android NDK: \u0060ANDROID_NDK_HOME\u0060 = \u0060/Users/[User]/Library/Developer/Xamarin/android-ndk\u0060\n\nThe environment variables are used internally by the skia build process.\n\nLet me know if there are any issues that you couldn\u0027t resolve.\n",
+        "createdAt": "2016-11-07T14:46:41",
+        "reactions": []
+      },
+      {
+        "id": 259562614,
+        "author": "czenzel",
+        "body": "Hi @mattleibow,\n\nI did manage to get things to work on my iMac. It seems that my Xamarin install of the Android SDK is not working with the SkiaSharp build process. I have to always use the Android Studio version of the tools for the NDK and SDK.\n\nOne other thing to note is that even with the submodule update the only way I can get this to build is doing the \u0060bin/fetch-gn\u0060 process. I don\u0027t know if it has something to do with macOS 10.12 Public Beta; however, using the Android Studio (\u0060/Users/[User]/Library/Android\u0060) does work after \u0060fetch-gn\u0060.\n\nI am waiting to test the compiled libraries. I might freshly grab the source tonight on my macOS 10.12 notebook (without Public Beta) and try again.\n\nThanks for helping.\nChris Z\n",
+        "createdAt": "2016-11-10T00:02:27",
+        "reactions": []
+      }
+    ]
+  }
 }

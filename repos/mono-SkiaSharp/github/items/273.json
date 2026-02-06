@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T21:02:12",
   "closedAt": "2017-04-04T19:25:13",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:09.5163472Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 291605877,
+        "author": "migueldeicaza",
+        "body": "to debug this sort of scenarios, you should provide a self-contained test case.\r\n\r\nFeel free to reopen when you have the full test case.",
+        "createdAt": "2017-04-04T19:25:13",
+        "reactions": []
+      },
+      {
+        "id": 291609039,
+        "author": "mattleibow",
+        "body": "@Sergey-Terekhin I am not sure exactly, but it may be because you are disposing the image and then using it later:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var grayImage = _grayConverter.Convert(source, PixelFormat.Format8bppIndexed))\r\n{\r\n    pixels.Dispose();\r\n    pixels = ((SkiaImageImpl)grayImage).Image.PeekPixels();\r\n}\r\n\u0060\u0060\u0060\r\n\r\nIf this is doing what I think it may be doing, then the underlying pixels are actually disposed/freed when the \u0060grayImage\u0060 is disposed. The \u0060PeekPixels()\u0060 method returns a small class that simply contains a POINTER to the pixel data contained in the image, and not the pixel data directly.",
+        "createdAt": "2017-04-04T19:37:33",
+        "reactions": []
+      }
+    ]
+  }
 }

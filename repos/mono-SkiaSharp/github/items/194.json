@@ -20,5 +20,18 @@
   "updatedAt": "2022-08-20T00:01:26",
   "closedAt": "2016-11-18T00:25:01",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:31.2228878Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 261412657,
+        "author": "mattleibow",
+        "body": "I had a look and the reason for that is quite simple actually. The \u0060SKData.AsStream()\u0060 just wraps the data as a stream. Because you are disposing the data object, the stream is actually now wrapping a chunk of memory that could be anything.\n\nThere are two ways to solve this, one of which you do already. Either **copy** the data to a stream, using \u0060SKData.SaveTo(Stream)\u0060 or you make sure the data object lives for as long as the data object. As you can\u0027t really do the latter when you are exposing the \u0060Stream\u0060 and not the \u0060SKData\u0060, copying is the only way to go about this.\n\nIn the next version I have added an overload that will allow you to get the stream, and when the stream is disposed, the underlying data will be too: https://github.com/mono/SkiaSharp/commit/f2875d86f92c39e8cf1e4a4bb7ac2c5bb000d4b7?w=1\n\nIn your case, you could write this:\n\n\u0060\u0060\u0060 csharp\nusing (var bitmap = new SKBitmap((int)sizeX, (int)sizeY)) {\n    using (var canvas = new SKCanvas(bitmap))\n    using (var paint = new SKPaint()) {\n        // draw on canvas\n    }\n    using (var image = SKImage.FromBitmap(bitmap)) {\n        var data = image.Encode(SKImageEncodeFormat.Png, 80)); // don\u0027t dispose\n        var stream = data?.AsStream(true);\n        return stream; // this will dispose \u0027data\u0027 in Stream.Dispose()\n    }\n    // \u0027bitmap\u0027 can be disposed as the data is a copy of the encoded bitmap\n}\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-11-18T00:23:41",
+        "reactions": []
+      }
+    ]
+  }
 }

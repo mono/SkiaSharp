@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-20T00:01:32",
   "closedAt": "2017-01-06T01:06:44",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:19.5939091Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 259159307,
+        "author": "charlenni",
+        "body": "The above is what I getting, if I try to compile SkiaSharp on Windows.\n\nWhen I try the same on Mac OSX, I get the following error:\n\n\u0060\u0060\u0060\nInstalling NuGet package Cake.FileHelpers...\nError downloading \u0027Cake.FileHelpers.1.0.3.2 : Cake.Core [0.7.0, )\u0027 from \u0027https://www.nuget.org/api/v2/package/Cake.FileHelpers/1.0.3.2\u0027.\nThe UTC time represented when the offset is applied must be between year 0 and 10,000.\nParameter name: offset\nError downloading \u0027Cake.FileHelpers.1.0.3.2 : Cake.Core [0.7.0, )\u0027 from \u0027https://www.nuget.org/api/v2/package/Cake.FileHelpers/1.0.3.2\u0027.\n  The UTC time represented when the offset is applied must be between year 0 and 10,000.\n  Parameter name: offset\nError: Cake.Core.CakeException: Failed to install addin \u0027Cake.FileHelpers\u0027.\n  at Cake.Core.Scripting.ScriptProcessor.InstallAddins (Cake.Core.Scripting.Analysis.ScriptAnalyzerResult analyzerResult, Cake.Core.IO.DirectoryPath installPath) [0x000ed] in \u003C1abf81795771408db3eac07a98d2cbc1\u003E:0 \n  at Cake.Core.Scripting.ScriptRunner.Run (Cake.Core.Scripting.IScriptHost host, Cake.Core.IO.FilePath scriptPath, System.Collections.Generic.IDictionary\u00602[TKey,TValue] arguments) [0x000c9] in \u003C1abf81795771408db3eac07a98d2cbc1\u003E:0 \n  at Cake.Commands.BuildCommand.Execute (Cake.CakeOptions options) [0x00026] in \u003Cfe9c776dd69a43a28368cc7f3cdd3a28\u003E:0 \n  at Cake.CakeApplication.Run (Cake.CakeOptions options) [0x00027] in \u003Cfe9c776dd69a43a28368cc7f3cdd3a28\u003E:0 \n  at Cake.Program.Main () [0x00086] in \u003Cfe9c776dd69a43a28368cc7f3cdd3a28\u003E:0 \n\u0060\u0060\u0060\n\nIt seems, that I have no luck with SkiaSharp :)\n",
+        "createdAt": "2016-11-08T15:00:44",
+        "reactions": []
+      },
+      {
+        "id": 259220388,
+        "author": "mattleibow",
+        "body": "@charlenni thanks for trying this out.\n\nOn Windows, did you init the submodules? The \u0060externals\u0060 folder should have two large folders: \u0060skia\u0060 and \u0060depot_tools\u0060. I think it can\u0027t actually find skia to build.\n\nOn Mac, that is a problem that I am trying to solve. Although I don\u0027t have this issue with that part of the build script, mine occurs when building the source. It appears Microsoft changed something with NuGet and there was a bug in mono. These two together create issues for some packages when you restore in a \u002B# timezone: https://github.com/NuGet/Home/issues/3089 (there are a few others).\n\nTo get around this issue, you can either drop your timezone to a -#. Or, you can manually download and extract the https://www.nuget.org/packages/Cake.FileHelpers/ NuGet into the \u0060/tools/Addins/Cake.FileHelpers\u0060 directory. A real pain, but at least you only have to do it once. (I just drop the TZ)\n\nI am using mono v4.6.1:\n\n\u0060\u0060\u0060\n$ mono --version\n\nMono JIT compiler version 4.6.1 (mono-4.6.0-branch-c8sr0/ef43c15 Mon Oct  3 14:35:32 EDT 2016)\nCopyright (C) 2002-2014 Novell, Inc, Xamarin Inc and Contributors. www.mono-project.com\n    TLS:           normal\n    SIGSEGV:       altstack\n    Notification:  kqueue\n    Architecture:  x86\n    Disabled:      none\n    Misc:          softdebug \n    LLVM:          yes(3.6.0svn-mono-master/8b1520c)\n    GC:            sgen\n\u0060\u0060\u0060\n\nAnd NuGet v3.4.4 (in the \u0060/tools/nuget.exe\u0060):\n\n\u0060\u0060\u0060\n$ mono ./tools/nuget.exe\n\nNuGet Version: 3.4.4.1321\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-11-08T18:35:18",
+        "reactions": []
+      },
+      {
+        "id": 259225648,
+        "author": "charlenni",
+        "body": "Am 08.11.2016 um 19:35 schrieb Matthew Leibowitz:\n\n\u003E @charlenni https://github.com/charlenni thanks for trying this out.\n\u003E \n\u003E On Windows, did you init the submodules? The |externals| folder should \n\u003E have two large folders: |skia| and |depot_tools|. I think it can\u0027t \n\u003E actually find skia to build.\n\nYes, I init the submodules. And both folders are present and filled. \ndepot_tools has a size around 10 MB, skia has a size of around 50 MB.\n\n\u003E On Mac, that is a problem that I am trying to solve. Although I don\u0027t \n\u003E have this issue with that part of the build script, mine occurs when \n\u003E building the source. It appears Microsoft changed something with NuGet \n\u003E and there was a bug in mono. These two together create issues for some \n\u003E packages when you restore in a \u002B# timezone: NuGet/Home#3089 \n\u003E https://github.com/NuGet/Home/issues/3089 (there are a few others).\n\u003E \n\u003E To get around this issue, you can either drop your timezone to a -#. \n\u003E Or, you can manually download and extract the \n\u003E https://www.nuget.org/packages/Cake.FileHelpers/ NuGet into the \n\u003E |/tools/Addins/Cake.FileHelpers| directory. A real pain, but at least \n\u003E you only have to do it once. (I just drop the TZ)\n\nI will try this. Very strange problem :)\n\n\u003E I am using mono v4.6.1:\n\u003E \n\u003E |$ mono --version Mono JIT compiler version 4.6.1 \n\u003E (mono-4.6.0-branch-c8sr0/ef43c15 Mon Oct 3 14:35:32 EDT 2016) \n\u003E Copyright (C) 2002-2014 Novell, Inc, Xamarin Inc and Contributors. \n\u003E www.mono-project.com TLS: normal SIGSEGV: altstack Notification: \n\u003E kqueue Architecture: x86 Disabled: none Misc: softdebug LLVM: \n\u003E yes(3.6.0svn-mono-master/8b1520c) GC: sgen |\n\u003E \n\u003E And NuGet v3.4.4 (in the |/tools/nuget.exe|):\n\u003E \n\u003E |$ mono ./tools/nuget.exe NuGet Version: 3.4.4.1321 |\n\u003E \n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub \n\u003E https://github.com/mono/SkiaSharp/issues/188#issuecomment-259220388, \n\u003E or mute the thread \n\u003E https://github.com/notifications/unsubscribe-auth/AELaJ2MWqvq9ZXDFmPqSVMkGqIb382rCks5q8MDogaJpZM4KsehM.\n",
+        "createdAt": "2016-11-08T18:55:17",
+        "reactions": []
+      },
+      {
+        "id": 259248866,
+        "author": "mattleibow",
+        "body": "@charlenni Just remembered... Do you have Python 2.x installed and available in your \u0060PATH\u0060 variable. On Windows.\n",
+        "createdAt": "2016-11-08T20:23:24",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,57 @@
   "updatedAt": "2022-08-20T00:01:17",
   "closedAt": "2017-02-07T11:04:46",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:46.1379352Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 274067788,
+        "author": "mattleibow",
+        "body": "I am looking at this, there are a few things to do before making the type public. However, are you able to see if you can attach the handler using effects: https://developer.xamarin.com/guides/xamarin-forms/effects/introduction/\r\n\r\nYou can do that and just add the effect for Android - no need to create a custom renderer. You can access the native control and even cast it to \u0060SKCanvasView\u0060",
+        "createdAt": "2017-01-20T13:06:25",
+        "reactions": [
+          {
+            "user": "evan-choi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:45.246664Z"
+          },
+          {
+            "user": "StenPetrov",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:45.2466644Z"
+          }
+        ]
+      },
+      {
+        "id": 274144519,
+        "author": "evan-choi",
+        "body": "I already solved it by edited the SkiaSharp open source, but thanks for the good way.",
+        "createdAt": "2017-01-20T18:30:46",
+        "reactions": []
+      },
+      {
+        "id": 277967080,
+        "author": "mattleibow",
+        "body": "In a recent commit (https://github.com/mono/SkiaSharp/commit/af51bb49d32e4e5dcf7048c00db18a94872438b0), I changed the visibility to public so that custom renderers can be created.\r\n\r\nThis is just the basic access to the types, so you can\u0027t control some things (intercepting existing events, controlling the render loop on GL views, change the actual underlying native view). I was going to do a bit more, but there are a few things that need thought. So, I decided to just allow for customizations on to of what\u0027s there for the first release.\r\n\r\nI am closing this issue as my commit actually adresses the feature, and other changes should be on a new issue",
+        "createdAt": "2017-02-07T11:04:46",
+        "reactions": []
+      },
+      {
+        "id": 278021251,
+        "author": "mattleibow",
+        "body": "I created a simple sample app that uses custom renderers: https://github.com/mattleibow/SkiaSharpFormsRendererDemo",
+        "createdAt": "2017-02-07T14:49:11",
+        "reactions": []
+      },
+      {
+        "id": 279278321,
+        "author": "evan-choi",
+        "body": "WOWWWW!! Thanks for response. This is what I was going to do.",
+        "createdAt": "2017-02-13T02:13:06",
+        "reactions": []
+      }
+    ]
+  }
 }

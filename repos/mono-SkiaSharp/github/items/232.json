@@ -15,5 +15,109 @@
   "updatedAt": "2022-08-19T21:02:42",
   "closedAt": "2017-02-04T19:10:07",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:08.1821051Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 277449370,
+        "author": "mattleibow",
+        "body": "The real answer lies here: https://groups.google.com/forum/#!topic/skia-discuss/Hdm0KrbXOKE\r\n\r\nYou need a set typeface on the SkPaint that has that character.  C\u002B\u002B code:\r\n\r\n\u0060\u0060\u0060cpp\r\n    canvas-\u003Eclear(SK_ColorWHITE);\r\n    sk_sp\u003CSkFontMgr\u003E mgr(SkFontMgr::RefDefault());\r\n    uint32_t utf32string[] = { 0x1F310 };\r\n    sk_sp\u003CSkTypeface\u003E tf(\r\n            mgr-\u003EmatchFamilyStyleCharacter(\r\n                    nullptr, SkFontStyle(), nullptr, 0, utf32string[0]));\r\n    if (tf) {\r\n\tSkPaint paint;\r\n\tpaint.setTextSize(64.0f);\r\n        paint.setAntiAlias(true);\r\n\tpaint.setColor(0xff4281A4);\r\n\tpaint.setStyle(SkPaint::kFill_Style);\r\n        paint.setTypeface(tf);\r\n        paint.setTextEncoding(SkPaint::kUTF32_TextEncoding);\r\n        canvas-\u003EdrawText(utf32string, sizeof(utf32string), 0.0f, 64.0f, paint);\r\n    }\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-02-04T14:30:16",
+        "reactions": []
+      },
+      {
+        "id": 277458753,
+        "author": "mattleibow",
+        "body": "The C\u002B\u002B code can be \u0022translated\u0022 into this C# code after the commit: https://github.com/mono/SkiaSharp/commit/485ef83acda0bb309efafedf1d4a357a5d451dee\r\n\r\n\u0060\u0060\u0060csharp\r\n// get the character code\r\n// either:\r\nvar emojiChar = StringUtilities.GetUnicodeCharacterCode(\u0022\uD83D\uDE80\u0022, SKTextEncoding.Utf32);\r\n// or:\r\nvar emojiChar = 0x1F680;\r\n\r\n// ask the font manager for a font with that character\r\nvar fontManager = SKFontManager.Default;\r\nvar emojiTypeface = fontManager.MatchCharacter(emojiChar);\r\n\r\n// draw it\r\nvar paint = new SKPaint { Typeface = emoji };\r\ncanvas.DrawText(\u0022\uD83C\uDF10 \uD83C\uDF6A \uD83C\uDF55 \uD83D\uDE80\u0022, 20, 40, paint);\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-02-04T16:51:04",
+        "reactions": [
+          {
+            "user": "WongWeiLoon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:06.4655147Z"
+          },
+          {
+            "user": "JaggerJo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:06.465515Z"
+          }
+        ]
+      },
+      {
+        "id": 277459442,
+        "author": "mattleibow",
+        "body": "The real issue is that Skia does not support character fallbacks. If the typeface does not contain the character, it will print a block. \r\n\r\nHere is a relevant topic: https://groups.google.com/forum/#!topic/skia-discuss/O4ClH4ziwVo\r\n\r\n\u003E This is more likely to do with font fallback. In previous versions of Skia font fallback (font chaining) was implicit. Basically, every font was \u0027extended\u0027 with all of the characters/glyphs in all of the fallback fonts. This became unsupportable (as the number of glyphs became too large and meant that fallback could not be controlled in a app locale dependent manner). As a result, you\u0027ll need to use SkTypeface::matchFamilyStyleCharacter to discover a font to use with glyphs which cannot be mapped.\r\n",
+        "createdAt": "2017-02-04T17:01:01",
+        "reactions": []
+      },
+      {
+        "id": 277467636,
+        "author": "mattleibow",
+        "body": "I am closing this because this is not a bug, it is just not a automatic feature. The solution to removing those blocks is to first find a typeface that has those characters.",
+        "createdAt": "2017-02-04T19:10:07",
+        "reactions": []
+      },
+      {
+        "id": 390480974,
+        "author": "steamypassion",
+        "body": "If any of ubiquitous library that worked cross platform with able to check the typeface contain the characters code? Kinda start experiment font rendering",
+        "createdAt": "2018-05-20T13:03:25",
+        "reactions": [
+          {
+            "user": "yinyue200",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:07.0838529Z"
+          }
+        ]
+      },
+      {
+        "id": 528840847,
+        "author": "inbreaks",
+        "body": "\u003E The C\u002B\u002B code can be \u0022translated\u0022 into this C# code after the commit: [485ef83](https://github.com/mono/SkiaSharp/commit/485ef83acda0bb309efafedf1d4a357a5d451dee)\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E // get the character code\r\n\u003E // either:\r\n\u003E var emojiChar = StringUtilities.GetUnicodeCharacterCode(\u0022\uD83D\uDE80\u0022, SKTextEncoding.Utf32);\r\n\u003E // or:\r\n\u003E var emojiChar = 0x1F680;\r\n\u003E \r\n\u003E // ask the font manager for a font with that character\r\n\u003E var fontManager = SKFontManager.Default;\r\n\u003E var emojiTypeface = fontManager.MatchCharacter(emojiChar);\r\n\u003E \r\n\u003E // draw it\r\n\u003E var paint = new SKPaint { Typeface = emoji };\r\n\u003E canvas.DrawText(\u0022\uD83C\uDF10 \uD83C\uDF6A \uD83C\uDF55 \uD83D\uDE80\u0022, 20, 40, paint);\r\n\u003E \u0060\u0060\u0060\r\n\r\n@mattleibow When emoji is included, the pdf obtained by \u0060SKDocument.CreatePdf\u0060 is 135M, this is too big.",
+        "createdAt": "2019-09-06T12:47:35",
+        "reactions": []
+      },
+      {
+        "id": 542488917,
+        "author": "mattleibow",
+        "body": "@inbreaks Could you open a new issue so we don\u0027t lose this?",
+        "createdAt": "2019-10-16T03:00:16",
+        "reactions": []
+      },
+      {
+        "id": 542493850,
+        "author": "inbreaks",
+        "body": "\u003E @inbreaks Could you open a new issue so we don\u0027t lose this?\r\n\r\n@mattleibow  https://github.com/mono/SkiaSharp/issues/982",
+        "createdAt": "2019-10-16T03:24:24",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:07.706997Z"
+          },
+          {
+            "user": "Hanprogramer",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:07.7069973Z"
+          }
+        ]
+      },
+      {
+        "id": 635328234,
+        "author": "HDLiYue",
+        "body": "Microcharts.Entry can\u0027t show Chinese #165\r\n",
+        "createdAt": "2020-05-28T12:46:48",
+        "reactions": []
+      },
+      {
+        "id": 929911616,
+        "author": "AlleSchonWeg",
+        "body": "Hi @mattleibow,\r\ni have the same problem and one question. What is the best approach to get the font if i hava a string like: \u002212 \u4E00\u5230\u5341\u4E8C\u6708 2005\u0022 ?\r\nThank you.",
+        "createdAt": "2021-09-29T07:25:23",
+        "reactions": []
+      }
+    ]
+  }
 }

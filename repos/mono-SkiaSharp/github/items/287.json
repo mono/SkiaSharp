@@ -14,5 +14,55 @@
   "updatedAt": "2022-08-19T21:02:02",
   "closedAt": "2017-08-29T12:43:39",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:30.3820452Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 299995607,
+        "author": "mattleibow",
+        "body": "This appears to be an issue with your compiler architecture... \u0022An attempt was made to load a program with an incorrect format.\u0022\r\n\r\nI am assuming you are running Windows as this is where this type of error usually occurs.\r\n\r\nAre you building for x86, x64 or Any CPU? Is this .NET Core or Full .NET Framework? One machine may be running an x86 OS and the other a x64 OS. Because we are using a native library, you may need to build for each architecture separately. If you are building for Any CPU, both platform native files will be copied into the output directory, as well as the current platform in the bin. If you are running on a specific architecture, you can just copy the required native file out of the sub folder into the bin.",
+        "createdAt": "2017-05-08T21:25:53",
+        "reactions": []
+      },
+      {
+        "id": 307038834,
+        "author": "AwsomeCode",
+        "body": "Hi @mattleibow ,\r\n\r\nI am running on Full .NET Framework with Any CPU. Both the machine running on X64 Windows 10 OS.\r\nBoth have native file for each CPU architecture in separate folder and X64 one in bin folder.\r\n\r\nThe only difference is working one is running on IIS 8 on Xeon Processor. Non working on is using IIS express on Core I7 in debug mode.\r\n\r\nI have made simple console application on core i7 Full .NET Framework with Any CPU its working fine.\r\n\r\n\r\n",
+        "createdAt": "2017-06-08T08:41:00",
+        "reactions": []
+      },
+      {
+        "id": 325651870,
+        "author": "AwsomeCode",
+        "body": "Its working after changing from x86 to x64. Thanks.",
+        "createdAt": "2017-08-29T12:43:39",
+        "reactions": [
+          {
+            "user": "chrisadol",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:30.1380387Z"
+          },
+          {
+            "user": "gqn110",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:30.1380391Z"
+          },
+          {
+            "user": "chrisheil",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:30.1380393Z"
+          }
+        ]
+      },
+      {
+        "id": 325681730,
+        "author": "mattleibow",
+        "body": "The build should work for the machine that it is building on (and from the IDE). but as soon as you change it, there is no way for the build to know.\r\n\r\nThe reason for the two \u0022x86\u0022 and \u0022x64\u0022 folders is that depending on the destination architecture, you are supposed to copy the contents out of the sub folder and next to the main exe.",
+        "createdAt": "2017-08-29T14:28:20",
+        "reactions": []
+      }
+    ]
+  }
 }

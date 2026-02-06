@@ -15,5 +15,108 @@
   "updatedAt": "2022-08-19T21:02:46",
   "closedAt": "2017-03-12T13:52:05",
   "commentCount": 13,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:59.9521028Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 276977923,
+        "author": "mattleibow",
+        "body": "I just tested with Xamarin.Form\u0027s \u0060OpenGLView\u0060, and it does the same thing. I think this has to do with how Xamarin.Forms works - when you go to a new page, the old content is still underneath. In the case of Android\u0027s \u0060GLSurfaceView\u0060, the way it works is to basically punch a hole through the UI to the bottom-most GL view. You can see this by the fact that the previous view still fires it\u0027s paint event.\r\n\r\nThis is really an Android \u0060GLSurfaceView\u0060 issue, but I am looking to see if I can replace it with a \u0060TextureView\u0060: https://github.com/mono/SkiaSharp/issues/223",
+        "createdAt": "2017-02-02T14:50:42",
+        "reactions": []
+      },
+      {
+        "id": 277209478,
+        "author": "bugadani",
+        "body": "Thank you. As a workaround, removing the view from the hierarchy when the page disappears,\u00A0seems to work.",
+        "createdAt": "2017-02-03T10:03:35",
+        "reactions": []
+      },
+      {
+        "id": 285945924,
+        "author": "mattleibow",
+        "body": "Closing this as I will have to implement a \u0060TextureView\u0060 (#263) to properly avoid this issue.",
+        "createdAt": "2017-03-12T13:51:47",
+        "reactions": []
+      },
+      {
+        "id": 364183676,
+        "author": "mattleibow",
+        "body": "@bugadani I have reached what I think is good to go...\r\n\r\n - [SkiaSharp.1.60.0-beta.nupkg](https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/lastSuccessfulBuild/Azure/processDownloadRequest/ArtifactsFor-319/eb629db98be18a73870fcab33b677512ec6bc02a/output/SkiaSharp.1.60.0-beta.nupkg)\r\n - [SkiaSharp.Views.1.60.0-beta.nupkg](https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/lastSuccessfulBuild/Azure/processDownloadRequest/ArtifactsFor-319/eb629db98be18a73870fcab33b677512ec6bc02a/output/SkiaSharp.Views.1.60.0-beta.nupkg)\r\n - [SkiaSharp.Views.Forms.1.60.0-beta.nupkg](https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/lastSuccessfulBuild/Azure/processDownloadRequest/ArtifactsFor-319/eb629db98be18a73870fcab33b677512ec6bc02a/output/SkiaSharp.Views.Forms.1.60.0-beta.nupkg)\r\n\r\nGive that a whirl and let me know what happens. The Xamarin.Forms view should now be using the TextureView under the hood.",
+        "createdAt": "2018-02-08T17:18:23",
+        "reactions": []
+      },
+      {
+        "id": 364187191,
+        "author": "bugadani",
+        "body": "Cool, didn\u0027t expect a heads up! I will try to remove my workarounds and give it a go this weekend.",
+        "createdAt": "2018-02-08T17:29:55",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:55:58.3088811Z"
+          }
+        ]
+      },
+      {
+        "id": 364468423,
+        "author": "bugadani",
+        "body": "Hello! I\u0027ve tried the packages and I can say that they have not solved my issue but made it worse.\r\n\r\nAs for my setup, currently I\u0027m using a Galaxy S5 with android 6.0 and a Huawei P9 Lite 2016 with LineageOS 14.1 (Android 7.1) to test my apps.\r\n\r\nMy app uses a master-detail view as its menu, where the main detail page has a custom made chart using SKGLView. My original issue was that the chart was displayed on pages that went above this main page (i.e. an evaluation page with other charts and stuff) instead of the upper pages\u0027 charts and skglview views. Also, the Master part of the master-detail view was only rendered outside of the charts bounds.\r\n\r\nAfter removing my workarounds I noticed that this issue was not present on my 7.1 device (which I got long after applying my workarounds...) but it was still present on the 6.0 device.\r\n\r\nAfter installing the betas, this above issue remains as before, with the additional effect where everything is mirrored vertically (i.e. what was supposed to be drawn in the upper left corner is now drawn in the lower left, and texts are upside-down mirrored as well).\r\n\r\nI\u0027m not able to test it with other devices at the moment.",
+        "createdAt": "2018-02-09T15:38:08",
+        "reactions": []
+      },
+      {
+        "id": 364489768,
+        "author": "mattleibow",
+        "body": "@bugadani Thanks for the feedback. Could you attach a screenshot?\r\nBesides the incorrect image, does the chart still appear on top of all the pages? Just to make sure that all the packages are correct, check to see if all the projects have been updated to v1.60.",
+        "createdAt": "2018-02-09T16:48:52",
+        "reactions": []
+      },
+      {
+        "id": 364497571,
+        "author": "bugadani",
+        "body": "![one](https://user-images.githubusercontent.com/977627/36040030-86c3ab6c-0dc4-11e8-8d0d-1763fc5d9377.png) This one is from the 7.1 device (so this one will only show the mirroring) but not the other one as my work day has ended and I left the phone at the office.\r\n\r\nIt appears all packages were updated.\r\n\r\nYes, the chart appears above the other pages, but only where the other pages use SKGLView and only on Marshmallow (I would guess any below Nougat). This is the same behaviour as with the old implementation.\r\n",
+        "createdAt": "2018-02-09T17:15:01",
+        "reactions": []
+      },
+      {
+        "id": 364511010,
+        "author": "mattleibow",
+        "body": "Hmm. I created a set of tests.\r\n[SkiaSharp_v1.59.zip](https://github.com/mono/SkiaSharp/files/1711960/SkiaSharp_v1.59.zip)\r\n[SkiaSharp_v1.60.zip](https://github.com/mono/SkiaSharp/files/1711962/SkiaSharp_v1.60.zip)\r\n\r\nHave a look and see what happens. I tested on a Nexus and Cubot (my Huwawei is out of reach at the momemnt, but I will test it). With v1.59, the second page appears over everything, but the view is still visible. With v1.60, the page slides up and covers everything.\r\n\r\nThis is what it should look like before navigating:\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/1096616/36042328-2678635a-0dd4-11e8-8d4b-33c32258d504.png\u0022 width=\u0022300\u0022 /\u003E\r\n",
+        "createdAt": "2018-02-09T18:03:52",
+        "reactions": []
+      },
+      {
+        "id": 364554293,
+        "author": "bugadani",
+        "body": "Apart from the crashes related to invalid casts your demos seem to do what they should: in v1.59 only the page title turns black, in v1.60 all of the page does. Also I don\u0027t experience the mirroring here, as well.\r\n\r\n[30 minutes and a deleted paragraph later]\r\n\r\nAfter fiddling around a bit I noticed that my chart started to render correctly while my other skia-based view was still mirrored. Looks like updating SkiaSharp did not trigger a rebuild of my projects. Looks good now on my P9 Lite, I\u0027ll be able to check the S5 next Tuesday. Thanks a lot for your work, your help and your demo (wouldn\u0027t have figured it out without that...) and I hope I\u0027ll have good news on Tuesday.\r\n\r\nHave a nice weekend!",
+        "createdAt": "2018-02-09T20:22:57",
+        "reactions": []
+      },
+      {
+        "id": 364708019,
+        "author": "mattleibow",
+        "body": "Ah, no prob. Sorry about the crash, that was some hacky code I gave you.\r\nGood to hear it works now - not sure why it didn\u0027t cause a rebuild.",
+        "createdAt": "2018-02-11T00:28:08",
+        "reactions": []
+      },
+      {
+        "id": 365246386,
+        "author": "bugadani",
+        "body": "Hey, so I had the change to try again on my marshmallow phone, works nicely there as well. Thanks for the fix, I\u0027m now free to remove some ugly workarounds permanently.",
+        "createdAt": "2018-02-13T11:59:33",
+        "reactions": []
+      },
+      {
+        "id": 365352100,
+        "author": "mattleibow",
+        "body": "Awesome! Don\u0027t hesitate to open a new issue for any other things that you come across.",
+        "createdAt": "2018-02-13T18:04:59",
+        "reactions": []
+      }
+    ]
+  }
 }

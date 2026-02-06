@@ -24,5 +24,60 @@
   "updatedAt": "2022-08-20T00:01:41",
   "closedAt": "2016-11-07T15:40:53",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:06.2914839Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 257528569,
+        "author": "mattleibow",
+        "body": "I had a look and I believe it is because you are using PowerShell version 2, and we wrote the script for v3. I fixed that issue in fd88f1add7954b3d428e9bcf251b8d064080ebca\n\nLet me know how things go.\n\nAlso remember that you don\u0027t have to build SkiaSharp to use the samples. Right now the code that will work out the box is v1.54.1: https://github.com/mono/SkiaSharp/releases/tag/v1.54.1\n\nThe master is the almost-finished bits for the next v1.55 - the samples want the later version of the NuGet, so you will have to build everything, but the samples in v1.54.1 will work with the v1.54.1 NuGet.\n",
+        "createdAt": "2016-11-01T09:59:32",
+        "reactions": []
+      },
+      {
+        "id": 258332448,
+        "author": "mattleibow",
+        "body": "@KingSora I am closing this now as I confirmed that I can build SkiaSharp on Powershell v2. Please re-open if you are still having issues.\n",
+        "createdAt": "2016-11-04T02:51:07",
+        "reactions": []
+      },
+      {
+        "id": 258617479,
+        "author": "KingSora",
+        "body": "Thank you very much!\n\nThis error is resolved, but there is a new one now.\nhttp://puu.sh/s7lWF/f499ce4e56.png\n\nThe error says: \u0022The file \u0027externals-uwp\u0027 couldn\u0027t be found\u0022.\n\nBest regards,\nSora\n",
+        "createdAt": "2016-11-05T15:07:07",
+        "reactions": []
+      },
+      {
+        "id": 258849430,
+        "author": "mattleibow",
+        "body": "@KingSora, I think I may know what is happening here. Did you clone the submodules too?\n\n\u0060\u0060\u0060\ngit submodule update --init --recursive\n\u0060\u0060\u0060\n\nThe submodules are skia and the build tools to actually compile all those pieces. SkiaSharp is just the managed wrapper, and we use MSBuild for that. skia is a lot of C/C\u002B\u002B code, and we just build the library using Google tools.\n\nYou can check to see it the submodules are downloaded under the \u0060externals\u0060 folder, there should be \u0060skia\u0060 and \u0060depot_tools\u0060 folders with lots of files.\n",
+        "createdAt": "2016-11-07T14:28:48",
+        "reactions": []
+      },
+      {
+        "id": 258853687,
+        "author": "KingSora",
+        "body": "Yes they are cloned, I tried a lot by myself but I really dont know why it wont work.\n",
+        "createdAt": "2016-11-07T14:44:13",
+        "reactions": []
+      },
+      {
+        "id": 258863318,
+        "author": "KingSora",
+        "body": "FINALLY! After really long time I found the mistake!\n\nI\u0027ve two harddrives and my Python2.7 Path wasn\u0027t correct anymore If I hadn\u0027t plugged in my D: drive.\nMaybe I should watch more carefully on the Path variables I\u0027ve registred on my machine.\n\nYou can close it now.\n",
+        "createdAt": "2016-11-07T15:18:05",
+        "reactions": []
+      },
+      {
+        "id": 258870004,
+        "author": "mattleibow",
+        "body": "Hehe. Those little things. Have fun!\n",
+        "createdAt": "2016-11-07T15:40:53",
+        "reactions": []
+      }
+    ]
+  }
 }

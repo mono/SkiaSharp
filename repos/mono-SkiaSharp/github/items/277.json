@@ -14,5 +14,53 @@
   "updatedAt": "2022-08-19T21:02:10",
   "closedAt": "2017-04-21T14:31:07",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:12.4670531Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 296107203,
+        "author": "mattleibow",
+        "body": "Before I add this, I wanted to check that you are aware of the fact that you can tell the decoder what image configuration that you want.\r\n\r\nInstead of \u0060SKBitmap.Decode(string path)\u0060, you can use the overload: \u0060SKBitmap.Decode(string path, SKImageInfo info)\u0060\r\n\r\nhttps://developer.xamarin.com/api/member/SkiaSharp.SKBitmap.Decode/p/System.String/SkiaSharp.SKImageInfo/\r\n\r\nThis will result in the image being loaded and converted into the desired color type and alpha type in a single decode operation.\r\n\r\nThe \u0060SkBitmap::setAlphaType(...)\u0060 function does not actually do anything except switch the alpha type field, leaving the pixel data the same. This means that by changing the alpha type, the pixel data may be \u0022different\u0022. For example, if you switch the alpha type from premultiplied to unpremultiplied, the color has effectively changed, since the color is related to the alpha value.\r\n\r\nIf you have an image that was loaded, you can still \u0022change\u0022 the alpha type by reading it into another image using a single/block operation: \r\n\r\n\u0060\u0060\u0060\r\nvar newBmp = new SKBitmap(desiredInfo);\r\noldBmp.CopyTo(newBmp);\r\n\u0060\u0060\u0060\r\n\r\nLet me know if any of these things help.",
+        "createdAt": "2017-04-21T07:28:28",
+        "reactions": []
+      },
+      {
+        "id": 296108268,
+        "author": "ikolev21",
+        "body": "Ah, thanks for the info, I should have looked at the implementation of setAlphaType, in that case it won\u0027t do the job.\r\nOK, I\u0027ll try Decode with ImageInfo.",
+        "createdAt": "2017-04-21T07:32:01",
+        "reactions": []
+      },
+      {
+        "id": 296160603,
+        "author": "ikolev21",
+        "body": "I had missed your comment about changing the alpha type by using CopyTo. I had already tried that, it changes the alpha type of the target bitmap to match the type of the source, so it doesn\u0027t work.\r\n\r\nDecode with a specified SKImageInfo does work. The only small inconvenience is that I need to open the stream twice, once to read the bounds and another time to read the image (since SKImageInfo wants to be given the image bounds).",
+        "createdAt": "2017-04-21T10:53:23",
+        "reactions": []
+      },
+      {
+        "id": 296175418,
+        "author": "mattleibow",
+        "body": "Ah, in that case, you can use the \u0060SKCodec\u0060 directly with an extra step:\r\n\r\n\u0060\u0060\u0060\r\n// open the codec\r\nvar codec = SKCodec.Create(stream);\r\n\r\n// get the dimensions from the codec\r\nvar codecInfo = codec.Info;\r\n\r\n// create the bitmap (use the dimensions and optionally any desired color/alpha type)\r\nvar desiredInfo = new SKImageInfo(codecInfo.Width, codecInfo.Height);\r\nvar bitmap = new SKBitmap(desiredInfo);\r\n\r\n// decode the bitmap\r\ncodec.GetPixels(bitmap.Info, bitmap.GetPixels());\r\n\u0060\u0060\u0060\r\n\r\nThis is exactly what the \u0060Decode\u0060 method does, I just added many overloads to make it easy to work with. \r\n\r\nBasically, you are initializing the codec with the stream - which results in the stream being partially read to get the dimensions and color types. Then, you can just use what you want from the info to construct your desired info. Finally, the \u0060GetPixels\u0060 method reads/decodes the stream into the bitmap using the \u0060bitmap.Info\u0060 (which will be equivalent to \u0060desiredInfo\u0060).",
+        "createdAt": "2017-04-21T12:17:19",
+        "reactions": []
+      },
+      {
+        "id": 296184921,
+        "author": "ikolev21",
+        "body": "Thanks, this works and is indeed better.",
+        "createdAt": "2017-04-21T13:04:33",
+        "reactions": []
+      },
+      {
+        "id": 296206761,
+        "author": "mattleibow",
+        "body": "I\u0027ll close this as this solves your problem, and I am not really wanting to wrap \u0060SkBitmap::setAlphaType\u0060. \r\n\r\nFeel free to reopen if this is needed.",
+        "createdAt": "2017-04-21T14:31:05",
+        "reactions": []
+      }
+    ]
+  }
 }

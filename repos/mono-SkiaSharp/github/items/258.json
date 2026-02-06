@@ -23,5 +23,78 @@
   "updatedAt": "2022-08-19T21:02:24",
   "closedAt": "2017-06-05T21:03:12",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:41.0116719Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 284721897,
+        "author": "mattleibow",
+        "body": "We do want to support SVG, but this is no small task. SVG has a HUGE scope and detailed specification: http://www.w3.org/TR/SVG2/\r\n\r\nAt this point, SkiaSharp is more of wrapper for skia, with some added features. We will probably only support SVG in the same way skia does, when they do. This is not to say that someone (anyone really) can create a SVG engine that makes use of SkiaSharp as the rendering engine. Essentially, SkiaSharp is a 2D raster graphics engine, thus SVG and any vector system will have to be created from scratch.\r\n\r\nI am looking at creating a SVG engine with inspiration for WebKit\r\nhttps://chromium.googlesource.com/chromium/src/\u002B/master/third_party/WebKit/Source/core/svg/\r\n\r\nBut... That is nowhere near a proof-of-concept even. I would not wait for this. There are a few SVG engines for .NET, but they aren\u0027t really cross-platform or mobile friendly.\r\n\r\nSVG is not a case of we don\u0027t want or we don\u0027t care, but simply a case of the SkiaSharp team is too small to get around to doing this. At this point, the community will have to jump in on this.",
+        "createdAt": "2017-03-07T13:32:50",
+        "reactions": []
+      },
+      {
+        "id": 284967743,
+        "author": "EnCey",
+        "body": "Alright, thank you for making that clear.\r\n\r\nI believe I\u0027m familiar with most/all the SVG engines available in .NET, but sadly none of them can \u0022do it all\u0022, that\u0027s why I was curious what the SkiaSharp team\u0027s plans were in this regard.\r\n\r\nI\u0027ll add your SVG engine to my watch list as well, even if it\u0027s still in early stages. ",
+        "createdAt": "2017-03-08T07:28:52",
+        "reactions": []
+      },
+      {
+        "id": 285628639,
+        "author": "YZahringer",
+        "body": "The support of these files would be great: https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/\r\n\r\nFor example, dukechain.svg and image.svg are not rendered correctly.",
+        "createdAt": "2017-03-10T10:04:54",
+        "reactions": []
+      },
+      {
+        "id": 287764047,
+        "author": "mattleibow",
+        "body": "Just for reference #120 \u0022Add SVG support to SkiaSharp\u0022",
+        "createdAt": "2017-03-20T13:49:19",
+        "reactions": []
+      },
+      {
+        "id": 287783610,
+        "author": "charlesroddie",
+        "body": "I don\u0027t understand this thread. There is SkiaSharp.SVG.\r\nThis went out of beta on 08 February 2017 according to https://www.nuget.org/packages/SkiaSharp.Svg/\r\nDoesn\u0027t this simply mean that SkiaSharp supports SVG?",
+        "createdAt": "2017-03-20T14:52:57",
+        "reactions": []
+      },
+      {
+        "id": 287996860,
+        "author": "EnCey",
+        "body": "@charlesroddie I doubt that SkiaSharp.SVG is anywhere close to supporting the full SVG 1 spec, purely from looking at the very compact source. \r\nIt may be able to draw some basic shapes etc., but probably can\u0027t handle any of the advanced features of SVG like [clipping/masking](https://www.w3.org/TR/SVG/masking.html) or [filters](https://www.w3.org/TR/SVG/filters.html).",
+        "createdAt": "2017-03-21T07:25:18",
+        "reactions": []
+      },
+      {
+        "id": 289959291,
+        "author": "mattleibow",
+        "body": "I was asking on the skia forums, and it appears SVG work is underway, but not coming any time soon. This is because SVG support is really not a big requirement of either Chrome or Android.\r\n\r\nThey have right now a limited support:\r\nhttps://github.com/google/skia/blob/2979b1a7eaffcdcf994e506caf743a9adf35b8ed/experimental/svg/model/SkSVGDOM.cpp#L279-L330\r\n\r\nhttps://groups.google.com/forum/#!topic/skia-discuss/EuU-KljkQoE\r\n\u003E ... we are still working toward an SVG backend for Skia.\u00A0 Practically speaking development is active, but we don\u0027t have exact time frame and the extent of support (have you seen the spec!?) is a bit unclear at this point.\u00A0 As you mention, our biggest clients don\u0027t really need this support, but a handful of others have expressed interest, so it\u0027s something we\u0027re doing as possible to expand capability of the library.\r\n\r\nI think it is safe to say that it is coming, eventually. I will endeavor to contribute to skia to get a fuller SVG support, but I can make no promises on this point. I think both skia and SkiaSharp have the same points in that SVG is large and not easy to implement. But, there are many low-hanging fruit that can be done to aid this process - for example, there is no radial gradient support yet, so that could be added, without too much work.",
+        "createdAt": "2017-03-29T02:00:52",
+        "reactions": []
+      },
+      {
+        "id": 306309481,
+        "author": "mattleibow",
+        "body": "I just want to thank the community for there support and feature requests, and, to inform the world that SVG support has moved from this repository to one that is more appropriate: https://github.com/mono/SkiaSharp.Extended\r\n\r\nThis new repository will make it easier to develop libraries that use SkiaSharp, but don\u0027t really have to be built with the main library. In addition, there will be no need to first build all the native code, just to test a fix for some SVG case.\r\n\r\nI opened a new issue there so that any updates can still be tracked. Please feel free to comment or open some PRs: https://github.com/mono/SkiaSharp.Extended/issues/2",
+        "createdAt": "2017-06-05T21:03:12",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:40.9614588Z"
+          },
+          {
+            "user": "EnCey",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:40.9614591Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T21:01:50",
   "closedAt": "2017-06-05T23:53:19",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:54.9558513Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 304141071,
+        "author": "mattleibow",
+        "body": "I think that I may need a bit more information. The paint event will get fired each time something invalidates the underlying surface.\r\n\r\nThis can include view transformations (animations), view manipulations (resizing) or just by calling \u0060InvalidateSurface()\u0060 on some platforms.\r\n\r\nHow are you doing the transformations? And, have you ensured that you are not attaching multiple event handlers to the event (or the same one multiple times)?",
+        "createdAt": "2017-05-25T22:25:14",
+        "reactions": []
+      },
+      {
+        "id": 304521963,
+        "author": "gayugokhale",
+        "body": "Sorry, I am little bit late. Actually when I was searching for this issue, I first tried [this](https://github.com/xamarin/xamarin-forms-samples/tree/master/SkiaSharpForms/SkiaSharpFormsDemos) example. but at that time bitmap scaling translating operations were not implemented. It was just simple skiasharp demo. After that I found [this](https://github.com/mattleibow/SkiaSharpFormsRendererDemo) example. I tried that and implemented using renderer. So now, my current code includes both the code.  Actually I am not at my working place at the time of writing. So here is the description what I have done.\r\n\r\nSo I have \u0060TouchCanvasView\u0060 Where you defined only \u0060OnTouch\u0060 I have defined all the other methods \u0060OnScale\u0060,\u0060OnTranslate\u0060 and others. Now in renderer in \u0060OnTouch\u0060 I calculate distance, scale or rotate and return events defined in \u0060TouchCanvasView\u0060. and catch it in \u0060MainPage.xaml.cs\u0060. And I implemented rotation after \u0060SkiaSharpFormsDemos\u0060 got updated. because there was matrix related issue.\r\n\r\nI know its crazy but after trying for so many days, its working !! \r\nAnd I am not calling event multiple times.\r\n\r\nOne more question when I \u0060Invalidate\u0060 from \u0060MainPage.xaml.cs\u0060, OnPaint is not called. why ??\r\n\r\nThank you !!",
+        "createdAt": "2017-05-28T15:29:18",
+        "reactions": []
+      },
+      {
+        "id": 306342597,
+        "author": "mattleibow",
+        "body": "Great to hear that you are making progress.\r\n\r\nI am not too sure what you mean by \u0060Invalidate\u0060... Do you mean \u0060InvalidateSurface\u0060? This works for mean - how are you testing that it is not being called? It might be the case that either the width or height is zero, so in this case, the paint is skipped.",
+        "createdAt": "2017-06-05T23:53:19",
+        "reactions": []
+      }
+    ]
+  }
 }

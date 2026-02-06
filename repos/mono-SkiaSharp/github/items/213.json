@@ -19,5 +19,46 @@
   "updatedAt": "2022-08-20T00:01:20",
   "closedAt": "2017-03-12T13:45:43",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:41.0705577Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 268285376,
+        "author": "prepare",
+        "body": "yes, you can use  GPU-backed SKSurface on Windows 7\r\nI\u0027ve test it :)\r\n\r\nI use libEGL from  this ...\r\nhttps://github.com/google/angle\r\n\r\nSKIA sample (4,5) here\r\nhttps://github.com/PaintLab/PixelFarm/issues/1",
+        "createdAt": "2016-12-20T16:16:15",
+        "reactions": []
+      },
+      {
+        "id": 270941064,
+        "author": "mattleibow",
+        "body": "@tdenniston This can be done in two ways. \u0060CreateDefaultInterface\u0060 uses the preferred platform engine - on Windows it is DirectX. I haven\u0027t yet got the targets in place for it to work out the box.\r\n\r\n\u0060CreateDefaultInterface\u0060 is basically a wrapper: \u0060CreateNativeAngleInterface() ?? CreateNativeGlInterface()\u0060. On non-Windows platforms \u0060CreateNativeAngleInterface\u0060 just returns null, so automatically falls back to OpenGL[ES].\r\n\r\nHowever, OpenGL is working fine: \u0060GRGlInterface.CreateNativeGlInterface()\u0060. This will work on Windows 7 out the box and is what I use for the GL controls. I need to get the ANGLE bits for Windows Classic and then hook up the DirectX/OpenGL context to WinForms. This is a bit of work, so I haven\u0027t had a chance to do it yet.",
+        "createdAt": "2017-01-06T16:24:30",
+        "reactions": []
+      },
+      {
+        "id": 271587646,
+        "author": "tdenniston",
+        "body": "@mattleibow When I try calling \u0060GRGlInterface.CreateNativeGlInterface()\u0060 it is returning null.",
+        "createdAt": "2017-01-10T14:23:19",
+        "reactions": []
+      },
+      {
+        "id": 272755110,
+        "author": "mattleibow",
+        "body": "@tdenniston That might be because you don\u0027t have an OpenGL context set up?\r\n\r\nSkiaSharp does not create an OpenGL context, the \u0022interface\u0022 here is basically a set of function pointers to the OpenGL functions (glDrawXXX). In my SkiaSharp.Views, I first set up a context to draw to the control/memory and then in the draw loop, I get the interface.\r\n\r\nFor the Windows Desktop, I use OpenTK and GLControl (I will be switching eventually to DirectX): https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Desktop/SKGLControl.cs\r\n\r\nFor UWP, I set up my ANGLE/DX context:\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.UWP/SKSwapChainPanel.cs",
+        "createdAt": "2017-01-16T01:35:03",
+        "reactions": []
+      },
+      {
+        "id": 285945571,
+        "author": "mattleibow",
+        "body": "Closing this as this is a combination of a duplicate issue and is also not really the right issue to solve:\r\n - GPU is supported for Windows 7\r\n - Only OpenGL views are currently implemented (via \u0060OpenTK.GLControl\u0060)\r\n - ANGLE views are not **currently** implemented (or distributed) #243\r\n\r\nTo use OpenGL GPU on Windows 7, either use the OpenGL-based view, or you will have to set up your own context. For DirectX GPU, you will have to make use of the \u0060AssembleAngleInterface\u0060:\r\nhttps://github.com/mono/SkiaSharp/blob/v1.56.2/binding/Binding/GRGlInterface.cs#L89\r\n",
+        "createdAt": "2017-03-12T13:45:43",
+        "reactions": []
+      }
+    ]
+  }
 }

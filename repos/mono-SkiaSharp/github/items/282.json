@@ -15,5 +15,60 @@
   "updatedAt": "2022-08-19T21:02:06",
   "closedAt": "2017-05-12T02:35:02",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:22.3065564Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 297802409,
+        "author": "mattleibow",
+        "body": "I was not able to reproduce this.\r\n\r\nI loaded my image like this (I load it via a bitmap because I am lazy):\r\n\r\n\u0060\u0060\u0060csharp\r\n\r\nvar assembly = GetType().GetTypeInfo().Assembly;\r\nusing (var stream = assembly.GetManifestResourceStream(\u0022SkiaSharpXamarinFormsDemo.image.png\u0022))\r\n{\r\n\tbitmap = SKBitmap.Decode(stream);\r\n\timage = SKImage.FromBitmap(bitmap);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThen, in my draw event, I draw:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.Clear(SKColors.Blue);\r\nvar paint = new SKPaint { FilterQuality = SKFilterQuality.High };\r\ncanvas.DrawImage(image, SKRect.Create(300, 300), paint);\r\n\u0060\u0060\u0060\r\n\r\nIs it possible to provide a small test case or code that reproduces the problem?\r\n\r\n![image](https://cloud.githubusercontent.com/assets/1096616/25498326/dd4976bc-2b87-11e7-8ed2-30b826df5b08.png)\r\n",
+        "createdAt": "2017-04-27T18:38:40",
+        "reactions": []
+      },
+      {
+        "id": 297813587,
+        "author": "Rungee",
+        "body": "In the post, there was a link to a [GitHub repository](https://www.google.com/url?q=https%3A%2F%2Fgithub.com%2FRungee%2FSkiasharp_Tests\u0026sa=D\u0026sntz=1\u0026usg=AFQjCNFh3Lgk0gq78p0dtgT0le7sSBzZfg) containing a test case.\r\n\r\nIt is important to note that this bug happens only under certain conditions such as image scale or rect coordinates.\r\n",
+        "createdAt": "2017-04-27T19:21:19",
+        "reactions": []
+      },
+      {
+        "id": 297929096,
+        "author": "mattleibow",
+        "body": "All right! I am now able to reproduce it. It appears that when the image has a negative X and Y, the transparency is lost...\r\n\r\nNot sure why yet, but I will have a look and see if this is a bug that was fixed in a later version of skia.",
+        "createdAt": "2017-04-28T07:32:34",
+        "reactions": []
+      },
+      {
+        "id": 300876304,
+        "author": "mattleibow",
+        "body": "@Rungee I think I have found the problem.\r\n\r\nThere appears to be a bug in skia that doesn\u0027t draw Unpremultiplied images correctly. When using \u0060SKBitmap.Decode(path/stream)\u0060, the image is decoded as Unpremultiplied. To decode as a Premultiplied image, use the overload that allows you to specify the desired alpha type:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var codec = SKCodec.Create(new SKFileStream(path)))\r\n{\r\n    var info = new SKImageInfo(codec.Info.Width, codec.Info.Height);\r\n    var image = SKImage.FromBitmap(SKBitmap.Decode(codec, info));\r\n    \r\n    // draw\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThis is almost what we do under the hood, but instead of creating a new \u0060SKImageInfo\u0060, I use the one provided by the codec - which is Unpremultiplied.",
+        "createdAt": "2017-05-11T18:25:32",
+        "reactions": []
+      },
+      {
+        "id": 300876816,
+        "author": "mattleibow",
+        "body": "I noticed on the linked issue that they pointed to a forum post: https://forums.xamarin.com/discussion/88793/scaling-transparent-png-images\r\n\r\nThere I suggested the same solution. ",
+        "createdAt": "2017-05-11T18:27:23",
+        "reactions": []
+      },
+      {
+        "id": 300896220,
+        "author": "mattleibow",
+        "body": "According to Google (https://groups.google.com/forum/#!topic/skia-discuss/7xcKq09kL0Y), I should be able to always use Premul when decoding since it really is the only type supported:\r\n\r\n\u003E Skia only supports drawing premultiplied bitmaps/images. \r\n\r\nSo I am thinking of changing the default alpha type when decoding... Any thoughts?",
+        "createdAt": "2017-05-11T19:42:18",
+        "reactions": []
+      },
+      {
+        "id": 300968215,
+        "author": "mattleibow",
+        "body": "I am closing this because:\r\n - it is most probably a bug inside skia (according to Google)\r\n - I have merged a PR that should default to an alpha type that will work in most cases\r\n - \u0060SKBitmap\u0060 is really a dying type (sloooowly), \u0060SKImage\u0060 is preferred\r\n - \u0060SKImage.FromEncodedData\u0060 is probably the better way to decode",
+        "createdAt": "2017-05-12T02:35:02",
+        "reactions": []
+      }
+    ]
+  }
 }

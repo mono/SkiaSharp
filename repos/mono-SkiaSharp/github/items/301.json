@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T21:01:52",
   "closedAt": "2017-05-26T16:43:15",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:52.1056082Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 303895021,
+        "author": "mattleibow",
+        "body": "Unfortunately, I am unable to reproduce this.\r\n\r\nI created a new portable project and made sure that it was Profile111. Then I installed both v1.57.1 and v1.58 without any issues.\r\n\r\nIf you do a new project and install that, does it work? Also, if you uninstall SkiaSharp and then re-install it, does it still give the same error?\r\n\r\nHere is my log:\r\n\u0060\u0060\u0060\r\nAttempting to gather dependency information for package \u0027SkiaSharp.1.57.1\u0027 with respect to project \u0027ClassLibrary1\u0027, targeting \u0027.NETPortable,Version=v4.5,Profile=Profile111\u0027\r\nGathering dependency information took 2.08 sec\r\nAttempting to resolve dependencies for package \u0027SkiaSharp.1.57.1\u0027 with DependencyBehavior \u0027Lowest\u0027\r\nResolving dependency information took 0 ms\r\nResolving actions to install package \u0027SkiaSharp.1.57.1\u0027\r\nResolved actions to install package \u0027SkiaSharp.1.57.1\u0027\r\nRetrieving package \u0027SkiaSharp 1.57.1\u0027 from \u0027nuget.org\u0027.\r\nAdding package \u0027SkiaSharp.1.57.1\u0027 to folder \u0027C:\\Samples\\packages\u0027\r\nAdded package \u0027SkiaSharp.1.57.1\u0027 to folder \u0027C:\\Samples\\packages\u0027\r\nAdded package \u0027SkiaSharp.1.57.1\u0027 to \u0027packages.config\u0027\r\nSuccessfully installed \u0027SkiaSharp 1.57.1\u0027 to ClassLibrary1\r\nExecuting nuget actions took 1.44 sec\r\n========== Finished ==========\r\nTime Elapsed: 00:00:05.5308904\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-25T01:11:38",
+        "reactions": []
+      },
+      {
+        "id": 303895285,
+        "author": "mattleibow",
+        "body": "Oh, wait... just saw the package that you are trying to install \u0060SkiaSharp.Views\u0060. That package is not meant to be installed into a PCL as that is platform-specific.\r\n\r\nFor a PCL, you just need to install the \u0060SkiaSharp\u0060 and \u0060SkiaSharp.Views.Forms\u0060 packages. For each app project, you should be able to install the same, but then NuGet will automatically pull in the \u0060SkiaSharp.Views\u0060 package as well.\r\n\r\n - \u0060SkiaSharp\u0060 - the drawing engine\r\n - \u0060SkiaSharp.Views\u0060 - the platform-specific UI elements\r\n - \u0060SkiaSharp.Views.Forms\u0060 - Xamarin.Forms UI and types",
+        "createdAt": "2017-05-25T01:13:39",
+        "reactions": []
+      },
+      {
+        "id": 304330983,
+        "author": "mattleibow",
+        "body": "This is the forum post:\r\nhttps://forums.xamarin.com/discussion/96229/how-do-i-get-skiasharp-to-build-now-i-have-updated-xamarin",
+        "createdAt": "2017-05-26T16:43:15",
+        "reactions": []
+      }
+    ]
+  }
 }

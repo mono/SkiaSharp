@@ -31,5 +31,150 @@
   "updatedAt": "2022-08-19T21:01:46",
   "closedAt": "2018-03-25T11:26:12",
   "commentCount": 19,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:58:04.1468265Z",
+    "reactions": [
+      {
+        "user": "galvesribeiro",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:58:04.1468313Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 307133960,
+        "author": "hurricanehrndz",
+        "body": "@mattleibow,\r\nMy only concern is getting libSkiaSharp.so built. I have been able to do that with a minimal make file. I will try and write a small bash script that ensures all the build dependencies are installed and that make is called. I will post something early next week.",
+        "createdAt": "2017-06-08T15:11:44",
+        "reactions": []
+      },
+      {
+        "id": 310606917,
+        "author": "andrew-boyarshin",
+        "body": "Why not just use Skia\u0027s GN build file?\r\nGN is a robust solution used in Chromium project as well as some other projects, such as Skia. It\u0027s not that complicated to setup even on Windows. It also builds with harfbuzz.",
+        "createdAt": "2017-06-23T08:35:40",
+        "reactions": []
+      },
+      {
+        "id": 310624101,
+        "author": "mattleibow",
+        "body": "@andrew-boyarshin the reason you may want libSkiaSharp is that it comes with extras, as well as less :)\r\nThe basic skia is OK, if you are using C\u002B\u002B, but for libSkiaSharp, we have a largish C API, and link out the rest. As a result, you get a tiny little, but comprehensive, package that can do CPU and GPU drawing. In addition, we have some extra APIs that help out with managed wrappers. Finally, we also provide a managed wrapper that can talk to it.",
+        "createdAt": "2017-06-23T09:52:20",
+        "reactions": []
+      },
+      {
+        "id": 310624609,
+        "author": "mattleibow",
+        "body": "@hurricanehrndz I may have something that might be good... I have just creating a makefile that will pop out the native bits. It is awful, should be taken out back and shot, but it works :)\r\n\r\nI WILL be accepting ANY PRs, lol.\r\n\r\nI will try get it up ASAP.",
+        "createdAt": "2017-06-23T09:54:53",
+        "reactions": []
+      },
+      {
+        "id": 310633475,
+        "author": "andrew-boyarshin",
+        "body": "@mattleibow I am afraid I still don\u0027t see your point or I just misunderstood the goal of this issue.\r\n\r\n[mono/skia](https://github.com/mono/skia) has BUILD.gn (of course with modifications to take winrt platform addition and C source set expansions in account). There is also plenty of \u0060\u0060\u0060skia_use_*\u0060\u0060\u0060 to control what is being built in. Why make the Makefile that would duplicate the GN build file just for one platform?\r\n\r\nI also see that now Cake is used to call GN and then call Ninja. The original build overhead discussed in #90 is about the usage of Cake and therefore the .NET platform to do that. That can indeed be removed, but in my opinion a premade \u0060\u0060\u0060args.gn\u0060\u0060\u0060 is sufficient. Why \u0060\u0060\u0060make\u0060\u0060\u0060? Why even shell script? \u0060\u0060\u0060gclient sync \u0026\u0026 gn gen out \u0026\u0026 ninja -C out\u0060\u0060\u0060 or sth like that is not that hard but provides better understanding what is done on each step.\r\n\r\nThe addition of alternative build file would definitely slow down the contribution back to upstream (as I can see from \u0060\u0060\u0060BINDING.md\u0060\u0060\u0060 it was planned, or at least a year ago).",
+        "createdAt": "2017-06-23T10:39:45",
+        "reactions": []
+      },
+      {
+        "id": 310640031,
+        "author": "mattleibow",
+        "body": "@andrew-boyarshin I see what you mean... simple reason - I am no Linux guy, and I barely know what I am supposed to do for this platform. (I just recently learned about sonames and stuff that make Linux tick) If someone can help out then I will gladly accept. There is also a [few bits of code in the SkiaSharp repo](https://github.com/mono/SkiaSharp/tree/master/native-builds/src) that handle the API for managed interop. \r\n\r\nI just committed my dodgy Makefile. This does all the work and pops out a native binary that can be used: https://github.com/mono/SkiaSharp/blob/linux-make/native-builds/libSkiaSharp_linux/Makefile. I now need to get into what I need to do, and how I need to do it. I am totally a Windows/MSBuild guy, but I am learning :)\r\n\r\nThe reason to split libSkiaSharp and libHarfBuzz is that I want to keep them separate as (hopefully) I will replace it with ICU for better text support. Skia doesn\u0027t do text shaping, and adding harfbuzz to it helps no one (I think it is just for the tests). \r\n\r\nSo right now, there are 3 Makefiles:\r\n - build all Linux: https://github.com/mono/SkiaSharp/blob/linux-make/Makefile\r\n - build libSkiaSharp: https://github.com/mono/SkiaSharp/blob/linux-make/native-builds/libSkiaSharp_linux/Makefile\r\n - build libHarfBuzzSharp: https://github.com/mono/SkiaSharp/blob/linux-make/native-builds/libHarfBuzzSharp_linux/Makefile\r\n\r\nRight now, libSkiaSharp is basically a linked, C interface designed for managed P/Invoke. As skia does not support text shaping, this has no shaping engines (such as harfbuzz or icu). libHarfBuzzSharp is a \u0022temporary\u0022 text shaping engine that can do basic shaping. It is helpful for many simple cases (a single direction and typeface) I want to replace this soonish with icu, which is a much fuller system that can to multi-direction, multi-typeface, wrapping, etc.\r\n\r\nI need to spend some time to understand how gn works and to create a build for Linux, and maybe get this to produce the binaries for all the platforms. This way we don\u0027t need to spin up cake just to call ninja.\r\n",
+        "createdAt": "2017-06-23T11:17:15",
+        "reactions": []
+      },
+      {
+        "id": 310642619,
+        "author": "mattleibow",
+        "body": "This bit is how I start make from cake: \r\nhttps://github.com/mono/SkiaSharp/blob/linux-make/cake/BuildExternals.cake#L720-L732\r\n\r\n        RunProcess (\u0022make\u0022, new ProcessSettings {\r\n            Arguments = \u0022externals-linux\u0022 \u002B\r\n                \u0022 SKIA_PATH=\u0022 \u002B SKIA_PATH.FullPath \u002B \r\n                \u0022 DEPOT_PATH=\u0022 \u002B DEPOT_PATH.FullPath \u002B \r\n                \u0022 HARFBUZZ_PATH=\u0022 \u002B HARFBUZZ_PATH.FullPath \u002B \r\n                \u0022 NATIVEBUILDS_PATH=\u0022 \u002B ROOT_PATH.Combine(\u0022native-builds\u0022).FullPath \u002B \r\n                \u0022 ARCH=\u0022 \u002B arch \u002B \r\n                \u0022 SKIA_VERSION=\u0022 \u002B VERSION_FILE \u002B \r\n                \u0022 HARFBUZZ_VERSION=\u0022 \u002B HARFBUZZ_VERSION_FILE \u002B \r\n                \u0022 HARFBUZZ_VERSION_SOURCE=\u0022 \u002B HARFBUZZ_VERSION_SOURCE \u002B \r\n                \u0022 SUPPORT_GPU=\u0022 \u002B SUPPORT_GPU,\r\n            WorkingDirectory = ROOT_PATH.FullPath,\r\n        });\r\n\r\n",
+        "createdAt": "2017-06-23T11:30:59",
+        "reactions": []
+      },
+      {
+        "id": 310643963,
+        "author": "mattleibow",
+        "body": "Also want to mention that I currently have to store some of the C/C\u002B\u002B code in the SkiaSharp repo as that will never be merged into upstream skia. I have been trying to upstream the C API - it doesn\u0027t do anything extra, just exposes still to C, but Google is not that interested in this at the moment. Basically, what gets into upstream is what Android/Chrome need. The C API is more of a nice to have, but they haven\u0027t gotten round to it yet.\r\n\r\nWe can, or course, have our own BUILD.gn in SkiaSharp and that pulls in the skia bits - sort of what Google is doing to pull in third party libraries. So it is totally feasible, but I think that we have to keep in mind that all changes in the mono/skia repo need to be, at least considering, possible to upstream. So, the \u0060SkManagedStream\u0060 (in SkiaSharp) will never get upstreamed, but the C API for \u0060SkStream\u0060 (in skia) will.\r\n\r\nHope this makes things a bit clearer...",
+        "createdAt": "2017-06-23T11:39:20",
+        "reactions": []
+      },
+      {
+        "id": 310740374,
+        "author": "mattleibow",
+        "body": "@kekekeks @galvesribeiro I thought I would add you in case you were interested... You seem to have done some Linux work before \uD83D\uDE09 \r\n\r\nThis is just a Makefile (https://github.com/mono/SkiaSharp/issues/323) that should pop out a native file - it really just download/syncs the native code and then calls the individual Makefiles. I am not sure exactly how you do your own builds, but maybe you can comment. Obviously, I am the worst Linux/make guy, but hopefully it is useful in some way :skeptical-emoji:",
+        "createdAt": "2017-06-23T18:30:03",
+        "reactions": []
+      },
+      {
+        "id": 310748464,
+        "author": "galvesribeiro",
+        "body": "Thanks @mattleibow! I agree with @andrew-boyarshin that if we could use GN as it is the standard tooling from Google it would be great.\r\n\r\nHowever, as you know (and spent days and nights helping me on that), Google tooling is _great_ if you are doing what they want, the way they want and to use how they want. If you need *anything* different than that, you are doomed (as we were). \r\n\r\nIn my case, we weren\u0027t able to build Skia for ARM Linux just because their build config files (by that time, gyp files) were so tricky and hardcoded that we weren\u0027t able to make it build for ARM. If you remember Matthew, we had to hack several gyp files in order to make it build properly and I could finally use it on our ARM device.\r\n\r\nSo, if using a makefile will enable more scenarios to run SkiaSharp, I\u0027m all up for it! What I don\u0027t like is to be caged by Google tooling (believe me, Skia is not my first adventure with Google\u0027s code) and have 0 flexibility.\r\n\r\nI\u0027ll have a look on the new changes over the weekend.\r\n\r\nThank you Matthew!",
+        "createdAt": "2017-06-23T19:05:25",
+        "reactions": []
+      },
+      {
+        "id": 310760720,
+        "author": "mattleibow",
+        "body": "Any comments/suggestions will be very welcome!",
+        "createdAt": "2017-06-23T20:06:28",
+        "reactions": []
+      },
+      {
+        "id": 311657828,
+        "author": "andrew-boyarshin",
+        "body": "@mattleibow\r\n[ICU LayoutEngine](http://userguide.icu-project.org/layoutengine) is deprecated and has been removed since ICU 58. ICU encourages users to switch to HarfBuzz which is now more robust and bug-free text shaping engine. So, probably no point in trying ICU LE.",
+        "createdAt": "2017-06-28T13:20:53",
+        "reactions": []
+      },
+      {
+        "id": 311659045,
+        "author": "andrew-boyarshin",
+        "body": "@galvesribeiro GN buildconfigs for Skia indeed seem too small and inflexible compared to Chromium ones for my taste. I was negatively surprised by the lack of real VC tools and Windows SDK search in Skia configs. GCC and MSVC toolchains in one main BUILD.gn file. Well, no wonder it is so given GN was built specifically to suit Chromium needs and Skia only adopted it later for the sake of ecosystem.",
+        "createdAt": "2017-06-28T13:25:31",
+        "reactions": []
+      },
+      {
+        "id": 311662659,
+        "author": "mattleibow",
+        "body": "@andrew-boyarshin the ICU LayoutEngine is deprecated in favour of HarfBuzz as a shaping engine, but not the rest. For example, HarfBuzz cannot handle mixed cultures or typefaces. ICU will first process the text, split it into text chunks and the HarfBuzz will actually do the layout/shaping",
+        "createdAt": "2017-06-28T13:38:59",
+        "reactions": []
+      },
+      {
+        "id": 311679016,
+        "author": "kekekeks",
+        "body": "The problem with ICU is that it\u0027s *huge* (~30MB) so it\u0027s super inconvenient to ship as a part of the app. Is it possible to somehow build only \u0022text shaping bits\u0022? Pango, for example, doesn\u0027t seem to have a dependency on ICU and only takes around 1MB of disk space.",
+        "createdAt": "2017-06-28T14:35:22",
+        "reactions": []
+      },
+      {
+        "id": 311680637,
+        "author": "kekekeks",
+        "body": "http://apps.icu-project.org/datacustom/ - seems to provide a way to exclude unneeded data",
+        "createdAt": "2017-06-28T14:40:48",
+        "reactions": []
+      },
+      {
+        "id": 311703260,
+        "author": "andrew-boyarshin",
+        "body": "@mattleibow I might not have put emphasis correctly in my comment. ICU LayoutEngine was deprecated and removed, all of it. LayoutEngine itself used to contain the same set of features as HarfBuzz (as far as I can tell from docs, sources, samples, and [ICU-LE-HB](https://github.com/behdad/icu-le-hb) compatibility layer). LE itself couldn\u0027t handle mixed font properties and scripts too, but there is mostly complete (as an _extra_) _scrptrun_ module with implementation of text split by script algo ([sample](http://source.icu-project.org/repos/icu/trunk/icu4c/source/extra/scrptrun/srtest.cpp)) without LE dependency.\r\nOf course the whole power of the rest of the ICU remains (break iterators, bidi algorithm, _scrptrun_ and so on) and can be used, it\u0027s just that HarfBuzz now has little alternative as a cross-platform text shaping library (only Graphite, but its a whole different ecosystem).",
+        "createdAt": "2017-06-28T15:51:31",
+        "reactions": []
+      },
+      {
+        "id": 331477256,
+        "author": "mattleibow",
+        "body": "Just adding this comment from another issue:\r\n\r\n\u003E This is all extra work, and I am not that up to standard with make. Obviously we accepts PRs and help. Most of the time, you should be able to install the NuGet from nuget.org, and then just include your own native build of the libSkiaSharp.so for whatever distro/architecture you are running.",
+        "createdAt": "2017-09-22T15:19:30",
+        "reactions": []
+      },
+      {
+        "id": 375963150,
+        "author": "mattleibow",
+        "body": "This is no longer relevant as the build is now done with GN and ninja directly: https://github.com/mono/SkiaSharp/wiki/Building-on-Linux",
+        "createdAt": "2018-03-25T11:26:12",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -32,5 +32,81 @@
   "updatedAt": "2022-08-20T00:01:22",
   "closedAt": "2018-09-26T04:19:03",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:38.2251635Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 264344843,
+        "author": "mattleibow",
+        "body": "Interesting... Could you share device specs? And what versions of DirectX are on those devices?\r\n\r\nSkiaSharp for UWP uses DirectX instead of OpenGL, and works on my test devices. But it may be the case that I need to adjust some of the DX context options.",
+        "createdAt": "2016-12-02T01:08:29",
+        "reactions": []
+      },
+      {
+        "id": 264457336,
+        "author": "mattleibow",
+        "body": "I think I managed to find a device that has the same issue: Lumia 435. I get a blank white screen.\r\n\r\nI am having a look to see what is going on, but it appears to be an issue with the way the context is initialized.",
+        "createdAt": "2016-12-02T13:47:35",
+        "reactions": []
+      },
+      {
+        "id": 264486519,
+        "author": "mattleibow",
+        "body": "Some more investigation: There appears to be a problem with my offscreen buffer with the lower-end devices. The Lumia 435 appears to use DX9.3. If I force the drawing to FBO 0, then the image is visible, but if I draw to FBO 1, and then blit that to FBO 0, nothing appears. \r\n\r\nBecause it works on both my Lumia 950XL and SurfaceBook, I think the fallback to DX9 may cause some change somewhere that results in the buffers not working as expected.",
+        "createdAt": "2016-12-02T15:52:14",
+        "reactions": []
+      },
+      {
+        "id": 264511009,
+        "author": "MxNxP",
+        "body": "Thank your for your response and for all the great work you\u0027re doing!\r\n\r\nWe are using the following devices for testing, because these are cheap, but popular phones and i think DX9.3 capable devices still have a high market share.\r\n\r\nUnfortunately i don\u0027t have experience with directx development..\r\n\r\n__test device 1__\r\ntype: Microsoft Lumia 550\r\nOS: Windows 10 Mobile\r\nOS build: 10.0.14393.448\r\nQualcomm Adreno 304\r\nDirectX11 Feature level 9.3\r\n\r\n__test device 2__\r\ntype: Microsoft Lumia 435\r\nOS: Windows 10 Mobile\r\nOS build: 10.0.14393.448\r\nQualcomm Adreno 305\r\nDirectX11 Feature level 9.3\r\n",
+        "createdAt": "2016-12-02T17:26:47",
+        "reactions": []
+      },
+      {
+        "id": 270320165,
+        "author": "Azmarel",
+        "body": "Hi\r\nI have the same problem with: \r\nNokia Lumia 735\r\nWindows 10 Mobile\r\n\r\nDid you find a solution for this problem ??\r\n",
+        "createdAt": "2017-01-04T08:38:06",
+        "reactions": []
+      },
+      {
+        "id": 275657810,
+        "author": "MxNxP",
+        "body": "No, we couldn\u0027t find any workaround, so we are waiting for a bug fix.",
+        "createdAt": "2017-01-27T12:46:46",
+        "reactions": []
+      },
+      {
+        "id": 289015868,
+        "author": "imregazdag",
+        "body": "Hi! Is there an approximate date when will be fixed this issue? (we would like to use SkiaSharp in our project and Windows Phone is one of our main platforms)",
+        "createdAt": "2017-03-24T12:58:32",
+        "reactions": []
+      },
+      {
+        "id": 317225220,
+        "author": "entdark",
+        "body": "Hello.\r\nI have the same problem on Lumia 550.\r\nIt works fine on the emulator and desktop.",
+        "createdAt": "2017-07-23T03:03:08",
+        "reactions": []
+      },
+      {
+        "id": 348709337,
+        "author": "entdark",
+        "body": "It also happens on Lumia 640 XL LTE.",
+        "createdAt": "2017-12-02T18:08:05",
+        "reactions": []
+      },
+      {
+        "id": 424579658,
+        "author": "mattleibow",
+        "body": "I am closing this as this is no longer something that is going to be supported in the future. Windows 10 Mobile is really no more.\r\n\r\nI believe that I have \u0022fixed\u0022 the real cause of he underlying GL issue with the rewrite of the UWP views, but I have also changed the way libSkiaSharp.dll builds for UWP. As a result, it no longer runs on the old Windows Phones. It still works on my Lumia 950 XL, so it is nothing to do with the ARM component, but rather somewhere it id causing one of the dependencies not to be loaded.\r\n\r\nIf someone really needs UWP for Windows 10 Mobile, we need to open a new issue and hopefully the community can help out. From the side of the SkiaSharp team, we feel that the deprecated Mobile platform is not a priority at this point in time.",
+        "createdAt": "2018-09-26T04:19:03",
+        "reactions": []
+      }
+    ]
+  }
 }

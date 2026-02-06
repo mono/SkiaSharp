@@ -14,5 +14,38 @@
   "updatedAt": "2022-08-19T21:02:28",
   "closedAt": "2017-02-28T23:43:40",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:34.3752444Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 281673009,
+        "author": "karosas",
+        "body": "Everything works when I create empty project and do exactly same thing...",
+        "createdAt": "2017-02-22T13:45:36",
+        "reactions": []
+      },
+      {
+        "id": 282310753,
+        "author": "karosas",
+        "body": "I managed to narrow stacktrace down by removing some of the code that\u0027s is referenced inside the stacktrace and at the moment the Stactrace shortened to  this - \r\n\r\n\r\n        02-24 14:34:54.175 E/mono-rt ( 3990): Stacktrace:\r\n        02-24 14:34:54.175 E/mono-rt ( 3990): \r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_canvas_draw_bitmap_rect (intptr,intptr,intptr,SkiaSharp.SKRect\u0026,intptr) \u003C0x00012\u003E\r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at SkiaSharp.SKCanvas.DrawBitmap (SkiaSharp.SKBitmap,SkiaSharp.SKRect,SkiaSharp.SKPaint) \u003CIL 0x0003a, 0x00177\u003E\r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at hlma.lawnrun.Droid.ImageEditorCanvasView.OnDraw (SkiaSharp.SKSurface,SkiaSharp.SKImageInfo) [0x0004a] in C:\\Users\\Administrator\\Desktop\\Android\\hlma.lawnrun.Droid\\Controls\\ImageEditorCanvasView.cs:191\r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at SkiaSharp.Views.Android.SKCanvasView.OnDraw (Android.Graphics.Canvas) \u003CIL 0x0009e, 0x00390\u003E\r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at Android.Views.View.n_OnDraw_Landroid_graphics_Canvas_ (intptr,intptr,intptr) [0x00011] in /Users/builder/data/lanes/3511/501e63ce/source/monodroid/src/Mono.Android/platforms/android-24/src/generated/Android.Views.View.cs:14432\r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at (wrapper dynamic-method) object.7c87c2da-d1ee-4cad-bde8-102021e8aa30 (intptr,intptr,intptr) \u003CIL 0x00017, 0x00027\u003E\r\n        02-24 14:34:54.176 E/mono-rt ( 3990):   at (wrapper native-to-managed) object.7c87c2da-d1ee-4cad-bde8-102021e8aa30 (intptr,intptr,intptr) \u003CIL 0x00022, 0x0009f\u003E\r\n\r\nLine that causes the crash according to StackTrace\r\n\r\n     // OnDraw(...) { \r\n     var np = new SKPaint();\r\n     np.BlendMode = SKBlendMode.Multiply;\r\n    \r\n     try\r\n    \t{\r\n    \t\tcanvas.Clear();\r\n    \t\tcanvas.DrawBitmap(mBackgroundBitmap, info.Rect, np); // \u003C-- Crash\r\n    \t}\r\n\r\nOr if i put OnDraw()  inside MainLooper\u0027s Handler.Post(...) -\r\n\r\n        02-24 14:42:25.698 E/mono-rt ( 4314):   at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n        02-24 14:42:25.698 E/mono-rt ( 4314):   at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_surface_get_canvas (intptr) \u003C0x00012\u003E\r\n        02-24 14:42:25.698 E/mono-rt ( 4314):   at SkiaSharp.SKSurface.get_Canvas () \u003CIL 0x00006, 0x0005f\u003E\r\n        02-24 14:42:25.698 E/mono-rt ( 4314):   at hlma.lawnrun.Droid.ImageEditorCanvasView/\u003C\u003Ec__DisplayClass21_0.\u003COnDraw\u003Eb__0 () [0x00031] in C:\\Users\\Administrator\\Desktop\\Android\\hlma.lawnrun.Droid\\Controls\\ImageEditorCanvasView.cs:179\r\n        02-24 14:42:25.698 E/mono-rt ( 4314):   at Java.Lang.Thread/RunnableImplementor.Run () [0x0000b] in /Users/builder/data/lanes/3511/501e63ce/source/xamarin-android/src/Mono.Android/Java.Lang/Thread.cs:36\r\n        02-24 14:42:25.698 E/mono-rt ( 4314):   at Java.Lang.IRunnableInvoker.n_Run (intptr,intptr) [0x00009] in /Users/builder/data/lanes/3511/501e63ce/source/monodroid/src/Mono.Android/platforms/android-24/src/generated/Java.Lang.IRunnable.cs:81\r\n        02-24 14:42:25.698 E/mono-rt ( 4314):   at (wrapper dynamic-method) object.e0a0f540-c550-4d21-bb37-ed755c4ee87e (intptr,intptr) \u003CIL 0x00011, 0x0001f\u003E\r\n        02-24 14:42:25.699 E/mono-rt ( 4314):   at (wrapper native-to-managed) object.e0a0f540-c550-4d21-bb37-ed755c4ee87e (intptr,intptr) \u003CIL 0x00021, 0x00097\u003E\r\n    \r\nLine that causes the crash now\r\n\r\n    //OnDraw() { ...\r\n    var canvas = surface.Canvas;\r\n\r\n",
+        "createdAt": "2017-02-24T14:54:37",
+        "reactions": []
+      },
+      {
+        "id": 282452641,
+        "author": "mattleibow",
+        "body": "Closing: https://forums.xamarin.com/discussion/comment/255350/#Comment_255350\r\n\r\n\u003E We were maintaining a local copy of canvas and trying to reuse it. Removing that local reference fixed the crash",
+        "createdAt": "2017-02-25T02:21:40",
+        "reactions": [
+          {
+            "user": "lucidBrot",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:34.3248413Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -28,5 +28,119 @@
   "updatedAt": "2022-08-19T21:01:58",
   "closedAt": "2017-09-12T15:10:09",
   "commentCount": 13,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:42.9203517Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 300344027,
+        "author": "mattleibow",
+        "body": "Hi @benevbright I will look into this. I where the problem starts, my dispose method is trying to release the bitmap - which for some reason is already released. This technically should not happen since after releasing, the bitmap is set to null.\r\n\r\nCan you provide more info as to what is causing the issue? Maybe you are scrolling a list view and then this happens? Is it during some page navigation? I need to be able to do some test - it may be that something is happening on another thread, and then the view is being disposed of twice simultaneously.\r\n\r\nThe finalizer is the result of the GC, but if this view was cleaned up in any way, my field will be null. If the bitmap is being cleaned up somewhere then something is still wrong as I still have my field referencing it. It might be that the GC is collecting both at the same time, which is weird still.\r\n\r\nAny further info as what is happening at the time of the crash will be helpful.",
+        "createdAt": "2017-05-10T01:00:59",
+        "reactions": [
+          {
+            "user": "benevbright",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:40.4852871Z"
+          },
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:40.4852874Z"
+          }
+        ]
+      },
+      {
+        "id": 300402312,
+        "author": "benevbright",
+        "body": "Hi, Matthew. \r\nThanks for your help.\r\n\r\nI made a repro sample project which has a similar layout as my project.\r\nI attach it here.\r\n[test_skiasharp_disposedException.zip](https://github.com/mono/SkiaSharp/files/989038/test_skiasharp_disposedException.zip)\r\n\r\nThe difference between the sample and my project is that it\u0027s really hard to reproduce this exception.\r\nTo reproduce: try to view the Listview page and modal many time, after that, change the mainpage by using a button as many as you can. I got the exception after I press changing page button about 100 times.\r\nAnd it\u0027s same to reproduce with our app. It occurs when I change my MainPage(when user login/logout). Our app is huge now, so I guess changing MainPage triggers GC to collect.\r\n\r\nCLUE : likely it may happen when SkiaCanvas\u0027s isVisible property to \u0027false\u0027.\r\n\r\nTested on Xamarin.Forms 2.3.4.231 / SkiaSharp 1.57.1 / Mac Android Player(Nexus 4) / Android SDK API 25.\r\n\r\nBut because It\u0027s too hard to reproduce, I can not say it\u0027s a problem of SkiaSharp.\r\nBut It occurs easily on our app than sample project.\r\n\r\n\u0060\u0060\u0060\r\n[mono] Unhandled Exception:\r\n[mono] System.ObjectDisposedException: Cannot access a disposed object.\r\n[mono] Object name: \u0027Android.Graphics.Bitmap\u0027.\r\n[mono]   at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00030] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.cs:153 \r\n[mono]   at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeAbstractVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00002] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods_Invoke.cs:11 \r\n[mono]   at Android.Graphics.Bitmap.Recycle () [0x00000] in /Users/builder/data/lanes/4468/b16fb820/source/monodroid/src/Mono.Android/platforms/android-25/src/generated/Android.Graphics.Bitmap.cs:975 \r\n[mono]   at SkiaSharp.Views.Android.SKCanvasView.FreeBitmap () [0x0000b] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono]   at SkiaSharp.Views.Android.SKCanvasView.Dispose (System.Boolean disposing) [0x00007] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono]   at Java.Lang.Object.Finalize () [0x00051] in /Users/builder/data/lanes/4468/b16fb820/source/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:67 \r\n[mono-rt] [ERROR] FATAL UNHANDLED EXCEPTION: System.ObjectDisposedException: Cannot access a disposed object.\r\n[mono-rt] Object name: \u0027Android.Graphics.Bitmap\u0027.\r\n[mono-rt]   at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00030] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.cs:153 \r\n[mono-rt]   at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeAbstractVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00002] in /Users/builder/data/lanes/4468/b16fb820/source/Java.Interop/src/Java.Interop/Java.Interop/JniPeerMembers.JniInstanceMethods_Invoke.cs:11 \r\n[mono-rt]   at Android.Graphics.Bitmap.Recycle () [0x00000] in /Users/builder/data/lanes/4468/b16fb820/source/monodroid/src/Mono.Android/platforms/android-25/src/generated/Android.Graphics.Bitmap.cs:975 \r\n[mono-rt]   at SkiaSharp.Views.Android.SKCanvasView.FreeBitmap () [0x0000b] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono-rt]   at SkiaSharp.Views.Android.SKCanvasView.Dispose (System.Boolean disposing) [0x00007] in \u003C0008caffa6d54ab5af7bddda1c82b23a\u003E:0 \r\n[mono-rt]   at Java.Lang.Object.Finalize () [0x00051] in /Users/builder/data/lanes/4468/b16fb820/source/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:67 \r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-10T07:43:15",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:40.6925556Z"
+          }
+        ]
+      },
+      {
+        "id": 305520578,
+        "author": "pauldendulk",
+        "body": "My users report the same issue. ",
+        "createdAt": "2017-06-01T15:00:18",
+        "reactions": []
+      },
+      {
+        "id": 305530506,
+        "author": "Sebastian1989101",
+        "body": "I have the same issue with Mapsui from pauldendulk which uses SkiaSharp. It looks like this exception comes always when a huge amount of memory is allocated. I got the exception everytime when my app uses a lot of RAM. Even if I navigate away from the Map which is the only usage of SkiaSharp, this exception comes up as soon as I hit about 2.5-3.2GB RAM usage (depends on the amount of background processes). I tried to force the cleanup from the memory at the right moment but it dosn\u0027t change a bit. \r\n\r\n**Edit**: This problem only occures on Android. On iOS the app runs fine, so I guess the cleanup works there.\r\n\r\n\u0060\u0060\u0060\r\n[0:] AppDomain.CurrentDomain.UnhandledException: System.ObjectDisposedException: Cannot access a disposed object.\r\nObject name: \u0027Android.Graphics.Bitmap\u0027.\r\n  at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00029] in \u003Cbd30a18775d94dc8b6263aecd1ca9077\u003E:0 \r\n  at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeAbstractVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00000] in \u003Cbd30a18775d94dc8b6263aecd1ca9077\u003E:0 \r\n  at Android.Graphics.Bitmap.Recycle () [0x0000a] in \u003Cd855bac285f44dda8a0d8510b679b1e2\u003E:0 \r\n  at SkiaSharp.Views.Android.SKCanvasView.FreeBitmap () [0x0000b] in \u003Ca8778ebdc67a470582197fdb95ec7e8c\u003E:0 \r\n  at SkiaSharp.Views.Android.SKCanvasView.Dispose (System.Boolean disposing) [0x00007] in \u003Ca8778ebdc67a470582197fdb95ec7e8c\u003E:0 \r\n  at Java.Lang.Object.Finalize () [0x00048] in \u003Cd855bac285f44dda8a0d8510b679b1e2\u003E:0 . IsTerminating: True\r\nIn mgmain JNI_OnLoad\r\n06-01 17:18:29.090 E/mono-rt (15355): [ERROR] FATAL UNHANDLED EXCEPTION: System.ObjectDisposedException: Cannot access a disposed object.\r\n06-01 17:18:29.090 E/mono-rt (15355): Object name: \u0027Android.Graphics.Bitmap\u0027.\r\n06-01 17:18:29.090 E/mono-rt (15355):   at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00029] in \u003Cbd30a18775d94dc8b6263aecd1ca9077\u003E:0 \r\n06-01 17:18:29.090 E/mono-rt (15355):   at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeAbstractVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00000] in \u003Cbd30a18775d94dc8b6263aecd1ca9077\u003E:0 \r\n06-01 17:18:29.090 E/mono-rt (15355):   at Android.Graphics.Bitmap.Recycle () [0x0000a] in \u003Cd855bac285f44dda8a0d8510b679b1e2\u003E:0 \r\n06-01 17:18:29.090 E/mono-rt (15355):   at **SkiaSharp.Views.Android.SKCanvasView.FreeBitmap** () [0x0000b] in \u003Ca8778ebdc67a470582197fdb95ec7e8c\u003E:0 \r\n06-01 17:18:29.090 E/mono-rt (15355):   at **SkiaSharp.Views.Android.SKCanvasView.Dispose** (System.Boolean disposing) [0x00007] in \u003Ca8778ebdc67a470582197fdb95ec7e8c\u003E:0 \r\n06-01 17:18:29.090 E/mono-rt (15355):   at Java.Lang.Object.Finalize () [0x00048] in \u003Cd855bac285f44dda8a0d8510b679b1e2\u003E:0 \r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2017-06-01T15:31:37",
+        "reactions": []
+      },
+      {
+        "id": 312353551,
+        "author": "mattleibow",
+        "body": "Just a note about repro:\r\n\r\nI managed to repro the easily by using \u0060GC.Collect();\u0060\r\nI used the sample app provided by @benevbright, and then added a new button that called the GC. I opened the modal, scrolled, returned to the test5Page and called the GC.\r\n\r\nIt failed every time after the third collect.\r\n\r\nThe reason for this is that the finalizer is collecting the bitmap underneath me. When I call \u0060Recycle\u0060, the handle is zero, thus it throws. I am trying to find a solution - might be to just check the handle before using the bitmap.",
+        "createdAt": "2017-06-30T19:25:51",
+        "reactions": []
+      },
+      {
+        "id": 312356785,
+        "author": "mattleibow",
+        "body": "The new dispose logic is this\r\n\r\n\u0060\u0060\u0060\r\nif (bitmap != null)\r\n{\r\n    // the GC might have nuked our bitmap :(\r\n    if (bitmap.Handle != IntPtr.Zero \u0026\u0026 !bitmap.IsRecycled)\r\n        bitmap.Recycle();\r\n    bitmap.Dispose();\r\n    bitmap = null;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAlthough a bit scary, at least the GC is releasing the bitmap :)",
+        "createdAt": "2017-06-30T19:42:22",
+        "reactions": []
+      },
+      {
+        "id": 312385358,
+        "author": "mattleibow",
+        "body": "Just pushed out a release that should resolve this: https://github.com/mono/SkiaSharp/releases/tag/v1.58.1",
+        "createdAt": "2017-06-30T22:21:16",
+        "reactions": []
+      },
+      {
+        "id": 312407743,
+        "author": "benevbright",
+        "body": "Always thanks, Matthew.\r\nI wish I could have found the code causes the problem.\r\nI will try the update!",
+        "createdAt": "2017-07-01T03:37:05",
+        "reactions": []
+      },
+      {
+        "id": 312644347,
+        "author": "user000000000000001",
+        "body": "Cool! Thanks a lot!",
+        "createdAt": "2017-07-03T13:22:55",
+        "reactions": []
+      },
+      {
+        "id": 323514438,
+        "author": "Tsukrov",
+        "body": "Have exactly the same problem in my code.\r\nHave even synchronized it - still getting this totally strange ObjectDisposedException.\r\n",
+        "createdAt": "2017-08-19T10:13:11",
+        "reactions": []
+      },
+      {
+        "id": 325693822,
+        "author": "mattleibow",
+        "body": "@Tsukrov Can you provide a stack trace and details about the version of forms, the device and anything else that you may be doing differently?",
+        "createdAt": "2017-08-29T15:05:50",
+        "reactions": []
+      },
+      {
+        "id": 327219987,
+        "author": "mattleibow",
+        "body": "Reopening as this is still an issue. I will investigate this further.",
+        "createdAt": "2017-09-05T15:53:26",
+        "reactions": []
+      },
+      {
+        "id": 328051463,
+        "author": "bay0fred",
+        "body": "Hi Matthew,\r\n\r\ni encountered a similar problem but with the SKDocument object, more specifically the underlying Stream.\r\nI create a fairly big Pdf document and it seems when the RAM limit is reached and the GC kicks in, it crashes afterwards. I use SkiaSharp version 1.59.1.\r\n\r\n\u0060\u0060\u0060\r\n09-08 08:45:02.485 D/Mono    ( 3718): Searching for \u0027sk_document_close\u0027.\r\n09-08 08:45:02.485 D/Mono    ( 3718): Probing \u0027sk_document_close\u0027.\r\n09-08 08:45:02.485 D/Mono    ( 3718): Found as \u0027sk_document_close\u0027.\r\n09-08 08:45:02.593 I/art     ( 3718): Starting a blocking GC Explicit\r\n09-08 08:45:02.599 I/art     ( 3718): Explicit concurrent mark sweep GC freed 11000(469KB) AllocSpace objects, 1(40KB) LOS objects, 60% free, 661KB/1685KB, paused 281us total 5.660ms\r\n09-08 08:45:02.599 D/Mono    ( 3718): GC_TAR_BRIDGE bridges 3 objects 6 opaque 0 colors 3 colors-bridged 3 colors-visible 3 xref 0 cache-hit 0 cache-semihit 0 cache-miss 0 setup 0.02ms tarjan 0.01ms scc-setup 0.01ms gather-xref 0.01ms xref-setup 0.01ms cleanup 0.12ms\r\n09-08 08:45:02.599 D/Mono    ( 3718): GC_BRIDGE: Complete, was running for 6.22ms\r\n09-08 08:45:02.599 D/Mono    ( 3718): GC_MINOR: (Nursery full) time 1.59ms, stw 2.59ms promoted 206K major size: 1056K in use: 280K los size: 13312K in use: 10956K\r\n09-08 08:45:02.621 D/Mono    ( 3718): DllImport searching in: \u0027libSkiaSharp.so\u0027 (\u0027libSkiaSharp.so\u0027).\r\n09-08 08:45:02.621 D/Mono    ( 3718): Searching for \u0027sk_paint_delete\u0027.\r\n09-08 08:45:02.621 D/Mono    ( 3718): Probing \u0027sk_paint_delete\u0027.\r\n09-08 08:45:02.622 D/Mono    ( 3718): Found as \u0027sk_paint_delete\u0027.\r\nInspectorDebugSession(106): HandleTargetEvent: UnhandledException\r\nUnhandled Exception:\r\n\r\nSystem.ObjectDisposedException: Cannot access a disposed object.\r\nObject name: \u0027SKManagedStream: -1736448144\u0027.\r\n\u0060\u0060\u0060\r\n\r\nI could provide some repro demo project if its desired.",
+        "createdAt": "2017-09-08T09:21:27",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T21:02:50",
   "closedAt": "2017-01-24T17:14:40",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:53.3445725Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 274864646,
+        "author": "mattleibow",
+        "body": "I haven\u0027t tested it yet, but have you tried saving the canvas, then restoring it after the clipped drawing operation:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.Save();\r\ncanvas.ClipPath(mypath);\r\n// .. do stuff ...\r\ncanvas.Restore();\r\n\u0060\u0060\u0060\r\n\r\nYou can also make use of the nice \u0060SKAutoCanvasRestore\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (new SKAutoCanvasRestore(canvas)) {\r\n    canvas.ClipPath(mypath);\r\n    // .. do stuff ...\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAccording to the docs: https://developer.xamarin.com/api/member/SkiaSharp.SKCanvas.Save()/\r\n\r\n\u003E This call saves the current matrix, clip, and draw filter, and pushes a copy onto a private stack. Subsequent calls to translate, scale, rotate, skew, concat or clipping path or drawing filter all operate on this copy. When the balancing call to\u00A0SKCanvas.Restore\u00A0is made, the previous matrix, clipping, and drawing filters are restored.",
+        "createdAt": "2017-01-24T16:53:48",
+        "reactions": [
+          {
+            "user": "vlkam",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:53.0707346Z"
+          },
+          {
+            "user": "ChadJPetersen",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:53.0707349Z"
+          },
+          {
+            "user": "Ghasan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:53.0707351Z"
+          },
+          {
+            "user": "eli191",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:55:53.0707364Z"
+          }
+        ]
+      },
+      {
+        "id": 274866073,
+        "author": "allbdeveloper",
+        "body": "Yey!!\r\nYour solution is working. \r\nThanks. ",
+        "createdAt": "2017-01-24T16:57:56",
+        "reactions": []
+      }
+    ]
+  }
 }

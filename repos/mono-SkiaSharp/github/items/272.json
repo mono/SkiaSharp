@@ -24,5 +24,273 @@
   "updatedAt": "2022-08-19T21:02:13",
   "closedAt": "2017-05-01T18:44:07",
   "commentCount": 28,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:57:08.3587122Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 290517402,
+        "author": "mattleibow",
+        "body": "I am not sure of the level of support for RTL.\r\nHere is an old post with a bit of info: https://groups.google.com/forum/#!topic/skia-discuss/vSlrc-SPtkc\r\n\r\nI would suggest asking on the skia forums as they can provide more detailed information: https://groups.google.com/forum/#!forum/skia-discuss\r\n\r\n",
+        "createdAt": "2017-03-30T19:21:59",
+        "reactions": []
+      },
+      {
+        "id": 290670029,
+        "author": "vrassouli",
+        "body": "I have implemented a very simple Custom View and it\u0027s render for android, and the drawing of text, renders correctly.\r\n\u0060\u0060\u0060csharp\r\n    public class MyViewRenderer : ViewRenderer\r\n    {\r\n        public MyViewRenderer()\r\n        {\r\n            SetWillNotDraw(false);\r\n        }\r\n\r\n        public override void Draw(Canvas canvas)\r\n        {\r\n            var paint = new Paint\r\n            {\r\n                StrokeWidth = 10,\r\n                Color = Color.Red,\r\n                TextSize = 40\r\n            };\r\n\r\n            var text = \u0022\u0627\u06CC\u0646 \u06CC\u06A9 \u0645\u062A\u0646 \u0641\u0627\u0631\u0633\u06CC \u0627\u0633\u062A\u0022;\r\n            canvas.DrawLine(0, 0, 100, 100, paint);\r\n            canvas.DrawText(text, 200, 100, paint);\r\n            base.Draw(canvas);\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\nSo, if the issue is from the Skia library itself, this implementation shouldn\u0027t work.\r\nI believe, there is something wrong with SkiaSharp, since native implementations work fine.\r\nBy the way, this code, does not require to set the font. It seems, the default font of the system, already supports RTL languages (in this case, Farsi)",
+        "createdAt": "2017-03-31T09:52:15",
+        "reactions": []
+      },
+      {
+        "id": 290727510,
+        "author": "tdenniston",
+        "body": "@vrassouli @mattleibow I was also interested in this, so I looked in a bit. It appears the problem is in Skia, not SkiaSharp. See this fiddle for example: https://fiddle.skia.org/c/233fe257d13c6f87d39f6cd13e1054c7\r\n\r\nI don\u0027t speak Farsi, but it looks like it is being rendered left-to-right. That indicates this is an issue in Skia, not SkiaSharp.",
+        "createdAt": "2017-03-31T14:28:56",
+        "reactions": [
+          {
+            "user": "itsmaream",
+            "content": "confused",
+            "createdAt": "2026-02-06T13:57:02.8411027Z"
+          }
+        ]
+      },
+      {
+        "id": 290776983,
+        "author": "mattleibow",
+        "body": "I created a forum post just so that we can get some feedback on the \u0022correct\u0022 way to draw text:\r\nhttps://groups.google.com/forum/#!topic/skia-discuss/sMvI2oOdpNM",
+        "createdAt": "2017-03-31T17:31:04",
+        "reactions": []
+      },
+      {
+        "id": 291604461,
+        "author": "migueldeicaza",
+        "body": "From the responses it looks like we will have to surface SkShaper and SkTextBlobBuilder to C# ",
+        "createdAt": "2017-04-04T19:19:41",
+        "reactions": []
+      },
+      {
+        "id": 296587068,
+        "author": "rocuh",
+        "body": "\u002B1 for harfbuzz support if its not to much KB (I suspect it might add a lot though..). I had a related issue with the current text renderer with font fallback (e.g. mixing European and Chinese glyphs for example in the same string on iOS). I managed to work around it using MatchCharacter but it wasn\u0027t fast or elegant.",
+        "createdAt": "2017-04-24T09:05:37",
+        "reactions": []
+      },
+      {
+        "id": 296630593,
+        "author": "mattleibow",
+        "body": "I have been looking at this, and in the words of Google: \u0022It is _really_, _really_ hard\u0022.\r\n\r\nWhat I found was that **harfbuzz** JUST does text **SHAPING** - this means that you have to provide it with a string that only contains a single script (Arabic OR Japanese) and a single direction (top-down OR right-to-left). As soon as you mix them, the shaper cannot correctly provide the position. I created a sample that could write text that contains only a single language.\r\n\r\nTo handle complex strings, such as mixed scripts or directions, or even if the text is wrapped or not, we need to use a engine that can first break down the text into chunks, and then pass that off to harfbuzz. One such engine is ICU, which also needs to be included. This is a fairly large library (~5MB).\r\n\r\nAs a result, RTL text support is a bit more complex to add than a few extra methods. I also need to do more research into how to do this properly. I am thinking that rather than sticking everything into SkiaSharp (no need to add extra overhead just for text), we can rather do a separate library (eg: Mono.Harfbuzz and Mono.ICU) and then those libraries can be used by anyone that needs them. We can then write some \u0022glue\u0022 that contains helper classes and extension methods so that all the hard work appears as a single method... ",
+        "createdAt": "2017-04-24T11:41:37",
+        "reactions": []
+      },
+      {
+        "id": 296633936,
+        "author": "mattleibow",
+        "body": "@roceh  About the size, you are partially correct... Harfbuzz is quite small (~300KB), so that is OK, but ICU is the big one.",
+        "createdAt": "2017-04-24T11:48:37",
+        "reactions": []
+      },
+      {
+        "id": 297069260,
+        "author": "migueldeicaza",
+        "body": "I believe from looking at the samples that we only need to bind the APIs I described.   \r\n\r\nThat said, the native library would have to be compiled with ICU/Harfuzz, which is where the size increase would come.   I do not know how we can split that easily into a separate library.",
+        "createdAt": "2017-04-25T15:31:51",
+        "reactions": []
+      },
+      {
+        "id": 297419033,
+        "author": "rocuh",
+        "body": "perhaps a basic/small custom ICU data blob could be included with the default SkiaSharp (I think this is most of the 5MB for the ICU library). And then another more complete ICU data blob that supports more locales in another nuget. No idea how easy it would be to redirect ICU to use another location for its data files. \r\n\r\nReading this:\r\nhttp://userguide.icu-project.org/icudata#TOC-Customizing-ICU-s-Data-Library\r\nimplies it might be possible.",
+        "createdAt": "2017-04-26T14:05:16",
+        "reactions": []
+      },
+      {
+        "id": 298000023,
+        "author": "mattleibow",
+        "body": "I have started support on this, the first step will be to get harfbuzz available on all the platforms. I am using this branch: https://github.com/mono/SkiaSharp/tree/harfbuzz\r\n\r\nRight now, Windows is working so you can effectively do:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var tf = SKFontManager.Default.MatchCharacter(\u0027\u05D0\u0027))\r\nusing (var shaper = new SKShaper(tf))\r\nusing (var paint = new SKPaint { TextSize = 64, Typeface = tf }) {\r\n    canvas.Clear(SKColors.White);\r\n    canvas.DrawShapedText(shaper, \u0022\u05D0\u05DE\u05EA\u0022, 100, 200, paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nSpecial note to this line:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.DrawShapedText(shaper, \u0022\u05D0\u05DE\u05EA\u0022, 100, 200, paint);\r\n\u0060\u0060\u0060\r\n\r\nAt this point, \u0060SKShaper\u0060 is a nice wrapper around a new HarfBuzzSharp binding of HarfBuzz. This new library will be in a totally separate package - both because it is a separate product and that there is no real dependency on either. The \u0060SKShaper\u0060 will live in a new \u0060SkiaSharp.HarfBuzz\u0060 package that can be included into an app if text shaping support is needed when drawing with SkiaSharp. \r\n\r\nSince HarfBuzz is quite small and separate, it can be used by any type of app, not just a SkiaSharp drawing.",
+        "createdAt": "2017-04-28T13:38:27",
+        "reactions": [
+          {
+            "user": "tdenniston",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:04.6944801Z"
+          },
+          {
+            "user": "1saeedsalehi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:04.6944803Z"
+          },
+          {
+            "user": "kilanny",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:57:04.6944804Z"
+          },
+          {
+            "user": "AndreyGrishin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:04.6944805Z"
+          }
+        ]
+      },
+      {
+        "id": 298047088,
+        "author": "mattleibow",
+        "body": "Here is a sample that you may like :)\r\n\r\n\u003Cimg width=\u0022480\u0022 alt=\u0022screen shot 2017-04-28 at 12 36 49 pm\u0022 src=\u0022https://cloud.githubusercontent.com/assets/1096616/25538206/c414314a-2c0f-11e7-8277-db8be6cf7aa7.png\u0022\u003E\r\n",
+        "createdAt": "2017-04-28T16:40:05",
+        "reactions": []
+      },
+      {
+        "id": 298399301,
+        "author": "mattleibow",
+        "body": "I have merged the HarfBuzz support into master so SkiaSharp can now do text shaping properly with either the simple extension method \u0060SKCanvas.DrawShapedText(...)\u0060, a more detailed \u0060SKShaper\u0060 instance, or by using HarfBuzz directly via the new HarfBuzzSharp binding.\r\n\r\n_note: the shaper and extension method live in the \u0060SkiaSharp.HarfBuzz\u0060 namespace so that other shapers can be added later if need be._\r\n\r\nI am closing this issue as I believe I have addressed the issue here: adding proper RTL support. New issues can be created for new features, bugs or suggestions to avoid one long issue with all issues.",
+        "createdAt": "2017-05-01T18:44:07",
+        "reactions": []
+      },
+      {
+        "id": 298403714,
+        "author": "mattleibow",
+        "body": "More advanced text support can be seen using WebKit\u0027s text stack:\r\nhttps://chromium.googlesource.com/chromium/src/\u002B/master/third_party/WebKit/Source/platform/fonts\r\n\r\nAs of today, we just support the text shaping, not the advanced steps such as run segmentation and font fallback. This can be added later, and should be under new issues.",
+        "createdAt": "2017-05-01T19:02:14",
+        "reactions": []
+      },
+      {
+        "id": 454761068,
+        "author": "sharpwood",
+        "body": "\u003E I have started support on this, the first step will be to get harfbuzz available on all the platforms. I am using this branch: https://github.com/mono/SkiaSharp/tree/harfbuzz\r\n\u003E \r\n\u003E Right now, Windows is working so you can effectively do:\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E using (var tf = SKFontManager.Default.MatchCharacter(\u0027\u05D0\u0027))\r\n\u003E using (var shaper = new SKShaper(tf))\r\n\u003E using (var paint = new SKPaint { TextSize = 64, Typeface = tf }) {\r\n\u003E     canvas.Clear(SKColors.White);\r\n\u003E     canvas.DrawShapedText(shaper, \u0022\u05D0\u05DE\u05EA\u0022, 100, 200, paint);\r\n\u003E }\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Special note to this line:\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E canvas.DrawShapedText(shaper, \u0022\u05D0\u05DE\u05EA\u0022, 100, 200, paint);\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E At this point, \u0060SKShaper\u0060 is a nice wrapper around a new HarfBuzzSharp binding of HarfBuzz. This new library will be in a totally separate package - both because it is a separate product and that there is no real dependency on either. The \u0060SKShaper\u0060 will live in a new \u0060SkiaSharp.HarfBuzz\u0060 package that can be included into an app if text shaping support is needed when drawing with SkiaSharp.\r\n\u003E \r\n\u003E Since HarfBuzz is quite small and separate, it can be used by any type of app, not just a SkiaSharp drawing.\r\n\r\nHow can I use the specified font when matching characters in this way? @mattleibow ",
+        "createdAt": "2019-01-16T12:25:50",
+        "reactions": []
+      },
+      {
+        "id": 455039745,
+        "author": "mattleibow",
+        "body": "@sharpwood you just need to install the \u0060SkiaSharp.HarfBuzz\u0060 NuGet package: https://nuget.org/packages/SkiaSharp.HarfBuzz",
+        "createdAt": "2019-01-17T04:37:49",
+        "reactions": []
+      },
+      {
+        "id": 582942517,
+        "author": "itsmaream",
+        "body": "why don\u0027t the Arabic letters appear ?\r\n\r\n        private void SKCanvasView_PaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs args)\r\n        {\r\n            SKImageInfo info = args.Info;\r\n            SKSurface surface = args.Surface;\r\n            SKCanvas canvas = surface.Canvas;\r\n\r\n            canvas.Clear();\r\n\r\n            using (SKPaint textPaint = new SKPaint\r\n            {\r\n                Style = SKPaintStyle.Stroke,\r\n                Color = SKColors.Blue,\r\n                StrokeWidth = 0.1f,\r\n                StrokeJoin = SKStrokeJoin.Round\r\n            })\r\n            {\r\n                SKRect textBounds = new SKRect();\r\n                textPaint.MeasureText(\u0022\u0643\u0022, ref textBounds);\r\n\r\n                // Inflate bounds by the stroke width\r\n                textBounds.Inflate(textPaint.StrokeWidth / 2,\r\n                                   textPaint.StrokeWidth / 2);\r\n\r\n                canvas.Scale(info.Width / textBounds.Width,\r\n                             info.Height / textBounds.Height);\r\n                canvas.Translate(-textBounds.Right, -textBounds.Top);\r\n\r\n                canvas.DrawText(\u0022\u0643\u0022, 0, 0, textPaint);\r\n            \r\n        }\u0060",
+        "createdAt": "2020-02-06T14:54:14",
+        "reactions": []
+      },
+      {
+        "id": 582963877,
+        "author": "mattleibow",
+        "body": "@EngMaream, have a look at this snippet: https://github.com/mono/SkiaSharp/issues/272#issuecomment-298000023\r\n\r\nMost probably you have a font that does not have Arabic text characters - since you are not setting any typeface. But I would also have a look at this for drawing text: https://github.com/toptensoftware/RichTextKit\r\n\r\nThat will allow you to actually create all the text you want, and then draw without having to measure and things.",
+        "createdAt": "2020-02-06T15:38:47",
+        "reactions": [
+          {
+            "user": "Mohsnb",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:06.103374Z"
+          },
+          {
+            "user": "KShaibani",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:06.1033743Z"
+          }
+        ]
+      },
+      {
+        "id": 583027029,
+        "author": "itsmaream",
+        "body": "Severity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\tCS1061\t\u0027SKCanvas\u0027 does not contain a definition for \u0027DrawShapedText\u0027 and no accessible extension method \u0027DrawShapedText\u0027 accepting a first argument of type \u0027SKCanvas\u0027 could be found (are you missing a using directive or an assembly reference?)\t\r\n\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\tCS0246\tThe type or namespace name \u0027SKShaper\u0027 could not be found (are you missing a using directive or an assembly reference?)\t\r\n\r\n\u0060        private void SKCanvasView_PaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs args)\r\n        {\r\n            SKSurface surface = args.Surface;\r\n            SKCanvas canvas = surface.Canvas;\r\n\r\n            canvas.Clear();\r\n\r\n            using (var tf = SKFontManager.Default.MatchCharacter(\u0027\u05D0\u0027))\r\n            using (var shaper = new SKShaper(tf))\r\n            using (var paint = new SKPaint { TextSize = 64, Typeface = tf })\r\n            {\r\n                canvas.Clear(SKColors.White);\r\n                canvas.DrawShapedText(shaper, \u0022\u05D0\u05DE\u05EA\u0022, 100, 200, paint);\r\n            }\r\n        }\u0060\r\n@mattleibow \r\n\r\n\r\n",
+        "createdAt": "2020-02-06T17:49:06",
+        "reactions": []
+      },
+      {
+        "id": 583031418,
+        "author": "Gillibald",
+        "body": "You need to install \u0060SkiaSharp.HarfBuzz\u0060 to be able to use \u0060DrawShapedText\u0060",
+        "createdAt": "2020-02-06T17:58:36",
+        "reactions": [
+          {
+            "user": "itsmaream",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:06.5538976Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:06.5538978Z"
+          },
+          {
+            "user": "sirgru",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:06.5538979Z"
+          }
+        ]
+      },
+      {
+        "id": 664502914,
+        "author": "eman1986",
+        "body": "if I use DrawShapedText with numbers, I get boxes back, is there something special I need to do for cases where a label would have text and numbers?",
+        "createdAt": "2020-07-27T16:31:59",
+        "reactions": []
+      },
+      {
+        "id": 664538349,
+        "author": "Gillibald",
+        "body": "By default harfbuzz just checks the first codepoint for directional properties. It might be possible that the text is shaped with LeftToRight direction because of that. Ideally text is split into runs of same direction before shaping. For advanced scenarios you have to use HarfBuzzSharp directly. ",
+        "createdAt": "2020-07-27T17:39:29",
+        "reactions": []
+      },
+      {
+        "id": 664669586,
+        "author": "mattleibow",
+        "body": "There are also 2 libraries that I know about that you might also be able to use and do all the work for you:\r\n - https://github.com/toptensoftware/RichTextKit\r\n - https://github.com/wouterst79/SkiaSharp.TextBlocks\r\n",
+        "createdAt": "2020-07-27T22:26:23",
+        "reactions": [
+          {
+            "user": "eman1986",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:07.183468Z"
+          }
+        ]
+      },
+      {
+        "id": 664727707,
+        "author": "eman1986",
+        "body": "Thanks for the resources, I\u0027ll probably give the second one a try as I need it to work with Xamarin and the first one doesn\u0027t look like it does.",
+        "createdAt": "2020-07-28T01:46:10",
+        "reactions": []
+      },
+      {
+        "id": 664801112,
+        "author": "mattleibow",
+        "body": "@eman1986 the docs are out of date. The first actually does and is what powers Comet.\n\nBut they both do the same thing so it doesn\u0027t really matter. ",
+        "createdAt": "2020-07-28T06:18:14",
+        "reactions": []
+      },
+      {
+        "id": 664849927,
+        "author": "Gillibald",
+        "body": "I must disagree RichTextKit is the only library that implements some parts of the unicode standard. Full BiDi, line breaking algorithm, etc. ",
+        "createdAt": "2020-07-28T08:14:03",
+        "reactions": []
+      },
+      {
+        "id": 664986755,
+        "author": "mattleibow",
+        "body": "Ah, thanks for that info. I didn\u0027t know about that.\n\nWell, I guess @eman1986 has the answer now \uD83D\uDE09 Use RichTextKit. ",
+        "createdAt": "2020-07-28T11:30:15",
+        "reactions": [
+          {
+            "user": "eman1986",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:57:08.0673504Z"
+          }
+        ]
+      },
+      {
+        "id": 665039229,
+        "author": "eman1986",
+        "body": "I\u0027ll give it a try then",
+        "createdAt": "2020-07-28T13:26:45",
+        "reactions": []
+      }
+    ]
+  }
 }

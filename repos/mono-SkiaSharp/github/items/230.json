@@ -15,5 +15,58 @@
   "updatedAt": "2022-08-19T21:02:44",
   "closedAt": "2017-02-03T19:36:29",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:04.386294Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 277292250,
+        "author": "mattleibow",
+        "body": "Yes, and it has just been fixed: https://github.com/mono/SkiaSharp/commit/fc73ee01d91a20b1e8dfc8502f6540235db1a49d\r\n\r\nI\u0027m trying to get this out very soon",
+        "createdAt": "2017-02-03T16:23:11",
+        "reactions": [
+          {
+            "user": "flanakin",
+            "content": "laugh",
+            "createdAt": "2026-02-06T13:56:03.4758527Z"
+          }
+        ]
+      },
+      {
+        "id": 277293491,
+        "author": "mattleibow",
+        "body": "Do you have a sample SVG that I can use to test and confirm.",
+        "createdAt": "2017-02-03T16:27:36",
+        "reactions": []
+      },
+      {
+        "id": 277307368,
+        "author": "flanakin",
+        "body": "\u0060\u0060\u0060\r\n\u003Csvg viewBox=\u0027-549 251 100 100\u0027\u003E\r\n  \u003Cpath d=\u0027M-466.3,342.8h-65.5c-5,0-9.1-4.1-9.1-9.1v-65.5c0-5,4.1-9.1,9.1-9.1h65.5c5,0,9.1,4.1,9.1,9.1v65.5 C-457.2,338.7-461.3,342.8-466.3,342.8z M-531.8,265.1c-1.7,0-3,1.4-3,3v65.5c0,1.7,1.4,3,3,3h65.5c1.7,0,3-1.4,3-3v-65.5 c0-1.7-1.4-3-3-3H-531.8z\u0027 fill=\u0027#a0a1a2\u0027/\u003E\r\n  \u003Cpath d=\u0027M-507.9,251.9c-2.2-1-4.8-1.2-7.1-0.3c-2.3,0.8-4.2,2.5-5.2,4.8l-1.4,2.9h29.5L-507.9,251.9z\u0027 fill=\u0027#7a7a7a\u0027/\u003E\r\n  \u003Cpath d=\u0027M-449.6,285c-0.8-2.3-2.5-4.2-4.8-5.2l-2.9-1.4V308l7.4-15.8C-448.8,289.9-448.7,287.4-449.6,285z\u0027 fill=\u0027#7a7a7a\u0027/\u003E\r\n  \u003Cpath d=\u0027M-548.1,316.7c-1,2.2-1.2,4.8-0.3,7.1c0.8,2.3,2.5,4.2,4.8,5.2l2.9,1.4v-29.5L-548.1,316.7z\u0027 fill=\u0027#7a7a7a\u0027/\u003E\r\n  \u003Cpath d=\u0027M-483.3,350.1c1.2,0.6,2.6,0.9,3.9,0.9c1.1,0,2.1-0.2,3.2-0.6c2.3-0.8,4.2-2.5,5.2-4.8l0,0l1.4-2.9h-29.5 L-483.3,350.1z\u0027 fill=\u0027#7a7a7a\u0027/\u003E\r\n  \u003Cpath d=\u0027M-531.8,265.1c-1.7,0-3,1.4-3,3v65.5c0,1.7,1.4,3,3,3h65.5c1.7,0,3-1.4,3-3v-65.5c0-1.7-1.4-3-3-3H-531.8z\u0027 fill=\u0027#fff\u0027/\u003E\r\n  \u003Cpath d=\u0027M-484.6,294.7L-484.6,294.7h-12.7l5.3-17.7c0.1-0.5-0.1-1-0.5-1.2c-0.1-0.1-0.3-0.1-0.4-0.1 c-0.3,0-0.6,0.2-0.8,0.4l-20.5,29.9c-0.2,0.3-0.2,0.7-0.1,1c0.2,0.3,0.5,0.5,0.9,0.5h12.3l-5.5,18c-0.1,0.5,0.1,1,0.5,1.2 c0.1,0.1,0.3,0.1,0.4,0.1c0.3,0,0.6-0.2,0.8-0.4l21.1-30.2c0.1-0.2,0.2-0.4,0.2-0.6C-483.6,295.1-484.1,294.7-484.6,294.7z\u0027 fill=\u0027#59b4d9\u0027/\u003E\r\n\u003C/svg\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-02-03T17:20:16",
+        "reactions": []
+      },
+      {
+        "id": 277340675,
+        "author": "mattleibow",
+        "body": "Thanks for that example, I now handle the viewBox correctly when it has a negative origin. I was previously just handling the size, and ignoring the origin. And before that, the whole concept of viewBox was wrong.",
+        "createdAt": "2017-02-03T19:33:38",
+        "reactions": []
+      },
+      {
+        "id": 277341373,
+        "author": "mattleibow",
+        "body": "@flanakin, I am closing this as I think I have fixed all the cases, please feel free to re-open if this is not the case.\r\n\r\nTo test while a release is building, you can just pull the single SKSvg file, and drop that into your app/library. It is fully PCL and only really uses System.Xml.Linq: https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/SKSvg.cs",
+        "createdAt": "2017-02-03T19:36:29",
+        "reactions": [
+          {
+            "user": "flanakin",
+            "content": "laugh",
+            "createdAt": "2026-02-06T13:56:04.3360531Z"
+          }
+        ]
+      }
+    ]
+  }
 }

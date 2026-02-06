@@ -20,5 +20,74 @@
   "updatedAt": "2022-08-20T00:01:39",
   "closedAt": "2016-11-11T01:37:28",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:55:10.0665369Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 258392996,
+        "author": "mattleibow",
+        "body": "@Tylerflick I had a look at your code, and I was wondering why you chose to calculate the values.\n\nI was thinking that you should be using the color table of the bitmap (\u0060SkBitmap::getColorTable()\u0060) as well as the index (\u0060SkBitmap::getIndex8Color(int,int)\u0060). You might want to use \u0060SkBitmap::getAddr8\u0060 and as you walk the pointers, get the color from the color table. Because the color table is premultiplied, you may need to unpremultiply (\u0060SkUnPreMultiply::PMColorToColor\u0060).\n\nWith this you can actually just look up the color. Setting the color may involve searching the table. I am having a look if there is a function to find the correct/nearest index for a color.\n",
+        "createdAt": "2016-11-04T10:26:23",
+        "reactions": []
+      },
+      {
+        "id": 258401196,
+        "author": "mattleibow",
+        "body": "I asked the skia guys here: https://groups.google.com/forum/#!topic/skia-discuss/Jk4mpDPBZEo\n",
+        "createdAt": "2016-11-04T10:53:45",
+        "reactions": []
+      },
+      {
+        "id": 258402038,
+        "author": "mattleibow",
+        "body": "Also note this: https://groups.google.com/forum/#!topic/skia-discuss/2RORN6klVwg\n\n\u003E **Can we remove support for colortable bitmaps (kIndex8_Config)?**\n\u003E Skia\u0027s bitmap config includes kIndex8, which is an 8-bit bitmap with an associated array of colors (SkColorTable). There is some burden in supporting this. Is there any value?\n",
+        "createdAt": "2016-11-04T10:56:39",
+        "reactions": []
+      },
+      {
+        "id": 258435918,
+        "author": "Tylerflick",
+        "body": "@mattleibow You\u0027re completely right about the index color type. \nThe pull request I issued really only applies to gray8, which is why the lumo conversion is used. I\u0027ll update the changes in the switch statement to target gray8 instead of index8.\n",
+        "createdAt": "2016-11-04T13:50:05",
+        "reactions": []
+      },
+      {
+        "id": 258448953,
+        "author": "mattleibow",
+        "body": "If you are doing gray, then they have a inline method you can use (\u0060SkComputeLuminance\u0060):\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/include/core/SkColorPriv.h#L166-L174\n\nAnother thing is that the bitmap is premultiplied, but color is not. So when you set the color, you need to premultiply it:\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/src/core/SkPixmap.cpp#L144-L149\n\nAnd then when you get that color, you need to unpremultiply it: \u0060SkUnPreMultiply::PMColorToColor\u0060. Also, the gray appears to be a premultiplied gray, so you need to get that first: \u0060SkPackARGB32(0xFF, src8[x], src8[x], src8[x])\u0060.\n\nI was using this file for my reference:\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/src/core/SkConfig8888.cpp#L129-L168\n",
+        "createdAt": "2016-11-04T14:39:51",
+        "reactions": []
+      },
+      {
+        "id": 258451468,
+        "author": "mattleibow",
+        "body": "I am thinking, based on the forum answer and the issue, \u0060Index8\u0060 is not really supported for drawing, but rather decoding.\n",
+        "createdAt": "2016-11-04T14:48:58",
+        "reactions": []
+      },
+      {
+        "id": 258546010,
+        "author": "Tylerflick",
+        "body": "I think the issues dealing with index8 can be resolved by extending the SKBitmap API to support \u0060void SkBitmap::setPixels(void* p, SkColorTable* ctable)\u0060.\n",
+        "createdAt": "2016-11-04T20:59:34",
+        "reactions": []
+      },
+      {
+        "id": 258873328,
+        "author": "mattleibow",
+        "body": "@Tylerflick, this is looking good. I was wondering what your plans for the rest of the issue? The title is Index8, but we are doing Gray8, Maybe we should rename the issue and do them separately? Unless you have already done code for Index8.\n\nAre you able to add the get_pixel variants for the Gray8? I can merge that and then you can do a new PR for the Index8.\n",
+        "createdAt": "2016-11-07T15:51:43",
+        "reactions": []
+      },
+      {
+        "id": 258889525,
+        "author": "Tylerflick",
+        "body": "\u003E The title is Index8, but we are doing Gray8, Maybe we should rename the issue and do them separately? \n\nI\u0027ll refocus this issue to dealing with gray8 and then open a new issue to deal with the changes necessary for index8.\n\n\u003E Are you able to add the get_pixel variants for the Gray8?\n\nJust added gray8 support to those API\u0027s for the above PR now.\n",
+        "createdAt": "2016-11-07T16:44:58",
+        "reactions": []
+      }
+    ]
+  }
 }

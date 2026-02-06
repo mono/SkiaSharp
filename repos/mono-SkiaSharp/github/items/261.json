@@ -14,5 +14,127 @@
   "updatedAt": "2022-08-19T21:02:21",
   "closedAt": "2017-03-24T14:43:01",
   "commentCount": 14,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:56:48.4759623Z",
+    "reactions": [
+      {
+        "user": "ncthbrt",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:56:48.4759649Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 285003207,
+        "author": "mattleibow",
+        "body": "I will try and do this. But,  I am wondering how you are building on Windows? I just run:\r\n\r\n\u0060\u0060\u0060\r\n./bootstrapper.ps1 -Target externals-windows\r\n\u0060\u0060\u0060\r\n\r\nAnd that does everything. (Make sure the \u0060git submodule update --init --recursive\u0060 has run)\r\n\r\nI do that from a fresh Windows install with VS2015. \r\n\r\nThen, you can just keep running that over and over to build the native bit.",
+        "createdAt": "2017-03-08T10:21:06",
+        "reactions": []
+      },
+      {
+        "id": 285004008,
+        "author": "gentledepp",
+        "body": "well... not so much:\r\n\u0060\u0060\u0060\r\n\r\nPS D:\\Code\\SkiaSharp_gd\u003E git submodule update --init --recursive\r\nPS D:\\Code\\SkiaSharp_gd\u003E ./bootstrapper.ps1 -Target externals-windows\r\nFeeds used:\r\n  C:\\Users\\alexa\\AppData\\Local\\NuGet\\Cache\r\n  C:\\Users\\alexa\\.nuget\\packages\\\r\n  https://www.nuget.org/api/v2\r\n\r\nAlle in \u0022D:\\Code\\SkiaSharp_gd\\tools\\packages.config\u0022 aufgef\u00FChrten Pakete sind bereits installiert.\r\nAnalyzing build script...\r\nProcessing build script...\r\nInstalling addins...\r\nCompiling build script...\r\nError: D:/Code/SkiaSharp_gd/cake/UtilsManaged.cake(4,27): error CS0103: The name \u0027DotNetCoreRestoreVerbosity\u0027 does not e\r\nxist in the current context\r\nPS D:\\Code\\SkiaSharp_gd\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-03-08T10:24:35",
+        "reactions": []
+      },
+      {
+        "id": 285007987,
+        "author": "mattleibow",
+        "body": "???\r\n\r\nMaybe your cake folder is out of date. Just delete everything in your /tools folder except the mdoc folder, .gitignore and packages.config.",
+        "createdAt": "2017-03-08T10:42:40",
+        "reactions": []
+      },
+      {
+        "id": 285008061,
+        "author": "mattleibow",
+        "body": "You will also need .netcore installed",
+        "createdAt": "2017-03-08T10:43:00",
+        "reactions": []
+      },
+      {
+        "id": 285009271,
+        "author": "gentledepp",
+        "body": "you were absolutely right: Now it worked up to this point\r\n\u0060\u0060\u0060\r\n\r\nPS D:\\Code\\SkiaSharp_gd\u003E ./bootstrapper.ps1 -Target externals-windows\r\nFeeds used:\r\n  C:\\Users\\alexa\\.nuget\\packages\\\r\n  https://www.nuget.org/api/v2\r\n\r\nRestoring NuGet package NUnit.ConsoleRunner.3.6.0.\r\nRestoring NuGet package Microsoft.DotNet.BuildTools.GenAPI.1.0.0-beta-00081.\r\nRestoring NuGet package Cake.0.17.0.\r\nAdding package \u0027NUnit.ConsoleRunner.3.6.0\u0027 to folder \u0027D:\\Code\\SkiaSharp_gd\\tools\u0027\r\nAdding package \u0027Cake.0.17.0\u0027 to folder \u0027D:\\Code\\SkiaSharp_gd\\tools\u0027\r\nAdding package \u0027Microsoft.DotNet.BuildTools.GenAPI.1.0.0-beta-00081\u0027 to folder \u0027D:\\Code\\SkiaSharp_gd\\tools\u0027\r\nAdded package \u0027NUnit.ConsoleRunner.3.6.0\u0027 to folder \u0027D:\\Code\\SkiaSharp_gd\\tools\u0027\r\nAdded package \u0027Microsoft.DotNet.BuildTools.GenAPI.1.0.0-beta-00081\u0027 to folder \u0027D:\\Code\\SkiaSharp_gd\\tools\u0027\r\nAdded package \u0027Cake.0.17.0\u0027 to folder \u0027D:\\Code\\SkiaSharp_gd\\tools\u0027\r\nAnalyzing build script...\r\nProcessing build script...\r\nInstalling addins...\r\nDownloading and installing Roslyn...\r\nInstalling packages (using https://packages.nuget.org/api/v2)...\r\nCopying files...\r\nCopying Roslyn.Compilers.CSharp.dll...\r\nCopying Roslyn.Compilers.dll...\r\nDeleting installation directory...\r\nCompiling build script...\r\nCake.exe ToolPath: D:/Code/SkiaSharp_gd/tools/Cake/../Cake/Cake.exe\r\nCake.exe NUnitConsoleToolPath: D:/Code/SkiaSharp_gd/tools/Cake/../NUnit.ConsoleRunner/tools/nunit3-console.exe\r\nNuGet.exe ToolPath: D:/Code/SkiaSharp_gd/tools/Cake/../nuget.exe\r\nXamarin-Component.exe ToolPath: D:/Code/SkiaSharp_gd/tools/Cake/../xamarin-component.exe\r\ngenapi.exe ToolPath: D:/Code/SkiaSharp_gd/tools/Cake/../Microsoft.DotNet.BuildTools.GenAPI/tools/GenAPI.exe\r\nEnvironment Variables:\r\n        Key: SystemDrive        Value: \u0022C:\u0022\r\n        Key: ProgramFiles(x86)  Value: \u0022C:\\Program Files (x86)\u0022\r\n        Key: ProgramW6432       Value: \u0022C:\\Program Files\u0022\r\n        Key: windir     Value: \u0022C:\\WINDOWS\u0022\r\n        Key: ChocolateyInstall  Value: \u0022C:\\ProgramData\\chocolatey\u0022\r\n        Key: PROCESSOR_IDENTIFIER       Value: \u0022Intel64 Family 6 Model 94 Stepping 3, GenuineIntel\u0022\r\n        Key: TMP        Value: \u0022C:\\Users\\alexa\\AppData\\Local\\Temp\u0022\r\n        Key: PROCESSOR_ARCHITECTURE     Value: \u0022AMD64\u0022\r\n        Key: Path       Value: \u0022C:\\ProgramData\\Oracle\\Java\\javapath;C:\\Program Files (x86)\\Intel\\iCLS Client\\;C:\\Program\r\n Files\\Intel\\iCLS Client\\;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\\r\nv1.0\\;C:\\Program Files (x86)\\Intel\\Intel(R) Management Engine Components\\DAL;C:\\Program Files\\Intel\\Intel(R) Management\r\nEngine Components\\DAL;C:\\Program Files (x86)\\Intel\\Intel(R) Management Engine Components\\IPT;C:\\Program Files\\Intel\\Inte\r\nl(R) Management Engine Components\\IPT;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files (x86)\\Skyp\r\ne\\Phone\\;C:\\Program Files\\Microsoft SQL Server\\120\\Tools\\Binn\\;C:\\Program Files\\Microsoft\\Web Platform Installer\\;C:\\Pro\r\ngram Files\\Microsoft SQL Server\\110\\Tools\\Binn\\;C:\\Program Files (x86)\\Microsoft SQL Server\\110\\Tools\\Binn\\;C:\\Program F\r\niles\\Microsoft SQL Server\\110\\DTS\\Binn\\;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\Wind\r\nowsPowerShell\\v1.0\\;C:\\Program Files (x86)\\nodejs\\;C:\\Program Files (x86)\\Microsoft SQL Server\\Client SDK\\ODBC\\130\\Tools\r\n\\Binn\\;C:\\Program Files (x86)\\Microsoft SQL Server\\130\\Tools\\Binn\\;C:\\Program Files (x86)\\Microsoft SQL Server\\130\\DTS\\B\r\ninn\\;C:\\Program Files (x86)\\Microsoft SQL Server\\130\\Tools\\Binn\\ManagementStudio\\;C:\\Program Files\\Microsoft SQL Server\\\r\n130\\Tools\\Binn\\;C:\\Program Files (x86)\\GtkSharp\\2.12\\bin;C:\\Python27;C:\\Program Files\\dotnet\\;C:\\Program Files\\TortoiseG\r\nit\\bin;C:\\Program Files (x86)\\Microsoft Emulator Manager\\1.0\\;C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance\r\n Toolkit\\;C:\\Program Files\\Git\\cmd;C:\\Program Files\\Microsoft DNX\\Dnvm\\;C:\\Program Files\\Redis\\;C:\\Users\\alexa\\.dnx\\bin;\r\nC:\\Users\\alexa\\AppData\\Roaming\\npm;C:\\Program Files (x86)\\Microsoft VS Code\\bin;C:\\ProgramData\\chocolatey\\bin;D:\\SKDs\\ni\r\nnja;C:\\Users\\alexa\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Program Files\\OpenSSL-Win64\\bin\u0022\r\n        Key: NEventStore.MsSql  Value: \u0022Data Source=(localdb)\\.;Initial Catalog=NEventStoreTests;Integrated Security=Tru\r\ne;Pooling=False\u0022\r\n        Key: VisualInstallerDesignTimeConfig    Value: \u0022C:\\Program Files (x86)\\Xeam\\Visual Installer\\DesignTimeConfig\u0022\r\n        Key: USERPROFILE        Value: \u0022C:\\Users\\alexa\u0022\r\n        Key: OPENSSL_CONF       Value: \u0022C:\\Program Files\\OpenSSL-Win64\\bin\\openssl.cfg\u0022\r\n        Key: PROCESSOR_REVISION Value: \u00225e03\u0022\r\n        Key: GTK_BASEPATH       Value: \u0022C:\\Program Files (x86)\\GtkSharp\\2.12\\\u0022\r\n        Key: TEMP       Value: \u0022C:\\Users\\alexa\\AppData\\Local\\Temp\u0022\r\n        Key: FPS_BROWSER_APP_PROFILE_STRING     Value: \u0022Internet Explorer\u0022\r\n        Key: FPS_BROWSER_USER_PROFILE_STRING    Value: \u0022Default\u0022\r\n        Key: LOGONSERVER        Value: \u0022\\\\LAPTOP-3M6KT9KO\u0022\r\n        Key: USERNAME   Value: \u0022alexa\u0022\r\n        Key: SystemRoot Value: \u0022C:\\WINDOWS\u0022\r\n        Key: OneDrive   Value: \u0022C:\\Users\\alexa\\OneDrive\u0022\r\n        Key: LOCALAPPDATA       Value: \u0022C:\\Users\\alexa\\AppData\\Local\u0022\r\n        Key: VS110COMNTOOLS     Value: \u0022C:\\Program Files (x86)\\Microsoft Visual Studio 11.0\\Common7\\Tools\\\u0022\r\n        Key: CommonProgramFiles Value: \u0022C:\\Program Files\\Common Files\u0022\r\n        Key: ProgramData        Value: \u0022C:\\ProgramData\u0022\r\n        Key: HOMEPATH   Value: \u0022\\Users\\alexa\u0022\r\n        Key: COMPUTERNAME       Value: \u0022LAPTOP-3M6KT9KO\u0022\r\n        Key: ALLUSERSPROFILE    Value: \u0022C:\\ProgramData\u0022\r\n        Key: CommonProgramW6432 Value: \u0022C:\\Program Files\\Common Files\u0022\r\n        Key: VS140COMNTOOLS     Value: \u0022C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\Common7\\Tools\\\u0022\r\n        Key: WIX        Value: \u0022C:\\Program Files (x86)\\WiX Toolset v3.10\\\u0022\r\n        Key: SESSIONNAME        Value: \u0022Console\u0022\r\n        Key: CommonProgramFiles(x86)    Value: \u0022C:\\Program Files (x86)\\Common Files\u0022\r\n        Key: HOMEDRIVE  Value: \u0022C:\u0022\r\n        Key: TelerikWPFDir      Value: \u0022D:\\SKDs\\telerik\\UI for WPF Q2 2016\\\u0022\r\n        Key: NUMBER_OF_PROCESSORS       Value: \u00228\u0022\r\n        Key: OS Value: \u0022Windows_NT\u0022\r\n        Key: ProgramFiles       Value: \u0022C:\\Program Files\u0022\r\n        Key: ComSpec    Value: \u0022C:\\WINDOWS\\system32\\cmd.exe\u0022\r\n        Key: VS120COMNTOOLS     Value: \u0022C:\\Program Files (x86)\\Microsoft Visual Studio 12.0\\Common7\\Tools\\\u0022\r\n        Key: VSSDK140Install    Value: \u0022C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VSSDK\\\u0022\r\n        Key: PATHEXT    Value: \u0022.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL\u0022\r\n        Key: JAVA_HOME  Value: \u0022C:\\Program Files (x86)\\Java\\jdk1.7.0_55\u0022\r\n        Key: PSModulePath       Value: \u0022C:\\Users\\alexa\\Documents\\WindowsPowerShell\\Modules;C:\\WINDOWS\\system32\\WindowsPo\r\nwerShell\\v1.0\\Modules\\;C:\\Program Files (x86)\\Microsoft SQL Server\\110\\Tools\\PowerShell\\Modules\\;C:\\Program Files (x86)\\\r\nMicrosoft SQL Server\\130\\Tools\\PowerShell\\Modules\\;C:\\Program Files\\WindowsPowerShell\\Modules\\;C:\\Program Files (x86)\\Mi\r\ncrosoft SDKs\\Azure\\PowerShell\\ResourceManager\\AzureResourceManager\\;C:\\Program Files (x86)\\Microsoft SDKs\\Azure\\PowerShe\r\nll\\ServiceManagement\\\u0022\r\n        Key: APPDATA    Value: \u0022C:\\Users\\alexa\\AppData\\Roaming\u0022\r\n        Key: USERDOMAIN Value: \u0022LAPTOP-3M6KT9KO\u0022\r\n        Key: PROCESSOR_LEVEL    Value: \u00226\u0022\r\n        Key: VisualInstaller    Value: \u0022C:\\Program Files (x86)\\Xeam\\Visual Installer\\\u0022\r\n        Key: ANDROID_NDK_PATH   Value: \u0022C:\\Users\\alexa\\Documents\\Android\\ndk\\android-ndk-r10e\u0022\r\n        Key: ChocolateyLastPathUpdate   Value: \u0022Di. Nov 29 17:05:14 2016\u0022\r\n        Key: USERDOMAIN_ROAMINGPROFILE  Value: \u0022LAPTOP-3M6KT9KO\u0022\r\n        Key: PUBLIC     Value: \u0022C:\\Users\\Public\u0022\r\nError: Could not reach target \u0027externals-windows\u0027 since it was skipped due to a criteria.\r\n\u0060\u0060\u0060\r\n\r\nmaybe the bootstrapper should  by default delete all stuf of the tools folder, just to be sure?\r\n\r\n\r\nalso for \u0022.netcore\u0022: take a look at [Automappers psake build script](https://github.com/AutoMapper/AutoMapper/blob/master/default.ps1 )\r\nThere it automagically installs .netcore ;-)  (function Install-Dotnet)\r\n",
+        "createdAt": "2017-03-08T10:48:30",
+        "reactions": []
+      },
+      {
+        "id": 285009552,
+        "author": "gentledepp",
+        "body": "don\u0027t get me wrong: I know it is a lot to ask to keep these installs so smooth - especially with such a complicated repository.\r\nbut your PR count and community acceptance would greatly benefit from this :)",
+        "createdAt": "2017-03-08T10:49:56",
+        "reactions": []
+      },
+      {
+        "id": 285010238,
+        "author": "mattleibow",
+        "body": "the \u0060externals-windows\u0060 was skipped due to the fact that all the output files are there. you will also have to delete the /native-builds/libs/windows folder\r\n\r\nOr, what I do for dev, just comment out the checks: https://github.com/mono/SkiaSharp/blob/master/cake/BuildExternals.cake#L157-L159\r\n\r\nI suppose I have been doing this so long I just know what to do :) Also, the script is really aimed for the managed dev - I try not to build the native bits too often.\r\n\r\nAnd, for the average joe who wants to build from scratch with an old checkout:\r\n\r\n\u0060\u0060\u0060\r\n.\\bootstrapper.ps1 -Target clean\r\n\u0060\u0060\u0060\r\n\r\nThat will nuke all!",
+        "createdAt": "2017-03-08T10:53:29",
+        "reactions": []
+      },
+      {
+        "id": 285010440,
+        "author": "mattleibow",
+        "body": "Any and all feedback is welcomed as I need to get this easy for anyone.",
+        "createdAt": "2017-03-08T10:54:29",
+        "reactions": []
+      },
+      {
+        "id": 285010836,
+        "author": "gentledepp",
+        "body": "in that case you only have to change your readme to \r\n\r\n\u0022\r\ninstall .netcore (with a link to the installer, or even a script?)\r\nrun \r\n\u0060.\\bootstrapper.ps1 -Target clean\u0060\r\nthen \u0060.\\bootstrapper.ps1 -Target externals-windows\u0060\r\n\u0022\r\n\r\nthat should do it for now",
+        "createdAt": "2017-03-08T10:56:27",
+        "reactions": []
+      },
+      {
+        "id": 285011101,
+        "author": "mattleibow",
+        "body": "Good point!\r\n\r\nIs your build building?",
+        "createdAt": "2017-03-08T10:57:42",
+        "reactions": []
+      },
+      {
+        "id": 285011972,
+        "author": "gentledepp",
+        "body": "seems like it.\r\n\r\nAs for \u0022installing dotnet automatigally\u0022, the following code actually works (I just copied it from the Automapper build script I referenced earlier)\r\n\u0060\u0060\u0060\r\n\r\nfunction Install-Dotnet\r\n{\r\n    $dotnetcli = where-is(\u0027dotnet\u0027)\r\n\t\r\n    if($dotnetcli -eq $null)\r\n    {\r\n\t\t$dotnetPath = \u0022$pwd\\.dotnet\u0022\r\n\t\t$dotnetCliVersion = if ($env:DOTNET_CLI_VERSION -eq $null) { \u0027Latest\u0027 } else { $env:DOTNET_CLI_VERSION }\r\n\t\t$dotnetInstallScriptUrl = \u0027https://raw.githubusercontent.com/dotnet/cli/rel/1.0.0/scripts/obtain/install.ps1\u0027\r\n\t\t$dotnetInstallScriptPath = \u0027.\\scripts\\obtain\\install.ps1\u0027\r\n\r\n\t\tmd -Force \u0022.\\scripts\\obtain\\\u0022 | Out-Null\r\n\t\tcurl $dotnetInstallScriptUrl -OutFile $dotnetInstallScriptPath\r\n\t\t\u0026 .\\scripts\\obtain\\install.ps1 -Channel \u0022preview\u0022 -version $dotnetCliVersion -InstallDir $dotnetPath -NoPath\r\n\t\t$env:Path = \u0022$dotnetPath;$env:Path\u0022\r\n\t}\r\n}\r\n\r\nfunction where-is($command) {\r\n    (ls env:\\path).Value.split(\u0027;\u0027) | \u0060\r\n        where { $_ } | \u0060\r\n        %{ [System.Environment]::ExpandEnvironmentVariables($_) } | \u0060\r\n        where { test-path $_ } |\u0060\r\n        %{ ls \u0022$_\\*\u0022 -include *.bat,*.exe,*cmd } | \u0060\r\n        %{  $file = $_.Name; \u0060\r\n            if($file -and ($file -eq $command -or \u0060\r\n\t\t\t   $file -eq ($command \u002B \u0027.exe\u0027) -or  \u0060\r\n\t\t\t   $file -eq ($command \u002B \u0027.bat\u0027) -or  \u0060\r\n\t\t\t   $file -eq ($command \u002B \u0027.cmd\u0027))) \u0060\r\n            { \u0060\r\n                $_.FullName \u0060\r\n            } \u0060\r\n        } | \u0060\r\n        select -unique\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\nnow if you included those functions in \u0022bootstrapper.ps1\u0022, you could ensure that dotnet was installed by simply calling \r\n\u0060install-dotnet\u0060\r\n\r\nI think that\u0027s pretty awesome \uD83D\uDC4D ",
+        "createdAt": "2017-03-08T11:01:43",
+        "reactions": []
+      },
+      {
+        "id": 285012430,
+        "author": "gentledepp",
+        "body": "oh crap... wait - I just noticed that the install script it is supposed to download does not exist anymore.\r\nIt yields an ugly \u0022404 not found\u0022\r\n\r\nso ignore that please ;-)\r\n\r\nhowever, you can find the official install scripts here, if you did not know that yet: https://github.com/dotnet/docs/blob/master/docs/core/tools/dotnet-install-script.md",
+        "createdAt": "2017-03-08T11:03:54",
+        "reactions": []
+      },
+      {
+        "id": 285030333,
+        "author": "gentledepp",
+        "body": "build completed! Thank you so much! \uD83E\uDD47 ",
+        "createdAt": "2017-03-08T12:39:52",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:56:48.2207862Z"
+          }
+        ]
+      },
+      {
+        "id": 289041910,
+        "author": "mattleibow",
+        "body": "Although not perfect yet, I am closing this as I think many issues have been resolved by switching to the new GN build system.\r\n\r\nThis should be all that is needed: https://github.com/mono/SkiaSharp#building-skiasharp\r\n\r\nI decided not to install anything during the build as this may cause issues on existing machines.",
+        "createdAt": "2017-03-24T14:42:58",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:56:48.42575Z"
+          }
+        ]
+      }
+    ]
+  }
 }
