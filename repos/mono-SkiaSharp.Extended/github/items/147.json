@@ -19,5 +19,135 @@
   "updatedAt": "2023-08-23T14:17:05",
   "closedAt": "2023-08-23T00:00:36",
   "commentCount": 13,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T11:48:51.7915493Z",
+    "reactions": [
+      {
+        "user": "TheCodeTraveler",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:48:51.7915569Z"
+      },
+      {
+        "user": "jerry2007",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:48:51.7915578Z"
+      },
+      {
+        "user": "twsl",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:48:51.7915582Z"
+      },
+      {
+        "user": "alextorres50",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:48:51.7915586Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1328720038,
+        "author": "MarMarIV",
+        "body": "Is there any progress of this bug?",
+        "createdAt": "2022-11-28T08:39:15",
+        "reactions": []
+      },
+      {
+        "id": 1531192968,
+        "author": "Syed-RI",
+        "body": "bump @mattleibow ",
+        "createdAt": "2023-05-02T09:53:00",
+        "reactions": []
+      },
+      {
+        "id": 1531194599,
+        "author": "Syed-RI",
+        "body": "Any workaround anyone?",
+        "createdAt": "2023-05-02T09:54:25",
+        "reactions": []
+      },
+      {
+        "id": 1531647429,
+        "author": "Syed-RI",
+        "body": "Sadly, moved back to \u0060ActivityIndicator\u0060",
+        "createdAt": "2023-05-02T15:07:59",
+        "reactions": []
+      },
+      {
+        "id": 1544235192,
+        "author": "alextorres50",
+        "body": "any update? @PureWeen Any alternative solution? @jfversluis ",
+        "createdAt": "2023-05-11T15:46:08",
+        "reactions": []
+      },
+      {
+        "id": 1544262750,
+        "author": "Syed-RI",
+        "body": "bump @mattleibow ",
+        "createdAt": "2023-05-11T16:01:31",
+        "reactions": []
+      },
+      {
+        "id": 1596048001,
+        "author": "gabsamples6",
+        "body": "@mattleibow   is lottie still supported in maui? it does not work in ios at all ",
+        "createdAt": "2023-06-18T09:07:09",
+        "reactions": [
+          {
+            "user": "Syed-RI",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:48:50.6187693Z"
+          }
+        ]
+      },
+      {
+        "id": 1657877767,
+        "author": "MarMarIV",
+        "body": "I originally started this issue, so I\u0027ll include a possible workaround:\r\n\r\nCopy these listed resources and paste them into your app. Rendering should start working\r\n\r\nhttps://github.com/mono/SkiaSharp.Extended/blob/0ff98b0080b043e7e12aff3912f496f708acfd25/source/SkiaSharp.Extended.UI.Maui/Controls/Lottie/SKLottieViewResources.shared.xaml#L7C1-L20C59\r\n\r\n",
+        "createdAt": "2023-07-31T08:07:34",
+        "reactions": []
+      },
+      {
+        "id": 1657943851,
+        "author": "Syed-RI",
+        "body": "Ok but is there an explanation as to why this would work?  PS Im yet to try the solution myself",
+        "createdAt": "2023-07-31T08:52:13",
+        "reactions": []
+      },
+      {
+        "id": 1658193406,
+        "author": "gabsamples6",
+        "body": "@MarMarIV  copy to any resource dictionary at startup ?",
+        "createdAt": "2023-07-31T11:32:49",
+        "reactions": []
+      },
+      {
+        "id": 1689016153,
+        "author": "mattleibow",
+        "body": "I had a look at this and I think I see what is happening. The lottie view uses some styles that are in the class library. Typically if you add the control to a page that is _not_ from the services, the view will register the styles it needs _before_ it is constructed, so it can access them.\r\n\r\nHowever, if the page comes from the services as in this issue, then the page and the lottie view is constructed _before_ the app has completed construction - because it is _part_ of the construction.\r\n\r\nA workaround is to include the themes and styles yourself in your \u0060App.xaml\u0060:\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003C?xml version = \u00221.0\u0022 encoding = \u0022UTF-8\u0022 ?\u003E\r\n\u003CApplication xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:local=\u0022clr-namespace:MauiLottieApp\u0022\r\n             xmlns:themes=\u0022clr-namespace:SkiaSharp.Extended.UI.Controls.Themes;assembly=SkiaSharp.Extended.UI\u0022\r\n             x:Class=\u0022MauiLottieApp.App\u0022\u003E\r\n    \u003CApplication.Resources\u003E\r\n        \u003CResourceDictionary\u003E\r\n            \u003CResourceDictionary.MergedDictionaries\u003E\r\n                \u003C!-- ... existing styles ... --\u003E\r\n                \u003Cthemes:SKLottieViewResources /\u003E \u003C!-- this is the new style from the library --\u003E\r\n            \u003C/ResourceDictionary.MergedDictionaries\u003E\r\n        \u003C/ResourceDictionary\u003E\r\n    \u003C/Application.Resources\u003E\r\n\u003C/Application\u003E\r\n\u0060\u0060\u0060\r\n\r\nThis is actually a manifestation of https://github.com/dotnet/maui/issues/9612. I have to try and find a good place to add the themes, but it is not great.",
+        "createdAt": "2023-08-22T22:37:32",
+        "reactions": [
+          {
+            "user": "nk-alex",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:48:51.3830203Z"
+          }
+        ]
+      },
+      {
+        "id": 1689039570,
+        "author": "mattleibow",
+        "body": "I think I have a workaround for now. I can detect when the Window changes and at that point the app is ready and the control is not yet styled. If I register my themes then it works again.",
+        "createdAt": "2023-08-22T23:09:42",
+        "reactions": []
+      },
+      {
+        "id": 1690049166,
+        "author": "Syed-RI",
+        "body": "woowhooo! \uD83C\uDF89 \r\n\r\n@mattleibow thanks a lot for your hard work! Does \u00602.0.0-preview.70\u0060 contains this workaround?",
+        "createdAt": "2023-08-23T14:17:05",
+        "reactions": []
+      }
+    ]
+  }
 }

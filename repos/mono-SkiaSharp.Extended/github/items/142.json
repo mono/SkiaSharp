@@ -18,5 +18,169 @@
   "createdAt": "2022-09-15T18:15:13",
   "updatedAt": "2024-02-20T13:59:03",
   "commentCount": 15,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T11:47:49.1343936Z",
+    "reactions": [
+      {
+        "user": "HugoPeters",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:47:49.1347905Z"
+      },
+      {
+        "user": "thomaskaelin",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:47:49.1347944Z"
+      },
+      {
+        "user": "Syed-RI",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T11:47:49.1347947Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1258576396,
+        "author": "johnwilson-wsh",
+        "body": "We are seeing similar behavior when adding a Lottie animation to a page that is navigated to, instead of the main page of the app. If we put the SKLottieView on the main page of the app, it works perfectly, but if we put the SKLottieView on a secondary page that is navigated to, it displays the first frame of the animation but does not animate. ",
+        "createdAt": "2022-09-26T20:20:07",
+        "reactions": [
+          {
+            "user": "dpjha84",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:47:46.4831327Z"
+          },
+          {
+            "user": "ericdgood",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:47:46.4831329Z"
+          },
+          {
+            "user": "Syed-RI",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:47:46.483133Z"
+          },
+          {
+            "user": "salvadorjesus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:47:46.4831342Z"
+          }
+        ]
+      },
+      {
+        "id": 1259723334,
+        "author": "vhugogarcia",
+        "body": "That is true @johnwilson-wsh\r\n\r\nOn Android the animation is not being displayed, and macOS the image is displayed however it is not animated. \r\n\r\nPlease find below a few video samples for further information of the issue (macOS, Android and iOS):\r\n\r\n\r\nhttps://user-images.githubusercontent.com/1047398/192578186-42f2f68f-9eef-4b61-b100-c474d796a32b.mp4\r\n\r\n\r\nhttps://user-images.githubusercontent.com/1047398/192577984-7140ba2a-c787-4690-b365-5a6550ab8222.mov\r\n\r\n\r\n\r\nhttps://user-images.githubusercontent.com/1047398/192578275-85e5b3b0-a60f-44a6-af8d-1d1e040b382d.mov\r\n\r\n",
+        "createdAt": "2022-09-27T16:06:43",
+        "reactions": []
+      },
+      {
+        "id": 1364180669,
+        "author": "VToegel",
+        "body": "Just for info, maybe it helps as a workaround:\r\n\r\nI expirienced the same issue on iOS (SKLottieView loaded but did not play animation since it stopped before the first frame).\r\n\r\nI solved the issue by using Async Initialization with a short delay, after which the LottieAnimation IsAnimationEnabled property is set to true (set to false in XAML). See code example below\r\n\r\n    public PopupView()\r\n    {\r\n        InitializeComponent();\r\n\r\n        // initialize this \u0060InitializeLottieAsync()\u0060\r\n        Initialization = InitializeLottieAsync();\r\n    }\r\n\r\n    public Task Initialization { get; private set; }\r\n\r\n    public async Task InitializeLottieAsync()\r\n    {\r\n        await Task.Delay(50);\r\n        LottieAnimation.IsAnimationEnabled = true;\r\n    }",
+        "createdAt": "2022-12-23T18:47:51",
+        "reactions": [
+          {
+            "user": "dpjha84",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:47:46.8579142Z"
+          },
+          {
+            "user": "mavispuford",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:47:46.8579144Z"
+          },
+          {
+            "user": "ArtemAI",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:47:46.8579146Z"
+          }
+        ]
+      },
+      {
+        "id": 1429414978,
+        "author": "HugoPeters",
+        "body": "This is still an issue for me despite @VToegel\u0027s workaround - when I launch a popup from anywhere but a page itself animations usually don\u0027t work, with the workaround it seems they have a higher chance of working but still don\u0027t sometimes. For context, this is using shell and ModalAnimated / FormSheet presentation style. Invoking on main thread doesn\u0027t make a difference. I didn\u0027t look much into it but enabling debug statistics shows 0 FPS on those animations.",
+        "createdAt": "2023-02-14T09:35:01",
+        "reactions": []
+      },
+      {
+        "id": 1438923063,
+        "author": "mavispuford",
+        "body": "We are also experiencing this outside of popup situations.  We\u0027ve got a loading spinner set up in a \u0060ControlTemplate\u0060 for our pages, and \u0060IsAnimationEnabled\u0060 is bound using a \u0060TemplateBinding\u0060 to an \u0060IsBusy\u0060 bool on our view models. We assume a VM is busy until it finishes being initialized, so \u0060IsBusy\u0060 is defaulted to true.  This causes the animation to not play.  Similar to [VToegal](https://github.com/mono/SkiaSharp.Extended/issues/142#issuecomment-1364180669)\u0027s workaround, I can get it working by defaulting \u0060IsBusy\u0060 to false and setting it to true after a small delay.",
+        "createdAt": "2023-02-21T18:28:27",
+        "reactions": []
+      },
+      {
+        "id": 1448590285,
+        "author": "gabsamples6",
+        "body": "It would be nice to have this fixed , even with the workround using mopups does not work\r\n@VToegel  do you have a noddy sample with a pop up that works?  I cannot make it work I am using https://github.com/LuckyDucko/Mopups\r\nthanks",
+        "createdAt": "2023-02-28T17:35:01",
+        "reactions": []
+      },
+      {
+        "id": 1448662107,
+        "author": "VToegel",
+        "body": "@gabsamples6 i could only provide an example for Maui community toolkit popup. There the workaround works for sure.\n\nI am unfortunately not using mopups for the time being.\n\nRgds Vinc",
+        "createdAt": "2023-02-28T18:25:45",
+        "reactions": []
+      },
+      {
+        "id": 1449382074,
+        "author": "gabsamples6",
+        "body": "@VToegel  thanks for replying , I will revert to mauiCommunity toolkit for the popup (its bottom one) if this is not going to be fixed. So if you have anything that you can show because I cannot make it work\r\n\r\nthanks again",
+        "createdAt": "2023-03-01T05:40:47",
+        "reactions": []
+      },
+      {
+        "id": 1450368253,
+        "author": "VToegel",
+        "body": "@gabsamples6 Please find an example here:\r\n\r\nhttps://github.com/VToegel/MauiLottiePopupExample.git\r\n\r\nWorks for me on windows, android and iOS.\r\nPlease also read through the readme for some tips.\r\n\r\nReds Vinc\r\n",
+        "createdAt": "2023-03-01T15:44:15",
+        "reactions": []
+      },
+      {
+        "id": 1451513071,
+        "author": "gabsamples6",
+        "body": "@VToegel  brilliant!! thank you!",
+        "createdAt": "2023-03-02T08:55:13",
+        "reactions": []
+      },
+      {
+        "id": 1461276940,
+        "author": "AntPolkanov",
+        "body": "Came across this timing issue too when tried to display an animation in a CarouselView. Does anyone have an idea how to properly fix it? Checked the source code, but cannot see anything obvious.",
+        "createdAt": "2023-03-09T04:53:38",
+        "reactions": []
+      },
+      {
+        "id": 1689860827,
+        "author": "mattleibow",
+        "body": "Looking closer, this appears to be the case because the MCT is not causing the Loaded event to fire",
+        "createdAt": "2023-08-23T12:18:50",
+        "reactions": []
+      },
+      {
+        "id": 1806853033,
+        "author": "kyurkchyan",
+        "body": "We have a custom view that we use a loading view inside all of the screens. Here\u0027s how the view looks roughly\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003CGrid\r\n    RowDefinitions=\u0022*,Auto,Auto,*\u0022\r\n    x:Name=\u0022This\u0022\r\n    IsVisible=\u0022{Binding IsBusy, Source={x:Reference  This}}\u0022\r\n    HorizontalOptions=\u0022Fill\u0022\r\n    VerticalOptions=\u0022Fill\u0022\r\n    RowSpacing=\u00220\u0022\u003E\r\n    \u003Ccontrols:Placeholder\r\n        IsBusy=\u0022{Binding IsBusy, Source={x:Reference  This}}\u0022\r\n        Aspect=\u0022AspectFit\u0022\r\n        Width=\u0022300\u0022\r\n        HorizontalOptions=\u0022Center\u0022\r\n        VerticalOptions=\u0022Fill\u0022 /\u003E\r\n    \u003Cskia:SKLottieView\r\n        Grid.Row=\u00221\u0022\r\n        Source=\u0022loading_indicator.json\u0022\r\n        RepeatCount=\u0022-1\u0022\r\n        HeightRequest=\u002232\u0022\r\n        WidthRequest=\u002255\u0022\r\n        HorizontalOptions=\u0022Center\u0022 /\u003E\r\n    \u003CLabel\r\n        Grid.Row=\u00222\u0022\r\n        Text=\u0022{markupExtensions:Translate Loading}\u0022\r\n        Style=\u0022{StaticResource MetadataLabelStyle}\u0022\r\n        FontSize=\u0022{StaticResource LargeFontSize}\u0022\r\n        Margin=\u00228\u0022\r\n        HorizontalTextAlignment=\u0022Center\u0022 /\u003E\r\n    \u003Cprogress:ProgressBar\r\n        Grid.Row=\u00223\u0022\r\n        IsVisible=\u0022{Binding Progress, Converter={StaticResource IsNotNullConverter}, Source={x:Reference This}}\u0022\r\n        Progress=\u0022{Binding Progress, Source={x:Reference This}}\u0022\r\n        HeightRequest=\u00228\u0022\r\n        ProgressColor=\u0022{StaticResource AccentColor}\u0022\r\n        HorizontalOptions=\u0022Fill\u0022\r\n        VerticalOptions=\u0022End\u0022 /\u003E\r\n\u003C/Grid\u003E\r\n\u0060\u0060\u0060\r\n\r\nThis view gets shown and hidden whenever the screen has an active loading process. The behavior we observe is that the animation doesn\u0027t work in the first screen, the first time the Lottie view is shown, the animation doesn\u0027t work. However, it works on the screens that come after. I tried adding the artificial delay workaround mentioned above, but it didn\u0027t help. ",
+        "createdAt": "2023-11-11T16:05:00",
+        "reactions": []
+      },
+      {
+        "id": 1953075157,
+        "author": "ghost",
+        "body": "\u003E Just for info, maybe it helps as a workaround:\r\n\u003E \r\n\u003E I expirienced the same issue on iOS (SKLottieView loaded but did not play animation since it stopped before the first frame).\r\n\u003E \r\n\u003E I solved the issue by using Async Initialization with a short delay, after which the LottieAnimation IsAnimationEnabled property is set to true (set to false in XAML). See code example below\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E public PopupView()\r\n\u003E {\r\n\u003E     InitializeComponent();\r\n\u003E \r\n\u003E     // initialize this \u0060InitializeLottieAsync()\u0060\r\n\u003E     Initialization = InitializeLottieAsync();\r\n\u003E }\r\n\u003E \r\n\u003E public Task Initialization { get; private set; }\r\n\u003E \r\n\u003E public async Task InitializeLottieAsync()\r\n\u003E {\r\n\u003E     await Task.Delay(50);\r\n\u003E     LottieAnimation.IsAnimationEnabled = true;\r\n\u003E }\r\n\u003E \u0060\u0060\u0060\r\n\r\nHow does this work using MVVM? I cannot get it to work for Lottie used in CarouselView items. Changing the binding to the \u0060IsAnimationPlaying\u0060 attribute using \u0060Task.Delay\u0060 does not seem to do anything. The first slide never shows on Android but the second, third, etc. work fine.",
+        "createdAt": "2024-02-19T19:46:09",
+        "reactions": []
+      },
+      {
+        "id": 1954273544,
+        "author": "VToegel",
+        "body": "I bind the lottiesource from the viewmodel, but IsAnimationEnabled is always set from code behind.\n\nBut basically it should also work using a binding. I think its  a timing issue and the question is if your viewmodel or the view is instantiated first. You can check that by setting breakpoints in viewmodel and view.\nNext you can try a ridiculous high delay (e.g. 5000ms) and see if the animation starts. If yes then you do need to play with your architecture or delay to solve the issue.",
+        "createdAt": "2024-02-20T13:59:01",
+        "reactions": []
+      }
+    ]
+  }
 }

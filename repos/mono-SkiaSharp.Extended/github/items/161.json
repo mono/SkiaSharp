@@ -19,5 +19,45 @@
   "updatedAt": "2023-09-01T18:47:22",
   "closedAt": "2023-09-01T18:36:45",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T11:48:33.775885Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1702249201,
+        "author": "haavamoa",
+        "body": "I was also in the need of knowing when the animation finished to provide the best UX when the animation was showing and finished. I found a workaround:\r\n\r\nYou can subscribe \u0060PropertyChanged\u0060 event and listen for the \u0060IsCompleted\u0060 property changing. This will be come \u0060true\u0060 when it\u0027s finished.  ",
+        "createdAt": "2023-09-01T06:43:02",
+        "reactions": []
+      },
+      {
+        "id": 1702308642,
+        "author": "mattleibow",
+        "body": "I could add an event, but I just want to check what would be the expected for a looping animation.\n\nFor a normal, no loop I would assume it runs once and then fires. For a loop X times, I assume it will loop X times and then fire at the end.\n\nSo in this thought, a looping will never fire as it never finishes?\n",
+        "createdAt": "2023-09-01T07:36:55",
+        "reactions": []
+      },
+      {
+        "id": 1703118436,
+        "author": "pm64",
+        "body": "@mattleibow I think the expectation would be for the event to never fire in the infinite-loop scenario.\r\n\r\nBut your question makes me realize the idea can be improved, by splitting this into two events: \u0060OnFinishedLoop\u0060 and \u0060OnFinishedPlayback\u0060.\r\n\r\n\u0060OnFinishedLoop\u0060 would fire on completion of each loop, and \u0060OnFinishedPlayback\u0060 would fire on completion of the final loop (if any).",
+        "createdAt": "2023-09-01T17:49:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T11:48:33.5321842Z"
+          }
+        ]
+      },
+      {
+        "id": 1703188087,
+        "author": "mattleibow",
+        "body": "Sounds like a new feature request!!! :)",
+        "createdAt": "2023-09-01T18:47:22",
+        "reactions": []
+      }
+    ]
+  }
 }
