@@ -1,0 +1,19 @@
+{
+  "number": 849,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] ToSKBitmap() doesn\u0027t work properly",
+  "body": "ToSKBitmap() causes artifacts and displays at the incorrect size in Windows Forms.\r\n\r\nI\u0027m able to generate the correct bitmaps with my own method below:\r\n\r\n\u0060\u0060\u0060\r\n        public static SKBitmap BitmapToSKBitmap(Bitmap bitmap)\r\n        {\r\n            var info = new SKImageInfo(bitmap.Width, bitmap.Height);\r\n            var skiaBitmap = new SKBitmap(info);\r\n\r\n            for (int i = 0; i \u003C bitmap.Width; i\u002B\u002B)\r\n            {\r\n                for (int j = 0; j \u003C bitmap.Height; j\u002B\u002B)\r\n                {\r\n                    Color color = bitmap.GetPixel(i, j);\r\n                    skiaBitmap.SetPixel(i, j, new SKColor(color.R, color.G, color.B, color.A));\r\n                }\r\n            }\r\n\r\n            return skiaBitmap;\r\n        }\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "derekshreds",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-05-24T04:34:33",
+  "updatedAt": "2022-08-19T12:01:24",
+  "closedAt": "2019-06-24T01:36:54",
+  "commentCount": 3,
+  "reactionCount": 2
+}

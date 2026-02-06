@@ -1,0 +1,17 @@
+{
+  "number": 934,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] SKClipOperation.Difference not working as expected with clip methods",
+  "body": "I have a rectangle and I want to get the remaining bounding rectangle after subtracting other rectangles from it. However, after passing \u0060SKClipOperation.Difference\u0060 to the \u0060ClipRect\u0060 method, the clip bounds always remain unchanged.\r\n\r\nIn this example, rect2 of height 50 is the bottom half of rect1 (height 100). I create a surface using the details of rect1:\r\n\r\n    SKRect rect1 = new SKRect(10, 10, 110, 110);\r\n    SKRect rect2 = new SKRect(10, 60, 110, 110);\r\n\r\n    SKImageInfo info = new SKImageInfo((int)rect1.Width, (int)rect1.Height);\r\n\r\n    using (SKSurface surface = SKSurface.Create(info)) {\r\n        surface.Canvas.Translate(-rect1.Left, -rect1.Top);\r\n\r\nThen I attempt to subtract rect2 from the clip region, but the clip bounds remain unchanged. I\u0027ve also tried rectangular \u0060SKPath\u0060 objects and used them with \u0060ClipPath\u0060, but got the same result. Is there something I\u0027m missing?\r\n\r\n        surface.Canvas.ClipRect(rect2, SKClipOperation.Difference);\r\n\r\nThis works however. Intersecting with rect2 reduces the clip bounds to a height of 50:\r\n\r\n        surface.Canvas.ClipRect(rect2, SKClipOperation.Intersect);\r\n    }",
+  "author": {
+    "login": "PlanetBloopy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-08-22T08:45:53",
+  "updatedAt": "2019-11-13T00:28:32",
+  "commentCount": 2,
+  "reactionCount": 0
+}

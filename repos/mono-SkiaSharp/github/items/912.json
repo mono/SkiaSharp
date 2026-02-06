@@ -1,0 +1,18 @@
+{
+  "number": 912,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Using ToHsv then FromHsv can give you different SKColors",
+  "body": "**Description**\r\n\r\n\u0060SKColor.ToHsv(...)\u0060 and \u0060SKColor.FromHsv(...)\u0060 do not invert each other properly.\r\n\r\nThis seems to be fixed by rounding R, G, B in \u0060SKColor.FromHsv(...)\u0060, but I don\u0027t know if that\u0027s the proper way to do it:\r\n\u0060return new SKColor ((byte)Math.Round(r), (byte)Math.Round(g), (byte)Math.Round(b), a);\u0060\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nvar yellow = new SKColor(byte.MaxValue, byte.MaxValue, 0);\r\nyellow.ToHsv(out var h, out var s, out var v);\r\nvar notYellow = SKColor.FromHsv(h, s, v);\r\n\r\n// notYellow is #FEFF00\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "daltonks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-07-16T01:04:13",
+  "updatedAt": "2022-08-19T09:02:44",
+  "closedAt": "2020-06-10T02:27:48",
+  "commentCount": 1,
+  "reactionCount": 0
+}

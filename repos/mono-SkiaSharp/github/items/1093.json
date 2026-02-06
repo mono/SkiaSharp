@@ -1,0 +1,18 @@
+{
+  "number": 1093,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKPaint.GetGlyphWidths returns wrong size array",
+  "body": "**Description**\r\n\r\nAccording to https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skpaint.getglyphwidths?view=skiasharp-1.68.1 the return value of SKPaint.GetGlyphWidths is equal to the length of the input string\r\n\r\n\u003E Returns\r\nSingle[]\r\nReturns the text advances **for each glyph**\r\n\r\nIn the given code sample this is not true, input string length and result length missmatch.\r\nAlso this seems to be a real bug, because if each char of the string is performed separately GetGlyphWidths works as expected.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\n        [TestMethod]\r\n        public void TestGlyphWidths()\r\n        {\r\n            //All ISO 10646 chars \r\n            const int maxChar = (char)65534;\r\n            var builder = new StringBuilder(maxChar);\r\n            for (var c = (char)0; c \u003C= maxChar; c\u002B\u002B)\r\n            {\r\n                builder.Append(c);\r\n            }\r\n\r\n            var s = builder.ToString();\r\n            using (var newPaint = new SKPaint())\r\n            {\r\n                var glyphWidths = newPaint.GetGlyphWidths(s);\r\n\r\n                //Assert below already fails: Assert.AreEqual failed. Expected:\u003C65535\u003E. Actual:\u003C65534\u003E. \r\n                Assert.AreEqual(s.Length, glyphWidths.Length);\r\n            }\r\n\r\n            //But the following works:\r\n            foreach (var c in s)\r\n            {\r\n                using (var newPaint = new SKPaint())\r\n                {\r\n                    var glyphWidths = newPaint.GetGlyphWidths(c.ToString());\r\n                    Assert.AreEqual(1, glyphWidths.Length);\r\n                }\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n**Basic Information**\r\n\r\n- Version with issue: 1.68.1.1\r\n- Last known good version:  ?\r\n- IDE:  Visual Studio 2017\r\n- Platform Target Frameworks: \r\nI could reproduce it as a unit test, so it should be plattform indepentent (Originally observed in WPF and UWP).",
+  "author": {
+    "login": "N-Olbert",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-01-08T11:01:04",
+  "updatedAt": "2022-08-19T09:01:30",
+  "closedAt": "2020-06-01T10:08:25",
+  "commentCount": 2,
+  "reactionCount": 0
+}

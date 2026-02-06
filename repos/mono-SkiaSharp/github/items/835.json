@@ -1,0 +1,24 @@
+{
+  "number": 835,
+  "type": "issue",
+  "state": "closed",
+  "title": "Getting the message \u0022Not replacing existing, living, managed instance with new object.\u0022",
+  "body": "I\u0027m running locally on Windows and I find that if I run my application multithreaded, I get a lot of the debugger output:\r\n\r\nNot replacing existing, living, managed instance with new object.\r\n\r\nI don\u0027t seem to get this if I only run with a single thread. I haven\u0027t tracked down the reproduction any more than that yet.\r\n\r\nThe source code seems to point to this line:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKObject.cs#L124\r\n\r\nBut I don\u0027t yet understand when \u0060RegisterHandle\u0060 gets called.\r\n\r\nIs this a harmless message? Is there something I should change to prevent this from occurring?",
+  "author": {
+    "login": "BrianHanechak",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-04-30T06:48:36",
+  "updatedAt": "2022-08-19T12:01:32",
+  "closedAt": "2019-09-23T23:34:45",
+  "commentCount": 4,
+  "reactionCount": 2
+}

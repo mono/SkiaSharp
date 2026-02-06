@@ -1,0 +1,23 @@
+{
+  "number": 831,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Why is SKFontMetrics Leading property sometimes 0?",
+  "body": "We have a graphical editor in the browser running Fabric.js, and once editing is complete, we send the raw layout data to our server and use SkiaSharp to interpret the data and draw the image on the server. This works great in almost all circumstances, but one huge problem we\u0027ve run into is outputting multi-line text. We figured out a way to calculate line height and separate lines of text with that amount of space, but we have run into more and more scenarios where certain custom fonts (TTF or OTF) used in the image don\u0027t have a \u0060Leading\u0060 property when we try to calculate the line height from the \u0060SKFontMetrics\u0060 of the font file. I can\u0027t tell any rhyme or reason to this... it\u0027s just that some fonts have the \u0060Leading\u0060 property, and some don\u0027t. The ones that don\u0027t are impossible to correctly calculate the line height, which is ruining our solution.\r\n\r\nDoes anyone have any idea why certain fonts wouldn\u0027t have the \u0060Leading\u0060 property set on the font\u0027s \u0060SKFontMetrics\u0060? The strange thing is that Fabric.js is able to load in the custom font and draw it perfectly, with the right line height. But then it goes to the server, and it\u0027s like SkiaSharp can\u0027t interpret the font metrics correctly or something.\r\n\r\nI posted this question on [StackOverflow](https://stackoverflow.com/questions/53122732/why-is-skfontmetrics-leading-property-sometimes-0) months ago, but received no answers, so if anyone here can answer or if anyone here wants to answer there (and I\u0027ll mark it as the correct answer, if it\u0027s helpful), we would appreciate it. Thanks!",
+  "author": {
+    "login": "washamdev",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-04-24T03:53:14",
+  "updatedAt": "2022-08-19T12:01:35",
+  "closedAt": "2019-05-01T04:44:56",
+  "commentCount": 6,
+  "reactionCount": 0
+}

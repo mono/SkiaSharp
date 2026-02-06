@@ -1,0 +1,24 @@
+{
+  "number": 876,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Add a SkiaApi and SKAbstractManagedStream native abstraction",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\nFor the implementation of https://github.com/nventive/Uno.SkiaSharp, some internal changes have to be made to enable WebAssembly support. All of the changes need to be made specifically at the P/Invoke (parameter shuffling, types adjustments, custom delegates, etc...) while the rest of the code remains untouched.\r\n\r\nThis requires the creation of a wasm specific version of the SkiaSharp library, and therefore requires the creation of wasm-specific dependencies, such as SkiaSharp.Extended packages.\r\n\r\n**Describe the solution you\u0027d like**\r\nSkiaSharp should provide a way to change the native backend. e.g. a \u0060SkiaNativeBackend.Current\u0060 which provides an \u0060ISkiaNativeBackend\u0060 implementation.\r\n\r\nThis will enable the support for WebAssembly, while minimally impacting the structure of SkiaSharp, until the situation of the packaging of WebAssembly support settles down (https://github.com/NuGet/Home/issues/8186).\r\n",
+  "author": {
+    "login": "jeromelaban",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.80.0",
+  "createdAt": "2019-06-21T18:03:47",
+  "updatedAt": "2022-08-19T12:01:16",
+  "closedAt": "2020-06-09T17:11:23",
+  "commentCount": 12,
+  "reactionCount": 3
+}

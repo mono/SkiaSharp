@@ -1,0 +1,18 @@
+{
+  "number": 858,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Much higher RAM usage on x64 compared with x86",
+  "body": "**Description**\r\n\r\nWe are putting images to GPU(texture based SKImage) to render them later with perfect performance.\r\nOn x86 build images are allocating only GPU RAM.\r\nOn x64 build images are allocating also CPU RAM.\r\n\r\nThis is a huge issue for us  \uD83D\uDC4E. App is working some times slower on x64 and eating a lot more RAM, like 10 times more in some cases(200mb vs 2gb), because we store a lot images on GPU.\r\n\r\n\r\nI\u0027ve provided a repro project repo link below.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nusing (var surf = SKSurface.Create(_grContext, false, _imageInfo, 1, GRSurfaceOrigin.TopLeft))\r\n{\r\n    surf.Canvas.DrawImage(_rasterImg, 0, 0);\r\n    surf.Canvas.Flush();\r\n    _textureImages.Add(surf.Snapshot());\r\n}\r\n\u0060\u0060\u0060\r\n\r\nIs there a better way to transform raster image to texture-backed image? We\u0027ve tried to create textures and then push image to it - but this approach generated some artifacts on rendering. \r\n\r\n**Expected Behavior**\r\n\r\nOn x86 Snapshot() SKImage is allocating only GPU memory\r\nOn x64 Snapshot() SKImage is allocating only GPU memory\r\n\r\n**Actual Behavior**\r\n\r\nOn x64 Snapshot() SKImage is allocating only GPU memory\r\nOn x64 Snapshot() SKImage is allocating GPU and CPU memory\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68\r\n- IDE:  Visual Studio\r\n  - Windows Classic:  Windows 10\r\n- Target Devices:  High-end PC\r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/Mikolaytis/SkiaSharpMemoryIssue\r\n\r\n",
+  "author": {
+    "login": "Mikolaytis",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-06-09T21:34:00",
+  "updatedAt": "2022-08-19T12:01:21",
+  "closedAt": "2020-01-25T23:44:46",
+  "commentCount": 5,
+  "reactionCount": 5
+}

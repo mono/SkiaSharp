@@ -1,0 +1,17 @@
+{
+  "number": 1105,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKTypeface cannot be created in a Windows Nano Server Docker container",
+  "body": "**Description**\r\n\r\nSkTypeface cannot be created in Windows Docker container. It simply returns null. I use SkiaSharp 1.68.1.1 version and SkiaSharp.NativeAssets.NanoServer 1.68.1.1 version. .csproj file is modified as required\r\n\r\n  \u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 ExcludeAssets=\u0022native\u0022 Version=\u00221.68.1.1\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.NanoServer\u0022 Version=\u00221.68.1.1\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\r\nI tried creating SkTypeface from file, stream, family name with the same result - SkTypeface is null. Also SkTypeface.CreateDefault() returns SkTypeface that is not null, but FamilyName is empty.\r\n\r\n**Code**\r\n\r\n            SKTypeface typeface = SKTypeface.FromFamilyName(\u0022Lucida Console\u0022, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n            Console.WriteLine(\u0022SkSKTypeface created from family name - {0}\u0022, typeface != null);\r\n\r\n            const string fontFileName = @\u0022C:\\Windows\\Fonts\\lucon.ttf\u0022;\r\n            typeface = SKTypeface.FromFile(fontFileName);\r\n            Console.WriteLine(\u0022SkSKTypeface created from file name - {0}\u0022, typeface != null);\r\n\r\n            using (FileStream fs = File.OpenRead(fontFileName))\r\n            {\r\n                typeface = SKTypeface.FromStream(fs);\r\n                Console.WriteLine(\u0022SkSKTypeface created from stream - {0}\u0022, typeface != null);\r\n            }\r\n\r\n            typeface = SKTypeface.CreateDefault();\r\n            Console.WriteLine(typeface.FamilyName);\r\n\r\n",
+  "author": {
+    "login": "AlexNosk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-01-16T12:19:21",
+  "updatedAt": "2024-03-01T12:13:21",
+  "commentCount": 25,
+  "reactionCount": 1
+}

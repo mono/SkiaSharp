@@ -1,0 +1,23 @@
+{
+  "number": 931,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Color of jpeg image changed after decode/encode",
+  "body": "**Description**\r\nAfter decoding and encoding image it\u0027s color is changed (blue color becomes brighter). The latest (1.68) version is used, tested on Windows.\r\n\r\n**Code**\r\n\r\nusing (FileStream inputStream = File.Open(@\u0022C:\\Temp\\in.jpeg\u0022, FileMode.Open))\r\nusing (SkiaSharp.SKBitmap bmp = SkiaSharp.SKBitmap.Decode(inputStream))\r\nusing (SkiaSharp.SKFileWStream outputStream = new SkiaSharp.SKFileWStream(@\u0022C:\\Temp\\out.jpeg\u0022))\r\n{\r\n        SkiaSharp.SKPixmap.Encode(outputStream, bmp, SkiaSharp.SKEncodedImageFormat.Jpeg, 100);\r\n}\r\n\r\n**Expected Behavior**\r\n\r\nThe result image must look the same as input. Attached input and output images.\r\n![in](https://user-images.githubusercontent.com/31235892/63153083-1ecbd880-c016-11e9-9559-dafdd0c748c0.jpeg)\r\n![out](https://user-images.githubusercontent.com/31235892/63153084-1ecbd880-c016-11e9-8563-a512c773dda1.jpeg)",
+  "author": {
+    "login": "AlexNosk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2019-08-16T08:10:00",
+  "updatedAt": "2024-12-04T00:50:13",
+  "commentCount": 23,
+  "reactionCount": 1
+}

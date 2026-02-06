@@ -1,0 +1,18 @@
+{
+  "number": 695,
+  "type": "issue",
+  "state": "closed",
+  "title": "How to create a Rectangle Shadow VIew Using SkiaSharp",
+  "body": "Hi ,\r\n\r\nI created one Rectangle Shadow View using Skiasharp. I wanted to add child elements inside this view but It is not working as expected.\r\n\r\n\u0060\u0060\u0060csharp\r\n    public class ShadowView : ContentView\r\n    {\r\n        public ShadowView()\r\n        {\r\n            SKCanvasView sKCanvasView = new SKCanvasView();\r\n            sKCanvasView.PaintSurface \u002B= OnPaintSurface;\r\n            Content = sKCanvasView;\r\n        }\r\n\r\n        void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\r\n        {\r\n            var skCanvas = e.Surface.Canvas;\r\n            var skinfo = e.Info;\r\n            skCanvas.Clear();\r\n\r\n           \r\n            var RectangleStyleFillShadowColor = new SKColor(255, 0, 0, 255);\r\n          \r\n            var RectangleStyleFillShadow = SKImageFilter.CreateDropShadow(0f, 0f, 20f,20f, RectangleStyleFillShadowColor, SKDropShadowImageFilterShadowMode.DrawShadowAndForeground, null, null);\r\n      \r\n            var RectangleStyleFillColor = new SKColor(255, 255, 255, 255);\r\n         \r\n            var RectangleStyleFillPaint = new SKPaint()\r\n            {\r\n                Style = SKPaintStyle.Fill,\r\n                Color = RectangleStyleFillColor,\r\n                BlendMode = SKBlendMode.SrcOver,\r\n                IsAntialias = true,\r\n                ImageFilter = RectangleStyleFillShadow\r\n            };\r\n            var top = (float)(skinfo.Height * 0.1);\r\n            var left = (float)(skinfo.Width * 0.1);\r\n            var bottom = (float)(skinfo.Height);\r\n            var right = (float)(skinfo.Width * 0.1);\r\n            skCanvas.DrawRect(new SKRect(20f, 20f, skinfo.Width-20, skinfo.Height-20), RectangleStyleFillPaint);\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\nXaml: Here the border is not displaying\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CStackLayout\r\n            HorizontalOptions=\u0022FillAndExpand\u0022\r\n            Orientation=\u0022Vertical\u0022\r\n            VerticalOptions=\u0022FillAndExpand\u0022\u003E\r\n           \u003Clocal:ShadowView HeightRequest=\u0022150\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 Margin=\u002220\u0022\u003E\r\n               \u003CLabel Text=\u0022Hello\u0022 HorizontalOptions=\u0022Center\u0022 VerticalOptions=\u0022CenterAndExpand\u0022/\u003E\r\n            \u003C/local:ShadowView\u003E\r\n        \u003C/StackLayout\u003E\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "sylendra7",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-11-23T18:05:57",
+  "updatedAt": "2022-08-19T12:02:33",
+  "closedAt": "2018-11-26T15:07:34",
+  "commentCount": 6,
+  "reactionCount": 0
+}
