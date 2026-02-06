@@ -23,5 +23,49 @@
   "updatedAt": "2023-04-08T15:00:50",
   "closedAt": "2023-03-09T12:01:04",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:32.0994145Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1448658853,
+        "author": "mattleibow",
+        "body": "TL;DR: It already does!!!\r\n\r\nThis issue has a few things, so I will go through them:\r\n\r\n* The list of support is more a minimum, so basically .NET 6 and later - including 7, 8, and 9\r\n* Support for SkiaSharp will still go on as it is used by platforms that do not have a native graphics engine or as an alternative - Tizen and the GPU accelerated on desktop\r\n* Maui.Graphics is an alternative implementation that sits above SkiaSharp. Some platforms have their own graphics engine (eg iOS and Android) so Maui.Graphics is the recommended way to use if you are building graphics things. On iOS, it will use CoreGraphics, Android will use Android Graphics, Windows it will use Win2D and on Tizen it will SkiaSharp. But! It also supports you swapping out the graphics engine so if you WANT to use SkiaSharp on Android, then you can swap out the Maui.Graphics backend without having to rewrite your code. ",
+        "createdAt": "2023-02-28T18:22:53",
+        "reactions": [
+          {
+            "user": "chrisbillson",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:46:31.6087406Z"
+          }
+        ]
+      },
+      {
+        "id": 1451698610,
+        "author": "charlesroddie",
+        "body": "Maui.Graphics has a LOGO inspired, imperative API (MOVE HERE, SET THIS PAINT, DRAW) whereas SkiaSharp has a higher-level structure (DRAW(HERE, THIS PAINT)). Not sure about this exact example but certainly things are more global and imperative in Maui.Graphics. That makes it hard to use Maui.Graphics for large scale projects. We investigated it for potential deployment-size savings but did not find it usable.\n\nAvalonia is dependent on SkiaSharp, as is Uno, and it deploys on the web via either blazor or NativeAOT. We are moving all of our UI graphics to SkiaSharp (migrating from Xamarin.Forms to drawn controls), and we are not the only ones to be doing this. In other words 100% of the non-buggy dotnet cross-platform UI frameworks out there are SkiaSharp drawn! If you do a GitHub issues search, you will find many projects are adopting SkiaSharp as a way to go cross-platform.\n\nThe state of the repo is unfortunate (it doesn\u0027t build and it\u0027s not clear who the maintainers are now that @mattleibow is involved in MAUI or even who has the rights to decide who the maintainers are or which group to discuss that with). But the projects involving SkiaSharp are so large and essential to dotnet that in my opinion this is bound to be resolved in the near future, and the current nuget packages are good enough to work well in the interim.",
+        "createdAt": "2023-03-02T11:12:27",
+        "reactions": [
+          {
+            "user": "chrisbillson",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:31.8568283Z"
+          },
+          {
+            "user": "MartinZikmund",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:31.8568287Z"
+          }
+        ]
+      },
+      {
+        "id": 1456005799,
+        "author": "ghost",
+        "body": "This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.",
+        "createdAt": "2023-03-06T12:00:47",
+        "reactions": []
+      }
+    ]
+  }
 }

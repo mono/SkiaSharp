@@ -14,5 +14,74 @@
   "updatedAt": "2023-07-19T09:00:48",
   "closedAt": "2023-06-19T08:39:57",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:45:01.6541577Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1594981862,
+        "author": "mattleibow",
+        "body": "One thing I notice is that you have in your csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CNativeFileReference Include=\u0022$(SkiaSharpStaticLibraryPath)\\3.1.34\\st\\*.a\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nNote the \u0060st\u0060, but in the logs you have \u0060mt\u0060:\r\n\r\n\u003E C:\\Users\\kirea\\.nuget\\packages\\skiasharp.nativeassets.webassembly\\2.88.4-preview.70\\buildTransitive\\netstandard1.0\\..\\..\\build\\netstandard1.0\\libSkiaSharp.a\\3.1.34\\mt\\libSkiaSharp.a \r\n\r\nNot saying this is the issue, but it is something I noticed. ",
+        "createdAt": "2023-06-16T16:57:15",
+        "reactions": []
+      },
+      {
+        "id": 1594996842,
+        "author": "mattleibow",
+        "body": "That type seems to be a part of .NET itself... https://github.com/search?q=org%3Adotnet%20emscripten_longjmp\u0026type=code",
+        "createdAt": "2023-06-16T17:09:58",
+        "reactions": []
+      },
+      {
+        "id": 1595007915,
+        "author": "mattleibow",
+        "body": "https://github.com/emscripten-core/emscripten/blob/51b99e19f63896f681cdc714c62a3bbcbbef2690/ChangeLog.md#3132---021723\r\n\r\n\u003E SUPPORT_LONGJMP\u0027s default value now depends on the exception mode. If Wasm EH (-fwasm-exception) is used, it defaults to wasm, and if Emscripten EH (-sDISABLE_EXCEPTION_CATCHING=0) is used or no exception support is used, it defaults to emscripten. Previously it always defaulted to emscripten, so when a user specified -fwasm-exceptions, it resulted in Wasm EH \u002B Emscripten SjLj, the combination we do not intend to support for the long term.\r\n",
+        "createdAt": "2023-06-16T17:21:31",
+        "reactions": []
+      },
+      {
+        "id": 1595009828,
+        "author": "mattleibow",
+        "body": "And also https://github.com/emscripten-core/emscripten/pull/19004",
+        "createdAt": "2023-06-16T17:23:39",
+        "reactions": []
+      },
+      {
+        "id": 1595020122,
+        "author": "mattleibow",
+        "body": "Can you also attach a binlog so we can investigate?",
+        "createdAt": "2023-06-16T17:34:30",
+        "reactions": []
+      },
+      {
+        "id": 1595153164,
+        "author": "KirillKornienko",
+        "body": "\u003E One thing I notice is that you have in your csproj:\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \u003CNativeFileReference Include=\u0022$(SkiaSharpStaticLibraryPath)\\3.1.34\\st\\*.a\u0022 /\u003E\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Note the \u0060st\u0060, but in the logs you have \u0060mt\u0060:\r\n\u003E \r\n\u003E \u003E C:\\Users\\kirea.nuget\\packages\\skiasharp.nativeassets.webassembly\\2.88.4-preview.70\\buildTransitive\\netstandard1.0....\\build\\netstandard1.0\\libSkiaSharp.a\\3.1.34\\mt\\libSkiaSharp.a\r\n\u003E \r\n\u003E Not saying this is the issue, but it is something I noticed.\r\n\r\nYes, I accidentally attached the build output with \u0060mt\u0060 when I tried this. With \u0060st\u0060 the situation is the same. I corrected the build output in Issue.",
+        "createdAt": "2023-06-16T19:01:27",
+        "reactions": []
+      },
+      {
+        "id": 1595154730,
+        "author": "mattleibow",
+        "body": "The PR from @jeromelaban may fix this issue. It is still in the queue, but when it is done you can try using the PR artifacts.",
+        "createdAt": "2023-06-16T19:03:01",
+        "reactions": []
+      },
+      {
+        "id": 1595156045,
+        "author": "mattleibow",
+        "body": "Thanks for finding this! ",
+        "createdAt": "2023-06-16T19:04:11",
+        "reactions": []
+      },
+      {
+        "id": 1595166738,
+        "author": "KirillKornienko",
+        "body": "\u003E The PR from @jeromelaban may fix this issue. It is still in the queue, but when it is done you can try using the PR artifacts.\r\n\r\nSure, I will try this, when the artifacts will be ready.",
+        "createdAt": "2023-06-16T19:12:49",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -13,5 +13,153 @@
   "createdAt": "2019-07-28T20:39:34",
   "updatedAt": "2023-07-07T00:06:00",
   "commentCount": 18,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:45:17.666602Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 515958051,
+        "author": "FaizanDurrani",
+        "body": "Okay, so I managed to make it work. I just copied the whole Bindings\u0027 source over to my unity project and built the unity project using \u0060__IOS__\u0060 and \u0060__UNIFIED__\u0060 definitions. This allowed all the extern calls to go to the .framework instead of the .dll on iOS. I couldn\u0027t find any trace of Xamarin.iOS namespace in the actual source so no compiler errors were thrown.\r\n\r\nThe \u0027proper\u0027 way I guess would be to rebuild the bindings for Unity IOS with proper references but this works for now.",
+        "createdAt": "2019-07-29T11:44:58",
+        "reactions": []
+      },
+      {
+        "id": 516192905,
+        "author": "mattleibow",
+        "body": "I am going to reopen this as this is a good issue. We do need to solve this. You might be able to use the .config way with the .net standard library.\r\n\r\nhttps://www.mono-project.com/docs/advanced/pinvoke/dllmap/\r\n\r\n\u0060SkiaSharp.dll.config\u0060:\r\n\u0060\u0060\u0060xml\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022UTF-8\u0022?\u003E\r\n\u003Cconfiguration\u003E\r\n  \u003Cdllmap dll=\u0022libSkiaSharp\u0022 target=\u0022@rpath/libSkiaSharp.framework/libSkiaSharp\u0022 /\u003E\r\n\u003C/configuration\u003E\r\n\u0060\u0060\u0060\r\n\r\n_(Not sure if this actually works, seems to be a mono feature...)_",
+        "createdAt": "2019-07-29T22:56:40",
+        "reactions": []
+      },
+      {
+        "id": 516194058,
+        "author": "mattleibow",
+        "body": "Seems to be related: https://github.com/xamarin/xamarin-macios/issues/5112\r\n\r\nIt _may_ just work...",
+        "createdAt": "2019-07-29T23:01:53",
+        "reactions": []
+      },
+      {
+        "id": 549198197,
+        "author": "ForkeSeal",
+        "body": "\u003E Okay, so I managed to make it work. I just copied the whole Bindings\u0027 source over to my unity project and built the unity project using \u0060__IOS__\u0060 and \u0060__UNIFIED__\u0060 definitions. This allowed all the extern calls to go to the .framework instead of the .dll on iOS. I couldn\u0027t find any trace of Xamarin.iOS namespace in the actual source so no compiler errors were thrown.\r\n\u003E \r\n\u003E The \u0027proper\u0027 way I guess would be to rebuild the bindings for Unity IOS with proper references but this works for now.\r\n\r\nI am having the same problem. I have linked libSkiaSharp.framework but get this message\r\n\u0060dyld: Library not loaded: @rpath/libSkiaSharp.framework/libSkiaSharp\u0060\r\nExactly how did you get the extern calls to go to the .framework instead of the .dll on iOS?",
+        "createdAt": "2019-11-04T00:55:17",
+        "reactions": []
+      },
+      {
+        "id": 549259325,
+        "author": "FaizanDurrani",
+        "body": "Assuming you\u0027ve already imported the .framework inside unity, copy the Bindings folder from repo source to Unity and build using the following compiler definitions \u0060__IOS__\u0060 and \u0060__UNIFIED__\u0060\r\n\r\nThat should make it work ",
+        "createdAt": "2019-11-04T08:31:31",
+        "reactions": []
+      },
+      {
+        "id": 549654348,
+        "author": "ForkeSeal",
+        "body": "Thanks @FaizanDurrani I got it to work. There were a few errors once I imported the bindings folder but I got to work in the end.",
+        "createdAt": "2019-11-05T04:06:15",
+        "reactions": []
+      },
+      {
+        "id": 576372672,
+        "author": "PedroRossa",
+        "body": "Hello folks,\r\n@FaizanDurrani , please, how you put skiasharp to run on Android in Unity?\r\nI spent a lot of time but just received different type of errors.",
+        "createdAt": "2020-01-20T17:36:18",
+        "reactions": []
+      },
+      {
+        "id": 576392817,
+        "author": "FaizanDurrani",
+        "body": "\u003E Hello folks,\r\n\u003E @FaizanDurrani , please, how you put skiasharp to run on Android in Unity?\r\n\u003E I spent a lot of time but just received different type of errors.\r\n\r\nI think I just copied the \u0060.so\u0060s into \u0060Assets/\u0060 and imported the \u0060.dll\u0060 into \u0060Plugins/Android\u0060. I don\u0027t remember if I used my own build or the NuGet one. I\u0027ll push the skeleton of the project to Github sometime tomorrow so you can take a look at it.",
+        "createdAt": "2020-01-20T18:47:20",
+        "reactions": []
+      },
+      {
+        "id": 577386474,
+        "author": "PedroRossa",
+        "body": "\u003E \u003E Hello folks,\r\n\u003E \u003E @FaizanDurrani , please, how you put skiasharp to run on Android in Unity?\r\n\u003E \u003E I spent a lot of time but just received different type of errors.\r\n\u003E \r\n\u003E I think I just copied the \u0060.so\u0060s into \u0060Assets/\u0060 and imported the \u0060.dll\u0060 into \u0060Plugins/Android\u0060. I don\u0027t remember if I used my own build or the NuGet one. I\u0027ll push the skeleton of the project to Github sometime tomorrow so you can take a look at it.\r\n\r\nCan you send your project or some like that? Because we tried a lot and don\u0027t be able to use on Android (Oculus Quest to be more precisely)",
+        "createdAt": "2020-01-22T21:08:54",
+        "reactions": []
+      },
+      {
+        "id": 577779463,
+        "author": "FaizanDurrani",
+        "body": "\r\n\u003E \u003E \u003E Hello folks,\r\n\u003E \u003E \u003E @FaizanDurrani , please, how you put skiasharp to run on Android in Unity?\r\n\u003E \u003E \u003E I spent a lot of time but just received different type of errors.\r\n\u003E \u003E \r\n\u003E \u003E \r\n\u003E \u003E I think I just copied the \u0060.so\u0060s into \u0060Assets/\u0060 and imported the \u0060.dll\u0060 into \u0060Plugins/Android\u0060. I don\u0027t remember if I used my own build or the NuGet one. I\u0027ll push the skeleton of the project to Github sometime tomorrow so you can take a look at it.\r\n\u003E \r\n\u003E Can you send your project or some like that? Because we tried a lot and don\u0027t be able to use on Android (Oculus Quest to be more precisely)\r\n\r\nhttps://github.com/FaizanDurrani/SkiaSharp-Unity-Test\r\nI\u0027ve made a repo with the setup of SkiaSharp that I used for Unity. It doesn\u0027t have any scripts or scenes but you should be able to get a general idea of how its set up.",
+        "createdAt": "2020-01-23T17:14:14",
+        "reactions": []
+      },
+      {
+        "id": 624366869,
+        "author": "lahmidi-developer",
+        "body": "\u003E \u003E \u003E \u003E Hello folks,\r\n\u003E \u003E \u003E \u003E @FaizanDurrani , please, how you put skiasharp to run on Android in Unity?\r\n\u003E \u003E \u003E \u003E I spent a lot of time but just received different type of errors.\r\n\u003E \u003E \u003E \r\n\u003E \u003E \u003E \r\n\u003E \u003E \u003E I think I just copied the \u0060.so\u0060s into \u0060Assets/\u0060 and imported the \u0060.dll\u0060 into \u0060Plugins/Android\u0060. I don\u0027t remember if I used my own build or the NuGet one. I\u0027ll push the skeleton of the project to Github sometime tomorrow so you can take a look at it.\r\n\u003E \u003E \r\n\u003E \u003E \r\n\u003E \u003E Can you send your project or some like that? Because we tried a lot and don\u0027t be able to use on Android (Oculus Quest to be more precisely)\r\n\u003E \r\n\u003E https://github.com/FaizanDurrani/SkiaSharp-Unity-Test\r\n\u003E I\u0027ve made a repo with the setup of SkiaSharp that I used for Unity. It doesn\u0027t have any scripts or scenes but you should be able to get a general idea of how its set up.\r\n\r\nHello, @FaizanDurrani\r\nI still did not know how to exactly to set up \u0022SkiaSharp\u0022 with ios in unity please can you make some screenshots for that please im really need that\r\nthank you",
+        "createdAt": "2020-05-05T23:58:24",
+        "reactions": []
+      },
+      {
+        "id": 636373050,
+        "author": "smakarov",
+        "body": "Hi there! Is this issue fixed?",
+        "createdAt": "2020-05-30T19:18:54",
+        "reactions": []
+      },
+      {
+        "id": 638457562,
+        "author": "lahmidi-developer",
+        "body": "not yet \uD83D\uDE41\n\nOn Sat, May 30, 2020 at 8:19 PM smakarov \u003Cnotifications@github.com\u003E wrote:\n\n\u003E Hi there! Is this issue fixed?\n\u003E\n\u003E \u2014\n\u003E You are receiving this because you commented.\n\u003E Reply to this email directly, view it on GitHub\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/921#issuecomment-636373050\u003E, or\n\u003E unsubscribe\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/APO2HHMCKHTQDODYWR4KRFDRUFL2TANCNFSM4IHNMMMA\u003E\n\u003E .\n\u003E\n",
+        "createdAt": "2020-06-03T20:57:38",
+        "reactions": []
+      },
+      {
+        "id": 688410834,
+        "author": "mightypanda",
+        "body": "Hello @lahmidi-developer, and thank you @FaizanDurrani  for your repo.\r\n\r\nI found another repo  by @zia95 that has some working SkiaSharp code so should ease your testing on all platforms, even if the skiasharp embedding in that case is only for windows standalone, so i would just grab the drawing code from there.\r\n\r\nhttps://github.com/zia95/Unity-with-SkiaSharp-2.8-Demo\r\n\r\nMaybe we could get to a working repo with SkiaSharp on Unity working on all platforms, as well as some \u0022update\u0022 instructions?\r\n\r\nAll the best, let me know if this helps.\r\n\r\n\u003E not yet \uD83D\uDE41\r\n\u003E [\u2026](#)\r\n\u003E On Sat, May 30, 2020 at 8:19 PM smakarov ***@***.***\u003E wrote: Hi there! Is this issue fixed? \u2014 You are receiving this because you commented. Reply to this email directly, view it on GitHub \u003C[#921 (comment)](https://github.com/mono/SkiaSharp/issues/921#issuecomment-636373050)\u003E, or unsubscribe \u003Chttps://github.com/notifications/unsubscribe-auth/APO2HHMCKHTQDODYWR4KRFDRUFL2TANCNFSM4IHNMMMA\u003E .\r\n\r\n",
+        "createdAt": "2020-09-07T16:01:40",
+        "reactions": []
+      },
+      {
+        "id": 707382597,
+        "author": "mattleibow",
+        "body": "I saw these repos:\r\n - https://github.com/FluffyFishGames/ACNHDesignPatternEditor\r\n - https://github.com/erkyrath/UnitySkiaDemo\r\n - https://github.com/mrsaleh/UnityMapViewer\r\n\r\nNot sure if they are working, just was browsing. Maybe a solution can be pulled together from all of these comments...",
+        "createdAt": "2020-10-12T22:47:00",
+        "reactions": []
+      },
+      {
+        "id": 707570995,
+        "author": "lahmidi-developer",
+        "body": "thank you\nI will try and let you know new \uD83D\uDC4D\n\nOn Mon, Oct 12, 2020 at 11:47 PM Matthew Leibowitz \u003Cnotifications@github.com\u003E\nwrote:\n\n\u003E I saw these repos:\n\u003E\n\u003E    - https://github.com/FluffyFishGames/ACNHDesignPatternEditor\n\u003E    - https://github.com/erkyrath/UnitySkiaDemo\n\u003E    - https://github.com/mrsaleh/UnityMapViewer\n\u003E\n\u003E Not sure if they are working, just was browsing. Maybe a solution can be\n\u003E pulled together from all of these comments...\n\u003E\n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/921#issuecomment-707382597\u003E, or\n\u003E unsubscribe\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/APO2HHM2QKVC72JKE67GEMTSKOBPHANCNFSM4IHNMMMA\u003E\n\u003E .\n\u003E\n",
+        "createdAt": "2020-10-13T08:10:03",
+        "reactions": []
+      },
+      {
+        "id": 716536881,
+        "author": "lahmidi-developer",
+        "body": "Unfortunately it did not work \uD83D\uDE41\nthank you\n\nOn Sun, Oct 25, 2020 at 8:49 AM breadnone \u003Cnotifications@github.com\u003E wrote:\n\n\u003E Any news on this to be officially supported in form of official\n\u003E documentation of SkiaSharp? Especially that the official Linux nuget\n\u003E package is also available.\n\u003E\n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/921#issuecomment-716107632\u003E, or\n\u003E unsubscribe\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/APO2HHPC5FHGM4TKV7NYCV3SMPKCDANCNFSM4IHNMMMA\u003E\n\u003E .\n\u003E\n",
+        "createdAt": "2020-10-26T13:12:57",
+        "reactions": []
+      },
+      {
+        "id": 1624455567,
+        "author": "ammariqais",
+        "body": "Skia For Unity\r\ngithub\r\nhttps://github.com/ammariqais/SkiaForUnity\r\nunity forum thread:\r\nhttps://forum.unity.com/threads/free-skiasharp-for-unity-with-skottie.1455973/",
+        "createdAt": "2023-07-07T00:06:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:45:17.616361Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "eyes",
+            "createdAt": "2026-02-06T13:45:17.6163613Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:45:17.6163614Z"
+          }
+        ]
+      }
+    ]
+  }
 }

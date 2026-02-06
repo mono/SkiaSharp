@@ -13,5 +13,46 @@
   "createdAt": "2023-05-17T23:23:14",
   "updatedAt": "2023-06-21T03:21:40",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:45:32.7335126Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1552266710,
+        "author": "erebuswolf",
+        "body": "After a good deal of trial and error I copied libSkiaSharp.dll and libSkiaSharp.dylib from my build output directory to my installed application folder and it was able to load the DLL for SkiaSharp. I am trying to figure out how to include those files implicitly through assembly dependencies, but I can\u0027t figure it out currently.",
+        "createdAt": "2023-05-18T01:02:36",
+        "reactions": []
+      },
+      {
+        "id": 1552367441,
+        "author": "erebuswolf",
+        "body": "Right now I just explicitly add the files to the installer \u0022application folder\u0022 from the release bin directory. This feels like a really bad solution as it will be pulling from release even if I want to make a debug build. If there is a better cleaner way to do this please let me know.",
+        "createdAt": "2023-05-18T03:58:50",
+        "reactions": []
+      },
+      {
+        "id": 1552859118,
+        "author": "ojb500",
+        "body": "I would guess your installer is missing the contents of the \u0060runtimes\u0060\ndirectory which is where the platform-specific \u0060libSkiaSharp.dll\u0060 can be\nfound?\n\nOn Thu, 18 May 2023 at 00:23, Jesse Fish ***@***.***\u003E wrote:\n\n\u003E I have a WPF app that I added a SkiaSharp control to for high performance\n\u003E drawing. It works great. Runs fine in Visual Studio. It runs fine when I\n\u003E build and open the exe in the build output folder. But when I package an\n\u003E installer and try running the installed application, I get this error:\n\u003E\n\u003E Unhandled Exception: System.TypeInitializationException: The type\n\u003E initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception.\n\u003E ---\u003E System.DllNotFoundException: Unable to load library \u0027libSkiaSharp\u0027. at\n\u003E SkiaSharp.LibraryLoader.LoadLocalLibrary[T](String libraryName) at\n\u003E System.Lazy1.CreateValue()\n\u003E at System.Lazy1.LazyInitValue() at\n\u003E SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates\n\u003E procs) at SkiaSharp.SKAbstractManagedStream..cctor() --- End of inner\n\u003E exception stack trace --- at\n\u003E SkiaSharp.SKAbstractManagedStream..ctor(Boolean owns) at\n\u003E SkiaSharp.SKManagedStream..ctor(Stream managedStream, Boolean\n\u003E disposeManagedStream) at SkiaSharp.SKCodec.WrapManagedStream(Stream stream)\n\u003E at SkiaSharp.SKBitmap.Decode(Stream stream) at\n\u003E LabMonsterToolkit.SKImageStore.LoadResource(String key, String uri) at\n\u003E LabMonsterToolkit.SKImageStore.LoadResources() at\n\u003E LabMonsterToolkit.SKImageStore..ctor() at\n\u003E LabMonsterToolkit.SKImageStore.GetImageStoreSingle() at\n\u003E LabMonsterToolkit.TrainingWindow..ctor(ControllerInterface\n\u003E controllerInterface) at LabMonsterToolkit.MainWindow.OpenTrainer(Object\n\u003E sender, RoutedEventArgs e) at\n\u003E System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs\n\u003E args, Boolean reRaised) at\n\u003E System.Windows.UIElement.RaiseEventImpl(DependencyObject sender,\n\u003E RoutedEventArgs args) at\n\u003E System.Windows.Controls.Primitives.ButtonBase.OnClick() at\n\u003E System.Windows.Controls.Button.OnClick() at\n\u003E System.Windows.Controls.Primitives.ButtonBase.OnMouseLeftButtonUp(MouseButtonEventArgs\n\u003E e) at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object\n\u003E target) at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object\n\u003E target, RoutedEventArgs routedEventArgs) at\n\u003E System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs\n\u003E args, Boolean reRaised) at\n\u003E System.Windows.UIElement.ReRaiseEventAs(DependencyObject sender,\n\u003E RoutedEventArgs args, RoutedEvent newEvent) at\n\u003E System.Windows.UIElement.OnMouseUpThunk(Object sender, MouseButtonEventArgs\n\u003E e) at System.Windows.RoutedEventArgs.InvokeHandler(Delegate handler, Object\n\u003E target) at System.Windows.RoutedEventHandlerInfo.InvokeHandler(Object\n\u003E target, RoutedEventArgs routedEventArgs) at\n\u003E System.Windows.EventRoute.InvokeHandlersImpl(Object source, RoutedEventArgs\n\u003E args, Boolean reRaised) at\n\u003E System.Windows.UIElement.RaiseEventImpl(DependencyObject sender,\n\u003E RoutedEventArgs args) at\n\u003E System.Windows.UIElement.RaiseTrustedEvent(RoutedEventArgs args) at\n\u003E System.Windows.Input.InputManager.ProcessStagingArea() at\n\u003E System.Windows.Input.InputManager.ProcessInput(InputEventArgs input) at\n\u003E System.Windows.Input.InputProviderSite.ReportInput(InputReport inputReport)\n\u003E at System.Windows.Interop.HwndMouseInputProvider.ReportInput(IntPtr hwnd,\n\u003E InputMode mode, Int32 timestamp, RawMouseActions actions, Int32 x, Int32 y,\n\u003E Int32 wheel) at\n\u003E System.Windows.Interop.HwndMouseInputProvider.FilterMessage(IntPtr hwnd,\n\u003E WindowMessage msg, IntPtr wParam, IntPtr lParam, Boolean\u0026 handled) at\n\u003E System.Windows.Interop.HwndSource.InputFilterMessage(IntPtr hwnd, Int32\n\u003E msg, IntPtr wParam, IntPtr lParam, Boolean\u0026 handled) at\n\u003E MS.Win32.HwndWrapper.WndProc(IntPtr hwnd, Int32 msg, IntPtr wParam, IntPtr\n\u003E lParam, Boolean\u0026 handled) at\n\u003E MS.Win32.HwndSubclass.DispatcherCallbackOperation(Object o) at\n\u003E System.Windows.Threading.ExceptionWrapper.InternalRealCall(Delegate\n\u003E callback, Object args, Int32 numArgs) at\n\u003E System.Windows.Threading.ExceptionWrapper.TryCatchWhen(Object source,\n\u003E Delegate callback, Object args, Int32 numArgs, Delegate catchHandler) at\n\u003E System.Windows.Threading.Dispatcher.LegacyInvokeImpl(DispatcherPriority\n\u003E priority, TimeSpan timeout, Delegate method, Object args, Int32 numArgs) at\n\u003E MS.Win32.HwndSubclass.SubclassWndProc(IntPtr hwnd, Int32 msg, IntPtr\n\u003E wParam, IntPtr lParam) at MS.Win32.UnsafeNativeMethods.DispatchMessage(MSG\u0026\n\u003E msg) at System.Windows.Threading.Dispatcher.PushFrameImpl(DispatcherFrame\n\u003E frame) at System.Windows.Application.RunDispatcher(Object ignore) at\n\u003E System.Windows.Application.RunInternal(Window window) at\n\u003E LabMonsterToolkit.App.Main()\n\u003E\n\u003E I\u0027ve been searching trying to determine the source of the issue. I\n\u003E installed Skia vis the NuGet installer for the project. The following dlls\n\u003E are included as dependencies in the installer:\n\u003E\n\u003E    - SkiaSharp.dll\n\u003E    - SkiaSharp.Views.Desktop.Common.dll\n\u003E    - SkiaSharp.Views.Desktop.dll\n\u003E    - SkiaSharp.Views.Gtk.dll\n\u003E    - SkiaSharp.Views.WindowsForms.dll\n\u003E    - SkiaSharp.Views.WPF.dll\n\u003E\n\u003E I can see the dlls are in the application directory for the installed\n\u003E application.\n\u003E\n\u003E The dlls have the following attributes for the installer:\n\u003E [image: DLL config]\n\u003E \u003Chttps://user-images.githubusercontent.com/319468/239097181-1cdb5447-d853-421a-aebf-713814546b20.PNG\u003E\n\u003E\n\u003E Any help is appreciated. I put a lot of work rewriting my applicaiton to\n\u003E use SkiaSharp and it works great. Hitting this roadblock is very\n\u003E frustrating.\n\u003E\n\u003E \u2014\n\u003E Reply to this email directly, view it on GitHub\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/2463\u003E, or unsubscribe\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/AALDKFKQY7QTQPSULHZVSGDXGVMW3ANCNFSM6AAAAAAYFXXBKY\u003E\n\u003E .\n\u003E You are receiving this because you are subscribed to this thread.Message\n\u003E ID: ***@***.***\u003E\n\u003E\n",
+        "createdAt": "2023-05-18T10:33:27",
+        "reactions": []
+      },
+      {
+        "id": 1552889420,
+        "author": "erebuswolf",
+        "body": "Thank you for the reply. After adding the runtime libs, I now am getting this from my installer log\r\n\r\nDEBUG: Error 2727:  The directory entry \u0027_412412F434E7471BB49E4F29D2448DDD\u0027 does not exist in the Directory table\r\n\r\nI\u0027m not sure if this director is needed by skia or something else but it is a weird directory to require for my application. Do you have any clue why it would need this to exist?\r\n\r\nEdit: The directory changes names every build, so it must be some auto-generated parth. I\u0027m stumped again.",
+        "createdAt": "2023-05-18T11:00:23",
+        "reactions": []
+      },
+      {
+        "id": 1600014805,
+        "author": "yuanrui",
+        "body": "In our old project, has same error. copy nuget packages file \u0022libSkiaSharp.dll\u0022 to bin path fixed this problem. It looks sime strange, why not auto copy libSkiaSharp.dll to bin path.\r\n.net framework is 4.6.2, platform is anycpu.\r\n",
+        "createdAt": "2023-06-21T03:21:40",
+        "reactions": []
+      }
+    ]
+  }
 }

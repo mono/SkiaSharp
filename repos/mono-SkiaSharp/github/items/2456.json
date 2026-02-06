@@ -13,5 +13,18 @@
   "createdAt": "2023-05-09T20:27:26",
   "updatedAt": "2023-05-10T13:18:27",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:21.8642305Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1542192125,
+        "author": "gktval",
+        "body": "Update, trying to figure out what is causing this some more. I am able to reproduce the AccessViolationException without the ProjNet assemblies. (i.e., using \u0060\u0060\u0060await DisplayAlert(\u0022Something\u0022, \u0022Ask Something\u0022, \u0022Yes\u0022);\u0060\u0060\u0060).\r\n\r\nI also notice that I can more easily reproduce the error if I create larger bitmaps (such as 1200x1000 as compared to 256x256). \r\nOccasionally I can get the access exception on the first \u0022Click me\u0022. in the project. Here is an image of the exception and the memory usage in Diagnostics:\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/7605046/38c58860-5ac1-4ba8-ad36-716c8eb6863a)\r\n\r\nIf i make the method synchronous by taking out the await, then I cannot reproduce the error\r\n",
+        "createdAt": "2023-05-10T13:13:38",
+        "reactions": []
+      }
+    ]
+  }
 }

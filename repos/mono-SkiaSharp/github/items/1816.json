@@ -13,5 +13,53 @@
   "createdAt": "2021-09-24T07:04:46",
   "updatedAt": "2023-05-15T08:10:32",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:17.078052Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1334682888,
+        "author": "justinimel",
+        "body": "Im also encountering this issue now.  Were you able to solve it?",
+        "createdAt": "2022-12-02T02:23:59",
+        "reactions": []
+      },
+      {
+        "id": 1334798202,
+        "author": "tankei-gtj",
+        "body": "Hello, justinimel.\r\n\r\nSorry I haven\u0027t solved it yet.\r\nI\u0027m still using the 2.80.2 version.\r\n\r\nIf possible, you may be able to solve it by upgrading Xamarin.iOS.\r\n\r\nI don\u0027t remember exactly because it happened in the past.,\r\nIf you set \u0022Linker behavior\u0022 in \u0022iOS Build\u0022 to \u0022Don\u0027t Link\u0022,\r\nYou may be able to build for iOS Simulator.\r\n\r\nBut, I don\u0027t know if this is the correct way.",
+        "createdAt": "2022-12-02T05:59:50",
+        "reactions": []
+      },
+      {
+        "id": 1334826582,
+        "author": "justinimel",
+        "body": "Seems like the combination of Link SDKs or Link All and using the Static Registrar on the Simulator is the cause of the issue. \r\n\r\nOriginal issue is that older versions of the iOS Simulator didn\u0027t support Metal at all, as in it wasn\u0027t even included: https://github.com/xamarin/xamarin-macios/issues/4422\r\n\r\nLooks like changes were made to the Linker in the Xamarin.Macios project to account for this here: https://github.com/xamarin/xamarin-macios/pull/4510/files#\r\n\r\nStarting in 2.80.3 this package brought in support for the Metal API: https://github.com/mono/SkiaSharp/commit/2a87a0d947e69800cdfc8dc31ab38a6a916bf7c1\r\n\r\nMy suspicion is that the Xamarin changes above aren\u0027t 100% correct and bringing in these packages with the Metal Dependencies with the above build settings exposes the issue.\r\n\r\nThe only solution is to remove the static registrar, but unfortunately I also need it.  So i am stuck on the same version as well.\r\n\r\nSadly I\u0027m only using the Forms version and don\u0027t even need Metal at all.  I\u0027ve tried various ways to strip that aspect from my builds to allow the linker to work but to no avail.",
+        "createdAt": "2022-12-02T06:45:30",
+        "reactions": []
+      },
+      {
+        "id": 1334869394,
+        "author": "tankei-gtj",
+        "body": "Thank you for the detailed information.\r\nI also don\u0027t need Metal API, so I tried various things at that time, but I couldn\u0027t solve it after all.\r\nIt\u0027s been over a year, so I don\u0027t remember exactly what I tried.",
+        "createdAt": "2022-12-02T07:48:47",
+        "reactions": []
+      },
+      {
+        "id": 1335546198,
+        "author": "justinimel",
+        "body": "I think we\u0027re just stuck on this version at this point.  It still works for now thankfully.",
+        "createdAt": "2022-12-02T17:06:00",
+        "reactions": []
+      },
+      {
+        "id": 1547390396,
+        "author": "grahampett",
+        "body": "I found this could be fixed by adding \u0060-gcc_flags \u0027-framework MetalKit\u0027\u0060 to the Additional MTouch Arguments field in the simulator build configuration",
+        "createdAt": "2023-05-15T08:10:32",
+        "reactions": []
+      }
+    ]
+  }
 }

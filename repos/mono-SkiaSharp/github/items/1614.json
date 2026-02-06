@@ -14,5 +14,65 @@
   "updatedAt": "2023-07-13T12:00:42",
   "closedAt": "2023-06-12T23:10:17",
   "commentCount": 6,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:45:09.6625183Z",
+    "reactions": [
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:45:09.6625251Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 812517765,
+        "author": "Sebosek",
+        "body": "Just an idea; I don\u0027t see an implementation of \u0060IDisposable\u0060, so how do you remove the event listeners?",
+        "createdAt": "2021-04-02T12:56:09",
+        "reactions": [
+          {
+            "user": "oridotaoyebode",
+            "content": "eyes",
+            "createdAt": "2026-02-06T13:45:08.5804865Z"
+          }
+        ]
+      },
+      {
+        "id": 907538707,
+        "author": "EmilAlipiev",
+        "body": "any update on this? i am seeing also same crashes?",
+        "createdAt": "2021-08-28T00:37:49",
+        "reactions": []
+      },
+      {
+        "id": 967165093,
+        "author": "oridotaoyebode",
+        "body": "\u003E Just an idea; I don\u0027t see an implementation of \u0060IDisposable\u0060, so how do you remove the event listeners?\r\n\r\nValid point. I ended up solving this. How I did it, I don\u0027t remember. Will have to check my commits",
+        "createdAt": "2021-11-12T14:36:54",
+        "reactions": []
+      },
+      {
+        "id": 1311924708,
+        "author": "charlesroddie",
+        "body": "We are also seeing these.",
+        "createdAt": "2022-11-11T16:32:40",
+        "reactions": []
+      },
+      {
+        "id": 1312676024,
+        "author": "charlesroddie",
+        "body": "Stacktrace:\r\n\r\n\u0060\u0060\u0060\r\n\r\nXamarin Exception Stack:\r\nSystem.ObjectDisposedException: Cannot access a disposed object.\r\nObject name: \u0027SkiaSharp.Views.Android.SKCanvasView\u0027.\r\n  at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00029] in \u003C66b5e34d958f4ffd883b03b7ee0e6396\u003E:0\r\n  at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeVirtualVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00000] in \u003C66b5e34d958f4ffd883b03b7ee0e6396\u003E:0\r\n  at Android.Views.View.SetOnTouchListener (Android.Views.View\u002BIOnTouchListener l) [0x00036] in \u003C60d11f4313494e9baf416a406e9d0d7f\u003E:0\r\n  at Android.Views.View\u002B\u003C\u003Ec__DisplayClass2963_0.\u003Cremove_Touch\u003Eb__0 (Android.Views.View\u002BIOnTouchListener __v) [0x00000] in \u003C60d11f4313494e9baf416a406e9d0d7f\u003E:0\r\n  at Java.Interop.EventHelper.RemoveEventHandler[TInterface,TImplementor] (System.WeakReference\u0026 implementor, System.Func\u00602[T,TResult] empty, System.Action\u00601[T] unsetListener, System.Action\u00601[T] remove) [0x00032] in \u003C60d11f4313494e9baf416a406e9d0d7f\u003E:0\r\n  at Android.Views.View.remove_Touch (System.EventHandler\u00601[TEventArgs] value) [0x00014] in \u003C60d11f4313494e9baf416a406e9d0d7f\u003E:0\r\n  at SkiaSharp.Views.Forms.SKTouchHandler.SetEnabled (Android.Views.View view, System.Boolean enableTouchEvents) [0x00003] in \u003C6db4df16d2d546e28f83f12f7d1cc858\u003E:0\r\n  at SkiaSharp.Views.Forms.SKTouchHandler.Detach (Android.Views.View view) [0x00000] in \u003C6db4df16d2d546e28f83f12f7d1cc858\u003E:0\r\n  at SkiaSharp.Views.Forms.SKCanvasViewRendererBase\u00602[TFormsView,TNativeView].Dispose (System.Boolean disposing) [0x00059] in \u003C6db4df16d2d546e28f83f12f7d1cc858\u003E:0\r\n  at Java.Lang.Object.Java.Interop.IJavaPeerable.Finalized () [0x00000] in \u003C60d11f4313494e9baf416a406e9d0d7f\u003E:0\r\n  at Android.Runtime.AndroidValueManager.FinalizePeer (Java.Interop.IJavaPeerable value) [0x00068] in \u003C60d11f4313494e9baf416a406e9d0d7f\u003E:0\r\n  at Java.Lang.Object.Finalize () [0x0001a] in \u003C60d11f4313494e9baf416a406e9d0d7f\u003E:0\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-11-13T08:53:34",
+        "reactions": []
+      },
+      {
+        "id": 1313509617,
+        "author": "charlesroddie",
+        "body": "@mattleibow is this likely to be looked at?\r\n\r\nI suppose a workaround would be to make all Skia views disposable in user code and manually settting EnableTouchEvents to false on disposal.",
+        "createdAt": "2022-11-14T11:09:30",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -13,5 +13,68 @@
   "createdAt": "2022-11-17T13:55:57",
   "updatedAt": "2023-04-04T16:05:06",
   "commentCount": 5,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:35.6940526Z",
+    "reactions": [
+      {
+        "user": "themcoo",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:35.6940576Z"
+      },
+      {
+        "user": "Gobra",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:35.6940583Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1339509902,
+        "author": "AnarchyMob",
+        "body": "SKMatrix is not a read-only structure, passing through with \u0022in\u0022 modifier will create a shadow copy of the structure...",
+        "createdAt": "2022-12-06T14:57:34",
+        "reactions": [
+          {
+            "user": "OJacot-Descombes",
+            "content": "-1",
+            "createdAt": "2026-02-06T13:46:34.7649574Z"
+          },
+          {
+            "user": "ojb500",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:34.7649578Z"
+          }
+        ]
+      },
+      {
+        "id": 1339761598,
+        "author": "OJacot-Descombes",
+        "body": "@AnarchyMob, this is not how the in-keyword works in C#. It passes a reference to the original struct but disallows assignments to it:\r\n\r\n![image](https://user-images.githubusercontent.com/12754787/205986058-e4fd5961-77b2-4abd-b296-47a961962de4.png)\r\n\r\nSee also the link in the \u0022Additional context\u0022 section of my post. The Microsoft\u0027s doc clearly says\r\n\u003EThe in keyword causes arguments to be passed by reference but ensures the argument is not modified.",
+        "createdAt": "2022-12-06T17:59:39",
+        "reactions": []
+      },
+      {
+        "id": 1343765598,
+        "author": "ojb500",
+        "body": "@OJacot-Descombes\r\n\r\n\u003E The in keyword causes arguments to be passed by reference but ensures the argument is not modified.\r\n\r\nTrue, but the compiler is often forced to emit a defensive copy to ensure this.\r\n\r\nWithout the \u0060readonly\u0060 modifier the compiler cannot know that calling a method of \u0060m\u0060 (or even a get accessor) would not mutate the struct in some way. Therefore it would be unsafe to pass a reference to the original struct.\r\n\r\nhttps://learn.microsoft.com/en-us/dotnet/csharp/write-safe-efficient-code#avoid-defensive-copies\r\n\r\n",
+        "createdAt": "2022-12-09T02:36:41",
+        "reactions": []
+      },
+      {
+        "id": 1344350045,
+        "author": "OJacot-Descombes",
+        "body": "OK, I learned something. But luckily there are [Readonly Instance Members](https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/proposals/csharp-8.0/readonly-instance-members). You can apply \u0060readonly\u0060 to property accessors and to methods.\r\n\u0060\u0060\u0060 c#\r\nprivate int _x;\r\npublic int X { readonly get { return _x; } set { _x = value; } }\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-12-09T14:05:48",
+        "reactions": []
+      },
+      {
+        "id": 1496237227,
+        "author": "cyraid",
+        "body": "I wouldn\u0027t mind at least being able to pass a ref to skia as that\u0027s a lot of structure copying as I\u0027m saving and restore the matrix a lot.",
+        "createdAt": "2023-04-04T16:05:06",
+        "reactions": []
+      }
+    ]
+  }
 }

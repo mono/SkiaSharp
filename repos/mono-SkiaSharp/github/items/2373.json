@@ -13,5 +13,69 @@
   "createdAt": "2023-02-06T00:14:04",
   "updatedAt": "2023-05-24T15:43:01",
   "commentCount": 1,
-  "reactionCount": 10
+  "reactionCount": 10,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:11.3068173Z",
+    "reactions": [
+      {
+        "user": "agneszitte",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068209Z"
+      },
+      {
+        "user": "MartinZikmund",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068216Z"
+      },
+      {
+        "user": "ramezgerges",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068217Z"
+      },
+      {
+        "user": "Youssef1313",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068221Z"
+      },
+      {
+        "user": "ahmed605",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068222Z"
+      },
+      {
+        "user": "morning4coffe-dev",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068249Z"
+      },
+      {
+        "user": "NVLudwig",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.306825Z"
+      },
+      {
+        "user": "ajitid",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068251Z"
+      },
+      {
+        "user": "taublast",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068252Z"
+      },
+      {
+        "user": "DearVa",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:11.3068254Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1561315570,
+        "author": "cyraid",
+        "body": "I\u0027m wanting to do shaders too, but it seems there\u0027s a large lack of support. @mattleibow Think we could have some better uniform setting support too? :) (instead of just WriteTo with a byte span). Just passing a simple color to an effect shader seems to be a lot of boiler plate! Let alone passing floats, etc.\r\n\r\nEdit Edit: By better support I mean, uniform.Set(float), uniform.Set(float[]), uniform.Set(SKColorF), etc. For those coming in not knowing there\u0027s implicit operator overrides.\r\n\r\nEdit: I found out I can set the SKRuntimeEffectUniform and it\u0027ll accept Span\u003Cfloat\u003E, so anyone coming here wondering an easy way to do it?\r\n\r\n\u0060\u0060\u0060csharp\r\nColorF color = new SKColorF(1, 0, 0, 1); // 100% Red, with 100% alpha\r\nSpan\u003Cfloat\u003E colorSpan = stackalloc float[4] { color.Red, color.Green, color.Blue, color.Alpha };\r\nSKRuntimeEffectUniform colorUniform = colorSpan;\r\n\u0060\u0060\u0060\r\nor without stackalloc:\r\n\u0060\u0060\u0060csharp\r\nColorF color = new SKColorF(1, 0, 0, 1); // 100% Red, with 100% alpha\r\nSpan\u003Cfloat\u003E colorFloats = new float[4] { color.Red, color.Green, color.Blue, color.Alpha };\r\nSKRuntimeEffectUniform colorUniform = colorFloats;\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-05-24T14:55:35",
+        "reactions": []
+      }
+    ]
+  }
 }

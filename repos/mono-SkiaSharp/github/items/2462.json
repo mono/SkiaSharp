@@ -14,5 +14,44 @@
   "updatedAt": "2023-07-20T00:00:44",
   "closedAt": "2023-06-19T17:09:50",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:44:58.8733725Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1553783606,
+        "author": "dubiousconst282",
+        "body": "I think that the SKBitmap object is being freed by the GC while the unmanaged pointer is still being used, since there are no other references to it after the GetPixels() call.\r\n\r\nAdding either an using block or accessing some property of the bitmap afterwards seems to fix the issue:\r\n\r\n\u0060\u0060\u0060diff\r\n\u002B        using var bitmap = SKBitmap.Decode(File.OpenRead(\u0022test.jpg\u0022));\r\n         ...\r\n\u002B        Console.WriteLine(bitmap.Width);\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-05-18T23:38:44",
+        "reactions": [
+          {
+            "user": "Vercidium",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:58.4089509Z"
+          }
+        ]
+      },
+      {
+        "id": 1554376051,
+        "author": "Vercidium",
+        "body": "Changing from \u0060var bitmap\u0060 to \u0060using var bitmap\u0060 does fix it, thank you for the workaround!",
+        "createdAt": "2023-05-19T10:38:55",
+        "reactions": []
+      },
+      {
+        "id": 1597506831,
+        "author": "mattleibow",
+        "body": "Closing this issue as @dubiousconst282 is correct. The GC will collect the bitmap because there are no more references to it. Once you access the pixels as a pointer, there is no connection from that pointer to the bitmap.\r\n\r\nI also think you could use the \u0060GC.KeepAlive\u0060 if you did not want to dispose the bitmap - ie: you are some method that does not control the bitmap.",
+        "createdAt": "2023-06-19T17:09:50",
+        "reactions": [
+          {
+            "user": "dubiousconst282",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:58.8231049Z"
+          }
+        ]
+      }
+    ]
+  }
 }

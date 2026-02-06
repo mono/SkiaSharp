@@ -13,5 +13,25 @@
   "createdAt": "2023-02-13T10:33:58",
   "updatedAt": "2023-07-04T16:55:54",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:45:20.6441085Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1428242317,
+        "author": "mail2mhossain",
+        "body": "Trying to convert AV_PIX_FMT_BGR24 to 32-bit color with the format BGRA:\r\n\r\n        AnyBitmap anyImage;\r\n        int width = rawImage.Width;\r\n        int height = rawImage.Height;\r\n    int stride = rawImage.Stride;\r\n\r\n        byte[] bgr24 = rawImage.GetBuffer(); \r\n        byte[] bgra32 = new byte[width * height * 4]; \r\n\r\n        for (int y = 0; y \u003C height; y\u002B\u002B)\r\n        {\r\n            int bgr24RowIndex = y * stride;\r\n            int bgra32RowIndex = y * width * 4;\r\n\r\n            for (int x = 0; x \u003C width; x\u002B\u002B)\r\n            {\r\n                int bgr24Index = bgr24RowIndex \u002B x * 3;\r\n                int bgra32Index = bgra32RowIndex \u002B x * 4;\r\n\r\n                bgra32[bgra32Index] = bgr24[bgr24Index \u002B 2]; // blue channel\r\n                bgra32[bgra32Index \u002B 1] = bgr24[bgr24Index \u002B 1]; // green channel\r\n                bgra32[bgra32Index \u002B 2] = bgr24[bgr24Index]; // red channel\r\n                bgra32[bgra32Index \u002B 3] = 255; // alpha channel (fully opaque)\r\n            }\r\n        }\r\n\r\n        SKImageInfo info = new SKImageInfo(rawImage.Width, rawImage.Height, SKColorType.Bgra8888);\t\r\n\t\t\r\n        using (SKData data = SKData.CreateCopy(bgra32))\r\n        {\r\n            using (SKImage image = SKImage.FromPixels(info, data, rawImage.Width * 4))\r\n            {\r\n                using (SKBitmap bitmap = SKBitmap.FromImage(image))\r\n                {\r\n                    anyImage = bitmap;\r\n                }\r\n            }\r\n        }\r\n\r\nBut getting blueish color in image and taking to long to convert too.\r\n\r\nAny suggestions please.",
+        "createdAt": "2023-02-13T16:26:37",
+        "reactions": []
+      },
+      {
+        "id": 1620537730,
+        "author": "m7md7sien",
+        "body": "The result image is blueish because you swap blue and red channels. Either don\u0027t swap the channels:\r\n\u0060bgra32[bgra32Index] = bgr24[bgr24Index]; // blue channel\r\n            bgra32[bgra32Index \u002B 1] = bgr24[bgr24Index \u002B 1]; // green channel\r\n            bgra32[bgra32Index \u002B 2] = bgr24[bgr24Index \u002B 2]; // red channel\r\n            bgra32[bgra32Index \u002B 3] = 255; // alpha channel (fully opaque)\u0060\r\n\r\nOr use RGB color type (like SKColorType.Rgba8888) instead of BGR (SKColorType.Bgra8888).\r\n",
+        "createdAt": "2023-07-04T16:55:54",
+        "reactions": []
+      }
+    ]
+  }
 }

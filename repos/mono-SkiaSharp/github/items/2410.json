@@ -13,5 +13,116 @@
   "createdAt": "2023-03-07T16:24:11",
   "updatedAt": "2023-04-14T12:50:06",
   "commentCount": 8,
-  "reactionCount": 5
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:28.0987552Z",
+    "reactions": [
+      {
+        "user": "UkeHa",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:28.0987585Z"
+      },
+      {
+        "user": "borrmann",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:28.0987724Z"
+      },
+      {
+        "user": "LRufenacht",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:28.0987729Z"
+      },
+      {
+        "user": "Inrego",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:28.0987733Z"
+      },
+      {
+        "user": "logikonline",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:28.0987736Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1463798971,
+        "author": "UkeHa",
+        "body": "Can confirm, SKCodec.Create(inputStream); doesn\u0027t work either. I suspect this has to do with the native libraries not being copied into the right directory and therefore failing. @mattleibow, could you try to reproduce this issue?",
+        "createdAt": "2023-03-10T13:23:19",
+        "reactions": [
+          {
+            "user": "borrmann",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:26.5576164Z"
+          },
+          {
+            "user": "logikonline",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:26.5576169Z"
+          }
+        ]
+      },
+      {
+        "id": 1475949847,
+        "author": "cwilde123",
+        "body": "I\u0027m getting the same issue. I\u0027m using a library that uses SKIA MAUI lib and I boiled down the bug to when it tries to create a new SKpaint object it crashes on iOS. It\u0027s weird though because it works on the iOS simulator running 16.2 but not a real device on any iOS version I tested running in either debug or release with Adhoc previsioning profile. @erdogdum  Does it work on a simulator for you? Will there be a fix for this? My issue regarding this: #2421",
+        "createdAt": "2023-03-20T10:10:33",
+        "reactions": [
+          {
+            "user": "logikonline",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:26.7900653Z"
+          }
+        ]
+      },
+      {
+        "id": 1475988429,
+        "author": "UkeHa",
+        "body": "My workaround for this is twofold.\r\n\r\nFirst, i compress my pictures with iOS-specific code:\r\n\r\n\u0060\u0060\u0060\r\n#if IOS\r\n\t\tprivate static byte[] ResizeImageIos(byte[] imageData)\r\n\t\t{\r\n\t\t\tvar originalImage = ImageFromByteArray(imageData);\r\n\t\t\tusing var jpgImage = originalImage.AsJPEG(0.9f);\r\n\t\t\treturn jpgImage.ToArray();\r\n\t\t}\r\n\t\tpublic static UIImage ImageFromByteArray(byte[] data)\r\n\t\t{\r\n\t\t\tif (data == null)\r\n\t\t\t{\r\n\t\t\t\treturn null;\r\n\t\t\t}\r\n\r\n\t\t\tUIImage image;\r\n\t\t\ttry\r\n\t\t\t{\r\n\t\t\t\timage = new UIImage(NSData.FromArray(data));\r\n\t\t\t}\r\n\t\t\tcatch (Exception e)\r\n\t\t\t{\r\n\t\t\t\treturn null;\r\n\t\t\t}\r\n\t\t\treturn image;\r\n\t\t}\r\n#endif\r\n\u0060\u0060\u0060\r\n\r\nSecond, i\u0027m using https://github.com/dimonovdd/Xamarin.MediaGallery to capture/select images, as the current implementation in MAUI is broken and doesn\u0027t return the image orientation.\r\n",
+        "createdAt": "2023-03-20T10:37:53",
+        "reactions": []
+      },
+      {
+        "id": 1499068352,
+        "author": "LRufenacht",
+        "body": "Same issue here.\r\n\r\n{System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: @rpath/libSkiaSharp.framework/libSkiaSharp\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n\r\nwhen creating a new SKBitmap on a physical iOS device.",
+        "createdAt": "2023-04-06T13:30:08",
+        "reactions": [
+          {
+            "user": "logikonline",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:27.2092295Z"
+          }
+        ]
+      },
+      {
+        "id": 1506519500,
+        "author": "Inrego",
+        "body": "Running into the same issue here. Did anyone find a workaround?",
+        "createdAt": "2023-04-13T07:58:15",
+        "reactions": []
+      },
+      {
+        "id": 1506523284,
+        "author": "cwilde123",
+        "body": "@Inrego No it\u0027s really annoying, tried cloning the whole repo down and fixing the SKpaint object myself but there is so many dependencies for this so it\u0027s no point. This is a major bug that needs to be fixed",
+        "createdAt": "2023-04-13T08:00:50",
+        "reactions": []
+      },
+      {
+        "id": 1506543879,
+        "author": "Inrego",
+        "body": "I actually managed to get it working. What I did was to connect my iPad directly to the Mac, and deploy the app to iOS Remote Devices -\u003E device rather than doing the Hot Reload thingy where the device is connected directly to the Windows machine.\r\n\r\nOther things I also did, which may or may not be necessary: Changed Minimum Target iOS Framework to 13.6 (I noticed that the SkiaSharp NuGet targets net6.0-ios13.6)",
+        "createdAt": "2023-04-13T08:15:39",
+        "reactions": []
+      },
+      {
+        "id": 1508457294,
+        "author": "erdogdum",
+        "body": "@Inrego \u0027s solution works and that\u0027s how we also tried to implement. ",
+        "createdAt": "2023-04-14T12:50:06",
+        "reactions": []
+      }
+    ]
+  }
 }
