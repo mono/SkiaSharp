@@ -23,5 +23,46 @@
   "updatedAt": "2024-07-23T20:38:07",
   "closedAt": "2024-07-23T20:38:07",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:35:35.8088557Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2140653591,
+        "author": "martinaxure",
+        "body": "I think the bug was from this pull request:\r\nhttps://github.com/mono/SkiaSharp/pull/2780/files\r\n",
+        "createdAt": "2024-05-30T18:45:30",
+        "reactions": []
+      },
+      {
+        "id": 2142552269,
+        "author": "mattleibow",
+        "body": "I am not able to repro:\r\n\r\n[TestingApp.zip](https://github.com/user-attachments/files/15516037/TestingApp.zip)\r\n\r\n\u0060\u0060\u0060\r\nBEFORE Canvas.TotalMatrix = 1, 0, 0, 0, 1, 0, 0, 0, 1\r\nAFTER Canvas.TotalMatrix = 1, 0, 100, 0, 1, 100, 0, 0, 1\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-05-31T15:58:58",
+        "reactions": []
+      },
+      {
+        "id": 2142552776,
+        "author": "mattleibow",
+        "body": "Maybe attach a sample that repro\u0027s the issue?",
+        "createdAt": "2024-05-31T15:59:19",
+        "reactions": []
+      },
+      {
+        "id": 2148495072,
+        "author": "martinaxure",
+        "body": "@mattleibow, you\u0027re right. I created a fresh project (and replicated my codepath on that project) and am not seeing the Translate issue. I think the state of the surface may actually be corrupt before my code gets to the translation. I replaced the \u0060Canvas.Translate\u0060 call with \u0060Canvas.SetMatrix(Canvas.TotalMatrix.PreConcat(SKMatrix.CreateTranslation((float)point.X, (float)point.Y)));\u0060 and while that fixed the value that was printed, it created a bunch of other rendering artifacts.\r\n\r\nI\u0027ve worked on it a day so far and I\u0027ll try and spend some more time getting to the bottom of the issue as soon as I can. Currently, preview.2.1 works fine.",
+        "createdAt": "2024-06-04T22:09:50",
+        "reactions": []
+      },
+      {
+        "id": 2246267910,
+        "author": "martinaxure",
+        "body": "I\u0027m going to mark this as closed. I was never able to repro this in anything but our codebase, but preview-4.1 has seemingly fixed the issue. Thanks!",
+        "createdAt": "2024-07-23T20:38:07",
+        "reactions": []
+      }
+    ]
+  }
 }

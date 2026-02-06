@@ -19,5 +19,38 @@
   "updatedAt": "2024-10-09T06:02:42",
   "closedAt": "2024-10-09T06:02:42",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:34:07.0838474Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2374085193,
+        "author": "ojb500",
+        "body": "Is something else interfering with \u0060this._linePaint\u0060 (maybe disposing of it)? ",
+        "createdAt": "2024-09-25T13:26:21",
+        "reactions": []
+      },
+      {
+        "id": 2374126170,
+        "author": "Joost-Jens-Luminis",
+        "body": "this._linePaint is a property that is created on startup of the class and never disposed of during the runtime of the class.\r\nThere is also only one draw action running at the same time ever, so nothing is changed on linePaint while canvas.DrawPath is doing it\u0027s thing..",
+        "createdAt": "2024-09-25T13:41:36",
+        "reactions": [
+          {
+            "user": "ojb500",
+            "content": "confused",
+            "createdAt": "2026-02-06T13:34:06.8287843Z"
+          }
+        ]
+      },
+      {
+        "id": 2401385662,
+        "author": "Joost-Jens-Luminis",
+        "body": "It turns out it was a driver issue. The client had out-of-date drivers.",
+        "createdAt": "2024-10-09T06:02:42",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -18,5 +18,46 @@
   "createdAt": "2024-10-15T17:56:47",
   "updatedAt": "2024-10-26T04:17:07",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:33:27.6923509Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2418902567,
+        "author": "kekekeks",
+        "body": "I suspect that the proper solution would be to generate some wrappers with \u0060HBSharp_\u0060 prefix and mark the list of the symbols as private.",
+        "createdAt": "2024-10-17T08:30:59",
+        "reactions": []
+      },
+      {
+        "id": 2418924998,
+        "author": "kekekeks",
+        "body": "Also, linking with -Bsymbolic could help too:\r\n\u0060\u0060\u0060\r\n-Bsymbolic\r\n  When creating a shared library, bind references to global symbols to the \r\n  definition within the shared library, if any. Normally, it is possible \r\n  for a program linked against a shared library to override the definition \r\n  within the shared library. \r\n\r\n  This option is only meaningful on ELF platforms which support shared libraries.\r\n\r\n-Bsymbolic-functions\r\n  When creating a shared library, bind references to global function symbols \r\n  to the definition within the shared library, if any.  \r\n\r\n  This option is only meaningful on ELF platforms which support shared libraries.\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-10-17T08:41:47",
+        "reactions": []
+      },
+      {
+        "id": 2438248512,
+        "author": "mattleibow",
+        "body": "Are things different after the work in https://github.com/mono/SkiaSharp/pull/2917 by @maxkatz6 ? Is there a way to control the imports in .NET so when we invoke it, the symbols are the ones we just have in the same binary vs some random one that was loaded by the process at some point before?",
+        "createdAt": "2024-10-25T16:19:56",
+        "reactions": []
+      },
+      {
+        "id": 2438420946,
+        "author": "kekekeks",
+        "body": "It\u0027s not about the way the .NET or app itself resolve functions nor about the way they call those.\r\n\r\nIt\u0027s about native symbols being misresolved by the native linux shared library loader when it lazy-loads parts of \u0060libHarfBuzzSharp.so\u0060\r\n\r\nUnlike PE files, ELF shared libraries were designed to emulate static libraries, so the naming space is process-global and it\u0027s possible to **accidentally replace internally used symbols** that are externally visible.\r\n\r\ni. e. the following happens:\r\n1) \u0060libA.so\u0060 exports \u0060Foo\u0060 and \u0060Bar\u0060, \u0060Foo\u0060 internally calls \u0060Bar\u0060.\r\n2) \u0060libB.so\u0060 exports its own \u0060Bar\u0060 and got loaded in a way that can provide \u0060Bar\u0060 to other libraries\r\n3) Linux shared library loader _overrides_ all calls to \u0060Bar\u0060 in \u0060libA.so\u0060 to use \u0060Bar\u0060 from \u0060libB.so\u0060, even if \u0060libB.so\u0060 was just exporting some random symbol with the same name, without asking \u0060libA.so\u0060 or \u0060libB.so\u0060 if they want that or not (remember, symbol name space is process global and symbols can come from any source).\r\n\r\nIt can even happen if \u0060libB.so\u0060 was loaded _after_ \u0060libA.so\u0060.\r\n\r\n\r\nYes, this is rather unexpected and surprising behavior, but the person who decided for it to work like that is probably not even alive today.\r\n\r\nThe previous workaround was passing \u0060RTLD_DEEPBIND\u0060 to \u0060dlopen\u0060 to override that behavior and to force all symbols from libHarfBuzzSharp that are used from libHarfBuzzSharp itself to always be resolved correctly.\r\n\r\n\r\nNote, that the issue doesn\u0027t manifest itself in every scenario and provided repro requires GtkSharp specifically, because [GtkSharp uses \u0060RTLD_GLOBAL\u0060 flag](https://github.com/GtkSharp/GtkSharp/issues/443) when loading \u0060libgtk.so.3\u0060. It\u0027s not possible to workaround by loading libgtk.so.3 without that flag, because it will later be \u0022upgraded\u0022 to \u0060RTLD_GLOBAL\u0060 when GtkSharp would call dlopen. It\u0027s not limited, however, to GtkSharp and can happen with other library combinations.\r\n\r\n\r\nThe workaround I\u0027m currently using is to load \u0060libHarfBuzzSharp.so\u0060 with NativeLibrary API, extract the path to it via \u0060dlinfo\u0060\u002B\u0060RTLD_DI_ORIGIN\u0060, unload, load again with \u0060RTLD_DEEPBIND\u0060 and define native library resolver for libHarfBuzzSharp with custom \u0060dlopen\u0060. However that only works with glibc-based Linux systems.\r\n\r\nThere are two ways to solve this issue:\r\n1) link libHarfBuzzSharp with \u0060-Bsymbolic\u0060 (needs checking)\r\n2) add a prefix to every single exported symbol so there won\u0027t be any possible name clashes.\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2024-10-25T17:37:05",
+        "reactions": []
+      },
+      {
+        "id": 2439294489,
+        "author": "mattleibow",
+        "body": "I see.\r\n\r\nAre you able to build skia with \u0060-Bsymbolic\u0060 and test?\r\n\r\nOption 2 is a lot more work so hopefully option 1 works. I typically just exposed everything in the harfbuzz library via the generator, so it will be a lot to wrap.",
+        "createdAt": "2024-10-26T04:17:06",
+        "reactions": []
+      }
+    ]
+  }
 }

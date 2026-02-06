@@ -13,5 +13,135 @@
   "createdAt": "2020-06-10T22:29:36",
   "updatedAt": "2024-10-30T12:14:20",
   "commentCount": 16,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:33:07.1489985Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 642448345,
+        "author": "pauldendulk",
+        "body": "A broad comment from my user perspective:\r\n- Breaking changes are not such a problem. Just document them well. It helps to put tags like these on the deprecated fields to the compiler can help in the migration:\r\n\u0060\u0060\u0060[Obsolete(\u0022Use X instead\u0022, true)]\u0060\u0060\u0060\r\n- Performance is important. We iteratively draw again and again, so especially avoiding newing objects for simple operations is important.\r\n- If it is possible to avoid the slower solution by using the matrices directly while other users can use the implicit conversion this is fine as well.\r\n\r\nIt it hard to give more specific comments. Could you point to some code that would be affected and what it would look like after the changes?\r\n\r\n",
+        "createdAt": "2020-06-11T06:49:38",
+        "reactions": []
+      },
+      {
+        "id": 642453214,
+        "author": "ziriax",
+        "body": "For a major version bump, I am perfectly fine with breaking changes. After all, it is a new major version.\r\n\r\nFor SkM44, it seems to binary compatible at first sight with Matrix4\r\n\r\nWe should look at the memory layout of these matrices. Passing a matrix by ref and just casting the pointer might be the fastest way. \r\n\r\nThat only would work for matrices passed by reference. If Skia expects a matrix to be passed by value, then a copy is made anyway, so it doesn\u0027t matter what type we use.\r\n\r\n\r\n",
+        "createdAt": "2020-06-11T07:01:50",
+        "reactions": []
+      },
+      {
+        "id": 644156692,
+        "author": "mattleibow",
+        "body": "We can\u0027t _really_ do breaking changes too much since folks like Syncfusion/Telerik and other vendors will all have to update and then all users will have to make sure thy are all in sync. \r\n\r\n@Ziriax If the ABI for Matrix4 and SKM44 are the same, then we could just ref it over... For Matrix, I cheat a bit as they have a whole bunch of other private fields. So I ref it over to my own type, and then copy it to the real matrix type. ",
+        "createdAt": "2020-06-15T14:06:55",
+        "reactions": []
+      },
+      {
+        "id": 2171073831,
+        "author": "taublast",
+        "body": "\u003E We can\u0027t _really_ do breaking changes too much since folks like Syncfusion/Telerik and other vendors will all have to update and then all users will have to make sure thy are all in sync.\r\n\r\nCan\u0027t they just either update, either use older nugets?\r\n\r\nLike one of the skia maintainers said \u0022Our ability to evolve Skia effectively depends on our ability to drop old features.\u0022",
+        "createdAt": "2024-06-16T06:13:05",
+        "reactions": []
+      },
+      {
+        "id": 2428622867,
+        "author": "taublast",
+        "body": "@mattleibow Do we have https://api.skia.org/classSkM44.html in v3 preview? \r\nIn order to replace \u0060SK3dView\u0060 we need the LookAt() etc.. Maybe I missed something. Might be related to https://github.com/mono/SkiaSharp/issues/1652\r\n\r\nWe could indeed use System.Numerics Matrix4x4 CreateLookAt but then do we have a FAST conversion between this dontnet and skia SKMatrix that is used for SKCanvas.SetMatrix?\r\n\r\nPersonal vote regarding \u0022what to do what to do\u0022 would be to ignore System.Numerics duplicates and go for including the skia latest API without cheats. ",
+        "createdAt": "2024-10-22T08:34:13",
+        "reactions": []
+      },
+      {
+        "id": 2438238557,
+        "author": "mattleibow",
+        "body": "We should have \u0060SKMatrix44\u0060. Is there some API on there that is missing?",
+        "createdAt": "2024-10-25T16:15:19",
+        "reactions": []
+      },
+      {
+        "id": 2438307929,
+        "author": "taublast",
+        "body": "Yes, in order to replace SK3dView i need the LookAt, map, normalizePerspective etc.  \r\nDo you mean SKMatrix44 is equivalent to skm44?",
+        "createdAt": "2024-10-25T16:47:10",
+        "reactions": []
+      },
+      {
+        "id": 2438367441,
+        "author": "mattleibow",
+        "body": "It should be. I just chose a better name (I hope).\n\nThe implementation is currently a bit of a lie as I just use the system numeric Matrix4x4 under the hood. It is also implicitly castable between it.\n\nI may not have mapped all the apis since they had a bunch that I may not have felt it was easy to write myself. Let me know if those apis are missing. It may not be the same as the SK3dVoiew was from the perspective of a camera or something. Matrix is just a matrix, but I think they have some create methods in there. ",
+        "createdAt": "2024-10-25T17:10:26",
+        "reactions": []
+      },
+      {
+        "id": 2439427879,
+        "author": "taublast",
+        "body": "@mattleibow I may be totally wrong on every point below, please feel free to correct me:\r\n\r\n* Skia deprecated SK3DView, SKCamera3D, SKPatch3D, because they provided a more flexible \u0060SKM44\u0060, that has methods to recreate the 3d camera behavior.\r\n* Skiasharp has now bindings to SK3dView removed and its replacement (SKM44) not introduced as \u0060SKMatrix44\u0060 class is not bound to \u0060SKM44\u0060 but is using \u0060System.Numeric.Matrix4x4\u0060. This one doesn\u0027t provide the same methods \u0060SKM44\u0060 provides, just looking at the docs https://api.skia.org/classSkM44.html.\r\n* Using bindings to \u0060SKM44\u0060 can result in slower executing time with interop compared to calling \u0060System.Numeric.Matrix4x4\u0060, yet these are (a bit?) different. \r\n\r\nI have created a custom implementation of a \u0060SK3dView\u0060 using \u0060System.Numeric.Matrix4x4\u0060 and its \u0060Matrix4x4.CreateLookAt\u0060, and while *overall* the result is *similar* comparing the result between the original \u0060SK3dView\u0060 and this custom implementation I see differences in 3D. They might come from the implementation itself, but being currently stuck with it I\u0027m left to think that using directly \u0060SKM44\u0060 that *is intended* for this and has c\u002B\u002B code from SK3DView, SKCamera3D and SKPatch3D, would instantly solve my problem.\r\n\r\nWhile personally missing [this](https://github.com/mono/SkiaSharp/issues/1330#issuecomment-2438307929) other people could be missing other API from \u0060SKM44\u0060, depending on usage. Again, this is just one use-case, other people might still expect to be able to interop with \u0060SKM44\u0060.\r\n\r\nOne day i might solve my problem using just \u0060System.Numeric.Matrix4x4\u0060, but i\u0027m left to think that Skiasharp missing a latest and modern part of the skia library, which is SKM44, could have its impact.\r\n",
+        "createdAt": "2024-10-26T08:15:27",
+        "reactions": []
+      },
+      {
+        "id": 2439478698,
+        "author": "mattleibow",
+        "body": "OK, I see. You are not wrong, it all comes down to me not yet doing all the things I wanted to in my semi-limited time. \r\n\r\nThe current SKMatrix44 in SkiaSharp is just the basics needed to make things work. I see SkM44 does have several more APIs that I have not yet ported/wrapped/exposed since I did not yet have the opportunity to do so. I do not want to directly bind the SKM44 object in C\u002B\u002B to the C# world as then each time we do an operation we will have to potentially copy data as well as hop the interop bridge - which will be way slower than doing it in C# directly. I took a shortcut for now to just wrap the Numerics Matrix4x4 so I could get something working. It is slower than I want, but not as slow as doing interop.\r\n\r\nWhat I would like to do is complete the implementation (using Numerics or not) of the SKMatrix44 so that it can be a replacement for the old camera implementations.\r\n\r\nMaybe give a list of all the APIs right now that are missing so I can prioritize them.\r\n\r\nIf you have an implementation for some APIs, we can use that too. You mention that you see differences, so maybe if you have a test case for each of your APIs and then we can make sure the new APIs match what SkM44 does. I am also not sure if the camera APIs are supposed to be a 100% drop-in replacement since they may have fixed a bug or changed the implementations. Where are you seeing the case that SK3DView and SkM44 are supposed to be exactly the same?\r\n\r\nAt the end of all this, I didn\u0027t get the time I needed to fully recreate the SkM44 API in C#, so just leveraged the Numerics. Any missing APIs were just a result of me not knowing which ones to prioritize so just got the basics working.",
+        "createdAt": "2024-10-26T10:22:44",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:05.8791964Z"
+          }
+        ]
+      },
+      {
+        "id": 2439480509,
+        "author": "mattleibow",
+        "body": "With regards to:\r\n\r\n\u003E do we have a FAST conversion between this dontnet and skia SKMatrix that is used for SKCanvas.SetMatrix?\r\n\r\nIs this fast enough?\r\n\r\n\u0060\u0060\u0060cs\r\npublic static implicit operator Matrix4x4 (SKMatrix44 matrix) =\u003E\r\n\tUnsafe.As\u003CSKMatrix44, Matrix4x4\u003E (ref matrix);\r\n\r\npublic static implicit operator SKMatrix44 (Matrix4x4 matrix) =\u003E\r\n\tUnsafe.As\u003CMatrix4x4, SKMatrix44\u003E (ref matrix);\r\n\u0060\u0060\u0060\r\n\r\nBut, regardless, I would like to get all the APIs (and any new ones) added to the C# API so we can not need to cast or fall back to Numerics. Adding new APIs that are useful is also something I am happy to do so we can reduce the amount of manual code needed.",
+        "createdAt": "2024-10-26T10:26:16",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:06.0850151Z"
+          }
+        ]
+      },
+      {
+        "id": 2441852776,
+        "author": "taublast",
+        "body": "Here is my short implementation of \u0060Sk3dView\u0060 i use for v3: https://github.com/taublast/DrawnUi.Maui/blob/2-A/src/Engine/Internals/Helpers/3D/Sk3dView.cs\r\n\r\nFunny enough was first using Matrix4x4 CreateLookAt, got stuck with z-rotation not being \u0022non-affine\u0022 then did a version with Matrix4x4 CreatePerspective, was kinda working but looked IMHO over-complicated, and finally ended up with just approximative maths.\r\n\r\nActually i\u0027m failing to make it [pass this test](https://learn.microsoft.com/en-us/dotnet/api/skiasharp.sk3dview?view=skiasharp-2.88), \u0060ApplyToCanvas\u0060 is not working as it should because of the missing \u0022mapping matrix by new matrix\u0022 process that was done by SkCamera3D\u002BSkPatch3D.\r\n\r\n\u0060\u0060\u0060\r\nvoid Sk3DView::getMatrix(SkMatrix* matrix) const {\r\n    if (matrix != nullptr) {\r\n        SkPatch3D   patch;\r\n        patch.transform(fRec-\u003EfMatrix);\r\n        fCamera.patchToMatrix(patch, matrix);\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nOtherwise if I use only the \u0060.Matrix\u0060 getter to postconcat my canvas for non-affine transforms of skia controls (that was the goal initially) the result is pretty similar, maybe even identical, to one produced by the original v2.\r\n\r\n![image](https://github.com/user-attachments/assets/618dd3ce-94f6-49e3-81ac-36167f72d485)\r\n\r\nThis is to say that when someone would want to implement the \u0060patch.transform(fRec-\u003EfMatrix); fCamera.patchToMatrix(patch, matrix);\u0060 they could maybe find SKM44 helper methods useful. Personally I\u0027m forced to leave it as it is for now due to lack of time.\r\n\r\n\r\n\r\n",
+        "createdAt": "2024-10-28T15:06:12",
+        "reactions": []
+      },
+      {
+        "id": 2442895761,
+        "author": "mattleibow",
+        "body": "Thanks for this! I\u0027ll have a look and see if I am missing the secret apis. ",
+        "createdAt": "2024-10-29T00:01:28",
+        "reactions": []
+      },
+      {
+        "id": 2443216009,
+        "author": "taublast",
+        "body": "I have SkCamera3D \u002BSkPatch3D csharp classes skeletons (incomplete ports) sitting in same folder as Sk3dView.cs for anyone to play with, just in case..",
+        "createdAt": "2024-10-29T04:59:42",
+        "reactions": []
+      },
+      {
+        "id": 2445011656,
+        "author": "taublast",
+        "body": "another interesting possible fact to be verified is the rotation orientation difference between SKM44 and Matrix4x4 that might come into play:\r\n\r\nhttps://stackoverflow.com/questions/73007949/c-sharp-matrix4x4-multiplication-problems-with-createrotationx-createrotatez\r\n\r\n\u003E I might be mistaken, but think this is due to the classes originating from SharpDX which was written with DirectX in mind, and the DirectXMath helper functions create clockwise rotation matrices aswell. \u2013 \r\n\u003E [Ray](https://stackoverflow.com/users/777985/ray)\r\n\u003E  [CommentedJul 16, 2022 at 22:30](https://stackoverflow.com/questions/73007949/c-sharp-matrix4x4-multiplication-problems-with-createrotationx-createrotatez#comment128946505_73007949)",
+        "createdAt": "2024-10-29T18:13:50",
+        "reactions": []
+      },
+      {
+        "id": 2446939233,
+        "author": "mattleibow",
+        "body": "Thanks for the extra info. I will have a look and run both \u0060SK3dView\u0060 and \u0060SKMatrix44\u0060 side-by-side and see if I can get them to work the same or at least figure out why they are different.",
+        "createdAt": "2024-10-30T12:14:18",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -19,5 +19,352 @@
   "updatedAt": "2024-10-25T16:28:28",
   "closedAt": "2024-10-25T16:28:28",
   "commentCount": 31,
-  "reactionCount": 5
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:33:43.4479893Z",
+    "reactions": [
+      {
+        "user": "vilgotf",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:43.4479919Z"
+      },
+      {
+        "user": "Auto72",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:43.4479925Z"
+      },
+      {
+        "user": "ArchieCoder",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:43.4479928Z"
+      },
+      {
+        "user": "pauldendulk",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:43.447993Z"
+      },
+      {
+        "user": "john-hollander",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:43.4479933Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2351493169,
+        "author": "inforithmics",
+        "body": "Things I tried.\r\n1) Update to .NET 9 no success\r\n2) Update SkiaSharp to 3 Preview no success\r\n3) Update WindowsSdkPackageVersion to 10.0.19041.45 no success\r\n\r\nThe only thing that helped was removing\r\n\u0060\u003CWindowsSdkPackageVersion\u003E10.0.19041.45\u003C/WindowsSdkPackageVersion\u003E\u0060\r\nAnd going back to Version 1.5 of Windows AppSdk.\r\n\r\nBecause with .NET 8.0.402 the WindowsSdkPackageVersion is updated to something that works with Windows AppSDK 1.6 This error could become quite common. Affecting Maui, Uno (WinUI Target), WinUI\r\n\r\nOr is this a Bug in the WindowsAppSDK itself?\r\n\r\nThe Problem seems to be here, in The GetPixels function.\r\nhttps://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views/SkiaSharp.Views.WinUI/UWPExtensions.cs#L180\r\n\r\nCould this be fixed by this Commit https://github.com/mono/SkiaSharp/commit/9fde53e5f16ed37c21b7f7f96c68d9862e81148e\r\nSeems not to be included in the latest SkiaSharp 3.0 Preview (Which is from 17.July and this commit is from the 18. July)\r\n",
+        "createdAt": "2024-09-15T09:32:24",
+        "reactions": []
+      },
+      {
+        "id": 2351780709,
+        "author": "inforithmics",
+        "body": "I managed to Compile SkiaSharp locally and confirm that it works now, so this Bug was indeed fixed, But needs a SkiaSharp nuget Release.",
+        "createdAt": "2024-09-15T20:24:36",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:33:37.6091283Z"
+          }
+        ]
+      },
+      {
+        "id": 2368497470,
+        "author": "jeromelaban",
+        "body": "@mattleibow This fix would also need to be backported to 2.x, ideally. Thanks!",
+        "createdAt": "2024-09-23T14:43:21",
+        "reactions": [
+          {
+            "user": "AdrianSkib",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:37.8370686Z"
+          },
+          {
+            "user": "trydalch",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:37.8370689Z"
+          },
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:37.837069Z"
+          },
+          {
+            "user": "beto-rodriguez",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:37.8370691Z"
+          },
+          {
+            "user": "baskren",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:37.8370692Z"
+          },
+          {
+            "user": "cmonachan-git",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:37.8370693Z"
+          },
+          {
+            "user": "ToolmakerSteve",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:37.8370693Z"
+          }
+        ]
+      },
+      {
+        "id": 2368646330,
+        "author": "inforithmics",
+        "body": "https://github.com/mono/SkiaSharp/pull/2920\r\n\r\nI think this pull request needs to be back ported",
+        "createdAt": "2024-09-23T15:29:25",
+        "reactions": [
+          {
+            "user": "baskren",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:38.0448652Z"
+          }
+        ]
+      },
+      {
+        "id": 2368651536,
+        "author": "inforithmics",
+        "body": "https://github.com/microsoft/CsWinRT/issues/1645\r\n\r\nAnd this is the issue",
+        "createdAt": "2024-09-23T15:30:48",
+        "reactions": []
+      },
+      {
+        "id": 2377430562,
+        "author": "Auto72",
+        "body": "I made an App in ,NET MAUI (8.0.91) that communicate with my BLE device and uses SkiaSharp and it works very well on Android and iOS. When I try to run it on Windows, and SkiaSharp get involved, it crashes and Visual Studio shows the dialog to select a debugger.\r\n\r\nI use the following NuGet packages:\r\n\r\nSkiaSharp.Views.Maui.Controls ver. 3.0.0-preview.4.1\r\nSkiaSharp.Views.Maui.Controls.Compatibility ver. 2.88.8\r\nSkiaSharp.Views.Maui.Core ver. 3.0.0-preview.4.1\r\nCommunityToolkit.Mvvm ver. 8.3.2 (just to use ObservableObject)\r\n\r\nIn order to use CommunityToolkit.Mvvm ver. 8.3.2, I put the following tag to the project file:\r\n\u003C WindowsSdkPackageVersion \u003E10.0.19041.45 \u003C /WindowsSdkPackageVersion \u003E\r\n\r\nhttps://github.com/CommunityToolkit/dotnet/issues/951\r\n\r\nHere the errors Log:\r\n\r\n2024-09-26 17:42:34.972 [MauiUnhandledExceptionManager] FirstChanceException caught: Managed vtable types (ie. containing any reference types) are not supported.\r\nException occurred in method: GetVtable\r\nClass: WinRT.ObjectReference\u00601\r\nFile: Line: 0\r\n\r\n2024-09-26 17:42:34.974 [MauiUnhandledExceptionManager] \r\nFirstChanceException\r\nManaged vtable types (ie. containing any reference types) are not supported.\r\n(StackTrace)\r\n   at WinRT.ObjectReference\u00601.GetVtable(IntPtr thisPtr)\r\n\r\n2024-09-26 17:42:34.975 [MauiUnhandledExceptionManager] FirstChanceException caught: Exception has been thrown by the target of an invocation.\r\nException occurred in method: InvokeWithNoArgs\r\nClass: System.Reflection.MethodBaseInvoker\r\nFile: Line: 0\r\n\r\n2024-09-26 17:42:34.976 [MauiUnhandledExceptionManager] \r\nFirstChanceException\r\nException has been thrown by the target of an invocation.\r\n(StackTrace)\r\n   at System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)\r\n\r\nThe program \u0027[21316] MYAPPNAME.exe: Program Trace\u0027 has exited with code 0 (0x0).\r\nThe program \u0027[21316] MYAPPNAME.exe\u0027 has exited with code 3221226107 (0xc000027b).\r\n",
+        "createdAt": "2024-09-26T16:30:27",
+        "reactions": []
+      },
+      {
+        "id": 2378838817,
+        "author": "Bush-cat",
+        "body": "@Auto72 to fix your issue either use winappsdk 10.0.19041.34 (anything lower than .38) or get the patched update from their azure build servers (there is no nuget release yet)",
+        "createdAt": "2024-09-27T09:21:29",
+        "reactions": [
+          {
+            "user": "Auto72",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:38.6555383Z"
+          }
+        ]
+      },
+      {
+        "id": 2378873814,
+        "author": "Auto72",
+        "body": "@Bush-cat I used the winappsdk 10.0.19041.34 and I reverted to use the NuGet library CommunityToolkit.Mvvm ver 8.2.2 and now my App works also on Windows. \r\nThanks a lot \uD83D\uDC4D",
+        "createdAt": "2024-09-27T09:40:22",
+        "reactions": []
+      },
+      {
+        "id": 2381919164,
+        "author": "mattleibow",
+        "body": "Can you try the latest nightly on \u0060https://aka.ms/skiasharp-eap/index.json\u0060 and let me know if it starts working again? I want to do a release, but I want to make sure I fixed it.",
+        "createdAt": "2024-09-30T03:13:53",
+        "reactions": []
+      },
+      {
+        "id": 2382246085,
+        "author": "Auto72",
+        "body": "@mattleibow I tried my app using the latest nightly build of SkiaSharp on Windows:\r\n\r\nSkiaSharp.Views.Maui.Controls ver. 3.0.0-preview.5.3\r\nSkiaSharp.Views.Maui.Controls.Compatibility ver. 3.0.0-alpha.1.2 \r\nSkiaSharp.Views.Maui.Core ver. 3.0.0-preview.5.3\r\n\r\nI also used the NuGet library\r\n\r\nCommunityToolkit.Mvvm ver. 8.3.2 \r\n\r\nAnd in the project file I added:\r\n\u003C WindowsSdkPackageVersion \u003E10.0.19041.45 \u003C /WindowsSdkPackageVersion \u003E\r\n\r\nand now it works \uD83E\uDD73\uD83E\uDD73\uD83E\uDD73",
+        "createdAt": "2024-09-30T06:46:32",
+        "reactions": []
+      },
+      {
+        "id": 2383828431,
+        "author": "jeromelaban",
+        "body": "@mattleibow I can also confirm that 3.0.0-preview.5.3 is working on WinAppSDK 1.6.",
+        "createdAt": "2024-09-30T17:52:54",
+        "reactions": []
+      },
+      {
+        "id": 2383882361,
+        "author": "inforithmics",
+        "body": "@mattleibow, Yes I can confirm that it works now. (SkiaSharp.Views.WinUI 3.0.0 on WindoAppSDK 1.6)",
+        "createdAt": "2024-09-30T18:23:45",
+        "reactions": []
+      },
+      {
+        "id": 2392476148,
+        "author": "beto-rodriguez",
+        "body": " 3.0.0-preview.5.3 works!",
+        "createdAt": "2024-10-03T22:56:14",
+        "reactions": []
+      },
+      {
+        "id": 2403658662,
+        "author": "bytesandwich",
+        "body": "3.0.0-preview.5.3 works for me too.",
+        "createdAt": "2024-10-10T00:20:16",
+        "reactions": []
+      },
+      {
+        "id": 2405653417,
+        "author": "mpulukkinen",
+        "body": "I\u0027ve been fighting with this issue for whole evening now. I don\u0027t even know how this happened to me. I was implementing some Microsoft Store features and suddenly my app started crashing. Yesterday everything worked fine. Stashing all changes and clean build and stuff does not help. Also the workarounds mentioned above do not help. DId I get some secret update that I\u0027m not aware or did my windows update?",
+        "createdAt": "2024-10-10T17:16:33",
+        "reactions": []
+      },
+      {
+        "id": 2405662086,
+        "author": "bfmyr4",
+        "body": "\u003E I\u0027ve been fighting with this issue for whole evening now. I don\u0027t even know how this happened to me. I was implementing some Microsoft Store features and suddenly my app started crashing. Yesterday everything worked fine. Stashing all changes and clean build and stuff does not help. Also the workarounds mentioned above do not help. DId I get some secret update that I\u0027m not aware or did my windows update?\r\n\r\nThis is in the release notes for 17.11.5: \u0022Updated the Windows 11 SDK (10.0.26100.0) installed by Visual Studio to the October 2024 servicing build.\u0022\r\n\r\nI was able to workaround this by adding this to my .csproj:\r\n\u0060\u003CWindowsSdkPackageVersion\u003E10.0.19041.34\u003C/WindowsSdkPackageVersion\u003E\u0060",
+        "createdAt": "2024-10-10T17:21:20",
+        "reactions": []
+      },
+      {
+        "id": 2405684299,
+        "author": "mpulukkinen",
+        "body": "Ah, thank you very much, that worked. At least I won\u0027t waste another evening with this",
+        "createdAt": "2024-10-10T17:33:41",
+        "reactions": []
+      },
+      {
+        "id": 2407017615,
+        "author": "TopperDEL",
+        "body": "3.0.0-preview.5.3 resolves my issue!\r\n\r\nTemporarily adding this to my csproj works, too:\r\n\r\n\u0060\u003CWindowsSdkPackageVersion\u003E10.0.19041.34\u003C/WindowsSdkPackageVersion\u003E\u0060",
+        "createdAt": "2024-10-11T09:30:48",
+        "reactions": []
+      },
+      {
+        "id": 2407191440,
+        "author": "Joost-Jens-Luminis",
+        "body": "Where can I get the 3.0.0-preview.5.3? It\u0027s not on the nuget servers which only go until 4.1.\r\n\r\nCan I only get that from the nightly build server?\r\n\r\nFurhter more, is there a release timeline for version 3.0? If that is far away, will this be backported? ",
+        "createdAt": "2024-10-11T11:15:47",
+        "reactions": []
+      },
+      {
+        "id": 2407219403,
+        "author": "TopperDEL",
+        "body": "\u003E Where can I get the 3.0.0-preview.5.3? It\u0027s not on the nuget servers which only go until 4.1.\r\n\r\nYou need the nightly builds as  nuget-feed: \u0060https://aka.ms/skiasharp-eap/index.json\u0060",
+        "createdAt": "2024-10-11T11:32:14",
+        "reactions": []
+      },
+      {
+        "id": 2407244121,
+        "author": "Joost-Jens-Luminis",
+        "body": "@TopperDEL Thanks for the quick response. It is much appreciated. \r\nI can also confirm it works with that build.",
+        "createdAt": "2024-10-11T11:47:44",
+        "reactions": []
+      },
+      {
+        "id": 2407501570,
+        "author": "eysdev",
+        "body": "It works :)",
+        "createdAt": "2024-10-11T14:11:17",
+        "reactions": []
+      },
+      {
+        "id": 2408614781,
+        "author": "core2lord",
+        "body": "While on VS2022 version \u002717.11.5\u0027, is it correct that I\u0027m to keep the \u0060\u0027LiveChartsCore.SkiaSharpView.WinUI\u0027[2.0.0-rc3.3]\u0060 \r\n and add \r\n\u0060\u0027SkiaSharp.Views.WInUI\u0027[3.0.0-preview.5.3]\u0060\r\n\r\nAfter doing so, when trying to run my app or the LiveCharts WinUI sample app, I receive a different error \r\n\u0060\u0022Could not load type \u0027CropRect\u0027 from assembly \u0027SkiaSharp, Version=3.0.0.0\u0022\u0060.\r\n\r\nAlso, when adding the following to the csproj file\r\n\u0060\u003CWindowsSdkPackageVersion\u003E10.0.19041.34\u003C/WindowsSdkPackageVersion\u003E\u0060\r\nI receive an error \r\n\u0060minimum required SDK is \u002710.0.19041.38\u0027\u0060\r\nbut dropping down to NuGet SDK version \u00271.5.241001000\u0027 from \u00271.6.240923002\u0027 did rid of this message.",
+        "createdAt": "2024-10-12T16:14:53",
+        "reactions": []
+      },
+      {
+        "id": 2408617156,
+        "author": "beto-rodriguez",
+        "body": "@core2lord Because the latest version of LiveCharts is not running on SkiaSharp 3, you need to build [#1622](https://github.com/beto-rodriguez/LiveCharts2/pull/1622) to fix that.",
+        "createdAt": "2024-10-12T16:23:20",
+        "reactions": [
+          {
+            "user": "ghuotvez",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:41.966197Z"
+          }
+        ]
+      },
+      {
+        "id": 2408805500,
+        "author": "core2lord",
+        "body": "@beto-rodriguez wow, you are on top of it thank you for such quick reply. I\u0027ve \r\ncloned the repository then tried right clicking the VS2022 WinUI project -\u003E selecting \u0027Pack\u0027. Tried the different build configs ad-hoc, release, appstore, with x64 and x86, along with making the SDK, SDK builder, SkiaSharp versions matched exactly as you have shown in the #1622 commit. I\u0027ve also tried running the PS scripts inside the build folder to no avail. I continue to get build errors for metadata files missing and/or unable to sign a file, etc...I will just hang my head low in embarrassment and say that I have been trying to do this since I read your comment 32 minutes after you posted it, but I don\u0027t think I\u0027m approaching this correctly at all :/",
+        "createdAt": "2024-10-13T03:34:20",
+        "reactions": []
+      },
+      {
+        "id": 2408907061,
+        "author": "Bush-cat",
+        "body": "@core2lord you just cloned the master repo and updated the skiasharp dependency?\r\nYou\u0027re missing commits then, you will need this branch\r\nhttps://github.com/beto-rodriguez/LiveCharts2/tree/skiasharp-3",
+        "createdAt": "2024-10-13T09:47:08",
+        "reactions": []
+      },
+      {
+        "id": 2410162335,
+        "author": "Joost-Jens-Luminis",
+        "body": "Is there any idea on when this will be released? \r\nThe Azure DevOps pipeline (which we are using) is now updated that it requires this fix be in place. So no we are stuck between using a nightly build version of this package, or downgrading our pipeline and not updating to the latest WIndowsAppSDK.\r\n\r\nThis will also be a problem when updating to .Net 9 later this year.",
+        "createdAt": "2024-10-14T06:36:54",
+        "reactions": [
+          {
+            "user": "eysdev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:42.6134495Z"
+          },
+          {
+            "user": "Mangepange",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:42.6134499Z"
+          },
+          {
+            "user": "AdrianSkib",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:42.61345Z"
+          },
+          {
+            "user": "d2dyno1",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:42.6134501Z"
+          },
+          {
+            "user": "Trix07",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:42.6134502Z"
+          }
+        ]
+      },
+      {
+        "id": 2413629946,
+        "author": "AdrianSkib",
+        "body": "This issue has broken my MapsUI application on windows 11. Hope this fix is released soon. \r\n\r\nI tried with the pre-release, but it doesn\u0027t seem to be completely ready yet, as it just led to other errors.",
+        "createdAt": "2024-10-15T11:28:37",
+        "reactions": []
+      },
+      {
+        "id": 2417619085,
+        "author": "ghuotvez",
+        "body": "\u003E This issue has broken my MapsUI application on windows 11. Hope this fix is released soon.\r\n\u003E \r\n\u003E I tried with the pre-release, but it doesn\u0027t seem to be completely ready yet, as it just led to other errors.\r\n\r\nSame it broke my mapsui.",
+        "createdAt": "2024-10-16T18:37:47",
+        "reactions": []
+      },
+      {
+        "id": 2438259016,
+        "author": "mattleibow",
+        "body": "I pushed out a new version of SkiaSharp which should have all the WASDK fixes in it.",
+        "createdAt": "2024-10-25T16:25:03",
+        "reactions": [
+          {
+            "user": "TopperDEL",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:33:43.2028247Z"
+          }
+        ]
+      },
+      {
+        "id": 2438267264,
+        "author": "mattleibow",
+        "body": "Closing this for now as the issue is fixed for both v2 and v3 in the latest preview.",
+        "createdAt": "2024-10-25T16:28:26",
+        "reactions": [
+          {
+            "user": "TopperDEL",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:33:43.3977599Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -41,5 +41,73 @@
       "state": "APPROVED",
       "submittedAt": "2024-08-16T17:19:52"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:35:11.934804Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2285573373,
+        "author": "Youssef1313",
+        "body": "Ping @mattleibow for review",
+        "createdAt": "2024-08-13T07:43:55",
+        "reactions": []
+      },
+      {
+        "id": 2289388176,
+        "author": "mattleibow",
+        "body": "I am not sure how this would work. These are all new APIs that never existed in 2.x:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/release/2.88.8/binding/Binding/SKBitmap.cs#L877-L884\r\n\r\nWhat are you currently doing today? What version of SkiaSharp are you working with?",
+        "createdAt": "2024-08-14T17:18:45",
+        "reactions": []
+      },
+      {
+        "id": 2289394561,
+        "author": "Youssef1313",
+        "body": "@mattleibow We are compiling against 2.x, but still want to support users who upgrade to 3.x via a compatibility layer we did using UnsafeAccessor.\r\n\r\nCurrently, we can\u0027t use UnsafeAccessor for \u0060SKSamplingOptions\u0060 as it\u0027s a whole new type. All we can do is some ugly reflection that we want to avoid.\r\n\r\nWith this PR, assuming ported to 2.x, we will be able to use the new methods both on 2.x and 3.x",
+        "createdAt": "2024-08-14T17:22:31",
+        "reactions": []
+      },
+      {
+        "id": 2289641910,
+        "author": "mattleibow",
+        "body": "How will this work in 2.x? Are you able to create a PR against release/2.x to show. Not sure 2.x has this arg so is it just a no-op?\r\n\r\nAlso, adding a test to make sure nothing blows up will also be great.\r\n\r\nThanks!",
+        "createdAt": "2024-08-14T19:11:38",
+        "reactions": []
+      },
+      {
+        "id": 2289669162,
+        "author": "Youssef1313",
+        "body": "@mattleibow Okay I missed that this won\u0027t be possible to backport to 2.x (I had it right in the original PR description), still will allow us to easily use UnsafeAccessor for 3.x specifically, and fallback to set quality on the paint when on 2.x",
+        "createdAt": "2024-08-14T19:19:24",
+        "reactions": []
+      },
+      {
+        "id": 2289766342,
+        "author": "mattleibow",
+        "body": "OK, I see how this works. I think this is fine then, they are obsolete and removed from the public API. So, this should make it safe.\r\n\r\nI see the 2.x version of skia had a more rudimentary form of the sampling options, and I contemplated adding that. But, rather add this than change the past and cause other issues.",
+        "createdAt": "2024-08-14T20:01:26",
+        "reactions": [
+          {
+            "user": "Youssef1313",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:35:11.407536Z"
+          }
+        ]
+      },
+      {
+        "id": 2293164639,
+        "author": "Youssef1313",
+        "body": "@mattleibow Great! I assume the CI failures are not related to my PR? Not sure if they need to be fixed separately before this PR can be merged or not necessary for merging this?",
+        "createdAt": "2024-08-16T09:28:47",
+        "reactions": []
+      },
+      {
+        "id": 2293876625,
+        "author": "mattleibow",
+        "body": "The CI failures are a failure of CI. Still trying to figure it out. Every month it seems that CI needs some tweaks.",
+        "createdAt": "2024-08-16T17:19:40",
+        "reactions": []
+      }
+    ]
+  }
 }

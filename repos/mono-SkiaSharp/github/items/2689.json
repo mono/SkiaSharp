@@ -22,5 +22,112 @@
   "createdAt": "2024-01-04T17:03:44",
   "updatedAt": "2024-10-28T10:35:13",
   "commentCount": 10,
-  "reactionCount": 6
+  "reactionCount": 6,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:33:24.523292Z",
+    "reactions": [
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:24.5232963Z"
+      },
+      {
+        "user": "inforithmics",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:24.5232969Z"
+      },
+      {
+        "user": "iamcarbon",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:24.5232972Z"
+      },
+      {
+        "user": "SamuelBerger",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:24.5232975Z"
+      },
+      {
+        "user": "fcallejon",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:24.5232978Z"
+      },
+      {
+        "user": "angelofb",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:33:24.523298Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2226751391,
+        "author": "HinTak",
+        "body": "FWIW, skia-python had \u0060SkSVGDOM::MakeFromStream\u0060 4 years ago, in m87, \r\nhttps://github.com/kyamagu/skia-python/blob/e0b030c14e33f70880cfcc502eaeed898a77fc3c/src/skia/SVGDOM.cpp#L13 before it became non-experimental in m88.",
+        "createdAt": "2024-07-13T03:48:10",
+        "reactions": []
+      },
+      {
+        "id": 2416491499,
+        "author": "fcallejon",
+        "body": "Hi @mattleibow is [this](https://github.com/mono/SkiaSharp/tree/dev/experimental/svg-dom) branch supposed to cover this feature ?\r\nIf anyone can guide me I can try to add \u0060SkSVGDOM\u0060.",
+        "createdAt": "2024-10-16T11:10:01",
+        "reactions": []
+      },
+      {
+        "id": 2431182809,
+        "author": "HinTak",
+        "body": "2017 sounds really old.",
+        "createdAt": "2024-10-23T07:46:48",
+        "reactions": []
+      },
+      {
+        "id": 2431189482,
+        "author": "HinTak",
+        "body": "Argh, the svgdom code was based on m57. Skia itself is m131 now... you need m10x at least for some of this.",
+        "createdAt": "2024-10-23T07:49:13",
+        "reactions": []
+      },
+      {
+        "id": 2432317628,
+        "author": "HinTak",
+        "body": "Btw, it may not be default on yet, you need \u0060skia_enable_svg=true\u0060 passed to \u0060--args\u0022...\u0022\u0060 of \u0060gn gen\u0060 when building skia.",
+        "createdAt": "2024-10-23T14:03:49",
+        "reactions": []
+      },
+      {
+        "id": 2432320869,
+        "author": "HinTak",
+        "body": "While it was no longer experimental since m88, it is still optional as far as I know.",
+        "createdAt": "2024-10-23T14:04:46",
+        "reactions": []
+      },
+      {
+        "id": 2439484698,
+        "author": "mattleibow",
+        "body": "One downside of SVG support is that it pulls in the shaper, which pulls in the harfbuzz and unicode modules. This might make the small API ballon significantly. I am not sure we can add this until I figure out a way to make the modules be optional dependencies that can be included.\r\n\r\nIn addition to size, if there is a bug in skia\u0027s SVG, it will take a long time for that bug fix to reach us as I only update skia once a year or less. We may just need to actually get SVG.NET to be better nad faster - and then also Svg.Skia. If we fix that, we fix the entire community. Adding SVG to skia will make it bigger and may not have all the features yet either.\r\n\r\nMaybe we can open an issue with the problems you are seeing on the Svg.Skia repo and then we can work to fix them there. I am not sure how modern the codebase is. It may have just been ported but not actually taking up the Spans and other new .NET features.",
+        "createdAt": "2024-10-26T10:38:29",
+        "reactions": []
+      },
+      {
+        "id": 2439492181,
+        "author": "HinTak",
+        "body": "As for harfbuzz / unicode, you\u0027d want that for skparagraph and skottie, eventually.",
+        "createdAt": "2024-10-26T11:05:44",
+        "reactions": []
+      },
+      {
+        "id": 2439553782,
+        "author": "mattleibow",
+        "body": "That too is not something that I think we will add. For text, we have [RichTextKit](https://github.com/toptensoftware/RichTextKit) and we have a separate HarfBuzzSharp binding in this repo. \r\n\r\nI see we do have a Skittie binding, so not sure what is included. Maybe some no-op shaper.\r\n\r\nMaybe we can do the SVG and see what the resulting size is? Not sure if you would like to have a go at seeing what would happen. This PR is for skottie, so you could have a look at the native side and check the size: https://github.com/mono/SkiaSharp/pull/1987",
+        "createdAt": "2024-10-26T12:08:02",
+        "reactions": []
+      },
+      {
+        "id": 2441207525,
+        "author": "lol768",
+        "body": "Thanks for your comments @mattleibow \r\n\r\n\u003E One downside of SVG support is that it pulls in the shaper, which pulls in the harfbuzz and unicode modules. This might make the small API ballon significantly. I am not sure we can add this until I figure out a way to make the modules be optional dependencies that can be included.\r\n\r\nThis is life really, isn\u0027t it? I agree that some way of making this be optional for folks who don\u0027t want/need proper text support might be prudent if it really _does_ significantly impact the size, but if you want to do anything beyond the basics with rendering SVGs then you need to be able to render text and to be blunt you simply can\u0027t do this properly without harfbuzz. I would try and take inspiration from what other language bindings like skia-python and rust-skia are doing here.\r\n\r\n\u003E In addition to size, if there is a bug in skia\u0027s SVG, it will take a long time for that bug fix to reach us as I only update skia once a year or less\r\n\r\nYou could make this argument about any functionality in Skia really though, couldn\u0027t you? I would love to see more frequent Skia updates, but I appreciate that\u0027s a very non-trivial undertaking and to be clear, I\u0027m very grateful for the work you do currently. Even JetBrains struggle to do more than 2 Skia updates a year for their Compose stuff.\r\n\r\n\u003E If we fix that, we fix the entire community. Adding SVG to skia will make it bigger and may not have all the features yet either.\r\n\r\nThe only thing I\u0027d note here is that, whilst I think a pure .NET SVG implementation is nice and you\u0027re right about improving the ecosystem here being a good thing, the SkSVGDOM APIs benefit from being actively maintained by Google and wide adoption (e.g. JetBrains\u0027 Compose Multiplatform) elsewhere. However: I don\u0027t have a good enough understanding of how mature and comprehensive SkSVGDOM in latest Skia actually _is_ to be honest, I haven\u0027t tested it extensively enough.\r\n\r\nI suspect some of my historical complaints with SVG.NET/Svg.Skia are _actually_ complaints with the Skia PDF backend.",
+        "createdAt": "2024-10-28T10:35:12",
+        "reactions": []
+      }
+    ]
+  }
 }

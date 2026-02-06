@@ -18,5 +18,79 @@
   "createdAt": "2023-09-26T22:23:43",
   "updatedAt": "2024-08-26T09:20:46",
   "commentCount": 3,
-  "reactionCount": 5
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:34:48.1844496Z",
+    "reactions": [
+      {
+        "user": "danielschilling-ml",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:34:48.1844537Z"
+      },
+      {
+        "user": "intenzive",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:34:48.1844545Z"
+      },
+      {
+        "user": "calee88",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:34:48.1844548Z"
+      },
+      {
+        "user": "MateuszBogdan",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:34:48.1844551Z"
+      },
+      {
+        "user": "FoggyFinder",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:34:48.1844554Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1758090955,
+        "author": "mpbraithwaite",
+        "body": "We are also seeing our .net process on Windows crash if we call the function\r\n\r\n\u0060SKCodec.GetScaledDimensions(float)\u0060\r\n\r\nIf we use a positive value e.g. 0.4 there is a crash\r\n\r\nIf we use package 2.88.5 there is no crash\r\npackage 2.88.6 crashes with the error System.AccessViolationException",
+        "createdAt": "2023-10-11T16:43:51",
+        "reactions": [
+          {
+            "user": "intenzive",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:34:47.7551693Z"
+          },
+          {
+            "user": "calee88",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:34:47.7551696Z"
+          },
+          {
+            "user": "MateuszBogdan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:34:47.7551697Z"
+          },
+          {
+            "user": "YZahringer",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:34:47.7551699Z"
+          }
+        ]
+      },
+      {
+        "id": 1838523311,
+        "author": "MateuszBogdan",
+        "body": "I have the same crash ending with SIGSEGV in Net Core 8 docker image (mcr.microsoft.com/dotnet/aspnet:8.0) as well as Windows (got AccessViolationException under the debugger). And again rolling back to 2.88.5 fixes this specific issue.\r\nIt also seems that sometimes operation succeeeds and sometimes failes with crash. There seem to be more simillar issues being reported (propably dupes?):\r\nhttps://github.com/mono/SkiaSharp/issues/2681\r\nhttps://github.com/mono/SkiaSharp/issues/2645",
+        "createdAt": "2023-12-04T12:20:45",
+        "reactions": []
+      },
+      {
+        "id": 2309750767,
+        "author": "FoggyFinder",
+        "body": "so you propose to add check that if Width/Height = 0 then take that params from Codec?",
+        "createdAt": "2024-08-26T09:20:45",
+        "reactions": []
+      }
+    ]
+  }
 }

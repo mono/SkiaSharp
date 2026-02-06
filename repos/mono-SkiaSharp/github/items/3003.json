@@ -65,5 +65,67 @@
       "state": "COMMENTED",
       "submittedAt": "2024-09-24T08:02:11"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:34:21.6629111Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2358850328,
+        "author": "mattleibow",
+        "body": "This looks good. The only issue is that the \u0060IgnorePixelScaling\u0060 is false by default in all other platforms and the meaning is flipped. \r\n\r\nIt _is_ wrong and what you have is technically correct, but when I originally implemented the code, the property was to tell the drawing system that if \u0060IgnorePixelScaling == true\u0060 then we want to ignore the fact that the OS has a different scale to the number on the screen and just stretch the image. I have no idea why that was ever an option anyone would ever want.\r\n\r\nSo, false is the default and would typically be blurry on high res monitors.\r\n\r\nOne day we can have a new property that just inverts this one. Maybe we can add a \u0060bool ApplyPixelScaling =\u003E IgnorePixelScaling\u0060 and hide this old one. But it is the backwards world in which we live.",
+        "createdAt": "2024-09-18T15:55:53",
+        "reactions": []
+      },
+      {
+        "id": 2358855351,
+        "author": "mattleibow",
+        "body": "Another thing I also do in other platforms is lie about the canvas size if this is set.\r\n\r\nFor example for android:\r\n\r\n\u0060\u0060\u0060cs\r\nvar userVisibleSize = IgnorePixelScaling\r\n\t? new SKSizeI((int)(info.Width / density), (int)(info.Height / density))\r\n\t: info.Size;\r\n\r\nCanvasSize = userVisibleSize;\r\n\r\nif (IgnorePixelScaling)\r\n{\r\n\tvar skiaCanvas = surface.Canvas;\r\n\tskiaCanvas.Scale(density);\r\n\tskiaCanvas.Save();\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe reason to use the smaller/scaled down canvas size is that someone drawing the image with this option still assumes the canvas is the same size as the view. ",
+        "createdAt": "2024-09-18T15:58:20",
+        "reactions": []
+      },
+      {
+        "id": 2358880617,
+        "author": "jairbubbles",
+        "body": "\u003E  The only issue is that the IgnorePixelScaling is false by default in all other platforms and the meaning is flipped.\r\n\r\nHonestly, it was not clear to me at all what was the meaning of it. \uD83D\uDE05\r\n\r\nI wrote a small prototype based on SkiaShap and I tested with Blazor/WPF/GTK.\r\n\r\nBlazor/WPF did apply the scaling to the surface passed to the paint callback.\r\n\r\nThough on Blazor I\u0027m using\r\n\r\n\u0060\u0060\u0060\r\n\u003CSKGLView OnPaintSurface=\u0022OnPaint\u0022 IgnorePixelScaling=\u0022false\u0022\r\n\u0060\u0060\u0060\r\n\r\nAnd on WPF I didn\u0027t touch the default value, which should be \u0060false\u0060 ?\r\n\r\n(I pushed the requested modification)\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2024-09-18T16:09:55",
+        "reactions": []
+      },
+      {
+        "id": 2358888329,
+        "author": "jairbubbles",
+        "body": "(in fact I\u0027m using \u0060SkiaSharp.Views.WPF.SKGLElement\u0060 which has no such option)",
+        "createdAt": "2024-09-18T16:13:46",
+        "reactions": []
+      },
+      {
+        "id": 2358904149,
+        "author": "jairbubbles",
+        "body": "On Blazor, if set the value to false I get the full width (minus the browser borders):\r\n\r\n![image](https://github.com/user-attachments/assets/079d55d5-e719-48f3-8e9a-94915ff49660)\r\n\r\n(my screen is 2560x1440, scaling is 125%)\r\n\r\nIf I set it to true I get a smaller size:\r\n\r\n![image](https://github.com/user-attachments/assets/f3e445c4-6c30-422d-ae32-b5d0a315f397)\r\n\r\nI don\u0027t get my pixel perfect rendering and I\u0027m sad \uD83D\uDE3F \r\n",
+        "createdAt": "2024-09-18T16:21:19",
+        "reactions": []
+      },
+      {
+        "id": 2359029205,
+        "author": "mattleibow",
+        "body": "There is also the \u0060e.RawInfo\u0060 property that should always be the size of the actual pixel canvas. When you set to true, this is where the lies come in. The info says 2000, but we just applied the scaling for you.\r\n\r\n",
+        "createdAt": "2024-09-18T17:24:37",
+        "reactions": []
+      },
+      {
+        "id": 2359037413,
+        "author": "mattleibow",
+        "body": "For blazor, I think the size needs to be set via CSS/style or something. If you run the skia sample in the repo, it should be setting the property to true and also be crisp.\r\n\r\nI think I did what this article said: https://web.dev/articles/canvas-hidipi and this mozilla: https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio#correcting_resolution_in_a_canvas",
+        "createdAt": "2024-09-18T17:29:12",
+        "reactions": []
+      },
+      {
+        "id": 2359044842,
+        "author": "jairbubbles",
+        "body": "\u003E There is also the e.RawInfo property that should always be the size of the actual pixel canvas\r\n\r\nYes indeed I get my 2500 px \r\n\r\n\u003E I think I did what this article said: https://web.dev/articles/canvas-hidipi and this mozilla: https://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio#correcting_resolution_in_a_canvas\r\n\r\nI\u0027ll look into it but when running the WPF / Blazor (IgnorePixelScaling=\u0022false\u0022) I was getting the same results.\r\n\r\nSide note but what would be great is to have the scaling info in the \u0060SurfaceEventArgs\u0060. In my case, I would expect to get 1.25% so that I know I need to scale the rendering of my components.",
+        "createdAt": "2024-09-18T17:33:09",
+        "reactions": []
+      }
+    ]
+  }
 }
