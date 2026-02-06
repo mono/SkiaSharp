@@ -13,5 +13,25 @@
   "createdAt": "2022-10-07T11:15:39",
   "updatedAt": "2022-10-13T08:03:04",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:48:39.3469198Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1272589343,
+        "author": "ojb500",
+        "body": "This image is actually a landscape image with some EXIF metadata saying that it should be rotated. This is normal for \u0027portrait\u0027 format images from camera phones\r\n\r\n\u0060\u0060\u0060\r\nExifTool Version Number         : 12.47\r\nFile Name                       : 194540687-d2b259c9-a53f-4079-a70a-754198de8ef9.jpeg\r\n[...]\r\nFile Type                       : JPEG\r\nFile Type Extension             : jpg\r\nMIME Type                       : image/jpeg\r\nExif Byte Order                 : Big-endian (Motorola, MM)\r\nOrientation                     : Rotate 90 CW\r\nX Resolution                    : 72\r\nY Resolution                    : 72\r\n[...]\r\nImage Size                      : 4032x3024\r\nMegapixels                      : 12.2\r\nThumbnail Image                 : (Binary data 6654 bytes, use -b option to extract)\r\n\u0060\u0060\u0060\r\n\r\nWithout seeing your code it\u0027s difficult to say but you need to either handle this metadata ([SKCodec.EncodedOrigin](https://learn.microsoft.com/en-us/dotnet/api/skiasharp.skcodec.encodedorigin?view=skiasharp-2.88#skiasharp-skcodec-encodedorigin)) or preserve it in your output jpeg.\r\n\r\nRelated:\r\n\r\nhttps://github.com/mono/SkiaSharp/issues/836\r\nhttps://stackoverflow.com/questions/44181914/iphone-image-orientation-wrong-when-resizing-with-skiasharp",
+        "createdAt": "2022-10-09T17:24:37",
+        "reactions": []
+      },
+      {
+        "id": 1277198171,
+        "author": "hosseinitabar",
+        "body": "@ojb500 thank you so much for clarification. Now I understand that some photos have this intrinsic metadata.\r\n\r\nCan I clean their metadata altogheter?",
+        "createdAt": "2022-10-13T08:03:03",
+        "reactions": []
+      }
+    ]
+  }
 }

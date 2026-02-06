@@ -15,5 +15,18 @@
   "updatedAt": "2022-11-03T06:00:52",
   "closedAt": "2022-10-03T01:53:57",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:48:16.5731151Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1263438561,
+        "author": "pavelsavara",
+        "body": "\u003E net 6, ES6 modules are not used: GL is a global variable.\r\n\r\ncorrect, in net6 GL is a global variable because it\u0027s not modularized. It\u0027s there only when GL is included by emscripten.\r\nI don\u0027t know how skiaSharp configures the emscripten in net6.\r\n\r\n\u003E something generates the js code for the GL stuff and stuffs it in (dotnet.js). \r\n\r\nThat something is emscripten linker, when you pass for example \u0060-s LEGACY_GL_EMULATION=1 -lGL -lSDL\u0060 to it \r\nOr other WebGL modules.\r\nhttps://emscripten.org/docs/porting/multimedia_and_graphics/OpenGL-support.html\r\n\r\n\u003E net7 dotnet.js is using ES6 modules, and GL is now private and isnt exported.\r\n\r\nCorrect. Again, if emscripten includes the GL module, it\u0027s still inside ES6 dotnet.js not on \u0060globalThis\u0060.\r\nIt\u0027s also not on \u0060Module\u0060 object. To put it there you need to configure emscripten \u0060EXPORTED_RUNTIME_METHODS\u0060\r\n",
+        "createdAt": "2022-09-30T11:10:01",
+        "reactions": []
+      }
+    ]
+  }
 }

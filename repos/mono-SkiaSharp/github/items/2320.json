@@ -14,5 +14,25 @@
   "updatedAt": "2022-12-23T18:00:50",
   "closedAt": "2022-11-23T15:55:28",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:33.7141522Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1325180761,
+        "author": "themcoo",
+        "body": "It\u0027s because with MoveTo in each iteration you create a series of disjoint lines rather than a single contour. Additionally InverseWinding makes filling of exterior of a path, which for a line is exactly the whole surface.\r\n\r\nWith fixed approach you\u0027ll get the filling of the contour:\r\n\r\n\u0060\u0060\u0060\r\npublic void FillPath(SKCanvas g, SKPath gp)\r\n{\r\n\r\n\tSKPoint[] points = new SKPoint[]{\r\n\t\t\tnew SKPoint(728.4489f,48.174187f),\r\n\t\t\tnew SKPoint(618.8237f,168.18684f),\r\n\t\t\tnew SKPoint(573.079f,375.3296f),\r\n\t\t\tnew SKPoint(662.4753f,478.39078f),\r\n\t\t\tnew SKPoint(842.29297f,508.02264f),\r\n\t\t\tnew SKPoint(940.2133f,237.2352f),\r\n\t\t\tnew SKPoint(728.4489f,48.174187f)\r\n\t\t\t};\r\n\tgp = new SKPath();\r\n\r\n\tgp.MoveTo(points[0]);\r\n\r\n\tfor (int i = 1; i \u003C points.Length; i\u002B\u002B)\r\n\t{\r\n\t\tgp.LineTo(points[i]);\r\n\t}\r\n\r\n\t//gp.FillType = SKPathFillType.InverseWinding;\r\n\r\n\tusing (var p = new SKPaint() { Color = SKColors.Green, Style = SKPaintStyle.Fill })\r\n\t{\r\n\t\tg.DrawPath(gp, p);\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n![image](https://user-images.githubusercontent.com/2964157/203575182-e4da8f2c-086a-4e28-b0be-385ab9d5f5e1.png)\r\n\r\n",
+        "createdAt": "2022-11-23T14:44:02",
+        "reactions": []
+      },
+      {
+        "id": 1325296639,
+        "author": "gktval",
+        "body": "Thanks, I was using moveTo/Line to to also draw the boundary (i.e., g.DrawPoint(SKPointMode.Lines, gp.Points, paint)). Changing this to DrawPath instead fixed the boundary not drawing to each point in the path. ",
+        "createdAt": "2022-11-23T15:55:28",
+        "reactions": []
+      }
+    ]
+  }
 }

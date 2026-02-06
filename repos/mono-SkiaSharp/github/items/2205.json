@@ -14,5 +14,18 @@
   "updatedAt": "2022-11-19T15:00:59",
   "closedAt": "2022-10-20T13:35:23",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:59.5118456Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1285551347,
+        "author": "Luc1412",
+        "body": "I found a solution with the following method:\r\n\u0060\u0060\u0060cs\r\nprivate void DrawBlurredRoundRect(SKBitmap bitmap, SKRoundRect rect)\r\n{\r\n    using var canvas = new SKCanvas(bitmap);\r\n\r\n    canvas.ClipRoundRect(rect, antialias:true);\r\n\r\n    using var paint = new SKPaint();\r\n    paint.IsAntialias = true;\r\n    paint.ImageFilter = SKImageFilter.CreateBlur(5, 5);\r\n            \r\n    canvas.DrawBitmap(bitmap, 0, 0, paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe color was applies later by drawing a rounded rect with a translucent white color",
+        "createdAt": "2022-10-20T13:35:23",
+        "reactions": []
+      }
+    ]
+  }
 }

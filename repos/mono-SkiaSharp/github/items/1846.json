@@ -14,5 +14,95 @@
   "updatedAt": "2022-11-10T09:00:56",
   "closedAt": "2022-10-11T06:02:38",
   "commentCount": 8,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:48:09.4208353Z",
+    "reactions": [
+      {
+        "user": "robkaandorp",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:09.420839Z"
+      },
+      {
+        "user": "vladimir-litvinchik",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:09.4208396Z"
+      },
+      {
+        "user": "jpatte",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:09.4208399Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 960601098,
+        "author": "Azkarell",
+        "body": "I have a similar issue, I found out if I first use SKData.Create(ms) and then create the bitmap it works. On the other hand if i use SKCodec.Create(ms) i get the exception as well, so it seems the SKCodec implementation has an issue with (probably) very specific pictures.",
+        "createdAt": "2021-11-04T09:47:56",
+        "reactions": [
+          {
+            "user": "jpatte",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:48:07.8912527Z"
+          }
+        ]
+      },
+      {
+        "id": 981218201,
+        "author": "mmcmasterd3",
+        "body": "I have the same issue when passing in a stream from HttpResponseMessage.Content.ReadAsStream()",
+        "createdAt": "2021-11-29T01:37:18",
+        "reactions": []
+      },
+      {
+        "id": 984099421,
+        "author": "jpatte",
+        "body": "We\u0027ve had this exact same issue in production for a few days. Here is the problematic image we came across.\r\n[killer image.zip](https://github.com/mono/SkiaSharp/files/7637432/killer.image.zip)\r\n\r\n",
+        "createdAt": "2021-12-01T22:10:37",
+        "reactions": []
+      },
+      {
+        "id": 984104236,
+        "author": "jpatte",
+        "body": "@Azkarell gave a pretty nice workaround: in our case we only needed to replace\r\n\u0060var bitmap = SKBitmap.Decode(theStream);\u0060\r\nwith\r\n\u0060var skData = SKData.Create(theStream);\r\nvar bitmap = SKBitmap.Decode(skData);\u0060\r\nto avoid the issue entirely.",
+        "createdAt": "2021-12-01T22:18:15",
+        "reactions": []
+      },
+      {
+        "id": 1272994571,
+        "author": "rctec-at",
+        "body": "@jpatte thanks for saving my monday!\r\n\r\nGeneral question:\r\nIs there another issue thats not linked here that fixes this problem or is this workaround the way we should decode images always?",
+        "createdAt": "2022-10-10T08:56:41",
+        "reactions": [
+          {
+            "user": "jpatte",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:48:08.7496815Z"
+          }
+        ]
+      },
+      {
+        "id": 1274043641,
+        "author": "mattleibow",
+        "body": "This may have been fixed in the latest nuget. Are you able to check? ",
+        "createdAt": "2022-10-11T03:37:37",
+        "reactions": []
+      },
+      {
+        "id": 1274070810,
+        "author": "rctec-at",
+        "body": "@mattleibow  the new nuget 2.88.3 on Xamarin.Forms 5.0.0.2196 seems to work and has fixed this issue.",
+        "createdAt": "2022-10-11T04:28:00",
+        "reactions": []
+      },
+      {
+        "id": 1274127771,
+        "author": "mattleibow",
+        "body": "Fixed in https://github.com/mono/SkiaSharp/pull/2265 ",
+        "createdAt": "2022-10-11T06:02:33",
+        "reactions": []
+      }
+    ]
+  }
 }

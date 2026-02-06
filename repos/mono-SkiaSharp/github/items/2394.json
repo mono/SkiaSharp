@@ -13,5 +13,65 @@
   "createdAt": "2023-02-18T22:07:47",
   "updatedAt": "2023-02-18T23:23:53",
   "commentCount": 6,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:58.7664535Z",
+    "reactions": [
+      {
+        "user": "AdamRealE",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:46:58.7664653Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1435784423,
+        "author": "ojb500",
+        "body": "You are experiencing [aliasing](https://en.wikipedia.org/wiki/Aliasing). As pixels are aligned to an integer grid, and you are asking for a radius of 3.5f, it\u0027s fundamentally not possible to draw a 1-pixel wide stroke from x = 0.5 to x = 1.5 without either rounding or antialiasing.\r\n\r\nYour radius will need to be a whole number if you wish to draw correctly without antialiasing. Otherwise you can set \u0060IsAntialias = true\u0060 on your paint, but the circle will not have perfectly sharp edges then.\r\n\r\nI guess a radius of 3.0f should give the expected result from your second image\r\n\r\n",
+        "createdAt": "2023-02-18T22:40:14",
+        "reactions": []
+      },
+      {
+        "id": 1435787794,
+        "author": "feanor12",
+        "body": "You are right with IsAntialias it is much better.\r\nTo improve it, I moved the center points to the center of a pixel (0.5). That way I could also get the dot into the center.\r\nHere is a small example:\r\nhttps://fiddle.skia.org/c/3327db77f29797e6b3e2cf5dd30fb782\r\nStrangely enough,  the center point is not there in the GPU version.",
+        "createdAt": "2023-02-18T23:03:27",
+        "reactions": []
+      },
+      {
+        "id": 1435788534,
+        "author": "ojb500",
+        "body": "That\u0027s really odd, I just had the same realisation about moving the centre to 4.5f, but in my fiddle I get the centre point OK on GPU: https://fiddle.skia.org/c/4df759d11a4e7fa2f55bf9137ca64901\r\n",
+        "createdAt": "2023-02-18T23:08:03",
+        "reactions": []
+      },
+      {
+        "id": 1435789629,
+        "author": "feanor12",
+        "body": "If I set the stroke width to 1 it also works on the GPU.",
+        "createdAt": "2023-02-18T23:15:51",
+        "reactions": []
+      },
+      {
+        "id": 1435790040,
+        "author": "feanor12",
+        "body": "An unset stroke width seems to be an undefined state.",
+        "createdAt": "2023-02-18T23:18:54",
+        "reactions": [
+          {
+            "user": "ojb500",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:46:58.512775Z"
+          }
+        ]
+      },
+      {
+        "id": 1435790697,
+        "author": "ojb500",
+        "body": "You can also experiment with setting the stroke width to 0, this is a special value that means you want a hairline stroke",
+        "createdAt": "2023-02-18T23:23:52",
+        "reactions": []
+      }
+    ]
+  }
 }

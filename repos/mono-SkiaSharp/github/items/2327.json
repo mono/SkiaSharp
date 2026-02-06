@@ -14,5 +14,105 @@
   "updatedAt": "2023-01-08T18:00:52",
   "closedAt": "2022-12-09T17:29:59",
   "commentCount": 6,
-  "reactionCount": 8
+  "reactionCount": 8,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:19.3913558Z",
+    "reactions": [
+      {
+        "user": "albi005",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3913632Z"
+      },
+      {
+        "user": "bwinklesky",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3913639Z"
+      },
+      {
+        "user": "Juansero29",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3913642Z"
+      },
+      {
+        "user": "msneijders",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3913646Z"
+      },
+      {
+        "user": "gavinfang-fi",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3913649Z"
+      },
+      {
+        "user": "breenbob",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3913653Z"
+      },
+      {
+        "user": "KieranMaclagan",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3913656Z"
+      },
+      {
+        "user": "bradencohen",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:19.3914125Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1335311268,
+        "author": "JozefGulaPayius",
+        "body": "Hi, I have the same issue. Inner exception from linker is:\r\n\r\nSystem.ArgumentException: Member \u0027System.Int32 SKCanvasView_ignorePixelScaling\u0027 is declared in another module and needs to be imported",
+        "createdAt": "2022-12-02T14:25:56",
+        "reactions": []
+      },
+      {
+        "id": 1336488789,
+        "author": "bwinklesky",
+        "body": "I\u0027m having an issue with is as well.  ",
+        "createdAt": "2022-12-04T18:45:32",
+        "reactions": []
+      },
+      {
+        "id": 1338987986,
+        "author": "RichardMarsh",
+        "body": "Same issue",
+        "createdAt": "2022-12-06T08:57:51",
+        "reactions": []
+      },
+      {
+        "id": 1340416802,
+        "author": "bcaceiro",
+        "body": "I\u0027m having the same problem.",
+        "createdAt": "2022-12-07T06:08:08",
+        "reactions": []
+      },
+      {
+        "id": 1342980573,
+        "author": "breenbob",
+        "body": "Same but with Maui Compatibility controls library:\r\n\u0060\u0060\u0060\r\nFatal error in IL Linker\r\n  Unhandled exception. Mono.Linker.LinkerFatalErrorException: ILLink: error IL1011: Failed to write \u0027obj\\Release\\net7.0-android33.0\\android-arm64\\linked\\Microsoft.Maui.Controls.Compatibility.dll\u0027.\r\n   ---\u003E System.ArgumentException: Member \u0027System.Int32 toolbar\u0027 is declared in another module and needs to be imported\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-12-08T16:27:05",
+        "reactions": []
+      },
+      {
+        "id": 1344574499,
+        "author": "mattleibow",
+        "body": "OK, based on some further testing and checking binlogs, we have confirmed it was the new linker step that was added in GA. This was disabled for the upcoming service release in https://github.com/dotnet/maui/pull/11096 as a result of https://github.com/dotnet/maui/issues/11069.\r\n\r\nThe solution for now is to use this in your csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CAndroidLinkResources\u003Efalse\u003C/AndroidLinkResources\u003E\r\n\u0060\u0060\u0060\r\n\r\nThe next servicing release of .NET MAUI will have this disabled already.\r\n",
+        "createdAt": "2022-12-09T17:29:49",
+        "reactions": [
+          {
+            "user": "UkeHa",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:19.3411047Z"
+          },
+          {
+            "user": "breenbob",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:19.3411056Z"
+          }
+        ]
+      }
+    ]
+  }
 }

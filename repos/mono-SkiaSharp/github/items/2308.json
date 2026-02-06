@@ -14,5 +14,65 @@
   "updatedAt": "2023-01-01T18:00:48",
   "closedAt": "2022-12-02T15:29:00",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:26.7172225Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1328363832,
+        "author": "themcoo",
+        "body": "The change was actually done in google/skia, related to https://bugs.chromium.org/p/skia/issues/detail?id=3934\r\n\r\nSo in short words the \u0060PixelGeometry\u0060 on created surface is now defaulting to \u0060Unknown\u0060 instead of \u0060RgbHorizontal\u0060. To bring back the default behaviour the \u0060SKSurface\u0060 ctor must be provided \u0060SKSurfaceProperties\u0060 with \u0060SKPixelGeometry.RgbHorizontal\u0060, e.g.:\r\n\r\n\u0060using var surface = SKSurface.Create(imageInfo, new SKSurfaceProperties(SKPixelGeometry.RgbHorizontal));\u0060",
+        "createdAt": "2022-11-27T23:09:47",
+        "reactions": [
+          {
+            "user": "michaldobrodenka",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:25.6157157Z"
+          }
+        ]
+      },
+      {
+        "id": 1328427486,
+        "author": "AquilaAbriel",
+        "body": "Thank you very much, for your response and for the insight into this problem!\r\nBut I\u0027m still wondering how to specify the surface properties on creation...\r\nI\u0027m using the (winforms) SKGL Control, which as far as I can tell, creates its internal surface automatically.\r\nThe SKGLControl doesn\u0027t seem to accept any parameters which specify the surface properties.\r\n\r\nP.s.\r\nOkay, I think I found a bypass... and subpixel AA finally works.\r\nIf I create an additional SKSurface and use it as a rendertarget, I can specify its SKPixelGeometry.\r\nAll I have to do, is to draw into that offscreen rendertarget and later redraw that surface onto the SKGL surface.\r\nBut I\u0027m still wondering, if there is a way to tell the SKGLControl to use a different SKPixelGeometry for its surface.\r\n\r\nI would consider this issue closed then.",
+        "createdAt": "2022-11-28T01:58:30",
+        "reactions": []
+      },
+      {
+        "id": 1328659046,
+        "author": "themcoo",
+        "body": "Well I haven\u0027t used any skiasharp views, but just going through the code I don\u0027t see a possibility currently to hook up with different pixel geometry. Glad that at least you could find a workaround",
+        "createdAt": "2022-11-28T07:35:43",
+        "reactions": []
+      },
+      {
+        "id": 1328716555,
+        "author": "michaldobrodenka",
+        "body": "@themcoo Thank you! Good news is that I tried it and it works! I\u0027m rendering text for embedded devices, so I\u0027m rendering to ram and I can create surface I want. In order to work, only few types of SKColorTypes are supported (parameter of SKImageInfo ctor which is parameter of SKSurface.Create() ). I found only SKColorType.Bgra8888 for be working - default on windows. (not even SKColorType.Rgba8888, 565 etc)\r\n\r\nBad news is that I can\u0027t get vertical SKPixelGeometry font edging to work. (My device display is 90 rotated)",
+        "createdAt": "2022-11-28T08:35:44",
+        "reactions": []
+      },
+      {
+        "id": 1328788983,
+        "author": "themcoo",
+        "body": "Indeed vertial geometry is somewhat ignored. But that\u0027s too deep in glyph rendering engine in google/skia for me to find time to investigate. For another workaround you could render everything on you offscreen canvas rotated -90 degrees and then render the canvas rotated 90 degrees back :)",
+        "createdAt": "2022-11-28T09:38:56",
+        "reactions": [
+          {
+            "user": "michaldobrodenka",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:26.4496993Z"
+          }
+        ]
+      },
+      {
+        "id": 1328848511,
+        "author": "michaldobrodenka",
+        "body": "It would be nice if I could set for WPF SKElement (and also on other platforms) Pixel geometry other than unknown",
+        "createdAt": "2022-11-28T10:26:31",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,182 @@
   "updatedAt": "2022-10-29T09:01:17",
   "closedAt": "2022-09-29T06:55:01",
   "commentCount": 9,
-  "reactionCount": 9
+  "reactionCount": 9,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:48:29.5084132Z",
+    "reactions": [
+      {
+        "user": "intenzive",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.508418Z"
+      },
+      {
+        "user": "webseb",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.5084186Z"
+      },
+      {
+        "user": "stesee",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.5084188Z"
+      },
+      {
+        "user": "basvis",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.508419Z"
+      },
+      {
+        "user": "drk-mtr",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.5084192Z"
+      },
+      {
+        "user": "rheusinkveld",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.5084193Z"
+      },
+      {
+        "user": "NicoloBeltrame",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.5084198Z"
+      },
+      {
+        "user": "91378246",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.50842Z"
+      },
+      {
+        "user": "ThinkElevenDave",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:29.5084201Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 776072938,
+        "author": "mattleibow",
+        "body": "Are you able to attach the file here in a zip? These websites like to process them. ",
+        "createdAt": "2021-02-09T16:40:09",
+        "reactions": []
+      },
+      {
+        "id": 776090604,
+        "author": "sowenzhang",
+        "body": "yes, sorry, I was distracted after I quickly post the bug. \r\n\r\nThere are 2 photos in the folder \u0060Photos\u0060, the 4.jpg cannot be loaded but the other one works fine. \r\n\r\nIf you change the code to: using SKImage to read stream and then load into SKBitmap, then it works. \r\n\r\n[SkiaLoadTest.zip](https://github.com/mono/SkiaSharp/files/5952921/SkiaLoadTest.zip)\r\n",
+        "createdAt": "2021-02-09T17:04:40",
+        "reactions": []
+      },
+      {
+        "id": 880470398,
+        "author": "intenzive",
+        "body": "I am experiencing the exact same behaviour with some images exported from Photoshop.\r\nDo we have information why this is happening? ",
+        "createdAt": "2021-07-15T07:39:42",
+        "reactions": []
+      },
+      {
+        "id": 886046512,
+        "author": "glintpursuit",
+        "body": "SKBitmap bitMap = SKBitmap.FromImage(SKImage.FromEncodedData(new MemoryStream(mediaFileBytearray))); \r\n\r\nDoes not work using SKImage too \r\n\r\nskia version 2.80.3 ",
+        "createdAt": "2021-07-24T12:26:33",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.4185548Z"
+          },
+          {
+            "user": "Jacko1394",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.4185553Z"
+          },
+          {
+            "user": "ThinkElevenDave",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.4185554Z"
+          }
+        ]
+      },
+      {
+        "id": 889044692,
+        "author": "mattleibow",
+        "body": "Duplicate of #1551",
+        "createdAt": "2021-07-29T11:37:47",
+        "reactions": []
+      },
+      {
+        "id": 895436918,
+        "author": "taublast",
+        "body": "Can it do anything with \u0022some images\u0022 are thoses with specific metadata, causing this to happen?.. \r\n\r\nI have the following error happening with stable 2.80.3 on iOS 14.x (on iOS 12.x it\u0027s not happening):\r\n\r\n\u0060var bitmap = SKBitmap.Decode(stream);\u0060\r\n\r\ncrash boom bang:\r\n\r\n\u0060\u0060\u0060\r\n{System.ArgumentNullException: Value cannot be null.\r\nParameter name: buffer\r\n  at SkiaSharp.SKManagedStream.OnReadManagedStream (System.IntPtr buffer, System.IntPtr size) [0x0000d] in \u003C870e9db956e7461cb750c2b6d9037f6f\u003E:0 \r\n  at SkiaSharp.SKManagedStream.OnRead (System.IntPtr buffer, System.IntPtr size) [0x00006] in \u003C870e9db956e7461cb750c2b6d9037f6f\u003E:0 \r\n  at SkiaSharp.SKAbstractManagedStream.ReadInternal (System.IntPtr s, System.Void* context, System.Void* buffer, System.IntPtr size) [0x00015] in \u003C870e9db956e7461cb750c2b6d9037f6f\u003E:0 \r\n  at (wrapper native-to-managed) SkiaSharp.SKAbstractManagedStream.ReadInternal(intptr,void*,void*,intptr)\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_codec_new_from_stream(intptr,SkiaSharp.SKCodecResult*)\r\n  at SkiaSharp.SKCodec.Create (SkiaSharp.SKStream stream, SkiaSharp.SKCodecResult\u0026 result) [0x0003b] in \u003C870e9db956e7461cb750c2b6d9037f6f\u003E:0 \r\n  at SkiaSharp.SKCodec.Create (System.IO.Stream stream, SkiaSharp.SKCodecResult\u0026 result) [0x00006] in \u003C870e9db956e7461cb750c2b6d9037f6f\u003E:0 \r\n  at SkiaSharp.SKCodec.Create (System.IO.Stream stream) [0x00000] in \u003C870e9db956e7461cb750c2b6d9037f6f\u003E:0 \r\n  at SkiaSharp.SKBitmap.Decode (System.IO.Stream stream) [0x0000e] in \u003C870e9db956e7461cb750c2b6d9037f6f\u003E:0 \r\n\u0060\u0060\u0060\r\n\r\n\r\nDowngrading to 2.80.2 solved it.. \r\n",
+        "createdAt": "2021-08-09T18:19:22",
+        "reactions": [
+          {
+            "user": "sowenzhang",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665663Z"
+          },
+          {
+            "user": "texaclou",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665667Z"
+          },
+          {
+            "user": "webseb",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665668Z"
+          },
+          {
+            "user": "funwaywang",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665669Z"
+          },
+          {
+            "user": "stesee",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.866567Z"
+          },
+          {
+            "user": "fr4gles",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665671Z"
+          },
+          {
+            "user": "rheusinkveld",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665672Z"
+          },
+          {
+            "user": "91378246",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665672Z"
+          },
+          {
+            "user": "ThinkElevenDave",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:28.8665673Z"
+          }
+        ]
+      },
+      {
+        "id": 947343119,
+        "author": "ThanhNg",
+        "body": "\u0022Some images\u0022 are landscape-oriented images, portrait works. Hope it helps.",
+        "createdAt": "2021-10-20T05:34:13",
+        "reactions": []
+      },
+      {
+        "id": 1046670681,
+        "author": "max-kroell",
+        "body": "I am getting the same errors for images with a high DPI (300). Images with lower ones (\u003C 96) are working fine. Any ideas why this is the case?",
+        "createdAt": "2022-02-21T09:46:47",
+        "reactions": []
+      },
+      {
+        "id": 1261739270,
+        "author": "mattleibow",
+        "body": "Hi folks. Sorry it took forever to fix this - especially since it was so simple and totally my fault. I will try get a package out ASAP after this merges: https://github.com/mono/SkiaSharp/pull/2265",
+        "createdAt": "2022-09-29T04:29:16",
+        "reactions": []
+      }
+    ]
+  }
 }

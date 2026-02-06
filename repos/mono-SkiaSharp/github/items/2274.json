@@ -14,5 +14,38 @@
   "updatedAt": "2023-01-16T00:00:51",
   "closedAt": "2022-12-16T21:36:03",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:08.2294885Z",
+    "reactions": [
+      {
+        "user": "Mrxx99",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:08.2295384Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1268821598,
+        "author": "mattleibow",
+        "body": "This is an interesting one.\r\n\r\nOne of the issues with this is how would you represent a color that has no alpha? (not sure if that is something that people do)\r\n\r\nThis is also a breaking change, so not sure how possible if people are doing things with 0 alpha...\r\n\r\nMaybe the unexpectedness of this warrants a change.",
+        "createdAt": "2022-10-05T18:51:25",
+        "reactions": []
+      },
+      {
+        "id": 1268859115,
+        "author": "beto-rodriguez",
+        "body": "I am not sure if there is a standard, but on HTML colors this is really common. The alpha channel is by default to \u0027ff\u0027 unless you specify it, there are multiple color tables on hexadecimal format, like [material colors](https://material.io/resources/color/#!/?view.left=0\u0026view.right=0\u0026primary.color=9575CD) or [fluent colors](https://developer.microsoft.com/en-us/fluentui#/styles/web/colors/shared).\r\n\r\nIf this is implemented it would more intuitive to get a color from any color table on the web:\r\n\r\n![skiacolor](https://user-images.githubusercontent.com/10853349/194145073-ef0ddce8-08ce-4290-8329-3878ed375c51.gif)\r\n\r\nNot sure if the breaking change is worth.\r\n",
+        "createdAt": "2022-10-05T19:24:15",
+        "reactions": []
+      },
+      {
+        "id": 1326360406,
+        "author": "themcoo",
+        "body": "\u0060SKColor.Parse(string) \u0060 does exactly that. It actually provides the same rules as you would expect from setting a hex color in CSS:\r\n\u0060\u0060\u0060\r\n        foreach (var str in new [] { \u0022123\u0022, \u0022123456\u0022, \u0022aabbccdd\u0022, \u0022#112233\u0022 })\r\n\t{\r\n\t\tConsole.WriteLine(SKColor.Parse(str).ToString());\r\n\t}\r\n\u0060\u0060\u0060\r\n\t\r\noutputs:\r\n\u0060\u0060\u0060\r\n#ff112233\r\n#ff123456\r\n#aabbccdd\r\n#ff112233\r\n\u0060\u0060\u0060\r\n\r\nI would be sad if the current behaviour for uint based constructor was changed.",
+        "createdAt": "2022-11-24T12:05:52",
+        "reactions": []
+      }
+    ]
+  }
 }

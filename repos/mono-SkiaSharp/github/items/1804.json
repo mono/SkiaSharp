@@ -37,5 +37,45 @@
       "state": "COMMENTED",
       "submittedAt": "2021-09-11T09:19:15"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:42.2335929Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 917300573,
+        "author": "myroot",
+        "body": "Hi, this PR meet the our requirements except one thing\r\n\r\nWe hope to able to update ScalingFactor\r\nhttps://github.com/mono/SkiaSharp/blob/2ad29861d5a40d3bf78c28ab0a9cb02a8f0fe437/source/SkiaSharp.Views/SkiaSharp.Views.Tizen/ScalingInfo.cs#L30\r\nBecause, in several reasons, we need to support a virtual scaling factor.\r\nCould you make a setter on ScalingInfo.ScalingFactor?",
+        "createdAt": "2021-09-11T00:16:32",
+        "reactions": []
+      },
+      {
+        "id": 917367682,
+        "author": "mattleibow",
+        "body": "\u003E Because, in several reasons, we need to support a virtual scaling factor.\r\n\r\n@myroot I can do that. Do we need to have different scaling factors on different canvases? Or can it all be in one place?\r\n\r\nFor now I will add a setter to the \u0060ScalingInfo\u0060 type. But we can easily move it to the canvas before we merge this.\r\n\r\nDo you have an example of when you would want the scaling to be different to the screen DPI?",
+        "createdAt": "2021-09-11T08:32:27",
+        "reactions": []
+      },
+      {
+        "id": 917374817,
+        "author": "myroot",
+        "body": "\u003E Do you have an example of when you would want the scaling to be different to the screen DPI?\r\n\r\nhttps://github.com/Samsung/Tizen.UIExtensions/blob/d13d130b552a177939d81a12cacf7069c343fa6c/src/Tizen.UIExtensions.ElmSharp/DeviceInfo.cs#L233\r\n\r\nHere is a code of setting custom scaling factor on tizen. if this PR was merged, I will add code to call \u0060SetScalingFactor\u0060 in the end of this method",
+        "createdAt": "2021-09-11T09:25:38",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:41.9256074Z"
+          }
+        ]
+      },
+      {
+        "id": 1347936206,
+        "author": "tipa",
+        "body": "@mattleibow I just stumbled over this and how the \u0060IgnorePixelScaling\u0060 works.\r\nFrom what I understand the new behavior is different from the document behavior, which was the old one.\r\nThe [docs](https://learn.microsoft.com/en-us/dotnet/api/skiasharp.views.ios.skcanvasview.ignorepixelscaling) still say \u0060When true, the canvas is resized to device independent pixels, and then stretched to fill the view\u0060.\r\nThis isn\u0027t the case any more with v2.88.0, is it?",
+        "createdAt": "2022-12-13T08:41:17",
+        "reactions": []
+      }
+    ]
+  }
 }

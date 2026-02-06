@@ -14,5 +14,46 @@
   "updatedAt": "2022-12-31T12:00:53",
   "closedAt": "2022-11-30T15:59:14",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:30.6727464Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1332311302,
+        "author": "themcoo",
+        "body": "Hi,\r\nthis is rather a google/skia bug, not SkiaSharp... \r\nI found more issues with PathOps during my work, some were already pointed out in chromium backlog:\r\nhttps://bugs.chromium.org/p/skia/issues/detail?id=10366\u0026q=Area%3DPathOps\u0026can=1\u0026sort=-id\r\n\r\nI also found out that they want to discourage clients from using PathOps: https://bugs.chromium.org/p/skia/issues/detail?id=10978\u0026q=Area%3DPathOps\u0026can=1\u0026sort=-id\r\n\r\nFrom my experience the PahtOps for paths containing Conics were always somewhat buggy. At some point I built a conic-remover for paths, which uses quads to approximate the conic.\r\n\u0060\u0060\u0060\r\n    SKPath RemoveConics(SKPath path)\r\n    {\r\n        var result = new SKPath();\r\n        var iter = path.CreateRawIterator();\r\n        var pts = new SKPoint[4];\r\n        SKPathVerb verb;\r\n        while ((verb = iter.Next(pts)) != SKPathVerb.Done)\r\n        {\r\n            switch (verb)\r\n            {\r\n                case SKPathVerb.Conic:\r\n                    var quads = SKPath.ConvertConicToQuads(pts[0], pts[1], pts[2], iter.ConicWeight(), 2);\r\n                    for (var qi = 1; qi \u003C quads.Length - 1; qi \u002B= 2)\r\n                    {\r\n                        result.QuadTo(quads[qi], quads[qi \u002B 1]);\r\n                    }\r\n                    break;\r\n                case SKPathVerb.Cubic:\r\n                    result.CubicTo(pts[1], pts[2], pts[3]);\r\n                    break;\r\n                case SKPathVerb.Move:\r\n                    result.MoveTo(pts[0]);\r\n                    break;\r\n                case SKPathVerb.Close:\r\n                    result.Close();\r\n                    break;\r\n                case SKPathVerb.Done:\r\n                    return result;\r\n                case SKPathVerb.Line:\r\n                    result.LineTo(pts[1]);\r\n                    break;\r\n                case SKPathVerb.Quad:\r\n                    result.QuadTo(pts[1], pts[2]);\r\n                    break;\r\n            }\r\n        }\r\n\r\n        return result;\r\n    }\r\n\u0060\u0060\u0060\r\nIt does indeed fix your case:\r\n\u0060\u0060\u0060\r\nvar strokePathBug = new SKPath();\r\np.GetFillPath(pathBug, strokePathBug, 2);\r\nstrokePathBug = RemoveConics(strokePathBug);\r\n\u0060\u0060\u0060\r\n![image](https://user-images.githubusercontent.com/2964157/204833182-77c48a89-a5c4-42ba-a457-e5984fc53631.png)\r\n",
+        "createdAt": "2022-11-30T15:07:02",
+        "reactions": []
+      },
+      {
+        "id": 1332389033,
+        "author": "filippo-springa",
+        "body": "Hi,\r\n\r\nThanks for the fast reply!\r\n\r\nI understand that is a google/skia bug.\r\n\r\nHowever it didn\u0027t work on my program. Do you know a better way to calculate the offset?\r\n\r\nThanks a lot ",
+        "createdAt": "2022-11-30T15:59:14",
+        "reactions": []
+      },
+      {
+        "id": 1332596872,
+        "author": "themcoo",
+        "body": "Hi,\r\n\r\nsorry I made a mistake when rewriting the simplified code, the \u0060for\u0060 loop should start from 1:\r\n\u0060    for (var qi = 1; qi \u003C quads.Length - 1; qi \u002B= 2)\u0060\r\n(I edited original code). The first point is always the same as the last point from the previous verb.\r\n\r\nIf this also won\u0027t work for you, let me know what\u0027s the path that still causes issues. I wonder too!\r\n\r\nAnd regarding your question, that\u0027s funny because it has been actually in my backlog forever and I haven\u0027t had have time to explore this yet, you kinda mobilized me to do so :) For path operations I\u0027m using clipper library written (among others) in C#: http://www.angusj.com/clipper2/Docs/Overview.htm\r\nApparently a major update 2.0 has been released, I need to explore this. I was using version 1, I don\u0027t know whether the same limitations are still present in 2.0, but main thing is that it only works on polygons, so you need to flatten all curves before processing them with this library.\r\n",
+        "createdAt": "2022-11-30T18:54:27",
+        "reactions": []
+      },
+      {
+        "id": 1333453908,
+        "author": "filippo-springa",
+        "body": "Hi,\r\n\r\nI tried with that fix but I had no luck. I\u0027m using this path:\r\n\r\n\u0022m 450.35434,822.38865 c 0.617,-0.3014 0.617,-1.18 -8e-4,-1.4897 l -88.8175,-0.01 v -14.1176 l 88.8175,0.047 c 0.6178,-0.2555 0.6178,-1.13424 8e-4,-1.43545 -8.9949,-1.11499 -17.90118,-2.85449 -26.6546,-5.20599 -16.69,-4.07019 -43.8432,-25.11432 -43.8432,-25.11432 l 104.71302,26.80432 c 0,0 -31.0553,32.1922 -34.21524,20.52164 z\u0022\r\n\r\nI had a little improvement with your fix with the top left corner but the main issue remains.\r\nIf this works on your code maybe I\u0027m doing something wrong :)\r\n\r\nAnyway It appears that the problem occurs only in some section of the canvas(this image is without your workaround):\r\n\r\n![image](https://user-images.githubusercontent.com/117271075/205010954-957e1869-e866-4760-a767-74b8ffe66cf2.png)\r\n\r\nI have also opened an issue on skia/google if you want to follow up: https://bugs.chromium.org/p/skia/issues/detail?id=13954\r\n\r\nThanks for sharing me that clipper library, I will explore it and see if it fits for me!\r\n\r\n",
+        "createdAt": "2022-12-01T09:11:29",
+        "reactions": []
+      },
+      {
+        "id": 1333467143,
+        "author": "themcoo",
+        "body": "Oh, bummer, so I was lucky this was fixing the issues I had so far. Thanks for sharing, I will definitely track that google/skia bug.",
+        "createdAt": "2022-12-01T09:22:18",
+        "reactions": []
+      }
+    ]
+  }
 }

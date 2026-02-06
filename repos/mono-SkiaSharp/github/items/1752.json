@@ -15,5 +15,139 @@
   "updatedAt": "2022-10-29T09:01:16",
   "closedAt": "2022-09-29T06:55:01",
   "commentCount": 7,
-  "reactionCount": 10
+  "reactionCount": 10,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:48:32.0072737Z",
+    "reactions": [
+      {
+        "user": "tanfwc",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072775Z"
+      },
+      {
+        "user": "deli-nik",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072781Z"
+      },
+      {
+        "user": "christianrondeau",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072784Z"
+      },
+      {
+        "user": "MiguelCosta",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072787Z"
+      },
+      {
+        "user": "Xamarin2019",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.007279Z"
+      },
+      {
+        "user": "Rodrigo-Andrade",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072792Z"
+      },
+      {
+        "user": "7702244",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072795Z"
+      },
+      {
+        "user": "Socolin",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072796Z"
+      },
+      {
+        "user": "jcoqueret",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072797Z"
+      },
+      {
+        "user": "tarekgh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:32.0072799Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 891518230,
+        "author": "lordtct",
+        "body": "I can confirm the same with 2.80.3. Fixed by rolling back to 2.80.2.\r\nAlso this seems to be related to #1551 \r\n\u0060\u0060\u0060\r\nusing var codec = SKCodec.Create(source); \r\n....\r\nUnhandled exception. Unhandled exception. Unhandled exception. System.ArgumentNullException: Value cannot be null. (Parameter \u0027buffer\u0027)\r\n   at SkiaSharp.SKManagedStream.OnReadManagedStream(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKManagedStream.OnRead(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKAbstractManagedStream.ReadInternal(IntPtr s, Void* context, Void* buffer, IntPtr size)System.ArgumentNullException: Value cannot be null. (Parameter \u0027buffer\u0027)\r\n   at SkiaSharp.SKManagedStream.OnReadManagedStream(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKManagedStream.OnRead(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKAbstractManagedStream.ReadInternal(IntPtr s, Void* context, Void* buffer, IntPtr size)System.ArgumentNullException: Value cannot be null. (Parameter \u0027buffer\u0027)\r\n   at SkiaSharp.SKManagedStream.OnReadManagedStream(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKManagedStream.OnRead(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKAbstractManagedStream.ReadInternal(IntPtr s, Void* context, Void* buffer, IntPtr size)\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-08-03T04:39:23",
+        "reactions": [
+          {
+            "user": "jing8956",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:30.5776462Z"
+          },
+          {
+            "user": "7702244",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:30.5776466Z"
+          }
+        ]
+      },
+      {
+        "id": 895242855,
+        "author": "deli-nik",
+        "body": "Experiencing same problem on version 2.80.3, but only on very specific device (Huawei Nova 5T in my case). Can\u0027t repro myself, I don\u0027t have the device but this is Visual Studio App Center report:\r\n\r\nException:\r\n\u0060\u0060\u0060\r\nSKManagedStream.OnReadManagedStream (System.IntPtr buffer, System.IntPtr size)\r\nSystem.ArgumentNullException: Value cannot be null. Parameter name: buffer\r\n\r\nSKManagedStream.OnReadManagedStream (System.IntPtr buffer, System.IntPtr size)\r\nSKManagedStream.OnRead (System.IntPtr buffer, System.IntPtr size)\r\nSKAbstractManagedStream.ReadInternal (System.IntPtr s, System.Void* context, System.Void* buffer, System.IntPtr size)\r\n(wrapper native-to-managed) SkiaSharp.SKAbstractManagedStream.ReadInternal(intptr,void*,void*,intptr)\r\n(wrapper managed-to-native) SkiaSharp.SkiaApi.sk_codec_new_from_stream(intptr,SkiaSharp.SKCodecResult*)\r\nSKCodec.Create (SkiaSharp.SKStream stream, SkiaSharp.SKCodecResult\u0026 result)\r\nSKCodec.Create (SkiaSharp.SKStream stream)\r\n\u0060\u0060\u0060\r\n\r\nCode:\r\n\u0060\u0060\u0060\r\nusing (var file = new FileStream(filePath, FileMode.Open, FileAccess.Read))\r\n{\r\n    using (var inputStream = new SKManagedStream(file))\r\n    {\r\n        using (var codec = SKCodec.Create(inputStream)) // Crashes here, most likely\r\n...\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-08-09T13:54:29",
+        "reactions": []
+      },
+      {
+        "id": 1014801852,
+        "author": "julianadormon",
+        "body": "I too am experiencing this issue but with JPGs and only some of them.\r\n\r\n\u0060\u0060\u0060cs\r\nusing (var input = File.OpenRead(file.FilePath))\r\n                {\r\n                    using (var inputStream = new SKManagedStream(input))\r\n                    {\r\n                        using (var original = SKBitmap.Decode(inputStream))\u0060 \u003C-- errors here\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-01-17T18:29:16",
+        "reactions": []
+      },
+      {
+        "id": 1064246957,
+        "author": "mtyeager",
+        "body": "Have the same issue. Pixel emulator works fine. But physical Samsung Galaxy S9\u002B throws this error. Rolled back to 2.80.2 and it works on both.",
+        "createdAt": "2022-03-10T16:21:33",
+        "reactions": []
+      },
+      {
+        "id": 1121327163,
+        "author": "theolivenbaum",
+        "body": "Any updates on this one?",
+        "createdAt": "2022-05-09T16:36:19",
+        "reactions": [
+          {
+            "user": "7702244",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:31.4163777Z"
+          },
+          {
+            "user": "codeBestard",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:31.4163779Z"
+          }
+        ]
+      },
+      {
+        "id": 1166418145,
+        "author": "Socolin",
+        "body": "I encounter the same problem after upgrading from 2.80.2",
+        "createdAt": "2022-06-26T04:59:12",
+        "reactions": [
+          {
+            "user": "codeBestard",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:48:31.7184873Z"
+          }
+        ]
+      },
+      {
+        "id": 1261739228,
+        "author": "mattleibow",
+        "body": "Hi folks. Sorry it took forever to fix this - especially since it was so simple and totally my fault. I will try get a package out ASAP after this merges: https://github.com/mono/SkiaSharp/pull/2265",
+        "createdAt": "2022-09-29T04:29:11",
+        "reactions": []
+      }
+    ]
+  }
 }

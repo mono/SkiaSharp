@@ -13,5 +13,36 @@
   "createdAt": "2022-11-05T20:49:10",
   "updatedAt": "2022-11-05T22:02:06",
   "commentCount": 2,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:48:12.3069888Z",
+    "reactions": [
+      {
+        "user": "DenisTDR",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:12.3069936Z"
+      },
+      {
+        "user": "HaptelmanovArtem",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:48:12.3069944Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1304645904,
+        "author": "alexhorner",
+        "body": "I should note I have been unable to reproduce this in a separate console app using essentially that sample code I provided",
+        "createdAt": "2022-11-05T21:34:03",
+        "reactions": []
+      },
+      {
+        "id": 1304649774,
+        "author": "alexhorner",
+        "body": "Replacing\r\n\u0060\u0060\u0060csharp\r\nStream? thumbnailPngData = thumbnailPng.AsStream();\r\n\u0060\u0060\u0060\r\n\r\nand\r\n\r\n\u0060\u0060\u0060csharp\r\nthumbnailPngData.Position = 0;\r\nawait thumbnailPngData.CopyToAsync(fileHandle);\r\n\u0060\u0060\u0060\r\n\r\nwith a direct\r\n\r\n\u0060\u0060\u0060\r\nthumbnailPng.SaveTo(fileHandle);\r\n\u0060\u0060\u0060\r\n\r\nDoes not resolve the issue.",
+        "createdAt": "2022-11-05T22:02:06",
+        "reactions": []
+      }
+    ]
+  }
 }

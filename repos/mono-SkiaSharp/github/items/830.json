@@ -18,5 +18,105 @@
   "createdAt": "2019-04-22T05:31:11",
   "updatedAt": "2022-11-28T01:56:59",
   "commentCount": 8,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:51.519099Z",
+    "reactions": [
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:51.5191048Z"
+      },
+      {
+        "user": "Happypig375",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:47:51.5191056Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 533830433,
+        "author": "Gillibald",
+        "body": "ClearType is only possible on surfaces that don\u0027t use premultiplied alpha and I guess here an alpha channel is used.",
+        "createdAt": "2019-09-21T21:10:35",
+        "reactions": []
+      },
+      {
+        "id": 750938062,
+        "author": "charlesroddie",
+        "body": "Related question from Rust: https://github.com/rust-skia/rust-skia/issues/331\r\nThey seem to have got this working.",
+        "createdAt": "2020-12-24T18:08:05",
+        "reactions": []
+      },
+      {
+        "id": 841225721,
+        "author": "cilliemalan",
+        "body": "In order to enable subpixel antialiasing for text, one needs to enable subpixel antialiased edging:\r\n\u0060\u0060\u0060csharp\r\nvar paint = new SKPaint\r\n{\r\n\tColor = SKColors.Black,\r\n\tIsAntialias = true,\r\n\tStyle = SKPaintStyle.Fill,\r\n\tTextAlign = SKTextAlign.Center,\r\n\tTextSize = 24\r\n};\r\nvar font = new SKFont\r\n{\r\n\tEdging = SKFontEdging.SubpixelAntialias,\r\n\tSize = 24\r\n};\r\ncanvas.DrawText(\r\n\t\u0022SkiaSharp\u0022,\r\n\tscaledSize.Width / 2,\r\n\t(scaledSize.Height \u002B paint.TextSize) / 2,\r\n\tfont,\r\n\tpaint);\r\n\u0060\u0060\u0060\r\n![image](https://user-images.githubusercontent.com/3305301/118273437-358db080-b4c4-11eb-88af-60ef7e094cb1.png)\r\n\r\n",
+        "createdAt": "2021-05-14T12:55:05",
+        "reactions": []
+      },
+      {
+        "id": 841331199,
+        "author": "charlesroddie",
+        "body": "Good find @cilliemalan . The skia api is terrible here with fonts inside typefaces and typefaces inside fonts and properties duplicated among fonts and paints.\r\n\r\nWhat Skia View are you using? When we try this on a Forms SKCanvasView on UWP we get the same bug in rendering as https://github.com/rust-skia/rust-skia/issues/331#issuecomment-623083102 .",
+        "createdAt": "2021-05-14T15:52:37",
+        "reactions": []
+      },
+      {
+        "id": 841483499,
+        "author": "cilliemalan",
+        "body": "This is the [SkiaSharp Basic Desktop sample](https://github.com/mono/SkiaSharp/blob/main/samples/Basic/Desktop/SkiaSharpSample/Form1.cs).\r\n\r\nI just [changed a few lines](https://gist.github.com/cilliemalan/d4f663ee960682588e8ff66d8d057f38/revisions?diff=unified)\r\n\r\nI tried the same on the [UWP sample](https://github.com/mono/SkiaSharp/blob/main/samples/Basic/UWP/SkiaSharpSample/MainPage.xaml.cs):\r\n![image](https://user-images.githubusercontent.com/3305301/118325028-2417c900-b503-11eb-9dc9-7147c3123000.png)\r\n\r\nBigger:\r\n![image](https://user-images.githubusercontent.com/3305301/118325062-2da13100-b503-11eb-8383-b21d232b6f36.png)\r\n\r\nUWP Files:\r\n[UWPSkiaTest.zip](https://github.com/mono/SkiaSharp/files/6481043/UWPSkiaTest.zip)\r\n",
+        "createdAt": "2021-05-14T20:27:02",
+        "reactions": []
+      },
+      {
+        "id": 1008595713,
+        "author": "danipen",
+        "body": "I played around with the [sample application](https://github.com/mono/SkiaSharp/files/6481043/UWPSkiaTest.zip) provided by @cilliemalan, and I noticed that subpixel rendering is not performed well for some SkiaSharp versions.\r\n\r\nThe subpixel rendering works fine using \u00602.80.2\u0060. I additionally tested \u00602.80.3\u0060 and \u00602.80.4-preview.x\u0060, and those versions also worked fine for me.\r\n\r\n**However, I noticed that using the last \u00602.88.0-preview.x\u0060 versions, the sample app doesn\u0027t display subpixel rendering.**\r\n\r\nSo, sumarizing:\r\n\r\n- **2.80.2**: Subpixel displayed ok.\r\n- **2.80.3**: Subpixel displayed ok.\r\n- **2.80.4-preview.x**: Subpixel displayed ok.\r\n- **2.88.0-preview.x**: Subpixel is NOT displayed ok.",
+        "createdAt": "2022-01-10T07:16:10",
+        "reactions": [
+          {
+            "user": "michaldobrodenka",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:51.0312714Z"
+          },
+          {
+            "user": "AquilaAbriel",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:51.0312722Z"
+          }
+        ]
+      },
+      {
+        "id": 1223145593,
+        "author": "danipen",
+        "body": "@mattleibow ",
+        "createdAt": "2022-08-22T21:49:12",
+        "reactions": []
+      },
+      {
+        "id": 1328426781,
+        "author": "themcoo",
+        "body": "@danipen I answered in #2308 ",
+        "createdAt": "2022-11-28T01:56:59",
+        "reactions": [
+          {
+            "user": "michaldobrodenka",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:47:51.4688454Z"
+          },
+          {
+            "user": "danipen",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:47:51.4688654Z"
+          },
+          {
+            "user": "danipen",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:47:51.4688657Z"
+          }
+        ]
+      }
+    ]
+  }
 }

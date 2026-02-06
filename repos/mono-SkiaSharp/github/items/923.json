@@ -13,5 +13,32 @@
   "createdAt": "2019-08-01T13:13:30",
   "updatedAt": "2023-02-26T13:08:23",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:46:53.861541Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 517289355,
+        "author": "abubkdar",
+        "body": "Further If I save as same image as .PNG , Now I can resize this PNG without issue",
+        "createdAt": "2019-08-01T13:31:51",
+        "reactions": []
+      },
+      {
+        "id": 1008256766,
+        "author": "handcraftedsource",
+        "body": "I can reproduce this with all images with portrait orientation. Images with Landscape orientation remain correctly aligned.\r\n\r\nMy code looks like this:\r\n\r\n\u0060\u0060\u0060c#\r\npublic static async Task\u003Cstring?\u003E GetResizedPngImageAsBase64String(this System.IO.Stream inputStream, long streamSize, int maxHeight, int maxWidth)\r\n{\r\n    var inputBuffer = new byte[streamSize];\r\n    await inputStream.ReadAsync(inputBuffer);\r\n    using var original = SKBitmap.Decode(inputBuffer);\r\n\r\n    var scaleHeight = maxHeight / (float) original.Height;\r\n    var scaleWidth = maxWidth / (float) original.Width;\r\n    var scale = Math.Min(scaleHeight, scaleWidth);\r\n\r\n    var width = (int)(original.Width * scale);\r\n    var height = (int)(original.Height * scale);\r\n    \r\n    using var resized = original.Resize(new SKImageInfo(width, height), SKFilterQuality.High);\r\n    if (resized == null)\r\n    {\r\n        return null;\r\n    }\r\n\r\n    using var image = SKImage.FromBitmap(resized);\r\n    var buffer = image.Encode(SKEncodedImageFormat.Png, 100).ToArray();\r\n    var result = Convert.ToBase64String(buffer);\r\n    return result;\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\nUsed Package Version: 2.80.3\r\nFramework: net6.0",
+        "createdAt": "2022-01-09T08:57:05",
+        "reactions": []
+      },
+      {
+        "id": 1445357905,
+        "author": "wolfgangschneider",
+        "body": "HI\r\nI run into the same issue. Is this Bug still open ? Is there a workaround?",
+        "createdAt": "2023-02-26T13:08:23",
+        "reactions": []
+      }
+    ]
+  }
 }

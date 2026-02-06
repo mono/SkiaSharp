@@ -14,5 +14,25 @@
   "updatedAt": "2023-01-01T15:00:48",
   "closedAt": "2022-12-02T12:22:01",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:27.8789824Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1335151741,
+        "author": "themcoo",
+        "body": "There are 2 issues in your code:\r\n1. You return disposed SKImage from CreateBox() method:\r\n\u0060        using var image = surface.Snapshot();\u0060\r\nThis ends with uncatchable exception (I\u0027d guess some unmanaged memory violation). You should remove \u0060using\u0060 keyword and leave disposing to the consumer of this method.\r\n\r\n2. Skia can only encode PNG, JPEG and WEBP images, gif can only be decoded.",
+        "createdAt": "2022-12-02T12:15:19",
+        "reactions": []
+      },
+      {
+        "id": 1335157855,
+        "author": "kedare",
+        "body": "Thank you very much, indeed it looks like that was this issue, I\u0027m not very familiar with the using statement yet.\r\n\r\nIt\u0027s working now, thank you again :)",
+        "createdAt": "2022-12-02T12:22:01",
+        "reactions": []
+      }
+    ]
+  }
 }

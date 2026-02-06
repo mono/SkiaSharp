@@ -14,5 +14,46 @@
   "updatedAt": "2022-11-26T21:00:54",
   "closedAt": "2022-10-27T20:29:50",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:53.3318676Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 695031815,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes does anything different happen when you don\u0027t reset the path? Does having _just_ the paint reset also stop working?\r\nI originally added the reset for the paint after a request, and I never got any negative feedback from it.\r\n\r\nA \u0060SKPaint\u0060 reset is literally creating a new pain instance in the exact same place: https://github.com/google/skia/blob/master/src/core/SkPaint.cpp#L96\r\nAnd, when it is passed around, I believe it is copied. However, a picture may be using a reference.\r\n\r\nCould you confirm that it is both the paint AND the path having issues, or maybe it is one and the other is just causing it?",
+        "createdAt": "2020-09-18T18:53:46",
+        "reactions": []
+      },
+      {
+        "id": 695044011,
+        "author": "wieslawsoltes",
+        "body": "Both have issue when used separately and together. I was under impression that Reset() does not allocate new objects? ",
+        "createdAt": "2020-09-18T19:22:40",
+        "reactions": []
+      },
+      {
+        "id": 695128498,
+        "author": "mattleibow",
+        "body": "It does not in C# and the C\u002B\u002B side is interesting. It technically creates a new object over the old one. So not really a new object, just \u0022re-initializes\u0022 it.",
+        "createdAt": "2020-09-18T23:35:28",
+        "reactions": []
+      },
+      {
+        "id": 695172422,
+        "author": "wieslawsoltes",
+        "body": "This pointer constructor magic.",
+        "createdAt": "2020-09-19T06:25:53",
+        "reactions": []
+      },
+      {
+        "id": 713225584,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes  I have been looking at this and I think there might be a few things going on here.\r\n\r\n~First, I need to check some more, but I don\u0027t think you can reset the paths. This might be held by reference when drawing, so that is why the top part of the picture - the bit made up of the small path blocks - is reset.~\r\n\r\nThe other part is where it appears a font size is being set, then reset and then drawn.\r\n\r\nOver here, the paint is set:\r\nhttps://gist.github.com/wieslawsoltes/08a9b739fb3df25e191f9e99b943a7c5#file-pservers-pattern-01-b-svg-cs-L90\r\n\r\nThen reset over here:\r\nhttps://gist.github.com/wieslawsoltes/08a9b739fb3df25e191f9e99b943a7c5#file-pservers-pattern-01-b-svg-cs-L134\r\n\r\nThen drawn here:\r\nhttps://gist.github.com/wieslawsoltes/08a9b739fb3df25e191f9e99b943a7c5#file-pservers-pattern-01-b-svg-cs-L159\r\n\r\nEven though you are referencing the old paint object _variable_ you have actually reset it twice since.\r\n\r\nThis might be a result of a container setting some properties and then the elements changing them? You may need to investigate some sort of stack-based paint collection. I think it might be possible to have multiple paint objects at the same time due to the hierarchical nature of the xml.\r\n\r\n**EDIT**\r\n\r\nThe path can be reset, but right now, the code has the same issue:\r\n\r\nThe path for the big rectangle is set:\r\nhttps://gist.github.com/wieslawsoltes/08a9b739fb3df25e191f9e99b943a7c5#file-pservers-pattern-01-b-svg-cs-L31\r\n\r\nThen is reset:\r\nhttps://gist.github.com/wieslawsoltes/08a9b739fb3df25e191f9e99b943a7c5#file-pservers-pattern-01-b-svg-cs-L41\r\n\r\nThen is drawn:\r\nhttps://gist.github.com/wieslawsoltes/08a9b739fb3df25e191f9e99b943a7c5#file-pservers-pattern-01-b-svg-cs-L69",
+        "createdAt": "2020-10-21T01:00:41",
+        "reactions": []
+      }
+    ]
+  }
 }

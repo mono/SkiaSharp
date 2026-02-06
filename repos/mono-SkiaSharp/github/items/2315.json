@@ -14,5 +14,46 @@
   "updatedAt": "2023-01-04T12:00:51",
   "closedAt": "2022-12-05T10:57:22",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:47:24.6694867Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1328876168,
+        "author": "themcoo",
+        "body": "What does attachment contain? Are you sure it\u0027s raw image data? Could you dump its contents to a file?",
+        "createdAt": "2022-11-28T10:51:34",
+        "reactions": []
+      },
+      {
+        "id": 1328883787,
+        "author": "Manish082007",
+        "body": "@themcoo - I have issue with every PNG file. You can try it with the attached URL. I pass the image as \u0060multipart/form-data\u0060 as content type. \r\n[Png Image](https://www.gstatic.com/webp/gallery3/3.png)",
+        "createdAt": "2022-11-28T10:58:39",
+        "reactions": []
+      },
+      {
+        "id": 1328890734,
+        "author": "themcoo",
+        "body": "I understand, but are you sure \u0060attachment\u0060 array content is exactly equal to the png file content? That\u0027s why I asked if you can dump this array to a file to compare with actual png file",
+        "createdAt": "2022-11-28T11:04:10",
+        "reactions": []
+      },
+      {
+        "id": 1328903915,
+        "author": "Manish082007",
+        "body": "@themcoo - I have same doubt that it is getting changed by Aws Api Gateway. It may need \u0060image/png\u0060 content-type or I need to convert it to \u0060image/png\u0060 content-type. \r\nAnother doubt I have is skiasharp supports Debian 11 OS? \r\nI will dump png file content in few hours. \r\nThanks for your reply",
+        "createdAt": "2022-11-28T11:14:07",
+        "reactions": []
+      },
+      {
+        "id": 1337134261,
+        "author": "Manish082007",
+        "body": "@themcoo - I am able to resolve this issue. The problem was Aws Api Gateway was converting base64 string. I just need to specify the \u0060multipart-data\u0060 as binary type \u0026 re-deploy the API stage. Thank you for your help.",
+        "createdAt": "2022-12-05T10:57:22",
+        "reactions": []
+      }
+    ]
+  }
 }
