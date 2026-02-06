@@ -128,9 +128,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
           PAGE_COUNT="${{ inputs.page_count || '5' }}"
           BATCH=1
+          FIRST_RUN=true
           
           while true; do
             echo ""
@@ -138,13 +138,25 @@ jobs:
             echo "  SkiaSharp Items checkpoint $BATCH"
             echo "========================================"
             
+            # First batch: use --full if requested, subsequent: use --resume
+            if [ "${{ inputs.full }}" == "true" ]; then
+              if [ "$FIRST_RUN" == "true" ]; then
+                SYNC_FLAG="--full"
+              else
+                SYNC_FLAG="--resume"
+              fi
+            else
+              SYNC_FLAG=""
+            fi
+            FIRST_RUN=false
+            
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --repo mono/SkiaSharp \
               --cache-path .data-cache \
               --items-only \
               --page-count $PAGE_COUNT \
-              $FULL_FLAG
+              $SYNC_FLAG
             EXIT_CODE=$?
             set -e
             
@@ -185,8 +197,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ENGAGEMENT_COUNT="${{ inputs.engagement_count || '100' }}"
-          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
           BATCH=1
+          FIRST_RUN=true
           
           while true; do
             echo ""
@@ -194,13 +206,25 @@ jobs:
             echo "  SkiaSharp Engagement checkpoint $BATCH"
             echo "========================================"
             
+            # First batch: use --full if requested, subsequent: use --resume
+            if [ "${{ inputs.full }}" == "true" ]; then
+              if [ "$FIRST_RUN" == "true" ]; then
+                SYNC_FLAG="--full"
+              else
+                SYNC_FLAG="--resume"
+              fi
+            else
+              SYNC_FLAG=""
+            fi
+            FIRST_RUN=false
+            
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --repo mono/SkiaSharp \
               --cache-path .data-cache \
               --engagement-only \
               --engagement-count $ENGAGEMENT_COUNT \
-              $FULL_FLAG
+              $SYNC_FLAG
             EXIT_CODE=$?
             set -e
             
@@ -316,12 +340,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
           PAGE_COUNT="${{ inputs.page_count || '5' }}"
           BATCH=1
+          FIRST_RUN=true
           
           while true; do
             echo "Extended items checkpoint $BATCH"
+            
+            if [ "${{ inputs.full }}" == "true" ]; then
+              if [ "$FIRST_RUN" == "true" ]; then
+                SYNC_FLAG="--full"
+              else
+                SYNC_FLAG="--resume"
+              fi
+            else
+              SYNC_FLAG=""
+            fi
+            FIRST_RUN=false
             
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
@@ -329,7 +364,7 @@ jobs:
               --cache-path .data-cache \
               --items-only \
               --page-count $PAGE_COUNT \
-              $FULL_FLAG
+              $SYNC_FLAG
             EXIT_CODE=$?
             set -e
             
@@ -367,11 +402,22 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ENGAGEMENT_COUNT="${{ inputs.engagement_count || '100' }}"
-          FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
           BATCH=1
+          FIRST_RUN=true
           
           while true; do
             echo "Extended engagement checkpoint $BATCH"
+            
+            if [ "${{ inputs.full }}" == "true" ]; then
+              if [ "$FIRST_RUN" == "true" ]; then
+                SYNC_FLAG="--full"
+              else
+                SYNC_FLAG="--resume"
+              fi
+            else
+              SYNC_FLAG=""
+            fi
+            FIRST_RUN=false
             
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
@@ -379,7 +425,7 @@ jobs:
               --cache-path .data-cache \
               --engagement-only \
               --engagement-count $ENGAGEMENT_COUNT \
-              $FULL_FLAG
+              $SYNC_FLAG
             EXIT_CODE=$?
             set -e
             

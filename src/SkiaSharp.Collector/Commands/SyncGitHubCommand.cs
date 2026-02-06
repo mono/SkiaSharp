@@ -24,6 +24,13 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
     {
         (_owner, _repoName) = settings.ParseRepository();
         
+        // Validate flags
+        if (settings.FullRefresh && settings.Resume)
+        {
+            AnsiConsole.MarkupLine("[red]Error: Cannot use --full and --resume together[/]");
+            return 1;
+        }
+
         if (!settings.Quiet)
             AnsiConsole.MarkupLine($"[bold blue]Syncing GitHub data for {_owner}/{_repoName}...[/]");
 
@@ -42,6 +49,34 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var syncMeta = await cache.LoadGitHubSyncMetaAsync();
         var index = await cache.LoadGitHubIndexAsync();
         var now = DateTime.UtcNow;
+
+        // Handle --full: clear any existing full sync state and start fresh
+        if (settings.FullRefresh)
+        {
+            syncMeta = syncMeta with
+            {
+                FullSync = new FullSyncState(
+                    StartedAt: now,
+                    ItemsComplete: false,
+                    EngagementComplete: false,
+                    ItemsLastPage: 0,
+                    EngagementLastNumber: 0
+                )
+            };
+            if (!settings.Quiet)
+                AnsiConsole.MarkupLine("[blue]Starting fresh full sync...[/]");
+        }
+        // Handle --resume: require existing full sync state
+        else if (settings.Resume)
+        {
+            if (syncMeta.FullSync == null)
+            {
+                AnsiConsole.MarkupLine("[red]Error: No full sync in progress to resume. Use --full to start a new full sync.[/]");
+                return 1;
+            }
+            if (!settings.Quiet)
+                AnsiConsole.MarkupLine($"[blue]Resuming full sync from {syncMeta.FullSync.StartedAt:yyyy-MM-dd HH:mm}...[/]");
+        }
 
         // Check rate limit before starting
         var rateLimit = await apiClient.RateLimit.GetRateLimits();
@@ -62,20 +97,38 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var rateLimitHit = false;
         var itemsComplete = false;
 
+        // Determine if we're in full sync mode (either starting or resuming)
+        var isFullSync = settings.FullRefresh || settings.Resume;
+
         try
         {
             // Layer 1: Basic item data
             if (!settings.EngagementOnly)
             {
                 (index, syncMeta, itemsProcessed, itemsComplete) = await SyncLayer1Async(
-                    apiClient, cache, index, syncMeta, settings);
+                    apiClient, cache, index, syncMeta, settings, isFullSync);
             }
 
             // Layer 2: Engagement data
             if (!settings.ItemsOnly)
             {
                 (index, syncMeta, engagementProcessed, rateLimitHit) = await SyncLayer2Async(
-                    apiClient, cache, index, syncMeta, settings);
+                    apiClient, cache, index, syncMeta, settings, isFullSync);
+            }
+
+            // Check if full sync is complete (both layers done)
+            if (isFullSync && syncMeta.FullSync != null)
+            {
+                var itemsDone = settings.EngagementOnly || syncMeta.FullSync.ItemsComplete;
+                var engagementDone = settings.ItemsOnly || syncMeta.FullSync.EngagementComplete;
+                
+                if (itemsDone && engagementDone)
+                {
+                    // Full sync complete - clear the state
+                    syncMeta = syncMeta with { FullSync = null };
+                    if (!settings.Quiet)
+                        AnsiConsole.MarkupLine("[green]Full sync complete! Clearing resume state.[/]");
+                }
             }
 
             syncMeta = syncMeta with { LastRunStatus = rateLimitHit ? "rate_limited" : "success" };
@@ -109,21 +162,25 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             table.AddRow("Engagement Synced", $"[green]{engagementProcessed}[/]");
             table.AddRow("Total in Cache", index.Items.Count.ToString());
             table.AddRow("With Engagement", index.Items.Count(i => i.EngagementSyncedAt != null).ToString());
+            if (isFullSync && syncMeta.FullSync != null)
+                table.AddRow("Full Sync Progress", $"Items: {(syncMeta.FullSync.ItemsComplete ? "✓" : syncMeta.FullSync.ItemsLastPage + " pages")}, Engagement: {(syncMeta.FullSync.EngagementComplete ? "✓" : syncMeta.FullSync.EngagementLastNumber.ToString())}");
             
             AnsiConsole.Write(table);
             AnsiConsole.MarkupLine($"[green]✓ Sync complete[/]");
         }
 
         // Exit codes:
-        // 0 = work done successfully (or items batch complete, more pages to fetch)
+        // 0 = work done successfully (batch complete, more to do)
         // 1 = rate limit hit (more work to do)
-        // 2 = nothing to sync (items-only complete OR all engagement up to date)
+        // 2 = all done (items-only complete OR all engagement up to date OR full sync complete)
         if (rateLimitHit)
             return 1;
         if (settings.ItemsOnly && itemsComplete)
             return 2; // All items synced
         if (settings.EngagementOnly && engagementProcessed == 0)
             return 2; // All engagement synced, nothing more to do
+        if (isFullSync && syncMeta.FullSync == null)
+            return 2; // Full sync complete
         return 0;
     }
 
@@ -132,11 +189,20 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         CacheService cache,
         CacheIndex index,
         SyncMeta meta,
-        SyncGitHubSettings settings)
+        SyncGitHubSettings settings,
+        bool isFullSync)
     {
-        var syncMode = settings.FullRefresh ? "full (Created ASC)" : "incremental (Updated DESC)";
+        var syncMode = isFullSync ? "full (Created ASC)" : "incremental (Updated DESC)";
         if (!settings.Quiet)
             AnsiConsole.MarkupLine($"\n[bold]Layer 1: Basic item data[/] [dim]({syncMode})[/]");
+
+        // Check if items sync is already complete for this full sync
+        if (isFullSync && meta.FullSync?.ItemsComplete == true)
+        {
+            if (!settings.Quiet)
+                AnsiConsole.MarkupLine("[dim]  Items already complete for this full sync[/]");
+            return (index, meta, 0, true);
+        }
 
         // Get repo info (also gives us stars/forks/watchers)
         var repo = await client.Repository.Get(_owner, _repoName);
@@ -160,10 +226,17 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         
         // Full sync: fetch all items sorted by Created ASC (stable ordering)
         // Incremental: fetch recently updated items sorted by Updated DESC (recent first)
-        var since = settings.FullRefresh ? null : meta.Layers.Items.LastSync;
+        var since = isFullSync ? null : meta.Layers.Items.LastSync;
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
-        var page = 1;
+        
+        // For resume, start from the last processed page
+        var startPage = (isFullSync && meta.FullSync != null) ? meta.FullSync.ItemsLastPage + 1 : 1;
+        var page = startPage;
+        
+        if (startPage > 1 && !settings.Quiet)
+            AnsiConsole.MarkupLine($"[dim]  Resuming from page {startPage}[/]");
+        
         var pagesProcessed = 0;
         var maxPages = settings.PageCount > 0 ? settings.PageCount : int.MaxValue;
         var startTime = DateTime.UtcNow;
@@ -195,8 +268,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     var request = new RepositoryIssueRequest
                     {
                         State = ItemStateFilter.All,
-                        SortProperty = settings.FullRefresh ? IssueSort.Created : IssueSort.Updated,
-                        SortDirection = settings.FullRefresh ? SortDirection.Ascending : SortDirection.Descending,
+                        SortProperty = isFullSync ? IssueSort.Created : IssueSort.Updated,
+                        SortDirection = isFullSync ? SortDirection.Ascending : SortDirection.Descending,
                         Since = since?.ToUniversalTime()
                     };
 
@@ -216,7 +289,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         // Early exit optimization for incremental sync:
                         // When sorted by Updated DESC, if we hit an item that's already 
                         // in our cache with the same UpdatedAt, everything after is also synced
-                        if (!settings.FullRefresh && itemsDict.TryGetValue(issue.Number, out var cached))
+                        if (!isFullSync && itemsDict.TryGetValue(issue.Number, out var cached))
                         {
                             if (issue.UpdatedAt.HasValue && cached.UpdatedAt == issue.UpdatedAt.Value.DateTime)
                             {
@@ -292,6 +365,19 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             }
         };
 
+        // Update full sync state if in full sync mode
+        if (isFullSync && meta.FullSync != null)
+        {
+            meta = meta with
+            {
+                FullSync = meta.FullSync with
+                {
+                    ItemsLastPage = page - 1,  // Last completed page
+                    ItemsComplete = allDone
+                }
+            };
+        }
+
         if (!settings.Quiet)
         {
             if (allDone)
@@ -299,7 +385,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             else if (rateLimitHit)
                 AnsiConsole.MarkupLine($"[yellow]  → {processed:N0} items synced in {FormatTime(elapsed)} (rate limited)[/]");
             else
-                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (batch complete, more pages available)[/]");
+                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (batch at page {page - 1}, more available)[/]");
         }
 
         return (index, meta, processed, allDone);
@@ -310,17 +396,30 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         CacheService cache,
         CacheIndex index,
         SyncMeta meta,
-        SyncGitHubSettings settings)
+        SyncGitHubSettings settings,
+        bool isFullSync)
     {
         if (!settings.Quiet)
             AnsiConsole.MarkupLine("\n[bold]Layer 2: Engagement data[/]");
 
+        // Check if engagement sync is already complete for this full sync
+        if (isFullSync && meta.FullSync?.EngagementComplete == true)
+        {
+            if (!settings.Quiet)
+                AnsiConsole.MarkupLine("[dim]  Engagement already complete for this full sync[/]");
+            return (index, meta, 0, false);
+        }
+
         var now = DateTime.UtcNow;
+        var fullSyncStartedAt = meta.FullSync?.StartedAt ?? now;
+        var lastProcessedNumber = (isFullSync && meta.FullSync != null) ? meta.FullSync.EngagementLastNumber : 0;
+        
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
         var startTime = DateTime.UtcNow;
         var itemTimes = new Queue<double>(); // Rolling average for ETA
         var rateLimitHit = false;
+        var lastNumber = lastProcessedNumber;
 
         // Process skip list retries first
         var toRetry = cache.GetItemsToRetry(meta, now);
@@ -335,13 +434,32 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         }
 
         // Find items needing engagement sync
-        var needsSync = index.Items
-            .Where(i => 
-                !meta.Failures.ContainsKey(i.Number.ToString()) && // Not on skip list
-                (settings.FullRefresh || i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt)) // Needs sync (or full refresh)
-            .OrderByDescending(i => i.UpdatedAt) // Most recently updated first
-            .Take(settings.EngagementCount)
-            .ToList();
+        IEnumerable<IndexItem> needsSync;
+        
+        if (isFullSync)
+        {
+            // Full sync: process items that were synced before this full sync started
+            // Order by number to enable resume from lastProcessedNumber
+            needsSync = index.Items
+                .Where(i => 
+                    !meta.Failures.ContainsKey(i.Number.ToString()) &&
+                    i.Number > lastProcessedNumber && // Resume from last processed
+                    (i.EngagementSyncedAt == null || i.EngagementSyncedAt < fullSyncStartedAt))
+                .OrderBy(i => i.Number) // Process in order for predictable resume
+                .Take(settings.EngagementCount);
+        }
+        else
+        {
+            // Incremental: process items updated since last engagement sync
+            needsSync = index.Items
+                .Where(i => 
+                    !meta.Failures.ContainsKey(i.Number.ToString()) &&
+                    (i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt))
+                .OrderByDescending(i => i.UpdatedAt) // Most recently updated first
+                .Take(settings.EngagementCount);
+        }
+
+        var needsSyncList = needsSync.ToList();
 
         // Add retry items to front of queue
         var retryItems = toRetry
@@ -349,9 +467,12 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             .Select(n => itemsDict[n])
             .ToList();
         
-        var toProcess = retryItems.Concat(needsSync).Take(settings.EngagementCount).ToList();
+        var toProcess = retryItems.Concat(needsSyncList).Take(settings.EngagementCount).ToList();
         var totalToProcess = toProcess.Count;
 
+        if (isFullSync && lastProcessedNumber > 0 && !settings.Quiet)
+            AnsiConsole.MarkupLine($"  [dim]Resuming from item #{lastProcessedNumber}[/]");
+        
         if (!settings.Quiet && toRetry.Count > 0)
             AnsiConsole.MarkupLine($"  [dim]Retrying {Math.Min(toRetry.Count, settings.EngagementCount)} items from skip list[/]");
 
@@ -394,6 +515,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         // Remove from skip list if it was there
                         meta = cache.RemoveFailure(meta, indexItem.Number);
                         processed++;
+                        lastNumber = indexItem.Number; // Track for resume
 
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [dim]#{indexItem.Number}: {engagement.Comments.Count} comments, {engagement.Reactions.Count} reactions[/]");
@@ -408,12 +530,14 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     catch (NotFoundException)
                     {
                         meta = cache.AddFailure(meta, indexItem.Number, "engagement", "not_found", 404, "Item not found");
+                        lastNumber = indexItem.Number; // Still track for resume
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [yellow]#{indexItem.Number}: Not found, added to skip list[/]");
                     }
                     catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.InternalServerError)
                     {
                         meta = cache.AddFailure(meta, indexItem.Number, "engagement", "server_error", 500, ex.Message);
+                        lastNumber = indexItem.Number; // Still track for resume
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [yellow]#{indexItem.Number}: Server error, added to skip list[/]");
                     }
@@ -421,6 +545,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             });
 
         var elapsed = DateTime.UtcNow - startTime;
+        
+        // Check if all engagement is done (no more items to process)
+        var allDone = needsSyncList.Count == 0 || (processed == needsSyncList.Count && !rateLimitHit);
         
         index = index with 
         { 
@@ -434,7 +561,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                 Engagement = new EngagementLayerStatus(
                     "success",
                     DateTime.UtcNow,
-                    null,
+                    lastNumber,
                     processed,
                     settings.EngagementCount,
                     index.Items.Count(i => i.EngagementSyncedAt != null)
@@ -442,9 +569,25 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             }
         };
 
+        // Update full sync state if in full sync mode
+        if (isFullSync && meta.FullSync != null)
+        {
+            meta = meta with
+            {
+                FullSync = meta.FullSync with
+                {
+                    EngagementLastNumber = lastNumber,
+                    EngagementComplete = allDone
+                }
+            };
+        }
+
         if (!settings.Quiet)
         {
-            AnsiConsole.MarkupLine($"[green]  ✓ {processed} items with engagement synced in {FormatTime(elapsed)}[/]");
+            if (allDone)
+                AnsiConsole.MarkupLine($"[green]  ✓ {processed} items with engagement synced in {FormatTime(elapsed)} (complete)[/]");
+            else
+                AnsiConsole.MarkupLine($"[blue]  → {processed} items synced in {FormatTime(elapsed)} (last: #{lastNumber})[/]");
             if (meta.Failures.Count > 0)
                 AnsiConsole.MarkupLine($"[yellow]  ⚠ {meta.Failures.Count} items on skip list[/]");
             if (rateLimitHit)

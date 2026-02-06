@@ -19,7 +19,19 @@ public record SyncMeta(
     string? LastRunStatus,
     SyncLayers Layers,
     RateLimitInfo? RateLimit,
-    Dictionary<string, FailureEntry> Failures
+    Dictionary<string, FailureEntry> Failures,
+    FullSyncState? FullSync = null  // Track full sync progress
+);
+
+/// <summary>
+/// Tracks progress of a full sync operation for resume capability
+/// </summary>
+public record FullSyncState(
+    DateTime StartedAt,
+    bool ItemsComplete,
+    bool EngagementComplete,
+    int ItemsLastPage,           // Last completed page for items sync
+    int EngagementLastNumber     // Last processed issue number for engagement
 );
 
 public record SyncLayers(
