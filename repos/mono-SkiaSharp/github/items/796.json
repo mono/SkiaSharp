@@ -1,0 +1,23 @@
+{
+  "number": 796,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SKBitmap from byte array",
+  "body": "I\u0027m currently tryin to load a image from database into a SKBitmap. But so far, my only result looks like an old tv without a proper signal... The reason why I want to use SkiaSharp for this is, because I want to add gestures to it and the \u0022native\u0022 Xamarin.Forms gestures are not enough (for example because of Tap event without the position). \r\n\r\nOne problem is, that I might not know the format of the image - thats why I do not provide these parameters to \u0060new SKImageInfo(imageData.Width, imageData.Height)\u0060.\r\n\r\nMy code so far looks like this: \r\n\u0060\u0060\u0060\r\nusing System;\r\nusing System.IO;\r\nusing System.Runtime.InteropServices;\r\nusing MvvmCross;\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Forms;\r\nusing MyApp.Core.Repositories;\r\nusing Xamarin.Forms;\r\n\r\nnamespace MyApp.Core.Controls\r\n{\r\n    public class ZoomableDatabaseImage : SKCanvasView\r\n    {\r\n        public static readonly BindableProperty DatabaseSourceProperty =\r\n            BindableProperty.Create(nameof(DatabaseSource), typeof(string), typeof(ZoomableDatabaseImage),\r\n                default(string), propertyChanged: DatabaseSourceChanged);\r\n\r\n        public string DatabaseSource\r\n        {\r\n            get =\u003E (string)GetValue(DatabaseSourceProperty);\r\n            set =\u003E SetValue(DatabaseSourceProperty, value);\r\n        }\r\n\r\n        private SKBitmap bitmap;\r\n\r\n        private static void DatabaseSourceChanged(BindableObject bindable, object oldValue, object newValue)\r\n        {\r\n            if (bindable is ZoomableDatabaseImage image)\r\n            {\r\n                var targetSource = newValue?.ToString();\r\n                var imageData = Mvx.IoCProvider.Resolve\u003CIImageDatabaseRepository\u003E().GetFirstMatchingEntry(e =\u003E e.Name == targetSource);\r\n               \r\n                var handle = GCHandle.Alloc(imageData.Data, GCHandleType.Pinned);\r\n                //var codec = SKCodec.Create(SKData.Create(handle.AddrOfPinnedObject(), imageData.Data.Length));\r\n                var info = new SKImageInfo(imageData.Width, imageData.Height);\r\n                \r\n                var bitmap = new SKBitmap();\r\n                bitmap.InstallPixels(info, handle.AddrOfPinnedObject(), info.RowBytes, null, delegate { handle.Free(); }, null);\r\n\r\n                image.bitmap = bitmap;\r\n\r\n                image.InvalidateSurface();\r\n            }\r\n        }\r\n        \r\n        protected override void OnPaintSurface(SKPaintSurfaceEventArgs args)\r\n        {\r\n            if (bitmap != null)\r\n            {\r\n                args.Surface.Canvas.Clear();\r\n                args.Surface.Canvas.DrawBitmap(bitmap, 0, 0);\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "SebastianKruseWago",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-02-22T11:59:34",
+  "updatedAt": "2022-08-19T12:01:48",
+  "closedAt": "2020-04-25T12:50:45",
+  "commentCount": 3,
+  "reactionCount": 0
+}

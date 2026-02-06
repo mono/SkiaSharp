@@ -1,0 +1,23 @@
+{
+  "number": 826,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE][QUESTION] Support for macOS Multitouch Events on Xamarin.Forms",
+  "body": "**Is your feature request related to a problem? Please describe.**\r\nIn #309 touch events where added to SkiaSharp. In the conversation of the PR it says that multitouch is fully supported that it\u0027s correct for iOS and Android, butt not macOS as it seems. I tried a pinch and two-finger pan gesture with the trackpad but \u0060OnTouch(SKTouchEventArgs e)\u0060 doesn\u0027t get called.\r\n\r\n**Describe the solution you\u0027d like**\r\na great solution would be that trackpad gestures are handled the same way as touch gestures on a mobile platform (iOS / Android). In the file\r\n[source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/SKTouchHandler.cs](https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Mac/SKTouchHandler.cs) i saw that \u0060SKTouchHandler\u0060 derives from \u0060NSGestureRecognizer\u0060 so maybe we could add \u0060override void Magnify(NSEvent magnifyEvent)\u0060 to support the pinch gestures. For two-finger panning i think maybe \u0060override void ScrollWheel(NSEvent theEvent)\u0060 is a good starting point.\r\n\r\n**Describe alternatives you\u0027ve considered**\r\nAn alternative for pinch gestures would be to use a \u0060Xamarin.Forms\u0060 \u0060PinchGestureRecognizer\u0060 but my current application also supports Android and as mentioned in #309 Xamarin.Forms GestureRecognizers won\u0027t work in that case. So I would have to do are Runtime checks like:\r\n\u0060\u0060\u0060\r\nif(Xamarin.Forms.Device.RuntimePlatform == Xamarin.Forms.Device.macOS)\r\n{\r\n     var pinch = new PinchGestureRecognizer();\r\n     pinch.PinchUpdated \u002B= OnPinch;\r\n     this.GestureRecognizers.Add(pinch);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nIs this something that\u0027s planned for future releases?\r\nthanks",
+  "author": {
+    "login": "nor0x",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2019-04-08T14:29:50",
+  "updatedAt": "2022-09-11T18:31:02",
+  "commentCount": 1,
+  "reactionCount": 0
+}

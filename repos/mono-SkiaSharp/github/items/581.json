@@ -1,0 +1,19 @@
+{
+  "number": 581,
+  "type": "issue",
+  "state": "closed",
+  "title": "OnTouch Location error in Android ",
+  "body": "### Description\r\n\r\nif IgnorePixelScaling = true, the e.Location on Android will return a error numerical value.\r\nthe X and Y will increase at the same time if finger move down to the bottom of the screen.\r\nbut move the finger to the right of the screen, the X and Y will not increase.\r\n\r\n### Code\r\n\r\n\u0060IgnorePixelScaling = true;\u0060 in Constructor and \r\n\u0060       protected override void OnTouch(SKTouchEventArgs e)\r\n        {\r\n            base.OnTouch(e);\r\n            e.Handled = true;\r\n            Debug.WriteLine(e.Location);\r\n        }\u0060\r\n\r\n### Actual Behavior\r\n\r\nX increase in finger move to the right of the screen and Y increase in finger move to bottom of the screen.\r\nif IgnorePixelScaling = false the behavior is right.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.2\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Android: 8.1\r\n- Target Devices:\r\n  -   Android 6.0 simulator and android 7.1 real machine\r\n\r\n",
+  "author": {
+    "login": "j4587698",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.60.3",
+  "createdAt": "2018-07-18T13:34:22",
+  "updatedAt": "2022-08-19T15:02:02",
+  "closedAt": "2018-07-24T17:38:25",
+  "commentCount": 3,
+  "reactionCount": 0
+}

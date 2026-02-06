@@ -1,0 +1,24 @@
+{
+  "number": 618,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Android] SKBitmap.Decode crash",
+  "body": "### Description\r\n\r\nThe Decode() line simply crashes. And only on Android. The app terminates and there will be nothing in Visual Studio debug. No try-catch catches it, either. But we have a LogCat, see below.\r\n\r\n### Code\r\n\r\n    var source = (FileImageSource)ImageSource.FromFile((Device.RuntimePlatform == Device.UWP) ? \u0022Resources/trans_square.png\u0022 : \u0022trans_square.png\u0022);\r\n    var bitmap = SKBitmap.Decode(source.File);\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n\r\n### Error\r\n\r\nat \u003Cunknown\u003E \u003C0xffffffff\u003E  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_codec_new_from_stream (intptr) \u003C0x00037\u003E  at SkiaSharp.SKCodec.Create (SkiaSharp.SKStream) [0x00014] in \u003C0665b4d05b9e46c8a33bb731d6f5db83\u003E:0  at SkiaSharp.SKBitmap.Decode (SkiaSharp.SKStream) [0x0000f] in \u003C0665b4d05b9e46c8a33bb731d6f5db83\u003E:0  at SkiaSharp.SKBitmap.Decode (string) [0x00016] in \u003C0665b4d05b9e46c8a33bb731d6f5db83\u003E:0  ",
+  "author": {
+    "login": "deakjahn",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-08-17T19:04:47",
+  "updatedAt": "2022-08-19T15:01:46",
+  "closedAt": "2018-11-23T18:37:38",
+  "commentCount": 6,
+  "reactionCount": 0
+}

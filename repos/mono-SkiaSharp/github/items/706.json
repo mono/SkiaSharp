@@ -1,0 +1,32 @@
+{
+  "number": 706,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKGLView invalid memory exception when calling InvalidateSurface [Xamarin Forms UWP]",
+  "body": "### Description\r\n\r\nConnect SKGLView to the PaintSurface event. When a Xamarin forms page is loading and InvalidateSurface is called before the layout rendering passes are done (which also call the PaintSurface event), there is a memory exception encountered deep within the SKGLView. \r\n\r\n### Code\r\n\r\n\r\n\r\n### Expected Behavior\r\n\r\nShould not be an unhandled memory exception from C\u002B\u002B libraries underneath SkiaSharp.\r\n\r\n### Actual Behavior\r\n\r\nWhen calling SKGLView.InvalidateSurface while the view is still being loaded/rendered, an unhandled memory exception occurs outside of managed code. \r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- Last known good version:  \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  \u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Linux:  \u003C!-- The version and distro of linux that you are building for, e.g. Ubuntu 16.04 --\u003E\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.10 --\u003E\r\n  - Tizen:  \u003C!-- the version of the Tizen SDK you are compiling against, e.g. 4.0 --\u003E \r\n  - tvOS:  \u003C!-- the version of the tvOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E \r\n  - watchOS:  \u003C!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:\r\n  -   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n\r\n### Screenshots\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n### Reproduction Link\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\n\n\u003E VS bug [#735694](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/735694)",
+  "author": {
+    "login": "comfr3ak",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-11-26T14:17:42",
+  "updatedAt": "2022-08-19T12:02:28",
+  "closedAt": "2018-12-22T05:02:24",
+  "commentCount": 20,
+  "reactionCount": 0
+}

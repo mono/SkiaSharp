@@ -1,0 +1,18 @@
+{
+  "number": 905,
+  "type": "issue",
+  "state": "closed",
+  "title": "UWP store version has crashes from libSkiaSharp.dll",
+  "body": "At one point of time, I could see the following code causing app to exit despite it is in a catch block:\r\n\r\n\u0060SKBitmap skb = SKBitmap.Decode(codec, skiInfo);\u0060\r\n\r\nIt seems updating all NuGet packages fixed it for the debug version. The published store version causes app crash on every one of the few computers used to test it:\r\nThe stack trace is something like the following:\r\n\r\n\u0060\u0060\u0060\r\nFrame\tImage\tFunction\tOffset\r\n       Frame\tImage\tFunction\tOffset\r\n0\tucrtbase.dll\tabort\t0x000000000000004E\t\r\n1\tVCRUNTIME140_APP.dll\t_purecall\t0x000000000000002E\t\r\n2\tlibSkiaSharp.dll\tsk_rrect_transform\t0x0000000000233C57\t\r\n3\tlibSkiaSharp.dll\tsk_rrect_transform\t0x0000000000233D72\t\r\n4\tlibSkiaSharp.dll\tsk_rrect_transform\t0x0000000000043770\t\r\n5\tlibSkiaSharp.dll\tsk_codec_get_pixels\t0x0000000000000073\t\r\n6\tMY_APP.dll\tnull\t0x0000000001C88D19\t\r\n7\tnull\tnull\t0x0000000000000000\t\r\n8\tlibSkiaSharp.dll\tsk_rrect_transform\t0x0000000000031416\t\r\n9\tlibSkiaSharp.dll\tsk_rrect_transform\t0x000000000003168C\t\r\n\u0060\u0060\u0060\r\nThe app has only one place using SkiaSharp.  The code is something like the following (the enclosing try-catch block is omitted):\r\n\u0060\u0060\u0060\r\nusing (MemoryStream ms = new MemoryStream(abSnapshot))\r\n{\r\n    SKStream skStream = new SKManagedStream(ms);\r\n    SKCodec codec = SKCodec.Create(skStream);\r\n    SKImageInfo skInfo = codec.Info;\r\n    int iWidthOriginal = skInfo.Width;\r\n    int iHeightOriginal = skInfo.Height;\r\n    double dScale = Math.Min((float)iWidthNew / iWidthOriginal, 1);\r\n    uint uiWidthNew = (uint)(iWidthOriginal * dScale);\r\n    uint uiHeightNew = (uint)(iHeightOriginal * dScale);\r\n    SKSizeI ssi = codec.GetScaledDimensions((float)dScale);\r\n    SKImageInfo skiInfo = new SKImageInfo(ssi.Width, ssi.Height);\r\n\r\n    SKBitmap skb = SKBitmap.Decode(codec, skiInfo);\r\n    StorageFile sfNew = await sfSnapshots.CreateFileAsync(sID \u002B \u0022-last.jpg\u0022, CreationCollisionOption.ReplaceExisting);\r\n    if (sfNew == null)\r\n    {\r\n        //...\r\n    }\r\n    else\r\n    {\r\n        using (Stream stream = await sfNew.OpenStreamForWriteAsync())\r\n        {\r\n            using (SKImage skImage = SKImage.FromBitmap(skb))\r\n            using (SKData data = skImage.Encode(SKEncodedImageFormat.Jpeg, 80))\r\n            {\r\n                data.SaveTo(stream);\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\nCould anyone offer a tip on how to prevent app crash from this code?\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "zipswich",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-07-03T23:08:22",
+  "updatedAt": "2022-08-19T09:02:49",
+  "closedAt": "2020-06-10T02:21:02",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 506,
+  "type": "issue",
+  "state": "closed",
+  "title": "Drawing of wrong circles  on some android devices",
+  "body": "### Description\r\nOn some android devices the circles are drawn on the screen visibly lengthened. To obtain a visibly acceptable circle you must draw an oval with a ratio of 10 to 8, then with rx=100 pixels and ry=80 pixels.\r\n\r\n### Code\r\n           var info =  e.Info;\r\n           var surface = e.Surface;\r\n           var canvas  = surface.Canvas;\r\n\r\n            // CLEARING THE SURFACE\r\n            canvas.Clear(SKColors.White);\r\n\r\n\r\n            // DRAWING SHAPES\r\n\r\n            // create the paint for the outline of the circle\r\n            SKPaint paint = new SKPaint\r\n            {\r\n                Style = SKPaintStyle.Stroke,\r\n                Color = SKColors.Red,\r\n                StrokeWidth = 25\r\n            };\r\n\r\n            // draw the outline of the circle\r\n            canvas.DrawCircle(info.Width / 2, info.Height / 2, 100, paint);\r\n\r\n### Expected Behavior\r\nI expect a circle with the same height and width.\r\n\r\n### Actual Behavior\r\nOn some Android devices the circle shown on the display is extended vertically.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.0\r\n- IDE:  Visual Studio Community 2017 (15.6.7)\r\n- Platform Target Frameworks: \r\n  - Android: 6.0\r\n \r\n### Screenshoot\r\n![img_4185b](https://user-images.githubusercontent.com/36405345/39711381-e40192cc-521f-11e8-91cc-8bf56f1509cd.jpeg)\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "kappesLab",
+    "type": "Organization"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-05-07T15:57:23",
+  "updatedAt": "2022-08-19T15:02:38",
+  "closedAt": "2018-05-11T14:38:25",
+  "commentCount": 7,
+  "reactionCount": 0
+}

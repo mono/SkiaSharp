@@ -1,0 +1,18 @@
+{
+  "number": 974,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] skia does not render svg correctly",
+  "body": "**Description**\r\n\r\nskia does not render [svg](https://github.com/hulluP/SkiaSVGIssue/blob/master/debugSVG/demo.svg) correctly. \r\n\r\n**Code**\r\n\r\n            SKCanvas canvas = args.Surface.Canvas;\r\n            canvas.Clear();\r\n            using (Stream stream = GetType().Assembly.GetManifestResourceStream(\u0022debugSVG.demo.svg\u0022))\r\n            {\r\n                SKSvg svg = new SKSvg();\r\n                svg.Load(stream);\r\n                canvas.DrawPicture(svg.Picture);\r\n            }\r\n**Expected Behavior**\r\n\r\nexpected would be that following [https://github.com/hulluP/SkiaSVGIssue/blob/master/debugSVG/demo.svg](https://github.com/hulluP/SkiaSVGIssue/blob/master/debugSVG/demo.svg)\r\n\r\n**Actual Behavior**\r\n\r\nwhen the image loads it is missing the last path \r\n![Screenshot 2019-10-01 at 10 23 06](https://user-images.githubusercontent.com/46395952/65950560-962abf80-e43e-11e9-9af8-954df23f32ec.png)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68\r\n- Last known good version: --\r\n- IDE:  Visual Studio for Mac \r\n- Platform Target Frameworks: \r\n  - Android: 28\r\n  - iOS:  13\r\n \r\n**Screenshots**\r\n\r\nsee above\r\n\r\n**Reproduction Link**\r\n\r\ngit: https://github.com/hulluP/SkiaSVGIssue\r\n\r\n",
+  "author": {
+    "login": "hulluP",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-10-01T09:32:40",
+  "updatedAt": "2022-08-19T09:02:20",
+  "closedAt": "2019-11-05T21:56:34",
+  "commentCount": 10,
+  "reactionCount": 0
+}

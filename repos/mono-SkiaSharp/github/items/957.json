@@ -1,0 +1,19 @@
+{
+  "number": 957,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Calling MeasureText with an empty string generates an exception",
+  "body": "**Description**\r\n\r\nCalling MeasureText with an empty string generates an exception.\r\n\r\n**Code**\r\n\r\n                    var textRectangle = new SKRect();\r\n                    _textPaint.MeasureText(\u0022\u0022, ref textRectangle);\r\n\r\n**Actual Behavior**\r\n\r\nSystem.ArgumentNullException\r\n  HResult=0x80004003\r\n  Message=Value cannot be null.\r\nParameter name: buffer\r\n  Source=SkiaSharp\r\n  StackTrace:\r\n   at SkiaSharp.SKPaint.MeasureText(IntPtr buffer, IntPtr length, SKRect\u0026 bounds)\r\n   at SkiaSharp.SKPaint.MeasureText(Byte[] text, SKRect\u0026 bounds)\r\n   at SkiaSharp.SKPaint.MeasureText(String text, SKRect\u0026 bounds)\r\n   at AtillaX.UI.MainPage.canvasView_PaintSurface(Object sender, SKPaintSurfaceEventArgs skPaintSurfaceEventArgs) in C:\\Users\\alsasus\\source\\repos\\AtillaX\\AtillaX.UI\\AtillaX.UI\\MainPage.xaml.cs:line 81\r\n   at SkiaSharp.Views.Forms.SKCanvasView.OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n   at SkiaSharp.Views.Forms.SKCanvasView.SkiaSharp.Views.Forms.ISKCanvasViewController.OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n   at SkiaSharp.Views.Forms.SKCanvasViewRendererBase\u00602.OnPaintSurface(Object sender, SKPaintSurfaceEventArgs e)\r\n   at SkiaSharp.Views.UWP.SKXamlCanvas.OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n   at SkiaSharp.Views.UWP.SKXamlCanvas.DoInvalidate()\r\n   at SkiaSharp.Views.UWP.SKXamlCanvas.Invalidate()\r\n   at SkiaSharp.Views.UWP.SKXamlCanvas.OnSizeChanged(Object sender, SizeChangedEventArgs e)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp.View.Forms 1.68\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E \r\n",
+  "author": {
+    "login": "alexstrickland",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-09-15T14:43:51",
+  "updatedAt": "2022-08-19T09:02:29",
+  "closedAt": "2019-12-26T13:15:32",
+  "commentCount": 1,
+  "reactionCount": 0
+}

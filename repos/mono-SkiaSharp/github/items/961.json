@@ -1,0 +1,19 @@
+{
+  "number": 961,
+  "type": "issue",
+  "state": "closed",
+  "title": "ARM64_32 architecture for WatchOS missing in NuGet package",
+  "body": "**Description**\r\n\r\nI started to use SkiaSharp in a Xamarin WatchOS project for drawing charts in a Watch app.\r\nSince the Apple Watch Series 4 was introduced, it became mandatary to compile Watch apps against the ARM64_32 architecture.\r\nBut when I try to compile my app, that now includes the SkiaSharp package, against that architecture the linker gives an error.\r\n\r\nTo prevent this, the NuGet package for SkiaSharp would need to be extended with a version of the SkiaSharp library compiled against the ARM64_32 architecture for WatchOS.\r\n\r\n**Expected Behavior**\r\n\r\nIt would be great if I could use SkiaSharp in a WatchOS app that is compiled against the ARM64_32 architecture.\r\n\r\n**Actual Behavior**\r\n\r\nWhen compiling the Watch app, the linker currently gives the following error:\r\n\u0060ARM64_32 architecture for WatchOS missing in NuGet package\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:  Visual Studio for Mac 8.3 with Xcode 11\r\n- Platform Target Frameworks:\r\n  - iOS: 13\r\n  - watchOS: 6.0\r\n- Target Devices:\r\n  - iPhone X running iOS 13\r\n  - Apple Watch Series 4 running WatchOS 6\r\n\r\n**Steps to reproduce**\r\n\r\n- Start Visual Studio 8.3 for Mac\r\n- Create a new iOS project\r\n- Add a new WatchOS project to the solution\r\n- Open the project properties of the WatchOSExtension project\r\n- Select configuration Debug and platform iPhone\r\n- Change the supported architecture to ARM64_32\r\n  (if you don\u0027t, the app can\u0027t be deployed to a Series 4 or higher Apple Watch)\r\n- Click OK\r\n- Add the SkiaSharp NuGet package to the WatchOSExtension project\r\n- E.g. in the InterfaceController.CS file add the following lines of code to the Awake method:\r\n\r\n\u0060            SKBitmap oBitmap = new SKBitmap(400, 300, false);\u0060\r\n\u0060            SKCanvas oCanvas = new SKCanvas(oBitmap);\u0060\r\n\u0060            oCanvas.Clear(SKColors.Blue);\u0060\r\n\u0060            SKPaint oPaint = new SKPaint();\u0060\r\n\u0060            oPaint.Color = SKColors.Yellow;\u0060\r\n\u0060            oPaint.StrokeWidth = 5;\u0060\r\n\u0060            oCanvas.DrawCircle(200, 150, 100, oPaint);\u0060\r\n\r\n- Try to compile the solution\r\n- You will see the linker error in the error list pane",
+  "author": {
+    "login": "OABsoftware",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-09-24T13:04:11",
+  "updatedAt": "2022-08-19T09:02:25",
+  "closedAt": "2019-09-27T14:51:29",
+  "commentCount": 6,
+  "reactionCount": 0
+}

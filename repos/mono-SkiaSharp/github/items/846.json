@@ -1,0 +1,18 @@
+{
+  "number": 846,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] System.DllNotFoundException: libSkiaSharp assembly missing issue in ASP.NET Core Blazor client side application",
+  "body": "**Description**\r\n\r\nWe are using SkiaSharp to create image in ASP.NET Core Blazor application. In Blazor server side application, SkiaSharp works fine without any issue. But, when we use SkiaSharp in Blazor client side application we are facing libSkiaSharp assembly not found issue.  \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060C#\r\n@page \u0022/\u0022\r\n@using System.IO;\r\n@using SkiaSharp;\r\n\r\n\u003Ch1\u003EHello, world!\u003C/h1\u003E\r\n\r\nWelcome to your new app.\r\n\u003Cbr /\u003E\r\n\u003Cbutton class=\u0022btn btn-primary\u0022 onclick=\u0022@Create\u0022\u003ECreate\u003C/button\u003E\r\n\r\n\u003Cp\u003E@exception\u003C/p\u003E\r\n\r\n@functions{\r\n    string exception = string.Empty;\r\n    private void Create()\r\n    {\r\n        try\r\n        {\r\n            using (SKBitmap bitmap = new SKBitmap(500, 500, SKImageInfo.PlatformColorType, SKAlphaType.Premul))\r\n            {\r\n                using (SKSurface sKSurface = SKSurface.Create(bitmap.Info))\r\n                {\r\n                    SKCanvas sKCanvas = sKSurface.Canvas;\r\n                    SKPaint sKPaint = new SKPaint();\r\n                    sKPaint.Color = new SKColor(255, 0, 0);\r\n                    sKCanvas.DrawText(\u0022Blazor\u0022, new SKPoint(250, 250), sKPaint);\r\n                    MemoryStream stream = new MemoryStream();\r\n                    sKSurface.Snapshot().Encode(SKEncodedImageFormat.Png, 100).SaveTo(stream);\r\n                }\r\n            }\r\n        }\r\n        catch (Exception ex)\r\n        {\r\n            exception = ex.ToString();\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nSkiaSharp should work properly in Blazor client side application.\r\n\r\n**Actual Behavior**\r\n\r\nThe following exception is thrown.\r\n\r\n\u0060System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: libSkiaSharp assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null) at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_colortype_get_default_8888() at SkiaSharp.SKImageInfo..cctor () \u003C0x20f1170 \u002B 0x00000\u003E in \u003Cf0c24c4dec0742d096b8ec67614c0af5\u003E:0 --- End of inner exception stack trace --- at Blazor_SkiaSharp.Pages.Index.Create () [0x00002] in C:\\Users\\labuser\\source\\repos\\Blazor_SkiaSharp\\Blazor_SkiaSharp\\Pages\\Index.razor:19\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:  Visual Studio 2019\r\n- Platform: ASP.NET Core Blazor (client-side) \r\n- Platform Target Frameworks: .NET Core SDK 3.0.100-preview4-011223\r\n\r\n**Reproduction Link**\r\n\r\n[Blazor_SkiaSharp.zip](https://github.com/mono/SkiaSharp/files/3202266/Blazor_SkiaSharp.zip)\r\n\r\n",
+  "author": {
+    "login": "prasanthelvr",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-05-21T11:36:00",
+  "updatedAt": "2022-08-19T12:01:25",
+  "closedAt": "2019-06-24T02:23:30",
+  "commentCount": 6,
+  "reactionCount": 0
+}

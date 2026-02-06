@@ -1,0 +1,23 @@
+{
+  "number": 833,
+  "type": "issue",
+  "state": "closed",
+  "title": "Compatible version of libSkiaSharp.SO with aws lambda",
+  "body": "We are using Neodynamic TheramlLabel SDK(8.0.19.401) from Nuget package in AWS Lambda application which uses SkiaSharp(1.60.0) library.\r\nNow, When we are using inbuilt function of Neodynamic SDK called \u0022ExportToPDF\u0022 that uses \u0022libSkiaSharp.dll\u0022 to run, but it is failing at \u0022ExportToPDF\u0022 method as it is not getting libSkiaSharp.dll.(Dll not Found Exception).\r\nSo then we added \u0022libSkiaSharp.SO\u0022 file(Downloaded from GitHub) to the solution externally.\r\n\r\nNow after adding thsi SO file \u0022ExportToPDf\u0022 function works but fails in some cases where font property is Bold, Italic of Font family Arial Unicode MS.\r\n\r\n(Using SO file because our application runs on below AWS lambda which is using only linux operating system)\r\nOur AWS lambda is using Amazon linux instance of below OS details:\r\nNAME=\u0022Amazon Linux AMI\u0022\r\nVERSION=\u00222017.03\u0022\r\nID=\u0022amzn\u0022\r\nID_LIKE=\u0022rhel fedora\u0022\r\nVERSION_ID=\u00222017.03\u0022\r\nPRETTY_NAME=\u0022Amazon Linux AMI 2017.03\u0022\r\nANSI_COLOR=\u00220;33\u0022\r\nCPE_NAME=\u0022cpe:/o:amazon:linux:2017.03:ga\u0022\r\nHOME_URL=\u0022http://aws.amazon.com/amazon-linux-ami/ \u0022\r\n\r\nCould you please let us know  \u0022libSkiaSharp.SO\u0022 is compatible with above aws lambda linux OS ?\r\nIf not, please let us know the workaround if any.",
+  "author": {
+    "login": "saumyaverma1002",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-04-24T12:03:31",
+  "updatedAt": "2022-08-19T12:01:34",
+  "closedAt": "2020-06-10T02:22:28",
+  "commentCount": 6,
+  "reactionCount": 0
+}

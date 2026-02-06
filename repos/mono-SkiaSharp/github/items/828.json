@@ -1,0 +1,23 @@
+{
+  "number": 828,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Why does GRGlInterface.CreateDefaultInterface(); always return null",
+  "body": "I am trying to write code that resizes an image using Skiasharp using an accelerated SKSurface.   Unfortunately I am getting a null back when I call \u0060\u0060\u0060GRGlInterface.CreateDefaultInterface();\u0060\u0060\u0060 on Windows (I have not checked in any other OS yet).  What am I doing wrong?\r\n\r\n\u0060\u0060\u0060C#\r\npublic Stream ResizeImage(Stream inputStream, int width, int height)\r\n        {\r\n            // This statement always returns null\r\n            var glInterface = GRGlInterface.CreateDefaultInterface();\r\n            var context = GRContext.Create(GRBackend.OpenGL, glInterface);\r\n\r\n            var glInfo = new GRGlFramebufferInfo(\r\n                fboId: 0,\r\n                format: SKColorType.Rgba8888.ToGlSizedFormat());\r\n            var renderTarget = new GRBackendRenderTarget(\r\n                width: width,\r\n                height: height,\r\n                sampleCount: 0,\r\n                stencilBits: 0,\r\n                glInfo: glInfo);\r\n            var surface = SKSurface.Create(\r\n                context, renderTarget, GRSurfaceOrigin.BottomLeft, SKColorType.Rgba8888);\r\n\r\n            var canvas = surface.Canvas;\r\n\r\n            // Read the original image\r\n            using (var stream = new SKManagedStream(inputStream))\r\n            using (var bitmap = SKBitmap.Decode(stream))\r\n            {\r\n                // Draw the image\r\n                using (var paint = new SKPaint\r\n                {\r\n                    FilterQuality = SKFilterQuality.Low\r\n                })\r\n                {\r\n                    canvas.DrawColor(SKColor.Parse(\u002200ff00\u0022));\r\n                    canvas.DrawBitmap(bitmap, SKRect.Create(width, height), paint);\r\n                }\r\n\r\n                // Render to a png\r\n                SKImage image = surface.Snapshot().ToRasterImage();\r\n                SKData encoded = image.Encode(SKEncodedImageFormat.Png, 80);\r\n                Stream outputStream = encoded.AsStream();\r\n                return outputStream;\r\n            }\r\n        }\r\n\u0060\u0060\u0060",
+  "author": {
+    "login": "junioraepi",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-04-15T15:06:26",
+  "updatedAt": "2022-08-19T12:01:37",
+  "closedAt": "2019-06-24T02:24:06",
+  "commentCount": 3,
+  "reactionCount": 0
+}

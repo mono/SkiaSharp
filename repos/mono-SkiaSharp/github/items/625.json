@@ -1,0 +1,18 @@
+{
+  "number": 625,
+  "type": "issue",
+  "state": "closed",
+  "title": "Bitmap Negative Scale",
+  "body": "### Description\r\n\r\nTrying to apply a negative scale (to flip a bitmap) the bitmap disappears.\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060\r\ncanvas.Translate( -imageWidth/ 2.0f, -imageHeight/ 2.0f );\r\ncanvas.Scale( -1, 1,0,0 );\r\ncanvas.DrawBitmap( bitmap, new SKPoint( 0.0f, 0.0f ) );\r\ncanvas.Scale( -1, 1, 0, 0 );\r\ncanvas.Translate( imageWidth/ 2.0f, imageHeight / 2.0f );\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nThe bitmap should mirrored around the y axis.\r\n\r\n### Actual Behavior\r\n\r\nThe bitmap does not appear. I\u0027ve done some translations to check and I don\u0027t think it\u0027s there.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.1\r\n- Last known good version:  I don\u0027t think there is\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - Android: 8.1\r\n- Target Devices:\r\n  -   Pixel C\r\n\r\n### Screenshots\r\n\r\nA blank screen.\r\n",
+  "author": {
+    "login": "davidmn",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-08-28T14:40:20",
+  "updatedAt": "2022-08-19T15:01:41",
+  "closedAt": "2018-09-09T23:52:19",
+  "commentCount": 1,
+  "reactionCount": 0
+}

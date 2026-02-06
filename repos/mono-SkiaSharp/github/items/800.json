@@ -1,0 +1,23 @@
+{
+  "number": 800,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Filling a polygon with hatch style",
+  "body": "I\u0027m trying to fill a polygon with fill hatch style and border, but it looks like drawn paths doesn\u0027t fit. What am I doing wrong? \uD83D\uDE13 \r\n\r\nThanks!\r\n\r\n**Code:**\r\n\r\n\u0060\u0060\u0060c#\r\nSKBitmap skBitmap = new SKBitmap(pictureBox.Width, pictureBox.Height);\r\n\r\nfloat xCenter = pictureBox.Width / 2;\r\nfloat yCenter = pictureBox.Height / 2;\r\nfloat side = 250.0f;\r\n\r\nvar path = new SKPath();\r\npath.MoveTo(0, side / 2);\r\npath.LineTo(side / 2, 0);\r\npath.LineTo(side, side / 2);\r\npath.LineTo(side / 2, side);\r\npath.Close();\r\n\r\nfloat scale = 16.0f;\r\nvar scaleMatrix = SKMatrix.MakeScale(scale, scale);\r\n\r\nvar fillPaint = new SKPaint\r\n{\r\n       Color = SKColors.Blue,\r\n       StrokeWidth = 0.5f,\r\n       PathEffect = SKPathEffect.Create2DLine(2.0f, scaleMatrix)\r\n};\r\n\r\nvar paint = new SKPaint\r\n{\r\n        Color = SKColors.Red,\r\n        Style = SKPaintStyle.Stroke,\r\n        StrokeWidth = 2.0f\r\n};\r\n\r\nusing (var canvas = new SKCanvas(skBitmap))\r\n{\r\n         canvas.Translate(xCenter - (side / 2), yCenter - (side / 2));\r\n         canvas.DrawPath(path, fillPaint);\r\n         canvas.DrawPath(path, paint);\r\n}\r\n\r\nfillPaint.Dispose();\r\npaint.Dispose();\r\n\r\npictureBox.Image = skBitmap.ToBitmap();\r\n\u0060\u0060\u0060\r\n\r\n**Result**\r\n![result](https://user-images.githubusercontent.com/46196728/53497726-1a7e2400-3aa5-11e9-9eff-9e7c06d7d7c5.png)\r\n\r\n",
+  "author": {
+    "login": "Jtfs",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-02-27T14:40:22",
+  "updatedAt": "2022-08-19T12:01:47",
+  "closedAt": "2019-06-05T09:41:15",
+  "commentCount": 1,
+  "reactionCount": 1
+}

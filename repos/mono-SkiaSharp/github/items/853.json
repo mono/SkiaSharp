@@ -1,0 +1,22 @@
+{
+  "number": 853,
+  "type": "issue",
+  "state": "open",
+  "title": "SKTouchAction.Moved is too sensitive on the actual device vs using a mouse with simulator.",
+  "body": "Not sure if this is a bug or the desired behavior of the Touch events on the Canvas but here is what is happening. If it is the desired behavior, I could use a workaround. \r\n\r\nI have a SKCanvas View. In the Touch event I am doing a couple of things to determine if the user is resizing, or panning, etc. I am relying on the SKTouchAction.Moved to help with this. It works perfectly for me whenever I use a mouse, (i.e. the SKTouchAction.Moved only matches if I click and hold and move the mouse), however if I deploy to my IOS device (IOS Xs Max) everytime I touch the screen and the touch event fires, the SKTouchAction.Moved is matched which is not what I would expect unless I keep my finger down. Even if I tap extremely fast it still matches that action type.  Is there anyway to throttle the sensitivity of the Moved action type? \r\n\r\nJust further info on what I am trying to achieve:\r\nI created a custom SKCanvas by inheriting from it and then adding Pinch, Pan and Tap Gesture Recognizers and I handle all of the panning and zooming internal to this component. Then, \r\nin the normal Touch event handler I need to know when certain regions of the canvas have been touched, which I have working nicely and I perform my desired actions when the correct location is touched. However I need to make sure I don\u0027t do this if the user is double tapping, panning or zooming. To achieve this in the SKCanvas.Touch event, I match on the Pressed actionType first and then start a timer. If another press occurs within 300 milliseconds I disregard the initial tap because this is a double tap and that works just fine. Also if the Moved actionType matches I update a flag so that when the timer fires it will not perform the action of the single tap since a resize or pan is occurring. But as stated above, any touch with my finger causes the Moved actionType to be matched just after the Pressed actionType is matched which breaks my desired functionality. This does not happen when using the mouse in the simulator. I am guessing it has something to do with the size of the area on the device being touched?\r\n\r\nThanks in advance. \r\n\r\nBilly Jacobs\r\n",
+  "author": {
+    "login": "billyjacobs2014",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-05-28T19:28:53",
+  "updatedAt": "2021-09-07T07:55:52",
+  "commentCount": 4,
+  "reactionCount": 0
+}
