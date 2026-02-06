@@ -25,5 +25,31 @@
   "deletions": 3,
   "changedFiles": 1,
   "commits": 2,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:27:29.4425347Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1488654348,
+        "author": "seclerp",
+        "body": "@dotnet-policy-service agree",
+        "createdAt": "2023-03-29T13:49:36",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:27:29.0875322Z"
+          }
+        ]
+      },
+      {
+        "id": 1588249767,
+        "author": "mattleibow",
+        "body": "Thanks for this PR. Not copying things to get a shorter array is a good thing.\r\n\r\nFor these types of things, maybe we can use \u0060ReadOnlySpan\u003CT\u003E\u0060?\r\n\r\nNot only do we get performance benefits of not having to create arrays just to pass in, but we can make use of all the index/range features of spans.\r\n\r\nAn example of where I did this would is here:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/a426c16f92c0c6324c88fc4c8746b2db83888548/binding/Binding/SKMask.cs#L137-L140\r\n\r\n",
+        "createdAt": "2023-06-12T23:36:32",
+        "reactions": []
+      }
+    ]
+  }
 }

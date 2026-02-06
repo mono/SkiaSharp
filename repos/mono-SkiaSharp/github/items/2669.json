@@ -65,5 +65,114 @@
       "state": "APPROVED",
       "submittedAt": "2024-12-02T04:41:30"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:29:41.0651745Z",
+    "reactions": [
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:29:41.0651801Z"
+      },
+      {
+        "user": "inforithmics",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:29:41.0651807Z"
+      },
+      {
+        "user": "angelofb",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:29:41.0651811Z"
+      },
+      {
+        "user": "jeremy-visionaid",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:29:41.0651814Z"
+      },
+      {
+        "user": "MichaelRumpler",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:29:41.0651817Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1805406536,
+        "author": "ScrubN",
+        "body": "I\u0027ll make some tests later.\r\n\r\nFeedback on the null-terminated LPArray/LPStr situation would be appreciated!",
+        "createdAt": "2023-11-10T09:45:57",
+        "reactions": []
+      },
+      {
+        "id": 1809639675,
+        "author": "ScrubN",
+        "body": "Since the CI didn\u0027t run, here\u0027s a screenshot of the test results from my IDE. Was a bit of a pain to get it working since its setup for azure pipelines.\r\n![image](https://github.com/mono/SkiaSharp/assets/72096833/7efa18ee-ba7f-4a83-ae2f-8c41f28f070c)\r\n",
+        "createdAt": "2023-11-14T06:55:23",
+        "reactions": []
+      },
+      {
+        "id": 2285107851,
+        "author": "ScrubN",
+        "body": "@mattleibow What steps are needed to get this PR merged into dev/reduce-arrays, then dev/reduce-arrays into main?",
+        "createdAt": "2024-08-13T00:12:18",
+        "reactions": []
+      },
+      {
+        "id": 2325477747,
+        "author": "DJGosnell",
+        "body": "This would be fantastic to include especially for rendering partial arrays like on the \u0060SKCanvas.DrawPoints\u0060 method.  Is the only reason this is stalled due to the numerous changes on the main or is there a more fundamental reason?",
+        "createdAt": "2024-09-03T02:15:41",
+        "reactions": []
+      },
+      {
+        "id": 2460898391,
+        "author": "ScrubN",
+        "body": "Thanks for the response! I\u0027ll get working on the requested changes.\r\n\r\n\u003E Could you rebase\r\n\r\nI presume this means this PR will supersede #2617?\r\n\r\n\u003E I also added a few extra comments to things that I saw maybe should not be changed in this PR.\r\n\r\nYeah, I\u0027m not sure what I was thinking with some of the changes either. It probably had something to do with the changes being authored at 4am \uD83D\uDE05",
+        "createdAt": "2024-11-06T22:14:44",
+        "reactions": []
+      },
+      {
+        "id": 2461419423,
+        "author": "ScrubN",
+        "body": "All tests currently still pass\r\n![image](https://github.com/user-attachments/assets/6265bb3e-e4d4-485f-95f5-bb2bda0d738f)",
+        "createdAt": "2024-11-07T06:21:59",
+        "reactions": []
+      },
+      {
+        "id": 2461421773,
+        "author": "ScrubN",
+        "body": "In \u0060SKShaper\u0060, I would like to redirect \u0060public Result Shape(string text, float xOffset, float yOffset, SKFont font)\u0060 to the span overload for consistency, however the string overload currently uses \u0060Buffer.AddUtf8\u0060 which only accepts \u0060string\u0060/\u0060byte[]\u0060/\u0060span\u003Cbyte\u003E\u0060. Because of this, the span overload currently uses \u0060Buffer.AddUtf16\u0060, which produces a different (but technically more correct) cluster sequence when shaped by harfbuzz.\r\n\r\nBecause this is a breaking change, I do not want to make the call in this PR, but I would like to start a discussion on whether it can be done in order to maintain output parity between the string and span overloads.",
+        "createdAt": "2024-11-07T06:23:58",
+        "reactions": []
+      },
+      {
+        "id": 2684412790,
+        "author": "xoofx",
+        "body": "Hey, I\u0027m also really interested in this PR landing to be able to use it in e.g. Avalonia.\r\n\r\nWhat is left here to review, how can we help?",
+        "createdAt": "2025-02-26T09:31:51",
+        "reactions": []
+      },
+      {
+        "id": 2689648862,
+        "author": "mattleibow",
+        "body": "/rebase",
+        "createdAt": "2025-02-28T03:46:03",
+        "reactions": []
+      },
+      {
+        "id": 2689654008,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-02-28T03:51:23",
+        "reactions": []
+      },
+      {
+        "id": 2689654079,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines will not run the associated pipelines, because the pull request was updated after the run command was issued. Review the pull request again and issue a new run command.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-02-28T03:51:29",
+        "reactions": []
+      }
+    ]
+  }
 }

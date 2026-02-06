@@ -18,5 +18,312 @@
   "createdAt": "2019-05-02T09:02:54",
   "updatedAt": "2025-02-03T00:12:32",
   "commentCount": 15,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:30:14.9388773Z",
+    "reactions": [
+      {
+        "user": "mrtabaa",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:30:14.9388839Z"
+      },
+      {
+        "user": "mrtabaa",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:30:14.9388846Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 489762109,
+        "author": "charlesroddie",
+        "body": "Does this feature exist in Skia?",
+        "createdAt": "2019-05-06T20:21:22",
+        "reactions": []
+      },
+      {
+        "id": 489913279,
+        "author": "deivydas321",
+        "body": "At the moment it doesn\u0027t exist. But it can be solved with this method.\r\n\r\n\u0060\u0060\u0060cs\r\nprivate static SKBitmap AutoOrient(SKBitmap bitmap, SKEncodedOrigin origin)\r\n        {\r\n            SKBitmap rotated;\r\n            switch (origin)\r\n            {\r\n                case SKEncodedOrigin.BottomRight:\r\n                    using (var surface = new SKCanvas(bitmap))\r\n                    {\r\n                        surface.RotateDegrees(180, bitmap.Width / 2, bitmap.Height / 2);\r\n                        surface.DrawBitmap(bitmap.Copy(), 0, 0);\r\n                    }\r\n                    return bitmap;\r\n                case SKEncodedOrigin.RightTop:\r\n                    rotated = new SKBitmap(bitmap.Height, bitmap.Width);\r\n                    using (var surface = new SKCanvas(rotated))\r\n                    {\r\n                        surface.Translate(rotated.Width, 0);\r\n                        surface.RotateDegrees(90);\r\n                        surface.DrawBitmap(bitmap, 0, 0);\r\n                    }\r\n                    return rotated;\r\n                case SKEncodedOrigin.LeftBottom:\r\n                    rotated = new SKBitmap(bitmap.Height, bitmap.Width);\r\n                    using (var surface = new SKCanvas(rotated))\r\n                    {\r\n                        surface.Translate(0, rotated.Height);\r\n                        surface.RotateDegrees(270);\r\n                        surface.DrawBitmap(bitmap, 0, 0);\r\n                    }\r\n                    return rotated;\r\n                default:\r\n                    return bitmap;\r\n            }\r\n        }\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-05-07T05:24:58",
+        "reactions": [
+          {
+            "user": "mpsuzuki",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.4534381Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.4534386Z"
+          },
+          {
+            "user": "deivydas321",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.4534388Z"
+          },
+          {
+            "user": "taublast",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.4534389Z"
+          },
+          {
+            "user": "alistair-dejonge",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.453439Z"
+          },
+          {
+            "user": "sandybreon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.4534391Z"
+          },
+          {
+            "user": "Siedlerchr",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.4534391Z"
+          },
+          {
+            "user": "mtobinoac",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.4534392Z"
+          }
+        ]
+      },
+      {
+        "id": 491588008,
+        "author": "Gillibald",
+        "body": "I don\u0027t understand the issue here. Exif meta data just tells the consumer of that image how it should be displayed but doesn\u0027t effect the actual pixel data. That meta data isn\u0027t required nor is it guaranteed to work everywhere. You can\u0027t rely on it.",
+        "createdAt": "2019-05-12T11:39:06",
+        "reactions": []
+      },
+      {
+        "id": 493663392,
+        "author": "deivydas321",
+        "body": "@Gillibald, the problem is that when the image is taken from a mobile phone it is always saved in the orientation the device camera is built into the device(In most cases it is landscape view). So, if you want to read the image correctly you have to read _EXIF Orientation_ data how the device was rotated when the picture was taken. \r\nThis AutoRotate feature would be very useful in this case and is provided in many other image processing libraries but is missing in SkiaSharp.\r\n[Some info about rotation problem in web app.](https://medium.com/thetiltblog/fixing-rotated-mobile-image-uploads-in-php-803bb96a852c)",
+        "createdAt": "2019-05-18T09:40:07",
+        "reactions": [
+          {
+            "user": "ThinkElevenDave",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:12.8571426Z"
+          }
+        ]
+      },
+      {
+        "id": 493663519,
+        "author": "Gillibald",
+        "body": "It is not guaranteed that the camera driver is writing that meta data to the produced image. So you need to deal with that anyways.",
+        "createdAt": "2019-05-18T09:42:10",
+        "reactions": []
+      },
+      {
+        "id": 493665340,
+        "author": "charlesroddie",
+        "body": "@deivyd321 I agree that this would be good to have, but if something doesn\u0027t exist in Skia then it\u0027s unlikely to end up in SkiaSharp. So using your posted code will be best until this ends up in Skia and subsequently gets taken into SkiaSharp.",
+        "createdAt": "2019-05-18T10:11:32",
+        "reactions": []
+      },
+      {
+        "id": 502166395,
+        "author": "craigwi",
+        "body": "Short of doing the auto rotation, it would be helpful to store SKEncodedOrigin in SKBitmap.  Given that SKBitmap uses SKCodec internally, it should be easy to retain the encoded origin when available.  ",
+        "createdAt": "2019-06-14T16:03:12",
+        "reactions": [
+          {
+            "user": "ThinkElevenDave",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.4503703Z"
+          },
+          {
+            "user": "dkalpakian",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.4503708Z"
+          }
+        ]
+      },
+      {
+        "id": 584895517,
+        "author": "iainxt",
+        "body": "It took my brain awhile to catch up on it, so to save others time here is the code I am using. I have tested this on all origins and it works.\r\n\r\n\u0060\u0060\u0060cs\r\n        public Stream FixImageOrientation(Stream stream, out int width, out int height)\r\n        {\r\n            try { stream.Position = 0; } catch (NotSupportedException) { }\r\n            using (var inputStream = new SKManagedStream(stream))\r\n            {\r\n                using (var codec = SKCodec.Create(inputStream))\r\n                {\r\n                    using (var original = SKBitmap.Decode(codec))\r\n                    {\r\n                        var useWidth = original.Width;\r\n                        var useHeight = original.Height;\r\n                        Action\u003CSKCanvas\u003E transform = canvas =\u003E { };\r\n                        switch (codec.EncodedOrigin)\r\n                        {\r\n                            case SKEncodedOrigin.TopLeft:\r\n                                break;\r\n                            case SKEncodedOrigin.TopRight:\r\n                                // flip along the x-axis\r\n                                transform = canvas =\u003E canvas.Scale(-1, 1, useWidth / 2, useHeight / 2);\r\n                                break;\r\n                            case SKEncodedOrigin.BottomRight:\r\n                                transform = canvas =\u003E canvas.RotateDegrees(180, useWidth / 2, useHeight / 2);\r\n                                break;\r\n                            case SKEncodedOrigin.BottomLeft:\r\n                                // flip along the y-axis\r\n                                transform = canvas =\u003E canvas.Scale(1, -1, useWidth / 2, useHeight / 2);\r\n                                break;\r\n                            case SKEncodedOrigin.LeftTop:\r\n                                useWidth = original.Height;\r\n                                useHeight = original.Width;\r\n                                transform = canvas =\u003E\r\n                                {\r\n                                    // Rotate 90\r\n                                    canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n                                    canvas.Scale(useHeight * 1.0f / useWidth, -useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n                                };\r\n                                break;\r\n                            case SKEncodedOrigin.RightTop:\r\n                                useWidth = original.Height;\r\n                                useHeight = original.Width;\r\n                                transform = canvas =\u003E\r\n                                {\r\n                                    // Rotate 90\r\n                                    canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n                                    canvas.Scale(useHeight * 1.0f / useWidth, useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n                                };\r\n                                break;\r\n                            case SKEncodedOrigin.RightBottom:\r\n                                useWidth = original.Height;\r\n                                useHeight = original.Width;\r\n                                transform = canvas =\u003E\r\n                                {\r\n                                    // Rotate 90\r\n                                    canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n                                    canvas.Scale(-useHeight * 1.0f / useWidth, useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n                                };\r\n                                break;\r\n                            case SKEncodedOrigin.LeftBottom:\r\n                                useWidth = original.Height;\r\n                                useHeight = original.Width;\r\n                                transform = canvas =\u003E\r\n                                {\r\n                                    // Rotate 90\r\n                                    canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n                                    canvas.Scale(-useHeight * 1.0f / useWidth, -useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n                                };\r\n                                break;\r\n                            default:\r\n                                break;\r\n                        }\r\n                        var info = new SKImageInfo(useWidth, useHeight);\r\n                        using (var surface = SKSurface.Create(info))\r\n                        {\r\n                            using (var paint = new SKPaint())\r\n                            {\r\n                                // high quality with antialiasing\r\n                                paint.IsAntialias = true;\r\n                                paint.FilterQuality = SKFilterQuality.High;\r\n\r\n                                // rotate according to origin\r\n                                transform.Invoke(surface.Canvas);\r\n\r\n                                // draw the bitmap to fill the surface\r\n                                surface.Canvas.DrawBitmap(original, info.Rect, paint);\r\n                                surface.Canvas.Flush();\r\n\r\n                                using (var image = surface.Snapshot())\r\n                                {\r\n                                    var output = new MemoryStream();\r\n                                    using (var data = image.Encode(SKEncodedImageFormat.Jpeg, _azureStorageConfig.OriginalImageQuality))\r\n                                    {\r\n                                        data.SaveTo(output);\r\n                                        width = useWidth;\r\n                                        height = useHeight;\r\n                                        return output;\r\n                                    }\r\n                                }\r\n                            }\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n        }\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-02-11T22:48:53",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540466Z"
+          },
+          {
+            "user": "daniel-lerch",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540471Z"
+          },
+          {
+            "user": "Diaver",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540472Z"
+          },
+          {
+            "user": "deivydas321",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540473Z"
+          },
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540473Z"
+          },
+          {
+            "user": "worldbeater",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540474Z"
+          },
+          {
+            "user": "Geronatsios",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540475Z"
+          },
+          {
+            "user": "tucomel",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540476Z"
+          },
+          {
+            "user": "ViniciusLucas14",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540477Z"
+          },
+          {
+            "user": "mahdi-hamdarsi-r",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540478Z"
+          },
+          {
+            "user": "zb51628272",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540479Z"
+          },
+          {
+            "user": "zizhongzhang",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540479Z"
+          },
+          {
+            "user": "SeriousM",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.654048Z"
+          },
+          {
+            "user": "drormekorot",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540481Z"
+          },
+          {
+            "user": "jasonliuplanetart",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540482Z"
+          },
+          {
+            "user": "sandybreon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540483Z"
+          },
+          {
+            "user": "LewisGlo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540484Z"
+          },
+          {
+            "user": "Philipidev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540485Z"
+          },
+          {
+            "user": "dfberg",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.6540485Z"
+          }
+        ]
+      },
+      {
+        "id": 584928987,
+        "author": "mattleibow",
+        "body": "@iainxt thanks for that. I\u0027m thinking there might be a cause to have a property/method somewhere that could at least create a matrix for this so that you can draw an image using the matrix. And then have some member that does this auto-rotate.\r\n\r\nDefinitely something to have, thanks for the work.",
+        "createdAt": "2020-02-12T00:03:37",
+        "reactions": [
+          {
+            "user": "iainxt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.8604539Z"
+          },
+          {
+            "user": "tonimitrevski",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.8604545Z"
+          },
+          {
+            "user": "SunGram",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:13.8604546Z"
+          }
+        ]
+      },
+      {
+        "id": 861322810,
+        "author": "ziriax",
+        "body": "Please note:\r\n\r\n- \u0060SKImage\u0060 applies the orientation during decoding\r\n- \u0060SKBitmap\u0060 doesn\u0027t\r\n\r\nSo if you need to auto-orient your images, just use \u0060SKImage\u0060?\r\n\r\n\r\n",
+        "createdAt": "2021-06-15T09:01:56",
+        "reactions": [
+          {
+            "user": "dominik-weber",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:14.0831324Z"
+          },
+          {
+            "user": "Ghasan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:14.0831329Z"
+          },
+          {
+            "user": "Ghasan",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:30:14.083133Z"
+          }
+        ]
+      },
+      {
+        "id": 1378617894,
+        "author": "ViniciusLucas14",
+        "body": "\u003E It took my brain awhile to catch up on it, so to save others time here is the code I am using. I have tested this on all origins and it works.\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E         public Stream FixImageOrientation(Stream stream, out int width, out int height)\r\n\u003E         {\r\n\u003E             try { stream.Position = 0; } catch (NotSupportedException) { }\r\n\u003E             using (var inputStream = new SKManagedStream(stream))\r\n\u003E             {\r\n\u003E                 using (var codec = SKCodec.Create(inputStream))\r\n\u003E                 {\r\n\u003E                     using (var original = SKBitmap.Decode(codec))\r\n\u003E                     {\r\n\u003E                         var useWidth = original.Width;\r\n\u003E                         var useHeight = original.Height;\r\n\u003E                         Action\u003CSKCanvas\u003E transform = canvas =\u003E { };\r\n\u003E                         switch (codec.EncodedOrigin)\r\n\u003E                         {\r\n\u003E                             case SKEncodedOrigin.TopLeft:\r\n\u003E                                 break;\r\n\u003E                             case SKEncodedOrigin.TopRight:\r\n\u003E                                 // flip along the x-axis\r\n\u003E                                 transform = canvas =\u003E canvas.Scale(-1, 1, useWidth / 2, useHeight / 2);\r\n\u003E                                 break;\r\n\u003E                             case SKEncodedOrigin.BottomRight:\r\n\u003E                                 transform = canvas =\u003E canvas.RotateDegrees(180, useWidth / 2, useHeight / 2);\r\n\u003E                                 break;\r\n\u003E                             case SKEncodedOrigin.BottomLeft:\r\n\u003E                                 // flip along the y-axis\r\n\u003E                                 transform = canvas =\u003E canvas.Scale(1, -1, useWidth / 2, useHeight / 2);\r\n\u003E                                 break;\r\n\u003E                             case SKEncodedOrigin.LeftTop:\r\n\u003E                                 useWidth = original.Height;\r\n\u003E                                 useHeight = original.Width;\r\n\u003E                                 transform = canvas =\u003E\r\n\u003E                                 {\r\n\u003E                                     // Rotate 90\r\n\u003E                                     canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n\u003E                                     canvas.Scale(useHeight * 1.0f / useWidth, -useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n\u003E                                 };\r\n\u003E                                 break;\r\n\u003E                             case SKEncodedOrigin.RightTop:\r\n\u003E                                 useWidth = original.Height;\r\n\u003E                                 useHeight = original.Width;\r\n\u003E                                 transform = canvas =\u003E\r\n\u003E                                 {\r\n\u003E                                     // Rotate 90\r\n\u003E                                     canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n\u003E                                     canvas.Scale(useHeight * 1.0f / useWidth, useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n\u003E                                 };\r\n\u003E                                 break;\r\n\u003E                             case SKEncodedOrigin.RightBottom:\r\n\u003E                                 useWidth = original.Height;\r\n\u003E                                 useHeight = original.Width;\r\n\u003E                                 transform = canvas =\u003E\r\n\u003E                                 {\r\n\u003E                                     // Rotate 90\r\n\u003E                                     canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n\u003E                                     canvas.Scale(-useHeight * 1.0f / useWidth, useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n\u003E                                 };\r\n\u003E                                 break;\r\n\u003E                             case SKEncodedOrigin.LeftBottom:\r\n\u003E                                 useWidth = original.Height;\r\n\u003E                                 useHeight = original.Width;\r\n\u003E                                 transform = canvas =\u003E\r\n\u003E                                 {\r\n\u003E                                     // Rotate 90\r\n\u003E                                     canvas.RotateDegrees(90, useWidth / 2, useHeight / 2);\r\n\u003E                                     canvas.Scale(-useHeight * 1.0f / useWidth, -useWidth * 1.0f / useHeight, useWidth / 2, useHeight / 2);\r\n\u003E                                 };\r\n\u003E                                 break;\r\n\u003E                             default:\r\n\u003E                                 break;\r\n\u003E                         }\r\n\u003E                         var info = new SKImageInfo(useWidth, useHeight);\r\n\u003E                         using (var surface = SKSurface.Create(info))\r\n\u003E                         {\r\n\u003E                             using (var paint = new SKPaint())\r\n\u003E                             {\r\n\u003E                                 // high quality with antialiasing\r\n\u003E                                 paint.IsAntialias = true;\r\n\u003E                                 paint.FilterQuality = SKFilterQuality.High;\r\n\u003E \r\n\u003E                                 // rotate according to origin\r\n\u003E                                 transform.Invoke(surface.Canvas);\r\n\u003E \r\n\u003E                                 // draw the bitmap to fill the surface\r\n\u003E                                 surface.Canvas.DrawBitmap(original, info.Rect, paint);\r\n\u003E                                 surface.Canvas.Flush();\r\n\u003E \r\n\u003E                                 using (var image = surface.Snapshot())\r\n\u003E                                 {\r\n\u003E                                     var output = new MemoryStream();\r\n\u003E                                     using (var data = image.Encode(SKEncodedImageFormat.Jpeg, _azureStorageConfig.OriginalImageQuality))\r\n\u003E                                     {\r\n\u003E                                         data.SaveTo(output);\r\n\u003E                                         width = useWidth;\r\n\u003E                                         height = useHeight;\r\n\u003E                                         return output;\r\n\u003E                                     }\r\n\u003E                                 }\r\n\u003E                             }\r\n\u003E                         }\r\n\u003E                     }\r\n\u003E                 }\r\n\u003E             }\r\n\u003E         }\r\n\u003E \u0060\u0060\u0060\r\n\r\nWORKS FINE",
+        "createdAt": "2023-01-11T11:36:10",
+        "reactions": []
+      },
+      {
+        "id": 1451318485,
+        "author": "Hoopou",
+        "body": "\u003E At the moment it doesn\u0027t exist. But it can be solved with this method.\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E private static SKBitmap AutoOrient(SKBitmap bitmap, SKEncodedOrigin origin)\r\n\u003E         {\r\n\u003E             SKBitmap rotated;\r\n\u003E             switch (origin)\r\n\u003E             {\r\n\u003E                 case SKEncodedOrigin.BottomRight:\r\n\u003E                     using (var surface = new SKCanvas(bitmap))\r\n\u003E                     {\r\n\u003E                         surface.RotateDegrees(180, bitmap.Width / 2, bitmap.Height / 2);\r\n\u003E                         surface.DrawBitmap(bitmap.Copy(), 0, 0);\r\n\u003E                     }\r\n\u003E                     return bitmap;\r\n\u003E                 case SKEncodedOrigin.RightTop:\r\n\u003E                     rotated = new SKBitmap(bitmap.Height, bitmap.Width);\r\n\u003E                     using (var surface = new SKCanvas(rotated))\r\n\u003E                     {\r\n\u003E                         surface.Translate(rotated.Width, 0);\r\n\u003E                         surface.RotateDegrees(90);\r\n\u003E                         surface.DrawBitmap(bitmap, 0, 0);\r\n\u003E                     }\r\n\u003E                     return rotated;\r\n\u003E                 case SKEncodedOrigin.LeftBottom:\r\n\u003E                     rotated = new SKBitmap(bitmap.Height, bitmap.Width);\r\n\u003E                     using (var surface = new SKCanvas(rotated))\r\n\u003E                     {\r\n\u003E                         surface.Translate(0, rotated.Height);\r\n\u003E                         surface.RotateDegrees(270);\r\n\u003E                         surface.DrawBitmap(bitmap, 0, 0);\r\n\u003E                     }\r\n\u003E                     return rotated;\r\n\u003E                 default:\r\n\u003E                     return bitmap;\r\n\u003E             }\r\n\u003E         }\r\n\u003E \u0060\u0060\u0060\r\n\r\nIn the \u0060case SKEncodedOrigin.BottomRight \u0060, \u0060surface.DrawBitmap(bitmap.Copy(), 0, 0);\u0060 leads to a memory leak since a copy of the SKBitmap is passed to the surface and not the actual Bitmap. \r\nQuick fix, remove the \u0060 .Copy()\u0060 and everything works fine. \u0060surface.DrawBitmap(bitmap, 0, 0);\u0060 \r\n**OR**\r\nI\u0027m probably going to use the long way since I don\u0027t like this method some time returning a reference and other time a new object, so I will always create a new object if their is a rotation to do.\r\n\u0060\u0060\u0060cs\r\nprivate static SKBitmap? AutoOrient(SKBitmap bitmap, SKEncodedOrigin origin)\r\n        {\r\n            SKBitmap rotated;\r\n            switch (origin)\r\n            {\r\n                case SKEncodedOrigin.BottomRight:\r\n                    rotated = new SKBitmap(bitmap.Width, bitmap.Height);\r\n                    using (var surface = new SKCanvas(rotated))\r\n                    {\r\n                        surface.RotateDegrees(180, bitmap.Width / 2, bitmap.Height / 2);\r\n                        surface.DrawBitmap(bitmap, 0, 0);\r\n                    }\r\n                    return rotated;\r\n                case SKEncodedOrigin.RightTop:\r\n                    rotated = new SKBitmap(bitmap.Height, bitmap.Width);\r\n                    using (var surface = new SKCanvas(rotated))\r\n                    {\r\n                        surface.Translate(rotated.Width, 0);\r\n                        surface.RotateDegrees(90);\r\n                        surface.DrawBitmap(bitmap, 0, 0);\r\n                    }\r\n                    return rotated;\r\n                case SKEncodedOrigin.LeftBottom:\r\n                    rotated = new SKBitmap(bitmap.Height, bitmap.Width);\r\n                    using (var surface = new SKCanvas(rotated))\r\n                    {\r\n                        surface.Translate(0, rotated.Height);\r\n                        surface.RotateDegrees(270);\r\n                        surface.DrawBitmap(bitmap, 0, 0);\r\n                    }\r\n                    return rotated;\r\n                default:\r\n                    return null;\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nI return null if there is no rotation to do, so in the calling method I can easilly know if I have to close the given SKBitmap after the execution of this method or not. for example:\r\n\u0060\u0060\u0060cs\r\n var newBitmap = AutoOrient(Bitmap, orientation);\r\n if (newBitmap != null)\r\n {\r\n     Bitmap.Dispose();\r\n     Bitmap = newBitmap;\r\n }\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2023-03-02T05:22:06",
+        "reactions": []
+      },
+      {
+        "id": 1662564866,
+        "author": "ggolda",
+        "body": "Would be great if \u0060SKBitmap\u0060 and \u0060SKImage\u0060 supported an optional parameter that accepts a rotation angle or \u0060SKEncodedOrigin\u0060 when consuming already decoded data from \u0060SKData\u0060 or byte array.\r\n\r\nCurrently it is not supported and we either have to create an extra surface like people proposed above (which is a waste of memory and CPU, especially for 4K images) or manually apply rotation on byte array before creating image (which is complex to do correctly).",
+        "createdAt": "2023-08-02T16:39:24",
+        "reactions": []
+      },
+      {
+        "id": 1865829194,
+        "author": "fourix",
+        "body": "\u003E \u0060\u0060\u0060cs\r\n\u003E OriginalImageQuality\r\n\u003E \u0060\u0060\u0060\r\n\r\nHow to get _azureStorageConfig.OriginalImageQuality ?",
+        "createdAt": "2023-12-21T08:09:18",
+        "reactions": [
+          {
+            "user": "Nikita-181",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:14.8886518Z"
+          }
+        ]
+      }
+    ]
+  }
 }
