@@ -1,0 +1,22 @@
+{
+  "number": 3329,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp.csproj does not reference Linux native assets",
+  "body": "### Description\n\nI\u0027m getting a build issue where SkiaSharp.NativeAssets.Linux v2.88.7 is being included as a transient package rather than v3.119.0. I\u0027m guessing, but believe this is due to SkiaSharp.csproj not referencing the SkiaSharp.NativeAssets.Linux project\n\n### Code\n\nAdd this to SkiaSharp.csproj:\n\n\u003CProjectReference Include=\u0022..\\SkiaSharp.NativeAssets.Tizen\\SkiaSharp.NativeAssets.Linux.csproj\u0022 Condition=\u0022$(TargetFramework.Contains(\u0027-linux\u0027))\u0022 /\u003E\n\n### Expected Behavior\n\nLinux build to include the same version of all native assets as the version of SkiaSharp (3.119.0)\n\n### Actual Behavior\n\nAn old version of Linux native assets is included (2.88.1) and the following error is thrown:\n\nSystem.TypeInitializationException : The type initializer for \u0027SkiaSharp.SKColorSpace\u0027 threw an exception.\n  ----\u003E System.TypeInitializationException : The type initializer for \u0027SkiaSharp.SKObject\u0027 threw an exception.\n  ----\u003E System.InvalidOperationException : The version of the native libSkiaSharp library (88.1) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [119.0, 120.0).\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows), Other (Please indicate in the description)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\nOccurring in Linux runner in GitHub Action for CI\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "bitbltr",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-08-05T00:15:07",
+  "updatedAt": "2025-08-05T21:23:31",
+  "commentCount": 3,
+  "reactionCount": 2
+}

@@ -1,0 +1,35 @@
+{
+  "number": 3391,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Font Typefaces do not work in Blazor",
+  "body": "### Description\n\nWhen trying to change the font, or just to have a bold or italic font, nothing changes in the DrawText function. Currenlty using .Net 9 and SkiaSharp 3.119.1 in a Blazor WASM app with the SKGLView Component in the razor file. The font stayes the same with or without the TypeFace property set in the SKFont. I have tried loading different fonts or even trying to call SKTypeface.FromFile() and still no difference. I have not tried to render text in the past using SkiaSharp, as such i do not know the last good version.\n\nInstalled packages in my project:\n\n- SkiaSharp | nuget | 3.119.1\n- SkiaSharp.Views.Blazor | nuget | 3.119.1\n- SkiaSharp.NativeAssers.WebAssembly | nuget | 3.119.1\n\n### Code\n\nIndex.razor:\n\u0060\u0060\u0060cs\n\u003CSKGLView @ref=\u0022Canvas\u0022 @onmousemove=\u0022@OnMouseMove\u0022 @onmousedown=\u0022@OnMouseDown\u0022 @onmouseup=\u0022@OnMouseUp\u0022\n              @oncontextmenu=\u0022@OpenCtx\u0022 @onwheel=\u0022@OnMouseWheel\u0022 id=\u0022dropzone\u0022 IgnorePixelScaling=\u0022true\u0022\n              OnPaintSurface=\u0022OnPaintSurface\u0022 EnableRenderLoop=\u0022true\u0022\n              class=\u0022w-100 h-screen min-vh-100 mh-100 skglview\u0022/\u003E\n\u0060\u0060\u0060\n\nIndex.razor.cs:\n\u0060\u0060\u0060cs\nprivate void OnPaintSurface(SKPaintGLSurfaceEventArgs e)\n    {\n        SKImageInfo info   = e.Info;\n        SKCanvas?   canvas = e.Surface.Canvas;\n\n        canvas.Clear();\n        canvas.Save();\n        canvas.Scale(_zoom);\n        canvas.Translate(EndScale.X, EndScale.Y);\n\n        // DrawPattern(canvas, info);\n        // Manager.DrawPatterns(canvas, info, _zoom);\n\n        DrawWellHead(canvas);\n\n        Manager.DrawAll(canvas);\n\n        // Parallel.ForEach(Manager.NonDraggablesComponents.OfType\u003CIDrawComponent\u003E(),\n        //     (component, state) =\u003E { component.Draw(canvas); });\n        //\n        // Parallel.ForEach(Manager.DraggableComponents.OfType\u003CIDrawComponent\u003E(),\n        //     (component, state) =\u003E { component.Draw(canvas); });\n        //\n        // Parallel.ForEach(Manager.DraggableComponents.OfType\u003CIImageComponent\u003E(),\n        //     (component, state) =\u003E { component.Draw(canvas); });\n\n        canvas.Restore();\n    }\n\u0060\u0060\u0060\n\ncode snippet from Text Block class:\n\u0060\u0060\u0060cs\nprivate SKFont Font { get; set; } = new()\n    {\n        Size = 12,\n        ScaleX = 1,\n        SkewX = 0,\n        Typeface = SKTypeface.FromFamilyName(\u0022Noto Mono\u0022, 800, 500, SKFontStyleSlant.Italic)\n    };\n\n// other code ...\n\ncanvas.DrawText(text, X, Y, TextAlignment, Font, TextPaint);\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.118.0-preview.2 (Next Preview)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Blazor WASM\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "r00terAF18",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/WASM",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Blazor",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-21T14:55:56",
+  "updatedAt": "2025-11-01T15:38:01",
+  "closedAt": "2025-11-01T15:38:01",
+  "commentCount": 2,
+  "reactionCount": 0
+}

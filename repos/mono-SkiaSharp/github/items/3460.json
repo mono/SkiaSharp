@@ -1,0 +1,55 @@
+{
+  "number": 3460,
+  "type": "pr",
+  "state": "closed",
+  "title": "Update more AI skills",
+  "body": "This pull request introduces a new security audit skill for SkiaSharp\u0027s native dependencies and refines the workflow for updating those dependencies. The main focus is to clearly separate the processes for security auditing (read-only investigation and reporting) and for updating/fixing dependencies. Documentation has been enhanced to guide users on when to use each skill, ensure a more thorough and auditable update process, and prevent common mistakes.\r\n\r\n**Security Audit Skill Addition:**\r\n\r\n- Introduced a new \u0060security-audit\u0060 skill that provides a comprehensive, read-only workflow for auditing SkiaSharp\u0027s native dependencies for CVEs and security issues, including detailed reporting, prioritization, and actionable recommendations.\r\n- Added a reference document listing known false positive CVEs (e.g., MiniZip in zlib) that do not affect SkiaSharp, along with evidence and verification steps.\r\n\r\n**Native Dependency Update Skill Improvements:**\r\n\r\n- Clarified that security audits (CVE checks, PR coverage) should use the new \u0060security-audit\u0060 skill, and removed ambiguous triggers from the update skill documentation.\r\n- Expanded the update workflow to require checking for existing PRs before starting work, evaluating their relevance and currency, and reporting findings to the user before proceeding.\r\n- Improved instructions for verifying current and target dependency versions, and for presenting findings to the user, including existing PRs and reasons for updates.\r\n- Simplified and clarified the process for checking CI status and PR merge state, emphasizing the importance of verifying actual PR state rather than just CI status.\r\n\r\n**Process and Documentation Clarity:**\r\n\r\n- Strengthened language to require following every phase of the update workflow and removed ambiguous language that could be interpreted as permission to skip steps.\r\n- Removed redundant warnings about not pushing directly to main branches, focusing instead on the critical need for PRs and submodule updates. [[1]](diffhunk://#diff-f9c71b6da8951243004ec22339d2de5d5703f868295706fcc613bb26f17365cfL191-L192) [[2]](diffhunk://#diff-f9c71b6da8951243004ec22339d2de5d5703f868295706fcc613bb26f17365cfL203-L204)",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-27T17:57:50",
+  "updatedAt": "2026-02-02T21:52:53",
+  "closedAt": "2026-01-27T17:57:59",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-01-27T17:57:59",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/skils",
+  "additions": 428,
+  "deletions": 30,
+  "changedFiles": 3,
+  "commits": 1,
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:36:05.2983474Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3806652766,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate the areas affected, specifically relating to updates and improvements in SkiaSharp\u0027s native dependencies concerning security auditing and dependency management.\n\nThis issue is not a regression, as it does not relate to a previous version\u0027s breakdown but rather discusses ongoing improvements.\n\nAdditional remarks:\n* The issue does not pertain to a specific operating system or platform and focuses solely on SkiaSharp. \n* There is no information regarding compatibility, performance, or reliability issues, only updates on AI skills related to security.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue relates to updates in the workflow for SkiaSharp\u0027s native dependencies.\n- It specifically discusses improvements concerning security auditing and dependency management.\n- No specific operating system or platform label applies, as the issue is solely about the library.\n\nSummary of the actions that will be performed:\n\n| Action      | Item                | Description                                                                                                                                          |\n| :---------- | :------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------- |\n| Apply Label | area/SkiaSharp      | The issue relates to updates and improvements in SkiaSharp\u0027s native dependencies, particularly focusing on security auditing and dependency management. |\n| Apply Label | backend/SkiaSharp   | The issue discusses updates related to SkiaSharp\u0027s native dependencies, specifically introducing a new security audit skill for them.                   |\n\n\u003C/details\u003E\n\n\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2026-01-27T17:58:33",
+        "reactions": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "number": 3325,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Skia Starter Project",
+  "body": "### Is your feature request related to a problem?\n\nProblem: It is extremely difficult to get started building cross-platform with SkiaSharp (or really building anything at all with it).\n\nAfter all these years, there still doesn\u0027t seem to be a starter solution for building cross-platform Skia apps. The samples in this repo don\u0027t build easily and aren\u0027t structured correctly for this, nor do they take the right approach for handling dependencies.\n\n### Describe the solution you would like\n\nI\u0027d like to be able to open VS, create new project, and select \u0022Cross Platform Skia\u0022. This should set me up with a solution containing a shared render project, and a project per native platform, each referencing the shared render project. Prefer HW accel setups.\n\nThis seems like a pretty prime use case for Skia and .NET.\n\nIf you can\u0027t create a VS template for this, then a zip file I can download with this setup would be appreciated. It would definitely be helpful in the immediate term. I just want to be able to nuget restore, build, and run. Then start adding my own paint code.\n\n### Describe alternatives you have considered\n\nI have explored getting this to work with the samples in this repo (no go, multiple build errors) and with AI (which can\u0027t seem to get it right either).\n\n### Additional context\n\nEvery 6 months or so, for the last several years (I think), I pop in here to see if this one basic setup scenario has been addressed. So far, no. Today, I wasted an hour or two trying to get some things up and running. No go. So much time wasted just trying to get hello world. Extremely frustrating in 2025.\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "EisenbergEffect",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-08-02T19:30:36",
+  "updatedAt": "2026-01-31T17:34:12",
+  "commentCount": 2,
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:36:31.452244Z",
+    "reactions": [
+      {
+        "user": "github-actions[bot]",
+        "content": "eyes",
+        "createdAt": "2026-02-06T12:36:31.4522469Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3828700467,
+        "author": "mattleibow",
+        "body": "Thanks for your interest in the project. \n\nWhen using SkiaSharp, you can install the SkiaSharp.Views package and then get a view for any platform/framework. \n\nThere should be a PaintSurface event that you can handle to draw. \n\nI will still have a look at a tutorial. A template should not be needed as there is just the package and then add the view. ",
+        "createdAt": "2026-01-31T15:16:26",
+        "reactions": []
+      },
+      {
+        "id": 3828883857,
+        "author": "EisenbergEffect",
+        "body": "From my experience in open source (going on 20 years), adoption usually hinges less on how \u201Cdone\u201D a project is and more on two basics:\n\n- A clear, easy way to get started\n- Documentation that answers the first few questions\n\nEven when a project is early/alpha, people will try it if those two things exist. When they don\u2019t, many potential users simply bounce without leaving feedback.\n\nIf you\u2019re open to one high-impact improvement, I\u2019d suggest a single, easy-to-find \u201CGetting Started\u201D page that shows the recommended way to create a new cross-platform SkiaSharp solution with:\n- a shared runtime library, and\n- platform-specific hosts.\n\nIf you want to go a step further, a Visual Studio template (\u201CFile \u2192 New\u2026\u201D) plus a short guide pointing to it would remove a lot of friction for new users.\n\nAlso, I want to acknowledge the community side. A healthy community is critical to open-source adoption, and it\u2019s part of the onboarding path. I did notice there\u2019s a Discord badge and that GitHub Discussions are enabled, which is great, but they\u2019re not very discoverable from the \u201CUsing SkiaSharp\u201D section. A short \u201CGetting Started\u201D block there that links to the walkthrough/template and to \u201CWhere to ask questions\u201D (Discord/Discussions) would make it much easier for new folks to get going and know where to turn when they get stuck.",
+        "createdAt": "2026-01-31T17:34:12",
+        "reactions": []
+      }
+    ]
+  }
+}

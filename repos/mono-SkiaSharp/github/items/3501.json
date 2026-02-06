@@ -1,0 +1,55 @@
+{
+  "number": 3501,
+  "type": "pr",
+  "state": "closed",
+  "title": "Fix release-testing skill consistency issues",
+  "body": "## Summary\n\nFixes consistency issues in the release-testing skill identified during skill-creator review.\n\n## Changes\n\n### Critical\n- **Require \u0060-wipe-data\u0060 for Android emulators** in setup.md (was missing, contradicted SKILL.md)\n- Add boot time note: fresh wipe takes 60-120s vs 15-30s without\n\n### Consistency\n- Standardize adb/emulator paths: use PATH (e.g., \u0060emulator\u0060) not full paths (\u0060$ANDROID_HOME/emulator/emulator\u0060)\n- Add PATH fallback note in setup.md for when tools aren\u0027t in PATH\n- Remove redundant \u0022Start Emulators First\u0022 section (duplicated Android Emulator Workflow)\n- Fix net9.0 \u2192 net8.0 to match actual project target framework\n\n## Context\n\nThese issues were found during the 3.119.2-preview.3 release testing when tests ran on the wrong emulator. The skill-creator skill was used to review release-testing for consistency and these fixes address the findings.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/Android",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-05T18:00:34",
+  "updatedAt": "2026-02-05T20:23:17",
+  "closedAt": "2026-02-05T20:23:15",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-02-05T20:23:15",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "dev/release-testing-skill-improvements",
+  "additions": 312,
+  "deletions": 21,
+  "changedFiles": 8,
+  "commits": 2,
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:35:10.4896446Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3855305509,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate the affected area of documentation and the specific platforms involved (backend/Android and os/Android).\n\nThis issue does not classify as a regression as it primarily concerns documentation adjustments rather than functionality changes.\n\nAdditional remarks:\n* The issue specifically addresses inconsistencies in the documentation for the release-testing skill and related setup instructions, falling under documentation-related concerns.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue involves fixing documentation inconsistencies in the release-testing skill, signifying that it relates to documentation.\n- The issue addresses improvements and fixes pertinent to Android emulators, making the backend/Android and os/Android labels applicable.\n- No labels related to compatibility, performance, or reliability were deemed appropriate since the issue is focused on documentation rather than functional.\n\nSummary of the actions that will be performed:\n\n| Action       | Item              | Description                                                                                         |\n| :----------- | :---------------- | :-------------------------------------------------------------------------------------------------- |\n| Apply Label  | area/Docs        | The issue involves fixing documentation inconsistencies in the release-testing skill.              |\n| Apply Label  | backend/Android  | The issue specifically addresses improvements and fixes related to Android emulators.              |\n| Apply Label  | os/Android       | The issue specifically mentions changes related to the Android operating system and emulators.     |\n\n\u003C/details\u003E\n\n\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2026-02-05T18:01:11",
+        "reactions": []
+      }
+    ]
+  }
+}

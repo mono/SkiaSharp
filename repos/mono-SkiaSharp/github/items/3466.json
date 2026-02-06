@@ -1,0 +1,87 @@
+{
+  "number": 3466,
+  "type": "pr",
+  "state": "open",
+  "title": "Don\u0027t dispose SKStreamAsset in ToHarfBuzzBlob",
+  "body": "**Description of Change**\r\n\r\nHarfBuzz Blob should not have dispose ownership of SKStreamAsset as it might still be in use by the caller.\r\n\r\nSKShaper should also deterministically dispose the stream.\r\n\r\n**Bugs Fixed**\r\n\r\nDiscussion https://github.com/mono/SkiaSharp/discussions/3373\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- REPLACE THIS COMMENT\r\n\r\nList all API changes here (or just put None), example:\r\n\r\nAdded: \r\n \r\n- \u0060string Class.Property { get; set; }\u0060\r\n- \u0060void Class.Method();\u0060\r\n\r\nChanged:\r\n\r\n - \u0060object Cell.OldPropertyName =\u003E object Cell.NewPropertyName\u0060\r\n\r\n--\u003E\r\n\r\n**Behavioral Changes**\r\n\r\nToHarfBuzzBlob no longer takes dispose ownership of the given SKStreamAsset\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n\u003C!-- Replace this with the full URL to the skia PR. --\u003E\r\n\r\n**PR Checklist**\r\n\r\n- [X] Has tests (if omitted, state reason in description)\r\n- [X] Rebased on top of main at time of PR\r\n- [X] Merged related skia PRs\r\n- [X] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "jeremy-visionaid",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-27T21:20:51",
+  "updatedAt": "2026-01-29T02:02:20",
+  "commentCount": 3,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "fix-skstreamasset-disposal",
+  "additions": 36,
+  "deletions": 4,
+  "changedFiles": 3,
+  "commits": 3,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-01-27T22:27:58"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-01-29T01:45:13"
+    },
+    {
+      "author": "mattleibow",
+      "state": "CHANGES_REQUESTED",
+      "submittedAt": "2026-01-29T01:51:32"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-01-29T02:01:38"
+    }
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:36:54.2319158Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3807812092,
+        "author": "mattleibow",
+        "body": "This looks much better. I asked copilot to write some tests (https://github.com/mono/SkiaSharp/pull/3467) that will cover this. Hopefully it works. But please see if you can use these (when done) as areference or write specific tests for this change so we don\u0027t do this again.",
+        "createdAt": "2026-01-27T22:20:57",
+        "reactions": []
+      },
+      {
+        "id": 3808053625,
+        "author": "jeremy-visionaid",
+        "body": "Yeah, I was curious about your thoughts for testing this. There are 2 changes here:\r\n\r\n1. The stream shouldn\u0027t be being disposed by the blob because it doesn\u0027t own it\r\n2. The stream in SKShaper should be being disposed deterministically\r\n\r\nPart one is trivial, I don\u0027t mind doing it to prevent regressions (Copilot\u0027s attempt seems a bit clumsy and off topic IMHO). For the second part, the stream is internal so we don\u0027t have a reference to it - there are missing dispose calls in other places too (e.g. #3319). Are you happy just accepting that existing tests still work for those kinds of cases?",
+        "createdAt": "2026-01-27T23:16:53",
+        "reactions": []
+      },
+      {
+        "id": 3808299449,
+        "author": "jeremy-visionaid",
+        "body": "Heya. Sorry that took a while - took a while to update workloads etc. for the latest SDK. I\u0027ve added a couple of simpler and more targeted tests. One to test for regression of the unwanted disposal (that would currently fail on main) and another to ensure that a managed reference to the stream was not required by the blob (since it previously had one from the release delegate). Probably some more HarfBuzz related tests would be good, but feels to me like the Copilot ones either test the wrong things or are beyond the scope of this PR.",
+        "createdAt": "2026-01-28T00:35:45",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:54.1817147Z"
+          }
+        ]
+      }
+    ]
+  }
+}

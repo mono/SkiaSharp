@@ -1,0 +1,48 @@
+{
+  "number": 3436,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] undefined symbol exception thrown in linux ARM-64",
+  "body": "### Description\n\nWe are using SkiaSharp for rendering purposes and are currently facing an exception on the Linux ARM64 platform due to an upgrade from version 3.11.6 to 3.119.1. Initially, we encountered the following issue:\n\n\u0060dotnet: symbol lookup error: /app/runtimes/linux-arm64/native/libSkiaSharp.so: undefined symbol: FT_Get_BDF_Property\u0060\n\nAfter finding a temporary solution, the following exception was thrown, which we cannot resolve. This issue specifically occurs on the Linux ARM64 platform:\n\n\u0060undefined symbol: uuid_generate_random\u0060\n\n### Code\n\n-\n\n### Expected Behavior\n\nProcesses without exception in linux arm64 platform.\n\n### Actual Behavior\n\nexception thrown.\n\n### Version of SkiaSharp\n\n3.118.0-preview.2 (Next Preview)\n\n### Last Known Good Version of SkiaSharp\n\n3.116.0 (Current)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Yaavannvignesh",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Linux",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/compatibility",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-12-26T13:17:17",
+  "updatedAt": "2026-02-03T10:33:31",
+  "closedAt": "2026-02-03T10:33:31",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:35:34.2157688Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3692856967,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate the affected platform (Linux), a compatibility issue due to a version upgrade, and the specific area of concern regarding SkiaSharp.\n\nThis issue is not explicitly labeled as a regression, but it does pertain to a compatibility problem following an upgrade.\n\nAdditional remarks:\n* The issue specifically mentions a problem related to the SkiaSharp rendering on the Linux ARM64 platform, which is not covered by any of the listed labels. None of the available labels relate to the context of SkiaSharp or issues with undefined symbols in rendering libraries.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue affects the Linux operating system, specifically on the ARM64 architecture.\n- It describes a compatibility problem stemming from an upgrade from version 3.11.6 to 3.119.1 of SkiaSharp.\n- The issue relates to an undefined symbol exception occurring during the rendering process with SkiaSharp after the upgrade.\n\nSummary of the actions that will be performed:\n\n| Action        | Item                    | Description                                                                                 |\n| :------------ | :--------------------- | :------------------------------------------------------------------------------------------ |\n| Apply Label   | os/Linux               | The issue specifies that the behavior is occurring on the Linux ARM64 platform.           |\n| Apply Label   | tenet/compatibility    | The issue describes a compatibility problem due to an upgrade from version 3.11.6 to 3.119.1 of SkiaSharp. |\n| Apply Label   | area/SkiaSharp         | The issue pertains to an undefined symbol exception related to SkiaSharp on the Linux ARM64 platform. |\n\n\u003C/details\u003E\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2025-12-26T13:17:55",
+        "reactions": []
+      }
+    ]
+  }
+}

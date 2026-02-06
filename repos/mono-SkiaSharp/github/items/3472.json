@@ -1,0 +1,58 @@
+{
+  "number": 3472,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Blob FromStream is not GC safe",
+  "body": "### Description\n\nIf GC runs after the blob is created, the managed array memory might be moved resulting in a crash,\n\n### Code\n\nBy inspection:\n\n\t\tpublic static unsafe Blob FromStream (Stream stream)\n\t\t{\n\t\t\t// TODO: check to see if we can avoid the second copy (the ToArray)\n\n\n\t\t\tusing var ms = new MemoryStream ();\n\t\t\tstream.CopyTo (ms);\n\t\t\tvar data = ms.ToArray ();\n\n\n\t\t\tfixed (byte* dataPtr = data) {\n\t\t\t\treturn new Blob ((IntPtr)dataPtr, data.Length, MemoryMode.ReadOnly, () =\u003E ms.Dispose ());\n\t\t\t}\n\t\t}\n\n\n### Expected Behavior\n\nShould copy via an UnmanagedMemoryStream:\n\n\u0060\u0060\u0060\n\t\tpublic static unsafe Blob FromStream (Stream stream)\n\t\t{\n\t\t\tvar length = (int)(stream.Length - stream.Position);\n\n\t\t\tvar dataPtr = Marshal.AllocCoTaskMem (length);\n\n\t\t\tusing var ums = new UnmanagedMemoryStream ((byte*)dataPtr, length, length, FileAccess.ReadWrite);\n\t\t\tstream.CopyTo (ums);\n\n\t\t\treturn new Blob (dataPtr, length, MemoryMode.ReadOnly, () =\u003E Marshal.FreeCoTaskMem (dataPtr));\n\t\t}\n\u0060\u0060\u0060\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "jeremy-visionaid",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-28T21:50:32",
+  "updatedAt": "2026-01-28T21:59:50",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:36:56.7360322Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3814114458,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to highlight issues related to reliability (due to potential crashes), the SkiaSharp library, and the Windows Classic operating system.\n\nThis issue is not specifically identified as a regression based on the provided information.\n\nAdditional remarks:\n* The issue addresses a crash related to garbage collection in memory management, particularly within the SkiaSharp library\u0027s functionalities.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue describes a potential crash caused by garbage collection affecting memory management, which raises reliability concerns.\n- The bug is associated with the \u0027Blob FromStream\u0027 functionality within the SkiaSharp library.\n- The context of the issue is reported within Visual Studio on the Windows Classic operating system.\n- The problem particularly highlights memory management issues in SkiaSharp\u0027s Blob creation process.\n\nSummary of the actions that will be performed:\n\n| Action       | Item                    | Description                                                                                                           |\n| :----------- | :--------------------- | :-------------------------------------------------------------------------------------------------------------------- |\n| Apply Label  | tenet/reliability      | The issue describes a potential crash due to memory management, indicating concerns over reliability.                 |\n| Apply Label  | area/SkiaSharp         | The issue relates to a bug in the \u0027Blob FromStream\u0027 functionality within the SkiaSharp library.                       |\n| Apply Label  | os/Windows-Classic     | The issue is reported in the context of Visual Studio on the Windows Classic operating system.                       |\n| Apply Label  | backend/SkiaSharp      | The issue involves a bug related to memory management during the Blob creation process in SkiaSharp.                 |\n\n\u003C/details\u003E\n\n\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2026-01-28T21:51:14",
+        "reactions": []
+      },
+      {
+        "id": 3814148690,
+        "author": "jeremy-visionaid",
+        "body": "@mattleibow This should also improve performance since it removes the redundant copy",
+        "createdAt": "2026-01-28T21:59:50",
+        "reactions": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "number": 3393,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] P/Invokes should protect parameters across invocations",
+  "body": "### Description\n\nContext: https://learn.microsoft.com/en-us/archive/blogs/cbrumme/lifetime-gc-keepalive-handle-recycling\nContext: https://github.com/unoplatform/uno/pull/21660\nContext: https://github.com/dotnet/java-interop/issues/719\n\n*Background*: The most important background is Chris Bruce\u0027s blog post [Lifetime, GC.KeepAlive, handle recycling](https://learn.microsoft.com/en-us/archive/blogs/cbrumme/lifetime-gc-keepalive-handle-recycling). Excerpts:\n\n\u003E \u0060\u0060\u0060csharp\n\u003E class C {\n\u003E    IntPtr _handle;\n\u003E    Static void OperateOnHandle(IntPtr h) { ... }\n\u003E    void m() {\n\u003E       OperateOnHandle(_handle);\n\u003E       ...\n\u003E    }\n\u003E    ...\n\u003E }\n\u003E  \n\u003E class Other {\n\u003E    void work() {\n\u003E       if (something) {\n\u003E          C aC = new C();\n\u003E          aC.m();\n\u003E          ...  // most guess here\n\u003E       } else {\n\u003E          ...\n\u003E       }\n\u003E    }\n\u003E }\n\u003E \u0060\u0060\u0060\n\u003E \n\u003E It\u2019s more interesting to worry about the earliest point that \u0060aC\u0060 could be collected. \u2026\n\u003E \n\u003E \u2026 Actually, \u0060aC\u0060 could become eligible for collection before \u0060C.m()\u0060 even calls \u0060C.OperateOnHandle()\u0060. Once we\u2019ve extracted \u0060_handle\u0060 from \u0060this\u0060, there are no further uses of this object. In other words, \u0060this\u0060 can be collected even while you are executing an instance method on that object.\n\u003E \n\u003E But what if class \u0060C\u0060 has a \u0060Finalize()\u0060 method which closes \u0060_handle\u0060? When we call \u0060C.OperateOnHandle()\u0060, we now have a race between the application and the GC / Finalizer. Eventually, that\u2019s a race we\u2019re going to lose.\n\nRephrased:\n\n 1. .NET is a multi-threaded environment, and the GC is one of many threads that can mutate your data.\n 2. The .NET runtime cannot \u0022see\u0022 into native code\n 3. Therefore, care must be taken to ensure that we don\u0027t allow the GC to collect instances *while native code is operating on them*.\n\ndotnet/java-interop#719 was one non-Skia example of this.\n\nunoplatform/uno#21660 is a Skia-related example of this.  Paraphrasing greatly, we have:\n\n\u0060\u0060\u0060csharp\nvar canvas = \u2026\nvar picture = \u2026\ncanvas.DrawPicture(picture);\n// \u0060picture\u0060 is not referenced after this point.\n\u0060\u0060\u0060\n\nWhile we may *wish* that the \u0060canvas.DrawPicture()\u0060 call will keep \u0060picture\u0060 alive, *it does **not***.  Eventually you hit:\n\nhttps://github.com/mono/SkiaSharp/blob/34c5ed8272b9e0a138089d2e0a18f34f5592653f/binding/SkiaSharp/SKCanvas.cs#L533-L538\n\nmeaning once exeecution hits \u0060SkiaApi.sk_canvas_draw_picture()\u0060, *nothing* ensures that \u0060picture\u0060 is kept alive.  (Or \u0060canvas\u0060, for that matter!)\n\nThe fix: audit the code (is there a generator?) such that *all reference type parameters* are explicitly kept alive across P/Invoke boundaries.  For example, \u0060SKCanvas.DrawPicture()\u0060 should be updated to be:\n\n\u0060\u0060\u0060csharp\npartial class SKCanvas {\n\tpublic void DrawPicture (SKPicture picture, SKPaint paint = null)\n\t{\n\t\tif (picture == null)\n\t\t\tthrow new ArgumentNullException (nameof (picture));\n\t\tSkiaApi.sk_canvas_draw_picture (Handle, picture.Handle, null, paint == null ? IntPtr.Zero : paint.Handle);\n\t\tGC.KeepAlive (picture);\n\t\tGC.KeepAlive (paint);\n\t\t// *arguably* GC.KeepAlive(this), but maybe just require that the caller keep it around?\n\t}\n}\n\u0060\u0060\u0060\n\nThis should be done for *all* public methods that invoke P/Invoke methods.\n\n### Code\n\n-\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio Code (macOS)\n\n### Platform / Operating System\n\nAndroid, All\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "jonpryor",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-10-22T01:48:29",
+  "updatedAt": "2025-10-22T01:51:34",
+  "commentCount": 1,
+  "reactionCount": 3
+}

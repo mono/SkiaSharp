@@ -1,0 +1,51 @@
+{
+  "number": 3475,
+  "type": "pr",
+  "state": "closed",
+  "title": "Strengthen skill guidance on submodule merge sequence",
+  "body": "This pull request updates the documentation and submodule handling process to prevent critical issues when merging native dependency updates, specifically around squash-merging and submodule references. It also updates the \u0060externals/skia\u0060 submodule to a new commit.\r\n\r\n**Critical documentation updates to merge process:**\r\n\r\n* Added a warning to \u0060.github/skills/native-dependency-update/SKILL.md\u0060 about the dangers of merging both PRs without updating the submodule in between, highlighting that squash-merging creates a new SHA and can orphan commits, breaking users if the submodule isn\u0027t updated.\r\n* Expanded the documentation with a detailed, step-by-step mandatory merge sequence, emphasizing that the submodule must be updated to the new squashed commit before merging the SkiaSharp PR, and added explicit warnings against improper merge order.\r\n\r\n**Submodule update:**\r\n\r\n* Updated the \u0060externals/skia\u0060 submodule to point to commit \u0060346cbd67e038d3b432b08a89316527625cd30ecc\u0060.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    },
+    {
+      "name": "copilot",
+      "color": "6f42c1"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-29T00:51:35",
+  "updatedAt": "2026-02-02T21:44:01",
+  "closedAt": "2026-01-29T00:51:55",
+  "commentCount": 1,
+  "reactionCount": 0,
+  "draft": false,
+  "merged": true,
+  "mergedAt": "2026-01-29T00:51:55",
+  "mergeableState": "unknown",
+  "baseBranch": "main",
+  "headBranch": "fix/skia-submodule-ref",
+  "additions": 25,
+  "deletions": 4,
+  "changedFiles": 2,
+  "commits": 2,
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:36:15.745816Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3814724713,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied specifically for documentation updates related to the merging process and submodule handling.\n\nThis issue is not a regression as it pertains solely to documentation updates and does not involve any specific backend technologies or operational systems.\n\nAdditional remarks:\n* The issue does not pertain to any specific operating system or backend technologies, which limits the applicability of further labels.\n* It primarily addresses the merging process and submodule handling without inaccuracies in performance, reliability, or compatibility.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue focuses on documentation updates related to the merging process and submodule handling.\n- There are no specific details regarding the operating system or backend technologies discussed.\n- The issue does not suggest any regression, as it is purely documentation based.\n\nSummary of the actions that will be performed:\n\n| Action      | Item         | Description                                                                 |\n| :---------- | :----------- | :-------------------------------------------------------------------------- |\n| Apply Label | area/Docs    | The issue relates to updates in documentation regarding merging and submodules. |\n\n\u003C/details\u003E\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2026-01-29T00:52:11",
+        "reactions": []
+      }
+    ]
+  }
+}

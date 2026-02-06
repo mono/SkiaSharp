@@ -1,0 +1,127 @@
+{
+  "number": 3420,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Android 16 KB page size support for libSkiaSharp.so",
+  "body": "[16KB_PageSize_Report.txt](https://github.com/user-attachments/files/23669684/16KB_PageSize_Report.txt)\n\n[Android16_PageSize_Issue.pdf](https://github.com/user-attachments/files/23547442/Android16_PageSize_Issue.pdf)\n\n### Description\n\n**Description**\nGoogle Play now requires all 64-bit native libraries to use 16 KB memory page size starting with Android 16\u002B. Currently, libSkiaSharp.so included in SkiaSharp.NativeAssets.Android v2.88.6 has a 4 KB page size, which prevents apps from targeting Android 16\u002B.\n\n**Steps to reproduce**\n1. Create a .NET MAUI Android app targeting Android 16.\n2. Build AAB using current SkiaSharp (v2.88.6) / MAUI workload.\n3. Run page size check on .so files.\n4. libSkiaSharp.so shows 4 KB page size.\n\n**Expected behavior**\nlibSkiaSharp.so should be built with 16 KB page size to comply with Android 16\u002B requirements.\n\n**Environment**\n- SkiaSharp.NativeAssets.Android v2.88.6\n- .NET MAUI 9.0\n- Android 16\u002B target\n\n**References**\n- Google page size guide: https://developer.android.com/guide/practices/page-sizes\n- MAUI discussion: https://github.com/dotnet/maui/discussions/30428\n\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "baharvipin",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Android",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/compatibility",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/Android",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-11-14T11:45:15",
+  "updatedAt": "2026-01-31T15:06:07",
+  "commentCount": 3,
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:36:46.0777051Z",
+    "reactions": [
+      {
+        "user": "Willibaur",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:36:46.0777074Z"
+      },
+      {
+        "user": "TheSundayDev",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:36:46.0777078Z"
+      },
+      {
+        "user": "trup40",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:36:46.077708Z"
+      },
+      {
+        "user": "jmosbech",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:36:46.0777081Z"
+      },
+      {
+        "user": "Delphinidae84",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:36:46.0777084Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3532367979,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied indicating the affected areas of the backend (Android) and the compatibility issues related to the native library \u0027libSkiaSharp.so\u0027.\n\nThis issue is not specifically indicated as a regression, but it highlights compliance concerns with Android 16\u002B requirements.\n\nAdditional remarks:\n* The problem appears to stem from the incorrect memory page size of the libSkiaSharp.so library, which affects compatibility with the specified Android version.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue affects the backend integration with SkiaSharp.NativeAssets.Android.\n- The specific concern involves compatibility with Android 16\u002B due to incorrect memory page sizes of the \u0027libSkiaSharp.so\u0027 library.\n- The issue pertains directly to bugs affecting Android applications linked to Google\u0027s requirements for targeting Android 16\u002B.\n\nSummary of the actions that will be performed:\n\n| Action       | Item                      | Description                                                                                                          |\n| :----------- | :----------------------- | :------------------------------------------------------------------------------------------------------------------- |\n| Apply Label  | backend/Android          | The issue specifically pertains to SkiaSharp.NativeAssets.Android integration and its compliance with Android 16\u002B. |\n| Apply Label  | tenet/compatibility      | The issue relates to the compatibility concerns due to incorrect memory page size of the \u0027libSkiaSharp.so\u0027 library. |\n| Apply Label  | os/Android               | The issue directly relates to a bug affecting Android applications regarding page size requirements for Android 16\u002B. |\n| Apply Label  | area/libSkiaSharp.native | The issue specifically relates to the native library \u0027libSkiaSharp.so\u0027 and compliance with Android requirements.    |\n\n\u003C/details\u003E\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2025-11-14T11:45:49",
+        "reactions": []
+      },
+      {
+        "id": 3677086811,
+        "author": "ngpp564",
+        "body": "Any update on this ?",
+        "createdAt": "2025-12-20T00:34:56",
+        "reactions": [
+          {
+            "user": "TheSundayDev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:45.7923809Z"
+          },
+          {
+            "user": "davidbauer2",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:45.7923812Z"
+          },
+          {
+            "user": "badjester",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:45.7923813Z"
+          },
+          {
+            "user": "TheRDavid",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:45.7923815Z"
+          },
+          {
+            "user": "trup40",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:45.7923816Z"
+          },
+          {
+            "user": "null264",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:45.7923817Z"
+          },
+          {
+            "user": "Delphinidae84",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:45.7923817Z"
+          }
+        ]
+      },
+      {
+        "id": 3828684698,
+        "author": "mattleibow",
+        "body": "Have you tried the 3.x series of SkiaSharp? \n\nThe 2.x series is not really supported and will be really hard to build with all the out of date components. ",
+        "createdAt": "2026-01-31T15:06:07",
+        "reactions": []
+      }
+    ]
+  }
+}

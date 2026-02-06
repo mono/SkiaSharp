@@ -1,0 +1,22 @@
+{
+  "number": 3283,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] On Android, SKTypeface.FromFamilyName returns either serif or sans serif for installed font.",
+  "body": "### Description\n\nI\u0027m hitting this issue on Android.\n\n* I\u0027m calling SKFontManager.Default.GetFontFamilies() to enumerate the available fonts.\n* Later, I\u0027m calling SKTypeface.FromFamilyName(name, SKFontStyle) with a name returned from GetFontFamilies\n* The returned SKTypeface.FamilyName does not match the requested font.\n* I call a second time using SKTypeface.FromFamilyName(string name) and get the same result.\n\nFor example, on the Android simulator, \u0027georgia\u0027 is returned from GetFontFamilies yet both calls to SKTypeface.FromFamilyName return an SKTypeface with FamilyName = \u0027serif\u0027.\n\nThe only fonts that return the expected FontFamily are the various sans serif/serif fonts.  All the others either return sans-serif, sans, or monospace.\n\nI don\u0027t see this issue on Windows and have not tested yet tested on IOS or MacCatalyst.\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nSKTypeface.FromFontFamily should return the expected font when using a named returned  FontManager.GetFontFamilies\n\n### Actual Behavior\n\nOther than the family of serif fonts, calling SKTypeface.FromFontFamily appears to fallback to sans, sans-serif or monospaced.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\nAndroid 13\n.Net 9.0\nMaui 9.0.50\nSkiaSharp 3.116.1\n\n### Devices\n\nAndroid Emulator\n\n\n### Relevant Screenshots\n\n![Image](https://github.com/user-attachments/assets/9178d9c0-cb82-4737-bea8-0d966c4d6ca0)\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "DanTravison",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-06-02T00:40:41",
+  "updatedAt": "2025-06-02T13:20:02",
+  "commentCount": 2,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 3335,
+  "type": "issue",
+  "state": "closed",
+  "title": "[3.116.1, Android] SKGLView throws often an abort upon exit on Android",
+  "body": "### Description\n\nIn our game GnollHack, we are seeing Sentry reports that SKGLView crashes upon app exit on Android. Other platforms work fine. The stack trace is as follows:\n\n\u0060\u0060\u0060\nlibc\n\u002B0x0705fc\nabort\n\nlibc\u002B\u002B\n\u002B0x07d328\n\u003Cunknown\u003E\n\nlibc\u002B\u002B\n\u002B0x07bdf4\n\u003Cunknown\u003E\n\nlibc\u002B\u002B\n\u002B0x07c36c\n\u003Cunknown\u003E\n\nlibc\u002B\u002B\n\u002B0x07c310\nstd::terminate\n\nlibc\u002B\u002B\n\u002B0x0a3064\nstd::__1::thread::~thread\n\nlibEGL\n\u002B0x030b6c\n\u003Cunknown\u003E\n\nlibEGL\n\u002B0x015ed4\nandroid::egl_cache_t::terminate\n\nlibEGL\n\u002B0x016eac\nandroid::egl_display_t::~egl_display_t\n\nlibEGL\n\u002B0x01ac84\n\u003Cunknown\u003E\n\nlibc\n\u002B0x071190\n__cxa_finalize\n\nlibc\n\u002B0x075884\nexit\n\nlibmonosgen-2.0\n\u002B0x220258\n\u003Cunknown\u003E\n\n\u003Cunknown\u003E\n0x7187a74df4\n\u003Cunknown\u003E\n\u0060\u0060\u0060\n\nThis suggests that the GLThread or another GL related thread is still in a state that it needs to be aborted upon program exit. We\u0027ve tried to clean SKGLView in many ways in advance, but the experience is that the crashing problem becomes then only more severe, so this may be a problem within SkiaSharp and SKGLView implementation on Android.\n\nHowever, the SKGLViews are not even active or visible anymore, as they are in the GamePage, which already has been removed from view and possibly garbage collected. But something\u0027s been potentially left lingering on the GL side, so perhaps some thread-specific clean up from SKGLView has not fully worked out or is missing entirely.\n\n### Code\n\nhttps://github.com/hyvanmielenpelit/GnollHackMAUIEasyBuild/tree/420-69\n\n\n### Expected Behavior\n\nNo abort crash at app exit.\n\n### Actual Behavior\n\nOn upon exiting the app, the app crashes at abort from a GL related thread.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\nAndroid 16\n\n### Devices\n\nGoogle Pixel 6a (our test device)\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nSee the stack trace in description.\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-08-16T11:15:13",
+  "updatedAt": "2025-08-19T20:13:01",
+  "closedAt": "2025-08-19T20:13:01",
+  "commentCount": 4,
+  "reactionCount": 1
+}

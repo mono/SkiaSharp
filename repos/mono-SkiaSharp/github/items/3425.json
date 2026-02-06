@@ -1,0 +1,55 @@
+{
+  "number": 3425,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Bump libexpat in Skia deps to \u22652.6.4 (CVE-2024-50602)",
+  "body": "### Description\n\nhttps://nvd.nist.gov/vuln/detail/CVE-2024-50602 affects libexpat \u003C 2.6.4 . Request to update third_party/libexpat to 2.6.4\u002B and rebuild Skia so downstream native assets like SkiaSharp do not contain the vulnerable expat.\n\n### Code\n\n.\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio Code (Windows)\n\n### Platform / Operating System\n\ntvOS, Windows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "pkedalag",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "os/tvOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/libSkiaSharp.native",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-12-03T00:21:28",
+  "updatedAt": "2026-01-27T22:11:54",
+  "closedAt": "2026-01-27T22:11:54",
+  "commentCount": 2,
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:37:06.148336Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3604490611,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate the affected components (SkiaSharp, tvOS, and Windows-Classic) regarding the security vulnerability from a dependency update.\n\nThis issue is not categorized as a regression, as it pertains to a security vulnerability instead of functionality changes or performance problems.\n\nAdditional remarks:\n* The focus is primarily on updating a dependency due to a security concern.\n* There are no relevant labels available to further specify the issue\u0027s context regarding backend categories.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue involves updating a dependency (libexpat) affecting Skia and its C# bindings, specifically related to a security vulnerability.\n- The issue is relevant to the tvOS platform as it has been specifically mentioned.\n- Development is being conducted in a Windows environment using Visual Studio Code, which corresponds to the Windows-Classic label.\n- This is not a regression and does not affect performance, reliability, or compatibility.\n\nSummary of the actions that will be performed:\n\n| Action       | Item                       | Description                                                                                                 |\n| :----------- | :------------------------- | :---------------------------------------------------------------------------------------------------------- |\n| Apply Label  | area/libSkiaSharp.native   | The issue relates to updating a dependency (libexpat) affecting Skia and its C# bindings due to security. |\n| Apply Label  | os/tvOS                   | The issue specifically mentions impact on the tvOS platform.                                               |\n| Apply Label  | os/Windows-Classic        | The issue is being developed and addressed in a Windows environment using Visual Studio Code.              |\n\n\u003C/details\u003E\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2025-12-03T00:22:07",
+        "reactions": []
+      },
+      {
+        "id": 3805821454,
+        "author": "mattleibow",
+        "body": "Fixed by bumping libexpat from 2.6.4 to 2.7.3 in mono/skia@58763ac5b0.\n\nThis update addresses:\n- **CVE-2024-50602** (CVSS 5.9 Medium) - Parser crash (was already fixed in 2.6.4)\n- **CVE-2025-59375** (CVSS 7.5 HIGH) - Memory exhaustion DoS\n\nThe fix will be included in the next SkiaSharp release.",
+        "createdAt": "2026-01-27T15:21:02",
+        "reactions": []
+      }
+    ]
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "number": 3376,
+  "type": "pr",
+  "state": "open",
+  "title": "Disposing SKStreamAsset when asset MemoryBase is not IntPtr.Zero",
+  "body": "Extension \u0060public static Blob ToHarfBuzzBlob(this SKStreamAsset asset)\u0060 may leak when asset MemoryBase is not IntPtr.Zero.\r\n\r\nAfter freeing memory, Dispose to SKStreamAsset (SKNativeObject) is added.\r\n\r\n**Bugs Fixed**\r\n\r\n- Discussion #3373\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n\u003C!-- Describe any non-bug related behavioral changes that may change how users app behaves when upgrading to this version of the codebase. --\u003E\r\n\r\n**Required skia PR**\r\n\r\nNone.\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "michaldobrodenka",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-10-03T10:45:13",
+  "updatedAt": "2026-01-28T08:40:45",
+  "commentCount": 7,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "behind",
+  "baseBranch": "main",
+  "headBranch": "main",
+  "additions": 1,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 1,
+  "reviews": [
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-01-26T23:01:12"
+    }
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:36:59.5750867Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3365398050,
+        "author": "michaldobrodenka",
+        "body": "@dotnet-policy-service agree\r\n\r\n\r\npi 3. 10. 2025 o 13:37 dotnet-policy-service[bot] ***@***.***\u003E\r\nnap\u00EDsal(a):\r\n\r\n\u003E *dotnet-policy-service[bot]* left a comment (mono/SkiaSharp#3376)\r\n\u003E \u003Chttps://github.com/mono/SkiaSharp/pull/3376#issuecomment-3365362736\u003E\r\n\u003E\r\n\u003E @michaldobrodenka \u003Chttps://github.com/michaldobrodenka\u003E please read the\r\n\u003E following Contributor License Agreement(CLA). If you agree with the CLA,\r\n\u003E please reply with the following information.\r\n\u003E\r\n\u003E @dotnet-policy-service agree [company=\u0022{your company}\u0022]\r\n\u003E\r\n\u003E Options:\r\n\u003E\r\n\u003E    - (default - no company specified) I have sole ownership of\r\n\u003E    intellectual property rights to my Submissions and I am not making\r\n\u003E    Submissions in the course of work for my employer.\r\n\u003E\r\n\u003E @dotnet-policy-service agree\r\n\u003E\r\n\u003E\r\n\u003E    - (when company given) I am making Submissions in the course of work\r\n\u003E    for my employer (or my employer has intellectual property rights in my\r\n\u003E    Submissions by contract or applicable law). I have permission from my\r\n\u003E    employer to make Submissions and enter into this Agreement on behalf of my\r\n\u003E    employer. By signing below, the defined term \u201CYou\u201D includes me and my\r\n\u003E    employer.\r\n\u003E\r\n\u003E @dotnet-policy-service agree company=\u0022Microsoft\u0022\r\n\u003E\r\n\u003E Contributor License Agreement Contribution License Agreement\r\n\u003E\r\n\u003E This Contribution License Agreement ( *\u201CAgreement\u201D* ) is agreed to by the\r\n\u003E party signing below ( *\u201CYou\u201D* ),\r\n\u003E and conveys certain license rights to the .NET Foundation ( *\u201C.NET\r\n\u003E Foundation\u201D* ) for Your contributions to\r\n\u003E .NET Foundation open source projects. This Agreement is effective as of\r\n\u003E the latest signature date below.\r\n\u003E\r\n\u003E *1. Definitions.*\r\n\u003E\r\n\u003E *\u201CCode\u201D* means the computer software code, whether in human-readable or\r\n\u003E machine-executable form,\r\n\u003E that is delivered by You to .NET Foundation under this Agreement.\r\n\u003E\r\n\u003E *\u201CProject\u201D* means any of the projects owned or managed by .NET Foundation\r\n\u003E and offered under a license\r\n\u003E approved by the Open Source Initiative (www.opensource.org).\r\n\u003E\r\n\u003E *\u201CSubmit\u201D* is the act of uploading, submitting, transmitting, or\r\n\u003E distributing code or other content to any\r\n\u003E Project, including but not limited to communication on electronic mailing\r\n\u003E lists, source code control\r\n\u003E systems, and issue tracking systems that are managed by, or on behalf of,\r\n\u003E the Project for the purpose of\r\n\u003E discussing and improving that Project, but excluding communication that is\r\n\u003E conspicuously marked or\r\n\u003E otherwise designated in writing by You as \u201CNot a Submission.\u201D\r\n\u003E\r\n\u003E *\u201CSubmission\u201D* means the Code and any other copyrightable material\r\n\u003E Submitted by You, including any\r\n\u003E associated comments and documentation.\r\n\u003E\r\n\u003E *2. Your Submission.* You must agree to the terms of this Agreement\r\n\u003E before making a Submission to any\r\n\u003E Project. This Agreement covers any and all Submissions that You, now or in\r\n\u003E the future (except as\r\n\u003E described in Section 4 below), Submit to any Project.\r\n\u003E\r\n\u003E *3. Originality of Work.* You represent that each of Your Submissions is\r\n\u003E entirely Your\r\n\u003E original work. Should You wish to Submit materials that are not Your\r\n\u003E original work,\r\n\u003E You may Submit them separately to the Project if You (a) retain all\r\n\u003E copyright and\r\n\u003E license information that was in the materials as you received them, (b) in\r\n\u003E the\r\n\u003E description accompanying your Submission, include the phrase \u0022Submission\r\n\u003E containing materials of a third party:\u0022 followed by the names of the third\r\n\u003E party and any\r\n\u003E licenses or other restrictions of which You are aware, and (c) follow any\r\n\u003E other\r\n\u003E instructions in the Project\u0027s written guidelines concerning Submissions.\r\n\u003E\r\n\u003E *4. Your Employer.* References to \u201Cemployer\u201D in this Agreement include\r\n\u003E Your employer or anyone else\r\n\u003E for whom You are acting in making Your Submission, e.g. as a contractor,\r\n\u003E vendor, or agent. If Your\r\n\u003E Submission is made in the course of Your work for an employer or Your\r\n\u003E employer has intellectual\r\n\u003E property rights in Your Submission by contract or applicable law, You must\r\n\u003E secure permission from Your\r\n\u003E employer to make the Submission before signing this Agreement. In that\r\n\u003E case, the term \u201CYou\u201D in this\r\n\u003E Agreement will refer to You and the employer collectively. If You change\r\n\u003E employers in the future and\r\n\u003E desire to Submit additional Submissions for the new employer, then You\r\n\u003E agree to sign a new Agreement\r\n\u003E and secure permission from the new employer before Submitting those\r\n\u003E Submissions.\r\n\u003E\r\n\u003E *5. Licenses.*\r\n\u003E\r\n\u003E *a. Copyright License.* You grant .NET Foundation, and those who receive\r\n\u003E the Submission directly\r\n\u003E or indirectly from .NET Foundation, a perpetual, worldwide, non-exclusive,\r\n\u003E royalty-free, irrevocable\r\n\u003E license in the Submission to reproduce, prepare derivative works of,\r\n\u003E publicly display, publicly perform,\r\n\u003E and distribute the Submission and such derivative works, and to sublicense\r\n\u003E any or all of the foregoing\r\n\u003E rights to third parties.\r\n\u003E\r\n\u003E *b. Patent License.* You grant .NET Foundation, and those who receive the\r\n\u003E Submission directly or\r\n\u003E indirectly from .NET Foundation, a perpetual, worldwide, non-exclusive,\r\n\u003E royalty-free, irrevocable license\r\n\u003E under Your patent claims that are necessarily infringed by the Submission\r\n\u003E or the combination of the\r\n\u003E Submission with the Project to which it was Submitted to make, have made,\r\n\u003E use, offer to sell, sell and\r\n\u003E import or otherwise dispose of the Submission alone or with the Project.\r\n\u003E\r\n\u003E *c. Other Rights Reserved.* Each party reserves all rights not expressly\r\n\u003E granted in this Agreement.\r\n\u003E No additional licenses or rights whatsoever (including, without\r\n\u003E limitation, any implied licenses) are\r\n\u003E granted by implication, exhaustion, estoppel or otherwise.\r\n\u003E\r\n\u003E *6. Representations and Warranties.* You represent that You are legally\r\n\u003E entitled to grant the above\r\n\u003E licenses. You represent that each of Your Submissions is entirely Your\r\n\u003E original work (except as You may\r\n\u003E have disclosed under Section 3 ). You represent that You have secured\r\n\u003E permission from Your employer to\r\n\u003E make the Submission in cases where Your Submission is made in the course\r\n\u003E of Your work for Your\r\n\u003E employer or Your employer has intellectual property rights in Your\r\n\u003E Submission by contract or applicable\r\n\u003E law. If You are signing this Agreement on behalf of Your employer, You\r\n\u003E represent and warrant that You\r\n\u003E have the necessary authority to bind the listed employer to the\r\n\u003E obligations contained in this Agreement.\r\n\u003E You are not expected to provide support for Your Submission, unless You\r\n\u003E choose to do so. UNLESS\r\n\u003E REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING, AND EXCEPT FOR THE\r\n\u003E WARRANTIES\r\n\u003E EXPRESSLY STATED IN SECTIONS 3, 4, AND 6 , THE SUBMISSION PROVIDED UNDER\r\n\u003E THIS AGREEMENT IS\r\n\u003E PROVIDED WITHOUT WARRANTY OF ANY KIND, INCLUDING, BUT NOT LIMITED TO, ANY\r\n\u003E WARRANTY OF\r\n\u003E NONINFRINGEMENT, MERCHANTABILITY, OR FITNESS FOR A PARTICULAR PURPOSE.\r\n\u003E\r\n\u003E *7. Notice to .NET Foundation.* You agree to notify .NET Foundation in\r\n\u003E writing of any facts or\r\n\u003E circumstances of which You later become aware that would make Your\r\n\u003E representations in this\r\n\u003E Agreement inaccurate in any respect.\r\n\u003E\r\n\u003E *8. Information about Submissions.* You agree that contributions to\r\n\u003E Projects and information about\r\n\u003E contributions may be maintained indefinitely and disclosed publicly,\r\n\u003E including Your name and other\r\n\u003E information that You submit with Your Submission.\r\n\u003E\r\n\u003E *9. Governing Law/Jurisdiction.* This Agreement is governed by the laws\r\n\u003E of the State of Washington, and\r\n\u003E the parties consent to exclusive jurisdiction and venue in the federal\r\n\u003E courts sitting in King County,\r\n\u003E Washington, unless no federal subject matter jurisdiction exists, in which\r\n\u003E case the parties consent to\r\n\u003E exclusive jurisdiction and venue in the Superior Court of King County,\r\n\u003E Washington. The parties waive all\r\n\u003E defenses of lack of personal jurisdiction and forum non-conveniens.\r\n\u003E\r\n\u003E *10. Entire Agreement/Assignment.* This Agreement is the entire agreement\r\n\u003E between the parties, and\r\n\u003E supersedes any and all prior agreements, understandings or communications,\r\n\u003E written or oral, between\r\n\u003E the parties relating to the subject matter hereof. This Agreement may be\r\n\u003E assigned by .NET Foundation.\r\n\u003E\r\n\u003E *.NET Foundation dedicates this Contribution License Agreement to the\r\n\u003E public domain according to the Creative Commons CC0 1.*\r\n\u003E\r\n\u003E \u2014\r\n\u003E Reply to this email directly, view it on GitHub\r\n\u003E \u003Chttps://github.com/mono/SkiaSharp/pull/3376#issuecomment-3365362736\u003E, or\r\n\u003E unsubscribe\r\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/AASAUSYBXNRR6CD4MKYNS2D3VZNYFAVCNFSM6AAAAACIGHA4DWVHI2DSMVQWIX3LMV43OSLTON2WKQ3PNVWWK3TUHMZTGNRVGM3DENZTGY\u003E\r\n\u003E .\r\n\u003E You are receiving this because you were mentioned.Message ID:\r\n\u003E ***@***.***\u003E\r\n\u003E\r\n",
+        "createdAt": "2025-10-03T11:52:21",
+        "reactions": []
+      },
+      {
+        "id": 3370354851,
+        "author": "michaldobrodenka",
+        "body": "Fixes #3378\r\n",
+        "createdAt": "2025-10-06T07:52:54",
+        "reactions": []
+      },
+      {
+        "id": 3373821687,
+        "author": "molesmoke",
+        "body": "It is kind of odd that \u0060SKStreamAsset\u0060 is disposed on one path but not the other (and the caller doesn\u0027t know which). My two cents is that the problem is more that \u0060SKShaper\u0060 doesn\u0027t dispose the intermediate \u0060SKStreamAsset\u0060 from the \u0060Typeface\u0060. The leaking stream could already have been destroyed by the time the constructor exits (assuming that the \u0060Font\u0060 no longer requires access to the \u0060Blob\u0060 - since it\u0027s written that way already).",
+        "createdAt": "2025-10-06T20:08:38",
+        "reactions": []
+      },
+      {
+        "id": 3802135232,
+        "author": "mattleibow",
+        "body": "The extension method copies the data and does not own or keep a reference to the asset. Would it be better to maybe fix the caller?\r\n\r\nSince the stream may be in use by some othercode, disposing the harfbuzz object will now cause issues. ",
+        "createdAt": "2026-01-26T22:51:11",
+        "reactions": [
+          {
+            "user": "molesmoke",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:36:58.6280848Z"
+          }
+        ]
+      },
+      {
+        "id": 3802221734,
+        "author": "molesmoke",
+        "body": "\u003E Since the stream may be in use by some othercode, disposing the harfbuzz object will now cause issues.\r\n\r\nUnfortunately, the asset is already being disposed on the other path (that should probably be removed), and SKShaper should probably be something like:\r\n\r\n\u0060\u0060\u0060\r\n\t\tpublic SKShaper(SKTypeface typeface)\r\n\t\t{\r\n\t\t\tTypeface = typeface ?? throw new ArgumentNullException(nameof(typeface));\r\n\r\n\t\t\tint index;\r\n\t\t\tusing (var stream = Typeface.OpenStream(out index))\r\n\t\t\tusing (var blob = stream.ToHarfBuzzBlob())\r\n\t\t\tusing (var face = new Face(blob, index))\r\n\t\t\t{\r\n\t\t\t\tface.Index = index;\r\n\t\t\t\tface.UnitsPerEm = Typeface.UnitsPerEm;\r\n\r\n\t\t\t\thbFont = new Font(face);\r\n\t\t\t\thbFont.SetScale(FONT_SIZE_SCALE, FONT_SIZE_SCALE);\r\n\r\n\t\t\t\thbFont.SetFunctionsOpenType();\r\n\t\t\t}\r\n\r\n\t\t\thbBuffer = new Buffer();\r\n\t\t}\r\n\u0060\u0060\u0060\r\n\r\nI can put a PR for that instead if you want?\r\n",
+        "createdAt": "2026-01-26T23:19:01",
+        "reactions": []
+      },
+      {
+        "id": 3807602750,
+        "author": "jeremy-visionaid",
+        "body": "I\u0027ve put an alternate PR here to remove the stream disposal on the other path and fix the SKShaper constructor: https://github.com/mono/SkiaSharp/pull/3466",
+        "createdAt": "2026-01-27T21:22:29",
+        "reactions": []
+      },
+      {
+        "id": 3809823576,
+        "author": "michaldobrodenka",
+        "body": "\u003E I\u0027ve put an alternate PR here to remove the stream disposal on the other path and fix the SKShaper constructor: #3466\r\n\r\nGreat, that may be the way forward",
+        "createdAt": "2026-01-28T08:40:45",
+        "reactions": []
+      }
+    ]
+  }
+}

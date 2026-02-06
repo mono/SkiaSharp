@@ -1,0 +1,42 @@
+{
+  "number": 3437,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] text elements missing values when \u0060SKSvgCanvas\u0060 is used in parallel",
+  "body": "### Description\n\nWhen creating an \u0060SKSvgCanvas\u0060 in a thread (via \u0060Task.Run()\u0060), \u0060\u003Ctext\u003E\u0060 elements will sometimes have their text value and \u0060x\u0060/\u0060y\u0060 attribute values removed.\n\nThe more text elements being drawn and the more threads running the same task, the more likely the problem is to occur.\n\nThis is an issue for my application because it renders many plots to SVG in parallel tasks, and this is how I found the bug. This affects all SkiaSharp 3.x versions on Windows. Linux is unaffected.\n\nThis is a regression from SkiaSharp 2.88.9 which does not have the bug.\n\n### Code\n\nGitHub repository with full source code to reproduce: https://github.com/jankurianski/skiasharp-svg-text-missing-bug\n\nThe salient parts of the reproduction are:\n\u0060\u0060\u0060cs\nRegex containsBlankTextElement = new Regex(@\u0022\u003E\\s\u002B\u003C/text\u003E\u0022);\n// The bug will occur even with 1 text element, but more increases the chance of hitting it.\nint numTextElementsPerTask = 10;\n\nFunc\u003Cint, string\u003E drawSvgFunc = (int taskI) =\u003E {\n    using (var svgStream = new MemoryStream()) {\n        using (var canvas = SKSvgCanvas.Create(new SKRect(0, 0, 500, 500), svgStream)) {\n            for (int i = 0; i \u003C numTextElementsPerTask; i\u002B\u002B) {\n                using var paint = ...\n                using var typeface = ...\n                using var font = ...\n\n                var text = $\u0022Hello, World {i \u002B 1} of {numTextElementsPerTask}!\u0022;\n                canvas.DrawText(text, 10, i * 15 \u002B 20, align, font, paint);\n            }\n        }\n        svgStream.Position = 0;\n        svgBytes = svgStream.ToArray();\n    }\n    var svgStringDecoded = Encoding.UTF8.GetString(svgBytes);\n    bool containsBlankText = containsBlankTextElement.IsMatch(svgStringDecoded);\n    if (containsBlankText) {\n        Console.WriteLine($\u0022**bug found** during generation task {taskI} in first check\u0022);\n    }\n    return svgStringDecoded;\n};\n\nawait Task.WhenAll(\n    Enumerable.Range(0, 5)\n    .Select(i =\u003E Task.Run(() =\u003E drawSvgFunc(i)))\n    ).ConfigureAwait(false);\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n\u0060\u003Ctext\u003E\u0060 elements should always contain the text values, even if \u0060SKSvgCanvas\u0060 is created in a thread:\n\n\u0060\u0060\u0060\n\u003Ctext font-size=\u002214\u0022 font-family=\u0022Arial\u0022 x=\u002210, 20.110352, 27.896484, 31.006836, 34.117188, 41.90332, 45.792969, 49.682617, 62.896484, 70.682617, 75.344727, 78.455078, 86.241211, 90.130859, 97.916992, 101.80664, 109.59277, 113.48242, 117.37207, 125.1582, 132.94434, \u0022 y=\u002220, \u0022\u003E\nHello, World 1 of 10!\n\u003C/text\u003E\n\u0060\u0060\u0060\n\n### Actual Behavior\n\n\u0060\u003Ctext\u003E\u0060 elements are missing their text values as well as \u0060x\u0060 and \u0060y\u0060 attribute values:\n\n\u0060\u0060\u0060\n\u003Ctext font-size=\u002214\u0022 font-family=\u0022Arial\u0022 x=\u0022\u0022 y=\u0022\u0022\u003E\n\n\u003C/text\u003E\n\u0060\u0060\u0060\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n3.119.1\n3.119.2-preview.1\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio Code (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11.\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "jankurianski",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Classic",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp",
+      "color": "0052cc"
+    },
+    {
+      "name": "tenet/reliability",
+      "color": "BFD4F2"
+    },
+    {
+      "name": "backend/SVG",
+      "color": "ededed"
+    },
+    {
+      "name": "backend/SkiaSharp",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-01-09T07:49:12",
+  "updatedAt": "2026-01-09T09:09:24",
+  "commentCount": 2,
+  "reactionCount": 1
+}

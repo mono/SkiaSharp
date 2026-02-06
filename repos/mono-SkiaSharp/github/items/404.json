@@ -28,5 +28,53 @@
   "updatedAt": "2026-02-04T19:50:51",
   "closedAt": "2026-02-04T19:50:51",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:35:21.3914758Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 348661156,
+        "author": "entdark",
+        "body": "It also has crashed on iPad Air with iOS 11.0.3",
+        "createdAt": "2017-12-02T02:26:50",
+        "reactions": []
+      },
+      {
+        "id": 348738232,
+        "author": "migueldeicaza",
+        "body": "Please provide a self-contained test case and reopen the issue.",
+        "createdAt": "2017-12-03T03:47:55",
+        "reactions": []
+      },
+      {
+        "id": 427791888,
+        "author": "entdark",
+        "body": "The issue is related to this: https://developer.apple.com/library/archive/documentation/3DDrawing/Conceptual/OpenGLES_ProgrammingGuide/OpenGLESApplicationDesign/OpenGLESApplicationDesign.html#//apple_ref/doc/uid/TP40008793-CH6-SW15\r\n\u0022You should flush the command buffer when your app moves to the background, because executing OpenGL ES commands on the GPU while your app is in the background causes iOS to terminate your app.\u0022\r\nIs there a way to flush the OpenGL context in SKGLView before minimizing on iOS @mattleibow?\r\nIf no, could such a feature be added?",
+        "createdAt": "2018-10-08T10:54:40",
+        "reactions": []
+      },
+      {
+        "id": 427946445,
+        "author": "mattleibow",
+        "body": "I think I see what might be happening. Chances are the render loop is still running.\r\nI am assuming Xamarin.Forms here?\r\n\r\nThe best option would be to disable the render loop when disappearing and then re-enable on appearing - even if I do any magic here. This way you have full control. But, I think this may actually an issue on other platforms.\r\n\r\nI will investigate.",
+        "createdAt": "2018-10-08T19:07:18",
+        "reactions": []
+      },
+      {
+        "id": 428506325,
+        "author": "entdark",
+        "body": "Yes, Xamarin.Forms.\r\nDo you mean just settings HasRenderLoop = false before minimizing will call glFlush?",
+        "createdAt": "2018-10-10T09:38:16",
+        "reactions": []
+      },
+      {
+        "id": 3849431201,
+        "author": "mattleibow",
+        "body": "Closing this as we no longer support Xamarin.Forms. ",
+        "createdAt": "2026-02-04T19:50:49",
+        "reactions": []
+      }
+    ]
+  }
 }

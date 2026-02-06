@@ -1,0 +1,95 @@
+{
+  "number": 3502,
+  "type": "pr",
+  "state": "open",
+  "title": "Add Spectre mitigation flag for libSkiaSharp.so.",
+  "body": "**Description of Change**\r\n\r\n- Enable Spectre mitigations Binskim [BA2024.EnableSpectreMitigations](https://github.com/microsoft/binskim/blob/main/docs/BinSkimRules.md#rule-ba2024enablespectremitigations)\r\n- Use \u0060-mretpoline\u0060 flag for x86, x64\r\n- Use \u0060-mharden-sls=all\u0060 flag for ARM, ARM64\r\n- The following native module in scope (Linux OS):\r\n\r\n| Library | Platforms | Spectre Mitigation |\r\n|---------|-----------|-------------------|\r\n| libSkiaSharp.so | x86, x64, ARM, ARM64 | \u2705 ENABLED |\r\n\r\n**Bugs Fixed**\r\n\r\nNone.\r\n\r\n**API Changes**\r\n\r\nNone.\r\n\r\n**Behavioral Changes**\r\n\r\nNone.\r\n\r\n**Required skia PR**\r\n\r\nhttps://github.com/mono/skia/pull/168\r\n\r\n**PR Checklist**\r\n\r\n- [ ] Has tests (if omitted, state reason in description)\r\n- [ ] Rebased on top of main at time of PR\r\n- [ ] Merged related skia PRs\r\n- [ ] Changes adhere to coding standard\r\n- [ ] Updated documentation\r\n",
+  "author": {
+    "login": "sshumakov",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "community \u2728",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2026-02-05T18:30:55",
+  "updatedAt": "2026-02-06T07:59:10",
+  "commentCount": 8,
+  "reactionCount": 0,
+  "draft": false,
+  "mergeable": true,
+  "merged": false,
+  "mergeableState": "blocked",
+  "baseBranch": "main",
+  "headBranch": "add-spectre-libskiasharp-linux",
+  "additions": 8,
+  "deletions": 1,
+  "changedFiles": 1,
+  "commits": 4,
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:35:06.5389967Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3855444571,
+        "author": "sshumakov",
+        "body": "/azp run",
+        "createdAt": "2026-02-05T18:31:11",
+        "reactions": []
+      },
+      {
+        "id": 3855445024,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nCommenter does not have sufficient privileges for PR 3502 in repo mono/SkiaSharp\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-05T18:31:18",
+        "reactions": []
+      },
+      {
+        "id": 3855457815,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-05T18:34:13",
+        "reactions": []
+      },
+      {
+        "id": 3855458335,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-05T18:34:21",
+        "reactions": []
+      },
+      {
+        "id": 3857107698,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-06T00:21:03",
+        "reactions": []
+      },
+      {
+        "id": 3857108013,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-06T00:21:10",
+        "reactions": []
+      },
+      {
+        "id": 3857384342,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-06T01:45:24",
+        "reactions": []
+      },
+      {
+        "id": 3857384529,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2026-02-06T01:45:31",
+        "reactions": []
+      }
+    ]
+  }
+}

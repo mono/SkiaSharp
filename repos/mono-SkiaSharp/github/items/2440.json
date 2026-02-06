@@ -13,5 +13,31 @@
   "createdAt": "2023-04-12T13:39:26",
   "updatedAt": "2026-01-28T05:03:26",
   "commentCount": 2,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:37:00.8179463Z",
+    "reactions": [
+      {
+        "user": "hraftery",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:37:00.8179488Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3808889937,
+        "author": "hraftery",
+        "body": "I spent many hours looking for a workaround to this, and finally found two.\n\n### Workaround 1\n\nSwitch to \u0060mcr.microsoft.com/dotnet/runtime:5.0-windowsservercore-ltsc2019\u0060 for your runtime image. Incredibly, this is a 2019 Windows Server image with .NET 5.0, still available today. The more general \u0022windows/servercore:ltsc2019\u0022 will not do.\n\nI successfully ran a project built on \u0060mcr.microsoft.com/dotnet/sdk:5.0\u0060 that has \u0022SkiaSharp\u0022 version 2.88.3. The downside is the run time image is 5.41GB and seems to take a while to start.\n\n### Workaround 2\n\nSwitch to \u0060SkiaSharp.NativeAssets.NanoServer\u0060. The [package](https://www.nuget.org/packages/SkiaSharp.NativeAssets.NanoServer/2.88.3), version 2.88.3, can be added to the project instead of \u0060SkiaSharp\u0060 (although it looks like it gets depended on transitively anyway). I\u0027m yet to investigate handling both. The NanoServer version does not include dependencies on things not in NanoServer, like font subsetting.\n\nYou can also switch to \u0060mcr.microsoft.com/dotnet/runtime:5.0-nanoserver-1809\u0060 for your runtime image. It is 0.3GB instead. The \u00601809\u0060 tag is the [same OS version](https://hub.docker.com/r/microsoft/windows-nanoserver) as the \u0060ltsc2019\u0060 tag of \u0060windows-nanoserver\u0060. However, now that I\u0027ve done this, I see it has the same \u0022Image ID\u0022 as my preferred runtime image, \u0060mcr.microsoft.com/dotnet/runtime:5.0\u0060! So you can draw your own conclusion there.\n\n### Failed attempt to fix\n\nBefore finding the workarounds I spent a long time trying to get SkiaSharp 2.88.3 to work on \u0060mcr.microsoft.com/dotnet/runtime:5.0\u0060. I was unsuccessful, but made some inroads by copying DLLs from the host (a Win 11 PC) into the container. I could see using \u0060Dependencies\u0060 by \u0060lucasg\u0060 that \u0060SkiaSharp.dll\u0060 depends on \u0060libEGL.dll\u0060, and it is reported elsewhere that it needs \u0060opengl32.dll\u0060 and \u0060glu32.dll\u0060. Copying these files into the container didn\u0027t seem to make a difference and I suspect this information relates to a different version.\n\nInstead I noticed \u0060libSkiaSharp\u0060 itself (in the \u0060runtimes\u0060 directory) depends only on a couple of common things, including \u0060FONTSUB.dll\u0060. Copying that over didn\u0027t fix it, but did change the error message! Instead of \u0022The specified module could not be found\u0022 it became \u0022initialization routine failed\u0022. I tried persisting, copying over \u0060ole32.dll\u0060 as well, but got no further. Looks like \u0060.NanoServer\u0060 is just what I want.",
+        "createdAt": "2026-01-28T04:32:45",
+        "reactions": []
+      },
+      {
+        "id": 3808973321,
+        "author": "hraftery",
+        "body": "I see now there are two issues which cover the history here. They are now locked, so I\u0027ll reference them here for posterity:\n\n---\n\n- https://github.com/mono/SkiaSharp/issues/591\n\nThe original \u0022DLL not found in Windows Container\u0022 issue. After chasing the offending DLLs, it was eventually determined that:\n\n  1. \u0060fontsub.dll\u0060 is the last offending dependency, and it relates to a chunk of functionality that may not be missed by many - hence the NanoServer variant was born!\n  1. In the future it might be safest just to statically link SkiaSharp\u0027s dependencies. This was ultimately done in https://github.com/mono/SkiaSharp/issues/136 .\n\n---\n\n- https://github.com/mono/SkiaSharp/issues/676\n\nWherein the long and complicated road to supporting a \u0022NanoServer\u0022 target was completed. I don\u0027t understand the issues here, but boy do I feel them.\n\n---\n\nKudos to all those involved way back then, still benefitting us here in the future.",
+        "createdAt": "2026-01-28T05:03:26",
+        "reactions": []
+      }
+    ]
+  }
 }
