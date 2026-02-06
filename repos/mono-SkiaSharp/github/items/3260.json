@@ -1,0 +1,22 @@
+{
+  "number": 3260,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Release mode crash",
+  "body": "### Description\n\nUpon updating my applicatino from \u00603.118 preview 2.3\u0060 to \u00603.119\u0060, I observed a release mode crash on Android. I opened an issue upstream at the behest of an .NET Android developer, but the issue itself may exist in the library.\n\nOriginal issue: https://github.com/dotnet/android/issues/10096\n\n### Code\n\nNot code related, crashes on initializing a \u0060SKGLView\u0060\n\n### Expected Behavior\n\nNo crash in release mode\n\n### Actual Behavior\n\nActually crashes in release mode\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\n3.118.0-preview.2 (Next Preview)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Android 16\n- Windows 11 26100.3915\n\n### Devices\n\n- Google Pixel 6a\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n[AndroidRuntime] android.runtime.JavaProxyThrowable: [System.NotSupportedException]: Cannot create instance of type \u0027SkiaSharp.Views.Android.SKGLTextureView\u002BInternalRenderer\u0027: no Java peer type found.\n[AndroidRuntime]     at Java.Interop.JniPeerMembers\u002BJniInstanceMethods..ctor \u002B 0x4b(Unknown Source)\n[AndroidRuntime]     at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.GetConstructorsForType \u002B 0x41(Unknown Source)\n[AndroidRuntime]     at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.StartCreateInstance \u002B 0x25(Unknown Source)\n[AndroidRuntime]     at Java.Lang.Object..ctor \u002B 0x2f(Unknown Source)\n[AndroidRuntime]     at SkiaSharp.Views.Android.SKGLTextureViewRenderer..ctor \u002B 0x0(Unknown Source)\n...\n\n\nand\n\n\n[MonoDroid]   --- End of managed Java.Lang.UnsupportedOperationException stack trace ---\n\n[MonoDroid] java.lang.UnsupportedOperationException: TextureView doesn\u0027t support displaying a background drawable\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "daltzctr",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-01T17:09:59",
+  "updatedAt": "2025-06-11T10:12:36",
+  "commentCount": 5,
+  "reactionCount": 0
+}

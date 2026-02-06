@@ -1,0 +1,22 @@
+{
+  "number": 2842,
+  "type": "issue",
+  "state": "open",
+  "title": "[PERFORMANCE] On iOS, layout speed of pages with SKGLView is slow, making layout wobbly at start (SKCanvasView is instantaneous)",
+  "body": "### Description\r\n\r\nOn iOS in all SkiaSharp versions from 2.80.3 to 3.00.0 Preview 3.1, when I have an SKGLView on a page, the layout is ordered visibly slowly (adjusting elements back and forth for a few first 100ms or so), causing undesirable wobbliness to the start of the page / new grid made visible on the existing page. If I change the SKGLView to an SKCanvasView, the layout ordering is instant without any wobbliness. \r\n\r\nIn my case, I have a title, a subtitle, the SKGLView, and a buttons grid on the page, which may change based on which data is being shown. If you change the data on the page, iOS performance is wobbly between the old page data and the new one with SKGLView. On Android or with an SKCanvasView, the page data and the layout are changed instantaneously.\r\n\r\n### Code\r\n\r\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\n\r\n### Expected Behavior\r\n\r\nWith SKGLView, the page layout is ordered instantly when it becomes visible, similar to what happens with SKCanvasView.\r\n\r\n### Actual Behavior\r\n\r\nWith SKGLView, the page layout is ordered over a few first 100s of milliseconds after the page becomes visible, causing it to look wobbly, with various elements being adjusted in position and size over a period of time. This is in GnollHack especially visible on the menu grid on the GamePage (which shows all game menus in the game), where you can move from showing one menu to another using the same grid.\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x (Alpha)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\niOS\r\n\r\n### Platform / Operating System Version\r\n\r\niOS 17.4.1\r\n\r\n### Devices\r\n\r\niPad 11,7 (and all other tested iOS devices)\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-20T13:30:20",
+  "updatedAt": "2024-04-20T13:37:44",
+  "commentCount": 0,
+  "reactionCount": 0
+}

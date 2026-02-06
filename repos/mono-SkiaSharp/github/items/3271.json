@@ -1,0 +1,22 @@
+{
+  "number": 3271,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] The text is not rendered in AWS Lambda while using .NET 8.0",
+  "body": "### Description\n\nWhile trying to render text using SkiaSharp in .NET 8 (AWS Lambda), the text does not appear. It works correctly in .NET 6. We have tested with versions 2.88.6, 2.88.9, and 3.116.1 of SkiaSharp.\n\nBasic Information\n\u2022 NuGet: Skiasharp, SkiaSharp.NativeAssets.Linux.NoDependencies\n\u2022 Version with issue: 2.88.6, 2.88.9, and 3.116.1\n\u2022 IDE: Visual Studio 2022\n\u2022 Platform Target Frameworks: ASP.NET Core application with .NET 8.0\n\u2022 Environment : AWS Lambda\n\n### Code\n\nstring path = @\u0022D:\\Output.png\u0022;\n\nint width = 500;\nint height = 200;\n\nusing var bitmap = new SKBitmap(width, height);\nusing var canvas = new SKCanvas(bitmap);\ncanvas.Clear(SKColors.White); // Optional background color\n\nusing var paint = new SKPaint\n{\n    Color = SKColors.Black,\n    TextSize = 48,\n    IsAntialias = true,\n    Typeface = SKTypeface.FromFamilyName(\u0022Arial\u0022)\n};\n\ncanvas.DrawText(\u0022Hello, SkiaSharp!\u0022, 50, 100, paint);\n\nusing var image = SKImage.FromBitmap(bitmap);\nusing var data = image.Encode(SKEncodedImageFormat.Png, 100); // 100 = quality\nusing var stream = File.OpenWrite(path);\ndata.SaveTo(stream);\n\n### Expected Behavior\n\nThe text should be rendered properly for .Net 8.0 for the 2.88.6, 2.88.9, and 3.116.1 versions of SkiaSharp.\n\n### Actual Behavior\n\nText is not rendered in the output file.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWe didn\u0027t know the Last Known Good Version of SkiaSharp.\n\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\nOutput for the given  sample while using .Net 6.0\n\n![Image](https://github.com/user-attachments/assets/e82adb00-e592-468f-910d-70120dae746f)\n\nOutput for the given sample while using .Net 8.0\n\n![Image](https://github.com/user-attachments/assets/0b6a0117-773e-47af-a0c8-006e513c429d)\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "SivakumarRamya",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-08T13:52:06",
+  "updatedAt": "2025-09-03T11:34:25",
+  "commentCount": 4,
+  "reactionCount": 1
+}

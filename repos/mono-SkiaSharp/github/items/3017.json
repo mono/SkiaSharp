@@ -1,0 +1,22 @@
+{
+  "number": 3017,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKBlendMode.Multiply not working correctly",
+  "body": "### Description\n\nThe multiply blend mode in computer graphics should convert each part of RGBA to float ranging at [0,1], and multiply them. That means if one of the color is 0, then the outcome should be zero no matter what the another one is. However, when I multiply color 0 and color 0xFF000000 (by the way, the uint representation of color takes first byte as alpha, this is inconsistent with the convention). the outcome is not zero.\n\n### Code\n\nDraw the following paint\r\n\u0060\u0060\u0060\r\nvar shader = SKShader.CreateCompose(SKShader.CreateColor(0), SKShader.CreateColor(new(0,0,0,255)), SKBlendMode.Multiply);\r\nvar paint =  new SKPaint() { Shader = shader };\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nThe paint should draw nothing, as the composed color is 0 after multiplication.\n\n### Actual Behavior\n\nIt draws zero RGB with 255 alpha.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11 Home 23H2\n\n### Devices\n\nNitro AN515-58\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "martinrhan",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-25T03:14:22",
+  "updatedAt": "2024-09-25T03:14:22",
+  "commentCount": 0,
+  "reactionCount": 0
+}

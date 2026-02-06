@@ -1,0 +1,22 @@
+{
+  "number": 2771,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] DrawText - Slow Performance",
+  "body": "### Description\r\n\r\nWe\u0027re calling \u0022Canvas.DrawText()\u0022 on a full-screen GL SKSurface (so it is accelerated).  Everything in Skia that we are doing with this Canvas is lightning fast EXCEPT for DrawText calls.\r\n\r\nWe\u0027re trying to render about 100 double-stamped 5-character texts on the screen per Frame, and aiming for a Frame rate of 60 FPS (glass-smooth).    But on our lower-end Android devices, Skia can only render these \u00225-char text labels\u0022 at about 5-per-msec, which means 100 of them takes up 20 msec all by itself, limiting FPS to 50 FPS all by itself.  Plus we have 10 msec of other work to be done, now limiting us to 30 FPS.\r\n\r\nOur \u00225-char-text-labels\u0022 are slow-changing (meaning that for each label we render the same text many many frames in a row).\r\n\r\nWe\u0027ve tried \u0022Paint.GetTextPath\u0022 to capture it for this text, and then use Canvas.Translate() to move it about as the virtual camera is panned.    But \u0022Canvas.DrawPath()\u0022 for this text-path is even slower.\r\n\r\n===\r\nIs there a way to make DrawText run at least 5x faster (for slow-changing short labels) ??\r\n\r\n\r\nA workaround that we haven\u0027t tested yet is to implement a using a large shared SKImage \u0022atlas\u0022 where we pre-render each label to this atlas image, and then to quick-render the Label, we would then use \u0022Canvas.DrawImage()\u0022 cropping the source rectangle to the block that contains the desired label text.\r\n\r\nWe were hoping to avoid this type of workaround.\r\n\r\n\r\n### Code\r\n\u0060\u0060\u0060cs\r\nskCanvas.DrawText(\u00225Char\u0022, x, y, paint);  // Called 200 times per frame, at 60 FPS - so 12K/sec.\r\n\u0060\u0060\u0060\r\n\r\nIt currently only allows us to call it at 10K/sec...   And we have MORE to do, besides print text.\r\n\r\n### Expected Behavior\r\n\r\nExpecting (hoping) skCanvas.DrawText(\u00225Char\u0022) to perform 5x faster.\r\n\r\n### Actual Behavior\r\n\r\nRenders only 10K/sec max..   We need it to render 50K/sec  (5x faster).\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nAndroid\r\n\r\n### Platform / Operating System Version\r\n\r\nAndroid 12 is the specific test device.\r\n\r\n### Devices\r\n\r\nGeneric Android 12 device.\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "najak3d",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-29T06:09:03",
+  "updatedAt": "2025-05-02T19:04:45",
+  "commentCount": 7,
+  "reactionCount": 0
+}

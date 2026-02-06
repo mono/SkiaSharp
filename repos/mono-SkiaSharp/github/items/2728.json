@@ -1,0 +1,22 @@
+{
+  "number": 2728,
+  "type": "issue",
+  "state": "open",
+  "title": "Unable to load DLL \u0027libSkiaSharp\u0027 when referenced in class library targetting netstandard1.3",
+  "body": "### Description\n\nSkiaSharp beginner here, using VS2019. I created an ASP.NET WebForms application, targetting .NET Framework 4.6 (=.NETStandard 1.3), and installed SkiaSharp v2.88.7 NuGet package in a class library referenced by the WebForms application, compiling as AnyCPU. On build the LibSkiaSharp.dll is not deployed to any bin folder and on runtime I get the infamous error:\r\n\r\n_Unable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found._\r\n\r\nI added\r\n\u0060\u0060\u0060\r\n\u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\r\n\u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E\r\n\u0060\u0060\u0060\r\nto all PropertyGroups of both the class library and Webforms application *.csproj files, but it makes no difference. I\u0027m out of ideas... From what I could research:\r\n\r\n- #513: AnyCPU should be supported with the snippet above added to csproj;\r\n-  #955: C\u002B\u002B VS 2015 dist is statically compiled in since v1.68.x, no need to install it;\r\n- #1726: LibSkiaSharp.dll should be copied without issues for library projects;\r\n\r\nI confirmed the same issue happens on version 2.80.0.\r\nSkiaSharp v1.68.3 works fine and I do get libSkiaSharp.dll deployed in the bin folder, so for now I will continue using that version.\n\n### Code\n\nI created a sample project to reproduce the issue and uploaded it to the following GitHub repository:\r\n\r\nhttps://github.com/lbras/SkiaSharpTestWebFormsNETFramework46\n\n### Expected Behavior\n\nLibSkiaSharp.dll should be copied to the application bin folder\n\n### Actual Behavior\n\nLibSkiaSharp.dll is not deployed with the application, resulting in runtime errors\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n1.x (Obsolete)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 10\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n[DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)]\r\n   SkiaSharp.SkiaApi.sk_data_new_empty() \u002B0\r\n   SkiaSharp.SKData..cctor() \u002B28\r\n\r\n[TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception.]\r\n   SkiaSharp.SKData.Create(Stream stream) \u002B0\r\n   SkiaSharp.SKImage.FromEncodedData(Stream data) \u002B33\r\n   Imaging.ImageFile.IsValid() in D:\\Repos\\SkiaSharpTestWebFormsNETFramework46\\Imaging\\ImageFile.cs:30\r\n   SkiaSharpTestWebFormsNETFramework46._Default.Page_Load(Object sender, EventArgs e) in D:\\Repos\\SkiaSharpTestWebFormsNETFramework46\\Web\\Default.aspx.cs:21\r\n   System.Web.Util.CalliEventHandlerDelegateProxy.Callback(Object sender, EventArgs e) \u002B85\r\n   System.Web.UI.Control.OnLoad(EventArgs e) \u002B79\r\n   System.Web.UI.Control.LoadRecursive() \u002B130\r\n   System.Web.UI.Page.ProcessRequestMain(Boolean includeStagesBeforeAsyncPoint, Boolean includeStagesAfterAsyncPoint) \u002B2852\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "lbras",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-30T20:57:52",
+  "updatedAt": "2024-11-13T04:09:37",
+  "commentCount": 8,
+  "reactionCount": 0
+}

@@ -1,0 +1,22 @@
+{
+  "number": 3109,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Unacceptable drop of performance",
+  "body": "### Description\n\nHaving a gradient background was no issue with Version=\u00222.88.9\u0022. Using latest one or even the preview (3.118), the performance is down by 90%.\n\n### Code\n\nHaving:\r\n\u0060\u0060\u0060cs\r\nBG = new SKPaint\r\n{\r\n    Shader = SKShader.CreateLinearGradient(\r\n                    new SKPoint(0, 0),\r\n                    new SKPoint(0, FireField.Height),\r\n                    [SKColors.DarkBlue, SKColors.Black],\r\n                    [0, 0.75f],\r\n                    SKShaderTileMode.Clamp)\r\n};\r\n\r\n...\r\n\r\nvoid PaintSurface(SKPaintSurfaceEventArgs e)\r\n{\r\n    var canvas = e.Surface.Canvas;\r\n    canvas.DrawRect(0, 0, FireField.Width, FireField.Height, BG);\r\n...\r\n\u0060\u0060\u0060\r\nThe PaintSurface becomes **very slow**.\r\n\r\nSimply commenting out the Shader block, it returns fast... but flat.\n\n### Expected Behavior\n\nNo changes in drawing speed.\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\nWell working page:\r\n\r\n![immagine](https://github.com/user-attachments/assets/3e229090-ed7e-4585-a65a-49e4978af9d2)\r\n\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "LucaCris",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-12-07T16:03:00",
+  "updatedAt": "2025-11-16T10:04:30",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,23 @@
+{
+  "number": 3275,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] No way to use SKSamplingOptions when filling a path with an image brush",
+  "body": "### Description\n\nHistorically we have used SKPaint objects that tile with an image pattern when used. Today we set the FilterQuality directly on the SKPaint object which is now obsolete. The recommendation is to use SKSamplingOptions, but it is only a parameter on the canvas.DrawImage function which we are not using in this scenario.\n\n### Code\n\n\u0060\u0060\u0060cs\nSKSurface surface;\nSKPaint paint;\n\nusing (var snapshot = surface.Snapshot())\n\tpaint = new SKPaint\n\t{\n\t\tColor = SKColors.Black,\n\t\tShader = snapshot.ToShader(SKShaderTileMode.Repeat, SKShaderTileMode.Repeat, SKMatrix.CreateScale(xscale, yscale)),\n\t\tFilterQuality = SKFilterQuality.High\n\t};\n}\n\ncanvas.DrawPath(skPath, paint);\n\u0060\u0060\u0060\n\nWe don\u0027t see a way to adapt this code to use SKSamplingOptions because DrawPath does not take a suitable parameter. It appears that the tiled pattern is rendered at low quality and we have no way to set it to high.\n\n### Expected Behavior\n\nExpect that there is a way to increase the quality of the tiled shader on the SKPaint object.\n\n### Actual Behavior\n\nThe output is low quality and there doesn\u0027t appear to be a way to change it\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 10/11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "peternoyes",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-13T19:03:31",
+  "updatedAt": "2026-01-31T15:35:15",
+  "closedAt": "2026-01-31T15:35:15",
+  "commentCount": 1,
+  "reactionCount": 0
+}

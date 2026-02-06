@@ -1,0 +1,23 @@
+{
+  "number": 2945,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Windows .NET MAUI 9.0] SKGLView is missing DispatcherQueue from InvalidateSurface",
+  "body": "### Description\n\nWe got an immediate re-entrancy crash on Windows (and on no other platforms) when using SKGLView in .NET MAUI 9.0 Preview 6 with SkiaSharp 3.0 Preview 3.1. By adding:\r\n\r\n\u0060\u0060\u0060\r\n#if WINDOWS\r\n                if(GHApp.WindowsXamlWindow != null)\r\n                {\r\n                    GHApp.WindowsXamlWindow.DispatcherQueue?.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.High, () =\u003E \r\n                    {\r\n#endif\r\n                        internalGLView.InvalidateSurface();\r\n#if WINDOWS\r\n                    });\r\n                }\r\n#endif\r\n\u0060\u0060\u0060\r\n\r\nthe re-entrancy crash disappeared. It looks like that DispatcherQueue code should be added to Windows SKGLView directly. I was wondering on whether priority should be High or Normal, but High seemed to work fine, and sounded more appropriate for a game loop. (Note: RenderLoop did not really work at least in our case; it refreshed the screen at high frequency but the animations on the screen / actual drawing were updated very infrequently.)\n\n### Code\n\nhttps://github.com/hyvanmielenpelit/GnollHack\n\n### Expected Behavior\n\nSKGLView on Windows does not crash in re-entrancy upon consecutively calling InvalidateSurface.\n\n### Actual Behavior\n\nSKGLView on Windows crashes in re-entrancy upon consecutively calling InvalidateSurface.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11.\n\n### Devices\n\nMSI Laptop.\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-17T11:39:02",
+  "updatedAt": "2025-04-18T10:22:24",
+  "closedAt": "2025-04-18T10:22:24",
+  "commentCount": 1,
+  "reactionCount": 0
+}

@@ -1,0 +1,31 @@
+{
+  "number": 2961,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to load shared library \u0027libSkiaSharp\u0027 exception occurs using DOT NET 8 AWS Lambda",
+  "body": "### Description\r\n\r\nWe have created the SKBitmap and drawn a rectangle, circle, and line in .NET using AWS Lambda. We encountered an issue while using SkiaSharp.NativeAssets.Linux NuGet in an AWS Lambda - we faced the \u0027Unable to load shared library \u0027libSkiaSharp\u0027 exception. However, this issue does not occur when using .NET6 AWS Lambda.\r\n\r\nPlatform: AWS Lambda\r\nVisual Studio version: 2022\r\n.NET version :   .NET8 \r\nSkiaSharp version : 2.88.6\r\n\r\n### Code\r\n\r\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\r\n\r\nBut, you can also share a short block of code here:\r\n\u0060\u0060\u0060cs\r\npublic string FunctionHandler( ILambdaContext context)\r\n{\r\n     //Define the image dimensions\r\n     int width = 800;\r\n     int height = 600;\r\n     string base64String;\r\n \r\n     //Create a new bitmap\r\n     using (var bitmap = new SKBitmap(width, height))\r\n     {\r\n         // Create a canvas to draw on the bitmap\r\n         using (var canvas = new SKCanvas(bitmap))\r\n         {\r\n             // Clear the canvas with a white color\r\n             canvas.Clear(SKColors.White);\r\n \r\n             // Define the paint for drawing shapes\r\n             var paint = new SKPaint\r\n             {\r\n                 Color = SKColors.Blue,\r\n                 IsAntialias = true,\r\n                 Style = SKPaintStyle.Stroke,\r\n                 StrokeWidth = 5\r\n             };\r\n \r\n             // Draw a rectangle\r\n             var rect = new SKRect(100, 100, 300, 300);\r\n             canvas.DrawRect(rect, paint);\r\n \r\n             // Draw a circle\r\n             paint.Color = SKColors.Red;\r\n             canvas.DrawCircle(400, 400, 100, paint);\r\n \r\n             // Draw a line\r\n             paint.Color = SKColors.Green;\r\n             canvas.DrawLine(500, 100, 700, 300, paint);\r\n \r\n             // Save the bitmap to a file\r\n             using (var image = SKImage.FromBitmap(bitmap))\r\n             using (var data = image.Encode(SKEncodedImageFormat.Png, 100))\r\n \r\n             using (var memoryStream = new MemoryStream())\r\n             {\r\n                 data.SaveTo(memoryStream);\r\n                 byte[] imageBytes = memoryStream.ToArray();\r\n                 base64String = Convert.ToBase64String(imageBytes);\r\n                 Console.WriteLine(base64String);\r\n \r\n                 // Print or return the base64 string\r\n             }\r\n         }\r\n     }\r\n     return base64String;\r\n}\r\n// some C# code here\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060xaml\r\n\u003C!-- xaml code here --\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nThe program should run without any exceptions in AWS Lambda .NET8 \r\n\r\n### Actual Behavior\r\n\r\nGet an exception is **.NET version 8** \r\nWorking fine in **.NET version 6**\r\n\r\n**System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider using a tool like Strace. If you\u0027re using glibc, consider setting the LD_DEBUG environment variable.** \r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 11\r\n\r\n### Devices\r\n\r\nAsus 12th Gen Intel(R) Core(TM) i5-1235U   1.30 GHz\r\n \r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "pandi123",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-30T12:38:58",
+  "updatedAt": "2024-11-04T03:35:50",
+  "closedAt": "2024-11-04T03:35:50",
+  "commentCount": 7,
+  "reactionCount": 3
+}

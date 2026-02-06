@@ -1,0 +1,22 @@
+{
+  "number": 3153,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Consider dropping OpenTK metapackage dependency from SkiaSharp.Views.WindowsForms",
+  "body": "### Is your feature request related to a problem?\n\nSkiaSharp.Views.WindowsForms has a dependency on the OpenTK metapackage, which pulls in OpenTK.Audio.OpenAL, OpenTK.Compute and OpenTK.Input even though they are not used by SkiaSharp.Views.WindowsForms (as far as I can tell).\n\n### Describe the solution you would like\n\nDrop the dependency on the OpenTK metapackage. The dependency on OpenTK.GLControl will still transitively resolve everything that\u0027s needed (OpenTK.Windowing.Desktop etc.)\n\n### Describe alternatives you have considered\n\nYou can exclude OpenTK.Audio.OpenAL.dll, OpenTK.Compute.dll and OpenTK.Input.dll from your app package if you don\u0027t use them, but this is error prone because the compiler will think they are available and you might accidentally use them.\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "chrarnoldus",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-02-03T13:14:23",
+  "updatedAt": "2025-04-21T14:57:18",
+  "commentCount": 3,
+  "reactionCount": 0
+}

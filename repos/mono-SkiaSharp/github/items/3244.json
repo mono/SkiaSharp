@@ -1,0 +1,23 @@
+{
+  "number": 3244,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] No Emojis rendered",
+  "body": "### Description\n\nI try to render emojis using the [Noto Color Emoji](https://fonts.google.com/noto/specimen/Noto\u002BColor\u002BEmoji) font but the resulting image doesn\u0027t show them. Skia reports that that the font contains the emoji glyphs but neither \u0060DrawText\u0060 nor \u0060DrawShapedText\u0060 render them.  \n\n### Code\n\n\u0060\u0060\u0060cs\nusing var surface = SKSurface.Create(new SKImageInfo(800, 600, SKImageInfo.PlatformColorType, SKAlphaType.Premul));\nusing var typeface = SKTypeface.FromFile(\u0022NotoColorEmoji-Regular.ttf\u0022);\nusing var font = typeface.ToFont(16);\n\nusing var paint = new SKPaint();\npaint.Color = SKColors.Black;\npaint.Style = SKPaintStyle.Fill;\n\nvar text = \u0022 \uD83C\uDFB8 \uD83E\uDD18\uD83C\uDFFB \u0022;\nConsole.WriteLine(\u0022Contains glyphs: {0}\u0022, font.ContainsGlyphs(text));\nsurface.Canvas.DrawShapedText(\n    $\u0022.. {text} ..\u0022,\n    30,30,\n    font,\n    paint\n);\nsurface.Canvas.DrawText(\n    $\u0022.. {text} ..\u0022,\n    30,60,\n    font,\n    paint\n);\n\nusing var img = surface.Snapshot();\nusing var data = img.Encode(SKEncodedImageFormat.Png, 100);\nFile.WriteAllBytes(\u0022emoji.png\u0022, data.ToArray());\n\u0060\u0060\u0060\n\nhttps://fonts.google.com/noto/specimen/Noto\u002BColor\u002BEmoji\n\n### Expected Behavior\n\nThe emojis should be rendered. \n\n### Actual Behavior\n\nNo emojis are rendered (the squares are just placeholder glyphs from the dots to indicate the emojis should be).\n![Image](https://github.com/user-attachments/assets/11581357-a6db-4d1d-a406-d79f1630cde8)\n\nAs far I can tell it has to do something with the Windows FontMgr. In my own Skia wrapper I just noticed the same problem. But when using FreeType on Windows, Emojis are rendered. Hence it might be some problem in Skia itself, not something SkiaSharp can fix/workaround. \n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Windows 11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n![Image](https://github.com/user-attachments/assets/6a88d4b1-62c4-447a-a403-2e39bef43074)\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Danielku15",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-21T16:45:38",
+  "updatedAt": "2025-04-21T21:17:49",
+  "closedAt": "2025-04-21T21:17:49",
+  "commentCount": 1,
+  "reactionCount": 0
+}

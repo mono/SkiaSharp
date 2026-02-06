@@ -1,0 +1,32 @@
+{
+  "number": 3238,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] AoT application is crashing when reflection is disabled.",
+  "body": "### Description\n\nThe error ocurrs at instantiate the SkPaint using the latest version (3.116.1)\n\nI remember the previous version (2.88.9) working at some point. But trying again reults on different error.\n\u0060\u0060\u0060ps\nThe version of the native libSkiaSharp library (116.0) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [88.1, 89.0)\n\u0060\u0060\u0060\n\n### Code\n\n\u0060\u0060\u0060cs\nusing SkiaSharp;\n\nvar paint = new SKPaint();\n\u0060\u0060\u0060\n\n\u0060\u0060\u0060csproj\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFramework\u003Enet9.0\u003C/TargetFramework\u003E\n    \u003COutputType\u003EExe\u003C/OutputType\u003E\n    \u003CPublishAot\u003Etrue\u003C/PublishAot\u003E\n    \u003CIlcDisableReflection\u003Etrue\u003C/IlcDisableReflection\u003E\n    \u003CIsAotCompatible\u003Etrue\u003C/IsAotCompatible\u003E\n  \u003C/PropertyGroup\u003E\n\u003C/Project\u003E\n\u0060\u0060\u0060\n\n\u0060\u0060\u0060ps\nUnhandled exception. 0x7ff76e3a5180: TypeInitialization_Type_NoTypeAvailable\n ---\u003E 0x7ff76e3a5180: TypeInitialization_Type_NoTypeAvailable\n ---\u003E 0x7ff76e3a4c58: Reflection_Disabled\n   at System.RuntimeType.InitializeRuntimeTypeInfoHandle() \u002B 0x2c\n   at System.Array.InternalCreate(RuntimeType, Int32, Int32*, Int32*) \u002B 0x180\n   at System.Array.CreateInstance(Type, Int32) \u002B 0x27\n   at System.RuntimeType.GetEnumValues() \u002B 0x74\n   at SkiaSharp.SKBlender..cctor() \u002B 0x1f\n   at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0xba\n   Exception_EndOfInnerExceptionStack\n   at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0x13d\n   at System.Runtime.CompilerServices.ClassConstructorRunner.CheckStaticClassConstructionReturnNonGCStaticBase(StaticClassConstructionContext*, IntPtr) \u002B 0xd\n   at SkiaSharp.SKObject..cctor() \u002B 0x7a\n   at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0xba\n   Exception_EndOfInnerExceptionStack\n   at System.Runtime.CompilerServices.ClassConstructorRunner.EnsureClassConstructorRun(StaticClassConstructionContext*) \u002B 0x13d\n   at System.Runtime.CompilerServices.ClassConstructorRunner.CheckStaticClassConstructionReturnNonGCStaticBase(StaticClassConstructionContext*, IntPtr) \u002B 0xd\n   at SkiaSharp.SKPaint..ctor() \u002B 0x68\n   at Program.\u003CMain\u003E$(String[]) \u002B 0x18\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nNo crash when reflection disabled\n\n### Actual Behavior\n\nAoT application crashes when reflection disabled\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio Code (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "HitalloExiled",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    },
+    {
+      "login": "Copilot",
+      "type": "Bot"
+    }
+  ],
+  "createdAt": "2025-04-19T21:03:11",
+  "updatedAt": "2026-02-02T22:47:10",
+  "closedAt": "2026-02-02T22:47:10",
+  "commentCount": 1,
+  "reactionCount": 2
+}

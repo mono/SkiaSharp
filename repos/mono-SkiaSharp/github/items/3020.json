@@ -1,0 +1,27 @@
+{
+  "number": 3020,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkiaSharp.Views.Blazor and the SkiaSharp.Views not work well with Blazor/Wasm",
+  "body": "### Description\r\n\r\n![BlazorSKiaErr](https://github.com/user-attachments/assets/74442893-d5b0-4a3b-8368-652d3bace7f2)\r\n\r\nBlazor .Net 8 / SkiaSharp 2.88\r\n\r\n(1).\r\nin app.css\r\n\u0060\u0060\u0060css\r\nFitBody {\r\nwidth: 100%;\r\nheight: calc(100vh - 5rem);\r\nbackground-color: #239B56;\r\nborder-radius: 6px;\r\n}\r\n\u0060\u0060\u0060\r\nin Home.razor\r\n\u0060\u0060\u0060razor\r\n\u003Cdiv class=\u201CFitBody\u201D\u003E\r\n\u003C/div\u003E\r\n\u0060\u0060\u0060\r\nwork well, the div size (\u0060width: 100%; height: calc(100vh - 5rem);\u0060)as expected\r\n\r\n(2).\r\nonce\r\n\u0060\u0060\u0060razor\r\n\u003Cdiv class=\u201CFitBody\u201D\u003E\r\n\u003CSKCanvasView @ref=\u201CskiaView\u201D OnPaintSurface=\u201COnPaintSurface\u201D IgnorePixelScaling=\u201Ctrue\u201D /\u003E\r\n\u003C/div\u003E\r\n\u0060\u0060\u0060\r\n(3).\r\n\u0060\u0060\u0060cs\r\nvoid OnPaintSurface(SKPaintSurfaceEventArgs args)\r\n{\r\n    SKImageInfo NewInfo = args.Info;\r\n    SKSurface surface = args.Surface;\r\n    SKCanvas canvas = surface.Canvas;\r\n \r\n    canvas.Clear(SKColors.White);\r\n\r\n    DisplayingSize = NewInfo.Size;\r\n}\r\n\u0060\u0060\u0060\r\n(4).\r\nIt should be whole white cover the \u0060\u003Cdiv class=\u201CFitBody\u201D\u003E\u0060\r\nThe SKCanvas canvas size is wrong\r\nOnly cover the Left Top part\r\nThe SKCanvas canvas size should be equal to the\r\ndiv size (\u0060width: 100%; height: calc(100vh - 5rem);\u0060)as expected\r\n\r\n### Code\r\n\r\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\r\n\r\nBut, you can also share a short block of code here:\r\n\u0060\u0060\u0060css\r\nFitBody {\r\nwidth: 100%;\r\nheight: calc(100vh - 5rem);\r\nbackground-color: #239B56;\r\nborder-radius: 6px;/* margin: 0 0 0 -20px; */\r\n}\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060cs\r\n// some C# code here\r\nvoid OnPaintSurface(SKPaintSurfaceEventArgs args)\r\n{\r\n    SKImageInfo NewInfo = args.Info;\r\n    SKSurface surface = args.Surface;\r\n    SKCanvas canvas = surface.Canvas;\r\n\r\n    //canvas.Clear();\r\n    canvas.Clear(SKColors.White);\r\n\r\n    DisplayingSize = NewInfo.Size;\r\n}\r\n\r\n\u0060\u0060\u0060\r\nYou can also share some XAML:\r\n\u0060\u0060\u0060razor\r\n\u003C!-- xaml code here --\u003E\r\ni\r\n\u003Cdiv class=\u201CFitBody\u201D\u003E\r\n\u003CSKCanvasView @ref=\u201CskiaView\u201D OnPaintSurface=\u201COnPaintSurface\u201D IgnorePixelScaling=\u201Ctrue\u201D /\u003E\r\n\u003C/div\u003E\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nThe SKCanvas canvas size should be equal to the\r\ndiv size (width: 100%; height: calc(100vh - 5rem);)as expected\r\n\r\n### Actual Behavior\r\n\r\nThe SKCanvas canvas size is wrong \r\n![BlazorSKiaErr](https://github.com/user-attachments/assets/ad95e153-6d07-47fe-a361-67f648b7ea3c)\r\nOnly cover the Left Top part\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nBlazor/Wasm .Net 8 / SkiaSharp.Views.Blazor and the SkiaSharp.Views  2.88\r\n\r\n\r\n### Devices\r\n\r\nDell LapTop Win 11\r\n\r\n### Relevant Screenshots\r\n\r\nDell Laptop Window 11\r\n\r\n### Relevant Log Output\r\n\r\n\u0060\u0060\u0060shell\r\nThere is no log out\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ShingYehGit",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-09-28T05:19:21",
+  "updatedAt": "2024-11-26T18:45:59",
+  "closedAt": "2024-11-26T18:45:59",
+  "commentCount": 6,
+  "reactionCount": 0
+}

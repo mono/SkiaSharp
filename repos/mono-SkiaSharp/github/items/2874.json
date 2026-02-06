@@ -1,0 +1,22 @@
+{
+  "number": 2874,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Failed to decode png image",
+  "body": "### Description\n\nI\u0027ve noticed that we have some decode issues in our app with some PNG images. For example this one: \r\n![temp](https://github.com/mono/SkiaSharp/assets/405031/7d7ee2d5-81e4-49e8-891b-eeb3dcde41a8)\r\n\r\nIt\u0027s loading fine in OS (Windows 11), but consistently failed to be loaded with \u0060SKBitmap.Decode\u0060 (it returns null).\r\n\r\nI\u0027ve tried \u00603.0.0-preview.3.1\u0060 version and \u00602.88.8\u0060. This issue exists both on Windows 11 and in Linux containers with NET 8.\n\n### Code\n\n\u0060\u0060\u0060cs\r\nusing var bitmap = SKBitmap.Decode(@\u0022c:\\Temp\\temp.png\u0022);\r\nif (bitmap is null)\r\n    Console.WriteLine(\u0022Failed to load image\u0022);\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nImage loaded successfully.\n\n### Actual Behavior\n\n\u0060SKBitmap.Decode\u0060 returns null.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nLinux, Windows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MichaelLogutov",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-30T07:12:35",
+  "updatedAt": "2025-01-20T10:35:53",
+  "commentCount": 7,
+  "reactionCount": 0
+}

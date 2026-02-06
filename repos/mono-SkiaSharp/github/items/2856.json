@@ -1,0 +1,31 @@
+{
+  "number": 2856,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Horizontal lines disappear when zoomed in",
+  "body": "### Description\n\n![resim](https://github.com/mono/SkiaSharp/assets/49344491/a8d3d175-f609-40ed-9406-c4a07dcd0b06)\r\n![resim](https://github.com/mono/SkiaSharp/assets/49344491/6b456c32-ddd5-4662-8a6a-a9a0dd386e22)\r\nHorizontal lines disappear when zoomed in using Matrix. \r\nStroke width is irrelevant. Anti-aliasing helps to some extent but problem still pursue.\n\n### Code\n\n\r\n\u0060\u0060\u0060cs\r\n// Matrix code\r\n        var zoom = (float)skiaRenderer.Viewport.SceneZ;\r\n        var dpi = 1.5f;\r\n\r\n        var drawMatrix = SKMatrix.CreateScale((float)zoom, -(float)zoom);\r\n\r\n        var halfScaledWidth = (float)canvas.ActualWidth * 0.5f;\r\n        var halfScaledHeight = (float)canvas.ActualHeight * 0.5f;\r\n\r\n        var actualX = -(float)skiaRenderer.Viewport.SceneX * zoom \u002B (halfScaledWidth * dpi);\r\n        var actualY = (float)skiaRenderer.Viewport.SceneY * zoom \u002B (halfScaledHeight * dpi);\r\n\r\n        drawMatrix.TransX = actualX;\r\n        drawMatrix.TransY = actualY;\r\n\r\n        e.Surface.Canvas.SetMatrix(drawMatrix);      \r\n// Line drawing code\r\n_paint.Color.WithAlpha(255);\r\n_paint.IsAntialias = true;\r\n_paint.StrokeWidth = (float)(1.5 / _viewport.SceneZ);\r\n_paint.StrokeCap = SKStrokeCap.Round;\r\n_paint.IsStroke = true;\r\nsurface.Canvas.DrawLine((float)line.Object.Coor.Y, (float)line.Object.Coor.X, (float)line.Coord.Y, (float)line.Coord.X, _paint);\r\n\u0060\u0060\u0060\r\n\r\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "afcsoft",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/needs-repro",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-12T14:58:12",
+  "updatedAt": "2025-01-03T10:35:48",
+  "closedAt": "2024-06-10T19:14:03",
+  "commentCount": 4,
+  "reactionCount": 1
+}

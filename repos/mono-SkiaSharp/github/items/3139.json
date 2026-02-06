@@ -1,0 +1,23 @@
+{
+  "number": 3139,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Encode overload with Stream destination produces \u0022corruption\u0022 at the bottom.",
+  "body": "### Description\n\nThe overload of \u0060SKPixmap\u0060\r\n\u0060\u0060\u0060c#\r\npublic bool Encode(Stream dst, SKEncodedImageFormat encoder, int quality)\r\n\u0060\u0060\u0060\r\nis producing a black bar that is cropping the bottom part, but when i use this overload\r\n\u0060\u0060\u0060c#\r\npublic SKData Encode(SKEncodedImageFormat encoder, int quality)\r\n\u0060\u0060\u0060\r\nand _manually_ save the \u0060SKData\u0060 its fine without cropping the bottom part.\r\n\r\nIt might have been a \u0060SKManagedWStream\u0060 issue.\n\n### Code\n\n\u0060\u0060\u0060c#\r\nvar pxs = Marshal.AllocHGlobal(skInfo.BytesSize);\r\n\r\nvar bmp2 = new SKPixmap(skInfo.WithSize(640, 640), pxs);\r\nimage.ScalePixels(bmp2, SKSamplingOptions.Default);\r\n\r\nbmp2.Encode(File.Create(\u0022save2.png\u0022), SKEncodedImageFormat.Png, 100);\r\n\r\nvar enc = bmp2.Encode(SKEncodedImageFormat.Png, 100);\r\nvar f = File.Create(\u0022save3.png\u0022);\r\nenc.SaveTo(f);\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nNo black bar just like \u0060save3.png\u0060\n\n### Actual Behavior\n\nProduces a black bar at the bottom for \u0060save2.png\u0060\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n3.116.0 (Current)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n# Save2.png\r\n\u003Cdetails\u003E\r\n\u003Csummary\u003Esave2.png\u003C/summary\u003E\r\n\r\n![save2](https://github.com/user-attachments/assets/0bc74fe4-6c99-4b43-9537-20961832b55f)\r\n\r\n\u003C/details\u003E\r\n\r\n# Save3.png\r\n\r\n\u003Cdetails\u003E\r\n\u003Csummary\u003Esave3.png\u003C/summary\u003E\r\n\r\n![save3](https://github.com/user-attachments/assets/2ceafd13-5a5c-46e0-bd0d-c49d7dfef439)\r\n\r\n\u003C/details\u003E\r\n\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ha-ves",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-01-14T09:47:26",
+  "updatedAt": "2025-07-26T18:28:29",
+  "closedAt": "2025-07-26T18:28:29",
+  "commentCount": 3,
+  "reactionCount": 0
+}

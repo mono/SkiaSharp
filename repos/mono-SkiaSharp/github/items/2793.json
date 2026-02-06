@@ -1,0 +1,27 @@
+{
+  "number": 2793,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Font is not rendering properly when converting DOC to PDF in Blazor WASM NET8.0",
+  "body": "### Description\r\n\r\nWhen converting DOC to PDF using Syncfusion DocIORenderer as shown in the code below, the output font family does not properly show as how it should be. I am using SkiaSharp.Views.Blazor 2.88.7 NuGet package.\r\n\r\n\r\n\r\n\r\n### Code\r\n\u0060\u0060\u0060cs\r\npublic MemoryStream BuildPDF()\r\n{\r\n    DocIORenderer render = new DocIORenderer();\r\n    render.Settings.EmbedCompleteFonts = true;\r\n    PdfDocument pdfDocument = render.ConvertToPDF(document);\r\n    MemoryStream outputStream = new MemoryStream();\r\n    pdfDocument.Save(outputStream);\r\n    pdfDocument.Close();\r\n    outputStream.Position = 0;\r\n    return outputStream;\r\n}\r\n\u0060\u0060\u0060\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio Code (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\n_No response_\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\nThe Word document is like the image below:\r\n![image](https://github.com/mono/SkiaSharp/assets/53800465/db714673-a447-4b59-a79f-4e3948a17c00)\r\n\r\nOn the other hand, the output PDF from conversion:\r\n![image](https://github.com/mono/SkiaSharp/assets/53800465/e7b41b36-49d0-45a2-ad46-33989f4a4c62)\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ignasstephanie",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-11T15:47:53",
+  "updatedAt": "2024-04-15T17:17:32",
+  "closedAt": "2024-04-15T17:17:07",
+  "commentCount": 2,
+  "reactionCount": 0
+}

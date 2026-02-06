@@ -1,0 +1,27 @@
+{
+  "number": 2841,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] The position draw on SKXamCanvas is not correct. #1585 Was this a bug that you worked around?",
+  "body": "              Was this a bug that you worked around?\r\n\r\n_Originally posted by @mattleibow in https://github.com/mono/SkiaSharp/issues/1585#issuecomment-767164424_\r\nI\u0027m not sure if this issue has been resolved, but I can\u0027t see the solution in this thread. In my actual application, I also encountered a similar issue. Eventually, I found that I had set the scaling level for the window, so I needed to scale the input coordinates of input devices such as the mouse.\r\n\u0060\u0060\u0060cs\r\nprivate SKPoint GetSkiaBugPosition(MouseEventArgs e)\r\n{\r\n    DpiScale DpiScale = VisualTreeHelper.GetDpi(this);\r\n    return e.GetPosition(this).ToSKPoint().Scale((float)DpiScale.DpiScaleX);\r\n}\r\n/////////I believe that the code \r\n view.PointerPressed \u002B= (senderTemp, eTemp) =\u003E\r\n  {\r\n      clickPoint = eTemp.GetCurrentPoint(view).Position;//need scale\r\n      Debug.WriteLine(DateTime.Now \u002B \u0022: Click Position (\u0022 \u002B clickPoint.X \u002B \u0022,\u0022 \u002B clickPoint.Y \u002B \u0022)\u0022);\r\n  };\r\n\u0060\u0060\u0060\r\nmaybe need to do so.\r\n I\u0027m not sure if this is the real issue.            ",
+  "author": {
+    "login": "TruePluto",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-20T01:55:23",
+  "updatedAt": "2024-05-03T14:20:21",
+  "closedAt": "2024-05-03T14:20:21",
+  "commentCount": 3,
+  "reactionCount": 0
+}
