@@ -15,5 +15,159 @@
   "updatedAt": "2022-08-19T00:02:34",
   "closedAt": "2021-08-19T16:18:40",
   "commentCount": 11,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:40.2015172Z",
+    "reactions": [
+      {
+        "user": "nesc58",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:40.2015246Z"
+      },
+      {
+        "user": "eli191",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:40.2015256Z"
+      },
+      {
+        "user": "nickspoons",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:40.2015259Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 896869509,
+        "author": "twilly86",
+        "body": "same error here",
+        "createdAt": "2021-08-11T14:21:25",
+        "reactions": []
+      },
+      {
+        "id": 901167348,
+        "author": "jtothebell",
+        "body": "Also same issue here. Added 2.80.3 as it was the latest stable version on nuget, but got the error listed above. Downgraded to 2.80.2 and it is working. ",
+        "createdAt": "2021-08-18T14:34:06",
+        "reactions": []
+      },
+      {
+        "id": 901191071,
+        "author": "nesc58",
+        "body": "Same",
+        "createdAt": "2021-08-18T15:03:42",
+        "reactions": []
+      },
+      {
+        "id": 901606215,
+        "author": "mattleibow",
+        "body": "Thanks folks. I am looking into this now. No idea why the strong naming would have stopped working... Unless something happened during the package upload which is basically impossible really...",
+        "createdAt": "2021-08-19T04:46:40",
+        "reactions": []
+      },
+      {
+        "id": 901616810,
+        "author": "mattleibow",
+        "body": "I managed to locate the cause of the signing failing. It is 100% human error obscured by incremental builds.\r\n\r\nThe cause of the issue is that I made a change in PR #1698 that was to help reduce errors when the library was not built. The new (incorrect) logic was first going to check if the dll existed, and then would attach the task to the build. However, as is pretty obvious, if the dll does not exist, then it doesn\u0027t set up the strong naming. But that is _always_ the case with CI. This was obscured by the fact that in most local builds, I already had a dll in the bin directory. So it would always sign for me.\r\n\r\nThe reason this was not caught was because the signing verification also was set up as part of the build - and would only get attached if the dll existed. Effectively, I disabled signing and verification on CI.\r\n\r\nI have a fix and will release this ASAP.\r\n\r\nThis is being built on a path branch: https://github.com/mono/SkiaSharp/tree/patch/v2.80.4",
+        "createdAt": "2021-08-19T05:15:45",
+        "reactions": [
+          {
+            "user": "Kurpanik",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:38.9808964Z"
+          },
+          {
+            "user": "jtothebell",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:38.9808969Z"
+          }
+        ]
+      },
+      {
+        "id": 902049195,
+        "author": "mattleibow",
+        "body": "This fix has been merged and I have release a v2.80.4-preview.4 that should be fixed.\r\n\r\nI will put a few more fixes in and then release a 2.80.4 stable.",
+        "createdAt": "2021-08-19T16:18:40",
+        "reactions": []
+      },
+      {
+        "id": 912466892,
+        "author": "nesc58",
+        "body": "Can you please release v2.80.4 with this bugfix? It seems to take a long time to fix the other issues for the v2.80.4 release",
+        "createdAt": "2021-09-03T11:27:14",
+        "reactions": [
+          {
+            "user": "Kurpanik",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:39.3781167Z"
+          }
+        ]
+      },
+      {
+        "id": 913864687,
+        "author": "mattleibow",
+        "body": "I have released this as 2.80.4-preview.2 a couple weeks ago. Have you been able to confirm the fix?\r\n\r\n",
+        "createdAt": "2021-09-06T21:51:21",
+        "reactions": []
+      },
+      {
+        "id": 914983384,
+        "author": "nesc58",
+        "body": "The error seems to be fixed with \u00602.80.4-preview.2\u0060",
+        "createdAt": "2021-09-08T07:15:52",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:17:39.7481428Z"
+          },
+          {
+            "user": "ricky1712",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:17:39.7481433Z"
+          }
+        ]
+      },
+      {
+        "id": 1029060354,
+        "author": "jesperll",
+        "body": "Just got hit by this today. Is there a new stable release coming soon? It\u0027s a bit weird to have the latest released package being a broken one.",
+        "createdAt": "2022-02-03T14:43:47",
+        "reactions": [
+          {
+            "user": "yazansh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:39.9654886Z"
+          },
+          {
+            "user": "nickspoons",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:39.965489Z"
+          },
+          {
+            "user": "YipingRuan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:39.9654892Z"
+          }
+        ]
+      },
+      {
+        "id": 1084031803,
+        "author": "YipingRuan",
+        "body": "\u003E I have released this as 2.80.4-preview.2 a couple weeks ago. Have you been able to confirm the fix?\r\n\r\nCan we release this?",
+        "createdAt": "2022-03-31T03:23:04",
+        "reactions": [
+          {
+            "user": "nickspoons",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:40.151176Z"
+          },
+          {
+            "user": "RichardD2",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:40.1511765Z"
+          }
+        ]
+      }
+    ]
+  }
 }

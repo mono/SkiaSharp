@@ -14,5 +14,78 @@
   "updatedAt": "2022-08-19T03:01:40",
   "closedAt": "2020-10-10T13:29:10",
   "commentCount": 8,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:23.6940519Z",
+    "reactions": [
+      {
+        "user": "AndreyGrishin",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:23.6940595Z"
+      },
+      {
+        "user": "Nab0y",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:23.6940602Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 706746501,
+        "author": "Mikolaytis",
+        "body": "@mattleibow This issue is not unit-testable. Here is a screenshot of a problem:\r\n\r\n![Screenshot 2020-10-11 at 21 19 28](https://user-images.githubusercontent.com/4997065/95686609-98099000-0c07-11eb-91e5-6c67e07d41ca.png)\r\n\r\nHere is a bit detailed steps:\r\n1. create empty project in the visual studio and write next thing:\r\n\u0060\u0060\u0060\r\n            var matrix = SkiaSharp.SKMatrix.CreateIdentity();\r\n            Console.WriteLine(\u0022Hello World!\u0022 \u002B matrix);\r\n\u0060\u0060\u0060\r\n2. set breakpoint to the second line with writeLine.\r\n3. launch app with debugger attached\r\n4. hover mouse over matrix property declaration and expand properties list\r\n5. observe crash from screenshot above",
+        "createdAt": "2020-10-11T18:24:26",
+        "reactions": []
+      },
+      {
+        "id": 706746678,
+        "author": "Mikolaytis",
+        "body": "Disabling property evaluation is not a fix of a problem, because this option is essential for debugging.",
+        "createdAt": "2020-10-11T18:25:28",
+        "reactions": []
+      },
+      {
+        "id": 706767266,
+        "author": "Mikolaytis",
+        "body": "I think marking the \u0060IsInvertible\u0060 property with \u0060[DebuggerBrowsable(DebuggerBrowsableState.Never)]\u0060 should do the trick. I\u0027ll check this and will provide a PR.\r\n",
+        "createdAt": "2020-10-11T20:58:19",
+        "reactions": []
+      },
+      {
+        "id": 706777094,
+        "author": "mattleibow",
+        "body": "@Mikolaytis sorry I didn\u0027t ping you over the weekend. But thought you would have seen my pr I merged.\n\nThat should fix it and the bits are already out on the preview feed. Unless you saw that already and it didn\u0027t fix the issue?\n\nIt should be fixed in preview 9. You can check out the actual fix https://github.com/mono/skia/commit/a7b3674c74e3b0b5252cc8cc3e41168c5b6b7492\n\nBasically, the managed code was passing null as the dest matrix, but then I didn\u0027t check it. ",
+        "createdAt": "2020-10-11T22:25:42",
+        "reactions": []
+      },
+      {
+        "id": 706944946,
+        "author": "Mikolaytis",
+        "body": "@mattleibow I\u0027ve missed your mono/skia commit. I\u0027ve seen only unit test. Thought that you did not understand my bug and just added unit test, and closed the issue. It turns out I was wrong :) ",
+        "createdAt": "2020-10-12T07:51:18",
+        "reactions": []
+      },
+      {
+        "id": 706968538,
+        "author": "mattleibow",
+        "body": "\u263A\n\nLet me know if the preview works for you! I think I am reaching the first preview of 2.80.3 very soon. A nice bunch of fixes and features. ",
+        "createdAt": "2020-10-12T08:31:31",
+        "reactions": []
+      },
+      {
+        "id": 707139786,
+        "author": "Mikolaytis",
+        "body": "preview 9 - issue fixed! thanks",
+        "createdAt": "2020-10-12T14:02:11",
+        "reactions": []
+      },
+      {
+        "id": 707205935,
+        "author": "mattleibow",
+        "body": "Thanks for the feedback!",
+        "createdAt": "2020-10-12T15:59:10",
+        "reactions": []
+      }
+    ]
+  }
 }

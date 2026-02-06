@@ -15,5 +15,121 @@
   "updatedAt": "2022-08-19T00:01:48",
   "closedAt": "2022-05-18T07:53:13",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:40.6871826Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1103987557,
+        "author": "inforithmics",
+        "body": "I tried 2.88.0-preview.254 the issue is still there",
+        "createdAt": "2022-04-20T14:16:51",
+        "reactions": []
+      },
+      {
+        "id": 1104015296,
+        "author": "ziriax",
+        "body": "I also noticed corruption of PNGs loaded with SkiaSharp 2.88 (in my case these were 16-bit PNGs)\r\n",
+        "createdAt": "2022-04-20T14:41:53",
+        "reactions": []
+      },
+      {
+        "id": 1104038252,
+        "author": "inforithmics",
+        "body": "I played a bit around (Resaving it with Paint.net, when i Saved it as 8-bit image it worked 24 Bit or 32 Bit showed artefacts)",
+        "createdAt": "2022-04-20T15:02:26",
+        "reactions": []
+      },
+      {
+        "id": 1104069839,
+        "author": "inforithmics",
+        "body": "Inspired by this I tried to load the png With Image\r\n\r\nhttps://github.com/mono/SkiaSharp/issues/640\r\n\r\ndoes not work:\r\n\u0060\u0060\u0060\r\n            var stream = File.Open(@\u0022osm-liberty.png\u0022, FileMode.Open, FileAccess.Read, FileShare.Read);\r\n            var data = SKData.Create(stream);\r\n            var image = SKImage.FromEncodedData(data);\r\n\r\n            // draw image\r\n            canvas.DrawImage(image, new SKRect(0, 0, image.Width, image.Height));\r\n\r\n\u0060\u0060\u0060\r\nworks:\r\n \u0060\u0060\u0060\r\n           var bytes = ImageToByteArray(System.Drawing.Image.FromFile(\u0022osm-liberty.png\u0022));\r\n           var image = SKImage.FromEncodedData(bytes);\r\n\r\n            // draw image\r\n            canvas.DrawImage(image, new SKRect(0, 0, image.Width, image.Height));\r\n\r\n            byte[] ImageToByteArray(System.Drawing.Image image)\r\n            {\r\n                using (var ms = new System.IO.MemoryStream())\r\n                {\r\n                    image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);\r\n                    return ms.ToArray();\r\n                }\r\n            }\r\n\u0060\u0060\u0060\r\n\r\nSo it seems the png File could not be properly decoded.",
+        "createdAt": "2022-04-20T15:30:18",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:18:38.5489121Z"
+          }
+        ]
+      },
+      {
+        "id": 1104095578,
+        "author": "inforithmics",
+        "body": "So it seems the Encoding of the Original Image does not work. (The resaved Image is slightly larger 5Kb and has some more Metadata).",
+        "createdAt": "2022-04-20T15:52:38",
+        "reactions": []
+      },
+      {
+        "id": 1104102612,
+        "author": "inforithmics",
+        "body": "The workaround won\u0027t work on mobile Platforms, because Image is there not available",
+        "createdAt": "2022-04-20T15:58:04",
+        "reactions": []
+      },
+      {
+        "id": 1119594920,
+        "author": "inforithmics",
+        "body": "I made some research and libpng is used for decoding png images.\r\n\r\nFrom this issue:\r\n\r\nhttps://github.com/mono/SkiaSharp/issues/718\r\n\r\nThis Version of libpng is used.\r\nhttps://skia.googlesource.com/third_party/libpng.git@386707c6d19b974ca2e3db7f5c61873813c6fe44\r\n\r\nlooking at the history some png decoding Bugfixes where made. But I cannot tell if it would work.\r\nhttps://skia.googlesource.com/third_party/libpng/\u002Blog/a37d4836519517bdce6cb9d956092321eca3e73b\r\n\r\n",
+        "createdAt": "2022-05-06T13:03:52",
+        "reactions": []
+      },
+      {
+        "id": 1119964594,
+        "author": "inforithmics",
+        "body": "I checked the png Image with pngcheck and it seems to be valid.\r\n\r\nNot working:\r\n\r\nFile: osm-liberty.png (48207 bytes)\r\n  chunk IHDR at offset 0x0000c, length 13\r\n    512 x 248 image, 32-bit RGB\u002Balpha, non-interlaced\r\n  chunk IDAT at offset 0x00025, length 32768\r\n    zlib: deflated, 32K window, default compression\r\n    row filters (0 none, 1 sub, 2 up, 3 avg, 4 paeth):\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 (183 out of 248)\r\n  chunk IDAT at offset 0x08031, length 15370\r\n    row filters (0 none, 1 sub, 2 up, 3 avg, 4 paeth):\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (248 out of 248)\r\n  chunk IEND at offset 0x0bc47, length 0\r\nNo errors detected in osm-liberty.png (4 chunks, 90.5% compression).\r\n\r\nworking:\r\n\r\nFile: osm-liberty.png (52355 bytes)\r\n  chunk IHDR at offset 0x0000c, length 13\r\n    512 x 248 image, 32-bit RGB\u002Balpha, non-interlaced\r\n  chunk sRGB at offset 0x00025, length 1\r\n    rendering intent = perceptual\r\n  chunk gAMA at offset 0x00032, length 4: 0.45455\r\n  chunk IDAT at offset 0x00042, length 52269\r\n    zlib: deflated, 32K window, fast compression\r\n    row filters (0 none, 1 sub, 2 up, 3 avg, 4 paeth):\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0\r\n      0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 (248 out of 248)\r\n  chunk IEND at offset 0x0cc7b, length 0\r\nNo errors detected in osm-liberty.png (5 chunks, 89.7% compression)\r\n\r\nWhat I see is that the compression method is different so maybe it is a bug in the zlib used for decompressing.\r\n",
+        "createdAt": "2022-05-06T19:53:51",
+        "reactions": []
+      },
+      {
+        "id": 1127303791,
+        "author": "geckomx",
+        "body": "Same or similar problem when moving from .NET 5 to .NET 6 . ( Nuget packet 2.80.2 and 2.80.3 )\r\n\r\nusing SKImage:\r\n\r\n\u0060byte[] rawData = Load();\u0060\r\n\u0060SKImage img = SKImage.FromEncodedData(rawData);\u0060\r\n\r\n**i get corrupted image**\r\n\r\nusing SKBitmap\r\n\r\n\u0060SKBitmap bmp = SKBitmap.Decode(rawData);\u0060\r\n\r\n**i get null**\r\n\r\nWith .NET 5 both variants work.\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2022-05-16T07:07:16",
+        "reactions": []
+      },
+      {
+        "id": 1128027240,
+        "author": "mattleibow",
+        "body": "Just compiled a debug version of skia and it loads fine. Building release now to see if that is the thing, or maybe my computer is the fix.\n\n If it breaks in release, I\u0027ll try step through and see where it goes. I\u0027ll also update libpng and see.\n\nHopefully I can see why it works in some cases. I also wonder if other platforms work, or is everyone broken. ",
+        "createdAt": "2022-05-16T19:00:33",
+        "reactions": []
+      },
+      {
+        "id": 1128397249,
+        "author": "mattleibow",
+        "body": "I tried updating to the very latest of libpng and this still happens, so I think it may either have to do with something that is excluded in a release build - or something to do with the optimizations by the compiler.\r\n\r\nI am going to test some other platforms and then try reduce the optimization level.",
+        "createdAt": "2022-05-17T04:27:29",
+        "reactions": []
+      },
+      {
+        "id": 1128407887,
+        "author": "mattleibow",
+        "body": "I tried with \u0060SKBitmap.Decode\u0060 and it returns null. Something is happening, but at least it fails consistently across all image types.",
+        "createdAt": "2022-05-17T04:49:08",
+        "reactions": []
+      },
+      {
+        "id": 1128427653,
+        "author": "geckomx",
+        "body": "\r\nImageSharp had a very similar issue (1704) solved by stephentoub with (1707)",
+        "createdAt": "2022-05-17T05:28:13",
+        "reactions": []
+      },
+      {
+        "id": 1128432322,
+        "author": "mattleibow",
+        "body": "Thanks @inforithmics for the research and tip, I think it was a bug in zlib so updating to a later version fixes the issue. Ad there appears to be a few fixes in the SSE bits, so looks very related.",
+        "createdAt": "2022-05-17T05:36:08",
+        "reactions": [
+          {
+            "user": "toptensoftware",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:18:40.6368934Z"
+          }
+        ]
+      }
+    ]
+  }
 }

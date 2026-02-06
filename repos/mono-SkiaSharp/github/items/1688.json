@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T00:02:49",
   "closedAt": "2021-08-19T05:51:21",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:03.0122918Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 874362233,
+        "author": "ElanHasson",
+        "body": "I\u0027m seeing the same thing using \u0060dotnet new unoapp-winui -o MyApp -v true\u0060 ",
+        "createdAt": "2021-07-05T23:08:30",
+        "reactions": []
+      },
+      {
+        "id": 901629972,
+        "author": "mattleibow",
+        "body": "Is this still an issue. Currently the SkiaSharp.Views package does not support net5.0 because it depends on very old gtk2 things. The correct package that should have been used is SkiaSharp.Views.WPF.\r\n\r\nI believe this is now changed in Uno, however, this can be worked around by adding a reference to SkiaSharp.Views and then adding a \u0060NoWarn=\u0022NU1701\u0022\u0060 to the item.\r\n\r\n\u0060\u003CPackageReference Include=\u0022SkiaSharp.Views\u0022 NoWarn=\u0022NU1701\u0022 /\u003E\u0060\r\n\r\nI will close this because I believe this was fixed. However, if it is still the case, please open an issue in the Uno repo as they should not be using this package.",
+        "createdAt": "2021-08-19T05:51:17",
+        "reactions": []
+      }
+    ]
+  }
 }

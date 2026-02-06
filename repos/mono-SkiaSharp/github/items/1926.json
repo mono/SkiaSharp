@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T00:02:02",
   "closedAt": "2022-05-17T16:11:01",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:21.4534792Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1013871237,
+        "author": "Nyrest",
+        "body": "Skia doesn\u0027t support depth buffer itself.\r\nSo there\u0027s also no depth buffer in SkiaSharp.\r\n\r\nYou can implement a DrawQueue youself.\r\nHere\u0027s a simple example:\r\n\u0060\u0060\u0060cs\r\npublic class DrawQueue\r\n{\r\n    public Dictionary\u003Cfloat, List\u003CAction\u003CSKCanvas\u003E\u003E\u003E buffer = new();\r\n\r\n    public void Draw(Action\u003CSKCanvas\u003E action, float zIndex)\r\n    {\r\n        ref var list = ref CollectionsMarshal.GetValueRefOrAddDefault(buffer, zIndex, out var exists);\r\n        if (!exists)\r\n        {\r\n            list = new List\u003CAction\u003CSKCanvas\u003E\u003E();\r\n        }\r\n\r\n        list!.Add(action);\r\n    }\r\n\r\n    public void Flush(SKCanvas canvas)\r\n    {\r\n        foreach (var (zIndex, list) in buffer.OrderBy(x =\u003E x.Key))\r\n        {\r\n            foreach (var item in list)\r\n            {\r\n                item.Invoke(canvas);\r\n            }\r\n\r\n            list.Clear();\r\n        }\r\n        canvas.Flush();\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\nvar queue = new DrawQueue();\r\nqueue.Draw(canvas =\u003E canvas.Clear(SKColors.Red), 0);\r\nqueue.Draw(canvas =\u003E canvas.Clear(SKColors.Blue), 100);\r\nqueue.Draw(canvas =\u003E canvas.Clear(SKColors.Green), 20);\r\nqueue.Flush(canvas); // You will have a blue canvas\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-01-16T12:57:01",
+        "reactions": []
+      },
+      {
+        "id": 1129059169,
+        "author": "mattleibow",
+        "body": "This is a feature outside the scope of skia/SkiaSharp.\r\n\r\nAs Nyrest shows, you can create your own or maybe see if there is a library/nuget that does this and more advanced drawing things on top of skia.",
+        "createdAt": "2022-05-17T16:11:01",
+        "reactions": []
+      }
+    ]
+  }
 }

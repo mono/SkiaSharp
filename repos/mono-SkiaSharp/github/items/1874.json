@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T00:02:07",
   "closedAt": "2021-12-01T21:34:16",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:14.2818758Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 984074636,
+        "author": "Costigan",
+        "body": "This was due to a cache holding raster data on the GPU.  From an SKGLContext, this cache size can be set like this.  control is an instance of SKGLContect.\r\n\r\ncontrol.GRContext.SetResourceCacheLimit(number_of_bytes)\r\n\r\nThe default size of this cache in the version I\u0027m using is 100,663,296 bytes, which turned out to be too small for my application.  control.GRContext will return null before the context has been initialized.  I\u0027m not where it\u0027s best place is to set this cache size ... I\u0027m doing it once, the first time the paint method has been called.  I also don\u0027t know whether it\u0027s reset of the graphics context is regenerated for some reason. ",
+        "createdAt": "2021-12-01T21:34:16",
+        "reactions": []
+      }
+    ]
+  }
 }

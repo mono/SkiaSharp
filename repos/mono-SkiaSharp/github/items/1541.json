@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T03:01:33",
   "closedAt": "2020-10-28T19:46:19",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:34.0929237Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 718168202,
+        "author": "mattleibow",
+        "body": "It is not always the case that doing something results in an exact return to the same memory usage. This is especially the case after the first run, several things may need to be cached. I think that is what is happening, but not with skia, in the .NET runtime.\r\n\r\nFor example, I split the steps into a few parts:\r\n 1. before anything\r\n 2. after warmup that loads SkiaSharp and sets up the static fields\r\n 3. after first run loads types and delegates\r\n 4. after second run that returns to same memory\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/97488492-fef8aa00-1966-11eb-97f7-2ac506819d68.png)\r\n\r\nThose new 15 items in the first run are probably things like the array pool and GC things because we have to pin memory:\r\n![image](https://user-images.githubusercontent.com/1096616/97488686-39624700-1967-11eb-9b8a-955670f847e4.png)\r\n\r\n\r\n\r\n\u0060\u0060\u0060csharp\r\nstatic void Main(string[] args)\r\n{\r\n    Console.WriteLine(\u0022Warmup\u0022);\r\n    Console.ReadLine(); // Warmup snapshot\r\n\r\n    Warmup();\r\n\r\n    Console.WriteLine(\u0022Starting\u0022);\r\n    Console.ReadLine(); // Starting snapshot\r\n\r\n    MemoryCheck();\r\n\r\n    Console.WriteLine(\u0022Repeat\u0022);\r\n    Console.ReadLine(); // Repeat snapshot\r\n\r\n    MemoryCheck();\r\n\r\n    Console.WriteLine(\u0022disposed\u0022);\r\n    Console.ReadLine(); // Final snapshot\r\n}\r\n\r\nprivate static void Warmup()\r\n{\r\n    var info = SKImageInfo.PlatformColorType;\r\n    var data = SKData.Empty;\r\n}\r\n\r\nstatic void MemoryCheck()\r\n{\r\n    SKBitmap bitmap = new SKBitmap(10, 10);\r\n    SKCanvas sKCanvas = new SKCanvas(bitmap);\r\n    bitmap.Dispose();\r\n    sKCanvas.Dispose();\r\n    bitmap = null;\r\n    sKCanvas = null;\r\n}\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2020-10-28T19:46:19",
+        "reactions": []
+      }
+    ]
+  }
 }

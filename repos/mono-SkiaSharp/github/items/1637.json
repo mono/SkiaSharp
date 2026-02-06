@@ -14,5 +14,45 @@
   "updatedAt": "2022-08-19T00:02:55",
   "closedAt": "2021-05-20T07:09:31",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:55.7760958Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 797147740,
+        "author": "mattleibow",
+        "body": "Indeed. That is a very useful observation... \uD83E\uDD26 \r\n\r\nIs there a way to detect MUSL at runtime so I can correctly load from a different folder?",
+        "createdAt": "2021-03-12T00:29:00",
+        "reactions": []
+      },
+      {
+        "id": 797152272,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this and sorry for the long delay. I was doing crazy things with MAUI. I see what I did was basically dumb. What would work in a typical case? Would you want to compile for both glibc and musl and have some runtime check (that I am not sure of the best way to do) or have a project property that you set, say \u0060\u003CPreferMuslSkiaSharp\u003Etrue\u003C/\u003E\u0060?\r\n\r\n",
+        "createdAt": "2021-03-12T00:41:22",
+        "reactions": []
+      },
+      {
+        "id": 797289268,
+        "author": "kekekeks",
+        "body": "\u0060PreferMuslSkiaSharp\u0060 looks like a decent solution, yes. ",
+        "createdAt": "2021-03-12T07:17:37",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:55.5500955Z"
+          }
+        ]
+      },
+      {
+        "id": 798039202,
+        "author": "mattleibow",
+        "body": "@kekekeks this seems to be a nice solution that does not require any changes to the project files: https://github.com/mono/SkiaSharp/pull/1657\r\n\r\nIt also supports the magic of running anywhere if you copy the output dir. No need for Musl-specific builds.",
+        "createdAt": "2021-03-13T09:41:38",
+        "reactions": []
+      }
+    ]
+  }
 }

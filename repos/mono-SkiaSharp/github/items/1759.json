@@ -15,5 +15,84 @@
   "updatedAt": "2022-08-19T00:02:36",
   "closedAt": "2021-08-12T06:59:10",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:35.3882035Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 894620204,
+        "author": "Gillibald",
+        "body": "2.80.3 has no native bits compiled for that arch so it is expected not to work properly",
+        "createdAt": "2021-08-07T07:44:41",
+        "reactions": []
+      },
+      {
+        "id": 894622804,
+        "author": "jefim",
+        "body": "Is there anything I can do about it? Or is there any schedules or open issues that I can attempt to tackle for resolve this? Also, the 2.88 Skin package is fine for me, it is the HarfBuzzSharp that is causing the problem right now.",
+        "createdAt": "2021-08-07T08:10:08",
+        "reactions": []
+      },
+      {
+        "id": 894986272,
+        "author": "mattleibow",
+        "body": "Let me have a look. I may not have pushed an update to harfbuzzsharp with the new architecture. ",
+        "createdAt": "2021-08-09T06:43:45",
+        "reactions": []
+      },
+      {
+        "id": 895011494,
+        "author": "jefim",
+        "body": "Hello, I have actually resolved this yesterday as I realized with help from others that I should be referencing SkiaSharp.HarfBuzz rather that directly HarfBuzz package. The SkiaSharp one actually does have this arch builtin and things are working. Thanks for the help.\n\n\u003E Matthew Leibowitz ***@***.***\u003E kirjoitti 9.8.2021 kello 9.43:\n\u003E \n\u003E \uFEFF\n\u003E Let me have a look. I may not have pushed an update to harfbuzzsharp with the new architecture.\n\u003E \n\u003E \u2014\n\u003E You are receiving this because you authored the thread.\n\u003E Reply to this email directly, view it on GitHub, or unsubscribe.\n\u003E Triage notifications on the go with GitHub Mobile for iOS or Android.\n",
+        "createdAt": "2021-08-09T07:30:33",
+        "reactions": []
+      },
+      {
+        "id": 895040040,
+        "author": "Gillibald",
+        "body": "If that is true there is something totally wrong. SkiaSharp.HarfBuzz only provides extension methods for HarfBuzzSharp and has no native assets.",
+        "createdAt": "2021-08-09T08:25:12",
+        "reactions": []
+      },
+      {
+        "id": 895184252,
+        "author": "mattleibow",
+        "body": "I think I see what happened. I released SkiaSharp v2.80 and HarfBuzzSharp v2.6.1.8. This is the old combo. But, when 2.88 is coming around, the version that goes with that is HarfBuzzSharp v2.6.1.8-preview. I did not bump the HarfBuzzSharp version.\r\n\r\nI see a 2.6.1.9 on the preview feed.\r\n\r\nBasically, I forgot to bump harfbuzz when I released the preview, and when I did bump, it is still pending a release. I am waiting for the P7 of .NET 6 and .NET Maui.\r\n\r\nPulling in SkiaSharp.HarfBuzz 2.88 actually pulls in an \u0022older\u0022 version, but is newer.",
+        "createdAt": "2021-08-09T12:32:00",
+        "reactions": []
+      },
+      {
+        "id": 896131254,
+        "author": "mattleibow",
+        "body": "Just an FYI, I pushed a new preview of SkiaSharp and HarfBuzz and this should be good: https://www.nuget.org/packages/HarfBuzzSharp/2.6.1.9-preview.120\r\n\r\nAlso, it will have Mac Catalyst support.",
+        "createdAt": "2021-08-10T16:31:01",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:35.1463336Z"
+          },
+          {
+            "user": "jefim",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:35.1463342Z"
+          }
+        ]
+      },
+      {
+        "id": 897396775,
+        "author": "jefim",
+        "body": "Thanks for the explanations! I think that this is now resolved.",
+        "createdAt": "2021-08-12T06:59:10",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:35.3379372Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T00:01:51",
   "closedAt": "2022-03-11T07:27:13",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:34.8011025Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1063668701,
+        "author": "mgood7123",
+        "body": "the following method serves as an alternative to fix this\r\n\r\n\u0060\u0060\u0060\r\npublic void DrawRectCoords(float x1, float y1, float x2, float y2, SKPaint paint)\r\n{\r\n        // avoid allocating a new SKRect\r\n        DrawRect(x1, y1, x2 - x1, y2 - y1, paint);\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-03-10T05:05:17",
+        "reactions": []
+      },
+      {
+        "id": 1064837480,
+        "author": "FoggyFinder",
+        "body": "Read docs first:\r\n\r\n\u0060\u0060\u0060cs\r\npublic void DrawRect (float x, float y, float w, float h, SkiaSharp.SKPaint paint);\r\n\u0060\u0060\u0060\r\n\r\nhttps://docs.microsoft.com/en-us/dotnet/api/skiasharp.skcanvas.drawrect?view=skiasharp-2.80.2#skiasharp-skcanvas-drawrect(system-single-system-single-system-single-system-single-skiasharp-skpaint)",
+        "createdAt": "2022-03-11T07:11:47",
+        "reactions": []
+      },
+      {
+        "id": 1064846553,
+        "author": "mattleibow",
+        "body": "Closing this as this method is working as designed.\r\n\r\nThe gotcha may be that the ctor of SKRect is Left, Top Right, Bottom and all other APIs use the X, Y, W, H order. Very unfortunate, but nothing we can do as this is a breaking change without an ABI break, which means it is impossible to do.",
+        "createdAt": "2022-03-11T07:27:00",
+        "reactions": []
+      },
+      {
+        "id": 1066039714,
+        "author": "mgood7123",
+        "body": "\u003E Closing this as this method is working as designed.\r\n\u003E \r\n\u003E The gotcha may be that the ctor of SKRect is Left, Top Right, Bottom and all other APIs use the X, Y, W, H order. Very unfortunate, but nothing we can do as this is a breaking change without an ABI break, which means it is impossible to do.\r\n\r\nso it would be a breaking change even if you introduce a new API to account for this?",
+        "createdAt": "2022-03-13T06:57:45",
+        "reactions": []
+      },
+      {
+        "id": 1066039855,
+        "author": "mgood7123",
+        "body": "\u003E Read docs first:\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E public void DrawRect (float x, float y, float w, float h, SkiaSharp.SKPaint paint);\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skcanvas.drawrect?view=skiasharp-2.80.2#skiasharp-skcanvas-drawrect(system-single-system-single-system-single-system-single-skiasharp-skpaint)\r\n\r\ni have, which is why \u0060DrawRect(x1, y1, x2 - x1, y2 - y1, paint);\u0060 to account for the \u0060w\u0060 and \u0060h\u0060 requirements of the method",
+        "createdAt": "2022-03-13T06:59:02",
+        "reactions": []
+      }
+    ]
+  }
 }

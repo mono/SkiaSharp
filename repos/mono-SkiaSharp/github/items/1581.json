@@ -14,5 +14,98 @@
   "updatedAt": "2022-08-19T03:01:19",
   "closedAt": "2021-05-30T05:03:53",
   "commentCount": 8,
-  "reactionCount": 6
+  "reactionCount": 6,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:51.9065061Z",
+    "reactions": [
+      {
+        "user": "Skleni",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:51.9065141Z"
+      },
+      {
+        "user": "miszu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:51.9065151Z"
+      },
+      {
+        "user": "LasseOL",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:51.9065155Z"
+      },
+      {
+        "user": "Zalkovalsky",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:51.9065161Z"
+      },
+      {
+        "user": "MAChristiansen",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:51.9065164Z"
+      },
+      {
+        "user": "Cheesebaron",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:51.9065168Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 761254258,
+        "author": "bmitc",
+        "body": "With some help and guidance, I\u0027d be willing to help implement this. Although, I mainly know F# and haven\u0027t written C# code.",
+        "createdAt": "2021-01-15T23:32:50",
+        "reactions": []
+      },
+      {
+        "id": 850707068,
+        "author": "jonsequitur",
+        "body": "@bmitc The formatter can be written in F#. We\u0027re putting together a sample that will walk you through how to do it.",
+        "createdAt": "2021-05-28T22:39:29",
+        "reactions": []
+      },
+      {
+        "id": 850814457,
+        "author": "mattleibow",
+        "body": "This looks really cool. The main thing that might cause issues is the native component. SkiaSharp is just a wrapper. Are the native dll/dylib/so files loaded automatically?\r\n",
+        "createdAt": "2021-05-29T11:03:10",
+        "reactions": []
+      },
+      {
+        "id": 850823524,
+        "author": "jonsequitur",
+        "body": "Yes. It seems to work just fine in the notebook. ",
+        "createdAt": "2021-05-29T12:18:31",
+        "reactions": []
+      },
+      {
+        "id": 850860119,
+        "author": "mattleibow",
+        "body": "![image](https://user-images.githubusercontent.com/1096616/120077576-543a9c80-c0ab-11eb-8212-3e9f52cb936f.png)\r\n",
+        "createdAt": "2021-05-29T16:26:09",
+        "reactions": []
+      },
+      {
+        "id": 850863215,
+        "author": "mattleibow",
+        "body": "![image](https://user-images.githubusercontent.com/1096616/120078157-594d1b00-c0ae-11eb-9fc3-4c6a01e590db.png)\r\n\r\n",
+        "createdAt": "2021-05-29T16:47:46",
+        "reactions": []
+      },
+      {
+        "id": 850941542,
+        "author": "mattleibow",
+        "body": "@bmitc thanks for raising this issue. I somehow missed this whole announcement... I have been so heads down with MAUI I lost track of everything. However, when playing around with this, I accidentally created the extension. Literally like 20 lines of code. I did not expect that \uD83D\uDE02\r\n\r\nHowever, my PR #1710 is just the bare bones.\r\n\r\nI did not mean to do this so quickly, especially since you did volunteer. Sorry about that, however, there is still a bit more work needed a the general display work is pretty minimal to say the least. It would still be a really good to actually write better \u0022renderers\u0022 and maybe have more info or even some interactivity. \r\n\r\nRight now it just blats the image to the screen, but this is not so good because huge images will just fill the screen. There probably should be a resizing mechanism and maybe a click-to-see-full-size as well as other pertinent info - like bounds, color type and more.\r\n\r\nIf this still sounds interesting to you, then I would totally accept PRs on this.",
+        "createdAt": "2021-05-30T05:14:21",
+        "reactions": []
+      },
+      {
+        "id": 851710017,
+        "author": "jonsequitur",
+        "body": "We spent some time working on this the other day just to understand the problem a bit. I think ideally, the formatter should be able to return multiple representations in different MIME types, e.g. \u0060image/png\u0060 and \u0060text/html\u0060. I\u0027m also curious as to whether  some portions of the implementation would be reusable enough that they should go into [Microsoft.DotNet.Interactive.Formatting](https://www.nuget.org/packages/Microsoft.DotNet.Interactive.Formatting/) so that similar extensions for other image libraries can make use of them.\r\n\r\nRelated: https://github.com/dotnet/interactive/issues/1374\r\n\r\n@lytesfazion @cerasamson @AngleQian @colombod",
+        "createdAt": "2021-05-31T22:59:24",
+        "reactions": []
+      }
+    ]
+  }
 }

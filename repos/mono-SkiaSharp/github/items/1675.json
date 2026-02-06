@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T00:02:51",
   "closedAt": "2021-04-02T19:42:50",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:00.3856802Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 810045448,
+        "author": "tmijieux",
+        "body": "after digging a little in the azure yaml config files , i found this:\r\nhttps://github.com/mono/SkiaSharp/blob/1a779558b3696412f2c13b7fb64b554f30daf4e7/scripts/azure-templates-bootstrapper.yml#L122-L131\r\n\r\nAs i supposed downloading the exact version 10.0.10240 solved the build problems, even if i had to run some commands several times (i had to generate documentation, then re run \u0060externals-download\u0060 and then the \u0060everything \u0060again ...)\r\n\r\nalso the nuget target does not work on windows as the \u0022windows\u0022 solution does not build the ios stuff by default .\r\n\r\nwhen using skipExternals option, (using downloaded native libraries), shouldn\u0027t that be possible to build the managed dll even for mac/ios and use the downloaded ios native stuff and build the complete nuget even on windows ? \r\nI dont think we need to run mtouch on the managed dll stuff as it will be done by projects using the library ...\r\nIs there a mac only tool used to generate the bindings library maybe ?",
+        "createdAt": "2021-03-30T08:56:45",
+        "reactions": []
+      },
+      {
+        "id": 812682325,
+        "author": "tmijieux",
+        "body": "solution:\r\nadd \u0060-packall=true -buildall=true\u0060 options to the bootstrapper.ps1 commandline",
+        "createdAt": "2021-04-02T19:42:50",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -41,5 +41,101 @@
   "updatedAt": "2022-08-19T00:02:27",
   "closedAt": "2022-05-27T21:43:09",
   "commentCount": 6,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:48.2700848Z",
+    "reactions": [
+      {
+        "user": "jeromelaban",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:48.2700916Z"
+      },
+      {
+        "user": "anpin",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:48.2700927Z"
+      },
+      {
+        "user": "3D-aero-sbahr",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:48.2700932Z"
+      },
+      {
+        "user": "sigmarsson",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:48.2700935Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1006535788,
+        "author": "anpin",
+        "body": "hi @jeromelaban, is there any update on this? ",
+        "createdAt": "2022-01-06T12:15:16",
+        "reactions": []
+      },
+      {
+        "id": 1006576226,
+        "author": "jeromelaban",
+        "body": "Not at this point, but pieces are in place for the work to continue.",
+        "createdAt": "2022-01-06T13:06:46",
+        "reactions": []
+      },
+      {
+        "id": 1037938890,
+        "author": "anpin",
+        "body": "I\u0027ve started putting this together ",
+        "createdAt": "2022-02-13T08:54:20",
+        "reactions": [
+          {
+            "user": "jeromelaban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:47.6342275Z"
+          }
+        ]
+      },
+      {
+        "id": 1044355234,
+        "author": "anpin",
+        "body": "Unfortunately experience with bleeding edge tooling was frustrating for me. At first both \u0060\u0060\u0060cake\u0060\u0060\u0060 and \u0060\u0060\u0060vs2022-preview\u0060\u0060\u0060 were telling me that some workloads are not installed (e.g. macos or ios) even though I could see them in \u0060\u0060\u0060dotnet\u0060\u0060\u0060 and they were updated, so I had to reinstall \u0060\u0060\u0060dotnet\u0060\u0060\u0060 workloads multiple times and removed older sdk\u0027s until msbuild somehow recognized all workloads and started to build. Then I\u0027ve put up new view projects and samples targeting Uno.WinUI and referencing all the same files as current Uno projects, but with conditional compilation to allow different \u0060\u0060\u0060using\u0060\u0060\u0060 references for WinUI. Then I realized that I shouldn\u0027t just copy project structure for existing Uno views and instead should create a multi-targeted project like Maui views has, so I redo that part. At this point I was faced with \u0060\u0060\u0060Unable to map the following RuntimeIdentifier values to a target architecture: win10-arm-aot;win10-arm64-aot;win10-x86-aot;win10-x64-aot\u0060\u0060\u0060 which I couldn\u0027t really understand how to fix and VS2022 preview update has arrived, so I decided to try it out. So now \u0060\u0060\u0060msbuild\u0060\u0060\u0060 doesn\u0027t recognize installed workloads again. I tried to remove not preview version of VS2022 as well as \u0060\u0060\u0060dotnet 6.0.200 sdk\u0060\u0060\u0060 installed from binary, so only the VS 17.2.0 Preview 1.0 with it\u0027s bundled sdk would be left on my machine, but it still shows that workloads are missing even though \u0022dotnet workload list\u0022 shows every needed piece. As I\u0027m writing this I see that there is now dotnet 7 preview, so I\u0027ll try to use that instead of 6.0.200. \r\n(P.S. plus the same evening I wrote my previous comment I\u0027ve got covid with high fewer on next day and I\u0027m not yet fully recovered, so my judgement is a little off)  \r\n![image](https://user-images.githubusercontent.com/6060545/154671175-84e64ce9-1b95-4ded-88a7-a89d62ead763.png)\r\n",
+        "createdAt": "2022-02-18T11:12:28",
+        "reactions": []
+      },
+      {
+        "id": 1044373384,
+        "author": "anpin",
+        "body": "just found a new blog post from MAUI team where they suggest to reinstall previews and .net 6 altogether in case of any issue, so that is what I\u0027m going to do now \r\n\r\nEDIT: full reinstall of Visual Studio 2022 preview did not helped  \r\n\r\nEDIT 2: removing workloads via dotnet cli from clean vs2022 preview install and reinstalling them via cli did the job ",
+        "createdAt": "2022-02-18T11:29:52",
+        "reactions": []
+      },
+      {
+        "id": 1140060199,
+        "author": "mattleibow",
+        "body": "This feature request is now a feature complete! #2042",
+        "createdAt": "2022-05-27T21:43:09",
+        "reactions": [
+          {
+            "user": "beto-rodriguez",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:17:48.2198486Z"
+          },
+          {
+            "user": "beto-rodriguez",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:17:48.219849Z"
+          },
+          {
+            "user": "sigmarsson",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:48.2198491Z"
+          },
+          {
+            "user": "TopperDEL",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:48.2198492Z"
+          }
+        ]
+      }
+    ]
+  }
 }

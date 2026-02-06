@@ -14,5 +14,94 @@
   "updatedAt": "2022-08-19T00:02:16",
   "closedAt": "2022-06-15T20:09:34",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:01.9215739Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 945277238,
+        "author": "mattleibow",
+        "body": "Interesting... So the Blazor right now only is on wasm, but this is another case where we probably want to use the native apis instead of Web apis...\n\nI will see what I can do. ",
+        "createdAt": "2021-10-18T01:43:44",
+        "reactions": [
+          {
+            "user": "IvanJosipovic",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:17:59.9983109Z"
+          }
+        ]
+      },
+      {
+        "id": 945370648,
+        "author": "mattleibow",
+        "body": "@eilon what is the story here? I suppose I expected IJSInProcessRuntime to be available on Blazor desktop/mobile since it all exists in a single process on the device.\n\nShould it be? Is this a bug or is there another JS runtime type I should use? ",
+        "createdAt": "2021-10-18T05:10:53",
+        "reactions": []
+      },
+      {
+        "id": 946041339,
+        "author": "Eilon",
+        "body": "@mattleibow - I logged https://github.com/dotnet/aspnetcore/issues/37647 to track considering adding support for the \u0060IJSInProcessRuntime\u0060 interface in Blazor Desktop. We do already support \u0060IJSRuntime\u0060, but not the in-proc variation of it.",
+        "createdAt": "2021-10-18T18:20:46",
+        "reactions": []
+      },
+      {
+        "id": 1153671553,
+        "author": "SteveSandersonMS",
+        "body": "For clarification, the only difference between \u0060IJSRuntime\u0060 and \u0060IJSInProcessRuntime\u0060 is that \u0060IJSInProcessRuntime\u0060 supports synchronous calls. As such,\r\n\r\n * Platforms that can offer synchronous calls should offer \u0060IJSInProcessRuntime\u0060\r\n * Platforms that cannot (i.e., only support async interop calls) should offer \u0060IJSRuntime\u0060\r\n\r\nAs for Blazor Hybrid, the web view we\u0027re using is WebView2. **WebView2 only supports async interop calls via its \u0060ExecuteScriptAsync\u0060 API**. There isn\u0027t a synchronous API. So, it is correct and by design that Blazor should only offer \u0060IJSRuntime\u0060 when running on WebView2.\r\n\r\nHowever, I can\u0027t think of any particular reason why SkiaSharp shouldn\u0027t be able to work on top of \u0060IJSRuntime\u0060 via async calls. At least in the case of Blazor Hybrid, these async calls aren\u0027t going over a network, so they will be delivered approximately instantly even if they have a large payload. As for the naming and why this is not \u0022in process\u0022: bear in mind that Chromium is a multiprocess browser, so these calls may indeed be crossing a process boundary. But it\u0027s still all local to one machine so should remain fast.\r\n\r\nIf there are technical reasons why it\u0027s difficult to dispatch SkiaSharp\u0027s calls over \u0060IJSRuntime\u0060, I\u0027d love to hear more details and maybe we can help figure out a solution!",
+        "createdAt": "2022-06-13T09:11:15",
+        "reactions": []
+      },
+      {
+        "id": 1154008565,
+        "author": "RChrisCoble",
+        "body": "Thanks you @SteveSandersonMS!  \r\n\r\n@mattleibow, is using IJSRuntime viable with SkiaSharp?  Is this something you can evaluate/POC?",
+        "createdAt": "2022-06-13T14:39:48",
+        "reactions": []
+      },
+      {
+        "id": 1155725897,
+        "author": "mattleibow",
+        "body": "Hi folks, sorry for the delay I was getting things in a row and doing some research and trying to talk to folks.\r\n\r\nAs of today, I am not sure that we can technically support \u0022SkiaSharp in the Blazor Desktop environment running in a webview\u0022 because of a few limitations. But, there are some potential options that may warrant some investigation.\r\n\r\n@SteveSandersonMS mentions that we can try use \u0060IJSInProcessRuntime\u0060, however as he also points out this is not supported on Windows - one of the primary desktop environments. The main reason for requiring \u0060IJSInProcessRuntime\u0060 is that we actually need direct access to the memory. SkiaSharp will allocate a chunk of memory and draw on that, and then we use JS to read that memory onto a HTML canvas.\r\n\r\n@Eilon also makes a [comment](https://github.com/dotnet/aspnetcore/issues/37647#issuecomment-965773619) on the issue (which is closed) he linked:\r\n\r\n\u003E I think that either way on these, there is no way to implement this right now anyway, and I don\u0027t think this is important enough right now to try to push all (or even any) of the browser vendors to support this, plus the relevant interop APIs. As such, I think there is little value in keeping this issue open because it doesn\u0027t have any reasonable path forward.\r\n\r\nBasically, at this point, SkiaSharp is a .NET library that requires .NET and it requires that the .NET that is running have shared access to the memory that is readable by JS - and that is not something Blazor Desktop supports.\r\n\r\nHowever, there are some potential options here:\r\n\r\n### Dual Blazor App\r\n\r\nThere is an option to run an [semi] independent app inside the app. This would be for example a Blazor WASM app that runs on a page inside a Blazor server app. For example, you would have 2 Blazor apps in the solution. You would then build the WASM app as a static asset for the Blazor server app. \r\n\r\nThis, however, is very much a heavy handed way of drawing pictures - and there is the overhead of converting things to some intermediate format (or you can use the skia internal drawing format) and then replay commands in the WASM app.\r\n\r\n@danroth27 I am wondering if you have a link to the issue you mentioned about the other issue where Blazor WASM and Blazor server conflict as of net6.0 and only work with major hacks. And if there is any issues for the support of this for net7.\r\n\r\n### Dual Apps (Blazor Server and JS WASM)\r\n\r\nIf we follow on from the approach above, we could technically remove the Blazor on the embedded app. Since all the work is done via the underlying skia library, there is potential for you to take libSkiaSharp.a (the C\u002B\u002B binary) and then write a JS wrapper for it (or at least the bare bones of it) and then have that run in the background on the client and render to HTML canvases.\r\n\r\nThis approach is basically what skia CnavasKit is - a JS library that talks to a C\u002B\u002B binary. I just replaced JS with C# for SkiaSharp.\r\n\r\nThis has similar implications because data would have to be transported via some format - maybe binary - between the apps. However, since the app is much smaller - it can be treated as a JS library just like one would maybe write a JS interop with some graphics library or fancy combo box.\r\n\r\nIt is again important to note that this MUST be a WASM app as that is the only way I am aware of to run C\u002B\u002B code in any sort of browser.\r\n\r\n\r\n### Shared Libraries\r\n\r\nThis is last as it is requiring that we break out of the confines of pure HTML and Blazor. In this scenario, instead of placing a web view on a page that is \u0022running JS\u0022 while being controlled by Blazor in a Desktop app, just use a native control.\r\n\r\nSince all the work is shared via SkiaSharp in a very cross-platform dll, you could have the Blazor desktop runtime talk directly to the skia canvas - instead of even using the web view. This is in fact the main benefit of Blazor hybrid - you have direct access to the app. As a result - you don\u0027t NEED to stay in the web view.\r\n\r\nI am not sure of all the capabilities, but assuming great things - you could potentially have a canvas on part of the screen and the browser on another. So when links/button/filters are changed, it sends commands like normal to the server. But, in this case instead of sending commands back into the webview, commands are sent to the native skia view.\r\n\r\n",
+        "createdAt": "2022-06-14T21:23:52",
+        "reactions": []
+      },
+      {
+        "id": 1156641642,
+        "author": "danroth27",
+        "body": "\u003E @danroth27 I am wondering if you have a link to the issue you mentioned about the other issue where Blazor WASM and Blazor server conflict as of net6.0 and only work with major hacks. And if there is any issues for the support of this for net7.\r\n\r\nhttps://github.com/dotnet/aspnetcore/issues/38128",
+        "createdAt": "2022-06-15T15:48:46",
+        "reactions": []
+      },
+      {
+        "id": 1156772744,
+        "author": "mattleibow",
+        "body": "I just wanted to add that all of the options above are out of scope for SkiaSharp as a library.\r\n\r\nWhen this issue  (https://github.com/dotnet/aspnetcore/issues/38128) is resolved, we will get the dual blazor apps automatically.\r\n\r\nBut, the other options are out of scope for now because SkiaSharp is primarily a .NET library, so the JS for WASM is not something that will happen.\r\n\r\nAnd the shared libraries is not something that SkiaSharp does but rather what the developer will do based on app requirements.\r\n\r\nBut, to make things more exciting, I would consider a contribution for a JS implementation of SkiaSharp. But I do want to first have a discussion if this is actually something that is useful because I am unsure of implications as a general thing to have several WASM libraries together. What if there is a blazor wasm app that is using the JS wasm implementation via some dependency. Will there be conflicts or will the wasm system have issues?",
+        "createdAt": "2022-06-15T18:01:34",
+        "reactions": []
+      },
+      {
+        "id": 1156831174,
+        "author": "IvanJosipovic",
+        "body": "I would find it useful if I could use it in WASM, Desktop and MAUI. This thread is making me feel that we have some fundamental gaps in the architecture of the Blazor Hybrid model and its disappointing.",
+        "createdAt": "2022-06-15T19:12:42",
+        "reactions": []
+      },
+      {
+        "id": 1156848802,
+        "author": "danroth27",
+        "body": "I\u0027ve opened https://github.com/dotnet/aspnetcore/issues/42216 to discuss how we want to handle this scenario on the Blazor side.",
+        "createdAt": "2022-06-15T19:34:20",
+        "reactions": []
+      },
+      {
+        "id": 1156883546,
+        "author": "mattleibow",
+        "body": "Closing this issue now as it basically is not on SkiaSharp to render pictures in the embedded webviews because just like with blazor server, there is no way for skiasharp to access memory across the network or across the process boundary - since the \u0022embedded webviews\u0022 are really just windows into another running process.\r\n\r\nHopefully the issue Daniel opened allows us to come up with a better client-server architecture. And the issue for running WASM in a server scenario will also help.\r\n\r\n",
+        "createdAt": "2022-06-15T20:09:34",
+        "reactions": []
+      }
+    ]
+  }
 }

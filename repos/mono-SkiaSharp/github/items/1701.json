@@ -14,5 +14,57 @@
   "updatedAt": "2022-08-19T00:02:47",
   "closedAt": "2021-05-16T14:13:29",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:05.3738431Z",
+    "reactions": [
+      {
+        "user": "gureAngel",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:05.3738509Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 841823372,
+        "author": "taublast",
+        "body": "Well what tricked me into thinking it was SKiaSharp in cause that apps were signed ok for simulator. But for real device it throws a \r\n\r\n\u003E Failed to codesign \u0027bin/iPhone/Debug/XamarinTestApp.iOS.app\u0027: Warning: unable to build chain to self-signed root for signer \u0022Apple Development: TOTO (HW3HM3UBCO)\u0022\r\n\u003E /Users/Airboom/Library/Caches/Xamarin/mtbs/builds/XamarinTestApp.iOS/31c782e90715fd993ed01e15963fc6f699e2dc9661442e7b92edfc01c6ad08cb/bin/iPhone/Debug/XamarinTestApp.iOS.app: errSecInternalComponent\r\n\r\nWill dig further must be some certificates related error..\r\n",
+        "createdAt": "2021-05-16T14:13:29",
+        "reactions": [
+          {
+            "user": "gureAngel",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:04.757448Z"
+          }
+        ]
+      },
+      {
+        "id": 842306309,
+        "author": "taublast",
+        "body": "Would open this again, but cannot: i finally managed to recompile and sign for real device without SkiaSharp, but it fails after adding skia nuget with the above error.. Another bug was submitted by @Pequeno0 let\u0027s stick to that thread:\r\nhttps://github.com/mono/SkiaSharp/issues/1702",
+        "createdAt": "2021-05-17T13:03:14",
+        "reactions": [
+          {
+            "user": "gureAngel",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:04.9419339Z"
+          }
+        ]
+      },
+      {
+        "id": 913238121,
+        "author": "KaeTar",
+        "body": "If you are chasing this problem it is likely that you created a certificate after January 28, 2021 when apple changed over to their new Apple Worldwide Developer Relations Intermediate Certificate (intermediate certificate).   See [Here](https://developer.apple.com/support/expiration/) for details.   Download and install the new certificate on your mac and this error should go away.   Get the new cert [here](https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer)",
+        "createdAt": "2021-09-05T22:28:31",
+        "reactions": []
+      },
+      {
+        "id": 1158072457,
+        "author": "Azmarel",
+        "body": "@KaeTar Thanks, had the same problem. Resolved :) ",
+        "createdAt": "2022-06-16T19:51:31",
+        "reactions": []
+      }
+    ]
+  }
 }

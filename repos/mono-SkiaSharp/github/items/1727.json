@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T00:02:41",
   "closedAt": "2021-08-19T06:28:16",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:27.3145229Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 898263365,
+        "author": "nesc58",
+        "body": "Hi,\r\nyour Dockerfiles seems to be incorrect.\r\n\r\n\u0060\u0060\u0060\r\n\u003E [internal] load metadata for mcr.microsoft.com/dotnet/sdk:5.0.6-alpine3.13-amd64:\r\n------\r\nfailed to solve with frontend dockerfile.v0: failed to create LLB definition: mcr.microsoft.com/dotnet/sdk:5.0.6-alpine3.13-amd64: not found\r\n\u0060\u0060\u0060\r\n\r\nI have changed the SDK and added some packages like libpng, libjpeg, fontconfig and very importend: libc6-compat for linking \u0060ld-linux-x86-64.so.2\u0060. There are no more exceptions on my machine\r\n\r\n\u0060\u0060\u0060\r\nFROM mcr.microsoft.com/dotnet/aspnet:5.0.6-alpine3.13-amd64 AS base\r\nRUN apk update \u0026\u0026 apk add --no-cache bash libc6-compat libbsd-dev fontconfig libpng libjpeg libjpeg-turbo\r\nRUN ln -s /lib64/ld-linux-x86-64.so.2 /lib/ld-linux-x86-64.so.2\r\n...\r\nFROM mcr.microsoft.com/dotnet/sdk:5.0.400-alpine3.13 AS build\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-08-13T07:54:24",
+        "reactions": []
+      },
+      {
+        "id": 901646024,
+        "author": "mattleibow",
+        "body": "Thanks @nesc58 for helping with this!",
+        "createdAt": "2021-08-19T06:28:16",
+        "reactions": []
+      }
+    ]
+  }
 }

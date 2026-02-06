@@ -19,5 +19,38 @@
   "updatedAt": "2022-08-19T03:01:25",
   "closedAt": "2021-02-08T23:12:20",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:43.1763201Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 751894702,
+        "author": "mattleibow",
+        "body": "I think it might be because the stream has not yet flushed and closed. You can solve this by either wrapping the stream in a using statement, or at the end doing a \u0060stream.Dispose()\u0060\r\n\r\nThe best might be to just wrap in a using as this will handle any errors and not leak an open file.",
+        "createdAt": "2020-12-28T23:26:05",
+        "reactions": [
+          {
+            "user": "WorldOfBasti",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:42.7127716Z"
+          }
+        ]
+      },
+      {
+        "id": 751959029,
+        "author": "gayugokhale",
+        "body": "@mattleibow yes.. you were correct. I had removed \u0060using\u0060  earlier because I didn\u0027t have \u0060c#\u0060 8.0 and it was giving me error.  \r\nThank you for your kind help. \r\n\r\nI would really appreciate if you guide me for one more issue. I could not find anything in \u0060skiasharp\u0060 to draw table. Could you please let me know if there is a way for it.\r\n\r\nThanks.",
+        "createdAt": "2020-12-29T06:04:42",
+        "reactions": []
+      },
+      {
+        "id": 775525824,
+        "author": "mattleibow",
+        "body": "Ah, I missed that comment :|\r\n\r\nGlad to know that the using helped. About the table, I am not sure how that would work to be honest. You can ask on the skia forums: https://groups.google.com/g/skia-discuss I am not sure if drawing just lines will help as I am sure tables are something special in PDF documents.",
+        "createdAt": "2021-02-08T23:12:20",
+        "reactions": []
+      }
+    ]
+  }
 }

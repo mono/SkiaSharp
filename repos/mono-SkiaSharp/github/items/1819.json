@@ -14,5 +14,77 @@
   "updatedAt": "2022-08-19T00:02:20",
   "closedAt": "2021-10-12T13:17:20",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:55.4521229Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 931891297,
+        "author": "Gillibald",
+        "body": "The native bits can be used via https://www.nuget.org/packages/SkiaSharp.NativeAssets.WebAssembly/2.88.0-preview.145\r\nYou still need https://www.nuget.org/packages/Uno.Wasm.Bootstrap/ to set up Emscripten and the Mono runtime etc.\r\nThe last step would be creating a canvas and use that as a surface to render on. In the end, you just have Skia in the browser. The glue code is up to you.",
+        "createdAt": "2021-10-01T04:36:48",
+        "reactions": [
+          {
+            "user": "dr-vij",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:54.1874477Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:54.1874481Z"
+          }
+        ]
+      },
+      {
+        "id": 931947411,
+        "author": "dr-vij",
+        "body": "Thank you for the answer! I am trying to connect SkiaSharp to Unity 3d WebGL wasm, it works on standalone and my only problem is webassembly. I didn\u0027t try to use uno wasm bootrsrap yet, thank you so much for this direction. I will try to figure out how to use it",
+        "createdAt": "2021-10-01T06:29:58",
+        "reactions": []
+      },
+      {
+        "id": 934547890,
+        "author": "mattleibow",
+        "body": "I am also in the process of adding WASM support for Blazor apps: https://github.com/mono/SkiaSharp/pull/1811\r\n\r\nAre you trying to get a wasm build without any uno/blazor/framework?",
+        "createdAt": "2021-10-05T16:06:09",
+        "reactions": [
+          {
+            "user": "dr-vij",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:17:54.6118878Z"
+          }
+        ]
+      },
+      {
+        "id": 934676406,
+        "author": "dr-vij",
+        "body": "Yes, I have some problems with understanding of replacement of dynamic linking cause unity wasm does not support it. But unfortunately I have no success with it yet. I am doing this out of duty, I think skia has fantastic potential for texture processing in gamedev.",
+        "createdAt": "2021-10-05T18:48:17",
+        "reactions": []
+      },
+      {
+        "id": 935862830,
+        "author": "mattleibow",
+        "body": "The native asset for wasm is a static lib. I am not very familiar with the way unity does things, but I have different builds of skia in the nupkg depending on the version of Emscripten being used.\n\nDoes unity have docs on adding native deps on wasm? ",
+        "createdAt": "2021-10-06T09:46:23",
+        "reactions": []
+      },
+      {
+        "id": 935940434,
+        "author": "dr-vij",
+        "body": "they do!) https://docs.unity3d.com/Manual/NativePlugins.html\r\nthey use v1.37.27 Emscripten for Unity 2018-2020, and they updated to 2.x version in 2021 unity as I know",
+        "createdAt": "2021-10-06T10:37:32",
+        "reactions": []
+      },
+      {
+        "id": 941004539,
+        "author": "mattleibow",
+        "body": "I don\u0027t see any direct links with native and WASM in those docs. I don\u0027t think that SkiaSharp is the place to ask about Unity as I am not sure many of the developers here are using unity.\r\n\r\nI would maybe suggest asking on the unity forums. However, I can say that SkiaSharp.NativeAssets.WebAssembly has 2.0.5 - 2.0.23 builds of libSkiaSharp that you can download and use directly.",
+        "createdAt": "2021-10-12T13:17:20",
+        "reactions": []
+      }
+    ]
+  }
 }

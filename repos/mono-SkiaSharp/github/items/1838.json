@@ -14,5 +14,84 @@
   "updatedAt": "2022-08-19T00:02:14",
   "closedAt": "2022-03-19T12:52:56",
   "commentCount": 8,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:05.188302Z",
+    "reactions": [
+      {
+        "user": "jrhodnik",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:18:05.1883093Z"
+      },
+      {
+        "user": "JensKrumsieck",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:18:05.1883102Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 950394914,
+        "author": "artemiusgreat",
+        "body": "Update. \r\n\r\n[Original](https://github.com/mattleibow/SkiaSharpBlazorWebAssembly/tree/main/blazor-native)\r\n\r\nEven if I just copy original sample project as is into my VS solution and just change namespace from \u0060SkiaSharpSample\u0060 to another one, e.g. \u0060Client\u0060, I get the same error. It looks like original sample has some reference cached and makes it work fine, but any new project or another namespace causes this error. \r\n\r\nAlso, I replaced reference to local Views project to Nuget pacckage, so besides changing the namespace I also had to change project file too. \r\n\r\n\u0060\u0060\u0060\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk.BlazorWebAssembly\u0022\u003E\r\n\r\n  \u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enet6.0\u003C/TargetFramework\u003E\r\n    \u003CNullable\u003Edisable\u003C/Nullable\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\r\n  \u003CPropertyGroup Condition=\u0022\u0027$(Configuration)\u0027 == \u0027Debug\u0027\u0022\u003E\r\n    \u003CWasmNativeStrip\u003Efalse\u003C/WasmNativeStrip\u003E\r\n    \u003CEmccCompileOptimizationFlag\u003E-O1\u003C/EmccCompileOptimizationFlag\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\r\n  \u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly\u0022 Version=\u00226.0.0-rc.2.21470.37\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022Microsoft.AspNetCore.Components.WebAssembly.DevServer\u0022 Version=\u00226.0.0-rc.2.21470.37\u0022 PrivateAssets=\u0022all\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.0-preview.152\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.WebAssembly\u0022 Version=\u00222.88.0-preview.152\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.Views.Blazor\u0022 Version=\u00222.88.0-preview.152\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-10-24T21:05:02",
+        "reactions": []
+      },
+      {
+        "id": 960604955,
+        "author": "artemiusgreat",
+        "body": "Reproduced the issue again and sort of found a root cause. \r\nLooks like \u0060SkiaSharp.Views\u0060 package is trying to adjust the size of \u0060canvas\u0060 element to the size of the screen, which is good. \r\nThe problem is that this resize event seems to trigger some reinitialization which in turn triggers resize event again creating an infinite loop until stack or memory is full. \r\n\r\nThis little style prevents infinite resize. \r\n[https://github.com/mattleibow/SkiaSharpBlazorWebAssembly/blob/main/blazor-native/wwwroot/css/app.css#L58](https://github.com/mattleibow/SkiaSharpBlazorWebAssembly/blob/main/blazor-native/wwwroot/css/app.css#L58)\r\n\r\n\u0060\u0060\u0060CSS\r\ncanvas {\r\n  height: 300px;\r\n}\r\n\u0060\u0060\u0060\r\nMeanwhile, \u0060canvas\u0060 tag is just an HTML, so it should be able to resize to the full width and height of the screen without hardcoded values and going into an infinite loop. ",
+        "createdAt": "2021-11-04T09:53:54",
+        "reactions": []
+      },
+      {
+        "id": 961477991,
+        "author": "artemiusgreat",
+        "body": "Hi @mattleibow \r\nI would be glad to provide some PR for this issue and would appreciate if you could point me in the direction where to look for it. \r\nI also recorded quick video to explain it better if it helps. \r\n[https://www.youtube.com/watch?v=gRZVCrzuDDk](https://www.youtube.com/watch?v=gRZVCrzuDDk)\r\nThe issue must be coming somewhere from the rendering method below but I couldn\u0027t debug it because including SkiaSharp and SkiaSharp.Views.Blazor directly into my app is not copying Skia PDB files to my project. \r\nhttps://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs#L85\r\n\r\nThe only temporary workaround that I was able to come up with is to make sure that HTML \u0060canvas\u0060 is not stretched outside of the screen. So, the width and height of the canvas must not exceed 100% of the size of its container. If canvas is too big and its container creates scroll, this is when infinite scaling starts resulting in OutOfMemoryException. \r\n\r\n\u0060\u0060\u0060\r\ncanvas {\r\n  max-width: 100% !important;\r\n  max-height: 100% !important;\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-11-04T22:22:21",
+        "reactions": []
+      },
+      {
+        "id": 986312499,
+        "author": "JensKrumsieck",
+        "body": "I can confirm this bug (when running without debugger from VS) with \u00602.88.0-preview.171\u0060, even if canvas has width and height attributes. Only aforementioned css prevents from scaling the canvas into infinity.\r\n\r\nIf a debugger is attached setting width- and height-Attributes without the css works.",
+        "createdAt": "2021-12-05T22:30:05",
+        "reactions": []
+      },
+      {
+        "id": 991913527,
+        "author": "JensKrumsieck",
+        "body": "I monitored the Value of \u0060canvasSize\u0060 and \u0060dpi\u0060 in my \u0060OnPaintSurface\u0060-Event via Reflection:\r\n\u0060\u0060\u0060csharp \r\nif(_canvasView != null)\r\n        {\r\n            var canvasSizeField = typeof(SKCanvasView).GetField(\u0022canvasSize\u0022, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);\r\n            var size = (SKSize)canvasSizeField.GetValue(_canvasView);\r\n            Console.WriteLine(size.Width \u002B \u0022 : \u0022 \u002B size.Height);\r\n            var dpiField = typeof(SKCanvasView).GetField(\u0022dpi\u0022, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);\r\n            var dpi = (double)dpiField.GetValue(_canvasView);\r\n            Console.WriteLine(\u0022DPI: \u0022 \u002B dpi \u002B \u0022 -\u003E predicting: \u0022 \u002B size.Width * dpi \u002B \u0022: \u0022 \u002B size.Height * dpi);\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nWhich generates the following output:\r\n\u0060\u0060\u0060\r\n800 : 600\r\nDPI: 1,25 -\u003E predicting: 1000: 750\r\n1000 : 750\r\nDPI: 1,25 -\u003E predicting: 1250: 937,5\r\n1250 : 937\r\nDPI: 1,25 -\u003E predicting: 1562,5: 1171,25\r\n1562 : 1171\r\nDPI: 1,25 -\u003E predicting: 1952,5: 1463,75\r\n1952 : 1463\r\nDPI: 1,25 -\u003E predicting: 2440: 1828,75\r\n2440 : 1828\r\nDPI: 1,25 -\u003E predicting: 3050: 2285\r\n3050 : 2285\r\nDPI: 1,25 -\u003E predicting: 3812,5: 2856,25\r\n3812 : 2856\r\nDPI: 1,25 -\u003E predicting: 4765: 3570\r\n4765 : 3570\r\nDPI: 1,25 -\u003E predicting: 5956,25: 4462,5\r\n5956 : 4462\r\nDPI: 1,25 -\u003E predicting: 7445: 5577,5\r\n7445 : 5577\r\nDPI: 1,25 -\u003E predicting: 9306,25: 6971,25\r\n9306 : 6971\r\nDPI: 1,25 -\u003E predicting: 11632,5: 8713,75\r\n11632 : 8713\r\nDPI: 1,25 -\u003E predicting: 14540: 10891,25\r\n14540 : 10891\r\nDPI: 1,25 -\u003E predicting: 18175: 13613,75\r\n\u0060\u0060\u0060\r\n\r\nAs you can see the values of width and height are raised by the factor of dpi each time the event fires.\r\n\r\nBut why did I think I had solved the error with my commit (above)? Because I had performed the debug operation on a different monitor. **The 1.25 DPI is the 125% scaling of the monitor from the Windows settings**. The other monitor is set to 100%. On the monitor everything seems to work....\r\n @artemiusgreat So i think you also have set a scaling in your monitor settings?\r\n If i do not provide width and height the canvas size remains 0!\r\n@mattleibow ",
+        "createdAt": "2021-12-12T15:01:02",
+        "reactions": []
+      },
+      {
+        "id": 991914840,
+        "author": "JensKrumsieck",
+        "body": "I think the problem could be:\r\n\r\n\u0060interop.RequestAnimationFrame(EnableRenderLoop, (int)(canvasSize.Width * dpi), (int)(canvasSize.Height * dpi));\u0060 ([Line 80](https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs#L80)) \r\nsends the size multiplied by DPI as argument which is resizing the canvas and forcing the sizeInteropWatcher\u0027s event to fire. This results in rerendering the canvas as the new size is set and \u0060Invalidate\u0060 is called again here https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor/SKCanvasView.razor.cs#L158-L163",
+        "createdAt": "2021-12-12T15:08:46",
+        "reactions": []
+      },
+      {
+        "id": 992497488,
+        "author": "artemiusgreat",
+        "body": "\u003E I monitored the Value of \u0060canvasSize\u0060 and \u0060dpi\u0060 in my \u0060OnPaintSurface\u0060-Event via Reflection:\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E if(_canvasView != null)\r\n\u003E         {\r\n\u003E             var canvasSizeField = typeof(SKCanvasView).GetField(\u0022canvasSize\u0022, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);\r\n\u003E             var size = (SKSize)canvasSizeField.GetValue(_canvasView);\r\n\u003E             Console.WriteLine(size.Width \u002B \u0022 : \u0022 \u002B size.Height);\r\n\u003E             var dpiField = typeof(SKCanvasView).GetField(\u0022dpi\u0022, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);\r\n\u003E             var dpi = (double)dpiField.GetValue(_canvasView);\r\n\u003E             Console.WriteLine(\u0022DPI: \u0022 \u002B dpi \u002B \u0022 -\u003E predicting: \u0022 \u002B size.Width * dpi \u002B \u0022: \u0022 \u002B size.Height * dpi);\r\n\u003E         }\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Which generates the following output:\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E 800 : 600\r\n\u003E DPI: 1,25 -\u003E predicting: 1000: 750\r\n\u003E 1000 : 750\r\n\u003E DPI: 1,25 -\u003E predicting: 1250: 937,5\r\n\u003E 1250 : 937\r\n\u003E DPI: 1,25 -\u003E predicting: 1562,5: 1171,25\r\n\u003E 1562 : 1171\r\n\u003E DPI: 1,25 -\u003E predicting: 1952,5: 1463,75\r\n\u003E 1952 : 1463\r\n\u003E DPI: 1,25 -\u003E predicting: 2440: 1828,75\r\n\u003E 2440 : 1828\r\n\u003E DPI: 1,25 -\u003E predicting: 3050: 2285\r\n\u003E 3050 : 2285\r\n\u003E DPI: 1,25 -\u003E predicting: 3812,5: 2856,25\r\n\u003E 3812 : 2856\r\n\u003E DPI: 1,25 -\u003E predicting: 4765: 3570\r\n\u003E 4765 : 3570\r\n\u003E DPI: 1,25 -\u003E predicting: 5956,25: 4462,5\r\n\u003E 5956 : 4462\r\n\u003E DPI: 1,25 -\u003E predicting: 7445: 5577,5\r\n\u003E 7445 : 5577\r\n\u003E DPI: 1,25 -\u003E predicting: 9306,25: 6971,25\r\n\u003E 9306 : 6971\r\n\u003E DPI: 1,25 -\u003E predicting: 11632,5: 8713,75\r\n\u003E 11632 : 8713\r\n\u003E DPI: 1,25 -\u003E predicting: 14540: 10891,25\r\n\u003E 14540 : 10891\r\n\u003E DPI: 1,25 -\u003E predicting: 18175: 13613,75\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E As you can see the values of width and height are raised by the factor of dpi each time the event fires.\r\n\u003E \r\n\u003E But why did I think I had solved the error with my commit (above)? Because I had performed the debug operation on a different monitor. **The 1.25 DPI is the 125% scaling of the monitor from the Windows settings**. The other monitor is set to 100%. On the monitor everything seems to work.... @artemiusgreat So i think you also have set a scaling in your monitor settings? If i do not provide width and height the canvas size remains 0! @mattleibow\r\n\r\nThank you for investigation. This seems to be the case, my Windows font scaling is set to 125% ",
+        "createdAt": "2021-12-13T13:54:05",
+        "reactions": []
+      },
+      {
+        "id": 1002790766,
+        "author": "JensKrumsieck",
+        "body": "PR #1889 is merged which is in Version \u00602.88.0-preview.178\u0060 on NuGet (Latest Ver. \u00602.88.0-preview.179\u0060 is on NuGet, too)\r\nhttps://www.nuget.org/packages/SkiaSharp.Views.Blazor/2.88.0-preview.179\r\nI assume this issue can be closed now ?!",
+        "createdAt": "2021-12-29T21:58:09",
+        "reactions": [
+          {
+            "user": "artemiusgreat",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:18:05.1388477Z"
+          }
+        ]
+      }
+    ]
+  }
 }

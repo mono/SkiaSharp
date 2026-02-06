@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T00:01:57",
   "closedAt": "2022-02-15T07:29:54",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:26.8419332Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1037358900,
+        "author": "alucryd",
+        "body": "Looks like switching to llvm-ar did the trick! I have yet to test the library, will close this issue if it works.",
+        "createdAt": "2022-02-12T18:06:41",
+        "reactions": []
+      },
+      {
+        "id": 1039943107,
+        "author": "alucryd",
+        "body": "And the built files work! Closing this.",
+        "createdAt": "2022-02-15T07:29:54",
+        "reactions": []
+      },
+      {
+        "id": 1041190140,
+        "author": "mattleibow",
+        "body": "Awesome! Do you have a repo up with scripts or things? ",
+        "createdAt": "2022-02-16T07:23:10",
+        "reactions": []
+      },
+      {
+        "id": 1041500955,
+        "author": "alucryd",
+        "body": "The build scripts are hosted in a private repo with a lot of stuff I can\u0027t share. However, this is basically what I did:\r\n\r\n-  build google\u0027s gn from source (you\u0027ll need a recent one for FreeBSD 13 support, I used the latest git head)\r\n- patch BUILD.gn to support latest gn\r\n\u0060\u0060\u0060\r\ndiff --git a/BUILD.gn b/BUILD.gn\r\nindex c00bfa8daa..045b57b73e 100644\r\n--- a/BUILD.gn\r\n\u002B\u002B\u002B b/BUILD.gn\r\n@@ -69,7 \u002B69,11 @@ config(\u0022skia_public\u0022) {\r\n \r\n # Skia internal APIs, used by Skia itself and a few test tools.\r\n config(\u0022skia_private\u0022) {\r\n-  visibility = [ \u0022:*\u0022 ]\r\n\u002B  visibility = [\r\n\u002B    \u0022:*\u0022,\r\n\u002B    \u0022//modules/*\u0022,\r\n\u002B    \u0022//experimental/*\u0022,\r\n\u002B  ]\r\n \r\n   defines = [ \u0022SK_GAMMA_APPLY_TO_A8\u0022 ]\r\n   if (skia_enable_gpu) {\r\n@@ -878,11 \u002B878,6 @@ component(\u0022skia\u0022) {\r\n     \u0022:xml\u0022,\r\n   ]\r\n \r\n-  # This file (and all GN files in Skia) are designed to work with an\r\n-  # empty sources assignment filter; we handle all that explicitly.\r\n-  # We clear the filter here for clients who may have set up a global filter.\r\n-  set_sources_assignment_filter([])\r\n-\r\n   public = skia_core_public\r\n   public \u002B= skia_utils_public\r\n   public \u002B= skia_effects_public\r\n@@ -1068,11 \u002B1063,6 @@ static_library(\u0022pathkit\u0022) {\r\n     \u0022:ssse3\u0022,\r\n   ]\r\n \r\n-  # This file (and all GN files in Skia) are designed to work with an\r\n-  # empty sources assignment filter; we handle all that explicitly.\r\n-  # We clear the filter here for clients who may have set up a global filter.\r\n-  set_sources_assignment_filter([])\r\n-\r\n   sources = []\r\n   sources \u002B= skia_pathops_sources\r\n   sources \u002B= skia_pathops_public\r\n@@ -2527,8 \u002B2517,6 @@ skiasharp_build(\u0022SkiaSharp\u0022) {\r\n     \u0022:skia\u0022,\r\n   ]\r\n \r\n-  # clear the sources and add explicitly\r\n-  set_sources_assignment_filter([])\r\n   sources = [\r\n     \u0022src/xamarin/sk_compatpaint.cpp\u0022,\r\n     \u0022src/xamarin/sk_manageddrawable.cpp\u0022,\r\ndiff --git a/third_party/libsdl/BUILD.gn b/third_party/libsdl/BUILD.gn\r\nindex 2232acb44e15..fa24ef27fa6c 100644\r\n--- a/third_party/libsdl/BUILD.gn\r\n\u002B\u002B\u002B b/third_party/libsdl/BUILD.gn\r\n@@ -187,7 \u002B187,7 @@ third_party(\u0022libsdl\u0022) {\r\n       \u0022SDL_VIDEO_RENDER_OGL=1\u0022,\r\n       \u0022SDL_VIDEO_OPENGL_CGL=1\u0022,\r\n     ]\r\n-    libs \u002B= [\r\n\u002B    frameworks = [\r\n       \u0022Carbon.framework\u0022,\r\n       \u0022Cocoa.framework\u0022,\r\n       \u0022Foundation.framework\u0022,\r\n\u0060\u0060\u0060\r\n- follow the SkiaSharp build procedure for linux, making sure to use \u0060llvm-ar\u0060 in place of FreeBSD\u0027s \u0060ar\u0060, and force python2 to be used\r\n- if you want DNG, you need to hack it a bit after syncing the deps \u0060gsed s/__linux__/__unix__/ -i third_party/externals/dng_sdk/source/RawEnvironment.h\u0060 (sorry for the GNU command, I\u0027m a linux guy :/)\r\n- if you use the bundled expat you\u0027ll need an additional cflag \u0060-DXML_DEV_URANDOM\u0060\r\n- and freetype detection is borked on every platform, freebsd being no exception you\u0027ll need to point to its includedir manually (\u0060-I/third_party/externals/freetype/include\u0060 if using the bundled library)",
+        "createdAt": "2022-02-16T13:38:15",
+        "reactions": []
+      },
+      {
+        "id": 1042296088,
+        "author": "mattleibow",
+        "body": "Awesome! Thanks for sharing. ",
+        "createdAt": "2022-02-16T20:47:21",
+        "reactions": []
+      }
+    ]
+  }
 }

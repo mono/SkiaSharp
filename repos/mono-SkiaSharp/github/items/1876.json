@@ -14,5 +14,67 @@
   "updatedAt": "2022-08-19T00:02:06",
   "closedAt": "2021-12-02T11:15:55",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:16.5697592Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 984379284,
+        "author": "AnarchyMob",
+        "body": "You can do this: \n\n\u0060\u0060\u0060csharp\nvar pathMeasure = new SKPathMeasure(path);\nfloat length = pathMeasure.Length;\nfloat side = length / 4f;\nfloat area = side * side;\n\u0060\u0060\u0060\n",
+        "createdAt": "2021-12-02T08:02:07",
+        "reactions": []
+      },
+      {
+        "id": 984380194,
+        "author": "leonbohmann",
+        "body": "Sure, but that is only valid for rectangles. What if I add a beziers?",
+        "createdAt": "2021-12-02T08:03:31",
+        "reactions": []
+      },
+      {
+        "id": 984382248,
+        "author": "AnarchyMob",
+        "body": "In theory, it should work with any curves. Need to test with closed curves.",
+        "createdAt": "2021-12-02T08:06:05",
+        "reactions": []
+      },
+      {
+        "id": 984384808,
+        "author": "leonbohmann",
+        "body": "See below picture. There, I don\u0027t even have 4 \u0027sides\u0027. \r\n![grafik](https://user-images.githubusercontent.com/13386367/144382315-49d195d5-b9b1-461c-931e-bd3ff6bed897.png)\r\nI can\u0027t calculate that using (side)\u00B2, can I?\r\n\r\nOf course I need some kind of abbreviation since a bezier can\u0027t be integrated easily. What I could do is using triangles to approximate curves.",
+        "createdAt": "2021-12-02T08:10:00",
+        "reactions": []
+      },
+      {
+        "id": 984386771,
+        "author": "AnarchyMob",
+        "body": "We just interpret the length of the curve as a square, that\u0027s all.",
+        "createdAt": "2021-12-02T08:12:59",
+        "reactions": []
+      },
+      {
+        "id": 984398391,
+        "author": "AnarchyMob",
+        "body": "Yes, I was wrong, the algorithm is somewhat more complicated. you need to split the curve into polygons and calculate their total area.\n\n[StackOverflow](https://stackoverflow.com/questions/10039679/how-can-i-calculate-the-area-of-a-bezier-curve/55533770) \n[Google groups](https://groups.google.com/g/skia-discuss/c/_igHGE5o3q8/m/oODADWaXBgAJ?pli=1)",
+        "createdAt": "2021-12-02T08:29:31",
+        "reactions": []
+      },
+      {
+        "id": 984425380,
+        "author": "AnarchyMob",
+        "body": "You can try using SKRegion with CreateRectIterator...",
+        "createdAt": "2021-12-02T09:01:42",
+        "reactions": []
+      },
+      {
+        "id": 984531898,
+        "author": "leonbohmann",
+        "body": "That is an awesome idea!\r\nI tried it with SkiaSharpFiddle:\r\n![grafik](https://user-images.githubusercontent.com/13386367/144411904-2372506a-9502-45d2-9731-7b753c7efa62.png)\r\nI will iterate over the rectangles and calculate their area and just sum it up.\r\n\r\nThanks a lot!",
+        "createdAt": "2021-12-02T11:15:53",
+        "reactions": []
+      }
+    ]
+  }
 }

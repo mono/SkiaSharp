@@ -14,5 +14,73 @@
   "updatedAt": "2022-08-19T00:02:05",
   "closedAt": "2021-12-21T17:41:40",
   "commentCount": 5,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:18.3535156Z",
+    "reactions": [
+      {
+        "user": "robloo",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:18:18.3535236Z"
+      },
+      {
+        "user": "vincentcastagna",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:18:18.3535247Z"
+      },
+      {
+        "user": "jeanplevesque",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:18:18.3535251Z"
+      },
+      {
+        "user": "takla21",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:18:18.3535254Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 984838866,
+        "author": "nor0x",
+        "body": "i have a related issue with \u0060SKSwapChainPanel\u0060 and Uno 4.0 - opened almost at the same time \uD83D\uDE02\r\nhttps://github.com/mono/SkiaSharp/issues/1878",
+        "createdAt": "2021-12-02T17:25:29",
+        "reactions": []
+      },
+      {
+        "id": 985945465,
+        "author": "robloo",
+        "body": "@jeromelaban This might explain why the PR #1873 builds are failing.\r\n\r\nFor everyone, also see some comments added to the PR: https://github.com/mono/SkiaSharp/pull/1873#issuecomment-985832737",
+        "createdAt": "2021-12-04T01:58:23",
+        "reactions": []
+      },
+      {
+        "id": 985945886,
+        "author": "robloo",
+        "body": "\u003E That said, this is probably going to be an ongoing problem for SkiaSharp since if it\u0027s compiled against Uno 4 then it will have the same missing method issue (except with the expected and actual signatures reversed) when someone tries to use it with Uno 3.X (or any other version of Uno prior to 4). So you may need to ship two versions, deprecate support for pre-Uno 4, and at some reasonable time in the future cease building new SkiaSharp packages for pre-Uno 4.\r\n\r\nI would drop support for all older versions of Uno. If someone is still using old versions of Uno below 4.x they will simply need to use an older version of SkiaSharp. Otherwise, I don\u0027t think this is easy to manage going forward.",
+        "createdAt": "2021-12-04T02:01:17",
+        "reactions": []
+      },
+      {
+        "id": 985946521,
+        "author": "jeromelaban",
+        "body": "#1873 is here to fix the causes for this issue. \r\n\r\nUno 4.0 introduced (many) binary breaking changes to align with WinUI 3 and avoid discrepancies found when using Uno 3.x and earlier. We\u0027re unlikely to break again in the future as Uno is now aligned with WinUI/WinRT and that this API is stable.",
+        "createdAt": "2021-12-04T02:04:48",
+        "reactions": [
+          {
+            "user": "vincentcastagna",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:18:18.1213406Z"
+          }
+        ]
+      },
+      {
+        "id": 998959160,
+        "author": "robloo",
+        "body": "This was fixed with the SkiaSharp 2.88.0-preview.179 nuget (including SkiaSharp.Views and SkiaSharp.Views.Uno)\r\n\r\nAny Uno version \u003C 4.0 must use SkiaSharp \u003C 2.88.0-preview.179 and\r\nAny Uno version \u003E= 4.0 must use SkiaSharp \u003E= 2.88.0-preview.179\r\n\r\nI believe this issue can be closed unless you want to leave it open until final release (not preview Nugets).",
+        "createdAt": "2021-12-21T17:21:19",
+        "reactions": []
+      }
+    ]
+  }
 }

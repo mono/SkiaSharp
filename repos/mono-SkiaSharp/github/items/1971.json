@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T00:01:54",
   "closedAt": "2022-03-08T09:28:14",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:30.1707245Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1061575213,
+        "author": "mgood7123",
+        "body": "hmm this seems to not crash if i explicitly dispose the surface when disposing the canvas instead of letting the GC auto-dispose of the surface\r\n\r\n\u0060\u0060\u0060cs\r\nif (canvas_exists)\r\n{\r\n    canvas.Dispose();\r\n    canvas.DisposeSurface();\r\n    canvas = null;\r\n}\r\ncanvas = SKCanvasExtensions.CreateHardwareAcceleratedCanvas(null, GRContext, e.BackendRenderTarget.Width, e.BackendRenderTarget.Height);\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060cs\r\ninternal static void DisposeSurface(this SKCanvas this_canvas)\r\n{\r\n\tSKSurface s = (SKSurface)this_canvas.ExtensionProperties_GetValue(\u0022Surface\u0022, null);\r\n\tif (s != null)\r\n\t{\r\n\t\ts.Dispose();\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-03-08T09:28:03",
+        "reactions": []
+      }
+    ]
+  }
 }

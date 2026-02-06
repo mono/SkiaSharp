@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T03:01:35",
   "closedAt": "2020-10-20T23:40:36",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:32.3308024Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 713198855,
+        "author": "mattleibow",
+        "body": "Duplicate of https://github.com/mono/SkiaSharp/issues/1271",
+        "createdAt": "2020-10-20T23:35:03",
+        "reactions": []
+      },
+      {
+        "id": 713200541,
+        "author": "mattleibow",
+        "body": "I had a look again, and SkiaSharp does not reference any UIKit types. Not sure what type of build this is, but there should be no reference at all.\r\n\r\nI think the script is misleading you. The script is always printing the framework name, but actually does not reference it\r\n\r\nWhen trying to look for \u0060UIWebView\u0060\r\n\r\n**script**\r\n\u0060\u0060\u0060\r\nfor framework in Frameworks/*.framework; do\r\nfname=$(basename $framework .framework)\r\necho $fname\r\nnm $framework/$fname | grep UIWebView\r\ndone\r\n\u0060\u0060\u0060\r\n\r\n**output**\r\n\u0060\u0060\u0060\r\nlibSkiaSharp\r\n\u0060\u0060\u0060\r\n\r\nWhen trying to look for \u0060wstream\u0060\r\n\r\n\r\n**script**\r\n\u0060\u0060\u0060\r\nfor framework in Frameworks/*.framework; do\r\nfname=$(basename $framework .framework)\r\necho $fname\r\nnm $framework/$fname | grep wstream\r\ndone\r\n\u0060\u0060\u0060\r\n\r\n**output**\r\n\u0060\u0060\u0060\r\nlibSkiaSharp\r\n0000000000009620 T _sk_dynamicmemorywstream_copy_to\r\n0000000000009580 T _sk_dynamicmemorywstream_destroy\r\n0000000000009600 T _sk_dynamicmemorywstream_detach_as_data\r\n00000000000095e0 T _sk_dynamicmemorywstream_detach_as_stream\r\n00000000000095a0 T _sk_dynamicmemorywstream_new\r\n0000000000009630 T _sk_dynamicmemorywstream_write_to_stream\r\n0000000000009520 T _sk_filewstream_destroy\r\n0000000000009570 T _sk_filewstream_is_valid\r\n0000000000009540 T _sk_filewstream_new\r\n000000000000223e T _sk_managedwstream_destroy\r\n00000000000021ff T _sk_managedwstream_new\r\n0000000000002250 T _sk_managedwstream_set_procs\r\n0000000000009680 T _sk_wstream_bytes_written\r\n0000000000009670 T _sk_wstream_flush\r\n00000000000097e0 T _sk_wstream_get_size_of_packed_uint\r\n0000000000009650 T _sk_wstream_newline\r\n0000000000009640 T _sk_wstream_write\r\n00000000000096c0 T _sk_wstream_write_16\r\n00000000000096f0 T _sk_wstream_write_32\r\n0000000000009690 T _sk_wstream_write_8\r\n0000000000009750 T _sk_wstream_write_bigdec_as_text\r\n0000000000009780 T _sk_wstream_write_bool\r\n0000000000009740 T _sk_wstream_write_dec_as_text\r\n0000000000009760 T _sk_wstream_write_hex_as_text\r\n00000000000097c0 T _sk_wstream_write_packed_uint\r\n00000000000097b0 T _sk_wstream_write_scalar\r\n0000000000009770 T _sk_wstream_write_scalar_as_text\r\n00000000000097d0 T _sk_wstream_write_stream\r\n0000000000009710 T _sk_wstream_write_text\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2020-10-20T23:40:36",
+        "reactions": []
+      },
+      {
+        "id": 724067309,
+        "author": "idimkk",
+        "body": "Were you able to solve this problem?\r\nI am still getting consistent rejections from Apple due to this link.\r\nI will be glad for your help!\r\n\r\n@florian-berger ",
+        "createdAt": "2020-11-09T15:00:27",
+        "reactions": []
+      }
+    ]
+  }
 }

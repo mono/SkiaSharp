@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T00:02:03",
   "closedAt": "2022-01-13T00:49:26",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:20.2937632Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1011598183,
+        "author": "ndenkha",
+        "body": "For anyone\u0027s interest, I found the resolution to this. Hope this helps someone.\r\n\r\n    public static void CreateSkiaImageFromText(string text, int fontSize, string fontFileName, string sigFilename)\r\n    {\r\n    \t    // First, find the text bounds.\r\n\t    SKRect textBounds = new SKRect();\r\n\t    float textWidth = 0;\r\n\t    using (var textPaint = new SKPaint())\r\n\t    {\r\n\t\t    using (var typeFace = SKTypeface.FromFile(fontFileName))\r\n\t\t    {\r\n\t\t\t    textPaint.Typeface = typeFace;\r\n\t\t\t    textPaint.Color = SKColors.Navy;\r\n\t\t\t    textPaint.IsAntialias = true;\r\n\t\t\t    textPaint.IsLinearText = true;\r\n\t\t\t    textPaint.TextEncoding = SKTextEncoding.Utf8;\r\n\t\t\t    textPaint.FilterQuality = SKFilterQuality.High;\r\n\r\n\t\t\t    // Find the text bounds\r\n\t\t\t    textWidth = textPaint.MeasureText(text, ref textBounds);\r\n\t\t    }\r\n\t    }\r\n\r\n\t    var imgInfo = new SKImageInfo(175, 50);\r\n\t    using (var surface = SKSurface.Create(imgInfo))\r\n\t    {\r\n\t\t    var canvas = surface.Canvas;\r\n\t\t    canvas.Clear(SKColors.White);\r\n\r\n\t\t    using (var textPaint = new SKPaint())\r\n\t\t    {\r\n\t\t\t    using (var typeFace = SKTypeface.FromFile(fontFileName))\r\n\t\t\t    {\r\n\t\t\t\t    textPaint.Typeface = typeFace;\r\n\t\t\t\t    textPaint.Color = SKColors.Navy;\r\n\t\t\t\t    textPaint.IsAntialias = true;\r\n\t\t\t\t    textPaint.IsLinearText = true;\r\n\t\t\t\t    textPaint.TextEncoding = SKTextEncoding.Utf8;\r\n\t\t\t\t    textPaint.FilterQuality = SKFilterQuality.High;\r\n\t\t\t\t    textPaint.TextSize = fontSize;\r\n\t\t\t\t    // Negatives the x-axis. Refer to this to know why: // https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/basics/text\r\n\t\t\t\t    // Also center the y-axis\r\n\t\t\t\t    float yText = imgInfo.Height / 2 - textBounds.MidY;\r\n\t\t\t\t    canvas.DrawText(text, -textBounds.Left, yText, textPaint);\r\n\t\t\t    }\r\n\t\t    }\r\n\r\n\t\t    using (var image = surface.Snapshot())\r\n\t\t    {\r\n\t\t\t    using (var data = image.Encode(SKEncodedImageFormat.Png, 100))\r\n\t\t\t    {\r\n\t\t\t\t    var byteArray = data.ToArray();\r\n\t\t\t\t    using (var fs = new FileStream(sigFilename, FileMode.Create, FileAccess.ReadWrite, FileShare.None))\r\n\t\t\t\t    {\r\n\t\t\t\t\t    fs.Write(byteArray, 0, byteArray.Length);\r\n\t\t\t\t\t    fs.Flush();\r\n\t\t\t\t    }\r\n\t\t\t    }\r\n\t\t    }\r\n\t    }\r\n    }",
+        "createdAt": "2022-01-13T00:49:26",
+        "reactions": []
+      }
+    ]
+  }
 }

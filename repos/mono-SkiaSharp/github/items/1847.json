@@ -14,5 +14,38 @@
   "updatedAt": "2022-08-19T00:02:11",
   "closedAt": "2021-11-05T20:30:31",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:08.888983Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 962028501,
+        "author": "artemiusgreat",
+        "body": "My knowledge of Skia is limited, so take it with a grain of salt. \r\n\r\nBlazor bindings of SkiaSharp in Web work with HTML canvas element. \r\nThis element provides two types of API - 2D Canvas and 3D Web GL. \r\nhttps://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/getContext\r\n\r\n\u0060\u0060\u0060\r\nconst canvas = document.querySelector(\u0022canvas\u0022);\r\nconst c2d = canvas.getContext(\u00222d\u0022);\r\nconst c3d = canvas.getContext(\u0022webgl\u0022);\r\n\u0060\u0060\u0060\r\n\r\nThe same APIs are already exposed in SkiaSharp - SKCanvasView and SKGLView. \r\nhttps://github.com/mono/SkiaSharp/tree/main/source/SkiaSharp.Views.Blazor/SkiaSharp.Views.Blazor \r\n\r\nAt the same time, Skia positions itself as a 2D framework, so 3D Web GL in Skia may not be as evolved as 2D Canvas. \r\nIn other words\r\n\r\n- For 2D rendering, Skia and JS should perform the same way \r\n- For 3D rendering, Skia may require slightly more coding compared to JS frameworks above",
+        "createdAt": "2021-11-05T16:15:55",
+        "reactions": []
+      },
+      {
+        "id": 962148181,
+        "author": "mattleibow",
+        "body": "@artemiusgreat is correct. Skia is only really a 2D graphics engine. It can draw on WebGL for hardware acceleration, but still only 2D things.\n\n\nFor 3D, you will need to use another library. I am not sure of any offhand. ",
+        "createdAt": "2021-11-05T19:10:34",
+        "reactions": []
+      },
+      {
+        "id": 962201714,
+        "author": "mwpowellhtx",
+        "body": "\u003E For 3D, you will need to use another library. I am not sure of any offhand.\r\n\r\nWell, that was partly my question, along the lines of, what is _Skia_ and/or _SkiaSharp_ bringing to the table, exactly. Sounds like they are completely different target markets, this, compared contrasted with a _THREE_ or a _BabylonJS_, for instance.",
+        "createdAt": "2021-11-05T20:30:31",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:18:08.838717Z"
+          }
+        ]
+      }
+    ]
+  }
 }

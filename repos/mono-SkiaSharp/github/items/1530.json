@@ -14,5 +14,88 @@
   "updatedAt": "2022-08-19T03:01:39",
   "closedAt": "2020-10-17T16:22:08",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:26.6288634Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 707296043,
+        "author": "blmiles",
+        "body": "Un-installed everything again, cleaned, reinstalled SkiaSharp and SkiaSharp.Views.Forms ONLY. v2.80.2. NO SkiaSharp.Views installed.\r\nAnd as for the path/folder - /Users/[user]/Library/Caches/Xamarin/mtbs - finally got to it, deleted it AND emptied trash on the Mac.\r\n\r\nStill seeing same error on fresh build. No errors in Android solution and the app on that platform works just fine.\r\n\r\nThis is similar to this #855\r\n\r\nThanks",
+        "createdAt": "2020-10-12T19:07:35",
+        "reactions": []
+      },
+      {
+        "id": 707365783,
+        "author": "mattleibow",
+        "body": "Hey there again, if you create a binlog:  https://www.meziantou.net/exploring-the-msbuild-log-using-the-binary-log-viewer.htm\r\nYou can send it to me at maleib [at] microsoft.com",
+        "createdAt": "2020-10-12T21:56:20",
+        "reactions": []
+      },
+      {
+        "id": 707811761,
+        "author": "blmiles",
+        "body": "Sent binlog. Pls let me know if what I\u0027ve sent is right.\r\nThx",
+        "createdAt": "2020-10-13T15:15:50",
+        "reactions": []
+      },
+      {
+        "id": 708093320,
+        "author": "mattleibow",
+        "body": "Thanks! I\u0027ll have a look.",
+        "createdAt": "2020-10-14T01:09:00",
+        "reactions": []
+      },
+      {
+        "id": 708489378,
+        "author": "blmiles",
+        "body": "FIXED! For those who might run into a similar issue, try this:\r\n\r\nIn the iOS  .csproj inside the first _\u0060\u003CPropertyGroup\u003E\u0060_ element, add:\r\n\r\n_RuntimeIdentifiers\u003Eosx;osx-x86;osx-x64\u003C/RuntimeIdentifiers\r\nNuGetRuntimeIdentifier\u003Eosx\u003C/NuGetRuntimeIdentifier_\r\n\r\nAll compiled after that. Passed smoke-testing.\r\n\r\nHope that helps!\r\n",
+        "createdAt": "2020-10-14T15:44:24",
+        "reactions": []
+      },
+      {
+        "id": 709670085,
+        "author": "blmiles",
+        "body": "TOO GOOD TO BE TRUE\r\n\r\nFYI, this error builds just fine targeting the latest emulator and iOS 14.0, however, just cleaned/rebuilt for hard device iphone X, iOS 13.7 and get these errors:\r\n\r\n_Severity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tlinker command failed with exit code 1 (use -v to see invocation)\t[mycompany].iOS\tC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\MSBuild\\Xamarin\\iOS\\Xamarin.iOS.Common.targets\t885_\t\r\n\r\nAND\r\n\r\n_Severity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tNative linking failed for \u0027/Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhone/Debug/device-builds/iphone11.2-13.7/mtouch-cache/arm64/libSkiaSharp.dll.dylib\u0027. Please file a bug report at https://github.com/xamarin/xamarin-macios/issues/new\t[mycompany].iOS\tC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\MSBuild\\Xamarin\\iOS\\Xamarin.iOS.Common.targets\t885_\t\r\n\r\nAND\r\n\r\n_Severity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tNative linking failed for \u0027/Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhone/Debug/mtouch-cache/arm64/libSkiaSharp.dll.dylib\u0027. Please file a bug report at https://github.com/xamarin/xamarin-macios/issues/new\t[mycompany].iOS\tC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\MSBuild\\Xamarin\\iOS\\Xamarin.iOS.Common.targets\t885_\t",
+        "createdAt": "2020-10-16T01:08:03",
+        "reactions": []
+      },
+      {
+        "id": 710003696,
+        "author": "mattleibow",
+        "body": "Booooo!\n\nTry removing the PlatformTarget elements. Also, try installing SkiaSharp into the iOS project itself. I heard rumors that there is a bug with transitive dependencies from netstandard/SDK to classic projects. ",
+        "createdAt": "2020-10-16T12:02:25",
+        "reactions": []
+      },
+      {
+        "id": 710005096,
+        "author": "blmiles",
+        "body": "Ok, will do. Sent you the csproj file to take another look.\r\n\r\n",
+        "createdAt": "2020-10-16T12:05:23",
+        "reactions": []
+      },
+      {
+        "id": 710012057,
+        "author": "blmiles",
+        "body": "Removed the PlatformTarget elements, installed SkiaSharp and SkiaHarp.Views.Forms into the iOS proj.\r\nGet same error(s)\r\nBuilds and runs just fine going to the sim though.",
+        "createdAt": "2020-10-16T12:21:35",
+        "reactions": []
+      },
+      {
+        "id": 711021456,
+        "author": "blmiles",
+        "body": "For anyone watching this bug, latest fix is setting these in the Debug|iPhone section:\r\n\n\u0060\u0060\u0060\r\n\u003CMtouchNoSymbolStrip\u003Etrue\u003C/MtouchNoSymbolStrip\u003E\r\n    \u003CMtouchFastDev\u003Efalse\u003C/MtouchFastDev\u003E\n\u0060\u0060\u0060\n\r\nI also removed the \u0060\u003CPlatformTarget\u003E\u0060 entry in that same section.\r\n\r\nThat allowed a build/deploy to the hard device.\r\nHope that helps!",
+        "createdAt": "2020-10-17T14:34:46",
+        "reactions": []
+      },
+      {
+        "id": 711038841,
+        "author": "mattleibow",
+        "body": "After talking to the iOS team, it appears the issue is with the fast dev. This is sometimes unable to work properly.\n\nThere also seems to be a push to remove this and replace it with the even better interpreter. ",
+        "createdAt": "2020-10-17T16:22:04",
+        "reactions": []
+      }
+    ]
+  }
 }

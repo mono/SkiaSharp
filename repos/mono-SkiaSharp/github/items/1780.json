@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T00:02:29",
   "closedAt": "2021-09-06T22:29:08",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:44.8723122Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 913874161,
+        "author": "mattleibow",
+        "body": "There are a few things that might cause issues. You are building with Xamarin.Forms and using GTK, so I am not sure why the build is not finding the gtk-sharp.dll from the GAC. However, this might be because it is a .NET Core/.NET Standard test library? In this case, the GAC is not used.\r\n\r\nYou can add the GAC to the lookup in your csproj by adding this:\r\n\r\n\u0060\u0060\u0060xml\r\n  \u003CPropertyGroup\u003E\r\n    \u003C!--\r\n      SDK-style projects cannot reference GAC assemblies: \r\n      https://github.com/dotnet/sdk/issues/987\r\n    --\u003E\r\n    \u003CAssemblySearchPaths\u003E$(AssemblySearchPaths);{GAC}\u003C/AssemblySearchPaths\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nHowever, you may actually want to download and include the gtk-sharp bits into the app so you don\u0027t have to install gtk on client machines. But, if this is a dev/testing thing, then you might be fine.\r\n\r\nThe case with OpenTK restoring to .NET Framework, this is because it is only including the bits for that. The NuGet.org info shows nothing because the package author did not specify anything under the dependencies. However, if you have a look at the package explorer, you can see the lib folder only has net20: https://nuget.info/packages/OpenTK/3.0.1\r\n\r\nIf you don\u0027t like the warning, you can just ignore it:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPackageReference Include=\u0022OpenTK\u0022 Version=\u00223.0.1\u0022 NoWarn=\u0022NU1701\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nOr, you can update go a later version that is .NET Standard based.",
+        "createdAt": "2021-09-06T22:28:17",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,94 @@
   "updatedAt": "2022-08-19T00:02:10",
   "closedAt": "2021-11-02T15:33:37",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:18:11.9008609Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 955781626,
+        "author": "dr-vij",
+        "body": "UPD: I\u0027ve built wasm version on Ubuntu 20.4 and got same errors :(",
+        "createdAt": "2021-10-31T19:53:30",
+        "reactions": []
+      },
+      {
+        "id": 955782500,
+        "author": "dr-vij",
+        "body": "\u0060\u0060\u0060\r\nBuilding Library/Bee/artifacts/WebGL/build/debug_WebGL_wasm/build.js failed with output:\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nerror: undefined symbol: _ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_externalEPKcm (referenced by top-level compiled C/C\u002B\u002B code)\r\nwarning: Link with -s LLD_REPORT_UNDEFINED to get more information on undefined symbols\r\nwarning: To disable errors for undefined symbols use -s ERROR_ON_UNDEFINED_SYMBOLS=0\r\nwarning: __ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_externalEPKcm may need to be added to EXPORTED_FUNCTIONS if it arrives from a system library\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nerror: undefined symbol: _ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_no_aliasILb0EEERS5_PKcm (referenced by top-level compiled C/C\u002B\u002B code)\r\nwarning: __ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_no_aliasILb0EEERS5_PKcm may need to be added to EXPORTED_FUNCTIONS if it arrives from a system library\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nerror: undefined symbol: _ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_no_aliasILb1EEERS5_PKcm (referenced by top-level compiled C/C\u002B\u002B code)\r\nwarning: __ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE17__assign_no_aliasILb1EEERS5_PKcm may need to be added to EXPORTED_FUNCTIONS if it arrives from a system library\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nerror: undefined symbol: _ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE25__init_copy_ctor_externalEPKcm (referenced by top-level compiled C/C\u002B\u002B code)\r\nwarning: __ZNSt3__212basic_stringIcNS_11char_traitsIcEENS_9allocatorIcEEE25__init_copy_ctor_externalEPKcm may need to be added to EXPORTED_FUNCTIONS if it arrives from a system library\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nerror: undefined symbol: _ZNSt3__215basic_stringbufIcNS_11char_traitsIcEENS_9allocatorIcEEE3strERKNS_12basic_stringIcS2_S4_EE (referenced by top-level compiled C/C\u002B\u002B code)\r\nwarning: __ZNSt3__215basic_stringbufIcNS_11char_traitsIcEENS_9allocatorIcEEE3strERKNS_12basic_stringIcS2_S4_EE may need to be added to EXPORTED_FUNCTIONS if it arrives from a system library\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060\r\nError: Aborting compilation due to previous errors\r\nemcc2: error: \u0027/Applications/Unity/Hub/Editor/2021.2.0f1/PlaybackEngines/WebGLSupport/BuildTools/Emscripten/node/node /Applications/Unity/Hub/Editor/2021.2.0f1/PlaybackEngines/WebGLSupport/BuildTools/Emscripten/emscripten/src/compiler.js /var/folders/18/99jndmds6px_w52xph7yfc_h0000gn/T/tmp95iw9h4c.txt\u0027 failed (1)\r\nUnityEditor.BuildPlayerWindow:BuildPlayerAndRun () (at /Users/bokken/buildslave/unity/build/Editor/Mono/BuildPlayerWindow.cs:179)\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-10-31T19:59:29",
+        "reactions": []
+      },
+      {
+        "id": 955787142,
+        "author": "dr-vij",
+        "body": "Looks like it wants std::basic_string\u003CCharT,Traits,Allocator\u003E, am I on a right way? I see EXPORTED_FUNCTIONS there but dont understand how to use it yet to export lost ",
+        "createdAt": "2021-10-31T20:34:19",
+        "reactions": []
+      },
+      {
+        "id": 955791673,
+        "author": "dr-vij",
+        "body": "i found them in glslang includes\r\n\r\nnamespace glslang {\r\n    //\r\n    // Pool version of string.\r\n    //\r\n    typedef pool_allocator\u003Cchar\u003E TStringAllocator;\r\n    typedef std::basic_string \u003Cchar, std::char_traits\u003Cchar\u003E, TStringAllocator\u003E TString;\r\n\r\n} // end namespace glslang\r\n\r\nlooks like linker cant find it\r\n",
+        "createdAt": "2021-10-31T21:07:56",
+        "reactions": []
+      },
+      {
+        "id": 956587827,
+        "author": "dr-vij",
+        "body": "I removed all dllimports and found two where 1 gives this errors and one does not.\r\n\r\nthis one gives error:\r\n[DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]\r\n internal static extern sk_image_t sk_image_make_raster_image(sk_image_t cimage);\r\n\r\nthis one does not:\r\n[DllImport (SKIA, CallingConvention = CallingConvention.Cdecl)]\r\ninternal static extern sk_image_t sk_image_make_subset (sk_image_t cimage, SKRectI* subset);\r\n\r\nI also have noticed that wasm tests from utils folder do not work :(\r\n",
+        "createdAt": "2021-11-01T21:03:22",
+        "reactions": []
+      },
+      {
+        "id": 956721484,
+        "author": "dr-vij",
+        "body": "So I fixed this error by downgrading from emscripten 2.0.32 to 2.0.21, it compiles now, but does not work.",
+        "createdAt": "2021-11-01T22:09:48",
+        "reactions": []
+      },
+      {
+        "id": 957186396,
+        "author": "dr-vij",
+        "body": "So I moved forward, now I build skia sharp on Ubuntu 20.04 on emcc 2.0.19 (Same version as unity). And Unity project compiles, but the new error is runtime:\r\n\r\nexception thrown: RuntimeError: null function or function signature mismatch,RuntimeError: null function or function signature mismatch\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[35775]:0xa659b0\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[3667]:0x122e5f\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[3668]:0x122f78\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[9093]:0x34de83\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[35429]:0xa3fcfe\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[16989]:0x632db5\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[2786]:0xcab5e\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[16979]:0x63298d\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[20165]:0x782c31\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[26785]:0x923f3b\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[5737]:0x20ca83\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[21613]:0x7a9dd7\r\n    at invoke_iiii (http://localhost:49782/Build/skia.framework.js:2:389202)\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[1390]:0x5c05a\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[3848]:0x13a31c\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[687]:0x25741\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[34354]:0xa2350d\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[26785]:0x923f3b\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[5737]:0x20ca83\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[21613]:0x7a9dd7\r\n    at invoke_iiii (http://localhost:49782/Build/skia.framework.js:2:389202)\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[1390]:0x5c05a\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[3848]:0x13a31c\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[687]:0x25741\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[12641]:0x55cc09\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[3866]:0x13acb1\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[12823]:0x5620be\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[3001]:0xe3a28\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[28620]:0x945350\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[27463]:0x92f9a0\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[5737]:0x20ca83\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[21613]:0x7a9dd7\r\n    at invoke_iiii (http://localhost:49782/Build/skia.framework.js:2:389202)\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[1390]:0x5c05a\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[17433]:0x67009c\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[959]:0x32eb5\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[3326]:0x106663\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[25951]:0x8f772c\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[24919]:0x89d6b6\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[23583]:0x7ecc60\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[12154]:0x54768f\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[12154]:0x5476fe\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[10676]:0x458824\r\n    at http://localhost:49782/Build/skia.wasm.gz:wasm-function[21608]:0x7a9d99\r\n    at browserIterationFunc (http://localhost:49782/Build/skia.framework.js:2:257698)\r\n    at callUserCallback (http://localhost:49782/Build/skia.framework.js:2:131767)\r\n    at Object.runIter (http://localhost:49782/Build/skia.framework.js:2:133027)\r\n    at Browser_mainLoop_runner (http://localhost:49782/Build/skia.framework.js:2:131302)",
+        "createdAt": "2021-11-02T08:08:57",
+        "reactions": []
+      },
+      {
+        "id": 957835346,
+        "author": "dr-vij",
+        "body": "So after investigation, I found an error inside Unity3d. The wasm skiasharp works in development mode of engine. I will report them a bug",
+        "createdAt": "2021-11-02T15:33:37",
+        "reactions": []
+      },
+      {
+        "id": 958211303,
+        "author": "dr-vij",
+        "body": "https://forum.unity.com/threads/null-function-or-function-signature-mismatch-error-and-please-contact-customer-support-message.1192075/#post-7624297",
+        "createdAt": "2021-11-02T21:53:32",
+        "reactions": []
+      },
+      {
+        "id": 962141537,
+        "author": "mattleibow",
+        "body": "Oh wow. I look away and you are moving forward. This is really awesome.\n\nI would love to see what you are doing so maybe we can get an extra nuget or something out so you don\u0027t have to worry about building it. ",
+        "createdAt": "2021-11-05T19:00:19",
+        "reactions": [
+          {
+            "user": "dr-vij",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:18:11.6692155Z"
+          }
+        ]
+      },
+      {
+        "id": 964926875,
+        "author": "dr-vij",
+        "body": "https://forum.unity.com/threads/null-function-or-function-signature-mismatch-error-and-please-contact-customer-support-message.1192075/#post-7633822\r\n\r\nI created the new thread, I will create port of SkiaSharp working with Unity with same MIT license. But I found some bugs in Unity right now. I am waiting for them to fix it :) Your repository is wonderfull. I saw C# wrappers and .generated files, that is fantastic and difficult job.",
+        "createdAt": "2021-11-10T09:14:57",
+        "reactions": []
+      }
+    ]
+  }
 }

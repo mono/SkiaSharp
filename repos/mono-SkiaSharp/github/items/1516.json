@@ -14,5 +14,58 @@
   "updatedAt": "2022-08-19T03:01:44",
   "closedAt": "2020-10-03T08:55:10",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:12.9324287Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 702727632,
+        "author": "Gillibald",
+        "body": "This explains those properties pretty well: https://stackoverflow.com/a/27631737",
+        "createdAt": "2020-10-02T13:15:34",
+        "reactions": [
+          {
+            "user": "MichaelRumpler",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:12.0409016Z"
+          }
+        ]
+      },
+      {
+        "id": 702847317,
+        "author": "mattleibow",
+        "body": "You can also check out values in the \u0060SKPaint.MeasureText\u0060 and see what that rect contains.\r\n\r\n@Gillibald I think what you are saying is that those values in the metrics are more a guide and maybe defined by the font? OR are the actually calculated?",
+        "createdAt": "2020-10-02T17:02:24",
+        "reactions": []
+      },
+      {
+        "id": 702915083,
+        "author": "Gillibald",
+        "body": "They are defined by the font author and all glyphs share the same value",
+        "createdAt": "2020-10-02T19:22:42",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:12.4450957Z"
+          }
+        ]
+      },
+      {
+        "id": 703071425,
+        "author": "MichaelRumpler",
+        "body": "Thanks, that SO article is the best documentation I found so far.\r\n\r\nThat means there is some glyph which is even higher than that arrow or at least the font authors claimed so.\r\n\r\nI\u0027ll take a look at [the source of the Windows Terminal](https://github.com/microsoft/terminal) and see if I can find how they handle this. Because somehow their line seems to be as high as the arrow, starting at neither \u0060Top\u0060 nor \u0060Ascent\u0060.",
+        "createdAt": "2020-10-03T08:55:09",
+        "reactions": []
+      },
+      {
+        "id": 707587140,
+        "author": "MichaelRumpler",
+        "body": "I didn\u0027t find any properties which resemble the values I need, so I measure how big the biggest chars are which may be used. This works best in what I tested so far.\r\n\r\n\t// check the maximum sizes of those chars:\r\n\t// a Powerline Arrow, Unicode Full Block and \u00D6 and y as fallback\r\n\tvar bigChars = \u0022\\uE0B0\\u2588\u00D6y\u0022;\r\n\tvar cellSize = new SKRect();\r\n\tfor (int i = 0; i \u003C bigChars.Length; i\u002B\u002B)\r\n\t{\r\n\t\tvar s = bigChars.Substring(i, 1);\r\n\t\tif (Paint.ContainsGlyphs(s))\t// if the font does not contain the glyph, then skip it\r\n\t\t{\r\n\t\t\tvar rect = new SKRect();\r\n\t\t\tPaint.MeasureText(s, ref rect);\r\n\t\t\tcellSize.Union(rect);\r\n\t\t}\r\n\t}\r\n\r\n\tCharWidth = Paint.MeasureText(\u0022W\u0022);     // cellSize.Width is too big\r\n\tLineHeight = cellSize.Height;\r\n\tAscent = cellSize.Top;\r\n\r\nIt\u0027s really a shame that even in a monospace font not all glyphs have the same size. This is only trial and error what I\u0027m doing here. And I only tested with Courier New and Cascadia Mono PL. For other fonts it might not work at all.",
+        "createdAt": "2020-10-13T08:38:02",
+        "reactions": []
+      }
+    ]
+  }
 }

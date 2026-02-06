@@ -14,5 +14,90 @@
   "updatedAt": "2022-08-19T00:02:39",
   "closedAt": "2021-09-02T19:55:52",
   "commentCount": 9,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:17:30.9505913Z",
+    "reactions": [
+      {
+        "user": "DoubleDBE",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:30.950598Z"
+      },
+      {
+        "user": "prok155",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:30.950599Z"
+      },
+      {
+        "user": "thisisthekap",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:17:30.9505991Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 873521672,
+        "author": "DoubleDBE",
+        "body": "Same here with the same DLL versions mentiod by OP.\r\n\r\nThis log is taken from an Android 10 emulator, but i have these issues on physical devices as well.\r\n\r\n\u0060\u0060\u0060\r\n07-04 04:33:42.431: A/DEBUG(26429): *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\r\n07-04 04:33:42.431: A/DEBUG(26429): Build fingerprint: \u0027google/sdk_gphone_x86/generic_x86:10/QSR1.200715.002/6695061:userdebug/dev-keys\u0027\r\n07-04 04:33:42.431: A/DEBUG(26429): Revision: \u00270\u0027\r\n07-04 04:33:42.431: A/DEBUG(26429): ABI: \u0027x86\u0027\r\n07-04 04:33:42.432: A/DEBUG(26429): Timestamp: 2021-07-04 04:33:42\u002B0000\r\n07-04 04:33:42.432: A/DEBUG(26429): pid: 26111, tid: 26135, name: Finalizer  \u003E\u003E\u003E com.company.app \u003C\u003C\u003C\r\n07-04 04:33:42.432: A/DEBUG(26429): uid: 10133\r\n07-04 04:33:42.433: A/DEBUG(26429): signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x302015a\r\n07-04 04:33:42.433: A/DEBUG(26429):     eax 0302015a  ebx b7df8004  ecx b7661550  edx c4214e50\r\n07-04 04:33:42.433: A/DEBUG(26429):     edi b219ce08  esi b411bf20\r\n07-04 04:33:42.433: A/DEBUG(26429):     ebp c4214ec8  esp c4214e40  eip b766fcea\r\n07-04 04:33:42.528: A/DEBUG(26429): backtrace:\r\n07-04 04:33:42.528: A/DEBUG(26429):       #00 pc 0006ecea  /data/app/com.company.app-zqpOt9HQ87RSg-NvydKF7A==/lib/x86/libSkiaSharp.so\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2021-07-04T04:53:43",
+        "reactions": []
+      },
+      {
+        "id": 873666231,
+        "author": "prok155",
+        "body": "Have you managed to reproduce it on emulator? Which line of code causes the crash? Most of my app\u0027s crashes are form Android 11, but on android 10 and prevoius it occurs as well.",
+        "createdAt": "2021-07-04T21:31:05",
+        "reactions": []
+      },
+      {
+        "id": 895311067,
+        "author": "thisisthekap",
+        "body": "We are experiencing the same issue.\r\n\r\nDistribution by Android version and device:\r\n![image](https://user-images.githubusercontent.com/9071974/128730026-59bad3c4-35eb-4063-aa71-c084a78497ae.png)\r\n",
+        "createdAt": "2021-08-09T15:16:13",
+        "reactions": []
+      },
+      {
+        "id": 895409751,
+        "author": "prok155",
+        "body": "Have you managed to reproduce it? My app still experience this error, I tried to find this error on emulators and I\u0027ve done a lot of tests on firebase TestLab, but it didnt help me. ",
+        "createdAt": "2021-08-09T17:36:32",
+        "reactions": []
+      },
+      {
+        "id": 895588119,
+        "author": "thisisthekap",
+        "body": "Unfortunately, the same applies to us.\n\n@mattleibow Are you able to give some light to this issue?",
+        "createdAt": "2021-08-09T22:16:57",
+        "reactions": []
+      },
+      {
+        "id": 897514358,
+        "author": "thisisthekap",
+        "body": "Just did some additional research. This issue seems to cause the majority of our Android production crashes. But still unable to reproduce it.\r\n\r\n@DoubleDBE Were you able to reproduce this issue?",
+        "createdAt": "2021-08-12T10:10:47",
+        "reactions": []
+      },
+      {
+        "id": 897554269,
+        "author": "Huaba93",
+        "body": "We are experiencing the same problem. Android 10 is the most affected. This issue causes 70% of our android crashes and occurs in about 1.8% of the sessions. So it is very critical!\r\n\r\n@prok155 are you using \u0060SKCanvasView\u0060 or \u0060SKGLView\u0060? If SKGLView, are you using \u0060HasRenderLoop\u0060?\r\n",
+        "createdAt": "2021-08-12T11:16:52",
+        "reactions": []
+      },
+      {
+        "id": 897647596,
+        "author": "prok155",
+        "body": "I use only SKCanvasView.\r\n\r\nI suspect that this issue may be related with memory management and disposing objects. Issue appeared when I switch my app from SDK 29 to SDK 30, and I also change some code in OnPaintSurface method to improve performance (I decided to dispose loaded bitmaps).\r\n\r\nSee that post\r\n[https://stackoverflow.com/questions/17840521/android-fatal-signal-11-sigsegv-at-0x636f7d89-code-1-how-can-it-be-tracked](url) \r\n\r\n\u003E I also got this error many times and I solved it. This error will be faced in case of memory management in native side. Your application is accessing memory outside of its address space. This is most likely an invalid pointer access. SIGSEGV = segmentation fault in native code. \r\n\r\nDo you also dispose SKPaints,Canvas etc. in OnPaintSurface method? It may cause this issue\r\n\r\n\r\n",
+        "createdAt": "2021-08-12T13:38:39",
+        "reactions": []
+      },
+      {
+        "id": 912008516,
+        "author": "prok155",
+        "body": "Hello. I updated my app in google play store. As I suspected, native crash was caused by incorrect disposing of SKPaint, following code caused an error:\r\n\r\n\u0060SKPaint textPaint = new SKPaint();\u0060\r\n\u0060textPaint.Dispose();\u0060\r\n\r\nI removed this line of code \u0060textPaint.Dispose()\u0060 and error disappeared from google play console. I close this issue, if your app still suffer that error it is probably caused by incorrect disposing and memory management.",
+        "createdAt": "2021-09-02T19:55:47",
+        "reactions": []
+      }
+    ]
+  }
 }

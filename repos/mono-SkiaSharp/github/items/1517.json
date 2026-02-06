@@ -19,5 +19,223 @@
   "updatedAt": "2022-08-19T03:01:43",
   "closedAt": "2020-10-12T21:04:11",
   "commentCount": 26,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:19.0205795Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 702860039,
+        "author": "mattleibow",
+        "body": "Very interesting...\r\n\r\nI opened both in Windows Photos app, they are upright. But, when I open them in IrfanView, one is on its side.\r\n\r\nBut what is even more interesting is that they both have the orientation, but it seems a different order...\r\n\r\nWhen I open it with GIMP, the one that is upright has a popup saying that it contains EXIF metadata. But the other one does not.\r\n\r\nI\u0027ll see what I can do. Hopefully it is just a matter of different EXIF data that maybe skia is struggling to load.\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/94951579-d656cf00-04e4-11eb-84b1-27f014b0445a.png)\r\n",
+        "createdAt": "2020-10-02T17:26:53",
+        "reactions": [
+          {
+            "user": "Webreaper",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:13.7663513Z"
+          }
+        ]
+      },
+      {
+        "id": 702868120,
+        "author": "Webreaper",
+        "body": "Yes, I wondered if it might be a small glitch in the exif code. Let me know what you find and if you want me to test anything! ",
+        "createdAt": "2020-10-02T17:41:59",
+        "reactions": []
+      },
+      {
+        "id": 702940092,
+        "author": "mattleibow",
+        "body": "All right. I managed to locate the issue.\r\n\r\nWhat is happening is that the EXIF data is not is the usual location. As a result, there is a special entry in the tags to point to the correct location of the data. However, skia is not actually handling this case. Instead, it stops with the initial set of tags, which is just a pointer to the real data.\r\n\r\nI\u0027ll get a fix in and then report this to the Google team so that is can reach upstream.",
+        "createdAt": "2020-10-02T20:21:13",
+        "reactions": [
+          {
+            "user": "Webreaper",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:14.2348499Z"
+          }
+        ]
+      },
+      {
+        "id": 702948874,
+        "author": "Webreaper",
+        "body": "That\u0027s totally awesome. Thanks for the super quick response! ",
+        "createdAt": "2020-10-02T20:43:48",
+        "reactions": []
+      },
+      {
+        "id": 702972866,
+        "author": "mattleibow",
+        "body": "I have the fix building, and I have also reported it to Google: https://bugs.chromium.org/p/skia/issues/detail?id=10799",
+        "createdAt": "2020-10-02T21:50:14",
+        "reactions": [
+          {
+            "user": "Webreaper",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:14.6263383Z"
+          }
+        ]
+      },
+      {
+        "id": 703163203,
+        "author": "mattleibow",
+        "body": "@Webreaper, I have _just_ pushed the PR build to the preview feed. It would be great if you were able to check it out and see if it works for all your images that you can test on. I want to make sure I got all the cases. I think it should be good, but won\u0027t hurt to confirm.\r\n\r\nPreview feed: https://aka.ms/skiasharp-eap/index.json\r\nExact version: \u00602.80.3-pr.1518.1\u0060",
+        "createdAt": "2020-10-03T20:51:45",
+        "reactions": []
+      },
+      {
+        "id": 703169048,
+        "author": "Webreaper",
+        "body": "Will certainly give it a go - how do I use the preview feed...?\r\nEdit: never mind, figured it out - will let you know :)",
+        "createdAt": "2020-10-03T21:51:29",
+        "reactions": []
+      },
+      {
+        "id": 703172283,
+        "author": "Webreaper",
+        "body": "Built a new version using 2.80.3-pr.1518.1, and it\u0027s working perfectly. I see no images mis-oriented. Thanks for the quick fix!",
+        "createdAt": "2020-10-03T22:27:48",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:15.3080741Z"
+          }
+        ]
+      },
+      {
+        "id": 703174814,
+        "author": "mattleibow",
+        "body": "Awesome! I\u0027ll merge them and try get a release out asap! ",
+        "createdAt": "2020-10-03T22:59:55",
+        "reactions": [
+          {
+            "user": "Webreaper",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:16:15.5286834Z"
+          }
+        ]
+      },
+      {
+        "id": 703478391,
+        "author": "ziriax",
+        "body": "Nice! \r\n\r\nWould it be possible to apply this patch to 1.68.3 too?\r\n\r\nPS: Related, I find it very unfortunate Skia doesn\u0027t provide a full blown metadata API, like Windows Imaging Component does. ",
+        "createdAt": "2020-10-05T08:16:55",
+        "reactions": []
+      },
+      {
+        "id": 703926054,
+        "author": "mattleibow",
+        "body": "I can try see if CI can build v1 again, but I am not sure if it will actually be good.\r\n\r\nSkia is more creation than reading, so I think they decided to not put as much effort into the codecs.",
+        "createdAt": "2020-10-05T22:36:45",
+        "reactions": []
+      },
+      {
+        "id": 704573419,
+        "author": "mattleibow",
+        "body": "I have created a CR that probably will get merged: https://skia-review.googlesource.com/c/skia/\u002B/323217\r\n\r\nI\u0027m going to wait for feedback form the experts and then use whatever the final result is as this fix.",
+        "createdAt": "2020-10-06T21:53:41",
+        "reactions": []
+      },
+      {
+        "id": 744592980,
+        "author": "Webreaper",
+        "body": "Any timescales for when a new release with this fix is going to be made? ",
+        "createdAt": "2020-12-14T17:29:58",
+        "reactions": []
+      },
+      {
+        "id": 837006029,
+        "author": "Webreaper",
+        "body": "@mattleibow any idea when this will become available in a release? It\u0027s not in the latest previews, and the 2.80.3-pr.1518.1 is gone now, so I can\u0027t pull that. Means that SkiaSharp thumbs are still broken for me 8 months after the fix was completed, and I\u0027ve no way to fix them. \r\n\r\nCould you merge this into the 2.88-preview-7 or something similar?",
+        "createdAt": "2021-05-10T17:26:38",
+        "reactions": []
+      },
+      {
+        "id": 839137308,
+        "author": "mattleibow",
+        "body": "This should be available in the latest 2.80.3 previews. The PR releases might not stick around on the feeds for long as they are quickly merged into the main branches. In fact, I think this should be in both the 2.80.x and 2.88.x previews. ",
+        "createdAt": "2021-05-11T20:29:26",
+        "reactions": []
+      },
+      {
+        "id": 839152743,
+        "author": "Webreaper",
+        "body": "Okay, thanks. I tried 2.88-preview.7 but it failed to build on everything except Mac due to missing package:\r\n\r\n\u0060/home/runner/work/Damselfly/Damselfly/Damselfly.Core/Damselfly.Core.csproj : error NU1102: Unable to find package SkiaSharp.NativeAssets.Linux with version (\u003E= 2.88.0-preview.7) [/home/runner/work/Damselfly/Damselfly/Damselfly.Web/Damselfly.Web.csproj]\r\n\u0060\r\n([full build log here](https://github.com/Webreaper/Damselfly/runs/2548557732?check_suite_focus=true#step:4:12))\r\n\r\nI flipped back to 2.80.3-preview.40, but I\u0027m still getting thumbnails where the origin/rotation isn\u0027t right - see thumb and original here, so I guess the fix isn\u0027t in that one. It\u0027s hard to tell though, with all the branches and issues you have going on right now (or it\u0027s possible this could be another bug entirely....).\r\n\r\n![20210509_104445](https://user-images.githubusercontent.com/4901102/117882432-3fd06480-b2a2-11eb-8567-6f3089ee66ed.jpg)\r\n\r\n![_thumbs_Mark Phone_20210509_104445_l](https://user-images.githubusercontent.com/4901102/117882377-2f1fee80-b2a2-11eb-9d7d-cf2f84bb833c.jpeg)\r\n",
+        "createdAt": "2021-05-11T20:46:57",
+        "reactions": []
+      },
+      {
+        "id": 846241872,
+        "author": "ziriax",
+        "body": "@mattleibow @Webreaper\r\n\r\nI tried loading the images, and saving them back as PNG. \r\n\r\nHere are my findings:\r\n\r\n\u0060var bitmap = SKBitmap.Decode(inputPath);\u0060 =\u003E **does not** automatically orient images. [Related post](https://groups.google.com/g/skia-discuss/c/M27rm-w79xs/m/VG1ecAI3AwAJ)\r\n\r\n\u0060var image = SKImage.FromEncodedData(inputPath);\u0060 =\u003E **does** auto-orient all images with the latest code in \u0060main\u0060, and \u00602.88.0-preview.36\u0060 and \u00602.80.3-preview.40\u0060, but doesn\u0027t work on \u00602.80.2\u0060 or older.\r\n\r\n\r\n\r\n",
+        "createdAt": "2021-05-21T20:36:02",
+        "reactions": []
+      },
+      {
+        "id": 846257679,
+        "author": "ziriax",
+        "body": "@Webreaper Could you share your thumbnail generation code?\r\n",
+        "createdAt": "2021-05-21T21:01:39",
+        "reactions": []
+      },
+      {
+        "id": 846262188,
+        "author": "Webreaper",
+        "body": "Sure. It\u0027s here: https://www.github.com/Webreaper/Damselfly/tree/master/Damselfly.Core%2FImageProcessing%2FSkiaSharpProcessor.cs\n\nThe LoadOriented... method is where the orientation action happens. Please let me know if you see anything dumb in there or better ways to do things. \uD83D\uDE01",
+        "createdAt": "2021-05-21T21:11:39",
+        "reactions": []
+      },
+      {
+        "id": 846288640,
+        "author": "Webreaper",
+        "body": "Okay, so after a quick test, looks like I should just change \u0060LoadOrientedBitmap(...)\u0060 to use the method you suggest:\r\n\r\n\u0060\u0060\u0060\r\n        private SKBitmap LoadOrientedBitmap( FileInfo source, int desiredWidth )\r\n        {\r\n            SKImage img = SKImage.FromEncodedData(source.FullName);\r\n            var bmp = SKBitmap.FromImage(img);\r\n            return bmp;\r\n        }\r\n\r\n\u0060\u0060\u0060\r\nI\u0027m using 2.80.3-preview-40, and can confirm that with the change to the load/orientation above, it\u0027s all working now. Thanks very much! Pushed the change here: https://github.com/Webreaper/Damselfly/blob/develop/Damselfly.Core/ImageProcessing/SkiaSharpProcessor.cs#L172\r\n\r\nPS: If you feel like reviewing my code for any other n00b errors, please feel free. ;)",
+        "createdAt": "2021-05-21T22:13:41",
+        "reactions": []
+      },
+      {
+        "id": 846374334,
+        "author": "ziriax",
+        "body": "Your original code didn\u0027t work because you only handled 4 out of 8 possible orientations.\r\n\r\nYour new code that used SKImage looks fine :-)\r\n\r\nIMHO the SkiaSharp documentation should clearly state that SKBitmap does not auto orient, while SKImage does. ",
+        "createdAt": "2021-05-22T08:23:49",
+        "reactions": []
+      },
+      {
+        "id": 846374847,
+        "author": "Webreaper",
+        "body": "Thanks. May have missed that in the docs. Should be all good now - thanks for the help!",
+        "createdAt": "2021-05-22T08:29:02",
+        "reactions": []
+      },
+      {
+        "id": 846400352,
+        "author": "ziriax",
+        "body": "\u003E Thanks. May have missed that in the docs. Should be all good now - thanks for the help!\r\n\r\nNo you didn\u0027t miss anything, the docs are missing this bit of information at first sight.\r\n\r\nThank you for reporting this, otherwise I would not have found this weird discrepancy between \u0060SKBitmap\u0060 and \u0060SKImage\u0060!\r\n",
+        "createdAt": "2021-05-22T12:19:04",
+        "reactions": []
+      },
+      {
+        "id": 863937746,
+        "author": "Webreaper",
+        "body": "Chaps, one follow-up on this issue.... so I\u0027ve noticed some speed issues, and last night I tracked down why. The reason I was using the Codec method to load, rather than \u0060FromEncodedData\u0060 is because I was using the optimisation to only load the scale closes to the resolution I need. So if I\u0027m loading a 3,000 x 2,500 image to generate a 1,200 x 800 image, it loads closest to the 1200x800 scale - which _significantly_ decreases the time to read the image off the disk. \r\n\r\nThe new code is taking nearly a second to load a full-res image from disk in order to resize it to 1600 on the longest side, which is really slow. \r\n\r\nI think I took the general approach from this post: https://forums.xamarin.com/discussion/88794/fast-way-to-decode-skbitmap-from-byte-jpeg-raw - and this was why I had my own AutoOrient code (which, as you pointed out, @Ziriax, was missing orientation cases). \r\n\r\nIs there any built in load/orientation code so I can load a scaled version of the image more quickly, correctly oriented? If not, I\u0027ll have to revert to my previous code (with the additional orientation cases)..... If not, I\u0027ll snatch [the code here](https://github.com/mono/SkiaSharp/issues/836#issuecomment-584895517) which seems to do a better AutoOrient than the one I cribbed from [this StackOverflow post](https://stackoverflow.com/questions/44181914/iphone-image-orientation-wrong-when-resizing-with-skiasharp).",
+        "createdAt": "2021-06-18T10:29:42",
+        "reactions": []
+      },
+      {
+        "id": 863951202,
+        "author": "ziriax",
+        "body": "(I guess you should open a new issue, this one is closed)\r\n\r\nNo, it seems you can\u0027t do both auto-orientation and DCT-level scaling at the same time in SkiaSharp.\r\n\r\nSkia itself supports this with its [SkCodecImageGenerator](https://source.chromium.org/chromium/chromium/src/\u002B/main:third_party/skia/src/codec/SkCodecImageGenerator.h), but SkiaSharp doesn\u0027t expose this. \r\n\r\nI would suggest to open a new issue to expose this class.\r\n\r\nHowever, when looking at the [C\u002B\u002B codec of how Skia applies the orientation](https://source.chromium.org/chromium/chromium/src/\u002B/main:third_party/skia/src/core/SkPixmap.cpp?q=draw_orientation), we see it is just drawing the image to a canvas, creating a temporary internal bitmap! In many cases, this is not very efficient, [as this could be a SIMD inplace operation...](https://on-demand.gputechconf.com/gtc/2014/presentations/S4664-transposition-fast-array-structure-accesses.pdf)\r\n\r\n\r\nAnyway, we can cook something like that ourselves...\r\n\r\nHere\u0027s the code I\u0027m using.\r\n\r\nFirst, we need a way to convert the orientation into a transformation matrix, and to flip width \u0026 height if a 90 degree rotation happens. \r\n\r\nBased on the [Skia C\u002B\u002B code](https://source.chromium.org/chromium/chromium/src/\u002B/main:third_party/skia/include/codec/SkEncodedOrigin.h?q=SkEncodedOriginToMatrix), we can make something like this:\r\n\r\n\u0060\u0060\u0060\r\nprivate static (SKMatrix? transform, int width, int height) GetOrientationMatrix(SKEncodedOrigin origin, int sourceWidth, int sourceHeight)\r\n{\r\n\tvar isRotated = origin \u003E= SKEncodedOrigin.LeftTop;\r\n\tvar (w, h) = isRotated ? (sourceHeight, sourceWidth) : (sourceWidth, sourceHeight);\r\n\r\n\t// Based on SkEncodedOriginToMatrix in the Skia source code.\r\n\tSKMatrix? transform = origin switch\r\n\t{\r\n\t\tSKEncodedOrigin.TopRight =\u003E new SKMatrix(-1, 0, w, 0, 1, 0, 0, 0, 1),\r\n\t\tSKEncodedOrigin.BottomRight =\u003E new SKMatrix(-1, 0, w, 0, -1, h, 0, 0, 1),\r\n\t\tSKEncodedOrigin.BottomLeft =\u003E new SKMatrix(1, 0, 0, 0, -1, h, 0, 0, 1),\r\n\t\tSKEncodedOrigin.LeftTop =\u003E new SKMatrix(0, 1, 0, 1, 0, 0, 0, 0, 1),\r\n\t\tSKEncodedOrigin.RightTop =\u003E new SKMatrix(0, -1, w, 1, 0, 0, 0, 0, 1),\r\n\t\tSKEncodedOrigin.RightBottom =\u003E new SKMatrix(0, -1, w, -1, 0, h, 0, 0, 1),\r\n\t\tSKEncodedOrigin.LeftBottom =\u003E new SKMatrix(0, 1, 0, -1, 0, h, 0, 0, 1),\r\n\t\t_ =\u003E null\r\n\t};\r\n\r\n\treturn (transform, w, h);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nGiven any \u0060SKPixMap sourceMap\u0060, we can then apply this orientation transform\r\n\r\n\u0060\u0060\u0060\r\nvar (orientationMatrix, orientedWidth, orientedHeight) = GetOrientationMatrix(orientation, sourceMap.Width, sourceMap.Height);\r\n\r\nvar transformedMap = sourceMap;\r\n\r\nif (orientationMatrix.HasValue)\r\n{\r\n\t// Need to apply orientation\r\n\t// Code below based on draw_orientation at https://cs.skia.org\r\n\tvar newInfo = sourceMap.Info;\r\n\tnewInfo.Width = orientedWidth;\r\n\tnewInfo.Height = orientedHeight;\r\n\r\n\tusing var tempBitmap = new SKBitmap(newInfo, SKBitmapAllocFlags.None));\r\n\r\n\tusing var canvas = new SKCanvas(tempBitmap);\r\n\tusing var sourceBitmap = new SKBitmap();\r\n\t// NOTE: InstallPixels *does not* transfer ownership of pixels!\r\n\t// We must keep sourceMap alive as long as sourceBitmap lives.\r\n\t// In our cause, this is just what the doctor ordered.\r\n\tsourceBitmap.InstallPixels(sourceMap);\r\n\r\n\tusing var paint = new SKPaint\r\n\t{\r\n\t\tBlendMode = SKBlendMode.Src,\r\n\t\tFilterQuality = SKFilterQuality.None\r\n\t};\r\n\r\n\tcanvas.SetMatrix(orientationMatrix.Value);\r\n\tcanvas.DrawBitmap(sourceBitmap, 0, 0, paint);\r\n\r\n\ttransformedMap = tempBitmap.PeekPixelsEx();\r\n}\r\n\r\n// TODO: Don\u0027t forget to dispose the transformedMap when it is different from the sourceMap!\r\n\u0060\u0060\u0060\r\n\r\nPS: Unfortunately, in my benchmarks, the Skia solution is still twice as slow as the DirectX/WIC approach that I currently use on Windows. \r\n\r\nPS: Somehow SkiaSharp\u0027s JPEG decoder seems to run 3x slower than should be possible based on the \u0060libjpeg-turbo\u0060. I haven\u0027t figured out why this is the case, it might be that \u0060libjpeg-turbo\u0060 is incorrectly compiled or called, or that I\u0027m just doing the benchmarking wrong. I logged this issue here https://github.com/mono/SkiaSharp/issues/1693\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2021-06-18T10:54:57",
+        "reactions": []
+      },
+      {
+        "id": 863993214,
+        "author": "Webreaper",
+        "body": "Thanks, this is useful. Since it\u0027s the loading which is the lion\u0027s share of the effort, I suspect minor inefficiencies of creating a temp bitmap are less critical. For the brief benchmarking I did previously, loading scaled takes around 900ms on my M1 MBP, whereas loading the scaled version takes around 150ms. So it\u0027s quite a saving. :)\r\n\r\nI\u0027ll raise the issue you mentioned later today when I get a chance. ",
+        "createdAt": "2021-06-18T12:12:16",
+        "reactions": []
+      }
+    ]
+  }
 }
