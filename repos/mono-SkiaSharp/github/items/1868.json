@@ -1,0 +1,18 @@
+{
+  "number": 1868,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKRuntimeEffect compilation is missing build-in functions",
+  "body": "**Description**\r\n\r\nI\u0027ve been trying out the new SKRuntimeEffect support in 2.88.0-preview.155 . Compilation of shaders using some opengl functions fails. (Tested with step and smoothstep). Not sure if this a skiasharp problem or a skia problem.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nuniform float2 iResolution; \r\nuniform float2 iPos; \r\n\r\nhalf4 main(float2 fragcoord) {\r\n  float2 uv = (fragcoord - sk_FragCoord.xy) / iResolution.y;\r\n  float d = length(uv);\r\n  float m = 0.03 / d;\r\n  m *= step(0.2, 0.3);\r\n  return half4(m, m, m, m);\r\n}\u0022\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThis should compile. The same code works on the skia-sksl demo [https://shaders.skia.org/](website).\r\n\r\n**Actual Behavior**\r\n\r\nCompilation outputs the following error:\r\n\u0060error: 9: unknown identifier \u0027step\u0027\u0060\r\nThis also happens with \u0027smoothstep\u0027. Its weird that the \u0027length\u0027 function still works though. I have read that Skia only supports a subset of GL functions, but since it works on the demo site and these being very important shader functions, I doubt that they aren\u0027t included.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0-preview.155\r\n- Platform Target Frameworks:\r\n  - Android: 11 (API level 21)\r\n  - Xamarin: 5.0.0.2244",
+  "author": {
+    "login": "Oribow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-11-18T23:45:12",
+  "updatedAt": "2023-09-04T09:00:27",
+  "closedAt": "2023-08-05T06:55:22",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1637,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] musl binaries overwrite ones built for the normal glibc",
+  "body": "Entries here\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/621c52043ed69f639d798e1e96fc48f52d75c40d/binding/SkiaSharp/nuget/build/net462/SkiaSharp.targets#L46\r\n\r\nand here \r\n\r\nhttps://github.com/mono/SkiaSharp/blob/621c52043ed69f639d798e1e96fc48f52d75c40d/binding/HarfBuzzSharp/nuget/build/net462/HarfBuzzSharp.targets#L47\r\n\r\nget copied to the same directories as normal glibc-built binaries which makes MSBuild to overwrite normal ones with musl ones. That essentially breaks SkiaSharp with desktop Mono.",
+  "author": {
+    "login": "kekekeks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-02-19T07:09:52",
+  "updatedAt": "2022-08-19T00:02:55",
+  "closedAt": "2021-05-20T07:09:31",
+  "commentCount": 4,
+  "reactionCount": 0
+}

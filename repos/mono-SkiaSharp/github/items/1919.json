@@ -1,0 +1,17 @@
+{
+  "number": 1919,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] DrawShapedText does not working on Ubuntu 20.04 x64",
+  "body": "DrawShapedText does not working on Ubuntu 20.04 x64, it works fine on windows.\r\n\r\n**Code**\r\n\r\n\u003E using (var tf = SKFontManager.Default.MatchCharacter(\u00271\u0027))\r\n\t\tusing (var shaper = new SKShaper(tf))\r\n\t\tusing (var paint = new SKPaint { TextSize = 64, Typeface = tf })\r\n\t\t{\r\n\t\t\tcanvas.Clear(SKColors.White);\r\n\t\t\tcanvas.DrawShapedText(shaper, \u0022123\u0022, 100, 200, paint);\r\n\t\t}\r\n\r\n**Expected Behavior**\r\n\r\nDisplay \u0022123\u0022 on the window\r\n\r\n**Actual Behavior**\r\n\r\nDisplay \u0022Q\u0022 and \u0022R\u0022, and \u0022Q\u0022 and \u0022R\u0022 overlap.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: \r\nSkiaSharp: 2.88.0-preview.179\r\nSkiaSharp.Views.Gtk2: 2.88.0-preview.179\r\nSkiaSharp.HarfBuzz: 2.88.0-preview.179\r\nSkiaSharp.NativeAssets.Linux: 2.88.0-preview.179\r\nHarfBuzzSharp.NativeAssets.Linux: 2.8.2-preview.179\r\n\r\n- Last known good version:  NO, early version crashed with exception: \u0022double free or corruption (!prev)\u0022\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks:  Ubuntu 20.04 x64\r\n  \r\n\r\n\r\n**Screenshots**\r\n\r\nWORKS on windows:\r\n![image](https://user-images.githubusercontent.com/2252587/148382485-aadcf65b-c5fb-41e3-9bb1-f96911402b50.png)\r\n\r\nFAILED on Ubunto 20.04, Mono GTK2:\r\n![image](https://user-images.githubusercontent.com/2252587/148382592-7f9b3541-2f58-4fc7-8603-2210932c567f.png)\r\n\r\n\r\n**Project Source Code**\r\n\r\n[SkiaSharpSample.zip](https://github.com/mono/SkiaSharp/files/7821714/SkiaSharpSample.zip)\r\n\r\n\r\n",
+  "author": {
+    "login": "pardont",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-01-06T12:26:00",
+  "updatedAt": "2022-01-06T12:26:00",
+  "commentCount": 0,
+  "reactionCount": 0
+}

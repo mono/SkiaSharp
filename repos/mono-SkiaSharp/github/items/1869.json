@@ -1,0 +1,18 @@
+{
+  "number": 1869,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)",
+  "body": "**Description**\r\n\r\nI\u0027ve added SkiaSharp to my vb asp.net (.net 4.6) project. As I ran into the \u0022Strong Name Signature Problem\u0022 in 2.80.3, I\u0027ve tried both 2.80.2 and 2.88.0 preview 155. Project compiles, but as soon as I do anything with SkiaSharp (in my case SKBitmap.Decode with local filename) I get this error message:\r\n\r\nUnable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\r\n\r\nIn other reports i\u0027ve seen that installing 2015 runtime fixed it. In my case it was already installed. I\u0027ve additionally installed the 2015-2021 runtimes and restarted my machine, but problem still exists. In Bin-Folder I see SkiaSharp.dll but how could I get libSkiaSharp?\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2 and 2.88.0 preview 155\r\n- Last known good version:  ---\r\n- IDE:  Visual Studio 2019\r\n- Platform Target Frameworks: \r\n  - Windows Classic: Windows 10\r\n\r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nat SkiaSharp.SkiaApi.sk_filestream_new(Void* path)\r\n   at SkiaSharp.SKFileStream.CreateNew(String path)\r\n   at SkiaSharp.SKFileStream..ctor(String path)\r\n   at SkiaSharp.SKFileStream.OpenStream(String path)\r\n   at SkiaSharp.SKBitmap.Decode(String filename)\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n",
+  "author": {
+    "login": "K232",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-11-20T13:53:07",
+  "updatedAt": "2022-08-19T00:02:08",
+  "closedAt": "2021-11-20T22:49:34",
+  "commentCount": 1,
+  "reactionCount": 0
+}

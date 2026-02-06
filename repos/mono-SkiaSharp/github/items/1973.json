@@ -1,0 +1,18 @@
+{
+  "number": 1973,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKCanvas.DrawText does not properly handle newlines.",
+  "body": "**Description**\r\n\r\nWhen given text that has newlines in it, SKCanvas.DrawText fails to render the newlines and instead renders them as unknown characters.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\nstring _version = \u00220.1.\\n20220309.\\n1\u0022;\r\nstring _fontFile = \u0022Nunito-Black.ttf\u0022\r\n\r\nSKBitmap splashScreenVersionless = new(128, 128, isOpaque: true);\r\n\r\nusing SKCanvas canvas = new(splashScreenVersionless);\r\nSKPoint point = new(0, 50);\r\ncanvas.DrawText(_version, point, new SKPaint(new SKFont(SKTypeface.FromFile(_fontFile))) { Color = SKColors.White });\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nThe text is over three lines appropriately.\r\n\r\n**Actual Behavior**\r\n\r\nThe \u0022unknown character box\u0022 appears where the newline break should occur.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n- Last known good version:  Unknown\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \r\n  - .NET 6.0\r\n  - Windows Classic:  Windows 10\r\n- Target Devices:\r\n  - Windows 10\r\n\r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/69772986/157549249-72ad7190-bfad-449e-905c-5f24347e807e.png)",
+  "author": {
+    "login": "jonko0493",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-03-09T22:29:28",
+  "updatedAt": "2022-08-19T00:01:52",
+  "closedAt": "2022-05-17T16:01:35",
+  "commentCount": 3,
+  "reactionCount": 0
+}

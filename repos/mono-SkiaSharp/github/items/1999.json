@@ -1,0 +1,18 @@
+{
+  "number": 1999,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies.",
+  "body": "Deploying my dot.net 5 app with skiasharp with docker on linux, with this in my docker file:\r\n\r\n\u0060\u0060\u0060\r\nFROM mcr.microsoft.com/dotnet/aspnet:5.0-alpine AS final\r\n\r\n...\r\n\r\nRUN apk add --no-cache icu-libs fontconfig curl\r\n\u0060\u0060\u0060\r\n\r\nBuild on thuesday (April 12, 2022) works fine. Build next day causes container to build and run but with runtime error:\r\n\u0060\u0060\u0060\r\nThe type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception. Unable to load shared library \u0027libSkiaSharp\u0027\r\nor one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment\r\nvariable: Error loading shared library liblibSkiaSharp: No such file or directory \r\n\u0060\u0060\u0060\r\nI can only assume that my \u0060apk add\u0060 is now installing new versions.\r\n\r\n- Anyone else having this issue?\r\n- Anyone already found the cause?\r\n- What bould be a future proof way of installing the correct libraries?\r\n\r\nThanks!\r\n\r\nBefore arriving at above conclusion I used these references settings, none of them worked:\r\n\u0060\u0060\u0060\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.80.1\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.1\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.2\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.3\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.80.3\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux.NoDependencies\u0022 Version=\u00222.80.3\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n",
+  "author": {
+    "login": "14skywalker",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-14T08:20:33",
+  "updatedAt": "2022-09-11T21:01:16",
+  "closedAt": "2022-08-12T19:35:44",
+  "commentCount": 14,
+  "reactionCount": 0
+}

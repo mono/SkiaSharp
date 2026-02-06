@@ -1,0 +1,17 @@
+{
+  "number": 2021,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Width issue for Narrow Non breaking space in FrutigerNext LT LightCn font",
+  "body": "**Description**\r\n\r\nMeasurement difference found while comparing SkiaSharp library with System.Drawing\r\n\r\n**Text:** Narrow Non Breaking Space (Unicode U\u002B202F NARROW NO-BREAK SPACE) character\r\n**Font:**  \u201CFrutigerNext LT LightCn\u201D\r\n**Font size :**  9\r\n**System.Drawing** return width as  1.1953125.\r\n**SkiaSharp** return width as 4.5\r\n\r\nNote: We have tried this in ASP.NET Core with .NET Core 3.1 target sample.\r\n\r\n**Code**\r\n\r\nint ascii = 8239;\r\nchar nnbsp = (char)ascii;\r\nfloat width = SkiaMeasurng(nnbsp.ToString(), 9, \u0022FrutigerNext LT\u0022);\r\nprivate static float SkiaMeasurng(string text2, float fontsize, string fontName)\r\n{\r\n            float skiaMeasurement = 0;\r\n            SKFontStyleWeight weight = SKFontStyleWeight.Light;\r\n            SKFontStyleSlant sKFontStyleSlant = SKFontStyleSlant.Upright;\r\n            SKFontStyleWidth sKFontStyleWidth = SKFontStyleWidth.Condensed;\r\n            using (SKPaint paint = new SKPaint())\r\n            {\r\n                paint.Typeface = SKTypeface.FromFamilyName(fontName, weight, sKFontStyleWidth, sKFontStyleSlant);\r\n                paint.Color = SKColors.Black;\r\n                paint.IsAntialias = true;\r\n                paint.TextSize = fontsize;\r\n                paint.SubpixelText = true;\r\n                paint.TextAlign = SKTextAlign.Left;\r\n                paint.TextEncoding = SKTextEncoding.Utf8;\r\n                SKRect rect = new SKRect();\r\n                skiaMeasurement = paint.MeasureText(text2, ref rect);\r\n                return skiaMeasurement;\r\n            }\r\n        }\r\n\r\n\r\n**Expected Behavior**\r\n\r\nWidth should be 1.1953125 as like System.Drawing\r\n\r\n**Actual Behavior**\r\n\r\nWidth is  4.5\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  [2.88.0-preview.256](https://www.nuget.org/packages/SkiaSharp/2.88.0-preview.256) \r\n- IDE:  Visual Studio 2019 \r\n- Platform Target Frameworks: .NET Core 3.1 \r\nThis issue occurs specific to this font only.\r\n\r\n\r\n**Reproduction Link**\r\n\r\nRun the above code example\r\n",
+  "author": {
+    "login": "MohanaselvamJ",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-05-06T13:20:37",
+  "updatedAt": "2022-05-09T13:01:14",
+  "commentCount": 3,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 2002,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Unable to load library \u0027libSkiaSharp\u0027 in Visual Studio Design Mode",
+  "body": "**Description**\r\nWhen using SkiaSharp.Views.WindowsForms, one cannot create SkiaSharp classes (in this case, SKFont) within a custom control\u0027s constructor without breaking Visual Studio\u0027s design mode. This only seems to apply to .NET Framework projects. This is a problem for library authors looking to create controls using SkiaSharp rendering.\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\n    [ToolboxItem(true)]\r\n    public partial class MyCustomControl : SKControl\r\n    {\r\n        private SKFont myFont;\r\n\r\n        public MyCustomControl()\r\n        {\r\n            InitializeComponent();\r\n\r\n            myFont = new SKFont\r\n            {\r\n                Typeface = SKTypeface.FromFamilyName(\u0022Segoe UI\u0022),\r\n                Subpixel = true\r\n            };\r\n        }\r\n\r\n        protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n        {\r\n            base.OnPaintSurface(e);\r\n            var c = e.Surface.Canvas;\r\n            c.Clear();\r\n            c.DrawText(\u0022Test\u0022, new SKPoint(20, 20), new SKPaint());\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\nOne should be able to add a control that inherits from SKControl during design mode, even if it constructs SkiaSharp classes in its constructor.\r\n\r\n**Actual Behavior**\r\nAn exception is thrown when dropping the custom control onto a form in .NET Framework.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.3\r\n- Last known good version:  unknown\r\n- IDE:  Visual Studio 2022\r\n- Platform Target Frameworks: WindowsForms on .NET Framework\r\n- Target Devices:  Windows 10\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nMicrosoft Visual Studio Community 2022 (64-bit) - Preview\r\nVersion 17.2.0 Preview 2.1\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/jonchardy/SkiaSharpDesignModeRepro\r\n\r\n",
+  "author": {
+    "login": "jonchardy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-04-15T14:51:59",
+  "updatedAt": "2024-08-10T01:53:50",
+  "commentCount": 1,
+  "reactionCount": 0
+}

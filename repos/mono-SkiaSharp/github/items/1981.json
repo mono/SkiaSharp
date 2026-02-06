@@ -1,0 +1,19 @@
+{
+  "number": 1981,
+  "type": "issue",
+  "state": "closed",
+  "title": "Sometimes PNG files cannot be decoded",
+  "body": "**Description**\r\n\r\nSkia Sharp 2.88.0-preview.232 does not display a png fully - in 2.88.0-preview.209 it works\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nprivate void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\r\n\t\t{\r\n\t\t\t// the the canvas and properties\r\n\t\t\tvar canvas = e.Surface.Canvas;\r\n\r\n\t\t\t// make sure the canvas is blank\r\n\t\t\tcanvas.Clear(SKColors.White);\r\n\r\n\t\t\tusing var stream = File.Open(@\u0022osm-liberty.png\u0022, FileMode.Open, FileAccess.Read, FileShare.Read);\r\n\t\t\tvar data = SKData.Create(stream);\r\n\t\t\tvar image = SKImage.FromEncodedData(data);\r\n\r\n\t\t\t// draw image\r\n\t\t\tcanvas.DrawImage(image, new SKRect(0, 0, image.Width, image.Height));\r\n\t\t}\r\n\u0060\u0060\u0060\r\n\r\nThis should be displayed\r\n\r\n![image](https://user-images.githubusercontent.com/2290863/160253403-f39d0d4d-0962-44ec-8c6c-32195f71e9d4.png)\r\n\r\nBut this is displayed\r\n\r\n![image](https://user-images.githubusercontent.com/2290863/160253466-1e6f638a-f7f3-4626-9c40-d545e577eccb.png)\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0-preview.232\r\n- Last known good version:  2.88.0-preview.209\r\n- IDE:  Visual Studio 2022 17.1.2\r\n- Platform Target Frameworks: .Net Framework 4.8  \r\n  - Windows Classic:  Windows 11  \r\n \r\n**Reproduction Link**\r\n\r\n[WPF.zip](https://github.com/mono/SkiaSharp/files/8356177/WPF.zip)\r\n\r\n",
+  "author": {
+    "login": "inforithmics",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.1",
+  "createdAt": "2022-03-26T19:02:20",
+  "updatedAt": "2022-08-19T00:01:48",
+  "closedAt": "2022-05-18T07:53:13",
+  "commentCount": 14,
+  "reactionCount": 0
+}

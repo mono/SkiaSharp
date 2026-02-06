@@ -1,0 +1,17 @@
+{
+  "number": 1691,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Cannot decode picture with large Exif values",
+  "body": "**Description**\r\n\r\nI am using Magick.NET to generate an 100Mb PNG picture. The size of 100Mb is reached by setting the UserComment Exif property.\r\n\r\nWhile trying to decode that picture, my code flow is locked on SKBitmap.Decode(skCodec) call.\r\nI have added a timeout mechanism to stop the decoding process if it takes too much time but we cannot stop Skia reading the initial stream.\r\n\r\nNote that with other 100Mb pictures everything works fine so the huge Exif value seems to be the issue.\r\nIn critical systems where Skia is used to process customer pictures, that issue can make the system down because of \u0022invalid\u0022 pictures.\r\n\r\n**Code**\r\n\r\nThis is the code to generate a 100Mb PNG with Exif :\r\n\u0060\u0060\u0060csharp\r\npublic static MemoryStream CreatePicture()\r\n{\r\n\tusing (var image = new MagickImage(new MagickColor(MagickColors.LightBlue), 512, 512))\r\n\t{\r\n\t\tnew Drawables()\r\n\t\t\t.FontPointSize(72)\r\n\t\t\t.Font(\u0022Arial\u0022)\r\n\t\t\t.FillColor(MagickColors.White)\r\n\t\t\t.TextAlignment(TextAlignment.Center)\r\n\t\t\t.Text(256, 256, \u0022Image\u0022)\r\n\t\t\t.Draw(image);\r\n\r\n\t\tvar exifProfile = new ExifProfile();\r\n\t\texifProfile.SetValue(ExifTag.UserComment, Enumerable.Range(0, 100_000_000).Select(_ =\u003E (byte) 0x60).ToArray());\r\n\t\timage.SetProfile(exifProfile);\r\n\r\n\t\tvar stream = new MemoryStream();\r\n\t\timage.Write(stream, MagickFormat.Png);\r\n\r\n\t\tstream.Seek(0, SeekOrigin.Begin);\r\n\t\treturn stream;\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAnd the code to decode the picture :\r\n\u0060\u0060\u0060csharp\r\npublic static SKBitmap Decode(MemoryStream stream)\r\n{\r\n\tvar skCodec = SKCodec.Create(stream);\r\n\tvar skBitmap = SKBitmap.Decode(skCodec);\r\n\treturn skBitmap;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nHere the code to reproduce the issue with the previous stream :\r\n\r\n\u0060\u0060\u0060csharp\r\nstatic void Main(string[] args)\r\n{\r\n\tConsole.WriteLine(\u0022Start\u0022);\r\n\t\r\n\tvar stream = CreatePicture();\r\n\tvar image = Decode(stream);\r\n\t\r\n\tConsole.WriteLine(\u0022End\u0022);\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nIf the picture we are decoding is invalid because of the Exif value, we should expect an exception or null as a return value.\r\nIf the decoding process takes too long, we need a solution to cancel it and stop the initial stream to be read.\r\n\r\n**Actual Behavior**\r\n\r\nThe code execution is blocked on SkBitmap.Decode method.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  N/A\r\n- IDE:  Rider Jetbrains\r\n- Platform Target Frameworks: \r\n  - .NET 5 Console App\r\n \r\n**Project to reproduce**\r\n[SkiaDecodingIssue.zip](https://github.com/mono/SkiaSharp/files/7286752/SkiaDecodingIssue.zip)\r\n\r\n ",
+  "author": {
+    "login": "jcoqueret",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-04-14T23:00:04",
+  "updatedAt": "2021-10-05T14:41:28",
+  "commentCount": 0,
+  "reactionCount": 2
+}

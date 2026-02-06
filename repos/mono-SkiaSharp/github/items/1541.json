@@ -1,0 +1,18 @@
+{
+  "number": 1541,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Memory leak when create and dispose SKBitmap and SKCanvas using SkiaSharp",
+  "body": "Description\r\nI have create a SKBitmap and SKCanvas and then i call dispose for both SKBitmap and SKCanvas but the memory is not released. I have the checked the memory usage using Visual Studio. I have compare the third and first snapshot after the dispose method but it holds some bytes. Attached screenshots shows that memory is not released after disposing the object.\r\n\r\nCode\r\n\r\n        static void Main(string[] args)\r\n        {\r\n            Console.WriteLine(\u0022Starting\u0022);\r\n            Console.ReadLine(); // Starting snapshot\r\n            MemoryCheck();\r\n            Console.WriteLine(\u0022disposed\u0022);\r\n            Console.ReadLine(); // Final snapshot\r\n        }\r\n        static void MemoryCheck()\r\n        {\r\n            SKBitmap bitmap = new SKBitmap(10, 10);\r\n            SKCanvas sKCanvas = new SKCanvas(bitmap);\r\n            bitmap.Dispose();\r\n            sKCanvas.Dispose();\r\n            bitmap = null;\r\n            sKCanvas = null;\r\n        }\r\n\r\nExpected Behavior\r\nSecond snapshot Memory Should be downed to first snapshot. \r\n\r\nActual Behavior\r\nSecond snapshot holding extra memory which is not released even after calling dispose.\r\n\r\nI have ensured this with 1.59.3 And latest version, still issue is not resolved in latest version,\r\nthis issue is created with the follow up with the following issue - https://github.com/mono/SkiaSharp/issues/1009\r\n\r\nBasic Information\r\n\r\nVersion with issue: 1.59.3 And 2.80.2\r\nIDE: Visual Studio 2017\r\nPlatform Target Frameworks: .NET Core 2.0\r\n\r\nSkia sharp version - 1.59.3\r\n\u003Cimg width=\u0022960\u0022 alt=\u0022Skia Sharp - 1 59 3\u0022 src=\u0022https://user-images.githubusercontent.com/34718301/97434740-787fa080-1945-11eb-89c1-f08919aeba58.PNG\u0022\u003E\r\n\r\nSkia sharp version - 2.80.2\r\n\u003Cimg width=\u0022957\u0022 alt=\u0022SkiaSharp - 2 80 2\u0022 src=\u0022https://user-images.githubusercontent.com/34718301/97434744-7a496400-1945-11eb-962a-30d20e4c116d.PNG\u0022\u003E\r\n\r\nHere is the project to reproduce the issue:\r\n\r\n[Memory checking.zip](https://github.com/mono/SkiaSharp/files/5451756/Memory.checking.zip)\r\n\r\n\r\n",
+  "author": {
+    "login": "Jack-Paul",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-28T12:20:34",
+  "updatedAt": "2022-08-19T03:01:33",
+  "closedAt": "2020-10-28T19:46:19",
+  "commentCount": 1,
+  "reactionCount": 0
+}

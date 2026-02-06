@@ -1,0 +1,18 @@
+{
+  "number": 1533,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Unable to load shared library \u0027libHarfBuzzSharp\u0027 or one of its dependencies",
+  "body": "\r\n\r\nI am using Aspcore(dotnet core) under Ubuntu 18, i try to render images adding right-to-left text, for that purpose, i am using SkiaSharp, and HarfBuzzSharp, when the exception is raised mentioned in the title, i try to expect the missing shared libraries, in the /lib, i found that the library exist, but when run ldd /lib/libHarfBuzzSharp.so, the response is \u0027not a dynamic executable\u0027, when i run \u0027readelf -d\u0027 command, the result is:\r\n\r\nDynamic section at offset 0x9f938 contains 27 entries:\r\n Tag        Type                         Name/Value\r\n 0x00000001 (NEEDED)                     Shared library: [libpthread.so.0]\r\n 0x00000001 (NEEDED)                     Shared library: [libstdc\u002B\u002B.so.6]\r\n 0x00000001 (NEEDED)                     Shared library: [libc.so.6]\r\n 0x00000001 (NEEDED)                     Shared library: [libgcc_s.so.1]\r\n\r\nI think the so library is for other architecture or linux base sys, any ideas?\r\n",
+  "author": {
+    "login": "saimmm",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-15T12:58:37",
+  "updatedAt": "2022-08-19T03:01:36",
+  "closedAt": "2020-10-15T19:20:49",
+  "commentCount": 8,
+  "reactionCount": 0
+}

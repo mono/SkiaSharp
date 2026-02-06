@@ -1,0 +1,18 @@
+{
+  "number": 1530,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG]  Error while loading assemblies",
+  "body": "Hello, (I was asked to start a new thread on this topic)\r\n\r\nOccurs in any update after updating SkiaSharp from 1.60.3 to 2.80.2\r\nSolution is Xamarin.Forms (shared) and an iOS project and Android project. Android works just fine.\r\n\r\nAlso posted in this thread: #855\r\n\r\nHere\u0027s the error in iOS build:\r\nSeverity Code Description Project File Line Suppression State\r\nError Error while loading assemblies: /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/bin/iPhoneSimulator/Debug/libSkiaSharp.dll. [mycompany].iOS\r\n\r\n2\u003E /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mtouch @/Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhoneSimulator/Debug/response-file.rsp \u0022--gcc_flags=-Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhoneSimulator/Debug/Entitlements.xcent\u0022\r\n2\u003EC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\MSBuild\\Xamarin\\iOS\\Xamarin.iOS.Common.targets(885,3): error MT0009: Error while loading assemblies: /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/bin/iPhoneSimulator/Debug/libSkiaSharp.dll.\r\n\r\nI have tried removing this from the iOS .proj file: \u0060\u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\u0060\r\n\r\nAnd I\u0027ve tried adding this to the .proj file: \u0060ExcludeAssets=\u0022runtimes\u0022\u0060 in the skiaSharp reference(s).\r\n\r\nWondering if there\u0027s something lingering in my Mac as its looking for something that is no longer there...\r\n\r\nIf I regress to 1.60.3 it works just fine.\r\n\r\nEDIT: More info. Just updated the SkiaSharp packages again. I was only installing SkiaSharp and SkiaSharp.Views.Forms and getting the error above. Installed SkiaSharp.Views too (looking at dependencies, SkiaSharp.Views is listed under the iOS list).\r\n\r\nI get the same error.\r\n\r\nLooked at the Dependencies/Packages and I see this on the SkiaSharp.Views package:\r\nPackage \u0027SkiaSharp.Views 2.80.2\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETStandard,Version=v2.1\u0027. This package may not be fully compatible with your project.\r\n\r\nIs there an upgrade sequence (if skiasharp is already installed) - like 1.60.3 to 1.68.x to 2.80.x ? Silly question but I\u0027ll try anything right now :)\r\n\r\nAny other potential fixes?\r\n\r\nThanks\r\n",
+  "author": {
+    "login": "blmiles",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-10-12T19:02:05",
+  "updatedAt": "2022-08-19T03:01:39",
+  "closedAt": "2020-10-17T16:22:08",
+  "commentCount": 11,
+  "reactionCount": 0
+}

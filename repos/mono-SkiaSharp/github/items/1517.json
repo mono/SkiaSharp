@@ -1,0 +1,23 @@
+{
+  "number": 1517,
+  "type": "issue",
+  "state": "closed",
+  "title": "SkEncodedOrigin wrong for one JPEG but not another - why?",
+  "body": "I have two images (attached) which I\u0027m trying to load, orient correctly, and then resize/crop to make thumbnails. My code to load the codec is super simple (I haven\u0027t included the code to resize and rotate, but can do if appropriate): \r\n\r\n\u0060\u0060\u0060\r\n            SKCodec codec = SKCodec.Create(source.FullName);\r\n            SKImageInfo info = codec.Info;\r\n\u0060\u0060\u0060\r\nWhen I load the code via the Codec, the origin is coming back as \u0027Default\u0027 (TopLeft) for P8211052.JPG, which means that my resized thumbnails are not rotated correctly.  However, for PA010741.JPG, the origin is correct, so my rotation code works as expected.\r\n\r\nI\u0027m struggling to see what the difference is between the two images; both were taken on an Olympus OMD-EM5 Mk2. If I use other image processing libs to do the same thing (e.g., the AutoOrient method in ImageSharp) it works fine - and the photos display correctly-oriented in MacOS Preview. So I\u0027m wondering if there\u0027s either something odd about the photos, or a bug in the Codec (which seems less likely, being JPEG). Any ideas? \r\n\r\nI could use ImageSharp - which works - but SkiaSharp can process the thumbnails about 4-6x as fast, which is important as I\u0027m processing hundreds of thousands of images in my app.\r\n\r\n[P8211052.JPG.zip](https://github.com/mono/SkiaSharp/files/5318164/P8211052.JPG.zip)\r\n[PA010741.JPG.zip](https://github.com/mono/SkiaSharp/files/5318169/PA010741.JPG.zip)\r\n",
+  "author": {
+    "login": "Webreaper",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2020-10-02T13:23:42",
+  "updatedAt": "2022-08-19T03:01:43",
+  "closedAt": "2020-10-12T21:04:11",
+  "commentCount": 26,
+  "reactionCount": 0
+}

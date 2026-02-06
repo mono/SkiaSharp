@@ -1,0 +1,18 @@
+{
+  "number": 1861,
+  "type": "issue",
+  "state": "closed",
+  "title": "TypeInitializationException occuring in ASP.Net MVC, only in Azure",
+  "body": "I have a ASP.NET MVC website project that uses Skiasharp.\r\nIt is working well locally.\r\nRecently I tried to publish it to Azure. When running from Azure, this website generates an exception at startup:\r\n\r\nThe version of the native libSkiaSharp library (80.2) is incompatible with this version of SkiaSharp. Supported versions of the native libSkiaSharp library are in the range [88.0, 89.0).\r\n\r\n My whole solution is using v2.80.3\r\nASP.Net MVC project itself references:\r\n  \u003Cpackage id=\u0022SkiaSharp\u0022 version=\u00222.80.3\u0022 targetFramework=\u0022net47\u0022 /\u003E\r\n  \u003Cpackage id=\u0022SkiaSharp.Views.Desktop.Common\u0022 version=\u00222.80.3\u0022 targetFramework=\u0022net47\u0022 /\u003E\r\n\r\nASP.Net MVC project references library projects that reference nugets (if I write the union of all projects):\r\n- SkiaSharp \r\n- Skiasharp.Views\r\n- Skiasharp.Views.Desktop.Common\r\n- SkiaSharp.Views.Forms\r\n- SkiaSharp.Views.GTK2\r\n- SkaSharp.Views.WindowsForms\r\n- SkiaSharp.Views.WPF\r\n\r\nall in v2.80.3\r\n\r\n",
+  "author": {
+    "login": "MathieuJack",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-11-11T09:47:48",
+  "updatedAt": "2022-09-12T18:01:12",
+  "closedAt": "2022-08-13T17:09:08",
+  "commentCount": 3,
+  "reactionCount": 1
+}

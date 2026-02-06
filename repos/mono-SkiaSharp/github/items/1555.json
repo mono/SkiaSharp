@@ -1,0 +1,18 @@
+{
+  "number": 1555,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Using SkiaSharp with an OpenGL context",
+  "body": "Hi, I\u0027m trying to run SkiaSharp on an OpenGL context (in a console app) but all I see is a black screen. I\u0027m not sure what I\u0027m doing wrong as I\u0027m new to this. Also, I\u0027m using a GLFW wrapper for the OpenGL calls. Any help would be appreciated.\r\n\r\n\r\n\r\n            GLFW.glfwInit();\r\n            GL10.glHint(GLFW.GLFW_CONTEXT_VERSION_MAJOR, 3);\r\n            GL10.glHint(GLFW.GLFW_CONTEXT_VERSION_MINOR, 3);\r\n            GL10.glHint(GLFW.GLFW_OPENGL_PROFILE, GLFW.GLFW_OPENGL_CORE_PROFILE);\r\n\r\n            var window = GLFW.glfwCreateWindow(800, 600, new byte[0], IntPtr.Zero, IntPtr.Zero);\r\n            GLFW.glfwMakeContextCurrent(window);            \r\n            GL10.glViewport(0, 0, 800, 600); \r\n\r\n            SKImageInfo imageInfo = new SKImageInfo(800, 600);\r\n\r\n            var context = GRContext.CreateGl(GRGlInterface.CreateOpenGl((name) =\u003E new IntPtr(GLFW.glfwGetProcAddress(name))));\r\n\r\n            using (SKSurface surface = SKSurface.Create(context, false, imageInfo, 1, GRSurfaceOrigin.TopLeft))\r\n            {\r\n                SKCanvas canvas = surface.Canvas;\r\n\r\n                while (GLFW.glfwWindowShouldClose(window) == 0)\r\n                {\r\n                    canvas.Clear(SKColors.Red);\r\n                    GLFW.glfwSwapBuffers(window);\r\n                    GLFW.glfwPollEvents();\r\n\r\n                }\r\n            }",
+  "author": {
+    "login": "FireBanana",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-11-24T10:25:09",
+  "updatedAt": "2021-02-03T20:10:59",
+  "closedAt": "2021-02-03T20:10:59",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1688,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unable to run Skia.Gtk/Skia.Wpf Uno Application with SkiaSharp.Views.Uno reference.",
+  "body": "### Description\r\n\r\nWhen I create new project for Uno platform with **Uno Platform Solution Templates** and add reference to SkiaSharp.Views.Uno (latest stable 2.80.2) the build is successful, but with follow warnings:\r\n\r\n**TestApplication.Skia.Gtk**\r\nWarning\tNU1701\tPackage \u0027SkiaSharp.Views 2.80.0\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework **\u0027net5.0\u0027**. This package may not be fully compatible with your project.\t\r\n\r\n**TestApplication.Skia.Wpf.Host**\r\nWarning\tNU1701\tPackage \u0027SkiaSharp.Views 2.80.0\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework **\u0027.NETCoreApp,Version=v3.1\u0027**. This package may not be fully compatible with your project.\t\r\n\r\nBut when I try to start application it crashes with runtime error: **FileNotFoundException: Could not load file or assembly \u0027Uno.UI.Wasm, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027. The system cannot find the file specified.**\r\n \r\n### Expected Behavior\r\n\r\nSolution should be compiled without specified warnings and all applications should executed without initialization errors.\r\n\r\n**Actual Behavior**\r\n\r\nUnable to run Gtk and Wpf projects without errors after solution creation from scratch.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.2\r\n- Last known good version:  none\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: Uno.UI 3.6.6\r\n  - Linux:  Ubuntu 20.04 \r\n  - Windows Classic:  Windows 7\r\n",
+  "author": {
+    "login": "vkotov",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-04-12T08:16:22",
+  "updatedAt": "2022-08-19T00:02:49",
+  "closedAt": "2021-08-19T05:51:21",
+  "commentCount": 2,
+  "reactionCount": 0
+}

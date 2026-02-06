@@ -1,0 +1,18 @@
+{
+  "number": 1727,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG]The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception while using SkiaSharp in alpine3.13-amd64 docker",
+  "body": "**Description**\r\n\r\nFacing error while using SkiaSharp library in Alpine docker\r\n\r\n**Code**\r\n\r\n        SKBitmap bitmap = new SKBitmap(100, 100, SKImageInfo.PlatformColorType, SKAlphaType.Premul);\r\n        var surface = SKSurface.Create(bitmap.Info);\r\n        SKCanvas canvas = surface.Canvas;\r\n        canvas.Clear(SKColors.White);\r\n        var paint = new SKPaint();\r\n        paint.IsAntialias = true;\r\n        paint.Color = SKColors.Red;\r\n        paint.StrokeWidth = 3;\r\n        string fontName = SKTypeface.Default.FamilyName;\r\n        canvas.DrawCircle(50, 50, 25, paint);\r\n        var image = SKImage.FromBitmap(bitmap);\r\n        var data = surface.Snapshot().Encode(SKEncodedImageFormat.Jpeg, 80);\r\n        MemoryStream outputStream = new MemoryStream();\r\n        data.SaveTo(outputStream);\r\n        outputStream.Position = 0;\r\n**Expected Behavior**\r\n\r\nShould draw the circle as expected.\r\n\r\n**Actual Behavior**\r\n\r\nBelow exception thrown \r\nSystem.TypeInitializationException\r\n  HResult=0x80131534\r\n  Message=The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. \r\n\r\nInner Exception 1:\r\nDllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: Error loading shared library liblibSkiaSharp: No such file or directory\r\n\r\n**Basic Information**\r\n\r\nVersion with issue: SkiaSharp 2.80.2\r\nIDE: Microsoft Visual Studio Professional 2019, Version 16.9.0\r\nPlatform Target Frameworks: ASP.NET Core 5.0 targeted application with Alpine docker\r\nNote: Already we have **tried to resolve this issue by installing SkiaSharpNativeAssets.Linux, SkiaSharpNativeAssets.NoDependencies** packages. But nothing helps.\r\n\r\nPlease find the sample to replicate the issue:\r\n[DockerApplication.zip](https://github.com/mono/SkiaSharp/files/6710409/DockerApplication.zip)\r\n",
+  "author": {
+    "login": "HemalathaChiranjeevulu",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-06-24T15:28:48",
+  "updatedAt": "2022-08-19T00:02:41",
+  "closedAt": "2021-08-19T06:28:16",
+  "commentCount": 2,
+  "reactionCount": 0
+}

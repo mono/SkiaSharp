@@ -1,0 +1,17 @@
+{
+  "number": 1902,
+  "type": "issue",
+  "state": "open",
+  "title": "SKTypeface.FromFamilyName does not change the font or text style in SkiaSharp.Views.Blazor",
+  "body": "Unexpected behavior when changing the text font when drawing text. If you query what type of text it should have after assigning **Typeface**, it is always \u0060\u0060\u0060typeFace: Noto Mono.\u0060\u0060\u0060\r\n\r\nThe following example illustrates the supposed issue,\r\n\r\n\u0060\u0060\u0060csharp\r\n@page \u0022/drawing-text\u0022\r\n@using SkiaSharp\r\n@using SkiaSharp.Views.Blazor\r\n\r\n\u003CSKCanvasView OnPaintSurface=\u0022OnPaintSurface\u0022  /\u003E\r\n\r\n@code {\r\n    void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n    {\r\n        var canvas = e.Surface.Canvas;\r\n\r\n        var fontFamily = \u0022Tahoma\u0022; // \u0022Arial\u0022 | \u0022Calibri\u0022 | ... none works?\r\n        var typeFace = SKTypeface.FromFamilyName(fontFamily, SKFontStyle.BoldItalic);\r\n        // query\r\n        Console.WriteLine(\u0022typeFace: {0}\u0022, typeFace.FamilyName); //? typeFace: Noto Mono\r\n\r\n        using SKPaint paint = new() {\r\n                Style = SKPaintStyle.Fill,\r\n                TextSize = 26,\r\n                IsAntialias = true,\r\n                Typeface = typeFace\r\n            };\r\n\r\n        canvas.DrawText(\u0022Fancy Text\u0022, 30, 30, paint); //? draw with Noto Mono\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\u003E The expected behavior is that the text is drawn with the text font and text style. I have tried the equivalent code in other scenarios and it works fine.\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "harveytriana",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2021-12-22T17:19:59",
+  "updatedAt": "2025-01-17T19:28:42",
+  "commentCount": 14,
+  "reactionCount": 1
+}
