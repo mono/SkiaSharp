@@ -1,0 +1,18 @@
+{
+  "number": 959,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Can OpenGL ES be used as backend",
+  "body": "Hello,\r\n\r\nI made a C native library to create a EGL context on a raspberry pi 4 and be able to draw in a VideoCore native window. The context is successfully created and can be used in that native lib.\r\n\r\nI then made a C# lib to wrap the native one using p/invoke. The call is made, and the EGL context is created.\r\n\r\nIs it possible to use it as a backend for SkiaSharp ?\r\n\r\nI tried the following code : \r\n\r\n\u0060\u0060\u0060CSharp \r\nIntPtr glContext = _bridge.CreateGLContext(); // My native call\r\nvar info = new SKImageInfo(1920, 1080);\r\nvar context = GRContext.Create(GRBackend.OpenGL); // null\r\nvar surface = SKSurface.Create(context, false, info); // Exception\r\n\u0060\u0060\u0060\r\n\r\nAnd\r\n\u0060\u0060\u0060CSharp \r\nIntPtr glContext = _bridge.CreateGLContext();\r\nvar info = new SKImageInfo(1920, 1080);\r\nvar glInterface = GRGlInterface.CreateNativeGlInterface(); // maybe this ?\r\nvar context = GRContext.Create(GRBackend.OpenGL, glInterface); // nope, still null\r\nvar surface = SKSurface.Create(context, false, info);\r\n\u0060\u0060\u0060\r\n\r\nIt\u0027s of course, on the same thread.\r\n\r\nI don\u0027t know what to do or is this even possible\r\n\r\nThanks for your help",
+  "author": {
+    "login": "kipy-be",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-09-21T19:43:36",
+  "updatedAt": "2022-08-19T09:02:27",
+  "closedAt": "2020-04-26T06:37:25",
+  "commentCount": 5,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 955,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to load DLL \u0027libSkiaSharp\u0027 ASP.NET WebApp, net472",
+  "body": "I\u0027ve tried everything mentioned in https://github.com/mono/SkiaSharp/issues/513, and none of the suggestions helped. I\u0027m creating this new bug in hope to resurrect the above-closed ticket.\r\n\r\nI\u0027m using TallComponents Rasterizer4 and have a ticket about this with them. They use SkiaSharp 1.60.3, and all works fine on my development box running Win 10 Pro, 64bit, with Any CPU selected on my ASP.NET Web App, with .NET Framework 4.7.2 and VS 2019.\r\n\r\nBut, when I deploy to QA environment which is Win 2012 R2, 64bit, selecting anything from Any CPU, or doing the suggestions mentioned in the above ticket #513  none of them works, I keep getting the exception below.\r\nI even tried upgrading to the latest SkiaSharp version 1.68.0, with no luck.\r\n\r\nThis the exception I\u0027m getting.\r\n\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n\r\nI really hope someone can point me in the right direction. Thanks.",
+  "author": {
+    "login": "ndenkha",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-09-12T23:07:14",
+  "updatedAt": "2022-08-19T09:02:30",
+  "closedAt": "2019-11-05T23:05:54",
+  "commentCount": 4,
+  "reactionCount": 0
+}

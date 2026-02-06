@@ -1,0 +1,22 @@
+{
+  "number": 830,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] How to enable Subpixel rendering on Windows?",
+  "body": "Hi there,\r\n\r\nI\u0027m currently trying to use SkiaSharp for rendering fonts, however I cannot manage to make the text rendered with the subpixel antialias technique. Here is my sample code (using the winform control in SkiaSharp.View):\r\n\r\n\u0060\u0060\u0060\r\n        public Form1()\r\n        {\r\n            InitializeComponent();\r\n            this.skControl1.PaintSurface \u002B= SkControl1_PaintSurface;\r\n        }\r\n\r\n        private void SkControl1_PaintSurface(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)\r\n        {\r\n            var canvas = e.Surface.Canvas;\r\n            var typeface = SKTypeface.FromFamilyName(\u0022Fira Code\u0022, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n\r\n            var paint = new SKPaint()\r\n            {\r\n                Color = new SKColor(0, 0, 0),\r\n                Typeface = typeface,\r\n                TextSize = 15,\r\n                IsAntialias = true,\r\n                SubpixelText = true,\r\n            };\r\n            var shaper = new SKShaper(typeface);\r\n\r\n            canvas.DrawShapedText(shaper, \u0022test -\u003E figgabcd==abcdefgabcdefgabcdefgabcdefgabcdefgabcdefg\u0022, 40, 40, paint);\r\n            canvas.DrawText(\u0022test -\u003E figgabcd==abcdefgabcdefgabcdefgabcdefgabcdefgabcdefg\u0022, 40, 60, paint);\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nThe rendering result:\r\n\r\n![image](https://user-images.githubusercontent.com/1056013/56484439-3d0b4700-6502-11e9-81e4-624e15124b89.png)\r\n\r\nNether \u0060DrawText\u0060 nor \u0060DrawShapedText\u0060 from SkiaSharp.Harfbuzz gave us the subpixel rendering (Harfbuzz gave us the correct ligatures which was expected). Is there any other settings I need to set?",
+  "author": {
+    "login": "dontpanic92",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2019-04-22T05:31:11",
+  "updatedAt": "2022-11-28T01:56:59",
+  "commentCount": 8,
+  "reactionCount": 2
+}

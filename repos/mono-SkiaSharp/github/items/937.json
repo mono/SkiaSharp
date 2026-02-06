@@ -1,0 +1,17 @@
+{
+  "number": 937,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] [Android] Dissalow further propagation for touch events",
+  "body": "**Description**\r\n\r\nWhen \u0060SKCanvasView\u0060 is placed inside, for example, \u0060ScrollViewer\u0060 then touch events are intercepted even though \u0060e.Handled = args.Handled\u0060.\r\n\r\nHere is a link to the SO topic with proper description of the issue:\r\n\r\n[ACTION_CANCEL while touching](https://stackoverflow.com/questions/6018309/action-cancel-while-touching)\r\n\r\nAnd with advise how to handle it.\r\n\r\n**Code**\r\n\r\nWith slight modification to demo app:\r\n\r\nhttps://github.com/mattleibow/SkiaSharpDemo/tree/master/SkiaSharpDemo/SkiaSharpDemo\r\n\r\nAdd \u0060ListView\u0060 to the bottom and \u0060Label\u0060 to the top of the \u0060StackLayout\u0060:\r\n\r\n\u0060\u0060\u0060xml\r\n    \u003CScrollView\u003E\r\n        \u003CStackLayout\u003E\r\n            \u003CLabel Text=\u0022Some text\u0022 HorizontalOptions=\u0022Center\u0022 /\u003E\r\n            \u003Cviews:SKCanvasView HeightRequest=\u0022300\u0022\r\n                                WidthRequest=\u0022400\u0022\r\n                                HorizontalOptions=\u0022Center\u0022 \r\n                                PaintSurface=\u0022OnPainting\u0022 EnableTouchEvents=\u0022True\u0022 Touch=\u0022OnTouch\u0022 /\u003E\r\n            \u003CListView  /\u003E\r\n        \u003C/StackLayout\u003E\r\n    \u003C/ScrollView\u003E\r\n\u0060\u0060\u0060\r\nI also changed background color but it\u0027s doesn\u0027t related.\r\n\r\n**Expected Behavior**\r\n\r\nContent doesn\u0027t scroll when user drags inside of \u0060SKCanvasView\u0060.\r\n\r\n**Actual Behavior**\r\n\r\nIt does scroll:\r\n\r\n![skDroid](https://user-images.githubusercontent.com/16510738/64198264-9f9d2800-ce90-11e9-8360-fb02abc1fabe.gif)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  latest stable (1.68.0)\r\n- Last known good version:  none\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: - Android: 8.1\r\n\r\n**Reproduction Link**\r\n\r\nSince it\u0027s very easy to modify demo I haven\u0027t uploaded MCVE anywhere. But I could if it\u0027s required.",
+  "author": {
+    "login": "FoggyFinder",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-09-03T18:36:27",
+  "updatedAt": "2024-05-13T08:37:11",
+  "commentCount": 8,
+  "reactionCount": 2
+}

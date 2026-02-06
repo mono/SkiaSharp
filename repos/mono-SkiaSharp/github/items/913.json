@@ -1,0 +1,19 @@
+{
+  "number": 913,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Native library missing on Xamarin.Mac Full",
+  "body": "**Description**\r\n- Using Visual Studio for Mac (8.1.5 build 9), create a Mac / Cocoa App\r\n- In Options / Build / General, change \u0022Xamarin.Mac Modern\u0022 to \u0022Xamarin.Mac Full\u0022\r\n- Add SkiaSharp nuget to project, and create a new SKBitmap\r\n\r\nApplication crash on SKBitmap creation with a DllNotFoundException in inner exception :\r\n\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: libSkiaSharp\r\n  at at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n  at SkiaSharp.SKImageInfo..cctor () [0x00000] in \u003Ca0087d635ef94b8aaf6fe37af2df4f8d\u003E:0\r\n  --- End of inner exception stack trace ---\r\n  at at (wrapper managed-to-native) System.Object.__icall_wrapper_mono_generic_class_init(intptr)\r\n  at SkiaSharp.SKBitmap..ctor (System.Int32 width, System.Int32 height, System.Boolean isOpaque) [0x00000] in \u003Ca0087d635ef94b8aaf6fe37af2df4f8d\u003E:0\r\n  at TestSkia.MainClass.Main (System.String[] args) [0x00001] in /Users/christophe/Projects/TestSkia/TestSkia/Main.cs:10\r\n\r\n\r\n\r\n**Code**\r\n\u0060namespace TestSkia\r\n{\r\n    static class MainClass\r\n    {\r\n        static void Main(string[] args)\r\n        {\r\n            new SKBitmap(10, 10);\r\n\r\n            NSApplication.Init();\r\n            NSApplication.Main(args);\r\n        }\r\n    }\r\n}\r\n\u0060\r\n\r\n\r\n**Expected Behavior**\r\n\r\nOutput directory should contains libSkiaSharp.dylib (native Skia library for OSX)\r\n\r\n\r\n**Actual Behavior**\r\n\r\nOutput directory contains x86/libSkiaSharp.dll and x64/libSkiaSharp.dll, which are native library for Windows and not OSX\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:   Visual Studio for Mac (8.1.5 build 9)\r\n- Platform Target Frameworks: \r\n  - macOS:  mojave 10.14.5\r\n\r\n",
+  "author": {
+    "login": "Odirb",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.1",
+  "createdAt": "2019-07-17T14:03:32",
+  "updatedAt": "2022-08-19T09:02:43",
+  "closedAt": "2019-07-26T18:22:44",
+  "commentCount": 5,
+  "reactionCount": 0
+}

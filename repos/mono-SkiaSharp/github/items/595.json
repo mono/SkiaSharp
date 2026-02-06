@@ -1,0 +1,28 @@
+{
+  "number": 595,
+  "type": "issue",
+  "state": "closed",
+  "title": "Migrate GPU surface descriptors to new types",
+  "body": "With the update of m67, skia has changed the way GPU surfaces are created.\r\n\r\n - \u0060GRBackendRenderTargetDesc\u0060 has been replaced with \u0060GRBackendRenderTarget\u0060\r\n - \u0060GRBackendTextureDesc\u0060/\u0060GRGlBackendTextureDesc\u0060 has been replaced with \u0060GRBackendTexture\u0060\r\n\r\nI have ensured that there is 100% backwards compatibility with the previous API, but I cannot say for how long this will be able to work as Google may introduce a breaking change.\r\n\r\nThe various views (both native and Xamarin.Forms) need to be updated to use these new types. They currently work, but will give many obsolete warnings.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-07-26T16:41:41",
+  "updatedAt": "2022-08-19T15:01:56",
+  "closedAt": "2018-10-16T18:04:15",
+  "commentCount": 1,
+  "reactionCount": 0
+}

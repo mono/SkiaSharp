@@ -1,0 +1,18 @@
+{
+  "number": 633,
+  "type": "issue",
+  "state": "closed",
+  "title": "Build SkiaSharp for Linux Arm",
+  "body": "### Description\r\n\r\nI try to build SkiaSharp for Linux Arm. I followed the Wiki here\r\nhttps://github.com/mono/SkiaSharp/wiki/Building-on-Linux\r\nI used the _xamarin-mobile-bindings_ branch and followed the steps in the Wiki.\r\nTo create the build files I used\r\n\r\n\u0060\u0060\u0060\r\n./bin/gn gen \u0027out/linux/x64\u0027 --args=\u0027\r\n    is_official_build=true skia_enable_tools=false\r\n    target_os=\u0022linux\u0022 target_cpu=\u0022arm\u0022\r\n    skia_use_icu=false skia_use_sfntly=false skia_use_piex=true\r\n    skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false\r\n    skia_enable_gpu=true\r\n    extra_cflags=[ \u0022-DSKIA_C_DLL\u0022 ]\r\n    linux_soname_version=\u002260.3.0\u0022\u0027\r\n\r\n\u0060\u0060\u0060\r\nwhich is the command line from the Wiki but I replaced the _target_cpu_ with _arm_.\r\n\r\n### Expected Behavior\r\n\r\nBuild the .so file without any error.\r\n\r\n### Actual Behavior\r\n\r\nc\u002B\u002B: error: unrecognized command line option \u2018-mfpu=neon\u2019\r\nc\u002B\u002B: error: unrecognized command line option \u2018-mthumb\u2019\r\n\r\nAt that point I am not Linux expert enough to know how to resolve it. The command line shown above does not specify these arguments so they must have been auto generated. Any idea?\r\n\r\n### Basic Information\r\n\r\n  - Linux:  Ubuntu 14.04\r\n",
+  "author": {
+    "login": "nicolasr75",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-09-09T23:27:36",
+  "updatedAt": "2022-08-19T15:01:33",
+  "closedAt": "2018-09-11T20:31:25",
+  "commentCount": 11,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 601,
+  "type": "issue",
+  "state": "closed",
+  "title": "How to save only the image using SKCanvas",
+  "body": "### Description\r\n\r\nI\u0027m using Skiasharp for annotating an image. Currently i\u0027m facing a issue on saving the image from the canvas. \r\nI will load the image as per its size. But i\u0027m keeping the canvas to full screen size. While saving any small image my code is saving the image and the canvas which is set to full screen. As a result i\u0027m getting Extra spaces from either side of the image (given that image is loaded center in my UI).\r\nPlease could you suggest some idea on how to save only the annotated image irrespective of the Canvas size?\r\n\r\n### Code\r\nprivate void OnCanvasViewPaintSurface(object sender, SKPaintSurfaceEventArgs args)\r\n{\r\nsurface = args.Surface;\r\ncanvas = args.Surface.Canvas;\r\n\r\n//Load the image to the canvas\r\nSKSize imgSize = new SKSize(m_bitmap.bitmap.Width, m_bitmap.bitmap.Height);\r\nSKRect aspectRect = SKRect.Create(args.Info.Width, args.Info.Height).AspectFit(imgSize);\r\ncanvas.DrawBitmap(m_bitmap.bitmap, aspectRect, null);\r\n\r\n//Saving image from the canvas\r\nm_skImage = surface.Snapshot();\r\ndata = m_skImage.Encode(SKEncodedImageFormat.Png, 80);\r\nResultImageStream = data.AsStream();\r\nimageStream = new MemoryStream();\r\nResultImageStream.CopyTo(imageStream);\r\nResultData = imageStream.ToArray();\r\n}\r\n\r\n### Expected Behavior\r\n\r\nSave only the image with the annotation.\r\n\r\n### Actual Behavior\r\n\r\nSave the image with annotation and also with the Blank spaces\r\n\r\n### Basic Information\r\n\r\n- Version :  1.57.0\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android:  4.4 and above\r\n  - iOS:  10.4 and above\r\n  - UWP:  16299 \r\n",
+  "author": {
+    "login": "Packiaseelan",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-07-31T11:36:28",
+  "updatedAt": "2022-08-19T15:01:53",
+  "closedAt": "2018-08-01T06:45:48",
+  "commentCount": 1,
+  "reactionCount": 0
+}

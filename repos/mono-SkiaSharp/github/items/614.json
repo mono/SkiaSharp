@@ -1,0 +1,18 @@
+{
+  "number": 614,
+  "type": "issue",
+  "state": "closed",
+  "title": "Can I combine OpenGL 3D drawing with SkiaSharp?",
+  "body": "### Description\r\n\r\nI\u0027m using SkiaSharp with OpenTK on a Window desktop, but if I try to draw into the OpenGL context directly, both the OpenGL and SkiaSharp drawing is corrupted. I am guessing that they are trampling each other\u0027s GL states.\r\n\r\n### Code\r\n\r\nCan\u0027t share any code right now, there isn\u0027t anything in the documentation showing whether this is even allowed.\r\n\r\n### Expected Behavior\r\n\r\nExpected that I can draw something in 3D, call GrContext.ResetContext or similar function, then draw in 2D with SkiaSharp. (Or vice versa, 2D than 3D. Either is fine.)\r\n\r\n### Actual Behavior\r\n\r\nWhen I add our existing 3D code to the prototype SkiaSharp project, the 3D scene is not drawn, and the SkiaSharp 2D drawing is \u0027corrupted\u0027, i.e., text is not drawn, some objects are missing, a square appears where a square shouldn\u0027t be.\r\n\r\nI can\u0027t call GrContext.ResetContext, because SKGlControl.grContext is private.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  v1.60.2 of SkiaSharp and SkiaSharp.Views, from NuGet.\r\n- Last known good version:  This is the first time I have tried SkiaSharp.\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .NET Framework 4.5.2\r\n  - Android: N/A\r\n  - iOS:  N/A\r\n  - Linux:  Not yet\r\n  - macOS:  N/A\r\n  - Tizen:  N/A\r\n  - tvOS:  N/A\r\n  - UWP:  N/A\r\n  - watchOS:  N/A\r\n  - Windows Classic:  Windows 10\r\n- Target Devices:\r\n  -   Acer laptop\r\n\r\n### Screenshots\r\n\r\n![image](https://user-images.githubusercontent.com/13400041/43979809-8b81da3a-9cb1-11e8-80f2-3a7c586a8db3.png)\r\n\r\nThis is the title bar for our app. If I just have OpenGL clear the viewport to purple, then have Skia render, it\u0027s okay. (Top) If I have OpenGL actually draw things, then the Home button and title text disappears and I get that grey box. (Bottom)\r\n\r\nI could try to manually guess what OpenGL state needs to be corrected, but that sounds fragile.\r\n\r\n### Reproduction Link\r\n\r\nI can make up a reproduction case if the issue isn\u0027t clear, but this is more of a question of \u0022Can I even do this?\u0022 and not \u0022Is this broken?\u0022\r\n",
+  "author": {
+    "login": "ReactorScram",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-08-10T20:27:22",
+  "updatedAt": "2022-08-19T15:01:47",
+  "closedAt": "2018-08-13T16:05:33",
+  "commentCount": 5,
+  "reactionCount": 0
+}

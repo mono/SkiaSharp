@@ -1,0 +1,23 @@
+{
+  "number": 527,
+  "type": "issue",
+  "state": "closed",
+  "title": "Understanding PixelScaling",
+  "body": "### Description\r\n\r\nI am somewhat confused about the system scale in Skia. Below is a sample that draws a line diagonally across the screen to the lower right corner (see screenshot). It does not end there because of the windows screen scale (of 1.25  in this case). I can compensate for this in two ways (see \u0027solution\u0027 in code comments). \r\n\r\n1. Ignore pixel scaling\r\n2. Scale the canvas\r\n\r\nMy question is, are these methods equivalent, or will one or the other work with a bigger bitmap in the background? \r\n\r\nAlso, I don\u0027t really understand why I, as a user, need to deal with the windows scaling at all. Should there perhaps be a way to set the dpi of the canvas instead, and keep the coordinate system intact at all times, unless the user explicitly scales the canvas?\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060c#\r\nusing System;\r\nusing System.Windows;\r\nusing System.Windows.Media;\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Desktop;\r\n\r\nnamespace WpfScaleIssue\r\n{\r\n    /// \u003Csummary\u003E\r\n    /// Interaction logic for MainWindow.xaml\r\n    /// \u003C/summary\u003E\r\n    public partial class MainWindow\r\n    {\r\n        private float _scale;\r\n        private float _width;\r\n        private float _height;\r\n\r\n        public MainWindow()\r\n        {\r\n            InitializeComponent();\r\n\r\n            // Solution 1) Ignore pixel scaling\r\n            // SkiaCanvas.IgnorePixelScaling = true;\r\n\r\n            SkiaCanvas.PaintSurface \u002B= SkiaCanvasOnPaintSurface;\r\n            CompositionTarget.Rendering \u002B= (sender, args) =\u003E InvalidateVisual();\r\n\r\n            SizeChanged \u002B= (sender, args) =\u003E\r\n            {\r\n                _scale = DetermineSkiaScale();\r\n                _width = (float)SkiaCanvas.ActualWidth;\r\n                _height = (float)SkiaCanvas.ActualHeight;\r\n            };\r\n        }\r\n\r\n        private void SkiaCanvasOnPaintSurface(object sender, SKPaintSurfaceEventArgs args)\r\n        {\r\n            // Solution 2) Scale the canvas\r\n            // args.Surface.Canvas.SetMatrix(SKMatrix.MakeScale(_scale, _scale));\r\n            \r\n            Draw(args.Surface.Canvas);\r\n        }\r\n\r\n        private void Draw(SKCanvas canvas)\r\n        {\r\n            canvas.Clear(SKColors.LightPink);\r\n            canvas.DrawLine(0, 0, _width, _height, new SKPaint { Color = SKColors.Red });\r\n            canvas.DrawCircle(_width, _height, 10, new SKPaint { Color = SKColors.Red });\r\n        }\r\n\r\n        private float DetermineSkiaScale()\r\n        {\r\n            var presentationSource = PresentationSource.FromVisual(this);\r\n            if (presentationSource == null) throw new Exception(\u0022PresentationSource is null\u0022);\r\n            var compositionTarget = presentationSource.CompositionTarget;\r\n            if (compositionTarget == null) throw new Exception(\u0022CompositionTarget is null\u0022);\r\n\r\n            var matrix = compositionTarget.TransformToDevice;\r\n\r\n            var dpiX = matrix.M11;\r\n            var dpiY = matrix.M22;\r\n\r\n            if (dpiX != dpiY) throw new ArgumentException();\r\n\r\n            return (float)dpiX;\r\n        }\r\n    }\r\n}\r\n\r\n\u0060\u0060\u0060\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.1\r\n- Last known good version:  All the same\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: WPF\r\n\r\n### Screenshots\r\n\r\n![image](https://user-images.githubusercontent.com/963462/40476122-8a03dd9e-5f43-11e8-88f8-4e84559cdb39.png)\r\n\r\n### Reproduction Link\r\n\r\nhttps://github.com/pauldendulk/SkiaSharpPlayGround\r\n",
+  "author": {
+    "login": "pauldendulk",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "area/Docs",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-05-24T12:16:20",
+  "updatedAt": "2022-08-19T15:02:28",
+  "closedAt": "2020-03-08T07:50:38",
+  "commentCount": 4,
+  "reactionCount": 1
+}

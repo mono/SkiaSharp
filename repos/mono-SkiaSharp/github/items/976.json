@@ -1,0 +1,17 @@
+{
+  "number": 976,
+  "type": "issue",
+  "state": "open",
+  "title": "Memory violations when generating bitmaps in background threads [BUG] ",
+  "body": "This is a continuation / variation on #755.  I\u0027ve been able to GPU generate bitmap images in background threads on all platforms, including Windows.  When I monitor GPU activity when the app is running, I can see that it never goes higher than about 40%.  I\u0027d like improve the load on the GPU by generating the images on more than one background thread.\r\n\r\nI have written a mapping utility where my app receives a collection of vector tiles which it needs to render.  Each tile is independent of the others, and each tile can be very heavy: ie. contain tens of thousands of features that are drawn using paths.  A typical screen contains 36 tiles and the user can interact with the screen quickly (during panning or zooming interactions) so the map must render itself very quickly.  Since each tile is a unit unto itself, the ability to generate its bitmap quickly and then to weave the results onto the display is a crucial requirement.  If it takes more than two seconds to update the display, the app is considered unacceptable.\r\n\r\nI have read the Kronos EGl spec and a fair bit of documentation on OpenGL in general. My understanding is that if a GLContext is generated in an independent thread, which is associated with a PBuffer created in the same thread, and if that context is made current in that thread, then the GLContext\u0027s handle can be passed to the GrGlInterface, and a GRContext can be created from the interface so that SkiaSharp can render using the GRContext.  If I follow this approach with one thread, all the needed objects (the eglDisplay, the eglConfig, the eglPbufferSurface, and eglContext generate properly with no errors.  I\u0027m able to generate bitmaps with the GRContext.\r\n\r\nWhen I turn on two threads, again, all  the needed object generate with no errors.  The System.IntPtrs are all different, so there doesn\u0027t appear to be any overlaps.  But invariably when both threads are running memory violations will occur.\r\n\r\nHere is an example of how I create the context in UWP:\r\n\r\n[UWPGRContextProvider.txt](https://github.com/mono/SkiaSharp/files/3688747/UWPGRContextProvider.txt)\r\n\r\nThe mechanism is straight forward.  In an independent thread I instantiate a UWPGRContextProvider object and then call its CreateGRContext method.  \r\n\r\nThe method first initialises the EGL context, and then I use a custom loader to force the access to the EGL library:\r\n\r\n![image](https://user-images.githubusercontent.com/1115118/66177308-95d73200-e693-11e9-9a42-6d711ab3a0ec.png)\r\n\r\nThen I assemble the GRGlInterface using the eglContext and this custom loader.  From the interface I create the GRContext.  \r\n\r\n![image](https://user-images.githubusercontent.com/1115118/66177389-db93fa80-e693-11e9-8522-39190463ef74.png)\r\n\r\nIf there is something I\u0027m misunderstanding or using incorrectly, please let me know.  I\u0027ve tried asking the same question on the Kronos bulletin board.  If you know of another place I should ask, I\u0027m all ears!!\r\n\r\nThanks for any insights you can provide,\r\nTom",
+  "author": {
+    "login": "pathw0rk3r",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-10-04T02:58:19",
+  "updatedAt": "2019-10-13T03:45:39",
+  "commentCount": 3,
+  "reactionCount": 1
+}

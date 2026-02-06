@@ -1,0 +1,43 @@
+{
+  "number": 730,
+  "type": "issue",
+  "state": "open",
+  "title": "SKGLView exception when ViewExtensions.RotateYTo called on parent view [Xamarin Forms UWP]",
+  "body": "### Description\r\n\r\nWhen ViewExtensions.RotateYTo is called on the parent view (like a Grid) of an SKGLView, an unhandled exception occurs:\r\n\r\nSystem.Exception: Failed to create EGL surface\r\n   at SkiaSharp.Views.GlesInterop.GlesContext.CreateSurface(SwapChainPanel panel, Nullable\u00601 renderSurfaceSize, Nullable\u00601 resolutionScale)\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.EnsureRenderSurface()\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.OnCompositionChanged(SwapChainPanel sender, Object args)\r\n\r\n\r\n### Code\r\n\r\nCreate a window with a Grid. Add a SKGLView object to the grid. Then perform the following call on the grid object several times from 180 to 0, leaving plenty of time in between. It will crash, usually on the first try:\r\n\r\n\tXamarin.Forms.ViewExtensions.RotateYTo(\u003CYour Grid Object\u003E, 180, 300);\r\n\r\n### Expected Behavior\r\n\r\nThe parent view should flip horizontally without crashing. \r\n\r\n### Actual Behavior\r\n\r\nThe parent view flips partially, then the application closes with the exception. Sometimes it succeeds but always crashes within a few tries. \r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.68.0-preview28\r\n- Last known good version:  None\r\n- IDE:  VS2017\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: \u003C!-- the version of the Android SDK you are compiling against, e.g. 7.1 --\u003E \r\n  - iOS:  \u003C!-- the version of the iOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Linux:  \u003C!-- The version and distro of linux that you are building for, e.g. Ubuntu 16.04 --\u003E\r\n  - macOS:  \u003C!-- The version of macOS you are building for, e.g. 10.10 --\u003E\r\n  - Tizen:  \u003C!-- the version of the Tizen SDK you are compiling against, e.g. 4.0 --\u003E \r\n  - tvOS:  \u003C!-- the version of the tvOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - UWP:  \u003C!-- the version of the UWP SDK you are compiling against, e.g. 16299 --\u003E \r\n  - watchOS:  \u003C!-- the version of the watchOS SDK you are compiling against, e.g. 11.1 --\u003E\r\n  - Windows Classic:  \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:\r\n  -   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n\r\n### Screenshots\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n### Reproduction Link\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\n\n\u003E VS bug [#752323](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/752323)",
+  "author": {
+    "login": "comfr3ak",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Forms",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-12-13T20:01:41",
+  "updatedAt": "2021-01-04T17:28:42",
+  "commentCount": 2,
+  "reactionCount": 0
+}

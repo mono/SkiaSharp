@@ -1,0 +1,17 @@
+{
+  "number": 993,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Use Utils.NearlyEqual to compare floats",
+  "body": "## Bug\r\n\r\nIn [SKMatrix.cs](https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKMatrix.cs), there\u0027s code like this:\r\n\r\n\u0060\u0060\u0060\r\nif (sx == 1 \u0026\u0026 sy == 1)\r\n\u0060\u0060\u0060\r\n\r\nwhere \u0060sx\u0060 and \u0060sy\u0060 are floats.\r\n\r\n\u0060Utils.NearlyEqual\u0060 should be used for cases like this.\r\n\r\n## Related\r\n\r\nAlso, in [SKColor.cs](https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKColor.cs), there\u0027s logic using \u0060EPSILON = 0.001f\u0060. \u0060Utils.NearlyEqual\u0060 should be used too.\r\n\r\n## Improvement\r\n\r\nThe \u0060tolerance\u0060 argument of \u0060Utils.NearlyEqual\u0060 should be set to \u0060Utils.NearlyZero\u0060 by default, so that we don\u0027t have to pass it explicitly.",
+  "author": {
+    "login": "ngocdaothanh",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-11-04T20:53:16",
+  "updatedAt": "2019-11-04T20:58:30",
+  "commentCount": 0,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 519,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKTypeface.FromStream raises exception in Release mode only",
+  "body": "### Description\r\n\r\nHi, first of all, thx for this amazing library! I\u0027ve been using it for some time now without any issues up until now that I\u0027m building in release mode.  The code snippet below works perfectly in Debug mode but not Release, where it\u0027s raising an exception when calling SKTypeface.FromStream(stream) (stack trace details down below)\r\n\r\nAm I missing anything or should I change this approach?\r\n\r\nThanks in advance!\r\n\r\n### Code\r\n    using (var asset = App.assets.Open($\u0022fonts/someFont.otf\u0022))\r\n    {\r\n        var fontStream = new MemoryStream();\r\n        asset.CopyTo(fontStream);\r\n        fontStream.Flush();\r\n        fontStream.Position = 0;\r\n        typeface = SKTypeface.FromStream(fontStream);\r\n        if(typeface != null)\r\n        {\r\n            //Do something...\r\n        }\r\n    }\r\n\r\n### Expected Behavior\r\n\r\ntypeface form returned without exception\r\n\r\n### Actual Behavior\r\n\r\nException raised in release mode only.\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.0\r\n- IDE:  VS 2017 Enterprise 15.6.6\r\n- Platform Target Frameworks: API 25 (Android 7.1)\r\n  - Android:  Testing on a 6.0 android device.\r\n- Target Devices:\r\n  -   Honor 8\r\n\r\n\r\n\r\n### Stack trace details\r\n\r\n05-15 00:23:48.144 E/mono-rt ( 2747): Stacktrace:\r\n05-15 00:23:48.144 E/mono-rt ( 2747): \r\n05-15 00:23:48.144 E/mono-rt ( 2747):   at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n05-15 00:23:48.144 E/mono-rt ( 2747):   at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_typeface_create_from_stream (intptr,int) \u003C0x0003b\u003E\r\n05-15 00:23:48.144 E/mono-rt ( 2747):   at SkiaSharp.SKTypeface.FromStream (SkiaSharp.SKStreamAsset,int) [0x00018] in \u003C5a812555f55f40c0a29350793a12a8ac\u003E:0\r\n05-15 00:23:48.144 E/mono-rt ( 2747):   at SkiaSharp.SKTypeface.FromStream (System.IO.Stream,int) [0x00019] in \u003C5a812555f55f40c0a29350793a12a8ac\u003E:0",
+  "author": {
+    "login": "jordimontana82",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2018-05-14T23:40:38",
+  "updatedAt": "2022-08-19T15:02:32",
+  "closedAt": "2018-05-14T23:58:14",
+  "commentCount": 1,
+  "reactionCount": 0
+}

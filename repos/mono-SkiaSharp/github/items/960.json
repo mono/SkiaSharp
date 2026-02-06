@@ -1,0 +1,32 @@
+{
+  "number": 960,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] NullReferenceException occurs when iOS redraws SKCanvasView view but it had been already disposed",
+  "body": "**Description**\r\n\r\nException has occurred in the moment of back navigation from page with SKCanvasView.\r\n\r\n\r\n\u0060\u0060\u0060\r\nSystem.NullReferenceException: Object reference not set to an instance of an object\r\nat SkiaSharp.Views.iOS.SKDrawable.DrawSurface (CoreGraphics.CGContext ctx, CoreGraphics.CGRect viewBounds, SkiaSharp.SKImageInfo info, SkiaSharp.SKSurface surface) \u003C0x104f466f0 \u002B 0x0004c\u003E in \u003C1dff7dabaada4d38b0d12baee26f046c#85a406ab9d3ebec0a9a84dd9b6d8be21\u003E:0 \r\nat SkiaSharp.Views.iOS.SKCanvasView.Draw (CoreGraphics.CGRect rect) \u003C0x104f42990 \u002B 0x002bb\u003E in \u003C1dff7dabaada4d38b0d12baee26f046c#85a406ab9d3ebec0a9a84dd9b6d8be21\u003E:0 \r\nat (wrapper managed-to-native) UIKit.UIApplication.UIApplicationMain(int,string[],intptr,intptr)\r\nat UIKit.UIApplication.Main (System.String[] args, System.IntPtr principal, System.IntPtr delegate) \u003C0x10434de20 \u002B 0x0002b\u003E in \u003C854c6713acc54b0389a597c8b4079500#85a406ab9d3ebec0a9a84dd9b6d8be21\u003E:0 \r\nat UIKit.UIApplication.Main (System.String[] args, System.String principalClassName, System.String delegateClassName) \u003C0x10434dd60 \u002B 0x000ab\u003E in \u003C854c6713acc54b0389a597c8b4079500#85a406ab9d3ebec0a9a84dd9b6d8be21\u003E:0 \r\nat SomeApp.AppDelegate.Main (System.String[] args) \u003C0x102769e20 \u002B 0x0003f\u003E in :0\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Root cause**\r\nUsing of disposed object.\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.AppleiOS/SKCanvasView.cs\r\n\r\n![Screenshot_1](https://user-images.githubusercontent.com/31827085/65421156-b8ec2100-de0b-11e9-9582-b7e32b79a541.png)\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- IDE:  Visual Studio \r\n- Platform Target Frameworks: Xamarin.Touch\r\n  - iOS:  12.2\r\n\r\n",
+  "author": {
+    "login": "dmitryzarubin",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/iOS",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2019-09-23T11:23:39",
+  "updatedAt": "2022-08-19T09:02:26",
+  "closedAt": "2020-04-28T15:44:09",
+  "commentCount": 1,
+  "reactionCount": 0
+}

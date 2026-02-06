@@ -1,0 +1,24 @@
+{
+  "number": 677,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKBitmap.Decode( NONE_EXISTING_FILE_PATH ) should return null",
+  "body": "### Description\r\n\r\nHaving trouble catching a useful exception, and will have to write some guard code around it.\r\nMSDN docs suggest that SKBitmap should return null if an error occurs\r\n\r\n### Code\r\n\r\nSKBitmap.Decode( NONE_EXISTING_FILE_PATH );\r\n\r\n### Expected Behavior\r\n\r\neither throw file not found or return null\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n### Actual Behavior\r\n\r\nCaused a native crash and so far I have been unable to catch any exception.\r\nFrom some quick digging, SkiaSharp creates a stream from the path, this stream is already at the end...\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n### Basic Information\r\n\r\n- Version with issue:  1.60.3\r\n- Last known good version:  first time here...\r\n- IDE:  Visual Studio \r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: not tested\r\n  - iOS:  not tested\r\n  - Linux:  not tested\r\n  - macOS:  not tested\r\n  - Tizen:  not tested\r\n  - tvOS:  not tested\r\n  - UWP:  not tested\r\n  - watchOS:  not tested\r\n  - Windows Classic:  10 ( so far)\r\n- Target Devices:\r\n  -   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E",
+  "author": {
+    "login": "MonkeyNinja",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.0",
+  "createdAt": "2018-11-08T17:22:25",
+  "updatedAt": "2022-08-19T12:02:47",
+  "closedAt": "2018-11-25T19:19:16",
+  "commentCount": 2,
+  "reactionCount": 0
+}

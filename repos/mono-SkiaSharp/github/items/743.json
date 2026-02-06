@@ -1,0 +1,22 @@
+{
+  "number": 743,
+  "type": "issue",
+  "state": "open",
+  "title": "Recommended way to do error handling",
+  "body": "Currently evaluating image libraries to switch to from my current usage of GDI\u002B (System.Drawing.dll).\r\n\r\nBeing used to having .NET libraries throw exceptions upon failure, I got really confused to see that SkiaSharp does _not_ follow this .NET pattern.\r\n\r\nMethods that can fail seem to return \u0060false\u0060 only, like e.g. [\u0060SKBitmap.ScalePixels\u0060](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skbitmap.scalepixels).\r\n\r\nIn addition I found no way to get extended error messages, once a function fails and returns \u0060false\u0060.\r\n\r\nI would have expected to have at least something similar to [\u0060Marshal.GetLastWin32Error\u0060](https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal.getlastwin32error) but again found nothing.\r\n\r\nI strongly feel that SkiaSharp is not usable in any medium sized project because of the minimal error reporting. On the other hand, given SkiaSharps popularity, I really do hope, I miss some essential points.\r\n\r\n**My questions:**\r\n\r\n1. Can I tell SkiaSharp to throw exceptions instead of C style error reporting (returning booleans)?\r\n1. If not, can I query SkiaSharp to give me more error details than just a boolean?",
+  "author": {
+    "login": "UweKeim",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-12-24T09:17:23",
+  "updatedAt": "2020-06-10T23:18:33",
+  "commentCount": 2,
+  "reactionCount": 5
+}

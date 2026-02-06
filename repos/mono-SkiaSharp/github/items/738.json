@@ -1,0 +1,23 @@
+{
+  "number": 738,
+  "type": "issue",
+  "state": "closed",
+  "title": "Access violation in multithreaded code",
+  "body": "Yes, I\u0027m aware of https://github.com/mono/SkiaSharp/issues/235. This is slightly different.\r\n\r\nI have a listview with a canvas in each item. Displaying the items might take same time, so to ensure responsivity, the drawing has to be done asynchronously (all listivew items appear immediately, individual contents appear in async when finished). It\u0027s obvious that UI operations cannot happen on other threads, so I use the same solution that I use everywhere else in my app when I need to combine tasks and UI: grabbing the synchronization context. This works all right in all cases but not with Skia, it immediately leads to access violation errors.\r\n\r\nConsider a simple \u0060PaintSurface\u0060 handler that does anything Skia, eg:\r\n\r\n    private void OnPainting(object sender, SKPaintSurfaceEventArgs e) {\r\n      e.Surface.Canvas.DrawBitmap(bitmap, 0, 0);\r\n    }\r\n\r\nDrawing a bitmap is just an example, any canvas operation will do. Let\u0027s simply move this into a task of its own:\r\n\r\n    public async Task\u003Cbool\u003E Draw(SKCanvas canvas) {\r\n      return await Task.Factory.StartNew(() =\u003E {\r\n        canvas.DrawBitmap(bitmap, 0, 0);\r\n        return true;\r\n      }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());\r\n    }\r\n\r\nand call it accordingly:\r\n\r\n    private async void OnPainting(object sender, SKPaintSurfaceEventArgs e) {\r\n      await Draw(e.Surface.Canvas);\r\n    }\r\n\r\nresults in an AccessViolationError. Again, note that it isn\u0027t a \u0060Task.Run()\u0060, it\u0027s the underlying \u0060Task.Factory.StartNew()\u0060 specifying the current sync context. It *can* touch UI all right, no problems with that in general.",
+  "author": {
+    "login": "deakjahn",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-12-18T22:47:04",
+  "updatedAt": "2022-08-19T12:02:06",
+  "closedAt": "2020-06-10T23:08:41",
+  "commentCount": 8,
+  "reactionCount": 0
+}

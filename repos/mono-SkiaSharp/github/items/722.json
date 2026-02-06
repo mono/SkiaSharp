@@ -1,0 +1,40 @@
+{
+  "number": 722,
+  "type": "issue",
+  "state": "closed",
+  "title": "BackendRenderTarget doesn\u0027t give current width/height on UWP",
+  "body": "Override \u0060OnPaintSurface(e : SKPaintGLSurfaceEventArgs)\u0060.\r\n\r\nSometimes SkiaSharp has an incorrect Width/Height, with a discrepancy from the Xamarin.Forms.View Width and Height.\r\n\r\nThis manifests as:\r\n\r\n- e.BackendRenderTarget.Width / Height being incorrect\r\n- Drawing commands being incorrect.\r\n\r\nIt appears that SkiaSharp sometimes fails to update the canvas when Xamarin.Forms has changed the size of the view.\r\n\r\nThis does not always happen. In our testing if the change in size comes from another UI element appearing, SkiaSharp fails to update, while if the change in size comes from the window changing size, SkiaSharp updates correctly.\r\n\r\nWe will add more details as we find them. This is not the highest priority UWP issue at the moment, with the memory leak being a more critical issue.\r\n\r\n@sir-deenicus @Happypig375\n\n\u003E VS bug [#753283](https://devdiv.visualstudio.com/DevDiv/_workitems/edit/753283)",
+  "author": {
+    "login": "charlesroddie",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views",
+      "color": "0052cc"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [
+    {
+      "login": "mattleibow",
+      "type": "User"
+    }
+  ],
+  "createdAt": "2018-12-10T16:26:31",
+  "updatedAt": "2022-08-19T12:02:16",
+  "closedAt": "2021-03-30T15:30:48",
+  "commentCount": 2,
+  "reactionCount": 1
+}

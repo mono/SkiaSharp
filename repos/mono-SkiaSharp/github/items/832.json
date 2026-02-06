@@ -1,0 +1,17 @@
+{
+  "number": 832,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Touch events not passed through on iOS",
+  "body": "**Description**\r\n\r\nWhen having a SKCanvasView in front of a button the touch events don\u0027t reach the button on iOS even if EnableTouchEvents is set to false. Same when setting EnableTouchEvents to true and setting Handeled property of TouchEventArgs to false. \r\n\r\nOn Andorid everything works as expected.\r\n\r\n**Code**\r\n\r\nCase 0:\r\n\u0060\u003Cforms:SKCanvasView EnableTouchEvents=\u0022false\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 VerticalOptions=\u0022FillAndExpand\u0022 PaintSurface=\u0022Handle_PaintSurface\u0022 /\u003E\u0060\r\n\r\nCase 1: \r\n\r\n\u0060\u003Cforms:SKCanvasView EnableTouchEvents=\u0022true\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 VerticalOptions=\u0022FillAndExpand\u0022 Touch=\u0022SKCanvasView_OnTouch\u0022 PaintSurface=\u0022Handle_PaintSurface\u0022 /\u003E\u0060\r\n\r\n\u0060private async void SKCanvasView_OnTouch(object sender, SKTouchEventArgs e)\r\n        {\r\n            e.Handled = false;\r\n        }\u0060\r\n\r\n**Expected Behavior**\r\n\r\nWhen setting EnableTouchEvents to false touch gets passed through to underlying elements. Same when handling touch events and setting handled to false for TouchEventArgs. Just like it works on Android. \r\n\r\n**Actual Behavior**\r\n\r\nSee description.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.0\r\n- Last known good version:  none\r\n- IDE:  Visual Studio for Mac / Rider\r\n- Platform Target Frameworks: iOS, Android\r\n  - iOS:  Tested: 12.2 \u0026 11.3\r\n- Target Devices:   Tested: Simulator \u0026 iPhone 6s\r\n\r\n**Reproduction Link**\r\n\r\nSee for demo application:\r\nhttps://github.com/Alex-Witkowski/SkiaSharpTouchTest\r\n",
+  "author": {
+    "login": "Alex-Witkowski",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-04-24T07:52:40",
+  "updatedAt": "2021-05-06T15:41:41",
+  "commentCount": 1,
+  "reactionCount": 0
+}

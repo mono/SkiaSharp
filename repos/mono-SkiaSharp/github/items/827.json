@@ -1,0 +1,17 @@
+{
+  "number": 827,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKGLControl causes designer to throw exception in Visual Studio",
+  "body": "**Description**\r\n\r\nTrying to use SKGLControl in a Winforms application causes the designer to prevent loading with the following error message:\r\n\r\n_Could not load file or assembly \u0027OpenTK.GLControl, Version=1.1.0.0,  Culture=neutral, PublicKeyToken=bad199fe84eb3df4\u0027 or one of its dependencies.  The system cannot find the file specified._\r\n\r\n\r\nIt works fine compiling and running however.\r\n\r\n**Code**\r\n\r\nAdd the following to a form:\r\n\u0060\u0060\u0060\r\n                    var glControl = new SkiaSharp.Views.Desktop.SKGLControl();\r\n                    glControl.Size = new System.Drawing.Size(100, 100);\r\n                    glControl.Dock = DockStyle.Fill;\r\n                    this.Controls.Add(glControl);\r\n\u0060\u0060\u0060\r\n\r\n\r\n**Expected Behavior**\r\n\r\nTo allow the designer to display the form.\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68 (from nuget)\r\n- OpenTK version:  3.0.1 (from nuget)\r\n- Last known good version:  ?\r\n- IDE:  VS 2019 / VS 2017 (latest version of both)\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n",
+  "author": {
+    "login": "Xtrophic",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-04-12T14:36:23",
+  "updatedAt": "2019-04-12T14:37:18",
+  "commentCount": 0,
+  "reactionCount": 3
+}

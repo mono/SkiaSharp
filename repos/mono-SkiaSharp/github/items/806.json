@@ -1,0 +1,17 @@
+{
+  "number": 806,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Get gray8 image FromPixelCopy is fail",
+  "body": "**Description**\r\nI\u0027m trying to get a gray8 image from the pixel buffer which without encoded.\r\nUnfortunately, the result seems get a bgra8888 image.\r\n\r\n\r\n\r\n**Code**\r\n\u0060     \r\n\r\n            var imageInfo = new SKImageInfo(size.Width, size.Height, SKColorType.Gray8);\r\n            //I\u0027m pretty sure the picData is gray8 rows\u0027 pixel without encode\r\n            using (var data = SKData.CreateCopy(picData))\r\n            {\r\n                try\r\n                {\r\n                    using (var image = SKImage.FromPixelCopy(imageInfo, data.Data, size.Width))\r\n                    {\r\n                        // the bitmap become 4 bytes per pixel, color type become bgra8888\r\n                        var bitmap = SKBitmap.FromImage(image); \r\n                        using (var skData = image.Encode(SKEncodedImageFormat.Jpeg, 100))\r\n                        {\r\n                        }\r\n                    }\r\n                }\r\n                catch (Exception e)\r\n                {\r\n                    Console.WriteLine(e);\r\n                    throw;\r\n                }\r\n            }\u0060\r\n\r\n\r\n**Expected Behavior**\r\n\r\nGet a gray8 bitmap, 1 byte per pixel.\r\n\r\n**Actual Behavior**\r\n\r\nGet a bgra8888 bitmap, 4 byte per pixel.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- --\u003E1.68.0 \r\n- Last known good version:  \u003C!--   --\u003EDon\u0027t know\r\n- IDE:  \u003C!--  --\u003EVisual Studio 2017 Version 15.7.1\r\n- Platform Target Frameworks: \u003C!--  --\u003E.net core 2.0\r\n- Windows Classic:  \u003C!-- --\u003EWin10\r\n\r\n\r\n",
+  "author": {
+    "login": "836257514",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-03-05T06:59:58",
+  "updatedAt": "2019-03-05T07:07:21",
+  "commentCount": 0,
+  "reactionCount": 0
+}
