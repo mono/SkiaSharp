@@ -17,11 +17,15 @@
     
     <!-- Device configuration - can be overridden via command line -->
     <!-- dotnet test -p:iOSDevice="iPad Pro 13-inch (M4)" -p:iOSVersion="18.5" -->
-    <!-- dotnet test -p:AndroidDevice="Pixel 8" -p:AndroidVersion="14" -->
+    <!-- dotnet test -p:AndroidDevice="Pixel 8" -p:AndroidVersion="14" -p:AndroidDeviceId="emulator-5554" -p:AndroidApiLevel="23" -->
     <iOSDevice Condition="'$(iOSDevice)' == ''"></iOSDevice>
     <iOSVersion Condition="'$(iOSVersion)' == ''"></iOSVersion>
     <AndroidDevice Condition="'$(AndroidDevice)' == ''"></AndroidDevice>
     <AndroidVersion Condition="'$(AndroidVersion)' == ''"></AndroidVersion>
+    <!-- AndroidDeviceId: Specific emulator/device UDID (e.g., "emulator-5554") -->
+    <AndroidDeviceId Condition="'$(AndroidDeviceId)' == ''"></AndroidDeviceId>
+    <!-- AndroidApiLevel: Expected API level for validation (e.g., "23", "36") -->
+    <AndroidApiLevel Condition="'$(AndroidApiLevel)' == ''"></AndroidApiLevel>
   </PropertyGroup>
 
   <ItemGroup>
@@ -54,6 +58,8 @@
     <RuntimeHostConfigurationOption Include="iOSVersion" Value="$(iOSVersion)" />
     <RuntimeHostConfigurationOption Include="AndroidDevice" Value="$(AndroidDevice)" />
     <RuntimeHostConfigurationOption Include="AndroidVersion" Value="$(AndroidVersion)" />
+    <RuntimeHostConfigurationOption Include="AndroidDeviceId" Value="$(AndroidDeviceId)" />
+    <RuntimeHostConfigurationOption Include="AndroidApiLevel" Value="$(AndroidApiLevel)" />
   </ItemGroup>
 
   <!-- Error if versions not specified -->

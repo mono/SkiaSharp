@@ -17,7 +17,7 @@ appium driver install mac2 uiautomator2 xcuitest
 ```bash
 cd tests/SkiaSharp.Tests.Integration
 dotnet build -p:SkiaSharpVersion=X.Y.Z -p:HarfBuzzSharpVersion=X.Y.Z.N
-pwsh bin/Debug/net9.0/playwright.ps1 install chromium
+pwsh bin/Debug/net8.0/playwright.ps1 install chromium
 ```
 
 ### macOS Additional
@@ -69,9 +69,14 @@ For API 36+, use `google_apis_playstore` instead of `google_apis`.
 
 ### Starting Emulators
 
-1. Start: `emulator -avd {name} -no-snapshot -no-audio &`
+⚠️ **CRITICAL:** Always use `-wipe-data` to ensure a clean emulator state.
+
+1. Start with wipe: `emulator -avd {name} -wipe-data -no-snapshot -no-audio`
 2. Wait for boot: poll `adb shell getprop sys.boot_completed` until it returns `1`
-3. Verify version: `adb shell getprop ro.build.version.sdk`
+   - Fresh wipe takes **60-120 seconds** to boot (vs 15-30s without wipe)
+3. Verify API level: `adb shell getprop ro.build.version.sdk`
+
+**Note:** If `emulator` or `adb` are not in PATH, locate them via the SDK path documented above (e.g., `$ANDROID_HOME/emulator/emulator`).
 
 ---
 
