@@ -215,6 +215,15 @@ namespace SkiaSharp.Views.WPF
 		public void Dispose()
         {
             Dispose(true);
+
+#if NET6_0_OR_GREATER
+			base.Dispose();
+#else
+			// Older version of OpenTK do not implement IDisposable
+			// And there is also a possible memory leak in the base class
+			// https://github.com/opentk/GLWpfControl/issues/126
+			// ToDo: Update OpenTK? manually dispose the base class?
+#endif
 		}
 	}
 
