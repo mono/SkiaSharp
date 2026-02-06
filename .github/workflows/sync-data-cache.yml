@@ -31,6 +31,10 @@ on:
         description: 'Items per engagement checkpoint'
         type: number
         default: 100
+      page_count:
+        description: 'Pages per items checkpoint (100 items/page)'
+        type: number
+        default: 5
 
 concurrency:
   group: data-cache-sync
@@ -118,35 +122,61 @@ jobs:
             done
           fi
 
-      # GitHub items (Layer 1)
-      - name: Sync GitHub items
+      # GitHub items (Layer 1 - checkpoint loop)
+      - name: Sync GitHub items (checkpoint loop)
         if: inputs.source != 'nuget'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
-          dotnet run --project src/SkiaSharp.Collector -- sync github \
-            --repo mono/SkiaSharp \
-            --cache-path .data-cache \
-            --items-only \
-            $FULL_FLAG
-
-      - name: Push GitHub items
-        if: inputs.source != 'nuget'
-        working-directory: .data-cache
-        run: |
-          git add -A
-          if git diff --staged --quiet; then
-            echo "No GitHub item changes to commit"
-          else
-            git commit -m "Sync: SkiaSharp GitHub items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            for i in 1 2 3 4 5; do
-              git push && break
-              echo "Push failed, rebasing (attempt $i)..."
-              git pull --rebase
-              sleep $((i * 2))
-            done
-          fi
+          PAGE_COUNT="${{ inputs.page_count || '5' }}"
+          BATCH=1
+          
+          while true; do
+            echo ""
+            echo "========================================"
+            echo "  SkiaSharp Items checkpoint $BATCH"
+            echo "========================================"
+            
+            set +e
+            dotnet run --project src/SkiaSharp.Collector -- sync github \
+              --repo mono/SkiaSharp \
+              --cache-path .data-cache \
+              --items-only \
+              --page-count $PAGE_COUNT \
+              $FULL_FLAG
+            EXIT_CODE=$?
+            set -e
+            
+            if [ $EXIT_CODE -eq 2 ]; then
+              echo "All items synced!"
+              break
+            fi
+            
+            cd .data-cache
+            git add -A
+            if git diff --staged --quiet; then
+              echo "No changes - done!"
+              cd ..
+              break
+            else
+              git commit -m "Sync: SkiaSharp items checkpoint $BATCH $(date -u +%H:%M)"
+              for i in 1 2 3 4 5; do
+                git push && break
+                echo "Push failed, rebasing (attempt $i)..."
+                git pull --rebase
+                sleep $((i * 2))
+              done
+            fi
+            cd ..
+            
+            if [ $EXIT_CODE -eq 1 ]; then
+              echo "Rate limit hit - will resume next run"
+              break
+            fi
+            
+            BATCH=$((BATCH + 1))
+          done
 
       # GitHub engagement (Layer 2 - checkpoint loop)
       - name: Sync GitHub engagement (checkpoint loop)
@@ -280,34 +310,55 @@ jobs:
             done
           fi
 
-      # GitHub items
+      # GitHub items (checkpoint loop - Extended is small so usually completes in 1 batch)
       - name: Sync GitHub items
         if: inputs.source != 'nuget'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           FULL_FLAG="${{ inputs.full == true && '--full' || '' }}"
-          dotnet run --project src/SkiaSharp.Collector -- sync github \
-            --repo mono/SkiaSharp.Extended \
-            --cache-path .data-cache \
-            --items-only \
-            $FULL_FLAG
-
-      - name: Push GitHub items
-        if: inputs.source != 'nuget'
-        working-directory: .data-cache
-        run: |
-          git add -A
-          if git diff --staged --quiet; then
-            echo "No changes"
-          else
-            git commit -m "Sync: Extended GitHub items $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-            for i in 1 2 3 4 5; do
-              git push && break
-              git pull --rebase
-              sleep $((i * 2))
-            done
-          fi
+          PAGE_COUNT="${{ inputs.page_count || '5' }}"
+          BATCH=1
+          
+          while true; do
+            echo "Extended items checkpoint $BATCH"
+            
+            set +e
+            dotnet run --project src/SkiaSharp.Collector -- sync github \
+              --repo mono/SkiaSharp.Extended \
+              --cache-path .data-cache \
+              --items-only \
+              --page-count $PAGE_COUNT \
+              $FULL_FLAG
+            EXIT_CODE=$?
+            set -e
+            
+            if [ $EXIT_CODE -eq 2 ]; then
+              echo "All done!"
+              break
+            fi
+            
+            cd .data-cache
+            git add -A
+            if git diff --staged --quiet; then
+              cd ..
+              break
+            else
+              git commit -m "Sync: Extended items $BATCH $(date -u +%H:%M)"
+              for i in 1 2 3 4 5; do
+                git push && break
+                git pull --rebase
+                sleep $((i * 2))
+              done
+            fi
+            cd ..
+            
+            if [ $EXIT_CODE -eq 1 ]; then
+              break
+            fi
+            
+            BATCH=$((BATCH + 1))
+          done
 
       # GitHub engagement (checkpoint loop - Extended is small, should finish quickly)
       - name: Sync GitHub engagement

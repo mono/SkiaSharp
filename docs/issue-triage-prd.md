@@ -104,45 +104,21 @@ What does a "healthy" issue tracker look like?
 
 ## Issue Type Classification
 
-The first step is classifying every issue into one of these types:
+The first step is classifying every issue into one of 5 types. Each type maps to a GitHub label.
 
-### 1. 📚 Docs / Sample Needed
-**Description:** User is confused or needs an example, not reporting a bug.
+### GitHub Labels
 
-**Signals:**
-- "How do I...", "Example of...", "Tutorial for..."
-- "What's the correct way to..."
-- "I don't understand..."
-- No error/crash, just confusion
-
-**Action:** 
-- AI generates documentation or sample code
-- Post as comment, link to docs if applicable
-- Close issue with "Resolved with documentation"
-
-**Why AI is perfect:** AI can write docs and samples quickly and well. This is a huge time saver.
+| Label | Color | Description |
+|-------|-------|-------------|
+| `type/bug` | 🔴 Red | Bugs, crashes, performance, rendering issues |
+| `type/feature-request` | ⚪ Gray | New API, new type, new functionality |
+| `type/enhancement` | 🔵 Blue | Improvement to existing feature or infrastructure |
+| `type/question` | 🟢 Green | Support questions, how-to |
+| `type/documentation` | 🔵 Blue | Documentation or sample needed |
 
 ---
 
-### 2. ❓ Question / Support
-**Description:** User asking for help, not reporting a problem with SkiaSharp itself.
-
-**Signals:**
-- "How do I achieve X effect?"
-- "Best practice for..."
-- "Can SkiaSharp do X?" (capability question)
-- Stack Overflow-style questions
-
-**Action:**
-- Answer the question in a comment
-- Convert to GitHub Discussion (or link to existing)
-- Close issue
-
-**Why this helps:** Questions clutter the issue tracker. Discussions are the right place.
-
----
-
-### 3. 🐛 Bug / Crash / Performance / Rendering
+### 1. 🐛 Bug (`type/bug`)
 **Description:** Something is broken in SkiaSharp code.
 
 **Signals:**
@@ -160,13 +136,14 @@ The first step is classifying every issue into one of these types:
 
 ---
 
-### 4. ✨ Feature Request
+### 2. ✨ Feature Request (`type/feature-request`)
 **Description:** User wants new functionality that doesn't exist.
 
 **Signals:**
 - "It would be nice if..."
 - "Feature request:"
 - "Can you add support for..."
+- New API, new type, new platform support
 - Proposals, RFCs
 
 **Action:**
@@ -178,8 +155,75 @@ The first step is classifying every issue into one of these types:
 
 ---
 
-### 5. 🔄 Already Fixed
-**Description:** Issue was fixed in a newer version but not closed.
+### 3. 🔧 Enhancement (`type/enhancement`)
+**Description:** Improvement to existing functionality or infrastructure.
+
+**Signals:**
+- "Could X be faster/better/easier?"
+- "Make X poolable/reusable"
+- "Better error messages for..."
+- Performance improvements to existing APIs
+- Developer experience improvements
+
+**Action:**
+- Keep in backlog
+- Often lower priority than bugs
+- Good for contributors
+
+**Distinction from feature-request:** Enhancement improves what exists; feature-request adds something new.
+
+---
+
+### 4. ❓ Question (`type/question`)
+**Description:** User asking for help, not reporting a problem with SkiaSharp itself.
+
+**Signals:**
+- "How do I achieve X effect?"
+- "Best practice for..."
+- "Can SkiaSharp do X?" (capability question)
+- Stack Overflow-style questions
+
+**Action:**
+- Answer the question in a comment
+- Convert to GitHub Discussion (or link to existing)
+- Close issue
+
+**Why this helps:** Questions clutter the issue tracker. Discussions are the right place.
+
+---
+
+### 5. 📚 Documentation (`type/documentation`)
+**Description:** User is confused or needs an example, not reporting a bug.
+
+**Signals:**
+- "How do I...", "Example of...", "Tutorial for..."
+- "What's the correct way to..."
+- "I don't understand..."
+- No error/crash, just confusion
+- Requests for samples or code examples
+
+**Action:** 
+- AI generates documentation or sample code
+- Post as comment, link to docs if applicable
+- Close issue with "Resolved with documentation"
+
+**Why AI is perfect:** AI can write docs and samples quickly and well. This is a huge time saver.
+
+---
+
+## "Already Fixed" Detection
+
+**Note:** "Already fixed" is not a type - it's a resolution status that can apply to any type (mostly bugs).
+
+Instead of a label, AI populates JSON properties:
+
+```json
+{
+  "number": 1234,
+  "fixed": true,
+  "fixReason": "This was fixed when we merged the Metal backend in #2156"
+}
+```
 
 **Signals:**
 - Old version mentioned, issue not reproducible on latest
@@ -187,28 +231,60 @@ The first step is classifying every issue into one of these types:
 - Comments say "works for me now"
 
 **Action:**
-- AI attempts to verify fix
+- AI attempts to verify fix by checking code/PRs
 - If verified, close with "Fixed in version X"
 
 ---
 
 ## AI-Assisted Triage Workflow
 
+### Output Structure
+
+AI classification is stored in `ai-triage.json`:
+
+```json
+{
+  "1234": {
+    "type": "documentation",
+    "confidence": 0.92,
+    "reason": "User asks 'How do I draw rounded rectangles?' - needs sample code",
+    "fixed": false,
+    "fixReason": null
+  },
+  "5678": {
+    "type": "bug",
+    "confidence": 0.88,
+    "reason": "Stack trace present, reports crash on Android when disposing SKCanvasView",
+    "fixed": false,
+    "fixReason": null
+  },
+  "9012": {
+    "type": "bug",
+    "confidence": 0.75,
+    "reason": "Reports rendering issue with gradients on iOS",
+    "fixed": true,
+    "fixReason": "Likely fixed in SkiaSharp 3.0 when we upgraded Skia - gradient rendering was rewritten"
+  }
+}
+```
+
+**Type values:** `bug` | `feature-request` | `enhancement` | `question` | `documentation`
+
 ### Phase 1: Classify All Issues
 
-AI reads each issue's title + body and classifies:
+AI reads each issue's title + body + comments and classifies:
 
 ```
 Issue #1234: "How do I draw rounded rectangles?"
-→ Type: Docs/Sample Needed
-→ Confidence: 95%
+→ Type: documentation
+→ Confidence: 92%
 → Suggested Action: Generate sample code for rounded rectangles
 ```
 
 ```
 Issue #5678: "App crashes on Android when disposing SKCanvasView"
-→ Type: Bug
-→ Confidence: 90%
+→ Type: bug
+→ Confidence: 88%
 → Has Stack Trace: Yes
 → Has Repro: Yes
 → Platforms: Android
@@ -216,7 +292,7 @@ Issue #5678: "App crashes on Android when disposing SKCanvasView"
 
 ### Phase 2: Auto-Generate Content (Docs/Samples)
 
-For "Docs/Sample Needed" issues:
+For `type/documentation` issues:
 
 1. AI reads the issue to understand what user wants
 2. AI generates:

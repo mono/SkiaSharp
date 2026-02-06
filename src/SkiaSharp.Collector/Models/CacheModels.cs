@@ -31,7 +31,11 @@ public record LayerStatus(
     string? Status,
     DateTime? LastSync,
     int ItemsProcessed,
-    int ItemsTotal
+    int ItemsTotal,
+    // Checkpoint tracking for resumable sync
+    int? LastPageSynced = null,
+    DateTime? SyncStartedAt = null,
+    bool? SyncComplete = null
 );
 
 public record EngagementLayerStatus(

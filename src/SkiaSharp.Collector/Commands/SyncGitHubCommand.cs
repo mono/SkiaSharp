@@ -60,13 +60,14 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var itemsProcessed = 0;
         var engagementProcessed = 0;
         var rateLimitHit = false;
+        var itemsComplete = false;
 
         try
         {
             // Layer 1: Basic item data
             if (!settings.EngagementOnly)
             {
-                (index, syncMeta, itemsProcessed) = await SyncLayer1Async(
+                (index, syncMeta, itemsProcessed, itemsComplete) = await SyncLayer1Async(
                     apiClient, cache, index, syncMeta, settings);
             }
 
@@ -83,6 +84,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         {
             AnsiConsole.MarkupLine("[yellow]Rate limit exceeded. Progress saved.[/]");
             syncMeta = syncMeta with { LastRunStatus = "rate_limited" };
+            rateLimitHit = true;
         }
         catch (Exception ex)
         {
@@ -113,17 +115,19 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         }
 
         // Exit codes:
-        // 0 = work done successfully
+        // 0 = work done successfully (or items batch complete, more pages to fetch)
         // 1 = rate limit hit (more work to do)
-        // 2 = nothing to sync (all engagement up to date) - signals "all done"
+        // 2 = nothing to sync (items-only complete OR all engagement up to date)
         if (rateLimitHit)
             return 1;
+        if (settings.ItemsOnly && itemsComplete)
+            return 2; // All items synced
         if (settings.EngagementOnly && engagementProcessed == 0)
             return 2; // All engagement synced, nothing more to do
         return 0;
     }
 
-    private async Task<(CacheIndex, SyncMeta, int)> SyncLayer1Async(
+    private async Task<(CacheIndex, SyncMeta, int, bool)> SyncLayer1Async(
         GitHubClient client,
         CacheService cache,
         CacheIndex index,
@@ -153,30 +157,68 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (settings.Verbose)
             AnsiConsole.MarkupLine($"  [dim]Saved repo stats: {repoStats.Stars:N0} stars, {repoStats.Forks:N0} forks[/]");
         
-        var since = settings.FullRefresh ? null : meta.Layers.Items.LastSync;
+        // Determine if we're resuming a previous sync
+        var now = DateTime.UtcNow;
+        var resuming = false;
+        var startPage = 1;
+        
+        // Check if there's a recent incomplete sync to resume
+        if (meta.Layers.Items.SyncStartedAt != null && 
+            meta.Layers.Items.SyncComplete != true &&
+            meta.Layers.Items.LastPageSynced != null &&
+            (now - meta.Layers.Items.SyncStartedAt.Value).TotalHours < 2) // Resume if within 2 hours
+        {
+            startPage = meta.Layers.Items.LastPageSynced.Value + 1;
+            resuming = true;
+            if (!settings.Quiet)
+                AnsiConsole.MarkupLine($"[blue]  Resuming from page {startPage} (checkpoint from {meta.Layers.Items.SyncStartedAt:HH:mm})[/]");
+        }
+        else if (settings.FullRefresh || meta.Layers.Items.LastSync == null)
+        {
+            // Starting fresh - reset checkpoint tracking
+            meta = meta with
+            {
+                Layers = meta.Layers with
+                {
+                    Items = meta.Layers.Items with
+                    {
+                        SyncStartedAt = now,
+                        LastPageSynced = null,
+                        SyncComplete = false
+                    }
+                }
+            };
+        }
+        
+        var since = (settings.FullRefresh || resuming) ? null : meta.Layers.Items.LastSync;
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
-        var page = 1;
+        var page = startPage;
+        var pagesProcessed = 0;
+        var maxPages = settings.PageCount > 0 ? settings.PageCount : int.MaxValue;
         var startTime = DateTime.UtcNow;
         var pageTimes = new Queue<double>(); // Rolling average for ETA
+        var rateLimitHit = false;
+        var allDone = false;
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Dots)
             .StartAsync("Fetching items...", async ctx =>
             {
-                while (true)
+                while (pagesProcessed < maxPages)
                 {
                     var pageStart = DateTime.UtcNow;
                     var pct = totalCount > 0 ? (processed * 100 / totalCount) : 0;
                     var eta = GetEta(pageTimes, totalCount - processed, 100); // 100 items per page
                     
-                    ctx.Status($"Fetching... {pct}% ({processed:N0}/{totalCount:N0}){eta}");
+                    ctx.Status($"Fetching page {page}... {pct}% ({processed:N0}/{totalCount:N0}){eta}");
                     
                     // Check rate limit
                     var rateLimit = await client.RateLimit.GetRateLimits();
                     if (rateLimit.Resources.Core.Remaining < RateLimitThreshold)
                     {
                         AnsiConsole.MarkupLine($"[yellow]Rate limit low. Stopping at page {page}.[/]");
+                        rateLimitHit = true;
                         break;
                     }
 
@@ -193,7 +235,10 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         new ApiOptions { PageSize = 100, PageCount = 1, StartPage = page });
 
                     if (issues.Count == 0)
+                    {
+                        allDone = true;
                         break;
+                    }
 
                     foreach (var issue in issues)
                     {
@@ -220,6 +265,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     pageTimes.Enqueue(pageTime);
                     if (pageTimes.Count > 5) pageTimes.Dequeue(); // Rolling avg of last 5
 
+                    pagesProcessed++;
                     page++;
                     await Task.Delay(100); // Small delay between pages
                 }
@@ -238,18 +284,26 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             Layers = meta.Layers with 
             {
                 Items = new LayerStatus(
-                    "success",
-                    DateTime.UtcNow,
+                    allDone ? "success" : (rateLimitHit ? "rate_limited" : "in_progress"),
+                    allDone ? DateTime.UtcNow : meta.Layers.Items.LastSync,
                     processed,
-                    index.Items.Count
+                    index.Items.Count,
+                    page - 1, // Last page we completed
+                    meta.Layers.Items.SyncStartedAt ?? now,
+                    allDone
                 )
             }
         };
 
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine($"[green]  ✓ {processed:N0} items synced in {FormatTime(elapsed)}[/]");
+        {
+            if (allDone)
+                AnsiConsole.MarkupLine($"[green]  ✓ {processed:N0} items synced in {FormatTime(elapsed)} (complete)[/]");
+            else
+                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (checkpoint at page {page - 1})[/]");
+        }
 
-        return (index, meta, processed);
+        return (index, meta, processed, allDone);
     }
 
     private async Task<(CacheIndex, SyncMeta, int, bool)> SyncLayer2Async(

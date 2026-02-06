@@ -60,6 +60,11 @@ public class SyncGitHubSettings : SyncSettings
     [DefaultValue(100)]
     public int EngagementCount { get; set; } = 100;
 
+    [CommandOption("--page-count <COUNT>")]
+    [Description("Number of pages to sync for items per batch (100 items per page)")]
+    [DefaultValue(0)]
+    public int PageCount { get; set; } = 0; // 0 = unlimited
+
     [CommandOption("--full")]
     [Description("Force full refresh, ignore timestamps")]
     public bool FullRefresh { get; set; }
