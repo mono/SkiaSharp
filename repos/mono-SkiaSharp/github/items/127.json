@@ -14,5 +14,52 @@
   "updatedAt": "2022-08-20T00:02:26",
   "closedAt": "2016-11-10T02:14:11",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:30.4378443Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 237181867,
+        "author": "gentledepp",
+        "body": "Update:\n\nI replaced the current implementation with the following \n\n\u0060\u0060\u0060\n     public virtual SKBitmap CreateImageFromStream(Stream stream)\n     {\n        using (var s = new SKManagedStream(stream))\n        {\n            var bm = SKBitmap.Decode(s);\n            return bm;\n        }\n     }\n\u0060\u0060\u0060\n\n... which is much more elegant and works just fine.\nNevertheless, my first approach should not have caused a SIVSEGV, right?\n",
+        "createdAt": "2016-08-03T08:57:08",
+        "reactions": []
+      },
+      {
+        "id": 251125573,
+        "author": "zone117x",
+        "body": "@mattleibow Could you post a quick update on the status of this feature? Thanks again for working on this!\n",
+        "createdAt": "2016-10-03T14:46:47",
+        "reactions": []
+      },
+      {
+        "id": 251178148,
+        "author": "mattleibow",
+        "body": "Hi @zone117x. Thanks for the interest. I have not had a look at this yet, especially since there was a \u0022workaround\u0022. Are you having this issue too? If at all possible, can you attach a test/repro case so I can investigate.\n",
+        "createdAt": "2016-10-03T17:59:52",
+        "reactions": []
+      },
+      {
+        "id": 259583921,
+        "author": "mattleibow",
+        "body": "I am closing this as I can\u0027t reproduce this issue. It may have been fixed some time ago, indirectly. \n\nThis issue can be re-opened if it occurs again.\n",
+        "createdAt": "2016-11-10T02:14:10",
+        "reactions": []
+      },
+      {
+        "id": 259656069,
+        "author": "gentledepp",
+        "body": "Makes sense! You\u0027re doing great work by the way! \uD83D\uDC4D \n",
+        "createdAt": "2016-11-10T10:32:16",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:30.3876347Z"
+          }
+        ]
+      }
+    ]
+  }
 }

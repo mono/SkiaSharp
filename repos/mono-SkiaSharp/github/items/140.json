@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-20T00:02:13",
   "closedAt": "2016-08-19T15:45:06",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:02.4262751Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 240924753,
+        "author": "mattleibow",
+        "body": "@roceh Thanks for reporting this. It appears to be a Skia bug, since Chrome can\u0027t even load the images. I have [asked on the forums](https://groups.google.com/forum/#!topic/skia-discuss/nbRQI7pfqbw), and we might have to wait for a fix.\n\nAs soon as I know, I will update this issue. I can\u0027t \u0022roll back\u0022 since the old way of loading has been totally removed from the code. It used to use \u0060SKImageDecoder\u0060, but that was replaced with a supposedly better \u0060SKCodec\u0060.\n",
+        "createdAt": "2016-08-19T04:25:37",
+        "reactions": []
+      },
+      {
+        "id": 240943760,
+        "author": "rocuh",
+        "body": "Reading a little more I think the optimizations make the png non standard, but I think the android build process does similar things so that\u0027s probably why it worked at all in the past.\n\nI found this somewhat old article on what happens:\nhttp://iphonedevelopment.blogspot.co.uk/2008/10/iphone-optimized-pngs.html\n",
+        "createdAt": "2016-08-19T07:02:08",
+        "reactions": []
+      },
+      {
+        "id": 241054758,
+        "author": "mattleibow",
+        "body": "@roceh From Google:\n\n\u003E The file that you\u0027ve labeled as compressed.png is an \u0022Apple optimized png\u0022.  It\u0027s a proprietary png format only supported by iOS.  We don\u0027t have plans to support this - Chrome and Firefox also don\u0027t support it.\n\u003E \n\u003E A few major differences between \u0022Apple optimized png\u0022 and regular png is that Apple pngs are stored BGRA (instead of RGBA) and are premultiplied.  This is to optimize the speed of decoding/loading of the image on iOS.  As far as I can tell, this doesn\u0027t really have anything to do with compression size.  Are the two images you sent identical (I can\u0027t open compressed.png)?  If so, it\u0027s worth mentioning that compressed.png is actually a larger file.\n\u003E \n\u003E Below is a good resource explaining the iOS png.  And there\u0027s a lot more information out there if you search \u0022Apple optimized png\u0022.\n\u003E http://iphonedevwiki.net/index.php/CgBI_file_format\n\u003E \n\u003E And here\u0027s a guide for how to convert Apple pngs to regular pngs:\n\u003E https://developer.apple.com/library/ios/qa/qa1681/_index.html\n\nI will close this issue on the reason that we can\u0027t do anything until Google does something.\n",
+        "createdAt": "2016-08-19T15:45:06",
+        "reactions": []
+      },
+      {
+        "id": 326024217,
+        "author": "mattleibow",
+        "body": "Just for reference, PNG compression is disabled by:\r\n\r\n - unchecking the \u0022Optimize PNG images\u0022 in the \u0022iOS Build\u0022 section of the project options\r\n - unchecking the \u0022Optimize\u0022 item in the \u0022iOS Optimizations\u0022 section of the file properties in the IDE\r\n\r\n\u003Cimg width=\u0022300\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/29880011-fdc3fe54-8da6-11e7-8ee9-70d112fee1dd.png\u0022\u003E\r\n\u003Cimg width=\u0022600\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/29880012-fe3192b6-8da6-11e7-8dd1-e38485f90884.png\u0022\u003E\r\n\r\n",
+        "createdAt": "2017-08-30T15:18:56",
+        "reactions": []
+      },
+      {
+        "id": 381392523,
+        "author": "ylatuya",
+        "body": "Hi,\r\nThis just happened to me and I couldn\u0027t  find anything in the docs, it could be nice to have it properly documented in t[he platform specific documentation](https://docs.microsoft.com/en-us/xamarin/graphics-games/skiasharp/platform)",
+        "createdAt": "2018-04-15T09:26:16",
+        "reactions": []
+      }
+    ]
+  }
 }

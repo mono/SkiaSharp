@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-20T00:02:14",
   "closedAt": "2016-08-19T02:29:40",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:00.5618549Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 240911416,
+        "author": "mattleibow",
+        "body": "@mihai-iancu That is correct, the \u0060out\u0060 parameter is the length. The return value is the actual pointer to the image data.\n\nThe bitmap also has several other properties and methods that may be useful:\n- \u0060SKColor[] Pixels { get; set; }\u0060\n- \u0060byte[] Bytes { get; }\u0060\n- \u0060IntPtr GetPixels (out IntPtr)\u0060\n- \u0060SKColor GetPixel (int, int)\u0060\n",
+        "createdAt": "2016-08-19T02:24:55",
+        "reactions": []
+      },
+      {
+        "id": 240912338,
+        "author": "mattleibow",
+        "body": "The \u0060GetPixels\u0060 method and \u0060Bytes\u0060 property return just the image data. In order to make use of the data for saving as image files, \u0060SKImage.FromBitmap\u0060 and then \u0060SKImage.Encode\u0060 needs to be used instead.\n",
+        "createdAt": "2016-08-19T02:32:32",
+        "reactions": []
+      }
+    ]
+  }
 }

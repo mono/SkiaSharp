@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-20T00:02:16",
   "closedAt": "2016-08-17T20:28:56",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:55.0912235Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 240433391,
+        "author": "mattleibow",
+        "body": "@mihai-iancu I may not me doing this right, but I think I can draw the image. Maybe your canvas and the image are the same color?\n\nHere is what I did: created a Alpha8 surface, painted it a light, translucent blue (which is translucent gray) and then draw a black image on it. Seems to work.\n\n\u0060\u0060\u0060 csharp\nusing (var surface = SKSurface.Create(200, 200, SKColorType.Alpha8, SKAlphaType.Premul))\n{\n    var canvas = surface.Canvas;\n\n    // draw a translucent blue, which should translate into translucent black\n    canvas.DrawColor(new SKColor(0, 127, 255, 127));\n\n    int imageWidth = 100;\n    int imageHeight = 100;\n\n    // A black square\n    var imageData = new byte[imageWidth * imageHeight];\n    var imageHandle = GCHandle.Alloc(imageData, GCHandleType.Pinned);\n    var imageDataPtr = Marshal.UnsafeAddrOfPinnedArrayElement(imageData, 0);\n\n    var imageInfo = new SKImageInfo(imageWidth, imageHeight, SKColorType.Gray8, SKAlphaType.Opaque);\n    using (var img = SKImage.FromPixels(imageInfo, imageDataPtr, imageWidth))\n    {\n        canvas.DrawImage(img, new SKRect(0, 0, imageWidth, imageHeight));\n    }\n\n    imageHandle.Free();\n\n    // save the image\n    using (var stream = File.OpenWrite(@\u0022snapshot.png\u0022))\n        surface.Snapshot().Encode().SaveTo(stream);\n}\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-08-17T14:40:53",
+        "reactions": []
+      },
+      {
+        "id": 240447829,
+        "author": "xfiniumpdf-support",
+        "body": "My mistake, my Alpha8 surface was initialized to 255 in my particular situation, so obviously nothing else could be added to it.\nBut in your code above if you add this part (create a pixel checkers board):\n\n\u0060\u0060\u0060\nbyte[] imageData = new byte[imageWidth * imageHeight]; \nfor (int i = 0; i \u003C imageData.Length; i\u002B\u002B)\n{\n    imageData[i] = (byte)i;\n}\n\n\u0060\u0060\u0060\n\nThe output will still be a solid black square. Is there something that I\u0027m missing?\n",
+        "createdAt": "2016-08-17T15:24:49",
+        "reactions": []
+      },
+      {
+        "id": 240470681,
+        "author": "mattleibow",
+        "body": "@mihai-iancu I had a look and this is expected. The surface is a set of alpha values (0-255) and no color. The image is a set of gray values (0-255) with no alpha. The image has no alpha, or rather an alpha of opaque (255). Thus when you draw that image onto the surface, it just draws the alpha component - a solid block. \n\nYou can test this by changing the surface to a RGB version and then the image will be a solid block of some set of gray. If you set the image to be Alpha8, then it draws what you expect.\n",
+        "createdAt": "2016-08-17T16:38:18",
+        "reactions": []
+      }
+    ]
+  }
 }

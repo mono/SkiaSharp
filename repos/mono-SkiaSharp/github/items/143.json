@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-20T00:02:10",
   "closedAt": "2016-08-23T23:46:23",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:06.7571685Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 241917438,
+        "author": "mattleibow",
+        "body": "Hi @ollira, thanks for taking the time to report this.\nI have resolved the issue, which was us trying to marshal a uint32 from C\u002B\u002B as a struct in C#.\n",
+        "createdAt": "2016-08-23T23:49:01",
+        "reactions": []
+      },
+      {
+        "id": 305561760,
+        "author": "leonardors",
+        "body": "I am having the same problem with version 1.5.8, on simulator and device.\r\n\r\nvar paint = new SKPaint();\r\nvar color = SKColor.Parse(\u0022#ff0000\u0022);\r\n\r\nSystem.Diagnostics.Debug.WriteLine(\u0022CurrentColor: {0}\u0022, paint.Color);\r\nSystem.Diagnostics.Debug.WriteLine(\u0022NewColor: {0}\u0022, color);\r\npaint.Color = color;\r\nSystem.Diagnostics.Debug.WriteLine(\u0022Result: {0}\u0022, paint.Color);\r\n\r\nResult:\r\nCurrentColor: #8ef0eee8\r\nNewColor: #ffff0000\r\nResult: #955dfae4\r\n\r\n\r\n",
+        "createdAt": "2017-06-01T17:21:42",
+        "reactions": []
+      },
+      {
+        "id": 305651535,
+        "author": "mattleibow",
+        "body": "This was fixed again in #284 \r\nThis seemed to have been overwritten in another commit 3 months ago.",
+        "createdAt": "2017-06-01T23:52:40",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,59 @@
   "updatedAt": "2022-08-20T06:01:47",
   "closedAt": "2017-02-28T23:47:47",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:34.5127748Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 197182546,
+        "author": "pauldendulk",
+        "body": "Simply select one of the alternative profiles from the compile targets dropdown, like \u0027Debug|x86\u0027. Perhaps the \u0027Release\u0027 and \u0027Debug\u0027 targets could be removed.\n",
+        "createdAt": "2016-03-16T06:47:55",
+        "reactions": []
+      },
+      {
+        "id": 212933431,
+        "author": "KvanTTT",
+        "body": "Adding new Platform x64 in Configuration Manager solved my same issue.\n",
+        "createdAt": "2016-04-21T14:01:03",
+        "reactions": []
+      },
+      {
+        "id": 278071341,
+        "author": "tdoneal",
+        "body": "I mean, why doesn\u0027t it just default to whatever the compiler is using if not specified?  Or at minimum, it should default to  x86...",
+        "createdAt": "2017-02-07T17:18:30",
+        "reactions": []
+      },
+      {
+        "id": 278073828,
+        "author": "mattleibow",
+        "body": "This is related to #190 \r\n\r\nThe latest changes make a choice to use the native bits that the platform specifies (and just copies both for AnyCPU), but at an app level, the platform needs to be specified.\r\n\r\nOn your point of picking the default (aka, pick x86 or x64), we might be able to do something like that... I am just preparing to release the next version, but maybe I can fit this in:\r\n\r\nHow does adding a MSBuild property in the csproj sound? So, we can still target AnyCPU, but if there is something like this:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003COverrideSkiaSharpPlatform\u003Ex86\u003C/OverrideSkiaSharpPlatform\u003E\r\n\u0060\u0060\u0060\r\n\r\nthen, instead of copying both platforms to the output location, it just pretends it is an x86 app?",
+        "createdAt": "2017-02-07T17:26:08",
+        "reactions": []
+      },
+      {
+        "id": 278358412,
+        "author": "tdoneal",
+        "body": "I don\u0027t understand MSBuild at all, so I won\u0027t comment there.  I would just say it\u0027s worth it to not have to google an error message and waste time fixing configuration issues.  So whatever makes it \u0022just work\u0022 is likely best (in my humble opinion).",
+        "createdAt": "2017-02-08T15:22:58",
+        "reactions": []
+      },
+      {
+        "id": 283198667,
+        "author": "mattleibow",
+        "body": "Closing this as I have added logic to try and detect the correct libraries to copy with AnyCPU.",
+        "createdAt": "2017-02-28T23:47:47",
+        "reactions": [
+          {
+            "user": "KvanTTT",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:51:34.46248Z"
+          }
+        ]
+      }
+    ]
+  }
 }

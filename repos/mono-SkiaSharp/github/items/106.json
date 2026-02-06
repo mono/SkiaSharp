@@ -14,5 +14,172 @@
   "updatedAt": "2022-08-20T00:02:41",
   "closedAt": "2016-07-18T19:08:56",
   "commentCount": 18,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:00.520689Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 230695551,
+        "author": "gentledepp",
+        "body": "by looking a bit into it as no-one is answering, the only real problem seems to be\n\n\u003E ../../../../src/c/xamarin/sk_x_path.cpp -o obj/src/c/xamarin/core.sk_x_path.o\n\u003E ../../../../src/c/xamarin/sk_x_path.cpp:94:38: error: comparison between \u0027enum SkPath::Verb\u0027 and \u0027enum sk_path_verb_t\u0027 [-Werror=enum-compare]\n\u003E  static_assert (SkPath::kMove_Verb == MOVE_PATH_VERB, \u0022ABI changed, you must write a enumeration mapper for SkPath::Verb to sk_path_verb_t\u0022);\n\nBut I neither know how to fix it, nor where...\n",
+        "createdAt": "2016-07-06T07:10:55",
+        "reactions": []
+      },
+      {
+        "id": 230725106,
+        "author": "hypeartist",
+        "body": "2 **gentledepp**\n\n\u003E skia/src/c/xamarin/sk_x_path.cpp\n\nSimply comment out lines from 93 to 101 (there are nothing extra important - just assertions)\n",
+        "createdAt": "2016-07-06T09:37:13",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:56.5029326Z"
+          }
+        ]
+      },
+      {
+        "id": 230728654,
+        "author": "gentledepp",
+        "body": "Thank you @hypeartist, but unfortunately this only yields other similar errors.\nI guess this is because the build runs with the option \u0022treat warnings as errors\u0022\n\nI would much rather run the build without \u0022warnings as errors\u0022 instead of modifying skia code...\nCan you give me a hint how I could to that?\n",
+        "createdAt": "2016-07-06T09:53:19",
+        "reactions": []
+      },
+      {
+        "id": 230731771,
+        "author": "hypeartist",
+        "body": "2 **gentledepp**\n\n\u003E native-builds/libSkiaSharp_android/jni/SkiaSharp.mk\n\nAt line 35 try to remove \u0060-Werror\u0060 switch\n",
+        "createdAt": "2016-07-06T10:07:42",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:52:56.9446786Z"
+          },
+          {
+            "user": "gentledepp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:56.9446789Z"
+          }
+        ]
+      },
+      {
+        "id": 230733961,
+        "author": "gentledepp",
+        "body": "Thank you so much! I tried it and it did not work either.\nSo I switched back to your first proposal *commenting out the static asserts\nand in the same file,\n\n\u003E skia/src/c/xamarin/sk_x_path.cpp\n\u003E  commented out the lines 127... 130 like so\n\n\u0060\n//#if __cplusplus \u003E= 199711L\n//static_assert (SkPath::kAppend_AddPathMode == APPEND_ADD_MODE, \u0022ABI changed, you must write a enumeration mapper for SkPath::AddPathMode to sk_path_add_mode_t\u0022);\n//static_assert (SkPath::kExtend_AddPathMode == EXTEND_ADD_MODE, \u0022ABI changed, you must write a enumeration mapper for SkPath::AddPathMode to sk_path_add_mode_t\u0022);\n//#endif\n\nnot the build seems to work\n\nThank you so much! \n",
+        "createdAt": "2016-07-06T10:18:55",
+        "reactions": []
+      },
+      {
+        "id": 230747808,
+        "author": "gentledepp",
+        "body": "Oh man... there is still a problem, whereby a different one.\n\n\u003E Executing: /Users/xammac/SkiaSharp/skia/platform_tools/android/bin/android_ninja -d x86 skia_lib pdf sfntly icuuc\n\u003E GYP_GENERATORS is \u0022ninja-android\u0022\n\u003E Updating projects from gyp files...\n\u003E ninja: Entering directory \u0060/Users/xammac/SkiaSharp/skia/out/config/android-x86/Release\u0027\n\u003E [3/3] SOLINK lib/libskia_android.so\n\u003E Executing: /Users/xammac/SkiaSharp/skia/platform_tools/android/bin/android_ninja -d x86_64 skia_lib pdf sfntly icuuc\n\u003E GYP_GENERATORS is \u0022ninja-android\u0022\n\u003E Updating projects from gyp files...\n\u003E ninja: Entering directory\u0060/Users/xammac/SkiaSharp/skia/out/config/android-x86_64/Release\u0027\n\u003E [3/3] SOLINK lib/libskia_android.so\n\u003E Executing: /Users/xammac/SkiaSharp/skia/platform_tools/android/bin/android_ninja -d arm skia_lib pdf sfntly icuuc\n\u003E GYP_GENERATORS is \u0022ninja-android\u0022\n\u003E Updating projects from gyp files...\n\u003E ninja: Entering directory \u0060/Users/xammac/SkiaSharp/skia/out/config/android-arm/Release\u0027\n\u003E [3/3] SOLINK lib/libskia_android.so\n\u003E Executing: /Users/xammac/SkiaSharp/skia/platform_tools/android/bin/android_ninja -d arm_v7_neon skia_lib pdf sfntly icuuc\n\u003E GYP_GENERATORS is \u0022ninja-android\u0022\n\u003E Updating projects from gyp files...\n\u003E ninja: Entering directory\u0060/Users/xammac/SkiaSharp/skia/out/config/android-arm_v7_neon/Release\u0027\n\u003E [3/3] SOLINK lib/libskia_android.so\n\u003E Executing: /Users/xammac/SkiaSharp/skia/platform_tools/android/bin/android_ninja -d arm64 skia_lib pdf sfntly icuuc\n\u003E GYP_GENERATORS is \u0022ninja-android\u0022\n\u003E Updating projects from gyp files...\n\u003E ninja: Entering directory \u0060/Users/xammac/SkiaSharp/skia/out/config/android-arm64/Release\u0027\n\u003E [3/3] SOLINK lib/libskia_android.so\n\u003E Executing: /Users/xammac/Library/Developer/Xamarin/android-ndk/ndk-build \n\u003E An error occured when executing task \u0027externals-android\u0027.\n\u003E Error: System.ComponentModel.Win32Exception: ApplicationName=\u0027/Users/xammac/Library/Developer/Xamarin/android-ndk/ndk-build\u0027, CommandLine=\u0027\u0027, CurrentDirectory=\u0027/Users/xammac/SkiaSharp/native-builds/libSkiaSharp_android\u0027, Native error= Cannot find the specified file\n\u003E   at System.Diagnostics.Process.Start_noshell (System.Diagnostics.ProcessStartInfo startInfo, System.Diagnostics.Process process) \u003C0x39af1e8 \u002B 0x0055f\u003E in \u003Cfilename unknown\u003E:0 \n\nso during the libsSkiaSharp_android ndk-build, it cannot find some ?? file, but does not tell me which one.\nI guess it misses some SDK?\nI installed\nxamarin, python 2.7.x, Xcode and git\nam I missing something?\n",
+        "createdAt": "2016-07-06T11:36:01",
+        "reactions": []
+      },
+      {
+        "id": 230759906,
+        "author": "hypeartist",
+        "body": "2 **gentledepp**\n\nTake a look:\n\n[externals-android](https://github.com/search?q=org%3Axamarin\u002Bexternals-android\u0026type=Code)\n",
+        "createdAt": "2016-07-06T12:42:24",
+        "reactions": []
+      },
+      {
+        "id": 230775050,
+        "author": "gentledepp",
+        "body": "I guess you mean\nhttps://github.com/mono/SkiaSharp/blob/master/build.cake\n;-)\n",
+        "createdAt": "2016-07-06T13:43:58",
+        "reactions": []
+      },
+      {
+        "id": 230777170,
+        "author": "hypeartist",
+        "body": "2 **gentledepp**\n\nyep! \n",
+        "createdAt": "2016-07-06T13:51:03",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:52:58.3281625Z"
+          }
+        ]
+      },
+      {
+        "id": 230778134,
+        "author": "gentledepp",
+        "body": "seems I was missing ninja build system.... veeeeery interesting stuff.... never heard of it\n\nnow I ran the skia build first - as the \u0022libs\u0022 folder mentioned in the build.cake of SkiaSharp does not exist on my system.\n\nBut the command\n\n\u003E ninja -C out/Debug dm\n\u003E out/Debug/dm\n\nyields another 2 errors....\nI\u0027m fed up. Thank you for helping me out, but this is too tedious for me to continue. I guess SkiaSharp is still pretty Alpha-ish :-|\n",
+        "createdAt": "2016-07-06T13:54:39",
+        "reactions": []
+      },
+      {
+        "id": 230790331,
+        "author": "migueldeicaza",
+        "body": "I pushed a fix that should address the static_assert errors.\n",
+        "createdAt": "2016-07-06T14:32:35",
+        "reactions": []
+      },
+      {
+        "id": 230797855,
+        "author": "hypeartist",
+        "body": "2 **gentledepp** \n\n\u003E I\u0027m fed up. Thank you for helping me out, but this is too tedious for me to continue.\n\nTotally agreed! Tried to build it on Windows with no success. That incredible building system (with all those cakes, cmakes, ninjas, pythons and pwershells mixed up in some voodoo way) just blew my head off.\n",
+        "createdAt": "2016-07-06T14:55:16",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "confused",
+            "createdAt": "2026-02-06T13:52:59.0432658Z"
+          }
+        ]
+      },
+      {
+        "id": 230815690,
+        "author": "gentledepp",
+        "body": "well... interestingly it worked out-of-the box on my windows machine :dancer: \n",
+        "createdAt": "2016-07-06T15:52:09",
+        "reactions": []
+      },
+      {
+        "id": 233427431,
+        "author": "mattleibow",
+        "body": "I am closing this as the fix/commit seems to have removed all the kinks. It builds fine for me with m49/m52 as well as locally and on CI\n",
+        "createdAt": "2016-07-18T19:08:53",
+        "reactions": []
+      },
+      {
+        "id": 233565056,
+        "author": "gentledepp",
+        "body": "hmmm... so what am I doing wrong here?\n\n\n=== BUILD TARGET libSkiaSharp OF PROJECT libSkiaSharp WITH CONFIGURATION Release ===\n\nCheck dependencies\n\nLd build/Release/libSkiaSharp.dylib normal i386\n    cd /Users/xammac/SkiaSharp/native-builds/libSkiaSharp_osx\n    export MACOSX_DEPLOYMENT_TARGET=10.10\n    /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang\u002B\u002B -arch i386 -dynamiclib -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk -L/Users/xammac/SkiaSharp/native-builds/libSkiaSharp_osx/build/Release -F/Users/xammac/SkiaSharp/native-builds/libSkiaSharp_osx/build/Release -filelist /Users/xammac/SkiaSharp/native-builds/libSkiaSharp_osx/build/libSkiaSharp.build/Release/libSkiaSharp.build/Objects-normal/i386/libSkiaSharp.LinkFileList -install_name /usr/local/lib/libSkiaSharp.dylib -mmacosx-version-min=10.10 -stdlib=libc\u002B\u002B /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libgiflib.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libpng_static.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_codec_android.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_codec.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_pdf.a -lz /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libicuuc.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libsfntly.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libwebp_dec.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libwebp_demux.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libwebp_dsp_enc.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libwebp_dsp.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libwebp_enc.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libwebp_utils.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libjpeg-turbo.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libetc1.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_utils.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libSkKTX.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_ports.a -lc\u002B\u002B /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_opts_ssse3.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_sfnt.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_skgpu.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_core.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_effects.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_images.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_opts_avx.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_opts_sse41.a /Users/xammac/SkiaSharp/skia/xcodebuild/Release/libskia_opts.a -framework CoreGraphics -framework CoreText -framework CoreServices -framework ImageIO -framework CoreFoundation -single_module -compatibility_version 1 -current_version 1 -Xlinker -dependency_info -Xlinker /Users/xammac/SkiaSharp/native-builds/libSkiaSharp_osx/build/libSkiaSharp.build/Release/libSkiaSharp.build/Objects-normal/i386/libSkiaSharp_dependency_info.dat -o /Users/xammac/SkiaSharp/native-builds/libSkiaSharp_osx/build/Release/libSkiaSharp.dylib\nUndefined symbols for architecture i386:\n  \u0022_jconst_fancy_upsample_sse2\u0022, referenced from:\n      _jsimd_can_h2v2_fancy_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n      _jsimd_can_h2v1_fancy_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_fdct_float_sse\u0022, referenced from:\n      _jsimd_can_fdct_float in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_fdct_ifast_sse2\u0022, referenced from:\n      _jsimd_can_fdct_ifast in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_fdct_islow_sse2\u0022, referenced from:\n      _jsimd_can_fdct_islow in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_idct_float_sse2\u0022, referenced from:\n      _jsimd_can_idct_float in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_idct_ifast_sse2\u0022, referenced from:\n      _jsimd_can_idct_ifast in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_idct_islow_sse2\u0022, referenced from:\n      _jsimd_can_idct_islow in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_idct_red_sse2\u0022, referenced from:\n      _jsimd_can_idct_2x2 in libjpeg-turbo.a(jsimd_x86_64.o)\n      _jsimd_can_idct_4x4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_merged_upsample_sse2\u0022, referenced from:\n      _jsimd_can_h2v2_merged_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n      _jsimd_can_h2v1_merged_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_rgb_gray_convert_sse2\u0022, referenced from:\n      _jsimd_can_rgb_gray in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_rgb_ycc_convert_sse2\u0022, referenced from:\n      _jsimd_can_rgb_ycc in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jconst_ycc_rgb_convert_sse2\u0022, referenced from:\n      _jsimd_can_ycc_rgb in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_convsamp_float_sse2\u0022, referenced from:\n      _jsimd_convsamp_float in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_convsamp_sse2\u0022, referenced from:\n      _jsimd_convsamp in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extbgr_gray_convert_sse2\u0022, referenced from:\n      l_switch.table.1 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extbgr_ycc_convert_sse2\u0022, referenced from:\n      l_switch.table in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extbgrx_gray_convert_sse2\u0022, referenced from:\n      l_switch.table.1 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extbgrx_ycc_convert_sse2\u0022, referenced from:\n      l_switch.table in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extrgb_gray_convert_sse2\u0022, referenced from:\n      l_switch.table.1 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extrgb_ycc_convert_sse2\u0022, referenced from:\n      l_switch.table in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extrgbx_gray_convert_sse2\u0022, referenced from:\n      l_switch.table.1 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extrgbx_ycc_convert_sse2\u0022, referenced from:\n      l_switch.table in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extxbgr_gray_convert_sse2\u0022, referenced from:\n      l_switch.table.1 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extxbgr_ycc_convert_sse2\u0022, referenced from:\n      l_switch.table in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extxrgb_gray_convert_sse2\u0022, referenced from:\n      l_switch.table.1 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_extxrgb_ycc_convert_sse2\u0022, referenced from:\n      l_switch.table in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_fdct_float_sse\u0022, referenced from:\n      _jsimd_fdct_float in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_fdct_ifast_sse2\u0022, referenced from:\n      _jsimd_fdct_ifast in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_fdct_islow_sse2\u0022, referenced from:\n      _jsimd_fdct_islow in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_downsample_sse2\u0022, referenced from:\n      _jsimd_h2v1_downsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_extbgr_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_extbgrx_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_extrgb_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_extrgbx_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_extxbgr_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_extxrgb_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_fancy_upsample_sse2\u0022, referenced from:\n      _jsimd_h2v1_fancy_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_merged_upsample_sse2\u0022, referenced from:\n      _jsimd_h2v1_merged_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v1_upsample_sse2\u0022, referenced from:\n      _jsimd_h2v1_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_downsample_sse2\u0022, referenced from:\n      _jsimd_h2v2_downsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_extbgr_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.3 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_extbgrx_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.3 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_extrgb_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.3 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_extrgbx_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.3 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_extxbgr_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.3 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_extxrgb_merged_upsample_sse2\u0022, referenced from:\n      l_switch.table.3 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_fancy_upsample_sse2\u0022, referenced from:\n      _jsimd_h2v2_fancy_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_merged_upsample_sse2\u0022, referenced from:\n      _jsimd_h2v2_merged_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_h2v2_upsample_sse2\u0022, referenced from:\n      _jsimd_h2v2_upsample in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_idct_2x2_sse2\u0022, referenced from:\n      _jsimd_idct_2x2 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_idct_4x4_sse2\u0022, referenced from:\n      _jsimd_idct_4x4 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_idct_float_sse2\u0022, referenced from:\n      _jsimd_idct_float in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_idct_ifast_sse2\u0022, referenced from:\n      _jsimd_idct_ifast in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_idct_islow_sse2\u0022, referenced from:\n      _jsimd_idct_islow in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_quantize_float_sse2\u0022, referenced from:\n      _jsimd_quantize_float in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_quantize_sse2\u0022, referenced from:\n      _jsimd_quantize in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_rgb_gray_convert_sse2\u0022, referenced from:\n      _jsimd_rgb_gray_convert in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_rgb_ycc_convert_sse2\u0022, referenced from:\n      _jsimd_rgb_ycc_convert in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_ycc_extbgr_convert_sse2\u0022, referenced from:\n      l_switch.table.2 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_ycc_extbgrx_convert_sse2\u0022, referenced from:\n      l_switch.table.2 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_ycc_extrgb_convert_sse2\u0022, referenced from:\n      l_switch.table.2 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_ycc_extrgbx_convert_sse2\u0022, referenced from:\n      l_switch.table.2 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_ycc_extxbgr_convert_sse2\u0022, referenced from:\n      l_switch.table.2 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_ycc_extxrgb_convert_sse2\u0022, referenced from:\n      l_switch.table.2 in libjpeg-turbo.a(jsimd_x86_64.o)\n  \u0022_jsimd_ycc_rgb_convert_sse2\u0022, referenced from:\n      _jsimd_ycc_rgb_convert in libjpeg-turbo.a(jsimd_x86_64.o)\nld: symbol(s) not found for architecture i386\nclang: error: linker command failed with exit code 1 (use -v to see invocation)\n\n*\\* BUILD FAILED **\n\nThe following build commands failed:\n    Ld build/Release/libSkiaSharp.dylib normal i386\n(1 failure)\nAn error occured when executing task \u0027externals-osx\u0027.\nError: Cake.Core.CakeException: xcodebuild: Process returned an error (exit code 65).\n  at Cake.Core.Utilities.Tool\u00601[TSettings].Run (Cake.Core.Utilities.TSettings settings, Cake.Core.IO.ProcessArgumentBuilder arguments, Cake.Core.IO.FilePath toolPath, Cake.Core.IO.ProcessSettings processSettings, System.Action\u00601 postAction) \u003C0x39bd460 \u002B 0x00183\u003E in \u003Cfilename unknown\u003E:0 \n  at Cake.Core.Utilities.Tool\u00601[TSettings].Run (Cake.Core.Utilities.TSettings settings, Cake.Core.IO.ProcessArgumentBuilder arguments, Cake.Core.IO.FilePath toolPath) \u003C0x39bd418 \u002B 0x00037\u003E in \u003Cfilename unknown\u003E:0 \n  at Cake.XCode.XCodeBuildRunner.Build (Cake.XCode.XCodeBuildSettings settings) \u003C0x39bc9c8 \u002B 0x009fb\u003E in \u003Cfilename unknown\u003E:0 \n  at Cake.XCode.XCodeAliases.XCodeBuild (ICakeContext context, Cake.XCode.XCodeBuildSettings settings) \u003C0x39bc5f8 \u002B 0x000a3\u003E in \u003Cfilename unknown\u003E:0 \n  at CakeBuildScriptImpl.XCodeBuild (Cake.XCode.XCodeBuildSettings settings) \u003C0x39bc5c0 \u002B 0x00023\u003E in \u003Cfilename unknown\u003E:0 \n  at CakeBuildScriptImpl\u002B\u003CExecute\u003Ec__AnonStorey0.\u003C\u003Em__2B (System.String arch, System.String skiaArch) \u003C0x39bc068 \u002B 0x0015b\u003E in \u003Cfilename unknown\u003E:0 \n  at CakeBuildScriptImpl\u002B\u003CExecute\u003Ec__AnonStorey0.\u003C\u003Em__19 () \u003C0x39bbb08 \u002B 0x000b3\u003E in \u003Cfilename unknown\u003E:0 \n  at Cake.Core.CakeTaskBuilderExtensions\u002B\u003C\u003Ec__DisplayClass4.\u003CDoes\u003Eb__3 (ICakeContext context) \u003C0x39ad2f8 \u002B 0x00014\u003E in \u003Cfilename unknown\u003E:0 \n  at Cake.Core.ActionTask.Execute (ICakeContext context) \u003C0x39ad240 \u002B 0x00059\u003E in \u003Cfilename unknown\u003E:0 \n  at Cake.Core.DefaultExecutionStrategy.Execute (Cake.Core.CakeTask task, ICakeContext context) \u003C0x39ad078 \u002B 0x00162\u003E in \u003Cfilename unknown\u003E:0 \n  at Cake.Core.CakeEngine.ExecuteTask (ICakeContext context, IExecutionStrategy strategy, System.Diagnostics.Stopwatch stopWatch, Cake.Core.CakeTask task, Cake.Core.CakeReport report) \u003C0x39aca80 \u002B 0x00099\u003E in \u003Cfilename unknown\u003E:0 \n",
+        "createdAt": "2016-07-19T08:29:40",
+        "reactions": []
+      },
+      {
+        "id": 233565184,
+        "author": "gentledepp",
+        "body": "Also, where is your CI?\nIs there any way to crab the nuget packages that are created in your CI? Please?\n",
+        "createdAt": "2016-07-19T08:30:14",
+        "reactions": []
+      },
+      {
+        "id": 233646603,
+        "author": "gentledepp",
+        "body": "I seem to be just too dumb to get the build to work on mac.\nI would greatly appreciate, if someone could supply me with a nuget build of the current master branch. Maybe as \u0022alpha version\u0022?\nI really need this to continue developing my SVG editor/renderer based on Skia... :-|\n",
+        "createdAt": "2016-07-19T14:16:33",
+        "reactions": []
+      },
+      {
+        "id": 234227850,
+        "author": "gentledepp",
+        "body": "Never mind - I got it to work! (I am such a n00b so thank you for hanging in with me)\n",
+        "createdAt": "2016-07-21T11:30:30",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:53:00.4704899Z"
+          }
+        ]
+      }
+    ]
+  }
 }

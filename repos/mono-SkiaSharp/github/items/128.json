@@ -15,5 +15,67 @@
   "updatedAt": "2022-08-20T00:02:25",
   "closedAt": "2016-08-08T19:43:27",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:33.1807567Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 237360859,
+        "author": "bholmes",
+        "body": "To clarify.  This has only been tested (running) on Windows 10 so far.  The behavior may exist on other platforms.  \n",
+        "createdAt": "2016-08-03T20:23:30",
+        "reactions": []
+      },
+      {
+        "id": 237363529,
+        "author": "wieslawsoltes",
+        "body": "This also happens on AppVeyor CI when using \u0060SKBitmap.Decode\u0060 method. To fix the issue this patch has been made: https://github.com/AvaloniaUI/Avalonia/commit/126c28862d8464f16eea2de8a1a53eb3affd2f49\n",
+        "createdAt": "2016-08-03T20:32:19",
+        "reactions": []
+      },
+      {
+        "id": 237390532,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes @bholmes the reason for this is in the C\u002B\u002B code:\nhttps://github.com/mono/skia/blob/c8265a162d096951564ecb48cb789a97c03dc690/src/core/SkBitmap.cpp#L287\n\n\u0060\u0060\u0060 cpp\nbool SkBitmap::tryAllocPixels(const SkImageInfo\u0026 requestedInfo, size_t rowBytes) { \n   if (kIndex_8_SkColorType == requestedInfo.colorType()) { \n        return reset_return_false(this); \n    }\n\u0060\u0060\u0060\n\nThis version of \u0022new SKBitmap\u0022 in C# uses this C\u002B\u002B method, which does not handle \u0060Index8\u0060. The reason is that \u0060Index8\u0060 requires that the color table to be set. As the colors are index based, we need the color table.\n\nI will need to look into creating a bitmap with an Index8 color type. But I think in this instance, using BGRA8888 or RGBA8888 should be fine for on-screen drawing. I may be wrong, but Index8 is more for image storage on disk. No point in storing 4 bytes/pixel when 1 byte can do. This can be seen in the image provided, which is 18 KB as is, but goes up to 24 KB when saved as a 32-bit image instead of an 8-bit image. In memory, the bitmap is decoded and stored as a 32-bit color as normal, so you could draw another color line/bitmap over it and not be restricted to the colors in the first image.\n\nIn you example, you are loading and returning a bitmap, so you should be able to get away with reading the bitmap using 8-bit colors, but as you found out, storing it in memory with 32-bit colors. There should be no loss of information.\n\nOr course, this should not prevent you from creating an in-memory bitmap with a specific color table. And this is what I will look at.\n",
+        "createdAt": "2016-08-03T22:09:00",
+        "reactions": []
+      },
+      {
+        "id": 237605919,
+        "author": "mattleibow",
+        "body": "@gentledepp, I think I have all the bits covered now:\nhttps://github.com/mono/SkiaSharp/blob/a2cae9245fb73281d8d5f193210a92fe21613a6d/binding/Binding/SKBitmap.cs#L263-L284\n\nYou can test it out and see how it all works.\n",
+        "createdAt": "2016-08-04T16:23:39",
+        "reactions": []
+      },
+      {
+        "id": 237621016,
+        "author": "gentledepp",
+        "body": "I am confused. I did not report this big, neither did I stumble across it. What am I missing? :-)\n",
+        "createdAt": "2016-08-04T17:18:31",
+        "reactions": []
+      },
+      {
+        "id": 237641137,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow I am using SkiaSharp via NuGet so I cant test this.\n",
+        "createdAt": "2016-08-04T18:28:15",
+        "reactions": []
+      },
+      {
+        "id": 237649566,
+        "author": "mattleibow",
+        "body": "@gentledepp Oops, wrong guy \uD83D\uDE1C  You are my favourite user, so don\u0027t tell anybody \uD83D\uDE09 \n",
+        "createdAt": "2016-08-04T18:57:22",
+        "reactions": []
+      },
+      {
+        "id": 237688076,
+        "author": "gentledepp",
+        "body": "Should I be concerned? :-D\n\nAm 04.08.2016 20:57 schrieb \u0022Matthew Leibowitz\u0022 notifications@github.com:\n\n\u003E @gentledepp https://github.com/gentledepp Oops, wrong guy \uD83D\uDE1C You are my\n\u003E favourite user, so don\u0027t tell anybody \uD83D\uDE09\n\u003E \n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub\n\u003E https://github.com/mono/SkiaSharp/issues/128#issuecomment-237649566, or mute\n\u003E the thread\n\u003E https://github.com/notifications/unsubscribe-auth/ABHwxzoz3RUW1cGi6dxVyQ0Fc0v3QL4lks5qcjYUgaJpZM4Jb_A1\n\u003E .\n",
+        "createdAt": "2016-08-04T21:24:26",
+        "reactions": []
+      }
+    ]
+  }
 }

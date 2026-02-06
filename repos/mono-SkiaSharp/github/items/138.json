@@ -37,5 +37,133 @@
   "updatedAt": "2022-08-20T00:02:15",
   "closedAt": "2016-09-02T02:58:00",
   "commentCount": 15,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:59.3121336Z",
+    "reactions": [
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:53:59.3121408Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "hooray",
+        "createdAt": "2026-02-06T13:53:59.3121415Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 240553527,
+        "author": "mattleibow",
+        "body": "So far, we have these types:\n- \u0060GRContext\u0060\n  - \u0060static GRContext Create(GRBackend)\u0060\n  - \u0060static GRContext Create(GRBackend, IntPtr)\u0060\n  - \u0060static GRContext Create(GRBackend, GRGlInterface)\u0060\n- \u0060GRGlInterface\u0060\n  - \u0060static GRGlInterface CreateDefaultInterface()\u0060\n  - \u0060static GRGlInterface CreateNativeInterface()\u0060\n- \u0060SKCanvas\u0060\n  - \u0060static SKSurface Create(GRContext, GRBackendRenderTargetDesc, SKSurfaceProps)\u0060\n  - \u0060static SKSurface Create(GRContext, GRBackendTextureDesc, SKSurfaceProps)\u0060\n  - \u0060static SKSurface CreateAsRenderTarget(GRContext, GRBackendTextureDesc, SKSurfaceProps)\u0060\n  - \u0060static SKSurface Create(GRContext, bool, SKImageInfo, int, SKSurfaceProps)\u0060\n- \u0060GRBackendRenderTargetDesc\u0060\n- \u0060GRBackendTextureDesc\u0060\n\nAnd these enums:\n- \u0060SKSurfacePropsFlags\u0060\n- \u0060GRSurfaceOrigin\u0060\n- \u0060GRPixelConfig\u0060\n- \u0060GRBackend\u0060\n- \u0060GRBackendTextureDescFlags\u0060\n",
+        "createdAt": "2016-08-17T21:24:44",
+        "reactions": []
+      },
+      {
+        "id": 240928454,
+        "author": "mattleibow",
+        "body": "I just noticed that although Skia can have an OpenGL backend or a DirectX (through ANGLE) backend, it cannot have both. This is sort of a \u0022problem\u0022 on Windows desktop as which is best?\n\nThere is a way to have \u0022both\u0022 and that is to have two sets of dlls, one with OpenGL and the other DirectX. Then, as a developer, you can set either a MSBuild property (or something similar) and select the desired backend, without having to change the code.\n\nWe could also split the NuGet into per-platform packages, and just have two packages for Windows.\n",
+        "createdAt": "2016-08-19T05:01:40",
+        "reactions": []
+      },
+      {
+        "id": 241260110,
+        "author": "kekekeks",
+        "body": "@mattleibow Actually you _can_ create GrContext with needed opengl interface using GrGLAssembleGLInterface by passing a pointer to glGetProcAddress from corresponding opengl implementation.\nSee https://github.com/AvaloniaUI/libperspesk/blob/master/src/gl.cpp#L200\n",
+        "createdAt": "2016-08-21T14:15:33",
+        "reactions": []
+      },
+      {
+        "id": 241260192,
+        "author": "kekekeks",
+        "body": "It may be worth to allow user to manually initialize that from C# code (by passing glGetProcAddress pointer)\n",
+        "createdAt": "2016-08-21T14:17:33",
+        "reactions": []
+      },
+      {
+        "id": 241284334,
+        "author": "mattleibow",
+        "body": "@kekekeks Thanks! I did some work and added code so you could do this:\n\n\u0060\u0060\u0060 csharp\nvar openGLES = ObjCRuntime.Dlfcn.dlopen(\u0022/System/Library/Frameworks/OpenGLES.framework/OpenGLES\u0022, 0);\nvar glInterface = GRGlInterface.AssembleGlesInterface((ctx, name) =\u003E {\n    return ObjCRuntime.Dlfcn.dlsym(openGLES, name);\n});\n\u0060\u0060\u0060\n\nWhich is similar to what \u0060GrGLCreateNativeInterface()\u0060 does under the hood.\n\nThe value which is returned inside the delegate/callback is the pointer to the function that was requested using the \u0060name\u0060 parameter. In this case, we do a lookup in the GL library.\n",
+        "createdAt": "2016-08-21T21:48:47",
+        "reactions": []
+      },
+      {
+        "id": 242284083,
+        "author": "jazzay",
+        "body": "Hello. I have tried the latest Windows GL demo app with latest SkiaSharp 1.53.2-gpu2 nuget and vector drawing operations are all messed up. Simple operations like DrawCircle do not work when bound to a GL Backend. I also tried previous gpu1 nuget and it does not work either. The Shader based demos all work fine. Any eta on when this could be fixed?\n",
+        "createdAt": "2016-08-25T05:25:34",
+        "reactions": []
+      },
+      {
+        "id": 242355347,
+        "author": "mattleibow",
+        "body": "@jazzay I am not able to reproduce any issues. All the demos work on both Mac and Windows. Are you able to indicate which demo and send a screenshot?\n",
+        "createdAt": "2016-08-25T11:30:10",
+        "reactions": []
+      },
+      {
+        "id": 242410145,
+        "author": "kekekeks",
+        "body": "That might be related to particular OpenGL drivers. I\u0027d recommend to use ANGLE on windows instead of relying on proper OpenGL support.\n",
+        "createdAt": "2016-08-25T14:35:54",
+        "reactions": []
+      },
+      {
+        "id": 242473407,
+        "author": "jazzay",
+        "body": "Hey @kekekeks! I assume that is something I must configure on my machine? And then SkiaSharp will just pick up that driver configuration? \n\n**Update**: I investigated ANGLE, but see no way to install/use it within the OS. This appears to be a application linked solution, which is not accessible from SkiaSharp. Correct me if i\u0027m wrong @kekekeks \n",
+        "createdAt": "2016-08-25T17:30:04",
+        "reactions": []
+      },
+      {
+        "id": 242651938,
+        "author": "jazzay",
+        "body": "Hey I installed the latest NVidia GTX 660 TI driver (my video card), ran GL Bench passing with flying colors. Then build/run exact copy of the source from here: https://github.com/mono/SkiaSharp/tree/gpu-support/samples/Skia.WindowsDesktop.GLDemo. This is what I see for first demo, note how there is no logo (vector path) visible:\n\n![image](https://cloud.githubusercontent.com/assets/554363/17997605/434b9d34-6b24-11e6-9c66-0bf68b3502f2.png)\n\nPerlin noise demo runs fine, and fast indicating HW acceleration:\n\n![image](https://cloud.githubusercontent.com/assets/554363/17997618/61b704d4-6b24-11e6-94b0-4fdbd6642c3e.png)\n\nFonts also work fine:\n\n![image](https://cloud.githubusercontent.com/assets/554363/17997669/ca34c94c-6b24-11e6-99de-19385abe8d7b.png)\n\nI doubt this is an issue w my driver/hw setup.\n\nAlso note that I did code up a custom drawing method with simple circle - filled/stroked combinations. The fills never showed up. I could get the Stroke to show up only if the StrokeWidth = 1. Greater than 1 and it disappeared. Seems like some issue with the fill/stroke code path on Open GL.\n",
+        "createdAt": "2016-08-26T07:31:36",
+        "reactions": []
+      },
+      {
+        "id": 244270880,
+        "author": "mattleibow",
+        "body": "This appears to be working for most cases, so I am merging this into master and see what happens :)\n",
+        "createdAt": "2016-09-02T02:58:00",
+        "reactions": []
+      },
+      {
+        "id": 244574984,
+        "author": "DanWBR",
+        "body": "@mattleibow , where can I find a sample showing how to enable gpu acceleration on Android? thanks.\n",
+        "createdAt": "2016-09-03T23:12:48",
+        "reactions": []
+      },
+      {
+        "id": 245519457,
+        "author": "mattleibow",
+        "body": "Check out this issue #148, it had info and a branch with code\n",
+        "createdAt": "2016-09-08T07:45:33",
+        "reactions": [
+          {
+            "user": "DanWBR",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:58.821502Z"
+          }
+        ]
+      },
+      {
+        "id": 245676735,
+        "author": "DanWBR",
+        "body": "@mattleibow thanks a lot, got it working after commenting this line (Flush() not found): https://github.com/mono/SkiaSharp/blob/skiasharp-views/views/SkiaSharp.Views.Android/SKGLSurfaceViewRenderer.cs#L28\n",
+        "createdAt": "2016-09-08T17:36:03",
+        "reactions": []
+      },
+      {
+        "id": 245781611,
+        "author": "mattleibow",
+        "body": "@DanWBR that one is not yet released to 1.54.x. Once I get the Windows views done, I will update the SkiaSharp NuGet to v1.54.1 and see if I can get a beta out for the views.\n\nJust a note: I reworked all the iOS views/layers (and I think they are better for it)\n",
+        "createdAt": "2016-09-09T00:12:53",
+        "reactions": []
+      }
+    ]
+  }
 }

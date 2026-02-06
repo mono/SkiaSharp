@@ -15,5 +15,88 @@
   "updatedAt": "2022-08-20T00:01:53",
   "closedAt": "2016-11-08T18:16:27",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:32.9889339Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 253986408,
+        "author": "mattleibow",
+        "body": "Hi @prasannavl Thanks for bringing this up. You are correct that \u0060Location\u0060 is done incorrectly. We need to look at that, but about \u0060Offset\u0060, that does just move the rect.\nhttps://github.com/mono/SkiaSharp/blob/5b1d054f88288d9532d91d1639b9c1099d589650/binding/Binding/Definitions.cs#L1790\n\n\u0060\u0060\u0060\nvar rect = new SKRect(0, 0, 100, 100);\nrect.Offset(30, 30);\n\n// rect still has a width/height of 100\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-10-15T14:07:51",
+        "reactions": []
+      },
+      {
+        "id": 254000257,
+        "author": "prasannavl",
+        "body": "@mattleibow, ~~\u0060Offset\u0060 has another overload. One that takes a \u0060SKPoint\u0060. I\u0027m guessing you missed the code piece in my above post.~~\n\nhttps://github.com/mono/SkiaSharp/blob/5b1d054f88288d9532d91d1639b9c1099d589650/binding/Binding/Definitions.cs#L1798\n\n~~That doesn\u0027t just move the Rect - It should use \u0060Offset(pos.X, pos.Y, -pos.X, -pos.Y)\u0060~~\n",
+        "createdAt": "2016-10-15T18:01:35",
+        "reactions": []
+      },
+      {
+        "id": 254566309,
+        "author": "mattleibow",
+        "body": "@prasannavl I am not sure exactly what you mean about \u0060Offset\u0060... The \u0060Offset(SKPoint)\u0060 is just an overload for \u0060Offset(float, float)\u0060. The point version does not set the location, but rather moves the whole rect by X and Y.\n\nYour snippet will both move the origin AND shrink the rect two-fold. For example a rect at \u0060{X=10, Y=10, Width=10, Height=10}\u0060. If you offset with \u0060SkPoint(2, 2)\u0060 the new rect will be \u0060{12, 12, 6, 6}\u0060. Maybe you are mixing the fact that rectangles in SkiaSharp are left-top-right-bottom, not width-height?\n",
+        "createdAt": "2016-10-18T16:40:34",
+        "reactions": []
+      },
+      {
+        "id": 254617037,
+        "author": "prasannavl",
+        "body": "@mattleibow, you\u0027re correct. My bad. Sorry about that. \u0060Offset\u0060 is correct. I was working with a lot of \u0060Rect\u0060 in my own raw WinApi (https://github.com/prasannavl/WinApi/) wrappers, where I had manipulated the width and height. Seemed like I just needed some sleep! \n\nI\u0027m striking out the original Offset related things from the post to keep things in perspective. \n",
+        "createdAt": "2016-10-18T19:42:25",
+        "reactions": []
+      },
+      {
+        "id": 254838933,
+        "author": "mattleibow",
+        "body": "@prasannavl Great! Thanks for the issue, I\u0027ll look at it soon.\n",
+        "createdAt": "2016-10-19T14:58:12",
+        "reactions": []
+      },
+      {
+        "id": 257525092,
+        "author": "mattleibow",
+        "body": "All right. Did some thinking. I am going to close this issue because there is nothing that I can really do now.\n\nIf I change the way it works, I am changing released behavior and I am being inconsistent with the way changing the Top or Left (those move the point and change the size). If I remove it, I am removing released behavior. The only thing really to do is leave it as is and just add documentation for it.\n",
+        "createdAt": "2016-11-01T09:41:21",
+        "reactions": []
+      },
+      {
+        "id": 258709663,
+        "author": "prasannavl",
+        "body": "@mattleibow, I take it there isn\u0027t much I can do for you to reconsider? \n\nSkiaSharp is still in its infancy. I think this is the perfect time to fix semantic changes, bumping the version. The later it is, the more difficult it is. I think its a bad idea to leave bugs like this unfixed, just because its a breaking change. \n\nI don\u0027t think there are an enormous amount of projects that are based off SkiaSharp today. So, the other libraries basing on this behavior should not have too much difficulty catching up today. \n\nDespite the docs, this is going to remain as a confusing behavior for people who end up using this, if left unfixed. And also when inter-operating with other libraries, it will be highly inconsistent. \n",
+        "createdAt": "2016-11-06T20:51:42",
+        "reactions": []
+      },
+      {
+        "id": 258747195,
+        "author": "mattleibow",
+        "body": "@prasannavl I\u0027ll see what I can do... discuss with manager and all that.\n",
+        "createdAt": "2016-11-07T04:54:20",
+        "reactions": []
+      },
+      {
+        "id": 258752758,
+        "author": "prasannavl",
+        "body": "Great. Appreciate having an open mind. :)\n\nSent from Outlook for Android\n\nOn Mon, Nov 7, 2016 at 10:26 AM \u002B0530, \u0022Matthew Leibowitz\u0022 \u003Cnotifications@github.com\u003Cmailto:notifications@github.com\u003E\u003E wrote:\n\n@prasannavlhttps://github.com/prasannavl I\u0027ll see what I can do... discuss with manager and all that.\n\n## \n\nYou are receiving this because you were mentioned.\nReply to this email directly, view it on GitHubhttps://github.com/mono/SkiaSharp/issues/162#issuecomment-258747195, or mute the threadhttps://github.com/notifications/unsubscribe-auth/AAiJMSkKe6dANvm-Ez-lvR-sgBhntQWUks5q7q7-gaJpZM4KXnT2.\n",
+        "createdAt": "2016-11-07T05:51:19",
+        "reactions": []
+      },
+      {
+        "id": 259216049,
+        "author": "mattleibow",
+        "body": "I had a look, and I think you are right in all accounts:\n- young framework, so change \u0022OK\u0022\n- more consistent, with other frameworks\n- more intuitive, the location should move, not resize\n\nThanks for your support!\n",
+        "createdAt": "2016-11-08T18:19:27",
+        "reactions": []
+      },
+      {
+        "id": 259250658,
+        "author": "prasannavl",
+        "body": "Great! Nice to see that feedback is taken well :) \n",
+        "createdAt": "2016-11-08T20:30:42",
+        "reactions": []
+      }
+    ]
+  }
 }

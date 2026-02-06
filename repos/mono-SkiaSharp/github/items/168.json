@@ -24,5 +24,60 @@
   "updatedAt": "2022-08-20T00:01:48",
   "closedAt": "2016-10-24T20:35:45",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:42.1968403Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 255731163,
+        "author": "tdenniston",
+        "body": "I\u0027ll let the SkiaSharp owners correct me if I\u0027m wrong, but I believe that\u0027s working as intended. If you look at [the native Skia docs for dashing](https://github.com/mono/skia/blob/a01855170d8957a7b6fec253f8e56bcf5ae7d818/include/effects/SkDashPathEffect.h#L39) it specifies that the intervals array should contain an even number of elements.\n\nThe intervals array should contain a list of pairs of \u0060StrokeDist, GapDist\u0060. Therefore a simple method to fix your problem is to concatenate a copy of your intervals array onto itself (i.e. \u006015, 5, 5, 15, 5, 5\u0060). That\u0027s the method followed e.g. by the [SVG standard](https://www.w3.org/TR/SVG11/painting.html#StrokeDasharrayProperty)\n",
+        "createdAt": "2016-10-24T12:50:33",
+        "reactions": []
+      },
+      {
+        "id": 255739628,
+        "author": "codedevote",
+        "body": "Thanks for the clarification. Nevertheless, a factory method returning null without any hints on what was wrong seems still confusing. \n\nIn my opinion, it should either throw an ArgumentException or, if the second approach you suggest creates the intended dash effect, it could be an option to silently apply that modification within the factory method. Whatever seems the solution that\u0027s better aligned with the design of the skia sharp library I would be happy to send a PR containing the desired fix.\n",
+        "createdAt": "2016-10-24T13:26:22",
+        "reactions": []
+      },
+      {
+        "id": 255740398,
+        "author": "tdenniston",
+        "body": "Agreed, the docs should specify that (or the implementation should do something about it). I know @mattleibow has a done bunch of docs improvements that will be released with the next version, so perhaps that work is already done.\n",
+        "createdAt": "2016-10-24T13:29:17",
+        "reactions": []
+      },
+      {
+        "id": 255748047,
+        "author": "mattleibow",
+        "body": "@tdenniston Thanks for commenting. You are correct, it is working as intended. And, I have added some docs.\n\n@codedevote @tdenniston About the exception... We are in the fortunate position to make decisions. I think C\u002B\u002B returns null as that is preferable to exceptions there. I also am creating a dumb API wrapper - acts as C\u002B\u002B acts. However, since we are doing a .NET API, maybe throwing an arguments exception is actually better. For example, I do throw a few null exceptions in some places - even though nullrefex is a bit different. I am seriously considering adding an exception for hard rules - so there will be no need to hit the docs or do any research.\n\nAn example of a hard rule would be the fact that \u0022a color table is exactly 256 items\u0022, a \u0022dash must be even number\u0022, the \u0022stream cannot be null\u0022.\n\nAny thoughts on whether an exception is a good thing, or should we just leave it up the docs?\n",
+        "createdAt": "2016-10-24T13:58:40",
+        "reactions": []
+      },
+      {
+        "id": 255756506,
+        "author": "codedevote",
+        "body": "I\u0027ll throw in one more option of approaching hard rules:\n\nInstead of e.g. using an integer[] for the dash/gap definition, introduce a proper type, that just makes the invalid states unrepresentable. E.g. having a type like this\n\n\u0060class DashDefinition {\n  public float Dash {get; set; }\n  public float Gap {get; set; }\n}\u0060\n\nwould allow for a DashDefinition[] to be passed to the factory method, actually enforcing an even number of dash/gap.\n\nAs far as I am concerned, I would either use explicit types (preferred) or throw an ArgumentException for hard rules (as I think this is more idiomatic C# than returning null).\n",
+        "createdAt": "2016-10-24T14:29:18",
+        "reactions": []
+      },
+      {
+        "id": 255758731,
+        "author": "tdenniston",
+        "body": "The type-enforced approach would seem like the best approach except for the fact that SkiaSharp is (nominally) a thin wrapper around Skia. If there are small differences like \u0060DashDefinition[]\u0060 instead of \u0060float[]\u0060, SkiaSharp users might start to wonder what other subtle differences there are that they are missing. They also might wonder whether a function that takes \u0060DashDefinition[]\u0060 has the same functionality as the native Skia method, even if it has the same name.\n\nSo I guess if we\u0027re voting here, I\u0027d vote for the ArgumentException approach. That seems like a nice middle ground, and as @codedevote noted, probably more idiomatic in C#.\n",
+        "createdAt": "2016-10-24T14:36:49",
+        "reactions": []
+      },
+      {
+        "id": 255858285,
+        "author": "mattleibow",
+        "body": "Thanks for the info. I am using an exception so that I don\u0027t stray too far off the underlying skia. They may cause issues if the decide to change thing from underneath us (again). I now throw an exception for various cases and the messages should be helpful\n",
+        "createdAt": "2016-10-24T20:35:45",
+        "reactions": []
+      }
+    ]
+  }
 }

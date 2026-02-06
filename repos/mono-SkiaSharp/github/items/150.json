@@ -15,5 +15,53 @@
   "updatedAt": "2022-08-20T00:02:03",
   "closedAt": "2016-09-13T12:24:26",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:18.4813094Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 246370095,
+        "author": "gentledepp",
+        "body": "I dug a little deeper into this and it seems, that it takes the first control point of a cubic bezier curve for calculating the bounding box, although that point is not visible! \n",
+        "createdAt": "2016-09-12T14:42:59",
+        "reactions": []
+      },
+      {
+        "id": 246510690,
+        "author": "mattleibow",
+        "body": "@gentledepp It seems Skia does this: https://fiddle.skia.org/c/8972161759375a6a1463ebaa0b80cad4\n\nCan you confirm that this is what is happening. If so, maybe check on the skia forums, they may be better suited to answer your questions: https://groups.google.com/forum/#!forum/skia-discuss\n",
+        "createdAt": "2016-09-12T22:08:10",
+        "reactions": []
+      },
+      {
+        "id": 246589444,
+        "author": "gentledepp",
+        "body": "Dude! That \u0022skia.fiddle\u0022 is awesome!\nI just woke up this morning and realized that I actually sent you SVG.... stupid me. I am sorry for that.\nThat exactly is the bug we stumbled across.\nI\u0027ll file it in their repo.\nThanks for helping me out! \n",
+        "createdAt": "2016-09-13T06:40:28",
+        "reactions": []
+      },
+      {
+        "id": 246590096,
+        "author": "gentledepp",
+        "body": "I filed a bug here:\nhttps://bugs.chromium.org/p/skia/issues/detail?id=5751\n",
+        "createdAt": "2016-09-13T06:44:03",
+        "reactions": []
+      },
+      {
+        "id": 246664534,
+        "author": "gentledepp",
+        "body": "I got a response to the bug I filed.\nSeems that it is no bug, but the intended behavior.\n\nAs I, however, need the exact \u0022visible\u0022 bounding box, there is another API method available:\n\nSKPathOps \u0022TightBounds\u0022 which does what we need.\nsee: /*\\* Set the resulting rectangle to the tight bounds of the path.\n    @param path The path measured.\n    @param result The tight bounds of the path.\n    @return True if the bounds could be computed.\n  _/\nbool SK_API TightBounds(const SkPath\u0026 path, SkRect_ result); \n\nHowever, it seems that this API is not bound yet\nhttps://github.com/google/skia/blob/master/include/pathops/SkPathOps.h\n\nI will open a new issue for that :)\n",
+        "createdAt": "2016-09-13T12:24:26",
+        "reactions": []
+      },
+      {
+        "id": 246727070,
+        "author": "mattleibow",
+        "body": "Great! I\u0027ll get something up and see what I can do\n",
+        "createdAt": "2016-09-13T15:47:54",
+        "reactions": []
+      }
+    ]
+  }
 }

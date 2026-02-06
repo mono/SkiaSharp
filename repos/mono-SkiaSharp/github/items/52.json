@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-20T06:01:42",
   "closedAt": "2016-04-01T17:50:09",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:43.471394Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 207163682,
+        "author": "tdenniston",
+        "body": "@ariste1a I am also seeing this problem. Can you please elaborate on how you fixed it?\n",
+        "createdAt": "2016-04-08T01:36:11",
+        "reactions": []
+      },
+      {
+        "id": 207167745,
+        "author": "ariste1a",
+        "body": "Hey @tdenniston, and anyone else having the same problem, SkiaSharp uses its own branch of Skia which you\u0027d have to pull/download. Navigate to this repo\u0027s Skia folder and pull from it. Not sure how to do it from git bash though. You\u0027d also need Google\u0027s depot tool to compile. \n",
+        "createdAt": "2016-04-08T01:51:07",
+        "reactions": []
+      },
+      {
+        "id": 207451568,
+        "author": "tdenniston",
+        "body": "Thanks @ariste1a. I can\u0027t seem to identify an actual branch of Skia that SkiaSharp uses, but I managed to fix my compile error with the following steps:\n- Open the mono/SkiaSharp master branch on Github.\n- The \u0027skia\u0027 directory is displayed as something like \u0027skia @ 15d4e8e\u0027. Take note of the commit hash after the @ sign.\n- In Git bash navigate to the \u0027skia\u0027 directory on your filesystem. Execute \u0027git checkout 15d4e8e\u0027.\n- Try rebuilding SkiaSharp.\n\nThis fixed this particular compile error for me. Hopefully one of the maintainers can comment on why this was necessary.\n",
+        "createdAt": "2016-04-08T14:24:52",
+        "reactions": []
+      }
+    ]
+  }
 }

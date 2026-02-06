@@ -14,5 +14,81 @@
   "updatedAt": "2022-08-20T06:01:32",
   "closedAt": "2016-05-18T00:48:11",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:00.6818782Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 216035701,
+        "author": "agallero",
+        "body": "After looking more at how other unamaged memory is returned, I think the way that would follow most patterns in the existing C api is to return an SKString object which you must allocate and destroy. I\u0027ve implemented the proposed changes in pull request #73 \n",
+        "createdAt": "2016-05-01T11:23:13",
+        "reactions": []
+      },
+      {
+        "id": 218635588,
+        "author": "mattleibow",
+        "body": "Hi @agallero ... you are right, stings are funny in the managed/unmanaged world. \n\nI\u0027ll have a look at what we can do without having to use SkString... if all else fails, then we can create that type.\n",
+        "createdAt": "2016-05-12T01:23:03",
+        "reactions": []
+      },
+      {
+        "id": 218641833,
+        "author": "agallero",
+        "body": "ok, let me know your findings :)\n\nby the way, as said in the original comment I personally see using SkStrings a little overkill, specially for an API that currently only returns strings in only 3 methods. And it was not fun to create a new type just for a method. But after spending some time with the skia c api, I think it is the most consistent way. \n\nThe thing is, while there are no methods in the original google api that return strings (char_) so there is no standard to follow, there are methods that return array of bytes (void_). A void\\* is very similar and has the same issues as a char_. And the solutions are the same: you can allocate and free the void_ buffer in the caller, or in the called code, or expose a wrapper. The solution used in the original google api is to use a sk_data_t wrapper.\n\nSo to be consistent with what already is done, I think it makes sense to have a sk_string_t type. In fact, the wrapper I made is the sk_data_t wrapper ( https://github.com/google/skia/blob/master/include/c/sk_data.h ) modified to deal with char\\* instead of void\\* \n\nAs said, there are other solutions to return an array of characters. But given that the api already uses the wrapper approach for an array of bytes, I think the most consistent (even if it means adding an extra class) solution for an array of chars is to do the same.\n\nA final note: For those 3 methods we could also return an sk_data_t with the string encoded as an array of bytes. This would avoid creating a sk_string type which is very similar to sk_data, and as it is used in just 3 places which aren\u0027t even very important, it would not be a big deal. But it feels like a hack. The most elegant way to me still seems to be to return an sk_string, not an sk_data, even if it takes a little extra effort.\n",
+        "createdAt": "2016-05-12T02:13:53",
+        "reactions": []
+      },
+      {
+        "id": 218642081,
+        "author": "agallero",
+        "body": "there was some mixup in the previous post between char\\* and markdown doing italics... Whenever there are italics, it is a pointer that was interpreted as italics. \n",
+        "createdAt": "2016-05-12T02:16:13",
+        "reactions": []
+      },
+      {
+        "id": 218643176,
+        "author": "mattleibow",
+        "body": "I had a look and I think I have to agree with you. Using \u0060SKString\u0060 is a bit overkill, but I don\u0027t think there is another nice way.\n\nWe could try the get_array_size-and-then-get_array_data method, but this might cause problems if the get method is complex. No need to perform the same logic (that may take time to compute) just because we don\u0027t want to introduce a small new type.\n",
+        "createdAt": "2016-05-12T02:25:22",
+        "reactions": []
+      },
+      {
+        "id": 218643329,
+        "author": "mattleibow",
+        "body": "So, I think we need SKString. We can make life easier by keeping that think internal to the API, and by introducing the concept of implicit/explicit operators to the .NET string type.\n\nAlso, it will prevent any issues if Google ever tries to do anything too fancy with SkString in future\n",
+        "createdAt": "2016-05-12T02:26:42",
+        "reactions": []
+      },
+      {
+        "id": 218644104,
+        "author": "mattleibow",
+        "body": "I vote we go all out \u0060SKString\u0060 when Google uses it, and even when we are returning a string. That way, we can avoid any issues with memory allocations as it is all done in native code.\n\nAn example, and a fix, would be to change the \u0060sk_imagedecoder_get_format_name_from_decoder\u0060 methods to use \u0060SKString\u0060, even though it is a constant string... to be honest they are dropping this type altogether in m51, but we should be consistent in our C API - unless Google dictates otherwise.\n",
+        "createdAt": "2016-05-12T02:32:48",
+        "reactions": []
+      },
+      {
+        "id": 218644248,
+        "author": "mattleibow",
+        "body": "Once you fix the whitespaces in PR #73, we can merge and then use that code to fix this issue.\n",
+        "createdAt": "2016-05-12T02:33:55",
+        "reactions": []
+      },
+      {
+        "id": 218644675,
+        "author": "mattleibow",
+        "body": "Also, I think we should hide this:\n\n\u0060\u0060\u0060 csharp\nvar cstr = SkiaApi.sk_string_get_c_str(skstring);\nvar clen = SkiaApi.sk_string_get_size(skstring);\nreturn Util.GetString(cstr, (int)clen, SKTextEncoding.Utf8); \n\u0060\u0060\u0060\n\nin an explicit (string) operator... or maybe an implicit one?\n",
+        "createdAt": "2016-05-12T02:36:47",
+        "reactions": []
+      },
+      {
+        "id": 218645138,
+        "author": "mattleibow",
+        "body": "Ah, maybe I should say that \u0060SKString\u0060 should also exist in managed code, and implement \u0060IDisposable\u0060 so that we can create strings all we like and let the GC do the cleanup for us - but, we can keep this an internal type for now.\n",
+        "createdAt": "2016-05-12T02:40:22",
+        "reactions": []
+      }
+    ]
+  }
 }

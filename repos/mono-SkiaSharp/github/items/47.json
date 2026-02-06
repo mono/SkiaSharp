@@ -25,5 +25,191 @@
   "updatedAt": "2022-08-20T06:01:44",
   "closedAt": "2016-07-29T18:31:03",
   "commentCount": 16,
-  "reactionCount": 6
+  "reactionCount": 6,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:40.9376361Z",
+    "reactions": [
+      {
+        "user": "tdenniston",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:40.9378674Z"
+      },
+      {
+        "user": "hypeartist",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:40.9378683Z"
+      },
+      {
+        "user": "kekekeks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:40.9378689Z"
+      },
+      {
+        "user": "AbelToy",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:40.9378691Z"
+      },
+      {
+        "user": "benoitjadinon",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:40.9378693Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:51:40.9378695Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 200005305,
+        "author": "bholmes",
+        "body": "I quickly found that this patch is more involved than adding a missing property or method.  I have created a [branch](https://github.com/mono/SkiaSharp/tree/PathEffects-2016-03) to discuss the best way to integrate PathEffects.\n\nEnsuring that we wrap the return of the getter of the PathEffect property with the correct managed object is the point of discussion.\n",
+        "createdAt": "2016-03-22T20:25:15",
+        "reactions": []
+      },
+      {
+        "id": 202559048,
+        "author": "petergolde",
+        "body": "I don\u0027t think, in this particular case, that exposing subclasses of SkPathEffect serves any significant purpose, because the subclasses in the C\u002B\u002B API don\u0027t expose additional public members. I would just expose the single sealed class SKPathEffect, along with static Create function. E.g.:\n\nstatic SKPathEffect CreateDashed(float[] intervals, float phase)\n",
+        "createdAt": "2016-03-28T19:57:55",
+        "reactions": []
+      },
+      {
+        "id": 202559241,
+        "author": "petergolde",
+        "body": "Obviously the other PathEffects would have their own CreateXXX function.\n",
+        "createdAt": "2016-03-28T19:58:24",
+        "reactions": []
+      },
+      {
+        "id": 205683508,
+        "author": "hypeartist",
+        "body": "Could anyone, please, make a windows binary (dll) of SkiaSharp with SKPathEffect added?\n",
+        "createdAt": "2016-04-05T06:55:52",
+        "reactions": []
+      },
+      {
+        "id": 206944766,
+        "author": "migueldeicaza",
+        "body": "I agree with Peter\u0027s take.  We do not need to bind the subclasses (and in fact, I am wondering if we need to surface all of those SKStream subclasses in the first place as well).\n\nWe should just provide convenient factory methods to create these.\n",
+        "createdAt": "2016-04-07T15:06:53",
+        "reactions": []
+      },
+      {
+        "id": 207090442,
+        "author": "bholmes",
+        "body": "@migueldeicaza First I agree that we should do this.  I need to check the remaining path effect classes to see if there are any critical members that will be missing.  \n\nThere are some members on these effects, but they feel advanced to me.  Also I do not think creating factory methods would stop us from later surfacing these if needed.  \n\nI see two similar options.  One add the factory methods to the paint object in C# which will handle creating the effect and assigning in C.  The other option is to create a C# class (SkPathEffect) that only has static factory methods that take the paint as an argument to assign the new effect to.  Again in C.\n\nIn both options I think we need a way to clear the effect from the paint.  That could be as simple as a ResetEffect method on the paint class.  \n\nThoughts?\n",
+        "createdAt": "2016-04-07T21:12:38",
+        "reactions": []
+      },
+      {
+        "id": 207091437,
+        "author": "migueldeicaza",
+        "body": "I like it.\n",
+        "createdAt": "2016-04-07T21:16:32",
+        "reactions": []
+      },
+      {
+        "id": 207518721,
+        "author": "petergolde",
+        "body": "I would have a read/write property on SKPaint of type SKPathEffect.\n\nSKPathEffect would have only static creation methods, e.g.:\n\npublic static SKPathEffect CreateDashedPathEffect(...);\n\nI think this is\n\n1) most like the skia C\u002B\u002B api\n2) discoverable\n3) doesn\u0027t overly pollute the SKPaint members\n4) could extend later if we allow user-written subclasses of SKPathEffect (I don\u0027t think we should be go here now though)\n\nPeter\n\n\u003E On Apr 7, 2016, at 2:12 PM, Bill Holmes notifications@github.com wrote:\n\u003E \n\u003E @migueldeicaza First I agree that we should do this. I need to check the remaining path effect classes to see if there are any critical members that will be missing.\n\u003E \n\u003E There are some members on these effects, but they feel advanced to me. Also I do not think creating factory methods would stop us from later surfacing these if needed.\n\u003E \n\u003E I see two similar options. One add the factory methods to the paint object in C# which will handle creating the effect and assigning in C. The other option is to create a C# class (SkPathEffect) that only has static factory methods that take the paint as an argument to assign the new effect to. Again in C.\n\u003E \n\u003E In both options I think we need a way to clear the effect from the paint. That could be as simple as a ResetEffect method on the paint class.\n\u003E \n\u003E Thoughts?\n\u003E \n\u003E \u2014\n\u003E You are receiving this because you commented.\n\u003E Reply to this email directly or view it on GitHub\n",
+        "createdAt": "2016-04-08T17:06:00",
+        "reactions": []
+      },
+      {
+        "id": 208751579,
+        "author": "hypeartist",
+        "body": "Is anything of SKPathEffect implemented in 1.49.2-beta?\n",
+        "createdAt": "2016-04-12T07:21:53",
+        "reactions": []
+      },
+      {
+        "id": 208904681,
+        "author": "bholmes",
+        "body": "@hypeartist no there is not\n",
+        "createdAt": "2016-04-12T13:28:29",
+        "reactions": []
+      },
+      {
+        "id": 216981022,
+        "author": "derrickp",
+        "body": "Any idea when this might be implemented? Is it a fairly low priority thing?\n",
+        "createdAt": "2016-05-04T19:48:49",
+        "reactions": [
+          {
+            "user": "hypeartist",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:39.7464253Z"
+          },
+          {
+            "user": "benoitjadinon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:39.7464256Z"
+          }
+        ]
+      },
+      {
+        "id": 228848947,
+        "author": "gentledepp",
+        "body": "Is there any chance this will be implemented soon? At least in a branch so I can make a private nuget package? I would code it myself if I had any clue how to do so... :-\\\n",
+        "createdAt": "2016-06-27T19:26:25",
+        "reactions": []
+      },
+      {
+        "id": 228859553,
+        "author": "migueldeicaza",
+        "body": "Mattew is on vacation this week, and we were hoping to focus on merging our changes with upstream Google after that.   So shortly after I would hope we could work on this.\n",
+        "createdAt": "2016-06-27T20:06:57",
+        "reactions": [
+          {
+            "user": "derrickp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:40.2417395Z"
+          },
+          {
+            "user": "hypeartist",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:40.2417398Z"
+          },
+          {
+            "user": "benoitjadinon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:40.24174Z"
+          },
+          {
+            "user": "wieslawsoltes",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:40.2417401Z"
+          },
+          {
+            "user": "rsegerink",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:51:40.2417402Z"
+          }
+        ]
+      },
+      {
+        "id": 232473820,
+        "author": "mattleibow",
+        "body": "The C code for this is in commit https://github.com/mono/skia/commit/e31d35bc32be52f8e2c9da9628c89ca5646ad975\nDIFF: https://github.com/mono/skia/compare/xamarin-mobile-bindings...mono:feature-patheffect\n\nC#: https://github.com/mono/SkiaSharp/issues/112\n",
+        "createdAt": "2016-07-13T20:17:35",
+        "reactions": []
+      },
+      {
+        "id": 236258454,
+        "author": "mattleibow",
+        "body": "This will be in the next release. It is currently merged into master.\n",
+        "createdAt": "2016-07-29T18:31:26",
+        "reactions": []
+      },
+      {
+        "id": 236259668,
+        "author": "Rungee",
+        "body": "Thanks a lot for all your efforts.\n\n29 \u0418\u044E\u043B 2016 \u0433. 20:31 \u043F\u043E\u043B\u044C\u0437\u043E\u0432\u0430\u0442\u0435\u043B\u044C \u0022Matthew Leibowitz\u0022 \u003C\nnotifications@github.com\u003E \u043D\u0430\u043F\u0438\u0441\u0430\u043B:\n\n\u003E This will be in the next release. It is currently merged into master.\n\u003E \n\u003E \u2014\n\u003E You are receiving this because you authored the thread.\n\u003E Reply to this email directly, view it on GitHub\n\u003E https://github.com/mono/SkiaSharp/issues/47#issuecomment-236258454, or mute\n\u003E the thread\n\u003E https://github.com/notifications/unsubscribe-auth/ABlXL1r0vqzYPXKIOr2y_E9--gAath0pks5qakb_gaJpZM4Hz1wZ\n\u003E .\n",
+        "createdAt": "2016-07-29T18:36:06",
+        "reactions": []
+      }
+    ]
+  }
 }

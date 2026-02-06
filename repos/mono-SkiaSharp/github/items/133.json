@@ -15,5 +15,25 @@
   "updatedAt": "2022-08-20T00:02:20",
   "closedAt": "2016-08-15T15:15:57",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:42.8706108Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 239823322,
+        "author": "mattleibow",
+        "body": "I had a look at this and I think that you might be going about this wrong. The matrix transformations are applied to the entire canvas, not the next drawing. With this in mind, you should rotate the canvas and then scale it. \n\nThat way, when you stretch the block horizontally, the horizontal-ness is actually rotated in line with the block.\n\n\u0060\u0060\u0060 csharp\nSKMatrix m = SKMatrix.MakeTranslation(300, 100);\ncanvas.Concat(ref m);\n\nusing (new SKAutoCanvasRestore(canvas, true))\n{\n    m = SKMatrix.MakeScale(400, 200);\n    canvas.Concat(ref m);\n\n    using (SKPaint redPaint = new SKPaint())\n    {\n        redPaint.Color = new SKColor(255, 0, 0);\n        canvas.DrawRect(SKRect.Create(0, 0, 1, 1), redPaint);\n    }\n}\n\nusing (new SKAutoCanvasRestore(canvas, true))\n{\n    m = SKMatrix.MakeRotationDegrees(45);\n    canvas.Concat(ref m);\n\n    m = SKMatrix.MakeScale(400, 200);\n    canvas.Concat(ref m);\n\n    using (SKPaint bluePaint = new SKPaint())\n    {\n        bluePaint.Color = new SKColor(0, 0, 255);\n        canvas.DrawRect(SKRect.Create(0, 0, 1, 1), bluePaint);\n    }\n}\n\u0060\u0060\u0060\n\nI would also suggest that you use the \u0060SKAutoCanvasRestore\u0060 type to auto-rollback transformations:\n\n\u0060\u0060\u0060 csharp\nusing (new SKAutoCanvasRestore(canvas, true))\n{\n    // do you matrix transformations\n}\n\u0060\u0060\u0060\n\nThe equivalent \u0060Save\u0060/\u0060Restore\u0060 code is:\n\n\u0060\u0060\u0060 csharp\ncanvas.Save();\n// do you matrix transformations\ncanvas.Restore();\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-08-15T14:54:45",
+        "reactions": []
+      },
+      {
+        "id": 239827350,
+        "author": "mattleibow",
+        "body": "The same thing happens with HTML Canvas: http://jsbin.com/tukurarika/edit?html,output\nand then after my changes: http://jsbin.com/mekubacive/edit?html,output\n",
+        "createdAt": "2016-08-15T15:08:41",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -23,5 +23,67 @@
   "updatedAt": "2022-08-20T00:01:50",
   "closedAt": "2016-11-01T10:06:51",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:38.0524067Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 255429980,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. I am having a look now. I can confirm that it works on mac and iOS. \n\nI am in a meeting now, but I will check on my Windows machine. It is Windows 10, so it may differ a bit there.\n\nIn the mean time you can specify a serif font specifically, such as Times New Romans, or something similar.\n",
+        "createdAt": "2016-10-21T17:25:10",
+        "reactions": []
+      },
+      {
+        "id": 256169624,
+        "author": "mattleibow",
+        "body": "@tdenniston I had some more looks at this. I think it is actually a feature of the OS rather than skia that makes it work. DirectWrite tries, and fails, to find the font named \u0022serif\u0022. Then just falls back to the default platform font: Segoe UI.\n\nI created an issue on skia to confirm this: https://bugs.chromium.org/p/skia/issues/detail?id=5893\n\nhttps://msdn.microsoft.com/en-us/library/windows/desktop/dd368217(v=vs.85).aspx\n\n\u003E An array of characters, which is null-terminated, containing the name of the font family. The name is not case-sensitive but must otherwise exactly match a family name in the collection.\n",
+        "createdAt": "2016-10-25T20:42:41",
+        "reactions": []
+      },
+      {
+        "id": 256371330,
+        "author": "tdenniston",
+        "body": "It looks like they are saying \u0022not a bug\u0022 which is fine. Interestingly, they will have to solve this problem somehow in a cross-platform way when they implement SVG parsing (which is currently planned, according to their roadmap).\n",
+        "createdAt": "2016-10-26T14:50:37",
+        "reactions": []
+      },
+      {
+        "id": 256374412,
+        "author": "mattleibow",
+        "body": "I saw that. They still haven\u0027t closed the issue, so I think they might be considering this. I also linked in the spec from SVG and CSS.\n\nI will probably do something with regards to this myself until they come up with a solution. I\u0027ll probably add a few static properties such as \u0060SKTypeface.SansSerif\u0060 and \u0060SKTypeface.Serif\u0060. I am thinking a lazy, cached result using the spec: https://www.w3.org/TR/2008/REC-CSS2-20080411/fonts.html#generic-font-families\n",
+        "createdAt": "2016-10-26T15:00:22",
+        "reactions": []
+      },
+      {
+        "id": 256375460,
+        "author": "tdenniston",
+        "body": "I was going to use that same list myself, but I wondered: are those actually part of the spec? Or are they just examples?\n",
+        "createdAt": "2016-10-26T15:03:42",
+        "reactions": []
+      },
+      {
+        "id": 256377675,
+        "author": "mattleibow",
+        "body": "I see what you mean. I think every platform might be totally different. I wonder how this is done in reality - lots of docs and specs, but who is the actual mainstream SVG implementation that we should be looking at? is there a libsvg or something?\n",
+        "createdAt": "2016-10-26T15:11:02",
+        "reactions": []
+      },
+      {
+        "id": 256378436,
+        "author": "tdenniston",
+        "body": "I don\u0027t believe there is a reference implementation. There is librsvg (https://wiki.gnome.org/Projects/LibRsvg) which I haven\u0027t used, but have heard is ok but lacking some features. We could also take a look at Mozilla\u0027s SVG renderer or Inkscape. Not sure what license difficulties there might be in examining their code though.\n",
+        "createdAt": "2016-10-26T15:13:32",
+        "reactions": []
+      },
+      {
+        "id": 257529923,
+        "author": "mattleibow",
+        "body": "Closing this as this is not really a skia feature, and implementing this is not as straight-forward as picking a font from a list. More thought has to go into this and can be re-opened.\n",
+        "createdAt": "2016-11-01T10:06:51",
+        "reactions": []
+      }
+    ]
+  }
 }

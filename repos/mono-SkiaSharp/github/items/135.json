@@ -15,5 +15,73 @@
   "updatedAt": "2022-08-20T00:02:18",
   "closedAt": "2016-08-17T17:02:12",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:46.9472203Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 239796802,
+        "author": "mattleibow",
+        "body": "I am not exactly sure why this this changed, since it is fixed in v1.53.1 - which is the same native code... And there has been no change in the managed part. I rolled back to this version and still was not able to reproduce the error... which technically is an impossibility... \n\nThe only change I made was to update my VS 2015 from Update 2 to Update 3... I think this mush have resulted in a change in the compiler because this also happened: #114 \n\nThis code should not cause any issues since it is simply setting a field, and then fetching it.\n\nIn a summary: It is fixed in v1.53.1 (and if I recompile v1.53.0)\n",
+        "createdAt": "2016-08-15T13:05:46",
+        "reactions": []
+      },
+      {
+        "id": 239810878,
+        "author": "tdenniston",
+        "body": "@mattleibow Weird! Were you able to reproduce it? I ask because it\u0027s such a strange looking bug that I wonder if there\u0027s something wrong with my environment.\n",
+        "createdAt": "2016-08-15T14:08:24",
+        "reactions": []
+      },
+      {
+        "id": 240162433,
+        "author": "tdenniston",
+        "body": "@mattleibow Unfortunately, I\u0027d like to reopen this issue. I just upgraded to VS Update 3 and SkiaSharp 1.53.1 and I still encounter this bug.\n",
+        "createdAt": "2016-08-16T16:44:46",
+        "reactions": []
+      },
+      {
+        "id": 240295286,
+        "author": "mattleibow",
+        "body": "@tdenniston I am not too sure about this issue anymore... Basically, it happens on Windows, in Release mode - similar to the other issue...\n\nThe \u0060IsStroke\u0060 property (on the C side) looks like this:\n\n\u0060\u0060\u0060 cpp\nbool sk_paint_is_stroke(const sk_paint_t* cpaint) {\n    return AsPaint(*cpaint).getStyle() != SkPaint::kFill_Style;\n}\n\u0060\u0060\u0060\n\nPretty simple... but once the value gets to the C# side, it has changed to \u0060true\u0060, no matter what. If I change the \u0060bool\u0060 to an \u0060int\u0060 on the C# side, the value is some huge number.... really weird. Another weird thing, if I change the \u0060bool\u0060 to an \u0060int\u0060 on the C side, then everything works. And, another... If I keep the \u0060bool\u0060 on both C and C#, but flip the equals:\n\n\u0060\u0060\u0060 cpp\nbool sk_paint_is_stroke(const sk_paint_t* cpaint) {\n    return AsPaint(*cpaint).getStyle() == SkPaint::kStroke_Style;\n}\n\u0060\u0060\u0060\n\nThat also works... \uD83D\uDCA5 there goes my mind \uD83D\uDE04 I think MS is shipping a dodgy optimizer. This is making me scared, so I am going to work around it by passing the value and doing the comparison in C#.\n",
+        "createdAt": "2016-08-17T02:15:35",
+        "reactions": []
+      },
+      {
+        "id": 240426067,
+        "author": "mattleibow",
+        "body": "Confirmed that after the revert of the fix, the test failed. Re-applying the fix and the test should pass.\n",
+        "createdAt": "2016-08-17T14:18:48",
+        "reactions": []
+      },
+      {
+        "id": 240477518,
+        "author": "mattleibow",
+        "body": "@tdenniston test are all passing, I will release a fix soon (today/tomorrow) Thanks for your help!\n",
+        "createdAt": "2016-08-17T17:02:12",
+        "reactions": []
+      },
+      {
+        "id": 240536990,
+        "author": "mattleibow",
+        "body": "@tdenniston I pushed out a release that should work now: [v1.53.1.1](https://github.com/mono/SkiaSharp/releases/tag/v1.53.1.1)\n",
+        "createdAt": "2016-08-17T20:27:22",
+        "reactions": [
+          {
+            "user": "tdenniston",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:53:46.6332111Z"
+          }
+        ]
+      },
+      {
+        "id": 240551773,
+        "author": "tdenniston",
+        "body": "@mattleibow Confirmed the bug is fixed! Thanks for getting to it so quickly.\n\nI might have some time in the next few days to dig deeper into what\u0027s going on. I\u0027ve tried to debug into native skia before without luck, as I can\u0027t seem to get VS to load the libSkiaSharp.dll symbols. You wouldn\u0027t happen to have any idea how to get that working?\n",
+        "createdAt": "2016-08-17T21:18:26",
+        "reactions": []
+      }
+    ]
+  }
 }

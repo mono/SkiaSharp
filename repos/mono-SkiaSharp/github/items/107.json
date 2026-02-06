@@ -32,5 +32,170 @@
   "updatedAt": "2022-08-20T00:02:40",
   "closedAt": "2017-01-28T22:13:19",
   "commentCount": 15,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:06.1168819Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 239963879,
+        "author": "mattleibow",
+        "body": "I don\u0027t think this is going to be done at all anytime soon. \n\nHere is my code (it binds all that there is to bind):\n- Managed Branch: https://github.com/mono/SkiaSharp/tree/xamarin-svg-canvas\n- Native Branch: https://github.com/mono/skia/tree/xamarin-svg-canvas\n\nI did a check to see what\u0027s what and this is what I found:\n- \u0060SkSVGCanvas\u0060 is a thing, but it is very limited:\n  - basically just paths, shapes, text and images\n  - linear gradients are supported, but no others\n  - effects and filters are not\n\nI don\u0027t think I will be merging these changes into the main branch anytime soon. We have to wait for SVG to become something in Skia.\n",
+        "createdAt": "2016-08-15T23:52:36",
+        "reactions": []
+      },
+      {
+        "id": 242486452,
+        "author": "mattleibow",
+        "body": "A \u0060SKSvgCanvas\u0060 can be created on the fly, requiring only a bounds and an \u0060SKXmlWriter\u0060:\n\n\u0060\u0060\u0060 csharp\n// create a writeable stream\n// SKFileWStream skStream = ...\n// SKDynamicMemoryWStream skStream = ...\nSystem.IO.Stream stream = ...\nSkiaSharp.SKManagedWStream skStream = new SKManagedWStream(stream);\n\n// now create the xml writer and the canvas\nusing (var writer = new SKXmlStreamWriter(skStream))\nusing (var canvas = SKSvgCanvas.Create(SKRect.Create(0, 0, (int)Bounds.Width, (int)Bounds.Height), writer))\n{\n    // draw as normal since \u0022canvas\u0022 is just a \u0022SKCanvas\u0022\n}\n\n// you may have to:\n//skStream.Flush();\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-08-25T18:08:14",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:01.968336Z"
+          },
+          {
+            "user": "Arlorean",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:01.9683364Z"
+          }
+        ]
+      },
+      {
+        "id": 242550465,
+        "author": "zone117x",
+        "body": "Awesome job on getting those bindings. \n\n\u003E basically just paths, shapes, text and images\n\nThat\u0027s basically all I need for what we are using NGraphics for. Hopefully we\u0027ll get a chance to try it out soon. Thanks!\n",
+        "createdAt": "2016-08-25T21:40:41",
+        "reactions": []
+      },
+      {
+        "id": 242552338,
+        "author": "mattleibow",
+        "body": "@zone117x Make sure you use the svg betas as they haven\u0027t been merged into master/stable yet\n",
+        "createdAt": "2016-08-25T21:46:59",
+        "reactions": []
+      },
+      {
+        "id": 242942413,
+        "author": "wieslawsoltes",
+        "body": "I have run some tests using \u0060Version 1.53.2 (SVG Beta 1)\u0060 and generally works great!\n\nFound one bug when drawing paths with multiple figure.\n\nThe following path is not drawn correctly in Svg:\n\n\u0060\u0060\u0060\nM210,150L330,150L330,210L210,210z M225,165L315,165L315,195L225,195z\n\u0060\u0060\u0060\n\nBelow is the \u0060Svg\u0060 output using \u0060SkiaSharp\u0060:\n\n\u0060\u0060\u0060 SVG\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\n\u003Csvg xmlns=\u0022http://www.w3.org/2000/svg\u0022 xmlns:xlink=\u0022http://www.w3.org/1999/xlink\u0022 width=\u0022840\u0022 height=\u0022600\u0022\u003E\n    \u003Crect fill=\u0022rgb(255,255,255)\u0022 stroke=\u0022none\u0022 width=\u0022840\u0022 height=\u0022600\u0022/\u003E\n    \u003Cpath fill=\u0022rgb(0,0,0)\u0022 fill-opacity=\u00220.3137255\u0022 stroke=\u0022none\u0022 d=\u0022M210 150L330 150L330 210L210 210L210 150ZM225 165L315 165L315 195L225 195L225 165Z\u0022/\u003E\n    \u003Cpath fill=\u0022none\u0022 stroke=\u0022rgb(0,0,0)\u0022 stroke-width=\u00222\u0022 stroke-linecap=\u0022round\u0022 stroke-miterlimit=\u00224\u0022 d=\u0022M210 150L330 150L330 210L210 210L210 150ZM225 165L315 165L315 195L225 195L225 165Z\u0022/\u003E\n\u003C/svg\u003E\n\u0060\u0060\u0060\n\nIn above \u0060Svg\u0060 you can see that there are two paths, one with fill and one with stroke only, but they do not combine as they should.\n\nCode:\n\n\u0060\u0060\u0060\nvar presenter = new ContainerPresenter(); // MY DRAWING  CODE\n\nusing (SKFileWStream stream = new SKFileWStream(path))\nusing (var writer = new SKXmlStreamWriter(stream))\nusing (var canvas = SKSvgCanvas.Create(SKRect.Create(0, 0, (int)container.Width, (int)container.Height), writer))\n{\n    presenter.Render(canvas, renderer, container, 0, 0); // MY DRAWING CODE\n}\n\u0060\u0060\u0060\n\nI use same drawing code for creating Pdf\u0027s using SkiaSharp and output is correct.\n\nPdf:\n![2016-08-27_23-38-51](https://cloud.githubusercontent.com/assets/2297442/18030253/95a274e0-6caf-11e6-9953-88a3217e29ea.png)\n\nSvg:\n![2016-08-27_23-38-46](https://cloud.githubusercontent.com/assets/2297442/18030258/a12066d8-6caf-11e6-8d70-0d4b28bcd283.png)\n",
+        "createdAt": "2016-08-27T21:40:57",
+        "reactions": []
+      },
+      {
+        "id": 243172074,
+        "author": "wieslawsoltes",
+        "body": "I found the issue, the svg canvas backend does not set proper fill-rule, this is fixed version as it should be (the only difference is \u0060fill-rule=\u0022evenodd\u0022\u0060):\n\n\u0060\u0060\u0060 SVG\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\n\u003Csvg xmlns=\u0022http://www.w3.org/2000/svg\u0022 xmlns:xlink=\u0022http://www.w3.org/1999/xlink\u0022 width=\u0022840\u0022 height=\u0022600\u0022\u003E\n    \u003Crect fill=\u0022rgb(255,255,255)\u0022 stroke=\u0022none\u0022 width=\u0022840\u0022 height=\u0022600\u0022/\u003E\n    \u003Cpath fill-rule=\u0022evenodd\u0022 fill=\u0022rgb(0,0,0)\u0022 fill-opacity=\u00220.3137255\u0022 stroke=\u0022none\u0022 d=\u0022M210 150L330 150L330 210L210 210L210 150ZM225 165L315 165L315 195L225 195L225 165Z\u0022/\u003E\n    \u003Cpath fill=\u0022none\u0022 stroke=\u0022rgb(0,0,0)\u0022 stroke-width=\u00222\u0022 stroke-linecap=\u0022round\u0022 stroke-miterlimit=\u00224\u0022 d=\u0022M210 150L330 150L330 210L210 210L210 150ZM225 165L315 165L315 195L225 195L225 165Z\u0022/\u003E\n\u003C/svg\u003E\n\u0060\u0060\u0060\n\nThis is related to the fact that to use different color for fill and stroke using \u0060SKPaint\u0060 you have to issue two separate draw calls:\n\n\u0060\u0060\u0060 C#\nprivate void DrawPathInternal(SKCanvas canvas, SKPaint brush, SKPaint pen, bool isStroked, bool isFilled, SKPath path)\n{\n    if (isFilled)\n    {\n        canvas.DrawPath(path, brush);\n    }\n\n    if (isStroked)\n    {\n        canvas.DrawPath(path, pen);\n    }\n}\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-08-29T16:13:32",
+        "reactions": []
+      },
+      {
+        "id": 243504999,
+        "author": "zone117x",
+        "body": "The fix should probably be implemented in Skia?\n",
+        "createdAt": "2016-08-30T16:52:50",
+        "reactions": []
+      },
+      {
+        "id": 244246414,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes I think @zone117x is correct. If you look here: https://github.com/google/skia/blob/589a39eb81d25fa7af95e7366db17ac7a70a7d03/src/svg/SkSVGDevice.cpp#L348 they only do a few things. \n\nI would suggest opening an issue on http://bugs.skia.org and maybe creating a fiddle (https://fiddle.skia.org/) showing what you are trying to do.\n\nHere is \u0022more\u0022 information on the SVG plans by Google:\nhttps://bugs.chromium.org/p/skia/issues/detail?id=5596\n\nSpoilers: they are looking into it :)\n",
+        "createdAt": "2016-09-01T23:51:22",
+        "reactions": []
+      },
+      {
+        "id": 244300173,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow Opened issue https://bugs.chromium.org/p/skia/issues/detail?id=5712\n",
+        "createdAt": "2016-09-02T07:09:15",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:04.6981316Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:04.6981486Z"
+          }
+        ]
+      },
+      {
+        "id": 244387896,
+        "author": "mattleibow",
+        "body": "That is awesome! \n\nJust repo-ing the C# code for \u0022testing\u0022 purposes:\n\n\u0060\u0060\u0060 csharp\nusing (var stream = new SKFileWStream(\u0022test.svg\u0022))\nusing (var streamWriter = new SKXmlStreamWriter(stream))\nusing (var canvas = SKSvgCanvas.Create(new SKRect(0, 0, 100, 100), streamWriter))\n{\n    var p1 = new SKPaint();\n    p1.Color = SKColors.Red;\n    p1.IsAntialias = true;\n    p1.Style = SKPaintStyle.Fill;\n    p1.StrokeWidth = 1;\n\n    var p2 = new SKPaint();\n    p2.Color = SKColors.Black;\n    p2.IsAntialias = true;\n    p2.Style = SKPaintStyle.Stroke;\n    p2.StrokeWidth = 2;\n\n    var path = new SKPath();\n    path.FillType = SKPathFillType.EvenOdd;\n    path.MoveTo(10.0f, 10.0f);\n    path.LineTo(90.0f, 10.0f);\n    path.LineTo(90.0f, 90.0f);\n    path.LineTo(10.0f, 90.0f);\n    path.Close();\n    path.MoveTo(20.0f, 20.0f);\n    path.LineTo(80.0f, 20.0f);\n    path.LineTo(80.0f, 80.0f);\n    path.LineTo(20.0f, 80.0f);\n    path.Close();\n\n    canvas.DrawPath(path, p1);\n    canvas.DrawPath(path, p2);\n}\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-09-02T14:19:24",
+        "reactions": []
+      },
+      {
+        "id": 245118903,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow https://bugs.chromium.org/p/skia/issues/detail?id=5712#c2\n",
+        "createdAt": "2016-09-06T22:42:31",
+        "reactions": []
+      },
+      {
+        "id": 271348637,
+        "author": "daniel-luberda",
+        "body": "## Opacity - Not working:\r\n\u0060\u0060\u0060XML\r\n\u003Csvg width=\u002750\u0027 height=\u002750\u0027 viewBox=\u00270 0 50 50\u0027\u003E\u003Crect width=\u002750\u0027 height=\u002750\u0027 fill=\u0027#000\u0027 opacity=\u00270.5\u0027 /\u003E\u003C/svg\u003E\r\n\u0060\u0060\u0060\r\n## Fill-Opacty - Working\r\n\u0060\u0060\u0060XML\r\n\u003Csvg width=\u002750\u0027 height=\u002750\u0027 viewBox=\u00270 0 50 50\u0027\u003E\u003Crect width=\u002750\u0027 height=\u002750\u0027 fill=\u0027#000\u0027 fill-opacity=\u00270.5\u0027 /\u003E\u003C/svg\u003E\r\n\u0060\u0060\u0060\r\n\r\nMore here: https://github.com/luberda-molinet/FFImageLoading/issues/436",
+        "createdAt": "2017-01-09T17:29:25",
+        "reactions": []
+      },
+      {
+        "id": 271443055,
+        "author": "mattleibow",
+        "body": "@daniel-luberda I have added support for \u0022opacity\u0022 in this commit: https://github.com/mono/SkiaSharp/commit/cfe6afbf8aece4a2d4b835b727073cc50a0015da",
+        "createdAt": "2017-01-09T23:39:59",
+        "reactions": [
+          {
+            "user": "daniel-luberda",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:05.5775304Z"
+          },
+          {
+            "user": "daniel-luberda",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:05.5775306Z"
+          },
+          {
+            "user": "zone117x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:05.5775308Z"
+          },
+          {
+            "user": "zone117x",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:05.5775309Z"
+          },
+          {
+            "user": "vlkam",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:05.577531Z"
+          }
+        ]
+      },
+      {
+        "id": 275878419,
+        "author": "mattleibow",
+        "body": "I have merged the svg branch into the master, but please note that this area (svg canvas) is still very much in beta on the native side. Thus, it is a beta state in SkiaSharp.",
+        "createdAt": "2017-01-28T22:13:19",
+        "reactions": [
+          {
+            "user": "zone117x",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:05.7985755Z"
+          }
+        ]
+      },
+      {
+        "id": 276089816,
+        "author": "zone117x",
+        "body": "@mattleibow Thanks for committing to this and getting it done. Great work!",
+        "createdAt": "2017-01-30T15:19:31",
+        "reactions": []
+      }
+    ]
+  }
 }

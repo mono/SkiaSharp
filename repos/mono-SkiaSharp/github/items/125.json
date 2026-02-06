@@ -14,5 +14,107 @@
   "updatedAt": "2022-08-20T00:02:28",
   "closedAt": "2016-08-03T21:34:01",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:27.8538983Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 236640313,
+        "author": "mattleibow",
+        "body": "@gentledepp Thanks for reporting this. I\u0027ll have a look\n",
+        "createdAt": "2016-08-01T16:57:07",
+        "reactions": []
+      },
+      {
+        "id": 236951656,
+        "author": "gentledepp",
+        "body": "Any guesses where I should look at, @mattleibow ?\nI need to fix this until thursday if possible :-|\n",
+        "createdAt": "2016-08-02T16:00:24",
+        "reactions": []
+      },
+      {
+        "id": 236958551,
+        "author": "mattleibow",
+        "body": "I am looking now. \u0060FromBitmap\u0060 can load a bitmap and save it fine, so I think that works. What is blank in your screen? The image or the screen?\n",
+        "createdAt": "2016-08-02T16:21:47",
+        "reactions": []
+      },
+      {
+        "id": 236959653,
+        "author": "gentledepp",
+        "body": "The resulting png is empty.\n\nAm 02.08.2016 18:22 schrieb \u0022Matthew Leibowitz\u0022 notifications@github.com:\n\n\u003E I am looking now. FromBitmap can load a bitmap and save it fine, so I\n\u003E think that works. What is blank in your screen? The image or the screen?\n\u003E \n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub\n\u003E https://github.com/mono/SkiaSharp/issues/125#issuecomment-236958551, or mute\n\u003E the thread\n\u003E https://github.com/notifications/unsubscribe-auth/ABHwx5YBRzzGJxwcjCHVKeG_l-tPwm1Fks5qb26cgaJpZM4JZkeH\n\u003E .\n",
+        "createdAt": "2016-08-02T16:25:19",
+        "reactions": []
+      },
+      {
+        "id": 236960796,
+        "author": "mattleibow",
+        "body": "Ah, this is not correct:\n\n\u0060\u0060\u0060 csharp\nusing (var b = new SKBitmap(width, height))\nusing (var s = SKSurface.Create(b.Info))\n\u0060\u0060\u0060\n\n\u0060b.Info\u0060 has no reference to the bitmap itself, just the size/color. That \u0060SKSurface.Create\u0060 is actually creating a new bitmap under the hood.\n\nThere are two ways to do this:\n1. \u0060s.Snapshot()\u0060\n2. \u0060SKSurface.Create\u0060 with the bytes to the image\n\nLet me see if I can get some code here...\n",
+        "createdAt": "2016-08-02T16:29:13",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:26.8616143Z"
+          },
+          {
+            "user": "gentledepp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:26.8616148Z"
+          }
+        ]
+      },
+      {
+        "id": 236962532,
+        "author": "mattleibow",
+        "body": "\u0060\u0060\u0060 csharp\nIntPtr length;\nusing (var b = new SKBitmap(width, height, SKImageInfo.PlatformColorType, SKAlphaType.Premul))\nusing (var s = SKSurface.Create(b.Info, b.GetPixels(out length), b.RowBytes))\n{\n    sample.Method(s.Canvas, width, height);\n    SaveBitmap(\u0022FromBitmap\u0022, SKImage.FromBitmap(b));\n}\n\u0060\u0060\u0060\n\nOR\n\n\u0060\u0060\u0060 csharp\n// no need to the bitmap\nusing (var s = SKSurface.Create(b.Info))\n{\n    sample.Method(s.Canvas, width, height);\n    SaveBitmap(\u0022FromBitmap\u0022, s.Snapshot());\n}\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-08-02T16:35:07",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:27.1537598Z"
+          },
+          {
+            "user": "gentledepp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:27.1537602Z"
+          },
+          {
+            "user": "gentledepp",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:53:27.1537603Z"
+          }
+        ]
+      },
+      {
+        "id": 236972486,
+        "author": "mattleibow",
+        "body": "@gentledepp does this work for you?\n",
+        "createdAt": "2016-08-02T17:08:11",
+        "reactions": []
+      },
+      {
+        "id": 236974426,
+        "author": "gentledepp",
+        "body": "I am already out of the office. will try tomorrow. Thank you for helping me\nout!\n\nAm 02.08.2016 19:08 schrieb \u0022Matthew Leibowitz\u0022 notifications@github.com:\n\n\u003E @gentledepp https://github.com/gentledepp does this work for you?\n\u003E \n\u003E \u2014\n\u003E You are receiving this because you were mentioned.\n\u003E Reply to this email directly, view it on GitHub\n\u003E https://github.com/mono/SkiaSharp/issues/125#issuecomment-236972486, or mute\n\u003E the thread\n\u003E https://github.com/notifications/unsubscribe-auth/ABHwxxhBqHq__Tx0-Uvbffl6LZetN_0gks5qb3l8gaJpZM4JZkeH\n\u003E .\n",
+        "createdAt": "2016-08-02T17:14:39",
+        "reactions": []
+      },
+      {
+        "id": 237157053,
+        "author": "gentledepp",
+        "body": "Your suggestions both work like a charm!\nThank you so much. Indeed, in the SVG library, I made the same mistake that you pointed out:\n\u0060\nusing (var b = new SKBitmap(width, height));\nusing (var s = SKSurface.Create(b.Info))\u0060\n\nSo this was a false alarm and the issue can be closed. \nSorry for that and thank you so much!\n",
+        "createdAt": "2016-08-03T06:50:53",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:27.8042473Z"
+          }
+        ]
+      }
+    ]
+  }
 }

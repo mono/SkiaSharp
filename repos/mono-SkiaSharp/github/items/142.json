@@ -15,5 +15,25 @@
   "updatedAt": "2022-08-20T00:02:11",
   "closedAt": "2016-08-23T23:46:23",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:05.2345155Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 241635518,
+        "author": "ollira",
+        "body": "The same thing happens also in SKPathEffect.Create2DPath\n\nCode sample\n\n\u0060\u0060\u0060\n    public static void PathEffect2DPath(SKCanvas canvas, int width, int height)\n    {\n        float margin = Math.Min(width, height) / 5f;\n        float scale = 30f;\n\n        canvas.Clear(SKColors.White);\n\n        SKPath path = new SKPath();\n        path.AddCircle(0, 0, scale/3f, SKPathDirection.Clockwise);\n\n        using (var paint = new SKPaint())\n        using (var effect = SKPathEffect.Create2DPath(SKMatrix.MakeScale(scale, scale), path))\n        {\n            paint.PathEffect = effect;\n            canvas.DrawRect(new SKRect(margin, margin, width - margin, height - margin), paint);\n        }\n    }\n\u0060\u0060\u0060\n\nThe respective C functions expect pointers to matrix data:\n\nSK_API sk_path_effect_t\\* sk_path_effect_create_2d_line(float width, const sk_matrix_t\\* matrix);\nSK_API sk_path_effect_t\\* sk_path_effect_create_2d_path(const sk_matrix_t\\* matrix, const sk_path_t\\* path);\n\nSkiaSharp uses SKMatrix as the parameter type:\n\n\u0060\u0060\u0060\n    [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]\n    public extern static sk_path_effect_t sk_path_effect_create_2d_line(float width, SKMatrix matrix);\n    [DllImport(SKIA, CallingConvention = CallingConvention.Cdecl)]\n    public extern static sk_path_effect_t sk_path_effect_create_2d_path(SKMatrix matrix, sk_path_t path);\n\u0060\u0060\u0060\n\nPerhaps a matrix reference is needed here.\n\nRegards,\nOlli Raisa\n",
+        "createdAt": "2016-08-23T06:04:38",
+        "reactions": []
+      },
+      {
+        "id": 241917682,
+        "author": "mattleibow",
+        "body": "Hi @ollira Thanks for reporting and taking the time to have a poke around in the code.\nYour suggestion was correct, we were not marshalling the struct properly.\n",
+        "createdAt": "2016-08-23T23:50:11",
+        "reactions": []
+      }
+    ]
+  }
 }

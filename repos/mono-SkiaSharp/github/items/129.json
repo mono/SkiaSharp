@@ -25,5 +25,102 @@
   "updatedAt": "2022-08-20T00:02:24",
   "closedAt": "2016-08-20T18:12:43",
   "commentCount": 13,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:37.7490513Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 238448589,
+        "author": "migueldeicaza",
+        "body": "I suspect the problem is this code from:\n\nskia/src/utils/SkRTConf.cpp\n\nThere is some code surrounded by \u0060SK_BUILD_FOR_WINRT\u0060 and we are bringing this in.\n",
+        "createdAt": "2016-08-09T04:11:42",
+        "reactions": []
+      },
+      {
+        "id": 238615928,
+        "author": "bholmes",
+        "body": "The SkRTConf.cpp preprocessor check appears to do the right thing.  It should be excluded.\n\nI believe it is coming from libjpeg-turbo in the third party section.\n\nhttps://skia.googlesource.com/third_party/libjpeg-turbo/\u002B/debddedc75850bcdeb8a57258572f48b802a4bb3/simd/jsimd_x86_64.c#52\n\nTrying to think of a clean way to patch those files.  @mattleibow have we patched any other third party work?\n",
+        "createdAt": "2016-08-09T16:50:35",
+        "reactions": []
+      },
+      {
+        "id": 238842944,
+        "author": "mattleibow",
+        "body": "Fixed in commit c185f5cc2487728b0fa64fa25b57334292f5195d\n\n[SkiaSharpCert.xml.txt](https://github.com/mono/SkiaSharp/files/410945/SkiaSharpCert.xml.txt)\n",
+        "createdAt": "2016-08-10T11:45:55",
+        "reactions": []
+      },
+      {
+        "id": 238843246,
+        "author": "mattleibow",
+        "body": "Inject an empty method using defines. I am not sure how this compiled since the code in SkRTConf.cpp throws a compiler error, but the code in jsimd_x86_64.c does not...\n",
+        "createdAt": "2016-08-10T11:47:37",
+        "reactions": []
+      },
+      {
+        "id": 239124351,
+        "author": "mattleibow",
+        "body": "This should be fixed in the upcoming (planned for this week) release: v1.53.1\n",
+        "createdAt": "2016-08-11T10:25:20",
+        "reactions": []
+      },
+      {
+        "id": 241138019,
+        "author": "mattleibow",
+        "body": "Re-opening this on account that x86 still uses \u0060getenv\u0060 somewhere. ARM and x64 appear to be fine.\n",
+        "createdAt": "2016-08-19T21:19:13",
+        "reactions": []
+      },
+      {
+        "id": 241186303,
+        "author": "mattleibow",
+        "body": "I think everything is fixed now, just waiting on my app to be officially published.\n",
+        "createdAt": "2016-08-20T08:05:48",
+        "reactions": []
+      },
+      {
+        "id": 241472473,
+        "author": "mattleibow",
+        "body": "\u003E **Your submission for Skia.UWP.Demo passed certification.**\n\u003E \n\u003E It will take up to 16 hours for your changes to be visible to all of your customers. Once published, your app\u0027s listing will be available at https://www.microsoft.com/store/apps/9NBLGGH51856. \n\u003E \n\u003E Thank you, \n\u003E The Windows Store Team \n",
+        "createdAt": "2016-08-22T16:38:35",
+        "reactions": []
+      },
+      {
+        "id": 251366485,
+        "author": "tseemann-xematec",
+        "body": "Hi guys\n\nI am still experiencing this issue with SkiaSharp v1.54 :(\n\nMessage from Windows Store Certification:\n**API getenv in api-ms-win-crt-environment-l1-1-0.dll is not supported for this application type. libSkiaSharp.dll calls this API**\n\nAny suggestions?\n",
+        "createdAt": "2016-10-04T11:49:40",
+        "reactions": []
+      },
+      {
+        "id": 251691085,
+        "author": "mattleibow",
+        "body": "@tseemann-xematec That is weird. Especially since I have an app on the store using v1.54.0. What you can do to test is to run the cert tool on one platform at a time and see which one is failing.\n\nWhat you can try is to remove the NuGet, and then delete it from your cache \nC:\\Users\\username.nuget\\packages\\SkiaSharp\n\nThen restore it. Maybe for some reason it is doing it wrong. I released the app using the NuGet, so it can\u0027t be the released one. But, just for sanity, could you re-download and then run the cert again?\n\nLet me know what happens...\n",
+        "createdAt": "2016-10-05T14:28:48",
+        "reactions": []
+      },
+      {
+        "id": 251886126,
+        "author": "tseemann-xematec",
+        "body": "Thanks, @mattleibow - I will try removing and re-adding the package entirely. I\u0027ll be back.\n",
+        "createdAt": "2016-10-06T07:21:52",
+        "reactions": []
+      },
+      {
+        "id": 252764898,
+        "author": "mattleibow",
+        "body": "@tseemann-xematec Did this resolve your issue?\n",
+        "createdAt": "2016-10-10T22:38:37",
+        "reactions": []
+      },
+      {
+        "id": 252895932,
+        "author": "tseemann-xematec",
+        "body": "@mattleibow Problem solved :) You were right - we still had a reference to v1.53. All our direct references in our projects to SkiaSharp were correctly v1.54, but it turned out we had an indirect reference to v1.53 in one of our own NuGet packages, because it stated a dependency on v1.53, even though it was itself using v1.54.\n\nThanks for your hint!\n",
+        "createdAt": "2016-10-11T11:50:45",
+        "reactions": []
+      }
+    ]
+  }
 }

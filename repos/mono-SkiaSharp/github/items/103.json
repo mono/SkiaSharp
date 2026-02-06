@@ -15,5 +15,84 @@
   "updatedAt": "2022-08-20T00:02:44",
   "closedAt": "2016-08-11T16:50:12",
   "commentCount": 7,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:52.6367586Z",
+    "reactions": [
+      {
+        "user": "JimSEOW",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:52:52.6367609Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 229221029,
+        "author": "migueldeicaza",
+        "body": "If you have an SKBitmap, you can call:\n\n\u0060\u0060\u0060\nvar data = bitmap.Encode (SKImageEncodeFormat.Png, quality: 100);\nusing (var f = File.Create (\u0022foo.png\u0022))\n   data.SaveTo (f);\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-06-29T00:10:01",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "-1",
+            "createdAt": "2026-02-06T13:52:51.0313312Z"
+          }
+        ]
+      },
+      {
+        "id": 229299178,
+        "author": "gentledepp",
+        "body": "Unfortunately this is not true:\n**SKBitmap** (at last in version 1.49.4-beta) does not have a method \u0022**Encode**\u0022 :-|\n\nsee here: https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKBitmap.cs\n",
+        "createdAt": "2016-06-29T09:03:05",
+        "reactions": []
+      },
+      {
+        "id": 229335771,
+        "author": "gentledepp",
+        "body": "AAAH! Now I think I see what the problem is!\nYou meant \u0022**SKImage**\u0022 but wrote \u0022**SKBitmap**\u0022, right? Because SKImage has an \u0022Encode\u0022 method :)\nSo if I have some \u0022SKBitmap\u0022 that I\u0027d like to store, I\u0027d do the following (please correct me if I\u0027m wrong):\n\u0060\n\n\u0060\u0060\u0060\n        SKBitmap bitmap = ... I get it from somewhere - trust me;\n        using(var img = SKImage.FromPixels(bitmap.Info, bitmap.Handle, si.Width * 4))\n        {\n            var data = img.Encode(SKImageEncodeFormat.Png, quality: 100);\n            data.SaveTo(stream);\n        }\n\u0060\u0060\u0060\n\n\u0060\n\n... no... that was definetly wrong.... but I guess I am on the right track...\n",
+        "createdAt": "2016-06-29T12:01:03",
+        "reactions": [
+          {
+            "user": "gentledepp",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:52:51.4895092Z"
+          }
+        ]
+      },
+      {
+        "id": 229340082,
+        "author": "gentledepp",
+        "body": "I always get a SIGSEGV so I am doing something wrong, although it seems correct to me:\n\n\u0060\u0060\u0060\n    SKBitmap bitmap = Image;\n    try\n    {\n        bitmap.LockPixels();\n        IntPtr p;\n        bitmap.GetPixels(out p);\n        using (var img = SKImage.FromPixels(bitmap.Info, bitmap.Handle, bitmap.Width * bitmap.BytesPerPixel))\n        {\n            var data = img.Encode(SKImageEncodeFormat.Png, quality: quality);\n            data.SaveTo(stream);\n        }\n    }\n    finally\n    {\n        bitmap.UnlockPixels();\n    }\n\u0060\u0060\u0060\n\nthe stacktrace is:4\n\n\u003E 06-29 14:34:24.051 E/mono-rt (31174): Stacktrace:\n\u003E 06-29 14:34:24.051 E/mono-rt (31174): \n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at \u003Cunknown\u003E \u003C0xffffffff\u003E\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_image_new_raster_copy (SkiaSharp.SKImageInfo\u0026,intptr,intptr) \u003CIL 0x0002b, 0xffffffff\u003E\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at SkiaSharp.SKImage.FromPixels (SkiaSharp.SKImageInfo,intptr,int) \u003CIL 0x00009, 0x000a3\u003E\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at Svg.Platform.SkiaBitmap.SavePng (System.IO.Stream,int) [0x00019] in C:\\Code\\icl\\SVG\\SVG\\Svg.Core\\Platform\\SkiaBitmap.cs:66\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at Svg.Droid.SampleEditor.Core.Tools.SaveTool/\u003C\u003Ec__DisplayClass3_0.\u003CInitialize\u003Eb__8 (object) [0x0006d] in C:\\Code\\icl\\SVG\\SVG\\Svg.Editor.Sample.Core\\Tools\\SaveTool.cs:138\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at Svg.Core.Tools.ToolCommand.Execute (object) [0x00001] in C:\\Code\\icl\\SVG\\SVG\\Svg.Editor.Core\\Tools\\ITool.cs:97\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at Svg.Droid.SampleEditor.Views.EditorView.OnOptionsItemSelected (Android.Views.IMenuItem) [0x0005d] in C:\\Code\\icl\\SVG\\SVG\\Svg.Editor.Sample.Droid\\Views\\EditorView.cs:126\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at Android.App.Activity.n_OnOptionsItemSelected_Landroid_view_MenuItem_ (intptr,intptr,intptr) [0x00011] in /Users/builder/data/lanes/3236/ee215fc9/source/monodroid/src/Mono.Android/platforms/android-23/src/generated/Android.App.Activity.cs:3935\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at (wrapper dynamic-method) object.7c4f615e-b4f8-41e0-a9ab-ecd5399d7c82 (intptr,intptr,intptr) \u003CIL 0x00017, 0x0004b\u003E\n\u003E 06-29 14:34:24.051 E/mono-rt (31174):   at (wrapper native-to-managed) object.7c4f615e-b4f8-41e0-a9ab-ecd5399d7c82 (intptr,intptr,intptr) \u003CIL 0x00029, 0xffffffff\u003E\n\u003E 06-29 14:34:24.051 E/mono-rt (31174): \n\u003E 06-29 14:34:24.051 E/mono-rt (31174): Attempting native Android stacktrace:\n\u003E 06-29 14:34:24.051 E/mono-rt (31174): \n\u003E 06-29 14:34:24.066 E/mono-rt (31174):   at __memcpy_base\u002B88 [0x400d726c]\n\u003E 06-29 14:34:24.066 E/mono-rt (31174):   at SkData::PrivateNewWithCopy(void const*, unsigned int)\u002B36 [0x847185e5]\n\u003E 06-29 14:34:24.066 E/mono-rt (31174): \n\u003E 06-29 14:34:24.066 E/mono-rt (31174): =================================================================\n\u003E 06-29 14:34:24.066 E/mono-rt (31174): Got a SIGSEGV while executing native code. This usually indicates\n\u003E 06-29 14:34:24.066 E/mono-rt (31174): a fatal error in the mono runtime or one of the native libraries \n\u003E 06-29 14:34:24.066 E/mono-rt (31174): used by your application.\n\u003E 06-29 14:34:24.066 E/mono-rt (31174): =================================================================\n\u003E 06-29 14:34:24.066 E/mono-rt (31174): \n\u003E 06-29 14:34:24.066 F/libc    (31174): Fatal signal 11 (SIGSEGV) at 0x00019000 (code=1), thread 31174 (id.SampleEditor)\n",
+        "createdAt": "2016-06-29T12:23:13",
+        "reactions": []
+      },
+      {
+        "id": 229341108,
+        "author": "gentledepp",
+        "body": "I just saw, that there is conversion function in SKIA - could that be bound in SkiaSharp?\n\n\u0060static sk_sp\u003CSkImage\u003E MakeFromBitmap(const SkBitmap\u0026);\u0060\n\nsee SKImage.h\nhttps://github.com/google/skia/blob/master/include/core/SkImage.h \n\n... but if I look at the implementation, I would assume that my second implementation is correct - but still it is failing...\n\nsee: SKImage.cpp\nhttps://github.com/google/skia/blob/master/src/image/SkImage.cpp\n\n\u0060sk_sp\u003CSkImage\u003E SkImage::MakeFromBitmap(const SkBitmap\u0026 bm) {\n    SkPixelRef* pr = bm.pixelRef();\n    if (nullptr == pr) {\n        return nullptr;\n    }\u0060\n",
+        "createdAt": "2016-06-29T12:28:00",
+        "reactions": []
+      },
+      {
+        "id": 239128748,
+        "author": "mattleibow",
+        "body": "@gentledepp Is this still an issue?\n",
+        "createdAt": "2016-08-11T10:49:29",
+        "reactions": []
+      },
+      {
+        "id": 239220525,
+        "author": "mattleibow",
+        "body": "I am thinking that you are passing the wrong \u0060IntPtr\u0060 to \u0060SKImage.FromPixels\u0060:\n\n\u0060\u0060\u0060 csharp\n    SKBitmap bitmap = Image;\n    try\n    {\n        bitmap.LockPixels();\n        IntPtr p;\n        IntPtr pixels = bitmap.GetPixels(out p); // this line and the next\n        using (var img = SKImage.FromPixels(bitmap.Info, pixels, bitmap.Width * bitmap.BytesPerPixel))\n        {\n            var data = img.Encode(SKImageEncodeFormat.Png, quality: quality);\n            data.SaveTo(stream);\n        }\n    }\n    finally\n    {\n        bitmap.UnlockPixels();\n    }\n\u0060\u0060\u0060\n\nYou should never have to reference the \u0060object.Handle\u0060 from outside the SkiaSharp library. If you have to, you can never know what the underlying native type will be.\n",
+        "createdAt": "2016-08-11T16:50:12",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:52.5865362Z"
+          }
+        ]
+      }
+    ]
+  }
 }

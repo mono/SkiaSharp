@@ -27,5 +27,419 @@
   "updatedAt": "2022-08-20T06:01:20",
   "closedAt": "2017-06-08T15:00:47",
   "commentCount": 70,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:33.7471079Z",
+    "reactions": [
+      {
+        "user": "eman1986",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:52:33.7471116Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 226790855,
+        "author": "migueldeicaza",
+        "body": "SkiaSharp should, but the native supporting code needs to be compiled individually on each Linux distribution.\n\nSadly, NuGet was not designed to cope with this scenario, so there is not much that we can do to ship precompiled binaries.\n\nWhat we should do is at least provide a simple Makefile to create the native library support, so third parties can build/install it easily.\n",
+        "createdAt": "2016-06-17T14:53:06",
+        "reactions": [
+          {
+            "user": "eman1986",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:22.1472125Z"
+          }
+        ]
+      },
+      {
+        "id": 226820601,
+        "author": "tmds",
+        "body": "@migueldeicaza compilations could be provided for several linux flavors using the runtimes/RID feature: https://dotnet.github.io/docs/core-concepts/rid-catalog.html\n",
+        "createdAt": "2016-06-17T16:46:19",
+        "reactions": []
+      },
+      {
+        "id": 227108261,
+        "author": "mattleibow",
+        "body": "@tmds An ARM Linux was actually work with this guy: #18 \n@migueldeicaza not too sure of all the limitations, but as the native dll is the only thing that needs switching... is it possible to do something like this for a few supported (popular) versions of Linux: https://github.com/mono/SkiaSharp/blob/master/binding/SkiaSharp.Desktop/SkiaSharp.dll.config\n",
+        "createdAt": "2016-06-20T10:39:37",
+        "reactions": []
+      },
+      {
+        "id": 228860970,
+        "author": "migueldeicaza",
+        "body": "The issue is not identifying the library, the issue is that creating a package with the binaries is incredibly cumbersome (you need to create a package with all available systems upfront, build the native bits, and then package all the bits together).\n\nWhat should ideally happen is that these native binaries should be \u0022addons\u0022 to the core package, and could be published independently of the core package.\n",
+        "createdAt": "2016-06-27T20:12:11",
+        "reactions": []
+      },
+      {
+        "id": 230330278,
+        "author": "KarolKolenda",
+        "body": "@migueldeicaza Any idea when makefiles for popular distros will be available? Is it going to happen this year or are we looking more at 2017? With .Net Core in the wild, lack of server side graphics library in Linux environment all of the sudden seems like a pressing matter. \n\nThat being said, you are doing wonderful things with SkiaSharp and in Windows as GDI\u002B replacement it is just amazing. \n",
+        "createdAt": "2016-07-04T17:18:41",
+        "reactions": []
+      },
+      {
+        "id": 230909841,
+        "author": "kekekeks",
+        "body": "@migueldeicaza I think if you compile skia using sufficiently old distro (e. g. CentOS 6, Debian 5) it will just work everywhere. In the worst case you can just bundle dependencies (skia don\u0027t really need much: libfontconfig, libfreetype, libz, libpng12) and rely only on libc which is guaranteed to be present by LSB.\n",
+        "createdAt": "2016-07-06T21:17:51",
+        "reactions": []
+      },
+      {
+        "id": 238043126,
+        "author": "jameswalmsley",
+        "body": "I\u0027m looking into the build.cake file and trying to work out how to convert it to build for linux.\nAre there any attempts of pointers for me to start updating the build system.\n",
+        "createdAt": "2016-08-06T18:58:44",
+        "reactions": []
+      },
+      {
+        "id": 239211693,
+        "author": "mattleibow",
+        "body": "@jameswalmsley I would say you probably need to just get the externals building. These are grouped using the \u0060Task (\u0022externals-\u003Cplatform\u003E\u0022)\u0060 steps. For the case of Linux, I would suggest following the Android style: \u0060Task (\u0022externals-android\u0022)\u0060 https://github.com/mono/SkiaSharp/blob/v1.53.0/build.cake#L674-L724\n\nIt pretty much follows the official docs by google: https://skia.org/user/quick/linux\n\nIt follows the pattern of:\n1. set global env vars\n2. set gyp defines for platform\n3. build \u0060*.a\u0060 (using ninja) for platform\n4. link all \u0060*.a\u0060 together into a dynamic library of some sort\n5. repeat 2-4 for each platform\n\nIn the case of Android, I did step 4 using \u0060ndk-build\u0060, but you could use whatever it is that is used on Linux. @galvesribeiro did it without much trouble, after he built his compilers first ;)\n\nBasically, build all the \u0060*.a\u0060 files and then dynamically link them together. Let me know how this goes as we do want to have support for as many platforms as possible.\n\nThe rest of the stuff is pure C#/.NET P/Invoke\n",
+        "createdAt": "2016-08-11T16:18:19",
+        "reactions": []
+      },
+      {
+        "id": 239254733,
+        "author": "galvesribeiro",
+        "body": "Yes. Build for Android linux is already there on the Gyp files however, if you plan to build it to any other linux, you will either have to hack the .gyp files to point to your dependencies (specially if you are cross compiling to another arch) and the output will be a bunch of .a. After that all compiled, you need to link it to the skiasharp. I had everything statically linked since the ld and glibc on the targed device was too old (pre-C\u002B\u002B11).\n\nBasically this is the buld script:\n\n\u0060\u0060\u0060\nexport PATH=/home/guto/x-tools/arm-unknown-linux-gnueabi.485/bin:/home/guto/x-tools/crosstool-ng/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/guto/dev/chromium/depot_tools\nexport TARGETMACH=arm-arm1176jzs-linux-gnueabi\nexport BUILDMACH=i686-pc-linux-gnu\nexport CROSS=arm-arm1176jzs-linux-gnueabi\nexport CC=${CROSS}-gcc\nexport LD=${CROSS}-ld\nexport CXX=${CROSS}-g\u002B\u002B\nexport STRIP=${CROSS}-strip\nexport LINK=${CROSS}-g\u002B\u002B\nexport AS=${CROSS}-as\nexport AR=${CROSS}-ar\nexport RANLIB=${CROSS}-ranlib\nexport NM=${CROSS}-nm\nexport CROSS_COMPILE=\u0022arm-arm1176jzs-linux-gnueabi\u0022\nexport PKG_CONFIG_PATH=/home/guto/dev/libs/lib/pkgconfig\nexport INSTALLPATH=/home/guto/dev/libs/\n\nGYP_DEFINES=\u0027skia_gpu=0 skia_pdf= skia_os=linux skia_arch_type=arm\u0027 SK_SUPPORT_PDF=0  CC=\u0027arm-unknown-linux-gnueabi-gcc\u0027 CXX=\u0027arm-unknown-linux-gnueabi-g\u002B\u002B\u0027 PKG_CONFIG_PATH=/home/guto/dev/libs/lib/pkgconfig LDFLAGS=-L/home/guto/dev/libs/lib  python bin/sync-and-gyp\n\nninja -C out/Release skia_lib\n\n//Compiling source to object files\n$CXX -MMD /home/guto/dev/SkiaSharp/native-builds/src/SkiaKeeper.c /home/guto/dev/SkiaSharp/native-builds/src/SkManagedStream.cpp /home/guto/dev/SkiaSharp/native-builds/src/sk_managedstream.cpp /home/guto/dev/SkiaSharp/native-builds/src/sk_xamarin.cpp -g -fPIC -O3 -DSKIA_DLL -DSKIA_IMPLEMENTATION=1 -DSK_INTERNAL -DSK_BUILD_FOR_UNIX -I/home/guto/dev/SkiaSharp/skia/include -I/home/guto/dev/SkiaSharp/skia/include/c -I/home/guto/dev/SkiaSharp/skia/include/config -I/home/guto/dev/SkiaSharp/skia/include/core -I/home/guto/dev/SkiaSharp/skia/include/pathops -I/home/guto/dev/SkiaSharp/skia/include/pipe -I/home/guto/dev/SkiaSharp/skia/include/ports -I/home/guto/dev/SkiaSharp/skia/include/private -I/home/guto/dev/SkiaSharp/skia/include/utils -I/home/guto/dev/SkiaSharp/skia/include/images -I/home/guto/dev/SkiaSharp/skia/src/c -I/home/guto/dev/SkiaSharp/skia/src/core -I/home/guto/dev/SkiaSharp/skia/src/sfnt -I/home/guto/dev/SkiaSharp/skia/src/image -I/home/guto/dev/SkiaSharp/skia/src/opts -I/home/guto/dev/SkiaSharp/skia/src/utils -I/home/guto/dev/SkiaSharp/skia/include/gpu -I/home/guto/dev/SkiaSharp/skia/src/gpu -I/home/guto/SSBuild/SkiaSharp/SkiaSharp/obj/Debug/prec/Debug -L/home/guto/dev/libs/lib -lfontconfig -c -std=c\u002B\u002B11\n\n//Generating shared object \u0022libSkiaSharp.so\u0022 from object files\n$CXX -shared -o Release/libSkiaSharp.so SkiaKeeper.o sk_managedstream.o SkManagedStream.o sk_xamarin.o -L/home/guto/dev/SkiaSharp/skia/out/Release/lib -Wl,--start-group /home/guto/dev/SkiaSharp/skia/out/Release/libskia_core.a /home/guto/dev/SkiaSharp/skia/out/Release/libskia_ports.a /home/guto/dev/SkiaSharp/skia/out/Release/libskia_images.a /home/guto/dev/SkiaSharp/skia/out/Release/libskia_sfnt.a /home/guto/dev/SkiaSharp/skia/out/Release/libskia_opts.a /home/guto/dev/SkiaSharp/skia/out/Release/libskia_codec.a /home/guto/dev/SkiaSharp/skia/out/Release/libskia_effects.a /home/guto/dev/SkiaSharp/skia/out/Release/libskia_utils.a -Wl,--end-group /home/guto/dev/SkiaSharp/skia/out/Release/libpng_static.a /home/guto/dev/libs/lib/libfreetype.a /home/guto/dev/libs/lib/libfontconfig.so /home/guto/dev/libs/lib/libz.a /home/guto/dev/libs/lib/libturbojpeg.a /home/guto/dev/libs/lib/libjpeg.a /home/guto/dev/libs/lib/libexpat.a /home/guto/dev/libs/lib/libwebp.a /home/guto/dev/libs/lib/libwebpdecoder.a /home/guto/dev/libs/lib/libwebpdemux.a /home/guto/dev/libs/lib/libwebpextras.a /home/guto/dev/libs/lib/libwebpmux.a  /home/guto/x-tools/arm-unknown-linux-gnueabi.485/arm-unknown-linux-gnueabi/lib/libstdc\u002B\u002B.a -L/home/guto/dev/libs/lib -lfontconfig\n\n\u0060\u0060\u0060\n\nOne can create a makefile and make things easier but this native linux \u0022macumba\u0022 is not something we are good here. So thanks to @mattleibow we got it to work.\n\nThe C# side of SkiaSharp is just PInvokes with a .Net like APIs, so just point it to the right lib name and you are set.\n\nI hope it help.\n",
+        "createdAt": "2016-08-11T18:49:08",
+        "reactions": []
+      },
+      {
+        "id": 239299529,
+        "author": "mattleibow",
+        "body": "Thanks for this @galvesribeiro!\n",
+        "createdAt": "2016-08-11T21:32:33",
+        "reactions": [
+          {
+            "user": "galvesribeiro",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:24.2361297Z"
+          }
+        ]
+      },
+      {
+        "id": 239317318,
+        "author": "kekekeks",
+        "body": "Hello guys, I have some tips for you here. When I was messing with skia on linux half a year ago, I\u0027ve run into an issue with really huge library file (50MB\u002B). I\u0027ve managed to strip it down to 2MB.\n- Linker has a wonderful flag --gc-sections which allows it to remove parts that aren\u0027t needed by the final \u0060so\u0060 binary. The issue is it doesn\u0027t work properly for shared libs unless you specify -ffunction-sections -fdata-sections compiler flags for each source file\n- Disabling RTTI also saves a great deal of space\n\nYou can find a patch to skia.gyp here: https://github.com/AvaloniaUI/libperspesk/blob/master/linux/skia.patch\n\nAnother issue with linking it was the fact that for some reason linker doesn\u0027t work properly with static library dependencies when you compile your shared library. --whole-archive just bloats your binary size and even then doesn\u0027t always work.  So the trick is to unpack object files from static libs using \u0060ar\u0060 utility and then combine them into one. The script for that is here: https://github.com/AvaloniaUI/libperspesk/blob/master/linux/mergelibs.sh\n\nI also recommend you to specify --no-undefined linker flag so you won\u0027t run into weird \u0060undefined symbol\u0060 errors at runtime, and could figure out dependencies properly.\n\nMy old makefile is here:\n\nhttps://github.com/AvaloniaUI/libperspesk/blob/master/linux/Makefile#L32\n",
+        "createdAt": "2016-08-11T22:51:51",
+        "reactions": []
+      },
+      {
+        "id": 239318848,
+        "author": "kekekeks",
+        "body": "Oh, forgot to add the script that downloads and actually builds skia itself: https://github.com/AvaloniaUI/libperspesk/blob/master/linux/getskia.sh\n",
+        "createdAt": "2016-08-11T22:59:50",
+        "reactions": []
+      },
+      {
+        "id": 239355911,
+        "author": "galvesribeiro",
+        "body": "I wish I had that! Hehehe btw, after strip, my release build was 3mb with everything statically linked. \n",
+        "createdAt": "2016-08-12T03:58:35",
+        "reactions": []
+      },
+      {
+        "id": 272204617,
+        "author": "jameswalmsley",
+        "body": "@mattleibow Did you see this? https://github.com/phusion/holy-build-box",
+        "createdAt": "2017-01-12T16:08:54",
+        "reactions": []
+      },
+      {
+        "id": 272245142,
+        "author": "kekekeks",
+        "body": "If anyone is interested, I\u0027ve managed to run Cake in that docker container.\r\n\r\nFirst, you need to acquire mono-opt package for CentOS 5. For some reason I wasn\u0027t able to use the repo, so I\u0027ve downloaded it manually from https://copr-be.cloud.fedoraproject.org/results/tpokorra/mono-opt/epel-5-x86_64/00496651-mono-opt/mono-opt-4.6.2-1.x86_64.rpm . In case it gets deleted, here is mega link: https://mega.nz/#!cswD2Jza!EqE-Q_rwmTK0vwYeNDaWSGm0aHK6y5roF1BHZdPGtz8\r\n\r\nYou need to install this package with \u0060--no-gpg-check\u0060 option. You also need to install \u0060curl\u0060 and \u0060unzip\u0060 packages. Synchronizing certs is also mandatory.\r\n\r\n\u0060\u0060\u0060bash\r\nyum install -y --nogpgcheck ./mono-opt-4.6.2-1.x86_64.rpm\r\nyum install -y curl unzip\r\nsource /opt/mono/env.sh\r\n\u0060\u0060\u0060\r\nAfter that you should be able to run \u0060bootstrapper.sh\u0060. Of course it would need more steps to produce an actual build.\r\n\r\nBTW, last time when I was messing with Skia, my library was depending on:\r\n\u0060\u0060\u0060\r\n        linux-vdso.so.1 =\u003E  (0x00007ffd7adf3000)\r\n        libfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007f1cabc08000)\r\n        libz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1 (0x00007f1cab9ee000)\r\n        libfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007f1cab7af000)\r\n        libpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f1cab591000)\r\n        libstdc\u002B\u002B.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libstdc\u002B\u002B.so.6 (0x00007f1cab20f000)\r\n        libm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6 (0x00007f1caaf06000)\r\n        libc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6 (0x00007f1caab3c000)\r\n        libpng12.so.0 =\u003E /lib/x86_64-linux-gnu/libpng12.so.0 (0x00007f1caa916000)\r\n        libexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1 (0x00007f1caa6ec000)\r\n        /lib64/ld-linux-x86-64.so.2 (0x000055b85c884000)\r\n        libgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f1caa4d5000)\r\n\u0060\u0060\u0060\r\n\r\n\r\nSo it probably should be possible to provide a build of Skia that works *everywhere*",
+        "createdAt": "2017-01-12T18:39:48",
+        "reactions": []
+      },
+      {
+        "id": 273566728,
+        "author": "cyriltovena",
+        "body": "Hello Guys,\r\n\r\nI was able to get the whole thing working on .net core on linux. I will share that when I have some time. If someone is interested and can\u0027t wait let me know and I\u0027ll share my new gn target. (Not using gyp)",
+        "createdAt": "2017-01-18T18:57:04",
+        "reactions": []
+      },
+      {
+        "id": 274172523,
+        "author": "ghost",
+        "body": "@Kuqd I\u0027m interested in learning that, I\u0027ve been working on a way to make a Wayland Program under Linux. (Would love to avoid using OpenGL.)",
+        "createdAt": "2017-01-20T20:31:37",
+        "reactions": []
+      },
+      {
+        "id": 274318931,
+        "author": "mattleibow",
+        "body": "@Kuqd I am busy looking to get Linux support in, especially for .NET Core. I have been using gyp because that was there, but if it is possible to share what you have done I would like to try using gn. Also, what OS specs are you running?",
+        "createdAt": "2017-01-22T09:12:29",
+        "reactions": []
+      },
+      {
+        "id": 274323261,
+        "author": "kekekeks",
+        "body": "Not using gyp is actually a good idea, since there is a lot of stuff hardcoded there. With custom scripts it should be much easier to build in unusual environments like ARM platforms with custom toolchains, HBB, etc.",
+        "createdAt": "2017-01-22T10:45:36",
+        "reactions": []
+      },
+      {
+        "id": 276812147,
+        "author": "mattleibow",
+        "body": "Just referencing this as it is relevant: https://github.com/NuGet/Home/issues/3114",
+        "createdAt": "2017-02-01T23:05:02",
+        "reactions": []
+      },
+      {
+        "id": 276816456,
+        "author": "mattleibow",
+        "body": "I have created a partially complete script and makefile.\r\nI have been using Ubuntu 14.04 and right now it can fully build, package and run fine, but many things are hardcoded and may not work on other versions or flavors. I am still working on this, and this was more for testing purposes. But, the output is fully functional and all the bits are there.\r\n\r\nBuild Script: https://github.com/mono/SkiaSharp/blob/21306d6267aeadcba31255d823e89edd54055440/cake/BuildExternals.cake#L420-L463\r\nMakefile: https://github.com/mono/SkiaSharp/blob/21306d6267aeadcba31255d823e89edd54055440/native-builds/libSkiaSharp_linux/Makefile\r\n\r\nThe basic steps are to gyp (create the internal makefiles), ninja (build the skia static libraries), and make (create the dynamic, linked libSkiaSharp). The Makefile is also pretty straight forward, take the skia outputs, and the xamarin classes and link together. I don\u0027t actually do anything specific for linux.\r\n\r\nI am still using gyp right now, but I will be looking to switch to gn sometime in the near future.",
+        "createdAt": "2017-02-01T23:24:44",
+        "reactions": [
+          {
+            "user": "galvesribeiro",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:26.6838036Z"
+          }
+        ]
+      },
+      {
+        "id": 277125808,
+        "author": "cyriltovena",
+        "body": "Sorry I was away, here is the target to add to the build.gn:\r\n\u0060\u0060\u0060\r\ncomponent(\u0022libSkiaSharp\u0022) {\r\n\tsources = [\r\n\t\t\u0022../../native-builds/src/sk_managedstream.cpp\u0022,\r\n\t\t\u0022../../native-builds/src/sk_xamarin.cpp\u0022,\r\n\t\t\u0022../../native-builds/src/SkiaKeeper.c\u0022,\r\n\t\t\u0022../../native-builds/src/SkManagedStream.cpp\u0022,\r\n\t ]\r\n\tinclude_dirs = [\r\n\t\t\u0022include/c\u0022,\r\n\t\t\u0022include/config\u0022,\r\n\t\t\u0022include/core\u0022,\r\n\t\t\u0022include/effects\u0022,\r\n\t\t\u0022include/pathops\u0022,\r\n\t\t\u0022include/codec\u0022,\r\n\t\t\u0022include/pathops\u0022,\r\n\t\t\u0022include/pipe\u0022,\r\n\t\t\u0022include/ports\u0022,\r\n\t\t\u0022include/private\u0022,\r\n\t\t\u0022include/utils\u0022,\r\n\t\t\u0022include/images\u0022,\r\n\t\t\u0022src/c\u0022,\r\n\t\t\u0022src/core\u0022,\r\n\t\t\u0022src/sfnt\u0022,\r\n\t\t\u0022src/image\u0022,\r\n\t\t\u0022src/opts\u0022,\r\n\t\t\u0022src/utils\u0022,\r\n\t\t\u0022include/gpu\u0022,\r\n\t\t\u0022src/gpu\u0022\r\n\t]\r\n\tpublic_deps = [\u0022:skia\u0022]\r\n\tconfigs \u002B= [\u0022:skia_library\u0022,\u0022:skia_public\u0022]\r\n\tvisibility = [ \u0022:*\u0022 ]  # Prevent accidental dependencies.\r\n  }\r\n\u0060\u0060\u0060\r\n\r\nthen run this :\r\n\r\n\u0060\u0060\u0060\r\ngn gen ../../native-builds/lib/linux/x64/ --args=\u0022is_component_build=true is_debug=false\u0022\r\nninja -C ../../native-builds/lib/linux/x64/ libSkiaSharp\r\n\u0060\u0060\u0060\r\n\r\nThis is going to build 2 so :\r\n\r\nlibSkiasharp.so and libskia.so, libSkiasharp.so  depend on libskia.so, so make sure you update your LD_LIBRARY_PATH correclty on linux.\r\n\r\nI also have the .netstandard (1.6) project, with build task to create the correct nugetpackage that you can use on linux and .net core.If I have time I can create a pull request later @mattleibow , next month.\r\n\r\nThe project I have is using the new visual studio 2017 RC3 (so you need the last toolchain) csproj,  I\u0027ve added my .net standard binding to SkiaSharp\\binding\\SkiaSharp.NETStandard\\SkiaSharp.NETStandard.csproj :\r\n\r\n\u0060\u0060\u0060\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022 ToolsVersion=\u002215.0\u0022\u003E\r\n  \u003CPropertyGroup\u003E\r\n    \u003CDescription\u003ESkiaSharp for .net standard\u003C/Description\u003E\r\n    \u003CTargetFramework\u003Enetstandard1.6\u003C/TargetFramework\u003E\r\n    \u003CAllowUnsafeBlocks\u003Etrue\u003C/AllowUnsafeBlocks\u003E\r\n    \u003CDebugType\u003Eportable\u003C/DebugType\u003E\r\n    \u003CAssemblyName\u003ESkiaSharp.NetStandard\u003C/AssemblyName\u003E\r\n    \u003COutputType\u003Elibrary\u003C/OutputType\u003E\r\n    \u003CRuntimeIdentifiers\u003Ewin7-x64;win7-x86;linux-x64\u003C/RuntimeIdentifiers\u003E\r\n    \u003CPackageOutputPath\u003E..\\..\\..\\..\\built_packages\\\u003C/PackageOutputPath\u003E\r\n    \u003CIncludeSymbols\u003Etrue\u003C/IncludeSymbols\u003E\r\n    \u003CGeneratePackageOnBuild\u003ETrue\u003C/GeneratePackageOnBuild\u003E\r\n  \u003C/PropertyGroup\u003E\r\n  \u003CPropertyGroup Condition=\u0022\u0027$(Configuration)\u0027 == \u0027Release\u0027 \u0022\u003E\r\n    \u003COptimize\u003ETrue\u003C/Optimize\u003E\r\n    \u003CDefineConstants\u003E\r\n    \u003C/DefineConstants\u003E\r\n  \u003C/PropertyGroup\u003E\r\n  \u003CPropertyGroup Condition=\u0022\u0027$(Configuration)\u0027 == \u0027Debug\u0027 \u0022\u003E\r\n    \u003COptimize\u003EFalse\u003C/Optimize\u003E\r\n    \u003CDefineConstants\u003EDEBUG;TRACE\u003C/DefineConstants\u003E\r\n  \u003C/PropertyGroup\u003E\r\n  \u003CItemGroup\u003E\r\n    \u003CCompile Include=\u0022..\\Binding\\*.cs\u0022 Exclude=\u0022bin\\**;obj\\**;**\\*.xproj;packages\\**;Properties\\**\u0022 /\u003E\r\n    \u003CCompile Remove=\u0022.vscode\\**\u0022 /\u003E\r\n    \u003CCompile Remove=\u0022.vs\\**\u0022 /\u003E\r\n    \u003CEmbeddedResource Remove=\u0022.vscode\\**\u0022 /\u003E\r\n    \u003CEmbeddedResource Remove=\u0022.vs\\**\u0022 /\u003E\r\n    \u003CNone Remove=\u0022.vscode\\**\u0022 /\u003E\r\n    \u003CNone Remove=\u0022.vs\\**\u0022 /\u003E\r\n    \u003CContent Include=\u0022..\\..\\native-builds\\lib\\windows\\x64\\libSkiaSharp.dll\u0022\u003E\r\n      \u003CPackagePath\u003Eruntimes\\win7-x64\\native\u003C/PackagePath\u003E\r\n      \u003CPack\u003Etrue\u003C/Pack\u003E\r\n    \u003C/Content\u003E\r\n    \u003CContent Include=\u0022..\\..\\native-builds\\lib\\windows\\x86\\libSkiaSharp.dll\u0022\u003E\r\n      \u003CPackagePath\u003Eruntimes\\win7-x86\\native\u003C/PackagePath\u003E\r\n      \u003CPack\u003Etrue\u003C/Pack\u003E\r\n    \u003C/Content\u003E\r\n    \u003CContent Include=\u0022..\\..\\native-builds\\lib\\linux\\x64\\libSkiaSharp.so\u0022\u003E\r\n      \u003CPackagePath\u003Eruntimes\\linux-x64\\native\\libSkiaSharp.so\u003C/PackagePath\u003E\r\n      \u003CPack\u003Etrue\u003C/Pack\u003E\r\n    \u003C/Content\u003E\r\n    \u003CContent Include=\u0022..\\..\\native-builds\\lib\\linux\\x64\\libskia.so\u0022\u003E\r\n      \u003CPackagePath\u003Eruntimes\\linux-x64\\native\\libskia.so\u003C/PackagePath\u003E\r\n      \u003CPack\u003Etrue\u003C/Pack\u003E\r\n    \u003C/Content\u003E\r\n  \u003C/ItemGroup\u003E\r\n  \u003CItemGroup\u003E\r\n    \u003CNone Include=\u0022README.md\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n  \u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022System.IO.UnmanagedMemoryStream\u0022 Version=\u00224.3.0\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n\r\nOnce you have the package built all you need is to add a root nuget.config to fetch from the local folder like such:\r\n\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\r\n\u003Cconfiguration\u003E\r\n  \u003Cconfig\u003E\r\n    \u003Cadd key=\u0022http_proxy\u0022 value=\u0022http://proxy-mtl.ubisoft.org:3128/\u0022 /\u003E\r\n  \u003C/config\u003E\r\n   \u003CpackageSources\u003E\r\n      \u003C!--To inherit the global NuGet package sources remove the \u003Cclear/\u003E line below --\u003E\r\n      \u003Cclear /\u003E\r\n      \u003Cadd key=\u0022local\u0022 value=\u0022built_packages\u0022 /\u003E\r\n      \u003Cadd key=\u0022api.nuget.org\u0022 value=\u0022https://api.nuget.org/v3/index.json\u0022 /\u003E\r\n   \u003C/packageSources\u003E\r\n\u003C/configuration\u003E\r\n\u0060\u0060\u0060\r\n\r\nthen you can reference it like that in your project :\r\n\r\n\u0060\u0060\u0060\r\n \u003CPackageReference Include=\u0022SkiaSharp.NETStandard\u0022\u003E\r\n      \u003CVersion\u003E1.0.0\u003C/Version\u003E\r\n      \u003CPrivateAssets\u003EAll\u003C/PrivateAssets\u003E\r\n    \u003C/PackageReference\u003E\r\n\u0060\u0060\u0060\r\n\r\nI can provide built package if you want, but you will need to make sure that you fullfil all shared libraries dependencies use:\r\n\r\n\u0060\u0060\u0060ldd libskia.so\u0060\u0060 and \u0060\u0060ldd libSkiasharp.so\u0060\u0060\u0060 to see what\u0027s missing.\r\n\r\nWe\u0027re are in a middle of a big launch so can\u0027t really do more.\r\n\r\nI\u0027m having very good performance by the way on ubuntu ! :) Hope it helps\r\n\r\nCyril",
+        "createdAt": "2017-02-03T00:08:07",
+        "reactions": []
+      },
+      {
+        "id": 278984652,
+        "author": "kekekeks",
+        "body": "#238 Docker image and changes needed to produce a portable library that should work on most modern Linux distributions.",
+        "createdAt": "2017-02-10T16:05:38",
+        "reactions": []
+      },
+      {
+        "id": 279258544,
+        "author": "mattleibow",
+        "body": "I am looking at what is pulled in when adding the GPU bits. It is quite a bit and maybe the experts can tell me how much of this really portable. My local build and that of the holy build box is very similar:\r\n\r\nHoly Build Box:\r\n\u0060\u0060\u0060\r\nlinux-vdso.so.1 =\u003E  (0x00007ffe04f5d000)\r\nlibpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f696e40f000)\r\nlibdl.so.2 =\u003E /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f696e20b000)\r\nlibfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007f696dfce000)\r\nlibGL.so.1 =\u003E /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 (0x00007f696dd66000)\r\nlibGLU.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libGLU.so.1 (0x00007f696daf8000)\r\nlibX11.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libX11.so.6 (0x00007f696d7c2000)\r\nlibstdc\u002B\u002B.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libstdc\u002B\u002B.so.6 (0x00007f696d4be000)\r\nlibm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6 (0x00007f696d1b8000)\r\nlibgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f696cfa1000)\r\nlibc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6 (0x00007f696cbdc000)\r\n/lib64/ld-linux-x86-64.so.2 (0x000056496cd15000)\r\nlibfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007f696c939000)\r\nlibexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1 (0x00007f696c70e000)\r\nlibxcb-dri3.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0 (0x00007f696c50b000)\r\nlibxcb-present.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-present.so.0 (0x00007f696c308000)\r\nlibxcb-sync.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1 (0x00007f696c101000)\r\nlibxshmfence.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libxshmfence.so.1 (0x00007f696beff000)\r\nlibglapi.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libglapi.so.0 (0x00007f696bcd1000)\r\nlibXext.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libXext.so.6 (0x00007f696babe000)\r\nlibXdamage.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libXdamage.so.1 (0x00007f696b8bb000)\r\nlibXfixes.so.3 =\u003E /usr/lib/x86_64-linux-gnu/libXfixes.so.3 (0x00007f696b6b5000)\r\nlibX11-xcb.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libX11-xcb.so.1 (0x00007f696b4b2000)\r\nlibxcb-glx.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-glx.so.0 (0x00007f696b29b000)\r\nlibxcb-dri2.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-dri2.so.0 (0x00007f696b096000)\r\nlibxcb.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libxcb.so.1 (0x00007f696ae76000)\r\nlibXxf86vm.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libXxf86vm.so.1 (0x00007f696ac70000)\r\nlibdrm.so.2 =\u003E /usr/lib/x86_64-linux-gnu/libdrm.so.2 (0x00007f696aa62000)\r\nlibz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1 (0x00007f696a848000)\r\nlibpng12.so.0 =\u003E /lib/x86_64-linux-gnu/libpng12.so.0 (0x00007f696a622000)\r\nlibXau.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libXau.so.6 (0x00007f696a41d000)\r\nlibXdmcp.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libXdmcp.so.6 (0x00007f696a217000)\r\n\u0060\u0060\u0060\r\nFull -v: https://gist.github.com/mattleibow/f98bdd8b5a1bfc824f175a905bc48a9c\r\n\r\nMy Local Build:\r\n\r\n\u0060\u0060\u0060\r\nlinux-vdso.so.1 =\u003E  (0x00007ffddb1c9000)\r\nlibpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f0543d08000)\r\nlibfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007f0543acc000)\r\nlibGL.so.1 =\u003E /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 (0x00007f0543863000)\r\nlibstdc\u002B\u002B.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libstdc\u002B\u002B.so.6 (0x00007f054355f000)\r\nlibm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6 (0x00007f0543259000)\r\nlibgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f0543042000)\r\nlibc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6 (0x00007f0542c7d000)\r\n/lib64/ld-linux-x86-64.so.2 (0x0000556078b83000)\r\nlibfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007f05429da000)\r\nlibexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1 (0x00007f05427af000)\r\nlibxcb-dri3.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-dri3.so.0 (0x00007f05425ac000)\r\nlibxcb-present.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-present.so.0 (0x00007f05423a9000)\r\nlibxcb-sync.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-sync.so.1 (0x00007f05421a2000)\r\nlibxshmfence.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libxshmfence.so.1 (0x00007f0541fa0000)\r\nlibglapi.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libglapi.so.0 (0x00007f0541d72000)\r\nlibXext.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libXext.so.6 (0x00007f0541b5f000)\r\nlibXdamage.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libXdamage.so.1 (0x00007f054195c000)\r\nlibXfixes.so.3 =\u003E /usr/lib/x86_64-linux-gnu/libXfixes.so.3 (0x00007f0541756000)\r\nlibX11-xcb.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libX11-xcb.so.1 (0x00007f0541553000)\r\nlibX11.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libX11.so.6 (0x00007f054121e000)\r\nlibxcb-glx.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-glx.so.0 (0x00007f0541007000)\r\nlibxcb-dri2.so.0 =\u003E /usr/lib/x86_64-linux-gnu/libxcb-dri2.so.0 (0x00007f0540e01000)\r\nlibxcb.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libxcb.so.1 (0x00007f0540be2000)\r\nlibXxf86vm.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libXxf86vm.so.1 (0x00007f05409dc000)\r\nlibdrm.so.2 =\u003E /usr/lib/x86_64-linux-gnu/libdrm.so.2 (0x00007f05407cd000)\r\nlibdl.so.2 =\u003E /lib/x86_64-linux-gnu/libdl.so.2 (0x00007f05405c9000)\r\nlibz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1 (0x00007f05403af000)\r\nlibpng12.so.0 =\u003E /lib/x86_64-linux-gnu/libpng12.so.0 (0x00007f0540189000)\r\nlibXau.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libXau.so.6 (0x00007f053ff84000)\r\nlibXdmcp.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libXdmcp.so.6 (0x00007f053fd7e000)\r\n\u0060\u0060\u0060\r\n\r\nFull -v: https://gist.github.com/mattleibow/636ffaf7e9edf081bb08b094cdce3bea",
+        "createdAt": "2017-02-12T23:01:40",
+        "reactions": []
+      },
+      {
+        "id": 279258741,
+        "author": "galvesribeiro",
+        "body": "\u003E libGL.so.1 =\u003E /usr/lib/x86_64-linux-gnu/mesa/libGL.so.1 (0x00007f696dd66000)\r\nlibGLU.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libGLU.so.1 (0x00007f696daf8000)\r\nlibX11.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libX11.so.6 (0x00007f696d7c2000)\r\n\r\nWould be nice if X11, GL and HW acceleration would be optional/configurable while building... That would make low-powered/non-X11 targets to use it as well... ",
+        "createdAt": "2017-02-12T23:04:43",
+        "reactions": []
+      },
+      {
+        "id": 279258946,
+        "author": "mattleibow",
+        "body": "Also, about x86/32-bit builds. Is there a way to do this on a 64-bit OS? And should I even try?\r\n\r\nThe same build config and I get these errors:\r\n\r\n\u0060\u0060\u0060\r\n/usr/bin/ld: cannot find -lfontconfig\r\n/usr/bin/ld: cannot find -lGL\r\n/usr/bin/ld: cannot find -lGLU\r\n/usr/bin/ld: cannot find -lX11\r\n\u0060\u0060\u0060\r\n\r\nIt appears those packages only come with either x86 or x64 libraries, not both. Should I just use an x86 environment, or is there a clean way to do this properly?",
+        "createdAt": "2017-02-12T23:07:53",
+        "reactions": []
+      },
+      {
+        "id": 279259007,
+        "author": "mattleibow",
+        "body": "@galvesribeiro Let me see if I can make that a nice flag that can be set...",
+        "createdAt": "2017-02-12T23:08:47",
+        "reactions": []
+      },
+      {
+        "id": 279259089,
+        "author": "galvesribeiro",
+        "body": "@mattleibow just noticed one thing... HBB is x86/x64 only :(\r\n\r\nI wonder if someone with experience in that could create the same environment using https://buildroot.org/ since it support more targets including ARM.",
+        "createdAt": "2017-02-12T23:09:56",
+        "reactions": []
+      },
+      {
+        "id": 279271654,
+        "author": "mattleibow",
+        "body": "When building without the GPU, the requirements are far less:\r\n\r\n\u0060\u0060\u0060\r\nlinux-vdso.so.1 =\u003E  (0x00007ffd37b96000)\r\nlibpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0 (0x00007f459642a000)\r\nlibfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007f45961ee000)\r\nlibstdc\u002B\u002B.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libstdc\u002B\u002B.so.6 (0x00007f4595ee9000)\r\nlibm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6 (0x00007f4595be3000)\r\nlibgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f45959cd000)\r\nlibc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6 (0x00007f4595607000)\r\n/lib64/ld-linux-x86-64.so.2 (0x00005600634a7000)\r\nlibfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007f4595364000)\r\nlibexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1 (0x00007f459513a000)\r\nlibz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1 (0x00007f4594f20000)\r\nlibpng12.so.0 =\u003E /lib/x86_64-linux-gnu/libpng12.so.0 (0x00007f4594cfa000)\r\n\u0060\u0060\u0060\r\n\r\nFull -v: https://gist.github.com/mattleibow/315f4150746a2163bb8fc3c883850578",
+        "createdAt": "2017-02-13T01:03:05",
+        "reactions": []
+      },
+      {
+        "id": 279271823,
+        "author": "galvesribeiro",
+        "body": "Yeah... Looks a lot with the old manual build that I had the first time you were helping me build to ARM. In fact, most of those were statically linked.",
+        "createdAt": "2017-02-13T01:05:03",
+        "reactions": []
+      },
+      {
+        "id": 279273668,
+        "author": "mattleibow",
+        "body": "If the GPU dependencies are not portable, then we can always create a totally generic build without GPU for any linux. And then for each specific distro, we could enable it. This way everyone gets skia, and some get it with GPU, and the rest can just do a local build?",
+        "createdAt": "2017-02-13T01:25:08",
+        "reactions": []
+      },
+      {
+        "id": 279273793,
+        "author": "galvesribeiro",
+        "body": "@mattleibow I agree. As long as the build process is somehow simplified you just need to publish few generic releases. ",
+        "createdAt": "2017-02-13T01:26:32",
+        "reactions": []
+      },
+      {
+        "id": 279301755,
+        "author": "kekekeks",
+        "body": "Guys, you are doing it wrong. \u0060ldd\u0060 will print you *all* dependencies, even ones that are used by libs that you depend on. Use \u0060objdump -p {lib}|grep NEEDED\u0060 or \u0060lddtree\u0060.\r\n\r\nThe actual list of portable version dependencies is:\r\n\u0060\u0060\u0060\r\n  NEEDED               libpthread.so.0\r\n  NEEDED               libdl.so.2\r\n  NEEDED               libfontconfig.so.1\r\n  NEEDED               libGL.so.1\r\n  NEEDED               libGLU.so.1\r\n  NEEDED               libX11.so.6\r\n  NEEDED               libm.so.6\r\n  NEEDED               libgcc_s.so.1\r\n  NEEDED               libc.so.6\r\n  NEEDED               ld-linux-x86-64.so.2\r\n\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2017-02-13T06:06:22",
+        "reactions": []
+      },
+      {
+        "id": 279302253,
+        "author": "kekekeks",
+        "body": "Having GPU dependencies compiled out will be nice as long as you just remove \u0060GrGLCreateNativeInterface\u0060 and deps on libGL/libGLU/libX11 and *keep* GrContext-related stuff with \u0060GrGLAssembleGLInterface\u0060 to allow user to pass the address of \u0060glGetProcAddress\u0060. That will still allow to use GPU acceleration if needed, but remove dependency on unnecessary libs.",
+        "createdAt": "2017-02-13T06:10:51",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:30.2273674Z"
+          }
+        ]
+      },
+      {
+        "id": 279302702,
+        "author": "kekekeks",
+        "body": "BTW, Access to \u0060GrGLAssembleGLInterface\u0060 and \u0060GrGLAssembleGLESInterface\u0060 would be quite nice in general, since we need them to access EGL on Linux, see my old code: https://github.com/AvaloniaUI/libperspesk/blob/master/src/gl.cpp#L201",
+        "createdAt": "2017-02-13T06:14:26",
+        "reactions": []
+      },
+      {
+        "id": 279310587,
+        "author": "kekekeks",
+        "body": "Nvm, solved \u0022excessive dependencies\u0022 issue by using \u0060dlsym\u0060:  https://github.com/mono/skia/pull/50/files",
+        "createdAt": "2017-02-13T07:14:49",
+        "reactions": []
+      },
+      {
+        "id": 279701105,
+        "author": "mattleibow",
+        "body": "@kekekeks @galvesribeiro I did some more work (https://github.com/mono/skia/pull/49) to get a GL-free build of libSkiaSharp. The GLX bits are loaded at runtime, and so the only dependency is fontconfig.\r\n\r\nThe managed part, with test, is here: https://github.com/mono/SkiaSharp/pull/241",
+        "createdAt": "2017-02-14T13:01:08",
+        "reactions": []
+      },
+      {
+        "id": 279704275,
+        "author": "mattleibow",
+        "body": "The new dependency chain:\r\n\r\n    libSkiaSharp.so.56.1.0 =\u003E native-builds/libSkiaSharp_linux/bin/x64/libSkiaSharp.so.56.1.0\r\n        libpthread.so.0 =\u003E /lib/x86_64-linux-gnu/libpthread.so.0\r\n            ld-linux-x86-64.so.2 =\u003E /lib/x86_64-linux-gnu/ld-linux-x86-64.so.2\r\n        libdl.so.2 =\u003E /lib/x86_64-linux-gnu/libdl.so.2\r\n        libfontconfig.so.1 =\u003E /usr/lib/x86_64-linux-gnu/libfontconfig.so.1\r\n            libfreetype.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libfreetype.so.6\r\n                libz.so.1 =\u003E /lib/x86_64-linux-gnu/libz.so.1\r\n                libpng12.so.0 =\u003E /lib/x86_64-linux-gnu/libpng12.so.0\r\n            libexpat.so.1 =\u003E /lib/x86_64-linux-gnu/libexpat.so.1\r\n        libstdc\u002B\u002B.so.6 =\u003E /usr/lib/x86_64-linux-gnu/libstdc\u002B\u002B.so.6\r\n        libm.so.6 =\u003E /lib/x86_64-linux-gnu/libm.so.6\r\n        libgcc_s.so.1 =\u003E /lib/x86_64-linux-gnu/libgcc_s.so.1\r\n        libc.so.6 =\u003E /lib/x86_64-linux-gnu/libc.so.6\r\n",
+        "createdAt": "2017-02-14T13:17:02",
+        "reactions": []
+      },
+      {
+        "id": 280515006,
+        "author": "cyriltovena",
+        "body": "Looks good what\u0027s the matter with gpu ?",
+        "createdAt": "2017-02-17T00:51:00",
+        "reactions": []
+      },
+      {
+        "id": 280519462,
+        "author": "mattleibow",
+        "body": "@Kuqd Nothing particularly. We were just trying to find a way so that we didn\u0027t link directly to the GL libraries on linux. This might reduce potential portability of the library. I am really trying to get the ultimate portable linux binary \uD83D\uDE03  (I am a .NET dev at \u2764\uFE0F  - everything needs to be AnyCPU)\r\n\r\nI just merged the GPU bits into master, so that should produce a nice portable binary. With GPU, but not linked to GL. At runtime it will look for \u0060libGL.so.1\u0060 and load symbols for that. If that is not available, you can do so manually using the \u0060GRGlInterface.AssembleGlInterface\u0060 method -- you may get a linux build that uses DirectX \uD83D\uDE1C ",
+        "createdAt": "2017-02-17T01:15:41",
+        "reactions": []
+      },
+      {
+        "id": 280976955,
+        "author": "mattleibow",
+        "body": "Added a wiki to help when building on Linux:\r\nhttps://github.com/mono/SkiaSharp/wiki/Building-on-Linux",
+        "createdAt": "2017-02-20T03:01:23",
+        "reactions": [
+          {
+            "user": "galvesribeiro",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:52:31.7774395Z"
+          },
+          {
+            "user": "galvesribeiro",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:31.7774399Z"
+          },
+          {
+            "user": "ukgraphics",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:31.7774401Z"
+          }
+        ]
+      },
+      {
+        "id": 281020885,
+        "author": "kekekeks",
+        "body": "@mattleibow \r\nAre you going to use my Docker image for builds shipped with nuget package? You need to use build using distro with *old* glibc, you will be getting errors like \u0060/lib/x86_64-linux-gnu/libc.so.6: version \u0027GLIBC_2.14\u0027 not found\u0060 otherwise. So you can\u0027t use library built on Ubuntu 16.04 for Ubuntu 14.04 or another distro with older glibc. My image is based on HBB, which is based on CentOS 5 which is sufficiently old.",
+        "createdAt": "2017-02-20T08:53:00",
+        "reactions": []
+      },
+      {
+        "id": 281096684,
+        "author": "mattleibow",
+        "body": "@kekekeks I am not sure at the moment. I need to discuss the release bits with our release engineering team. But, until we get a release out, I want to make it as easy and quick as possible to get a Linux build.",
+        "createdAt": "2017-02-20T14:43:08",
+        "reactions": []
+      },
+      {
+        "id": 281111971,
+        "author": "galvesribeiro",
+        "body": "@mattleibow \r\n\u0060CC=gcc-4.8 CXX=g\u002B\u002B-4.8 AR=gcc-ar-4.8 NM=gcc-nm-4.8 ./bootstrapper.sh -t everything\u0060\r\n\r\nThat is great! I can use my own custom compiler for ARM. Thanks! What about the dependencies? Are all they compiled within the \u0060bootstrapper\u0060 process or are they linked with the versions installed on the build machine? Also, you mentioned a flag to remove GL and HW accell, where did it goes?\r\n\r\nGreat work! :)",
+        "createdAt": "2017-02-20T15:43:47",
+        "reactions": []
+      },
+      {
+        "id": 281142758,
+        "author": "mattleibow",
+        "body": "@galvesribeiro Everything is compiled and statically linked from the skia source. The only external dependency is \u0060fontconfig\u0060, \u0060dl\u0060 and \u0060pthread\u0060. Also, currently the only project that is generated is x64. To disable ALL HW, you can change set the \u0060SUPPORT_GPU\u0060 variable.\r\n\r\nGL is already \u0022optional\u0022 as the skia Gr* is compiled in, but not actually linked. If you try and use the \u0060GRGlInterface\u0060, it will try and find the \u0060libGL.so.1\u0060 library and use that.\r\n\r\nI am not sure exactly what you need to change to get your ARM going, so just change what you need and let me know / send a PR and I will add those flags/toggles/options so that you can just build.",
+        "createdAt": "2017-02-20T17:48:57",
+        "reactions": []
+      },
+      {
+        "id": 281148737,
+        "author": "galvesribeiro",
+        "body": "@mattleibow I guess if everything is compiled from skia source except that external dependencies, I would suggest add a parameter that we can pass a path pointing the directory of those dependencies so it would be something like this: \r\n\r\n\u0060CC=gcc-4.8 CXX=g\u002B\u002B-4.8 AR=gcc-ar-4.8 NM=gcc-nm-4.8 LD=ld FONTCONFIG_DIR=/my_fc_path PTHREAD_DIR=/my_pthread_path ./bootstrapper.sh -t everything\u0060 \r\n\r\nI can look at it but I\u0027m pretty sure you are more familiar with those build systems and I would have to ask you about that anyway.\r\n\r\ni.e. \u0060ld\u0060 is usually placed along with \u0060gcc\u0060, \u0060ar\u0060, \u0060nm\u0060, so just adding a new variable like that would work and the dependencies are just a matter of point to the pre-compiled dependency. \r\n\r\nAlso, I remember that when you was helping me manually build it, there was a flag that doesn\u0027t exist on the original skia code which make it run \u0060yasm\u0060 assembler for x86 that we have to remove. That would be good to add a \u0060IGNORE_YASM\u0060 or something...",
+        "createdAt": "2017-02-20T18:17:05",
+        "reactions": []
+      },
+      {
+        "id": 281159810,
+        "author": "mattleibow",
+        "body": "You can control the native build using these variables: \u0060CC\u0060, \u0060CXX\u0060, \u0060LD\u0060, \u0060LDXX\u0060, \u0060AR\u0060, \u0060NM\u0060 and \u0060READELF\u0060. So you can specify the tools. Then you can control the build with \u0060CFLAGS\u0060, \u0060CXXFLAGS\u0060, \u0060LDFLAGS\u0060 and \u0060LDXXFLAGS\u0060.",
+        "createdAt": "2017-02-20T19:09:09",
+        "reactions": [
+          {
+            "user": "galvesribeiro",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:33.0638968Z"
+          }
+        ]
+      },
+      {
+        "id": 281160325,
+        "author": "galvesribeiro",
+        "body": "Ok right, then LD problem is OK. What about the external dependencies and the yasm?",
+        "createdAt": "2017-02-20T19:11:52",
+        "reactions": []
+      },
+      {
+        "id": 281165792,
+        "author": "mattleibow",
+        "body": "For the linker, you can just use \u0060LDFLAGS\u0060. For example, they default to \u0060LDFLAGS=\u0027-lpthread -ldl -lfontconfig\u0027\u0060, but in your case you can just specify your paths \u0026 libraries. It will override the defaults. If they aren\u0027t correct, you\u0027ll just get a linker error.\r\n\r\nThe YASM, I am trying to remember what we did...",
+        "createdAt": "2017-02-20T19:41:04",
+        "reactions": [
+          {
+            "user": "galvesribeiro",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:33.4870949Z"
+          }
+        ]
+      },
+      {
+        "id": 281166608,
+        "author": "galvesribeiro",
+        "body": "OH! So they do respect the includes and lib from the variable. Great!\r\n\r\nFor the Yasm, I remember there was an IF which was only checking the OS and not the architecture on some of the gyp files... You gave me the proper condition and I changed it... Just don\u0027t remember where it goes \uD83D\uDE22 ",
+        "createdAt": "2017-02-20T19:45:30",
+        "reactions": []
+      }
+    ]
+  }
 }

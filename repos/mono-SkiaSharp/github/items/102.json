@@ -20,5 +20,31 @@
   "updatedAt": "2022-08-20T00:02:45",
   "closedAt": "2016-06-29T00:03:40",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:50.0118774Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 229046082,
+        "author": "gentledepp",
+        "body": "I now implemented it in C# and it seems this works, however I do not know if the native call could be faster?\n\u0060\n\n\u0060\u0060\u0060\n    public static RectangleF TransformRectangle(SKMatrix m, SKRect bound)\n    {\n        var start = new SKPoint(bound.Left, bound.Top);\n        var end = new SKPoint(bound.Right, bound.Bottom);\n        var pts = new[] { start, end };\n\n        TransformPoints(m, pts);\n\n        return new SKRect(start.X, start.Y, end.X, end.Y);\n    }\n\n    public static void TransformVectors(SKMatrix m, SKPoint[] points)\n    {\n\n        foreach (var point in points)\n        {\n            // see http://math.stackexchange.com/questions/29257/find-2d-point-given-2d-point-and-transformation-matrix\n            // transformvectors needs to IGNORE the translation! (see: http://stackoverflow.com/questions/3265169/matrix-transformpoints-vs-transformvectors)\n            point.X = (m.ScaleX * point.X) \u002B (m.SkewX * point.X); \n            point.Y = (m.SkewY * point.Y) \u002B (m.ScaleY * point.Y); \n        }\n    }\n\n    public static void TransformPoints(SKMatrix m, SKPoint[] points)\n    {\n        foreach (var point in points)\n        { \n            // see http://math.stackexchange.com/questions/29257/find-2d-point-given-2d-point-and-transformation-matrix\n            point.X = (m.ScaleX*point.X) \u002B (m.SkewX*point.X) \u002B m.TransX;\n            point.Y = (m.SkewY*point.Y) \u002B (m.ScaleY*point.Y) \u002B m.TransY;\n        }\n    }\n\u0060\u0060\u0060\n\n\u0060\n",
+        "createdAt": "2016-06-28T13:19:12",
+        "reactions": [
+          {
+            "user": "AlexandrYaltychenko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:49.718933Z"
+          }
+        ]
+      },
+      {
+        "id": 229220130,
+        "author": "migueldeicaza",
+        "body": "Implemented.\n",
+        "createdAt": "2016-06-29T00:03:40",
+        "reactions": []
+      }
+    ]
+  }
 }

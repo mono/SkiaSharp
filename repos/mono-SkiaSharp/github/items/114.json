@@ -20,5 +20,39 @@
   "updatedAt": "2022-08-20T00:02:35",
   "closedAt": "2018-02-04T12:49:51",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:16.2370522Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 232981760,
+        "author": "mattleibow",
+        "body": "The original function is:\n\n\u0060\u0060\u0060 cpp\nconst GrFragmentProcessor* GrConfigConversionEffect::TestCreate(GrProcessorTestData* d) {\n    PMConversion pmConv = static_cast\u003CPMConversion\u003E(d-\u003EfRandom-\u003EnextULessThan(kPMConversionCnt));\n    GrSwizzle swizzle;\n    do {\n        swizzle = GrSwizzle::CreateRandom(d-\u003EfRandom);\n    } while (pmConv == kNone_PMConversion \u0026\u0026 swizzle == GrSwizzle::RGBA());\n    return new GrConfigConversionEffect(d-\u003EfTextures[GrProcessorUnitTest::kSkiaPMTextureIdx],\n                                        swizzle, pmConv, GrTest::TestMatrix(d-\u003EfRandom));\n}\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-07-15T15:20:14",
+        "reactions": []
+      },
+      {
+        "id": 233353587,
+        "author": "mattleibow",
+        "body": "I have established that this occurs in Release when the optimizer is on.\n",
+        "createdAt": "2016-07-18T14:56:31",
+        "reactions": []
+      },
+      {
+        "id": 233354185,
+        "author": "mattleibow",
+        "body": "This is the old code:\n\n\u0060\u0060\u0060 cpp\nstatic const GrSwizzle\u0026 CreateRandom(SkRandom* random) {\n    switch (random-\u003EnextU() % 4) {\n        case 0:\n            return RGBA();\n        case 1:\n            return BGRA();\n        case 2:\n            return RRRR();\n        case 3:\n            return AAAA();\n        default:\n            SkFAIL(\u0022Mod is broken?!?\u0022);\n            return RGBA();\n    }\n}\n\u0060\u0060\u0060\n\nI removed the \u0022duplicate\u0022 \u0060case 0\u0060/\u0060default\u0060:\n\n\u0060\u0060\u0060 cpp\nstatic const GrSwizzle\u0026 CreateRandom(SkRandom* random) {\n    switch (random-\u003EnextU() % 4) {\n        case 1:\n            return BGRA();\n        case 2:\n            return RRRR();\n        case 3:\n            return AAAA();\n        default:\n            return RGBA();\n    }\n}\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-07-18T14:58:29",
+        "reactions": []
+      },
+      {
+        "id": 233359576,
+        "author": "mattleibow",
+        "body": "This needs to be undone once VS is corrected\n",
+        "createdAt": "2016-07-18T15:16:09",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,149 @@
   "updatedAt": "2022-08-20T06:01:30",
   "closedAt": "2016-08-20T15:43:00",
   "commentCount": 15,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:06.3962932Z",
+    "reactions": [
+      {
+        "user": "mgnslndh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:52:06.3963065Z"
+      },
+      {
+        "user": "hypeartist",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:52:06.3963073Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:52:06.3963076Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:52:06.3963081Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 219754584,
+        "author": "migueldeicaza",
+        "body": "You mean the APIs, or the actual libraries that we ship with the product?\n\nThe major challenge is that it would be a larger library for corner cases, so we would need to do some packaging work to sort that out.\n\nIn the meantime, we would love if you try it out by building the library on your own.\n\nCurrently, our main focus is to complete the API bindings, and likely add some of the missing APIs.\n",
+        "createdAt": "2016-05-17T15:28:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:03.3883302Z"
+          }
+        ]
+      },
+      {
+        "id": 220032566,
+        "author": "wildfire810",
+        "body": "Is there any hardware acceleration api in skiasharp?\nI can not find it.\nI think, the hardware render and soft render are different APIs in skia.\nIs this true?\n",
+        "createdAt": "2016-05-18T13:52:54",
+        "reactions": []
+      },
+      {
+        "id": 220218245,
+        "author": "alanricker",
+        "body": "I\u0027m confused. Does this mean that the existing version of SkiSharp is using HW graphics acceleration to do the drawing or is it using SW emulation to do the drawing?\nIf HW, can you tell me what HW graphics API it is using on the various platforms:\n- Windows\n- iOS\n- Android\n",
+        "createdAt": "2016-05-19T03:20:12",
+        "reactions": []
+      },
+      {
+        "id": 220236916,
+        "author": "wildfire810",
+        "body": "I think it is useful\n\nhttps://skia.org/user/api/canvas\n\nRaster - CPU-only.\nGanesh - Skia\u2019s GPU-accelerated backend.\nSkPDF - PDF document creation.\nSkPicture - Skia\u2019s display list format.\nNullCanvas - Useful for testing only.\nSkXPS - Experimental XPS backend.\nSkSVG - Experimental XPS backend.\n\nhttps://skia.org/user/api/canvas#ganesh\n\nhttps://skia.org/user/special/vulkan\n",
+        "createdAt": "2016-05-19T06:16:29",
+        "reactions": []
+      },
+      {
+        "id": 220397473,
+        "author": "kekekeks",
+        "body": "Actually the only thing needed for hw-acceleration is to properly wire up skia with native OpenGL context. There are some tricks, but I have some experience in doing this in native code. The question is how that should be exposed. See [this issue](https://github.com/mono/SkiaSharp/issues/24) for details. I\u0027ve also submitted initial design with [implementation example](https://github.com/mono/SkiaSharp/pull/36) but got no response, so I\u0027ve stopped the work on that front.\n",
+        "createdAt": "2016-05-19T17:36:42",
+        "reactions": []
+      },
+      {
+        "id": 220478703,
+        "author": "wildfire810",
+        "body": "How dose the offical dll work on windows?\n",
+        "createdAt": "2016-05-19T23:22:52",
+        "reactions": []
+      },
+      {
+        "id": 220486700,
+        "author": "wildfire810",
+        "body": "If offical skia can do, skiasharp should too...\n",
+        "createdAt": "2016-05-20T00:19:04",
+        "reactions": []
+      },
+      {
+        "id": 220554955,
+        "author": "kekekeks",
+        "body": "\u003E How dose the offical dll work on windows?\n\nOfficial dll needs you to manually provide opengl context and manually configure GrContext. Something like this: https://github.com/AvaloniaUI/libperspesk/blob/master/src/gl.cpp\n\nIt\u0027s not the code that you want to write in C#.\n",
+        "createdAt": "2016-05-20T09:08:25",
+        "reactions": []
+      },
+      {
+        "id": 220560841,
+        "author": "wildfire810",
+        "body": "best work\nhttps://github.com/AvaloniaUI/Avalonia\n",
+        "createdAt": "2016-05-20T09:36:22",
+        "reactions": []
+      },
+      {
+        "id": 220891441,
+        "author": "mattleibow",
+        "body": "@wildfire810 @kekekeks Right now, the native dll on all the platforms link out the GPU bits as there is no support from SkiaSharp yet... but, as I am busy on #33, that requires some of the GPU bits. As a result, the \u0022next\u0022 version should have PDF and GPU support. I am not sure if I will include the C# bindings for GPU just then, as it is more PDF-y. But, once the native bits are there, it will be easy to wrap. Basically, I am doing a bit of work for UWP as this is not yet Google-supported\n",
+        "createdAt": "2016-05-23T05:40:25",
+        "reactions": []
+      },
+      {
+        "id": 220892524,
+        "author": "alanricker",
+        "body": "@mattleibow  Thanks for the update!\nWhat is the ETA for \u0022next\u0022 version?\n",
+        "createdAt": "2016-05-23T05:50:31",
+        "reactions": []
+      },
+      {
+        "id": 225296762,
+        "author": "alanricker",
+        "body": "@mattleibow Now that you have closed #33 can you update us on the status of GPU support?\nThanks!\n",
+        "createdAt": "2016-06-10T21:11:08",
+        "reactions": [
+          {
+            "user": "aw2basc",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:52:05.7311658Z"
+          }
+        ]
+      },
+      {
+        "id": 241207004,
+        "author": "mattleibow",
+        "body": "@wildfire810, @alanricker, @kekekeks, @bratsche Hardware support is here (-ish)\nI have started with getting all the bits together and I think it is working quite well. Right now All the platforms should have OpenGL support (DirectX is coming in a few). This means all the platforms, except UWP, can draw with hardware acceleration.\n\nThe global issue for hardware / GPU is here: https://github.com/mono/SkiaSharp/issues/138\nPlease leave comments and suggestions so we can get the best product out.\n\nThere is also a preview NuGet: https://www.nuget.org/packages/SkiaSharp/1.53.2-gpu1\nPlease try that out and be sure to comment on how it went - if there are any features needed, just let us know!\n",
+        "createdAt": "2016-08-20T15:42:35",
+        "reactions": []
+      },
+      {
+        "id": 573804012,
+        "author": "mdmozibur",
+        "body": "@mattleibow any update on GPU acceleration in UWP?",
+        "createdAt": "2020-01-13T18:29:15",
+        "reactions": []
+      },
+      {
+        "id": 573828840,
+        "author": "mattleibow",
+        "body": "It has been there for quite some time. Not sure exactly what you mean?\r\n\r\nRight out the box, there is the \u0060SKSwapChainPanel\u0060 that is GPU-only. There there is the \u0060SKGLView\u0060 for Xamrin.Forms.\r\n\r\nIf you are talking the pure, non-UI way, then you have to first set up a GPU context - using ANGLE - and then do the \u0060SKSurface.Create\u0060.",
+        "createdAt": "2020-01-13T19:26:16",
+        "reactions": []
+      }
+    ]
+  }
 }

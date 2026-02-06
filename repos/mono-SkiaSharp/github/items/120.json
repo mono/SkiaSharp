@@ -14,5 +14,101 @@
   "updatedAt": "2022-08-20T00:02:31",
   "closedAt": "2016-08-02T02:25:42",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:22.545774Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 236507694,
+        "author": "gentledepp",
+        "body": "It is also my opinion, that SVG is a very important backend (I believe it is called this way in Skia?).\nIt is even way more important than the PDF support you added recently. So I am hoping this won\u0027t be too much effort? (_fingerscrossed_)\n\nWe are already creating our own port of a SVG library using SkiaSharp.\nHowever, our goal is to have a vector-graphics based editor for mobile platforms. \nSo advanced animations and filters will not be provided by us and also, as it is not native and includes all the callbacks and a rather compliated object model, it surely won\u0027t be fast enough for the purposes mentioned by @Emasoft \n\nNevertheless, you guys are doing a great job! I really love SkiaSharp. It even made me try to work with C\u002B\u002B and C again ;-)\n",
+        "createdAt": "2016-08-01T07:24:53",
+        "reactions": []
+      },
+      {
+        "id": 236775410,
+        "author": "migueldeicaza",
+        "body": "SVG is not supported by Skia itself, and thus is outside the scope of this project.\n\nNothing is preventing an additional library from being created that can load SVG files, but it is not part of the SkiaSharp project, unless you get Google to add SVG support directly to Skia.   Which is rather unlikely for reasons stated somewhere else on the bug reporting system.\n",
+        "createdAt": "2016-08-02T02:25:42",
+        "reactions": []
+      },
+      {
+        "id": 236839667,
+        "author": "gentledepp",
+        "body": "That is a good point, @migueldeicaza.\nNevertheless, it would be a superb addition to the Xamarin toolset.\nAs I am not planning to work fulltime on our SVG port, we will, however, never implement things as animations and the like.\nAlso, as it is a full blown SVG rendering **and editing** framework, it will never be as fast as a pure render lib. But I would be very happy to see our efforts supported by you :)\n",
+        "createdAt": "2016-08-02T08:34:08",
+        "reactions": []
+      },
+      {
+        "id": 236888495,
+        "author": "Emasoft",
+        "body": "@gentledepp Unfortunately I think that Skia is a dead end after all. I don\u0027t know why Miguel picked it, but nobody uses it on Android anymore because it is not hardware accelerated. We need an hardware accelerated crossplatform solution, like NGraphics (it uses the native calls of iOS and Android sdk on mobile, that are hardware accelerated, and DX on Windows), not an old and slow lib like Skia. \nIf I were in Miguel, I would buy NGraphics and start developing a cross platform WPF implementation with it, so that XAML code in Xamarin.Forms would be the same on all platforms, and SVG support in Xamarin.Forms would be obtained as a bonus.\nCurrently Xamarin.Forms is too slow (even using the XAMLC), and you need hacks like the TwinTechs FastCell library to get even a decent listview scroll speed.\nPorting Skia to C# as a Xamarin library is a waste of time. Miguel should just hire Frank A. Krueger and some other passionate developer like you, and start to invest massively in NGraphics as the next backbone of Xamarin.Forms.\n",
+        "createdAt": "2016-08-02T12:26:00",
+        "reactions": []
+      },
+      {
+        "id": 236973489,
+        "author": "mattleibow",
+        "body": "@emasoft, skia is hardware accelerated, but we have not yet brought that up to the C# binding layer. We were focussing on bringing functionality and features.\n",
+        "createdAt": "2016-08-02T17:11:16",
+        "reactions": []
+      },
+      {
+        "id": 237022955,
+        "author": "migueldeicaza",
+        "body": "There are many incorrect statements made about SkiaSharp on @Emasoft \u0027s previous comment.  This sort of misinformation is not helpful, here are some corrections to clear the record:\n- Everyone uses Skia on Android, it is the graphics library that powers every drawing call on Android.\n- Further, it is the engine that powers Google Chrome.\n- Hardware acceleration for 2D has limitations compared to the expectations of most people.   Including CoreGraphics, where only a handful of operations are hardware accelerated.   \n- When NGraphics delegates to the native code on Android, it is delegating to the system installed version of Skia\n- When NGraphics delegates to native code on iOS, it delegates to CoreGraphics, which only has support for doing some hardware acceleration (layer composition to a large extent, the rest is software rendered).\n- Support for GPU primitives in Skia is something we have not bound.\n- SkiaSharp is not a C# port of the native API, it is a wrapper of the native API.\n- SVG support is an independent effort from SkiaSharp, as stated on the comemnts.\n- Xamarin.Forms does not use SkiaSharp, so it is irrelevant to this discussion.\n\nFor the purpose of letting emotions cool off, I am adding a temporary ban for Emasoft for more comments.\n",
+        "createdAt": "2016-08-02T19:52:16",
+        "reactions": [
+          {
+            "user": "mode777",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:21.7577456Z"
+          },
+          {
+            "user": "tomeverin",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:21.757746Z"
+          },
+          {
+            "user": "zbjornson",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:21.7577461Z"
+          },
+          {
+            "user": "bruno-garcia",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:53:21.7577462Z"
+          }
+        ]
+      },
+      {
+        "id": 237052807,
+        "author": "gentledepp",
+        "body": "Thank you for making this clear. I personally am totally amazed by your\nefforts.\nYou guys are doing a great job :-)\n\nAm 02.08.2016 21:52 schrieb \u0022Miguel de Icaza\u0022 notifications@github.com:\n\nThere are many incorrect statements made about SkiaSharp on @Emasoft\nhttps://github.com/Emasoft \u0027s previous comment. This sort of\nmisinformation is not helpful, here are some corrections to clear the\nrecord:\n\n   -\n\n   Everyone uses Skia on Android, it is the graphics library that powers\n   every drawing call on Android.\n   -\n\n   Further, it is the engine that powers Google Chrome.\n   -\n\n   Hardware acceleration for 2D has limitations compared to the\n   expectations of most people. Including CoreGraphics, where only a handful\n   of operations are hardware accelerated.\n   -\n\n   When NGraphics delegates to the native code on Android, it is delegating\n   to the system installed version of Skia\n   -\n\n   When NGraphics delegates to native code on iOS, it delegates to\n   CoreGraphics, which only has support for doing some hardware acceleration\n   (layer composition to a large extent, the rest is software rendered).\n   -\n\n   Support for GPU primitives in Skia is something we have not bound.\n   -\n\n   SkiaSharp is not a C# port of the native API, it is a wrapper of the\n   native API.\n   -\n\n   SVG support is an independent effort from SkiaSharp, as stated on the\n   comemnts.\n   -\n\n   Xamarin.Forms does not use SkiaSharp, so it is irrelevant to this\n   discussion.\n\nFor the purpose of letting emotions cool off, I am adding a temporary ban\nfor Emasoft for more comments.\n\n\u2014\nYou are receiving this because you were mentioned.\nReply to this email directly, view it on GitHub\nhttps://github.com/mono/SkiaSharp/issues/120#issuecomment-237022955, or mute\nthe thread\nhttps://github.com/notifications/unsubscribe-auth/ABHwx-lYMX0l3euEF8nsmzn4VL9yhVFcks5qb5_xgaJpZM4JVxNo\n.\n",
+        "createdAt": "2016-08-02T21:36:50",
+        "reactions": []
+      },
+      {
+        "id": 287667947,
+        "author": "migueldeicaza",
+        "body": "Svg support is now available as SkiaSharp.Svg",
+        "createdAt": "2017-03-20T02:24:21",
+        "reactions": []
+      },
+      {
+        "id": 545138517,
+        "author": "danwalmsley",
+        "body": "https://github.com/wieslawsoltes/Svg.Skia",
+        "createdAt": "2019-10-22T20:26:08",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:22.4955809Z"
+          }
+        ]
+      }
+    ]
+  }
 }

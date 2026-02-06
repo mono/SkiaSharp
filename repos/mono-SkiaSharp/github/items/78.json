@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-20T06:01:25",
   "closedAt": "2016-05-12T14:58:05",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:13.8324743Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 218787033,
+        "author": "mattleibow",
+        "body": "@tdenniston Thanks for reporting this. Although it was fixed a little while ago, I re-fixed it.\n\nBasically, the error was that we were assuming UTF-8 (which was totally wrong since we could have UTF-16 and UTF-32 in the paint object). Then it was fixed to force UTF-16, although this \u0022worked\u0022 we changed the paint\u0027s encoding to UTF-16 for a few milliseconds... and \u0022forcing\u0022 is not always good. This now uses the encoding of the paint.\n\nTo draw UTF-32 text, the paint object must be ready to do so, thus you must set the \u0060TextEncoding\u0060 property to \u0060SKTextEncoding.Utf32\u0060. In fact, this is what that property is for:\n\n\u003E Describes how to interpret the text parameters that are passed to paint methods like \u0060MeasureText()\u0060 and \u0060GetTextWidths()\u0060.\n",
+        "createdAt": "2016-05-12T15:08:15",
+        "reactions": []
+      },
+      {
+        "id": 219031251,
+        "author": "tdenniston",
+        "body": "@mattleibow Thanks for fixing it so quickly!\n",
+        "createdAt": "2016-05-13T12:38:15",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -20,5 +20,131 @@
   "updatedAt": "2022-08-20T00:02:38",
   "closedAt": "2016-08-15T15:39:54",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:12.1436146Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 236562816,
+        "author": "CVertex",
+        "body": "I receive a similar error when trying to use SkiaSharp from C# Interactive Window on VS 2015 on Windows 10. .NET Framework 4.6\n\n\u0060\n\n\u003E var surface = SKSurface.Create(500, 500, SKColorType.Rgba_8888, SKAlphaType.Premul);\n\u003E Unable to load DLL \u0027libskia_windows.dll\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\n\u003E - SkiaSharp.SkiaApi.sk_surface_new_raster(SkiaSharp.SKImageInfo\u0026, System.IntPtr)\n\u003E - SkiaSharp.SKSurface.Create(int, int, SkiaSharp.SKColorType, SkiaSharp.SKAlphaType)\n\u003E   \u0060\n",
+        "createdAt": "2016-08-01T12:06:38",
+        "reactions": []
+      },
+      {
+        "id": 239129839,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes Is this still an issue with the latest release (v1.53.x)?\n",
+        "createdAt": "2016-08-11T10:55:56",
+        "reactions": []
+      },
+      {
+        "id": 239131239,
+        "author": "wieslawsoltes",
+        "body": "Yes, the issue is still present in 1.53.0 release.\n",
+        "createdAt": "2016-08-11T11:03:41",
+        "reactions": []
+      },
+      {
+        "id": 239416426,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes, I just want to check, is there a libSkiaSharp.dll in the same directory as SkiaSharp.dll? libSkiaSharp.dll is the native part of the library and must be present.\n",
+        "createdAt": "2016-08-12T10:45:10",
+        "reactions": []
+      },
+      {
+        "id": 239416684,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow Yes. You can try my app which uses Skia 1.53.0 https://chocolatey.org/packages/Core2D.Avalonia.Skia\n",
+        "createdAt": "2016-08-12T10:46:52",
+        "reactions": []
+      },
+      {
+        "id": 239703136,
+        "author": "mattleibow",
+        "body": "@tdenniston I was just wondering if you have this issue at all. I see from some of your issues that you are using Win7?\n",
+        "createdAt": "2016-08-14T22:59:24",
+        "reactions": []
+      },
+      {
+        "id": 239713349,
+        "author": "tdenniston",
+        "body": "@mattleibow I am using Win7. I just tried to reproduce this bug by cloning https://github.com/wieslawsoltes/SkiaSharpDemo and running with both 1.49.4-beta and 1.53, and I was unable to reproduce it. The app built, ran, and produced the PDF correctly when I pressed the button.\n",
+        "createdAt": "2016-08-15T01:37:52",
+        "reactions": []
+      },
+      {
+        "id": 239789662,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow The issue is easly reproducible in my tests using https://github.com/wieslawsoltes/SkiaSharpDemo (done on Windows 7 sp1 x64 using VM, Windows 7 sp1 32-bit using VM, and on real laptop running window 7 sp1).\n\nScreenshot using VM (https://developer.microsoft.com/en-us/microsoft-edge/tools/vms/#downloads, IE11 on Win7):\n![2016-08-15_14-20-33](https://cloud.githubusercontent.com/assets/2297442/17664369/cff5e9f8-62f3-11e6-8714-992dc7dca0fd.png)\n",
+        "createdAt": "2016-08-15T12:24:41",
+        "reactions": []
+      },
+      {
+        "id": 239804704,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes \nFrom a colleague of mine:\n\n\u003E It might be the C\u002B\u002B runtime is not installed. I can repro it if I rename c:\\windows\\system32\\msvcp140.dll to something else. The libSkiaSharp.dll depends on that.\n\nhttps://support.microsoft.com/en-us/kb/2977003\n\nPS: I am still getting my Win7 VM up\n",
+        "createdAt": "2016-08-15T13:43:05",
+        "reactions": [
+          {
+            "user": "amyagit",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:10.8138669Z"
+          },
+          {
+            "user": "pinki",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:10.8138674Z"
+          }
+        ]
+      },
+      {
+        "id": 239836110,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow Thanks for tip, installing the \u0060Microsoft Visual C\u002B\u002B 2015 Redistributable\u0060 https://www.microsoft.com/en-us/download/details.aspx?id=52982 solved the issue.\n\nWould be nice if this information would be provided in README or in wiki page.\n\nOther solution would be to link statically the .dll. for windows. The size would increase a little, but would not cause such problems in future.\n",
+        "createdAt": "2016-08-15T15:39:30",
+        "reactions": []
+      },
+      {
+        "id": 239838464,
+        "author": "tdenniston",
+        "body": "\u002B1 to the idea of statically linking the runtime to libSkiaSharp.dll (or providing the option, since of course it is not always the right choice). It seems odd to me to have the advantage of deploying a managed application but then having to deal with the MS C\u002B\u002B runtime dependency (and versioning) just as for deploying regular C\u002B\u002B applications.\n",
+        "createdAt": "2016-08-15T15:46:05",
+        "reactions": []
+      },
+      {
+        "id": 239858594,
+        "author": "mattleibow",
+        "body": "@tdenniston @wieslawsoltes Typically one would create an installer or the ClickOnce deployment and include the VC\u002B\u002B Runtime as part of the install package. But, I am glad that this is resolved and I will definitely have a look at the other options in the other issue. Thanks @tdenniston for confirming this!\n",
+        "createdAt": "2016-08-15T16:54:04",
+        "reactions": []
+      },
+      {
+        "id": 428647281,
+        "author": "jpatte",
+        "body": "In case anyone encounters a similar problem, it\u0027s worth noting that SkiaSharp now requires Microsoft Visual C\u002B\u002B 2017 Redistributable (instead of 2015) which can be found at https://support.microsoft.com/en-us/help/2977003/the-latest-supported-visual-c-downloads.",
+        "createdAt": "2018-10-10T16:50:31",
+        "reactions": [
+          {
+            "user": "KvanTTT",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:11.6523076Z"
+          },
+          {
+            "user": "ruvamuz",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:11.6523079Z"
+          }
+        ]
+      },
+      {
+        "id": 909271363,
+        "author": "julientrflz",
+        "body": "Still  present in VS2019 SkiaSharp V1.68.3...",
+        "createdAt": "2021-08-31T14:06:39",
+        "reactions": []
+      }
+    ]
+  }
 }

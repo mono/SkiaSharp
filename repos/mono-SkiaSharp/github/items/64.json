@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-20T06:01:34",
   "closedAt": "2016-05-14T20:31:04",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:56.1139187Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 219238980,
+        "author": "mattleibow",
+        "body": "Ok, the issue is that the \u0060SKImage.Encode\u0060 is returning a \u0060NULL\u0060 in native code, but is not properly reflected in the managed code.\n\n\u0060\u0060\u0060 c\n\n    /**\n     *  Encode the image\u0027s pixels and return the result as a new SkData, which\n     *  the caller must manage (i.e. call unref() when they are done).\n     *\n     *  If the image type cannot be encoded, or the requested encoder type is\n     *  not supported, this will return NULL.\n     *\n     *  Note: this will attempt to encode the image\u0027s pixels in the specified format,\n     *  even if the image returns a data from refEncoded(). That data will be ignored.\n     */\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-05-14T19:34:17",
+        "reactions": []
+      },
+      {
+        "id": 219239352,
+        "author": "mattleibow",
+        "body": "The currently supported encoders are:\n- KTX\n- JPEG\n- PNG\n- WEBP\n",
+        "createdAt": "2016-05-14T19:41:26",
+        "reactions": []
+      },
+      {
+        "id": 219250017,
+        "author": "mattleibow",
+        "body": "\u0022Fixed\u0022 in 733264b7be888c215da7bb204658a9ed0314ad38\n\nAlthough not a fix for supporting the other encoders, the fix correctly returns \u0060null\u0060 if the encoder couldn\u0027t be created. The new exception will be the correct \u0060NullReferenceException\u0060.\n",
+        "createdAt": "2016-05-14T20:31:04",
+        "reactions": []
+      }
+    ]
+  }
 }

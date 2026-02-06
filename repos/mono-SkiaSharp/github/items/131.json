@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-20T00:02:22",
   "closedAt": "2016-08-11T16:32:05",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:40.2667406Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 239115917,
+        "author": "mattleibow",
+        "body": "@tdenniston Thanks for creating an issue. There is no real problem with your code except that you are reading a stream when the position is already at the end (after the \u0060bitmap.Save\u0060 operation).\nTo fix this, just flush and rewind:\n\n\u0060\u0060\u0060 csharp\n// ...\nbitmap.Save(memstr, bitmap.RawFormat);\n// rewind the stream\nmemstr.Flush();\nmemstr.Position = 0;\n// ...\n\u0060\u0060\u0060\n\nWhat is happening is that you are saving, and when the codec tries to read it, it is unable to get data since there is no more data after the current position. As a result, the codec is returned as \u0060null\u0060. Internally we assume it will never be \u0060null\u0060 (which is wrong), and thus the \u0060NullReferenceException\u0060.\n\n\u0060stream.Handle\u0060 is \u00600\u0060 due to the fact that the \u0060SKCodec\u0060 takes ownership of the stream in native code and then disposes and releases the memory. As a result, the handle is \u00600\u0060 or \u0060NULL\u0060.\n\nI have made a small change in our code to prevent an exception, and it should just return \u0060null\u0060 as expected. However, the correct way to use these types is to first rewind the **\u0060MemoryStream\u0060**. \u0060SKManagedStream\u0060 will always have its own start at the position of the provided stream.\n",
+        "createdAt": "2016-08-11T09:41:40",
+        "reactions": []
+      },
+      {
+        "id": 239124524,
+        "author": "mattleibow",
+        "body": "Improved the ownership management: https://github.com/mono/SkiaSharp/commit/8239f1670e1f733167e853ab1900f97629a7cdc5\n",
+        "createdAt": "2016-08-11T10:26:18",
+        "reactions": []
+      },
+      {
+        "id": 239180633,
+        "author": "tdenniston",
+        "body": "Confirmed that adding the \u0060Flush()\u0060 and \u0060Position = 0\u0060 fixes my issue. Thanks for responding so quickly!\n",
+        "createdAt": "2016-08-11T14:38:43",
+        "reactions": []
+      }
+    ]
+  }
 }

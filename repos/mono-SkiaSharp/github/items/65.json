@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-20T06:01:33",
   "closedAt": "2016-04-20T15:57:57",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:51:57.688818Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 212480608,
+        "author": "mattleibow",
+        "body": "Hi @agallero, thanks for you interest. Go ahead and make the changes and we can review and merge them.\nI don\u0027t think anyone is working on them right now, so it\u0027s all yours. You can add the C methods and then add the C# wrappers. You can make use of the C# tests (https://github.com/mono/SkiaSharp/tree/master/tests) for any tests, without having to write C tests. To do the docs, there are two ways:\n- \u0060./bootstrapper.sh -t docs\u0060\n- \u0060make update-docs\u0060\n\nYou can the go ahead and write the docs in the xml files\n",
+        "createdAt": "2016-04-20T15:35:37",
+        "reactions": []
+      },
+      {
+        "id": 212489126,
+        "author": "agallero",
+        "body": "Thanks!  I had already began looking at it, and I have some questions about how skiasharp is handling the strings, but probably it is better that I ask about that in a different thread.\n",
+        "createdAt": "2016-04-20T15:57:57",
+        "reactions": []
+      },
+      {
+        "id": 212513704,
+        "author": "mattleibow",
+        "body": "@agallero Here are some examples of working with text:\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SkiaApi.cs#L125-L136\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKCanvas.cs#L243-L252\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/Util.cs\n",
+        "createdAt": "2016-04-20T16:57:24",
+        "reactions": []
+      },
+      {
+        "id": 212530742,
+        "author": "agallero",
+        "body": "Thanks, but I was thinking actually in methods returning strings, not methods taking strings as parameters.When returning strings the memory has to be allocated in the C side but freed in the .NET side. \n\nI\u0027ve opened another issue with it, and as mentioned there, the only examples I could get of C methods returning strings didn\u0027t seem to work.\n\nThanks for the time to dig the links, and sorry I wasn\u0027t too clear in the previous post about what I referred to.\n",
+        "createdAt": "2016-04-20T17:41:12",
+        "reactions": []
+      }
+    ]
+  }
 }

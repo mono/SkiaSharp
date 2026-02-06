@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-20T06:01:21",
   "closedAt": "2016-06-16T06:22:25",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:20.5914432Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 226398194,
+        "author": "mattleibow",
+        "body": "Hi @tdenniston,\nThanks for reporting this, I believe it was my fault... and that of the machines. The current state was just so that our CI could pop out the NuGet for uploading, but then CI just had a few hiccups. Should be all nice now.\n\nIssue 1, NuGet was having issues, so :(\nIssue 2, You were building \u0060SkiaSharp.UWP.csproj\u0060, that also has to be removed from the binding solution \u0060SkiaSharp.Windows.sln\u0060\nIssue 3, My bad, I used our internal feed for CI, but as NuGet was down, all the packages came from there - including the dodgy ones that we have\n\nI fixed it to use the SkiaSharp from the output folder, and if NuGet has issues, it will just fail to restore the other packages.\n\nJust a note: all is now well, and I have pushed out a new version: https://github.com/mono/SkiaSharp/releases/tag/v1.49.4-beta which has tvOS and PDF support\n",
+        "createdAt": "2016-06-16T06:22:25",
+        "reactions": []
+      }
+    ]
+  }
 }

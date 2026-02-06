@@ -20,5 +20,258 @@
   "updatedAt": "2022-08-20T00:02:17",
   "closedAt": "2018-11-06T17:42:48",
   "commentCount": 26,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:53:53.600153Z",
+    "reactions": [
+      {
+        "user": "soerendd",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:53:53.6001591Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:53:53.6001599Z"
+      },
+      {
+        "user": "nopara73",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:53:53.6001602Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 239860911,
+        "author": "mattleibow",
+        "body": "Typically one would create an installer or the ClickOnce deployment and include the VC\u002B\u002B Runtime as part of the install package.\n",
+        "createdAt": "2016-08-15T17:01:12",
+        "reactions": []
+      },
+      {
+        "id": 239881417,
+        "author": "migueldeicaza",
+        "body": "Neither one of the original two options look very appealing, we need to digest the above.\n\nSpecially considering that @mattleibow \u0027s suggestion is a viable option.\n",
+        "createdAt": "2016-08-15T18:14:06",
+        "reactions": []
+      },
+      {
+        "id": 239885811,
+        "author": "mattleibow",
+        "body": "I found some info: \n- [Should I link to the Visual Studio C runtime statically or dynamically?](http://stackoverflow.com/questions/787216/should-i-link-to-the-visual-studio-c-runtime-statically-or-dynamically)\n- [Should I compile with /MD or /MT?](http://stackoverflow.com/questions/757418/should-i-compile-with-md-or-mt)\n\nI think [this](https://github.com/rust-lang/libc/issues/290) sums it up nicely:\n\n\u003E Dynamic linkage is basically essential if you want to pass CRT objects between binaries. If you allocate something (memory, files, any CRT thing) in a dll/exe that links to one CRT and try to free it (or even use it, files in particular) in a different dll/exe that links to a different CRT then bad things can happen. So keeping an option to dynamically link the CRT is probably important. You don\u0027t always need it, but when you do need it you can\u0027t really go without it.\n",
+        "createdAt": "2016-08-15T18:28:08",
+        "reactions": []
+      },
+      {
+        "id": 240111987,
+        "author": "tdenniston",
+        "body": "Looking in to this yesterday (specifically w.r.t. SkiaSharp applications, as in general the situation can be more complicated) I found another option if you don\u0027t want to deploy your application via an installer. Your VS license comes with a [provision](https://www.visualstudio.com/en-us/downloads/2015-redistributables-rc-vs.aspx) to distribute certain runtime DLLs with your application directly, meaning you don\u0027t have to package them via the redistributable [installer](https://www.microsoft.com/en-us/download/details.aspx?id=52982) that everyone is familiar with.\n\nSo the fix for issue #109 that doesn\u0027t require the redistributable installer is to copy the following two DLLs to the directory with your application .exe file: \u0060C:\\Program Files (x86)\\Microsoft Visual Studio 14.0\\VC\\redist\\\u003Carch\u003E\\Microsoft.VC140.CRT\\msvcp140.dll\u0060 and \u0060...\\vcruntime140.dll\u0060. These appear to be the only runtime DLLs required by native Skia, at least in my brief testing.\n",
+        "createdAt": "2016-08-16T14:05:39",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:48.6495811Z"
+          },
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:48.6495816Z"
+          },
+          {
+            "user": "ststeiger",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:48.6495817Z"
+          },
+          {
+            "user": "torman119",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:48.6495818Z"
+          }
+        ]
+      },
+      {
+        "id": 240122522,
+        "author": "mattleibow",
+        "body": "@tdenniston Thanks for this. This is definitely another, possibly the best so far, option. \n\nWe want to make sure we make the right choice here, because as soon as we do a static link, we cannot go back as we may cause even more issues.\n",
+        "createdAt": "2016-08-16T14:39:28",
+        "reactions": []
+      },
+      {
+        "id": 240132549,
+        "author": "wieslawsoltes",
+        "body": "@tdenniston Thanks for info, was looking for this solution myself but did not find this page.\n\nIt also covers the Community edition, which is very good:\n\n https://www.visualstudio.com/en-us/support/legal/mt171547\n\nThis is newer version: \n\nhttps://www.visualstudio.com/en-us/downloads/2015-redistribution-vs.aspx\n\nI tested in VM and those 2 files are enough to run SkiaSharp succesfully.\n\n@mattleibow I thinks we can close this issue as the solution provided by @tdenniston is as good as static linking for me. Maybe adding this info to README would help other too.\n",
+        "createdAt": "2016-08-16T15:10:09",
+        "reactions": [
+          {
+            "user": "JimSEOW",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:49.1257558Z"
+          }
+        ]
+      },
+      {
+        "id": 249119457,
+        "author": "prasannavl",
+        "body": "@wieslawsoltes, @tdenniston is correct - but not entirely. Those are the only two non-system dlls that are required in general cases. \n\n\u0060\u0060\u0060\nDump of file libSkiaSharp.dll\n\nFile Type: DLL\n\n  Image has the following dependencies:\n\n    MSVCP140.dll\n    VCRUNTIME140.dll\n    api-ms-win-crt-string-l1-1-0.dll\n    api-ms-win-crt-math-l1-1-0.dll\n    api-ms-win-crt-stdio-l1-1-0.dll\n    api-ms-win-crt-runtime-l1-1-0.dll\n    api-ms-win-crt-heap-l1-1-0.dll\n    api-ms-win-crt-environment-l1-1-0.dll\n    api-ms-win-crt-convert-l1-1-0.dll\n    api-ms-win-crt-filesystem-l1-1-0.dll\n    api-ms-win-crt-time-l1-1-0.dll\n    api-ms-win-crt-utility-l1-1-0.dll\n    api-ms-win-crt-locale-l1-1-0.dll\n    OPENGL32.dll\n    KERNEL32.dll\n    USER32.dll\n    ADVAPI32.dll\n\u0060\u0060\u0060\n\nThe API-\\* are just the SxS assemblies provided by windows. However, on windows platforms without the Universal CRT, you may also have the need to install https://support.microsoft.com/en-us/kb/2999226. \n\nI\u0027m guessing the reason they worked without it, is that they were likely a part of Windows Update (I may be wrong). \n\nOn a side note, here\u0027s the Microsoft documentation that provides the full list of CRT deployment options: https://msdn.microsoft.com/en-us/library/ms235299.aspx\n",
+        "createdAt": "2016-09-23T07:13:10",
+        "reactions": []
+      },
+      {
+        "id": 289744494,
+        "author": "ststeiger",
+        "body": "I disagree with the installer solution. \r\nParticularly, you don\u0027t want to require admin rights to \u0022install\u0022 (xcopy deploy) an application or its dependencies. \r\nThe installation of the VC-runtime requires admin rights. \r\nIn order to avoid different version conflicts, you just need to make sure everything is compiled with the same C/C\u002B\u002B-runtime. Since .NET Core has to statically links its C-runtime, it\u0027s necessary to use that one for SkiaSharp. \r\n\u003E Requiring admin rights for the provisioning of an application is stupid.\r\n\u003E Not even Google-Chrome does it, and that\u0027s an entire browser. \r\n\r\n**Not requiring an installation is the whole point of .NET-Core self-contained deployment.** \r\nMaybe it would be wiser to deploy libSkiaSharp.dll as part of .NET Core itselfs. If you wouldn\u0027t need the runtime for each platform in there, you could drastically reduce the file\u0027s size. I think that would be the proper way forward. Especially considering that fully-managed solutions like ImageSharp are way too slow (14 seconds to create an image thumbnail vs. 300ms with Skia). \r\n\r\nGoogle has this very useful guiding principle: If it takes longer than 4 seconds, it\u0027s a bug. \r\nYou can apply that to deployment as well. \r\nI also apply that directive to SQL and reports, and pretty much everything else. ",
+        "createdAt": "2017-03-28T11:46:15",
+        "reactions": []
+      },
+      {
+        "id": 344392073,
+        "author": "toptensoftware",
+        "body": "I\u0027d like to add my vote to making a statically linked version available, although first of all... does anyone know if a statically linked version actually works?\r\n\r\nAssuming it does, here\u0027s my (possibly unique) rationale:\r\n\r\n1. My installer (typical Windows .exe installer built with InnoSetup) installs both the x86 and x64 versions of my app and is currently about 10mb.  To include the MSVC redistributables for both platforms would bloat that to over 36mb.\r\n\r\n2. My app loads lots of different third party plugins and I\u0027ve had stability problems with shared runtimes before.  Admittedly that was a long time ago and I\u0027m not sure why, but switching to statically linked runtime has helps reduce those problems.  (basically I think some of these plugins are very poorly written so anything I can do to isolate my app is good).\r\n\r\n3. I\u0027m not keen on installing just the two CRT dlls - sounds dangerous if plugins loaded by my app are dependant  on those dlls they\u0027ll be expecting the full runtime in the system folder and opens the possibility of mismatches.\r\n\r\n4. On this point: \u0022Dynamic linkage is basically essential if you want to pass CRT objects between binaries.\u0022.  Does libSkiaSharp ever do this?\r\n\r\nSo I\u0027m wondering what\u0027s the downside to including the statically linked versions in a separate folder in the nuget package (besides additional size)?  This doesn\u0027t impact current users who want the shared runtime versions, but for anyone trying to package a static version, the correctly built versions of the dlls are there ready to go.  It also means as new releases of SkiaSharp are made, we (those who want the statically linked version) don\u0027t need to make a special one-off build each time.\r\n\r\nIn other words, I think there are legitimate cases for wanting statically linked versions and having to build them ourselves is kinda painful.",
+        "createdAt": "2017-11-14T20:43:35",
+        "reactions": []
+      },
+      {
+        "id": 344457333,
+        "author": "toptensoftware",
+        "body": "To answer my own question, I\u0027ve just built a statically linked version and it seems to work just fine.  The size difference is about 300k:\r\n\r\n    x64 6,254,592 =\u003E 6,567,424\r\n    x86 4,857,856 =\u003E 5,134,848\r\n\r\nAnyone else interested in this, there\u0027s a [fork here](https://github.com/toptensoftware/SkiaSharp) with a new build target:\r\n\r\n    \u003E .\\bootstrapper.ps1 -Target externals-winstatic\r\n",
+        "createdAt": "2017-11-15T01:33:47",
+        "reactions": []
+      },
+      {
+        "id": 399275121,
+        "author": "danroot",
+        "body": "One scenario I\u0027m facing this on, where an installer will not work, is deployment to Azure App Services.",
+        "createdAt": "2018-06-21T23:32:34",
+        "reactions": []
+      },
+      {
+        "id": 399382524,
+        "author": "ststeiger",
+        "body": "Is Skia still relevant anyway ? \r\nImageSharp has become a lot faster, and basically, the only thing Skia can do that imagesharp can\u0027t is webp and tiff. \r\nThe time might be better spent adding webp and/or tiff to imagesharp. ",
+        "createdAt": "2018-06-22T09:29:41",
+        "reactions": []
+      },
+      {
+        "id": 399544801,
+        "author": "mattleibow",
+        "body": "@ststeiger SkiaSharp can do far more that ImageSharp and also has the added support of doing everything on the GPU. SkiaSharp uses skia, which is the same engine that powers Android and Chrome.\r\n\r\nOf course, if you like ImageSharp, then feel free to use that. ",
+        "createdAt": "2018-06-22T18:51:38",
+        "reactions": []
+      },
+      {
+        "id": 399545090,
+        "author": "mattleibow",
+        "body": "@danroot Thanks for pointing out the case with Azure, I will investigate this and see what we can do.",
+        "createdAt": "2018-06-22T18:52:28",
+        "reactions": []
+      },
+      {
+        "id": 399552182,
+        "author": "danroot",
+        "body": "@mattleibow I may have misunderstood this issue. I landed here from #109 with a similar error in an Azure App Service.  In my case though, I was eventually able to get it working in Azure App Services by using this in the csproj PropertyGroup section:\r\n\r\n    \u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\r\n    \u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E\r\n\r\nAnd publishing the ASP.NET Core 2.1 app as \u0022Self Contained\u0022.\r\n\r\nWhen I do this, the right DLL lands in Azure App Service, and I can run locally from my dev VM.  I have the app service set (intentionally) to 32-bit, the projects set to \u0022Any CPU\u0022, and it seems to be working both in Azure and on dev machine.  I had manually copied msvcp140,dll and vcruntime140.dll to the bin folder, but just removed those and SkiaSharp still works.  So I\u0027m thinking Azure App Services has the C\u002B\u002B runtimes already and you just need to be sure the right libSkiaSharp.dll lands as well.  It\u0027s still a little odd to me.  I\u0027m having a hard time imagining a scenario I wouldn\u0027t want the native dll and would rather it all \u0022just work\u0022 even if it means a few more bytes in the package. But I\u0027m sure there\u0027s reasons I just don\u0027t understand, and this solves my immediate issue..  ",
+        "createdAt": "2018-06-22T19:14:16",
+        "reactions": []
+      },
+      {
+        "id": 399650339,
+        "author": "mattleibow",
+        "body": "@danroot Ah. I see. You are most probably working on a x64 machine? What is happening is that AnyCPU is checking your current build machine and detecting x64, so it copies the x64 libSkiaSharp.dll. You deploy to a x86 machine, but there is no way for the IDE to know this.\r\n\r\nTo work around this, you can add the \u0060\u003CPreferredNativeSkiaSharp\u003E\u0060 element, as you did. This probably will break your local debug, so you can set the variable as part of the CI that builds this: \u0060/p:PreferredNativeSkiaSharp=x86\u0060. If you build AnyCPU, there should be a \u0060x86\u0060 and a \u0060x64\u0060 folder in the output directory that has the native files. As part of the deploy step, you can copy the correct one into the parent folder.",
+        "createdAt": "2018-06-23T08:07:43",
+        "reactions": []
+      },
+      {
+        "id": 399926592,
+        "author": "ststeiger",
+        "body": "@mattleibow \r\n\r\n\u003E Of course, if you like ImageSharp, then feel free to use that.\r\n\r\nActually I don\u0027t. \r\nI tried to like ImageSharp, but I still can\u0027t say I do. \r\nConstantly changing everything, breaking everything, making it \u0022hard\u0022 to NOT use a nuget package, and slow (albeit the speed is now more-or-less acceptable for my purposes), constant problem reading fonts. \r\nWhat is nice is that ImageSharp uses SIMD and doesn\u0027t require a native library - but that\u0027s about it. \r\nSadly, the native library is kindof show-stopping when you want an easy deployment on Linux. \r\nOn the upside, Skia is a hell of a lot faster. \r\nDon\u0027t know either if all the insecure code in ImageSharp is as secure as it should be. ",
+        "createdAt": "2018-06-25T11:58:39",
+        "reactions": []
+      },
+      {
+        "id": 423442619,
+        "author": "CoenraadS",
+        "body": "I also encountered this.\r\n\r\nI have .Net Framework 4.7 Azure Function (x64 on Azure), depending on a Net Standard 2.0 class library using SkiaSharp.\r\n\r\nI platform for all projects to x64 and in the class library I used\r\n\r\n\u0060\u0060\u0060\r\n\u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\r\n\u003CPreferredNativeSkiaSharp\u003Ex64\u003C/PreferredNativeSkiaSharp\u003E\r\n\u0060\u0060\u0060 \r\n\r\nBut still this error occurs. I can see the dll in \u0060/bin/runtimes/win7-64/native\u0060 but I think it should be in the \u0060/bin\u0060 folder",
+        "createdAt": "2018-09-21T07:36:09",
+        "reactions": []
+      },
+      {
+        "id": 423460504,
+        "author": "ststeiger",
+        "body": "Or you can stream it ouf - write to \r\n\u0060\u0060\u0060\r\nSystem.IO.Path.GetDirectoryName(\r\ntypeof(SomeClassInSkiaSharpAssembly).Assembly.Location\r\n);\r\n\u0060\u0060\u0060\r\ndepending on \u0060System.IntPtr.Size * 8 == 64\u0060 \r\non App_Start/Init.\r\n\r\nanyway, that works for each operating system. \r\nJust stream-out the right dll from embedded resources for the right operating system.\r\nContaining dlls for 3 OSes and 4 platforms (x86, x64, arm-32, arm64) adds to executable size, however. ",
+        "createdAt": "2018-09-21T08:43:45",
+        "reactions": []
+      },
+      {
+        "id": 423474238,
+        "author": "CoenraadS",
+        "body": "I solved it using:\r\n\r\n\u0060\u0060\u0060\r\n  \u003CItemGroup\u003E\r\n      \u003CContentWithTargetPath Include=\u0022$(OutDir)bin\\runtimes\\win7-x64\\native\\libSkiaSharp.dll\u0022\u003E\r\n      \u003CCopyToOutputDirectory\u003EPreserveNewest\u003C/CopyToOutputDirectory\u003E\r\n      \u003CTargetPath\u003Ebin\\libSkiaSharp.dll\u003C/TargetPath\u003E\r\n    \u003C/ContentWithTargetPath\u003E\r\n  \u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-09-21T09:34:05",
+        "reactions": []
+      },
+      {
+        "id": 427606309,
+        "author": "mattleibow",
+        "body": "After seeing what is happening with Windows Docker containers, we may need to revisit the static linking idea. To be honest, I never linked statically and don\u0027t know what the side effects are. \r\n\r\nRight now, I have this single binary that works on Win 7\u002B and possible accross various server variants. If this affects loading of other assemblies, will this affect the loading process of the ANGLE binaries? What happens if we statically link to the VC2017 binaries and we run on Windows 7?\r\n\r\nI need to do some more testing and determine if a static linking has side effects that will affect us. It may just be something that does not affect us in the least, in that case, there is no reason not to.",
+        "createdAt": "2018-10-06T21:06:38",
+        "reactions": []
+      },
+      {
+        "id": 427684229,
+        "author": "kekekeks",
+        "body": "\u003EIf this affects loading of other assemblies, will this affect the loading process of the ANGLE binaries\r\n\r\nIt only affects exported/imported C\u002B\u002B objects and memory allocated via CRT allocator (\u0060new\u0060/\u0060malloc\u0060). C\u002B\u002B objects would be incompatible and \u0060free\u0060/\u0060delete\u0060 in one library won\u0027t be able to release memory allocated in another with \u0060new\u0060/\u0060malloc\u0060. \r\n\r\nSkiaSharp and ANGLE aren\u0027t doing *any* of these things. They have plain C API (no C\u002B\u002B objects) and provide custom deallocators for all \u0022object\u0022 types. So it\u0027s completely safe to use any CRT linking options: static, dynamic, they can even use different versions of C runtime.\r\n\r\nVC2017 compiler and linker are compatible with Win7.",
+        "createdAt": "2018-10-07T20:26:46",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:52.6302502Z"
+          },
+          {
+            "user": "wieslawsoltes",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:52.6302507Z"
+          },
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:52.6302508Z"
+          }
+        ]
+      },
+      {
+        "id": 429940821,
+        "author": "mattleibow",
+        "body": "@kekekeks I tried a test build with a statically linked Windows binary, and something is not quite right. The raster rendering appears to work just fine, but SkiaSharp chokes when trying to load the OpenGL interface.\r\n\r\nIt throws an \u0060AccessViolationException\u0060 on this line:\r\n\r\nhttps://github.com/mono/skia/blob/9ec6cb29f41014890f61ed1329fc934bfd9167ae/src/gpu/gl/win/GrGLMakeNativeInterface_win.cpp#L101\r\n\r\nHere is my PR: https://github.com/mono/SkiaSharp/pull/654 Maybe I am doing something wrong? I just ran the tests and I created a minimal sample using a \u0060SKGLControl\u0060 on the desktop, and it consistently died.\r\n\r\n@toptensoftware, did you make use of the GPU features?\r\n\r\nAlso, things might have changed - I no longer have a hard dependency on opengl32.dll as I now load it dynamically with \u0060LoadLibraryA\u0060 and then each entry with \u0060GetProcAddress\u0060.",
+        "createdAt": "2018-10-15T17:24:03",
+        "reactions": []
+      },
+      {
+        "id": 431206496,
+        "author": "mattleibow",
+        "body": "I may need to retest this one... I think something broke and now all GPU fails ;) Ran a clean, if this fails then a clean checkout may be necessary... Or maybe I broke my machine :(\r\n\r\nEDIT: yup, everything is broken. Going full reset and nuking the entire repo \uD83D\uDCA5 Bwahahaaaa! Take that you piece of silicon!",
+        "createdAt": "2018-10-19T00:27:08",
+        "reactions": []
+      },
+      {
+        "id": 434052596,
+        "author": "mattleibow",
+        "body": "OK. I have fixed the static link errors - it had to do with me writing bad C\u002B\u002B interop code. It appears to be working and most probably will read the next release. Yay! No more vc_redist installs!\r\n\r\nAs of this comment, the new package is undergoing testing and can be downloaded here if you are not part of the EAP: https://jenkins.mono-project.com/view/SkiaSharp/job/SkiaSharp-Pipeline/job/feature%252Fstatic-win32/12/Azure",
+        "createdAt": "2018-10-29T19:46:08",
+        "reactions": []
+      },
+      {
+        "id": 436342647,
+        "author": "mattleibow",
+        "body": "That\u0027s it folks! The next version will be statically linked. We hope to have a public preview in a few days.",
+        "createdAt": "2018-11-06T17:42:34",
+        "reactions": [
+          {
+            "user": "twilly86",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:53:53.5499374Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -14,5 +14,53 @@
   "updatedAt": "2022-08-20T06:01:26",
   "closedAt": "2016-05-13T19:47:18",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:52:12.6982337Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 217508076,
+        "author": "galvesribeiro",
+        "body": "![img_1789](https://cloud.githubusercontent.com/assets/4714040/15081055/3d4788ec-1397-11e6-9be7-5481ec17e39c.JPG)\n![img_1787](https://cloud.githubusercontent.com/assets/4714040/15081058/3d4d3b5c-1397-11e6-8d46-881265fee7c2.JPG)\n![img_1788](https://cloud.githubusercontent.com/assets/4714040/15081057/3d4995ec-1397-11e6-9a3a-236a022eef07.JPG)\n![img_1792](https://cloud.githubusercontent.com/assets/4714040/15081056/3d481f1e-1397-11e6-9d90-b740400828e8.JPG)\n\nAnd that is working as you can see! :)\n",
+        "createdAt": "2016-05-06T17:32:00",
+        "reactions": []
+      },
+      {
+        "id": 219141935,
+        "author": "mattleibow",
+        "body": "Work being done in #81 \n",
+        "createdAt": "2016-05-13T19:47:18",
+        "reactions": []
+      },
+      {
+        "id": 226356951,
+        "author": "kekekeks",
+        "body": "Why not use \u0060dlsym\u0060/\u0060GetProcAddress\u0060 and \u0060Marshal.GetDelegateFromFunctionPtr\u0060 instead of \u0060DllImport\u0060? That will add a _lot_ of flexibility in native library location like looking for correct CPU arch version in libSkiaSharp-x86.dll or libSkiaSharp-x64.dll depending on current platform. \n\nSomething like that (MIT-licensed):\nhttps://github.com/kekekeks/evhttp-sharp/blob/master/EvHttpSharp/Interop/LinuxLoader.cs\nhttps://github.com/kekekeks/evhttp-sharp/blob/master/EvHttpSharp/Interop/OsxLoader.cs\nhttps://github.com/kekekeks/evhttp-sharp/blob/master/EvHttpSharp/Interop/Win32Loader.cs\n\nhttps://github.com/kekekeks/evhttp-sharp/blob/master/EvHttpSharp/Interop/Event.cs (usage)\n",
+        "createdAt": "2016-06-16T00:20:55",
+        "reactions": []
+      },
+      {
+        "id": 226357610,
+        "author": "kekekeks",
+        "body": "The only issue that I see is iOS static linker, but I think that a custom dlsym (\u0060skiasharp_dlsym\u0060 or something)  could be implemented in the native code. We did it this way in our old skia-based backend in avalonia(aka perspex) and it worked quite well.\n",
+        "createdAt": "2016-06-16T00:25:43",
+        "reactions": []
+      },
+      {
+        "id": 238023169,
+        "author": "jameswalmsley",
+        "body": "Are there any instruction on how this was achieved. I want to run SkiaSharp on native Linux but intel.\n",
+        "createdAt": "2016-08-06T13:24:44",
+        "reactions": []
+      },
+      {
+        "id": 239215068,
+        "author": "mattleibow",
+        "body": "@jameswalmsley I just use a default name of libSkiaSharp.[a/dll/so/dylib]\n\nI do this in the https://github.com/mono/SkiaSharp/blob/v1.53.0/binding/Binding/SkiaApi.cs#L48-L62\nYou should be able to just \u0060#if __LINUX__\u0060 or something. But, it should also fall back to the default \u0060\u0022libSkiaSharp\u0022\u0060 and the mono runtime will automatically select the correct extension on the platform.\n",
+        "createdAt": "2016-08-11T16:30:12",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -23,5 +23,39 @@
   "updatedAt": "2022-08-20T00:01:49",
   "closedAt": "2016-11-18T00:44:22",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:39.803647Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 255749653,
+        "author": "mattleibow",
+        "body": "@rac146 Good question... I think this has been asked a few times in the Xamarin.Forms world... Before I add this, I want to find out why the X.F guys actually left that info out.\n\nAlso, I would strongly suggest you have a look at what other devs have done with regards to X.F... Maybe check the forums (http://forums.xamarin.com/categories/xamarin-forms) or chat (https://gitter.im/xamarin/Xamarin.Forms) and see - maybe there is something, or a better way to get touch co-ordinates.\n\nIf you find anything, be sure to share so that we can do this properly inside SkiaSharp.\n\nThis is something I am considering since I am making a small 2D game on the side... touch is required for buttons and things like that...\n",
+        "createdAt": "2016-10-24T14:04:29",
+        "reactions": []
+      },
+      {
+        "id": 255894538,
+        "author": "rac146",
+        "body": "Thanks Matt!\n\nFor now, I\u0027m able to get the coordinates by extending the ContentPage across the Native Platforms. From here, you can override the touch events and send the coordinate info back to the PCL. The same principle could be applied directly to the SKNativeViews as one way to solve the problem. Would be better if the built-in gestures for Xamarin Forms could support the coordinates though.\n\nThis also still allows existing Pan and Pinch gestures to work.\n\nAndroid Example:\n\n\u0060\u0060\u0060\n    public class ClickPageRenderer : PageRenderer\n    {\n        public IClickPageController iClickView;\n\n        protected override void OnElementChanged(ElementChangedEventArgs\u003CPage\u003E e)\n        {\n            base.OnElementChanged(e);\n\n            if (e.OldElement != null || Element == null)\n            {\n                return;\n            }\n\n            if(e.NewElement != null)\n            {\n                iClickView = (IClickPageController) e.NewElement;\n            }\n\n        }\n\n        public override bool OnInterceptTouchEvent(MotionEvent e)\n        {\n            if (e.PointerCount == 1)\n            {\n                switch (e.Action)\n                {\n                    case MotionEventActions.Down:\n\n                        iClickView.SendCustomTap(e.GetX(), e.GetY(), false);\n\n                        break;\n                    case MotionEventActions.Up:\n\n                        iClickView.SendCustomTap(e.GetX(), e.GetY(), true);\n\n                        break;\n                    default:\n\n                        break;\n                }\n            }\n\n            return base.OnInterceptTouchEvent(e);\n        }\n\n    }\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-10-24T23:28:12",
+        "reactions": []
+      },
+      {
+        "id": 256355783,
+        "author": "MisterWilde",
+        "body": "I was trying to extend the SkiaCanvasView / SkiaCanvasViewRenderer to intercept touch events on iOS, Android and UWP. Unfortunately, I can\u0027t do that using the nuget package as the classes and interfaces required to write your own implementation of SkiaCanvas, or extending the SKCanvasViewRenderer, are inaccessible. But I will try the Content Page customization.\n",
+        "createdAt": "2016-10-26T13:58:48",
+        "reactions": []
+      },
+      {
+        "id": 261416080,
+        "author": "mattleibow",
+        "body": "I am closing this as I won\u0027t be adding touch events to the SkiaSharp views. This is primarily a forms question, so it might be better to ask the Forms guys. However, I will be making the forms renderers public in a future release (probably v1.56 since that just became a thing)\n",
+        "createdAt": "2016-11-18T00:44:22",
+        "reactions": []
+      }
+    ]
+  }
 }

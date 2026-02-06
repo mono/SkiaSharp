@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-20T00:01:47",
   "closedAt": "2016-10-25T20:07:08",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:54:43.4417992Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 256160407,
+        "author": "mattleibow",
+        "body": "Hi @Goldstrike. this is expected because that file is generated from the binding projects.\n\nIn order to generate that file, you need to run this build target:\n\n\u0060\u0060\u0060\n.\\bootstrapper.ps1 -Target externals-genapi\n\u0060\u0060\u0060\n\nThat will create the file. In order to build so that you can actually run the tests or platform libraries, you will need to first build the native library and managed wrappers:\n\n\u0060\u0060\u0060\n.\\bootstrapper.ps1 -Target libs\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-10-25T20:07:07",
+        "reactions": []
+      }
+    ]
+  }
 }
