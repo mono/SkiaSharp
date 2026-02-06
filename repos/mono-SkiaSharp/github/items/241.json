@@ -27,5 +27,45 @@
   "deletions": 429,
   "changedFiles": 47,
   "commits": 13,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:39:52.4938493Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 279303295,
+        "author": "kekekeks",
+        "body": "I\u0027m pretty sure that it\u0027s possible to keep GPU support without referencing libGL/libGLU/libX11 by exposing \u0060GrGLAssemble*Interface\u0060: https://github.com/mono/skia/blob/xamarin-mobile-bindings/include/gpu/gl/GrGLAssembleInterface.h#L17",
+        "createdAt": "2017-02-13T06:19:02",
+        "reactions": []
+      },
+      {
+        "id": 279303401,
+        "author": "kekekeks",
+        "body": "I\u0027ve removed -lGL -lGLU -lX11 from makefile, \u0060glXGetCurrentContext\u0060and \u0060glXGetProcAddress\u0060 are the *only* missing imports:\r\n\r\n\u0060\u0060\u0060\r\n../../externals/skia/out/x64/Release/libskia_skgpu.a(skgpu.GrGLCreateNativeInterface_glx.o): In function \u0060glx_get\u0027:\r\n/io/SkiaSharp/externals/skia/out/x64/Release/../../../src/gpu/gl/glx/GrGLCreateNativeInterface_glx.cpp:24: undefined reference to \u0060glXGetProcAddress\u0027\r\n../../externals/skia/out/x64/Release/libskia_skgpu.a(skgpu.GrGLCreateNativeInterface_glx.o): In function \u0060GrGLCreateNativeInterface()\u0027:\r\n/io/SkiaSharp/externals/skia/out/x64/Release/../../../src/gpu/gl/glx/GrGLCreateNativeInterface_glx.cpp:28: undefined reference to \u0060glXGetCurrentContext\u0027\r\n\u0060\u0060\u0060\r\n\r\nJust remove \u0060GrGLCreateNativeInterface_glx\u0060 from the build and you should get a library that doesn\u0027t depend on OpenGL.",
+        "createdAt": "2017-02-13T06:19:54",
+        "reactions": []
+      },
+      {
+        "id": 279306682,
+        "author": "kekekeks",
+        "body": "BTW, GLX won\u0027t be present in \u0022pure\u0022 Wayland/Mir environment, they use EGL instead.",
+        "createdAt": "2017-02-13T06:45:46",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:39:52.1793342Z"
+          }
+        ]
+      },
+      {
+        "id": 279380289,
+        "author": "mattleibow",
+        "body": "@kekekeks Thanks for the work, I will get it all merged. BTW, I already expose the \u0060GRGLAssemble*Interface\u0060 members on the \u0060GRGlInterface\u0060 type in SkiaSharp - that is actually how I do the ANGLE bits on UWP.\r\n\r\nDoing it via assemble is better than having no support at all. Good point.",
+        "createdAt": "2017-02-13T12:45:30",
+        "reactions": []
+      }
+    ]
+  }
 }

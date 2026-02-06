@@ -27,5 +27,64 @@
   "deletions": 3,
   "changedFiles": 2,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:39:47.3072656Z",
+    "reactions": [
+      {
+        "user": "galvesribeiro",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:39:47.3072744Z"
+      },
+      {
+        "user": "grokys",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:39:47.3072862Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 278984428,
+        "author": "kekekeks",
+        "body": "https://hub.docker.com/r/kekekeks/holy_build_box_for_skia_sharp/ - Docker image and build instructions",
+        "createdAt": "2017-02-10T16:04:47",
+        "reactions": []
+      },
+      {
+        "id": 279273409,
+        "author": "mattleibow",
+        "body": "@kekekeks why did you have link statically? I see that when you use fontconfig, that depends on freetype. If I link statically, then I have duplicate bits in the .so.\r\n\r\nMaybe the HBB did not have a late enough version or something?",
+        "createdAt": "2017-02-13T01:22:22",
+        "reactions": []
+      },
+      {
+        "id": 279301368,
+        "author": "kekekeks",
+        "body": "If I understand correctly, even CentOS7 has too old version of libfreetype. While we can ship our own libfreetype which is up to date, we *have* to use system libfontconfig, since it has hardcoded config and font paths. BTW, it didn\u0027t introduce a big change in the file size.",
+        "createdAt": "2017-02-13T06:02:54",
+        "reactions": []
+      },
+      {
+        "id": 279382252,
+        "author": "mattleibow",
+        "body": "So if I am understanding right, skia uses the linked freetype for itself, but you/app uses the system library?\r\nBut, when skia is going to be doing font things, won\u0027t it also need the hardcoded system things?",
+        "createdAt": "2017-02-13T12:52:37",
+        "reactions": []
+      },
+      {
+        "id": 279387535,
+        "author": "kekekeks",
+        "body": "Skia will use a fresh version of libfreetype which is statically linked, so one\u0027s applications will be able to use proper hinting, have support for recent changes in font formats, etc. At the same time it will use system libfontconfig to get system font locations and default settings.",
+        "createdAt": "2017-02-13T13:07:00",
+        "reactions": []
+      },
+      {
+        "id": 279393453,
+        "author": "mattleibow",
+        "body": "Aaaaahhhhh yeas. now is see - I continuously mix up libFONTCONFIG and libFREETYPE! It all makes sense now once you have the right libraries :stuck_out_tongue_winking_eye: ",
+        "createdAt": "2017-02-13T13:33:20",
+        "reactions": []
+      }
+    ]
+  }
 }

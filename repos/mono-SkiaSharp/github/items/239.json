@@ -27,5 +27,60 @@
   "deletions": 0,
   "changedFiles": 1,
   "commits": 2,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:39:49.9246164Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 279160718,
+        "author": "xamarin-cla-bot",
+        "body": "Hey @daniel-luberda,\r\nThank you for your Pull Request! We \u003C3 our contributors!\r\n\r\nHowever, it looks like you haven\u0027t signed our CLA (Contributor License Agreement) yet. In order for us to accept your pull request, you have to sign our CLA first.\r\nOnce you do this, we can check over your pull request. You should only have to do this once.\r\n\r\nYou can read and sign our full Contributor License Agreement [here](https://cla.xamarin.com).\r\n\r\nThanks,\r\n\r\nYour friendly Xamarin CLA Bot#",
+        "createdAt": "2017-02-11T17:15:25",
+        "reactions": []
+      },
+      {
+        "id": 279160965,
+        "author": "xamarin-cla-bot",
+        "body": "Hey @daniel-luberda,\r\n\r\nThanks for signing our CLA! We can now look at your pull request.\r\n\r\nAlways at your service,\r\n\r\nYour friendly Xamarin CLA Bot#",
+        "createdAt": "2017-02-11T17:18:50",
+        "reactions": []
+      },
+      {
+        "id": 279165105,
+        "author": "mattleibow",
+        "body": "Hi @daniel-luberda, thanks for this. I saw this but I think we need to do this differently.\r\nWe can\u0027t just pull the viewbox from the width and height - the \u0060ViewBox\u0060 property is specifically to see what was in the actual SVG.\r\n\r\nThere was a bug, and it is rather the division by zero when scaling: https://github.com/mono/SkiaSharp/blob/v1.56.1/source/SkiaSharp.Svg/SkiaSharp.Svg.Shared/SKSvg.cs#L132\r\n\r\nAccording to the SVG spec (http://www.w3.org/TR/SVG/coords.html#ViewBoxAttribute), if the value is set to 0 specifically, we shouldn\u0027t render:\r\n\r\n\u003E A value of zero disables rendering of the element.\r\n\r\nHowever, if the value was not set at all, then nothing should happen:\r\n\r\n\u003E If specified, an additional transformation is applied to all descendants of the given element to achieve the specified effect.\r\n\r\nI think we need to change this to rather check if it was specified, and then use that value. If it wasn\u0027t specified, then we just pretend that we have an infinite canvas (and no scale). This is what Chrome does as well.",
+        "createdAt": "2017-02-11T18:18:43",
+        "reactions": []
+      },
+      {
+        "id": 279165360,
+        "author": "mattleibow",
+        "body": "@migueldeicaza I think we should revert this and implement it according to the spec?",
+        "createdAt": "2017-02-11T18:22:33",
+        "reactions": []
+      },
+      {
+        "id": 279165517,
+        "author": "daniel-luberda",
+        "body": "Hi @mattleibow,\r\n\r\nSure, I understand. \uD83D\uDC4D  I didn\u0027t know that specification part, just wanted to bring back correct loading of some svg files that loaded properly and failed to do that after view port changes update. Sorry for that. :)",
+        "createdAt": "2017-02-11T18:24:37",
+        "reactions": []
+      },
+      {
+        "id": 279165922,
+        "author": "mattleibow",
+        "body": "I also think we should do the clipping correctly: http://www.w3.org/TR/SVG/masking.html#OverflowProperty\r\n\r\nRight now, it will just draw everything - which is fine since the \u0060overflow\u0060 attribute isn\u0027t checked. Maybe we should also add logic to look at that and clip the canvas before painting?",
+        "createdAt": "2017-02-11T18:31:08",
+        "reactions": []
+      },
+      {
+        "id": 279166100,
+        "author": "mattleibow",
+        "body": "@daniel-luberda No problem. Thanks for the PR - do you want to have a go at making the changes for the viewbox?\r\n\r\nOriginally I was just going ahead with this as something similar to what NGraphics was doing, but then sometimes I reached a point where I needed to make decisions. Then I decided to just try and follow the spec as closely as I could since that is really what was expected. NGraphics is a bit free thinking :)",
+        "createdAt": "2017-02-11T18:34:04",
+        "reactions": []
+      }
+    ]
+  }
 }
