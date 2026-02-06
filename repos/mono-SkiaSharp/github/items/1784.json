@@ -27,5 +27,66 @@
   "deletions": 0,
   "changedFiles": 3,
   "commits": 3,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:22:16.7013669Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 912909373,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2021-09-04T05:08:57",
+        "reactions": []
+      },
+      {
+        "id": 912909394,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines successfully started running 1 pipeline(s).\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2021-09-04T05:09:10",
+        "reactions": []
+      },
+      {
+        "id": 912909946,
+        "author": "mattleibow",
+        "body": "Thanks for this PR.\r\n\r\nI was playing around with the test app from the issue and think it lasts even longer if I dispose the data when it is removed from the window. It still crashes, but much later. Without the fix, it crashed after about 380 navigations on mu iPhone 6s. With the fixe and the release, it lasted to about 500. It still crashes, but this was the app. \r\n\r\nIt started producing blank pages for a bit (basically ran out of memory to allocate the surface), and then crashed after a while - but not from our code. Seems the OS got tired of allocating view controllers. I suppose 500 is a bit extreme for an app to just keep navigating down while preserving the back stack. Some overhead might also be that Xamarin.Forms may not be disposing the actual UIViews.\r\n\r\nAt least now, we are making sure to release the data when it is removed from the view hierarchy.\r\n\r\nI think this is better? We don\u0027t need to keep all the data in memory because we can totally re-allocate. And, the OS still has the last image in the graphics context. Our drawing is basically a second buffer. SkiaSharp draws to that, then blits it to the screen. If we dispose our buffer, the OS still has the copy.",
+        "createdAt": "2021-09-04T05:14:28",
+        "reactions": []
+      },
+      {
+        "id": 912991797,
+        "author": "richirisu",
+        "body": "Thanks for having looked into it this thoroughly.\r\n\r\nI think releasing the pixel data when the canvas view is being removed from the view hierarchy is a good move. After all, it can be recreated. Back in the good old days of iOS 1, it was even required to free up all data that could be recreated when switching view controllers. Of course, my test application is just an extreme example, and since NSData objects share the memory with all the rest, there can be a multitude of reasons for running out of memory.\r\n\r\nThe only thing I am not really sure about is that in most cases willMoveToWindow will only be called when the view controller is being pushed and when it is being popped again, but not when another view controller is being pushed on top. So all intermediate view controllers will still keep their views alive. But I might be mistaken.",
+        "createdAt": "2021-09-04T15:27:43",
+        "reactions": []
+      },
+      {
+        "id": 913015842,
+        "author": "mattleibow",
+        "body": "\u003E willMoveToWindow will only be called when the view controller is being pushed and when it is being popped again, but not when another view controller is being pushed on top\r\n\r\nI tested this and it seems that when we push another VC on top, it removes the previous one from the window. I did not actually expect that as I assumed it would still live on. However, it seems as soon as a view is no longer in the view hierarchy, it is removed from the window.\r\n\r\nMaybe this was sort of a hint but not explicitly stated:\r\n\r\n\u003E **newWindow**  \r\n\u003E The window object that will be at the root of the receiver\u0027s new _view hierarchy_. This parameter may be nil.",
+        "createdAt": "2021-09-04T18:08:30",
+        "reactions": []
+      },
+      {
+        "id": 913429892,
+        "author": "richirisu",
+        "body": "I could confirm in Xcode that you are right. Using the \u201CDebug View Hierarchy\u201D feature, only the top-most view controller is attached. All intermediate view controllers are detached for the time being.\r\n\r\nI could also confirm that for all view controllers that are being detached willMoveToWindow will be called with \u2019null\u2019 (which is in accordance with the specification as the view is being detached from the window). However, willMoveToSuperview will not be called with \u2018null\u2019 because the view is still attached to its superview. Only for the view controller\u0027s root view willMoveToSuperview will be called with \u2018null\u2019 because the root view is indeed detached from its parent view (which is a view belonging to the navigation controller). Note, that you can assign any custom view as the root view by overriding the loadView method of a view controller.\r\n\r\nI think I had confused it with the search view controller. Displaying the search view controller does not cause the actual view controller underneath to be removed from the view hierarchy.",
+        "createdAt": "2021-09-06T07:54:39",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:22:16.4166495Z"
+          }
+        ]
+      },
+      {
+        "id": 1133854717,
+        "author": "mattleibow",
+        "body": "Fixes #1308",
+        "createdAt": "2022-05-22T09:25:50",
+        "reactions": []
+      }
+    ]
+  }
 }

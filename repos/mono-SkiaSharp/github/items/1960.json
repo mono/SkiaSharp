@@ -62,5 +62,163 @@
       "state": "COMMENTED",
       "submittedAt": "2022-05-16T01:00:32"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:21:29.8527914Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1046200498,
+        "author": "anpin",
+        "body": "At the moment I\u0027m experiencing a strange issue with SkiaSharp.Views.Uno.WinUI.Mobile project. Compiling it to targets other than net6.0-android fails due to ignored conditional compilation symbols",
+        "createdAt": "2022-02-20T09:47:04",
+        "reactions": []
+      },
+      {
+        "id": 1046352168,
+        "author": "mattleibow",
+        "body": "To speed up the CI bulds and skip the unmanaged builds, change the number from \u00600\u0060 to \u00605768468\u0060 https://github.com/mono/SkiaSharp/blob/main/scripts/azure-pipelines.yml#L15\r\n\r\nThat number is just a last green build here. It expires after a while and it may not work if you change unmanaged files, but it is the best I have now. I need to write some yaml to allow you to somehow (maybe with a github tag) to skip the unmnaged builds. But for now, numbers!!!",
+        "createdAt": "2022-02-21T00:04:06",
+        "reactions": []
+      },
+      {
+        "id": 1046355796,
+        "author": "mattleibow",
+        "body": "The rename from native to platform is in maui preview 14. Is that the version you are wanting to target? only preview 13 is out right now. We can totally release a new p13 build of skia with uno.ui and then update to p14 once that is closer to release\r\n",
+        "createdAt": "2022-02-21T00:15:30",
+        "reactions": []
+      },
+      {
+        "id": 1046355962,
+        "author": "mattleibow",
+        "body": "CI iscurrently failing because of a missing package in our dotnet-puyblic feed. Asked them to add that now.",
+        "createdAt": "2022-02-21T00:15:58",
+        "reactions": []
+      },
+      {
+        "id": 1046576493,
+        "author": "anpin",
+        "body": "\u003E The rename from native to platform is in maui preview 14. Is that the version you are wanting to target? only preview 13 is out right now. We can totally release a new p13 build of skia with uno.ui and then update to p14 once that is closer to release\r\n\r\nI wanted to target Uno WinUI 3, so we can exclude the MAUI changes. I renamed them just so I won\u0027t get an error in latest VS2022 preview. ",
+        "createdAt": "2022-02-21T08:06:32",
+        "reactions": []
+      },
+      {
+        "id": 1047144778,
+        "author": "mattleibow",
+        "body": "Seems the skip does not work for forks \uD83D\uDE22 \r\n\r\nI thinkn this is the next thing I need to get working on CI. But for the time being, back to square 0 it seems.",
+        "createdAt": "2022-02-21T18:38:01",
+        "reactions": []
+      },
+      {
+        "id": 1055279603,
+        "author": "anpin",
+        "body": "@mattleibow is there anything else I can do to help merge this? ",
+        "createdAt": "2022-03-01T10:31:41",
+        "reactions": []
+      },
+      {
+        "id": 1075347438,
+        "author": "jeromelaban",
+        "body": "The Uno Platform release 4.1.9 now supports net6.0-ios, net6.0-android, net6.0-maccatalyst and net6.0-macos. It can be used to add the new targets compatible with the mobile template used in this PR.",
+        "createdAt": "2022-03-22T15:56:28",
+        "reactions": []
+      },
+      {
+        "id": 1088543719,
+        "author": "anpin",
+        "body": "It seems to me that \u0060Uno.WinUI\u0060 packages are still missing on the CI nuget feed, so it only compiles when I add public feed to \u0060nuget.config\u0060. Plus there is still something wrong with \u0060net6.0-ios\u0060 and \u0060net6.0-maccatalyast\u0060 targets and you ca n follow discussion in the \u0060msbuild\u0060 issue linked above. ",
+        "createdAt": "2022-04-05T10:40:09",
+        "reactions": []
+      },
+      {
+        "id": 1088652248,
+        "author": "jeromelaban",
+        "body": "Yes, the \u0060Uno.WinUI.*\u0060 packages need to be approved by the SkiaSharp team for the build to go further.",
+        "createdAt": "2022-04-05T12:37:25",
+        "reactions": []
+      },
+      {
+        "id": 1089587579,
+        "author": "jeromelaban",
+        "body": "Here are the uno packages for this PR:\r\n\r\n- uno.core\r\n- uno.core.extensions\r\n- uno.core.extensions.collections\r\n- uno.core.extensions.compatibility\r\n- uno.core.extensions.disposables\r\n- uno.core.extensions.equality\r\n- uno.core.extensions.logging\r\n- uno.core.extensions.logging.singleton\r\n- uno.core.extensions.threading\r\n- uno.diagnostics.eventing\r\n- uno.extensions.core\r\n- uno.extensions.logging.oslog\r\n- uno.extensions.logging.webassembly.console\r\n- uno.extensions.logging.winui\r\n- uno.foundation.logging\r\n- uno.foundation.runtime.webassembly\r\n- uno.sourcegenerationtasks\r\n- uno.ui.adapter.microsoft.extensions.logging\r\n- uno.universalimageloader\r\n- uno.wasm.bootstrap\r\n- uno.wasm.bootstrap.devserver\r\n- uno.wasm.websockets\r\n- uno.winui\r\n- uno.winui.remotecontrol\r\n- uno.winui.runtime.skia.gtk\r\n- uno.winui.runtime.skia.wpf\r\n- uno.winui.runtime.webassembly\r\n- uno.winui.skia.gtk\r\n- uno.winui.skia.wpf\r\n- uno.winui.webassembly\r\n- commonservicelocator\r\n",
+        "createdAt": "2022-04-06T00:45:33",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "eyes",
+            "createdAt": "2026-02-06T14:21:27.513117Z"
+          }
+        ]
+      },
+      {
+        "id": 1090325572,
+        "author": "mattleibow",
+        "body": "Should be available now. I asked for the latest, so maybe we need some older versions too. When you remove the nuget.config we will know.",
+        "createdAt": "2022-04-06T14:16:26",
+        "reactions": []
+      },
+      {
+        "id": 1090355595,
+        "author": "anpin",
+        "body": "   I haven\u2019t committed nuget.config, so it should be good to goOn Wed, Apr 6, 2022 at 6:16 PM, Matthew Leibowitz ***@***.***\u003E wrote:  \nShould be available now. I asked for the latest, so maybe we need some older versions too. When you remove the nuget.config we will know.\n\n\u2014Reply to this email directly, view it on GitHub, or unsubscribe.You are receiving this because you authored the thread.Message ID: ***@***.***\u003E",
+        "createdAt": "2022-04-06T14:44:30",
+        "reactions": []
+      },
+      {
+        "id": 1090357757,
+        "author": "mattleibow",
+        "body": "There are the nuget.configs in the samples folders. We can\u0027t have any nuget.configs anywhere in the repo that have nuget.org or any other non-azure feeds.",
+        "createdAt": "2022-04-06T14:46:29",
+        "reactions": []
+      },
+      {
+        "id": 1090360481,
+        "author": "anpin",
+        "body": "   Ok my bad maybe I did add them. I\u2019m on mobile, so will fix it later.\u00A0 On Wed, Apr 6, 2022 at 6:46 PM, Matthew Leibowitz ***@***.***\u003E wrote:  \nThere are the nuget.configs in the samples folders. We can\u0027t have any nuget.configs anywhere in the repo that have nuget.org or any other non-azure feeds.\n\n\u2014Reply to this email directly, view it on GitHub, or unsubscribe.You are receiving this because you authored the thread.Message ID: ***@***.***\u003E",
+        "createdAt": "2022-04-06T14:49:05",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:21:28.5628576Z"
+          }
+        ]
+      },
+      {
+        "id": 1093546947,
+        "author": "mattleibow",
+        "body": "There is 1 more: samples/Basic/Uno/NuGet.config \r\n\r\n\u0060\u0060\u0060\r\nStarting: Nuget Security Analysis (auto-injected by policy)\r\n==============================================================================\r\nTask         : Nuget Security Analysis\r\nDescription  : A task to scan for vulnerabilities in nuget files.\r\nVersion      : 0.2.102\r\nAuthor       : Microsoft Corporation\r\nHelp         : See https://aka.ms/nugetsecurityanalysis for more information. Please contact OpenSourceEngSupport@microsoft.com if you run into problems or have questions with this task.\r\n==============================================================================\r\nFor more information please visit: https://aka.ms/nugetsecurityanalysis\r\nStarting Multifeed Nuget Security Analysis: \r\nnuget.config - Multiple internal feeds declared, but none with upstreams.\r\nsamples/Basic/Uno/NuGet.config - Missing \u003Cclear/\u003E statement.\r\nsamples/Basic/Uno/NuGet.config - Multiple feeds declared.\r\nStarting Multifeed Python Security Analysis: \r\nStarting CFS NuGet Analysis: \r\nsamples/Basic/Uno/NuGet.config - External feeds found in the file.\r\nStarting CFS NPM Analysis: \r\nStarting DockerFile Analysis: \r\nscripts/Docker/alpine/amd64/Dockerfile - Container usage from external registry \u0027docker.io\u0027 found.\r\nscripts/Docker/debian9/amd64/Dockerfile - Container usage from external registry \u0027docker.io\u0027 found.\r\nscripts/Docker/debian9/clang-cross/Dockerfile - Container usage from external registry \u0027docker.io\u0027 found.\r\nAzure Artifacts Configuration Analysis found 1 vulnerable NuGet package manifest in the repository. Visit http://aka.ms/azure-artifacts-configuration-analysis for more details.\r\nContainer security analysis found 3 violations. This repo has one or more docker files having references to images from external registries. Please review https://aka.ms/containers-security-guidance to remove the reference of container images from external registries. Please contact cssc@microsoft.com for any questions or clarifications.\r\n##[error]NuGet Security Analysis found 1 vulnerable package manifest in the repository. Visit https://aka.ms/nugetmultifeed for more details.\r\nFinishing: Nuget Security Analysis (auto-injected by policy)\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-04-09T01:07:41",
+        "reactions": []
+      },
+      {
+        "id": 1096812850,
+        "author": "mattleibow",
+        "body": "I notice this in the logs:\r\n\u0060\u0060\u0060\r\nCSC : warning CS8002: Referenced assembly \u0027Uno.UI, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         CSC : warning CS8002: Referenced assembly \u0027Uno, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         CSC : warning CS8002: Referenced assembly \u0027Uno.Foundation, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         CSC : warning CS8002: Referenced assembly \u0027Uno.UI.BindingHelper.Android, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         CSC : warning CS8002: Referenced assembly \u0027Uno.UI.FluentTheme, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         CSC : warning CS8002: Referenced assembly \u0027Uno.UI.FluentTheme.v1, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         CSC : warning CS8002: Referenced assembly \u0027Uno.UI.FluentTheme.v2, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         CSC : warning CS8002: Referenced assembly \u0027Uno.UI.Toolkit, Version=255.255.255.255, Culture=neutral, PublicKeyToken=null\u0027 does not have a strong name. [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n\u0060\u0060\u0060\r\n\r\nDid the net6 uno loose the strong name?",
+        "createdAt": "2022-04-12T14:35:58",
+        "reactions": []
+      },
+      {
+        "id": 1096827098,
+        "author": "jeromelaban",
+        "body": "Uno never had strong names (and likely never will). Could it be that the skia build requires strong names in net6?",
+        "createdAt": "2022-04-12T14:46:53",
+        "reactions": []
+      },
+      {
+        "id": 1126637396,
+        "author": "mattleibow",
+        "body": "The Windows builds are failing with:\r\n\r\n\u0060\u0060\u0060\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (Build target) (1:2) -\u003E\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj\u0022 (default target) (10:22) -\u003E\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj\u0022 (Build target) (10:25) -\u003E\r\n       (CoreCompile target) -\u003E \r\n         D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.iOS\\SKSwapChainPanel.iOS.cs(14,11): error CS0246: The type or namespace name \u0027SKGLView\u0027 could not be found (are you missing a using directive or an assembly reference?) [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n\r\n\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (Build target) (1:2) -\u003E\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj\u0022 (default target) (10:22) -\u003E\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj\u0022 (Build target) (10:26) -\u003E\r\n         D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.Mac\\SKXamlCanvas.macOS.cs(3,23): error CS0234: The type or namespace name \u0027Mac\u0027 does not exist in the namespace \u0027SkiaSharp.Views\u0027 (are you missing an assembly reference?) [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         D:\\a\\1\\s\\source\\SkiaSharp.Views\\SkiaSharp.Views.Mac\\SKGLView.cs(6,23): error CS0234: The type or namespace name \u0027GlesInterop\u0027 does not exist in the namespace \u0027SkiaSharp.Views\u0027 (are you missing an assembly reference?) [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n         D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.Mac\\SKXamlCanvas.macOS.cs(14,11): error CS0246: The type or namespace name \u0027SKCGSurfaceFactory\u0027 could not be found (are you missing a using directive or an assembly reference?) [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n\r\n\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (Build target) (1:2) -\u003E\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj\u0022 (default target) (10:22) -\u003E\r\n       \u0022D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj\u0022 (Build target) (10:23) -\u003E\r\n         D:\\a\\1\\s\\source\\SkiaSharp.Views\\SkiaSharp.Views.AppleiOS\\SKGLView.cs(9,23): error CS0234: The type or namespace name \u0027GlesInterop\u0027 does not exist in the namespace \u0027SkiaSharp.Views\u0027 (are you missing an assembly reference?) [D:\\a\\1\\s\\source\\SkiaSharp.Views.Uno\\SkiaSharp.Views.Uno.WinUI.Mobile\\SkiaSharp.Views.Uno.WinUI.Mobile.csproj]\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-05-14T04:32:34",
+        "reactions": []
+      },
+      {
+        "id": 1140057884,
+        "author": "mattleibow",
+        "body": "Merged in 7b3e8f3375d8114c473f87803627ff6a17519130 via #2042",
+        "createdAt": "2022-05-27T21:37:43",
+        "reactions": []
+      }
+    ]
+  }
 }

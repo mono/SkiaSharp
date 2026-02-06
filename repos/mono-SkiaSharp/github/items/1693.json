@@ -13,5 +13,62 @@
   "createdAt": "2021-04-15T16:18:14",
   "updatedAt": "2022-05-25T12:51:10",
   "commentCount": 5,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:21:36.1959851Z",
+    "reactions": [
+      {
+        "user": "Pangamma",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:21:36.1959935Z"
+      },
+      {
+        "user": "joreg",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:21:36.195994Z"
+      },
+      {
+        "user": "sebescudie",
+        "content": "eyes",
+        "createdAt": "2026-02-06T14:21:36.1959943Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1136083088,
+        "author": "tomloomans88",
+        "body": "@[Ziriax](https://github.com/Ziriax) Did you ever find out how to improve the encoding speed?",
+        "createdAt": "2022-05-24T15:34:45",
+        "reactions": []
+      },
+      {
+        "id": 1136101572,
+        "author": "ziriax",
+        "body": "No, we decided to use \u0060libjpeg-turbo\u0060 directly, because Skia is also too strict, it rejects a lot of JPEG files that can perfectly be decoded. Well actually, that is on my current sprint goal \uD83D\uDE09 ",
+        "createdAt": "2022-05-24T15:50:40",
+        "reactions": []
+      },
+      {
+        "id": 1136105118,
+        "author": "tomloomans88",
+        "body": "Thnx for your answer. I\u0027m looking to encode SKBitmaps to PNG faster (the default method is really slow) so I will try to find a fast png encoding library and use that. Good luck with the sprint \uD83D\uDE04 ",
+        "createdAt": "2022-05-24T15:54:05",
+        "reactions": []
+      },
+      {
+        "id": 1136132805,
+        "author": "ziriax",
+        "body": "I see. Now. this issue was for JPEG encoding. \r\n\r\nFor fast encoding to PNG, I guess it\u0027s best not use compression, or a small compression factor. \r\n\r\nOut of interest, I did a Google search for \u0060parallel PNG encoder\u0060, and found this:\r\n\r\nhttps://github.com/brion/mtpng\r\n",
+        "createdAt": "2022-05-24T16:19:21",
+        "reactions": []
+      },
+      {
+        "id": 1137199817,
+        "author": "tomloomans88",
+        "body": "Thnx for the tip! I ended up settling for Tiff encoding using LibTiff.NET, but I still need to make it faster. I\u0027ve posted a question on [stackoverflow ](https://stackoverflow.com/questions/72377772/fast-lossless-encoding-of-skbitmap-images) if you\u0027re interested.",
+        "createdAt": "2022-05-25T12:51:10",
+        "reactions": []
+      }
+    ]
+  }
 }
