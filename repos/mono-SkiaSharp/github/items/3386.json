@@ -30,5 +30,25 @@
   "createdAt": "2025-10-17T14:21:04",
   "updatedAt": "2025-10-20T21:25:03",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:23:21.5225524Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3415816788,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate the specific area of the issue (libSkiaSharp.native), the affected operating system (Linux), and a potential compatibility concern.\n\nThis issue is not explicitly defined as a regression but indicates a compatibility issue with different versions of SkiaSharp.\n\nAdditional remarks:\n* The problem relates to a bug in deploying a web API using SkiaSharp; however, the currently available labels do not cover SkiaSharp or image processing contexts directly.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue involves a failure in loading the native library \u0027libSkiaSharp\u0027 on Linux.\n- It is specifically occurring in a Linux-based Azure Container App.\n- There\u0027s a potential compatibility concern between the current version of SkiaSharp (3.116.0) and the last known good version (2.88.9).\n\nSummary of the actions that will be performed:\n\n| Action          | Item                              | Description                                                                                                    |\n| :-------------- | :-------------------------------- | :------------------------------------------------------------------------------------------------------------- |\n| Apply Label     | area/libSkiaSharp.native         | The issue pertains to a failure in loading the \u0027libSkiaSharp\u0027 library, which relates to the native bindings.  |\n| Apply Label     | os/Linux                         | The issue is specifically occurring on a Linux-based Azure Container App.                                     |\n| Apply Label     | tenet/compatibility              | The issue indicates a potential compatibility problem with the current version of SkiaSharp compared to an earlier version. |\n\n\u003C/details\u003E\n\n\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2025-10-17T14:21:45",
+        "reactions": []
+      },
+      {
+        "id": 3423780577,
+        "author": "dansiegel",
+        "body": "In case it helps anyone else who may find this later, I was able to come up with the following work around.\n\n## Fixing the TypeInitializationException\n\n1) Since we had to use a custom image with the native dependencies installed, I switched to \u0060SkiaSharp.NativeAssets.Linux\u0060.\n2) I created the following repo [AvantiPoint/aspnet-skia](/AvantiPoint/aspnet-skia). This has a \u0060Dockerfile\u0060 based on the \u0060mcr.microsoft.com/dotnet/aspnet:X.0-noble\u0060 image. This then installs all of the required native dependencies into the Linux Environment for SkiaSharp. You can find the public images for this on \u0060ghcr.io\u0060\n    - ghcr.io/avantipoint/aspnet-skia:9.0\n    - ghcr.io/avantipoint/aspnet-skia:10.0\n3) I updated the \u0060csproj\u0060 for each of the executable projects that we are deploying which might make use of SkiaSharp to include the following:\n\u0060\u0060\u0060xml\n\u003CPropertyGroup\u003E\n  \u003COutputType\u003EExe\u003C/OutputType\u003E\n  \u003CTargetFramework\u003Enet9.0\u003C/TargetFramework\u003E\n  \u003CContainerBaseImage\u003Eghcr.io/avantipoint/aspnet-skia:9.0\u003C/ContainerBaseImage\u003E\n\u003C/PropertyGroup\u003E\n\u0060\u0060\u0060\n4) While the packages are public, \u0060ghcr.io\u0060 requires authentication. Generate a PAT for GitHub and run \u0060docker login ghcr.io\u0060.\n\n---\n\n## Fixing the Missing Assembly (Trimming)\n\nFollowing the \u0060TypeInitializationException\u0060 we were still getting another fatal error. This was being caused by the fact that \u0060System.Memory.Data\u0060 was not found. This assembly was a transitive reference for us and was therefore being stripped out because trimming is enabled. When we set this to be a Top Level NuGet dependency this issue was resolved and our APIs began working as expected and like they do in development.\n\n\u0060\u0060\u0060xml\n\u003CItemGroup\u003E\n  \u003C!-- \n    NOTE: \n       We use Central Package Management... \n       you should target the version that makes sense for your project. \n  --\u003E\n  \u003CPackageReference Include=\u0022System.Memory.Data\u0022 /\u003E\n\u003C/ItemGroup\u003E\n\u0060\u0060\u0060",
+        "createdAt": "2025-10-20T21:25:03",
+        "reactions": []
+      }
+    ]
+  }
 }

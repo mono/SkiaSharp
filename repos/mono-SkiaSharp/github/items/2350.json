@@ -13,5 +13,42 @@
   "createdAt": "2022-12-30T00:46:13",
   "updatedAt": "2025-11-24T21:12:30",
   "commentCount": 2,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:22:30.5930675Z",
+    "reactions": [
+      {
+        "user": "AndrewKraevskii",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:22:30.5930731Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3568368423,
+        "author": "SuperAuguste",
+        "body": "I experienced this as well in Linux on WSL2. I figured out that the crash occurs [in \u0060GrGLExtensions::init\u0060](https://github.com/mono/skia/blob/927041a58f130e0dd0562ba86cb4170989ad39e9/src/gpu/ganesh/gl/GrGLExtensions.cpp#L118). \u0060eglDisplay\u0060 seems to be a garbage value (\u00600xfffffffffffffec0\u0060) and \u0060queryString(eglDisplay, GR_EGL_EXTENSIONS)\u0060 seems to return that same garbage value, leading to a segfault when attempting to call \u0060eat_space_sep_strings\u0060 on it.\n\nI was able to fix this locally by intercepting calls to \u0060eglQueryString\u0060 and, on \u0060GR_EGL_EXTENSIONS\u0060, returning an empty string, which led to a successful run of my barebones sample application.\n\nI\u0027m not sure what the correct solution is here unfortunately but hopefully this helps point folks in the right direction. I guess you could validate \u0060eglDisplay\u0060 (what is this \u00600xfffffffffffffec0\u0060 value? Some sort of error constant that can be checked?) and not \u0060queryString\u0060 if it\u0027s invalid.",
+        "createdAt": "2025-11-23T21:49:24",
+        "reactions": [
+          {
+            "user": "AndrewKraevskii",
+            "content": "eyes",
+            "createdAt": "2026-02-06T13:22:30.3507624Z"
+          },
+          {
+            "user": "sin-ack",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:22:30.350763Z"
+          }
+        ]
+      },
+      {
+        "id": 3572750316,
+        "author": "SuperAuguste",
+        "body": "I found https://github.com/rust-skia/rust-skia/issues/511 which pointed to https://github.com/flutter/engine/pull/16924.\n\nAn F# equivalent of \u0060glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API)\u0060 when the OS is Linux should resolve this issue :)\n\nThus I don\u0027t believe this is a mono/skia or SkiaSharp bug but rather a rough edge that documentation should pave over.\n\nHope this helps!",
+        "createdAt": "2025-11-24T21:12:30",
+        "reactions": []
+      }
+    ]
+  }
 }

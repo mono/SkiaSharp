@@ -27,5 +27,52 @@
   "deletions": 9,
   "changedFiles": 1,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:23:36.2632958Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 382428906,
+        "author": "msftclas",
+        "body": "[![CLA assistant check](https://cla.opensource.microsoft.com/pull/badge/signed)](https://cla.opensource.microsoft.com/mono/SkiaSharp?pullRequest=494) \u003Cbr/\u003EAll CLA requirements met.",
+        "createdAt": "2018-04-18T15:31:44",
+        "reactions": []
+      },
+      {
+        "id": 382608655,
+        "author": "mattleibow",
+        "body": "build",
+        "createdAt": "2018-04-19T04:42:53",
+        "reactions": []
+      },
+      {
+        "id": 383249813,
+        "author": "mattleibow",
+        "body": "Thanks for this PR!",
+        "createdAt": "2018-04-20T23:52:24",
+        "reactions": []
+      },
+      {
+        "id": 383267170,
+        "author": "michaldobrodenka",
+        "body": "I was desperately looking and auditing code for memory leak. I\u0027m heavy using SkiaSharp SKCanvas in UITableView with many cell types. In the end, problem was elsewhere, turns out, that UITableView decides, that its reuse queue for given type is full, anbandon cells (but Dispose is not being called and in c# I have no notification on this). When UITableView needs items of that type again, and run out of items from reuse queue, creates new ones. \r\n\r\nSo with right combination of cell types (some of them very big) and their presence in table, I had some cell abandoned by table reuse queue, but with big SKCanvas objects, cells in limbo, I don\u0027t know why Dispose wasnt called (cell is using only WeakReference to outside world).\r\n\r\nWorkaround for me is to keep set of created items and observe theirs state in GetCell - cell is Created, Visible or NotVisibleAnyMore. When table creates a new items in DequeueReusableCell instead of reusing, all existing created items with state NotVisibleAnyMore Dispose theirs SKCanvas objects.\r\n\r\nToo bad, we don\u0027t have more control over reusing like in Android RecyclerView, where I had similar problem, but there we have recycle pool with given size for every type, so I can eagerly Dispose items when cache for item type is full etc.",
+        "createdAt": "2018-04-21T04:34:56",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:23:35.9814856Z"
+          }
+        ]
+      },
+      {
+        "id": 383555272,
+        "author": "mattleibow",
+        "body": "Were you keeping a reference to \u0060SKCanvas\u0060 at all? Each time the views are rendered, the surface and canvas are re-created - they are small objects that point to an underlying memory location.",
+        "createdAt": "2018-04-23T12:20:14",
+        "reactions": []
+      }
+    ]
+  }
 }

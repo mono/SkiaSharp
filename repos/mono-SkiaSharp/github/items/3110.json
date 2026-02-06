@@ -18,5 +18,185 @@
   "createdAt": "2024-12-07T20:26:58",
   "updatedAt": "2025-11-20T09:05:19",
   "commentCount": 24,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:22:37.8338749Z",
+    "reactions": [
+      {
+        "user": "Dokug",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:22:37.8338819Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2556851739,
+        "author": "bcaceiro",
+        "body": "Also facing this message when submitting an .ipa to AppStore",
+        "createdAt": "2024-12-20T11:51:40",
+        "reactions": []
+      },
+      {
+        "id": 2557266567,
+        "author": "ltemimi",
+        "body": "Has any thing been done about this issue I am blocked\r\n",
+        "createdAt": "2024-12-20T15:54:50",
+        "reactions": []
+      },
+      {
+        "id": 2628383316,
+        "author": "NeuralDynamics",
+        "body": "I am blocked as well, any updates?",
+        "createdAt": "2025-01-31T20:55:33",
+        "reactions": []
+      },
+      {
+        "id": 2654849974,
+        "author": "mchiz",
+        "body": "Same here.",
+        "createdAt": "2025-02-12T21:09:43",
+        "reactions": []
+      },
+      {
+        "id": 2698670322,
+        "author": "afnsvdan",
+        "body": "Same here.",
+        "createdAt": "2025-03-04T19:16:53",
+        "reactions": []
+      },
+      {
+        "id": 2698995245,
+        "author": "ltemimi",
+        "body": "there is no support do we have to use it?",
+        "createdAt": "2025-03-04T21:37:22",
+        "reactions": []
+      },
+      {
+        "id": 2702114427,
+        "author": "mattleibow",
+        "body": "I am having a look at a way to publish the symbols as part of the framework that is included in the app. Hopefully this makes life much easier for everyone.\n\nOne thing I have to check is if Apple is actually blocking the uploads witout symbols? Is it _just_ the skia symbols missing, or are the app symbols missing too?",
+        "createdAt": "2025-03-05T21:25:46",
+        "reactions": []
+      },
+      {
+        "id": 2702842735,
+        "author": "NeuralDynamics",
+        "body": "As far as I can tell, its just the skia symbols. I haven\u0027t had the issue with anything else.\nAnd yes, Apple is blocking the uploads without the symbols. Only way around it is to set it so it won\u0027t trim anything, but that leads to other unintended issues (like all of a sudden Calendar \u0026 Bluetooth access consent are required)",
+        "createdAt": "2025-03-06T05:20:12",
+        "reactions": []
+      },
+      {
+        "id": 2702875054,
+        "author": "bcaceiro",
+        "body": "From my experience, it is not a blocker, since Apple is accepting the build - however there always the warning. \n\n@mattleibow  It is just the Skia symbols \n\nFor reference I\u0027m using these packages:\n\n\u0060\u0060\u0060\n        \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.118.0-preview.2.3\u0022 /\u003E\n        \u003CPackageReference Include=\u0022SkiaSharp.Extended.UI.Maui\u0022 Version=\u00223.0.0-preview.13\u0022 /\u003E\n\u0060\u0060\u0060",
+        "createdAt": "2025-03-06T05:47:25",
+        "reactions": []
+      },
+      {
+        "id": 2703044565,
+        "author": "mattleibow",
+        "body": "OK, that is good to know. I think I got the symbols in the packages so hopefully once https://github.com/mono/SkiaSharp/pull/3184 finishes building you can test the artifacts?\n\nI am switching to the different xcframework format which can contain the debug symbols and the release binaries. Should not make much of a difference to the app as the build process does the extraction and everything, but it is not 100% the same as before.\n\nLet me know if you are able to test the packages!",
+        "createdAt": "2025-03-06T07:36:18",
+        "reactions": []
+      },
+      {
+        "id": 2703137074,
+        "author": "bcaceiro",
+        "body": "@mattleibow  can you tell me how to do it? No promises of when, since I\u0027m going on a business trip, but whenever possible I can try it out.",
+        "createdAt": "2025-03-06T08:24:06",
+        "reactions": []
+      },
+      {
+        "id": 2708290536,
+        "author": "ltemimi",
+        "body": "do we have a new nuget package? \n",
+        "createdAt": "2025-03-08T13:39:44",
+        "reactions": []
+      },
+      {
+        "id": 2708823845,
+        "author": "mattleibow",
+        "body": "To test, download the nuget artifact from https://dev.azure.com/xamarin/6fd3d886-57a5-4e31-8db7-52a1b47c07a8/_build/results?buildId=136992\n\nExtract to a folder and then add that folder as a nuget source in VS or in a nuget.config:\n\n\u0060\u0060\u0060xml\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\n\u003Cconfiguration\u003E\n  \u003CpackageSources\u003E\n    \u003Cadd key=\u0022nuget-skia-pr\u0022 value=\u0022/path/to/nuget/folder\u0022 /\u003E\n  \u003C/packageSources\u003E\n\u003C/configuration\u003E\n\u0060\u0060\u0060",
+        "createdAt": "2025-03-09T12:06:58",
+        "reactions": []
+      },
+      {
+        "id": 2717132365,
+        "author": "ltemimi",
+        "body": "I am desperate to launch my app when is the final fix going to be  available please . I am blocked. Do I have to use it ? is there an alternative?\n",
+        "createdAt": "2025-03-12T09:00:10",
+        "reactions": []
+      },
+      {
+        "id": 2720240165,
+        "author": "mattleibow",
+        "body": "Are you not able to publish at all? Can you send a screenshot of the errors? \n\n\u003E From my experience, it is not a blocker, since Apple is accepting the build - however there always the warning. \n\u003E \n\u003E @mattleibow  It is just the Skia symbols \n\u003E \n\u003E For reference I\u0027m using these packages:\n\u003E \n\u003E \u0060\u0060\u0060\n\u003E         \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00223.118.0-preview.2.3\u0022 /\u003E\n\u003E         \u003CPackageReference Include=\u0022SkiaSharp.Extended.UI.Maui\u0022 Version=\u00223.0.0-preview.13\u0022 /\u003E\n\u003E \u0060\u0060\u0060\n\n",
+        "createdAt": "2025-03-13T07:34:50",
+        "reactions": []
+      },
+      {
+        "id": 2720642016,
+        "author": "ltemimi",
+        "body": "Unfortunately we are not able to use preview version at present. When is the fix going to be released ? any idea? Thanks for the help",
+        "createdAt": "2025-03-13T09:53:22",
+        "reactions": []
+      },
+      {
+        "id": 2721091436,
+        "author": "mattleibow",
+        "body": "If you are using the latest stable, is apple blogging you or warning you?\n\nCan you share your error message or screenshot. ",
+        "createdAt": "2025-03-13T12:29:18",
+        "reactions": []
+      },
+      {
+        "id": 2726377508,
+        "author": "ltemimi",
+        "body": "Ok There is a new nuget released I will try it and let you know",
+        "createdAt": "2025-03-15T09:27:37",
+        "reactions": []
+      },
+      {
+        "id": 2735977436,
+        "author": "ltemimi",
+        "body": "yes I have installed the latest stable and I get a warning when I verify the ipa using xCode file and on the app store it is stuck on processing and yet transporter gives no errors and uploads it \n\n![Image](https://github.com/user-attachments/assets/5c812036-0102-4ec3-b84a-8fdf6f7d9201)",
+        "createdAt": "2025-03-19T09:52:46",
+        "reactions": []
+      },
+      {
+        "id": 2759129230,
+        "author": "blmiles",
+        "body": "\u003E yes I have installed the latest stable and I get a warning when I verify the ipa using xCode file and on the app store it is stuck on processing and yet transporter gives no errors and uploads it\n\u003E \n\u003E ![Image](https://github.com/user-attachments/assets/5c812036-0102-4ec3-b84a-8fdf6f7d9201)\n\nheh @mattleibow !\n\nI\u0027ve just got the latest off nuget. Get the same issue here, blocked in validation from Apple\n\nAny work around? any fix expected soon?\n\nThanks",
+        "createdAt": "2025-03-27T19:02:39",
+        "reactions": []
+      },
+      {
+        "id": 2804915650,
+        "author": "petemihaylov",
+        "body": "Same issue that we started getting recently. Its not blocking just warnings. ",
+        "createdAt": "2025-04-15T12:38:29",
+        "reactions": []
+      },
+      {
+        "id": 3244126366,
+        "author": "Danvdh87",
+        "body": "I\u0027m running into the same issue when trying to validate the archive from within TestFlight.  \n\n**Version of SkiaSharp**\n3.119.0\n\n**IDE / Editor**\nVisual Studio (Windows 11)\n\n**Target OS**\niOS\n\n**Dotnet Version**\n9.0.304\n\n\u003Cimg width=\u0022859\u0022 height=\u0022521\u0022 alt=\u0022Image\u0022 src=\u0022https://github.com/user-attachments/assets/c14ba207-7555-41f7-a951-a62e251f0eb3\u0022 /\u003E\n\n**Message**\nUpload Symbols Failed\nThe archive did not include a dSYM for the libSkiaSharp.framework with the UUIDs\n[F72282BC-1846-3669-A974-5CFF7806A45D]. Ensure that the archive\u0027s dSYM folder includes a\nDWARF file for libSkiaSharp.framework with the expected UUIDs.\n\nAny suggestions or workarounds would be really appreciated. \n\n",
+        "createdAt": "2025-09-02T07:31:06",
+        "reactions": []
+      },
+      {
+        "id": 3555565760,
+        "author": "joehanna",
+        "body": "This is still happening for me, I am not even referencing Skia directly - it is included in MAUI.\n\n",
+        "createdAt": "2025-11-20T03:04:14",
+        "reactions": []
+      },
+      {
+        "id": 3556535448,
+        "author": "ltemimi",
+        "body": "I ingnored the error and deployed using transporter to deploy and it seems to work  after  I set  IpaThinning  to None \u0060\u0060\u0060\u003CIpaThinning\u003ENone\u003C/IpaThinning\u003E\u0060\u0060\u0060\n\nhope it will help\nLaz",
+        "createdAt": "2025-11-20T08:27:12",
+        "reactions": []
+      }
+    ]
+  }
 }

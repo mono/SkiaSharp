@@ -18,5 +18,126 @@
   "createdAt": "2025-05-06T04:30:14",
   "updatedAt": "2026-01-13T12:53:55",
   "commentCount": 9,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:21:57.8335743Z",
+    "reactions": [
+      {
+        "user": "ArtyuhovVadim",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:21:57.833582Z"
+      },
+      {
+        "user": "Kostadeveloper1",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:21:57.8335827Z"
+      },
+      {
+        "user": "fitdev",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:21:57.833583Z"
+      },
+      {
+        "user": "AndreiMaz",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:21:57.8335834Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2888213001,
+        "author": "JK62333",
+        "body": "Yes, this problem will cause the version to crash under win7, which was also encountered.",
+        "createdAt": "2025-05-17T08:10:52",
+        "reactions": []
+      },
+      {
+        "id": 2910651234,
+        "author": "molesmoke",
+        "body": "Windows 7 is out of support, so IMHO it\u0027s reasonable for SkiaSharp not to support it either. Maybe you can use the Microsoft.Direct3D.D3D12On7 NuGet as a workaround? Though that hasn\u0027t been updated in years either.",
+        "createdAt": "2025-05-26T21:26:38",
+        "reactions": []
+      },
+      {
+        "id": 2910929930,
+        "author": "IDXGI",
+        "body": "This has nothing to do with Win7 systems. Just like OpenGL, D3D12 should be treated as a dynamic dependency of Skia, not a direct dependency. Without manually turning it on, Skia uses CPU rendering by default, D3D12 is mostly idle, and a direct dependency adds bulk and introduces compatibility issues.\n\nThere are also many computers that only have D3D11, like Win8, or have glitches in D3D12. It shouldn\u0027t cause numerous compatibility issues because of a less common dependency. That\u0027s not a good software engineering design solution.",
+        "createdAt": "2025-05-27T02:27:22",
+        "reactions": [
+          {
+            "user": "niza93",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:21:56.4487027Z"
+          },
+          {
+            "user": "IDXGI",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:21:56.4487037Z"
+          },
+          {
+            "user": "snowflysky",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:21:56.4487038Z"
+          },
+          {
+            "user": "andrewmd5",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:21:56.448704Z"
+          },
+          {
+            "user": "Kostadeveloper1",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:21:56.4487041Z"
+          },
+          {
+            "user": "fitdev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:21:56.4487042Z"
+          }
+        ]
+      },
+      {
+        "id": 2912208541,
+        "author": "mattleibow",
+        "body": "Thanks for this issue. I will see what I can do for this.\n\n",
+        "createdAt": "2025-05-27T11:44:50",
+        "reactions": []
+      },
+      {
+        "id": 2914292279,
+        "author": "molesmoke",
+        "body": "\u003E This has nothing to do with Win7 systems. \n\nYou can hopefully forgive my confusion given the title of the issue and its description \uD83D\uDE06\n\nBut yeah, from the perspective that it could/should be an optional/dynamic dependency, I agree.\n",
+        "createdAt": "2025-05-27T22:14:02",
+        "reactions": []
+      },
+      {
+        "id": 2965249963,
+        "author": "Kation",
+        "body": "\u003E Thanks for this issue. I will see what I can do for this.\n\nMaybe we can make a direct12 package standalone?",
+        "createdAt": "2025-06-12T06:14:21",
+        "reactions": []
+      },
+      {
+        "id": 3577791238,
+        "author": "setiri",
+        "body": "was there any progress with this",
+        "createdAt": "2025-11-25T22:10:23",
+        "reactions": []
+      },
+      {
+        "id": 3579497160,
+        "author": "Kation",
+        "body": "@mattleibow Can we keep all D3D12 API and do not compile skia with D3D12 precondition?\nThen compile skia with D3D12 precondition and make a native dependency nuget package.",
+        "createdAt": "2025-11-26T06:35:03",
+        "reactions": []
+      },
+      {
+        "id": 3744195103,
+        "author": "michaelmairegger",
+        "body": "Any news on that issue?",
+        "createdAt": "2026-01-13T12:53:55",
+        "reactions": []
+      }
+    ]
+  }
 }

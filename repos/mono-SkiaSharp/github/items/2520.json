@@ -13,5 +13,73 @@
   "createdAt": "2023-07-07T13:34:26",
   "updatedAt": "2025-12-09T14:50:42",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:22:22.215351Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1625715027,
+        "author": "ojb500",
+        "body": "Specify \u0060\u003CRuntimeIdentifiers\u003E\u0060 in your project file\n\nhttps://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#runtimeidentifiers\n\nhttps://learn.microsoft.com/en-us/dotnet/core/rid-catalog",
+        "createdAt": "2023-07-07T17:21:28",
+        "reactions": []
+      },
+      {
+        "id": 1626044765,
+        "author": "DamianSuess",
+        "body": "Thank you, @ojb500 for the quick reply and for providing reference resources.\r\n\r\nUnfortunately, the project is still generating all of the runtimes regardless of the addition to the \u0060.csproj\u0060 file. I tried even just specifying \u0060win10-x64\u0060 only and linux \u0026 mac runtimes are still being generated. I can keep toying around.. perhaps, i\u0027m doing something incorrectly?\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/1216684/c2ba77fd-0e67-4355-ba63-fd01a939e4c5)\r\n\r\n\u0060\u0060\u0060xml\r\n    \u003CPropertyGroup\u003E\r\n      \u003C!-- Reduce Build Resources --\u003E\r\n      \u003C!-- Supported languages https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#satelliteresourcelanguages --\u003E\r\n      \u003CSatelliteResourceLanguages\u003Een\u003C/SatelliteResourceLanguages\u003E\r\n      \u003C!-- Supported runtimes (https://learn.microsoft.com/en-us/dotnet/core/rid-catalog) --\u003E\r\n      \u003CRuntimeIdentifiers\u003Ewin10-x64;linux-x64\u003C/RuntimeIdentifiers\u003E\r\n    \u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-07-07T20:27:41",
+        "reactions": []
+      },
+      {
+        "id": 1626060411,
+        "author": "ojb500",
+        "body": "Hmm, I\u0027m pretty sure this is all I needed to do in my project to solve the same problem \uD83E\uDD14\n\nDid you clean the output folder before rebuilding? And what kind of project is this?",
+        "createdAt": "2023-07-07T20:36:43",
+        "reactions": []
+      },
+      {
+        "id": 1626067943,
+        "author": "DamianSuess",
+        "body": "Oh yes, cleaned it via VS2022 and even manually removed \u0060obj\u0060 and \u0060bin\u0060 folders.  This is a project that uses Avalonia v0.10.21.\r\n\r\nUPDATE:\r\nWhat I found was, using the singular, \u0060\u003CRuntimeIdentifier\u003Elinux-x64\u003C/RuntimeIdentifier\u003E\u0060 limits the output to just \u0060linux-x64\u0060, but the plural \u0060\u003CRuntimeIdentifiers\u003E\u0060 generates the subfolder \u0060runtimes\u0060 for all of them. Interesting stuff indeed.",
+        "createdAt": "2023-07-07T20:41:16",
+        "reactions": [
+          {
+            "user": "Measurity",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:22:21.3790432Z"
+          }
+        ]
+      },
+      {
+        "id": 1837623776,
+        "author": "JohnCampionJr",
+        "body": "Any luck on fixing this?  Having the same issue.",
+        "createdAt": "2023-12-03T22:41:50",
+        "reactions": []
+      },
+      {
+        "id": 2979089402,
+        "author": "nixtar",
+        "body": "\u002B1 to this issue\n\nIn my instance I want to target \u0060win-x64;win-arm64\u0060.\n\nAnyone know if its \u0022safe\u0022 to manually delete the extra platform runtime folders from the output of the build?",
+        "createdAt": "2025-06-17T06:21:36",
+        "reactions": []
+      },
+      {
+        "id": 2996347293,
+        "author": "mattleibow",
+        "body": "It is safe. The runtimes are all independent of each other.\n\nI know the runtime system has a feature so we can do away with all the weird native asset nugets. I need to investigate and implement that still. ",
+        "createdAt": "2025-06-23T12:41:09",
+        "reactions": []
+      },
+      {
+        "id": 3632669881,
+        "author": "PopSlime",
+        "body": "I wrote a custom target in my \u0060.csproj\u0060 to automatically remove runtimes from the build output based on \u0060\u003CRuntimeIdentifiers\u003E\u0060. Not really an elegant solution though.\n\n\u0060\u0060\u0060csproj\n\u003CTarget Name=\u0022TrimUntargetedRuntimes\u0022 AfterTargets=\u0022ResolvePackageAssets\u0022\u003E\n\t\u003CItemGroup\u003E\n\t\t\u003CRuntimeTargetsCopyLocalItems Remove=\u0022@(RuntimeTargetsCopyLocalItems)\u0022 Condition=\u0022!$([System.Text.RegularExpressions.Regex]::Match($(RuntimeIdentifiers),\u0027(^|;)\\s*%(RuntimeTargetsCopyLocalItems.RuntimeIdentifier)\\s*(;|$)\u0027).Success)\u0022 /\u003E\n\t\u003C/ItemGroup\u003E\n\u003C/Target\u003E\n\u0060\u0060\u0060",
+        "createdAt": "2025-12-09T14:50:42",
+        "reactions": []
+      }
+    ]
+  }
 }
