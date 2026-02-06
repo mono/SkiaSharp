@@ -1,0 +1,23 @@
+{
+  "number": 545,
+  "type": "issue",
+  "state": "closed",
+  "title": "SKPath, move point",
+  "body": "It possible to move single point inside skPath without recreate it?\r\n\r\n\u0060\u0060\u0060\r\n      public void OffsetPointAt(int index, SKPoint p)\r\n        {\r\n            var points = skPath.Points;\r\n            points[index] \u002B= p;\r\n            CreatePath(points);\r\n            IsDirty = true;\r\n        }\r\n\r\n        protected virtual void CreatePath(SKPoint[] points)\r\n        {\r\n            skPath.Reset();\r\n            skPath.AddPoly(points, true);\r\n        }\r\n\u0060\u0060\u0060\r\nOffsetPointAt called from touch handler, on move.\r\n",
+  "author": {
+    "login": "VoteForPedro",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/question",
+      "color": "daffa8"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2018-06-06T05:49:59",
+  "updatedAt": "2022-08-19T15:02:21",
+  "closedAt": "2018-06-25T10:46:24",
+  "commentCount": 2,
+  "reactionCount": 0
+}
