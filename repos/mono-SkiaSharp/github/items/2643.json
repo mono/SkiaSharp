@@ -19,5 +19,401 @@
   "updatedAt": "2024-02-09T12:00:26",
   "closedAt": "2024-01-10T09:28:51",
   "commentCount": 32,
-  "reactionCount": 6
+  "reactionCount": 6,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:40:41.3635165Z",
+    "reactions": [
+      {
+        "user": "Brosten",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:40:41.3635219Z"
+      },
+      {
+        "user": "FedericoNembrini",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:40:41.3635228Z"
+      },
+      {
+        "user": "AlexGoOn",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:40:41.3635229Z"
+      },
+      {
+        "user": "jsgg25",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:40:41.363523Z"
+      },
+      {
+        "user": "vividos",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:40:41.3635231Z"
+      },
+      {
+        "user": "snailb1007",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:40:41.3635232Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1756244772,
+        "author": "espenrl",
+        "body": "I experienced the exact same thing and had to roll back to a previous version (iOS and Android / MAUI).",
+        "createdAt": "2023-10-10T20:58:25",
+        "reactions": [
+          {
+            "user": "Sylv1F",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:35.0377202Z"
+          },
+          {
+            "user": "Denver0716",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:35.0377206Z"
+          },
+          {
+            "user": "gench23",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:35.0377207Z"
+          }
+        ]
+      },
+      {
+        "id": 1756861598,
+        "author": "Thibault-Vellicus",
+        "body": "It\u0027s exactly the same for us, we did a downgrade to the previous version but since there\u0027s a high-severity vulnerability (https://github.com/advisories/GHSA-j7hp-h8jx-5ppr), it would be really nice to have a patch for that...",
+        "createdAt": "2023-10-11T06:04:59",
+        "reactions": [
+          {
+            "user": "Timur-Filatov",
+            "content": "confused",
+            "createdAt": "2026-02-06T13:40:35.2668143Z"
+          },
+          {
+            "user": "Denver0716",
+            "content": "confused",
+            "createdAt": "2026-02-06T13:40:35.2668148Z"
+          }
+        ]
+      },
+      {
+        "id": 1759636966,
+        "author": "jhariel8",
+        "body": "Echoing what everyone else has said, we are experiencing a similar issue on our Xamarin.iOS project, except rather than just being \u0022darker,\u0022 the images seem to either be completely black or look really corrupt. Just a couple examples of what some photos look like:\r\n\r\n![0991f6c7-d588-471b-8b8f-0b03c1940a03](https://github.com/mono/SkiaSharp/assets/23176078/8365cc76-5b32-4807-bbfd-6b8f5a2cfb54)\r\n![a7512b50-835b-4d9f-8edf-e2c367194879](https://github.com/mono/SkiaSharp/assets/23176078/cebf5071-d574-4795-b71e-2e18a94b3131)\r\n\r\nPhotos look normal when running on UWP and in the simulator, but when deployed to a physical iOS device they are corrupted like this. Downgrading our Xamarin.iOS project to SkiaSharp version 2.8.8.3 fixed this issue for us. We are going with this solution for now because this concerns a critical part of our application, but since there is a major vulnerability in this package, a fix is very much needed.",
+        "createdAt": "2023-10-12T13:41:10",
+        "reactions": [
+          {
+            "user": "Timur-Filatov",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:40:35.4814395Z"
+          }
+        ]
+      },
+      {
+        "id": 1760927223,
+        "author": "jonmdev",
+        "body": "Oh wow, I just spent the last hour pulling my hair out over this same issue trying to figure out if I was doing something wrong. Glad to know I\u0027m not the only one. I only get this bug in iOS.\r\n\r\nThanks for stopping me from Googling endlessly searching for solutions. \uD83D\uDC4D \r\n\r\nAnyone who can, please fix.\r\n",
+        "createdAt": "2023-10-13T05:56:17",
+        "reactions": [
+          {
+            "user": "Timur-Filatov",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:40:35.6874692Z"
+          }
+        ]
+      },
+      {
+        "id": 1774535866,
+        "author": "e8-ZimingLiu",
+        "body": "Try to \u0060skImage.Encode(wstream, SKEncodedImageFormat.Png, 100);\u0060 It is a temporary fix for me.",
+        "createdAt": "2023-10-23T06:49:04",
+        "reactions": []
+      },
+      {
+        "id": 1781973800,
+        "author": "IainS1986",
+        "body": "Just echoing I comment I made on another, related issue.\n\nI\u0027m seeing similar issues but manifesting in PDF documents produced via Skiasharp.\n\nI\u0027m still investigating but my hunch is that it\u0027s JPG encoding specifically. Which is a pain for myself as there\u0027s no alternative as I think PDF encoding takes all image data and converts to JPG.\n\nHowever - I\u0027m not seeing **all** images come out corrupt. I have one test where one image is fine and one isn\u0027t. The difference is alpha channel.\n\nhttps://github.com/mono/SkiaSharp/issues/2650#issuecomment-1781968854\n\nBe interesting to know if any of you seeing issues - if you can - can you change one of your images to RGBA if it\u0027s only RGB and does that produce any difference? Or can any of you share what colorspace/encoding format your images are in?",
+        "createdAt": "2023-10-26T22:24:44",
+        "reactions": []
+      },
+      {
+        "id": 1790192427,
+        "author": "NovaKs68",
+        "body": "Hello @IainS1986 , unfortunately the images uploaded to the test project are in JPG and RGBA format.",
+        "createdAt": "2023-11-02T07:15:45",
+        "reactions": []
+      },
+      {
+        "id": 1790211933,
+        "author": "IainS1986",
+        "body": "\u003E Hello @IainS1986 , unfortunately the images uploaded to the test project are in JPG and RGBA format.\n\nJPGs don\u0027t support transparency, so they will be in RGB format.\n\nMight confirm a bit more that it\u0027s JPG/RGB images specifically...",
+        "createdAt": "2023-11-02T07:32:58",
+        "reactions": [
+          {
+            "user": "NovaKs68",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:36.5001288Z"
+          }
+        ]
+      },
+      {
+        "id": 1791890144,
+        "author": "beeradmoore",
+        "body": "Also having this problem after upgrading to 2.88.6. Parts of our code is in a horrible state of \u0022This is awful, but if we touch anything it will likely fall apart. So we best wait until MAUI port and re-write those key bits completely\u0022. We 100% have places where files are saving/opening/copying/renaming/etc and we have jpg data in .png files and png data in .jpg files (and I have hated it ever since I discovered it).\r\n\r\nGetting both corruption blocks like what @jhariel8 showed, with some tinting that @NovaKs68 showed. Sometimes even getting images shift horizontally ~40% with the other image data looping back. \r\n\r\nAdditionally I think the sample repo is doing something bad (see [this line](https://github.com/NovaKs68/bug-skiasharp/blob/main/TestProject/TestProject/Views/AboutPage.xaml.cs#L29)). If a user selects a png from their gallery it will have its data copied and saved with .jpeg extension. I\u0027d imagine that wouldn\u0027t cause issues because \u0060SKImage.FromEncodedData(\u0060 is unaware of the filename and instead use the headers. This is similar to the path we went down to do many many mistakes with images where everything is everywhere and its all bad \uD83D\uDE05",
+        "createdAt": "2023-11-03T04:48:49",
+        "reactions": []
+      },
+      {
+        "id": 1791890279,
+        "author": "KRA2008",
+        "body": "i\u0027m encountering this issue too. i have an open source project that i can change the SkiaSharp version in (and nothing else) and make the issue appear and disappear. if more information about recreating the issue in my project is needed i can provide it. \r\n\r\ni upgraded from 2.80.3 to 2.88.6 to fix issue #2265, but then i encountered this issue and i tried to work around it by downgrading to 2.88.5, but then i get blocked by #2584. i\u0027ll just keep downgrading.\r\n\r\n",
+        "createdAt": "2023-11-03T04:49:09",
+        "reactions": []
+      },
+      {
+        "id": 1793565678,
+        "author": "IainS1986",
+        "body": "Looking at the change log from 2.88.5 to 2.88.6 there isn\u0027t any actual logic changes made.\n\nVarious dependencies updated to newer versions, with a suspect one settings libjpeg being removed and libjpeg-turbo being updated a considerable amount of versions.\n\nWonder if we can at least have those rolled back if that\u0027s the cause to get a new build of Skia without the vulnerabilities in it?",
+        "createdAt": "2023-11-04T22:03:51",
+        "reactions": []
+      },
+      {
+        "id": 1800398213,
+        "author": "IainS1986",
+        "body": "\u003E i upgraded from 2.80.3 to 2.88.6 to fix issue #2265, but then i encountered this issue and i tried to work around it by downgrading to 2.88.5, but then i get blocked by #2584. i\u0027ll just keep downgrading.\r\n\r\nYes, if you\u0027re deploying to iOS you have to downgrade to 2.88.3. \r\n",
+        "createdAt": "2023-11-07T23:22:32",
+        "reactions": []
+      },
+      {
+        "id": 1805446387,
+        "author": "MFinkBK",
+        "body": "@mattleibow Can you say something about this bug? We had to roll back to SkiaSharp 2.88.3 since this is a regression from 2.88.5, but 2.88.5 and 2.88.4 doesn\u0027t allow publishing in Apple App Store, and so we\u0027re stuck on an old version with the CVE-2023-4863 vulnerability fixed in #2608.",
+        "createdAt": "2023-11-10T10:11:32",
+        "reactions": []
+      },
+      {
+        "id": 1807234263,
+        "author": "MarcinZiabek",
+        "body": "I would like to confirm the problem. It is related to encoding/decoding of JPEG images only. Based on my testing, it happens on macOS arm64 (M2). \r\n\r\nLink to repository that can be used for bug reproduction: https://github.com/MarcinZiabek/SkiaSharp.JpegEncodeIssue",
+        "createdAt": "2023-11-12T20:44:46",
+        "reactions": []
+      },
+      {
+        "id": 1807239358,
+        "author": "IainS1986",
+        "body": "@MarcinZiabek \n\nCan you check png images with no alpha channel, only RGB (not png images with opaque alpha, specifically RGB only png images) in your repo?\n\nI\u0027m pretty certain I\u0027ve seen issues with those as well, but have no repo to show it\n\n\nMy hunch is it\u0027s not JPG specific but RGB data being wrongly encoded into RGBA (and so all JPGs get affected)",
+        "createdAt": "2023-11-12T21:06:13",
+        "reactions": []
+      },
+      {
+        "id": 1807266840,
+        "author": "MarcinZiabek",
+        "body": "@IainS1986 The following code generates a PNG image with a specified color type. The gradient is clipped to ensure transparency configuration.\r\n\r\n\u0060\u0060\u0060csharp\r\nvoid Generate(SKColorType colorType)\r\n{\r\n    var imageInfo = new SKImageInfo(400, 300, colorType);\r\n    using var surface = SKSurface.Create(imageInfo);\r\n\r\n    surface.Canvas.ClipRect(new SKRect(50, 50, 300, 200));\r\n        \r\n    using var shaderPaint = new SKPaint\r\n    {\r\n        Shader = SKShader.CreateRadialGradient(\r\n            new SKPoint(200, 150), 300,\r\n            new[] { SKColors.DeepSkyBlue, SKColors.Green }, new[] {0, 1f},\r\n            SKShaderTileMode.Decal)\r\n    };\r\n            \r\n    surface.Canvas.DrawRect(0, 0, imageInfo.Width, imageInfo.Height, shaderPaint);\r\n\r\n            \r\n// return result as an image\r\n    using var image = surface.Snapshot();\r\n    using var data = image.Encode(SKEncodedImageFormat.Png, 90);\r\n    File.WriteAllBytes($\u0022result.png\u0022, data.ToArray());\r\n}\r\n\u0060\u0060\u0060\r\n\r\n1. Opaque:\r\n\r\n\u0060\u0060\u0060csharp\r\nGenerate(SKColorType.Rgb565);\r\n\u0060\u0060\u0060\r\n\r\n![result_opaque](https://github.com/mono/SkiaSharp/assets/9263853/29e56ceb-cd1c-4b36-bf8c-b49f6e62dff6)\r\n\r\n2. With transparency channel:\r\n\r\n\u0060\u0060\u0060csharp\r\nGenerate(SKColorType.Rgba8888);\r\n\u0060\u0060\u0060\r\n\r\n![result_opaque](https://github.com/mono/SkiaSharp/assets/9263853/9fa2d0a8-5fee-4b95-a5b5-0a919ffbab24)\r\n\r\n\r\nTested on: MacBook Pro 16 M2 Max ARM64, Sonoma 14.1.1",
+        "createdAt": "2023-11-12T22:43:59",
+        "reactions": []
+      },
+      {
+        "id": 1807269039,
+        "author": "MarcinZiabek",
+        "body": "From my observations:\r\n- loading PNG image and saving as JPEG: \u274C broken\r\n- loading JPEG image and saving as PNG: \u2705 working\r\n- generating image and saving as JPEG: \u274C broken\r\n- generating image and saving as PNG: \u2705 working\r\n\r\nTested on: MacBook Pro 16 M2 Max ARM64, Sonoma 14.1.1",
+        "createdAt": "2023-11-12T22:52:16",
+        "reactions": [
+          {
+            "user": "andressbarajas",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:40:38.3072108Z"
+          },
+          {
+            "user": "Simo4565",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:38.3072112Z"
+          }
+        ]
+      },
+      {
+        "id": 1807278827,
+        "author": "IainS1986",
+        "body": "Hmm fair enough, I was meaning more with decoding then encoding external images, not sure if a test using Skia to generate the PNG itself in the first place would result in the same or different issues if it\u0027s image encoding that seems broken? We have to trust the original generation \u0027worked\u0027?\n\nThere\u0027s also a chance skia generates pngs with no alpha fine, but fails in decoding the raw byte data of the same image from external sources?\n\nI definitely see issues with PDF document generation though which I believe concerts all images to JPG so I\u0027m 100% seeing the same JPG issue - I\u0027m just sure I saw an issue with an RGB PNG in a general SKCanvas view (on Android) that showed similar corruption \uD83E\uDD37\u200D\u2642\uFE0F\n\n",
+        "createdAt": "2023-11-12T23:25:05",
+        "reactions": []
+      },
+      {
+        "id": 1817481971,
+        "author": "SeriousM",
+        "body": "I can contribute to the issue:\r\nwe\u0027re using 2.88.6\r\n\r\nOriginal image:\r\n![original image](https://github.com/mono/SkiaSharp/assets/462013/e0b49c84-88b5-4e2a-bdfd-f14a5741cadf)\r\n\r\nEncode on windows (works):\r\n![win-full-size-only-redrawn](https://github.com/mono/SkiaSharp/assets/462013/67e8a8ba-bad3-4eb2-8eba-b9fb09bb8e3e)\r\n\r\nEncode on android (same result on ios; broken):\r\n![andr-full-size-only-redrawn](https://github.com/mono/SkiaSharp/assets/462013/0ba5028e-5e73-46ba-bca5-33ae1b58a51d)\r\n\r\nUsing https://www.guiffy.com/Binary-Diff-Tool.html I found a difference in a small amount of bytes:\r\n![diff](https://github.com/mono/SkiaSharp/assets/462013/3ecfc5e9-c374-4523-891c-c8ac446f96c8)\r\n\r\nTo my analysis, the broken image is shifted to the right and having an artifact at the top left. Sometimes the image is darkened, brightened, pink, purple, cyan... just a broken calculation of the bits based on the bytes different.\r\n![image](https://github.com/mono/SkiaSharp/assets/462013/ed10ab6f-f1f1-4df3-a74e-dc491b7d17b4)\r\n\r\n\r\nThat\u0027s the code I used to resize the image:\r\n\u0060\u0060\u0060cs\r\n  private static Stream resizeImage(Stream sourceImageStream, SKEncodedImageFormat imageFormat, int quality)\r\n  {\r\n    // make sure the image stream is readable from the start\r\n    try { sourceImageStream.Position = 0; } catch (NotSupportedException) { }\r\n\r\n    using var inputStream = new SKManagedStream(sourceImageStream);\r\n    using var original = SKImage.FromEncodedData(inputStream);\r\n\r\n    var imageWidth = original.Width;\r\n    var imageHeight = original.Height;\r\n\r\n    var useWidth = imageWidth;\r\n    var useHeight = imageHeight;\r\n\r\n    var info = new SKImageInfo(useWidth, useHeight, original.ColorType, original.AlphaType, original.ColorSpace);\r\n    using var surface = SKSurface.Create(info);\r\n    surface.Canvas.Clear();\r\n\t\r\n    surface.Canvas.DrawImage(original,\r\n      SKRect.Create(0, 0, useWidth, useHeight)\r\n    );\r\n    surface.Canvas.Flush();\r\n\r\n    using var snapshot = surface.Snapshot();\r\n\r\n    using var data = snapshot.Encode(imageFormat, quality);\r\n    var resizedContent = data.ToArray();\r\n\r\n    var resizedContentStream = new MemoryStream(resizedContent);\r\n\r\n    return resizedContentStream;\r\n  }\r\n\u0060\u0060\u0060\r\n\r\nI\u0027m sure the code could be shorter (as others posted) but I wanted to give you a way to reproduce the exact same bytes.\r\n\r\nI really hope that helps!",
+        "createdAt": "2023-11-18T11:24:11",
+        "reactions": [
+          {
+            "user": "IainS1986",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:38.7253314Z"
+          },
+          {
+            "user": "ekeneduru",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:38.7253319Z"
+          }
+        ]
+      },
+      {
+        "id": 1822440903,
+        "author": "ispysoftware",
+        "body": "Also getting jpeg encode issues on Mac OS only (Android / Windows OK) \r\n\r\n288.5:\r\n![image](https://github.com/mono/SkiaSharp/assets/800093/936b5146-03ff-4fb4-9e26-458c177c5ba6)\r\n\r\n\r\n288.6:\r\n![image](https://github.com/mono/SkiaSharp/assets/800093/c4d1d086-530d-42b1-8c50-403e0bc56c68)\r\n",
+        "createdAt": "2023-11-22T09:53:37",
+        "reactions": []
+      },
+      {
+        "id": 1830353244,
+        "author": "Denver0716",
+        "body": "Can confirm this happened for my organization as well with our Android application. Upgraded to SkiSharp 2.88.6 due to a security vulnerability. Each image decoded to a SKBitmap while using 2.88.6 gets corrupted.",
+        "createdAt": "2023-11-28T17:30:05",
+        "reactions": []
+      },
+      {
+        "id": 1830484640,
+        "author": "mlancione",
+        "body": "@mattleibow Any update on this jpeg encoding issue? Is it related to the libjpeg-turbo upgrade that does not include the recent ARM64 fix in libjpeg-turbo 3.0.1?\r\n#2667 ",
+        "createdAt": "2023-11-28T18:53:32",
+        "reactions": []
+      },
+      {
+        "id": 1831374768,
+        "author": "r-work",
+        "body": "Same here issue, on MAUI Android.",
+        "createdAt": "2023-11-29T07:44:51",
+        "reactions": []
+      },
+      {
+        "id": 1850823299,
+        "author": "jasoncodematic",
+        "body": "Seems like there have been no releases since Sep-2022 and no commits since Sep-2023 (approx 3 months at the time of writing this) and this above critical issue has been raised a number of times. Does anyone know if this repository is abandoned?",
+        "createdAt": "2023-12-11T20:18:37",
+        "reactions": []
+      },
+      {
+        "id": 1850917726,
+        "author": "IainS1986",
+        "body": "With the release of .net-8.0, which is meant to be the saving graces for MAUI - and SkiaSharp is pretty closely linked. Maybe the .net-8 release is just taking major priority over everything else?\n\nIt is a little concerning...",
+        "createdAt": "2023-12-11T21:28:58",
+        "reactions": [
+          {
+            "user": "jasoncodematic",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:39.9018164Z"
+          },
+          {
+            "user": "MarcinZiabek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:39.9018167Z"
+          },
+          {
+            "user": "samuelGrahame",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:39.9018168Z"
+          },
+          {
+            "user": "mjsb212",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:39.901817Z"
+          }
+        ]
+      },
+      {
+        "id": 1860085074,
+        "author": "Simo4565",
+        "body": "I experienced the exact same thing in Android and iOS",
+        "createdAt": "2023-12-18T10:44:03",
+        "reactions": []
+      },
+      {
+        "id": 1861951665,
+        "author": "ispysoftware",
+        "body": "@mattleibow  i\u0027m not sure what your involvement is in this but if you could take a look at this critical issue i\u0027m sure we\u0027d all appreciate it!\r\n",
+        "createdAt": "2023-12-19T01:26:07",
+        "reactions": [
+          {
+            "user": "OlofBlomqvist",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:40.3030138Z"
+          },
+          {
+            "user": "MarcinZiabek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:40.3030142Z"
+          },
+          {
+            "user": "Simo4565",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:40.3030143Z"
+          },
+          {
+            "user": "samuelGrahame",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:40.3030144Z"
+          }
+        ]
+      },
+      {
+        "id": 1868537405,
+        "author": "orwo1",
+        "body": "I\u0027m hitting the same issue with 2.88.6, can\u0027t rollback cause of other nugets dependent on that.\r\nReproduced in Maui app, both Android and iOS.\r\nThe problematic code:\r\n\r\n    \u0060public static class ResizeImageHelper\r\n    {\r\n    // 320 - because we want to limit image size to 350KB\r\n    private const int ImageWidthAndHeight = 320;\r\n    private const int Quality = 100;\r\n\r\n    public static byte[] ResizeImageSource(Stream stream)\r\n    {\r\n        try\r\n        {\r\n            byte[] imageAsByte = stream.ToByteArray();\r\n\r\n            var bitmap = SKBitmap.Decode(imageAsByte);\r\n            var scaled = bitmap.Resize(new SKImageInfo(ImageWidthAndHeight, ImageWidthAndHeight), SKFilterQuality.High);\r\n            SKImage image = SKImage.FromBitmap(scaled);\r\n            SKData jpgData = image.Encode(SKEncodedImageFormat.Jpeg, Quality);\r\n\r\n            byte[] resizedImageAsByte = jpgData.ToArray();\r\n            return resizedImageAsByte;\r\n        }\r\n        catch\r\n        {\r\n            return null;\r\n        }\r\n    }\u0060",
+        "createdAt": "2023-12-24T15:05:00",
+        "reactions": []
+      },
+      {
+        "id": 1880400958,
+        "author": "mjsb212",
+        "body": "Any fix or Workaround? - Having same problem with wrong colors / distorted results. On Maui Android .net 8.0.3",
+        "createdAt": "2024-01-08T05:22:15",
+        "reactions": []
+      },
+      {
+        "id": 1882911701,
+        "author": "stoff99",
+        "body": "Same problem here with 2.88.6. Working with 2.88.5 but unuseable for us because of the vulnerability.",
+        "createdAt": "2024-01-09T11:37:57",
+        "reactions": []
+      },
+      {
+        "id": 1883761108,
+        "author": "mattleibow",
+        "body": "I tested 3.0.1 and the latest main and I think this is an issue in libjpeg-turbo. For now I am reverting to the latest 2.x series.\r\n\r\nI had a look at the original security issue and it does not affect the 2.x series because 12-bit jpegs are not actually supported in our build. The 2.x series required the entire library to be either 8-bit or 12-bit, and we use 8-bit. The 3.x series allowed for both simultaneously.\r\n\r\nThe security issue was just reported for 2.1.90 (which seems like a 2.x series but is actually a 3.0 beta). The current stable version is 2.1.5.1 which is on a separate branch.\r\n\r\nI have opened an issue in libjpeg-turbo where I will try and determine the real cause and where this issue should live: https://github.com/libjpeg-turbo/libjpeg-turbo/issues/741",
+        "createdAt": "2024-01-09T20:40:58",
+        "reactions": [
+          {
+            "user": "ispysoftware",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:41.1225137Z"
+          },
+          {
+            "user": "Thibault-Vellicus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:41.1225141Z"
+          },
+          {
+            "user": "beeradmoore",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:41.1225143Z"
+          },
+          {
+            "user": "taublast",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:41.1225144Z"
+          },
+          {
+            "user": "NovaKs68",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:41.1225145Z"
+          }
+        ]
+      },
+      {
+        "id": 1883767509,
+        "author": "KRA2008",
+        "body": "@mattleibow Thank you!",
+        "createdAt": "2024-01-09T20:46:30",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -13,5 +13,51 @@
   "createdAt": "2023-03-17T04:45:11",
   "updatedAt": "2024-02-27T22:55:54",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:40:01.477515Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1474399899,
+        "author": "Dave-Quick",
+        "body": "This works fine on Xamain.Forms. \r\n\r\nI have an example project that includes the code you see here and would be happy to upload it here.",
+        "createdAt": "2023-03-17T21:02:11",
+        "reactions": []
+      },
+      {
+        "id": 1475057931,
+        "author": "Dave-Quick",
+        "body": "Just found the answer to my immediate problem. \r\n\r\nIn MauiProgram.cs add .UseSkiaSharp() to the builder like this:\r\n\r\nbuilder\r\n\u0060\u0060\u0060\r\n  .UseMauiApp\u003CApp\u003E()\r\n  .UseSkiaSharp(true)\r\n  .ConfigureFonts(fonts =\u003E ... \r\n\u0060\u0060\u0060\r\nand add namespace \u0027SkiaSharp.Views.Maui.Controls.Hosting\u0027:\r\n\r\n\u0060using SkiaSharp.Views.Maui.Controls.Hosting;\u0060\r\n\r\nSkiaSharp needs this call. \r\n\r\nFound it here:\r\nhttps://mapsui.com/documentation/getting-started-maui.html\r\n\r\nIs this documented anywhere? The only thing I could find was this:( https://learn.microsoft.com/en-us/dotnet/api/skiasharp.views.maui.controls.hosting.apphostbuilderextensions.useskiasharp?view=skiasharp-views-maui-2.88)\r\nAnd that really doesn\u0027t tell me much. \r\n\r\nI\u0027m new to maui, but not new to Xamarin.Forms or SkiaSharp. I read this article (https://learn.microsoft.com/en-us/dotnet/maui/migration/forms-projects?view=net-maui-7.0) and it didn\u0027t mention this.\r\n\r\nIt took me two days to track it down. If this work-around is the standard way to do it, it would be nice to have it documented somewhere that\u0027s easy to find. \r\n\r\nI\u0027ll leave the bug open until I get a reply.\r\n",
+        "createdAt": "2023-03-19T01:12:51",
+        "reactions": [
+          {
+            "user": "Zekiah-A",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:01.4272803Z"
+          },
+          {
+            "user": "Zekiah-A",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:40:01.4272807Z"
+          },
+          {
+            "user": "IdolZhou",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:01.4272808Z"
+          },
+          {
+            "user": "Phoenixkaze",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:01.4272809Z"
+          },
+          {
+            "user": "sikemullivan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:01.427281Z"
+          }
+        ]
+      }
+    ]
+  }
 }

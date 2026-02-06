@@ -19,5 +19,63 @@
   "updatedAt": "2024-02-09T00:00:25",
   "closedAt": "2024-01-09T21:40:07",
   "commentCount": 5,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:40:46.7495853Z",
+    "reactions": [
+      {
+        "user": "jwalaszek",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:40:46.7495887Z"
+      },
+      {
+        "user": "bennycoomans",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:40:46.7495894Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1794186129,
+        "author": "KRA2008",
+        "body": "likely duplicate of #2650 which is itself a duplicate of #2643",
+        "createdAt": "2023-11-06T06:53:46",
+        "reactions": []
+      },
+      {
+        "id": 1812118528,
+        "author": "gunasekarant",
+        "body": "Any expected date for this bug fix?",
+        "createdAt": "2023-11-15T09:45:18",
+        "reactions": [
+          {
+            "user": "jasoncodematic",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:40:46.0697823Z"
+          }
+        ]
+      },
+      {
+        "id": 1828566692,
+        "author": "jwalaszek",
+        "body": "I also see this issue using SkiaSharp 2.88.6 on macOS .NET 8. After downgrading to 2.88.5 the issue is gone.",
+        "createdAt": "2023-11-27T20:40:49",
+        "reactions": []
+      },
+      {
+        "id": 1883761006,
+        "author": "mattleibow",
+        "body": "I tested 3.0.1 and the latest main and I think this is an issue in libjpeg-turbo. For now I am reverting to the latest 2.x series.\r\n\r\nI had a look at the original security issue and it does not affect the 2.x series because 12-bit jpegs are not actually supported in our build. The 2.x series required the entire library to be either 8-bit or 12-bit, and we use 8-bit. The 3.x series allowed for both simultaneously.\r\n\r\nThe security issue was just reported for 2.1.90 (which seems like a 2.x series but is actually a 3.0 beta). The current stable version is 2.1.5.1 which is on a separate branch.\r\n\r\nI have opened an issue in libjpeg-turbo where I will try and determine the real cause and where this issue should live: https://github.com/libjpeg-turbo/libjpeg-turbo/issues/741",
+        "createdAt": "2024-01-09T20:40:53",
+        "reactions": []
+      },
+      {
+        "id": 1883841945,
+        "author": "mattleibow",
+        "body": "Duplicate of https://github.com/mono/SkiaSharp/issues/2643",
+        "createdAt": "2024-01-09T21:40:05",
+        "reactions": []
+      }
+    ]
+  }
 }

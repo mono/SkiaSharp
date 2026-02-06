@@ -19,5 +19,24 @@
   "updatedAt": "2024-03-04T19:42:01",
   "closedAt": "2024-03-04T19:42:01",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:39:37.0523457Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1974894021,
+        "author": "mattleibow",
+        "body": "I created a benchmark:\r\n\r\n\u0060\u0060\u0060cs\r\n[Benchmark(Baseline = true)]\r\npublic SKMatrix44 UseNewStruct()\r\n{\r\n\tSKMatrix44.UseUnsafeAs = false;\r\n\r\n\tSKMatrix44 TheSKMatrix44 = SKMatrix44.CreateRotation(10, 20, 30, 0.7f);\r\n\tvar inverted = TheSKMatrix44.Invert();\r\n\treturn inverted;\r\n}\r\n\r\n[Benchmark]\r\npublic SKMatrix44 UseUnsafeAs()\r\n{\r\n\tSKMatrix44.UseUnsafeAs = true;\r\n\r\n\tSKMatrix44 TheSKMatrix44 = SKMatrix44.CreateRotation(10, 20, 30, 0.7f);\r\n\tvar inverted = TheSKMatrix44.Invert();\r\n\treturn inverted;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAnd edited the code of \u0060SKMatrix44\u0060:\r\n\r\n\u0060\u0060\u0060cs\r\npublic static bool UseUnsafeAs = false;\r\n\r\npublic static implicit operator Matrix4x4 (SKMatrix44 matrix) =\u003E\r\n\tUseUnsafeAs ? Unsafe.As\u003CSKMatrix44, Matrix4x4\u003E (ref matrix) :\r\n\tnew Matrix4x4 (\r\n\t\tmatrix.m00, matrix.m10, matrix.m20, matrix.m30,\r\n\t\tmatrix.m01, matrix.m11, matrix.m21, matrix.m31,\r\n\t\tmatrix.m02, matrix.m12, matrix.m22, matrix.m32,\r\n\t\tmatrix.m03, matrix.m13, matrix.m23, matrix.m33);\r\n\r\npublic static implicit operator SKMatrix44 (Matrix4x4 matrix) =\u003E\r\n\tUseUnsafeAs ? Unsafe.As\u003CMatrix4x4, SKMatrix44\u003E (ref matrix) :\r\n\tnew SKMatrix44 (\r\n\t\tmatrix.M11, matrix.M21, matrix.M31, matrix.M41,\r\n\t\tmatrix.M12, matrix.M22, matrix.M32, matrix.M42,\r\n\t\tmatrix.M13, matrix.M23, matrix.M33, matrix.M43,\r\n\t\tmatrix.M14, matrix.M24, matrix.M34, matrix.M44);\r\n\u0060\u0060\u0060\r\n\r\nThe results:\r\n\r\n\u0060\u0060\u0060\r\n// * Summary *\r\n\r\nBenchmarkDotNet=v0.13.5, OS=Windows 11 (10.0.22631.3155)\r\nIntel Core i9-9980HK CPU 2.40GHz, 1 CPU, 16 logical and 8 physical cores\r\n.NET SDK=8.0.200\r\n  [Host]   : .NET 7.0.16 (7.0.1624.6629), X64 RyuJIT AVX2\r\n  .NET 7.0 : .NET 7.0.16 (7.0.1624.6629), X64 RyuJIT AVX2\r\n\r\nJob=.NET 7.0  Runtime=.NET 7.0\r\n\r\n|       Method |      Mean |    Error |   StdDev | Ratio | RatioSD | Allocated | Alloc Ratio |\r\n|------------- |----------:|---------:|---------:|------:|--------:|----------:|------------:|\r\n| UseNewStruct | 100.83 ns | 3.085 ns | 8.702 ns |  1.00 |    0.00 |         - |          NA |\r\n|  UseUnsafeAs |  59.51 ns | 1.093 ns | 0.853 ns |  0.59 |    0.05 |         - |          NA |\r\n\r\n// * Hints *\r\nOutliers\r\n  TheBenchmark.UseNewStruct: .NET 7.0 -\u003E 8 outliers were removed (132.01 ns..159.35 ns)\r\n  TheBenchmark.UseUnsafeAs: .NET 7.0  -\u003E 3 outliers were removed (68.31 ns..72.48 ns)\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-03-02T20:00:22",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:39:37.0021185Z"
+          }
+        ]
+      }
+    ]
+  }
 }

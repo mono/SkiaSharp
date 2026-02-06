@@ -18,5 +18,18 @@
   "createdAt": "2024-02-27T17:08:46",
   "updatedAt": "2024-02-28T13:42:48",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:40:00.3501269Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1969014104,
+        "author": "Pairoba",
+        "body": "It seems like, that the canvas on the snapshot is scaled to the snapshot target\u0027s size. So I was able to create a Workaround by scaling the \u0060CustomView\u0060 during the snapshot creation. \r\n\r\n\u0060\u0060\u0060cs\r\nprivate async void CaptureAsync(object sender, EventArgs e)\r\n{\r\n    CustomViewInstance.AnchorX = 0;\r\n    CustomViewInstance.AnchorY = 0;\r\n    CustomViewInstance.ScaleX = CustomViewInstance.Width / CaptureTarget.Width;\r\n    CustomViewInstance.ScaleY = CustomViewInstance.Height / CaptureTarget.Height;\r\n\r\n    var snap = await CaptureTarget.CaptureAsync();\r\n    if (snap != null)\r\n    {\r\n        var s = await snap.OpenReadAsync();\r\n        CaptureImageView.Source = ImageSource.FromStream(() =\u003E s);\r\n    }\r\n\r\n    CustomViewInstance.ScaleX = 1;\r\n    CustomViewInstance.ScaleY = 1;\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-02-28T13:42:46",
+        "reactions": []
+      }
+    ]
+  }
 }

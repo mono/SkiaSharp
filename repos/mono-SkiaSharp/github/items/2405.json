@@ -13,5 +13,32 @@
   "createdAt": "2023-03-06T05:59:12",
   "updatedAt": "2024-03-19T12:34:50",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:39:16.3419Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1457716029,
+        "author": "chrisbillson",
+        "body": "Something like this should work for grayscale.\r\n\r\n\u0060\u0060\u0060\r\nusing (var bitmap = SKBitmap.Decode(\u0022path/to/image\u0022))\r\nusing (var canvas = new SKCanvas(bitmap))\r\n{\r\n  using var paint = new SKPaint();\r\n  \r\n  // Define a grayscale color filter to apply to the image\r\n  paint.ColorFilter = SKColorFilter.CreateColorMatrix(new float[]\r\n  {\r\n          0.2126f, 0.7152f, 0.0722f, 0, 0,  // red channel weights\r\n  0.2126f, 0.7152f, 0.0722f, 0, 0,  // green channel weights\r\n  0.2126f, 0.7152f, 0.0722f, 0, 0,  // blue channel weights\r\n  0,       0,       0,       1, 0   // alpha channel weights\r\n  });\r\n\r\n  // redraw the image using the color filter\r\n  canvas.DrawBitmap(bitmap , 0, 0, paint);\r\n  }",
+        "createdAt": "2023-03-07T07:59:12",
+        "reactions": []
+      },
+      {
+        "id": 1457721813,
+        "author": "qcjxberin",
+        "body": "@cake-escape Thinks",
+        "createdAt": "2023-03-07T08:03:27",
+        "reactions": []
+      },
+      {
+        "id": 2007062613,
+        "author": "ArjixWasTaken",
+        "body": "This issue can be marked as solved and be closed.",
+        "createdAt": "2024-03-19T12:34:48",
+        "reactions": []
+      }
+    ]
+  }
 }
