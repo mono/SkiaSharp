@@ -34,5 +34,39 @@
   "deletions": 39,
   "changedFiles": 9,
   "commits": 18,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:20:59.7371173Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3828889697,
+        "author": "mattleibow",
+        "body": "@copilot can you investigate if there is benefit to having a new skill for this or if this is too fine frame and can be instructions. \n\nI also see large parts of docs that are duplicated. Can you see what should be in instructions and what can be in the docs. Maybe the instructions can have summaries and links to parts of the docs. \n\nAlso review the docs and instructions to make sure they make sense, the important things in the right place and the order/flow is good for AI model perfect. \n\nFocus on making things better, more reliable and easier to maintain. ",
+        "createdAt": "2026-01-31T17:37:16",
+        "reactions": []
+      },
+      {
+        "id": 3828892229,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot can you investigate if there is benefit to having a new skill for this or if this is too fine frame and can be instructions. \n\u003E \n\u003E I also see large parts of docs that are duplicated. Can you see ...\n\nI analyzed the documentation structure and found significant duplication. Here\u0027s my recommendation:\n\n**Create a new \u0060add-api\u0060 skill** - Yes, there\u0027s clear benefit similar to the \u0060native-dependency-update\u0060 skill pattern.\n\n**Key findings:**\n- 80\u002B lines of duplicated submodule workflow between instructions and docs\n- Instructions grew to 496 lines (too detailed for quick reference)\n- Adding APIs is a structured, repeatable workflow that benefits from skill-based execution\n\n**Plan:**\n1. Create \u0060.github/skills/add-api/SKILL.md\u0060 with 6-phase workflow and checkpoints\n2. Reduce instructions to 30-line summary with links (saves ~50 lines)\n3. Keep \u0060documentation/adding-apis.md\u0060 as comprehensive reference (unchanged)\n4. Add skill to copilot-instructions.md skills table\n\nThis follows the native-dependency-update pattern: structured skill for execution, summary in instructions, full reference in docs. Working on implementation now.",
+        "createdAt": "2026-01-31T17:38:54",
+        "reactions": []
+      },
+      {
+        "id": 3830490844,
+        "author": "mattleibow",
+        "body": "@copilot please remove things about working around networking issues. This was a temporary firewall rule that was fixed. Maybe change to say if there are networking issues you can retry once and then stop the process to let the dev know they need to fix it.\n\nAlso, please remove the nuget.exe as we are not allowed to use that. \n\nFinally, let\u0027s remove the actual api changes as this PR should just be the docs and skills update. The original goal was to make api changes, but let\u0027s totally skip that and keep the docs changes. Update the PR title and body to focus just on the skills and docs and instructions. ",
+        "createdAt": "2026-02-01T06:55:13",
+        "reactions": []
+      },
+      {
+        "id": 3830493197,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot please remove things about working around networking issues. This was a temporary firewall rule that was fixed. Maybe change to say if there are networking issues you can retry once and then ...\n\nDone. Changes made in commit 682668f:\n\n1. \u2705 Removed network workaround instructions - replaced with \u0022retry once, then stop and notify\u0022 guidance\n2. \u2705 Removed .nuget/nuget.exe file\n3. \u2705 Reverted all API changes (SKCanvas.cs, SKSurface.cs, SkiaApi.generated.cs, SKCanvasTest.cs)\n4. \u2705 Reverted externals/skia submodule to original commit\n5. \u2705 Updated PR title and description to focus on documentation/skills improvements only\n\nThe PR now contains only documentation structure optimizations:\n- add-api skill creation\n- copilot-instructions.md improvements\n- adding-apis.md enhancements\n\nNet change: -131 lines of API code, keeping only the documentation architecture improvements.",
+        "createdAt": "2026-02-01T06:58:11",
+        "reactions": []
+      }
+    ]
+  }
 }

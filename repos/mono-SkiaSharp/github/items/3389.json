@@ -31,5 +31,25 @@
   "updatedAt": "2026-01-27T22:11:54",
   "closedAt": "2026-01-27T22:11:54",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:21:34.059919Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3424207338,
+        "author": "github-actions[bot]",
+        "body": "**Triage Summary**  \n\nLabels will be applied to indicate compatibility concerns with SkiaSharp and specify the affected platform (Windows Classic) as well as the specific area related to native dependencies.\n\nThis issue is not a regression, but rather a matter of maintaining compatibility due to a security vulnerability in a library.\n\nAdditional remarks:\n* The focus of this issue is on ensuring safety through dependency updates, rather than performance or reliability issues. No labels were applied for specific backends, as the issue is central to the library update.\n\n\u003Cdetails\u003E\n\u003Csummary\u003EDetailed Summary and Actions\u003C/summary\u003E\n\nSummary of the triage:\n\n- The issue involves updating a library in SkiaSharp due to a security vulnerability.\n- It relates to ensuring compatibility with various versions that utilize SkiaSharp.\n- The development environment in question is Visual Studio Code on Windows Classic.\n- The focus is particularly on the native dependencies of SkiaSharp, especially regarding libexpat and dependency management.\n- This is a compatibility issue and does not indicate any regression or performance impact.\n\nSummary of the actions that will be performed:\n\n| Action            | Item                             | Description                                                                                      |\n| :---------------- | :------------------------------- | :----------------------------------------------------------------------------------------------- |\n| Apply Label       | tenet/compatibility             | The issue involves updating a library in SkiaSharp due to a security vulnerability affecting compatibility. |\n| Apply Label       | os/Windows-Classic              | The issue specifies that the behavior is related to the IDE used, which is Visual Studio Code on Windows. |\n| Apply Label       | area/libSkiaSharp.native        | The issue pertains to the native dependencies of SkiaSharp, particularly the vulnerability in libexpat. |\n\n\u003C/details\u003E\n\n_This entire triage process was automated by AI and mistakes may have been made. Please let us know so we can continue to improve._",
+        "createdAt": "2025-10-21T00:16:53",
+        "reactions": []
+      },
+      {
+        "id": 3805821462,
+        "author": "mattleibow",
+        "body": "Fixed by bumping libexpat from 2.6.4 to 2.7.3 in mono/skia@58763ac5b0.\n\nThis update addresses:\n- **CVE-2025-59375** (CVSS 7.5 HIGH) - Memory exhaustion DoS\n- **CVE-2024-50602** (CVSS 5.9 Medium) - Parser crash (was already fixed in 2.6.4)\n\nThe fix will be included in the next SkiaSharp release.",
+        "createdAt": "2026-01-27T15:21:03",
+        "reactions": []
+      }
+    ]
+  }
 }

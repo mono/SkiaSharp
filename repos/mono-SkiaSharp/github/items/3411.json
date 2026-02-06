@@ -34,5 +34,25 @@
   "deletions": 0,
   "changedFiles": 19,
   "commits": 10,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:21:47.4985957Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3506821556,
+        "author": "mattleibow",
+        "body": "@copilot i see the original had over 1000 lines, this is just over 500. This means that there is probably half the content missing.\n\nPlease make sure you didn\u0027t skip anything.\n\nMake sure you covered the interop, the testing, the samples, the platforms, the docs and more.\n\nLook at the repo and see what parts are the and make sure the reviewer covers it.\n\nAlso, we still need to keep the parts about running tests and iteration. Also, keep in mind that some changes will require native code, and this will require the correct native platform to be built before running tests. ",
+        "createdAt": "2025-11-08T19:29:07",
+        "reactions": []
+      },
+      {
+        "id": 3506826196,
+        "author": "Copilot",
+        "body": "\n\u003E @copilot i see the original had over 1000 lines, this is just over 500. This means that there is probably half the content missing.\n\u003E \n\u003E Please make sure you didn\u0027t skip anything....\n\nExpanded the PR reviewer from 578 to 1,428 lines (147% of MAUI\u0027s 1,125 lines). Added:\n\n**Testing Guidelines** (~400 lines):\n- Fetch PR changes workflow with merge failure handling\n- Setup test environment (native \u002B managed builds)\n- Test WITH/WITHOUT PR changes for baseline comparison\n- Edge case discovery with stress test examples\n- Success verification points and cleanup\n\n**Review Process** (~350 lines):\n- Initial assessment, deep code analysis with examples\n- Test coverage review (unit, memory, platform-specific)\n- Breaking changes \u0026 API review\n- Documentation review (XML docs, design docs, samples)\n- Generated code review workflow\n- Platform-specific considerations (all 8\u002B platforms)\n- Native code review with build procedures\n\n**Providing Feedback** (~200 lines):\n- Tone and style guidelines\n- Feedback categories with templates\n- PR approval checklist\n- Special considerations (first-time contributors, complex changes, bots, docs)\n\n**Coverage Verified**:\n\u2705 Interop (P/Invoke, exception safety, ownership, ABI)\n\u2705 Testing (unit, memory, platform, samples, iteration)\n\u2705 Samples (testing, best practices, documentation)\n\u2705 Platforms (Windows, macOS, Linux, iOS, Android, WASM, etc.)\n\u2705 Docs (XML, code comments, design docs, migration guides)\n\u2705 Native builds (platform-specific, 20\u002B min build time warnings)\n\nCommit: eb9b599",
+        "createdAt": "2025-11-08T19:36:57",
+        "reactions": []
+      }
+    ]
+  }
 }

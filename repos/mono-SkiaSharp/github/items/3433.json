@@ -39,5 +39,39 @@
       "state": "COMMENTED",
       "submittedAt": "2026-01-27T13:21:31"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:21:02.6185308Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3677726717,
+        "author": "wangfys",
+        "body": "@dotnet-policy-service agree",
+        "createdAt": "2025-12-20T10:55:58",
+        "reactions": []
+      },
+      {
+        "id": 3808470313,
+        "author": "mattleibow",
+        "body": "Thansk for this PR! I triggered the build internally and I see we are getting an error:\r\n\r\n\r\n\u003E \r\n\u003E        \u0022D:\\a\\1\\s\\native\\winui\\SkiaSharp.Views.WinUI.Native\\SkiaSharp.Views.WinUI.Native.sln\u0022 (Build target) (1:2) -\u003E\r\n\u003E        \u0022D:\\a\\1\\s\\native\\winui\\SkiaSharp.Views.WinUI.Native\\SkiaSharp.Views.WinUI.Native.Projection\\SkiaSharp.Views.WinUI.Native.Projection.csproj\u0022 (default target) (3:6) -\u003E\r\n\u003E        (CoreCompile target) -\u003E \r\n\u003E          D:\\a\\1\\s\\native\\winui\\SkiaSharp.Views.WinUI.Native\\SkiaSharp.Views.WinUI.Native.Projection\\obj\\Release\\net6.0-windows10.0.19041.0\\Generated Files\\CsWinRT\\SkiaSharp.Views.WinUI.Native.cs(108,162): error CS0117: \u0027IBufferMethods\u0027 does not contain a definition for \u0027IID\u0027 [D:\\a\\1\\s\\native\\winui\\SkiaSharp.Views.WinUI.Native\\SkiaSharp.Views.WinUI.Native.Projection\\SkiaSharp.Views.WinUI.Native.Projection.csproj]\r\n\u003E ",
+        "createdAt": "2026-01-28T01:36:41",
+        "reactions": []
+      },
+      {
+        "id": 3818059237,
+        "author": "wangfys",
+        "body": "Oh, I finally reproduced this build error. It is quite painful to prepare the environment since lots of stuffs are updated. For example, I ran into https://github.com/llvm/llvm-project/issues/95133 when trying to build \u0060externals-windows\u0060. Luckily, I finally realized that I only need to build \u0060externals-winui\u0060.\r\n\r\nIt seems like it is related to code generation. I need some time to check whether I can fix it here or we need to wait for bug fix from CsWinRT.",
+        "createdAt": "2026-01-29T14:30:56",
+        "reactions": []
+      },
+      {
+        "id": 3830424036,
+        "author": "wangfys",
+        "body": "@mattleibow Hello, I can now build \u0060externals-winui\u0060 successfully. The reason for the build failure is that the Windows metadata bundled with the \u0060.NET SDK 8.0.100\u0060 is outdated for \u0060CsWinRT 2.2.0\u0060. So, I added this line:\r\n\u0060\u0060\u0060\r\n\u003CCsWinRTWindowsMetadata\u003E10.0.17763.57\u003C/CsWinRTWindowsMetadata\u003E\r\n\u0060\u0060\u0060\r\n\r\nBut I\u0027m a little bit concerned about what if users of SkiaSharp use an old version.\r\n\r\nBy the way, I only made \u0060externals-winui\u0060 build successfully. I struggled a lot but still failed to prepare the environment for building the whole solution.",
+        "createdAt": "2026-02-01T05:47:37",
+        "reactions": []
+      }
+    ]
+  }
 }

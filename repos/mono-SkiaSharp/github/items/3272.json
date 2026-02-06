@@ -19,5 +19,209 @@
   "updatedAt": "2026-02-03T10:33:31",
   "closedAt": "2026-02-03T10:33:31",
   "commentCount": 8,
-  "reactionCount": 7
+  "reactionCount": 7,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:20:09.4940497Z",
+    "reactions": [
+      {
+        "user": "DaBeSoft",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:20:09.4940554Z"
+      },
+      {
+        "user": "BrycensRanch",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:20:09.4940561Z"
+      },
+      {
+        "user": "e8-MattLoidolt",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:20:09.4940565Z"
+      },
+      {
+        "user": "h333n",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:20:09.4940568Z"
+      },
+      {
+        "user": "paullalonde",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:20:09.4940571Z"
+      },
+      {
+        "user": "John-Paul-R",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:20:09.4940575Z"
+      },
+      {
+        "user": "John-Paul-R",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:20:09.4940578Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2867299327,
+        "author": "HakanL",
+        "body": "I tried to rebuild the Linux binaries for my distribution (Debian Bookworm on Arm64v8) and the build instructions were not 100%. Here\u0027s what I did, perhaps it helps somebody else with this issue:\n\nClone SkiaSharp and add submodules (I forgot this the first time)\n\u0060git submodule init \u0026\u0026 git submodule update\u0060\n\nUpdate debian docker file to .NET 9 and Debian 12 (Bookworm) (default is 10 and .NET 8, I assume the .NET version doesn\u0027t really matter, but I use 9 so I figured I may just as well, realizing it shouldn\u0027t matter when building the native binaries)\n\nBuild docker:\n\u0060sudo docker build --tag skiasharp-debian -f scripts/Docker/debian/arm64v8/Dockerfile .\u0060\n\n\nRun the docker image and build the native binaries:\n\u0060sudo docker run --rm --name skiasharp-debian --volume $(pwd):/work skiasharp-debian /bin/bash build.sh --variant=debian --buildarch=arm64 --gn=/work/externals/depot_tools/gn --ninja=ninja --target=externals-linux --verifyglibcmax=2.36\u0060\n\n\n\nOr if you want to run the build interactively for troubleshooting:\n\u0060sudo docker run -it --rm --name skiasharp-debian --volume $(pwd):/work skiasharp-debian\u0060\n\nBuild command:\n\u0060/bin/bash build.sh --variant=debian --buildarch=arm64 --gn=/work/externals/depot_tools/gn --ninja=ninja --target=externals-linux --verifyglibcmax=2.36\u0060\n\nRebuilding the native binaries and using those instead worked around the issue for me.",
+        "createdAt": "2025-05-09T16:58:08",
+        "reactions": [
+          {
+            "user": "3dfxuser",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:07.9270088Z"
+          },
+          {
+            "user": "xiaomoL444",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:07.9270097Z"
+          }
+        ]
+      },
+      {
+        "id": 2871156010,
+        "author": "nil4",
+        "body": "Similar issue with SkiaSharp 3.119.0 crashing at startup in an Avalonia app with the following output:\n\n\u0060\u0060\u0060\nFontconfig warning: \u0022/usr/share/fontconfig/conf.avail/05-reset-dirs-sample.conf\u0022, line 6: unknown element \u0022reset-dirs\u0022\nsymbol lookup error: /home/nil4/TestApp/bin/Debug/net9.0/runtimes/linux-arm64/native/libSkiaSharp.so: undefined symbol: uuid_parse\n\u0060\u0060\u0060\n\nInitially reported at https://github.com/AvaloniaUI/Avalonia/issues/18836 and triaged as:\n\n\u003E https://github.com/AvaloniaUI/Avalonia/issues/18836#issuecomment-2870938410\n\u003E \n\u003E ARM version of libSkiaSharp.so doesn\u0027t list any dependencies while using symbols from libuuid. This likely means that \u0060-Wl,--no-undefined\u0060 flag was missed from the build configuration. I\u0027m also seeing \u0060FT_Get_BDF_Property\u0060 symbol in the symbol table which suggests that the interned build of freetype is incomplete, so it will cause more convoluted native crashes when using font APIs later.\n\u003E \n\u003E Please, file a bug at SkiaSharp repo, it\u0027s not an Avalonia issue.",
+        "createdAt": "2025-05-12T07:08:56",
+        "reactions": [
+          {
+            "user": "HakanL",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.169667Z"
+          },
+          {
+            "user": "xiaomoL444",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.1696674Z"
+          }
+        ]
+      },
+      {
+        "id": 2872605701,
+        "author": "HakanL",
+        "body": "It\u0027s likely a duplicate of, or at least related to, https://github.com/mono/SkiaSharp/issues/3229",
+        "createdAt": "2025-05-12T13:34:08",
+        "reactions": [
+          {
+            "user": "nil4",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.387898Z"
+          },
+          {
+            "user": "e8-MattLoidolt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.3878984Z"
+          }
+        ]
+      },
+      {
+        "id": 3166801045,
+        "author": "Riton2013",
+        "body": "I meet same problem, how to fix it ?",
+        "createdAt": "2025-08-08T07:06:34",
+        "reactions": [
+          {
+            "user": "e8-MattLoidolt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.628491Z"
+          },
+          {
+            "user": "h333n",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.6284914Z"
+          },
+          {
+            "user": "gfolin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.6284915Z"
+          }
+        ]
+      },
+      {
+        "id": 3399779505,
+        "author": "rowan-gray",
+        "body": "Reposting this here. Originally posted in https://github.com/unoplatform/uno/issues/20273.\n\n---\n\nThe issue is caused by the arm64 libSkiaSharp.so binary not including DT_NEEDED entries for two required dependencies;\n* libuuid.so.1 (defines uuid_generate_random)\n* libfreetype.so.6 (defines FT_Get_BDF_Property)\n\nYou can check this by running \u0060ldd libSkiaSharp.so\u0060 on the arm64 binary (must be run on an arm64 machine):\n\u0060\u0060\u0060bash\nroot@1e1c59122297:/app# ldd libSkiaSharp.so\n        libpthread.so.0 =\u003E /lib/aarch64-linux-gnu/libpthread.so.0 (0x0000005503080000)\n        libdl.so.2 =\u003E /lib/aarch64-linux-gnu/libdl.so.2 (0x00000055030b0000)\n        libm.so.6 =\u003E /lib/aarch64-linux-gnu/libm.so.6 (0x00000055030e0000)\n        libc.so.6 =\u003E /lib/aarch64-linux-gnu/libc.so.6 (0x0000005503190000)\n        /lib/ld-linux-aarch64.so.1 (0x0000005500000000)\n\u0060\u0060\u0060\n\n**The solution is to have these dependencies correctly added by SkiaSharp during the build.**\n\nIn the meanwhile, you can patch the binary yourself as a workaround. Here\u0027s how you can do this on Ubuntu:\n\u0060\u0060\u0060bash\nsudo apt-get update\nsudo apt-get install patchelf\n\ncd \u003CpathToLibSkiaSharp.so\u003E\npatchelf --add-needed libuuid.so.1 libSkiaSharp.so\npatchelf --add-needed libfreetype.so.6 libSkiaSharp.so \n\n# Confirm required dynamic dependencies are linked\nldd libSkiaSharp.so\n\u0060\u0060\u0060\nThis will need to be done on linux-aarch64. If you have an x86 machine instead of an arm machine, you can use qemu and docker to emulate an arm64 machine (this is what I did).",
+        "createdAt": "2025-10-14T02:05:20",
+        "reactions": [
+          {
+            "user": "jeromelaban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.8476668Z"
+          },
+          {
+            "user": "nansheng2",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.8476674Z"
+          },
+          {
+            "user": "YoriMirus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.8476675Z"
+          },
+          {
+            "user": "John-Paul-R",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:08.8476676Z"
+          }
+        ]
+      },
+      {
+        "id": 3399784381,
+        "author": "rowan-gray",
+        "body": "@Riton2013 see the workaround above if you are still having this issue.",
+        "createdAt": "2025-10-14T02:05:53",
+        "reactions": []
+      },
+      {
+        "id": 3461369857,
+        "author": "kekekeks",
+        "body": "Please note that libSkiaSharp.so already contains its own private build of libfreetype. Attempting to resolve symbols from the system libfreetype can and will cause crashes once SkiaSharp version and system version will drift away enough with internal structures.",
+        "createdAt": "2025-10-29T12:53:13",
+        "reactions": []
+      },
+      {
+        "id": 3577797135,
+        "author": "ThadHouse",
+        "body": "What would it take to push along fixes for this? SkiaSharp 3 is essentially broken on linux arm64 platforms due to this, which also means Avalonia 12 is completely broken on Arm64 platforms.",
+        "createdAt": "2025-11-25T22:11:33",
+        "reactions": [
+          {
+            "user": "DaBeSoft",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:09.4438477Z"
+          },
+          {
+            "user": "JerryJian",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:09.4438484Z"
+          },
+          {
+            "user": "imsh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:09.4438485Z"
+          },
+          {
+            "user": "StefanKoell",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:09.4438487Z"
+          },
+          {
+            "user": "ScruffyDerHausmeister",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:09.4438489Z"
+          },
+          {
+            "user": "John-Paul-R",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:09.4438491Z"
+          },
+          {
+            "user": "MrJul",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:20:09.4438492Z"
+          }
+        ]
+      }
+    ]
+  }
 }

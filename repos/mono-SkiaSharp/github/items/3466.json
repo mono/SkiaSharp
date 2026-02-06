@@ -49,5 +49,38 @@
       "state": "COMMENTED",
       "submittedAt": "2026-01-29T02:01:38"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:21:24.3312729Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 3807812092,
+        "author": "mattleibow",
+        "body": "This looks much better. I asked copilot to write some tests (https://github.com/mono/SkiaSharp/pull/3467) that will cover this. Hopefully it works. But please see if you can use these (when done) as areference or write specific tests for this change so we don\u0027t do this again.",
+        "createdAt": "2026-01-27T22:20:57",
+        "reactions": []
+      },
+      {
+        "id": 3808053625,
+        "author": "jeremy-visionaid",
+        "body": "Yeah, I was curious about your thoughts for testing this. There are 2 changes here:\r\n\r\n1. The stream shouldn\u0027t be being disposed by the blob because it doesn\u0027t own it\r\n2. The stream in SKShaper should be being disposed deterministically\r\n\r\nPart one is trivial, I don\u0027t mind doing it to prevent regressions (Copilot\u0027s attempt seems a bit clumsy and off topic IMHO). For the second part, the stream is internal so we don\u0027t have a reference to it - there are missing dispose calls in other places too (e.g. #3319). Are you happy just accepting that existing tests still work for those kinds of cases?",
+        "createdAt": "2026-01-27T23:16:53",
+        "reactions": []
+      },
+      {
+        "id": 3808299449,
+        "author": "jeremy-visionaid",
+        "body": "Heya. Sorry that took a while - took a while to update workloads etc. for the latest SDK. I\u0027ve added a couple of simpler and more targeted tests. One to test for regression of the unwanted disposal (that would currently fail on main) and another to ensure that a managed reference to the stream was not required by the blob (since it previously had one from the release delegate). Probably some more HarfBuzz related tests would be good, but feels to me like the Copilot ones either test the wrong things or are beyond the scope of this PR.",
+        "createdAt": "2026-01-28T00:35:45",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:21:24.2809972Z"
+          }
+        ]
+      }
+    ]
+  }
 }
