@@ -19,5 +19,137 @@
   "updatedAt": "2023-10-29T00:00:26",
   "closedAt": "2023-08-28T16:15:43",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:16.2998097Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1694729901,
+        "author": "mattleibow",
+        "body": "@rolfbjarne I have added the M1 simulator bits to the fat framework, but it appears that xamarin.ios is not stripping out the simulator arch?\n\nDo I need a special something or is this a bug somewhere? ",
+        "createdAt": "2023-08-27T18:16:25",
+        "reactions": []
+      },
+      {
+        "id": 1695351569,
+        "author": "rolfbjarne",
+        "body": "@mattleibow you can\u0027t have a single .framework for both arm64 simulator and arm64 device. You need to use an .xcframework in that case (which contains two different .framework directories, one for the simulator and one for device).",
+        "createdAt": "2023-08-28T09:25:36",
+        "reactions": []
+      },
+      {
+        "id": 1695505088,
+        "author": "mattleibow",
+        "body": "@rolfbjarne i looked again and I am not doing that... I have 2 frameworks, one for sim and one for device.\n\nI have arm64 and arm64e in the device.\n\niphonesimulator: x86_64 \u002B arm64\niphoneos: arm64 \u002B arm64e\n\nIs this correct, and do I still need to use an xcframework? I am a tiny bit hesitant as I will have to change the build a bit. ",
+        "createdAt": "2023-08-28T11:11:23",
+        "reactions": []
+      },
+      {
+        "id": 1695507985,
+        "author": "rolfbjarne",
+        "body": "@mattleibow no, you can just drop arm64e, Apple doesn\u0027t allow submissions with that architecture, it\u0027s of no use right now.",
+        "createdAt": "2023-08-28T11:13:46",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:42:14.0667454Z"
+          }
+        ]
+      },
+      {
+        "id": 1695643838,
+        "author": "mattleibow",
+        "body": "Thanks!",
+        "createdAt": "2023-08-28T12:50:18",
+        "reactions": []
+      },
+      {
+        "id": 1695982546,
+        "author": "mattleibow",
+        "body": "I fixed this and will try push a preview with the fix soon.",
+        "createdAt": "2023-08-28T16:24:09",
+        "reactions": []
+      },
+      {
+        "id": 1699443873,
+        "author": "zleao",
+        "body": "Any idea when this will be published (even as a preview)?",
+        "createdAt": "2023-08-30T15:57:38",
+        "reactions": []
+      },
+      {
+        "id": 1699782575,
+        "author": "mattleibow",
+        "body": "Literally waiting on CI to finish the build and push :) Hopefully very soon. You can test right now using the preview feed:\r\n\r\n - https://aka.ms/skiasharp-eap/index.json\r\n - 2.88.6-preview.0.5\r\n\r\nIf it works for you I can push out today. I am fairly confident, but you should be able to test that.\r\n\r\nAre you abl to test and confirm easily, or does it require a full review by Apple?",
+        "createdAt": "2023-08-30T20:19:25",
+        "reactions": [
+          {
+            "user": "Ark667",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:42:14.8912335Z"
+          },
+          {
+            "user": "follesoe",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:42:14.891234Z"
+          },
+          {
+            "user": "bondarenkod",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:42:14.8912341Z"
+          }
+        ]
+      },
+      {
+        "id": 1700841437,
+        "author": "Ark667",
+        "body": "Its working now, thank you!",
+        "createdAt": "2023-08-31T11:12:02",
+        "reactions": []
+      },
+      {
+        "id": 1701892738,
+        "author": "baneageorge",
+        "body": "I also had the same problem with v2.88.5. Strangely enough, when trying to upload from VS I was still getting an error. But the same archive I managed to upload with Transporter",
+        "createdAt": "2023-08-31T23:06:45",
+        "reactions": []
+      },
+      {
+        "id": 1710808807,
+        "author": "jimbowyer",
+        "body": "\u003E \r\n\r\nThanks - this just unblocked us on iOS app store verification. v 2.88.5 was failing verification inside Xamarin Forms project with \u0027libSkiaSharp.framework contains unsupported architectures \u0027[arm64e]\u0027\u0027. Prerelease 2.88.6-preview.1.2 gets us past that and to a delivered app in submission review :)",
+        "createdAt": "2023-09-07T21:47:25",
+        "reactions": []
+      },
+      {
+        "id": 1715625974,
+        "author": "follesoe",
+        "body": "Excellent, thanks for the swift fix! Ran into the same issue, verifying using 2.88.6-preview.1.2 now.",
+        "createdAt": "2023-09-12T12:25:20",
+        "reactions": []
+      },
+      {
+        "id": 1737036083,
+        "author": "eddieyanez",
+        "body": "Hi, I\u0027m sorry I never saw this update. My email notifications were off, and so were on Github. Thanks for addressing the issue. I\u0027ll update to the latest version.",
+        "createdAt": "2023-09-27T09:25:46",
+        "reactions": []
+      },
+      {
+        "id": 1740117240,
+        "author": "mattleibow",
+        "body": "There should be a new stable version filled with fixes! Enjoy!",
+        "createdAt": "2023-09-28T23:21:41",
+        "reactions": [
+          {
+            "user": "follesoe",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:42:16.2495596Z"
+          }
+        ]
+      }
+    ]
+  }
 }

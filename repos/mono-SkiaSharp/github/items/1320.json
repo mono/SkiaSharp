@@ -13,5 +13,66 @@
   "createdAt": "2020-06-05T13:37:32",
   "updatedAt": "2023-09-26T06:05:16",
   "commentCount": 4,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:47.3107803Z",
+    "reactions": [
+      {
+        "user": "oshawaConnection",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:42:47.3107869Z"
+      },
+      {
+        "user": "snr745",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:42:47.3107875Z"
+      },
+      {
+        "user": "handerss-spotfire",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:42:47.3107876Z"
+      },
+      {
+        "user": "andreyeurope",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:42:47.3107877Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 639515186,
+        "author": "mattleibow",
+        "body": "What happen if you install the \u0060System.Buffers\u0060 package: https://www.nuget.org/packages/System.Buffers/\r\n\r\nMaybe that will help fix things...\r\n\r\nWhat happens (or do you have) these packages installed:\r\n - System.IO.UnmanagedMemoryStream\r\n - System.Memory\r\n - System.Buffers\r\n\r\n",
+        "createdAt": "2020-06-05T14:07:41",
+        "reactions": []
+      },
+      {
+        "id": 639530003,
+        "author": "ziriax",
+        "body": "Thanks for quick feedback.\r\n\r\n\u003E What happen if you install the \u0060System.Buffers\u0060 package: https://www.nuget.org/packages/System.Buffers/\r\n\r\nUnfortunately, that doesn\u0027t help, same error.\r\n\r\n\u003E What happens (or do you have) these packages installed:\r\n\u003E * System.IO.UnmanagedMemoryStream\r\n\u003E * System.Memory\r\n\u003E * System.Buffers\r\n\r\nI have none of these installed, but since \u0060Sixlabors.ImageSharp\u0060 [references \u0060System.Memory\u0060 and \u0060System.Buffers\u0060](https://github.com/SixLabors/ImageSharp/blob/master/src/ImageSharp/ImageSharp.csproj#L26)\r\n\r\nNotice that the \u0060System.Buffers\u0060 assembly in my build directory has assembly version \u00604.0.3.0\u0060, so it is very strange that this minor revision is not picked up automatically...\r\n\r\n",
+        "createdAt": "2020-06-05T14:26:46",
+        "reactions": []
+      },
+      {
+        "id": 654060138,
+        "author": "snr745",
+        "body": "similarly am facing issue with the System.Memory dll as below\r\nCould not load file or assembly \u0027System.Memory, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51\u0027 or one of its dependencies. The located assembly\u0027s manifest definition does not match the assembly reference. (Exception from HRESULT: 0x80131040)\r\n   at StreamJsonRpc.JsonMessageFormatter..ctor(Encoding encoding)\r\n   at StreamJsonRpc.JsonRpc..ctor(Stream sendingStream, Stream receivingStream, Object target)\r\n   at StreamJsonRpc.JsonRpc.Attach(Stream sendingStream, Stream receivingStream, Object target)\r\n   at StreamJsonRpc.JsonRpc.Attach(Stream stream, Object target)\r\n",
+        "createdAt": "2020-07-06T07:18:02",
+        "reactions": []
+      },
+      {
+        "id": 1566320073,
+        "author": "erebuswolf",
+        "body": "I am running into the same issue/error. The bindingRedirect in the App.config file is not respected by SkiaSharp. When I package my project into an installer and install locally, the app gives this error:\r\n\r\nUnhandled Exception: System.BadImageFormatException: Could not load file or assembly \u0027System.Buffers, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51\u0027 or one of its dependencies. Reference assemblies should not be loaded for execution.  They can only be loaded in the Reflection-only loader context. (Exception from HRESULT: 0x80131058) ---\u003E System.BadImageFormatException: Cannot load a reference assembly for execution.\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.Utils.RentedArray\u00601..ctor(Int32 length)\r\n   at SkiaSharp.SKManagedStream.OnReadManagedStream(IntPtr buffer, IntPtr size)\r\n   at SkiaSharp.SKManagedStream.OnPeek(IntPtr buffer, IntPtr size)\r\n\r\nI\u0027ve been pulling my hair out trying to figure out what I\u0027m doing wrong. But it appears Skia is not respecting these my bindingRedirect correctly for some reason. No version of System.Buffers from NuGet resolves this error, and the error only occurs in an installed version of the app. In visual studio it runs fine.\r\n\r\nI need to figure out how to duplicate what @ziriax did in his static constructor as a workaround in the mean time as I am currently hard stuck on the issue.\r\n\r\nEdit:\r\nMy issue turned out to be a corrupted dll in my NuGet cache being cached in a bunch of different locations. I had to remove the NuGet package from my project, then delete all bin folders and all the output folders for the installer project as well. Then remove the NuGet Cache from my user folder. Then re-add buffers 4.5.1 to my project. It finally worked at that point.",
+        "createdAt": "2023-05-29T00:12:47",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:42:47.2605616Z"
+          }
+        ]
+      }
+    ]
+  }
 }

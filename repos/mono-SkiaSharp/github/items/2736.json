@@ -30,5 +30,18 @@
   "deletions": 1,
   "changedFiles": 1,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:11.1572733Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1925255825,
+        "author": "github-actions[bot]",
+        "body": "The backport to \u0060release/2.x\u0060 failed:\n\u0060\u0060\u0060\nThe process \u0027/usr/bin/git\u0027 failed with exit code 1\n\u0060\u0060\u0060\nTo backport manually, run these commands in your terminal:\n\u0060\u0060\u0060bash\n# Fetch latest updates from GitHub\ngit fetch\n# Create a new working tree\ngit worktree add .worktrees/backport-release/2.x release/2.x\n# Navigate to the new working tree\ncd .worktrees/backport-release/2.x\n# Create a new branch\ngit switch --create backport/pr-2736-to-release/2.x\n# Cherry-pick the merged commit of this pull request and resolve the conflicts\ngit cherry-pick -x --mainline 1 14b451c6dad8121d7d6feb1b0ef6a7f96a531d6d\n# Push it to GitHub\ngit push --set-upstream origin backport/pr-2736-to-release/2.x\n# Go back to the original working tree\ncd ../..\n# Delete the working tree\ngit worktree remove .worktrees/backport-release/2.x\n\u0060\u0060\u0060\nThen, create a pull request where the \u0060base\u0060 branch is \u0060release/2.x\u0060 and the \u0060compare\u0060/\u0060head\u0060 branch is \u0060backport/pr-2736-to-release/2.x\u0060.",
+        "createdAt": "2024-02-03T10:17:08",
+        "reactions": []
+      }
+    ]
+  }
 }

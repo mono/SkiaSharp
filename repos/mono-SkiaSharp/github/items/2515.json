@@ -14,5 +14,18 @@
   "updatedAt": "2024-02-04T09:00:25",
   "closedAt": "2024-01-05T08:01:49",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:08.6017502Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1620119269,
+        "author": "nk-alex",
+        "body": "![Screenshot](https://github.com/mono/SkiaSharp/assets/101177816/c8198530-d6ac-4522-ba40-f5ba21f15472)\r\n\r\nWhere **CanvasB** has a stretched version of the image in **CanvasA**. The point in **CanvasA** is almost at the middle of the paper while **CanvasB** is showing me the point is located at the paper corner. \r\n\r\nDo I have to apply any type of scale while cropping the bitmap? (Making reference to this code line)\r\n\u0060\u0060\u0060\r\ncanvas.DrawBitmap(_originalBitmap.Resize(new SKImageInfo((int)(DeviceDisplay.MainDisplayInfo.Width),\r\n                    (int)(DeviceDisplay.MainDisplayInfo.Height)), SKFilterQuality.High), source, dest);\r\n\u0060\u0060\u0060\r\n\r\nIf I harcode something like this:\r\n\u0060\u0060\u0060\r\ndouble factor=1.7;\r\ncanvas.DrawBitmap(_originalBitmap.Resize(new SKImageInfo((int)(DeviceDisplay.MainDisplayInfo.Width),\r\n                    (int)(DeviceDisplay.MainDisplayInfo.Height/factor)), SKFilterQuality.High), source, dest);\r\n\u0060\u0060\u0060\r\n\r\nThings are looking better. But I don\u0027t have much clue how to calculate this factor. Any fresh ideas?",
+        "createdAt": "2023-07-04T12:02:17",
+        "reactions": []
+      }
+    ]
+  }
 }

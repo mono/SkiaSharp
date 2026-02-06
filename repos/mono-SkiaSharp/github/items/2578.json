@@ -20,5 +20,46 @@
   "updatedAt": "2023-09-25T12:00:26",
   "closedAt": "2023-08-25T14:55:10",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:49.0444261Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1690639074,
+        "author": "mattleibow",
+        "body": "In the google fork of libjpeg-turbo, they made an optimization to not duplicate a 65k byte table, however, this was never upstreamed. This means that skia may grow a little bit during the fix of this issue. I will try and see if I can get the optimization added upstream and then update again, but for now we will have to lose a bit.\r\n\r\n - https://github.com/libjpeg-turbo/libjpeg-turbo/issues/114\r\n",
+        "createdAt": "2023-08-23T21:06:38",
+        "reactions": []
+      },
+      {
+        "id": 1693557059,
+        "author": "mattleibow",
+        "body": "Merged this into main and now backporting into the 2.x series. I am a tad bit worried as this is a major jump of the lib - the first in probably years. They may have made some changes, but the author looks to be really break adverse - so it is comforting.\r\n\r\nI\u0027ll get a preview out ASAP for testing - and then a stable release shortly after.",
+        "createdAt": "2023-08-25T15:39:06",
+        "reactions": []
+      },
+      {
+        "id": 1693685185,
+        "author": "RChrisCoble",
+        "body": "Thanks for the heads up @mattleibow.  @jjzhang12 please keep this in mind.",
+        "createdAt": "2023-08-25T17:11:29",
+        "reactions": []
+      },
+      {
+        "id": 1694241795,
+        "author": "mattleibow",
+        "body": "Merged into the 2.x branch: https://github.com/mono/SkiaSharp/pull/2581",
+        "createdAt": "2023-08-26T09:30:01",
+        "reactions": []
+      },
+      {
+        "id": 1694244412,
+        "author": "mattleibow",
+        "body": "There should be a \u00602.88.6-preview.0.2\u0060 version on the preview feed with the new libjpeg-turbo bits.",
+        "createdAt": "2023-08-26T09:43:34",
+        "reactions": []
+      }
+    ]
+  }
 }

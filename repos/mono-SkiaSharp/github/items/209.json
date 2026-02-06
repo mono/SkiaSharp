@@ -23,5 +23,219 @@
   "createdAt": "2016-12-06T21:24:19",
   "updatedAt": "2024-02-06T09:41:07",
   "commentCount": 28,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:02.1684983Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 270152176,
+        "author": "mattleibow",
+        "body": "Hi @abezydar, thanks for giving SkiaSharp a go.\r\n\r\nI am having a look at your code and I can\u0027t really see why threads would come into this. There is just the single \u0060SKBitmap.Decode\u0060 operation. the \u0060bytes\u0060 variable - is that a byte array or is it a stream (as appears by the stack trace). If it is a stream, is there a way to test and see if you load the stream into a byte array and see if the issue goes away? (this is not a fix, but just checking to see where the error is)\r\n\r\nSkiaSharp is \u0022thread safe\u0022 in the sense that you can have two threads loading a bitmap, but two threads shouldn\u0027t access the same object.",
+        "createdAt": "2017-01-03T16:15:29",
+        "reactions": []
+      },
+      {
+        "id": 270393769,
+        "author": "abezydar",
+        "body": "Hey @mattleibow, no problem and thanks for the feedback. The \u0060bytes\u0060 variable is a byte array. It\u0027s multithreaded since an API in IIS is used to call this method. In the load test, 20 clients are decoding images at the same time. So, my expectation is that IIS is using multiple threads in the same worker process to decode the images. \r\n\r\nSince the error is happening on the \u0060SKBitmap.Decode\u0060 method, my thought was it couldn\u0027t handle decoding more than one byte array at a time reliably. If it should, then perhaps I\u0027m running into a memory error? If that\u0027s the case, I can look into limiting access to \u0060SKBitmap.Decode\u0060 by memory availability rather than concurrent processes. ",
+        "createdAt": "2017-01-04T15:12:05",
+        "reactions": []
+      },
+      {
+        "id": 276704698,
+        "author": "mattleibow",
+        "body": "I am going to re-investigate this. Here is another example of this issue: https://forums.xamarin.com/discussion/87687/usage-in-visual-studio-2015-unit-test-project",
+        "createdAt": "2017-02-01T16:26:45",
+        "reactions": []
+      },
+      {
+        "id": 276707299,
+        "author": "mattleibow",
+        "body": "This is the code that fails:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic class ImagingUnitTest\r\n{\r\n    public static void ImageScalingMultipleThreads()\r\n    {\r\n        const int numThreads = 100;\r\n        const int numIterationsPerThread = 1000;\r\n\r\n        var referenceFile = @\u0022/Users/matthew/Documents/baboon.jpg\u0022;\r\n\r\n        var tasks = new List\u003CTask\u003E();\r\n\r\n        for (int i = 0; i \u003C numThreads; i\u002B\u002B)\r\n        {\r\n            var task = Task.Run(() =\u003E\r\n            {\r\n                for (int j = 0; j \u003C numIterationsPerThread; j\u002B\u002B)\r\n                {\r\n                    var imageData = ComputeThumbnail(referenceFile);\r\n                }\r\n            });\r\n            tasks.Add(task);\r\n        }\r\n\r\n        Task.WaitAll(tasks.ToArray());\r\n\r\n        Console.WriteLine($\u0022Test completed for {numThreads} tasks, {numIterationsPerThread} each.\u0022);\r\n    }\r\n\r\n    public static byte[] ComputeThumbnail(string fileName)\r\n    {\r\n        using (var ms = new MemoryStream())\r\n        using (var bitmap = SKBitmap.Decode(fileName))\r\n        using (var scaledBitmap = new SKBitmap(60, 40, bitmap.ColorType, bitmap.AlphaType))\r\n        {\r\n            SKBitmap.Resize(scaledBitmap, bitmap, SKBitmapResizeMethod.Hamming);\r\n\r\n            using (var image = SKImage.FromBitmap(scaledBitmap))\r\n            using (var data = image.Encode(SKImageEncodeFormat.Png, 80))\r\n            {\r\n                data.SaveTo(ms);\r\n\r\n                return ms.ToArray();\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-02-01T16:35:20",
+        "reactions": []
+      },
+      {
+        "id": 276711663,
+        "author": "abezydar",
+        "body": "Thanks for looking into it @mattleibow!",
+        "createdAt": "2017-02-01T16:49:47",
+        "reactions": []
+      },
+      {
+        "id": 282979908,
+        "author": "groege",
+        "body": "Is there any workarount?",
+        "createdAt": "2017-02-28T08:53:01",
+        "reactions": []
+      },
+      {
+        "id": 283193498,
+        "author": "mattleibow",
+        "body": "I am not sure what I did to fix this :) It may have been an issue with skia returning the same instance of the decoders, and me not handling those cases. I think the fix is that I now track each time skia gives me an instance, and make sure it is not in use before disposing.\r\n\r\nI am cleaning up / preparing for a release - hopefully this week.",
+        "createdAt": "2017-02-28T23:20:03",
+        "reactions": []
+      },
+      {
+        "id": 283821209,
+        "author": "abezydar",
+        "body": "Cool, I\u0027ll check it out as soon as the release comes out! Thanks!",
+        "createdAt": "2017-03-02T23:53:46",
+        "reactions": []
+      },
+      {
+        "id": 287527691,
+        "author": "ncthbrt",
+        "body": "@mattleibow any updates on this? I\u0027m running into a similar problem in netcore in version 1.56.2\r\nCode is in this repo: https://github.com/ncthbrt/skia-fsharp\r\n\r\nThis is where the drawing call is made:\r\nhttps://github.com/ncthbrt/skia-fsharp/blob/master/Drawing/Test.fs#L94\r\n\r\n\u0060\u0060\u0060\r\nUnhandled Exception: System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\r\n   at System.Buffer.__Memmove(Byte* dest, Byte* src, UInt64 len)\r\n   at System.Buffer._Memmove(Byte* dest, Byte* src, UInt64 len)\r\n   at System.Buffer.Memmove(Byte* dest, Byte* src, UInt64 len)\r\n   at System.Buffer.Memcpy(Byte[] dest, Int32 destIndex, Byte* src, Int32 srcIndex, Int32 len)\r\n   at System.IO.UnmanagedMemoryStream.Read(Byte[] buffer, Int32 offset, Int32 count)\r\n   at System.IO.UnmanagedMemoryStream.ReadAsync(Byte[] buffer, Int32 offset, Int32 count, CancellationToken cancellation\r\nToken)\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-03-18T09:04:54",
+        "reactions": []
+      },
+      {
+        "id": 288927993,
+        "author": "mattleibow",
+        "body": "Moving to the next release so we can get the new skia out.",
+        "createdAt": "2017-03-24T04:03:53",
+        "reactions": []
+      },
+      {
+        "id": 290292062,
+        "author": "tdoneal",
+        "body": "Hi, I\u0027m having similar issues with 1.56.2.  I\u0027m getting nondeterministic AccessViolationExceptions using Windows Forms.  Strangely, the problem occurs only in Release mode (maybe due to tighter memory packing?).  Anyway, I\u0027m pretty sure I\u0027m allocating my surface correctly:\r\n\r\n            using (var bitmap = new Bitmap(iw, ih, PixelFormat.Format32bppPArgb))\r\n            {\r\n                var data = bitmap.LockBits(new Rectangle(0, 0, iw, ih), ImageLockMode.WriteOnly, bitmap.PixelFormat);\r\n\r\n                var surface = SKSurface.Create(iw, ih, SKColorType.Bgra8888, SKAlphaType.Premul, data.Scan0, iw * 4);\r\n                var skcanvas = surface.Canvas;\r\n                .... // canvas.draw(), etc\r\n\r\nThis was working very reliably for months while in Debug mode, but switching to Release mode caused it to start failing.  Is there a bug in Skia in handling the allocation, or am I missing something silly?  There\u0027s no other place in my code where I\u0027m doing \u0022low level\u0022 memory management so I don\u0027t really know how to go about fixing this.  I commented out the actual canvas.draw() calls but I\u0027m still getting the AccessViolationExceptions. I can try to get a minimal reproducing test case if the above code is indeed correct.",
+        "createdAt": "2017-03-30T03:28:54",
+        "reactions": []
+      },
+      {
+        "id": 290297806,
+        "author": "tdoneal",
+        "body": "Small correction: commenting out the actual canvas.draw() calls causes the exceptions to disappear.  Let me know if you have any debugging tips to try.",
+        "createdAt": "2017-03-30T04:16:02",
+        "reactions": []
+      },
+      {
+        "id": 290604269,
+        "author": "tdoneal",
+        "body": "Update: apparently I wasn\u0027t disposing of the SKSurface properly.  I wasn\u0027t calling surface.Dispose() after calling bitmap.UnlockBits().  Adding the call to surface.Dispose() fixed the issue.  I\u0027ll leave the above comments here in case anyone else runs into the same thing.",
+        "createdAt": "2017-03-31T03:11:55",
+        "reactions": []
+      },
+      {
+        "id": 290773425,
+        "author": "mattleibow",
+        "body": "Glad to hear that you got it to work.\r\n\r\nI would say that the \u0022best practice\u0022 is to wrap SkiaSharp types in a \u0060using\u0060 statement. This will make sure that there are no memory leaks as well as all the memory is freed ASAP. One thing where this helps is with the bitmap types, the managed type has only a size of \u0060IntPtr\u0060, but the underlying data could be several megabytes.",
+        "createdAt": "2017-03-31T17:16:36",
+        "reactions": []
+      },
+      {
+        "id": 290913856,
+        "author": "ncthbrt",
+        "body": "@mattleibow this appears to be still an issue. I think @tdoneal had a different problem",
+        "createdAt": "2017-04-01T11:18:35",
+        "reactions": []
+      },
+      {
+        "id": 297422490,
+        "author": "samirchakour-crossover",
+        "body": "I am having the same issue on Android, on iOS its working fine.\r\n\r\n\u0060_blobBitmap = SKBitmap.Decode(filePath);\u0060\r\n\r\nAfter the call to SKBitmap.Decode the app crash with a memory violation issue.\r\n\r\nHere is my project.json file on Android :\r\n\r\n\u0060\r\n\u003Cpackage id=\u0022SkiaSharp\u0022 version=\u00221.57.0\u0022 targetFramework=\u0022monoandroid71\u0022 /\u003E\r\n\u003Cpackage id=\u0022SkiaSharp.Views\u0022 version=\u00221.57.0\u0022 targetFramework=\u0022monoandroid71\u0022 /\u003E\r\n\u003Cpackage id=\u0022SkiaSharp.Views.Forms\u0022 version=\u00221.57.0\u0022 targetFramework=\u0022monoandroid71\u0022 /\u003E\r\n\u0060\r\n\r\nHere is the crash log :\r\n[logcat-android-skiasharp-crash.txt](https://github.com/mono/SkiaSharp/files/958710/logcat-android-skiasharp-crash.txt)",
+        "createdAt": "2017-04-26T14:16:39",
+        "reactions": []
+      },
+      {
+        "id": 297509478,
+        "author": "samirchakour-crossover",
+        "body": "I have done a couple of changes to my android configuration and the bug seems to be resolved for me :\r\n1. Changed the targetFramework to \u0027monoandroid60\u0027 instead of \u0027monoandroid71\u0027\r\n2. Changed the link behaviour to \u0022Don\u0027t Link\u0022\r\n3. Disabled the arm64 and x86_64 ABIs \r\n\r\nAnd SKBitmap.Decode is working now, I haven\u0027t investigated yet which of those changes resolve the issue but will do that on the next few days.\r\n\r\nHope this will help others.",
+        "createdAt": "2017-04-26T19:01:57",
+        "reactions": []
+      },
+      {
+        "id": 297925938,
+        "author": "ncthbrt",
+        "body": "I was thinking... Would it be possible that aspnet core is interfering with GC?",
+        "createdAt": "2017-04-28T07:15:02",
+        "reactions": []
+      },
+      {
+        "id": 298932047,
+        "author": "irv",
+        "body": "I\u0027m also hitting this (in dotnet core, running on .net 4.6.1)\r\n\r\nit appears to pop here: https://github.com/mono/SkiaSharp/blob/1cc9af5adb5a9966361ac5a4138952694a5345d3/binding/Binding/SKImage.cs#L59\r\n\r\nfrom the stacktrace:\r\n\r\nat SkiaSharp.SkiaApi.sk_image_unref(IntPtr image)\r\n  at SkiaSharp.SKImage.Dispose(Boolean disposing)\r\n  at SkiaSharp.SKNativeObject.Dispose()\r\n\r\nIt looks like maybe Dispose() is being called twice?",
+        "createdAt": "2017-05-03T14:43:53",
+        "reactions": []
+      },
+      {
+        "id": 444176010,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:02:23",
+        "reactions": []
+      },
+      {
+        "id": 952471047,
+        "author": "christian289",
+        "body": "Hello.\r\nI am currently debugging in Windows 10 VisualStudio 2019 environment using SkiaSharp.NativeAssets.Linux.NoDependencies version 2.80.3. We are debugging into a .NET 5 environment in the Azure Function Isolate Container Project, and we will finally release it to Azure Function. I am currently experiencing the same symptoms as the problem in this thread.\r\n\r\nMy calling sequence is as below code.\r\n\r\n\u0060\u0060\u0060cs\r\n        private ReadOnlySpan\u003Cbyte\u003E DownloadImageToSpan(HttpClient httpClient, Uri imageUri, bool tryResize = false)\r\n        {\r\n            byte[] imagebytes = null;\r\n\r\n            try\r\n            {\r\n                imagebytes = httpClient.GetByteArrayAsync(imageUri).Result;\r\n            }\r\n            catch\r\n            {\r\n                throw;\r\n            }\r\n\r\n            if (imagebytes.Length == 0)\r\n            {\r\n                return null;\r\n            }\r\n            return imagebytes.AsSpan();\r\n        }\r\n\r\n            ReadOnlySpan\u003Cbyte\u003E downloadSpan = DownloadImageToSpan(httpClient, messageObj.SourceUri);\r\n            SKBitmap decode = SKBitmap.Decode(downloadSpan); // System.AccessViolationException Occur!\r\n\u0060\u0060\u0060\r\n\r\nThe stack trace is below.\r\n\r\n\u003E [2021-10-27T01:45:05.139Z] Fatal error. System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\r\n[2021-10-27T01:45:05.142Z] Repeat 2 times:\r\n[2021-10-27T01:45:05.143Z] --------------------------------\r\n[2021-10-27T01:45:05.146Z]    at SkiaSharp.SkiaApi.sk_codec_get_pixels(IntPtr, SkiaSharp.SKImageInfoNative*, Void*, IntPtr, SkiaSharp.SKCodecOptionsInternal*)\r\n[2021-10-27T01:45:05.148Z] --------------------------------\r\n[2021-10-27T01:45:05.149Z]    at SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo, IntPtr, Int32, SkiaSharp.SKCodecOptions)\r\n[2021-10-27T01:45:05.151Z]    at SkiaSharp.SKCodec.GetPixels(SkiaSharp.SKImageInfo, IntPtr)\r\n[2021-10-27T01:45:05.152Z]    at SkiaSharp.SKBitmap.Decode(SkiaSharp.SKCodec, SkiaSharp.SKImageInfo)\r\n[2021-10-27T01:45:05.153Z]    at SkiaSharp.SKBitmap.Decode(SkiaSharp.SKCodec)\r\n[2021-10-27T01:45:05.155Z]    at SkiaSharp.SKBitmap.Decode(System.ReadOnlySpan\u00601\u003CByte\u003E)\r\n[2021-10-27T01:45:05.156Z]    at ServiceBusFunc.Functions.ImageAutoSlice.Run(System.String, Microsoft.Azure.Functions.Worker.FunctionContext)\r\n[2021-10-27T01:45:05.158Z]    at DynamicClass.lambda_method6(System.Runtime.CompilerServices.Closure, ServiceBusFunc.Functions.ImageAutoSlice, System.Object[])\r\n[2021-10-27T01:45:05.162Z]    at Microsoft.Azure.Functions.Worker.Invocation.VoidMethodInvoker\u00602[[System.__Canon, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.__Canon, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]].InvokeAsync(System.__Canon, System.Object[])\r\n[2021-10-27T01:45:05.165Z]    at Microsoft.Azure.Functions.Worker.Invocation.DefaultFunctionInvoker\u00602[[System.__Canon, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e],[System.__Canon, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]].InvokeAsync(System.Object, System.Object[])\r\n[2021-10-27T01:45:05.167Z]    at Microsoft.Azure.Functions.Worker.Invocation.DefaultFunctionExecutor\u002B\u003CExecuteAsync\u003Ed__4.MoveNext()\r\n[2021-10-27T01:45:05.169Z]    at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[[Microsoft.Azure.Functions.Worker.Invocation.DefaultFunctionExecutor\u002B\u003CExecuteAsync\u003Ed__4, Microsoft.Azure.Functions.Worker.Core, Version=1.3.1.0, Culture=neutral, PublicKeyToken=551316b6919f366c]](\u003CExecuteAsync\u003Ed__4 ByRef)\r\n[2021-10-27T01:45:05.172Z]    at Microsoft.Azure.Functions.Worker.Invocation.DefaultFunctionExecutor.ExecuteAsync(Microsoft.Azure.Functions.Worker.FunctionContext)\r\n[2021-10-27T01:45:05.174Z]    at Microsoft.Azure.Functions.Worker.OutputBindings.OutputBindingsMiddleware\u002B\u003CInvoke\u003Ed__0.MoveNext()\r\n[2021-10-27T01:45:05.177Z]    at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[[Microsoft.Azure.Functions.Worker.OutputBindings.OutputBindingsMiddleware\u002B\u003CInvoke\u003Ed__0, Microsoft.Azure.Functions.Worker.Core, Version=1.3.1.0, Culture=neutral, PublicKeyToken=551316b6919f366c]](\u003CInvoke\u003Ed__0 ByRef)\r\n[2021-10-27T01:45:05.179Z]    at Microsoft.Azure.Functions.Worker.OutputBindings.OutputBindingsMiddleware.Invoke(Microsoft.Azure.Functions.Worker.FunctionContext, Microsoft.Azure.Functions.Worker.Middleware.FunctionExecutionDelegate)\r\n[2021-10-27T01:45:05.181Z]    at Microsoft.Azure.Functions.Worker.FunctionsApplication.InvokeFunctionAsync(Microsoft.Azure.Functions.Worker.FunctionContext)\r\n[2021-10-27T01:45:05.183Z]    at Microsoft.Azure.Functions.Worker.GrpcWorker\u002B\u003CInvocationRequestHandlerAsync\u003Ed__17.MoveNext()\r\n[2021-10-27T01:45:05.185Z]    at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[[Microsoft.Azure.Functions.Worker.GrpcWorker\u002B\u003CInvocationRequestHandlerAsync\u003Ed__17, Microsoft.Azure.Functions.Worker.Grpc, Version=1.3.0.0, Culture=neutral, PublicKeyToken=551316b6919f366c]](\u003CInvocationRequestHandlerAsync\u003Ed__17 ByRef)\r\n[2021-10-27T01:45:05.186Z]    at Microsoft.Azure.Functions.Worker.GrpcWorker.InvocationRequestHandlerAsync(Microsoft.Azure.Functions.Worker.Grpc.Messages.InvocationRequest, Microsoft.Azure.Functions.Worker.IFunctionsApplication, Microsoft.Azure.Functions.Worker.IInvocationFeaturesFactory, Azure.Core.Serialization.ObjectSerializer, Microsoft.Azure.Functions.Worker.OutputBindings.IOutputBindingsInfoProvider)\r\n[2021-10-27T01:45:05.193Z]    at Microsoft.Azure.Functions.Worker.GrpcWorker\u002B\u003CProcessRequestCoreAsync\u003Ed__16.MoveNext()\r\n[2021-10-27T01:45:05.194Z]    at System.Runtime.CompilerServices.AsyncMethodBuilderCore.Start[[Microsoft.Azure.Functions.Worker.GrpcWorker\u002B\u003CProcessRequestCoreAsync\u003Ed__16, Microsoft.Azure.Functions.Worker.Grpc, Version=1.3.0.0, Culture=neutral, PublicKeyToken=551316b6919f366c]](\u003CProcessRequestCoreAsync\u003Ed__16 ByRef)\r\n[2021-10-27T01:45:05.197Z]    at Microsoft.Azure.Functions.Worker.GrpcWorker.ProcessRequestCoreAsync(Microsoft.Azure.Functions.Worker.Grpc.Messages.StreamingMessage)\r\n[2021-10-27T01:45:05.199Z]    at System.Threading.Tasks.Task\u00601[[System.__Canon, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]].InnerInvoke()\r\n[2021-10-27T01:45:05.201Z]    at System.Threading.ExecutionContext.RunFromThreadPoolDispatchLoop(System.Threading.Thread, System.Threading.ExecutionContext, System.Threading.ContextCallback, System.Object)\r\n[2021-10-27T01:45:05.203Z]    at System.Threading.Tasks.Task.ExecuteWithThreadLocal(System.Threading.Tasks.Task ByRef, System.Threading.Thread)\r\n[2021-10-27T01:45:05.207Z]    at System.Threading.ThreadPoolWorkQueue.Dispatch()\r\n\r\nAs the people above mentioned, this also happens when I process multiple Images.\r\n\r\nAsk for advice.\r\n",
+        "createdAt": "2021-10-27T02:00:18",
+        "reactions": []
+      },
+      {
+        "id": 952498853,
+        "author": "christian289",
+        "body": "Oh, my acquaintance gave me the solution.\r\nThank you. [evan](https://github.com/evan-choi).\r\n\r\nHere is the solution you gave me:\r\n\u0060\u0060\u0060cs\r\n        private byte[] DownloadImageToByteArray(HttpClient httpClient, Uri imageUri, bool tryResize = false)\r\n        {\r\n            byte[] imagebytes = null;\r\n\r\n            try\r\n            {\r\n                imagebytes = httpClient.GetByteArrayAsync(imageUri).Result;\r\n            }\r\n            catch\r\n            {\r\n                throw;\r\n            }\r\n\r\n            if (imagebytes.Length == 0)\r\n            {\r\n                return null;\r\n            }\r\n\r\n            return imagebytes;\r\n        }\r\n\r\n        private SKBitmap MakeSKBitmap(ReadOnlySpan\u003Cbyte\u003E span)\r\n        {\r\n            using MemoryStream ms = new(span.ToArray());\r\n            using SKManagedStream skStream = new(ms, false);\r\n            using SKCodec codec = SKCodec.Create(skStream);\r\n\r\n            return SKBitmap.Decode(codec);\r\n        }\r\n\r\n        ReadOnlySpan\u003Cbyte\u003E downloadSpan = DownloadImageToByteArray(httpClient, messageObj.SourceUri);\r\n        SKBitmap decode = MakeSKBitmap(downloadSpan); // No Exception!\r\n\u0060\u0060\u0060\r\n\r\nI hope it will be of help.",
+        "createdAt": "2021-10-27T03:11:23",
+        "reactions": [
+          {
+            "user": "evan-choi",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:41:00.7544466Z"
+          }
+        ]
+      },
+      {
+        "id": 1729664646,
+        "author": "kostebudinoski",
+        "body": "Hello\r\n\r\nis there any update on this?\r\n\r\nWe recently updated to latest version (2.88.5), and following issue started randomly popping up:\r\n\r\n\u0060\u0060\u0060\r\nApplication: dotnet.exe\r\nCoreCLR Version: 7.0.923.32018\r\n.NET Version: 7.0.9\r\nDescription: The process was terminated due to an unhandled exception.\r\nException Info: System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\r\nStack:\r\n   at SkiaSharp.SkiaApi.sk_codec_new_from_stream(IntPtr, SkiaSharp.SKCodecResult*)\r\n   at SkiaSharp.SkiaApi.sk_codec_new_from_stream(IntPtr, SkiaSharp.SKCodecResult*)\r\n   at SkiaSharp.SKCodec.Create(SkiaSharp.SKStream, SkiaSharp.SKCodecResult ByRef)\r\n   at SkiaSharp.SKBitmap.Decode(System.IO.Stream)\r\n\u0060\u0060\u0060\r\n   \r\n it crashes the whole process.\r\n",
+        "createdAt": "2023-09-21T14:10:29",
+        "reactions": []
+      },
+      {
+        "id": 1743048146,
+        "author": "kostebudinoski",
+        "body": "loading the stream into a byte array first, and than decoding it, makes the issue go away. @mattleibow what could be the reason for it? \r\nwould prefer using the stream I have. \r\n\r\nI think it\u0027s also worth mentioning that the image is read from azure blob storage and it\u0027s around 20mb in size.\r\n\r\nThe stream, that is being read, is of type: [LazyLoadingReadOnlyStream\u003CBlobProperties\u003E](https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/storage/Azure.Storage.Common/src/Shared/LazyLoadingReadOnlyStream.cs)",
+        "createdAt": "2023-10-02T13:46:05",
+        "reactions": []
+      },
+      {
+        "id": 1743200410,
+        "author": "kostebudinoski",
+        "body": "Reverting SkiaSharp to version 2.80.2 (what we used before the upgrade to 2.88.5) and the issue is gone.\r\n\r\nI believe you now have ample investigative materials.",
+        "createdAt": "2023-10-02T15:09:35",
+        "reactions": []
+      },
+      {
+        "id": 1769173002,
+        "author": "gktval",
+        "body": "I am seeing this on an Asp.Net core application, but only in IIS. During debug on my computer it seems to work fine.  I went back to version 2.80.2, but it still has the error.  The encode process will run fine for a few times, but it will randomly happen after 4-8 \u0027encode\u0027 calls.\r\n\r\nhere is the error from the log:\r\n\u0060\u0060\u0060\r\nFatal error. System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\r\nRepeat 2 times:\r\n--------------------------------\r\n   at SkiaSharp.SkiaApi.sk_pixmap_encode_image(IntPtr, IntPtr, SkiaSharp.SKEncodedImageFormat, Int32)\r\n--------------------------------\r\n   at SkiaSharp.SKPixmap.Encode(SkiaSharp.SKWStream, SkiaSharp.SKEncodedImageFormat, Int32)\r\n   at SkiaSharp.SKPixmap.Encode(SkiaSharp.SKEncodedImageFormat, Int32)\r\n   at SkiaSharp.SKBitmap.Encode(SkiaSharp.SKEncodedImageFormat, Int32)\r\n   ...\r\n\u0060\u0060\u0060\r\n\r\nseems to be crashing on this line of code:\r\n\u0060\u0060\u0060\r\nvar skData = bmp.Encode(SKEncodedImageFormat.Png, 10);\r\n\u0060\u0060\u0060\r\n\r\nEdit: Fixed. In my code prior to this I was using a pointer like below.\r\n\u0060\u0060\u0060\r\n // pin the managed array so that the GC doesn\u0027t move it\r\n var handle = GCHandle.Alloc(outBuffer, GCHandleType.Pinned);\r\n bmp.InstallPixels(bmp.Info, handle.AddrOfPinnedObject());\r\n handle.Free();\r\n GC.Collect();   \r\n \u0060\u0060\u0060\r\n Removing the GC.Collect() fixed the error",
+        "createdAt": "2023-10-18T19:18:40",
+        "reactions": []
+      },
+      {
+        "id": 1854872133,
+        "author": "Proektsoftbg",
+        "body": "@gktval . It is not enough just to remove \u0060GC.Collect()\u0060\r\n\r\nIf you need to use the bmp object further (e.g. to \u0027Encode\u0027), you should not immediately call \u0060handle.Free()\u0060.\r\nThe GC Handle must be released after the memory is no longer needed. Then, you can safely call \u0060handle.Free()\u0060, and definitely after \u0060bmp.Encode()\u0060. Otherwise, GC can \u0022decide\u0022 to collect the array behind the handle meanwhile and will destroy your bitmap data. If you try to use this bitmap after that, you will get again \u0022Attempted to read or write protected memory\u0022. \r\n\r\nRemoving \u0060GC.Collect()\u0060 just makes it to not happen each time. Now, it can happen rarely, but will cause your app to crash. You can catch it if you simulate heavy load on your app. This will trigger GC more often and there will be a greater chance to hit the small time span between freeing the handle and trying to use the bitmap. This is some of those nasty hidden bugs that can squeeze through your tests and cause troubles to your clients.",
+        "createdAt": "2023-12-13T23:54:55",
+        "reactions": [
+          {
+            "user": "kostebudinoski",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:41:01.9133548Z"
+          }
+        ]
+      },
+      {
+        "id": 1929129328,
+        "author": "kostebudinoski",
+        "body": "Taking into consideration the current vulnerability highlighted at https://security.snyk.io/vuln/SNYK-DOTNET-SKIASHARP-5922114, updating to the latest version becomes even more challenging. With one memory issue on one side and another vulnerability on the other, the task is compounded. @mattleibow , any insights you can provide would be greatly appreciated.",
+        "createdAt": "2024-02-06T09:41:07",
+        "reactions": []
+      }
+    ]
+  }
 }

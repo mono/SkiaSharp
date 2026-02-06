@@ -19,5 +19,128 @@
   "updatedAt": "2023-12-01T09:00:29",
   "closedAt": "2023-11-01T07:44:21",
   "commentCount": 15,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:00.2636301Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1785446473,
+        "author": "curia-damiano",
+        "body": "Additional comment: when compiling with Visual Studio 2022 17.5.2, the application works successfully\r\nWith later releases, it breaks at runtime.",
+        "createdAt": "2023-10-30T15:18:25",
+        "reactions": []
+      },
+      {
+        "id": 1787477978,
+        "author": "mattleibow",
+        "body": "I see you mention that there is an update to .NET 6 SDK and you listed that there was a change in the version of SkiaSharp.\r\n\r\nDid you update both at the same time? What happens if you use the same SkiaSharp with the new .NET 6 SDK?",
+        "createdAt": "2023-10-31T15:40:55",
+        "reactions": []
+      },
+      {
+        "id": 1787483447,
+        "author": "curia-damiano",
+        "body": "Sorry for the confusion - that came from the template\r\n\r\nThe change has been in the update of Visual Studio. With 17.5.2, it works. With newer versions, no.\r\nNo changes of SkiaSharp - both tests use the latest available NuGet.",
+        "createdAt": "2023-10-31T15:43:54",
+        "reactions": []
+      },
+      {
+        "id": 1787611804,
+        "author": "mattleibow",
+        "body": "@curia-damiano The changes are most likely in some part of the .NET SDK.\r\n\r\nAre you able to run the following:\r\n\r\n* dotnet --info\r\n* dotnet workload --info\r\n\r\nin the solution directory on both the working and not working setups? I am just wanting to verify the installed wasm-tools and sdk versions.",
+        "createdAt": "2023-10-31T16:55:09",
+        "reactions": [
+          {
+            "user": "radical",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:41:58.0518765Z"
+          }
+        ]
+      },
+      {
+        "id": 1787786635,
+        "author": "Redth",
+        "body": "This appears to be due to some change in the IDE for how debugging a WASM Blazor application works with respect to handling native file references.\r\n\r\nIf you try \u0060dotnet run --project .\\BlazorApp2\\Client\\BlazorApp2.Client.csproj\u0060 in your sample, that does seem to work with .NET 6.0 SDK.\r\n\r\n",
+        "createdAt": "2023-10-31T18:40:25",
+        "reactions": []
+      },
+      {
+        "id": 1788044543,
+        "author": "curia-damiano",
+        "body": "On the Azure VM with Visual Studio 17.5.2:\r\n\r\nC:\\_WorksNB\\BlazorApp2\u003Edotnet --info\r\n.NET SDK (reflecting any global.json):\r\n Version:   6.0.416\r\n Commit:    db3bc4a6c6\r\n\r\nRuntime Environment:\r\n OS Name:     Windows\r\n OS Version:  10.0.22621\r\n OS Platform: Windows\r\n RID:         win10-x64\r\n Base Path:   C:\\Program Files\\dotnet\\sdk\\6.0.416\\\r\n\r\nHost:\r\n  Version:      7.0.4\r\n  Architecture: x64\r\n  Commit:       0a396acafe\r\n\r\n.NET SDKs installed:\r\n  6.0.416 [C:\\Program Files\\dotnet\\sdk]\r\n  7.0.202 [C:\\Program Files\\dotnet\\sdk]\r\n\r\n.NET runtimes installed:\r\n  Microsoft.AspNetCore.App 6.0.15 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.AspNetCore.App 6.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.AspNetCore.App 7.0.4 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.NETCore.App 6.0.15 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.NETCore.App 6.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.NETCore.App 7.0.4 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.WindowsDesktop.App 6.0.15 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n  Microsoft.WindowsDesktop.App 6.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n  Microsoft.WindowsDesktop.App 7.0.4 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n\r\nOther architectures found:\r\n  x86   [C:\\Program Files (x86)\\dotnet]\r\n    registered at [HKLM\\SOFTWARE\\dotnet\\Setup\\InstalledVersions\\x86\\InstallLocation]\r\n\r\nEnvironment variables:\r\n  Not set\r\n\r\nglobal.json file:\r\n  C:\\_WorksNB\\BlazorApp2\\global.json\r\n\r\nLearn more:\r\n  https://aka.ms/dotnet/info\r\n\r\nDownload .NET:\r\n  https://aka.ms/dotnet/download\r\n",
+        "createdAt": "2023-10-31T21:14:25",
+        "reactions": []
+      },
+      {
+        "id": 1788045572,
+        "author": "curia-damiano",
+        "body": "On the Azure VM with Visual Studio 17.5.2:\r\n\r\nC:\\_WorksNB\\BlazorApp2\u003Edotnet workload list\r\n\r\nInstalled Workload Ids      Manifest Version      Installation Source\r\n---------------------------------------------------------------------\r\nwasm-tools                  6.0.24/6.0.400        SDK 6.0.400\r\n\r\nUse \u0060dotnet workload search\u0060 to find additional workloads to install.",
+        "createdAt": "2023-10-31T21:15:20",
+        "reactions": []
+      },
+      {
+        "id": 1788047558,
+        "author": "marcpopMSFT",
+        "body": "Is it an option to use the 7.0 SDK for this? I see that you\u0027re on 17.5 VS which is out of support. If you upgraded to the in-support 17.6 VS and use the in-support 7.0.3xx SDK, you can use that to target 6.0 applications.  The 6.0.416 SDK you\u0027re using was meant to be used with 17.3. While we don\u0027t block mismatching the SDK and VS versions, we can\u0027t test every combination and every scenario.\r\n\r\nHere\u0027s some more details on that: https://learn.microsoft.com/en-us/dotnet/core/porting/versioning-sdk-msbuild-vs#lifecycle",
+        "createdAt": "2023-10-31T21:17:00",
+        "reactions": []
+      },
+      {
+        "id": 1788050924,
+        "author": "curia-damiano",
+        "body": "On my machine, with latest VS installations:\r\n\r\nC:\\_WorksNB\\BlazorApp2\u003Edotnet --info\r\n.NET SDK (reflecting any global.json):\r\n Version:   6.0.416\r\n Commit:    db3bc4a6c6\r\n\r\nRuntime Environment:\r\n OS Name:     Windows\r\n OS Version:  10.0.22621\r\n OS Platform: Windows\r\n RID:         win10-x64\r\n Base Path:   C:\\Program Files\\dotnet\\sdk\\6.0.416\\\r\n\r\nHost:\r\n  Version:      8.0.0-rc.2.23479.6\r\n  Architecture: x64\r\n  Commit:       0b25e38ad3\r\n\r\n.NET SDKs installed:\r\n  6.0.416 [C:\\Program Files\\dotnet\\sdk]\r\n  7.0.403 [C:\\Program Files\\dotnet\\sdk]\r\n  8.0.100-rc.1.23463.5 [C:\\Program Files\\dotnet\\sdk]\r\n  8.0.100-rc.2.23502.2 [C:\\Program Files\\dotnet\\sdk]\r\n\r\n.NET runtimes installed:\r\n  Microsoft.AspNetCore.App 6.0.23 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.AspNetCore.App 6.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.AspNetCore.App 7.0.12 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.AspNetCore.App 7.0.13 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.AspNetCore.App 8.0.0-rc.1.23421.29 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.AspNetCore.App 8.0.0-rc.2.23480.2 [C:\\Program Files\\dotnet\\shared\\Microsoft.AspNetCore.App]\r\n  Microsoft.NETCore.App 6.0.23 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.NETCore.App 6.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.NETCore.App 7.0.12 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.NETCore.App 7.0.13 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.NETCore.App 8.0.0-rc.1.23419.4 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.NETCore.App 8.0.0-rc.2.23479.6 [C:\\Program Files\\dotnet\\shared\\Microsoft.NETCore.App]\r\n  Microsoft.WindowsDesktop.App 6.0.23 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n  Microsoft.WindowsDesktop.App 6.0.24 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n  Microsoft.WindowsDesktop.App 7.0.12 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n  Microsoft.WindowsDesktop.App 7.0.13 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n  Microsoft.WindowsDesktop.App 8.0.0-rc.1.23420.5 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n  Microsoft.WindowsDesktop.App 8.0.0-rc.2.23479.10 [C:\\Program Files\\dotnet\\shared\\Microsoft.WindowsDesktop.App]\r\n\r\nOther architectures found:\r\n  x86   [C:\\Program Files (x86)\\dotnet]\r\n    registered at [HKLM\\SOFTWARE\\dotnet\\Setup\\InstalledVersions\\x86\\InstallLocation]\r\n\r\nEnvironment variables:\r\n  Not set\r\n\r\nglobal.json file:\r\n  C:\\_WorksNB\\BlazorApp2\\global.json\r\n\r\nLearn more:\r\n  https://aka.ms/dotnet/info\r\n\r\nDownload .NET:\r\n  https://aka.ms/dotnet/download\r\n",
+        "createdAt": "2023-10-31T21:19:57",
+        "reactions": []
+      },
+      {
+        "id": 1788052420,
+        "author": "curia-damiano",
+        "body": "On my machine, with latest VS installations:\r\n\r\nC:\\_WorksNB\\BlazorApp2\u003Edotnet workload list\r\n\r\nInstalled Workload Ids      Manifest Version      Installation Source\r\n---------------------------------------------------------------------\r\nwasm-tools                  6.0.22/6.0.400        SDK 6.0.400\r\n\r\nUse \u0060dotnet workload search\u0060 to find additional workloads to install.\r\n\r\nUpdates are avaliable for the following workload(s): wasm-tools. Run \u0060dotnet workload update\u0060 to get the latest.\r\n",
+        "createdAt": "2023-10-31T21:20:40",
+        "reactions": []
+      },
+      {
+        "id": 1788056281,
+        "author": "curia-damiano",
+        "body": "\u003E Is it an option to use the 7.0 SDK for this? I see that you\u0027re on 17.5 VS which is out of support. If you upgraded to the in-support 17.6 VS and use the in-support 7.0.3xx SDK, you can use that to target 6.0 applications. The 6.0.416 SDK you\u0027re using was meant to be used with 17.3. While we don\u0027t block mismatching the SDK and VS versions, we can\u0027t test every combination and every scenario.\r\n\u003E \r\n\u003E Here\u0027s some more details on that: https://learn.microsoft.com/en-us/dotnet/core/porting/versioning-sdk-msbuild-vs#lifecycle\r\n\r\nHi,\r\nThe 7.0 SDK works.\r\nBut from https://learn.microsoft.com/en-us/visualstudio/releases/2022/release-history Visual Studio 2022 17.5.2 is still current.\r\nAnd the customer needs to run it on .NET 6, that is LTS.\r\n\r\nAnd in fact, the real problem is that the issue happens with latest versions of Visual Studio. With the older version 17.5.2 it works.\r\nMy customer would like to upgrade its version of Visual Studio.",
+        "createdAt": "2023-10-31T21:22:58",
+        "reactions": []
+      },
+      {
+        "id": 1788062182,
+        "author": "curia-damiano",
+        "body": "\u003E This appears to be due to some change in the IDE for how debugging a WASM Blazor application works with respect to handling native file references.\r\n\u003E \r\n\u003E If you try \u0060dotnet run --project .\\BlazorApp2\\Client\\BlazorApp2.Client.csproj\u0060 in your sample, that does seem to work with .NET 6.0 SDK.\r\n\r\nI confirm that running this command on my machine with all latest VS installations, IT WORKS !!!\r\n\r\nSo it\u0027s definitely a Visual Studio issue, more than a SDK issue.\r\n\r\nThis is already a very good result for my customer.\r\n\r\nNow, are you able to forward this issue to the Visual Studio team?",
+        "createdAt": "2023-10-31T21:28:13",
+        "reactions": []
+      },
+      {
+        "id": 1788105480,
+        "author": "mattleibow",
+        "body": "Is this an option? https://github.com/mono/SkiaSharp/issues/2640#issuecomment-1788047558\r\n\r\n\u003E Is it an option to use the 7.0 SDK for this? I see that you\u0027re on 17.5 VS which is out of support. If you upgraded to the in-support 17.6 VS and use the in-support 7.0.3xx SDK, you can use that to target 6.0 applications. The 6.0.416 SDK you\u0027re using was meant to be used with 17.3. While we don\u0027t block mismatching the SDK and VS versions, we can\u0027t test every combination and every scenario.\r\n\u003E \r\n\u003E Here\u0027s some more details on that: https://learn.microsoft.com/en-us/dotnet/core/porting/versioning-sdk-msbuild-vs#lifecycle\r\n\r\n",
+        "createdAt": "2023-10-31T22:09:30",
+        "reactions": []
+      },
+      {
+        "id": 1788108715,
+        "author": "lewing",
+        "body": "When you set your TargetFramework to net6.0 you will build a net6.0 (LTS) application even when using a 7.0.xxx SDK version.  The problem you are hitting is a previously unknown incompatibility with workloads when using global.json to force a 6.0.xxx version of the sdk with recent VisualStudio versions.\r\n\r\nOur recommendation is that you use the SDK that comes with the Visual Studio you want to use (remove global.json) and continue to target \u0060net6.0\u0060.  That will resolve the problem you are hitting and still produce a net6.0 LTS application.",
+        "createdAt": "2023-10-31T22:13:01",
+        "reactions": []
+      },
+      {
+        "id": 1788544121,
+        "author": "curia-damiano",
+        "body": "Thank you for your support, it is really appreciated!\r\n\r\nMy customer will probably keep the global.json, but upgrading it to use the .NET 7 SDK solves the issue.\r\n\r\nWe will keep it in this way, until migration to .NET 8.\r\n\r\nClosing this issue I want to thank all of your again for your quick support.",
+        "createdAt": "2023-11-01T07:44:22",
+        "reactions": [
+          {
+            "user": "lewing",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:42:00.2140611Z"
+          }
+        ]
+      }
+    ]
+  }
 }

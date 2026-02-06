@@ -18,5 +18,116 @@
   "createdAt": "2023-09-13T20:50:43",
   "updatedAt": "2024-01-21T19:15:57",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:23.8260217Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1724326577,
+        "author": "mattleibow",
+        "body": "The \u0022type initializer\u0022 is just the runtime component that constructs objects. So, the error is saying there was an exception in the constructor.\r\n\r\nSo, this exception is saying it was unable to load the libSkiaSharp native binary.\r\n\r\nAre you specifically using Blazor? Or, just web assembly?\r\n\r\nOr, is this a native Linux app running in docker and the exception is happening on the server?",
+        "createdAt": "2023-09-18T20:30:25",
+        "reactions": [
+          {
+            "user": "ak4shp",
+            "content": "eyes",
+            "createdAt": "2026-02-06T13:41:22.3988741Z"
+          }
+        ]
+      },
+      {
+        "id": 1724549251,
+        "author": "ak4shp",
+        "body": "Hi @mattleibow,\r\nThanks for the quick look up on the issue. \r\n\r\nI am not using Blazor or Web assembly specifically. The same code with _only_ \u0060SkiaSharp (2.88.5)\u0060 is working as expected on my Windows 10 console app with .NET 6. As per the suggestions across the web, I added all above mentioned SkiaSharp packages hoping atleast any of them might be the right one. \r\n\r\nYes, it is deployed to GCP (Google cloud platforms) Container Registry and build with docker. The exception is happening only on the server i.e GCP. \r\n\r\nAm I referencing to a wrong packege ? Or some plateform compatibility issues?",
+        "createdAt": "2023-09-18T22:29:45",
+        "reactions": []
+      },
+      {
+        "id": 1732111019,
+        "author": "ghost",
+        "body": "This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.",
+        "createdAt": "2023-09-22T23:00:28",
+        "reactions": []
+      },
+      {
+        "id": 1749762268,
+        "author": "fjpging8908",
+        "body": "I have the same problem... the only difference is that i\u0027am running my api in AWS ECS (Docker). i\u0027ve installed the same SkiaSharp.NativeAssets.Linux and my docker file contain this:\r\nRUN apt-get install -y libfontconfig1\r\nRUN apt-get update \u0026\u0026 apt-get install -y apt-utils libgdiplus libc6-dev\r\n\r\nI don\u0027t know what to do else. ",
+        "createdAt": "2023-10-05T22:51:27",
+        "reactions": []
+      },
+      {
+        "id": 1812437697,
+        "author": "filipecarneiro",
+        "body": "You should add reference to SkiaSharp.NativeAssets.Linux.**NoDependencies**: [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies).",
+        "createdAt": "2023-11-15T12:17:44",
+        "reactions": [
+          {
+            "user": "asushkov-github",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:41:23.2225498Z"
+          },
+          {
+            "user": "atakane",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:41:23.2225502Z"
+          },
+          {
+            "user": "masterlifting",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:41:23.2225503Z"
+          }
+        ]
+      },
+      {
+        "id": 1863861772,
+        "author": "narojay",
+        "body": "\u003E You should add reference to SkiaSharp.NativeAssets.Linux.**NoDependencies**: [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies).\r\n\r\nnot work",
+        "createdAt": "2023-12-20T05:09:15",
+        "reactions": []
+      },
+      {
+        "id": 1897830156,
+        "author": "atakane",
+        "body": "\u003E You should add reference to SkiaSharp.NativeAssets.Linux.**NoDependencies**: [SkiaSharp.NativeAssets.Linux.NoDependencies](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies).\r\n\r\nThis worked for me after adding missing 2 libs (in case)\r\n\u0060\u0060\u0060RUN apt-get update \u0026\u0026 apt-get install -y \\\r\n    libfontconfig1 \\\r\n    libfreetype6 \\\r\n    \u0026\u0026 rm -rf /var/lib/apt/lists/*\u0060\u0060\u0060 \r\n    into the DockerFile.",
+        "createdAt": "2024-01-18T05:33:18",
+        "reactions": [
+          {
+            "user": "Khobolov",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:41:23.5894525Z"
+          },
+          {
+            "user": "Pietervdw",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:41:23.589453Z"
+          },
+          {
+            "user": "iquadrat-barcelona",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:41:23.5894531Z"
+          }
+        ]
+      },
+      {
+        "id": 1902732831,
+        "author": "fjpging8908",
+        "body": "Thanks, a fixed de problem with your recommendation.  very kind of you\r\n\r\nEl jue, 18 ene 2024 a las 0:33, Atakan Eser ***@***.***\u003E)\r\nescribi\u00F3:\r\n\r\n\u003E You should add reference to SkiaSharp.NativeAssets.Linux.*NoDependencies*:\r\n\u003E SkiaSharp.NativeAssets.Linux.NoDependencies\r\n\u003E \u003Chttps://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies\u003E\r\n\u003E .\r\n\u003E\r\n\u003E This worked for me after adding missing 2 libs (in case)\r\n\u003E\r\n\u003E     libfontconfig1 \\\r\n\u003E     libfreetype6 \\\r\n\u003E     \u0026\u0026 rm -rf /var/lib/apt/lists/*\u0060\u0060\u0060\r\n\u003E     into the DockerFile.\r\n\u003E\r\n\u003E \u2014\r\n\u003E Reply to this email directly, view it on GitHub\r\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/2607#issuecomment-1897830156\u003E,\r\n\u003E or unsubscribe\r\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/AKLZFU54NRSLVY3J6SSPGVDYPCX2RAVCNFSM6AAAAAA4XCQM22VHI2DSMVQWIX3LMV43OSLTON2WKQ3PNVWWK3TUHMYTQOJXHAZTAMJVGY\u003E\r\n\u003E .\r\n\u003E You are receiving this because you commented.Message ID:\r\n\u003E ***@***.***\u003E\r\n\u003E\r\n",
+        "createdAt": "2024-01-21T19:15:56",
+        "reactions": [
+          {
+            "user": "atakane",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:41:23.7759511Z"
+          },
+          {
+            "user": "Adil530000",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:41:23.7759514Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -13,5 +13,102 @@
   "createdAt": "2021-06-22T06:50:07",
   "updatedAt": "2023-10-06T10:35:22",
   "commentCount": 13,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:42.3230114Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 876847429,
+        "author": "mattleibow",
+        "body": "I think it may be related to the drawing happening but for some reason the surface is not there.\r\n\r\nThis could be if the view is rendering, but then is removed from the hierarchy or disposed mid-render. As a result, we have a context, but the context does not have any surface. In the end, the null surface is trying to create a canvas, which blows up.\r\n\r\nMaybe see if there is a way to cancel rendering when the view is no longer used? Not sure exactly your app flow, but see if it helps is there is some way to disconnect the render and/or set the render mode to not looping.\r\n\r\nThat is the only reason I can see that it was told there is a surface, but it was gone by the time skia wanted to start working.",
+        "createdAt": "2021-07-09T01:31:00",
+        "reactions": []
+      },
+      {
+        "id": 876985001,
+        "author": "thisisthekap",
+        "body": "@mattleibow Thanks for the suggestions, I will definitely give them a try.\r\n\r\nWhat exactly do you mean by \u0022disconnect the render loop\u0022?",
+        "createdAt": "2021-07-09T07:41:58",
+        "reactions": []
+      },
+      {
+        "id": 897520021,
+        "author": "thisisthekap",
+        "body": "@mattleibow Could you please clarify?",
+        "createdAt": "2021-08-12T10:19:23",
+        "reactions": []
+      },
+      {
+        "id": 897522878,
+        "author": "mattleibow",
+        "body": "Hi, sorry. I see I typed the reply on my phone, but it never actually went through.\r\n\r\nI meant you can try do a HasRenderLoop=false when the page is disappearing. This should shut down the render loop thread. If that resolves it, then I can investigate some more. The issue could be that the frame draw has started but actually is killed mid-way through.\r\n\r\nIf this fixes it then I can see if I can add more guards.",
+        "createdAt": "2021-08-12T10:23:49",
+        "reactions": []
+      },
+      {
+        "id": 944018894,
+        "author": "Huaba93",
+        "body": "@mattleibow we have the same problem. In the last 30 days it caused about 1k crashes for 300 different users. It is also the most common reason for crashes on Android for us. \r\n\r\nMost effected devices:\r\nY7 Prime 2019 \r\nHUAWEI Y7s\r\nHonor 8X Max\r\n\r\nSetting \u0060HasRenderLoop=false\u0060 on disappearing/sleep did not change anything. Unfortunately, we can\u0027t reproduce the problem ourselves, so I don\u0027t know if abandoning HasRenderLoop would fix it. \r\n\r\n\u0060\u0060\u0060\r\nXamarin Exception Stack:\r\nSystem.NullReferenceException: Object reference not set to an instance of an object\r\n  at SkiaSharp.Views.Android.SKGLTextureViewRenderer.OnDrawFrame (Javax.Microedition.Khronos.Opengles.IGL10 gl) [0x0008a] in \u003C2240341f42164adf9675613a7d38e6a2\u003E:0\r\n  at SkiaSharp.Views.Android.GLTextureView\u002BGLThread.GuardedRun () [0x003bd] in \u003C2240341f42164adf9675613a7d38e6a2\u003E:0\r\n  at SkiaSharp.Views.Android.GLTextureView\u002BGLThread.Run () [0x00028] in \u003C2240341f42164adf9675613a7d38e6a2\u003E:0\r\n  at System.Threading.ThreadHelper.ThreadStart_Context (System.Object state) [0x00014] in \u003C90373b3274ec474892629de4358854a7\u003E:0\r\n  at System.Threading.ExecutionContext.RunInternal (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state, System.Boolean preserveSyncCtx) [0x00071] in \u003C90373b3274ec474892629de4358854a7\u003E:0\r\n  at System.Threading.ExecutionContext.Run (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state, System.Boolean preserveSyncCtx) [0x00000] in \u003C90373b3274ec474892629de4358854a7\u003E:0\r\n  at System.Threading.ExecutionContext.Run (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state) [0x0002b] in \u003C90373b3274ec474892629de4358854a7\u003E:0\r\n  at System.Threading.ThreadHelper.ThreadStart () [0x00008] in \u003C90373b3274ec474892629de4358854a7\u003E:0\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-10-15T05:43:09",
+        "reactions": []
+      },
+      {
+        "id": 945391399,
+        "author": "Huaba93",
+        "body": "@mattleibow SKSurface.Create can return null on purpose. \r\n\r\n_Returns the new surface if it could be created and the configuration is supported, otherwise null._\r\n\r\nSrc: https://docs.microsoft.com/en-us/dotnet/api/skiasharp.sksurface.create?view=skiasharp-2.80.2#SkiaSharp_SKSurface_Create_SkiaSharp_GRContext_System_Boolean_SkiaSharp_SKImageInfo_System_Int32_\r\n\r\nSo this part could be causing the crash:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/95c296bd9e8301205c7136de5670681fd1f24396/source/SkiaSharp.Views/SkiaSharp.Views.Android/SKGLTextureViewRenderer.cs#L88-L89",
+        "createdAt": "2021-10-18T06:03:21",
+        "reactions": []
+      },
+      {
+        "id": 966053883,
+        "author": "thisisthekap",
+        "body": "\u0060HasRenderLoop=false\u0060 did not solve our issue as well. @mattleibow what do you think about the suggestion of @Huaba93 to add a null check?",
+        "createdAt": "2021-11-11T07:26:23",
+        "reactions": []
+      },
+      {
+        "id": 1012830031,
+        "author": "thisisthekap",
+        "body": "@mattleibow Would the null check for the result of \u0060SKSurface.Create\u0060 be a viable option (as suggested by https://github.com/mono/SkiaSharp/issues/1723#issuecomment-945391399)?",
+        "createdAt": "2022-01-14T07:00:33",
+        "reactions": []
+      },
+      {
+        "id": 1012859925,
+        "author": "thisisthekap",
+        "body": "@mattleibow I tried to build skiasharp myself. Without success. When executing the target \u0060externals-download\u0060, keep getting a \u0022method not found\u0022 error:\r\n\r\n\u0060\u0060\u0060\r\n========================================\r\nexternals-download\r\n========================================\r\nDownloading \u0027_nativeassets\u0027 version \u00270.0.0-branch.main.179\u0027...\r\nAn error occurred when executing task \u0027externals-download\u0027.\r\nError: One or more errors occurred. (Method not found: \u0027System.Threading.Tasks.Task\u00601\u003CSystem.Collections.Generic.IEnumerable\u00601\u003CSystem.String\u003E\u003E NuGet.Packaging.PackageReaderBase.CopyFilesAsync(System.String, System.Collections.Generic.IEnumerable\u00601\u003CSystem.String\u003E, NuGet.Packaging.Core.ExtractPackageFileDelegate, NuGet.Common.ILogger, System.Threading.CancellationToken)\u0027.)\r\n        Method not found: \u0027System.Threading.Tasks.Task\u00601\u003CSystem.Collections.Generic.IEnumerable\u00601\u003CSystem.String\u003E\u003E NuGet.Packaging.PackageReaderBase.CopyFilesAsync(System.String, System.Collections.Generic.IEnumerable\u00601\u003CSystem.String\u003E, NuGet.Packaging.Core.ExtractPackageFileDelegate, NuGet.Common.ILogger, System.Threading.CancellationToken)\u0027.\r\n",
+        "createdAt": "2022-01-14T07:42:33",
+        "reactions": []
+      },
+      {
+        "id": 1025676349,
+        "author": "thisisthekap",
+        "body": "@mattleibow This issue keeps to be the top reason for crashes for all of our android apps. As I am unfortunately not able to do a custom build myself, your help is very much appreciated. I would be happy to do a PR as well, but without the ability to build the repository on my side, I do not want to propose a code change.",
+        "createdAt": "2022-01-31T12:13:15",
+        "reactions": []
+      },
+      {
+        "id": 1125498334,
+        "author": "wouterst79",
+        "body": "I\u0027m now seeing crashes with the same stack trace - exclusively on Y7 Prime 2019\r\n\r\nCrashes all happen after \u00222seconds\u0022 (according to appcenter).\r\n\r\n\u0060\u0060\u0060\r\nSKGLTextureViewRenderer.OnDrawFrame (Javax.Microedition.Khronos.Opengles.IGL10 gl)\r\nGLTextureView\u002BGLThread.GuardedRun ()\r\nGLTextureView\u002BGLThread.Run ()\r\nThreadHelper.ThreadStart_Context (System.Object state)\r\nExecutionContext.RunInternal (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state, System.Boolean preserveSyncCtx)\r\nExecutionContext.Run (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state, System.Boolean preserveSyncCtx)\r\nExecutionContext.Run (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state)\r\nThreadHelper.ThreadStart ()\r\n\r\n\u0060\u0060\u0060\r\n\r\nThis code is running on Xamarin.Android (no Xamarin.Forms involved) - as far as I can tell, the Renderloop is a Xamarin Forms feature. I\u0027ve tried to find a device farm with any of the mentioned devices, but no luck.\r\n\r\nI\u0027ve looked through my event logs, and I do see logs from Huawei devices, just none with a device type containing Y7. I\u0027m thinking I\u0027ll exclude that device from being supported from the Play Store.\r\n\r\n@mattleibow - what\u0027s the next step in the investigation here? ",
+        "createdAt": "2022-05-12T23:10:07",
+        "reactions": []
+      },
+      {
+        "id": 1145303075,
+        "author": "wouterst79",
+        "body": "I have another set of these (also on Y7 Prime 2019), but now they appear sometimes after 5 seconds, and sometimes after 8.\r\n\r\n\u0060\u0060\u0060\r\nSKGLTextureViewRenderer.OnDrawFrame (Javax.Microedition.Khronos.Opengles.IGL10 gl)\r\nGLTextureView\u002BGLThread.GuardedRun ()\r\nGLTextureView\u002BGLThread.Run ()\r\nThreadHelper.ThreadStart_Context (System.Object state)\r\nExecutionContext.RunInternal (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state, System.Boolean preserveSyncCtx)\r\nExecutionContext.Run (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state, System.Boolean preserveSyncCtx)\r\nExecutionContext.Run (System.Threading.ExecutionContext executionContext, System.Threading.ContextCallback callback, System.Object state)\r\nThreadHelper.ThreadStart ()\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-06-02T20:19:23",
+        "reactions": []
+      },
+      {
+        "id": 1750379523,
+        "author": "Picao84",
+        "body": "Did anyone find any way to fix this? I\u0027ve a tried a lot on mine Xamarin Forms, but looking at the stack trace it does not look like the issue is with my code, as the crash happens even before the OnPaintSurface method is called?",
+        "createdAt": "2023-10-06T10:35:22",
+        "reactions": []
+      }
+    ]
+  }
 }

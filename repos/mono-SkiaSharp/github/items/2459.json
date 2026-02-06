@@ -19,5 +19,66 @@
   "updatedAt": "2023-09-24T15:00:29",
   "closedAt": "2023-08-25T14:16:52",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:51.8493494Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1690126068,
+        "author": "jeromelaban",
+        "body": "Thanks for the report.\r\n\r\nIt looks like you\u0027re trying to add SkiaSharp to an uno project that does not already have a Uno.* reference, or is using an Uno version older than 4.0. Which one is it?",
+        "createdAt": "2023-08-23T15:00:40",
+        "reactions": []
+      },
+      {
+        "id": 1690209817,
+        "author": "proficad",
+        "body": "I am using VS 17.7.2. Today I created a new UNO project. I did not write a single line of code.\r\nWhen I tried to add nuget packages, I got the error message in the screenshot.[](url)\r\n![uno-nuget](https://github.com/mono/SkiaSharp/assets/1932632/eaa4a186-bc02-4cd5-912b-4195802d8dcd)\r\n",
+        "createdAt": "2023-08-23T15:50:03",
+        "reactions": []
+      },
+      {
+        "id": 1691584293,
+        "author": "jeromelaban",
+        "body": "Thanks for the update! Looks like there\u0027s a bug in VS that prevents it from showing the right error message... and the original error is https://github.com/unoplatform/uno.templates/issues/248. We\u0027ll fix it in uno, but you can fix this in two ways:\r\n- Remove the two test projects for your testing\r\n- Or add the following lines to the Directory.Packages.props:\r\n   \u0060\u0060\u0060\r\n\t\u003CPackageVersion Include=\u0022FluentAssertions\u0022 Version=\u00226.12.0\u0022 /\u003E\r\n\t\u003CPackageVersion Include=\u0022Microsoft.NET.Test.Sdk\u0022 Version=\u002217.7.1\u0022 /\u003E\r\n\t\u003CPackageVersion Include=\u0022coverlet.collector\u0022 Version=\u00226.0.0\u0022 /\u003E\r\n\t\u003CPackageVersion Include=\u0022NUnit\u0022 Version=\u00223.13.3\u0022 /\u003E\r\n\t\u003CPackageVersion Include=\u0022NUnit3TestAdapter\u0022 Version=\u00224.5.0\u0022 /\u003E\r\n  \u0060\u0060\u0060\r\n  then do a restore.",
+        "createdAt": "2023-08-24T12:29:05",
+        "reactions": []
+      },
+      {
+        "id": 1691801833,
+        "author": "proficad",
+        "body": "Thank you that helped!\r\nCould you please advise how to add a Skisharp view to the project?\r\nI tried to add SkiaSharp.Views.Uno 2.88.5 nuget package\r\nand the response is\r\nAssets file has not changed. Skipping assets file writing. Path: D:\\pokusy\\UnoApp5\\UnoApp5.Mobile\\obj\\project.assets.json\r\n",
+        "createdAt": "2023-08-24T14:33:23",
+        "reactions": []
+      },
+      {
+        "id": 1691835585,
+        "author": "jeromelaban",
+        "body": "Thanks for the update!\r\n\r\nTo use skiasharp, you can take a look at [this sample](https://github.com/unoplatform/Uno.Samples/tree/master/UI/SkiaSharpTest).\r\n\r\nUno Platform apps are now WinUI, so you\u0027ll need to add \u0060SkiaSharp.Views.Uno.WinUI\u0060.",
+        "createdAt": "2023-08-24T14:52:10",
+        "reactions": []
+      },
+      {
+        "id": 1692841454,
+        "author": "proficad",
+        "body": "Problem solved.\r\nThank you very much!",
+        "createdAt": "2023-08-25T06:34:37",
+        "reactions": [
+          {
+            "user": "jeromelaban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:42:51.6123129Z"
+          }
+        ]
+      },
+      {
+        "id": 1693383465,
+        "author": "jeromelaban",
+        "body": "Thanks! Feel free to close the issue.",
+        "createdAt": "2023-08-25T13:43:20",
+        "reactions": []
+      }
+    ]
+  }
 }

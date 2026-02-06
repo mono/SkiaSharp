@@ -13,5 +13,73 @@
   "createdAt": "2021-04-07T08:11:21",
   "updatedAt": "2023-10-07T00:18:12",
   "commentCount": 8,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:28.7804231Z",
+    "reactions": [
+      {
+        "user": "nor0x",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:42:28.7804295Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 815486443,
+        "author": "radev8",
+        "body": "This issue is possibly related to my issue as I also use the hardware acceleration.  The memory usage over time is comparable.\r\n[https://github.com/mono/SkiaSharp/issues/1680](url)",
+        "createdAt": "2021-04-08T06:28:08",
+        "reactions": []
+      },
+      {
+        "id": 815509116,
+        "author": "IainS1986",
+        "body": "@radev8 I\u0027ll double check but I\u0027m pretty certain I see the exact same rate of memory increase even with no SKPath usage\r\n\r\nBut certainly sounds in a similar area, and interesting yours is UWP while this is iOS. Both ARM based GPUs maybe?",
+        "createdAt": "2021-04-08T07:07:24",
+        "reactions": []
+      },
+      {
+        "id": 914066910,
+        "author": "charlenni",
+        "body": "@IainS1986 As you could see, we now have the same problems as you: When there are many redraws in short time then the app crashes with the same GPU error.\n\nDo you find a solution for this?",
+        "createdAt": "2021-09-07T07:38:23",
+        "reactions": []
+      },
+      {
+        "id": 914076056,
+        "author": "IainS1986",
+        "body": "@charlenni yes - don\u0027t use SKGLView on iOS.",
+        "createdAt": "2021-09-07T07:52:52",
+        "reactions": []
+      },
+      {
+        "id": 914114298,
+        "author": "charlenni",
+        "body": "\uD83D\uDE02\n\nThank you for your fast answer.\n\nDo you use SKPath for your drawings? Could it be, that there are resources created that aren\u0027t released before the next drawing?",
+        "createdAt": "2021-09-07T08:48:31",
+        "reactions": []
+      },
+      {
+        "id": 914131340,
+        "author": "charlenni",
+        "body": "I assume here, that you use SKPath.\n\nI assume, that there are problems with releasing the resources. Perhaps Skia uploads a path to the GPU for drawing, because it thinks, that the path is drawn again and again. But in some cases, if you create the SKPath every time new before drawing it, the release of the resources on GPU is not fast enough.\n\nDid you try to release them by explicitly deleting SKPath after drawing the path?",
+        "createdAt": "2021-09-07T09:08:39",
+        "reactions": []
+      },
+      {
+        "id": 914139405,
+        "author": "IainS1986",
+        "body": "I use SKPath and I completely reuse the same paths in every redraw (Rewinding the same path to then reuse it). Before this I also released the SKPaths - both approaches still crashed.\r\n\r\nHowever - its been a long time (April) - but I believe I could reproduce the memory issue without any SKPath calls too.\r\n\r\nI don\u0027t think its SKPath specific. I think you could have a blank SKGLView and redraw every frame and get the same error.",
+        "createdAt": "2021-09-07T09:19:16",
+        "reactions": []
+      },
+      {
+        "id": 1750316461,
+        "author": "najak3d",
+        "body": "**This defect would be a HUGE issue for us.**  Without the GPU-based SKGLView, we will be unable to make use of Custom Shaders, right?  We NEED Custom Skia Shaders to create the needed effects, plus we need/want the performance boost.  From what I can tell, this has never been fixed, correct?\r\n\r\nBUT, I ran a test myself, where all I did was this:\r\n1. Clear(Green)\r\n2. DrawBitmap (full sized, 1000x2000 pixels approx)\r\n3. DrawPath Polygon 50 points.  Each time I create a new Path (but using the same SKPoint[50] array), and do NOT dispose of the previous one (was trying to induce a crash that I could then see if Dispose() fixed it -- but for me, not calling Dispose() even works).\r\n\r\nIt Runs continuously at 50 FPS.  No hiccups.\r\n\r\nIt\u0027s been running now for 15 minutes (900 seconds x 50 FPS = 45,000 frames rendered), and no crash yet.  Performance hasn\u0027t slowed.  I will let it run all night, and see if it\u0027s still running 8 hrs from now, and will update this comment.\r\n\r\nEDIT: Yep, it ran for 8.5 hrs -- full speed, no slow downs, no crashes.  50 FPS, recreating a 50 pt Polygon Path every single frame.\r\n\r\nI don\u0027t have a profiler here to show me the memory usage on my iPad.\r\n\r\nI\u0027m using Skia 2.88.6, on iOS 16.7,  iPad Mini 4.\r\n\r\nSo for me, it appears it *might* be fixed?  Or maybe my test case simply doesn\u0027t cause the defect for some reason.",
+        "createdAt": "2023-10-06T09:54:59",
+        "reactions": []
+      }
+    ]
+  }
 }

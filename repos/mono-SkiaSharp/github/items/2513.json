@@ -24,5 +24,25 @@
   "deletions": 17,
   "changedFiles": 2,
   "commits": 9,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:09.5568778Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1610745481,
+        "author": "ScrubN",
+        "body": "@dotnet-policy-service agree",
+        "createdAt": "2023-06-28T05:09:04",
+        "reactions": []
+      },
+      {
+        "id": 1610777388,
+        "author": "ScrubN",
+        "body": "I should also mention that the choice to use \u0060SKFont.GetGlyphPath()\u0060 over \u0060SKFont.GetGlyphPaths()\u0060 was deliberate. In my testing, \u0060GetGlyphPaths()\u0060 tended to be 2-5% slower and allocated up to 50% more memory (.NET 7).\r\n\r\n\u0060\u0060\u0060 ini\r\n\r\nBenchmarkDotNet=v0.13.5, OS=Windows 10 (10.0.19045.3086/22H2/2022Update)\r\nAMD Ryzen 7 5800X, 1 CPU, 16 logical and 8 physical cores\r\n.NET SDK=7.0.304\r\n  [Host]     : .NET 7.0.7 (7.0.723.27404), X64 RyuJIT AVX2\r\n  DefaultJob : .NET 7.0.7 (7.0.723.27404), X64 RyuJIT AVX2\r\n\r\n\r\n\u0060\u0060\u0060\r\n|                                 Method | StringLength |        Mean |     Error |      StdDev |     Gen0 |     Gen1 |     Gen2 |  Allocated |\r\n|--------------------------------------- |---------- |------------:|----------:|------------:|---------:|---------:|---------:|-----------:|\r\n| **GetShapedTextPath_GetGlyphPath** |         **41** |    **297.2 \u03BCs** |   **5.72 \u03BCs** |     **4.78 \u03BCs** |        **-** |        **-** |        **-** |    **6.33 KB** |\r\n|      GetShapedTextPath_GetGlyphPaths |         41 |    304.0 \u03BCs |   5.98 \u03BCs |     9.65 \u03BCs |   0.4883 |        - |        - |    9.16 KB |\r\n| **GetShapedTextPath_GetGlyphPath** |         **410** |    **627.2 \u03BCs** |   **8.06 \u03BCs** |     **6.30 \u03BCs** |   **2.9297** |        **-** |        **-** |   **55.99 KB** |\r\n|      GetShapedTextPath_GetGlyphPaths |         410 |    648.6 \u03BCs |  12.84 \u03BCs |    12.01 \u03BCs |   4.8828 |   3.9063 |        - |   83.43 KB |\r\n| **GetShapedTextPath_GetGlyphPath** |         **4,100** |  **5,035.4 \u03BCs** |  **97.87 \u03BCs** |   **133.96 \u03BCs** |  **31.2500** |        **-** |        **-** |  **552.75 KB** |\r\n|      GetShapedTextPath_GetGlyphPaths |         4,100 |  4,603.0 \u03BCs |  90.81 \u03BCs |   114.84 \u03BCs |  46.8750 |  39.0625 |        - |  826.29 KB |\r\n| **GetShapedTextPath_GetGlyphPath** |         **41,000** | **49,409.5 \u03BCs** | **973.14 \u03BCs** | **1,543.50 \u03BCs** | **636.3636** | **454.5455** | **454.5455** |  **5520.5 KB** |\r\n|      GetShapedTextPath_GetGlyphPaths |         41,000 | 51,697.9 \u03BCs | 979.89 \u03BCs | 1,663.93 \u03BCs | 750.0000 | 750.0000 | 500.0000 | 8255.01 KB |\r\n\r\n**Notes**\r\n\r\n- These results are from the final benchmark run (3 runs total). This was the only run where \u0060GetGlyphPaths()\u0060 was faster with a string length of 4,100.\r\n- The string used was \u0060\u0627\u0644\u062B\u0639\u0644\u0628 \u0627\u0644\u0628\u0646\u064A \u0627\u0644\u0633\u0631\u064A\u0639 \u064A\u0642\u0641\u0632 \u0641\u0648\u0642 \u0627\u0644\u0643\u0644\u0628 \u0627\u0644\u0643\u0633\u0648\u0644\u0060. The length was increased by appending the string to itself multiple times within the benchmark global setup.",
+        "createdAt": "2023-06-28T05:46:20",
+        "reactions": []
+      }
+    ]
+  }
 }

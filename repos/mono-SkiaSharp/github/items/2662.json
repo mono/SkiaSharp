@@ -19,5 +19,32 @@
   "updatedAt": "2023-11-30T18:00:30",
   "closedAt": "2023-10-31T15:51:25",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:01.6146688Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1786637246,
+        "author": "Webreaper",
+        "body": "Did a bit more debugging, and it looks like it\u0027s crashing out here:  \r\n\u0060\u0060\u0060\r\nvar supportedScale = codec.GetScaledDimensions((float)desiredWidth / info.Width);\r\n\u0060\u0060\u0060\r\non this line:\r\n\r\nhttps://github.com/Webreaper/Damselfly/blob/master/Damselfly.Core.ImageProcessing/SkiaSharpProcessor.cs#L305\r\n\r\nDoesn\u0027t seem to be image-related, it\u0027s happening for all images.\r\n",
+        "createdAt": "2023-10-31T07:31:37",
+        "reactions": []
+      },
+      {
+        "id": 1787370326,
+        "author": "mpbraithwaite",
+        "body": "Sounds like the same bug as reported here? https://github.com/mono/SkiaSharp/issues/2645",
+        "createdAt": "2023-10-31T14:48:04",
+        "reactions": []
+      },
+      {
+        "id": 1787497477,
+        "author": "Webreaper",
+        "body": "Thanks - definitely that one. Will close as duplicate.",
+        "createdAt": "2023-10-31T15:51:25",
+        "reactions": []
+      }
+    ]
+  }
 }

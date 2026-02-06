@@ -13,5 +13,164 @@
   "createdAt": "2019-05-08T13:40:36",
   "updatedAt": "2023-12-28T23:08:35",
   "commentCount": 21,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:52.5252697Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 490516946,
+        "author": "Gillibald",
+        "body": "You have to load the same font file from stream to get the same result. Using SKTypeface.FromFamilyName(\u0022Arial\u0022) will load different fonts depending on the platform. On Linux for example FontConfig is used to query the font and most likely \u0022Arial\u0022 is mapped as an alias to a similar font but not the same as on Windows. ",
+        "createdAt": "2019-05-08T14:48:42",
+        "reactions": []
+      },
+      {
+        "id": 490545641,
+        "author": "VijayRM",
+        "body": "Could you please suggest me the best alternative overload for below method, as the suggested [SKTypeface.FromStream()](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.sktypeface.fromstream?view=skiasharp-1.68.0#SkiaSharp_SKTypeface_FromStream_System_IO_Stream_System_Int32_) overload doesn\u0027t have option to specify the SKFontStyleWeight, SKFontStyleWidth and SKFontStyleSlant?\r\n\r\n\u0060SKTypeface.FromFamilyName(\u0022Arial\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\u0060\r\n\r\n",
+        "createdAt": "2019-05-08T15:59:20",
+        "reactions": []
+      },
+      {
+        "id": 490549010,
+        "author": "Gillibald",
+        "body": "Most font files .ttf and .otf only contain one set of glyphs. For example MyFont-Regular.ttf which will be loaded as a SKTypeface with weight set to normal etc.\r\n\r\nhttps://fonts.google.com/specimen/Roboto for example ",
+        "createdAt": "2019-05-08T16:08:39",
+        "reactions": []
+      },
+      {
+        "id": 490827619,
+        "author": "VijayRM",
+        "body": "SKTypeface.FromStream()  also causes the same problem in Linux OS. \r\n\r\n            SKPaint paint = new SKPaint();\r\n            paint.TextEncoding = SKTextEncoding.Utf8;\r\n            paint.IsAntialias = true;\r\n            FileStream fStream = new FileStream(@\u0022arialbd.ttf\u0022, FileMode.Open, FileAccess.Read);\r\n            paint.Typeface = SKTypeface.FromStream(fStream);//SKTypeface.FromFamilyName(\u0022Arial\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n            paint.TextSize = 9;\r\n            paint.TextAlign = SKTextAlign.Left;\r\n\r\n            SKRect rect = new SKRect();\r\n            float width = paint.MeasureText(\u0022Locatio\u0022, ref rect);\r\n            Console.WriteLine(width);\r\n\r\nI think it could be a bug, as most of other cases are working fine in both Windows and Linux by using below overload. Could you please confirm this?\r\n\r\n\u0060SKTypeface.FromFamilyName(\u0022Arial\u0022, SKFontStyleWeight.Bold, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\u0060\r\n\r\nPlease provide solution to resolve the issue by using above overload, as the Font stream overload requires the installed font location in all the environment. I hope already getting font from the installed location may handled internally in above API.",
+        "createdAt": "2019-05-09T09:22:13",
+        "reactions": []
+      },
+      {
+        "id": 490852626,
+        "author": "Gillibald",
+        "body": "Can you try to set \u0060paint.SubpixelText = true\u0060? Maybe that isn\u0027t set by default on Linux. I will investigate this further if I find some spare time. ",
+        "createdAt": "2019-05-09T10:42:46",
+        "reactions": [
+          {
+            "user": "Ghasan",
+            "content": "hooray",
+            "createdAt": "2026-02-06T13:41:49.3074551Z"
+          }
+        ]
+      },
+      {
+        "id": 490878984,
+        "author": "VijayRM",
+        "body": "The default value of [paint.SubpixelText](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skpaint.subpixeltext?view=skiasharp-1.68.0#SkiaSharp_SKPaint_SubpixelText) is false in both Windows and Linux OS.\r\n\r\nAs per your suggestion, if [paint.SubpixelText](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skpaint.subpixeltext?view=skiasharp-1.68.0#SkiaSharp_SKPaint_SubpixelText) property was set as true, then width of the text size was calculated as expected in Linux OS. \r\n\r\nCould you please provide more information about the use of this property? Whether this changes will introduce any side effects in Linux or Windows?  ",
+        "createdAt": "2019-05-09T12:16:44",
+        "reactions": []
+      },
+      {
+        "id": 490889101,
+        "author": "Gillibald",
+        "body": "It seems that on Windows Subpixel positioning of glyphs is always used. There should be no side effects. You should enable it to get better rendering results. I can\u0027t give you more info. If you need more info about this you have to contact the Skia devs.",
+        "createdAt": "2019-05-09T12:47:54",
+        "reactions": []
+      },
+      {
+        "id": 490892612,
+        "author": "VijayRM",
+        "body": "Thanks @Gillibald . I will do the necessary changes and update you the confirmation once after ensuring the complete testing.",
+        "createdAt": "2019-05-09T12:57:13",
+        "reactions": []
+      },
+      {
+        "id": 491705340,
+        "author": "VijayRM",
+        "body": "@Gillibald - Although the provided suggestions resolved the above problems. I have found that the same problem exist for another text. Please find the example code to reproduce the issue.\r\n\r\n            SKPaint paint = new SKPaint();\r\n            paint.TextEncoding = SKTextEncoding.Utf8;\r\n            paint.IsAntialias = true;\r\n            paint.TextAlign = SKTextAlign.Left;\r\n            //As per your suggestion, I have enabled SubpixelText property.\r\n            paint.SubpixelText = true;\r\n             string text = char.ConvertFromUtf32(254);\r\n            paint.Typeface = SKTypeface.FromFile(@\u0022wingding.ttf\u0022);\r\n            paint.TextSize = 12;\r\n            SKRect rect = new SKRect();\r\n            float width = paint.MeasureText(text, ref rect);\r\n            Console.WriteLine(width);\r\n\r\nThe width of the text was calculated in Linux is invalid. Please find the size difference between Windows \u0026 Linux from below.\r\n\r\nWindows - 10.69922\r\nLinux - 6\r\n\r\n",
+        "createdAt": "2019-05-13T07:21:45",
+        "reactions": []
+      },
+      {
+        "id": 494779710,
+        "author": "VijayRM",
+        "body": "@Gillibald  - Could you please provide solution for this issue?",
+        "createdAt": "2019-05-22T12:24:12",
+        "reactions": []
+      },
+      {
+        "id": 494790163,
+        "author": "Gillibald",
+        "body": "I need the font file you are using to investigate this further. If you measure a string your should set \u0060paint.TextEncoding = SKTextEncoding.Utf16\u0060 not Utf8. That can result in errors.",
+        "createdAt": "2019-05-22T12:56:03",
+        "reactions": []
+      },
+      {
+        "id": 495141629,
+        "author": "VijayRM",
+        "body": "I have attached the fonts file [wingding.zip](https://github.com/mono/SkiaSharp/files/3211327/wingding.zip). Even if i use Utf16 encoding the same issue still exists. \r\n",
+        "createdAt": "2019-05-23T09:29:49",
+        "reactions": []
+      },
+      {
+        "id": 502680909,
+        "author": "martinhonovais",
+        "body": "Hi, I\u0027ve faced this problem, yesterday and I guess that I had found a workaround.\r\n\r\nTry this:\r\n\u0060SKTypeface.FromData(SKData.Create(stream));\u0060\r\n\r\nIt has worked for me, :).",
+        "createdAt": "2019-06-17T13:25:06",
+        "reactions": []
+      },
+      {
+        "id": 506942717,
+        "author": "mattleibow",
+        "body": "@Tazjoubire so are you saying that you get different results when loading the font via a stream vs a data? That seems to be a bug somewhere... ",
+        "createdAt": "2019-06-29T09:20:17",
+        "reactions": []
+      },
+      {
+        "id": 506942924,
+        "author": "Gillibald",
+        "body": "Yes there is a bug. That\u0027s why I implemented the GetTableData etc",
+        "createdAt": "2019-06-29T09:23:21",
+        "reactions": []
+      },
+      {
+        "id": 506943075,
+        "author": "Gillibald",
+        "body": "This fails on Linux https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.HarfBuzz/SkiaSharp.HarfBuzz.Shared/BlobExtensions.cs#L28\r\n\r\nGetMemoryBase returns IntPtr.Zero on Linux",
+        "createdAt": "2019-06-29T09:26:00",
+        "reactions": []
+      },
+      {
+        "id": 507315159,
+        "author": "martinhonovais",
+        "body": "Hi all!\r\n\r\nYes @mattleibow, If I load the font from stream it does not work, otherwise, if I load font from SKData it works perfectly in both environments linux and windows.\r\n\r\nAdditional, I am trying to load a barcode font and it works very well.\r\n\r\nThanks.",
+        "createdAt": "2019-07-01T15:33:51",
+        "reactions": []
+      },
+      {
+        "id": 608509539,
+        "author": "Ghasan",
+        "body": "For me, loading from SKData is still same. The only thing that fixed it is by setting \u0060SubpixelText\u0060 to true as suggested by Gillibald. Thanks :) ",
+        "createdAt": "2020-04-03T15:34:36",
+        "reactions": []
+      },
+      {
+        "id": 704055146,
+        "author": "parthipanr",
+        "body": "Facing same issue even if we load from SKData and setting SubpixelText to true.  Can any one please suggest to overcome this issue.   ",
+        "createdAt": "2020-10-06T06:18:47",
+        "reactions": []
+      },
+      {
+        "id": 1164508369,
+        "author": "kyugoa",
+        "body": "Not sure if it\u0027s related, the lineheight is also off in linux (is it calculated from the font size? ) see the related link on QuestPDF for detail.",
+        "createdAt": "2022-06-23T14:51:16",
+        "reactions": []
+      },
+      {
+        "id": 1871615880,
+        "author": "Seegras",
+        "body": "This might be unrelated to the issue, but as this is one of the few bug reports I can find that seems to be related, I add this here: \r\n\r\nI still can\u0027t set the font size to be easily readable _as a user_. No matter to what I set the DPI with Xft.dpi. And MONO_MWF_SCALING doesn\u0027t seem to do anything either. \r\n\r\nYes, this is a serious accessibility issue.\r\n\r\nSomebody did a patch. https://web.archive.org/web/20161025103319/http://www.vakuumverpackt.de/configurablesystemfontsformono/ which sadly isn\u0027t available any more; but I\u0027m wondering why something like this still isn\u0027t in mono. ",
+        "createdAt": "2023-12-28T23:08:34",
+        "reactions": []
+      }
+    ]
+  }
 }

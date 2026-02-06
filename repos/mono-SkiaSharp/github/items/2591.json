@@ -27,5 +27,32 @@
   "updatedAt": "2023-10-07T18:00:26",
   "closedAt": "2023-09-07T15:00:31",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:42:25.093198Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1699772098,
+        "author": "mattleibow",
+        "body": "I had a look and the reason nothing displays is because the canvas is in a vertical stack layout. This is not a problem exactly, but the real issue occurs because the canvas has no intrinsic size. The stack is asking the canvas for the size, the canvas says I have none and then the stack precedes to layout a 0 height stack.\r\n\r\nYou can probably use a grid or give the canvas a height. Let me know if this helps.",
+        "createdAt": "2023-08-30T20:11:10",
+        "reactions": []
+      },
+      {
+        "id": 1704440891,
+        "author": "ghost",
+        "body": "This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.",
+        "createdAt": "2023-09-04T00:00:29",
+        "reactions": []
+      },
+      {
+        "id": 1705327265,
+        "author": "AghaKhan",
+        "body": "The problem is solved because, for some reason, the SikaSharp only works with Grid containers.  I changed the container to Grid, and it worked fine. Thanks for your reply. Regards Agha ",
+        "createdAt": "2023-09-04T14:02:12",
+        "reactions": []
+      }
+    ]
+  }
 }

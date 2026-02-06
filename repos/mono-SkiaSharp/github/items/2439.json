@@ -13,5 +13,43 @@
   "createdAt": "2023-04-11T12:33:33",
   "updatedAt": "2023-12-11T05:42:43",
   "commentCount": 3,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:55.7705996Z",
+    "reactions": [
+      {
+        "user": "asidorowicz",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:41:55.7706066Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:41:55.7706076Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1553206018,
+        "author": "asidorowicz",
+        "body": "I have a similar behavior with the native SkiaSharp libraries being included throughout all transitive dependencies\r\nEx:\r\nAppA -\u003E LibA -\u003E LibB -\u003E SkiaSharp\r\n\r\nAppA, LibA and LibB will all embed the native dependencies in the nupkg, even when AppA end LibA are pulling it transitively",
+        "createdAt": "2023-05-18T15:07:32",
+        "reactions": []
+      },
+      {
+        "id": 1607260028,
+        "author": "SimonWeinbergerEnscape",
+        "body": "I also just stumbled upon this issue.\r\n\r\nI have added the following code to \u0060Directory.Build.targets\u0060, but would prefer to have the \u0060Pack\u0060 property set in the nuget\u0027s \u0060.props\u0060 file, as is outlined in the bug report as a possible solution.\r\n\r\n\u0060\u0060\u0060xml\r\n  \u003CItemGroup\u003E\r\n    \u003CContent Update=\u0022@(_NativeSkiaSharpFile)\u0022\u003E\r\n      \u003CPack\u003EFalse\u003C/Pack\u003E\r\n    \u003C/Content\u003E\r\n  \u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nSetting \u0060ShouldIncludeNativeSkiaSharp\u0060 to \u0060False\u0060 is not an option in my case because I need to run my application from the bin folder.",
+        "createdAt": "2023-06-26T11:19:20",
+        "reactions": []
+      },
+      {
+        "id": 1849363246,
+        "author": "SebastianSchumann",
+        "body": "This problem still occurs when building NuGet-Packages. I\u0027m using version 2.88.6.\r\nSometimes, but not always, an error occurs during compilation when the compiler tries to copy the DLLs into the bin directory.\r\n\r\nWe also have to start our application from the bin folder, but we also pack NuGet packages for some assemblies. \r\n\r\nIs there a satisfying solution for this?\r\n",
+        "createdAt": "2023-12-11T05:42:42",
+        "reactions": []
+      }
+    ]
+  }
 }

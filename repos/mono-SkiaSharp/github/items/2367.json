@@ -13,5 +13,52 @@
   "createdAt": "2023-01-24T12:02:58",
   "updatedAt": "2024-01-28T03:29:19",
   "commentCount": 5,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:17.8191088Z",
+    "reactions": [
+      {
+        "user": "Martinn2",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:41:17.819113Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1826326658,
+        "author": "DanTravison",
+        "body": "@polqnaP - did you find a resolution to this?  I\u0027m seeing it also.",
+        "createdAt": "2023-11-25T13:56:37",
+        "reactions": []
+      },
+      {
+        "id": 1832414576,
+        "author": "DanTravison",
+        "body": "Can anyone provide any insight here?  I\u0027m hitting this in three different scenarios, drawing on the canvas with mouse/touch, a custom slider control, and resizer thumb.\r\n\r\nI thought it limited to the thumb since I\u0027m moving SKCanvasView within move touch events but I also see it in other cases where I\u0027m simply redrawing a shape on the canvas view. \r\n\r\nFWIW: it appears the capture remains in place until I switch away, click on the apps window header, or wait for a while(??). It doesn\u0027t block touch interaction with the SKCanvasView but does prevent touch events to controls outside the SKCanvasView.\r\n\r\nI\u0027m using Maui 8.03, SkiaSharp.Maui.Controls/Corel 2.88.6",
+        "createdAt": "2023-11-29T17:46:08",
+        "reactions": []
+      },
+      {
+        "id": 1833990907,
+        "author": "DanTravison",
+        "body": "I\u0027ve narrowed down the repro somewhat.\r\n\r\nWhen I click the mouse button, I receive a Pressed event and set e.Handled to true.  As long as I keep the mouse pointer within the application\u0027s Window, the capture is NOT released when the mouse button is released.  If I move the pointer outside the application\u0027s window before releasing the button, the capture is released.\r\n\r\nThe behavior is the same using the Touch event or overriding OnTouch.\r\n\r\nI\u0027m running on a Macbook Air/M2 with Simona 14.1.1.",
+        "createdAt": "2023-11-30T15:22:50",
+        "reactions": []
+      },
+      {
+        "id": 1845661121,
+        "author": "DanTravison",
+        "body": "I believe I found the root cause of the capture not being released.  \r\n\r\nIn SKTouchHandler.TouchesEnded, FireEvent is called for each subscriber but the UIGestureRecognizer.State is left unchanged.  I changed the logic to set State to Recognized if any subscriber sets TouchEventArgs.Handled to true.\r\n\r\nThis appears to resolve the issue for both Mouse and TouchPad usage for both simple \u0027click\u0027 usage as well as press/move/release.\r\n\r\nI do have a few caveats:\r\n\u003E I\u0027m not a mac developer and don\u0027t play one on TV and I don\u0027t know how this will impact other usages.\r\n\u003E I implemented it by creating my own UIGestureRecognizer modeling SKTouchHandler\u0027s logic with my change.\r\n\u003E I inject the recognizer in HandlerChanged and control enabling it outside EnableTouchEvents.\r\n\u003E I still have deployment issues to iOS so I haven\u0027t been able to verify it in a simulator or iOS device.",
+        "createdAt": "2023-12-07T16:32:09",
+        "reactions": []
+      },
+      {
+        "id": 1913433087,
+        "author": "DanTravison",
+        "body": "I\u0027m surprised this isn\u0027t getting any attention; it occurs whenever a press/release occurs withing the confines of an SKCanvasView on MacCatalyst.\r\n\r\nIt\u0027s intrusive enough that I ended up completely replacing touch handling is SKCanvasView to get consistent behavior across platforms.",
+        "createdAt": "2024-01-28T03:29:18",
+        "reactions": []
+      }
+    ]
+  }
 }

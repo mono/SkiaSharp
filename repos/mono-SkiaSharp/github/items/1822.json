@@ -14,5 +14,95 @@
   "updatedAt": "2024-01-10T20:59:39",
   "closedAt": "2023-08-17T15:24:06",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:41:33.7757642Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 938169825,
+        "author": "AnarchyMob",
+        "body": "SkVM is not integrated (for official build) into Skia 88th milestone, support starts at 90th milestone.",
+        "createdAt": "2021-10-07T21:30:17",
+        "reactions": []
+      },
+      {
+        "id": 1236014288,
+        "author": "mgood7123",
+        "body": "specifically the issue is the \u0060SK_ENABLE_SKSL_INTERPRETER\u0060 is undefined when skia is being compiled\r\n\r\n\u0060\u0060\u0060cpp\r\nstd::unique_ptr\u003CByteCode\u003E Compiler::toByteCode(Program\u0026 program) {\r\n#if defined(SK_ENABLE_SKSL_INTERPRETER)\r\n    AutoSource as(this, program.fSource.get());\r\n    std::unique_ptr\u003CByteCode\u003E result(new ByteCode());\r\n    ByteCodeGenerator cg(fContext.get(), \u0026program, this, result.get());\r\n    bool success = cg.generateCode();\r\n    if (success) {\r\n        return result;\r\n    }\r\n#else\r\n    ABORT(\u0022ByteCode interpreter not enabled\u0022);\r\n#endif\r\n    return nullptr;\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-09-03T01:08:59",
+        "reactions": []
+      },
+      {
+        "id": 1236020705,
+        "author": "mgood7123",
+        "body": "enabling this in the CPP file directly enables SKSL to work on CPU",
+        "createdAt": "2022-09-03T01:34:55",
+        "reactions": []
+      },
+      {
+        "id": 1236020837,
+        "author": "mgood7123",
+        "body": "specifically\r\n\u0060\u0060\u0060c\r\n // required to enable CPU support for SKSL, this enables SKSL to work in a CPU canvas\r\n#define SK_ENABLE_SKSL_INTERPRETER\r\n\u0060\u0060\u0060\r\n\r\nin \u0060SkiaSharp\\externals\\skia\\src\\sksl\\SkSLByteCode.cpp\u0060 and \u0060SkiaSharp\\externals\\skia\\src\\sksl\\SkSLCompiler.cpp\u0060\r\n\r\nalso\r\n\u0060\u0060\u0060c\r\n// enable JIT if possible\r\n#define SKVM_JIT_WHEN_POSSIBLE\r\n\u0060\u0060\u0060\r\nin \u0060SkiaSharp\\externals\\skia\\src\\core\\SkVM.h\u0060 (doesnt hurt to JIT :) )",
+        "createdAt": "2022-09-03T01:35:50",
+        "reactions": []
+      },
+      {
+        "id": 1439790088,
+        "author": "xtu",
+        "body": "@mgood7123 did those changes work for you? I am still seeing the exception after applying those changes. Could you please help? Here are my changes.\r\n\r\n![image](https://user-images.githubusercontent.com/264364/220595586-ab62d4fc-1d2a-4ff0-8a08-9366a38dc727.png)\r\n",
+        "createdAt": "2023-02-22T10:36:31",
+        "reactions": []
+      },
+      {
+        "id": 1439799765,
+        "author": "mgood7123",
+        "body": "it should work, did you try recompiling from scratch?\r\n\r\nif not then you will need to try to debug the exception",
+        "createdAt": "2023-02-22T10:43:45",
+        "reactions": []
+      },
+      {
+        "id": 1439994780,
+        "author": "xtu",
+        "body": "I used the same \u0060azure-pipelines.yml\u0060 from this repo to create an Azure pipeline, so I think it is recompiling from scratch.\r\n\r\nI cannot debug yet. It would take some time to setup the build environment.\r\n\r\nDo you have a copy of the \u0060libSkiaSharp.dll\u0060 that have these changes for me to try?",
+        "createdAt": "2023-02-22T13:12:42",
+        "reactions": []
+      },
+      {
+        "id": 1666416586,
+        "author": "mattleibow",
+        "body": "Just been testing this in the new Skia update and it is looking so good. This shaders thing looks like a game changer. GPU and CPU surfaces are all fast!",
+        "createdAt": "2023-08-05T06:52:33",
+        "reactions": []
+      },
+      {
+        "id": 1697326200,
+        "author": "Gobra",
+        "body": "@mattleibow Is there any documentation and/or samples about this update that brings custom shaders support? I\u0027ve been trying a piece of simplest code with \u0060SkiaSharp 2.88.5\u0060, which is the latest one available, and it still crashes the same way.\r\n\r\nI\u0027ve tried both bitmap canvas and rendering onscreen through \u0060SKCanvasView\u0060, both crash.",
+        "createdAt": "2023-08-29T12:14:19",
+        "reactions": []
+      },
+      {
+        "id": 1697589442,
+        "author": "mattleibow",
+        "body": "Have you tried the v3 alphas? The v2 is still using the same version of skia that does not yet support this. ",
+        "createdAt": "2023-08-29T14:45:34",
+        "reactions": []
+      },
+      {
+        "id": 1697736129,
+        "author": "Gobra",
+        "body": "\u003E Have you tried the v3 alphas? The v2 is still using the same version of skia that does not yet support this.\r\n\r\nI\u0027m a bit lost here, which \u0060v3 alphas\u0060 are you referring to? \u0060NuGet\u0060 offset not pre-release versions and \u00602.88.5\u0060 is the freshest one, I\u0027ve checked tags and branches within this project to no result and I\u0027ve googled around for both \u0060SkiaSharp\u0060 and more general MAUI alpha builds to no avail again.\r\n\r\nWhat am I missing?",
+        "createdAt": "2023-08-29T16:00:25",
+        "reactions": []
+      },
+      {
+        "id": 1885722397,
+        "author": "mattleibow",
+        "body": "They are on the preview feed: https://aka.ms/skiasharp-eap/index.json\r\n\r\nHowever, I am hoping to release a preview of v3 to nuget soon.",
+        "createdAt": "2024-01-10T20:59:38",
+        "reactions": []
+      }
+    ]
+  }
 }
