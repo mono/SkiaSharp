@@ -285,7 +285,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var needsSync = index.Items
             .Where(i => 
                 !meta.Failures.ContainsKey(i.Number.ToString()) && // Not on skip list
-                (i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt)) // Needs sync
+                (settings.FullRefresh || i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt)) // Needs sync (or full refresh)
             .OrderByDescending(i => i.UpdatedAt) // Most recently updated first
             .Take(settings.EngagementCount)
             .ToList();
