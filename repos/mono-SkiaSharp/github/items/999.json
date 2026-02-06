@@ -14,5 +14,80 @@
   "updatedAt": "2022-08-19T09:02:08",
   "closedAt": "2019-11-06T12:24:58",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:17.1650407Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 550241881,
+        "author": "Gillibald",
+        "body": "Pls use the DrawShapedText method ",
+        "createdAt": "2019-11-06T10:14:00",
+        "reactions": []
+      },
+      {
+        "id": 550272677,
+        "author": "Chasyl",
+        "body": "I\u0027m using version 1.60.0 and I don\u0027t see this function.",
+        "createdAt": "2019-11-06T11:40:29",
+        "reactions": []
+      },
+      {
+        "id": 550274557,
+        "author": "Gillibald",
+        "body": "You need to use the SkiaSharp.HarfBuzz package https://www.nuget.org/packages/SkiaSharp.HarfBuzz/",
+        "createdAt": "2019-11-06T11:46:37",
+        "reactions": []
+      },
+      {
+        "id": 550277809,
+        "author": "Chasyl",
+        "body": "Thanks!!",
+        "createdAt": "2019-11-06T11:57:09",
+        "reactions": []
+      },
+      {
+        "id": 550281576,
+        "author": "Chasyl",
+        "body": "Hi,\r\ncan I write mixed text (English and hebrew together)?\r\nI tried doing it and the english text becomes rectangles.",
+        "createdAt": "2019-11-06T12:09:29",
+        "reactions": []
+      },
+      {
+        "id": 550282993,
+        "author": "Gillibald",
+        "body": "You have to split your text into runs with a unique direction. So you have to draw Hebrew and English text separately. Also consider using the font mager for character matching to find a suitable Typeface. ",
+        "createdAt": "2019-11-06T12:14:01",
+        "reactions": []
+      },
+      {
+        "id": 550299693,
+        "author": "mattleibow",
+        "body": "@Gillibald at some point we are going to have to get icu or some similar library bound. ",
+        "createdAt": "2019-11-06T13:03:35",
+        "reactions": [
+          {
+            "user": "Chasyl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:16.6898329Z"
+          }
+        ]
+      },
+      {
+        "id": 550301768,
+        "author": "Gillibald",
+        "body": "I think we can bundle SkiaSharp.HarfBuzz with a text segmenter that is producing a text blob of unique runs. For more advanced scenarios we need a markup for styled text.",
+        "createdAt": "2019-11-06T13:09:42",
+        "reactions": []
+      },
+      {
+        "id": 550303107,
+        "author": "Gillibald",
+        "body": "https://github.com/Gillibald/Avalonia/blob/feature/SkiaTextLayout/src/Skia/Avalonia.Skia/TextRunIterator.cs\r\nhttps://github.com/Gillibald/Avalonia/blob/feature/SkiaTextLayout/src/Avalonia.Visuals/Media/Text/Unicode/LineBreaker.cs\r\nCombined in one component",
+        "createdAt": "2019-11-06T13:13:29",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -19,5 +19,32 @@
   "updatedAt": "2022-08-19T12:01:37",
   "closedAt": "2019-06-24T02:24:06",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:10.4756173Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 504814842,
+        "author": "mattleibow",
+        "body": "That might be because you don\u0027t have an OpenGL context set up?\r\n\r\nSkiaSharp does not create an OpenGL context, the \u0022interface\u0022 here is basically a set of function pointers to the OpenGL functions (glDrawXXX). In my SkiaSharp.Views, I first set up a context to draw to the control/memory and then in the draw loop, I get the interface.\r\n\r\nFor the Windows Desktop, I use OpenTK and GLControl (I will be switching eventually to DirectX): https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Desktop/SKGLControl.cs\r\n\r\nFor UWP, I set up my ANGLE/DX context:\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.UWP/SKSwapChainPanel.cs\r\n\r\nhttps://github.com/mono/SkiaSharp/issues/213#issuecomment-272755110",
+        "createdAt": "2019-06-24T02:15:40",
+        "reactions": []
+      },
+      {
+        "id": 504815040,
+        "author": "mattleibow",
+        "body": "I also have contexts that I create for the unit tests: https://github.com/mono/SkiaSharp/tree/master/tests/Tests/GlContexts\r\n\r\nYou could have a look at that logic and add it to your solution.",
+        "createdAt": "2019-06-24T02:16:45",
+        "reactions": []
+      },
+      {
+        "id": 504828550,
+        "author": "mattleibow",
+        "body": "Closing this as there was no GPU context set up.",
+        "createdAt": "2019-06-24T02:24:04",
+        "reactions": []
+      }
+    ]
+  }
 }

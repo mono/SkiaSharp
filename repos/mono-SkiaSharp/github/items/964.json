@@ -14,5 +14,175 @@
   "updatedAt": "2022-08-19T09:02:24",
   "closedAt": "2020-09-14T13:42:50",
   "commentCount": 10,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:41.8686872Z",
+    "reactions": [
+      {
+        "user": "he55",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:41.8686908Z"
+      },
+      {
+        "user": "ssoellinger",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:41.8686913Z"
+      },
+      {
+        "user": "deremakif",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:41.8686916Z"
+      },
+      {
+        "user": "radutomy",
+        "content": "-1",
+        "createdAt": "2026-02-06T14:08:41.8686919Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 541399218,
+        "author": "f2calv",
+        "body": "I have a similar issue with a .NET Core 3.0 deployment, it was working fine during preview releases of .NET Core 3 up-to preview 9, then seemingly when .NET Core 3.0 final was released it then failed with the same error as you.\r\n\r\nAdding the following to my Dockerfile fixed the issue;\r\n\r\n- RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\r\n\r\nI guess the underlying image and its dependencies must have changed (regardless of having SkiaSharp.NativeAssets.Linux installed), so maybe this tweak will help...",
+        "createdAt": "2019-10-13T08:41:29",
+        "reactions": [
+          {
+            "user": "lawrencegripper",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:39.9985643Z"
+          },
+          {
+            "user": "evilpilaf",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:39.9985648Z"
+          },
+          {
+            "user": "matt-moody",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:39.9985649Z"
+          },
+          {
+            "user": "YukiCoco",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:39.9985651Z"
+          },
+          {
+            "user": "jorelius",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:39.9985651Z"
+          },
+          {
+            "user": "91378246",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:39.9985652Z"
+          }
+        ]
+      },
+      {
+        "id": 549385484,
+        "author": "mattleibow",
+        "body": "If you aren\u0027t doing things with text, or if you are brining your own fonts, you could try \r\nhttps://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux.NoDependencies\r\n\r\nThis NuGet is the same as SkiaSharp.NativeAssets.Linux, but does not have the fontconfig dependency. The downside is that it doesn\u0027t have the same support of features - mostly font finding. But it can still draw text.",
+        "createdAt": "2019-11-04T14:43:36",
+        "reactions": [
+          {
+            "user": "f2calv",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.2326446Z"
+          },
+          {
+            "user": "ssoellinger",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.2326451Z"
+          },
+          {
+            "user": "atrauzzi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.2326452Z"
+          },
+          {
+            "user": "deremakif",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.2326453Z"
+          },
+          {
+            "user": "poloboc",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.2326454Z"
+          },
+          {
+            "user": "johnseed",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.2326455Z"
+          },
+          {
+            "user": "91378246",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.2326456Z"
+          }
+        ]
+      },
+      {
+        "id": 682598119,
+        "author": "eoware",
+        "body": "I built a lambda layer based on the instructions from this page, using my lambda project instead of the one in the post: https://www.leadtools.com/help/sdk/v20/tutorials/documents/cross-platform/dotnet-core/convert-documents-using-aws-lambda.html\r\nThis makes it so my lambda actually runs without exception -- no more \u0022Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies\u0022, but the output is what I am guessing is a default, just a small white square, not the output I get when I run the function locally in debug mode. My project basically just does some DrawText calls to a canvas. \r\n\r\nFor reference, the libraries the script adds for the layer are:\r\nlibbz2.so.1\r\nlibc.so.6\r\nlibdl.so.2\r\nlibexpat.so.1\r\nlibfontconfig.so.1\r\nlibfreetype.so.6\r\nlibm.so.6\r\nlibpng15.so.15\r\nlibpthread.so.0\r\nlibuuid.so.1\r\nlibz.so.1",
+        "createdAt": "2020-08-28T14:11:53",
+        "reactions": []
+      },
+      {
+        "id": 689968112,
+        "author": "matt-moody",
+        "body": "\u003E I have a similar issue with a .NET Core 3.0 deployment, it was working fine during preview releases of .NET Core 3 up-to preview 9, then seemingly when .NET Core 3.0 final was released it then failed with the same error as you.\r\n\u003E \r\n\u003E Adding the following to my Dockerfile fixed the issue;\r\n\u003E \r\n\u003E * RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\r\n\u003E \r\n\u003E I guess the underlying image and its dependencies must have changed (regardless of having SkiaSharp.NativeAssets.Linux installed), so maybe this tweak will help...\r\n\r\n@f2calv your solution worked for me! Thank you for posting this! I am running .net core 3.1 and was running into the OP above listed error during my cloud deployments to google app engine. During local development on my mac, I had zero issues so you can imagine I was quite perplexed by google app engine giving me grief over this. I tried every variation of the SkiaSharp, SkiaSharp.NativeAssets.Linux, SkaiSharp.NativeAssets.Linux.NoDependencies and every single one failed when deployed to the cloud (all worked while developing on my local machine). Once I flipped over to using a custom docker file and added the \u0060libfontconfig1\u0060 package, my cloud deployed code worked as expected.\r\n\r\nHere\u0027s how I solved this\r\n\r\nFor those who come after me, here is a snippet of nuget packages in my .csproj:\r\n\u0060\u0060\u0060xml\r\n      \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.80.1\u0022 /\u003E\r\n      \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.80.1\u0022 /\u003E\r\n\u0060\u0060\u0060\r\nand a snippet of my Dockerfile:\r\n\u0060\u0060\u0060\r\n# Build runtime image\r\nFROM gcr.io/google-appengine/aspnetcore:3.1\r\nRUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-09-10T04:13:38",
+        "reactions": []
+      },
+      {
+        "id": 692059958,
+        "author": "mattleibow",
+        "body": "@matt-moody apologies for the grief. I noticed there was a bug in the 2.80.1 package where the NoDependencies binaries still required fontconfig. This was fixed in 2.80.2 and release last week.\r\n\r\nHowever, your solution to install \u0060fontconfig\u0060 and use \u0060SkiaSharp.NativeAssets.Linux\u0060 instead is the best option as you get access to all the font lookup and such.",
+        "createdAt": "2020-09-14T13:40:27",
+        "reactions": [
+          {
+            "user": "91378246",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:40.8103546Z"
+          }
+        ]
+      },
+      {
+        "id": 692061381,
+        "author": "mattleibow",
+        "body": "I\u0027ll close this as it appears to be related to #1341 and fixed in https://github.com/mono/SkiaSharp/pull/1416",
+        "createdAt": "2020-09-14T13:42:50",
+        "reactions": []
+      },
+      {
+        "id": 692319548,
+        "author": "matt-moody",
+        "body": "@mattleibow - Just an FYI version \u00602.80.2\u0060 fixed my missing assembly issue when I installed \u0060SkaiSharp.NativeAssets.Linux.NoDependencies\u0060 and removed my apt-get step in my docker file. Thanks for the quick follow up.",
+        "createdAt": "2020-09-14T21:17:37",
+        "reactions": []
+      },
+      {
+        "id": 692324028,
+        "author": "eoware",
+        "body": "What isn\u0027t usable in the library with SkiaSharp.NativeAssets.Linux.NoDependencies used and fontconfig not available? Can you still draw text? Are there any fonts or a default font still guaranteed to be available across platforms?",
+        "createdAt": "2020-09-14T21:27:51",
+        "reactions": []
+      },
+      {
+        "id": 707390063,
+        "author": "mattleibow",
+        "body": "The NoDependencies version can\u0027t search for fonts based on characters or other fonts. Basically, you have to manually load fonts - either by family name or file.\r\nOther than that, it should be able to do most things.",
+        "createdAt": "2020-10-12T23:11:30",
+        "reactions": []
+      },
+      {
+        "id": 747432977,
+        "author": "thylux",
+        "body": "Been struggling for 2 days with this because I need fonts in a AWS Lambda, so I can\u0027t use \u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 and didn\u0027t have how to install libfontconfig1.\r\n\r\nAWS recently launched [Lambda with docker](https://aws.amazon.com/blogs/developer/net-5-aws-lambda-support-with-container-images/) and so we now have how to install the dependencies we need.\r\n\r\nWhat you need in \u0060aws-lambda-tools-defaults.json\u0060 is to:\r\n* Replace \u0060function-handler\u0060 with \u0060image-command\u0060\r\n* Add \u0060\u0022docker-host-build-output-dir\u0022 : \u0022./bin/Release/netcore3.1/linux-x64/publish\u0022\u0060 (and adapt for the fw version you use)\r\n\r\nCreate a dockerfile (and adapt for the fw version you use):\r\n\u0060\u0060\u0060docker\r\nFROM public.ecr.aws/lambda/dotnet:core3.1\r\n\r\nWORKDIR /var/task\r\n\r\n\r\n\r\n# This COPY command copies the .NET Lambda project\u0027s build artifacts from the host machine into the image.\r\n# The source of the COPY should match where the .NET Lambda project publishes its build artifacts. If the Lambda function is being built\r\n# with the AWS .NET Lambda Tooling, the \u0060--docker-host-build-output-dir\u0060 switch controls where the .NET Lambda project\r\n# will be built. The .NET Lambda project templates default to having \u0060--docker-host-build-output-dir\u0060\r\n# set in the aws-lambda-tools-defaults.json file to \u0022bin/Release/net5.0/linux-x64/publish\u0022.\r\n#\r\n# Alternatively Docker multi-stage build could be used to build the .NET Lambda project inside the image.\r\n# For more information on this approach checkout the project\u0027s README.md file.\r\nCOPY \u0022bin/Release/netcore3.1/linux-x64/publish\u0022  .\r\n\r\n# Install these if you need access to System.Drawing\r\n# https://aws.amazon.com/blogs/developer/net-5-aws-lambda-support-with-container-images/\r\n#RUN yum install -y amazon-linux-extras\r\n#RUN amazon-linux-extras install epel -y\r\n#RUN yum install -y libgdiplus\r\n\r\nRUN yum install -y fontconfig freetype freetype-devel fontconfig-devel libstdc\u002B\u002B\r\n\u0060\u0060\u0060\r\n\r\nIf you are using a serverless.template update to something like in the image below:\r\n* Replace \u0060CodeUri\u0060 with \u0060ImageUri\u0060\r\n* Remove \u0060Runtime\u0060\r\n* Add \u0060\u0022PackageType\u0022: \u0022Image\u0022\u0060\r\n* Add \u0060ImageConfig\u0060 with an \u0060Entrypoint\u0060 and \u0060Command\u0060. \u0060Command\u0060 replaces \u0060Handler\u0060\r\n* Add \u0060Metadata\u0060\r\n\r\n![image](https://user-images.githubusercontent.com/1215984/102492635-e1dc7f80-4069-11eb-995f-e2fc6d0ace15.png)\r\n",
+        "createdAt": "2020-12-17T13:16:49",
+        "reactions": []
+      }
+    ]
+  }
 }

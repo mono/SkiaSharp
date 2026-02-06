@@ -14,5 +14,77 @@
   "updatedAt": "2022-08-19T09:01:50",
   "closedAt": "2020-01-08T16:30:20",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:01.2587038Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 561149134,
+        "author": "lothargrieb",
+        "body": "I have almost similar problem.\r\nSince moving from 1.68.01 to 1.68.1, I  cannot override SKCanvasViewRendererBase at the UWP project. Decompiling points me always to the Mono version.",
+        "createdAt": "2019-12-03T12:38:22",
+        "reactions": [
+          {
+            "user": "alexandrvslv",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:00.0237096Z"
+          }
+        ]
+      },
+      {
+        "id": 561149307,
+        "author": "mattleibow",
+        "body": "@knocte The netstandard library is actually moved to the ref folder so that the compiler never copies it to the device. It was done to solve https://github.com/mono/SkiaSharp/issues/1011. You typically should not be using the netstandard library directly as it contains stub methods / missing methods as it is just for reference only.\r\n\r\nBut... If it is working for you, then maybe we can have a look at splitting the assembly into two - one that is a \u0022base\u0022 assembly in the lib folder for all to use and one that is in the ref folder so that it does not conflict with the platform.\r\n\r\nWe can\u0027t move it back because of #1011 in which there are two assemblies with the same name and the first (which is the netstandard) is always picked. Moving it to the ref folder means that the platform assembly is picked. It might have been working for you because you have a different assembly name for GTK?\r\n\r\nAnother options is that you can send in a PR with the code you are using for GTK and we can have a look at merging that in - then you don\u0027t need to worry about that anymore.",
+        "createdAt": "2019-12-03T12:38:51",
+        "reactions": []
+      },
+      {
+        "id": 561149879,
+        "author": "mattleibow",
+        "body": "@lothargrieb We just spotted that in #1042 and a fix is in #1044. I have pushed out a fix to the preview feed:\r\n\r\nhttps://aka.ms/skiasharp-eap/index.json\r\n\r\nTry version 1.68.1.1-preview.2 as that should have the fix. _(there is a 1.68.2 series, but that is actually older because I decided to get .1.1 out first with this fix)_",
+        "createdAt": "2019-12-03T12:40:36",
+        "reactions": [
+          {
+            "user": "lothargrieb",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:00.4208711Z"
+          },
+          {
+            "user": "alexandrvslv",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:00.4208715Z"
+          }
+        ]
+      },
+      {
+        "id": 562831903,
+        "author": "knocte",
+        "body": "\u003E Another options is that you can send in a PR with the code you are using for GTK\r\n\r\nNot sure what you mean with this? I just use SkiaSharp.Views.Forms in my project because one single static method I make use of: \u0060SkiaSharp.Views.Forms.Extensions.ToSKColor()\u0060. I\u0027m sure this can be made available in a .netStandard binary which works across all platforms, or am I missing something?",
+        "createdAt": "2019-12-07T09:12:17",
+        "reactions": []
+      },
+      {
+        "id": 566584904,
+        "author": "knocte",
+        "body": "Is this related to https://github.com/mono/SkiaSharp/issues/379 ? I don\u0027t understand how this has worked before.",
+        "createdAt": "2019-12-17T15:14:54",
+        "reactions": []
+      },
+      {
+        "id": 566719972,
+        "author": "mattleibow",
+        "body": "This used to work because I had the nuget install the netstandard dll into platforms that were not supported. This was incorrect behavior because if you were to install the WPF nuget or the (hopefully soon) GTK nuget you would get duplicate dlls - the one from the core forms and the one from the WPF/GTK nuget. In addition, several paths would also throw exceptions\r\n\r\nSee https://github.com/mono/SkiaSharp/pull/1012\r\n\r\nIt used to work because there was no WPF nuget to cause this issue.\r\n\r\nIf you are using just one single static method, I would really suggest just adding this extension method directly into your project instead of referenceing the NuGet with is not supported in this scenario:\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Shared/Extensions.cs#L63-L66\r\n\r\nThe SkiaSharp.Views.Forms NuGet is only supported in Android, iOS, macOS, UWP and Tizen platforms. There is a separate package for WPF. All other uses are not supported and will cause issues if used.\r\n\r\nI have created an issue to actually track this implementation.",
+        "createdAt": "2019-12-17T19:46:29",
+        "reactions": []
+      },
+      {
+        "id": 572149255,
+        "author": "mattleibow",
+        "body": "Closing this for now as this is \u0022technically\u0022 a regression as a result of fixing a bug. It was also not a supported pattern. For GTK, we will be getting a new NuGet that has much more features #1089 \r\n\r\nAs a result, this particular use case will be addressed at some point with #1065, but not right now. The progress will be tracked on that issue.",
+        "createdAt": "2020-01-08T16:30:20",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T09:02:27",
   "closedAt": "2020-04-26T06:37:25",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:36.2030954Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 533828611,
+        "author": "Gillibald",
+        "body": "I think you have to make sure the context is attached to the right thread you want to use it on by calling https://www.khronos.org/registry/EGL/sdk/docs/man/html/eglMakeCurrent.xhtml before you can create a GRContext. Just a guess. ",
+        "createdAt": "2019-09-21T20:38:16",
+        "reactions": []
+      },
+      {
+        "id": 533833668,
+        "author": "kipy-be",
+        "body": "Thanks for your reply, but I\u0027m already doing this :)\r\n\r\nwithout all the check/asserts and the videocore stuff, here\u0027s basically what i\u0027m doing with egl : \r\n\r\n\u0060\u0060\u0060C\r\ndisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);\r\neglInitialize(...);\r\neglBindAPI(EGL_OPENGL_ES_API);\r\neglChooseConfig(...);\r\nsurface = eglCreateWindowSurface(...);\r\ncontext = eglCreateContext(...);\r\neglMakeCurrent(display, surface, surface, context);\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-09-21T22:08:45",
+        "reactions": []
+      },
+      {
+        "id": 533859636,
+        "author": "Gillibald",
+        "body": "Please try to pass the GRGlInterface explicitly. You can create one with https://docs.microsoft.com/en-us/dotnet/api/skiasharp.grglinterface.assembleglesinterface?view=skiasharp-1.68.0 and call https://docs.microsoft.com/en-us/dotnet/api/skiasharp.grcontext.create?view=skiasharp-1.68.0#SkiaSharp_GRContext_Create_SkiaSharp_GRBackend_SkiaSharp_GRGlInterface_ afterwards. ",
+        "createdAt": "2019-09-22T08:10:41",
+        "reactions": []
+      },
+      {
+        "id": 533885210,
+        "author": "kipy-be",
+        "body": "I tried that, but I honestly don\u0027t know what to do with that.\r\nIn the C lib, I return the pointer from eglCreateContext() to the C# layer (IntPtr object)\r\n\r\nI tried this : \r\n\r\n\u0060\u0060\u0060CSharp\r\nvar glInterface = GRGlInterface.AssembleGlesInterface((ctx, name) =\u003E {\r\n    return _bridge.CreateGLContext(); // call to the native lib wich return the IntPtr (pointer to egl context)\r\n});\r\nvar context = GRContext.Create(GRBackend.OpenGL, glInterface);\r\n\u0060\u0060\u0060\r\nbut the AssembleGlesInterface call lead to a \u0022Segmentation fault\u0022 error\r\n\r\nBut maybe it\u0027s not what I am supposed to do.\r\n\r\nI tried with both broadcom and mesa OpenGL driver",
+        "createdAt": "2019-09-22T14:08:26",
+        "reactions": []
+      },
+      {
+        "id": 619493377,
+        "author": "mattleibow",
+        "body": "Have a look at the unit tests for some ideas:\r\nhttps://github.com/mono/SkiaSharp/blob/master/tests/Tests/GlContexts/Glx/GlxContext.cs\r\n\r\nSkiaSharp has GTK views that you can also try out if you are using that.\r\n\r\nFor the construction of the actual OpenGL ES contexts, it might be better to chat those those folks. But, in terms of support? Yes. It is currently being used on the mobile platforms.",
+        "createdAt": "2020-04-26T06:37:25",
+        "reactions": []
+      }
+    ]
+  }
 }

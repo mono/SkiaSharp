@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T09:02:21",
   "closedAt": "2019-09-27T13:28:23",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:54.0487242Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 535919155,
+        "author": "Gillibald",
+        "body": "I had a quick look at this and it seems the C wrapper already has the needed functions to create a picture shader just the binding is missing the needed bits.\r\n\r\nThe C API is defined here: \r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/src/c/sk_shader.cpp#L37\r\n\r\nP/Invoke: \r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SkiaApi.cs#L591\r\n\r\nAnd the C# Binding is defined here: https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKShader.cs\r\n\r\nIf you can fork SkiaSharp and create a PR against current master.",
+        "createdAt": "2019-09-27T12:31:33",
+        "reactions": []
+      },
+      {
+        "id": 535927617,
+        "author": "Gillibald",
+        "body": "DirectWrite doesn\u0027t support Type 1 typefaces so I don\u0027t think this will ever work. It is probably time to use a newer format. Looks like FreeType isn\u0027t supporting this aswell. ",
+        "createdAt": "2019-09-27T12:56:45",
+        "reactions": []
+      },
+      {
+        "id": 535938857,
+        "author": "alexandrvslv",
+        "body": "Ok. look\u0027s like that fonts requires to implement custom text extraction for mystic encodings from 90\u0027s)",
+        "createdAt": "2019-09-27T13:28:23",
+        "reactions": []
+      }
+    ]
+  }
 }

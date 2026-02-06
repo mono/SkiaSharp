@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T09:02:40",
   "closedAt": "2019-12-26T13:23:31",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:18.6341331Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 569057955,
+        "author": "mattleibow",
+        "body": "You are correct that .NET Standard works on Mac. However the runtimes folder sadly only applies to netcoreapp.\r\nIt results in issues like this: https://github.com/xamarin/xamarin-macios/issues/6065\r\n\r\nRight now, the Xamarin.Mac library has special attributes and embedded files that the toolchain know to extract and link. This goes for all the Xamarin platforms. The reason for this is that Xamarin was doing native files long before .NET Core was even a thing. As a result, there was a fair amount of differences - especially around native things. As .NET Core matures and gains the required features, things like this will start to disappear.\r\n\r\nI am working with the .NET teams on these issues for all the platforms. I am hoping this will be addressed with .NET 5 later next year.",
+        "createdAt": "2019-12-26T13:23:31",
+        "reactions": []
+      }
+    ]
+  }
 }

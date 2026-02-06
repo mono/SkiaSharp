@@ -14,5 +14,150 @@
   "updatedAt": "2022-08-19T12:01:33",
   "closedAt": "2019-06-24T02:26:39",
   "commentCount": 15,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:19.2710581Z",
+    "reactions": [
+      {
+        "user": "pablocom",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:19.2710648Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 486996846,
+        "author": "deinok",
+        "body": "Same here with Ubuntu 19.04 and dotnet-sdk from snap",
+        "createdAt": "2019-04-26T09:41:04",
+        "reactions": []
+      },
+      {
+        "id": 489986383,
+        "author": "jcyuan",
+        "body": "https://github.com/mono/SkiaSharp/issues/453#issuecomment-367428176\r\n\r\ndoes this resolve your problem?",
+        "createdAt": "2019-05-07T08:29:43",
+        "reactions": []
+      },
+      {
+        "id": 490107424,
+        "author": "jcyuan",
+        "body": "beside, if the related libs the libSkiaSharp.so refers are missing in your OS, the OS will still report libSkiaSharp.so is missing, so it\u0027s better to ensure that your libs are all installed properly.",
+        "createdAt": "2019-05-07T14:37:15",
+        "reactions": []
+      },
+      {
+        "id": 504813021,
+        "author": "mattleibow",
+        "body": "Make sure you install the [SkiaSharp.NativeAssets.Linux](https://www.nuget.org/packages/SkiaSharp.NativeAssets.Linux) package as that contains the binaries for Ubuntu and various other Debian-based Linux distros.\r\n",
+        "createdAt": "2019-06-24T02:03:38",
+        "reactions": []
+      },
+      {
+        "id": 504833936,
+        "author": "mattleibow",
+        "body": "As mentioned in some places, make sure you have the SkiaSharp.NativeAssets.Linux package installed for Linux and the dependencies. Typically it is just fontconfig, but some distros need different things.\r\n",
+        "createdAt": "2019-06-24T02:26:39",
+        "reactions": []
+      },
+      {
+        "id": 609411179,
+        "author": "WonderD",
+        "body": "Run into the same issue on Ubuntu 18.04\r\nAdding SkiaSharp.NativeAssets.Linux didn\u0027t help, but adding SkiaSharp.NativeAssets.Linux.NoDependencies resolved the issue.",
+        "createdAt": "2020-04-05T12:47:55",
+        "reactions": [
+          {
+            "user": "SteffenLanger",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:17.402936Z"
+          },
+          {
+            "user": "orestiskosko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:17.4029365Z"
+          },
+          {
+            "user": "kdcllc",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:17.4029366Z"
+          }
+        ]
+      },
+      {
+        "id": 609454686,
+        "author": "mattleibow",
+        "body": "@WonderD that might be because you are missing the fontconfig dependency.\r\n\r\nUsually you can just install that from apt-get:\r\n\r\n\u0060\u0060\u0060\r\napt-get install -y libfontconfig1\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-04-05T17:43:44",
+        "reactions": []
+      },
+      {
+        "id": 631479750,
+        "author": "VesaVainio",
+        "body": "Just commenting, in case this will benefit somebody else who stumbles on the same issue. In my case we are using a third-party library that depends on SkiaSharp. Our application is using .NET Core 3.1, and it\u0027s running in Docker containers on top of Ubuntu 16.04.\r\n\r\nIn our troubleshooting case, we had to do BOTH of the following steps to get SkiaSharp to work. I tested both of them individually, and neither one alone solves it, but both of them together does solve it.\r\n\r\n1. Adding the following line to dockerfile, to install necessary libraries inside the container:\r\n\u0060RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0060\r\n2. Including the SkiaSharp.NativeAssets.Linux nuget package (version 1.68.3) to the .NET Core project where SkiaSharp is used.\r\n",
+        "createdAt": "2020-05-20T13:39:22",
+        "reactions": []
+      },
+      {
+        "id": 634390980,
+        "author": "JMan7777",
+        "body": "@VesaVainio \r\nThx a lot. You made my day. My web application is also using .NET Core 3.1, and it\u0027s running in Docker containers on top of Ubuntu 18.04. Would be nice if these requirements would be mentioned clearly in the SkiaSharp readme. ",
+        "createdAt": "2020-05-27T02:33:55",
+        "reactions": []
+      },
+      {
+        "id": 667092924,
+        "author": "merschformann",
+        "body": "@VesaVainio \r\nSame here. Thank you very much for the hint!",
+        "createdAt": "2020-07-31T12:22:32",
+        "reactions": []
+      },
+      {
+        "id": 672580092,
+        "author": "philipogorman",
+        "body": "I\u0027m using  .NET Core 3.1 on a amd64 Ubuntu 20.04 docker (3.1-focal https://hub.docker.com/_/microsoft-dotnet-core-runtime/ )\r\nSkiaSharp 1.68.1\r\nSkiaSharp.NativeAssets.Linux.NoDependencies 1.68.1\r\n\r\n\u0060 at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\nSystem.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\u0060\r\n\r\nI\u0027ve tried : \u0060RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0060 still the same error\r\nAny ideas?\r\n\r\n\r\n",
+        "createdAt": "2020-08-12T05:16:09",
+        "reactions": []
+      },
+      {
+        "id": 673713062,
+        "author": "philipogorman",
+        "body": "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\u003E \r\n\u003E \r\n\u003E I\u0027m using .NET Core 3.1 on a amd64 Ubuntu 20.04 docker (3.1-focal https://hub.docker.com/_/microsoft-dotnet-core-runtime/ )\r\n\u003E SkiaSharp 1.68.1\r\n\u003E SkiaSharp.NativeAssets.Linux.NoDependencies 1.68.1\r\n\u003E \r\n\u003E \u0060 at SkiaSharp.SkiaApi.sk_colortype_get_default_8888() System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\u0060\r\n\u003E \r\n\u003E I\u0027ve tried : \u0060RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0060 still the same error\r\n\u003E Any ideas?\r\n\r\nOk we got this working on a couple of targets - here is the note in our readme\r\n\r\nSkiaSharp doesn\u0027t have inbuilt support for linux - it has: \u0060win-x86\u0060 \u0060win-x64\u0060 \u0060win10-x86\u0060 \u0060win10-x64\u0060 \u0060win10-arm\u0060 \u0060tizen-x86\u0060 \u0060tizen-armel\u0060 \u0060osx\u0060\r\nTo have linux support the following nugets are required:\r\n\u0060jellyfin.skiasharp.nativeassets.linuxarm\u0060 :  \u0060linux-arm\u0060 \u0060linux-arm64\u0060\r\n\u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060 : \u0060linux-x64\u0060 (Tested on AMD)\r\n",
+        "createdAt": "2020-08-13T21:12:44",
+        "reactions": []
+      },
+      {
+        "id": 674201151,
+        "author": "mattleibow",
+        "body": "@philipogorman there is the \u0060SkiaSharp.NativeAssets.Linux\u0060 package as well. Both the \u0060SkiaSharp.NativeAssets.Linux.*\u0060 packages should also have the ARM and ARM64 if you are using the new v2 version of SkiaSharp. It also has support for Alpine.\r\n\r\nI have this info in the release notes, but I should probably move it to the main readme. https://github.com/mono/SkiaSharp/releases/tag/v2.80.0#additional",
+        "createdAt": "2020-08-14T18:16:23",
+        "reactions": [
+          {
+            "user": "philipogorman",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:18.8110452Z"
+          }
+        ]
+      },
+      {
+        "id": 674206873,
+        "author": "philipogorman",
+        "body": "@mattleibow thanks for the info! I think we can move to the newer versions (2.x) soon.",
+        "createdAt": "2020-08-14T18:30:27",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:19.0145178Z"
+          }
+        ]
+      },
+      {
+        "id": 737424095,
+        "author": "ghost",
+        "body": "Any info on how to fix this? I have the SkiaSharp.NativeAssets.Linux package but the program can\u0027t find it",
+        "createdAt": "2020-12-02T18:47:31",
+        "reactions": []
+      }
+    ]
+  }
 }

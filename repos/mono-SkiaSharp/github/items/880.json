@@ -19,5 +19,166 @@
   "updatedAt": "2022-08-19T12:01:15",
   "closedAt": "2020-09-30T20:49:56",
   "commentCount": 16,
-  "reactionCount": 5
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:50.7511674Z",
+    "reactions": [
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:50.7511726Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:07:50.7511733Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:07:50.7511739Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:07:50.7511743Z"
+      },
+      {
+        "user": "daltonks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:50.7511746Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 599262994,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes is there a reason you closed this?",
+        "createdAt": "2020-03-15T20:50:56",
+        "reactions": []
+      },
+      {
+        "id": 701188403,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow Any new on this issue? This would make debugging issues much easier as you can load created .skp into https://debugger.skia.org/",
+        "createdAt": "2020-09-30T06:35:15",
+        "reactions": []
+      },
+      {
+        "id": 701200150,
+        "author": "wieslawsoltes",
+        "body": "![Skia Debugger](https://user-images.githubusercontent.com/2297442/94653108-56b9dc00-02fb-11eb-9b8e-d42281b21dd2.gif)\r\n",
+        "createdAt": "2020-09-30T07:01:05",
+        "reactions": []
+      },
+      {
+        "id": 701273201,
+        "author": "mattleibow",
+        "body": "Oh wow. An old issue.\n\nThat is awesome. Let me get this is asap! ",
+        "createdAt": "2020-09-30T09:23:36",
+        "reactions": [
+          {
+            "user": "wieslawsoltes",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:48.1173597Z"
+          }
+        ]
+      },
+      {
+        "id": 701288805,
+        "author": "Gillibald",
+        "body": "Wow indeed. That is a nice tool.",
+        "createdAt": "2020-09-30T09:54:33",
+        "reactions": []
+      },
+      {
+        "id": 701380801,
+        "author": "wieslawsoltes",
+        "body": "![1](https://user-images.githubusercontent.com/2297442/94689344-0fe5d980-032f-11eb-90f4-78423b62201e.PNG)\r\n\r\nAnd you get some nice insights:\r\n\u0060\u0060\u0060json\r\n{\r\n  \u0022command\u0022: \u0022DrawPath\u0022,\r\n  \u0022visible\u0022: true,\r\n  \u0022path\u0022: {\r\n    \u0022fillType\u0022: \u0022winding\u0022,\r\n    \u0022verbs\u0022: [\r\n      {\r\n        \u0022move\u0022: [\r\n          20.5,\r\n          344.5\r\n        ]\r\n      },\r\n      {\r\n        \u0022cubic\u0022: [\r\n          [\r\n            20.5,\r\n            344.5\r\n          ],\r\n          [\r\n            22,\r\n            333.5\r\n          ],\r\n          [\r\n            10.5,\r\n            346.5\r\n          ]\r\n        ]\r\n      }\r\n    ]\r\n  },\r\n  \u0022paint\u0022: {\r\n    \u0022strokeWidth\u0022: 1,\r\n    \u0022antiAlias\u0022: true,\r\n    \u0022style\u0022: \u0022stroke\u0022,\r\n    \u0022filterQuality\u0022: \u0022low\u0022\r\n  },\r\n  \u0022auditTrail\u0022: {\r\n    \u0022Ops\u0022: [\r\n      {\r\n        \u0022Name\u0022: \u0022SmallPathOp\u0022,\r\n        \u0022ClientID\u0022: 310,\r\n        \u0022OpsTaskID\u0022: 264,\r\n        \u0022ChildID\u0022: 28,\r\n        \u0022Bounds\u0022: {\r\n          \u0022Left\u0022: 193.948,\r\n          \u0022Right\u0022: 205.214,\r\n          \u0022Top\u0022: 483.872,\r\n          \u0022Bottom\u0022: 491.691\r\n        },\r\n        \u0022Stack\u0022: [\r\n          \u0022SkGpuDevice::drawPath\u0022,\r\n          \u0022GrRenderTargetContext::drawPath\u0022,\r\n          \u0022GrRenderTargetContext::drawShape\u0022,\r\n          \u0022GrRenderTargetContext::internalDrawPath\u0022,\r\n          \u0022GrSmallPathRenderer::onDrawPath\u0022,\r\n          \u0022GrRenderTargetContext::addDrawOp\u0022\r\n        ]\r\n      }\r\n    ]\r\n  }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-09-30T13:11:05",
+        "reactions": []
+      },
+      {
+        "id": 701408616,
+        "author": "mattleibow",
+        "body": "Now that is very nice!\r\n\r\nI got a PR up that should make this a cinch. Leave any comments, and once I merge CI will push to the preview feed: https://github.com/mono/SkiaSharp/pull/1514",
+        "createdAt": "2020-09-30T13:58:28",
+        "reactions": [
+          {
+            "user": "wieslawsoltes",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:48.7582493Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:48.7582498Z"
+          }
+        ]
+      },
+      {
+        "id": 701413841,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow Amazing!\r\n\r\nWill test the preview.\r\n\r\nPS. Now we can submit issues with recordings ;)",
+        "createdAt": "2020-09-30T14:06:19",
+        "reactions": []
+      },
+      {
+        "id": 701472820,
+        "author": "mattleibow",
+        "body": "Oh yeah. That will be such a great help! The avalonia folks might also find this helpful... @danwalmsley @kekekeks? ",
+        "createdAt": "2020-09-30T15:40:35",
+        "reactions": []
+      },
+      {
+        "id": 701476061,
+        "author": "wieslawsoltes",
+        "body": "I can compare my library svg rendering vs chrome svg rendering, like draw command by draw  command, you can inspect filters and effects etc.",
+        "createdAt": "2020-09-30T15:45:46",
+        "reactions": []
+      },
+      {
+        "id": 701476945,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow I also wonder if there is any built-in public skia API to inspect SKPicture draw commands",
+        "createdAt": "2020-09-30T15:47:11",
+        "reactions": []
+      },
+      {
+        "id": 701481353,
+        "author": "wieslawsoltes",
+        "body": "\u003E @mattleibow I also wonder if there is any built-in public skia API to inspect SKPicture draw commands\r\n\r\nLike https://api.skia.org/classSkPicture.html#a9e5313999fc681ec64586dada8f5a259\r\n\r\n\u0060\u0060\u0060C\u002B\u002B\r\nvirtual void SkPicture::playback\t(\tSkCanvas * \tcanvas,\r\nAbortCallback * \tcallback = nullptr \r\n)\t\tconst\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2020-09-30T15:54:33",
+        "reactions": []
+      },
+      {
+        "id": 701483222,
+        "author": "wieslawsoltes",
+        "body": "\u003E \u003E @mattleibow I also wonder if there is any built-in public skia API to inspect SKPicture draw commands\r\n\u003E \r\n\u003E Like https://api.skia.org/classSkPicture.html#a9e5313999fc681ec64586dada8f5a259\r\n\u003E \r\n\u003E \u0060\u0060\u0060c\u002B\u002B\r\n\u003E virtual void SkPicture::playback\t(\tSkCanvas * \tcanvas,\r\n\u003E AbortCallback * \tcallback = nullptr \r\n\u003E )\t\tconst\r\n\u003E \u0060\u0060\u0060\r\n\r\nBut than I need to somehow intercept commands from SkCanvas",
+        "createdAt": "2020-09-30T15:57:27",
+        "reactions": []
+      },
+      {
+        "id": 701488661,
+        "author": "wieslawsoltes",
+        "body": "Hm maybe this can be used\r\n\r\nhttps://skia.googlesource.com/skia/\u002B/master/include/core/SkCanvasVirtualEnforcer.h\r\n\r\nhttps://skia.googlesource.com/skia/\u002B/master/include/core/SkCanvas.h#2502",
+        "createdAt": "2020-09-30T16:06:38",
+        "reactions": []
+      },
+      {
+        "id": 701640477,
+        "author": "mattleibow",
+        "body": "@wieslawsoltes There doesn\u0027t seem to be any APIs for anything too advanced on SKPicture. The playback is more for when drawing the picture. SKCanvas.DrawPicture does this in one operation, the Playback will basically replay all the commands you did. So, all the crops, draws and transforms. Not sure exactly how this works... Maybe if there was some background thread that would cancel it?\r\n\r\nIn the code there is basically a loop that goes through all the commands and provides a call to the abort method to optionally break.\r\n\r\nSKPicture is basically an abstract type that never exists. There are some derived types that have all the props, but they are private/internal.",
+        "createdAt": "2020-09-30T20:55:40",
+        "reactions": []
+      },
+      {
+        "id": 701642652,
+        "author": "wieslawsoltes",
+        "body": "@mattleibow yeah looks like there is no way to get access to picture draw commands, also skp file format is undocumented and no plans for opening it by Google ",
+        "createdAt": "2020-09-30T20:59:56",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -19,5 +19,104 @@
   "updatedAt": "2022-08-19T12:01:40",
   "closedAt": "2019-07-23T11:29:06",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:06.9379767Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 478478562,
+        "author": "aodpi",
+        "body": "After testing it on a macbook pro with a discrete video card it does work. The difference is that mac mini doesn\u0027t have a discrete video card.",
+        "createdAt": "2019-04-01T08:07:48",
+        "reactions": []
+      },
+      {
+        "id": 506245926,
+        "author": "nor0x",
+        "body": "I have the same issue on a \u0060MacBook Pro (13-inch, 2018, Four Thunderbolt 3 Ports)\u0060",
+        "createdAt": "2019-06-27T08:23:24",
+        "reactions": []
+      },
+      {
+        "id": 508011322,
+        "author": "nor0x",
+        "body": "I just tested this in a blank project, here is a repro for the issue (Xamarin.Forms on macOS).\r\n[https://github.com/nor0x/SkiaSharp_PerfomanceExperiments/tree/master/Xamarin.Forms](https://github.com/nor0x/SkiaSharp_PerfomanceExperiments/tree/master/Xamarin.Forms)\r\n\r\nStacktrace\r\n\u0060\u0060\u0060\r\nat SkiaSharp.Views.Mac.SKGLView.DrawRect (CoreGraphics.CGRect dirtyRect) [0x000d0] in \u003Cf196d3fbe68d4774a19d9220fd09cf57\u003E:0\r\nat (wrapper managed-to-native) AppKit.NSApplication.NSApplicationMain(int,string[])\r\nat AppKit.NSApplication.Main (System.String[] args) [0x00040] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.10.0.157/src/Xamarin.Mac/AppKit/NSApplication.cs:100 \r\nat SkiaXFPlayground.macOS.MainClass.Main (System.String[] args) [0x00017] in /Users/johnny/SkiaPlayground/Xamarin.Forms/SkiaXFPlayground.macOS/Main.cs:11\r\n\u0060\u0060\u0060\r\n\r\nAny updates on this one @mattleibow ?\r\nThanks",
+        "createdAt": "2019-07-03T09:12:47",
+        "reactions": [
+          {
+            "user": "aodpi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:05.4051276Z"
+          },
+          {
+            "user": "Adamster",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:05.4051279Z"
+          }
+        ]
+      },
+      {
+        "id": 509226645,
+        "author": "aodpi",
+        "body": "@nor0x Does your MacBook Pro have a discrete videocard?",
+        "createdAt": "2019-07-08T13:32:54",
+        "reactions": []
+      },
+      {
+        "id": 509450045,
+        "author": "nor0x",
+        "body": "@aodpi no it doesn\u0027t. In the hardware infos the only entry is.\r\n\u0060Intel Iris Plus Graphics 655 1536 MB graphics\u0060",
+        "createdAt": "2019-07-09T01:23:33",
+        "reactions": [
+          {
+            "user": "aodpi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:05.815619Z"
+          }
+        ]
+      },
+      {
+        "id": 514113641,
+        "author": "aodpi",
+        "body": "@nor0x I took the code for SKGLView and created a new view and used it natively on macOS and it works with no issues, no crashes event on a mac with no dedicated gpu, so GPU is not the issue here \uD83D\uDE1E. ",
+        "createdAt": "2019-07-23T08:41:45",
+        "reactions": []
+      },
+      {
+        "id": 514137815,
+        "author": "aodpi",
+        "body": "After some more digging, this line causes the issue: \r\nhttps://github.com/mono/SkiaSharp/blob/5e8dc3e2c9e72f2ad0d9feecefbef503ca9fcc15/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L100 \r\n\r\nThe \u0060SKSurface.Create\u0060 method with the signature above returns null thus causing the \u0060NullReferenceException\u0060. I\u0027ve also installed the early access build \u0060v1.68.1-rc.138\u0060 and it works well. Changes to [SKSurface](https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKSurface.cs) from the last release (v 1.68.0) seem to have fixed this  issue.",
+        "createdAt": "2019-07-23T09:47:48",
+        "reactions": []
+      },
+      {
+        "id": 514168949,
+        "author": "aodpi",
+        "body": "Actually, changes in the mac \u0060SKGLView\u0060 [diff](https://github.com/mono/SkiaSharp/commit/a215f55215248f7075d5f67323c813c14f02be15#diff-d0833452943d0d16c21f4df6d349835a]) have fixed this issue. It\u0027s related to the way the surface samples count read.",
+        "createdAt": "2019-07-23T11:23:37",
+        "reactions": []
+      },
+      {
+        "id": 514170177,
+        "author": "aodpi",
+        "body": "Yep, it has been fixed here https://github.com/mono/SkiaSharp/issues/727#issuecomment-448425962 #727 . I think I will close this issue.",
+        "createdAt": "2019-07-23T11:27:47",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:06.6696029Z"
+          }
+        ]
+      },
+      {
+        "id": 514202194,
+        "author": "nor0x",
+        "body": "thanks for the response and closing, it\u2019s great to see this fixed",
+        "createdAt": "2019-07-23T13:08:51",
+        "reactions": []
+      }
+    ]
+  }
 }

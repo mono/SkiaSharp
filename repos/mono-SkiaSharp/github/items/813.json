@@ -19,5 +19,39 @@
   "updatedAt": "2022-08-19T12:01:43",
   "closedAt": "2019-03-17T17:26:37",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:01.2964229Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 473664409,
+        "author": "patrik-gustavsson",
+        "body": "It is possible to draw cubic bezier curves with SKCanvasView or SKGLView by using SKCanvas.DrawPath and to get the circle image you can use SKCanvas.ClipPath and then SKCanvas.DrawBitmap. See https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/curves/ for further information. I have provided a simple example for your case, I use an embedded resource image which is loaded in the constructor:\r\n\r\n\u0060\u0060\u0060CSharp\r\nprivate SKBitmap bitmap;\r\n\r\nprivate SKPaint paint = new SKPaint() {\r\n    Color = SKColor.Parse(\u0022#4EB4F9\u0022),\r\n    ImageFilter = SKImageFilter.CreateDropShadow(0, 1, 0, 100, SKColors.Gray, SKDropShadowImageFilterShadowMode.DrawShadowAndForeground)\r\n};\r\n\r\nprivate void LoadBitmap()\r\n{\r\n    string resourceID = \u0022assemblyName.folderName.fileName\u0022;\r\n    Assembly assembly = GetType().GetTypeInfo().Assembly;\r\n\r\n    using (Stream stream = assembly.GetManifestResourceStream(resourceID))\r\n    {\r\n        bitmap = SKBitmap.Decode(stream);\r\n    }\r\n}\r\n\r\nprivate void SKCanvasView_PaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs e)\r\n{\r\n    SKSurface surface = e.Surface;\r\n    SKCanvas canvas = surface.Canvas;\r\n    canvas.Clear(SKColors.White);\r\n\r\n    float canvasWidth = canvas.LocalClipBounds.Width;\r\n    float imageSize = 400;\r\n\r\n    using (SKPath bezierPath = new SKPath())\r\n    {\r\n        bezierPath.MoveTo(0, 0);\r\n        bezierPath.LineTo(0, 600);\r\n        bezierPath.CubicTo(400, 700, canvasWidth - 400, 300, canvasWidth, 200);\r\n        bezierPath.LineTo(canvasWidth, 0);\r\n        bezierPath.LineTo(0, 0);\r\n        bezierPath.Close();\r\n        canvas.DrawPath(bezierPath, paint);\r\n    }\r\n\r\n    canvas.Save();\r\n    using (SKPath circlePath = new SKPath())\r\n    {\r\n        float halfSize = imageSize / 2;\r\n        SKPoint imageCenter = new SKPoint(canvasWidth / 2, 450);\r\n        SKRect rect = new SKRect(imageCenter.X - halfSize, imageCenter.Y - halfSize, imageCenter.X \u002B halfSize, imageCenter.Y \u002B halfSize);\r\n\r\n        circlePath.AddCircle(imageCenter.X, imageCenter.Y, imageSize / 2);\r\n        canvas.ClipPath(circlePath);\r\n        canvas.DrawBitmap(bitmap, rect);\r\n    }\r\n    canvas.Restore();\r\n}\r\n\u0060\u0060\u0060\r\nResult:\r\n\u003Cimg width=\u0022300\u0022 src=\u0022https://user-images.githubusercontent.com/20979157/54495049-afc04b80-48e0-11e9-9270-7f1de180a6fa.jpg\u0022\u003E\r\n\r\n\r\n",
+        "createdAt": "2019-03-17T13:11:42",
+        "reactions": []
+      },
+      {
+        "id": 473678997,
+        "author": "sylendra7",
+        "body": "Hi @patrik-gustavsson ,\r\n\r\nthanks for the reply.. Is it possible to draw an circle view in centre of the curve as shown in my pic...?\r\n\r\n\r\nThanks \u0026 regards\r\nSylendra",
+        "createdAt": "2019-03-17T15:57:20",
+        "reactions": []
+      },
+      {
+        "id": 473686642,
+        "author": "patrik-gustavsson",
+        "body": "I updated the comment with code for adding the circle image as well.",
+        "createdAt": "2019-03-17T17:24:54",
+        "reactions": []
+      },
+      {
+        "id": 473686784,
+        "author": "sylendra7",
+        "body": "Thank you very much @patrik-gustavsson ",
+        "createdAt": "2019-03-17T17:26:51",
+        "reactions": []
+      }
+    ]
+  }
 }

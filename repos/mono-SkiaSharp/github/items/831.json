@@ -19,5 +19,59 @@
   "updatedAt": "2022-08-19T12:01:35",
   "closedAt": "2019-05-01T04:44:56",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:13.5276467Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 486060228,
+        "author": "Gillibald",
+        "body": "Looks like you are calculating the line height wrong. Having a leading of zero is just normal.\r\n\r\n\u0060Size = new SKSize(width, descent - ascent \u002B leading);\u0060\r\n\u0060BaselineOrigin = new SKPoint(xOrigin, -ascent);\u0060\r\n\r\nI don\u0027t think Fabric.js uses the actual font data it just measures all glyphs within a string and takes the highest value.",
+        "createdAt": "2019-04-24T04:11:13",
+        "reactions": []
+      },
+      {
+        "id": 486499079,
+        "author": "washamdev",
+        "body": "@Gillibald I\u0027m not sure I\u0027m entirely following. Here\u0027s a bit more detail:\r\n\r\nFrom FabricJs, they pass in a \u0022lineHeight\u0022 property, which defaults to 1.16. Looks like what we\u0027ve been doing is calculating the line height by starting with \u0060fontSize\u0060 x \u0060lineHeight\u0060, but then that wasn\u0027t giving us the right amount of space between lines. So we then went to using the \u0060SKFontMetrics\u0060 to try to get the correct line height by using the \u0060leading\u0060 and \u0060ascent\u0060 of the font file. It\u0027s entirely possible those are the wrong values to use. Do you have any idea how to put together what you suggested with what we have to work with? (e.g. the font size, like \u006024\u0060, and the line height, like \u00601.16\u0060, then any \u0060SKFontMetrics\u0060 from the font?)",
+        "createdAt": "2019-04-25T02:44:01",
+        "reactions": []
+      },
+      {
+        "id": 486513168,
+        "author": "Gillibald",
+        "body": "\u0060SKFontMetrics\u0060 always has the scaled values of ascent, descent and leading. So before drawing you just set the appropriate TextSize and you should get the right value.\r\n\r\nWhen drawing text you always start from the baseline. So the line height is the sum of | ascent | \u002B | descent | \u002B | leading |\r\n\r\nIf you have multiple fonts in one line you have to calculate the highest values of those 3.\r\n\r\nThis might help https://github.com/Gillibald/Avalonia/blob/a0777883d5b184656ca255d612c250674c06b6e8/src/Skia/Avalonia.Skia/Text/SKTextLayout.cs\r\n\r\nLeading is just some extra space underneath your glyphs. Normally this is just zero. Most glyphs should be within ascent and leading.\r\n\r\nThis shows how to draw the text https://github.com/Gillibald/Avalonia/blob/a0777883d5b184656ca255d612c250674c06b6e8/src/Skia/Avalonia.Skia/Text/SKTextLayout.cs#L95\r\n\r\nJust let me know if you need more help. Multi line paragraph layout isn\u0027t an easy task and Skia doesn\u0027t support this out of the box.\r\n\r\nIf you only have lines of text that share the same font the layout process can be simplyfied.",
+        "createdAt": "2019-04-25T04:12:13",
+        "reactions": [
+          {
+            "user": "washamdev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:12.8870155Z"
+          }
+        ]
+      },
+      {
+        "id": 487826701,
+        "author": "washamdev",
+        "body": "@Gillibald Really appreciate your expertise here and the in-depth information. I think where I\u0027m continuing to struggle is taking what Fabric.js gives me and trying to use it in SkiaSharp to make it look the same. It\u0027s just not working out.\r\n\r\nFor instance, I just cannot figure out how Fabric.js is measuring text to output what it does. See this screenshot:\r\n\r\n![image](https://user-images.githubusercontent.com/4692325/56942329-a3cec880-6adf-11e9-991b-405872766e76.png)\r\n\r\nThe font size is 16. From the \u0060top\u0060 point of the bounding box to the baseline of the first line of text, it\u0027s 16 pixels. The line height is 1.16. But measuring from the first baseline to the next baseline is.... 21 pixels? If the distance between lines of text is \u0060fontSize\u0060 * \u0060lineHeight\u0060, then the distance should be 18.56. So where is Fabric.js getting the extra 2.44 pixels? And how do I calculate the same 21 pixel line height in SkiaSharp to copy what Fabric.js is doing?\r\n\r\nThanks so much for any further shedding of light you can provide!",
+        "createdAt": "2019-04-30T05:40:17",
+        "reactions": []
+      },
+      {
+        "id": 487910733,
+        "author": "Gillibald",
+        "body": "I don\u0027t think you can compare Fabric.js\u0027s lineheight definition with SkiaSharp\u0027s way of rendering text. The lineheight isn\u0027t just the maximum height of all glyphs rendered. I guess they don\u0027t use the actual data that the font editor supplied. The only way I see to make this work is positioning all glyphs that SkiaSharp should render yourself and somehow find out how the distance between lines is calculated by Fabric.js\r\n\r\nSkiaSharp follows the spec and Fabric.js don\u0027t.\r\n\r\nhttps://docs.microsoft.com/en-us/dotnet/api/skiasharp.skcanvas.drawtext?view=skiasharp-1.68.0#SkiaSharp_SKCanvas_DrawText_System_Byte___System_Single_System_Single_SkiaSharp_SKPaint_\r\ncan help you achieving this. ",
+        "createdAt": "2019-04-30T11:04:34",
+        "reactions": []
+      },
+      {
+        "id": 488209636,
+        "author": "washamdev",
+        "body": "@Gillibald I will submit a message to the developer of Fabris.js and see if he can provide any insight. Thank you again!",
+        "createdAt": "2019-05-01T04:44:56",
+        "reactions": []
+      }
+    ]
+  }
 }

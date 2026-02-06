@@ -19,5 +19,53 @@
   "updatedAt": "2022-08-19T12:01:34",
   "closedAt": "2020-06-10T02:22:28",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:15.4621079Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 486534786,
+        "author": "rkstar007",
+        "body": "@saumyaverma1002 : did you check libSkiaSharp.SO  on Ubuntu machine ? As per @mattleibow the pre-built native library works (it was built on Ubuntu 14.04). Custom Linux distros might need to rebuild. \r\n\r\nAlso, Run below command to find the missing libraries if any.\r\n\r\n\u0060# ldd libSkiaSharp.so  \u0060\r\n\r\nCheckout this issue: https://github.com/mono/SkiaSharp/issues/288  \r\n\r\n",
+        "createdAt": "2019-04-25T06:20:02",
+        "reactions": []
+      },
+      {
+        "id": 486636314,
+        "author": "saumyaverma1002",
+        "body": "Hi,\r\n\r\nWe are using below OS in our AWS lambda not ubuntu\r\n NAME=\u0022Amazon Linux AMI\u0022\r\n VERSION=\u00222017.03\u0022\r\n ID=\u0022amzn\u0022\r\n ID_LIKE=\u0022rhel fedora\u0022\r\n\r\nKindly guide to resolve the issue ",
+        "createdAt": "2019-04-25T11:36:21",
+        "reactions": []
+      },
+      {
+        "id": 493713443,
+        "author": "mattleibow",
+        "body": "The issue might be missing dependencies - most commonly the **fontconfig** library. Typically, you need to sudo install that first. (thanks @kstar007 for getting in on that)\r\n\r\nIf you cannot install if for some reason, we are working on a new package that does not have any dependencies which should work. This was just merged in with #821.",
+        "createdAt": "2019-05-18T23:06:11",
+        "reactions": []
+      },
+      {
+        "id": 505002618,
+        "author": "mattleibow",
+        "body": "@saumyaverma1002 are you able to install packages on the labmda instance? Typically you will need fontconfig.",
+        "createdAt": "2019-06-24T13:09:16",
+        "reactions": []
+      },
+      {
+        "id": 540983741,
+        "author": "vijayasurya20",
+        "body": "Hi, I am also facing the similar \u0022Unable to load DLL libSkiaSharp or one of its dependent assemblies\u0022 issue even after replace the libskiaSharp.SO file manually. As you mentioned, I suppose to think missing of \u0022fontconfig\u0022 library is the reason behind this issue. We have been facing difficulties to install the fontconfig library manually into AWS lambda due to its restriction.\r\n\r\nCan you please let me know in which release this below fix will get included? \r\nhttps://github.com/mono/SkiaSharp/pull/821\r\n\r\nThis details will be helpful for us to upgrade to the specific version to overcome from this issue.",
+        "createdAt": "2019-10-11T09:09:28",
+        "reactions": []
+      },
+      {
+        "id": 541002802,
+        "author": "Gillibald",
+        "body": "This \u0022fix\u0022 should be available threw the nightly feed here: https://nugetized.blob.core.windows.net/skiasharp-eap/index.json\r\n\r\nJust use the NoDependencies package",
+        "createdAt": "2019-10-11T10:05:28",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -24,5 +24,80 @@
   "updatedAt": "2022-08-19T09:02:05",
   "closedAt": "2019-11-16T03:56:47",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:22.6953312Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 554487590,
+        "author": "mattleibow",
+        "body": "Ah, I think you may actually be wanting to use [SkiaSharp.Views.WPF](https://www.nuget.org/packages/SkiaSharp.Views.WPF/1.68.1-rc.169). Note the lack of the \u0060.Forms\u0060 in the name. This just includes the WPF bits and should work with both .NET Framework and .NET Core.\r\n\r\nUnless you are using Xamarin.Forms and then I have a dodgy package.",
+        "createdAt": "2019-11-15T19:03:23",
+        "reactions": []
+      },
+      {
+        "id": 554539472,
+        "author": "mattleibow",
+        "body": "I see what you mean. I created a new project and I see what you are talking about. Let me find a fix\r\n",
+        "createdAt": "2019-11-15T21:41:02",
+        "reactions": []
+      },
+      {
+        "id": 554565660,
+        "author": "inforithmics",
+        "body": "Yes you are right, I meant a Xamarin.Forms WPF Application. ",
+        "createdAt": "2019-11-15T23:14:36",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:21.2759775Z"
+          }
+        ]
+      },
+      {
+        "id": 554601501,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this issue. I got it fixed and it will be in the next preview release.",
+        "createdAt": "2019-11-16T03:57:36",
+        "reactions": []
+      },
+      {
+        "id": 554648159,
+        "author": "mattleibow",
+        "body": "I am pushing a NuGet now. rc.170 should be up soon and you can test.",
+        "createdAt": "2019-11-16T15:40:40",
+        "reactions": []
+      },
+      {
+        "id": 554680525,
+        "author": "inforithmics",
+        "body": "I tested it and the SkiaSharp.Views.Forms.Wpf works like a charm, thanks a lot. I tested if the UWP and the Android Version work too and they seemed fine. \r\nIn the Android Version I found a strange behavior. On a real arm64 device it works, but in the emulator (x64 on a pc) the colors seem to be wrong in skiasharp.\r\n\r\nFor me it seems that in the x64 android compilation something went wrong. \r\nFor example Blue became somewhat green. and when I changed the transperency to white the colors changed to violett.\r\n\r\nI reverted back to 1.68 and the colors looked perfect in the emulator. \r\n\r\n",
+        "createdAt": "2019-11-16T22:32:32",
+        "reactions": []
+      },
+      {
+        "id": 554704739,
+        "author": "mattleibow",
+        "body": "@inforithmics Could you open a new issue on this? I want to make sure that I fix any issues before we release. I don\u0027t think I changed anything for Android, but I can check. Also could you attach some screenshots/sample code that generates this?",
+        "createdAt": "2019-11-17T04:51:40",
+        "reactions": []
+      },
+      {
+        "id": 554990757,
+        "author": "inforithmics",
+        "body": "I created a new issue: https://github.com/mono/SkiaSharp/issues/1017",
+        "createdAt": "2019-11-18T12:15:28",
+        "reactions": []
+      },
+      {
+        "id": 555130441,
+        "author": "mattleibow",
+        "body": "Thanks! I will investigate.",
+        "createdAt": "2019-11-18T17:49:37",
+        "reactions": []
+      }
+    ]
+  }
 }

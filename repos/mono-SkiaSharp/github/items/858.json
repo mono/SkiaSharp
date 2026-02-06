@@ -14,5 +14,90 @@
   "updatedAt": "2022-08-19T12:01:21",
   "closedAt": "2020-01-25T23:44:46",
   "commentCount": 5,
-  "reactionCount": 5
+  "reactionCount": 5,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:37.0243641Z",
+    "reactions": [
+      {
+        "user": "Mikolaytis",
+        "content": "confused",
+        "createdAt": "2026-02-06T14:07:37.0244065Z"
+      },
+      {
+        "user": "AndreyGrishin",
+        "content": "confused",
+        "createdAt": "2026-02-06T14:07:37.0244071Z"
+      },
+      {
+        "user": "Donsezan",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:37.0244075Z"
+      },
+      {
+        "user": "marizombie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:37.0244077Z"
+      },
+      {
+        "user": "marizombie",
+        "content": "confused",
+        "createdAt": "2026-02-06T14:07:37.024408Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 500320384,
+        "author": "AndreyGrishin",
+        "body": "Yes, this is really a problem(",
+        "createdAt": "2019-06-10T07:29:38",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:36.1220788Z"
+          }
+        ]
+      },
+      {
+        "id": 503556987,
+        "author": "marizombie",
+        "body": "\u002B1. Our team would highly appreciate your attention to this issue.",
+        "createdAt": "2019-06-19T13:19:02",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:36.3395779Z"
+          }
+        ]
+      },
+      {
+        "id": 503748844,
+        "author": "Donsezan",
+        "body": "This is a big problem! Please help!",
+        "createdAt": "2019-06-19T21:13:38",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:36.5507836Z"
+          }
+        ]
+      },
+      {
+        "id": 540705660,
+        "author": "Mikolaytis",
+        "body": "New prerelease 1.68.1-pre did not fix this issue",
+        "createdAt": "2019-10-10T18:08:54",
+        "reactions": []
+      },
+      {
+        "id": 578453331,
+        "author": "Mikolaytis",
+        "body": "**Update**: \r\nTurns out there is no issue about increased memory usage on x64. It has an another behavior on x64.\r\n\r\nOn x86 test prefers to use shared GPU memory,\r\n![image](https://user-images.githubusercontent.com/4997065/73128557-4ae67f00-3fe2-11ea-9ffd-8120a4f395a3.png)\r\n_(shared GPU memory was used by x86 launch and disposed after test end)_\r\n\r\nbut x64 test prefers to use just a process RAM, not shared GPU memory.\r\n\r\n![image](https://user-images.githubusercontent.com/4997065/73128555-41f5ad80-3fe2-11ea-9fdc-97926569168a.png)\r\n_(second test on x64 started right after first, you can see a rise on GPU memory, but nothing is going in the shared GPU memory - because somehow it started to eat regular RAM)_\r\n\r\nIt can be:\r\n\r\n1. a driver issue\r\n2. an OpenGL issue\r\n3. Windows issue\r\n4. Skia issue\r\n5. SkiaSharp issue\r\n\r\nNow I think that this is not an issue at all. Because it looks like it does not matter how used RAM will be named in Windows - shared GPU RAM or regular RAM, it should work almost the same as I believe. So I think I can close this issue.\r\n\r\n",
+        "createdAt": "2020-01-25T23:33:51",
+        "reactions": []
+      }
+    ]
+  }
 }

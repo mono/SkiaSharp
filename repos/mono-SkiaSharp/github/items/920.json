@@ -32,5 +32,135 @@
   "updatedAt": "2022-08-19T09:02:41",
   "closedAt": "2020-02-11T23:42:25",
   "commentCount": 13,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:17.6575439Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 516370704,
+        "author": "AlexandreLaborde",
+        "body": "@Redth @mattleibow I have found and fixed the bug in the \u0060SKGLControl\u0060 that is causing this issue. Should I make a pull request?",
+        "createdAt": "2019-07-30T10:58:14",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:15.1175983Z"
+          },
+          {
+            "user": "idotta",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:15.1175988Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:15.1175989Z"
+          }
+        ]
+      },
+      {
+        "id": 543890497,
+        "author": "idotta",
+        "body": "I have the same issue. Do you have the solution in a fork? Or maybe you could do the PR.",
+        "createdAt": "2019-10-18T19:03:12",
+        "reactions": []
+      },
+      {
+        "id": 546891793,
+        "author": "AlexandreLaborde",
+        "body": "@idotta Since I did not receive any approval from any of the mods I decided not to do the PR.\r\nThe problem lies in the way the \u0060SKGLControl\u0060 uses the control it gets from OpenTK.\r\n\r\nThe OpenTK documentation specifies that when using multiple \u0060GLControls\u0060 you need to specify which control you are using at that time.\r\n\r\nYou do that by calling \u0060MakeCurrent()\u0060 on one control. This will make all other controls non-current in the calling thread.\r\n\r\nGoing back to SkiaSharp. I had to create my own \u0060SKGLControl \u0060 that calls the \u0060MakeCurrent()\u0060 function before painting the canvas.\r\n\r\nYou can do that by doing something like this:\r\n\r\n\u0060\u0060\u0060csharp\r\n    class ConcurrentSKGLControl : SKGLControl\r\n    {\r\n        protected override void OnPaint(PaintEventArgs e)\r\n        {\r\n            MakeCurrent();\r\n            base.OnPaint(e);\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\nNow you just follow SkiaSharp\u0027s documentation but you use this new class in the place of the standard \u0060SKGLControl\u0060.\r\n\r\nI\u0027m not sure if it is the most optimal implementation of this, of even if you need to call \u0060MakeCurrent\u0060 every time your drawing but at least this fixes the weird cross-talk issues I had.\r\n\r\nLet me know if this helps fixing your problems as well.",
+        "createdAt": "2019-10-28T10:48:47",
+        "reactions": [
+          {
+            "user": "FoggyFinder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:15.5491782Z"
+          }
+        ]
+      },
+      {
+        "id": 546898875,
+        "author": "Gillibald",
+        "body": "Just spawn a new thread for each window and call MakeCurrent once per thread / window.",
+        "createdAt": "2019-10-28T11:09:58",
+        "reactions": []
+      },
+      {
+        "id": 546905194,
+        "author": "AlexandreLaborde",
+        "body": "@Gillibald In my example, every window was running on its own thread and I\u0027ve tried what you suggested and that does not seem to fix this issue.\r\n\r\nIn addition, the \u0060MakeCurrent\u0060 can only be called through the \u0060SKGLControl\u0060. The only way I got your suggestion not to crash was by removing the \u0060glHost\u0060 variable from the \u0060OnGLControlHost\u0060 function and keep it as a class variable. Then use \u0060Dispacher.Invoke\u0060 so that the correct thread is calling \u0060MakeCurrent\u0060",
+        "createdAt": "2019-10-28T11:29:19",
+        "reactions": []
+      },
+      {
+        "id": 546910792,
+        "author": "Gillibald",
+        "body": "SKGLControl should call MakeCurrent when it is created. If you really spawn a new UI thread per window there shouldn\u0027t be an issue. Heaving multiple SKGLControl per thread should not be allowed unless you can control the GRContext like you did in your example. ",
+        "createdAt": "2019-10-28T11:47:49",
+        "reactions": []
+      },
+      {
+        "id": 546914117,
+        "author": "AlexandreLaborde",
+        "body": "But don\u0027t I need to all of this if I want to render all objects using the GPU ? I was just following the official examples.",
+        "createdAt": "2019-10-28T11:58:21",
+        "reactions": []
+      },
+      {
+        "id": 546915949,
+        "author": "Gillibald",
+        "body": "You can only have one GRContext per thread. If you want to have more than one you have to deal with \u0060MakeCurrent\u0060 calls. That is expected behavior. Calling \u0060MakeCurrent\u0060 on every render call works but I am not sure if that is the best way to do it when you want to draw on a window\u0027s surface.\r\n",
+        "createdAt": "2019-10-28T12:03:30",
+        "reactions": []
+      },
+      {
+        "id": 556387666,
+        "author": "mattleibow",
+        "body": "Hi @AlexandreLaborde sorry about the incredibly long wait. Just so you know, this is an open-source project and you can just send in PRs - no need to ask!\r\n\r\nThe SKGLControl has not received _that_ much love at all, so could very well have a few bugs. It does not get the same level of support as Android and iOS.\r\n\r\n@Gillibald thanks for getting in on the discussion.\r\n\r\n@AlexandreLaborde did you try calling \u0060MakeCurrent\u0060 in the constructors - as opposed to the paint method?",
+        "createdAt": "2019-11-20T20:59:20",
+        "reactions": []
+      },
+      {
+        "id": 583346099,
+        "author": "jensbrak",
+        "body": "I just found this and it explains why I get black surfaces when trying to have two SKGLControls. I tried two controls just out of curiosity (previously had one single control and did all painting from a single PaintSurface but thought it would be more logical to have two separate canvases and PaintSurfaces, one for each control).\r\n\r\nOne GRContext per thread - guess that means one SKGLControl per thread. If the need to do MakeCurrent on every render - would it be better to have separate threads instead? \r\n",
+        "createdAt": "2020-02-07T11:12:54",
+        "reactions": []
+      },
+      {
+        "id": 584784939,
+        "author": "mattleibow",
+        "body": "I was looking at the general OpenGL world, and it does seem to be a thing to call \u0022make current\u0022 before rendering - even if there is multiple views and a single thread. I did some tests (thanks to the attached code) and this seems to fix it. \r\n\r\nI am going to go with this a fix unless there is some serious downside. But, I think the alternative is only a single GL view per thread, which is more of a downside.",
+        "createdAt": "2020-02-11T18:33:55",
+        "reactions": []
+      },
+      {
+        "id": 584813908,
+        "author": "AlexandreLaborde",
+        "body": "@mattleibow Sorry for being away from this thread for such a long time and forgetting to reply to the message you sent in November. Is there still something I can help with ?",
+        "createdAt": "2020-02-11T19:38:54",
+        "reactions": []
+      },
+      {
+        "id": 584922313,
+        "author": "mattleibow",
+        "body": "@AlexandreLaborde I think you gave enough information, so all is good. I got what I think is a fix just merged in. I\u0027ll try get a preview out soon so you can test it. I basically just do what you did and call \u0060MakeCurrent\u0060 as this is the correct (as far as I can see) way to handle multiple drawing surfaces on a single thread.\r\n\r\nThanks for the issue and continuing info over several months. SkiaSharp just got better.",
+        "createdAt": "2020-02-11T23:48:45",
+        "reactions": [
+          {
+            "user": "tebjan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:17.6073012Z"
+          },
+          {
+            "user": "jensbrak",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:17.6073017Z"
+          }
+        ]
+      }
+    ]
+  }
 }

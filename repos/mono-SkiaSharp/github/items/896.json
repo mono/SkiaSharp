@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T09:02:51",
   "closedAt": "2019-07-01T10:22:36",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:02.2332687Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 506929905,
+        "author": "michaldobrodenka",
+        "body": "Maximum canvas size is dependent on the os and graphic hw. I think it\u0027s between 4096x4096 to 16384x16384 pixels ",
+        "createdAt": "2019-06-29T05:51:32",
+        "reactions": []
+      },
+      {
+        "id": 507143646,
+        "author": "sarthak199526",
+        "body": "This mean it\u0027s not possible to create a horizontally scrollable long bar chart using skia-sharp canvas view since I might gonna need width so much greater then the above you suggest ?",
+        "createdAt": "2019-07-01T07:08:44",
+        "reactions": []
+      },
+      {
+        "id": 507175048,
+        "author": "michaldobrodenka",
+        "body": "Exactly. You should keep size of canvas smaller or not much bigger than size of screen.\r\n\r\nWe have Skiasharp drawn charts, they are scrollable and zoom able. But scroll is implemented within canvas. I listen for Move/Pan/Zoom event/gesture (I don\u0027t know how it\u0027s called in Xamarin Forms implementation, I use WPF, Xamarin.Android/iOS native), and redraw canvas accordingly.\r\n\r\nOr another approcah, if you have something like scrollable items is to use some collection view (Vertical or Horizontal) with many items, each containing own canvas. This collection view can preferably use recycling technique, so only on screen visible canvases (\u002B small cache) are allocated in memory. Skiasharp can be very memory hungry if not used correctly.",
+        "createdAt": "2019-07-01T08:47:18",
+        "reactions": []
+      },
+      {
+        "id": 507207184,
+        "author": "sarthak199526",
+        "body": "Understood thanks mate ",
+        "createdAt": "2019-07-01T10:22:34",
+        "reactions": []
+      }
+    ]
+  }
 }

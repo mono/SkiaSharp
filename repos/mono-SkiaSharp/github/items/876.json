@@ -20,5 +20,123 @@
   "updatedAt": "2022-08-19T12:01:16",
   "closedAt": "2020-06-09T17:11:23",
   "commentCount": 12,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:46.5847889Z",
+    "reactions": [
+      {
+        "user": "gritsenko",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:07:46.5847958Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:07:46.5847965Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:07:46.5847968Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 507053925,
+        "author": "mattleibow",
+        "body": "@jeromelaban I had a very, very quick think and this looks to be something that may work. Just tested it on Windows and it runs. Will it work for WASM?\r\n\r\nhttps://gist.github.com/mattleibow/6f0cd3efd6152fb614aa0fd803867d25\r\n\r\nThat should be a fully working gist, at least on Windows x64, here is a snippet:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic delegate IntPtr sk_surface_new_null(int width, int height);\r\n\r\npublic static class TheInterop {\r\n  public static sk_surface_new_null sk_surface_new_null = ThePInvokeInterop.sk_surface_new_null;\r\n}\r\n\r\npublic unsafe class ThePInvokeInterop {\r\n  [DllImport(\u0022libSkiaSharp\u0022, CallingConvention = CallingConvention.Cdecl)]\r\n  public extern static IntPtr sk_surface_new_null(int width, int height);\r\n}\r\n\r\npublic unsafe class TheWasmInterop {\r\n  public static void Init() {\r\n    TheInterop.sk_surface_new_null = CreateProxy;\r\n  }\r\n  public static IntPtr CreateProxy(int width, int height) {\r\n    var p = new sk_surface_new_null_params();\r\n    p.width = width;\r\n    p.height = height;\r\n    return sk_surface_new_null(ref p);\r\n  }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-30T17:40:34",
+        "reactions": []
+      },
+      {
+        "id": 507054539,
+        "author": "mattleibow",
+        "body": "One important thing to note is that we initialize all the delegates, and then WASM can just override the specific ones that need adjustments. Is this useful? Will WASM override all of the methods and this is now just extra work?",
+        "createdAt": "2019-06-30T17:49:58",
+        "reactions": []
+      },
+      {
+        "id": 507055582,
+        "author": "jeromelaban",
+        "body": "@mattleibow most of the native functions in wasm don\u0027t change, so this could definitely work. I wondering about the performance impact of using an indirect call through a delegate, vs. a virtual invocation through an interface. I don\u0027t know what LLVM does in those cases, if there\u0027s some magic optimization that helps there :)\r\n\r\nThe case of the delegate registration for the \u0060SKAbstractManagedStream\u0060 ends up being an abstraction for \u0060Marshal.GetFunctionPointerForDelegate\u0060 which is not yet supported by mono-wasm (it has to go through emscripten\u0027s \u0060addFunction\u0060). The best way there would be to delegate the whole registration process to the platform specific implementation (the whole \u0060SKAbstractManagedStream\u0060 type initializer).",
+        "createdAt": "2019-06-30T18:06:11",
+        "reactions": []
+      },
+      {
+        "id": 507056800,
+        "author": "Gillibald",
+        "body": "Is it likely to happen that we will get a full-featured Skia running via WASM? In my opinion, this is a special environment that needs a special build of Skia like CanvasKit. Cripleing other platforms just for one platform wouldn\u0027t be ideal. A user of SkiaSharp would expect to be able to use all features of SkiaSharp if there was a WASM build of it.",
+        "createdAt": "2019-06-30T18:25:36",
+        "reactions": []
+      },
+      {
+        "id": 507057969,
+        "author": "jeromelaban",
+        "body": "@Gillibald this is already working, I\u0027ve built a [specific version of Skia from CanvasKit](https://github.com/unoplatform/skia). This is actually more like a Skia DLL than CanvasKit, as I\u0027ve stripped out everything JavaScript related.\r\n\r\nThe discussion here is about providing a minimally intrusive way to override the P/Invoke layer, so it fits the needs of WebAssembly and mono-wasm.\r\n\r\nThe outcome of the discussion could very well be that the cost is too high, and that mono-wasm needs to evolve more for this to be viable.",
+        "createdAt": "2019-06-30T18:44:13",
+        "reactions": []
+      },
+      {
+        "id": 507059343,
+        "author": "jeromelaban",
+        "body": "Here\u0027s what it could look like, with your suggestion: https://github.com/unoplatform/Uno.SkiaSharp/commit/a904780a4aa2494503f5b6c366eb6d878fd72718\r\n\r\nThe only particularity is the addition of \u0060_2\u0060 and others to compensate for the lack of delegate overload support.\r\n\r\nI have not added the \u0060SKAbstractManagedStream\u0060 udpate yet.\r\n\r\nWould that make sense ?",
+        "createdAt": "2019-06-30T19:06:21",
+        "reactions": []
+      },
+      {
+        "id": 507059856,
+        "author": "mattleibow",
+        "body": "The delegate based approach can totally be done behind some conditional compilation magic. This way, only netstandard and/or net45 is impacted. (I have updated the gist to demo this)\r\n\r\nInterfaces will be a bit heavy and will require that ALL the methods be implemented.",
+        "createdAt": "2019-06-30T19:13:38",
+        "reactions": [
+          {
+            "user": "jeromelaban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:45.5169438Z"
+          }
+        ]
+      },
+      {
+        "id": 507060911,
+        "author": "mattleibow",
+        "body": "@jeromelaban we can always replace the _2 and \u0060ref SKRect\u0060 with a \u0060SKRect*\u0060 so we can use the same delegate everywhere. Initially I wanted to be a \u0022no unsafe\u0022 but that is not so useful at all.",
+        "createdAt": "2019-06-30T19:27:45",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:45.7360426Z"
+          }
+        ]
+      },
+      {
+        "id": 507061138,
+        "author": "mattleibow",
+        "body": "And, yes. @jeromelaban what you have looks like what I am thinking. What we can do is ask some folks on the runtime team for some input on the performance and optimizations for this approach. You know of anyone we can pull in to this discussion since you have been working closely with them?",
+        "createdAt": "2019-06-30T19:30:26",
+        "reactions": []
+      },
+      {
+        "id": 507072048,
+        "author": "jeromelaban",
+        "body": "Excellent. Without tagging them explicitly, Zoltan or Bernhard may know more more about this, but in all cases, because those are not generic delegates, they will likely perform very well.",
+        "createdAt": "2019-06-30T22:18:38",
+        "reactions": []
+      },
+      {
+        "id": 507072563,
+        "author": "mattleibow",
+        "body": "@jeromelaban will something like this be possible in WASM? https://gist.github.com/mattleibow/7f21dd8fdcd176f035ecdbb47af8f223\r\n\r\n@Gillibald and I discovered that we can just create a delegate and pass the \u0060GCHandle\u0060 around. This way we don\u0027t need to look up pointers and use dictionaries to find instances.\r\n\r\nI was hoping to migrate the rest of SkiaSharp to this sort of pattern as not only do we avoid a dictionary which helps concurrency, but also we get a performance improvement. We have already moved most of the types to this, but we still have the streams to do.\r\n\r\nLet me know if this is better or worse.",
+        "createdAt": "2019-06-30T22:28:22",
+        "reactions": []
+      },
+      {
+        "id": 641454308,
+        "author": "mattleibow",
+        "body": "Closing this as I think all the new changes and code fixes have created a place where WASM does not need this anymore.",
+        "createdAt": "2020-06-09T17:11:23",
+        "reactions": []
+      }
+    ]
+  }
 }

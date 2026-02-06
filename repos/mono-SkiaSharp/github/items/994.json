@@ -15,5 +15,52 @@
   "updatedAt": "2022-08-19T09:02:11",
   "closedAt": "2019-11-06T16:24:36",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:10.6880284Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 549602301,
+        "author": "mattleibow",
+        "body": "Good catch! Thanks!\r\nFixed in #995",
+        "createdAt": "2019-11-05T00:01:28",
+        "reactions": []
+      },
+      {
+        "id": 549630264,
+        "author": "ngocdaothanh",
+        "body": "Looking at the new code:\r\nhttps://github.com/mono/SkiaSharp/pull/995/files\r\n\r\nI think the memory leak hasn\u0027t been fixed, because there\u0027s no call to \u0060sk_rrect_delete\u0060.\r\n\r\nWhen \u0060sk_rrect_transform\u0060 returns \u0060false\u0060, \u0060destHandle\u0060 is still not released.",
+        "createdAt": "2019-11-05T02:03:07",
+        "reactions": []
+      },
+      {
+        "id": 549634173,
+        "author": "ngocdaothanh",
+        "body": "@mattleibow Please see the above comment ^^",
+        "createdAt": "2019-11-05T02:21:42",
+        "reactions": []
+      },
+      {
+        "id": 550302282,
+        "author": "mattleibow",
+        "body": "Oh no. I think something got lost in a merge. Let me fix that.",
+        "createdAt": "2019-11-06T13:11:13",
+        "reactions": []
+      },
+      {
+        "id": 550387527,
+        "author": "mattleibow",
+        "body": "Should be there now.",
+        "createdAt": "2019-11-06T16:25:07",
+        "reactions": [
+          {
+            "user": "ngocdaothanh",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:09:10.6382956Z"
+          }
+        ]
+      }
+    ]
+  }
 }

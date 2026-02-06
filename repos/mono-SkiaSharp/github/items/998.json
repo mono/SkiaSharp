@@ -14,5 +14,90 @@
   "updatedAt": "2022-08-19T09:02:09",
   "closedAt": "2019-11-06T05:46:21",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:14.5027043Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 550134228,
+        "author": "daltonks",
+        "body": "It looks like most of the garbage is coming from using Xamarin Essential\u0027s \u0060DeviceDisplay.MainDisplayInfo.Density\u0060 every draw.",
+        "createdAt": "2019-11-06T04:08:29",
+        "reactions": [
+          {
+            "user": "beeradmoore",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:12.9897426Z"
+          }
+        ]
+      },
+      {
+        "id": 550154399,
+        "author": "beeradmoore",
+        "body": "Oh my goodness... Moving \u0060DeviceDisplay.MainDisplayInfo.Density\u0060 to be measured only once has allowed my emulator build to get up to 800 seconds. I feel this was most definitely the issue. Did you pick this up with profiling, or just by eyeing how regularly that was being called?",
+        "createdAt": "2019-11-06T05:44:48",
+        "reactions": []
+      },
+      {
+        "id": 550155012,
+        "author": "daltonks",
+        "body": "Everything else looked legit in the draw call, and I didn\u0027t know that Xamarin Essentials had \u0060DeviceDisplay.MainDisplayInfo.Density\u0060, so I was curious about it. Changed it to 10 and saw the number of GCs go down a lot, hah.",
+        "createdAt": "2019-11-06T05:47:28",
+        "reactions": []
+      },
+      {
+        "id": 550159848,
+        "author": "beeradmoore",
+        "body": "(sorry for the above close/open ticket, its been a long debugging filled day -_-)\r\n\r\nMy repro project is now up over 2,000 seconds. I am so sure that was the issue so I\u0027ll keep this closed and pass this on to one of the devs in our team to fix in our app and I\u0027ll check back to confirm it is indeed fixed. It makes perfect sense why we appeared to be the only people getting this issue in the last 2 years.\r\n\r\nThanks for the quick response!",
+        "createdAt": "2019-11-06T06:06:50",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:13.6520503Z"
+          }
+        ]
+      },
+      {
+        "id": 559229592,
+        "author": "VieiraJP",
+        "body": "I got exactly the same issue. \r\nMoving the DeviceDisplay.MainDisplayInfo.Density out of the Draw, sorted the issue.",
+        "createdAt": "2019-11-27T19:51:19",
+        "reactions": []
+      },
+      {
+        "id": 559233346,
+        "author": "mattleibow",
+        "body": "I this on Android?",
+        "createdAt": "2019-11-27T20:03:44",
+        "reactions": []
+      },
+      {
+        "id": 559248236,
+        "author": "VieiraJP",
+        "body": "\u003E I this on Android?\r\nYes, actually Android. IOS seems to not complain, at least in the emulator. \r\n\r\nIn short, Im working is a live chart library. \r\nAs the canvas needs to translate in order to offer the live moving effect, I had a need to redraw all visible the points, including text. \r\nI\u0027m using DeviceDisplay.MainDisplayInfo.Density to easier scale the text. By rush I was calling it within the OnDrawMethod, forcing the  DeviceDisplay.MainDisplayInfo.Density to be called very often. \r\nThe quick fix was removing it form there. \r\nThe Density value is constant is only necessary to call it once. I\u0027m using Xamarin.Essentials V1.3.1. \r\nPersonally I can not consider it a bug, as a simple change in the client architecture can avoid it. Still can be an interesting challenge for those who maintain the package.",
+        "createdAt": "2019-11-27T20:56:36",
+        "reactions": []
+      },
+      {
+        "id": 559259650,
+        "author": "beeradmoore",
+        "body": "@mattleibow , yeah this was on Android. Wasn\u0027t an issue with SkiaSharp but just how I was using Xamarin.Essentials. ",
+        "createdAt": "2019-11-27T21:38:34",
+        "reactions": [
+          {
+            "user": "VieiraJP",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:14.4531857Z"
+          },
+          {
+            "user": "SamsonMychael",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:14.4531861Z"
+          }
+        ]
+      }
+    ]
+  }
 }

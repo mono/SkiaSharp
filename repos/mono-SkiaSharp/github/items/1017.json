@@ -14,5 +14,227 @@
   "updatedAt": "2022-08-19T09:02:03",
   "closedAt": "2019-11-20T20:23:13",
   "commentCount": 30,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:31.5448752Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 554919800,
+        "author": "inforithmics",
+        "body": "I investigated a litte further and found out why the Colors change in the Android Emulator. Somehow the Windows Accent Color (Theme Color is connected to the Android Emulator).\r\n\r\nWindows Accent Color Blue -\u003E Android SkiaSharp Blue becomes Green.\r\nWindows Accent Color Gray -\u003E Android SkiaSharp Blue becomes Dark Blue.\r\n\r\n![image](https://user-images.githubusercontent.com/2290863/69038716-ab59ae80-09ea-11ea-8ff8-9bcb9da4a699.png)\r\n\r\nHere I set the Windows Accent Color to Gray (gives me the best colors at the moment)\r\n\r\nI have set on my Computer to Automatically pick the Accent Color Dending on the Background. And because I change the Background every few minutes the Accent Color Changes with it and the Image in the Android Emulator.\r\n\r\nSo I googled a little bit and in Android there seems to be a Theme Color (Connected with the Theme Color of Windows) and I think SkiaSharp somehow listens to that in the new Version causing this behavior.\r\n",
+        "createdAt": "2019-11-18T09:02:35",
+        "reactions": []
+      },
+      {
+        "id": 555556567,
+        "author": "inforithmics",
+        "body": "Experimenting arround I have the Impression that a Default Theme ColorFilter is applied, because I could correct the Colors with a \u0022Inverse Color Filter\u0022 but naturally on a real Android Device the colors where wrong.",
+        "createdAt": "2019-11-19T15:22:24",
+        "reactions": []
+      },
+      {
+        "id": 555583419,
+        "author": "mattleibow",
+        "body": "That is really strange, and I don\u0027t actually think that feature exists. In fact, there should be no way your Windows machine influences the Android emulator.\r\nBut, it is happening, so who knows anymore. \u00AF\\_(\u30C4)_/\u00AF\r\n\r\nWhat emulator are you using HAXM or Hyper-V?\r\n\r\nAlso, maybe try deleting your emulator image and recreating it - or create a new image. Also, if you roll back to v1.68.0, does it go away, or stay? What happens if you try an x86 emulator?\r\n\r\nDo you have a mac that you could test on?",
+        "createdAt": "2019-11-19T16:19:20",
+        "reactions": []
+      },
+      {
+        "id": 555585590,
+        "author": "mattleibow",
+        "body": "One separate thing that you could test is adding a label to the screen (with text the same color as the drawing), or using the native Android drawing APIs on a custom view to see where the color weirdness stops.\r\n\r\nIf you have not done native Android dev, then I can maybe whip up a sample app for you to try.",
+        "createdAt": "2019-11-19T16:21:54",
+        "reactions": []
+      },
+      {
+        "id": 555591437,
+        "author": "inforithmics",
+        "body": "I use Hyper-V (Because I run it on a Amd Ryzen 1800 Processor). But it exists although on a Intel PC where I although use Hyper-V. \r\nStrangly the Problem goes away when I downgrade to 1.68\r\nI will make later a sample with Native Android.\r\nI\u0027ll try it first on a Mac",
+        "createdAt": "2019-11-19T16:31:35",
+        "reactions": []
+      },
+      {
+        "id": 555608698,
+        "author": "inforithmics",
+        "body": "On the Mac Emulator it is although somehow greenish and not blue.\r\n![iosBug](https://user-images.githubusercontent.com/2290863/69168699-78e9a780-0af7-11ea-9270-487f3f42d98a.gif)\r\n",
+        "createdAt": "2019-11-19T17:08:48",
+        "reactions": []
+      },
+      {
+        "id": 555616984,
+        "author": "inforithmics",
+        "body": "I have a intresting finding The Colors don\u0027t work on x86 Target Device on a x64 Target Device they work.\r\nI discovered this because I recreated all Emulators and redownloaded the images.\r\nOn x64 it worked on a x86 Target device it didn\u0027t work. I will now make the label image",
+        "createdAt": "2019-11-19T17:26:41",
+        "reactions": []
+      },
+      {
+        "id": 555645749,
+        "author": "inforithmics",
+        "body": "Background of the label has the same color as the lines\r\n\r\n![image](https://user-images.githubusercontent.com/2290863/69175057-58bfe580-0b03-11ea-9e2c-987e3336520f.png)\r\n",
+        "createdAt": "2019-11-19T18:32:58",
+        "reactions": []
+      },
+      {
+        "id": 555723549,
+        "author": "inforithmics",
+        "body": "Heureka I found the problem:\r\n\r\n\r\n\r\n\u0060\u0060\u0060\r\n                // setting SKColor and reading values works.\r\n                var color = new SKColor(1,2,3, 4);\r\n                var r = color.Red;\r\n                // 1\r\n                var g = color.Green;\r\n                // 2\r\n                var b = color.Blue;\r\n                // 3\r\n                var a = color.Alpha;\r\n                // 4\r\n\r\n               // setting the Color of skPaint\r\n               // I cannot read back the values as is done in the SkiaSharp.Extended.Svg library \r\n               // so the colors\r\n                // get changed\r\n                var skPaint = new SKPaint();\r\n                skPaint.Color = color;\r\n\r\n                var pr = skPaint.Color.Red;\r\n                // 86 !!\r\n                var pg = skPaint.Color.Green;\r\n                // 48 !!\r\n                var pb = skPaint.Color.Blue;\r\n                // 140 !!\r\n                var pa = skPaint.Color.Alpha;\r\n                // 203 !!\r\n\u0060\u0060\u0060\r\nSo it seems to be a memory layout \\ mapping issue on x86  Code\r\nSetting the value works, but not reading them back from SKPaint ",
+        "createdAt": "2019-11-19T21:28:05",
+        "reactions": []
+      },
+      {
+        "id": 555890292,
+        "author": "Gillibald",
+        "body": "Are you sure that you are not working with premultiplied alpha values here? What is the PixelFormat of your Surface? ",
+        "createdAt": "2019-11-20T08:13:51",
+        "reactions": []
+      },
+      {
+        "id": 555909017,
+        "author": "inforithmics",
+        "body": "var pixelGeometry = args.Surface.SurfaceProperties.PixelGeometry;\r\n// SkiaSharp.SKPixelGeometry.RgbHorizontal\r\n",
+        "createdAt": "2019-11-20T09:04:43",
+        "reactions": []
+      },
+      {
+        "id": 555912217,
+        "author": "inforithmics",
+        "body": "The strange part is when I make new SKPaint there is already a Value in skPaint.Color and the returned value seems for me random. \r\n\u0060\u0060\u0060\r\nvar skPaint = new SKPaint();\r\nvar dColor = skPaint.Color;\r\n\u0060\u0060\u0060\r\nI isn\u0027t Corelated to the Accent Color. So I think the property reads somewhere from the Memory it shouldn\u0027t because it doesn\u0027t return the same value as is set.\r\n\r\nLooking at them implementation (in. Net interop) SkiaApi.sk_paint_get_color(this.Handle)\r\nIs used to read the SKColor and I think in Android x86 this is broken it reads from the wrong Memory Adress,\r\n\u0060\u0060\u0060\r\n/// \u003Csummary\u003EGets or sets the paint\u0027s foreground color.\u003C/summary\u003E\r\n    /// \u003Cvalue /\u003E\r\n    /// \u003Cremarks\u003EThe color is a 32-bit value containing ARGB. This 32-bit value is not premultiplied, meaning that its alpha can be any value, regardless of the values of R, G and B.\u003C/remarks\u003E\r\n    public SKColor Color\r\n    {\r\n      get\r\n      {\r\n        return SkiaApi.sk_paint_get_color(this.Handle);\r\n      }\r\n      set\r\n      {\r\n        SkiaApi.sk_paint_set_color(this.Handle, value);\r\n      }\r\n    }\r\n\u0060\u0060\u0060\r\nI don\u0027t know x86 Assembler so I cannot investigate further.\r\n",
+        "createdAt": "2019-11-20T09:12:58",
+        "reactions": []
+      },
+      {
+        "id": 555942039,
+        "author": "Gillibald",
+        "body": "A float is 4 bytes on both architectures so there should be no difference. The paint\u0027s color is stored as 4 float values. ",
+        "createdAt": "2019-11-20T10:30:13",
+        "reactions": []
+      },
+      {
+        "id": 555996029,
+        "author": "mattleibow",
+        "body": "This is getting weird now, the original issue said x64 was not work. But seems it is now and x86 is not?\r\n\r\nWhat happens if you set the paint color to a red and then read it out? Does it still happen? SKColors.Red ",
+        "createdAt": "2019-11-20T13:08:17",
+        "reactions": []
+      },
+      {
+        "id": 556017408,
+        "author": "mattleibow",
+        "body": "Thanks for your patience with this. I think I figured it out. Just need to confirm and try a few things. I\u0027ll make sure this is fixed before we release.",
+        "createdAt": "2019-11-20T14:06:06",
+        "reactions": []
+      },
+      {
+        "id": 556039423,
+        "author": "inforithmics",
+        "body": "I thought I execute the x64 Android Emulator, but I was really executing the x86 Emulator so the Title was wrong in the First place. \r\nI later corrected it to x86",
+        "createdAt": "2019-11-20T14:57:33",
+        "reactions": []
+      },
+      {
+        "id": 556039999,
+        "author": "mattleibow",
+        "body": "Ah, that makes sense. I think I got a fix. It was the managed-native interop that was doing things wrong. I fixed that in #1023.",
+        "createdAt": "2019-11-20T14:58:48",
+        "reactions": []
+      },
+      {
+        "id": 556044643,
+        "author": "inforithmics",
+        "body": "Are the Tests executed on every platform (x86, x64, Arm, Arm64) \\ (Windows, Android ...) , because this only occured on x86 Android",
+        "createdAt": "2019-11-20T15:08:41",
+        "reactions": []
+      },
+      {
+        "id": 556046219,
+        "author": "mattleibow",
+        "body": "There is a problem in that I only have tests for mac x64, win x64/x86 and linux x64. I have no other platforms yet. I am working on getting that going, but the tests are a bit more complex to write. Usually the 2 windows platforms pick this up, but for some reason my tests around colors are bad. I got a test there now that I want to check really breaks CI.",
+        "createdAt": "2019-11-20T15:11:45",
+        "reactions": []
+      },
+      {
+        "id": 556048273,
+        "author": "mattleibow",
+        "body": "Well, that was disappointing. All the Windows tests just passed. Looks like Windows gets it right for some reason. The only thing I can think of is that the mono runtime on android does the interop slightly differently.\r\n\r\nI will have to talk to those folks and find out.",
+        "createdAt": "2019-11-20T15:15:31",
+        "reactions": []
+      },
+      {
+        "id": 556148259,
+        "author": "inforithmics",
+        "body": "The difference in the IL is in 1.68 the value is fetched in the following manner\r\n\r\n1.68\r\n\u0060  return (SKColor) SkiaApi.sk_paint_get_color(this.Handle);\u0060\r\n sk_paint_get_color is defined public and as return type uint.\r\n\r\n1.68.1-rc170\r\n\u0060  return SkiaApi.sk_paint_get_color(this.Handle);\u0060\r\n  sk_paint_get_color is internal and as return Type SKColor\r\n  so maybe interop layer converts uint correctly but not when it is in a struct.",
+        "createdAt": "2019-11-20T17:34:11",
+        "reactions": []
+      },
+      {
+        "id": 556157330,
+        "author": "inforithmics",
+        "body": "I had a quick look with Ghidra at the assembly code and the assembler was the same, so it is definitly an interop thing.\r\n\r\n1.68.1-rc-170\r\n\u0060\u0060\u0060\r\nundefined4 sk_paint_get_color(int param_1)\r\n{\r\n  return *(undefined4 *)(param_1 \u002B 0x28);\r\n}\r\n\u0060\u0060\u0060\r\n1.68.0\r\n\u0060\u0060\u0060\r\nundefined4 sk_paint_get_color(int param_1)\r\n{\r\n  return *(undefined4 *)(param_1 \u002B 0x28);\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-11-20T17:41:58",
+        "reactions": []
+      },
+      {
+        "id": 556200299,
+        "author": "Gillibald",
+        "body": "\u0060typedef uint32_t SkColor;\u0060",
+        "createdAt": "2019-11-20T18:17:58",
+        "reactions": []
+      },
+      {
+        "id": 556206790,
+        "author": "Gillibald",
+        "body": "https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SkiaApi.generated.cs#L2816 I guess we need to change that parameter to uint instead of \u0060SKColor\u0060\r\nWhat is \u0060sizeof(SKColor)\u0060?",
+        "createdAt": "2019-11-20T18:23:23",
+        "reactions": []
+      },
+      {
+        "id": 556326706,
+        "author": "inforithmics",
+        "body": "I made a test and specified the interop in my test program as uint\r\n\r\n        [DllImport(\u0022libSkiaSharp\u0022, CallingConvention = CallingConvention.Cdecl)]\r\n        internal static extern uint sk_paint_get_color(IntPtr param0);\r\n        \r\n        and then I casted it o SKColor like in the Version 1.68 and the values are\r\n        now valid.\r\n\r\n         var test = (SKColor)sk_paint_get_color(skPaint.Handle);\r\n         var r = test.Red;\r\n                // 1\r\n                var g = test.Green;\r\n                // 2\r\n                var b = test.Blue;\r\n                // 3\r\n                var a = test.Alpha;\r\n                // 4\r\n",
+        "createdAt": "2019-11-20T20:05:56",
+        "reactions": []
+      },
+      {
+        "id": 556337834,
+        "author": "inforithmics",
+        "body": "    var size1 = sizeof(SKColor);\r\n    // 4\r\n    var size2 = sizeof(uint);\r\n    // 4\r\n",
+        "createdAt": "2019-11-20T20:15:50",
+        "reactions": []
+      },
+      {
+        "id": 556350301,
+        "author": "mattleibow",
+        "body": "This was the interesting thing. I previously had the parameters as \u0060SKColor\u0060 and the return types as \u0060uint\u0060.\r\n\r\nSeems the value is fine when it is a parameter, but when it is a return, it can\u0027t just be forced. But I changed everything to be \u0060uint\u0060 in the PR and do the work manually in the managed side now. \r\n\r\nIt broke because i switched to the generator and did not take into account the return vs parameter. But now, it is just like the C code and it is cast. Should be back to normal.",
+        "createdAt": "2019-11-20T20:26:33",
+        "reactions": []
+      },
+      {
+        "id": 556351851,
+        "author": "mattleibow",
+        "body": "@inforithmics thanks for all the research and opening this issue. It would have been pretty bad for this to get out to the stable release.\r\n\r\nAs soon as the build completes, I\u0027ll push to NuGet for testing.",
+        "createdAt": "2019-11-20T20:27:53",
+        "reactions": []
+      },
+      {
+        "id": 557447952,
+        "author": "inforithmics",
+        "body": "You\u0027re welcome and thanks for the fixed nuget package. I tested it and it works now on Android X86 Emulator.",
+        "createdAt": "2019-11-22T08:54:10",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:09:31.2689724Z"
+          }
+        ]
+      },
+      {
+        "id": 773173610,
+        "author": "makstraw",
+        "body": "Hey guys, had same issue working with my android application, information about windows theme affecting emulator output by @inforithmics gave me a clue on how to fix this issue.\r\nIf you remove **skin.path** and replace **skin.name** with something like 1080x1920 it will display emulator without physical device sprite around window and it will not be affected by windows theme.",
+        "createdAt": "2021-02-04T09:43:02",
+        "reactions": []
+      }
+    ]
+  }
 }

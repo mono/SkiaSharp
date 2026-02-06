@@ -19,5 +19,32 @@
   "updatedAt": "2022-08-19T12:01:27",
   "closedAt": "2019-06-24T06:00:32",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:27.6648113Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 496169628,
+        "author": "MichaelRumpler",
+        "body": "I found several versions how to work around this problem. It looks like they are all faster (and correct), than \u0060SKCanvas.DrawBitmap\u0060.\r\n\r\nYou can find them on https://github.com/MichaelRumpler/CopyBitmap.\r\n\r\nI prefer the version with \u0060GetPixelSpan\u003CT\u003E\u0060 where my code does not have to be \u0060unsafe\u0060.",
+        "createdAt": "2019-05-27T10:45:01",
+        "reactions": []
+      },
+      {
+        "id": 504811584,
+        "author": "mattleibow",
+        "body": "@MichaelRumpler we are adding the spans directly into the SkiaSharp APIs #865 so the next release will be easier to manipulate. Also, thanks for those benchmarks, they are helpful. The operations seem to be about the same speed regardless of method used (except for manual copying).\r\n\r\nYou could probably create a hybrid that checks the rectangle and then uses SkiaCopyDown, and then falls back to the Span copy.\r\n\r\nWith regards to your question:\r\n\r\n\u003E Can this be considered a bug in Skia(Sharp) or is it simply not meant to copy areas of a bitmap within itself?\r\n\r\nThis is more of a feature that is not typically done, and thus has no support at this time. In most cases, you are going to be drawing a bitmap - or part of it - onto the canvas that you are creating.\r\n",
+        "createdAt": "2019-06-24T01:54:29",
+        "reactions": []
+      },
+      {
+        "id": 504869489,
+        "author": "MichaelRumpler",
+        "body": "Ok, thanks!\r\n\r\nI settled for my \u0060GetPixelSpan()\u0060 to get a \u0060Span\u003Cbyte\u003E\u0060 and then \u0060Span\u003Cbyte\u003E.CopyTo()\u0060 as a workaround. This is pretty fast and checks from which direction to copy.",
+        "createdAt": "2019-06-24T06:00:32",
+        "reactions": []
+      }
+    ]
+  }
 }

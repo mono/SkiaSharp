@@ -19,5 +19,45 @@
   "updatedAt": "2022-08-19T12:01:22",
   "closedAt": "2020-06-10T23:21:46",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:35.2254031Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 499908730,
+        "author": "mattleibow",
+        "body": "I was putting something together for this here:\r\nhttps://github.com/mono/SkiaSharp/compare/dev/resource-extensions\r\n\r\nI am not actually sure if this code is actually running at all, but you could use this for inspiration. You should be able to register a dependency service (https://docs.microsoft.com/en-us/xamarin/xamarin-forms/app-fundamentals/dependency-service/introduction) with the code in the meantime.",
+        "createdAt": "2019-06-07T14:33:57",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:34.6065133Z"
+          }
+        ]
+      },
+      {
+        "id": 501102800,
+        "author": "LeoJHarris",
+        "body": "@mattleibow thats great will check that out, although any reason why that cant be merged?",
+        "createdAt": "2019-06-12T03:05:43",
+        "reactions": []
+      },
+      {
+        "id": 502536467,
+        "author": "LeoJHarris",
+        "body": "@mattleibow tried your code but unfortunately throwing native exception:\r\n\r\n\u0060\u0060\u0060csharp\r\n\tNative Crash Reporting\r\n=================================================================\r\nGot a SIGSEGV while executing native code. This usually indicates\r\na fatal error in the mono runtime or one of the native libraries \r\nused by your application.\r\n=================================================================06-17 17:09:01.574 E/mono-rt (31733): /proc/self/maps:\r\n\r\n\r\n=================================================================06-17 17:09:01.574 E/mono-rt (31733): 12c00000-12e01000 rw-p 00000000 00:04 7343       /dev/ashmem/dalvik-main space (deleted)\r\n\r\n\tBasic Fault Adddress Reporting\r\n=================================================================\r\nMemory around native instruction pointer (0x9c7a2492):0x9c7a2482  d8 f8 00 06-17 17:09:01.574 E/mono-rt (31733): 12e01000-12fb0000 rw-p 00201000 00:04 7343       /dev/ashmem/dalvik-main space (deleted)\r\n\r\n00 58 b1 da f8 00 10 4a 46 07 9b b8 69  ....X.....JF...i\r\n0x9c7a2492  d1 f8 a4 60 41 46 00 90 50 46 b0 47 08 9c 00 2c  ...\u0060AF..PF.G...,\r\n0x9c7a24a2  1e bf 0a 98 00 06-17 17:09:01.574 E/mono-rt (31733): 12fb0000-22c00000 ---p 003b0000 00:04 7343       /dev/ashmem/dalvik-main space (deleted)\r\n\r\n78 00 28 09 d0 8b f0 80 fd 03 68  .....x.(.......h\r\n0x9c7a24b2  0a ae 46 ce 5b 69 0d 9d cd e9 00 65 98 47 0f b0  ..F.[i.....e.G..\r\n\r\nNo native Android stacktrace (see debuggerd output).\r\n\r\n=================================================================\r\n\tManaged Stacktrace:\r\n=================================================================\r\n\t  at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n\t  at SkiaSharp.SkiaApi:sk_canvas_draw_bitmap \u003C0x0004f\u003E\r\n\t  at SkiaSharp.SKCanvas:DrawBitmap \u003C0x0020b\u003E\r\n\t  at \u003CdrawCheckInGaugeAsync\u003Ed__30:MoveNext \u003C0x02393\u003E\r\n\t  at MoveNextRunner:InvokeMoveNext \u003C0x000db\u003E\r\n\t  at System.Threading.ExecutionContext:RunInternal \u003C0x00483\u003E\r\n\t  at System.Threading.ExecutionContext:Run \u003C0x00073\u003E\r\n\t  at MoveNextRunner:Run \u003C0x00183\u003E\r\n\t  at System.Threading.Tasks.AwaitTaskContinuation:InvokeAction \u003C0x00093\u003E\r\n\t  at System.Threading.Tasks.AwaitTaskContinuation:RunCallback \u003C0x00133\u003E\r\n\t  at System.Threading.Tasks.SynchronizationContextAwaitTaskContinuation:Run \u003C0x0010b\u003E\r\n\t  at System.Threading.Tasks.Task:FinishContinuations \u003C0x00693\u003E\r\n\t  at S06-17 17:09:01.574 E/mono-rt (31733): 22c00000-22c01000 rw-p 00000000 00:04 7344       /dev/ashmem/dalvik-main space (deleted)\r\n\r\nystem.Threading.Tasks.Task:FinishStageThree \u003C0x00177\u003E\r\n\t  at System.Threading.Tasks.Task\u00601:TrySetResult \u003C0x00233\u003E\r\n\t  at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601:SetResult \u003C0x00237\u003E\r\n\t  at \u003CDecodeBitmapAsync\u003Ed__2:MoveNext \u003C0x00c0f\u003E\r\n\t  at MoveNextRunner:InvokeMoveNext \u003C0x000db\u003E\r\n\t  at System.Threading.ExecutionContext:RunInternal \u003C0x00483\u003E\r\n\t  at System.Threading.ExecutionContext:Run \u003C0x00073\u003E\r\n\t  at MoveNextRunner:Run \u003C0x00183\u003E\r\n\t  at \u003C\u003Ec:\u003C.cctor\u003Eb__7_0 \u003C0x00097\u003E\r\n\t  at \u003C\u003Ec__DisplayClass2_0:\u003CPost\u003Eb__0 \u003C0x0008b\u003E\r\n\t  at RunnableImplementor:Run \u003C0x000c3\u003E\r\n\t  at Java.Lang.IRunnableInvoker:n_Run \u003C0x000bf\u003E\r\n\t  at Android.Runtime.DynamicMethodNameCounter:50 \u003C0x0003b\u003E\r\n\t  at Android.Runtime.DynamicMethodNameCounter:50 \u003C0x000c3\u003E\r\n=================================================================06-17 17:09:01.574 E/mono-rt (31733): 22c01000-32c00000 ---p 00001000 00:04 7344       /dev/ashmem/dalvik-main space (deleted)\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-17T05:10:16",
+        "reactions": []
+      },
+      {
+        "id": 642316924,
+        "author": "mattleibow",
+        "body": "Closing this as I don\u0027t think this is going to happen any time soon. This is very platform specific, and also very app model specific. Also, this is also very app specific. For example, on Android, there are resources and assets. Then embedded resources. And Forms has some embedded font attributes.\r\n\r\nThe best way for now would be to create a dependency service to return the data/bytes/image.",
+        "createdAt": "2020-06-10T23:21:46",
+        "reactions": []
+      }
+    ]
+  }
 }

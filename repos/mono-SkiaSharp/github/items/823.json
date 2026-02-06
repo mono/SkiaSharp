@@ -19,5 +19,25 @@
   "updatedAt": "2022-08-19T12:01:39",
   "closedAt": "2019-05-18T23:16:52",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:08.167363Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 493713867,
+        "author": "mattleibow",
+        "body": "There is no control at this time, but there is nothing stopping you from just creating an image and either storing that in a cache, or using a web API endpoint.\r\n\r\nFor images displayed in a browser, you typically need the complete image stored on some server (or at least generated on the server). If the image is static, then you could potentially draw an image in memory when it is first requested, and then save it to disk for future requests.\r\n\r\nIf the image is dynamic, such as changes over time or changes per user, then you can create an API that gives the impression of a static image. This can be done by creating an API controller that returns the image bytes.\r\n\r\nFor example, you could merge or use one of these ideas. I have created an image in an Azure Function: https://github.com/mattleibow/SkiaSharpFunction/blob/master/SkiaSharpFunction/Images.cs and then created an empty Web API: https://github.com/mattleibow/SkiaSharpWebApi-Docker/blob/master/SkiaSharpWebApi/Controllers/ColorTypeController.cs. You could possible use this as a starting point.",
+        "createdAt": "2019-05-18T23:15:39",
+        "reactions": []
+      },
+      {
+        "id": 493713995,
+        "author": "mattleibow",
+        "body": "I am closing this issue as I don\u0027t think we will ever embed the image into the HTML of the page, so a REST endpoint or cached image is the way to go.\r\n\r\nFeel free to re-open this issue if you have any more comments on this particular question.",
+        "createdAt": "2019-05-18T23:18:06",
+        "reactions": []
+      }
+    ]
+  }
 }

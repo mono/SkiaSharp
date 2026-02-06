@@ -20,5 +20,50 @@
   "updatedAt": "2022-08-19T12:01:32",
   "closedAt": "2019-09-23T23:34:45",
   "commentCount": 4,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:20.8338485Z",
+    "reactions": [
+      {
+        "user": "MichaelRumpler",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:20.8338528Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:20.8338532Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 498431047,
+        "author": "BrianHanechak",
+        "body": "Here\u0027s a small example to reproduce this:\r\n\r\n    using System;\r\n    using System.IO;\r\n    using System.Linq;\r\n    using System.Threading.Tasks;\r\n    using SkiaSharp;\r\n\r\n    namespace skiatest\r\n    {\r\n        class Program\r\n        {\r\n            public static byte[,] DecodeGrayscaleImage(Stream stream)\r\n            {\r\n                using (var data = SKData.Create(stream))\r\n                {\r\n                    using (var codec = SKCodec.Create(data))\r\n                    {\r\n                        var info = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8, SKAlphaType.Opaque, SKColorSpace.CreateSrgb());\r\n                        using (var image = SKBitmap.Decode(codec, info))\r\n                        {\r\n                            return Gray8ImageToBytes(image);\r\n                        }\r\n                    }\r\n                }\r\n            }\r\n\r\n            unsafe public static byte[,] Gray8ImageToBytes(SKBitmap image)\r\n            {\r\n                // byte* ptr = (byte*)image.GetPixels().ToPointer();\r\n                byte[,] data = new byte[image.Height, image.Width];\r\n                // for (int y = 0; y \u003C image.Height; y\u002B\u002B)\r\n                // {\r\n                //     for (int x = 0; x \u003C image.Width; x\u002B\u002B)\r\n                //     {\r\n                //         data[y, x] = *ptr\u002B\u002B;\r\n                //     }\r\n                // }\r\n                return data;\r\n            }\r\n\r\n            static async Task\u003Cint\u003E Main(string[] args)\r\n            {\r\n                var tasks = new Task[1000];\r\n\r\n                for (int i = 0; i \u003C 1000; i\u002B\u002B)\r\n                {\r\n                    var task = new Task(() =\u003E {\r\n                        using (var stream = File.OpenRead(\u0022sample-L.png\u0022))\r\n                        {\r\n                            var img = DecodeGrayscaleImage(stream);\r\n                        }\r\n                    });\r\n                    tasks[i] = task;\r\n                    task.Start();\r\n                }\r\n                await Task.WhenAll(tasks);\r\n                Console.WriteLine(\u0022done\u0022);\r\n                return 0;\r\n            }\r\n        }\r\n    }",
+        "createdAt": "2019-06-03T21:20:41",
+        "reactions": []
+      },
+      {
+        "id": 498431757,
+        "author": "BrianHanechak",
+        "body": "@kneedels helped me track down that the object that is producing this message is the color space that\u0027s generated from \u0060SKColorSpace.CreateSrgb()\u0060. Even if I put this in its own using block, we still get the message. The only way I\u0027ve seen to avoid it is to create the color space once before the program runs and then use the same instance for each call.\r\n\r\nIs this a good idea? Are \u0060SKColorSpace\u0060 objects safe to use simultaneously across threads? \r\n\r\nIs the message causing any actual harm, or should I just ignore it?",
+        "createdAt": "2019-06-03T21:23:12",
+        "reactions": []
+      },
+      {
+        "id": 504955324,
+        "author": "MichaelRumpler",
+        "body": "I also get this message a lot. I don\u0027t use color spaces at all, but also multiple threads.\r\n\r\nMy app uses WPF/.NET Core 3.\r\n\r\nA background thread writes to a invisible SKBitmap (e.g. with DrawBitmap). About 50x/sec I call InvalidateVisual() on my main SKElement. This triggers OnPaintSurface which uses DrawBitmap to draw the bitmap to the surface of the SKElement.\r\n\r\nCurrently I don\u0027t do any thread synchronization. If the background thread is not finished writing to the bitmap when OnPaintSurface is called, then it will be written to the screen the next time. This is ok for me.",
+        "createdAt": "2019-06-24T10:35:56",
+        "reactions": []
+      },
+      {
+        "id": 516521896,
+        "author": "mattleibow",
+        "body": "I have been working on #900 to fix all these cases. The case with the color spaces was a really special one. Even though the method and the docs appear to indicate that you are getting a new instance of an object, you _may_ be getting a static object depending on the arguments.\r\n\r\nSee this PR: https://github.com/mono/SkiaSharp/pull/922",
+        "createdAt": "2019-07-30T17:45:31",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -23,5 +23,59 @@
   "updatedAt": "2022-08-19T09:01:49",
   "closedAt": "2019-12-22T04:50:41",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:03.2211249Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 561175932,
+        "author": "vijayasurya20",
+        "body": "Please find the test project  in which we are facing issue from the following link. \r\n\r\n[Test project.zip](https://github.com/mono/SkiaSharp/files/3916928/Test.project.zip)\r\n",
+        "createdAt": "2019-12-03T13:49:52",
+        "reactions": []
+      },
+      {
+        "id": 561180006,
+        "author": "mattleibow",
+        "body": "What happens if you install SkiaSharp into the test project?\r\n\r\nI think the default project rules basically say not to include these native libraries. I am working on #1041 to see if this will fix this issue.",
+        "createdAt": "2019-12-03T13:59:57",
+        "reactions": []
+      },
+      {
+        "id": 561184570,
+        "author": "vijayasurya20",
+        "body": "Hi Mattlie,\r\n\r\nThank you for your update.\r\n\r\nAs you have mentioned, while installing the SkiaSharp into the test project works fine.\r\n\r\nSince we have added the .Net Standard library project which has \u0022SkiaSharp\u0022 as dependent package is added as dependency of Test project, then please let me know why should we need to add \u0022SkiaSharp\u0022 package individually into the test project. Because the Library project itself should have every dependency it needs.\r\n\r\nRegards,\r\nVijayasurya A \r\n",
+        "createdAt": "2019-12-03T14:11:36",
+        "reactions": []
+      },
+      {
+        "id": 561274558,
+        "author": "mattleibow",
+        "body": "I believe it is because the way the build works with the .net framework build. This actually won\u0027t happen with .net core. What is happening is that we have a .targets file that copies the native libraries from .net framework. But, with the new tooling, it ignores it unless you have a specific reference. \r\n\r\nThis is the issue tracking that: https://github.com/mono/SkiaSharp/issues/1041\r\n\r\nI\u0027ll release a fix as soon as I can, but the install into the test project is the way to do it now.",
+        "createdAt": "2019-12-03T17:33:05",
+        "reactions": []
+      },
+      {
+        "id": 561308319,
+        "author": "mattleibow",
+        "body": "Closing this as a duplicate of #1041 Also, moving the discussion there as this needs a bit of thought.",
+        "createdAt": "2019-12-03T18:59:30",
+        "reactions": []
+      },
+      {
+        "id": 1003768997,
+        "author": "boonkerz",
+        "body": "Hi i have the same issue:\r\n\r\nSystem.TypeInitializationException\r\n  HResult=0x80131534\r\n  Nachricht = The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\r\n  Quelle = Avalonia.Skia\r\n  Stapel\u00FCberwachung:\r\n   bei Avalonia.Skia.PlatformRenderInterface..ctor(ISkiaGpu skiaGpu, Nullable\u00601 maxResourceBytes) in /_/src/Skia/Avalonia.Skia/PlatformRenderInterface.cs: Zeile27\r\n   bei Avalonia.Skia.SkiaPlatform.Initialize(SkiaOptions options) in /_/src/Skia/Avalonia.Skia/SkiaPlatform.cs: Zeile21\r\n   bei Avalonia.SkiaApplicationExtensions.\u003C\u003Ec__0\u00601.\u003CUseSkia\u003Eb__0_0() in /_/src/Skia/Avalonia.Skia/SkiaApplicationExtensions.cs: Zeile20\r\n   bei Avalonia.Controls.AppBuilderBase\u00601.Setup() in /_/src/Avalonia.Controls/AppBuilderBase.cs: Zeile305\r\n   bei Avalonia.Controls.AppBuilderBase\u00601.SetupWithLifetime(IApplicationLifetime lifetime) in /_/src/Avalonia.Controls/AppBuilderBase.cs: Zeile180\r\n   bei Avalonia.ClassicDesktopStyleApplicationLifetimeExtensions.StartWithClassicDesktopLifetime[T](T builder, String[] args, ShutdownMode shutdownMode) in /_/src/Avalonia.Controls/ApplicationLifetimes/ClassicDesktopStyleApplicationLifetime.cs: Zeile175\r\n   bei PscCloud.Program.Main(String[] args) in Z:\\home\\thomas\\projekte\\psccloud\\PscCloud\\Program.cs: Zeile13\r\n\r\n  Diese Ausnahme wurde urspr\u00FCnglich von dieser Aufrufliste ausgel\u00F6st:\r\n    [Externer Code]\r\n\r\nInnere Ausnahme 1:\r\nDllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: Das angegebene Modul wurde nicht gefunden. (0x8007007E)\r\n",
+        "createdAt": "2022-01-02T20:14:00",
+        "reactions": [
+          {
+            "user": "thomasgalliker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:03.1709151Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -19,5 +19,43 @@
   "updatedAt": "2022-08-19T09:01:55",
   "closedAt": "2019-12-07T00:06:10",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:49.6870838Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 561153558,
+        "author": "mattleibow",
+        "body": "If I understand what \u0060GetFlattenedPathGeometry\u0060 does, this might be what you are looking for: https://docs.microsoft.com/dotnet/api/skiasharp.skpaint.getfillpath",
+        "createdAt": "2019-12-03T12:52:11",
+        "reactions": [
+          {
+            "user": "SeRgI1982",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:49.2451889Z"
+          },
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:49.2451893Z"
+          }
+        ]
+      },
+      {
+        "id": 561158828,
+        "author": "SeRgI1982",
+        "body": "Currently, I finish working on this. \r\nI draw a newPath taken from GetFillPath and check if pixel color in touched/clicked location has the same color like color of my original path (original path has always one color).\r\n\r\nHaving this function I was able also to detect the real beginning of drawn path for ex. you have triangle with thick StrokeThickness. Original SKPath doesn\u0027t include points where border begins but filled Path contains them. \r\n\r\nI wanted to avoid drawing of this additional SKPath to detect the real edge of SKPath. \r\nI thought that maybe there is some complex algorithm (based on interpolation) to check if a clicked point is inside SKPath without drawing this SKPath (at the end it is a set of figures in the cartesian system).  \r\n\r\nAnyway, thank you for pointing me a right direction.",
+        "createdAt": "2019-12-03T13:07:28",
+        "reactions": []
+      },
+      {
+        "id": 1140389681,
+        "author": "AmitParmar2005",
+        "body": "Hi,\r\n\r\nI am working on similar requirement. I am trying to imitate **IsOutlineVisible** function from GDI\u002B into WinUI3 using SkiaSharp. If possible, could you please share code here? How do you get mouse click location color and compare with your path color?  \r\n\r\nThanks In Advance,\r\nAmit",
+        "createdAt": "2022-05-29T06:54:39",
+        "reactions": []
+      }
+    ]
+  }
 }

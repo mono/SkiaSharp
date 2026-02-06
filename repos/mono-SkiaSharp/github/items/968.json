@@ -20,5 +20,383 @@
   "updatedAt": "2022-08-19T09:02:23",
   "closedAt": "2019-12-14T01:56:06",
   "commentCount": 42,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:51.6635003Z",
+    "reactions": [
+      {
+        "user": "praeclarum",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:51.6635071Z"
+      },
+      {
+        "user": "joshkautz",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:51.6635079Z"
+      },
+      {
+        "user": "Genfood",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:51.6635081Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 535905862,
+        "author": "michaldobrodenka",
+        "body": "The same on Windows WPF:\r\nSystem.EntryPointNotFoundException: \u0027Unable to find an entry point named \u0027sk_refcnt_safe_unref\u0027 in DLL \u0027libSkiaSharp\u0027.\u0027\r\n\r\nI\u0027ve deleted bin/obj, rebuild",
+        "createdAt": "2019-09-27T11:45:54",
+        "reactions": [
+          {
+            "user": "1iveowl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:42.9987944Z"
+          }
+        ]
+      },
+      {
+        "id": 535928931,
+        "author": "nor0x",
+        "body": "quick update from my side - i have also cleaned and deleted bin/obj. After closing Visual Studio and re-opening the solution with the latest preview version of VS it works fine. ",
+        "createdAt": "2019-09-27T13:00:27",
+        "reactions": [
+          {
+            "user": "1iveowl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:43.208296Z"
+          }
+        ]
+      },
+      {
+        "id": 536358109,
+        "author": "adrianknight89",
+        "body": "I have a similar issue on XF / iOS. The app crashes on launch, and I can\u0027t find any useful exception information. AppCenter doesn\u0027t catch anything either.",
+        "createdAt": "2019-09-30T00:35:18",
+        "reactions": []
+      },
+      {
+        "id": 541241747,
+        "author": "praeclarum",
+        "body": "I am getting the same crash after upgrading.\r\n\r\n@Redth This is a pretty critical problem since 1.68 does not work on Catalina but this beta does (before it crashes)\r\n\r\n\u0060\u0060\u0060\r\nERROR: System.EntryPointNotFoundException: sk_refcnt_safe_unref assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_refcnt_safe_unref(intptr)\r\n  at SkiaSharp.SKObjectExtensions.SafeUnRef (SkiaSharp.ISKReferenceCounted obj) [0x00017] in \u003C0dd1f6e452a9498eb4c5ec4fafde30fd\u003E:0 \r\n  at SkiaSharp.SKObject.GetObject[TSkiaObject,TSkiaImplementation] (System.IntPtr handle, System.Boolean owns, System.Boolean unrefExisting, System.Boolean refNew) [0x0003b] in \u003C0dd1f6e452a9498eb4c5ec4fafde30fd\u003E:0 \r\n  at SkiaSharp.SKObject.GetObject[TSkiaObject] (System.IntPtr handle, System.Boolean owns, System.Boolean unrefExisting, System.Boolean refNew) [0x00000] in \u003C0dd1f6e452a9498eb4c5ec4fafde30fd\u003E:0 \r\n  at SkiaSharp.SKTypeface.FromFamilyName (System.String familyName, SkiaSharp.SKFontStyle style) [0x0001a] in \u003C0dd1f6e452a9498eb4c5ec4fafde30fd\u003E:0 \r\n  at SkiaSharp.SKTypeface.FromFamilyName (System.String familyName, System.Int32 weight, System.Int32 width, SkiaSharp.SKFontStyleSlant slant) [0x00009] in \u003C0dd1f6e452a9498eb4c5ec4fafde30fd\u003E:0 \r\n  at SkiaSharp.SKTypeface.FromFamilyName (System.String familyName, SkiaSharp.SKFontStyleWeight weight, SkiaSharp.SKFontStyleWidth width, SkiaSharp.SKFontStyleSlant slant) [0x00000] in \u003C0dd1f6e452a9498eb4c5ec4fafde30fd\u003E:0 \r\n  at SkiaSharp.SKTypeface.FromFamilyName (System.String familyName, SkiaSharp.SKTypefaceStyle style) [0x00038] in \u003C0dd1f6e452a9498eb4c5ec4fafde30fd\u003E:0 \r\n  at CrossGraphics.Skia.SkiaGraphics.GetFontInfo (CrossGraphics.Font f) [0x00063] in /Users/fak/Dropbox/Projects/Circuit/External/CrossGraphics/src/SkiaGraphics.cs:273 \r\n  at CrossGraphics.Skia.SkiaGraphics.GetFontMetrics () [0x00001] in /Users/fak/Dropbox/Projects/Circuit/External/CrossGraphics/src/SkiaGraphics.cs:252 \r\n  at CrossGraphics.Button.Draw (CrossGraphics.IGraphics g) [0x000d3] in /Users/fak/Dropbox/Projects/Circuit/External/CrossGraphics/src/Canvas.cs:174 \r\n  at Circuit.Scope.Draw (CrossGraphics.IGraphics graphics, Circuit.ScopeTrack[] tracks, System.Drawing.RectangleF wholeFrame, System.Boolean stacked, System.Boolean drawUI, System.Boolean drawAxes, System.Boolean drawCursor) [0x002f0] in /Users/fak/Dropbox/Projects/Circuit/CircuitLib/Scope.cs:821 \r\n  at Circuit.Scope.Draw (CrossGraphics.IGraphics g) [0x00056] in /Users/fak/Dropbox/Projects/Circuit/CircuitLib/Scope.cs:733 \r\n  at Circuit.Mac.ScopeView.OnPaintSurface (SkiaSharp.Views.Mac.SKPaintGLSurfaceEventArgs e) [0x000c2] in /Users/fak/Dropbox/Projects/Circuit/CircuitMac/ScopeView.cs:182 \r\n\u0060\u0060\u0060",
+        "createdAt": "2019-10-11T22:14:05",
+        "reactions": []
+      },
+      {
+        "id": 541245720,
+        "author": "praeclarum",
+        "body": "This function was added in:\r\n\r\nhttps://github.com/mono/SkiaSharp/commit/d5aa34a78786a9e24c13655694760bf3ee4db45a#diff-1aed66166e4845e2a091a4e328bb6a43R101\r\n\r\nI\u0027ve looked over the Skia sources and don\u0027t see this function (\u0060sk_refcnt_safe_unref \u0060) anywhere.",
+        "createdAt": "2019-10-11T22:33:17",
+        "reactions": []
+      },
+      {
+        "id": 541247817,
+        "author": "Gillibald",
+        "body": "It is in the source: https://github.com/mono/skia/blob/xamarin-mobile-bindings/src/c/sk_general.cpp#L34\r\n\r\nSkiaSharp never calls Skia-API directly it always uses a C-Wrapper",
+        "createdAt": "2019-10-11T22:44:27",
+        "reactions": [
+          {
+            "user": "praeclarum",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:44.0683349Z"
+          }
+        ]
+      },
+      {
+        "id": 541253168,
+        "author": "mattleibow",
+        "body": "Does this also happen with the preview (-rc.153) from the preview feed?\r\nhttps://nugetized.blob.core.windows.net/skiasharp-eap/index.json\r\n\r\nThe -rc.147 had some issues with regards to disposing native objects that is why I have this later one where I think I got the memory management fixed. I think I might delist this version as it seems to have this issue for everyone. Not sure how the other folks that were testing this version did not hit any of these issues.",
+        "createdAt": "2019-10-11T23:14:06",
+        "reactions": []
+      },
+      {
+        "id": 541254081,
+        "author": "praeclarum",
+        "body": "@mattleibow 153 is working for me! \u003C3\r\n\r\nMy build server will love you if you put it up on nuget :-)",
+        "createdAt": "2019-10-11T23:19:37",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:08:44.4605839Z"
+          },
+          {
+            "user": "jamesmontemagno",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:08:44.4605844Z"
+          },
+          {
+            "user": "nor0x",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:08:44.4605845Z"
+          },
+          {
+            "user": "user20112",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:08:44.4605846Z"
+          }
+        ]
+      },
+      {
+        "id": 541254473,
+        "author": "mattleibow",
+        "body": "We are just waiting a week or so to make sure that it does not break the world. But what I think is happening is that nobody really uses the private feed. I suppose that is what the preview for NuGet really is for...",
+        "createdAt": "2019-10-11T23:22:10",
+        "reactions": []
+      },
+      {
+        "id": 541256800,
+        "author": "praeclarum",
+        "body": "Yeah, I didn\u0027t even know you had a private feed. Just upload to Nuget, Microsoft is paying ;-)\r\n\r\nAlso, I\u0027ll be testing on some older macOS\u0027s and will let you know if I run into anymore problems.",
+        "createdAt": "2019-10-11T23:37:34",
+        "reactions": []
+      },
+      {
+        "id": 541264540,
+        "author": "jamesmontemagno",
+        "body": "@praeclarum you could just create a nuget config and add the url: https://docs.microsoft.com/en-us/nuget/reference/nuget-config-file CI will pick it up :)",
+        "createdAt": "2019-10-12T00:39:03",
+        "reactions": []
+      },
+      {
+        "id": 541283613,
+        "author": "praeclarum",
+        "body": "@mattleibow Unfortunately 153 isn\u0027t working on OS X 10.11.4 (El Capitan).\r\n\r\nI get the error \u0022Could not initialize an instance of the type \u0027AppKit.NSOpenGLPixelFormat\u0027: the native \u0027init*\u0027 method returned nil.\u0022. Bug filed: https://github.com/mono/SkiaSharp/issues/977\r\n\r\n@jamesmontemagno This is why I always test :-) ",
+        "createdAt": "2019-10-12T04:28:32",
+        "reactions": []
+      },
+      {
+        "id": 541319794,
+        "author": "michaldobrodenka",
+        "body": "I\u0027ve upgraded all nugets, deleted bin \u0026 obj, but no luck.\r\nVS2019 16.3 PReview 2\r\nSkiaSharp 1.68.1-rc.153\r\nWindows WPF:\r\n\r\nSystem.EntryPointNotFoundException: \u0027Unable to find an entry point named \u0027sk_refcnt_safe_unref\u0027 in DLL \u0027libSkiaSharp\u0027.\u0027",
+        "createdAt": "2019-10-12T12:19:41",
+        "reactions": []
+      },
+      {
+        "id": 541320185,
+        "author": "Gillibald",
+        "body": "I am using \u00601.68.1-rc.153\u0060 without any issues. Also on CI this works for multiple platforms. (MacOS, Linux, Windows)",
+        "createdAt": "2019-10-12T12:25:06",
+        "reactions": []
+      },
+      {
+        "id": 547076897,
+        "author": "michaldobrodenka",
+        "body": "Sorry guys, ignore my comments about this exception in WPF. I had a custom build step which replaced libraries and with wrong ones.\r\n\r\nNow everything works with r 153!\r\n\r\n(one thing had to be fixed: shaping text now need setting Utf8 encoding to paint before shaping string text and setting to glyph when drawing text) ",
+        "createdAt": "2019-10-28T18:10:26",
+        "reactions": []
+      },
+      {
+        "id": 547143825,
+        "author": "Gillibald",
+        "body": "@michaldobrodenka Can you give me an example how you are drawing the text?",
+        "createdAt": "2019-10-28T21:00:44",
+        "reactions": []
+      },
+      {
+        "id": 547148153,
+        "author": "michaldobrodenka",
+        "body": "@Gillibald To draw a text is not easy. Without HarfBuzz its more like a debug or something, not really useful in real app - only basic english alphabet is rendered correctly (so no localization), RTL/LTR is not observed, rendering text using harfbuzz results in much crisper result etc.\r\n\r\nSo you have to use Harfbuzz, split text into RTL/LTR/Neutral segments and each segment render separately using harfbuzz. My simplified version is 780 lines long and it is tied in my more complex framework which I wrote to create SkiaSharp multiplatform UI controls. Text drawing was one of most complex chalenges in this framework, really unexpected, at beginning it seemed so simple, just draw text usinng Canvas.DrawText. I started with Canvas.DrawText, then with extension DrawShapedText and now I wrote my own methods with RTL/LTR segments etc.\r\n\r\nAnother challenge is font fallback (useful when you combine more fonts - emoticons with latin script, arabic - you probably need 3 fonts) I cheated and merged used fonts into one.\r\n\r\nI don\u0027t know If I\u0027m doing it correctly, but seems to be working",
+        "createdAt": "2019-10-28T21:12:46",
+        "reactions": []
+      },
+      {
+        "id": 547160927,
+        "author": "Gillibald",
+        "body": "@michaldobrodenka I am the maintainer of HarfBuzzSharp \uD83D\uDE00\r\nI just wanted to investigate what is happening when you have to set TextEncoding to UTF8",
+        "createdAt": "2019-10-28T21:50:05",
+        "reactions": []
+      },
+      {
+        "id": 547162423,
+        "author": "michaldobrodenka",
+        "body": "Haha, sorry :D Thank you for work! \r\n\r\nThere is a change in getting Buffer from string, which requires setting encoding in paint. In previous versions getting harfbuzz Buffer from string was done always in Utf8 I think. I can share more details tomorrow. ",
+        "createdAt": "2019-10-28T21:55:05",
+        "reactions": []
+      },
+      {
+        "id": 559393482,
+        "author": "john-dalsgaard",
+        "body": "Updated to 1.68.1 last night. It crashes the app instantly... Downgrading to 1.68.0 works. I\u0027ll need to publish a version that works - and then I can add the stacktrace here if you want?\r\n\r\nI\u0027m on MacOS Catalina, VS 2019 Version 8.3.10 (build 2), Xamarin.Forms 4.3.0.991211",
+        "createdAt": "2019-11-28T08:35:12",
+        "reactions": []
+      },
+      {
+        "id": 559440395,
+        "author": "john-dalsgaard",
+        "body": "Well, I seem to be wrong - downgrading _doesn\u0027t_ fix it....\r\n\r\nIn AppCenter I still get these errors (using 1.68.0):\r\n\r\n![image](https://user-images.githubusercontent.com/2842073/69799519-b6bf8d80-11d3-11ea-98f0-f694fb1a441c.png)\r\n\r\nIdeas??",
+        "createdAt": "2019-11-28T10:40:04",
+        "reactions": []
+      },
+      {
+        "id": 559457690,
+        "author": "john-dalsgaard",
+        "body": "My fault - I had not downgraded the plugin in the iOS project... Doing that seems to make it work...\r\n\r\nLet me know if you need any information from trying to use version 1.68.1?",
+        "createdAt": "2019-11-28T11:32:59",
+        "reactions": []
+      },
+      {
+        "id": 559593707,
+        "author": "mattleibow",
+        "body": "This is because there appears to be some issue with the packaging process not copying the new native binaries/frameworks into the app package.\r\n\r\nA rebuild of the app will fix it.\r\n\r\nI have opened an issue: https://github.com/xamarin/xamarin-macios/issues/7514",
+        "createdAt": "2019-11-28T19:58:16",
+        "reactions": []
+      },
+      {
+        "id": 559609315,
+        "author": "john-dalsgaard",
+        "body": "Well, I tried to upgrade again (after discussing this with someone from Microsoft on Slack) - clean, build and upload to appstore again. And this time it worked... \uD83D\uDC4D ",
+        "createdAt": "2019-11-28T21:56:56",
+        "reactions": []
+      },
+      {
+        "id": 559610839,
+        "author": "john-dalsgaard",
+        "body": "Ahhhh... I was wrong - it doesn\u0027t work! I have removed that build for the external testers again \uD83D\uDC4E ",
+        "createdAt": "2019-11-28T22:09:22",
+        "reactions": []
+      },
+      {
+        "id": 559619236,
+        "author": "mattleibow",
+        "body": "@john-dalsgaard (that was me on slack) Is it the same exception? The missing \u0060sk_refcnt_safe_unref\u0060 exception?",
+        "createdAt": "2019-11-28T23:33:44",
+        "reactions": [
+          {
+            "user": "john-dalsgaard",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:48.1844188Z"
+          }
+        ]
+      },
+      {
+        "id": 559619883,
+        "author": "john-dalsgaard",
+        "body": "Yep, it looks the same:\r\n\u0060    SKObjectExtensions.SafeUnRef (SkiaSharp.ISKReferenceCounted obj)\r\n    SKObject.DisposeNative ()\r\n    SKNativeObject.Dispose (System.Boolean disposing)\r\n    SKObject.Dispose (System.Boolean disposing)\r\n    SKPicture.Dispose (System.Boolean disposing)\r\n    SKNativeObject.Finalize ()\u0060",
+        "createdAt": "2019-11-28T23:41:27",
+        "reactions": []
+      },
+      {
+        "id": 561128141,
+        "author": "JKennedy24",
+        "body": "I am also seeing this issue with 1.68.1 on an Ipad using Xamarin.iOS.\r\n\r\nFirst spotted in the test cloud using an automated release build (built using VS mac, cleaned and rebuilt)\r\n\r\nHas anyone been able to replicate this bug in a sample or is it something to do with the way the build machine is configured?\r\n\r\ndowngrading to 1.68.0 fixed the error",
+        "createdAt": "2019-12-03T11:33:25",
+        "reactions": [
+          {
+            "user": "john-dalsgaard",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:48.6054964Z"
+          }
+        ]
+      },
+      {
+        "id": 561143347,
+        "author": "mattleibow",
+        "body": "@JKennedy24 Is it also an \u0060EntryPointNotFoundException\u0060 exception? Also, could you just add your stack trace so I can see if it is exactly the same?",
+        "createdAt": "2019-12-03T12:20:52",
+        "reactions": []
+      },
+      {
+        "id": 561193332,
+        "author": "JKennedy24",
+        "body": "I tested on a simulator - everything worked fine.\r\n\r\nI tested on an iPad air (2019) running 13.1.3 and this was the error it threw:\r\n\r\n\u003E System.EntryPointNotFoundException has been thrown\r\n\u003E sk_refcnt_safe_unref\r\n\u003E at SkiaSharp.SKObjectExtensions.SafeUnRef (SkiaSharp.ISKReferenceCounted obj) [0x00017] in \u003Ca7c90b8c47404850a87d153c500104ed\u003E:0 \\n  at SkiaSharp.SKObject.DisposeNative () [0x0000a] in \u003Ca7c90b8c47404850a87d153c500104ed\u003E:0 \\n  at SkiaSharp.SKNativeObject.Dispose (System.Boolean disposing) [0x0002a] in \u003Ca7c90b8c47404850a87d153c500104ed\u003E:0 \\n  at SkiaSharp.SKObject.Dispose (System.Boolean disposing) [0x00000] in \u003Ca7c90b8c47404850a87d153c500104ed\u003E:0 \\n  at SkiaSharp.SKSurface.Dispose (System.Boolean disposing) [0x00000] in \u003Ca7c90b8c47404850a87d153c500104ed\u003E:0 \\n  at SkiaSharp.SKNativeObject.DisposeInternal () [0x00000] in \u003Ca7c90b8c47404850a87d153c500104ed\u003E:0 \\n  at SkiaSharp.SKNativeObject.Dispose () [0x00009] in \u003Ca7c90b8c47404850a87d153c500104ed\u003E:0 \\n  at SkiaSharp.Views.iOS.SKCanvasView.Draw (CoreGraphics.CGRect rect) [0x00094] in \u003C6fc7fece3bdb478390d6db867ea7bd11\u003E:0 \\n  at (wrapper managed-to-native) UIKit.UIApplication.UIApplicationMain(int,string[],intptr,intptr)\\n  at UIKit.UIApplication.Main (System.String[] args, System.IntPtr principal, System.IntPtr delegate) [0x00005] in /Library/Frameworks/Xamarin.iOS.framework/Versions/13.6.0.12/src/Xamarin.iOS/UIKit/UIApplication.cs:86 \\n  at UIKit.UIApplication.Main (System.String[] args, System.String principalClassName, System.String delegateClassName) [0x0000e] in /Library/Frameworks/Xamarin.iOS.framework/Versions/13.6.0.12/src/Xamarin.iOS/UIKit/UIApplication.cs:65 \\n  at FieldStrikeMove.iOS.Application.Main (System.String[] args) [0x00001] in /Users/chrisjohn/Documents/TFS/FieldStrike/FieldStrikeMove-dev/FieldStrikeMove.iOS/Main.cs:29 \u0022\r\n\r\nI use:\r\niOS proj\r\nSkiasharp 1.68.1\r\n\r\nForms project:\r\nSkiasharp.Views.Forms 1.68.1\r\nSkiasharp.SVG 1.60.0\r\nSkiasharp.extended 1.60.0\r\n\r\n\r\n**Scratch all this**\r\n\u003E Ok so I don\u0027t know whether this is related, because I don\u0027t fully understand what\u0027s causing the issue but I\u0027ll post some information here anyway\r\n\u003E \r\n\u003E I noticed at the top of Mac VS it said \u0022Install missing Xcode command line tools\u0022 (I guess Xcode automatically updated and Mac vs is checking whether command line tools exist?) After doing this I upgraded back to 1.68.1 and it seems to build and doesn\u0027t throw any runtime exceptions.\r\n\u003E \r\n\u003E Unfortunately another third party package does throw errors which prevents me doing a UI test to 100% confirm whether this has fixed the issue.\r\n\u003E \r\n\u003E As soon as the third party has fixed their issue I will run my UI test and confirm.\r\n\u003E \r\n\u003E \u003E Is it also an EntryPointNotFoundException exception\r\n\u003E \r\n\u003E It was definitely the EntryPointNotFoundException I was getting this morning\r\n\r\n",
+        "createdAt": "2019-12-03T14:32:05",
+        "reactions": []
+      },
+      {
+        "id": 561203113,
+        "author": "JKennedy24",
+        "body": "Interestingly my third party bug I said about has the following stacktrace:\r\n\r\n\u003E Could not create provider from the specified file\r\n\u003E   at CoreGraphics.CGDataProvider..ctor (System.String file) [0x0003d] in /Library/Frameworks/Xamarin.iOS.framework/Versions/13.6.0.12/src/Xamarin.iOS/CoreGraphics/CGDataProvider.cs:106 \r\n\u003E   at Syncfusion.SfDataGrid.XForms.iOS.FontIconHelper.SetFontIcon (System.String font) [0x00000] in \u003C8603d9919dd740d399be22bdbd54ebfa\u003E:0\r\n\r\nI see this looks like a similar stack trace to:\r\n\r\nhttps://github.com/mono/SkiaSharp/issues/968#issuecomment-541241747\r\n\r\nare the two linked?",
+        "createdAt": "2019-12-03T14:54:03",
+        "reactions": []
+      },
+      {
+        "id": 561242725,
+        "author": "Gillibald",
+        "body": "SkiaSharp.SVG and SkiaSharp.extended are not directly referencing the new version. Might that be an issue?",
+        "createdAt": "2019-12-03T16:20:26",
+        "reactions": []
+      },
+      {
+        "id": 561384720,
+        "author": "john-dalsgaard",
+        "body": "Ok, so I tried to release another test version today. This time it does not work with version 1.68.0... it crashes instantly with: \r\n\r\n\u0060\u0060\u0060  SKObjectExtensions.SafeUnRef (SkiaSharp.ISKReferenceCounted obj)\r\n    SKObject.DisposeNative ()\r\n    SKNativeObject.Dispose (System.Boolean disposing)\r\n    SKPicture.Dispose (System.Boolean disposing)\r\n    SKNativeObject.Finalize ()\r\n\u0060\u0060\u0060 \r\nIf I run the same project in debug mode on the same device it works fine...\r\n\r\nNot sure how to fix that right now.... :-(",
+        "createdAt": "2019-12-03T22:23:58",
+        "reactions": []
+      },
+      {
+        "id": 561552030,
+        "author": "john-dalsgaard",
+        "body": "Ok, it turned out that disabling LLVM optimization made it work again....",
+        "createdAt": "2019-12-04T09:25:21",
+        "reactions": []
+      },
+      {
+        "id": 561635923,
+        "author": "mattleibow",
+        "body": "This is very interesting as LLVM _may_ be removing things, but shouldn\u0027t as it is used by the p/invokes. I will investigate.",
+        "createdAt": "2019-12-04T13:10:16",
+        "reactions": []
+      },
+      {
+        "id": 561646049,
+        "author": "JKennedy24",
+        "body": "Because I was using Debug builds when I tested, LLVM optimiser isn\u0027t even enabled for me, so I would be skeptical of that as a cause",
+        "createdAt": "2019-12-04T13:29:10",
+        "reactions": []
+      },
+      {
+        "id": 565670003,
+        "author": "mattleibow",
+        "body": "So, I have been looking at this and it is a result of https://github.com/xamarin/xamarin-macios/issues/7514. When the framework is extracted, it is not actually deployed to the device.\r\n\r\nThe best way to make all this work is to just delete the bin and obj folders after updating the NuGet. Then a restore and build should make everything work again.\r\n\r\nThis is a bit of a pain, but I hope to try out some new buttons mentioned in that issue to permanently fix this issue. But, in order to get out a release soon - and avoid any changes that may cause issues - this will have to wait for v1.68.2.",
+        "createdAt": "2019-12-14T01:56:06",
+        "reactions": []
+      },
+      {
+        "id": 571526730,
+        "author": "JKennedy24",
+        "body": "@mattleibow Just to double check. Do you think this issue will be fixed in V1.68.2?",
+        "createdAt": "2020-01-07T10:22:19",
+        "reactions": [
+          {
+            "user": "mbalous",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:50.6976686Z"
+          },
+          {
+            "user": "Genfood",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:50.6976691Z"
+          }
+        ]
+      },
+      {
+        "id": 572726593,
+        "author": "john-dalsgaard",
+        "body": "I tried to update to 1.68.1.1 - but this error seems still to be relevant (if it is exactly the same?). This happens on launch of my app (in debugger):\r\n\r\n\u0060\u0060\u0060\r\n2020-01-09 20:08:41.345316\u002B0100 Angler.iOS[33939:2277356] [AppCenterCrashes] ERROR: \u002B[MSWrapperLogger MSWrapperLog:tag:level:]/10 Unhandled Exception:\r\nSystem.EntryPointNotFoundException: sk_refcnt_safe_unref assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_refcnt_safe_unref(intptr)\r\n  at SkiaSharp.SKObjectExtensions.SafeUnRef (SkiaSharp.ISKReferenceCounted obj) [0x00017] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKObject.DisposeNative () [0x0000a] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKNativeObject.Dispose (System.Boolean disposing) [0x0002a] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKObject.Dispose (System.Boolean disposing) [0x00000] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKPicture.Dispose (System.Boolean disposing) [0x00000] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKNativeObject.Finalize () [0x00000] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0\r\n2020-01-09 20:08:41.355942\u002B0100 Angler.iOS[33939:2277356] Unhandled managed exception: sk_refcnt_safe_unref assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null) (System.EntryPointNotFoundException)\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_refcnt_safe_unref(intptr)\r\n  at SkiaSharp.SKObjectExtensions.SafeUnRef (SkiaSharp.ISKReferenceCounted obj) [0x00017] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKObject.DisposeNative () [0x0000a] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKNativeObject.Dispose (System.Boolean disposing) [0x0002a] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKObject.Dispose (System.Boolean disposing) [0x00000] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKPicture.Dispose (System.Boolean disposing) [0x00000] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0 \r\n  at SkiaSharp.SKNativeObject.Finalize () [0x00000] in \u003Cbbddcb2c541b425685678410ffe54489\u003E:0\r\nCalabashServer | XTC_SKIP_LPSERVER_TOKEN is not in the app environment\r\nCalabashServer | Will start LPServer with identifier: e8754b3cd4c478021b7b5f5654606d3a9bc25485\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b68796e\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b68796e\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x112de198b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x112de198b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x112ddf71b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x112ddf71b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3ee0\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3ee0\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_frame_ptr:86: Stack growing in wrong direction, terminating stack walk\r\n[PLCrashReport] plcrash_writer_write_thread:984: Terminated stack walking early: Corrupted frame\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b68796e\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b68796e\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x112de198b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x112de198b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x112ddf71b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x112ddf71b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3ee0\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3ee0\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1120e3313\r\n[PLCrashReport] MSplframe_cursor_read_frame_ptr:86: Stack growing in wrong direction, terminating stack walk\r\n[PLCrashReport] plcrash_writer_write_thread:984: Terminated stack walking early: Corrupted frame\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26f5e0\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26f5e0\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26ec43\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26ec43\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26ce26\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26ce26\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26f5e0\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26f5e0\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26ec43\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26ec43\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26ce26\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26ce26\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11293737b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11293737b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1129340eb\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1129340eb\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11293269b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11293269b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11277dc5c\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11277dc5c\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11277d49d\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11277d49d\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b32230b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b32230b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b320e4b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b320e4b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11277a9b3\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11277a9b3\r\n[PLCrashReport] MSplframe_cursor_read_frame_ptr:86: Stack growing in wrong direction, terminating stack walk\r\n[PLCrashReport] plcrash_writer_write_thread:984: Terminated stack walking early: Corrupted frame\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11293737b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11293737b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x1129340eb\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x1129340eb\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11293269b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11293269b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11277dc5c\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11277dc5c\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b26af43\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11277d49d\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11277d49d\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b32230b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b32230b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x10b320e4b\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x10b320e4b\r\n[PLCrashReport] MSplframe_cursor_read_compact_unwind:67: Could not find a loaded image for the current frame pc: 0x11277a9b3\r\n[PLCrashReport] MSplframe_cursor_read_dwarf_unwind:236: Could not find a loaded image for the current frame pc: 0x11277a9b3\r\n[PLCrashReport] MSplframe_cursor_read_frame_ptr:86: Stack growing in wrong direction, terminating stack walk\r\n[PLCrashReport] plcrash_writer_write_thread:984: Terminated stack walking early: Corrupted frame\r\n\u0060\u0060\u0060\r\nDowngrading to 1.68.0 - restore NuGet packages and cleaning the project fixed the issue for now ;-)\r\n\r\nThis is my environment:\r\n\u0060\u0060\u0060\r\n=== Visual Studio Professional 2019 for Mac ===\r\n\r\nVersion 8.4 (build 2657)\r\nInstallation UUID: 0e93c0c9-35a7-4964-a385-abee678b36e8\r\n\tGTK\u002B 2.24.23 (Raleigh theme)\r\n\tXamarin.Mac 5.16.1.25 (issue-7441-d16-3-vsmac / 881172e73)\r\n\r\n\tPackage version: 606000155\r\n\r\n=== Mono Framework MDK ===\r\n\r\nRuntime:\r\n\tMono 6.6.0.155 (2019-08/296a9afdb24) (64-bit)\r\n\tPackage version: 606000155\r\n\r\n=== Roslyn (Language Service) ===\r\n\r\n3.4.0-beta4-19562-05\u002Bff930dec4565e2bc424ad3bf3e22ecb20542c87d\r\n\r\n=== NuGet ===\r\n\r\nVersion: 5.3.0.6192\r\n\r\n=== .NET Core SDK ===\r\n\r\nSDK: /usr/local/share/dotnet/sdk/3.1.100/Sdks\r\nSDK Versions:\r\n\t3.1.100\r\n\t3.0.101\r\n\t3.0.100\r\n\t2.2.401\r\n\t2.1.701\r\n\t2.1.700\r\n\t2.1.505\r\n\t2.1.504\r\n\t2.1.503\r\n\t2.1.401\r\n\t2.1.302\r\n\t2.1.301\r\n\t2.1.4\r\nMSBuild SDKs: /Library/Frameworks/Mono.framework/Versions/6.6.0/lib/mono/msbuild/Current/bin/Sdks\r\n\r\n=== .NET Core Runtime ===\r\n\r\nRuntime: /usr/local/share/dotnet/dotnet\r\nRuntime Versions:\r\n\t3.1.0\r\n\t3.0.1\r\n\t3.0.0\r\n\t3.0.0-rc1-19456-20\r\n\t3.0.0-preview9-19423-09\r\n\t2.2.6\r\n\t2.1.14\r\n\t2.1.13\r\n\t2.1.12\r\n\t2.1.11\r\n\t2.1.9\r\n\t2.1.8\r\n\t2.1.7\r\n\t2.1.3\r\n\t2.1.2\r\n\t2.1.1\r\n\t2.0.5\r\n\r\n=== Xamarin.Profiler ===\r\n\r\nVersion: 1.6.12.29\r\nLocation: /Applications/Xamarin Profiler.app/Contents/MacOS/Xamarin Profiler\r\n\r\n=== Updater ===\r\n\r\nVersion: 11\r\n\r\n=== Apple Developer Tools ===\r\n\r\nXcode 11.2.1 (15526.1)\r\nBuild 11B53\r\n\r\n=== Xamarin.Mac ===\r\n\r\nVersion: 6.8.3.0 (Visual Studio Professional)\r\nHash: 0d8fe219c\r\nBranch: d16-4\r\nBuild date: 2019-12-04 13:06:40-0500\r\n\r\n=== Xamarin.iOS ===\r\n\r\nVersion: 13.8.3.0 (Visual Studio Professional)\r\nHash: 0d8fe219c\r\nBranch: d16-4\r\nBuild date: 2019-12-04 13:06:41-0500\r\n\r\n=== Xamarin Designer ===\r\n\r\nVersion: 16.4.0.468\r\nHash: 519082ea8\r\nBranch: remotes/origin/d16-4\r\nBuild date: 2019-12-04 16:21:00 UTC\r\n\r\n=== Xamarin.Android ===\r\n\r\nVersion: 10.1.1.0 (Visual Studio Professional)\r\nCommit: xamarin-android/d16-4/f2c9364\r\nAndroid SDK: /Users/jda/Library/Android/sdk\r\n\tSupported Android versions:\r\n\t\t4.4 (API level 19)\r\n\t\t5.1 (API level 22)\r\n\t\t6.0 (API level 23)\r\n\t\t7.1 (API level 25)\r\n\t\t8.0 (API level 26)\r\n\t\t8.1 (API level 27)\r\n\r\nSDK Tools Version: 26.1.1\r\nSDK Platform Tools Version: 29.0.2\r\nSDK Build Tools Version: 28.0.3\r\n\r\nBuild Information: \r\nMono: bef1e63\r\nJava.Interop: xamarin/java.interop/d16-4@c4e569f\r\nProGuard: xamarin/proguard/master@905836d\r\nSQLite: xamarin/sqlite/3.28.0@46204c4\r\nXamarin.Android Tools: xamarin/xamarin-android-tools/master@9f4ed4b\r\n\r\n=== Microsoft Mobile OpenJDK ===\r\n\r\nJava SDK: /Users/jda/Library/Developer/Xamarin/jdk/microsoft_dist_openjdk_8.0.25\r\n1.8.0-25\r\nAndroid Designer EPL code available here:\r\nhttps://github.com/xamarin/AndroidDesigner.EPL\r\n\r\n=== Android SDK Manager ===\r\n\r\nVersion: 16.4.0.9\r\nHash: 3f7256f\r\nBranch: remotes/origin/d16-4\r\nBuild date: 2019-12-19 18:59:12 UTC\r\n\r\n=== Android Device Manager ===\r\n\r\nVersion: 16.4.0.28\r\nHash: 68e9956\r\nBranch: remotes/origin/d16-4\r\nBuild date: 2019-12-19 18:59:32 UTC\r\n\r\n=== Xamarin Inspector ===\r\n\r\nVersion: 1.4.3\r\nHash: db27525\r\nBranch: 1.4-release\r\nBuild date: Mon, 09 Jul 2018 21:20:18 GMT\r\nClient compatibility: 1\r\n\r\n=== Build Information ===\r\n\r\nRelease ID: 804002657\r\nGit revision: 4c6723413e884e024466fc93ff10e938bca7f721\r\nBuild date: 2020-01-06 18:20:13\u002B00\r\nBuild branch: release-8.4\r\nXamarin extensions: 0f572cad12fd3886cd8e21a8b93b86e29ceaf111\r\n\r\n=== Operating System ===\r\n\r\nMac OS X 10.15.2\r\nDarwin 19.2.0 Darwin Kernel Version 19.2.0\r\n    Sat Nov  9 03:47:04 PST 2019\r\n    root:xnu-6153.61.1~20/RELEASE_X86_64 x86_64\r\n\r\n\u0060\u0060\u0060\r\n... and also latest Xamarin.Forms (4.4.0.991265)",
+        "createdAt": "2020-01-09T19:51:49",
+        "reactions": []
+      },
+      {
+        "id": 572957131,
+        "author": "mbalous",
+        "body": "Experienced crashing with a very similar stacktrace (\u0060sk_refcnt_safe_unref\u0060) as @john-dalsgaard on SkiaSharp 1.68.1.1. Hovewer cleaning the solution and rebuilding the project fixed it.",
+        "createdAt": "2020-01-10T09:52:44",
+        "reactions": []
+      },
+      {
+        "id": 573039507,
+        "author": "john-dalsgaard",
+        "body": "@mbalous Good catch! I _should_ have done a clean before reporting this... (but I had issues with other packages so just saw the same issue as with 1.68.1).\r\n\r\nBut... upgrading _**and**_ cleaning seems to make it work. \r\n\r\nThanks! \r\n\r\n_I really prefer to have all of the latest versions installed - much easier to admin :-)_",
+        "createdAt": "2020-01-10T13:41:14",
+        "reactions": []
+      },
+      {
+        "id": 573091481,
+        "author": "mattleibow",
+        "body": "That\u0027s good to hear. It is a combination of a few things, but it appears to have been fixed and merge a few days ago: https://github.com/xamarin/xamarin-macios/issues/7514\r\n\r\nRight now, the fix is just a clean and rebuild. But, hopefully the next release makes all the things go away.",
+        "createdAt": "2020-01-10T15:52:09",
+        "reactions": []
+      }
+    ]
+  }
 }

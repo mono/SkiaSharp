@@ -14,5 +14,93 @@
   "updatedAt": "2022-08-19T09:02:20",
   "closedAt": "2019-11-05T21:56:34",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:56.8301987Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 537067093,
+        "author": "daltonks",
+        "body": "Opening the SVG in Inkscape, I see that the left-most part has an undefined fill color. Maybe SkiaSharp takes this to mean transparent instead of black?\r\n\r\nAs a workaround, I bet you could explicitly set a black fill color for the second path in the SVG.",
+        "createdAt": "2019-10-01T14:37:39",
+        "reactions": []
+      },
+      {
+        "id": 537068469,
+        "author": "daltonks",
+        "body": "Oh actually, when a fill is undefined, it looks like SkiaSharp holds on to the last fill color that was used instead of using black.\r\n\r\nIn this case, red is used because it was the fill color for the previous path in the SVG.",
+        "createdAt": "2019-10-01T14:40:34",
+        "reactions": []
+      },
+      {
+        "id": 537354172,
+        "author": "hulluP",
+        "body": "a pointer here to maybe speed up the triage:\r\nWhen I load the svg as a FFImageLoading.CachedImage it shows correctly. The FFImageLoading framework is using skia sharp.",
+        "createdAt": "2019-10-02T06:22:45",
+        "reactions": []
+      },
+      {
+        "id": 550040215,
+        "author": "mattleibow",
+        "body": "@hulluP I believe that FFImageLoading is using it\u0027s own implementation of the SVG. Currently, there is not much work going on with the SkiaSharp SVG due to priorities.\r\n\r\nI have not tried this particular set of libraries, but you could check out https://github.com/wieslawsoltes/Svg.Skia\r\n\r\n@wieslawsoltes has been hard at work here and has some good bits that probably can do a far better job than SkiaSharp could ever do.\r\n\r\nDuplicate of https://github.com/mono/SkiaSharp.Extended/issues/2",
+        "createdAt": "2019-11-05T21:56:33",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:55.517743Z"
+          }
+        ]
+      },
+      {
+        "id": 550468182,
+        "author": "wieslawsoltes",
+        "body": "@hulluP @mattleibow I am working hard on the \u0060Svg.Skia\u0060 library. \r\n\r\nThere has been some great progress with \u0060Svg\u0060 library itself https://github.com/vvvv/SVG\r\n\r\nHere is sample test app I am using in development. You can check easily your \u0060SVG\u0060 with this tool (and compare with Chrome rendering):\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/tree/master/tests/SvgToPng\r\n\r\nThere is still a lot work to be done \uD83D\uDE04 ",
+        "createdAt": "2019-11-06T19:38:54",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:08:55.7601218Z"
+          }
+        ]
+      },
+      {
+        "id": 569878790,
+        "author": "hulluP",
+        "body": "@wieslawsoltes @mattleibow \r\nI tried to plug in the svg.skia but I am failing to load any type of files. I tried multiple ways but I am getting a \u0022System.PlatformNotSupportedException has been thrown\u0022.\r\nmy simple sample project is at https://github.com/hulluP/SkiaSVGIssue any pointers how to get the svgs to render are greatly appreciated. \r\n\r\nthanks HP\r\n",
+        "createdAt": "2019-12-31T07:12:04",
+        "reactions": []
+      },
+      {
+        "id": 569883456,
+        "author": "wieslawsoltes",
+        "body": "\u003E @wieslawsoltes @mattleibow\r\n\u003E I tried to plug in the svg.skia but I am failing to load any type of files. I tried multiple ways but I am getting a \u0022System.PlatformNotSupportedException has been thrown\u0022.\r\n\u003E my simple sample project is at https://github.com/hulluP/SkiaSVGIssue any pointers how to get the svgs to render are greatly appreciated.\r\n\u003E \r\n\u003E thanks HP\r\n\r\nToy need to use one of support target frameworks for final executable netcoreapp2.2 or newer and net452 or newer. The nestadndard2.0 will not work if final executable does not use supported target framework. This is known issue.",
+        "createdAt": "2019-12-31T07:51:22",
+        "reactions": []
+      },
+      {
+        "id": 569917694,
+        "author": "mattleibow",
+        "body": "Thanks @wieslawsoltes .\r\n\r\n@hulluP I would suggest opening an issue on Svg.Skia so that not only can the issue be tracked, but it will get implemented. I am hoping @wieslawsoltes supports iOS and Android? Since SkiaSharp is cross-platform.",
+        "createdAt": "2019-12-31T11:58:37",
+        "reactions": []
+      },
+      {
+        "id": 569921374,
+        "author": "wieslawsoltes",
+        "body": "\u003E Thanks @wieslawsoltes .\r\n\u003E \r\n\u003E @hulluP I would suggest opening an issue on Svg.Skia so that not only can the issue be tracked, but it will get implemented. I am hoping @wieslawsoltes supports iOS and Android? Since SkiaSharp is cross-platform.\r\n\r\nIt\u0027s issue with dependency \u0060System.Drawing.Common\u0060 and missing stuff when using \u0060.NETStandard 2.0\u0060 and using different executable than netcoreapp2.2 or newer and net452 or newer.\r\n\r\nSvg.Skia depends on https://github.com/vvvv/SVG and it depends on \u0060System.Drawing.Common\u0060.\r\n\r\nhttps://github.com/vvvv/SVG/issues/581\r\n\r\nProbably some stuff is missing in \u0060System.Drawing.Common\u0060 or other related issue with this package on Android/iOS.",
+        "createdAt": "2019-12-31T12:28:02",
+        "reactions": []
+      },
+      {
+        "id": 569946743,
+        "author": "wieslawsoltes",
+        "body": "This is how Svg.Skia renders demo.svg file:\r\n![SvgToPng_2019-12-31_16-34-49](https://user-images.githubusercontent.com/2297442/71626070-92e4d280-2beb-11ea-992f-8cfec3de3474.png)\r\n",
+        "createdAt": "2019-12-31T15:35:57",
+        "reactions": []
+      }
+    ]
+  }
 }

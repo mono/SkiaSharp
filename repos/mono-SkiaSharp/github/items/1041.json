@@ -36,5 +36,144 @@
   "updatedAt": "2022-08-19T09:01:53",
   "closedAt": "2019-12-13T00:45:35",
   "commentCount": 19,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:55.5007427Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 561309325,
+        "author": "mattleibow",
+        "body": "Just bringing in a comment from @vijayasurya20: https://github.com/mono/SkiaSharp/issues/1050#issuecomment-561184570\r\n\r\n\u003E As you have mentioned, while installing the SkiaSharp into the test project works fine.\r\n\u003E\r\n\u003E Since we have added the .Net Standard library project which has \u0022SkiaSharp\u0022 as dependent package is added as dependency of Test project, then please let me know why should we need to add \u0022SkiaSharp\u0022 package individually into the test project. Because the Library project itself should have every dependency it needs.",
+        "createdAt": "2019-12-03T19:01:56",
+        "reactions": []
+      },
+      {
+        "id": 561313379,
+        "author": "mattleibow",
+        "body": "@vijayasurya20 raises a good point - why should the test project need it to be specified. But this is not as straight forward as it may seem.\r\n\r\nFor .NET Core and all the platforms other than the full .NET Framework, the platform has the understanding that it should only reference the native libraries at the end of the chain. If I create a netcoreapp with a long dependency chain with only the last referencing SkiaSharp, the app still works. This is because the SkiaSharp reference is bubbled all the way up, and the final app project also includes the native binaries in the runtimes folder. As a result, everything works.\r\n\r\nFor the full .NET Framework, it does not have this idea of the runtimes folder, so I have to manually copy the files to the output directory. Right now, all this logic is in a build target. That build target is only referenced by the project that pulls in SkiaSharp. As a result, the MANAGED reference to SkiaSharp get bubbled up as it is a reference, but not the native binaries.\r\n\r\nThis is obviously not the best. But, if we make the targets file bubble up as well, then EACH project will have the native binaries in the output. Is this desirable?\r\n\r\nWe _could_ make the native binaries only copy when the project is an app project (Exe or WinExe). This would work, but what about test projects (which is one of the reasons for this issue)?\r\n\r\nAfter all this, we are at a place where .NET Core works fine and .NET Framework is a little dodgy. But, all we have to do is install SkiaSharp into the top-level project. \r\n\r\nI am moving this to v1.68.2 until I can decide what the best thing to do is.",
+        "createdAt": "2019-12-03T19:12:11",
+        "reactions": []
+      },
+      {
+        "id": 561377570,
+        "author": "dotMorten",
+        "body": "\u003E if we make the targets file bubble up as well, then EACH project will have the native binaries in the output\r\n\r\nI used to limit this based on the output type (ie don\u0027t do it for class libraries). However that caused problems for people building plugins for other products, as they were now missing the native assemblies. So yes I\u0027d say deploy it regardless.",
+        "createdAt": "2019-12-03T22:03:48",
+        "reactions": []
+      },
+      {
+        "id": 571460572,
+        "author": "vijayasurya20",
+        "body": "Hi @mattleibow ,\r\n\r\nI have checked in latest 1.68.1.1 release version, but still i am facing the same issue as raised in the following forum.\r\nhttps://github.com/mono/SkiaSharp/issues/1050\r\n\r\nPlease let me know whether it is fixed? If not so when can I expect the fix for this issue?\r\n\r\nRegards,\r\nVijayasurya A\r\n\r\n",
+        "createdAt": "2020-01-07T06:52:36",
+        "reactions": []
+      },
+      {
+        "id": 571617022,
+        "author": "mattleibow",
+        "body": "I just tried your sample project attached to the other issue and upgraded. The tests ran in the IDE. All I did was unzip, open and upgrade.",
+        "createdAt": "2020-01-07T14:46:32",
+        "reactions": []
+      },
+      {
+        "id": 573888012,
+        "author": "hafner",
+        "body": "\u003E I just tried your sample project attached to the other issue and upgraded. The tests ran in the IDE. All I did was unzip, open, and upgrade.\r\n\r\nSo I\u0027m having the same problem with my project. I also downloaded vijayasuya20\u0027s project, and it has the same error I\u0027m getting. I unzipped, opened, and upgraded and I still get the same error. What can I try next? If we knew, it would help multiple people.",
+        "createdAt": "2020-01-13T21:49:37",
+        "reactions": []
+      },
+      {
+        "id": 574024125,
+        "author": "vijayasurya20",
+        "body": "Hi @mattleibow ,\r\n\r\nAs @hafner said, I am also still facing the same error in my end.\r\n\r\nPlease let me know what should i need to do from my end to resolve this issue.\r\n\r\nRegards,\r\nVijayasurya A",
+        "createdAt": "2020-01-14T06:28:28",
+        "reactions": []
+      },
+      {
+        "id": 574693872,
+        "author": "hafner",
+        "body": "What I don\u0027t get is both projects seem to have all of the dlls copied to the output directory yet it still doesn\u0027t work.",
+        "createdAt": "2020-01-15T14:51:16",
+        "reactions": []
+      },
+      {
+        "id": 576400773,
+        "author": "TysonMN",
+        "body": "My experience is similar to @mattleibow\u0027s; his description below is also true for me.\r\n\u003E I just tried your sample project attached to the other issue and upgraded. The tests ran in the IDE. All I did was unzip, open and upgrade.\r\n\r\nIn particular, instead of the test failing with a \u0060TypeInitializationException\u0060 it now fails with a \u0060FileLoadException\u0060.\r\n\r\nI poked around a bit further and figured the following out.  Maybe it is helpful.\r\n\r\nI have a simple WPF application with a dependency on the latest prerelease of SkiaSharp (version 1.68.2 (Preview Build 17)).  The application works when targeting .NET Core 3.0 and throws a \u0060TypeInitializationException\u0060 (c.f. #1050) when targeting .NET Framework 4.7.2.\r\n\r\nI also found three workarounds:\r\n1. Change platform from \u0022Any CPU\u0022 to \u002264-bit\u0022;\r\n2. Change platform from \u0022Any CPU\u0022 to \u002232-bit\u0022; and\r\n3. Leave platform as \u0022Any CPU\u0022 but then copy \u0060netcoreapp3.0\\runtimes\\win-x64\\native\\libSkiaSharp.dll\u0060 to \u0060net472\u0060.\r\n\r\nIn case three (when platform is set to \u0022Any CPU\u0022), it seems like the 32-bit version of \u0060libSkiaSharp.dll\u0060 is copied into the output directory.  In particular,\r\n- \u0060netcoreapp3.0\\runtimes\\win-x86\\native\\libSkiaSharp.dll\u0060 and\r\n- \u0060net472\\libSkiaSharp.dll\u0060\r\n\r\nhave the same MD5 hash.",
+        "createdAt": "2020-01-20T19:17:17",
+        "reactions": []
+      },
+      {
+        "id": 576435426,
+        "author": "mattleibow",
+        "body": "Ah, very good catch. That is often the case. The main issue here is that I think the test is built as 32-bit and then run as 64-bit (or vice versa). Switching to a specific architecture usually fixes that as @bender2k14 found. But, I believe you can ALSO switch the CPU that the tests run in in VS to control the runner.",
+        "createdAt": "2020-01-20T21:28:16",
+        "reactions": []
+      },
+      {
+        "id": 577777604,
+        "author": "hafner",
+        "body": "So my whole 4.7.2, ten project solution (including libraries and tests) were all targeting \u0022Any CPU.\u0022 After spending hours and hours on it what @bender2k14 said got me going, so thank you. I switched everything over to 32-bit. Although I need to research what the implications of doing this vs Any CPU are. Is an official fix coming?",
+        "createdAt": "2020-01-23T17:09:45",
+        "reactions": []
+      },
+      {
+        "id": 580725714,
+        "author": "loketha",
+        "body": "Hi @mattleibow \r\n\r\nAs per @bender2k14 suggestion, I checked the project with different configurations. But Still i am facing the same FileLoadException issue.\r\n\r\nPlease let me know what should i need to do from my end to resolve this issue.\r\n\r\nRegards,\r\nLoketha E\r\n\r\n",
+        "createdAt": "2020-01-31T13:06:01",
+        "reactions": []
+      },
+      {
+        "id": 581020293,
+        "author": "mattleibow",
+        "body": "Does anyone have a repro project of this? Also, remember that MSBuild may detect that it needs to copy a 32/64 bit assemblies, and then VS will run the other platform. There is a option in the test explorer setting to pick what CPU arch to use.\r\n\r\nAlso, it might be the case that you have selected the \u0022prefer 32-bit\u0022 in the project options. So, even though the runner is selecting 64-bit, the runtime actually thinks it is 32-bit.\r\n\r\nWhat I usually do is make sure the \u0022prefer 32-bit\u0022 is OFF in the project settings, build Any CPU and then make sure that my test explorer is running 64-bit. This way, MSBuild copies the 64-bit, and the runner is 64-bit.\r\n\r\n\u003E Also note, the p[refer 32-bit option is just for Windows. I believe it is ignored on macos/linux. I might be wrong, but it is usually safe to disable.\r\n\r\n",
+        "createdAt": "2020-02-01T11:20:48",
+        "reactions": []
+      },
+      {
+        "id": 586908786,
+        "author": "vijayasurya20",
+        "body": "Hi @mattleibow ,\r\n\r\nFirst of all, Thank you for all your efforts.\r\n\r\nAs you have mentioned, we have checked our project and ensured that the \u0022Prefer 32 bit\u0022 option is disabled both in our Library and also in the Test project. In both of our projects, we set the build target platform as \u0022x86\u0022 only, but still, we are facing the same issue in our end. Can you please check this in your end using the project shared by us in the following link.\r\n\r\nhttps://github.com/mono/SkiaSharp/issues/1050 \r\n\r\nPlease let us know if you have any questions.\r\n\r\nRegards,\r\nVijayasurya A",
+        "createdAt": "2020-02-17T09:55:27",
+        "reactions": []
+      },
+      {
+        "id": 586927336,
+        "author": "mattleibow",
+        "body": "I just did that and it worked. Steps:\r\n - download zip\r\n - update SkiaSharp to v1.68.1.1\r\n - switch to x86\r\n - right click the project and select \u0022Run Tests\u0022\r\n - observe the green wave\r\n\r\nI also notice this on both projects:\r\n\u0060\u0060\u0060csharp\r\n    \u003CPlatforms\u003EAnyCPU;x86\u003C/Platforms\u003E\r\n    ....\r\n    \u003CPropertyGroup Condition=\u0022 \u0027$(Configuration)\u0027 == \u0027Debug\u0027 \u0022\u003E\r\n      \u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\r\n    \u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nYou probably should not need that. \r\n\r\nI removed them and the test was red. This is because the test runner now was using x86, but the compiler was optimizing for x64. To fix this, I just selected x64 from the test runner\u0027s settings:\r\n![image](https://user-images.githubusercontent.com/1096616/74646233-18afe380-5182-11ea-8755-524086037820.png)\r\n\r\nBut this last option is up to you.",
+        "createdAt": "2020-02-17T10:37:21",
+        "reactions": []
+      },
+      {
+        "id": 591405774,
+        "author": "vijayasurya20",
+        "body": "Hi @mattleibow,\r\n\r\nThank you for your suggestion.\r\n\r\nWe have tried both of your suggestions in our end, but still, the persists in our end. For your reference, please find the video illustration below as follows.\r\n[Video.zip](https://github.com/mono/SkiaSharp/files/4255723/Video.zip)\r\n\r\n\r\nCan you please check this and provide us solution? \r\n\r\nRegards,\r\nVijayasurya A",
+        "createdAt": "2020-02-26T12:40:10",
+        "reactions": []
+      },
+      {
+        "id": 594329832,
+        "author": "vijayasurya20",
+        "body": "Hi @mattleibow ,\r\n\r\nCan you please share your suggestion on this as requested earlier.\r\n\r\nRegards,\r\nVijayasurya A",
+        "createdAt": "2020-03-04T05:08:08",
+        "reactions": []
+      },
+      {
+        "id": 597680350,
+        "author": "ManikandanRavichandranSync",
+        "body": "Hi @mattleibow,\r\n\r\nCan you please share your suggestion on this as requested earlier.\r\n\r\nRegards,\r\nManish Ravichandran\r\n",
+        "createdAt": "2020-03-11T14:52:42",
+        "reactions": []
+      },
+      {
+        "id": 598145878,
+        "author": "mattleibow",
+        "body": "@vijayasurya20 @ManishSync Sorry for the delay in getting back to you. I had a look at your screen capture and I think I see what is going on. All the features for supporting your scenario are not supported in VS2017. It is recommended to use VS2019.\r\n\r\nThe feature for \u0060buildTransitive\u0060 folders in NuGets are only supported in NuGet v5. VS2017 only has NuGet v4.6.\r\n\r\nAnother issue that is sort of contributing to this not working is the fact that the \u0060office-processing\u0060 is \u0060netstandard\u0060 (which is a good thing). The .NET Standard projects do not make use of the .targets files that copy files because they make use of a new feature in NuGet - the \u0060runtimes\u0060 folder. However, this is not coming into play right now because the test project is net471 - which does not support the \u0060runtimes\u0060 feature.\r\n\r\nThere are a few solutions for VS2017:\r\n - Switch the \u0060office-processing\u0060 project to \u0060net471\u0060 so that the .targets files start to come into play.\r\n - Multi-target the \u0060office-processing\u0060 project so the tests can use net471 and the apps can use netstandard: \u0060\u003CTargetFrameworks\u003Enetstandard2.0;net471\u003C/TargetFrameworks\u003E\u0060.\r\n - Switch to netcoreapp2.2 for the tests: \u0060\u003CTargetFramework\u003Enetcoreapp2.2\u003C/TargetFramework\u003E\u0060. For this I did have to remove the platform things (all the x86). The .NET Core runtime will handle the native files\r\n - Install the SkiaSharp NuGet into the test project.\r\n\r\nLet me know if any of these things help.",
+        "createdAt": "2020-03-12T11:53:03",
+        "reactions": []
+      }
+    ]
+  }
 }

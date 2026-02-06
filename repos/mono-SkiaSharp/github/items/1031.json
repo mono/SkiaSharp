@@ -15,5 +15,52 @@
   "updatedAt": "2022-08-19T09:01:57",
   "closedAt": "2019-11-27T08:14:47",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:46.2148291Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 557955260,
+        "author": "mattleibow",
+        "body": "Looking a bit, I think it is because we are not writing a \u0060\\0\u0060 in the managed delegate in \u0060GlyphNameProxyImplementation\u0060",
+        "createdAt": "2019-11-25T01:41:16",
+        "reactions": []
+      },
+      {
+        "id": 557955736,
+        "author": "mattleibow",
+        "body": "Something like this:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar len = Math.Min (realName.Length, size - 1);\r\nvar bufferSpan = new Span\u003Cchar\u003E (nameBuffer, size);\r\nvar nameSpan = realName.AsSpan ();\r\nnameSpan.CopyTo (bufferSpan);\r\nbufferSpan[len] = \u0027\\0\u0027;\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-11-25T01:44:11",
+        "reactions": []
+      },
+      {
+        "id": 558004990,
+        "author": "Gillibald",
+        "body": "We can check for the termination. I kind of expected the termination in all results because that\u0027s what HarfBuzz should produce. We can go the safe way. Non terminated strings should throw. ",
+        "createdAt": "2019-11-25T06:05:50",
+        "reactions": []
+      },
+      {
+        "id": 558011928,
+        "author": "mattleibow",
+        "body": "I think harfbuzz is getting it right, it is our delegate when we copy the string: \u0060nameSpan.CopyTo (bufferSpan);\u0060 I don\u0027t think it is adding the \u0060\\0\u0060 to the span. \r\n",
+        "createdAt": "2019-11-25T06:32:30",
+        "reactions": []
+      },
+      {
+        "id": 558940994,
+        "author": "mattleibow",
+        "body": "@Gillibald I figured out what was happening with the name. It was the marshalling from a C \u0060char\u0060 to a C# \u0060char\u0060. C has 1 byte, C# has 2 bytes.\r\n\r\nI fixed this by actually passing a \u0060byte[]\u0060 to the functions, and then copying into a string:\r\nhttps://github.com/mono/SkiaSharp/pull/1034/files#diff-6b5300eff3e894978921b22e164317ceL209-L217\r\n",
+        "createdAt": "2019-11-27T05:52:56",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:46.1642324Z"
+          }
+        ]
+      }
+    ]
+  }
 }

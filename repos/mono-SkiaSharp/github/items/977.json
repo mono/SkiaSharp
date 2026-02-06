@@ -32,5 +32,81 @@
   "updatedAt": "2022-08-19T09:02:18",
   "closedAt": "2019-12-28T15:24:34",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:00.7624693Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 541284391,
+        "author": "praeclarum",
+        "body": "It also crashes on macOS 10.9 - Mavericks.",
+        "createdAt": "2019-10-12T04:42:22",
+        "reactions": []
+      },
+      {
+        "id": 541286277,
+        "author": "praeclarum",
+        "body": "It looks like you\u0027re supposed to expect errors (null returns) and adjust the attributes until it works :-/ according to: https://developer.apple.com/documentation/appkit/nsopenglpixelformat/1436219-initwithattributes?language=objc",
+        "createdAt": "2019-10-12T05:15:42",
+        "reactions": []
+      },
+      {
+        "id": 541930507,
+        "author": "praeclarum",
+        "body": "This may be a less severe bug than I first thought.\r\n\r\nLooks like it\u0027s the \u0022Accelerated\u0022 attribute causing trouble. However, I imagine most macOS 10.9\u002B systems have accelerated. I think I\u0027ll still make a PR to fix this.",
+        "createdAt": "2019-10-14T21:24:31",
+        "reactions": []
+      },
+      {
+        "id": 550062571,
+        "author": "mattleibow",
+        "body": "Thanks for the research. I am not a total fan of the try until it works that we have with OpenGL. But, I suppose that is what must be done - if it ain\u0027t there, we can\u0027t use it.",
+        "createdAt": "2019-11-05T23:01:29",
+        "reactions": []
+      },
+      {
+        "id": 550062859,
+        "author": "mattleibow",
+        "body": "Just on that... Are use using a system that doesn\u0027t support the Accelerated?",
+        "createdAt": "2019-11-05T23:02:21",
+        "reactions": []
+      },
+      {
+        "id": 552525591,
+        "author": "praeclarum",
+        "body": "@mattleibow The documentation specifically says you *should* try until it works - its how the API was designed. Don\u0027t anthropomorphize computers ;-D",
+        "createdAt": "2019-11-11T16:56:56",
+        "reactions": []
+      },
+      {
+        "id": 552599823,
+        "author": "mattleibow",
+        "body": "Yeah, I know. But we got AI! They said it was the future! I thought we were in a modern world with \u0022machine learning\u0022 \uD83D\uDE1C The machines must learn that I want to draw images, not try and check for features. And then it must draw it very fast.\r\n\r\nYou still got that PR in progress? Was it just a case of trying again without Accelerated or were there other flags that needed removing?",
+        "createdAt": "2019-11-11T20:23:15",
+        "reactions": []
+      },
+      {
+        "id": 569274849,
+        "author": "MatheMagick",
+        "body": "This crashes for me too when running Mac on a Virtual Machine (where there\u0027s no hardware acceleration available due to display adapter not working with VM)\r\nWhat\u0027s weird is that the same parameters used to work on 1.68.0\r\n\r\nTurns out it\u0027s initializing the attributes as object[]\r\nhttps://github.com/mono/SkiaSharp/blob/v1.68.1.1/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L50\r\n\r\nNot NSOpenGLPixelFormatAttribute[]\r\nhttps://github.com/mono/SkiaSharp/blob/v1.68.0/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L47\r\n\r\nOnce I modify a local copy of SKGLView and initialize the array as NSOpenGLPixelFormatAttribute[] it works correctly.\r\n\r\nThere may be something going wrong while converting the parameters - it seems the logic in Xamarin.Mac is different depending on whether the array is object[] or NSOpenGLPixelFormatAttribute[]\r\nCan we switch back to NSOpenGLPixelFormatAttribute in the next version, since it fixes the issue and \r\nI can once again use a VM?",
+        "createdAt": "2019-12-27T13:54:14",
+        "reactions": []
+      },
+      {
+        "id": 569404426,
+        "author": "mattleibow",
+        "body": "That is very weird. I\u0027ll check what is happening in Xamarin.Mac and see if there is some funny business.\r\n\r\nI\u0027ll see what I can do for a release ASAP to fix this.",
+        "createdAt": "2019-12-28T10:17:46",
+        "reactions": []
+      },
+      {
+        "id": 569425744,
+        "author": "mattleibow",
+        "body": "Closing this with #1083 as that seems to be the only change made. We can always reopen this.\r\n\r\nI think the issue was that the \u0060NSOpenGLPixelFormatAttribute[]\u0060 required a null-termination, and the \u0060object[]\u0060 did not (added in the internal conversion). Seems having a double null-termination broke a few more things than it probably should have.",
+        "createdAt": "2019-12-28T15:24:34",
+        "reactions": []
+      }
+    ]
+  }
 }

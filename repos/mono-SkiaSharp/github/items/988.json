@@ -19,5 +19,39 @@
   "updatedAt": "2022-08-19T09:02:14",
   "closedAt": "2020-04-26T06:33:30",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:06.6229307Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 550036842,
+        "author": "mattleibow",
+        "body": "Thanks for taking the time to open this issue. This may not be exactly in the scope of SkiaSharp. We currently support exporting PNG, JPEG and WEBP files. There is also PDF if that is desired. In addition to those, there is experimental SVG and XPS file formats.\r\n\r\nCurrently, the SkiaSharp objects are not serializable since this is more a binding than an implementation. What this means is that for every object you see, there may be one or more native object that live in the C\u002B\u002B world. Unfortunately, this makes it hard to support serialization.\r\n\r\nWhat I would be more interested in, is why exporting to PNG or one of the other formats aren\u0027t working?",
+        "createdAt": "2019-11-05T21:48:23",
+        "reactions": []
+      },
+      {
+        "id": 550076010,
+        "author": "BretJohnson",
+        "body": "@satochibi Can you say more about what your app does \u0026 how you plan to use this feature. My https://github.com/BretJohnson/XGraphics may be a better match for what you want to do, as those graphics primitives are serializable (at least that\u0027s the intent). It\u0027s a higher level abstraction. But mostly, I\u0027m just curious about your use case. Thanks.",
+        "createdAt": "2019-11-05T23:49:19",
+        "reactions": []
+      },
+      {
+        "id": 564985717,
+        "author": "satochibi",
+        "body": "\u003E What I would be more interested in, is why exporting to PNG or one of the other formats aren\u0027t working?\r\n\r\nThis is because we want to create drawing software that can handle screen tones of 1px physical units.\r\nAt this time, I want to be able to display the screen tone in a certain size, whether the picture drawn on the art board is enlarged or reduced.\r\nWe did this, but we considered XML serialization to save and load the state of the picture we drew.\r\nIn short, I wanted to do a \u201CSave Project\u201D like an adobe illustrator ai file.\r\n\r\n\u003E Unfortunately, this makes it hard to support serialization.\r\n\r\nXmlSerializer was difficult, but is binary or json difficult too?\r\n\r\nImplemented application:\r\nhttps://github.com/satochibi/UgomemoPro",
+        "createdAt": "2019-12-12T12:24:51",
+        "reactions": []
+      },
+      {
+        "id": 619492723,
+        "author": "mattleibow",
+        "body": "Closing this as SkiaSharp will not support serializing types. There is one way, and that is to save as .png files. This is obviously not the same at all, but SkiaSharp is designed to _create_ raster files or draw on the screen.",
+        "createdAt": "2020-04-26T06:33:30",
+        "reactions": []
+      }
+    ]
+  }
 }

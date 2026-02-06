@@ -14,5 +14,56 @@
   "updatedAt": "2022-08-19T12:01:17",
   "closedAt": "2020-04-26T06:22:44",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:43.3114148Z",
+    "reactions": [
+      {
+        "user": "ValonK",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:07:43.3114221Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 504216211,
+        "author": "vchelaru",
+        "body": "**Workaround**\r\n\r\nI found that a workaround! The page that contains the SKCanvasView can enable/disable touch events:\r\n\r\n\u0060\u0060\u0060\r\nprotected override void OnAppearing()\r\n{\r\n    base.OnAppearing();\r\n    view.EnableTouchEvents = true;\r\n}\r\n\r\nprotected override void OnDisappearing()\r\n{\r\n    view.EnableTouchEvents = false;\r\n    base.OnDisappearing();\r\n}\r\n\u0060\u0060\u0060\r\n\r\nMaybe this will help others who run into this problem until a proper fix is put in place.",
+        "createdAt": "2019-06-20T22:03:33",
+        "reactions": [
+          {
+            "user": "josephmesteban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:42.7033295Z"
+          },
+          {
+            "user": "EmilAlipiev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:42.70333Z"
+          }
+        ]
+      },
+      {
+        "id": 619491185,
+        "author": "mattleibow",
+        "body": "This should no longer be happening due to dispose keeping a reference to the control during execution.",
+        "createdAt": "2020-04-26T06:22:44",
+        "reactions": []
+      },
+      {
+        "id": 987231960,
+        "author": "vchelaru",
+        "body": "Unfortunately I have been able to reproduce this again:\r\n\r\n\u0060\u0060\u0060\r\n[mono-rt] [ERROR] FATAL UNHANDLED EXCEPTION: System.ObjectDisposedException: Cannot access a disposed object.\r\n[mono-rt] Object name: \u0027SkiaSharp.Views.Android.SKCanvasView\u0027.\r\n[mono-rt]   at Java.Interop.JniPeerMembers.AssertSelf (Java.Interop.IJavaPeerable self) [0x00029] in \u003Cbd6bd528a8784b7caf03e9f25c9f0d7b\u003E:0 \r\n[mono-rt]   at Java.Interop.JniPeerMembers\u002BJniInstanceMethods.InvokeVirtualVoidMethod (System.String encodedMember, Java.Interop.IJavaPeerable self, Java.Interop.JniArgumentValue* parameters) [0x00000] in \u003Cbd6bd528a8784b7caf03e9f25c9f0d7b\u003E:0 \r\n[mono-rt]   at Android.Views.View.SetOnTouchListener (Android.Views.View\u002BIOnTouchListener l) [0x0002c] in /Users/builder/azdo/_work/1/s/xamarin-android/src/Mono.Android/obj/Release/monoandroid10/android-30/mcw/Android.Views.View.cs:23279 \r\n[mono-rt]   at Android.Views.View\u002B\u003C\u003Ec__DisplayClass2854_0.\u003Cremove_Touch\u003Eb__0 (Android.Views.View\u002BIOnTouchListener __v) [0x00000] in /Users/builder/azdo/_work/1/s/xamarin-android/src/Mono.Android/obj/Release/monoandroid10/android-30/mcw/Android.Views.View.cs:24822 \r\n[mono-rt]   at Java.Interop.EventHelper.RemoveEventHandler[TInterface,TImplementor] (System.WeakReference\u0026 implementor, System.Func\u00602[T,TResult] empty, System.Action\u00601[T] unsetListener, System.Action\u00601[T] remove) [0x00032] in /Users/builder/azdo/_work/1/s/xamarin-android/src/Mono.Android/Java.Interop/EventHelper.cs:35 \r\n[mono-rt]   at Android.Views.View.remove_Touch (System.EventHandler\u00601[TEventArgs] value) [0x00014] in /Users/builder/azdo/_work/1/s/xamarin-android/src/Mono.Android/obj/Release/monoandroid10/android-30/mcw/Android.Views.View.cs:24819 \r\n[mono-rt]   at SkiaSharp.Views.Forms.SKTouchHandler.SetEnabled (Android.Views.View view, System.Boolean enableTouchEvents) [0x00003] in \u003C70db931b20b148d097dc1e71a7f1cc73\u003E:0 \r\n[mono-rt]   at SkiaSharp.Views.Forms.SKTouchHandler.Detach (Android.Views.View view) [0x00000] in \u003C70db931b20b148d097dc1e71a7f1cc73\u003E:0 \r\n[mono-rt]   at SkiaSharp.Views.Forms.SKCanvasViewRendererBase\u00602[TFormsView,TNativeView].Dispose (System.Boolean disposing) [0x00059] in \u003C70db931b20b148d097dc1e71a7f1cc73\u003E:0 \r\n[mono-rt]   at Java.Lang.Object.Java.Interop.IJavaPeerable.Finalized () [0x00000] in /Users/builder/azdo/_work/1/s/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:183 \r\n[mono-rt]   at Android.Runtime.AndroidValueManager.FinalizePeer (Java.Interop.IJavaPeerable value) [0x00068] in /Users/builder/azdo/_work/1/s/xamarin-android/src/Mono.Android/Android.Runtime/AndroidRuntime.cs:675 \r\n[mono-rt]   at Java.Lang.Object.Finalize () [0x00010] in /Users/builder/azdo/_work/1/s/xamarin-android/src/Mono.Android/Java.Lang/Object.cs:65 \r\n\u0060\u0060\u0060\r\n\r\nThis time I am using:\r\n\r\nSkia Sharp 2.80.3\r\nXamarin Forms 5.0.0.2244\r\nSkiaSharp.Views 2.80.3\r\nSkiaSharp.Views.Forms 2.80.3\r\n\r\n",
+        "createdAt": "2021-12-06T21:22:21",
+        "reactions": []
+      },
+      {
+        "id": 1173244950,
+        "author": "MaximMikhisor",
+        "body": "\u003E This should no longer be happening due to dispose keeping a reference to the control during execution.\r\n\r\nIn what version was it fix?\r\n\r\nWe also still gettting this error.\r\nWe are using Skia Sharp 2.80.2\r\n",
+        "createdAt": "2022-07-04T01:38:17",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -19,5 +19,53 @@
   "updatedAt": "2022-08-19T12:01:44",
   "closedAt": "2019-03-04T20:34:34",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:59.6702042Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 469337325,
+        "author": "entdark",
+        "body": "According to the fact you are using \u0060SKCanvasView\u0060 I\u0027d assume you are using some external timer to invalidate the surface from time to time.\r\nIt does not work like that in \u0060SKGLView\u0060.\r\n\r\nTo count animation correctly you suppose to use something like that:\r\nhttps://github.com/mono/SkiaSharp/issues/533#issuecomment-392337956\r\nYou can work with \u0060ElapsedMilliseconds\u0060 instead for more precise updates.\r\n\r\nJust compare expected time and elapsed and if the elapsed time passed then apply the new rotation. But it\u0027s better to use some interpolation functions actually.\r\n\r\n\u0060SKGLView\u0060 does not need invalidation, it updates itself each frame, and you have to recount your view on each frame all the time.\r\n",
+        "createdAt": "2019-03-04T17:18:20",
+        "reactions": []
+      },
+      {
+        "id": 469377565,
+        "author": "Al3xlab",
+        "body": "@entdark : my \u0060SKGLView \u0060is configured with \u0060HasRenderLoop = false;\u0060 and the result is identical with 1FPS.\r\n Always image glitches in \u0060SKGLView \u0060(and the rotation is never centered):\r\n![glitch](https://user-images.githubusercontent.com/48130657/53754042-06766000-3eb3-11e9-9401-f90a7b822339.jpg)\r\n\r\nIn meantime, i\u0027ve changed the transformation method for the draw path. On my previous animations, it was (for each frame):\r\n\u0060\u0060\u0060\r\npath.Transform(matrix);// matrix is defined with centered rotation\r\ncanvas.DrawPath(path, paint);\r\npath.Transform(invertMatrix);// restore original path\r\n\u0060\u0060\u0060\r\nAnd for the new animation below (identical with \u0060SKCanvasView \u0060 and \u0060SKGLView\u0060):\r\n![gif](https://user-images.githubusercontent.com/48130657/53754512-720cfd00-3eb4-11e9-9f24-7614a28cd679.gif)\r\n\u0060\u0060\u0060\r\n// path.Transform() replaced with canvas.SetMatrix()\r\ncanvas.Save();\r\ncanvas.SetMatrix(matrix);\r\ncanvas.DrawPath(path, paint);\r\ncanvas.Restore();\r\n\u0060\u0060\u0060\r\nNo more glitches but the path is deformed (\u0060StrokeWidth != 1\u0060).\r\nSo, what\u0027s the problem with \u0060path.Transform()\u0060 ?\r\n",
+        "createdAt": "2019-03-04T18:57:23",
+        "reactions": []
+      },
+      {
+        "id": 469411247,
+        "author": "Al3xlab",
+        "body": "I may have found a bug with \u0060SKPath.Transform()\u0060 when drawing on \u0060SKGLView\u0060.\r\nI close this comment and open a bug report...",
+        "createdAt": "2019-03-04T20:34:34",
+        "reactions": []
+      },
+      {
+        "id": 471307033,
+        "author": "mattleibow",
+        "body": "Did you open a bug so we can track it?",
+        "createdAt": "2019-03-10T13:39:33",
+        "reactions": []
+      },
+      {
+        "id": 471313033,
+        "author": "mattleibow",
+        "body": "Is this you? This looks to be the issue: https://groups.google.com/forum/#!topic/skia-discuss/pMbOWNz5ihs",
+        "createdAt": "2019-03-10T14:51:53",
+        "reactions": []
+      },
+      {
+        "id": 471362719,
+        "author": "Al3xlab",
+        "body": "No, I didn\u0027t open a bug report, because the problem is gone and I don\u0027t know why !?",
+        "createdAt": "2019-03-10T22:56:01",
+        "reactions": []
+      }
+    ]
+  }
 }

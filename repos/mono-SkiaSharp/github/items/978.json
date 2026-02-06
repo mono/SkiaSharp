@@ -28,5 +28,53 @@
   "updatedAt": "2022-08-19T09:02:17",
   "closedAt": "2020-02-13T12:25:32",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:02.6288131Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 552310719,
+        "author": "pardont",
+        "body": "Any update? the bug always exist in 4.4.0.936621-pre1.",
+        "createdAt": "2019-11-11T06:26:00",
+        "reactions": []
+      },
+      {
+        "id": 570531266,
+        "author": "pardont",
+        "body": "the bug always exist in 4.4.0.991265...",
+        "createdAt": "2020-01-03T10:24:09",
+        "reactions": []
+      },
+      {
+        "id": 570560581,
+        "author": "mattleibow",
+        "body": "Do you have a stack trace?\r\n\r\nI think it may be because you have \u0060item.Title\u0060 as null and trying to draw that. Maybe.",
+        "createdAt": "2020-01-03T12:34:32",
+        "reactions": []
+      },
+      {
+        "id": 571021687,
+        "author": "pardont",
+        "body": "I remove the code of drawing, exception always throw.\r\n\r\nthe stack trace:\r\n![image](https://user-images.githubusercontent.com/2252587/71799639-e3977800-3090-11ea-89a7-4f2f34c01b3b.png)\r\n",
+        "createdAt": "2020-01-06T06:29:11",
+        "reactions": []
+      },
+      {
+        "id": 571147447,
+        "author": "mattleibow",
+        "body": "OK, not sure what that even means. Something is going wonky in the math... I\u0027ll have a look.",
+        "createdAt": "2020-01-06T13:58:23",
+        "reactions": []
+      },
+      {
+        "id": 585488106,
+        "author": "mattleibow",
+        "body": "I think I finally found out what was happening. The reason this only happens in the list view is because of virtualization. Sometimes the view is no longer part of the hierarchy, so getting the scale and position in said hierarchy is impossible. I have a fix to make sure we are still valid.",
+        "createdAt": "2020-02-13T00:31:29",
+        "reactions": []
+      }
+    ]
+  }
 }

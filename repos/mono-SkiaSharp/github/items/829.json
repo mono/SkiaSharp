@@ -19,5 +19,25 @@
   "updatedAt": "2022-08-19T12:01:36",
   "closedAt": "2019-06-24T02:33:13",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:11.5978002Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 485164198,
+        "author": "charlesroddie",
+        "body": "The API suggests that the various SKObjects are independent of SKCanvas, so there should not be a problem drawing on multiple SKSurface. For the same reason they are not disposed when any particular SKSurface is disposed, so you will need to handle disposals.",
+        "createdAt": "2019-04-20T20:20:30",
+        "reactions": []
+      },
+      {
+        "id": 504835148,
+        "author": "mattleibow",
+        "body": "@charlesroddie is correct. The paint objects can be reused multiple times and can be cached. Typically, paints and typefaces are cached as they are data for a draw operation.\r\n\r\nIn fact, most objects can be cached, including source bitmaps/images.\r\n\r\nJust be careful when drawing across threads, some objects are not thread safe. See this discussion: https://groups.google.com/forum/#!topic/skia-discuss/TUy0I596FlM\r\n\r\nWith regards to the IDisposable, the GC will automatically dispose of the object when they are not referenced anymore, but you can make sure they get disposed sooner by calling Dispose yourself. For restricted devices (such as mobile), disposing objects sooner avoids a larger GC collection.",
+        "createdAt": "2019-06-24T02:33:07",
+        "reactions": []
+      }
+    ]
+  }
 }

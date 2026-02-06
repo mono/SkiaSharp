@@ -14,5 +14,109 @@
   "updatedAt": "2022-08-19T09:02:28",
   "closedAt": "2020-10-13T22:24:19",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:34.4574703Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 678092514,
+        "author": "xPaw",
+        "body": "I just ran into this issue when updating from 1.68.2.1 to 2.80.0. On 1.68.2.1 it seemingly worked correctly.",
+        "createdAt": "2020-08-21T07:34:15",
+        "reactions": []
+      },
+      {
+        "id": 678209572,
+        "author": "mattleibow",
+        "body": "Is the value in \u0060c\u0060 the correct color?\n\n",
+        "createdAt": "2020-08-21T10:36:16",
+        "reactions": []
+      },
+      {
+        "id": 678213957,
+        "author": "xPaw",
+        "body": "I don\u0027t know in my case, as I was testing against an image: https://github.com/SteamDatabase/ValveResourceFormat/issues/283#issuecomment-678073831\r\n\r\nI bisected the bug to commit that updated skia.\r\n\r\nEDIT: In OP\u0027s behaviour \u0060c\u0060 also flips incorrectly.",
+        "createdAt": "2020-08-21T10:39:33",
+        "reactions": []
+      },
+      {
+        "id": 678223505,
+        "author": "mattleibow",
+        "body": "OK, I\u0027ll have a look.\n\nThanks for the update. ",
+        "createdAt": "2020-08-21T10:46:46",
+        "reactions": []
+      },
+      {
+        "id": 678474833,
+        "author": "mattleibow",
+        "body": "I can\u0027t seem to repro this. In v2.80.1, the color is correct:\r\n\r\n| RGBA | BGRA |\r\n| :--: | :--: |\r\n| ![image](https://user-images.githubusercontent.com/1096616/90931017-13b34180-e3fc-11ea-89a0-732a9cb5e51f.png) | ![image](https://user-images.githubusercontent.com/1096616/90931091-35142d80-e3fc-11ea-900d-26cfcbe37314.png) |",
+        "createdAt": "2020-08-21T20:18:20",
+        "reactions": []
+      },
+      {
+        "id": 678481268,
+        "author": "xPaw",
+        "body": "This might be related to int constructor on SKColor?\r\n\r\n\u0060\u0060\u0060\r\nSKBitmap testbmp = new SKBitmap(new SKImageInfo(1,1,SKColorType.Bgra8888,SKAlphaType.Unpremul));\r\ntestbmp.SetPixel(0,0,new SKColor(0xAABBCCFF));\r\nSKColor c = testbmp.GetPixel(0, 0); // aabbccff\r\n\r\nSKBitmap testbmp = new SKBitmap(new SKImageInfo(1,1,SKColorType.Rgba8888,SKAlphaType.Unpremul));\r\ntestbmp.SetPixel(0,0,new SKColor(0xAABBCCFF));\r\nSKColor c = testbmp.GetPixel(0, 0); // aabbccff\r\n\u0060\u0060\u0060\r\n\r\n\r\nI even tried to save to both to a file, and it\u0027s producing the same color.\r\n\r\n\u0060\u0060\u0060\r\n            using (var ms = File.OpenWrite(\u0022b.png\u0022))\r\n            {\r\n                using (var imageData = testbmp.Encode(SKEncodedImageFormat.Png, 100))\r\n                {\r\n                    imageData.SaveTo(ms);\r\n                }\r\n            }\r\n\u0060\u0060\u0060\r\n\r\nAs you can see from my \u0022fix\u0022 I switched from \u0060new SKColor(r.ReadUInt32()));\u0060 to reading each color as byte for Rgba8888 images.\r\n\r\nhttps://github.com/SteamDatabase/ValveResourceFormat/commit/21b0e8fac710f1481595e289cba74a613fc4cee7\r\n",
+        "createdAt": "2020-08-21T20:34:29",
+        "reactions": []
+      },
+      {
+        "id": 678496300,
+        "author": "mattleibow",
+        "body": "I am not sure I understand the issue then... \r\n\r\n\u0060SKColor\u0060 is stored in a \u0060uint\u0060 in the form ARGB. The 4 byte ctor is a bit different as it puts the alpha at the end. This makes operations in managed code easier.\r\n\r\nHowever, if you want the raw bytes, then this is stored in memory and accessed via the \u0060Bytes\u0060, \u0060IntPtr GetPixels()\u0060 and \u0060ReadOnlySpan\u003Cbyte\u003E GetPixelSpan()\u0060. In this case, the byte order is dependent on the bitmap color type - as can be seen in my screenshots.",
+        "createdAt": "2020-08-21T21:05:35",
+        "reactions": []
+      },
+      {
+        "id": 678511923,
+        "author": "mattleibow",
+        "body": "Ah, I see now. \uD83D\uDE2C \r\n\r\nMy gosh, I think the v1.x series was horribly broken! I basically treat the RGBA and BGRA colors as the same and just blit that into the bitmap memory.\r\n\r\n\u003E https://github.com/mono/skia/blob/v1.68.3/src/c/sk_bitmap.cpp#L184-L186\r\n\u003E \u0060\u0060\u0060cpp\r\n\u003E     case kBGRA_8888_SkColorType:\r\n\u003E     case kRGBA_8888_SkColorType:\r\n\u003E         copy8888FromColor(1, \u0026color, (uint32_t*)bmp-\u003EgetAddr32(x, y));\r\n\u003E \u0060\u0060\u0060\r\n\r\nThe v2.x API uses the correct painting mechanism:\r\n\r\n\u003E https://github.com/mono/SkiaSharp/blob/v2.80.1/binding/Binding/SKBitmap.cs#L200-L210\r\n\u003E \u0060\u0060\u0060cs\r\n\u003E \t\tpublic void SetPixel (int x, int y, SKColor color)\r\n\u003E \t\t{\r\n\u003E \t\t\tusing var canvas = new SKCanvas (this);\r\n\u003E \t\t\tcanvas.DrawPoint (x, y, color);\r\n\u003E \t\t}\r\n\u003E \u0060\u0060\u0060",
+        "createdAt": "2020-08-21T21:16:23",
+        "reactions": []
+      },
+      {
+        "id": 678527195,
+        "author": "mattleibow",
+        "body": "Looking at your code, not judging here, but you could potentially do something like this for each color type:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static SKBitmap ReadI8(BinaryReader r, int w, int h)\r\n{\r\n    var res = new SKBitmap(w, h, SKColorType.Bgra8888, SKAlphaType.Unpremul);\r\n    var span = new Span\u003CSKColor\u003E((void*)res.GetPixels(out var length), (int)length);\r\n\r\n    for (var i = 0; i \u003C span.Length; i\u002B\u002B)\r\n    {\r\n        var color = r.ReadByte();\r\n        span[i] = new SKColor(color, color, color, 255);\r\n    }\r\n\r\n    return res;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nOr:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static SKBitmap ReadRGBA8888(BinaryReader r, int w, int h)\r\n{\r\n    var res = new SKBitmap(w, h, SKColorType.Bgra8888, SKAlphaType.Unpremul);\r\n    var span = new Span\u003CSKColor\u003E((void*)res.GetPixels(out var length), (int)length);\r\n\r\n    for (var i = 0; i \u003C span.Length; i\u002B\u002B)\r\n    {\r\n        var colorR = r.ReadByte();\r\n        var colorG = r.ReadByte();\r\n        var colorB = r.ReadByte();\r\n        var colorA = r.ReadByte();\r\n        span[i] = new SKColor(colorR, colorG, colorB, colorA);\r\n    }\r\n\r\n    return res;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThis should give an amazing perf boost because you are not crossing the interop boundary for every single pixel. You are basically creating the bitmap, getting the address of the pixels which you know are in the BGRA format, and then updating the raw memory location directly.\r\n\r\nNOTE: I didn\u0027t actually test this code here, but I think I did it right...\r\n\r\nNOTE 2: You have to use the \u0060void*\u0060 here because unfortunately I made the mistake of having the \u0060GetPixelSpan\u0060 return a readonly span instead of the correct writeable span. This is an open issue: #1240 \r\n\r\n**EDIT**\r\n\r\nThe \u0022open\u0022 issue is not actually because I added an alternative in \u0060SKPixmap\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar span = res.PeekPixels().GetPixelSpan\u003CSKColor\u003E();\r\n\u0060\u0060\u0060\r\n\r\nNot pretty, but not to bad either. This means no need for that pesky \u0022unsafe\u0022 code. And, if you try and map a wrong pixel size, then you will get an exception. For example, if each pixel is 16 bits and you try get a 32 bit span, it will throw and tell you the correct size.\r\n\r\nSee these test for examples: https://github.com/mono/SkiaSharp/blob/v2.80.1/tests/Tests/SKPixmapTest.cs#L187-L270",
+        "createdAt": "2020-08-21T21:35:54",
+        "reactions": []
+      },
+      {
+        "id": 678528784,
+        "author": "mattleibow",
+        "body": "But, back to the original issue...\r\n\r\nI am not sure that it will be good to revert back to the v1 buggy code.\r\n\r\nLet me know your thoughts on this one. Thanks for bringing this up, I did not catch this one.",
+        "createdAt": "2020-08-21T21:41:15",
+        "reactions": []
+      },
+      {
+        "id": 678601903,
+        "author": "xPaw",
+        "body": "Thanks for the example on how to optimize our code. It definitely was written as \u0022get it working, worry about optimizing later\u0022.\n\nIts up to you to decide whether V2 behaves correctly, it just catches me off guard as passing int produces the same colour despite color type being different.",
+        "createdAt": "2020-08-22T06:17:32",
+        "reactions": []
+      },
+      {
+        "id": 678603341,
+        "author": "0x5b25",
+        "body": "It seems that those operations involving pixel(like getPixels, setPixels, getColor, etc) from skia c\u002B\u002B api are meant to be as fast as possible(by directly manipulating buffer), so I think the v1 code works better, if color type is handled correctly, v2 api might defeat the purpose of fast pixel operations\r\n\r\n... but the code needs to function properly first",
+        "createdAt": "2020-08-22T06:34:22",
+        "reactions": []
+      },
+      {
+        "id": 678603481,
+        "author": "0x5b25",
+        "body": "Originally I thought it was a big-endian or little-endian problem as the code works fine on my android device",
+        "createdAt": "2020-08-22T06:35:47",
+        "reactions": []
+      },
+      {
+        "id": 708042232,
+        "author": "mattleibow",
+        "body": "I have been thinking about this and I think what v2 does is the most correct form.\r\n\r\nWhen creating a bitmap with \u0060Rgba8888\u0060 the _bytes_ are in the order of RGBA. And for \u0060Bgra8888\u0060, the _bytes_ are in the order BGRA. This allows for a memory buffer to be used and the order to be known. If you were to take a bitmap and copy the pixels back in on itself, the colors will change when using v1 and this is unexpected. \r\n\r\n**Code**\r\n\u0060\u0060\u0060csharp\r\nclass Program\r\n{\r\n    static void Main(string[] args)\r\n    {\r\n        Console.WriteLine(\u0022RGBA:\u0022);\r\n        Test(SKColorType.Rgba8888);\r\n\r\n        Console.WriteLine(\u0022BGRA:\u0022);\r\n        Test(SKColorType.Bgra8888);\r\n    }\r\n\r\n    private static void Test(SKColorType colorType)\r\n    {\r\n        var bmp = new SKBitmap(1, 1, colorType, SKAlphaType.Premul);\r\n        bmp.Erase(SKColors.Red);\r\n\r\n        Console.WriteLine(\u0022   OLD:\u0022);\r\n        Console.WriteLine(\u0022    - color: \u0022 \u002B bmp.GetPixel(0, 0));\r\n        Console.WriteLine(\u0022    - bytes: \u0022 \u002B string.Join(\u0022, \u0022, bmp.Bytes));\r\n\r\n        bmp.SetPixel(0, 0, bmp.GetPixel(0, 0));\r\n\r\n        Console.WriteLine(\u0022   NEW:\u0022);\r\n        Console.WriteLine(\u0022    - color: \u0022 \u002B bmp.GetPixel(0, 0));\r\n        Console.WriteLine(\u0022    - bytes: \u0022 \u002B string.Join(\u0022, \u0022, bmp.Bytes));\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**v1** (note the different color with RGBA due to the swapping of the bytes)\r\n\u0060\u0060\u0060\r\nRGBA:\r\n   OLD:\r\n    - color: #ffff0000\r\n    - bytes: 255, 0, 0, 255\r\n   NEW:\r\n    - color: #ff0000ff\r\n    - bytes: 0, 0, 255, 255\r\nBGRA:\r\n   OLD:\r\n    - color: #ffff0000\r\n    - bytes: 0, 0, 255, 255\r\n   NEW:\r\n    - color: #ffff0000\r\n    - bytes: 0, 0, 255, 255\r\n\u0060\u0060\u0060\r\n\r\n**v2**\r\n\u0060\u0060\u0060\r\nRGBA:\r\n   OLD:\r\n    - color: #ffff0000\r\n    - bytes: 255, 0, 0, 255\r\n   NEW:\r\n    - color: #ffff0000\r\n    - bytes: 255, 0, 0, 255\r\nBGRA:\r\n   OLD:\r\n    - color: #ffff0000\r\n    - bytes: 0, 0, 255, 255\r\n   NEW:\r\n    - color: #ffff0000\r\n    - bytes: 0, 0, 255, 255\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-10-13T22:24:18",
+        "reactions": []
+      }
+    ]
+  }
 }

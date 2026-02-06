@@ -15,5 +15,142 @@
   "updatedAt": "2022-08-19T09:01:58",
   "closedAt": "2019-12-27T21:01:28",
   "commentCount": 17,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:44.4971967Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 566721993,
+        "author": "TysonMN",
+        "body": "I might be able to help get dual targeting working for \u0060View.WPF\u0060.\r\n\r\n----------------------\r\n\r\nCurrently, \u0060View.WPF\u0060 references NuGet packages \u0060OpenTK\u0060 and \u0060OpenTK.GLControl\u0060, but the project still compiles if they are removed.\r\n\r\nAre these references needed?  Are they only runtime dependencies on them?\r\n\r\n----------------------\r\n\r\n(After removing references to \u0060OpenTK\u0060 and \u0060OpenTK.GLControl\u0060...)\r\n\r\nI can get \u0060View.WPF\u0060 to build without any warnings when targeting either \u0060net45\u0060 or \u0060netcoreapp3.0\u0060 but not when targeting both.  I could share more details about this, but there is another possibility.\r\n\r\nInstead of targeting \u0060net45\u0060 and \u0060netcoreapp3.0\u0060, what about targeting \u0060net472\u0060 and \u0060netcoreapp3.0\u0060?\r\n\r\nThis makes things easier, because \u0060Views.Desktop.Common.NetStandard\u0060 targets \u0060netstandard2.0\u0060, so both \u0060net472\u0060 and \u0060netcoreapp3.0\u0060 can target that ([source](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)).\r\n\r\n----------------------\r\n\r\nEven after removing the references to \u0060OpenTK\u0060 and \u0060OpenTK.GLControl\u0060 and dual targeting \u0060net472\u0060 and \u0060netcoreapp3.0\u0060, I still had a problem (copying a \u0060pdb\u0060 file).  I can share more details about this as well if this is the direction that should be taken.",
+        "createdAt": "2019-12-17T19:51:16",
+        "reactions": []
+      },
+      {
+        "id": 566730917,
+        "author": "TysonMN",
+        "body": "\u003E I can get View.WPF to build without any warnings when targeting either net45 or netcoreapp3.0 but not when targeting both. I could share more details about this...\r\n\r\nQuoting from https://github.com/mono/SkiaSharp/issues/1011#issue-523581067\r\n\u003E Because during compilation it took the dll from SkiaSharp.Views.Forms instead of SkiaSharp.Views.Forms.WPF.  I think the error is that SkiaSharp.Views.Forms.WPF has a dependency on SkiaSharp.Views.Forms. (which it shouldn\u0027t have because both SkiaSharp.Views.Forms.WPF and SkiaSharp.Views.Forms provide SkiaSharp.Views.Forms.dll).  And nuget decides in my case to use the SkiaSharp.Views.Forms nuget package dll which does not work on WPF.\r\n\r\nI think this describes a problem I had as well.  Both \u0060SkiaSharp.Desktop\u0060 and \u0060SkiaSharp.NetStandard\u0060 produce a DLL named \u0060SkiaSharp.dll\u0060.  Then when dual targeting, the target that comes second in the list fails to find the appropriate \u0060SkiaSharp.dll\u0060.",
+        "createdAt": "2019-12-17T20:14:54",
+        "reactions": []
+      },
+      {
+        "id": 566747791,
+        "author": "mattleibow",
+        "body": "\u003E I might be able to help get dual targeting working for View.WPF.\r\n\r\nTHANKS!\r\n\r\n---\r\nIt could also be an issue with all the old versions of things used in the master branch. Try using the [dev/vs-2019](https://github.com/mono/SkiaSharp/tree/dev/vs-2019) branch. I will be merged that in soon and it makes life much easier. I think the multi-targeting is broken a bit with the old .net core 2.1",
+        "createdAt": "2019-12-17T21:03:06",
+        "reactions": [
+          {
+            "user": "TysonMN",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:09:41.6019416Z"
+          }
+        ]
+      },
+      {
+        "id": 567204038,
+        "author": "TysonMN",
+        "body": "\u003E \u003E Both \u0060SkiaSharp.Desktop\u0060 and \u0060SkiaSharp.NetStandard\u0060 produce a DLL named \u0060SkiaSharp.dll\u0060. Then when dual targeting, the target that comes second in the list fails to find the appropriate \u0060SkiaSharp.dll\u0060.\r\n\u003E\r\n\u003E  ...Try using the dev/vs-2019 branch. ...\r\n\r\nIt is better.  That problem with \u0060SkiaSharp.dll\u0060 is gone, but for simplicity before, I didn\u0027t mention that a similar problem exists where \u0060SkiaSharp.Views.Desktop.Common\u0060 and \u0060SkiaSharp.Views.Desktop.Common.NetStandard\u0060 both produce a DLL named \u0060SkiaSharp.Views.Desktop.Common.dll\u0060.\r\n\r\nI think I can combine \u0060SkiaSharp.Views.Desktop.Common\u0060 and \u0060SkiaSharp.Views.Desktop.Common.NetStandard\u0060 into one project called \u0060SkiaSharp.Views.Desktop.Common\u0060 that multitargets \u0060netstandard2.0\u0060, \u0060net45\u0060, and \u0060netcoreapp3.0\u0060.\r\n\r\nDoes that sounds like a good idea?",
+        "createdAt": "2019-12-18T20:40:51",
+        "reactions": []
+      },
+      {
+        "id": 567557793,
+        "author": "mattleibow",
+        "body": "\u003E Does that sounds like a good idea?\r\n\r\nIt does :)\r\n\r\nPR merged.",
+        "createdAt": "2019-12-19T16:18:32",
+        "reactions": []
+      },
+      {
+        "id": 567618861,
+        "author": "TysonMN",
+        "body": "\u003E Currently \u0060View.WPF\u0060 references NuGet packages \u0060OpenTK\u0060 and \u0060OpenTK.GLControl\u0060, but the project still compiles if they are removed.\r\n\u003E \r\n\u003E Are these references needed? Are they only runtime dependencies on them?\r\n\r\nI think these \u0060OpenTK\u0060 dependencies are now the only obstacle preventing \u0060View.WPF\u0060 from targeting .NET Core.\r\n\r\nDoes anyone know anything about these dependencies?",
+        "createdAt": "2019-12-19T19:00:11",
+        "reactions": []
+      },
+      {
+        "id": 567622997,
+        "author": "mattleibow",
+        "body": "Maybe the references can be removed for WPF.\r\n\r\nBut, I see the OpenTK is built for net20, so even if the references are not \u0022official\u0022 .net core, it should work...\r\n\r\nBut, for WPF, if we aren\u0027t using it, then we can remove it.",
+        "createdAt": "2019-12-19T19:11:38",
+        "reactions": []
+      },
+      {
+        "id": 567623357,
+        "author": "mattleibow",
+        "body": "What is the actual reason you can\u0027t target netcoreapp with a reference to OpenTK? Is it a compiler error? Runtime error? I know I have a sample netforeapp3.0 that uses the WPF views as is.",
+        "createdAt": "2019-12-19T19:12:37",
+        "reactions": []
+      },
+      {
+        "id": 567635286,
+        "author": "TysonMN",
+        "body": "\u003E But, I see the OpenTK is built for net20, so even if the references are not \u0022official\u0022 .net core, it should work...\r\n\u003E ...\r\n\u003E What is the actual reason you can\u0027t target netcoreapp with a reference to OpenTK? Is it a compiler error? Runtime error? I know I have a sample \u0060netcoreapp3.0\u0060 that uses the WPF views as is.\r\n\r\nMy concern is just these warnings.\r\n\u0060\u0060\u0060\r\n\u0027OpenTK 3.0.1\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETCoreApp,Version=v3.0\u0027. This package may not be fully compatible with your project.\r\n\u0027OpenTK.GLControl 3.0.1\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETCoreApp,Version=v3.0\u0027. This package may not be fully compatible with your project.\r\n\u0060\u0060\u0060\r\n\r\nI also noticed that these packages target .NET Framework 2.0.  It does seem like a .NET Core 3.0 application should be able to utilize .NET Framework 2.0 dependencies (based on [this table](https://docs.microsoft.com/en-us/dotnet/standard/net-standard)).\r\n\r\n\u003E Maybe the references can be removed for WPF.\r\n\u003E ...\r\n\u003E ...if we aren\u0027t using it, then we can remove it.\r\n\r\nThey aren\u0027t being used at compile time.  That much is for sure.  Sometimes though a NuGet package needs to be included because of a runtime-only dependency.  Maybe that is the case here.  I don\u0027t know.\r\n\r\nEven if the compatibility isn\u0027t perfect or these dependencies can be removed, adding the dual target seems better than the status quo.  I will make a PR soon.\r\n\r\nP.S.\r\nThe next major version of OpenTK will target .NET Standard 2.0 https://github.com/opentk/opentk/issues/823",
+        "createdAt": "2019-12-19T19:45:12",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:09:42.810189Z"
+          }
+        ]
+      },
+      {
+        "id": 567642427,
+        "author": "mattleibow",
+        "body": "Oh no! \uD83D\uDE2D\r\n\r\nhttps://github.com/opentk/opentk/issues/823:\r\n\u003E Change all namespaces to the new root\r\n\r\n**EDIT**\r\n\r\nI see the discussion and the reasons. The new namespace will be OpenToolkit - which is a nice name, just a bit more work ;)",
+        "createdAt": "2019-12-19T20:05:16",
+        "reactions": []
+      },
+      {
+        "id": 567671683,
+        "author": "TysonMN",
+        "body": "\u003E The new namespace will be OpenToolkit - which is a nice name, just a bit more work ;)\r\n\r\nShould be able to make quick work of it via find/replace.",
+        "createdAt": "2019-12-19T20:51:40",
+        "reactions": []
+      },
+      {
+        "id": 567675584,
+        "author": "mattleibow",
+        "body": "I\u0027m a bit more worried about people updating the package and then blowing up at runtime or something.",
+        "createdAt": "2019-12-19T21:02:25",
+        "reactions": []
+      },
+      {
+        "id": 568156345,
+        "author": "mattleibow",
+        "body": "I see the actual WPF nuspec did not depend on OpenTK, so I think we should be good with the updates. Either that or I have been release broken packages \uD83D\uDE06 ",
+        "createdAt": "2019-12-21T06:14:48",
+        "reactions": []
+      },
+      {
+        "id": 568179363,
+        "author": "TysonMN",
+        "body": "Great observation :)\r\n\r\nPR #1078 up for that change",
+        "createdAt": "2019-12-21T12:57:51",
+        "reactions": []
+      },
+      {
+        "id": 568232264,
+        "author": "mattleibow",
+        "body": "This is now complete since #1067 and #1069",
+        "createdAt": "2019-12-22T04:43:18",
+        "reactions": []
+      },
+      {
+        "id": 568232650,
+        "author": "TysonMN",
+        "body": "I didn\u0027t make any changes to \u0060Views.Windows Forms\u0060.  I think it still targets only .NET Framework.\n\nShould this issue stay open until it is also dual targeting with .NET Core? ",
+        "createdAt": "2019-12-22T04:52:50",
+        "reactions": []
+      },
+      {
+        "id": 568280565,
+        "author": "mattleibow",
+        "body": "Yep, it should. Thanks.",
+        "createdAt": "2019-12-22T16:47:24",
+        "reactions": []
+      }
+    ]
+  }
 }

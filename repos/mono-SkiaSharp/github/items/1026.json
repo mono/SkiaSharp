@@ -14,5 +14,80 @@
   "updatedAt": "2022-08-19T09:02:01",
   "closedAt": "2019-11-27T06:16:00",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:36.0762911Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 557194802,
+        "author": "mattleibow",
+        "body": "It might be that the \u0060TouchEffect\u0060 is having issues. Is this a custom effect that you created? If possible, try using the native \u0060Touch\u0060 event on the \u0060SKCanvasView\u0060. Also set the \u0060EnableTouchEvents\u0060 to true.\r\n\r\nDocs:\r\nhttps://docs.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview.touch\r\nhttps://docs.microsoft.com/dotnet/api/skiasharp.views.forms.skcanvasview.enabletouchevents",
+        "createdAt": "2019-11-21T17:40:18",
+        "reactions": []
+      },
+      {
+        "id": 558584301,
+        "author": "ilsoftltd",
+        "body": "I had the same problem. App which used to work and then stopped working on the physical device but was on on the emulator and Android devices. Pulled my hair out trying to find out what it was. \r\nIn the end, in Visual Studio, I used  the dependencies/references analyser. Quite a few were shown as \u0022Unused\u0022. I deleted all these. The iOS project then didn\u0027t show as having a reference to SkiaSharp.Views.Forms so I added it....and it started working again! I think is was some sort of mis-match of DLLs, also indicated by the fact that if, when it\u0027s not auto calling the ondraw, you try and create a Paint structure for the canvas using a button handler, you receive a \u0022DLLNotFound\u0022 exception. So I guess it\u0027s update every NuGet to the latest version, delete unused references/dependencies and double check required references are included. Hope this works for you.",
+        "createdAt": "2019-11-26T11:18:38",
+        "reactions": []
+      },
+      {
+        "id": 558603910,
+        "author": "twinharbor",
+        "body": "Thanks for the replies! \r\n@ilsoftltd - thanks for this, sounds promising! Where is the dependency/reference analyzer? I\u0027m using Visual Studio for Mac (latest version). \r\n@mattleibow - thanks, I do believe I have a custom effect but I think it\u0027s straight out of the example from MS (the finger painting one here: [https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/paths/finger-paint](url)). I\u0027ll look into your recommendation as well and see. \r\n",
+        "createdAt": "2019-11-26T12:18:44",
+        "reactions": []
+      },
+      {
+        "id": 558607783,
+        "author": "ilsoftltd",
+        "body": "I right clicked the \u0022References\u0022 folder under each project in turn and chose \u0022Optimize References..,\u0022 from the popup menu.\r\nThis brought up a window listing Unused and Used references and allowed me to delete the unused ones. I see there is a \u0022Delete Unused References\u0022 menu item too which I\u0027m guessing shortcuts this.\r\nThis was on VS2019 on Windows mind you!\r\n",
+        "createdAt": "2019-11-26T12:30:49",
+        "reactions": []
+      },
+      {
+        "id": 558615477,
+        "author": "twinharbor",
+        "body": "Ah ha- seems some things are in VS for windows and not mac. Fortunately I also have windows running in parallels, but I\u0027ve been on vs 2017. I\u0027m going to update to 2019 and then see if I can open the project on that side. Thanks!",
+        "createdAt": "2019-11-26T12:54:14",
+        "reactions": []
+      },
+      {
+        "id": 558666391,
+        "author": "twinharbor",
+        "body": "@ilsoftltd - do you have an addin or something? I don\u0027t have an optimize references option in vs.net 2019 for windows. Googling shows something called resharper that has a function with that name, maybe that\u0027s what you have? ",
+        "createdAt": "2019-11-26T14:55:29",
+        "reactions": []
+      },
+      {
+        "id": 558677769,
+        "author": "ilsoftltd",
+        "body": "Ah yes I do use Resharper :) ",
+        "createdAt": "2019-11-26T15:18:59",
+        "reactions": []
+      },
+      {
+        "id": 558792074,
+        "author": "twinharbor",
+        "body": "Thanks to all who posted ideas. I tried several things, and nothing worked but as I looked closer at your mention of EnableTouchEvents (@mattleibow ) I saw that in the sample code I was working from, it adds a toucheffect to Grid.Effects, whereas it seems we should be adding a touch handler directly to the SKCanvasView: EnableTouchEvents=\u0022True\u0022 Touch=\u0022CanvasView_Touch\u0022. I had to rework the handler a little bit, but overall the functionality is the same, and now it\u0027s all working! Thanks all! ",
+        "createdAt": "2019-11-26T19:53:49",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:09:35.8151472Z"
+          }
+        ]
+      },
+      {
+        "id": 558946800,
+        "author": "mattleibow",
+        "body": "@twinharbor That is good to hear! Let us know if you have any other issues.",
+        "createdAt": "2019-11-27T06:16:00",
+        "reactions": []
+      }
+    ]
+  }
 }

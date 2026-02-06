@@ -18,5 +18,31 @@
   "createdAt": "2022-08-01T10:36:10",
   "updatedAt": "2022-08-19T09:16:43",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:51.8815156Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1211727987,
+        "author": "mattleibow",
+        "body": "There is this property: https://docs.microsoft.com/dotnet/api/skiasharp.grvkimageinfo.imagelayout\r\n\r\nThe google skia docs say \u0060GrVkImageInfo::updateImageLayout\u0060 (not the INFO part) but that does not exist - that method only exists on a separate type \u0060GrVkImage\u0060. And the \u0060getTextureHandle()\u0060 method does not exist either.\r\n\r\nWhat I think has changed is the way to do this and we need to use the new \u0060SkSurface::getBackendTexture()\u0060 to get the \u0060GrBackendTexture\u0060 and then call \u0060GrBackendTexture::getVkImageInfo()\u0060 and/or use the \u0060GrBackendTexture::setVkImageLayout()\u0060.\r\n\r\nBut, this all fails still because we don\u0027t have the initial  \u0060SkSurface::getBackendTexture()\u0060 ...\r\n\r\n",
+        "createdAt": "2022-08-11T09:06:15",
+        "reactions": []
+      },
+      {
+        "id": 1220446947,
+        "author": "KCoen",
+        "body": "We don\u0027t have to use getBackendTexture, we instead create a surface using SKSurface.Create and keep a reference to the RenderTarget we pass in. This seems to work for our use case.\r\n\r\n\u0060\u0060\u0060patch\r\nFrom 6e7fabb1573165a139aa6f1b0888c818e410b1a3 Mon Sep 17 00:00:00 2001\r\nFrom: Koen \u003Ckoen@blackware.com\u003E\r\nDate: Fri, 6 May 2022 10:25:20 \u002B0200\r\nSubject: [PATCH] Add C Bindings for getVkImageInfo and setVkImageLayout\r\n\r\n---\r\n include/c/gr_context.h |  2 \u002B\u002B\r\n src/c/gr_context.cpp   | 10 \u002B\u002B\u002B\u002B\u002B\u002B\u002B\u002B\u002B\u002B\r\n 2 files changed, 12 insertions(\u002B)\r\n\r\ndiff --git a/include/c/gr_context.h b/include/c/gr_context.h\r\nindex 3a55ede2e7..86d77f0dba 100644\r\n--- a/include/c/gr_context.h\r\n\u002B\u002B\u002B b/include/c/gr_context.h\r\n@@ -96,6 \u002B96,8 @@ SK_C_API int gr_backendrendertarget_get_stencils(const gr_backendrendertarget_t*\r\n SK_C_API gr_backend_t gr_backendrendertarget_get_backend(const gr_backendrendertarget_t* rendertarget);\r\n SK_C_API bool gr_backendrendertarget_get_gl_framebufferinfo(const gr_backendrendertarget_t* rendertarget, gr_gl_framebufferinfo_t* glInfo);\r\n \r\n\u002BSK_C_API void gr_backendrendertarget_set_vk_imagelayout(gr_backendrendertarget_t* rendertarget, uint32_t imageLayout);\r\n\u002BSK_C_API gr_vk_imageinfo_t gr_backendrendertarget_get_vk_imageinfo(const gr_backendrendertarget_t* rendertarget);\r\n \r\n SK_C_PLUS_PLUS_END_GUARD\r\n \r\ndiff --git a/src/c/gr_context.cpp b/src/c/gr_context.cpp\r\nindex 1e94b3ac73..36cb9ce2c3 100644\r\n--- a/src/c/gr_context.cpp\r\n\u002B\u002B\u002B b/src/c/gr_context.cpp\r\n@@ -275,3 \u002B275,13 @@ gr_backend_t gr_backendrendertarget_get_backend(const gr_backendrendertarget_t*\r\n bool gr_backendrendertarget_get_gl_framebufferinfo(const gr_backendrendertarget_t* rendertarget, gr_gl_framebufferinfo_t* glInfo) {\r\n     return SK_ONLY_GPU(AsGrBackendRenderTarget(rendertarget)-\u003EgetGLFramebufferInfo(AsGrGLFramebufferInfo(glInfo)), false);\r\n }\r\n\u002B\r\n\u002Bgr_vk_imageinfo_t gr_backendrendertarget_get_vk_imageinfo(const gr_backendrendertarget_t* rendertarget) {\r\n\u002B    GrVkImageInfo imageInfo;\r\n\u002B    SK_ONLY_GPU(AsGrBackendRenderTarget(rendertarget)-\u003EgetVkImageInfo(\u0026imageInfo));\r\n\u002B    return *(gr_vk_imageinfo_t*)(\u0026imageInfo);\r\n\u002B}\r\n\u002B\r\n\u002Bvoid gr_backendrendertarget_set_vk_imagelayout(gr_backendrendertarget_t* rendertarget, uint32_t imageLayout) {\r\n\u002B    return SK_ONLY_GPU(AsGrBackendRenderTarget(rendertarget)-\u003EsetVkImageLayout((VkImageLayout)imageLayout));\r\n\u002B}\r\n\\ No newline at end of file\r\n-- \r\n2.37.1.windows.1\r\n\r\n\u0060\u0060\u0060\r\n\r\nAnd subsequently used it like this\r\n\r\n\u0060\u0060\u0060C#\r\ninternal class GRVkBackendRenderTarget : GRBackendRenderTarget\r\n{\r\n\tpublic GRVkBackendRenderTarget(int width, int height, int sampleCount, GRVkImageInfo vkImageInfo) : base(width, height, sampleCount, vkImageInfo)\r\n\t{\r\n\t}\r\n\r\n\t[DllImport(\u0022libSkiaSharp.dll\u0022, CallingConvention = CallingConvention.Cdecl)]\r\n\tinternal static extern GRVkImageInfo gr_backendrendertarget_get_vk_imageinfo(IntPtr rendertarget);\r\n\r\n\t[DllImport(\u0022libSkiaSharp.dll\u0022, CallingConvention = CallingConvention.Cdecl)]\r\n\tinternal static extern void gr_backendrendertarget_set_vk_imagelayout(IntPtr rendertarget, uint imageLayout);\r\n\t\t\r\n\tpublic GRVkImageInfo GetVkImageInfo()\r\n\t{\r\n\t\treturn gr_backendrendertarget_get_vk_imageinfo(Handle);\r\n\t}\r\n\tpublic void SetVkImageLayout(uint imageLayout)\r\n\t{\r\n\t\tgr_backendrendertarget_set_vk_imagelayout(Handle, imageLayout);\r\n\t}\r\n}\r\n\r\n...\r\n\r\nimage = GPUContext.AppContext().Vk.Device.CreateImage(...)\r\nrt = new GRVkBackendRenderTarget(...);\r\n\r\nsurface = SKSurface.Create(Skia, rt, ...);\r\n\u0060\u0060\u0060\r\n\r\nI wish i could have made the proper PR\u0027s and such, but because of the volume of code, and complexity of build scripts and CI, this is the best I can do.",
+        "createdAt": "2022-08-19T09:16:43",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:51.8312413Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T09:02:10",
   "closedAt": "2019-12-22T04:52:59",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:12.0685003Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 549800467,
+        "author": "mattleibow",
+        "body": "I had a look and it appears to be some leak inside the native library when a stream is used. Even in the case of the filename, there is an underlying file stream that is opened.\r\nI\u0027ll need to investigate further to see why it is not being released.\r\n\r\nAs a workaround, you can cache the typeface. This will use more memory than desired, but only once.\r\n\r\n\u0060\u0060\u0060csharp\r\n// some \u0022global\u0022 state\r\nvar typefaces = new ConcurrentDictionary\u003Cstring, SKTypeface\u003E();\r\n...\r\n\r\n// in loop\r\nvar typeface = typefaces.GetOrAdd(\u0022C:\\\\WINDOWS\\\\Fonts\\\\calibri.ttf\u0022, key =\u003E SKTypeface.FromFile(key));\r\n\u0060\u0060\u0060\r\n\r\nJust make sure no not dispose the typefaces as you will then get a disposed item from the dictionary.",
+        "createdAt": "2019-11-05T12:21:34",
+        "reactions": []
+      },
+      {
+        "id": 550212812,
+        "author": "AlexNosk",
+        "body": "Thank you for the proposed workaround, I changed the code to use overload that creates SkTypeface from family name. But still the fix is required, because sometimes it is needed to create typeface from stream or file. ",
+        "createdAt": "2019-11-06T09:00:51",
+        "reactions": []
+      },
+      {
+        "id": 568232659,
+        "author": "mattleibow",
+        "body": "@AlexNosk Since the release of 1.68.1, I believe there were several major fixes for memory leaks. I am closing this issue as it appears to be fixed. If you fine that this is not the case, feel free to reopen this issue.",
+        "createdAt": "2019-12-22T04:52:59",
+        "reactions": []
+      }
+    ]
+  }
 }

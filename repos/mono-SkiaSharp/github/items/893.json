@@ -28,5 +28,81 @@
   "updatedAt": "2022-08-19T09:02:52",
   "closedAt": "2019-07-23T01:02:21",
   "commentCount": 4,
-  "reactionCount": 6
+  "reactionCount": 6,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:08:00.6332989Z",
+    "reactions": [
+      {
+        "user": "mgnslndh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:00.6333071Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:00.6333079Z"
+      },
+      {
+        "user": "michaelstonis",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:00.6333083Z"
+      },
+      {
+        "user": "dalexsoto",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:00.6333246Z"
+      },
+      {
+        "user": "jschroedl",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:00.633325Z"
+      },
+      {
+        "user": "danien",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:08:00.6333252Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 506451848,
+        "author": "MichaelRumpler",
+        "body": "If bait \u0026 switch does not work, then I\u0027m fine with installing the correct platform package manually. Namespaces and APIs should be the same as far as possible.\r\n\r\nA breaking change is always preferred to keeping a broken API forever (as XF does it).\r\n\r\nSpecifically I want to share code between WPF for Core, Android and iOS. But that\u0027s just now. Who knows what the future brings.",
+        "createdAt": "2019-06-27T18:06:39",
+        "reactions": [
+          {
+            "user": "StefanKoell",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:59.9729572Z"
+          },
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:59.9729577Z"
+          }
+        ]
+      },
+      {
+        "id": 506453283,
+        "author": "mattleibow",
+        "body": "I have been playing around with GTK# v3 and that seems to be a nice way to make a fully cross-platform netcoreapp. But, right now, you are forced to use GTK# v2, which is very old. And it brings in the WPF and WinForms dll into your build.\r\n\r\nBut, an important thing is that this should not be a breaking change for Xamarin.Forms users as the SkiaSharp.Views.Forms package will still bring in the same APIs.",
+        "createdAt": "2019-06-27T18:11:03",
+        "reactions": []
+      },
+      {
+        "id": 506453644,
+        "author": "mattleibow",
+        "body": "And, I will make sure to create a nice warning/error if you install the SkiaSharp.Views package, but forget to install the actual platform framework package.",
+        "createdAt": "2019-06-27T18:12:10",
+        "reactions": []
+      },
+      {
+        "id": 506962007,
+        "author": "mattleibow",
+        "body": "I just realised that this is not such a breaking change. Because there is no cross-platform code in this package, all the platforms can technically be separate.\r\n\r\nFor the desktop builds, we will have to have a type forwarding assembly so we don\u0027t break everyone.",
+        "createdAt": "2019-06-29T14:43:12",
+        "reactions": []
+      }
+    ]
+  }
 }

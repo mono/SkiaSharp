@@ -14,5 +14,95 @@
   "updatedAt": "2022-08-19T09:02:00",
   "closedAt": "2019-11-25T14:50:43",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:09:39.3055726Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 557617423,
+        "author": "knocte",
+        "body": "Updated to 1.68.1 and Catalina, still broken.",
+        "createdAt": "2019-11-22T17:17:38",
+        "reactions": []
+      },
+      {
+        "id": 557767532,
+        "author": "mattleibow",
+        "body": "This is interesting that it happens with an update of form as this is a totally separate library. I\u0027ll have a look and see if I can spot anything. If you create a console app, or any other type of app that is not forms, does this still happen?\r\n\r\nAs a workaround, you can create a SKSurface use the canvas on that and then call Snapshot to get an SKImage https://docs.microsoft.com/en-us/dotnet/api/skiasharp.sksurface.snapshot?view=skiasharp-1.68.0",
+        "createdAt": "2019-11-23T05:02:09",
+        "reactions": []
+      },
+      {
+        "id": 558101958,
+        "author": "knocte",
+        "body": "\u003E As a workaround, you can create a SKSurface \r\n\r\nHave had a brief look around this and couldn\u0027t figure out what overload to use to create the SKSurface, can you elaborate?\r\n\r\n\u003E If you create a console app, or any other type of app that is not forms, does this still happen?\r\n\r\nGood question I\u0027ll test that and report back.",
+        "createdAt": "2019-11-25T10:54:48",
+        "reactions": []
+      },
+      {
+        "id": 558104143,
+        "author": "Gillibald",
+        "body": "https://docs.microsoft.com/en-us/dotnet/api/skiasharp.sksurface.create?view=skiasharp-1.68.0#SkiaSharp_SKSurface_Create_SkiaSharp_SKPixmap_",
+        "createdAt": "2019-11-25T11:00:56",
+        "reactions": []
+      },
+      {
+        "id": 558105208,
+        "author": "knocte",
+        "body": "\u003E https://docs.microsoft.com/en-us/dotnet/api/skiasharp.sksurface.create?view=skiasharp-1.68.0#SkiaSharp_SKSurface_Create_SkiaSharp_SKPixmap_\r\n\r\nI know how to find the API, I just don\u0027t know which of those overloads to use in my particular case, to transform the code (I didn\u0027t write that code in the first place so it\u0027s a bit harder for me to wrap my head around it).",
+        "createdAt": "2019-11-25T11:03:25",
+        "reactions": []
+      },
+      {
+        "id": 558112680,
+        "author": "mattleibow",
+        "body": "You are probably looking for the\r\n\r\n\u0060\u0060\u0060csharp\r\nvar info = new SKImageInfo(width, height) ;\r\nvar surface = new SKSurface.Create(info);\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-11-25T11:24:26",
+        "reactions": []
+      },
+      {
+        "id": 558143597,
+        "author": "knocte",
+        "body": "\u003E You are probably looking for the\r\n\r\nThanks! Just tested this and I can verify that this workaround works.",
+        "createdAt": "2019-11-25T12:57:38",
+        "reactions": []
+      },
+      {
+        "id": 558145482,
+        "author": "knocte",
+        "body": "\u003E Thanks! Just tested this and I can verify that this workaround works.\r\n\r\nSpoke too soon, the new Surface approach works on XF3.0 but still throws a NRE with XF4.3. So maybe what\u0027s happening is that the width and height values are 0 somehow with the latter, will continue investigating...",
+        "createdAt": "2019-11-25T13:02:56",
+        "reactions": []
+      },
+      {
+        "id": 558177078,
+        "author": "knocte",
+        "body": "\u003E So maybe what\u0027s happening is that the width and height values are 0 somehow with the latter\r\n\r\nI was right about this hunch, and these values come from a SkSvg object (https://github.com/knocte/geewallet/blob/b0dcca50c1fab8010e8376afea566763a1b5b8ec/src/GWallet.Frontend.XF/Controls/DonutChartView.fs#L234), so maybe it\u0027s a bug in \u0060SkiaSharp.Svg\u0060?",
+        "createdAt": "2019-11-25T14:21:44",
+        "reactions": []
+      },
+      {
+        "id": 558189331,
+        "author": "knocte",
+        "body": "Sorry for the noise, it\u0027s the Xamarin.Forms.DeviceInfo.ScalingFactor property which somehow in v4.3 is returning 0.0. Closing here so I\u0027ll open in XF repo.",
+        "createdAt": "2019-11-25T14:50:43",
+        "reactions": []
+      },
+      {
+        "id": 558203967,
+        "author": "knocte",
+        "body": "In case you\u0027re curious I filed this as github issue number 8652 in XF repo.",
+        "createdAt": "2019-11-25T15:24:08",
+        "reactions": []
+      },
+      {
+        "id": 558208461,
+        "author": "mattleibow",
+        "body": "Ah, OK. Thanks.  Issue: https://github.com/xamarin/Xamarin.Forms/issues/8652",
+        "createdAt": "2019-11-25T15:34:10",
+        "reactions": []
+      }
+    ]
+  }
 }

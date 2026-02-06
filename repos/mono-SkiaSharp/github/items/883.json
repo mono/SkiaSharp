@@ -20,5 +20,147 @@
   "updatedAt": "2022-08-19T09:02:55",
   "closedAt": "2019-06-27T17:58:27",
   "commentCount": 16,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:07:55.909139Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 505061470,
+        "author": "Gillibald",
+        "body": "You can download them from here https://dev.azure.com/xamarin/public/_build/results?buildId=3348\r\n",
+        "createdAt": "2019-06-24T15:30:55",
+        "reactions": [
+          {
+            "user": "danien",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:52.7842192Z"
+          }
+        ]
+      },
+      {
+        "id": 505063318,
+        "author": "danien",
+        "body": "\u003E https://dev.azure.com/xamarin/public/_build/results?buildId=3348\r\n\r\nDo I click on the Artifact button and just select any/all of the options? When I tried that, I get the following error:\r\n\r\n\u0060\u0060\u0060\r\n{\u0022$id\u0022:\u00221\u0022,\u0022innerException\u0022:null,\u0022message\u0022:\u0022TF400813: The user \u0027\u003Cgithub user id\u003E\u0027 is not authorized to access this resource.\u0022,\u0022typeName\u0022:\u0022Microsoft.TeamFoundation.Framework.Server.UnauthorizedRequestException, Microsoft.TeamFoundation.Framework.Server\u0022,\u0022typeKey\u0022:\u0022UnauthorizedRequestException\u0022,\u0022errorCode\u0022:0,\u0022eventId\u0022:3000}\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-24T15:35:31",
+        "reactions": []
+      },
+      {
+        "id": 505071855,
+        "author": "Gillibald",
+        "body": "You should be able to download the \u0060nuget.zip\u0060",
+        "createdAt": "2019-06-24T15:57:15",
+        "reactions": [
+          {
+            "user": "danien",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:07:53.2223023Z"
+          }
+        ]
+      },
+      {
+        "id": 505084948,
+        "author": "danien",
+        "body": "\u003E You should be able to download the \u0060nuget.zip\u0060\r\n\r\nAh, thank you! I was able to download just that file, which contains all the built nupkgs.\r\n\r\nMy partially built output folder seems to have a different layout with nuget subfolders:\r\n\r\n\u0060\u0060\u0060\r\noutput/\r\n    HarfBuzzSharp/\r\n        nuget/\r\n    SkiaSharp/\r\n        nuget/\r\n    SkiaSharp.HarfBuzz/\r\n        nuget/\r\n    SkiaSharp.Views/\r\n        nuget/\r\n    SkiaSharp.Views.Forms/\r\n        nuget/\r\n\u0060\u0060\u0060\r\nso I\u0027m guessing I have to unzip the contents of the nupkgs into their respective nuget subfolders in order to get the Managed-only build to be able to use them? (I\u0027ll try that 1st thing tomorrow.)\r\n\r\nThanks again and apologies for all the questions as I\u0027m rather new to SkiaSharp.",
+        "createdAt": "2019-06-24T16:33:04",
+        "reactions": []
+      },
+      {
+        "id": 505088001,
+        "author": "Gillibald",
+        "body": "For example: \u0060SkiaSharp\\output\\native\\windows\\x64\u0060\r\n![Anmerkung 2019-06-24 183826](https://user-images.githubusercontent.com/5928797/60036438-89fccc80-96af-11e9-9869-b81e2435736a.png)\r\n![Anmerkung 2019-06-24 183850](https://user-images.githubusercontent.com/5928797/60036444-8c5f2680-96af-11e9-9e81-150fc8fce228.png)\r\n![Anmerkung 2019-06-24 183912](https://user-images.githubusercontent.com/5928797/60036452-8e28ea00-96af-11e9-817c-8e072b306a01.png)\r\n![Anmerkung 2019-06-24 183940](https://user-images.githubusercontent.com/5928797/60036455-8ff2ad80-96af-11e9-9052-200265126b0d.png)\r\n![Anmerkung 2019-06-24 184002](https://user-images.githubusercontent.com/5928797/60036459-91bc7100-96af-11e9-85c5-73a571faddcc.png)\r\n",
+        "createdAt": "2019-06-24T16:41:49",
+        "reactions": [
+          {
+            "user": "danien",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:07:53.6332966Z"
+          }
+        ]
+      },
+      {
+        "id": 505091456,
+        "author": "danien",
+        "body": "Thanks! I wouldn\u0027t have known to add a native subfolder under output.\r\n\r\nI found runtime/[platform]/native subfolders with the binaries (dll, dylib, so, no pdbs) inside the SkiaSharp and HarfBuzzSharp nupkgs, so I\u0027ll try that tomorrow.\r\n\r\nReally appreciate your help!",
+        "createdAt": "2019-06-24T16:52:03",
+        "reactions": []
+      },
+      {
+        "id": 505327431,
+        "author": "danien",
+        "body": "Unfortunately, the nuget.zip seems to be missing the android, ios, tvos, watchos binaries and it\u0027s quite hard to figure out all the subfolder names that the binaries should go into. e.g., For tizen, the build appears to look for i386, while the nuget has the binaries in tizen-armel, tizen-x86 folders, etc.\r\n\r\nIs there another way to get the native.zip or to get the \u0022externals-download\u0022 target to work for people without access to the Azure Build pipeline so that this line in the documentation works?\r\n\r\n\u0060\u0060\u0060\r\n./bootstrapper.ps1 -t externals-download --azureBuildId=\u003Cbuild-id\u003E\r\n\u0060\u0060\u0060\r\n\r\nThanks.",
+        "createdAt": "2019-06-25T07:43:12",
+        "reactions": []
+      },
+      {
+        "id": 505422259,
+        "author": "Gillibald",
+        "body": "You can also download the package from Nuget.org https://www.nuget.org/api/v2/package/SkiaSharp/1.68.0\r\n\r\nBut downloading the externals directly from CI is probably the best. \r\n\r\nTo test things added to the binding you don\u0027t need to use the bootstrapper.ps1 you can just build the projects directly",
+        "createdAt": "2019-06-25T12:27:59",
+        "reactions": []
+      },
+      {
+        "id": 505455794,
+        "author": "danien",
+        "body": "\u003E You can also download the package from Nuget.org https://www.nuget.org/api/v2/package/SkiaSharp/1.68.0\r\n\u003E \r\n\u003E But downloading the externals directly from CI is probably the best.\r\n\u003E \r\n\u003E To test things added to the binding you don\u0027t need to use the bootstrapper.ps1 you can just build the projects directly\r\n\r\nThis doesn\u0027t seem to have the android, ios, etc folders and binaries as well. The nuget.zip that I managed to download for build 3348 has a similar structure as this (except it\u0027s a later version 1.68.1).\r\n\r\nIf there is a way to download the externals (I\u0027m guessing native-default, native-*, under Artifacts) from CI without contributor permissions, please let me know how.\r\n\r\nMy goal is actually to try to update the SkiaSharp and SkiaSharp.Views.Forms managed libraries for netstandard 2.0 and Xamarin.Forms 4.0 for use with Fabulous (F#), which is still on SkiaSharp 1.60.3 and is missing the SKGLView, but I wanted to learn to build the whole project from scratch if possible.\r\n\r\nI\u0027ll try building just the ones I need without the bootstrapper then. Just running into a lot of issues especially with Android.",
+        "createdAt": "2019-06-25T13:54:52",
+        "reactions": []
+      },
+      {
+        "id": 505553758,
+        "author": "mattleibow",
+        "body": "@danien you can download the \u0060native-default\u0060 artifacts to just get all the native assets, and the \u0060nuget\u0060 artifact to get all the nupkgs.\r\n\r\n**EDIT: I see you have to be signed in for  \u0060native-default\u0060 because it is not actually published - it is just an intermediate artifact. Let be see what I can do to change that.**\r\n\r\nFor example, it you are getting the bits for build \u00603425\u0060, you can go to that build:\r\nhttps://dev.azure.com/xamarin/public/_build/results?buildId=3425\r\n\r\nAnd then download the \u0060native-default\u0060 artifact:\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/1096616/60121331-1d530200-9783-11e9-945c-37a65134a843.png\u0022 width=\u0022400\u0022 /\u003E\r\n",
+        "createdAt": "2019-06-25T17:55:52",
+        "reactions": []
+      },
+      {
+        "id": 505559278,
+        "author": "mattleibow",
+        "body": "Once this PR is merged (https://github.com/mono/SkiaSharp/pull/889), you should be able to access the artifacts.\r\n\r\nSo we will have 2 public artifacts:\r\n - \u0060native-default\u0060 - for accessing all the native assets from all the platforms\r\n - \u0060nuget\u0060 - for accessing all the packaged NuGets for all the platforms\r\n\r\nIf you need a REST endpoint, you can use:\r\n\r\n\u0060\u0060\u0060\r\nhttps://dev.azure.com/xamarin/public/_apis/build/builds/BUILD_ID/artifacts?artifactName=ARTIFACT_NAME\u0026%24format=zip\r\n\u0060\u0060\u0060\r\n\r\nWhere:\r\n - \u0060BUILD_ID\u0060 is the build ID (eg: \u00603425\u0060)\r\n - \u0060ARTIFACT_NAME\u0060 is the artifact name (eg: \u0060nuget\u0060 or \u0060native-default\u0060)",
+        "createdAt": "2019-06-25T18:10:32",
+        "reactions": [
+          {
+            "user": "danien",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:07:54.8366931Z"
+          }
+        ]
+      },
+      {
+        "id": 505561203,
+        "author": "danien",
+        "body": "Awesome! Thank you all for your help! I\u0027ll post back here to confirm.",
+        "createdAt": "2019-06-25T18:15:31",
+        "reactions": []
+      },
+      {
+        "id": 505844799,
+        "author": "danien",
+        "body": "Confirmed that it works. Also confirmed that it works with [building the rest of the project](https://github.com/mono/SkiaSharp/wiki/Building-SkiaSharp#building) using\r\n\u0060\u0060\u0060\r\n.\\bootstrapper.ps1 -t everything --skipExternals=all\r\n\u0060\u0060\u0060\r\nafter unzipping the contents into the output/native folder.\r\n\r\nShould the \u0022externals-download\u0022 task in cake/BuildExternals.cake be updated from \u0022native\u0022 to \u0022native-default\u0022 for the artifact name as well (though the unzipped folder probably needs to be renamed back to \u0022native\u0022)?\r\n\r\n\u0060\u0060\u0060\r\nTask (\u0022externals-download\u0022)\r\n    .Does (() =\u003E\r\n{\r\n    ...\r\n    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, \u0022native-default\u0022);\r\n    ...\r\n});\r\n\u0060\u0060\u0060\r\n\r\n(For convenience, here\u0027s the [Azure build Id #3459](https://dev.azure.com/xamarin/public/_build/results?buildId=3459).)\r\n",
+        "createdAt": "2019-06-26T12:02:05",
+        "reactions": []
+      },
+      {
+        "id": 506191262,
+        "author": "mattleibow",
+        "body": "\u003E Should the \u0022externals-download\u0022 task in cake/BuildExternals.cake be updated from \u0022native\u0022 to \u0022native-default\u0022\r\n\r\nGood catch, yes it should be \u0060native-default\u0060.\r\n\r\nAnd the rename should just be a matter of moving the dir after extraction:\r\n\r\n\u0060\u0060\u0060csharp\r\nMoveDirectory (\u0022./output/native-default\u0022, \u0022./output/native\u0022);\r\n\u0060\u0060\u0060\r\n\r\nDo you want to edit the file? Then you can join the ranks as a SkiaSharp contributor!",
+        "createdAt": "2019-06-27T05:06:16",
+        "reactions": []
+      },
+      {
+        "id": 506215392,
+        "author": "danien",
+        "body": "\u003E Do you want to edit the file? Then you can join the ranks as a SkiaSharp contributor!\r\n\r\nCool. I\u0027ve submitted a pull request #892 for your review but if it\u0027s easier, I\u0027ve added the code from the [BuildExternals.cake](https://github.com/danien/SkiaSharp/blob/dev/change-externals-download-native-artifact-name/cake/BuildExternals.cake) file here.\r\n\r\nI\u0027m new to Github contributions, so let me know if I\u0027m doing anything wrong. Thanks again!\r\n\r\n\u0060\u0060\u0060\r\nTask (\u0022externals-download\u0022)\r\n    .Does (() =\u003E\r\n{\r\n    if (string.IsNullOrEmpty (AZURE_BUILD_ID))\r\n        throw new Exception (\u0022Specify a build ID with --azureBuildId=\u003CID\u003E\u0022);\r\n\r\n    var artifactName = \u0022native-default\u0022;\r\n    var artifactFilename = $\u0022{artifactName}.zip\u0022;\r\n    var url = string.Format(AZURE_BUILD_URL, AZURE_BUILD_ID, artifactName);\r\n\r\n    var outputPath = \u0022./output\u0022;\r\n    EnsureDirectoryExists (outputPath);\r\n    CleanDirectories (outputPath);\r\n\r\n    DownloadFile (url, $\u0022{outputPath}/{artifactFilename}\u0022);\r\n    Unzip ($\u0022{outputPath}/{artifactFilename}\u0022, outputPath);\r\n    MoveDirectory ($\u0022{outputPath}/{artifactName}\u0022, $\u0022{outputPath}/native\u0022);\r\n});\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2019-06-27T06:46:11",
+        "reactions": []
+      },
+      {
+        "id": 506448758,
+        "author": "mattleibow",
+        "body": "@danien you did everything right! Merging!",
+        "createdAt": "2019-06-27T17:57:34",
+        "reactions": []
+      }
+    ]
+  }
 }

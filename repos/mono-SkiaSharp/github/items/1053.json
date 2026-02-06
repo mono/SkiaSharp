@@ -20,5 +20,50 @@
   "updatedAt": "2022-08-19T09:01:47",
   "closedAt": "2019-12-13T05:26:38",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:10:06.1732858Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 565255584,
+        "author": "mattleibow",
+        "body": "Confirmed that this still works fine on macOS. I bet it has to do with something on Windows because we switched from the ancient OpenTK v1.1 to v3.0.\r\n\r\n\uD83D\uDC40 ",
+        "createdAt": "2019-12-13T01:01:03",
+        "reactions": []
+      },
+      {
+        "id": 565285581,
+        "author": "mattleibow",
+        "body": "I can repro this on my Surface Book 2 with the NVIDIA GeForce GTX 1050. It is fine on the Intel(R) UHD Graphics 620 though... Probably the setup for the graphics. \r\n",
+        "createdAt": "2019-12-13T03:29:34",
+        "reactions": []
+      },
+      {
+        "id": 565296719,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. The issue was that the control was just going for the max samples that SkiaSharp supported, which was sometimes too high for the actual GPU. The fix is to actually ask the control how many samples to use.",
+        "createdAt": "2019-12-13T04:35:09",
+        "reactions": [
+          {
+            "user": "antongit",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:10:05.9169274Z"
+          },
+          {
+            "user": "antongit",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:10:05.9169279Z"
+          }
+        ]
+      },
+      {
+        "id": 565361597,
+        "author": "antongit",
+        "body": "Hurray! Thank you.",
+        "createdAt": "2019-12-13T09:08:49",
+        "reactions": []
+      }
+    ]
+  }
 }
