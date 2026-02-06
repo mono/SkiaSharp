@@ -19,5 +19,58 @@
   "updatedAt": "2020-08-15T00:24:41",
   "closedAt": "2020-08-15T00:24:41",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:25:51.9670229Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 379073454,
+        "author": "adamhill",
+        "body": "Me too. Our Web team \u0026 designer uses IcoMoon with CSS templates and we would like to use their mappings and custom font in our Xamarin project.",
+        "createdAt": "2018-04-05T20:54:24",
+        "reactions": []
+      },
+      {
+        "id": 379079033,
+        "author": "sylvain-toptal",
+        "body": "@adamhill \r\nYou can most likely directly import the .target and the IconifyGenerator class and change your .csproj to use the generator.  Check what they did in the icon projects.\r\n\r\nThis ticket is more about making this easier, it seems possible to use the generator by manually editing the project file.",
+        "createdAt": "2018-04-05T21:14:40",
+        "reactions": []
+      },
+      {
+        "id": 380410876,
+        "author": "mattleibow",
+        "body": "I will investigate this and see if I can release it.",
+        "createdAt": "2018-04-11T10:54:19",
+        "reactions": [
+          {
+            "user": "sylvain-toptal",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:25:51.4230853Z"
+          }
+        ]
+      },
+      {
+        "id": 393623061,
+        "author": "brianjtools",
+        "body": "I was able to include my custom icon font in the demo.  \r\n1) Downloaded and built the Solution.\r\n2) The  IconifyGenerator is a command line app and so used it to create the template for my font by pointing it to my font file and requesting the option to create the template file.\r\n3) Copied one of the font templates, deleted the bin and obj folders in the copy and renamed it for my font and edited the template for my font name.  I also included my font in the folder and edited .csproj to point to my font for the RemoteFontFile.  Deleted the RemoteStyleSheet line as with the template the generator created it doesn\u0027t seem to be needed.\r\n4) Built that and then also included the font project as a ProjectReference in the demo .csproj\r\n5) Added a line to the demo to use my font with it\u0027s own special codepoints.\r\n6) Built and ran perfectly.  Now I have the font to use in my own projects.\r\n",
+        "createdAt": "2018-05-31T18:07:58",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:25:51.6886689Z"
+          }
+        ]
+      },
+      {
+        "id": 674320331,
+        "author": "mattleibow",
+        "body": "Thanks for this issue, but due the the fact that this library is now deprecated, no further work will be done on SkiaSharp.SVG.\r\n\r\nThank you for all of you folks that have been using this library this long, it is always great to know that some of my work has made things a bit better. However, I am unable to maintain this library, but I would recommend using the far superior https://github.com/wieslawsoltes/Svg.Skia \r\nIt has an API that is compatible and will just require a namespace change.\r\n\r\nFor better text support, I again would recommend the equally awesome https://github.com/toptensoftware/RichTextKit that can pretty much do everything.\r\n\r\nWith both of these, I have updated the sample app to demonstrate how to use these libraries, producing a far better result.",
+        "createdAt": "2020-08-15T00:24:41",
+        "reactions": []
+      }
+    ]
+  }
 }

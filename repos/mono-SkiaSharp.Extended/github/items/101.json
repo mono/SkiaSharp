@@ -18,5 +18,25 @@
   "createdAt": "2020-09-12T00:33:05",
   "updatedAt": "2021-01-19T09:50:54",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:25:26.0317889Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 757480036,
+        "author": "ziriax",
+        "body": "I\u0027ve been doing some more tests, and this resampler isn\u0027t yet production ready, it is rather slow. Quality is great though.\r\n\r\nFurthermore, it seems Halide already contains a really good and fast high quality image resizer:\r\nhttps://github.com/halide/Halide/tree/master/apps/resize\r\n\r\nOkay, Halide doesn\u0027t yet resample in linear color space, so I\u0027m comparing apples with oranges, but for most scenarios, resampling in sRGB space is good enough.\r\n\r\nHalide is just... insane. IMHO the way forward for most advanced imaging processing.\r\n\r\nIt would be awesome if we could somehow integrate the Halide LLVM-based JIT into C# :-) \r\n\r\nAs a start we could just AOT compile a lot of specialized native libs, and call the correct one at runtime.\r\n\r\nNOTE: the existing image scaling filters in Skia are horrible, they produce blurry results when downscaling \u003E0.5 (SkiaSharp 2.80.2), so this problem is not fixed. IMHO Skia should get a native high quality downsampling filter.\r\n\r\n",
+        "createdAt": "2021-01-10T13:53:35",
+        "reactions": []
+      },
+      {
+        "id": 762729764,
+        "author": "ziriax",
+        "body": "I\u0027ve managed to create an image downsampler that just uses **System.Numerics.Vectors** that approaches the performance of WIC\u0027s FANT downscaler (just a box filter), it is 3% slower on my machine (i7700k). Not sure how it performs on other CPUs. \r\n\r\nI\u0027m amazed I could get this performance out of C#, using only old common constructs!\r\n\r\nMaybe when using the new intrinsics, I can beat the native implementation, not sure.\r\n\r\nHowever, since this really has nothing to do with Skia, I\u0027m not sure it should be integrated?\r\n\r\n",
+        "createdAt": "2021-01-19T09:50:54",
+        "reactions": []
+      }
+    ]
+  }
 }

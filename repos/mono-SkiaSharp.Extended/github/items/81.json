@@ -14,5 +14,39 @@
   "updatedAt": "2020-08-15T00:16:47",
   "closedAt": "2020-08-15T00:16:47",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:26:17.1865522Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 506611314,
+        "author": "inforithmics",
+        "body": "I reduced the svg to to only show the offending circle\r\n\r\n\u0060\u0060\u0060svg\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022UTF-8\u0022 standalone=\u0022no\u0022?\u003E\r\n\r\n\u003Csvg\r\n   xmlns:dc=\u0022http://purl.org/dc/elements/1.1/\u0022\r\n   xmlns:cc=\u0022http://creativecommons.org/ns#\u0022\r\n   xmlns:rdf=\u0022http://www.w3.org/1999/02/22-rdf-syntax-ns#\u0022\r\n   xmlns:svg=\u0022http://www.w3.org/2000/svg\u0022\r\n   xmlns=\u0022http://www.w3.org/2000/svg\u0022\r\n   xmlns:xlink=\u0022http://www.w3.org/1999/xlink\u0022\r\n   width=\u002266.666664\u0022\r\n   height=\u0022200\u0022\u003E\u003Cdefs\u003E\r\n      \u003CradialGradient\r\n       fx=\u00220\u0022\r\n       fy=\u00220\u0022\r\n       cx=\u00220\u0022\r\n       cy=\u00220\u0022\r\n       r=\u00221\u0022\r\n       gradientUnits=\u0022userSpaceOnUse\u0022\r\n       gradientTransform=\u0022matrix(0,20.15979,40.643555,0,25.000488,122.98193)\u0022\r\n       id=\u0022radialGradient134\u0022\u003E\r\n          \u003Cstop style=\u0022stop-opacity:1;stop-color:#f5a8a2\u0022 offset=\u00220\u0022/\u003E\r\n          \u003Cstop style=\u0022stop-opacity:1;stop-color:#e30613\u0022 offset=\u00220.45403363\u0022/\u003E\r\n      \u003C/radialGradient\u003E\r\n\u003C/defs\u003E\u003Cg\u003E\u003Cpath\r\n          d=\u0022m 4.843,122.982 c 0,-11.224 9.024,-20.323 20.157,-20.323 v 0 c 11.133,0 20.158,9.099 20.158,20.323 v 0 c 0,11.225 -9.025,20.324 -20.158,20.324 v 0 c -11.133,0 -20.157,-9.099 -20.157,-20.324\u0022\r\n          style=\u0022fill:url(#radialGradient134)\u0022/\u003E\r\n\u003C/g\u003E\u003C/svg\u003E\r\n\u0060\u0060\u0060\r\nBecause of this the gradient has an absolute position\r\n\u0060     gradientUnits=\u0022userSpaceOnUse\u0022\u0060\r\nand the gradient position shouldn\u0027t be adpated as it is currently the case\r\n\r\nI made a pull request that fixes this. The image that I show here is already in the tests \r\nfolder\r\n\r\nhttps://github.com/mono/SkiaSharp.Extended/blob/master/SkiaSharp.Extended.Svg/tests/SkiaSharp.Extended.Svg.Tests/images/gradient.svg",
+        "createdAt": "2019-06-28T05:55:22",
+        "reactions": []
+      },
+      {
+        "id": 532929073,
+        "author": "alexanderrafalovich",
+        "body": "I also encoutered this problem. Is there an easy way I can integrate @inforithmics fix into my project?",
+        "createdAt": "2019-09-19T01:39:18",
+        "reactions": []
+      },
+      {
+        "id": 532974015,
+        "author": "inforithmics",
+        "body": "You could compile this code and then include it in your solution.\r\n\r\nhttps://github.com/inforithmics/SkiaSharp.Extended/tree/master/SkiaSharp.Extended.Svg/source\r\n\r\nIs only my fixes, but there are others where more bugs are fixed.",
+        "createdAt": "2019-09-19T05:36:21",
+        "reactions": []
+      },
+      {
+        "id": 674318933,
+        "author": "mattleibow",
+        "body": "Thanks for this issue, but due the the fact that this library is now deprecated, no further work will be done on this library.\r\n\r\nI would recommend using the far superior https://github.com/wieslawsoltes/Svg.Skia",
+        "createdAt": "2020-08-15T00:16:47",
+        "reactions": []
+      }
+    ]
+  }
 }
