@@ -13,5 +13,50 @@
   "createdAt": "2022-12-20T20:35:31",
   "updatedAt": "2025-08-31T01:43:35",
   "commentCount": 4,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:24:46.2162317Z",
+    "reactions": [
+      {
+        "user": "themcoo",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:46.2162735Z"
+      },
+      {
+        "user": "rtk0c",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:46.2162744Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1370043967,
+        "author": "MarkIngramUK",
+        "body": "The wiki entry https://github.com/mono/SkiaSharp/wiki/Creating-Bindings makes no mention of how to actually generate those bindings. ",
+        "createdAt": "2023-01-03T17:33:39",
+        "reactions": []
+      },
+      {
+        "id": 1370342636,
+        "author": "mattleibow",
+        "body": "Ah yeah this one... Not sure what it really wants but I think I found that I just had to install the C\u002B\u002B workload in VS and then it started working... I think.",
+        "createdAt": "2023-01-03T23:59:47",
+        "reactions": []
+      },
+      {
+        "id": 3239663823,
+        "author": "rtk0c",
+        "body": "I\u0027ll share some details on stuff I figured out. I was able to get the generator process to run on linux, but it just spits out a almost empty file \u0060SkiaApi.generated.cs\u0060, as if the headers did not contain anything? This is obviously not very helpful. Help appreciated.\n\n- Clone [CppAST.Net](https://github.com/xoofx/CppAst.NET) and [ClangSharp](http://github.com/microsoft/ClangSharp)\n- Change CppAST.NET version from \u00600.13.0\u0060 to \u00600.23.1\u0060 in \u0060SkiaSharpGenerator.csproj\u0060\n  - I also tried the old version, it had the exact same problem with not generating any bindings\n  - On some occasions the old CppAST.Net \u002B new ClangSharp will segfault. (I couldn\u0027t build the corresponding version, too many LLVM api changes to manually figure out, because I used archlinux\u0027s prebuilt versions which is currently LLVM 20)\n- Build the ClangSharp native parts with\n  \u0060\u0060\u0060sh\n  cmake -B artifacts/bin/native/ -S . -DCMAKE_BUILD_TYPE=Release -GNinja\n  cmake --build artifacts/bin/native/\n  \u0060\u0060\u0060\n  - I need to do this because nuget prebuilt \u0060ClangSharp.Interop\u0060 artifact that provides the native libclang and libclangsharp dlls doesn\u0027t work. Nuget says it can\u0027t find the package.\n  - I was able to use archlinux\u0027s \u0060llvm llvm-libs clang\u0060 to avoid having to build libclang from source. In particular the patch and build steps from [a AUR package](https://aur.archlinux.org/packages/clangsharp-pinvoke-generator) to use system libs as packaged by archlinux\n    \u0060\u0060\u0060diff\n    diff --git a/sources/libClangSharp/CMakeLists.txt b/sources/libClangSharp/CMakeLists.txt\n    --- a/sources/libClangSharp/CMakeLists.txt\n    \u002B\u002B\u002B b/sources/libClangSharp/CMakeLists.txt\n    @@ -39,7 \u002B39,8 @@ find_package(Clang REQUIRED CONFIG\n\n     add_library(ClangSharp SHARED ${SOURCES})\n\n    -target_link_libraries(ClangSharp PRIVATE clangAST clangFrontend libclang)\n    \u002B# Arch packs all clang libraries as libclang-cpp.so\n    \u002Btarget_link_libraries(ClangSharp PRIVATE clang-cpp)\n\n     target_include_directories(ClangSharp PRIVATE ${CLANG_INCLUDE_DIRS})\n    \u0060\u0060\u0060\n- Build CppAST\u0027s and ClangSharp\u0027s C# parts, and put them in a local nuget feed \u0060~/nugetfeed\u0060 with\n  \u0060\u0060\u0060sh\n  cd CppAST.Net\n  dotnet pack src/CppAst/CppAst.csproj -o ~/nugetfeed -c Debug\n  cd ClangSharp\n  dotnet pack ClangSharp.sln -o ~/nugetfeed -c Debug\n  \u0060\u0060\u0060\n- Add \u0060~/nugetfeed\u0060 to the project\n  \u0060\u0060\u0060sh\n  cd SkiaSharp\n  dotnet nuget add source ~/nugetfeed\n  \u0060\u0060\u0060\n- Build and run SkiaSharpGenerator as normal\n  \u0060\u0060\u0060sh\n  dotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.json --root externals/skia --output binding/SkiaSharp/SkiaApi.generated.cs\n  \u0060\u0060\u0060",
+        "createdAt": "2025-08-31T01:39:48",
+        "reactions": []
+      },
+      {
+        "id": 3239665374,
+        "author": "rtk0c",
+        "body": "I should bit more clear why I had to build everything from source. If I simply run the generator like the MarkIngramUK, or even use \u0060utils/generate.ps1\u0060, then Nuget will report it can\u0027t find an appropriate version of \u0060ClangSharp.Interop\u0060. I assume this is because ClangSharp project only started publishing linux native library artifacts last year, and CppAST.Net 0.13.0 used by the generator is too old to pull in the new artifacts.\n\nAlthough if I recall correctly, changing to CppAST.Net 0.23.1 had the exact same issue. So there must be some other reason affecting Nuget too.",
+        "createdAt": "2025-08-31T01:43:35",
+        "reactions": []
+      }
+    ]
+  }
 }

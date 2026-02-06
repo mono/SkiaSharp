@@ -18,5 +18,60 @@
   "createdAt": "2025-04-02T23:49:05",
   "updatedAt": "2025-08-07T23:12:00",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:25:32.7114267Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2775466210,
+        "author": "mattleibow",
+        "body": "I have a to matrix and then also a to matrix44\n\nIs that one also wrong? I feel like I have a test that checks a cycle so both may be wrong. ",
+        "createdAt": "2025-04-03T11:33:02",
+        "reactions": []
+      },
+      {
+        "id": 2775865871,
+        "author": "mlancione",
+        "body": "The Implicit operator in SKMatrix44 is also wrong:\n\nCurrent Implementation:\n\u0060\u0060\u0060cs\n\t\tpublic static implicit operator SKMatrix44 (SKMatrix matrix) =\u003E\n\t\t\tnew SKMatrix44 (\n\t\t\t\tmatrix.ScaleX, matrix.SkewY, 0, matrix.Persp0,\n\t\t\t\tmatrix.SkewX, matrix.ScaleY, 0, matrix.Persp1,\n\t\t\t\t0, 0, 1, 0,\n\t\t\t\tmatrix.TransX, matrix.TransY, 0, matrix.Persp2);\n\u0060\u0060\u0060\n\nCorrect Implementation:\n\u0060\u0060\u0060cs\n\t\tpublic static implicit operator SKMatrix44 (SKMatrix matrix) =\u003E\n\t\t\tnew SKMatrix44 (\n\t\t\t\tmatrix.ScaleX, matrix.SkewX, 0, matrix.TransX,\n\t\t\t\tmatrix.SkewY, matrix.ScaleY, 0, matrix.TransY,\n\t\t\t\t0, 0, 1, 0,\n\t\t\t\tmatrix.Persp0, matrix.Persp1, 0, matrix.Persp2);\n\u0060\u0060\u0060\n\nWhere are the ToMatrix and ToMatrix44 methods? I can\u0027t find them.",
+        "createdAt": "2025-04-03T13:52:06",
+        "reactions": []
+      },
+      {
+        "id": 2872994270,
+        "author": "mlancione",
+        "body": "Any update on this issue?",
+        "createdAt": "2025-05-12T15:18:49",
+        "reactions": []
+      },
+      {
+        "id": 3161731914,
+        "author": "mlancione",
+        "body": "No update on this fix?",
+        "createdAt": "2025-08-06T21:49:06",
+        "reactions": []
+      },
+      {
+        "id": 3162413910,
+        "author": "molesmoke",
+        "body": "This doesn\u0027t sound/feel right... \u0060Canvas.SetMatrix\u0060 uses the implicit operator if you provide it an SKMatrix, and it gives the output I expect. If it were switched to your suggested implementation then it wouldn\u0027t. Consider doing it explicitly (e.g. with the WinForms sample for simplicity):\n\n\u0060\u0060\u0060\nSKMatrix m = SKMatrix.CreateTranslation(100, 0);\nSKMatrix4x4 m4 = (SKMatrix44)m;\ncanvas.SetMatrix(m4);\n\u0060\u0060\u0060\n\nSince nobody has complained that SKCanvas transforms are hideously broken, and the unit tests cover the round trip between the two types, it seems likely that the current implementation is correct.",
+        "createdAt": "2025-08-07T04:30:40",
+        "reactions": []
+      },
+      {
+        "id": 3165604662,
+        "author": "mlancione",
+        "body": "@molesmoke Are you referring to my original post? The SKMatrix44.Matrix property is definitely wrong as I indicated in the post.\n\nI listed the correct order of the elements with a link to the skia documentation.",
+        "createdAt": "2025-08-07T20:26:08",
+        "reactions": []
+      },
+      {
+        "id": 3166101005,
+        "author": "molesmoke",
+        "body": "AFAICT, \u0060SkMatrix::get9\u0060 wasn\u0027t used in 2.88.9 for conversions (although the conversion was performed natively).\n\nI don\u0027t mind helping out, but could you perhaps provide the additional details that bug reports requests? What you did, what happened, what you expected? That way we could eliminate API usage and/or expectations being at fault. I note that both Skia and SkiaSharp sometimes use row-major and sometimes use column-major, perhaps that\u0027s a point of confusion here?\n\nI provided a reasonably straightforward method for you to be able to verify that your suggested changes would make transforms give incorrect output without needing to compile SkiaSharp. Did you try it out? If so, what were your results?\n",
+        "createdAt": "2025-08-07T23:12:00",
+        "reactions": []
+      }
+    ]
+  }
 }

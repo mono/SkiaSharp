@@ -24,5 +24,230 @@
   "updatedAt": "2025-08-22T23:55:10",
   "closedAt": "2025-08-22T23:55:10",
   "commentCount": 23,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:25:02.1579962Z",
+    "reactions": [
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:25:02.1580028Z"
+      },
+      {
+        "user": "ghishadow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:25:02.1580036Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2466641715,
+        "author": "TommiGustafsson-HMP",
+        "body": "@mattleibow I ran analysis on the dump using WinDbg. It says the following:\r\n\u0060\u0060\u0060\r\n0:000\u003E !analyze -v\r\n*******************************************************************************\r\n*                                                                             *\r\n*                        Exception Analysis                                   *\r\n*                                                                             *\r\n*******************************************************************************\r\n\r\nFailed to request MethodData, not in JIT code range\r\n\r\nKEY_VALUES_STRING: 1\r\n\r\n    Key  : AV.Dereference\r\n    Value: NullPtr\r\n\r\n    Key  : AV.Fault\r\n    Value: Read\r\n\r\n    Key  : Analysis.CPU.mSec\r\n    Value: 1890\r\n\r\n    Key  : Analysis.Elapsed.mSec\r\n    Value: 12794\r\n\r\n    Key  : Analysis.IO.Other.Mb\r\n    Value: 9\r\n\r\n    Key  : Analysis.IO.Read.Mb\r\n    Value: 2\r\n\r\n    Key  : Analysis.IO.Write.Mb\r\n    Value: 29\r\n\r\n    Key  : Analysis.Init.CPU.mSec\r\n    Value: 2781\r\n\r\n    Key  : Analysis.Init.Elapsed.mSec\r\n    Value: 19018\r\n\r\n    Key  : Analysis.Memory.CommitPeak.Mb\r\n    Value: 377\r\n\r\n    Key  : Analysis.Version.DbgEng\r\n    Value: 10.0.27725.1000\r\n\r\n    Key  : Analysis.Version.Description\r\n    Value: 10.2408.27.01 amd64fre\r\n\r\n    Key  : Analysis.Version.Ext\r\n    Value: 1.2408.27.1\r\n\r\n    Key  : CLR.Engine\r\n    Value: CORECLR\r\n\r\n    Key  : CLR.Version\r\n    Value: 9.0.24.47305\r\n\r\n    Key  : Failure.Bucket\r\n    Value: NULL_POINTER_READ_c0000005_coreclr.dll!ProcessCLRExceptionNew\r\n\r\n    Key  : Failure.Hash\r\n    Value: {c7c8b0e4-8662-6d89-0847-b939a6a3bc0f}\r\n\r\n    Key  : Failure.Source.FileLine\r\n    Value: 952\r\n\r\n    Key  : Failure.Source.FilePath\r\n    Value: D:\\a\\_work\\1\\s\\src\\coreclr\\vm\\exceptionhandling.cpp\r\n\r\n    Key  : Failure.Source.SourceServerCommand\r\n    Value: raw.githubusercontent.com/dotnet/runtime/990ebf52fc408ca45929fd176d2740675a67fab8/src/coreclr/vm/exceptionhandling.cpp\r\n\r\n    Key  : Timeline.OS.Boot.DeltaSec\r\n    Value: 923469\r\n\r\n    Key  : Timeline.Process.Start.DeltaSec\r\n    Value: 7\r\n\r\n    Key  : WER.OS.Branch\r\n    Value: ni_release\r\n\r\n    Key  : WER.OS.Version\r\n    Value: 10.0.22621.1\r\n\r\n    Key  : WER.Process.Version\r\n    Value: 1.0.0.0\r\n\r\n\r\nFILE_IN_CAB:  WindowsMauiUnpackagedSKGLViewError.exe.31924.dmp\r\n\r\nNTGLOBALFLAG:  0\r\n\r\nAPPLICATION_VERIFIER_FLAGS:  0\r\n\r\nCONTEXT:  000001d80dfd45b8 -- (.cxr 0x1d80dfd45b8)\r\nrax=0000000000000000 rbx=0000000000000000 rcx=0000000000000000\r\nrdx=0000000000000000 rsi=0000000000000000 rdi=0000000100000000\r\nrip=3f80000000000000 rsp=0000000000000000 rbp=0000000000000000\r\n r8=0000000000000000  r9=0000000000000000 r10=0000000000000000\r\nr11=0000000000000000 r12=0000000000000000 r13=3f8000003f800000\r\nr14=3f8000003f800000 r15=0000000000000000\r\niopl=0         nv up di pl nz na pe nc\r\ncs=4df1  ss=0000  ds=0e08  es=01d8  fs=0000  gs=0001             efl=00000000\r\n3f800000\u006000000000 ??              ???\r\nResetting default scope\r\n\r\nEXCEPTION_RECORD:  000001d819de2c70 -- (.exr 0x1d819de2c70)\r\nExceptionAddress: 0000000000000000\r\n   ExceptionCode: 7fb4fd98\r\n  ExceptionFlags: 00007ffd\r\nNumberParameters: 0\r\n\r\nPROCESS_NAME:  WindowsMauiUnpackagedSKGLViewError.dll\r\n\r\nREAD_ADDRESS:  0000000000000000 \r\n\r\nERROR_CODE: (NTSTATUS) 0xc0000005 - The instruction at 0x%p referenced memory at 0x%p. The memory could not be %s.\r\n\r\nEXCEPTION_CODE_STR:  c0000005\r\n\r\nFAULTING_THREAD:  ffffffff\r\n\r\nSTACK_TEXT:  \r\n00007ffe\u00606e67be7f 00007ffe\u00606e67be7f coreclr!ProcessCLRExceptionNew\u002B0xfb\r\n\r\n\r\nSTACK_COMMAND:  ** Pseudo Context ** Pseudo ** Value: 3 ** ; kb\r\n\r\nFAULTING_SOURCE_LINE:  D:\\a\\_work\\1\\s\\src\\coreclr\\vm\\exceptionhandling.cpp\r\n\r\nFAULTING_SOURCE_FILE:  D:\\a\\_work\\1\\s\\src\\coreclr\\vm\\exceptionhandling.cpp\r\n\r\nFAULTING_SOURCE_LINE_NUMBER:  952\r\n\r\nFAULTING_SOURCE_SRV_COMMAND:  https://raw.githubusercontent.com/dotnet/runtime/990ebf52fc408ca45929fd176d2740675a67fab8/src/coreclr/vm/exceptionhandling.cpp\r\n\r\nFAULTING_SOURCE_CODE:  \r\nNo source found for \u0027D:\\a\\_work\\1\\s\\src\\coreclr\\vm\\exceptionhandling.cpp\u0027\r\n\r\n\r\nSYMBOL_NAME:  coreclr!ProcessCLRExceptionNew\u002Bfb\r\n\r\nMODULE_NAME: coreclr\r\n\r\nIMAGE_NAME:  coreclr.dll\r\n\r\nFAILURE_BUCKET_ID:  NULL_POINTER_READ_c0000005_coreclr.dll!ProcessCLRExceptionNew\r\n\r\nOS_VERSION:  10.0.22621.1\r\n\r\nBUILDLAB_STR:  ni_release\r\n\r\nOSPLATFORM_TYPE:  x64\r\n\r\nOSNAME:  Windows 10\r\n\r\nIMAGE_VERSION:  9.0.24.47305\r\n\r\nFAILURE_ID_HASH:  {c7c8b0e4-8662-6d89-0847-b939a6a3bc0f}\r\n\r\nFollowup:     MachineOwner\r\n---------\r\n\u0060\u0060\u0060\r\n\r\nAt this point, I am using Visual Studio 2022 Community Preview 17.12.0 Preview 5.0, .NET MAUI 9.0 RC2, SkiaSharp 3.118.0-Preview1.2. I have also activated Full Dump (2) in Registry Editor for the test app.",
+        "createdAt": "2024-11-10T08:38:31",
+        "reactions": []
+      },
+      {
+        "id": 2467357730,
+        "author": "taublast",
+        "body": "A quick guess: before net9 we would never expect an unpackaged mode on Windows, seems it was implemented to speed up development (no idea why, windows was already the fastest platform to debug a MAUI app haha).   \r\nAnyway it may be that skiasharp is calling some code present in packaged mode only, resulting in this crash.\r\nhttps://x.com/dotMorten/status/1849193454414573679",
+        "createdAt": "2024-11-11T06:41:07",
+        "reactions": []
+      },
+      {
+        "id": 2721605083,
+        "author": "TommiGustafsson-HMP",
+        "body": "@mattleibow Since Direct3D support is coming to SkiaSharp (#2823), would it be possible to add a Direct3D-accelerated view to WinUI/MAUI views to replace SKGLView, which does not work in the unpackaged mode on Windows? Or make it possible to choose a Direct3D renderer for SKGLView, which would work in the unpackaged mode (which is now default for .NET 9 apps)?",
+        "createdAt": "2025-03-13T15:08:34",
+        "reactions": []
+      },
+      {
+        "id": 2723828127,
+        "author": "mattleibow",
+        "body": "WinUI is technically using Direct3D via the ANGLE library. ANGLE is basically a wrapper for DirectX that looks like OpenGL ES.\n\nHowever, we still can add views to skip this layer and draw directly.\n\nBut, is this issue still occurring in unpackaged? I see the view does not have a width and height, so maybe the view is 0 height and causes a crash.\n\nI will have a look as it should be working. ",
+        "createdAt": "2025-03-14T07:08:54",
+        "reactions": []
+      },
+      {
+        "id": 2723869308,
+        "author": "TommiGustafsson-HMP",
+        "body": "Thanks for clarifying things up.\n\nI updated the test application to .NET SDK 9.0.201, .NET MAUI 9.0.50 and SkiaSharp 3.116.1. And it\u0027s still crashing in the unpackaged mode. Is there a SkiaSharp nuget package available that uses Direct3D, since 3.116.1 is crashing when AngleSwapChainPanel is accessing SkiaSharp.Views.GlesInterop.GlesContext?\n\nI also added WidthRequest and HeightRequest to SKGLView, but they didn\u0027t help.",
+        "createdAt": "2025-03-14T07:35:15",
+        "reactions": []
+      },
+      {
+        "id": 2723916141,
+        "author": "taublast",
+        "body": "Can confirm SKGLView is crashing on Windows if accessed in unpackaged mode, tried on Debug.\nskiasharp 3.116.1 maui.controls 9.0.22\n@TommiGustafsson-HMP what is the \u0022unpackaged mode\u0022 use case? thought that was to speed up deployment on debug only?",
+        "createdAt": "2025-03-14T08:00:00",
+        "reactions": []
+      },
+      {
+        "id": 2723949716,
+        "author": "TommiGustafsson-HMP",
+        "body": "\u003E Can confirm SKGLView is crashing on Windows if accessed in unpackaged mode, tried on Debug. skiasharp 3.116.1 maui.controls 9.0.22 [@TommiGustafsson-HMP](https://github.com/TommiGustafsson-HMP) what is the \u0022unpackaged mode\u0022 use case? thought that was to speed up deployment on debug only?\n\nOur app is a game and Steam does not support MSIX, so we must upload it there as an unpackaged version.",
+        "createdAt": "2025-03-14T08:15:22",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:24:58.6839789Z"
+          }
+        ]
+      },
+      {
+        "id": 2724363538,
+        "author": "mattleibow",
+        "body": "OK, I will investigate.\n\nIt should be working, and if not then it is a horrible case of a bug fest. ",
+        "createdAt": "2025-03-14T11:13:44",
+        "reactions": []
+      },
+      {
+        "id": 2726724975,
+        "author": "TommiGustafsson-HMP",
+        "body": "That\u0027s much appreciated! Thank you!",
+        "createdAt": "2025-03-15T15:09:54",
+        "reactions": []
+      },
+      {
+        "id": 2796713734,
+        "author": "TommiGustafsson-HMP",
+        "body": "The crash is still present in:\n- .NET SDK 9.0.203\n- .NET MAUI 9.0.60\n- SkiaSharp 3.119.0-preview.1.2",
+        "createdAt": "2025-04-11T12:01:17",
+        "reactions": []
+      },
+      {
+        "id": 2799836500,
+        "author": "pauldendulk",
+        "body": "I reported a similar issue (maybe the same at the core): https://github.com/mono/SkiaSharp/issues/3233\n\nIt has a very simple minimal reproducible sample: https://github.com/pauldendulk/skiasharpcrash",
+        "createdAt": "2025-04-13T07:16:14",
+        "reactions": []
+      },
+      {
+        "id": 2799857658,
+        "author": "TommiGustafsson-HMP",
+        "body": "\u003E I reported a similar issue (maybe the same at the core): [#3233](https://github.com/mono/SkiaSharp/issues/3233)\n\u003E \n\u003E It has a very simple minimal reproducible sample: https://github.com/pauldendulk/skiasharpcrash\n\nYes, it\u0027s the same issue. The thing is that when I reported this issue on August 13, 2024, the default \u0060WindowsPackageType\u0060 was \u0060MSIX\u0060. They changed it to \u0060None\u0060, when .NET 9 was released, and therefore the crash is now the default behavior with SKGLView on the Windows platform, which it was not back in August 2024.",
+        "createdAt": "2025-04-13T08:26:41",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:24:59.7390284Z"
+          }
+        ]
+      },
+      {
+        "id": 3016967300,
+        "author": "TommiGustafsson-HMP",
+        "body": "@mattleibow I was able to debug this a bit further. I copied libEGL.dll and libGLESv2.dll from Google Chrome to the output directory, which resolved the System.ExecutionEngineException. However, then the next error was:\n\n\u0060\u0060\u0060\n\t\t\tsurface = Egl.eglCreateWindowSurface(eglDisplay, eglConfig, surfaceCreationProperties.As\u003CIInspectable\u003E().ThisPtr, surfaceAttributes);\n\t\t\tif (surface == Egl.EGL_NO_SURFACE)\n\t\t\t{\n\t\t\t\tthrow new Exception(\u0022Failed to create EGL surface\u0022);\n\t\t\t}\n\u0060\u0060\u0060\n\nfailing with: EGL_BAD_NATIVE_WINDOW, 0x300B, 12299, A NativeWindowType is invalid, which I was able to get with eglGetError() in Immediate Window.\n\nBut apparently it was able to at least initialize the EGL.\n\nSo, I guess the problem in the unpackaged mode are the ANGLE libraries, and something else that it doesn\u0027t get the right native window.",
+        "createdAt": "2025-06-29T18:39:42",
+        "reactions": []
+      },
+      {
+        "id": 3019641881,
+        "author": "TommiGustafsson-HMP",
+        "body": "I was able to fix this problem by using libEGL.dll from Google Chrome (137.0.7151.120) and libGLESv2.dll from SkiaSharp 3.119.0. That combination worked.",
+        "createdAt": "2025-06-30T15:31:49",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:25:00.2268041Z"
+          },
+          {
+            "user": "taublast",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:25:00.2268046Z"
+          }
+        ]
+      },
+      {
+        "id": 3049768464,
+        "author": "TommiGustafsson-HMP",
+        "body": "I built working ANGLE libraries for unpackaged WinAppSDK:\n\n[ANGLE-for-WinAppSDK-2025-07-08.zip](https://github.com/user-attachments/files/21126888/ANGLE-for-WinAppSDK-2025-07-08.zip)",
+        "createdAt": "2025-07-08T17:35:21",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:25:00.4484589Z"
+          }
+        ]
+      },
+      {
+        "id": 3061067485,
+        "author": "TommiGustafsson-HMP",
+        "body": "The problem at the moment is that in the current ANGLE build process:\n- **libEGL.dll** must be compiled with \u0060angle_is_winappsdk=false\u0060\n- **libGLESv2.dll** must be compiled with \u0060angle_is_winappsdk=true\u0060\n\nOr things do not work in the unpackaged mode.\n\nWe have 2 options to fix this.\n\n## Option 1\nFix the ANGLE build process, so that **libEGL.dll** works when compiled with \u0060angle_is_winappsdk=true\u0060.\n\n## Option 2\nCompile ANGLE 2 times. Essentially you\u0027d need to add something like this task to https://github.com/mono/SkiaSharp/blob/main/native/winui-angle/build.cake\n\n\u0060\u0060\u0060\nTask(\u0022ANGLE2\u0022)\n    .IsDependentOn(\u0022sync-ANGLE\u0022)\n    .IsDependentOn(\u0022git-sync-deps\u0022)\n    .WithCriteria(IsRunningOnWindows())\n    .Does(() =\u003E\n{\n    Build(\u0022x86\u0022);\n    Build(\u0022x64\u0022);\n    Build(\u0022arm64\u0022);\n\n    void Build(string arch)\n    {\n        if (Skip(arch)) return;\n\n        try {\n            System.Environment.SetEnvironmentVariable(\u0022DEPOT_TOOLS_WIN_TOOLCHAIN\u0022, \u00220\u0022);\n\n            RunGn(ANGLE_PATH, $\u0022out/winui/{arch}\u0022, \n                $\u0022target_cpu=\u0027{arch}\u0027 \u0022 \u002B\n                $\u0022is_component_build=false \u0022 \u002B\n                $\u0022is_debug=false \u0022 \u002B\n                $\u0022is_clang=false \u0022 \u002B\n                $\u0022angle_is_winappsdk=false \u0022 \u002B\n                $\u0022winappsdk_dir=\u0027{WINAPPSDK_PATH}\u0027 \u0022 \u002B\n                $\u0022enable_precompiled_headers=false \u0022 \u002B\n                $\u0022angle_enable_null=false \u0022 \u002B\n                $\u0022angle_enable_wgpu=false \u0022 \u002B\n                $\u0022angle_enable_gl_desktop_backend=false \u0022 \u002B\n                $\u0022angle_enable_vulkan=false\u0022);\n\n            RunNinja(ANGLE_PATH, $\u0022out/winui2/{arch}\u0022, \u0022libEGL\u0022);\n        } finally {\n            System.Environment.SetEnvironmentVariable(\u0022DEPOT_TOOLS_WIN_TOOLCHAIN\u0022, \u0022\u0022);\n        }\n\n        var outDir = OUTPUT_PATH.Combine(arch);\n        EnsureDirectoryExists(outDir);\n        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($\u0022out/winui/{arch}/libEGL.dll\u0022), outDir);\n        CopyFileToDirectory(ANGLE_PATH.CombineWithFilePath($\u0022out/winui/{arch}/libEGL.pdb\u0022), outDir);\n    }\n});\n\u0060\u0060\u0060\n\nAnd of course remove libEGL.dll compiling from \u0060Task(\u0022ANGLE\u0022)\u0060.",
+        "createdAt": "2025-07-11T07:43:39",
+        "reactions": []
+      },
+      {
+        "id": 3061100206,
+        "author": "pauldendulk",
+        "body": "@TommiGustafsson-HMP But building it twice will also cause a distribution problem right? How would that work? Two different nuget packages? Or two versions in one nuget package? If so, how would the correct one be selected? This could cause dodgy problems.\n\nAnd do you know what it would take to fix the ANGLE build for option 1?",
+        "createdAt": "2025-07-11T07:54:23",
+        "reactions": []
+      },
+      {
+        "id": 3061143261,
+        "author": "TommiGustafsson-HMP",
+        "body": "No, it doesn\u0027t cause distribution problems, because if you build it twice, it works in both packaged (MSIX) and unpackaged modes. At least in x64 architecture.",
+        "createdAt": "2025-07-11T08:06:04",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:25:01.0799743Z"
+          }
+        ]
+      },
+      {
+        "id": 3066644050,
+        "author": "taublast",
+        "body": "Thanks will try today!\n\n\u003E I built working ANGLE libraries for unpackaged WinAppSDK:\n\u003E \n\u003E [ANGLE-for-WinAppSDK-2025-07-08.zip](https://github.com/user-attachments/files/21126888/ANGLE-for-WinAppSDK-2025-07-08.zip)\n\n@TommiGustafsson-HMP Thanks again for you research! I used those and they work fine for both Un-packaged and MSIX-packaged. Is this same for you regarding the packaged mode?",
+        "createdAt": "2025-07-13T06:31:15",
+        "reactions": []
+      },
+      {
+        "id": 3066708036,
+        "author": "TommiGustafsson-HMP",
+        "body": "Yes, they work well in the MSIX-packaged mode for me, too. So, they work in both modes. ",
+        "createdAt": "2025-07-13T08:06:50",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:25:01.4709587Z"
+          }
+        ]
+      },
+      {
+        "id": 3066715116,
+        "author": "taublast",
+        "body": "@TommiGustafsson-HMP Thank you so much for this! The new DrawnUi preview nuget is now \u0022Steam-friendly\u0022 with your dlls.",
+        "createdAt": "2025-07-13T08:21:21",
+        "reactions": [
+          {
+            "user": "TommiGustafsson-HMP",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:25:01.6832043Z"
+          }
+        ]
+      },
+      {
+        "id": 3066722857,
+        "author": "TommiGustafsson-HMP",
+        "body": "The two DLLs that I built are for the **x64** architecture. SkiaSharp obviously needs also DLLs for the **x86** and **arm64** architectures, but I won\u0027t build them, because I have no way of testing that they work as intended, so I leave it to others.",
+        "createdAt": "2025-07-13T08:36:42",
+        "reactions": []
+      },
+      {
+        "id": 3076961505,
+        "author": "taublast",
+        "body": "@TommiGustafsson-HMP  Well the fact that Windows x64 doesn\u0027t require MSIX mode anymore is really a huge deal!   \nFor libs that when consumed on Windows just crash, then people have to search, read docs, to find out that they have to enable MSIX blabla, so no more of that, thanks to you. \uD83E\uDD47 ",
+        "createdAt": "2025-07-16T06:01:18",
+        "reactions": []
+      }
+    ]
+  }
 }

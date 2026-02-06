@@ -18,5 +18,24 @@
   "createdAt": "2025-08-16T17:14:27",
   "updatedAt": "2025-08-17T22:17:19",
   "commentCount": 1,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:25:30.4137464Z",
+    "reactions": [
+      {
+        "user": "github-actions[bot]",
+        "content": "eyes",
+        "createdAt": "2026-02-06T13:25:30.4137544Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3194687780,
+        "author": "molesmoke",
+        "body": "That\u0027s a good spot! It was also the wrong value in 2.88.9 though...\n\nI was using that in my own custom control before the DX12 backend was enabled. IIRC, part of the perf improvement is that it\u0027s not conformant (the surfaces are vertically flipped). So, if the fast path were enabled, then users creating surfaces from \u0060SKSwapChainPanel.GRContext\u0060 would find that they need to swap the surface origin to \u0060GRSurfaceOrigin.TopLeft\u0060. Surprisingly, \u0060SKSwapChainPanel\u0060 seems to still render the right way up for its paint event, so the fallout might not be too bad.\n\n@mattleibow Might want to comment on whether he\u0027d prefer a fix that explicitly uses the copy path, or whether the fast path should be correctly enabled as a breaking change?",
+        "createdAt": "2025-08-17T22:17:19",
+        "reactions": []
+      }
+    ]
+  }
 }

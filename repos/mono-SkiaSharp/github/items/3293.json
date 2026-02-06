@@ -41,5 +41,158 @@
       "state": "APPROVED",
       "submittedAt": "2025-08-18T17:46:39"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:25:25.6098374Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2988800898,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-06-19T17:48:48",
+        "reactions": []
+      },
+      {
+        "id": 2988801237,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-06-19T17:48:55",
+        "reactions": []
+      },
+      {
+        "id": 2992667085,
+        "author": "mattleibow",
+        "body": "/rebase",
+        "createdAt": "2025-06-20T20:06:20",
+        "reactions": []
+      },
+      {
+        "id": 2992668689,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-06-20T20:06:52",
+        "reactions": []
+      },
+      {
+        "id": 2992668959,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-06-20T20:06:59",
+        "reactions": []
+      },
+      {
+        "id": 2997336882,
+        "author": "mattleibow",
+        "body": "/Users/runner/work/1/s/source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/Platform/Android/SKTouchHandler.cs(120,37): warning CA1416: This call site is reachable on: \u0027Android\u0027 21.0 and later. \u0027MotionEventButtonState.StylusSecondary\u0027 is only supported on: \u0027android\u0027 23.0 and later. (https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca1416) [/Users/runner/work/1/s/source/SkiaSharp.Views.Maui/SkiaSharp.Views.Maui.Core/SkiaSharp.Views.Maui.Core.csproj::TargetFramework=net8.0-android34.0]\n/Users/runner/work/1/s/source/SkiaSharp.Views/SkiaSharp.Views/Platform/Apple/SKMetalView.cs(96,8): error CS0103: The name \u0027UIKit\u0027 does not exist in the current context [/Users/runner/work/1/s/source/SkiaSharp.Views/SkiaSharp.Views/SkiaSharp.Views.csproj::TargetFramework=net8.0-macos14.0]\n    98 Warning(s)\n    1 Error(s)\n ",
+        "createdAt": "2025-06-23T17:43:15",
+        "reactions": []
+      },
+      {
+        "id": 3001091148,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2025-06-24T16:09:16",
+        "reactions": []
+      },
+      {
+        "id": 3001091458,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2025-06-24T16:09:23",
+        "reactions": []
+      },
+      {
+        "id": 3001117936,
+        "author": "taublast",
+        "body": "We had SampleCount 1 before fixing metal for simulator, so in context of info from Jeremy0 (https://github.com/mono/SkiaSharp/pull/3156#issuecomment-2846719662) it could be safer to return to the state of SampleCount for phisical devices we had previously.  \r\nI did not notice any difference on real device (not simulator) with SampleCount 1 or 2, so 1 is fine with me personally to revert to the way it was.",
+        "createdAt": "2025-06-24T16:19:31",
+        "reactions": []
+      },
+      {
+        "id": 3001572383,
+        "author": "mattleibow",
+        "body": "@taublast are you saying to revert entirely, or detect if physican and then use 1, else use this version check?",
+        "createdAt": "2025-06-24T19:06:07",
+        "reactions": []
+      },
+      {
+        "id": 3001574554,
+        "author": "mattleibow",
+        "body": "If we got some testing to do here, I can merge the revert PR and we can iterate on this?",
+        "createdAt": "2025-06-24T19:07:04",
+        "reactions": []
+      },
+      {
+        "id": 3001585671,
+        "author": "taublast",
+        "body": "This pr \u0022reverts for old phisical devices\u0022. The \u0022revert pr\u0022 would make ios simulator unusable for skglview animated scenarios for people that use default skiasharp handlers.",
+        "createdAt": "2025-06-24T19:11:56",
+        "reactions": []
+      },
+      {
+        "id": 3001601351,
+        "author": "taublast",
+        "body": "I\u0027m using this code several times a week on simulator/real mac/real iphone, if this info could help..",
+        "createdAt": "2025-06-24T19:18:11",
+        "reactions": []
+      },
+      {
+        "id": 3002223708,
+        "author": "jeremy-visionaid",
+        "body": "@taublast IIRC, the sample you provided for the performance measurements used a redundant intermediate blit (and also used a sample count of 1 on the intermediate surface). Have you fixed those yet? It would be good to rule them out. Might be helpful to get the actual render timings as opposed to the FPS too.\r\n\r\nIn my use case I did not notice any significant performance difference in the simulator with the defaults (i.e. 1), and I still think that the docs do not recommend this.  If I\u0027m reading it correctly, the docs and the sample just avoid using a sample count of 2 - they don\u0027t say not to use 1.\r\n\r\nI\u0027m happy to go and triple check my measurements, and I have an older MacBook I can test on too, but prob be a bit later in the day as I\u0027ve got other more urgent bits I need to get to first.",
+        "createdAt": "2025-06-25T00:19:43",
+        "reactions": []
+      },
+      {
+        "id": 3003172668,
+        "author": "taublast",
+        "body": "\u003E @taublast IIRC, the sample you provided for the performance measurements used a redundant intermediate blit (and also used a sample count of 1 on the intermediate surface). Have you fixed those yet? It would be good to rule them out. Might be helpful to get the actual render timings as opposed to the FPS too.\r\n\r\n@jeremy-visionaid \r\nThe sample i provided in the first place was the current skiasharp handler, and my custom handlers appeared after the fix was already working, nothing to do with it. To answer direct about the handler, yes it is now better \u0022timed\u0022 with more fluid rendering than what we had.\r\n\r\n\u003E In my use case I did not notice any significant performance difference in the simulator with the defaults (i.e. 1), and I still think that the docs do not recommend this. If I\u0027m reading it correctly, the docs and the sample just avoid using a sample count of 2 - they don\u0027t say not to use 1.\r\n\r\nExact quoted examples from apple were followed both for simulator and real device. Simulator settings worked perfectly, on real devices we had an issue with iOS lower than 16 (thanks apple).  \r\nThis PR sets SampleCount to 1 for real devices as it was already the case previously, default is 1 and our code is not changing this.  \r\nThe \u00221\u0022 variable is there for an explicit set, to be visible and customizable.  \r\nAnd I think we already had this interesting conversation between me \u0022simulator went from unusable to awesome\u0022 and you \u0022did not notice any significant performance difference\u0022, will not continue on this.\r\n\r\n\u003E I\u0027m happy to go and triple check my measurements, and I have an older MacBook I can test on too, but prob be a bit later in the day as I\u0027ve got other more urgent bits I need to get to first.\r\n\r\nPlease suite yourself, meanwhile I would not choose to revert the good to avoid the bad, instead of fixing the bad to achieve a better state. \r\n\r\n",
+        "createdAt": "2025-06-25T04:37:55",
+        "reactions": []
+      },
+      {
+        "id": 3003342956,
+        "author": "jeremy-visionaid",
+        "body": "Hey, sorry, I didn\u0027t mean for my post to seem so terse - just got a lot of stuff on. I was only pointing out that there were other factors in the sample you provided me that might have been a contributing factor to the performance issues you experienced - I wasn\u0027t aware of the timeline of your own handlers to know whether that was important or not. I can only say that original PR didn\u0027t seem to affect the performance for my particular usage on my particular hardware - and I completely accept there might be something with either of those factors that make this PR the better one.\r\n\r\nWith the sample count set to 1 for real devices, I don\u0027t see that it\u0027s a particularly big deal either way about which PR gets accepted (just technical correctness and simulator will render slightly different results). I\u0027d rather the attention go to higher priority stuff like #3258 since that\u0027s blocking for stuff like Avalonia than foresake the great for the good.",
+        "createdAt": "2025-06-25T05:13:29",
+        "reactions": []
+      },
+      {
+        "id": 3004014825,
+        "author": "jeremy-visionaid",
+        "body": "OK, I\u0027ve got some time now to look at this. I recall now that my initial investigation was based off https://github.com/taublast/Maui.Game.SpaceShooter\r\nand\r\nhttps://github.com/taublast/DrawnUi\r\nin order to eliminate my use case being a factor.\r\n\r\nI still had some of the modifications locally, so I\u0027ve simplified them and pused those to a fork:\r\nhttps://github.com/jeremy-visionaid/Maui.Game.SpaceShooter/tree/samplecount-test\r\nhttps://github.com/jeremy-visionaid/DrawnUi/tree/samplecount-test\r\nThe timings are obviously very quick and dirty - I have more sophisticated timings in my own app, but I hope they would be sufficient to show if there were a significant performance issue related to the sample count in the simulator.\r\n\r\nAt the time, there was a bug in dotnet and it wasn\u0027t possible to compile a release build for the simulator without setting UseInterpreter:\r\nhttps://github.com/dotnet/macios/issues/22205\r\nThis has now been resolved, so I\u0027ve disabled UseInterpreter again.\r\n\r\nHere are the timings with dotnet sdk 9.0.301:\r\n\r\nM2 Pro - iPad A16 18.5 Simulator - Debug\r\nSampleCount = 1: ~5.5 ms\r\nSampleCount = 4: ~5.5 ms\r\n\r\nM2 Pro - iPad A16 18.5 Simulator - Release\r\nSampleCount = 1: ~5.5 ms\r\nSampleCount = 4: ~5.5 ms\r\n\r\nI also added a 5 ms sleep as a control, which increased the render timings to over 10 ms as expected. The shooter app maintained 60 fps for all the tests.\r\n\r\nSo, the test method is pretty blunt, please let me know if you disagree with it, but it is at least something that everyone here could look at and spin up as a test pretty quickly to inform a decision here.\r\n",
+        "createdAt": "2025-06-25T09:09:28",
+        "reactions": []
+      },
+      {
+        "id": 3004137883,
+        "author": "jeremy-visionaid",
+        "body": "Urgh. I forgot to hit reload when I switched to the release build \uD83E\uDD26 It\u0027s too late here for me to repeat the timings now since release builds are so very slow.\r\n\r\nIn the meantime I tested my x86 machine...\r\n\r\nMacBook Pro 2019 - iPad A16 18.5 Simulator - Debug\r\nSampleCount = 1: ~15 ms\r\nSampleCount = 4: ~16 ms\r\n\r\nSo it _seems_ sample count of 1 might be measurably faster there, which is probably what you\u0027d expect, but one off timings are obviously pretty sketchy - it would really need an average to be more certain.\r\n",
+        "createdAt": "2025-06-25T09:47:46",
+        "reactions": []
+      },
+      {
+        "id": 3197873961,
+        "author": "mattleibow",
+        "body": "Sorry that I have not been on top of this. I am hoping to merge some fixes and get ready to release a new SkiaSharp.\r\n\r\nJust want to confirm that this PR is beter than the crash :) And is there anything that would be worse than the revert PR? Effectively, is the PR beter or OK as before for common cases? Since these are public properties, devs can edit the properties after the ctor runs, so if we can\u0027t get 100% perfect, we should get better for 99.999% (or even 80%) of the cases.",
+        "createdAt": "2025-08-18T17:51:00",
+        "reactions": []
+      },
+      {
+        "id": 3198494089,
+        "author": "jeremy-visionaid",
+        "body": "I think there\u0027s a difference in opinion there :) It\u0027s definitely better than the crash, but from my perspective:\r\n\r\n1. I was not able to repro the op\u0027s claim that MSAA improved simulator perfomance on arm64\r\n2. The op\u0027s repro actually showed a perf degradation on x86\r\n3. MSAA increases GPU memory usage\r\n4. It possibly creates a difference in output between a real device and the simulator\r\n5. The documentation doesn\u0027t endorse using MSAA for the simulator (i.e. the original change was made under a false pretense)\r\n6. There were approach/implementation issues with the op\u0027s original repro that may have been contributing factors in the observations\r\n\r\nSo, yeah, IMHO, this is better than it crashing, but worse than the revert (though not catastrophically). I have provided evidence here to show that the ops claims appear to be invalid. That\u0027s open to rebutal, but, I would go with the revert pending demonstration/repro that there was ever an actual problem, since it should have evidence for it being an improvement before being accepted.\r\n",
+        "createdAt": "2025-08-18T21:33:21",
+        "reactions": []
+      },
+      {
+        "id": 3198516549,
+        "author": "jeremy-visionaid",
+        "body": "FWIW, I think that these being public properties also support applying the revert. If a user has a legitimate need to change the values then they can. But the original defaults are a better match for the upstream, so probably more in line with what people expect. Currently they\u0027re unexpectedly different without a shown need.",
+        "createdAt": "2025-08-18T21:44:26",
+        "reactions": []
+      }
+    ]
+  }
 }

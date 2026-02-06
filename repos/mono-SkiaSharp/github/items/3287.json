@@ -18,5 +18,59 @@
   "createdAt": "2025-06-04T18:42:16",
   "updatedAt": "2025-06-27T06:25:35",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:26:17.6865095Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2941359250,
+        "author": "janne-hmp",
+        "body": "@mattleibow I can confirm based on initial testing that this SKGLView PaintSurface thread problem happens only in MAUI on Android. MAUI iOS, MAUI Windows, and Xamarin Android all seem to work correctly by always using the main thread to call PaintSurface. It would be great if this could be fixed asap, as it makes use of SKGLView on Android in MAUI pretty complicated compared to other platforms or Xamarin.",
+        "createdAt": "2025-06-04T20:24:06",
+        "reactions": []
+      },
+      {
+        "id": 2951911323,
+        "author": "taublast",
+        "body": "Sorry for saying this, I would see it as a progress and not a regression. The \u0022complicated\u0022 is what we have signed-in. The rendering is all about performance and not simplicity. The Main thread is about updating UI with a state, not preparing/calculating it.  \nUnfortunately MAUI went this \u0022simplicity\u0022 way creating a wrong feeling that it\u0027s okay not to care about threads, all will be on the Main thread, and after that you would see tons of \u0022MAUI laggy on Android\u0022 posts, mainly ignored, because you can do nothing about it after you choose to tame developers to constantly sit on the UI-thread. ",
+        "createdAt": "2025-06-07T05:57:06",
+        "reactions": []
+      },
+      {
+        "id": 2952148620,
+        "author": "janne-hmp",
+        "body": "It is generally very important that the code works similarly across platforms. In this case the thread that the event handler runs on determines what resources it can use safely. It is impractical that the event handler code needs to be written separately depending on the platform implementation, as the resources safely available to the UI thread are very different from the other threads. Running on the UI thread enables the event handler to access UI information safely, like SKGLView\u0027s own properties such as IsVisible, IsEnabled, Width and so on. None of that can be used safely if the event handler runs in some other thread. (We actually had a crash due to reading IsVisible property on Android with SKGLView.) In any case, all the other platforms as well as SKCanvasView implement the event handler so that it runs on the main thread. It is not good that there is a single case where the implementation is suddenly different, and you would need to write completely separate and possibly massively more complicated event handler code for that one case. If one wants a potentially more efficient SKGLView with an event handler that is run in GLThread and that therefore cannot use UI resources, perhaps that could be another special handler for SKGLView, but it should not be the primary implementation of the handler. Things already worked brilliantly in Xamarin running the event handler on the main thread, so why complicate things unnecessarily in .NET MAUI?",
+        "createdAt": "2025-06-07T08:15:38",
+        "reactions": []
+      },
+      {
+        "id": 2952211694,
+        "author": "taublast",
+        "body": "@janne-hmp basically it\u0027s a question of modernizing a framework, optimizing  performance and responsiveness, vs staying with thread-unaware invoke-and-forget programming. Xamarin was using outdated code, outdated skia api and outdated gl api. \nActually to expect any callback to be called on UI thread is wrong. Offtopically speaking this may come for a huge problem that MSFT already tamed developers to expect this and still doing this further, creating related crashes on release and making apps UI to freeze.\nTry post on Apple forums \u0022why my camera callback is invoked in background thread, my app is crashing when i access UIView properties from it\u0022. \nNo offence.",
+        "createdAt": "2025-06-07T09:12:26",
+        "reactions": []
+      },
+      {
+        "id": 2952603055,
+        "author": "janne-hmp",
+        "body": "This is noted. I fixed the code so that it uses thread-safe wrappers for the few things I need from the UI. Perhaps the assumption of things being in the UI thread is wrong and/or complicated or inefficient to implement for the framework, but I think it is generally pretty confusing if an event handler may or may not be on the UI thread. Ideally, there should be some disclaimer, perhaps in an attribute or elsewhere, that a particular event handler is not run in the UI thread and therefore the programmer should not access UI properties (like check if the SKGLView itself is visible or enabled) directly from there.",
+        "createdAt": "2025-06-07T14:56:58",
+        "reactions": []
+      },
+      {
+        "id": 3011835526,
+        "author": "janne-hmp",
+        "body": "\u003E Sorry for saying this, I would see it as a progress and not a regression. The \u0022complicated\u0022 is what we have signed-in. The rendering is all about performance and not simplicity. The Main thread is about updating UI with a state, not preparing/calculating it. Unfortunately MAUI went this \u0022simplicity\u0022 way creating a wrong feeling that it\u0027s okay not to care about threads, all will be on the Main thread, and after that you would see tons of \u0022MAUI laggy on Android\u0022 posts, mainly ignored, because you can do nothing about it after you choose to tame developers to constantly sit on the UI-thread.\n\nJust to note here, some of the lagginess of Android seems to be caused by overly small nursery size (4MB). Adjusting upwards, e.g. to 128MB, via Android Environment file with the line MONO_GC_PARAMS=nursery-size=128m resolves many lag issues on Android.",
+        "createdAt": "2025-06-27T06:25:35",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:26:17.6361957Z"
+          }
+        ]
+      }
+    ]
+  }
 }

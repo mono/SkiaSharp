@@ -13,5 +13,84 @@
   "createdAt": "2020-07-16T13:18:51",
   "updatedAt": "2025-06-08T14:24:17",
   "commentCount": 8,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:26:36.0275076Z",
+    "reactions": [
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:26:36.02752Z"
+      },
+      {
+        "user": "maiad",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:26:36.0275213Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 659421915,
+        "author": "mattleibow",
+        "body": "When you say:\r\n\u003E We had similar issues during leaving and reopening ContentPage with SKGLView but GRContext.AbandonContext(releaseResources: true) helped.\r\n\r\nDid the issue go away or did it happen less?\r\n\r\nAlso, did the crash happen while drawing or when for example navigating or removing the view from the screen?",
+        "createdAt": "2020-07-16T13:44:25",
+        "reactions": []
+      },
+      {
+        "id": 659428733,
+        "author": "mattleibow",
+        "body": "You can try symbolicate using the symbols from this version (2.80.1):\r\n\r\n[libSkiaSharp.dylib.dSYM.zip](https://github.com/mono/SkiaSharp/files/4931874/libSkiaSharp.dylib.dSYM.zip)\r\n",
+        "createdAt": "2020-07-16T13:55:27",
+        "reactions": [
+          {
+            "user": "SeRgI1982",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:26:34.6690464Z"
+          }
+        ]
+      },
+      {
+        "id": 659938752,
+        "author": "SeRgI1982",
+        "body": "\u003E When you say:\r\n\u003E \r\n\u003E \u003E We had similar issues during leaving and reopening ContentPage with SKGLView but GRContext.AbandonContext(releaseResources: true) helped.\r\n\u003E \r\n\u003E Did the issue go away or did it happen less?\r\n\u003E \r\n\u003E Also, did the crash happen while drawing or when for example navigating or removing the view from the screen?\r\n\r\nIt was another case: \r\n1. you are on ProjectListPage\r\n2. when you hit on the project you will be navigated to ProjectPage where you have SKGLView (for this specific project we have almost 2000 drawing objects like SKPath, SKImage, rectangles, lines, circles, labels etc.).\r\n3. create a new drawing object let say simple rectangle \r\n4. close ProjectPage and navigate back to ProjectListPage\r\n5. open once again the same project\r\n6. CRASH (no Exceptions just native crash so there is no space to make a brakepoint and see something).\r\n\r\nIn this case GRContext.AbandonContext(releaseResources: true) helped and I am able to imagine why. During back navigation we dispose all controls and all resources should be released.\r\n\r\nIn case described at the top I do:\r\n1. you are on ProjectListPage\r\n2. open empty project (navigate to ProjectPage)\r\n3. create a few drawing objects like rectangle, triangle (SKPath)\r\n4. CRASH (no Exceptions just native crash so there is no space to make a brakepoint and see something).",
+        "createdAt": "2020-07-17T07:54:07",
+        "reactions": []
+      },
+      {
+        "id": 660056062,
+        "author": "SeRgI1982",
+        "body": "\u003E symbolicate\r\n\r\nThanks for this suggestion. Symbolicate gave me an answer.\r\n\r\nBecause there is weird behavior\r\n\r\n in SKGLView (on one call InvalidateSurface(), an event OnPaintSurface is called twice - SKCanvas works good), I did a little trick which gave me a performance boost:\r\n- on each odd OnPaintSurface calling, at the end of this handler I do TakeScreenshot() to my private field _test (SKImage),\r\n- on each even OnPaintSurface I draw this screenshot instead of drawing all elements.\r\n\r\nLike I mentioned above, there are cases were we have a few thousands of elements to draw so drawing them twice kills the performance :/\r\n\r\nMy mistake was that I didn\u0027t call _test.Dispose() before reassignment my new screenshot to this field.\r\n\r\nIs there a chance to provide an additional property \r\n\r\n\u0060public bool IsDisposed { get; }\u0060\r\n\r\nto SKObject ?\r\n\r\nI hope that it was the only place where I failed.\r\n\r\nI have attached a short sample showing this issue with calling OnPainSurface twice on each one call of InvalidateSurface() method.\r\n\r\n[XFMacSample 2.zip](https://github.com/mono/SkiaSharp/files/4937463/XFMacSample.2.zip)\r\n\r\n\u0060\u0060\u0060\r\nThread 2 Crashed:: Finalizer\r\n\r\n0   libsystem_kernel.dylib      0x00007fff62e42b66 __pthread_kill \u002B 10\r\n1   libsystem_pthread.dylib      0x00007fff6300d080 pthread_kill \u002B 333\r\n2   libsystem_c.dylib      0x00007fff62d9e1ae abort \u002B 127\r\n3   de.deon.macos      0x0000000109e3e6ac altstack_handle_and_restore.cold.1 \u002B 44\r\n4   de.deon.macos      0x0000000109b8101e altstack_handle_and_restore \u002B 206\r\n5   libGL.dylib      0x00007fff446f9f58 glDeleteBuffers \u002B 18\r\n6   libSkiaSharp.dylib      0x000000010a60036c GrGLBuffer::onRelease() (in libSkiaSharp.dylib) \u002B 188\r\n7   libSkiaSharp.dylib      0x000000010a4a4e9f GrGpuResource::release() (in libSkiaSharp.dylib) \u002B 15\r\n8   libSkiaSharp.dylib      0x000000010a4cb9cd GrResourceCache::notifyRefCntReachedZero(GrGpuResource*) (in libSkiaSharp.dylib) \u002B 445\r\n9   libSkiaSharp.dylib      0x000000010a4af8ac GrProxyProvider::processInvalidUniqueKey(GrUniqueKey const\u0026, GrTextureProxy*, GrProxyProvider::InvalidateGPUResource) (in libSkiaSharp.dylib) \u002B 508\r\n10  libSkiaSharp.dylib      0x000000010a4ca086 GrResourceCache::purgeAsNeeded() (in libSkiaSharp.dylib) \u002B 86\r\n11  libSkiaSharp.dylib      0x000000010a4cbac6 GrResourceCache::didChangeBudgetStatus(GrGpuResource*) (in libSkiaSharp.dylib) \u002B 198\r\n12  libSkiaSharp.dylib      0x000000010a4e9682 GrTextureProxy::~GrTextureProxy() (in libSkiaSharp.dylib) \u002B 98\r\n13  libSkiaSharp.dylib      0x000000010a4e97b7 virtual thunk to GrTextureProxy::~GrTextureProxy() (in libSkiaSharp.dylib) \u002B 39\r\n\r\n14  libSkiaSharp.dylib      0x000000010a584715 SkImage_Gpu::~SkImage_Gpu() (in libSkiaSharp.dylib) \u002B 53\r\n\r\n15  ???                    0x000000011a4c4cc3 0 \u002B 4736175299\r\n16  ???                     0x0000000111e8c55c 0 \u002B 4595434844\r\n17  de.deon.macos      0x0000000109cd45a0 mono_gc_run_finalize \u002B 720 (gc.c:331)\r\n18  de.deon.macos      0x0000000109dd2508 sgen_gc_invoke_finalizers \u002B 232 (sgen-gc.c:2822)\r\n19  de.deon.macos      0x0000000109cd63f3 finalizer_thread \u002B 723 (gc.c:934)\r\n20  de.deon.macos      0x0000000109da88b3 start_wrapper_internal \u002B 403 (threads.c:1288)\r\n21  de.deon.macos      0x0000000109da86fe start_wrapper \u002B 62 (threads.c:1309)\r\n22  libsystem_pthread.dylib      0x00007fff6300a661 _pthread_body \u002B 340\r\n23  libsystem_pthread.dylib      0x00007fff6300a50d _pthread_start \u002B 377\r\n24  libsystem_pthread.dylib      0x00007fff63009bf9 thread_start \u002B 13\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-07-17T11:29:30",
+        "reactions": []
+      },
+      {
+        "id": 660879762,
+        "author": "SeRgI1982",
+        "body": "@mattleibow I have covered cases described above and it seems that it works.\r\nUnfortunately, the same crash appeared in another case: the user pushed computer into sleep mode. After wake up the crash appeared. It happens randomly. Is it possible that during going into sleep mode the GPU release resources and when the app wakes up, SkiaSharp doesn\u0027t know that some of those resources cached by GRContext are no longer available ?",
+        "createdAt": "2020-07-20T08:21:22",
+        "reactions": []
+      },
+      {
+        "id": 661043249,
+        "author": "SeRgI1982",
+        "body": "I was able to reproduce it on my machine. Case pretty different but native crash exactly the same like above.\r\nSteps to reproduce:\r\n- add at least one shape (Add Rectangle)\r\n- click ShowDialog\r\n- close dialog by clicking Ok\r\n- take a look at VS Application Output\r\n\r\nAccording to stack trace and to implementation of Prism Dialog service, there is reparenting which means that:\r\n\r\nDuring opening Dialog\r\n1st step - content from current MainPage (let\u0027s call it MainContent] is replaced by DialogContent and\r\n2nd step -  reparented to DialogContent,\r\n\r\nDuring close Dialog\r\n3rd step - reparented MainContent from DialogContent is assigned back to MainPage content\r\n\r\nwich means that under the hood Page remove his children which leads to call Dispose method on those children (1st step) and once again create a SKGLView control (2nd step). In 3rd step this operation happens once again.\r\nI guess that similar behavior appears also in case where I remove SKGLView control from page content and add once again to page content. Definitely, something what was disposed is reused during re-creation of SKGLView in such case. \r\n\r\n[XFMacSample 2.zip](https://github.com/mono/SkiaSharp/files/4947960/XFMacSample.2.zip)\r\n",
+        "createdAt": "2020-07-20T13:35:08",
+        "reactions": []
+      },
+      {
+        "id": 718714580,
+        "author": "ltetak",
+        "body": "I had the same problem. It seems to be fixed if this \u0060context \u0060is properly disposed with \u0060SKGlView\u0060.\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Mac/SKGLView.cs#L92\r\nTo test this you can also call \u0060GC.SuppressFinalize\u0060 on it.",
+        "createdAt": "2020-10-29T12:15:41",
+        "reactions": []
+      },
+      {
+        "id": 2954106462,
+        "author": "taublast",
+        "body": "Can it be same as https://github.com/mono/SkiaSharp/issues/3178 by any chance? Looks so to me.",
+        "createdAt": "2025-06-08T14:24:17",
+        "reactions": []
+      }
+    ]
+  }
 }

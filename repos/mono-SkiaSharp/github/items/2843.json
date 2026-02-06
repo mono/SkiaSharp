@@ -19,5 +19,46 @@
   "updatedAt": "2025-05-20T20:08:32",
   "closedAt": "2025-05-20T20:08:32",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:26:54.7338167Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2073070288,
+        "author": "mattleibow",
+        "body": "Are you able to reproduce this crash at all? And maybe try SkiaSharp 3.x?\r\n\r\nNot much to go on there, but if the crash is in the GLES library, could it be some Android issue?\r\n\r\nAre you able to get the symbol in libSkiaSharp.so that is the start of the crash?",
+        "createdAt": "2024-04-23T18:08:55",
+        "reactions": []
+      },
+      {
+        "id": 2073115585,
+        "author": "janne-hmp",
+        "body": "I actually happen to have Google Pixel 6a, which has Mali GPU, and I managed to get it crash sometimes with SkiaSharp 2.80.3, so there\u0027s a fair chance that I can get it crash also with 2.88.8. The game used to crash when zooming out to minimap scale, so I can try that again.  (In minimap zoom scale, bitmaps get scaled very small in the game so that you can see the entire map.) My experience though is that the crash in minimap zoom happens much less frequently these than in 2.80.3, so I was expecting the bug to have been fixed, but apparently not entirely so.\r\n\r\nHow do I get the symbol(s) from libSkiaSharp.so normally? Should I get Android logs or is there a way to get further debug data e.g. in debug configuration using SkiaSharp? Tommi has been playing around with building SkiaSharp, too, but getting a custom SkiaSharp in the game could be a bit much, but in theory might be possible.\r\n\r\nIt is obviously some Android / OpenGL / Mali driver issue, or some kind of an incompatibility between those.\r\n\r\nSkiaSharp 3.0x does not seem to be available on Xamarin. On that note, we are still stuck with Xamarin because of the iOS memory corruption problem mentioned in https://github.com/mono/SkiaSharp/issues/2840 which is the most serious problem we have encountered with SkiaSharp so far. My guess is that that corruption problem may have something to do with a threading problem / incompatibility between .NET MAUI layout cycle (perhaps works now differently from Xamarin) and SKGLView rendering cycle (which seems to be oddly slow like it would cause .NET layout cycle to wait for OpenGL to finish drawing or the like, see https://github.com/mono/SkiaSharp/issues/2842). I suspect that because the corruption starts to happen after I open many game menus / pages / layouts with SKGLViews (say, 40 times), and after that suddenly things break down with SkiaSharp.",
+        "createdAt": "2024-04-23T18:29:54",
+        "reactions": []
+      },
+      {
+        "id": 2075696710,
+        "author": "janne-hmp",
+        "body": "With the old 2.80.3, which crashes easier, I managed to get the following log:\r\n\r\n\u0060\u0060\u0060\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : Build fingerprint: \u0027google/bluejay/bluejay:14/AP1A.240305.019.A1/11445699:user/release-keys\u0027\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : Revision: \u0027MP1.0\u0027\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : ABI: \u0027arm64\u0027\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : Timestamp: 2024-04-24 22:21:26.982976904\u002B0300\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : Process uptime: 57s\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : Cmdline: com.soundmindentertainment.gnollhack\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : pid: 28325, tid: 28460, name: GLThread 14  \u003E\u003E\u003E com.soundmindentertainment.gnollhack \u003C\u003C\u003C\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : uid: 10299\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : tagged_addr_ctrl: 0000000000000001 (PR_TAGGED_ADDR_ENABLE)\r\n04-24 22:21:27.464 28488 28488 F DEBUG   : signal 11 (SIGSEGV), code 2 (SEGV_ACCERR), fault addr 0x00000077bba94000\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x0  0000005efc3e4000  x1  b4000077bba93fa0  x2  ffffffffffffffdc  x3  0000005efc3f6300\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x4  b4000077bba9400c  x5  0000005efc3f636c  x6  0000000000000000  x7  00000076a8d3d92c\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x8  b4000077bba81ca0  x9  0000000000000000  x10 0000005efc3e4000  x11 0000000000000000\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x12 0000000000000001  x13 0000000000000020  x14 0000000000000000  x15 b40000792b2794bc\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x16 00000077ad2e7cc8  x17 0000007a8ed18240  x18 0000000000000008  x19 0000000000001849\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x20 0000000000000000  x21 b4000079ebda3b00  x22 b4000079ebda3bb8  x23 000000000001236c\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x24 b4000079ebda3b00  x25 0000000000000000  x26 0000000000000000  x27 0000000000000000\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     x28 0000000000000028  x29 b4000079ebda3b00\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :     lr  00000077ab3362d4  sp  00000076a8d3d790  pc  0000007a8ed18370  pst 0000000080001000\r\n04-24 22:21:27.465 28488 28488 F DEBUG   : 6 total frames\r\n04-24 22:21:27.465 28488 28488 F DEBUG   : backtrace:\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :       #00 pc 0000000000057370  /apex/com.android.runtime/lib64/bionic/libc.so (__memcpy_aarch64_simd\u002B304) (BuildId: 33ad5959e2b38fc822cda3c642e16c94)\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :       #01 pc 00000000009092d0  /vendor/lib64/egl/libGLES_mali.so (gles_vertexp_copy_client_buffers\u002B112) (BuildId: 5df901741dd97a6e)\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :       #02 pc 00000000009310a8  /vendor/lib64/egl/libGLES_mali.so (gles_vertex_prepare_nx\u002B1256) (BuildId: 5df901741dd97a6e)\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :       #03 pc 0000000000910860  /vendor/lib64/egl/libGLES_mali.so (gles_drawp_draw_common\u002B992) (BuildId: 5df901741dd97a6e)\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :       #04 pc 00000000008b64d0  /vendor/lib64/egl/libGLES_mali.so (gles2_draw_draw_range_elements\u002B80) (BuildId: 5df901741dd97a6e)\r\n04-24 22:21:27.465 28488 28488 F DEBUG   :       #05 pc 00000000002a04f0  /data/app/~~9pOSwkQawvTpLLKQCTyTIA==/com.soundmindentertainment.gnollhack-qjJOr4_fB_KAVMYS-t_mWA==/lib/arm64/libSkiaSharp.so\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-04-24T19:34:22",
+        "reactions": []
+      },
+      {
+        "id": 2079042194,
+        "author": "janne-hmp",
+        "body": "Also, 6 hours ago the seemingly same crash was reported by Google Play on 2.88.8 with Google Husky (Pixel 8 Pro) with Android 14. @mattleibow Does this help anything? At least the function names seem to be now there, and this is 2.88.8 for sure.\r\n\r\n\u0060\u0060\u0060\r\n*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\r\npid: 0, tid: 5047 \u003E\u003E\u003E com.soundmindentertainment.gnollhack \u003C\u003C\u003C\r\n\r\nbacktrace:\r\n  #00  pc 0x0000000000057370  /apex/com.android.runtime/lib64/bionic/libc.so (__memcpy_aarch64_simd\u002B304)\r\n  #01  pc 0x0000000000948e80  /vendor/lib64/egl/libGLES_mali.so (gles_vertexp_copy_client_buffers\u002B112)\r\n  #02  pc 0x0000000000974268  /vendor/lib64/egl/libGLES_mali.so (gles_vertex_prepare_nx\u002B1256)\r\n  #03  pc 0x00000000009506a0  /vendor/lib64/egl/libGLES_mali.so (gles_drawp_draw_common\u002B992)\r\n  #04  pc 0x00000000008f4380  /vendor/lib64/egl/libGLES_mali.so (gles2_draw_draw_range_elements\u002B80)\r\n  #05  pc 0x000000000029e450  /data/app/~~m_pX_fPRZKRV0SSeX4pqzA==/com.soundmindentertainment.gnollhack-yqHSB1HKmOlCuV-gHBJD5A==/split_config.arm64_v8a.apk!libSkiaSharp.so\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-04-26T09:54:26",
+        "reactions": []
+      },
+      {
+        "id": 2895705964,
+        "author": "janne-hmp",
+        "body": "Closing as obsolete.",
+        "createdAt": "2025-05-20T20:08:27",
+        "reactions": []
+      }
+    ]
+  }
 }

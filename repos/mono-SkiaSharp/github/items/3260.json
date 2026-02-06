@@ -18,5 +18,46 @@
   "createdAt": "2025-05-01T17:09:59",
   "updatedAt": "2025-06-11T10:12:36",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:26:32.5976289Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2845305388,
+        "author": "daltzctr",
+        "body": "I did confirm that downgrading to 3.118 preview 2.3 resolves the issue with the same MAUI version. This is definitely a regression in the library",
+        "createdAt": "2025-05-01T17:22:58",
+        "reactions": []
+      },
+      {
+        "id": 2845325485,
+        "author": "daltzctr",
+        "body": "\u00603.119\u0060 also seems to result in a release mode crash on \u0060MacCatalyst\u0060 as well. May be different root causes.",
+        "createdAt": "2025-05-01T17:33:36",
+        "reactions": []
+      },
+      {
+        "id": 2900534078,
+        "author": "mootah01",
+        "body": "\u003E \u00603.119\u0060 also seems to result in a release mode crash on \u0060MacCatalyst\u0060 as well. May be different root causes.\n\nYes, I\u0027m getting MacCatalyst release mode crash.... works in debug, release crashes as shown below...\nApplication Specific Backtrace 0:\n0   CoreFoundation                      0x000000018fefeca0 __exceptionPreprocess \u002B 176\n1   libobjc.A.dylib                     0x000000018f9c2b90 objc_exception_throw \u002B 88\n2   RC600 Editor                        0x000000010092a828 xamarin_unhandled_exception_handler \u002B 0\n3   RC600 Editor                        0x0000000100b84f0c -[SKCanvasView drawRect:] \u002B 152",
+        "createdAt": "2025-05-22T09:30:58",
+        "reactions": []
+      },
+      {
+        "id": 2900593704,
+        "author": "mootah01",
+        "body": "\u003E \u003E \u00603.119\u0060 also seems to result in a release mode crash on \u0060MacCatalyst\u0060 as well. May be different root causes.\n\u003E \n\u003E Yes, I\u0027m getting MacCatalyst release mode crash.... works in debug, release crashes as shown below... Application Specific Backtrace 0: 0 CoreFoundation 0x000000018fefeca0 __exceptionPreprocess \u002B 176 1 libobjc.A.dylib 0x000000018f9c2b90 objc_exception_throw \u002B 88 2 RC600 Editor 0x000000010092a828 xamarin_unhandled_exception_handler \u002B 0 3 RC600 Editor 0x0000000100b84f0c -[SKCanvasView drawRect:] \u002B 152\n\n... although downgrading to 3.118 preview 2.3 does NOT resolve this crash.",
+        "createdAt": "2025-05-22T09:48:49",
+        "reactions": []
+      },
+      {
+        "id": 2962070078,
+        "author": "bcaceiro",
+        "body": "Also facing this issue, when reverting to 3.118-preview2.3 it does not occur",
+        "createdAt": "2025-06-11T10:12:36",
+        "reactions": []
+      }
+    ]
+  }
 }

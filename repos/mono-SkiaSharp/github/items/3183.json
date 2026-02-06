@@ -18,5 +18,59 @@
   "createdAt": "2025-03-05T18:20:36",
   "updatedAt": "2025-07-26T08:21:48",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:25:47.8840193Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2701844528,
+        "author": "yauhenibhIDT",
+        "body": "UPD: also tested with https://github.com/mono/SkiaSharp/blob/main/tests/Content/images/baboon.jpg image.\n\nUploading the sample project for demonstrating the issue:\n\n[SkiaSharpIssue.zip](https://github.com/user-attachments/files/19095189/SkiaSharpIssue.zip)",
+        "createdAt": "2025-03-05T19:14:14",
+        "reactions": []
+      },
+      {
+        "id": 2708324638,
+        "author": "TommiGustafsson-HMP",
+        "body": "This is probably because JPEG is a lossy format, which means that information disappears and/or changes when you re-encode a JPEG image.\n\nPNG, on the other hand, is a lossless format, which means that you are encoding the same information over and over again, and therefore the size of the file is constant.",
+        "createdAt": "2025-03-08T14:39:51",
+        "reactions": [
+          {
+            "user": "molesmoke",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:25:47.0948426Z"
+          }
+        ]
+      },
+      {
+        "id": 2708949553,
+        "author": "yauhenibhIDT",
+        "body": "@TommiGustafsson-HMP, do you know how to maintain the same quality when decoding and encoding JPEG images with SkiaSharp?",
+        "createdAt": "2025-03-09T16:33:38",
+        "reactions": []
+      },
+      {
+        "id": 2708959263,
+        "author": "TommiGustafsson-HMP",
+        "body": "I don\u0027t think a JPEG image stores encoder settings, with which the images have been encoded.\n\nI think the only thing that you can do in SkiaSharp is to select the quality you want to encode images in with some precision. It\u0027s an integer you can pass to the Encode function. Higher quality means better image quality but larger file size. Smaller quality means worse image quality but smaller file size. Essentially, you should do some tests with different integer values and settle on a balance between image quality and file size.",
+        "createdAt": "2025-03-09T16:54:17",
+        "reactions": []
+      },
+      {
+        "id": 2711345808,
+        "author": "yauhenibhIDT",
+        "body": "I have utilized Magick.NET for the same purpose, and it works flawlessly: decoding and then encoding a JPEG sequence yields the same results (though there may be some minor byte differences). I\u0027m curious if this functionality should be available out of the box in SkiaSharp.",
+        "createdAt": "2025-03-10T17:34:58",
+        "reactions": []
+      },
+      {
+        "id": 3121490181,
+        "author": "molesmoke",
+        "body": "The size likely increases simply because of your encoder settings. This doesn\u0027t sound like a bug",
+        "createdAt": "2025-07-26T08:21:48",
+        "reactions": []
+      }
+    ]
+  }
 }

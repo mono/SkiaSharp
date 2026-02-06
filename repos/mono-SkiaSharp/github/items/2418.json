@@ -13,5 +13,59 @@
   "createdAt": "2023-03-14T21:12:09",
   "updatedAt": "2025-05-31T20:54:43",
   "commentCount": 6,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:26:43.9558747Z",
+    "reactions": [
+      {
+        "user": "angelofb",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:26:43.9558795Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1496396635,
+        "author": "TommiGustafsson-HMP",
+        "body": "Have you tried an older version, such as 2.80.3, and see if it is faster?",
+        "createdAt": "2023-04-04T18:12:57",
+        "reactions": []
+      },
+      {
+        "id": 1496398918,
+        "author": "bmitc",
+        "body": "I can try that. Are there some changes that might be expected to have affected this, or is it more trying to see if there was a change in performance?",
+        "createdAt": "2023-04-04T18:14:49",
+        "reactions": []
+      },
+      {
+        "id": 1496410687,
+        "author": "TommiGustafsson-HMP",
+        "body": "Well, we have a game that draws the canvas using SkiaSharp and we have been unable to upgrade it from 2.80.3 because of performance reasons.",
+        "createdAt": "2023-04-04T18:24:20",
+        "reactions": []
+      },
+      {
+        "id": 1496412832,
+        "author": "bmitc",
+        "body": "Oh, I see. Thanks for the heads up. I\u0027ll give it a whirl later. It should be a simple thing to test.",
+        "createdAt": "2023-04-04T18:25:58",
+        "reactions": []
+      },
+      {
+        "id": 1546909355,
+        "author": "cyraid",
+        "body": "Any update on this? I find surface flush seems to be the big bottleneck and it\u0027s barely doing anything (clear screen, and a simple drawimage).",
+        "createdAt": "2023-05-14T14:09:58",
+        "reactions": []
+      },
+      {
+        "id": 2925706835,
+        "author": "ToolmakerSteve",
+        "body": "This thought may or may not be relevant:\n\nOn current .Net implementations, all it takes is a single \u0060Task.Delay(1);\u0060 to limit performance to at best 15 ms / frame. 60 fps.  \nBecause the code that executes that Delay won\u0027t be considered for execution again until the next \u0022Task time slice\u0022.  \nEven though the code asks only for a 1 millisecond delay.\n\nFortunately, an app can have multiple *independent/simultaneous* pieces of code with \u0060Task.Delay(1);\u0060, without further cost.  \nIt\u0027s just that none of those tasks will be considered again until the next time slice.\n\nAnd if the code takes more than 15 ms, performance will immediately drop to at best (2x15) ms / frame. 30 fps.\n\n--------------------------------\n\nI got badly bitten in a situation where one piece of code \u0022delayed a millisecond\u0022 to allow other stuff to run, then a bit more code was run, then another delay. TWO time slices had to pass, before this sequence could run again. Immediately dropped to 30 fps. Before I did any real work. When I chained that with computation that exceeded 15 ms, it was down to 20 fps. awful.\n\nI had to redesign my code to ensure that no path through the code had more than a single Task.Delay in a frame!\n\nAnd I\u0027ll likely redesign again to move any code that might need 15 ms (or more) to a separate thread.  \nI\u0027ll have to use the result of that code whenever it is ready. Make sure no animation is dependent on it.  \n\n--------------------------------\n\nI haven\u0027t looked at any code; just mentioning this as a possible suspect to look for.  \n(It\u0027s a severe limitation of Task.Delay, for my purposes.)\n\n(Oops - I tested in a Debug build. I need to verify in a Release build. And re-do it in a new sample app. That doesn\u0027t use any third-party nugets. Not even SkiaSharp. Make sure it isn\u0027t interacting with something else in my code, or in SkiaSharp.)",
+        "createdAt": "2025-05-31T20:38:57",
+        "reactions": []
+      }
+    ]
+  }
 }

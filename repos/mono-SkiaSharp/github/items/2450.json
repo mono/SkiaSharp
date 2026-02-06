@@ -13,5 +13,99 @@
   "createdAt": "2023-04-27T12:24:01",
   "updatedAt": "2025-08-28T21:09:57",
   "commentCount": 6,
-  "reactionCount": 9
+  "reactionCount": 9,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:24:48.353699Z",
+    "reactions": [
+      {
+        "user": "ruslanhumeniuk-eaton",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537176Z"
+      },
+      {
+        "user": "gluk1024",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537185Z"
+      },
+      {
+        "user": "TomWHall",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537188Z"
+      },
+      {
+        "user": "shaunpearsondev",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537195Z"
+      },
+      {
+        "user": "Ne4to",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537198Z"
+      },
+      {
+        "user": "zabulus",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537201Z"
+      },
+      {
+        "user": "vplemyannik",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537205Z"
+      },
+      {
+        "user": "stajs",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537274Z"
+      },
+      {
+        "user": "tskimmett",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:24:48.3537277Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1675873737,
+        "author": "ArlenLi",
+        "body": "Hi, @heathdavies-eaton , Did you solve this issue in the end?",
+        "createdAt": "2023-08-12T11:54:15",
+        "reactions": []
+      },
+      {
+        "id": 1680118996,
+        "author": "heathdavies-eaton",
+        "body": "Hello @ArlenLi , no I didn\u0027t find a solution. In the end I just had to use a non-SDK style project.",
+        "createdAt": "2023-08-16T07:42:16",
+        "reactions": []
+      },
+      {
+        "id": 1771030318,
+        "author": "skeller1",
+        "body": "@ArlenLi @heathdavies-eaton,\r\n\r\nwe are suffering the same problem, maybe a workaround would be excluding the macOS Nuget package native assets, because net48 is not platform independent. A valid temporary fix would be removing SkiaSharp.NativeAssets.macOS as transitive package.\r\n\r\nBut I\u0027m not an expert for nuget packages:\r\n\r\n\r\n\u0060\u0060\u0060\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk.Web\u0022\u003E\r\n\t\u003CPropertyGroup\u003E\r\n\t\t\u003CTargetFramework\u003Enet48\u003C/TargetFramework\u003E\r\n\t\u003C/PropertyGroup\u003E\r\n\r\n\t\u003CItemGroup\u003E\r\n\t\t\u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.6\u0022 ExcludeAssets=\u0022buildTransitive\u0022 /\u003E\r\n\t\t\u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Win32\u0022 Version=\u00222.88.6\u0022 /\u003E\r\n\t\u003C/ItemGroup\u003E\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/226753/f40bc708-44bb-4041-aa8e-47095aecd78d)\r\n\r\n\r\nMaybe the correct bug fix would be removing SkiaSharp.NativeAssets.macOS nuget package dependency for net462 in SkiaSharp.nuspec:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/e2c5c86249621857107c779af0f79b4d06613766/nuget/SkiaSharp.nuspec#L33C1-L33C1\r\n\r\n",
+        "createdAt": "2023-10-19T13:48:59",
+        "reactions": []
+      },
+      {
+        "id": 2060034883,
+        "author": "simonegli8",
+        "body": "Same issue. I had to solve it as follows in my csproj:\r\n\r\n\u0060\u0060\u0060\r\n\u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.8\u0022 GeneratePathProperty=\u0022true\u0022 EcludeAssets=\u0022buildTransitive\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Linux\u0022 Version=\u00222.88.8\u0022 GeneratePathProperty=\u0022true\u0022 ExcludeAssets=\u0022all\u0022 /\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.macOS\u0022 Version=\u00222.88.8\u0022 GeneratePathProperty=\u0022true\u0022 ExcludeAssets=\u0022all\u0022/\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp.NativeAssets.Win32\u0022 Version=\u00222.88.8\u0022 GeneratePathProperty=\u0022true\u0022 ExcludeAssets=\u0022all\u0022 /\u003E\r\n\u003C/ItemGroup\u003E\r\n\r\n\u003C!-- hack for SkiaSharp, so the native dlls go in the right place --\u003E\r\n\u003CImport Project=\u0022$(PkgSkiaSharp_NativeAssets_Linux)\\build\\net462\\SkiaSharp.NativeAssets.Linux.targets\u0022 Condition=\u0022\u0027$(TargetFramework)\u0027 != \u0027\u0027\u0022 /\u003E\r\n\u003CImport Project=\u0022$(PkgSkiaSharp_NativeAssets_macOS)\\build\\net462\\SkiaSharp.NativeAssets.macOS.targets\u0022 Condition=\u0022\u0027$(TargetFramework)\u0027 != \u0027\u0027\u0022 /\u003E\r\n\u003CImport Project=\u0022$(PkgSkiaSharp_NativeAssets_Win32)\\build\\net462\\SkiaSharp.NativeAssets.Win32.targets\u0022 Condition=\u0022\u0027$(TargetFramework)\u0027 != \u0027\u0027\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nThen, in my code I had to tell .NET where to load the native dlls as follows:\r\n\r\nFirst I made a class that set\u0027s up a DllImportResolver when needed:\r\n\r\n\u0060\u0060\u0060\r\nusing System;\r\nusing System.Collections.Generic;\r\nusing System.IO;\r\nusing System.Linq;\r\nusing System.Reflection;\r\nusing System.Runtime.InteropServices;\r\nusing System.Text;\r\n\r\nnamespace SolidCP.Providers.OS\r\n{\r\n    public class SkiaSharp\r\n    {\r\n        public bool IsLinuxMusl\r\n        {\r\n            get\r\n            {\r\n                if (!OSInfo.IsLinux) return false;\r\n                return OS.Shell.Default.Exec(\u0022ldd /bin/ls\u0022).OutputAndError().Result.Contains(\u0022musl\u0022);\r\n            }\r\n        }\r\n\r\n        static readonly SkiaSharp Current = new SkiaSharp(); \r\n\r\n        static Dictionary\u003Cstring, IntPtr\u003E loadedNativeDlls = new Dictionary\u003Cstring, IntPtr\u003E();\r\n        public IntPtr SkiaDllImportResolver(string libraryName, Assembly assembly, DllImportSearchPath? searchPath)\r\n        {\r\n            if (libraryName.Contains(\u0022SkiaSharp\u0022))\r\n            {\r\n                lock (this)\r\n                {\r\n                    IntPtr dll;\r\n                    if (loadedNativeDlls.TryGetValue(libraryName, out dll)) return dll;\r\n\r\n                    var runtimeInformation = typeof(RuntimeInformation);\r\n                    var runtimeIdentifier = (string?)runtimeInformation.GetProperty(\u0022RuntimeIdentifier\u0022)?.GetValue(null);\r\n                    if (runtimeIdentifier == \u0022linux-x64\u0022 \u0026\u0026 IsLinuxMusl) runtimeIdentifier = \u0022linux-musl-x64\u0022;\r\n                    runtimeIdentifier = runtimeIdentifier.Replace(\u0022linux-\u0022, \u0022\u0022);\r\n                    var currentDllPath = Path.GetDirectoryName(new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath);\r\n                    string libraryFileName = libraryName;\r\n                    if (!libraryFileName.EndsWith(\u0022.so\u0022)) libraryFileName \u002B= \u0022.so\u0022;\r\n                    if (!libraryFileName.StartsWith(\u0022lib\u0022)) libraryFileName = \u0022lib\u0022 \u002B libraryFileName;\r\n                    var nativeDllPath = Path.Combine(currentDllPath, runtimeIdentifier, libraryFileName);\r\n\r\n                    if (File.Exists(nativeDllPath))\r\n                    {\r\n                        // call NativeLibrary.Load via reflection, becuase it\u0027s not available in NET Standard\r\n                        var nativeLibrary = Type.GetType(\u0022System.Runtime.InteropServices.NativeLibrary, System.Runtime.InteropServices\u0022);\r\n                        var load = nativeLibrary.GetMethod(\u0022Load\u0022, new Type[] { typeof(string), typeof(Assembly), typeof(DllImportSearchPath?) });\r\n                        dll = (IntPtr)load?.Invoke(null, new object[] { nativeDllPath, assembly, searchPath });\r\n                        loadedNativeDlls.Add(libraryName, dll);\r\n\r\n                        Console.WriteLine($\u0022Loaded native library: {nativeDllPath}\u0022);\r\n\r\n                        return dll;\r\n                    }\r\n                }\r\n            }\r\n\r\n            // Otherwise, fallback to default import resolver.\r\n            return IntPtr.Zero;\r\n        }\r\n\r\n        static bool nativeSkiaDllLoaded = false;\r\n        public static void LoadNativeDlls()\r\n        {\r\n            if (nativeSkiaDllLoaded) return;\r\n            nativeSkiaDllLoaded = true;\r\n\r\n            if (OSInfo.IsLinux)\r\n            {\r\n                // call NativeLibrary.SetDllImportResolver via reflection, becuase it\u0027s not available in NET Standard\r\n                var nativeLibrary = Type.GetType(\u0022System.Runtime.InteropServices.NativeLibrary, System.Runtime.InteropServices\u0022);\r\n                var dllImportResolver = Type.GetType(\u0022System.Runtime.InteropServices.DllImportResolver, System.Runtime.InteropServices\u0022);\r\n\r\n                Assembly skiaSharp = AppDomain.CurrentDomain.GetAssemblies()\r\n                    .FirstOrDefault(a =\u003E a.GetName().Name == \u0022SkiaSharp\u0022);\r\n                if (skiaSharp == null)\r\n                {\r\n                    skiaSharp = Assembly.Load(\u0022SkiaSharp\u0022);\r\n                }\r\n                var setDllImportResolver = nativeLibrary.GetMethod(\u0022SetDllImportResolver\u0022, new Type[] { typeof(Assembly), dllImportResolver });\r\n                //var importResolverMethod = this.GetType().GetMethod(nameof(SkiaDllImportResolver));\r\n\r\n                var skiaDllImportResolver = Delegate.CreateDelegate(dllImportResolver, Current, nameof(SkiaDllImportResolver));\r\n                setDllImportResolver?.Invoke(null, new object[] { skiaSharp, skiaDllImportResolver });\r\n\r\n                Console.WriteLine(\u0022Added SkiaSharp DllImportResolver\u0022);\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThen, always before you run SkiaSharp in your code call \u0060SkiaSharp.LoadNativeDlls()\u0060\r\n\r\nIn the above code, \u0060OS.Shell.Default.Exec(\u0022ldd /bin/ls\u0022).OutputAndError().Result.Contains(\u0022musl\u0022);\u0060,\r\nthis is a call to one of my library methods, what it does it calls a new process \u0022ldd\u0022 with arguments \u0022/bin/ls\u0022 and checks if the output contains \u0022musl\u0022. Thats how you check if you\u0027re running on a Linux with musl c library, in which case you need to load the linux-musl-x64 .so SkiaSharp native library. You have to replace that line in my code with a proper call to Process.Start and then examine it\u0027s output. Also the call to \u0060OSInfo.IsLinux\u0060 you have to replace with  \u0060RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.Linux);\u0060\r\n\r\nProbably when you do a \u0060dotnet publish\u0060 you don\u0027t need all this, but my project runs on both .NET FX and .NET Core and my project cannot use \u0060dotnet publish\u00B4",
+        "createdAt": "2024-04-16T22:48:58",
+        "reactions": []
+      },
+      {
+        "id": 2475057773,
+        "author": "Shane32",
+        "body": "I am getting the same build error.  My .NET Framework 4.8 web project referenced another local project, which referenced a nuget package, which referenced another nuget package, which referenced SkiaSharp.  I can probably reproduce the issue in a sample repo if it would help.",
+        "createdAt": "2024-11-13T23:51:44",
+        "reactions": []
+      },
+      {
+        "id": 2603096072,
+        "author": "englebertnicolas",
+        "body": "Hello, any news about fixes?\n\nWith a Sdk-like csproj, my temporary workaround is to set EnableDefaultContentItems=false and explicitly add required files like this:\n\n\u0060\u0060\u0060\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk.Web\u0022\u003E\n  \u003CPropertyGroup\u003E\n    \u003CTargetFrameworks\u003Enet48;net8.0\u003C/TargetFrameworks\u003E\n    ...\n  \u003C/PropertyGroup\u003E\n\n  \u003C!-- Workaround Skiasharp issue 2450 --\u003E\n  \u003CPropertyGroup Condition=\u0022\u0027$(TargetFramework)\u0027 == \u0027net48\u0027\u0022\u003E\n    \u003CEnableDefaultContentItems\u003Efalse\u003C/EnableDefaultContentItems\u003E\n  \u003C/PropertyGroup\u003E\n  \u003CItemGroup Condition=\u0022\u0027$(TargetFramework)\u0027 == \u0027net48\u0027\u0022\u003E\n    \u003CContent Include=\u0022appsettings*.json\u0022\u003E\n      \u003CCopyToOutputDirectory\u003EAlways\u003C/CopyToOutputDirectory\u003E\n    \u003C/Content\u003E\n    \u003CContent Include=\u0022web.config\u0022\u003E\n      \u003CCopyToOutputDirectory\u003EAlways\u003C/CopyToOutputDirectory\u003E\n    \u003C/Content\u003E\n    ...\n  \u003C/ItemGroup\u003E\n  \u003C!-- End of workaround --\u003E\n  ...\n\u003C/Project\u003E\n\n\u0060\u0060\u0060\n",
+        "createdAt": "2025-01-20T19:10:14",
+        "reactions": []
+      }
+    ]
+  }
 }

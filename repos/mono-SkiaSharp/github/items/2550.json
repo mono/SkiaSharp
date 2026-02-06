@@ -13,5 +13,141 @@
   "createdAt": "2023-08-10T09:17:38",
   "updatedAt": "2025-07-21T16:53:52",
   "commentCount": 16,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:26:00.9782399Z",
+    "reactions": [
+      {
+        "user": "janusw",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:26:00.9782472Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1673431704,
+        "author": "noelbk",
+        "body": "Ooops!  I didn\u0027t realize this is for the *mono* SkiaSharp implementation, not *Microsoft*.  I was kind of surprised to find MS on github.  I\u0027ll close this bug and look for the MS repo.",
+        "createdAt": "2023-08-10T15:18:03",
+        "reactions": []
+      },
+      {
+        "id": 1674478239,
+        "author": "noelbk",
+        "body": "Fixed by hack: toggle IsVisible in container\u0027s OnAppearing",
+        "createdAt": "2023-08-11T09:48:38",
+        "reactions": []
+      },
+      {
+        "id": 2194265726,
+        "author": "janusw",
+        "body": "\u003E I was kind of surprised to find MS on github.\r\n\r\nGitHub is _owned_ by Microsoft! \uD83D\uDE06",
+        "createdAt": "2024-06-27T09:54:06",
+        "reactions": []
+      },
+      {
+        "id": 2194284803,
+        "author": "janusw",
+        "body": "I can reproduce this issue with .NET 8 (MAUI 8.0.61 and SkiaSharp 2.88.8). Unfortunately it also affects [Mapsui](https://github.com/Mapsui/Mapsui).\r\n\r\n\u003E Fixed by hack: toggle IsVisible in container\u0027s OnAppearing\r\n\r\nGladly I can also confirm this workaround :)\r\n",
+        "createdAt": "2024-06-27T10:01:39",
+        "reactions": []
+      },
+      {
+        "id": 2238694589,
+        "author": "albilaga",
+        "body": "This is happen to me also and not even in a \u0060TabBar\u0060. We just have content page as usual. And this is only happen on Android. And thank you @noelbk for the workaround. It works for now :D",
+        "createdAt": "2024-07-19T08:54:22",
+        "reactions": []
+      },
+      {
+        "id": 2242106868,
+        "author": "thisisthekap",
+        "body": "Even though there is a workaround, it would be much appreciated to have an official fix for this issue. This hack is not a sustainable solution and having a proper fix would ensure better reliability. Moreover, this issue might be a symptom of something even more severe, so addressing it promptly would be beneficial.\r\n\r\n@mattleibow What do you think?",
+        "createdAt": "2024-07-22T05:15:51",
+        "reactions": [
+          {
+            "user": "janusw",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:25:58.853802Z"
+          }
+        ]
+      },
+      {
+        "id": 2495972570,
+        "author": "SimonvBez",
+        "body": "This issue happens when a new rendering thread is created for an SKGLView which already has had its layout (size/position) set.\r\n\r\nThe cause lies in \u0060SkiaSharp.Views.Android.GLTextureView.OnAttachToWindow()\u0060 creating a new \u0060GLThread\u0060 when the Tab with the \u0060SKGLView\u0060 comes on the screen for a second time, without telling the thread what the size of the View is.\r\nThis makes the \u0060GLThread\u0060 assume the View has a width and height of 0, causing nothing to be rendered.\r\nAnd since the View has already been created and had its size/position set by the previous time the Tab came into view, \u0060GLTextureView.OnSurfaceTextureSizeChanged()\u0060 (which currently is responsible for setting the width/height in the \u0060GLThread\u0060) is never called.\r\n\r\nThat\u0027s also exactly why toggling the \u0060IsVisible\u0060 property off and on works! It will call \u0060GLTextureView.OnLayoutChange()\u0060 with the correct width and height, enabling the \u0060GLThread\u0060 to receive the actual width and height of the View.\r\n\r\nThe solution should be simple, which is to pass the View\u0027s width and height to the \u0060GLThread\u0060 when it gets constructed, instead of assuming a size of (0, 0).",
+        "createdAt": "2024-11-24T12:23:41",
+        "reactions": []
+      },
+      {
+        "id": 2501273556,
+        "author": "noelbk",
+        "body": "Nice analysis! :\u002B1: ",
+        "createdAt": "2024-11-26T16:11:34",
+        "reactions": [
+          {
+            "user": "janusw",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:25:59.3418528Z"
+          }
+        ]
+      },
+      {
+        "id": 3094137132,
+        "author": "janusw",
+        "body": "The phenomenology of this bug seems to have changed a bit with .NET 9, unfortunately ...\n\nIn order to explain my findings, let me first define the test setup:\n* A simple MAUI app with a \u0060TabBar\u0060 (like in the original report).\n* But this time with three tabs/pages, let\u0027s call them A, B and C.\n* Let\u0027s say tab A is the one with the SKGLView (a Mapsui \u0060MapView\u0060 in my case).\n* I\u0027m testing all of this on Android 16 (with a Pixel 9).\n\nI\u0027ll differentiate between two usage scenarios:\n1. A simple navigation pattern, like these: \n  * A \u2192 B \u2192 A\n  * A \u2192 C \u2192 A\n2. A slightly more complex pattern, like those:\n  * A \u2192 B \u2192 C \u2192 A\n  * A \u2192 C \u2192 B \u2192 A\n\nWith .NET 8, the following behavior was seen (e.g. using MAUI 8.0.100 and SkiaSharp 2.88.9):\n* Both patterns were broken (tab A is blank upon return from any other tab), but could be fixed with the workaround mentioned above (toggling \u0060IsVisbile\u0060 in the \u0060OnAppearing\u0060 method of page A). \u2611\uFE0F \n\nWith .NET 9, this changes in the following way (up to MAUI 9.0.51, with SkiaSharp 2.88.9):\n* scenario (1) works well, even without the workaround \u2705 \n* scenario (2) does not work, but is fixed by the workaround \u2611\uFE0F \n\nThis almost seems like a slight improvement. Using SkiaSharp 3.119.0, even scenario (2) seems to work without workaround. But now comes the bad part ...\n\nWith any MAUI version beyond 9.0.51 (up to 9.0.90, which is currently the most recent one), the behavior changes like this:\n* scenario (1) still works without workaround \u2705 \n* scenario (2) fails even with the workaround \u2757\u2757\n\nThis currently blocks me from moving to MAUI versions \u003E 9.0.51. I see it both with SkiaSharp 2.88.9 and 3.119.0.\n\nTwo questions:\n* Can anyone confirm this behavior (ideally with a pure SKGLView and without Mapsui)?\n* Can we find a different workaround? Is anyone aware of a way to work around this with MAUI 9?\n\nThere seems to be a proposed fix for this issue in PR #3076 (thanks to @SimonvBez), which has been waiting for quite a while, but has still not been merged.\n@mattleibow Since this is becoming a real blocker now, maybe #3076 can finally be considered for inclusion?",
+        "createdAt": "2025-07-20T07:59:25",
+        "reactions": []
+      },
+      {
+        "id": 3094365187,
+        "author": "SimonvBez",
+        "body": "\u003E * Can we find a different workaround? Is anyone aware of a way to work around this with MAUI 9?\n\nThe \u0060IsVisible\u0060 workaround has also been spotty for me back on MAUI 8.0.100, working on most devices but not all.\nYou could try to use this different workaround, which is what I\u0027m currently using. I\u0027m not at my development rig at the moment, so I can\u0027t test it for MAUI 9 sadly, but my hopes are high!\nIt\u0027s a fair bit bigger sadly, but definitely worth a shot until #3076 gets merged (hopefully? Feedback\u0027s welcome @mattleibow ).\n\nPut this into your class that inherits from \u0060SKGLView\u0060\n(Or if you can\u0027t edit the code of the class, modify \u0060FixInvisible()\u0060 to take an \u0060SKGLView\u0060 as an argument instead of it being a class method, then use \u0060view.Handler\u0060 instead of just \u0060Handler\u0060, and be sure to make a unique \u0060sizeNotifyTask\u0060 for every SKGLView instance if your app has multiple! Every SKGLView will have its own render thread)\n\u0060\u0060\u0060cs\n#if ANDROID\n        private static FieldInfo glThreadField;\n        private static FieldInfo glThreadExitedField;\n        private Task sizeNotifyTask;\n\n        private static void LoadReflectionFields(SkiaSharp.Views.Android.GLTextureView glTextureView)\n        {\n            if (glThreadExitedField is not null)\n                return;\n\n            glThreadField = typeof(SkiaSharp.Views.Android.GLTextureView).GetField(\u0022glThread\u0022, BindingFlags.NonPublic | BindingFlags.Instance);\n            var glThread = glThreadField.GetValue(glTextureView);\n            glThreadExitedField = glThread.GetType().GetField(\u0022exited\u0022, BindingFlags.Instance | BindingFlags.Public);\n        }\n\n        /// \u003Csummary\u003E\n        /// An SKGLView may become invisible when it is reappearing after being off-screen. Calling this hack will trigger the View to render again properly.\n        /// This is because the SkiaSharp.Views.Android.GLTextureView.GLThread is restarted when an SKGLView has reappeared, and it by default assumes that\n        /// the size of the View is (0, 0) until notified otherwise. Instead of resizing this View, we are calling the GLTextureView\u0027s\n        /// OnSurfaceTextureSizeChanged function, which in turn will call the GLThread\u0027s OnWindowResize(int width, int height)\n        /// with the actual View\u0027s size to kick the GLThread back into action.\n        /// \u003C/summary\u003E\n        public void FixInvisible()\n        {\n            if (Handler is not null)\n            {\n                SkiaSharp.Views.Android.GLTextureView glTextureView = (Handler as SKGLViewHandler).PlatformView;\n                LoadReflectionFields(glTextureView);\n\n                // Ensure there\u0027s only a single polling Task that will fix the SKGLView\u0027s internal render thread\n                if (sizeNotifyTask is not null \u0026\u0026 !sizeNotifyTask.IsCompleted)\n                {\n                    return;\n                }\n\n                sizeNotifyTask = Task.Run(async () =\u003E\n                {\n                    while (true)\n                    {\n                        var glThread = glThreadField.GetValue(glTextureView);\n                        bool exited = (bool)glThreadExitedField.GetValue(glThread);\n                        if (exited)\n                        {\n                            // The TextureView still has its old glThread. Wait for the new glThread to be created\n                            await Task.Delay(30);\n                            continue;\n                        }\n                        // Now notify the glThread of the actual size of the View\n                        glTextureView.OnSurfaceTextureSizeChanged(null, glTextureView.Width, glTextureView.Height);\n                        return;\n                    }\n                });\n            }\n        }\n#endif\n\u0060\u0060\u0060\n\u0060FixInvisible()\u0060 should be called by the \u0060Appearing\u0060 event or \u0060OnAppearing\u0060 method of the \u0060Page\u0060 the \u0060SKGLView\u0060 is used in.",
+        "createdAt": "2025-07-20T08:49:53",
+        "reactions": []
+      },
+      {
+        "id": 3094392143,
+        "author": "janusw",
+        "body": "\u003E \u003E * Can we find a different workaround? Is anyone aware of a way to work around this with MAUI 9?\n\u003E \n\u003E The \u0060IsVisible\u0060 workaround has also been spotty for me back on MAUI 8.0.100, working on most devices but not all. You could try to use this different workaround, which is what I\u0027m currently using.\n\u003E [..]\n\u003E Put this into your class that inherits from \u0060SKGLView\u0060 \n\nAwesome! Thanks for your quick reply and the alternative workaround, @SimonvBez! I\u0027ll definitely try to give this a shot soon with MAUI 9. For my use case, it probably needs to be applied on the level of Mapsui\u0027s \u0060MapControl\u0060 (I\u0027ll look into this).\n\n\n\u003E I\u0027m not at my development rig at the moment, so I can\u0027t test it for MAUI 9 sadly, but my hopes are high! It\u0027s a fair bit bigger sadly, but definitely worth a shot until [#3076](https://github.com/mono/SkiaSharp/pull/3076) gets merged (hopefully? Feedback\u0027s welcome [@mattleibow](https://github.com/mattleibow) ).\n\nYeah, irrespective of any workaround, it would be really awesome to have this long-standing bug finally fixed for good in SkiaSharp 3. Your fix in PR #3076 is rather simple, it seems. And I assume this bug potentially affects quite a lot of people (at least five sufferers in this thread alone, plus the people hitting this via secondary libs like Mapsui, plus many people seeing this but not reporting it, or not knowing where to report it in the first place).\n\n@mattleibow We really need you on this on! Please don\u0027t let us down here. \uD83E\uDD7A",
+        "createdAt": "2025-07-20T09:30:32",
+        "reactions": []
+      },
+      {
+        "id": 3094440143,
+        "author": "janusw",
+        "body": "Before I start testing the workaround in the context of Mapsui 5 \u0026 MAUI 9, I first created a simple reproducer based on the sample app \u0060Mapsui.Samples.Maui\u0060:\n* https://github.com/janusw/Mapsui/tree/SkiaSharp_issue2550_repro/Samples/Mapsui.Samples.Maui\n* https://github.com/janusw/Mapsui/commit/f149bb322396c5fa20c8dfc40e71cff84433a6a5\n\nThis is based on the latest Mapsui version 5.0.0-beta.19 and uses the current stable MAUI version 9.0.90 to showcase [the behavior described above](https://github.com/mono/SkiaSharp/issues/2550#issuecomment-3094137132), so that everyone at least has a way to uniquely reproduce the problem: Navigating from the Map to Tab2 to Tab3 back to the Map, makes the \u0060MapControl\u0060 disappear (not rendering any more).\n\nNext I\u0027ll try to apply @SimonvBez\u0027s [latest workaround](https://github.com/mono/SkiaSharp/issues/2550#issuecomment-3094365187) in the Mapsui context (and will check via this reproducer if the workaround actually has an effect with MAUI 9) ...",
+        "createdAt": "2025-07-20T10:55:34",
+        "reactions": []
+      },
+      {
+        "id": 3094787394,
+        "author": "janusw",
+        "body": "@SimonvBez I now tried to implement your workaround in Mapsui\u0027s MapControl, see here:\nhttps://github.com/janusw/Mapsui/commits/SkiaSharp_issue2550_workaround/\nand in particular this commit: https://github.com/janusw/Mapsui/commit/67a7dcf0d423c05e4833552762ac298366e8d08a\n\nIt is applied to the repro sample in this commit: https://github.com/janusw/Mapsui/commit/0ee0383e57cda41a6543f6147e542f89bddb6a8d\nBut unfortunately it does not seem to have any effect.\n(Note that I had to make some small adjustments, I hope I didn\u0027t mess anything up.)\n\nI also verified that the original workaround (i.e. toggling the IsVisible property in OnAppearing) does not work for my Mapsui reproducer.\n\nSo it seems to me that both of the workarounds for this issue, which mostly worked well with .NET 8, do not work any more with the latest MAUI version 9.0.90 (and probably with all versions since 9.0.60).\n\nThat makes PR #3076 even more urgent ...",
+        "createdAt": "2025-07-20T20:48:49",
+        "reactions": []
+      },
+      {
+        "id": 3096051786,
+        "author": "SimonvBez",
+        "body": "@janusw I had a look at your fork. It seems that the Mapsui.UI.Maui project is targeted at just net9.0, not net9.0-android, so the whole \u0060#if ANDROID\u0060 block in https://github.com/janusw/Mapsui/commit/67a7dcf0d423c05e4833552762ac298366e8d08a was fully left out by the compiler \uD83D\uDE05\n\nGood news though, because by shifting some code around I got the workaround to work for your sample!\nI also made \u0060FixInvisible()\u0060 an extension method, allowing it to be used on any SKGLView. Really handy if it\u0027s part of a library, as you don\u0027t have to mess with compiling from source.\nI forked your repo with my fix over here: https://github.com/SimonvBez/Mapsui/commits/SkiaSharp_issue2550_workaround/\n\nIt all comes down to the glThread not having the correct size of the SKGLView. #3076 properly resolves this.",
+        "createdAt": "2025-07-21T10:15:51",
+        "reactions": []
+      },
+      {
+        "id": 3097044877,
+        "author": "janusw",
+        "body": "\u003E [@janusw](https://github.com/janusw) I had a look at your fork. It seems that the Mapsui.UI.Maui project is targeted at just net9.0, not net9.0-android, so the whole \u0060#if ANDROID\u0060 block in [janusw/Mapsui@67a7dcf](https://github.com/janusw/Mapsui/commit/67a7dcf0d423c05e4833552762ac298366e8d08a) was fully left out by the compiler \uD83D\uDE05\n\nOh boy, I missed that completely, thanks for pointing out my mistake. \uD83D\uDE4F\n\nI already suspected that something was messed up, but I did not have much time last night for checking stuff.\n\n\n\u003E Good news though, because by shifting some code around I got the workaround to work for your sample!\n\u003E I forked your repo with my fix over here: https://github.com/SimonvBez/Mapsui/commits/SkiaSharp_issue2550_workaround/\n\nAwesome, that\u0027s really good news. I can confirm that the sample indeed works with your fix! \uD83E\uDD73 \n",
+        "createdAt": "2025-07-21T14:34:40",
+        "reactions": []
+      },
+      {
+        "id": 3097584570,
+        "author": "janusw",
+        "body": "\n\u003E \u003E Good news though, because by shifting some code around I got the workaround to work for your sample!\n\u003E \u003E I forked your repo with my fix over here: https://github.com/SimonvBez/Mapsui/commits/SkiaSharp_issue2550_workaround/\n\u003E \n\u003E Awesome, that\u0027s really good news. I can confirm that the sample indeed works with your fix! \uD83E\uDD73\n\nSome second thoughts here: While your modified solution works well and it\u0027s not a bad idea to implement it in an extension class, it is still not set up very conveniently, since one has to apply the fix on each affected page explicitly.\n\nIn the context of Mapsui, it would be much better to integrate the fix more tightly with the MapControl class, and apply it automatically everywhere it is used without needing manual intervention on each page. In fact the old MAUI 8 workaround (i.e. toggling \u0060IsVisible\u0060) is already integrated with the MapControl in a very neat way, and it would be nice to extend this mechanism to include also the MAUI 9 workaround. However this will require Android-specific extensions of Mapsui.UI.Maui, which are probably only possible (or at least much easier) with an additional net9.0-android TFM. I will look into this and will try to mold it into a PR.\n\nSide note: What a shame that we have to establish a whole industry of workarounds for notoriously-ignored SkiaSharp bugs that are starting to become chronic. \uD83D\uDE48\uD83E\uDD2F",
+        "createdAt": "2025-07-21T16:53:27",
+        "reactions": []
+      }
+    ]
+  }
 }
