@@ -11,6 +11,10 @@
 
 ## Recent Changes
 
+### 2026-02-06 (Sync Design Review)
+
+- Reviewed full/resume GitHub sync design and documented edge cases around page drift, resume markers, crash windows, and concurrency.
+
 ### 2026-02-05 (UI Enhancements - v0.12.0)
 
 **Repo Badges & Filters ✅**

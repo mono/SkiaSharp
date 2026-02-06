@@ -65,13 +65,9 @@ public class SyncGitHubSettings : SyncSettings
     [DefaultValue(0)]
     public int PageCount { get; set; } = 0; // 0 = unlimited
 
-    [CommandOption("--full")]
-    [Description("Start a fresh full sync (clears any resume state)")]
-    public bool FullRefresh { get; set; }
-
-    [CommandOption("--resume")]
-    [Description("Resume a previous full sync from checkpoint")]
-    public bool Resume { get; set; }
+    [CommandOption("--reset")]
+    [Description("Delete all cached data and start fresh (use when data structures change)")]
+    public bool Reset { get; set; }
 }
 
 /// <summary>

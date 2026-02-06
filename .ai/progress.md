@@ -5,6 +5,7 @@
 ## Current Status
 
 **Overall**: ✅ Phase 5 - Multi-Repository Extension COMPLETE (Full Sync Done)
+**Notes**: Full/resume sync design review completed; edge cases documented for follow-up.
 
 | Area | Status | Notes |
 |------|--------|-------|

@@ -20,18 +20,8 @@ public record SyncMeta(
     SyncLayers Layers,
     RateLimitInfo? RateLimit,
     Dictionary<string, FailureEntry> Failures,
-    FullSyncState? FullSync = null  // Track full sync progress
-);
-
-/// <summary>
-/// Tracks progress of a full sync operation for resume capability
-/// </summary>
-public record FullSyncState(
-    DateTime StartedAt,
-    bool ItemsComplete,
-    bool EngagementComplete,
-    int ItemsLastPage,           // Last completed page for items sync
-    int EngagementLastNumber     // Last processed issue number for engagement
+    bool InitialSyncComplete = false,      // true = use incremental, false = initial sync mode
+    DateTime? HighestCreatedAt = null      // Resume marker for initial sync (Created ASC)
 );
 
 public record SyncLayers(

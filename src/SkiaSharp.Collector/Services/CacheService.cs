@@ -135,6 +135,18 @@ public class CacheService
         await WriteAtomicAsync(path, json);
     }
 
+    /// <summary>
+    /// Delete all cached GitHub items (for --reset).
+    /// </summary>
+    public Task ClearGitHubItemsAsync()
+    {
+        if (Directory.Exists(GitHubItemsPath))
+        {
+            Directory.Delete(GitHubItemsPath, recursive: true);
+        }
+        return Task.CompletedTask;
+    }
+
     public string GetItemPath(int number) => Path.Combine(GitHubItemsPath, $"{number}.json");
 
     #endregion

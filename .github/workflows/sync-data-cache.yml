@@ -23,8 +23,8 @@ on:
           - mono/SkiaSharp
           - mono/SkiaSharp.Extended
         default: all
-      full:
-        description: 'Force full sync (ignore timestamps)'
+      reset:
+        description: 'Reset cache (delete all data and start fresh)'
         type: boolean
         default: false
       engagement_count:
@@ -130,7 +130,7 @@ jobs:
         run: |
           PAGE_COUNT="${{ inputs.page_count || '5' }}"
           BATCH=1
-          FIRST_RUN=true
+          RESET_DONE=false
           
           while true; do
             echo ""
@@ -138,17 +138,13 @@ jobs:
             echo "  SkiaSharp Items checkpoint $BATCH"
             echo "========================================"
             
-            # First batch: use --full if requested, subsequent: use --resume
-            if [ "${{ inputs.full }}" == "true" ]; then
-              if [ "$FIRST_RUN" == "true" ]; then
-                SYNC_FLAG="--full"
-              else
-                SYNC_FLAG="--resume"
-              fi
+            # First batch only: use --reset if requested
+            if [ "${{ inputs.reset }}" == "true" ] && [ "$RESET_DONE" == "false" ]; then
+              SYNC_FLAG="--reset"
+              RESET_DONE=true
             else
               SYNC_FLAG=""
             fi
-            FIRST_RUN=false
             
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
@@ -198,7 +194,6 @@ jobs:
         run: |
           ENGAGEMENT_COUNT="${{ inputs.engagement_count || '100' }}"
           BATCH=1
-          FIRST_RUN=true
           
           while true; do
             echo ""
@@ -206,25 +201,15 @@ jobs:
             echo "  SkiaSharp Engagement checkpoint $BATCH"
             echo "========================================"
             
-            # First batch: use --full if requested, subsequent: use --resume
-            if [ "${{ inputs.full }}" == "true" ]; then
-              if [ "$FIRST_RUN" == "true" ]; then
-                SYNC_FLAG="--full"
-              else
-                SYNC_FLAG="--resume"
-              fi
-            else
-              SYNC_FLAG=""
-            fi
-            FIRST_RUN=false
+            # No flags needed - engagement sync is always incremental
+            # (processes items where EngagementSyncedAt = null or UpdatedAt > EngagementSyncedAt)
             
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --repo mono/SkiaSharp \
               --cache-path .data-cache \
               --engagement-only \
-              --engagement-count $ENGAGEMENT_COUNT \
-              $SYNC_FLAG
+              --engagement-count $ENGAGEMENT_COUNT
             EXIT_CODE=$?
             set -e
             
@@ -342,21 +327,18 @@ jobs:
         run: |
           PAGE_COUNT="${{ inputs.page_count || '5' }}"
           BATCH=1
-          FIRST_RUN=true
+          RESET_DONE=false
           
           while true; do
             echo "Extended items checkpoint $BATCH"
             
-            if [ "${{ inputs.full }}" == "true" ]; then
-              if [ "$FIRST_RUN" == "true" ]; then
-                SYNC_FLAG="--full"
-              else
-                SYNC_FLAG="--resume"
-              fi
+            # First batch only: use --reset if requested
+            if [ "${{ inputs.reset }}" == "true" ] && [ "$RESET_DONE" == "false" ]; then
+              SYNC_FLAG="--reset"
+              RESET_DONE=true
             else
               SYNC_FLAG=""
             fi
-            FIRST_RUN=false
             
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
@@ -403,29 +385,16 @@ jobs:
         run: |
           ENGAGEMENT_COUNT="${{ inputs.engagement_count || '100' }}"
           BATCH=1
-          FIRST_RUN=true
           
           while true; do
             echo "Extended engagement checkpoint $BATCH"
-            
-            if [ "${{ inputs.full }}" == "true" ]; then
-              if [ "$FIRST_RUN" == "true" ]; then
-                SYNC_FLAG="--full"
-              else
-                SYNC_FLAG="--resume"
-              fi
-            else
-              SYNC_FLAG=""
-            fi
-            FIRST_RUN=false
             
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --repo mono/SkiaSharp.Extended \
               --cache-path .data-cache \
               --engagement-only \
-              --engagement-count $ENGAGEMENT_COUNT \
-              $SYNC_FLAG
+              --engagement-count $ENGAGEMENT_COUNT
             EXIT_CODE=$?
             set -e
             
