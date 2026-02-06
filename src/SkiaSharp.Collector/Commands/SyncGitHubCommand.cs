@@ -54,7 +54,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             syncMeta = syncMeta with
             {
                 InitialSyncComplete = false,
-                HighestCreatedAt = null,
+                LastProcessedNumber = 0,
                 Layers = new SyncLayers(
                     new LayerStatus(null, null, 0, 0),
                     new EngagementLayerStatus(null, null, null, 0, 0, 0)
@@ -222,17 +222,11 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var pageTimes = new Queue<double>();
         var rateLimitHit = false;
         var allDone = false;
-        var highestCreatedAt = meta.HighestCreatedAt;
+        var lastProcessedNumber = meta.LastProcessedNumber;
 
-        // For initial sync resume: skip pages we've already processed
-        // Calculate starting page based on items already in cache
-        if (isInitialSync && itemsDict.Count > 0)
-        {
-            // Each page has ~100 items, so start from next page after what we have
-            page = (itemsDict.Count / 100) + 1;
-            if (!settings.Quiet)
-                AnsiConsole.MarkupLine($"[dim]  Resuming from page {page} ({itemsDict.Count} items in cache)[/]");
-        }
+        // For initial sync resume: we'll skip items with number <= lastProcessedNumber
+        if (isInitialSync && lastProcessedNumber > 0 && !settings.Quiet)
+            AnsiConsole.MarkupLine($"[dim]  Resuming - will skip items ≤ #{lastProcessedNumber}[/]");
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Dots)
@@ -276,6 +270,14 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     var earlyExit = false;
                     foreach (var issue in issues)
                     {
+                        // For initial sync: skip items we've already processed (resume)
+                        if (isInitialSync && issue.Number <= lastProcessedNumber)
+                        {
+                            if (settings.Verbose)
+                                AnsiConsole.MarkupLine($"  [dim]Skipping #{issue.Number} (already processed)[/]");
+                            continue;
+                        }
+
                         // Early exit for incremental: stop when we hit unchanged cached item
                         if (!isInitialSync && itemsDict.TryGetValue(issue.Number, out var cached))
                         {
@@ -301,9 +303,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         itemsDict[issue.Number] = CreateIndexItem(item);
                         processed++;
 
-                        // Track highest CreatedAt for resume (initial sync only)
-                        if (isInitialSync && issue.CreatedAt > (highestCreatedAt ?? DateTime.MinValue))
-                            highestCreatedAt = issue.CreatedAt.DateTime;
+                        // Track highest issue number for resume
+                        if (isInitialSync && issue.Number > lastProcessedNumber)
+                            lastProcessedNumber = issue.Number;
 
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [dim]#{issue.Number}: {Markup.Escape(issue.Title.Truncate(50))}[/]");
@@ -320,10 +322,10 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     };
                     await cache.SaveGitHubIndexAsync(index);
                     
-                    // Update HighestCreatedAt for resume capability
-                    if (isInitialSync && highestCreatedAt.HasValue)
+                    // Save last processed number for resume capability
+                    if (isInitialSync)
                     {
-                        meta = meta with { HighestCreatedAt = highestCreatedAt };
+                        meta = meta with { LastProcessedNumber = lastProcessedNumber };
                         await cache.SaveGitHubSyncMetaAsync(meta);
                     }
 
@@ -348,7 +350,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         // Update sync metadata
         meta = meta with 
         {
-            HighestCreatedAt = isInitialSync ? highestCreatedAt : meta.HighestCreatedAt,
+            LastProcessedNumber = isInitialSync ? lastProcessedNumber : meta.LastProcessedNumber,
             Layers = meta.Layers with 
             {
                 Items = new LayerStatus(
@@ -365,9 +367,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             if (allDone)
                 AnsiConsole.MarkupLine($"[green]  ✓ {processed:N0} items synced in {FormatTime(elapsed)} (complete)[/]");
             else if (rateLimitHit)
-                AnsiConsole.MarkupLine($"[yellow]  → {processed:N0} items synced in {FormatTime(elapsed)} (rate limited)[/]");
+                AnsiConsole.MarkupLine($"[yellow]  → {processed:N0} items synced in {FormatTime(elapsed)} (rate limited, last: #{lastProcessedNumber})[/]");
             else
-                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (batch complete, more available)[/]");
+                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (batch complete, last: #{lastProcessedNumber})[/]");
         }
 
         return (index, meta, processed, allDone);
