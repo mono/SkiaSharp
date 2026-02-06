@@ -15,5 +15,171 @@
   "updatedAt": "2022-08-19T03:02:31",
   "closedAt": "2020-08-09T19:44:46",
   "commentCount": 22,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:03.6973048Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 659139733,
+        "author": "maiad",
+        "body": "I have the same problem ! Application crashes without warning.",
+        "createdAt": "2020-07-16T03:43:39",
+        "reactions": []
+      },
+      {
+        "id": 667086496,
+        "author": "mattleibow",
+        "body": "Thanks for the issue and repro. Having a look now.",
+        "createdAt": "2020-07-31T12:05:02",
+        "reactions": []
+      },
+      {
+        "id": 667120356,
+        "author": "mattleibow",
+        "body": "I think this is just for 32-bit. When I set the target to 64, it works. When I set it to 32, it fails. When I set Any CPU with prefer 32 bit is fails.",
+        "createdAt": "2020-07-31T13:29:54",
+        "reactions": []
+      },
+      {
+        "id": 667346898,
+        "author": "JackLi-tg",
+        "body": "In fact set target to 64 or 32 both works,  only fails when set AnyCPU with prefer 32 bit.\r\nplease be sure to manually delete bin and obj folders when switching targets between 32 and 64.",
+        "createdAt": "2020-07-31T20:39:07",
+        "reactions": []
+      },
+      {
+        "id": 667378267,
+        "author": "mattleibow",
+        "body": "This is very weird. Had to accurately reproduce. The first times it throws. Then it starts just to log. Then it moves to only logging when the app closes. Then just works and no error exit code at all.\r\n\r\nSeems the more I run it, the less crashy it becomes.\r\n\r\nThe more annoying thing is that I can make the code fail in the ctor the first few runs. At this time, all is good an no fails at all. I have to restart my PC just to get it to fail again.",
+        "createdAt": "2020-07-31T21:32:16",
+        "reactions": []
+      },
+      {
+        "id": 667381974,
+        "author": "mattleibow",
+        "body": "The code that I was using:\r\n\r\n\u0060\u0060\u0060csharp\r\nSKPaint paint = new SKPaint();\r\npaint.Typeface = SKTypeface.CreateDefault();\r\n// Erros only occurs when project property - \u003E Build tab\r\n// 1. Platform Target set to: Any CPU \r\n// 2. AND \u0022Prefer 32-bit\u0022 option CHECKED\r\nvar textLength = paint.MeasureText(\u0022test\u0022);\r\n\r\nMessageBox.Show(\u0022Success - \u0022 \u002B textLength);\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-07-31T21:34:49",
+        "reactions": []
+      },
+      {
+        "id": 670794529,
+        "author": "mattleibow",
+        "body": "I think I may have found the issue, thanks to @sremiger1 in #1449. Just doing some tests now, but it might have to do with the way I am overriding the paint object in C\u002B\u002B. Gathering more info now and will update.",
+        "createdAt": "2020-08-08T00:25:10",
+        "reactions": []
+      },
+      {
+        "id": 670801512,
+        "author": "mattleibow",
+        "body": "\uD83D\uDE2D \r\n\r\n**EDIT**\r\n\r\nYou could probably tell from the tears that I did not find the issue. But this afternoon I think I have found out exactly where the issues occurs. With that snippet I posted (from @JackLi-tg), I saw that it was somewhere in \u0060MeasureText\u0060, but it was very unreliable. The code from @sremiger1 helped created a very consistent failure.\r\n\r\nBased on all this, I can now see that I get an error when the code is trying to return from the native \u0022measure text\u0022 method. Not sure if the bits are bad going in or if they are bad going out. However, I know have a reliable, single point of failure that I can check.\r\n\r\nThanks for the feedback and repro cases. I will try and get this resolved ASAP.",
+        "createdAt": "2020-08-08T01:10:11",
+        "reactions": []
+      },
+      {
+        "id": 670974233,
+        "author": "mattleibow",
+        "body": "@JackLi-tg @sremiger1, it appears this is a .NET Framework bug. Can you try and see if you use .NET Framework 4.8?\r\n\r\nI will make sure to find a fix for this for net462\u002B, but in the meantime let me know if net48 works for you.",
+        "createdAt": "2020-08-08T21:11:17",
+        "reactions": []
+      },
+      {
+        "id": 670974987,
+        "author": "mattleibow",
+        "body": "Another thing, this seems to work in _some_ versions of net48.\r\n\r\nFor example, running this code on my machine:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static Version GetRunningFrameworkVersion()\r\n{\r\n    var netVer = Environment.Version;\r\n    Assembly assObj = typeof(Object).GetTypeInfo().Assembly;\r\n    if (assObj != null)\r\n    {\r\n        AssemblyFileVersionAttribute attr;\r\n        attr = (AssemblyFileVersionAttribute)assObj.GetCustomAttribute(typeof(AssemblyFileVersionAttribute));\r\n        if (attr != null)\r\n        {\r\n            netVer = new Version(attr.Version);\r\n        }\r\n    }\r\n    return netVer;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nMu value is \u00604.8.4180.0\u0060 and it does not work. However, I had a colleague try it and their machine was \u00604.8.4075.0\u0060 and it worked there.\r\n",
+        "createdAt": "2020-08-08T21:20:30",
+        "reactions": []
+      },
+      {
+        "id": 670975151,
+        "author": "mattleibow",
+        "body": "Just a link of some code that can reproduce this every time: https://gist.github.com/mattleibow/33f54a166cd6bdcad8580b1f43e45077",
+        "createdAt": "2020-08-08T21:22:48",
+        "reactions": []
+      },
+      {
+        "id": 670977875,
+        "author": "sremiger1",
+        "body": "Unfortunately I am writing in netstandard and using core 2.1\r\nMy work around was to use system.drawing to measure Width then offset my x coordinate to half the width. It sort of works.",
+        "createdAt": "2020-08-08T21:53:44",
+        "reactions": []
+      },
+      {
+        "id": 670978649,
+        "author": "mattleibow",
+        "body": "@sremiger1 Can you try netcore 3.1? That works for me. Let me install netcore 2.1. What is your specific SDK version so I can test that?",
+        "createdAt": "2020-08-08T22:03:24",
+        "reactions": []
+      },
+      {
+        "id": 670982292,
+        "author": "mattleibow",
+        "body": "I think I have found a fix - which is more a workaround in the library as this appears to be a bug in .NET - and will push that out as soon as CI finishes.\r\n",
+        "createdAt": "2020-08-08T22:54:03",
+        "reactions": []
+      },
+      {
+        "id": 671093212,
+        "author": "mattleibow",
+        "body": "I merged the fixes, will push out soon.",
+        "createdAt": "2020-08-09T19:45:26",
+        "reactions": []
+      },
+      {
+        "id": 671363780,
+        "author": "JackLi-tg",
+        "body": "\u003E @JackLi-tg @sremiger1, it appears this is a .NET Framework bug. Can you try and see if you use .NET Framework 4.8?\r\n\u003E \r\n\u003E I will make sure to find a fix for this for net462\u002B, but in the meantime let me know if net48 works for you.\r\n\r\n@mattleibow Yes, net48 having the same error as net462",
+        "createdAt": "2020-08-10T13:46:13",
+        "reactions": []
+      },
+      {
+        "id": 671417721,
+        "author": "mattleibow",
+        "body": "@JackLi-tg can you try the latest 2.80.2-preview.24 on the preview feed. This should have the fix. If that works for you, then I\u0027ll push to NuGet.org.",
+        "createdAt": "2020-08-10T15:17:02",
+        "reactions": []
+      },
+      {
+        "id": 671507630,
+        "author": "JackLi-tg",
+        "body": "\u003E @JackLi-tg can you try the latest 2.80.2-preview.24 on the preview feed. This should have the fix. If that works for you, then I\u0027ll push to NuGet.org.\r\n\r\n2.80.2-preview.24 is not available yet as of Aug 10th, I\u0027ll try when it is available in Nuget",
+        "createdAt": "2020-08-10T18:11:48",
+        "reactions": []
+      },
+      {
+        "id": 680053021,
+        "author": "JackLi-tg",
+        "body": "@mattleibow Would like to follow up if there is any update on 2.80.2-preview.24, any idea when it will be available to test with?",
+        "createdAt": "2020-08-25T14:16:56",
+        "reactions": []
+      },
+      {
+        "id": 680264447,
+        "author": "mattleibow",
+        "body": "@JackLi-tg  sorry for the delay, there were some other things that needed to go in. However, I just pushed preview 33 to NuGet.org and it is indexing as we speak!",
+        "createdAt": "2020-08-25T20:53:45",
+        "reactions": []
+      },
+      {
+        "id": 680264990,
+        "author": "mattleibow",
+        "body": "Just so that you know, all commits on master (and some PRs) get pushed to the preview feed: \u0060https://aka.ms/skiasharp-eap/index.json\u0060\r\n\r\nYou should be able to use that for any testing.",
+        "createdAt": "2020-08-25T20:54:54",
+        "reactions": []
+      },
+      {
+        "id": 700136492,
+        "author": "JackLi-tg",
+        "body": "Verified this bug been fixed in v2.80.2\r\nThanks!",
+        "createdAt": "2020-09-28T16:16:17",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:15:03.6468691Z"
+          }
+        ]
+      }
+    ]
+  }
 }

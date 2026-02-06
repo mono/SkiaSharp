@@ -14,5 +14,72 @@
   "updatedAt": "2022-08-19T03:02:24",
   "closedAt": "2020-07-28T08:12:16",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:13.9874117Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 664519097,
+        "author": "mattleibow",
+        "body": "Unfortunately, \u0060SKCodec\u0060 always takes ownership of the stream and will close it. I don\u0027t particularly agree with this decision, but it is the one Google went with.\r\nThis is documented: https://docs.microsoft.com/dotnet/api/skiasharp.skcodec.create\r\n\r\nHowever, since determining if it is a valid image only requires the first few bytes. You can copy those into a temporary stream and use that: \u0060SKCodec.MinBufferedBytesNeeded\u0060.\r\nAnother thing that you can do (and might be better if you want to actually do other things) is create a proxy stream that the codec uses. Then it can close whatever it wants, but your stream still works. There is actually just such a type in SkiaSharp already: \u0060SKFrontBufferedManagedStream\u0060.\r\n\r\nI can\u0027t switch that to be the default now as it is a breaking change, but you can do that in your code.\r\n",
+        "createdAt": "2020-07-27T17:02:42",
+        "reactions": [
+          {
+            "user": "MhAllan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:12.6807046Z"
+          }
+        ]
+      },
+      {
+        "id": 664520295,
+        "author": "mattleibow",
+        "body": "I\u0027ll leave this issue open so I can maybe add an overload to do this - the default will be to always close, but there is an option to not.",
+        "createdAt": "2020-07-27T17:05:03",
+        "reactions": []
+      },
+      {
+        "id": 664809678,
+        "author": "MhAllan",
+        "body": "Wonderful answer, A proxy stream is great suggestion. Thank you so much @mattleibow \r\n\r\n\u0060\u0060\u0060csharp\r\npublic static bool IsImage(Stream stream)\r\n        {\r\n            if (stream == null)\r\n                throw new ArgumentNullException(nameof(stream));\r\n\r\n            using (var skStream = new SKFrontBufferedManagedStream(stream, SKCodec.MinBufferedBytesNeeded))\r\n            {\r\n                var codec = SKCodec.Create(skStream);\r\n                var result = codec != null;\r\n                if (codec != null)\r\n                    codec.Dispose();\r\n\r\n                return result;\r\n            }\r\n        }\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-07-28T06:41:33",
+        "reactions": []
+      },
+      {
+        "id": 664848937,
+        "author": "mattleibow",
+        "body": "One thing to keep in mind is that the stream position will move. This may be unexpected. As the stream is read, the cursor moves. So a double call to IsImage will fail the second time.\n\nI wonder if resetting the stream position is worth it? Or leave it up to the dev? ",
+        "createdAt": "2020-07-28T08:12:10",
+        "reactions": []
+      },
+      {
+        "id": 664861943,
+        "author": "MhAllan",
+        "body": "First, you are such a quality developer I really admire how you think of everything when answering a question. \r\n\r\nI have just added the position seeking seconds before reading your answer. My opinion is that, methods shouldn\u0027t alter the state of objects passed to them because they don\u0027t own them. so yes, the IsImage wrapper have to set the position back. On the other had, most of Stream methods alter the position property and we are used to set the position back after calling methods on Stream.\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static bool IsImage(Stream stream)\r\n        {\r\n            if (stream == null)\r\n                throw new ArgumentNullException(nameof(stream));\r\n\r\n            using (var skStream = new SKFrontBufferedManagedStream(stream, SKCodec.MinBufferedBytesNeeded))\r\n            {\r\n                var position = stream.Position;\r\n                stream.Position = 0;\r\n                try\r\n                {\r\n                    var codec = SKCodec.Create(skStream);\r\n                    var result = codec != null;\r\n                    if (result)\r\n                        codec.Dispose();\r\n\r\n                    return result;\r\n                }\r\n                finally\r\n                {\r\n                    stream.Position = position;\r\n                }\r\n            }\r\n        }\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-07-28T08:36:14",
+        "reactions": []
+      },
+      {
+        "id": 664989553,
+        "author": "mattleibow",
+        "body": "Just thought of something. You are setting the position to 0, but what happens if this is some zip stream where the position is at an offset in reality.\n\nThe other part is slightly different in that some streams can\u0027t seek because of what they are. For example, an http stream is forward only.\n\nNot sure what the best solution for this is. Might have to just leave it up to the dev to do it because no matter what we do, it can\u0027t go back. ",
+        "createdAt": "2020-07-28T11:37:20",
+        "reactions": []
+      },
+      {
+        "id": 665013738,
+        "author": "MhAllan",
+        "body": "\u0022Unseekable\u0022 streams can\u0027t make use of such a tool in all cases this \u0060IsImage\u0060 needs stream to be able to seek to work and keeps the streams available. zip stream is a good point. so yes, the position should be handled by the dev, Agree.",
+        "createdAt": "2020-07-28T12:36:19",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:13.9368507Z"
+          }
+        ]
+      }
+    ]
+  }
 }

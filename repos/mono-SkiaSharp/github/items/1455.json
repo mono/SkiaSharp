@@ -14,5 +14,172 @@
   "updatedAt": "2022-08-19T03:02:12",
   "closedAt": "2020-08-21T20:31:39",
   "commentCount": 10,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:31.5887752Z",
+    "reactions": [
+      {
+        "user": "daltonks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:15:31.588782Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:15:31.5887828Z"
+      },
+      {
+        "user": "tzengshinfu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:15:31.5887829Z"
+      },
+      {
+        "user": "Ralf1108",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:15:31.5887831Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 671072316,
+        "author": "mattleibow",
+        "body": "Thanks for starting this discussion. I hope we can get something going really soon.\r\n\r\nI also am a fan of the option 2. This will not only keep the code together and I can make sure it stays up to date with each release.\r\n\r\nLooking forward to what you are going to do\r\n\r\n\u003E I am busy fixing up the problems in the other issue to make your life easier.",
+        "createdAt": "2020-08-09T16:27:12",
+        "reactions": []
+      },
+      {
+        "id": 671098266,
+        "author": "RChrisCoble",
+        "body": "This is using XAML for the razor definition, meaning it\u0027s the \u0022native\u0022 usage of MBB, would this also be possible using MBB\u0027s \u0022Hybrid\u0022 apporach?  I\u0027m guessing not as SkiaSharp needs to be WASM in that scenario.  Figured I\u0027d ask though.",
+        "createdAt": "2020-08-09T20:38:06",
+        "reactions": []
+      },
+      {
+        "id": 671099967,
+        "author": "mattleibow",
+        "body": "How does the hybrid actually work? Is it really running html and JS, or is it some weird concoction of .NET code that just talks to the html. Maybe it is possible to write things in .NET and then somehow draw in the web part? I need to read up more on all this...",
+        "createdAt": "2020-08-09T20:55:29",
+        "reactions": []
+      },
+      {
+        "id": 671107560,
+        "author": "RChrisCoble",
+        "body": "The finer points of how this actually works would need to be answered by the owner of MBB, Eilon Lipton, or go exploring in the [MBB repo](https://github.com/xamarin/MobileBlazorBindings) over in Xamarin.\r\n\r\nHere\u0027s the high level, which I only put together this past week after an email from Dan Roth explaining it to me.\r\n\r\nBlazor has 5 deployment models (for lack of a better word).  Server, Client (WASM), PWA, Blazor Hybrid, Blazor Native.  The first three are pretty well known or GA.  PWA is just the Blazor app running off the local disk in a web browser.\r\n\r\nThe really interesting ones are Hybrid and Native.  MBB is the experimental framework that covers both of these.  As MBB matures I expect it to be rolled into...something.  Probably Xamarin.\r\n\r\n- Hybrid:  The user builds a Blazor component in typical Blazor fashion for the web.  User uses HTML in the razor file with .Net core code.  This component can be re-used under MBB on any platform that MBB supports, which is everything Xamarin supports, plus everything coming in .Net 6.  The UI is hosted in a local browser view, with the business logic running native on Xamarin (**no WASM**)\r\n- Native: The user builds a Blazor component using XAML/Xamarin syntax in the razor file using MBB.  This runs using Xamarin native UI controls on the device.  Technically a \u0022native\u0022 component end to end.\r\n\r\nA [great demo and explanation of this is from Dan himself](https://protect-eu.mimecast.com/s/gUKRCx661Sq7V3lF8wyEt?domain=youtu.be) from his Blazor Day webcast.\r\n\r\nSo, if SkiaSharp was going to support MBB, it probably only makes sense in the Native mode, as Lachlan is showing.  For the Hybrid, we know we need WASM linking.\r\n\r\nBuilding SkiaSharp with MBB would be cool in a sense that for every platform that is \u0027not\u0027 the web, you could use a single component leveraging SkiaSharp and use it unmodified on all the other platforms?  Even as I say that out loud that doesn\u0027t sound right, as I assume you need to target compile for hardware acceleration on the platform wrt. SkiaSharp.\r\n\r\nI\u0027ll stop now, getting past my expertise.  ;)",
+        "createdAt": "2020-08-09T22:18:13",
+        "reactions": []
+      },
+      {
+        "id": 671108643,
+        "author": "mattleibow",
+        "body": "Thanks for all this info! I will definitely be checking out the repos.",
+        "createdAt": "2020-08-09T22:30:48",
+        "reactions": []
+      },
+      {
+        "id": 671150467,
+        "author": "lachlanwgordon",
+        "body": "Thanks for the comments @RChrisCoble, I hadn\u0027t even thought about using Skia Sharp inside the Blazor Web View of a hybrid app yet.\r\n\r\nAs Chris points out, this is for using the Native approach where you use Razor Syntax instead of XAML to write a Xamarin Forms app.\r\n\r\nI think I\u0027ll limit the scope of this issue and my initial PR to MBB Native only as it\u0027ll be a fairly simple wrapping of the Xamarin Forms version, then we can discuss adding hybrid support.\r\n\r\nMy initial thoughts on hybrid are:\r\n* This should use the same public API and be built using the Blazor Web version being discussed in #1194\r\n* I *think* Blazor in a BlazorWebView in a hybrid app is neither WASM nor SignalR Server Blazor. The .NET part of the Blazor code is running in the same Mono runtime as the rest of your Xamarin App. In a lot of ways this is similar to WASM hosting except we\u0027ve already had Skia Sharp running nicely in XamarinIOS/MonoDroid for years.\r\n* This should be achievable now without having to think about WASM or waiting for different compiler/interpreter/.NET5 etc.",
+        "createdAt": "2020-08-10T03:46:54",
+        "reactions": [
+          {
+            "user": "Eilon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:30.7123592Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:30.7123598Z"
+          }
+        ]
+      },
+      {
+        "id": 671176538,
+        "author": "Eilon",
+        "body": "What @lachlanwgordon describes above is indeed how it works. All the .NET code in a Mobile Blazor Bindings app runs in Mono/AOT/.NET (depending on the platform) just like any .NET code in any Xamarin app. On iOS it\u0027s AOT, on Android it\u0027s Mono, and on Windows it\u0027s .NET Framework or .NET Core.\r\n\r\nAs far as where the code for this lives, each option has pros/cons, of course. My gut says that _for now_ it might make the most sense for the code to live wherever the least stable project is, which I assume is Mobile Blazor Bindings (so, option 3). I say this because Mobile Blazor Bindings is in such an early state that there could easily be major refactorings/renames and if it\u0027s all in one place, it\u0027s potentially easier to manage. On the other hand, that would essentially mean that _I_ would be the one managing it \uD83D\uDE04 But it\u0027s totally fair to have the code live here as well. I would always be willing to help out with any updates or questions.\r\n\r\nOption 5 with an automatic wrapper thingy is something that I\u0027ve been talking to someone about just recently but there\u0027s nothing for that just yet. It would certainly make scenarios such as this one easier to handle.",
+        "createdAt": "2020-08-10T06:02:12",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:30.9162465Z"
+          },
+          {
+            "user": "RChrisCoble",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:15:30.9162469Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:30.916247Z"
+          }
+        ]
+      },
+      {
+        "id": 671243976,
+        "author": "mattleibow",
+        "body": "Eilon makes a good point that this new code might be better in the least stable repo. The api for the SkiaSharp views are mostly stable and I won\u0027t be doing any breaking changes.\n\nYou might put the code there and all that should be required is a version bump from time to time, which I can also do.\n",
+        "createdAt": "2020-08-10T09:07:33",
+        "reactions": [
+          {
+            "user": "Eilon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.1325954Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.1325958Z"
+          }
+        ]
+      },
+      {
+        "id": 671288953,
+        "author": "lachlanwgordon",
+        "body": "Sound good.\r\n\r\nThis issue has moved to issue [167](https://github.com/xamarin/MobileBlazorBindings/issues/167) in the Mobile Blazor Bindings Repo",
+        "createdAt": "2020-08-10T10:57:24",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.3542996Z"
+          },
+          {
+            "user": "Eilon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.3543001Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.3543002Z"
+          }
+        ]
+      },
+      {
+        "id": 678480187,
+        "author": "mattleibow",
+        "body": "Closing this issue as the real implementation will live for now in the [Mobile Blazor Bindings Repo](https://github.com/xamarin/MobileBlazorBindings) and once that goes stable or merged in to MAUI or wherever it goes, we can bring that into this repo and merge.",
+        "createdAt": "2020-08-21T20:31:39",
+        "reactions": [
+          {
+            "user": "Eilon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.5384674Z"
+          },
+          {
+            "user": "lachlanwgordon",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.5384679Z"
+          },
+          {
+            "user": "tzengshinfu",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:31.538468Z"
+          }
+        ]
+      }
+    ]
+  }
 }

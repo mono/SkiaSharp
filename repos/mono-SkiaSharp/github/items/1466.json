@@ -14,5 +14,53 @@
   "updatedAt": "2022-08-19T03:02:05",
   "closedAt": "2020-08-15T16:22:38",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:41.5978574Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 674199410,
+        "author": "mattleibow",
+        "body": "I think this is probably related to this issue:\r\nhttps://developercommunity.visualstudio.com/content/problem/1142283/elements-still-appear-in-the-ide-even-though-they.html\r\n\r\nThe actual code for this is: https://github.com/mono/SkiaSharp/blob/master/binding/SkiaSharp/nuget/build/net462/SkiaSharp.targets#L11-L13\r\n\r\n\u0060\u0060\u0060xml\r\n    \u003CItemGroup Condition=\u0022 \u0027$(ShouldIncludeNativeSkiaSharp)\u0027 != \u0027False\u0027 and \u0027$(_AppIsFullMac)\u0027 == \u0027True\u0027 \u0022\u003E\r\n        \u003CNativeReference Include=\u0022$(MSBuildThisFileDirectory)..\\..\\runtimes\\osx\\native\\libSkiaSharp*.dylib\u0022 Kind=\u0022Dynamic\u0022 Visible=\u0022false\u0022 /\u003E\r\n    \u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nAs you can see, there are 2 conditions on that element, the \u0060ShouldIncludeNativeSkiaSharp\u0060 which you don\u0027t want to set because you _do_ want to copy the native files, and then \u0060_AppIsFullMac\u0060 which _should_ be false or unset... It is a bit annoying that MSBuild is ignoring these conditions and pulling all the \u0060NativeReference\u0060 elements out. I think it started with a recent-ish version of msbuild.\r\n\r\nOne thing you can try is setting the \u0060UseXamMacFullFramework\u0060  to \u0060false\u0060 in your csproj and see if that does something. Maybe also set \u0060_AppIsFullMac\u0060 to \u0060False\u0060 just in case something...\r\n\r\nAlso is it not possible to use .NET Core instead of .NET Framework? This will solve all the other deployment issues .NET Framework has.",
+        "createdAt": "2020-08-14T18:12:02",
+        "reactions": []
+      },
+      {
+        "id": 674328894,
+        "author": "jsgoupil",
+        "body": "My goal is to go towards .NET Core for sure, but it\u0027s not as simple as expected. I am moving slowly my .NET framework dependencies into .NET Standard or something that supports .NET Core and .NET Framework.\r\nSo it will have to stay with .NET Framework right now.\r\n\r\n\u0060\u0060\u0060\r\n    \u003CUseXamMacFullFramework\u003Efalse\u003C/UseXamMacFullFramework\u003E\r\n    \u003C_AppIsFullMac\u003EFalse\u003C/_AppIsFullMac\u003E\r\n\u0060\u0060\u0060\r\n\r\nIt doesn\u0027t work.\r\n\r\n\u0060\u0060\u0060\r\nMSBuild auto-detection: using msbuild version \u002714.0\u0027 from \u0027D:\\Program Files (x86)\\MSBuild\\14.0\\bin\\amd64\u0027.\r\nAll packages listed in packages.config are already installed.\r\nD:\\home\\site\\repository\\Portal\\hbti-web-master\\packages\\SkiaSharp.2.80.1\\build\\net462\\SkiaSharp.targets(12,109): error MSB4066: The attribute \u0022Kind\u0022 in element \u003CNativeReference\u003E is unrecognized. [D:\\home\\site\\repository\\Portal\\hbti-web-master\\HBTI.ServiceTech.Common\\HBTI.ServiceTech.Common.csproj]\r\nFailed exitCode=1, command=\u0022D:\\Program Files (x86)\\MSBuild\\14.0\\Bin\\MSBuild.exe\u0022 \u0022D:\\home\\site\\repository\\Portal\\hbti-web-master\\HBTI.ServiceTech.Web2\\HBTI.ServiceTech.Web2.csproj\u0022 /nologo /verbosity:m /t:Build /t:pipelinePreDeployCopyAllFilesToOneFolder /p:_PackageTempDir=\u0022D:\\local\\Temp\\8d840b5a8294a2a\u0022;AutoParameterizationWebConfigConnectionStrings=false;Configuration=Release;UseSharedCompilation=false /p:SolutionDir=\u0022D:\\home\\site\\repository\\Portal\\hbti-web-master\\\\\u0022\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-08-15T01:26:31",
+        "reactions": []
+      },
+      {
+        "id": 674329837,
+        "author": "jsgoupil",
+        "body": "I\u0027m not the most verse in MSBuild here, maybe it should not pick it up.\r\nBut \u0060Kind\u0060 doesn\u0027t seem to be a valid attribute.\r\nhttps://docs.microsoft.com/en-us/visualstudio/msbuild/common-msbuild-project-items?view=vs-2019\r\n\r\nPS I don\u0027t have access to your first link",
+        "createdAt": "2020-08-15T01:34:18",
+        "reactions": []
+      },
+      {
+        "id": 674385631,
+        "author": "jsgoupil",
+        "body": "OK. It worked with the following setting on Azure Configuration\r\n\r\n\u0060\u0060\u0060\r\nMSBUILD_PATH = %MSBUILD_16_DIR%\\msbuild.exe\r\n\u0060\u0060\u0060\r\n\r\nSince I use Kudu, it was using the MSBuild 14, and it seems like it was not liking the custom attribute.\r\n\r\nMaybe a documentation has to be written or a check earlier to warn for this problem when building Skiasharp.\r\n\r\nI\u0027ll let you handle the bug as you wish now :)",
+        "createdAt": "2020-08-15T11:31:23",
+        "reactions": []
+      },
+      {
+        "id": 674418618,
+        "author": "mattleibow",
+        "body": "Very interesting... What VM image are you using?\r\n\r\nI think what is happening here is that the older MSBuild did not like attributes and only had sub-elements.\r\n\r\nBut still, it is more weird that the default version MSBuild is so old... v14 is VS 2015? \r\n\r\nI\u0027ll close this issue as the minimum version supported is really MSBuild 16. If you regularly use older versions of MSBuild (or if anyone coming here in the future can\u0027t use a newer version) then just open a new issue to let me know.\r\n\r\n**EDIT**\r\n\r\nWait a sec, this explains why sometimes my new pipelines fail when using msbuild from powershell! I usually just used the MSBuild task or more Cake to do the builds. I didn\u0027t feel like spending time trying to debug more issues on devops.",
+        "createdAt": "2020-08-15T16:18:41",
+        "reactions": []
+      },
+      {
+        "id": 674903685,
+        "author": "jsgoupil",
+        "body": "I don\u0027t use any VM Images. On Azure this is called an App Service (Azure Websites), and I\u0027m doing a Web App Deployment. I picked Windows. I have very little control over this.\r\nI use Kudu deployment. It\u0027s the git flow deployment on Azure Web Apps. It\u0027s before DevOps existed.\r\nWhich is also quite old and not maintained much. By default, it uses MSBuild 14 if not overridden in the Configuration.\r\nhttps://github.com/projectkudu/kudu\r\n\r\nGood luck with the project!",
+        "createdAt": "2020-08-17T14:08:15",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,38 @@
   "updatedAt": "2022-08-19T03:02:17",
   "closedAt": "2020-08-06T12:22:01",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:22.8687535Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 669505363,
+        "author": "mattleibow",
+        "body": "This is quite interesting. I asked the folks on the engine now, so we shall see what they say: https://groups.google.com/g/skia-discuss/c/fB270mBYtkk\r\n\r\nHowever, in the meantime, there might be a better way to do this by using \u0060SKPath\u0060. In fact, the first way is just a matter of converting the points string into a \u0060SKPath\u0060 using \u0060ParseSvgPathData\u0060. This will not work with your string because it is missing the very first \u0022move\u0022 operation, but this is very easy to do by literally just adding a \u0022M \u0022 to the string and can also be done at runtime just fine:\r\n\r\n\u0060\u0060\u0060csharp\r\n// add an \u0022M\u0022 to the start and parse\r\nvar s = \u0022M 5,210 5,102.62 289,183.81 838.1,68.57 838.1,210 5,210\u0022;\r\nusing var path = SKPath.ParseSvgPathData(s);\r\n\u0060\u0060\u0060\r\n\r\nIf this is not possible, then you can also get a path from the points array:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar path = new SKPath();\r\npath.AddPoly(points);\r\n\u0060\u0060\u0060\r\n\r\nIn both cases, you can now just draw the path like you would any other shape:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.DrawPath(path, polygonPaint);\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-08-05T20:57:40",
+        "reactions": []
+      },
+      {
+        "id": 669894102,
+        "author": "sremiger1",
+        "body": "That is exactly what I converted to and it did work.  I however do not agree with Mike\u0027s response By [definition](https://www.dictionary.com/browse/polygon?s=t) a polygon is a closed object and therefore should behave the exact same way a rectangle should behave.\r\n\r\nThanks for the help.",
+        "createdAt": "2020-08-06T12:22:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:22.6471142Z"
+          }
+        ]
+      },
+      {
+        "id": 708043537,
+        "author": "mattleibow",
+        "body": "Just a note for the future: Draw points always draws lines and not fill.",
+        "createdAt": "2020-10-13T22:27:51",
+        "reactions": []
+      }
+    ]
+  }
 }

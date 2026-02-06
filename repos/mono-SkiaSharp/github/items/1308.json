@@ -15,5 +15,151 @@
   "updatedAt": "2022-08-19T06:01:33",
   "closedAt": "2021-09-10T16:43:24",
   "commentCount": 20,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:47.9605961Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 635003200,
+        "author": "mattleibow",
+        "body": "Does it still crash if you update to the latest v1.68.3?",
+        "createdAt": "2020-05-27T23:47:51",
+        "reactions": []
+      },
+      {
+        "id": 635099162,
+        "author": "arashcoder",
+        "body": "Thanks for the suggestion. I will try that, but since I can\u0027t reproduce that crash I can\u0027t be sure.",
+        "createdAt": "2020-05-28T04:52:36",
+        "reactions": []
+      },
+      {
+        "id": 641757153,
+        "author": "arashcoder",
+        "body": "@mattleibow I updated to v1.68.3 and I still get that crash occasionally. \r\nAny ideas? \r\nThanks.",
+        "createdAt": "2020-06-10T06:31:38",
+        "reactions": []
+      },
+      {
+        "id": 641860256,
+        "author": "mattleibow",
+        "body": "Could you paste the full stack trace? Very weird. ",
+        "createdAt": "2020-06-10T09:03:11",
+        "reactions": []
+      },
+      {
+        "id": 641954696,
+        "author": "arashcoder",
+        "body": "That\u0027s the whole stack trace that I get in AppCenter.",
+        "createdAt": "2020-06-10T11:57:07",
+        "reactions": []
+      },
+      {
+        "id": 641964499,
+        "author": "mattleibow",
+        "body": "This is very weird because there is not any way to get nulls...\r\nhttps://github.com/mono/SkiaSharp/blob/v1.68.3/source/SkiaSharp.Views/SkiaSharp.Views.Apple/SKCGSurfaceFactory.cs#L26-L59\r\n\r\nThe only possible way to get a null is with this line:\r\n\r\n\u0060\u0060\u0060csharp\r\nbitmapData = NSMutableData.FromLength(info.BytesSize);\r\n\u0060\u0060\u0060\r\n\r\nThat should not return null, so this whole thing looks off.\r\n\r\nDo you have any other info that may possibly be related? Is this a big graph, small graph, animated? What was happening before/during updates. Maybe you are accessing something from a background thread and there is a hidden exception.\r\n\r\nAre you able to share the actual text message form the exception?",
+        "createdAt": "2020-06-10T12:16:21",
+        "reactions": []
+      },
+      {
+        "id": 642426586,
+        "author": "arashcoder",
+        "body": "Thanks for the explanations. Indeed it\u0027s strange.\r\n This is the whole log that I get from this exception. I don\u0027t think I\u0027m doing anything special with the graphs, and it\u0027s working almost all the time. The problem is that I can\u0027t reproduce this, so I don\u0027t have a full stack trace.\r\nAlso could this line cause the crash?\r\n\u0060Info = info = CreateInfo((int)contentsBounds.Width, (int)contentsBounds.Height);\u0060\r\n",
+        "createdAt": "2020-06-11T05:59:38",
+        "reactions": []
+      },
+      {
+        "id": 642554986,
+        "author": "mattleibow",
+        "body": "That is working with structs, which cannot be null. How rare is this exception? Maybe iOS just decides that it will return null when it feels like it.\r\n\r\n",
+        "createdAt": "2020-06-11T10:21:40",
+        "reactions": []
+      },
+      {
+        "id": 740489747,
+        "author": "yungkakin",
+        "body": "I am also encountering this issue. Not easy to reproduce but it indeed happens on iOS. (Never happen on Android in my case)\r\nThe SkiaSharp version I am using is 2.80.2.",
+        "createdAt": "2020-12-08T09:10:46",
+        "reactions": []
+      },
+      {
+        "id": 740493288,
+        "author": "arashcoder",
+        "body": "So could someone please have a look at this?",
+        "createdAt": "2020-12-08T09:17:23",
+        "reactions": []
+      },
+      {
+        "id": 744998243,
+        "author": "yungkakin",
+        "body": "It seems no one is going to handle this issue. Is SkiaSharp really stable on iOS?",
+        "createdAt": "2020-12-15T01:52:37",
+        "reactions": []
+      },
+      {
+        "id": 779648681,
+        "author": "richirisu",
+        "body": "Hello, I am new to this conversation. I can confirm that this issue does indeed occur from time to time. It is more likely to occur in situations of low memory, e.g. when using SkiaSharp to render full-screen. Indeed, \u0060NSMutableData.FromLength\u0060 is not supposed to return null by default, but it is possible when there is not enough (continuous) memory available to allocate in the first place. Then null will be returned.\r\n\r\nOf course, I am unaware about how to proceed best in case there is not enough memory to allocate for the drawing surface. I mean, continuing with a blank surface is not a proper solution either.\r\n\r\nBy the way, I get the same crash log as arashcoder has in his first post.",
+        "createdAt": "2021-02-16T07:39:05",
+        "reactions": []
+      },
+      {
+        "id": 779864154,
+        "author": "mattleibow",
+        "body": "I\u0027ll have another look as this seems like it should not happen. We had a memory block that we just freed, so there should be some memory.\r\nAlso, this only runs when the view bounds changes as we reuse the data object between paints.\r\n\r\nIs there some sort of view changes happening when it crashes?\r\n\r\nWhat I _could_ do is check for null and throw a better exception and see if that appears in the stacktrace so we know for sure?",
+        "createdAt": "2021-02-16T14:16:16",
+        "reactions": []
+      },
+      {
+        "id": 780301539,
+        "author": "richirisu",
+        "body": "No pressure, and thanks for looking further into it.\r\n\r\nIn my case the Xamarin.iOS application opens a Xamarin.Forms Page whose entire content is a single SKCanvasView. The crash occurs at creation time, more precisely, when the page becomes visible for the first time. It does not even get to any custom drawing code. As such, I suppose no bitmap data has been allocated yet. With the currently biggest iPad resolution available a chunk of 22 MB is necessary that must fit in one continuous space in memory. And depending on current memory usage this is sometimes a problem.\r\n\r\nAs mentioned before, it does not happen all the time and it is more likely to occur on a device that has many applications installed / opened. The aforementioned page can be closed and opened over and over again, thus, allocating a new SKCanvasView each time. In general, this is not a problem. Further, the few crash reports I got all have in common that they occurred roughly a week after the application was launched. Memory leaks and memory defragmentation might increase the chances, as it seems.\r\n\r\nIn respect to the stack trace, I doubt throwing another exception in return is going to help much. Of course, it would slightly be more expressive than a null reference exception. However, if an exception is not handled in the \u0060Draw\u0060 method of an UIView, the application will crash consequently.\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/v1.68.3/source/SkiaSharp.Views/SkiaSharp.Views.AppleiOS/SKCanvasView.cs#L81-L106\r\n\r\nAs far as I understand, \u0060OnPaintSurface\u0060 is not called if the surface size is empty. So maybe it is a viable workaround to simply render a blank canvas in case of an exception, or as an alternative, to render the message of the exception directly to the canvas (not a fan of the latter though but I have seen many design tools doing exactly that). I have to admit, it\u2019s not very elegant though. At least the result would be that the application won\u2019t crash right away, just the canvas view being blank.\r\n\r\nStill, I think, there should be a means to let the implementer know that the bitmap data could not be allocated properly.\r\n\r\nPerformance-wise, I am not sure how the costs are for having a try-catch-block in the draw method.",
+        "createdAt": "2021-02-17T05:05:59",
+        "reactions": []
+      },
+      {
+        "id": 855868566,
+        "author": "richirisu",
+        "body": "I created a test application in order to reproduce the error. In the test application, a new page is being pushed to the navigation page by tapping the screen. The content view of each page is a new instance of a canvas view filled with a random background color, simple as that. The title bar shows the current number of stacked pages, as well as the currently used amount of memory (wich is the same as the profiling tool would display). \r\n\r\nAmong others, depending on the device, on the screen size and on how many applications are currently being cached, the test application will crash at some point and throw the above exception - exactly at the code line which I had mentioned in my other post. In my case at around 150 pages and 2200 MB. Keep tapping the screen ;)\r\n\r\nNote, that you must test this on an actual device, because the simulator has sufficient memory available.\r\n\r\nI also took the freedom to provide a fix for this issue. The application does not crash anymore if the memory is low. This is, an empty surface (height = width = 0) will be returned and consequently the rendering will be skipped. In the test application the canvas view will stay white/transparent in this case.\r\n\r\nI think by returning an empty surface it is in accordance with what is done at https://github.com/mono/SkiaSharp/blob/v2.80.2/source/SkiaSharp.Views/SkiaSharp.Views.Apple/SKCGSurfaceFactory.cs#L35-L40 where also a new but empty SKSurface object is being returned.\r\n\r\nPlease, have a look at the following links, one without and one with the bugfix. SkiaSharp is being referenced as a submodule.\r\n\r\nhttps://github.com/richirisu/SkiaSharpTest/releases/tag/without-bugfix\r\nhttps://github.com/richirisu/SkiaSharpTest/releases/tag/with-bugfix\r\n\r\nSkiSharp submodule with bugfix:\r\n\r\nhttps://github.com/richirisu/SkiaSharp/commit/c70ab35547d6f209ace7d9b736946f8f9c10770e\r\n\r\nIf it\u0027s okay, I can also create a pull request. Hope it helps!",
+        "createdAt": "2021-06-07T12:05:42",
+        "reactions": []
+      },
+      {
+        "id": 897583688,
+        "author": "rhult",
+        "body": "Just adding that I\u0027m seeing this bug consistently on iPad and the analysis by @richirisu above makes sense to me.",
+        "createdAt": "2021-08-12T12:05:13",
+        "reactions": []
+      },
+      {
+        "id": 897615565,
+        "author": "thisisthekap",
+        "body": "@mattleibow Does the fix suggested by @richirisu wound decent to you?\r\n\r\n![image](https://user-images.githubusercontent.com/9071974/129200261-e47381d1-ed33-4a18-b3f2-9c677da22f6f.png)\r\n",
+        "createdAt": "2021-08-12T12:55:14",
+        "reactions": []
+      },
+      {
+        "id": 901622095,
+        "author": "mattleibow",
+        "body": "I\u0027ll try get this in with the patch that I have to do.\r\n\r\nMy question is that this should not be happening and will only happen if the view is not collected. The fix looks sensible, nothing could be allocated, so just stop trying. However, I don\u0027t like the fact that we run out of memory across page changes. We probably need to somehow release memory when we navigate away.\r\n\r\nBut for now, I\u0027ll get your fixes in. Would you like to create a PR? Thanks a lot for the research and repro cases. \r\n\r\nIf you would like to make a PR (get your name in the books!), then do so against the \u0060patch/v2.80.4\u0060 branch.",
+        "createdAt": "2021-08-19T05:29:10",
+        "reactions": []
+      },
+      {
+        "id": 903939924,
+        "author": "richirisu",
+        "body": "I get your point, however, I think that in most cases it\u0027s less a problem of allocating a multitude of canvas views that causes the application to run into low memory but a low availability of free memory to work with in the first place, for instance, too many other applications in the background or the own application doing too much work in some manner or another.\r\n\r\nIn our case, for instance, there is only a single canvas view that covers the entire screen size, and it happens so that on creation of the view the surface cannot be instantiated due to low memory. All previously allocated canvas views have already been garbage collected beforehand.\r\n\r\nThe fix I am suggesting is not a solution regarding a proper memory management, that is correct. At least, it offers an additional guarding condition for the problem on the surface factory level, so that you may very well come up with a proper memory management solution in the future.\r\n\r\nAnother advantage I see is that when the surface of the canvas view is empty/blank after the creation of canvas view itself, it is then possible to test for that circumstance and to present an alert to the user that there was a problem, not enough memory etc. Until now, what happened, was that the application had simply crashed.",
+        "createdAt": "2021-08-23T16:46:10",
+        "reactions": []
+      },
+      {
+        "id": 917048334,
+        "author": "mattleibow",
+        "body": "Fixed in https://github.com/mono/SkiaSharp/commit/dbcd625bd09d8a4eb8fbc3023c3f2dcc5cfea4ba",
+        "createdAt": "2021-09-10T16:43:24",
+        "reactions": []
+      }
+    ]
+  }
 }

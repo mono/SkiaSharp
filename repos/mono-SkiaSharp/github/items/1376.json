@@ -14,5 +14,52 @@
   "updatedAt": "2022-08-19T03:02:48",
   "closedAt": "2020-07-02T16:44:33",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:34.2334582Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 653113997,
+        "author": "mattleibow",
+        "body": "@mlptownsend Good news! This is already done!\r\n\r\nThe library for harfbuzz is actually \u0022libHarfBuzzSharp\u0022, which is in the \u0022HarfBuzzSharp\u0022 series of packages: https://www.nuget.org/packages/HarfBuzzSharp.NativeAssets.Linux\r\n\r\nSkiaSharp.HarfBuzz is just a convenience package that adds some easy use cases.\r\n\r\nThanks for taking the time to open the issue and post your workings! Hopefully this helps.",
+        "createdAt": "2020-07-02T16:44:33",
+        "reactions": []
+      },
+      {
+        "id": 653118857,
+        "author": "mlptownsend",
+        "body": "Wow I totally overlooked it. Thanks!",
+        "createdAt": "2020-07-02T16:55:31",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:33.5210248Z"
+          }
+        ]
+      },
+      {
+        "id": 653154539,
+        "author": "mlptownsend",
+        "body": "I\u0027ll add one more workings. I don\u0027t have the free time to make a CentOS 7 package, but if someone else does... This is what I just did to get 1.68.3 to build on a random server I had lying around.\r\n\r\n\u0060\u0060\u0060\r\nsudo yum update\r\nsudo rpm --import \u0022https://keyserver.ubuntu.com/pks/lookup?op=get\u0026search=0x3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF\u0022\r\nsu -c \u0027curl https://download.mono-project.com/repo/centos7-stable.repo | tee /etc/yum.repos.d/mono-centos7-stable.repo\u0027\r\nsudo rpm -Uvh https://packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm\r\nsudo yum update\r\n\r\nsudo yum install -y centos-release-scl epel-release\r\nsudo yum install -y git bzip2 gmp-devel mpfr-devel libmpc-devel clang gcc gcc-c\u002B\u002B python27 python-pip openssl-devel bzip2-devel mono-devel dotnet-sdk-2.2 dotnet-sdk-3.1 fontconfig-devel freetype-devel\r\nsudo yum group install \u0022Development Tools\u0022 -y\r\nsudo yum install -y devtoolset-8-gcc* llvm-toolset-7\r\n\u0060\u0060\u0060\r\nTo compile using gcc:\r\n\r\n\u0060\u0060\u0060\r\nscl enable devtoolset-8 bash\r\n\u0060\u0060\u0060\r\n\r\nTo compile using clang (recommended):\r\n\r\n\u0060\u0060\u0060\r\nscl enable llvm-toolset-7 bash\r\nexport CC=clang\r\nexport CXX=clang\u002B\u002B\r\n\u0060\u0060\u0060\r\n\r\nThen the bootstrapper step.\r\n\u0060\u0060\u0060\r\ngit clone https://github.com/mono/SkiaSharp.git\r\ncd SkiaSharp\r\ngit checkout tags/v1.68.3\r\ngit submodule update --init --recursive\r\n./bootstrapper.sh -t externals-linux\r\n\u0060\u0060\u0060\r\n\r\nSomething for #453?",
+        "createdAt": "2020-07-02T18:18:34",
+        "reactions": []
+      },
+      {
+        "id": 653388586,
+        "author": "mattleibow",
+        "body": "Yes please! Share this over there too.\n\nBut, did the package on nuget not work for you for centos? ",
+        "createdAt": "2020-07-03T07:03:55",
+        "reactions": []
+      },
+      {
+        "id": 654270339,
+        "author": "mlptownsend",
+        "body": "It might take me a bit to try it out and see but I\u0027ll try and circle back and report back on this. Chances are it will actually work though. The .so\u0027s I built for CentOS did work on Ubuntu. I\u0027m not really a Linux person and assumed that you had to have a .so built on the specific OS or it wouldn\u0027t work at all. I guess it\u0027s not THAT inflexible.",
+        "createdAt": "2020-07-06T14:23:13",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,67 @@
   "updatedAt": "2022-08-19T03:02:41",
   "closedAt": "2021-02-02T11:59:42",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:44.6939352Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 656463802,
+        "author": "mattleibow",
+        "body": "Looking at the APIs, it appears there are 2 ways to use Metal, from a \u0060CAMetalLayer\u0060:\r\nhttps://github.com/google/skia/blob/chrome/m85/include/core/SkSurface.h#L304\r\n\r\nAnd a \u0060MTKView\u0060:\r\nhttps://github.com/google/skia/blob/chrome/m85/include/core/SkSurface.h#L331\r\n\r\nThe \u0060CAMetalLayer\u0060 part was added in m80, and \u0060MTKView\u0060 (sadly) in m81. Just one away.\r\n\r\nI will bind the layer one and see how that goes. I want to get m84 /m85 finished soon (#1321) and then we can add the view one.",
+        "createdAt": "2020-07-10T03:38:59",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:14:43.862357Z"
+          },
+          {
+            "user": "lunixbochs",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:14:43.8623574Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:14:43.8623575Z"
+          },
+          {
+            "user": "SparkieLabs",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:14:43.8623576Z"
+          }
+        ]
+      },
+      {
+        "id": 743769692,
+        "author": "SparkieLabs",
+        "body": "Will this enable screen drawing using the Display P3 color space?  The current OpenGL view only seems to support sRGB.",
+        "createdAt": "2020-12-12T15:11:10",
+        "reactions": []
+      },
+      {
+        "id": 771237563,
+        "author": "mattleibow",
+        "body": "Looking at the implementation, support for tvOS was not thought of. \r\n\r\nWhat I will do is merge this with iOS and macOS support. Then I need to create a PR upstream with tvOS support and then cherry pick that down. There are a few places that need some work, and I do not want to delay this any longer.",
+        "createdAt": "2021-02-01T23:38:49",
+        "reactions": []
+      },
+      {
+        "id": 771242312,
+        "author": "mattleibow",
+        "body": "I opened an issue to see what the upstream reception of tvOS bits are: https://bugs.chromium.org/p/skia/issues/detail?id=11250",
+        "createdAt": "2021-02-01T23:52:06",
+        "reactions": []
+      },
+      {
+        "id": 771243873,
+        "author": "mattleibow",
+        "body": "Opened an issue to track the feature and demand: https://github.com/mono/SkiaSharp/issues/1601",
+        "createdAt": "2021-02-01T23:56:50",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,135 @@
   "updatedAt": "2022-08-19T03:02:32",
   "closedAt": "2020-07-23T00:08:52",
   "commentCount": 16,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:58.5914176Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 658806469,
+        "author": "ziriax",
+        "body": "Thanks for reporting. I provided the text-on-path PR for 2.80, so I\u0027ll try to help you out.\r\n\r\nSince the text-on-path code was removed from the Skia native API, we rewrote it C#, so regressions are possible.\r\n\r\nCould you provide minimal code to reproduce the issue?\r\n\r\nDoes the same code work on dekstop?\r\n\r\n",
+        "createdAt": "2020-07-15T14:35:55",
+        "reactions": []
+      },
+      {
+        "id": 658827789,
+        "author": "geoffwc",
+        "body": "Hi Peter, not sure about desktop, but works on Android.\r\n\r\nThis is an example of how I use it in my demo app here (Draw method):\r\n\r\n[https://bitbucket.org/webbercross/skiacontrols/src/master/SkiaControls/Drawing/Label.cs](url)\r\n\r\nWas the method deprecated from the native api? Do you know if there is a replacement? I find it difficult positioning text without this!\r\n\r\nI just updated to 2.80.1, so you can run that on iOS if you like and see the exception.\r\n\r\nThanks",
+        "createdAt": "2020-07-15T15:14:04",
+        "reactions": []
+      },
+      {
+        "id": 658859838,
+        "author": "ziriax",
+        "body": "Well, the idea is that my replacement works on all platforms :)\r\n\r\nThis is going to be a bit difficult for me to test, since I\u0027ve never done any iOS development before.  \r\n\r\nBut just looking at the code, I see a bug: \u0060GetGlyphPath\u0060 can return null, I don\u0027t deal with that.\r\n\r\nThey question in your case is, why does it return \u0060null\u0060. Maybe the typeface isn\u0027t loaded on iOS? Or the specific glyph id doesn\u0027t exist on iOS, also possible.\r\n\r\nNevertheless, I bugfix is needed. The question is what to do: throw an exception when \u0060GetGlyphPath\u0060 fails (the .NET approach), or silently ignore the error and return \u0060false\u0060 or something (the Skia approach, better for performance)\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-07-15T16:18:10",
+        "reactions": []
+      },
+      {
+        "id": 658863615,
+        "author": "ziriax",
+        "body": "Just to be curious, I looked at your code:\r\n\u0060\u0060\u0060\r\n  // Text  \r\n            var textPath = new SKPath();\r\n            textPath.MoveTo(drawingBounds.Left, drawingBounds.Bottom);\r\n            textPath.LineTo(drawingBounds.Right, drawingBounds.Bottom);\r\n            canvas.DrawTextOnPath(Text, textPath, new SKPoint(0, (drawingBounds.Height / -2) \u002B TextSize / 2), _textPaint);\r\n\u0060\u0060\u0060\r\n\r\nAny reason why you use \u0060DrawTextOnPath\u0060 here? The path is a straight line, so just drawing it with \u0060DrawText\u0060 would be much much faster.\r\n",
+        "createdAt": "2020-07-15T16:25:23",
+        "reactions": []
+      },
+      {
+        "id": 658871048,
+        "author": "geoffwc",
+        "body": "That\u2019s a very good question! I\u2019m sure there was a good reason but I can\u2019t exactly remember why, I\u2019ll try replacing with DrawText to see if I can remember why I did it. I think it might be something to do with having difficulty correctly positioning the text in relation to other elements, but will find out",
+        "createdAt": "2020-07-15T16:38:30",
+        "reactions": []
+      },
+      {
+        "id": 658871261,
+        "author": "ziriax",
+        "body": "As a temporary workaround, could you try to pass \u0060warpGlyphs: false\u0060 to \u0060DrawTextOnPath\u0060, and see if that works for you?\r\n",
+        "createdAt": "2020-07-15T16:38:51",
+        "reactions": [
+          {
+            "user": "geoffwc",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:56.5594982Z"
+          }
+        ]
+      },
+      {
+        "id": 658871584,
+        "author": "geoffwc",
+        "body": "There is no custom font so should be fine loading it",
+        "createdAt": "2020-07-15T16:39:27",
+        "reactions": []
+      },
+      {
+        "id": 658878774,
+        "author": "ziriax",
+        "body": "When trying to write a unit test for this, I can\u0027t find any font for which \u0060GetGlyphPath\u0060 (Skia native = \u0060SkFont::getPath\u0060) ever returns null, for any glyph...\r\n\r\nSo I\u0027m going to provide a PR that doesn\u0027t crash when this happens, but it would be interesting to find out why \u0060GetGlyphPath\u0060 returns null on \u0060iOS\u0060...\r\n\r\nWhat font are you using in your code?\r\n\r\n\r\n",
+        "createdAt": "2020-07-15T16:52:22",
+        "reactions": []
+      },
+      {
+        "id": 658879753,
+        "author": "ziriax",
+        "body": "Mmm, it returns \u0060null\u0060 for bitmap fonts...\r\n",
+        "createdAt": "2020-07-15T16:54:00",
+        "reactions": []
+      },
+      {
+        "id": 658880158,
+        "author": "ziriax",
+        "body": "And you rendering just plain ASCII text?",
+        "createdAt": "2020-07-15T16:54:40",
+        "reactions": []
+      },
+      {
+        "id": 658884607,
+        "author": "geoffwc",
+        "body": "Ok, so I\u0027ve tried replacing a few instances of DrawTextOnPath with DrawText and I can achieve the same results with a bit of geometry for positioning, so not sure why I used it in the first place as like you say it\u0027s a straight line...maybe I had some vertical text on a drawing...really can\u0027t remember!\r\n\r\nI can\u0027t see the warpGlyphs option - where is that?\r\n\r\nIt\u0027s just ascii text with default font, so should be fine",
+        "createdAt": "2020-07-15T17:01:51",
+        "reactions": []
+      },
+      {
+        "id": 658890151,
+        "author": "ziriax",
+        "body": "\u0060warpGlyphs\u0060 is an argument of one of the \u0060DrawTextOnPath\u0060 overloads.",
+        "createdAt": "2020-07-15T17:11:35",
+        "reactions": []
+      },
+      {
+        "id": 658917687,
+        "author": "geoffwc",
+        "body": "I\u0027ve had a look at the main application the sample is from and I think I\u0027m using DrawTextOnPath because it handles SKPaint.TextAlign nicely because you are drawing along a line rather than from a point, so if you have a box, you can use a path along the horizontal length and changing TextAlign Centre to Left will align to left of box rather than left of mid-point if you use DrawText with a centre point.\r\nI could probably use a different method to achieve this using DrawText if I don\u0027t rely on TextAlign for the alignment",
+        "createdAt": "2020-07-15T18:04:36",
+        "reactions": []
+      },
+      {
+        "id": 658936548,
+        "author": "ziriax",
+        "body": "Ah yes, indeed. Otherwise you have to use \u0060MeasureText\u0060 and \u0060DrawText\u0060, aligning it yourself.\r\n\r\nI\u0027ve provided a PR #1410 that should fix the \u0060NullReferenceException\u0060, but it will just ignore the glyphs for which a path cannot be created... That of course doesn\u0027t fix your issue, but since Skia\u0027s documentation explicitly states that \u0060SkFont::getPath\u0060 can return \u0060null\u0060, it is a sensible thing to do... \r\n\r\nI most likely will need to do some native debugging on iOS to figure out what is going on. That is not obvious for a Windows developer like me, although I would like to get into iOS one day ;)\r\n\r\n\r\n",
+        "createdAt": "2020-07-15T18:41:41",
+        "reactions": []
+      },
+      {
+        "id": 659331684,
+        "author": "mattleibow",
+        "body": "I can have a look as I have an ios device. ",
+        "createdAt": "2020-07-16T10:47:20",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:58.3509882Z"
+          }
+        ]
+      },
+      {
+        "id": 662758437,
+        "author": "mattleibow",
+        "body": "I have pushed to the preview feed: https://aka.ms/skiasharp-eap/index.json\r\n\r\n\u003E \u00602.80.2-preview.4\u0060",
+        "createdAt": "2020-07-23T00:08:44",
+        "reactions": []
+      }
+    ]
+  }
 }

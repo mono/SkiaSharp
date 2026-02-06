@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T06:01:35",
   "closedAt": "2020-05-27T05:14:09",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:42.2004503Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 632680891,
+        "author": "Gillibald",
+        "body": "SKTypeface is cached by the font manager if you use \u0060SKTypeface.FromFamilyName\u0060. To avoid your issue you have to create a font manager per RenderContext. There might be some related fix in the current master that makes Dispose a no-op for these kinds of typefaces.",
+        "createdAt": "2020-05-22T13:06:13",
+        "reactions": []
+      },
+      {
+        "id": 632842860,
+        "author": "Jonarw",
+        "body": "Ahh that makes a lot more sense to me now, thank you!\r\n\r\nSo I guess this also means that we don\u0027t really need to cache fonts ourselves, as the font manager does this anyway?\r\n\r\nAnd by the way, updating to 1.68.3 totally seems to fix the issue.",
+        "createdAt": "2020-05-22T18:32:13",
+        "reactions": []
+      },
+      {
+        "id": 650467432,
+        "author": "mattleibow",
+        "body": "Yep, this was fixed in #1224",
+        "createdAt": "2020-06-27T01:06:48",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,123 @@
   "updatedAt": "2022-08-19T06:01:37",
   "closedAt": "2020-10-13T23:42:24",
   "commentCount": 16,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:39.5667802Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 633430087,
+        "author": "chrisfoulds",
+        "body": "For info it is showing as loaded assembly when you run the app.\r\nLoaded assembly: /Users/chrisfoulds/Library/Developer/CoreSimulator/Devices/286AE6C2-3029-4B45-B91E-07CA4464325B/data/Containers/Bundle/Application/8326DBC9-DB11-40B3-8A93-6CB04C68C5A1/MyApp.iOS.app/SkiaSharp.Views.Forms.dll [External]\r\nLoaded assembly: /Users/chrisfoulds/Library/Developer/CoreSimulator/Devices/286AE6C2-3029-4B45-B91E-07CA4464325B/data/Containers/Bundle/Application/8326DBC9-DB11-40B3-8A93-6CB04C68C5A1/MyApp.iOS.app/SkiaSharp.Views.iOS.dll [External]\r\nLoaded assembly: /Users/chrisfoulds/Library/Developer/CoreSimulator/Devices/286AE6C2-3029-4B45-B91E-07CA4464325B/data/Containers/Bundle/Application/8326DBC9-DB11-40B3-8A93-6CB04C68C5A1/MyApp.iOS.app/SkiaSharp.dll [External]\r\n\r\nSimulator is iOS13.5",
+        "createdAt": "2020-05-25T07:44:04",
+        "reactions": []
+      },
+      {
+        "id": 633433122,
+        "author": "chrisfoulds",
+        "body": "same happens with 13.4 simulator",
+        "createdAt": "2020-05-25T07:51:06",
+        "reactions": []
+      },
+      {
+        "id": 633477102,
+        "author": "chrisfoulds",
+        "body": "Tested on real device (13.5) - also experienced exact same issue. Will gather logs",
+        "createdAt": "2020-05-25T09:29:10",
+        "reactions": []
+      },
+      {
+        "id": 633477506,
+        "author": "chrisfoulds",
+        "body": "Crash on real device \r\n\u003Cimg width=\u00221603\u0022 alt=\u0022Screenshot 2020-05-25 at 10 29 30\u0022 src=\u0022https://user-images.githubusercontent.com/16035209/82799889-acc0d380-9e72-11ea-95b1-b8c35988634c.png\u0022\u003E\r\n",
+        "createdAt": "2020-05-25T09:30:01",
+        "reactions": []
+      },
+      {
+        "id": 633941223,
+        "author": "chrisfoulds",
+        "body": "Ran on iOS12 simulators and devices with same issues. All other components are loading and linking correctly on quick rebuilds, it is just skiasharp failing.",
+        "createdAt": "2020-05-26T10:24:31",
+        "reactions": []
+      },
+      {
+        "id": 635186060,
+        "author": "chrisfoulds",
+        "body": "Also occurs on new 8.6.1 (build 26)",
+        "createdAt": "2020-05-28T08:06:42",
+        "reactions": []
+      },
+      {
+        "id": 635553270,
+        "author": "chrisfoulds",
+        "body": "Did some more investigation,  I have a second Mac not quite so updated. It has the latest XCode but not everything new.\r\nI synced the project it worked no matter what, all good.\r\nI then ran Visual studio updater and updated all the components (see attached screenshots) and now I get the exact same issue.\r\nKinda annoyed I wiped out a second machine but it is reproducible. \r\n\u003Cimg width=\u0022599\u0022 alt=\u0022Screenshot 2020-05-28 at 20 20 22\u0022 src=\u0022https://user-images.githubusercontent.com/16035209/83185361-c12af780-a122-11ea-8e05-b30dd3730116.png\u0022\u003E\r\n\u003Cimg width=\u0022598\u0022 alt=\u0022Screenshot 2020-05-28 at 20 20 30\u0022 src=\u0022https://user-images.githubusercontent.com/16035209/83185365-c38d5180-a122-11ea-8c8f-d5bf1bf848ab.png\u0022\u003E\r\n",
+        "createdAt": "2020-05-28T19:35:39",
+        "reactions": []
+      },
+      {
+        "id": 640010522,
+        "author": "chrisfoulds",
+        "body": "Looking at logs \r\nOn first build \r\n/reference:/Users/chrisfoulds/.nuget/packages/skiasharp/1.68.3/lib/xamarinios1.0/SkiaSharp.dll /reference:/Users/chrisfoulds/.nuget/packages/skiasharp.svg/1.60.0/lib/netstandard2.0/SkiaSharp.Extended.Svg.dll /reference:/Users/chrisfoulds/.nuget/packages/skiasharp.views.forms/1.68.3/ref/xamarinios1.0/SkiaSharp.Views.Forms.dll /reference:/Users/chrisfoulds/.nuget/packages/skiasharp.views/1.68.3/lib/xamarinios1.0/SkiaSharp.Views.iOS.dll\r\n\r\nchange one line of code and the build log has\r\n/reference:/Users/chrisfoulds/.nuget/packages/skiasharp/1.68.3/lib/netstandard2.0/SkiaSharp.dll /reference:/Users/chrisfoulds/.nuget/packages/skiasharp.svg/1.60.0/lib/netstandard2.0/SkiaSharp.Extended.Svg.dll /reference:/Users/chrisfoulds/.nuget/packages/skiasharp.views.forms/1.68.3/ref/netstandard2.0/SkiaSharp.Views.Forms.dll\r\n\r\nSo that is the reason, but what is the cause?",
+        "createdAt": "2020-06-06T08:11:41",
+        "reactions": []
+      },
+      {
+        "id": 640094136,
+        "author": "chrisfoulds",
+        "body": "On same machine\r\nDowngraded MonoDroid, MonoiOS, Mono Framework \u0026 Visual Studio and it all works\r\nSo either one of them is broke or you have serious incompatibility with it.\r\n\r\nNow running\r\nVS 8.5.6 - build 11\r\nMonoDroid - 10.2\r\nMonoIOS - 13.16\r\n\r\n\r\n",
+        "createdAt": "2020-06-06T17:35:59",
+        "reactions": []
+      },
+      {
+        "id": 640179093,
+        "author": "chrisfoulds",
+        "body": "On Second machine downgraded VS but left everything else as latest\r\n(Mono, MonoDroid,MonoIOS) \r\nStill breaks, so it\u0027s not VS\r\nIt is a build issue when being used with one of the later MonoBuilds",
+        "createdAt": "2020-06-07T08:48:33",
+        "reactions": []
+      },
+      {
+        "id": 645429970,
+        "author": "chrisfoulds",
+        "body": "FYI : I narrowed it down to Xamarin.iOS \r\nI am on 13.16.0.13\r\nIf I upgrade to any of the 13.18 builds it stops working straight away",
+        "createdAt": "2020-06-17T15:02:15",
+        "reactions": []
+      },
+      {
+        "id": 645478811,
+        "author": "mattleibow",
+        "body": "Thanks for the continuous stream of info. Sorry I couldn\u0027t respond quicker.\r\n\r\nYou say that it breaks on updating Xamarin... Very weird. If you crack open the iOS app package, can you see the libSkiaSharp.framework?\r\n\r\nAlso, I _just_ pushed out a new preview package v2.80 (preview 12) that uses a new way of packaging the native parts in the nuget. What happens if you give that version a go? Try with the old version of X.iOS and see if that still works, and then upgrade and see if it breaks. It should work in both cases.\r\n\r\nAlso, I believe the most common issue with this native bit is that there is a bad caching on the device, so make sure you delete the obj and then app off the phone/sim.\r\n\r\nLet me know if that changes anything. I am hoping the v2 way of packaging fixes a few annoying iOS issues.",
+        "createdAt": "2020-06-17T16:27:06",
+        "reactions": []
+      },
+      {
+        "id": 645515626,
+        "author": "chrisfoulds",
+        "body": "I\u0027ve updated and I am getting this build error - which may point to the source of all the problems.\r\nNot sure how to fix it though :-)\r\nThis is with xamarin.ios 13.16.013 , same error occurs on later frameworks\r\n\r\n\u0060/Users/chrisfoulds/workspace/runtorace/RunToRace/RunToRace.iOS/error MT0099: Error: \u0027can\u0027t process a mix of dylibs and frameworks: /Users/chrisfoulds/.nuget/packages/skiasharp/2.80.0-preview.12/build/xamarinios1.0/../../runtimes/ios/native/libSkiaSharp.framework, /Users/chrisfoulds/workspace/runtorace/RunToRace/RunToRace.iOS/obj/iPhoneSimulator/Debug/device-builds/iphone 6 plus-12.4/mtouch-cache/libSkiaSharp.framework\u0027. Please file a bug report with a test case (https://github.com/xamarin/xamarin-macios/issues/new). (RunToRace.iOS) Internal\u0060",
+        "createdAt": "2020-06-17T17:31:02",
+        "reactions": []
+      },
+      {
+        "id": 645528132,
+        "author": "chrisfoulds",
+        "body": "First I removed\r\n[assembly: ObjCRuntime.LinkWith(\u0022libSkiaSharp.framework\u0022, SmartLink = true)]\r\n\r\nxamarin.ios 13.16.013\r\nClean build works\r\nMake one line change, build and run - works\r\n\r\ninstalled\r\nxamarin 13.18.2.1\r\n Deleted all obj/bin directories\r\nUninstall the app and reboot\r\nFull build - works\r\nMake one line change, build and run - still fails\r\n\r\nIs there any build logs etc. that could help ?",
+        "createdAt": "2020-06-17T17:55:39",
+        "reactions": []
+      },
+      {
+        "id": 645533624,
+        "author": "mattleibow",
+        "body": "What happens if you create a brand new project, Add SkiaSharp and then draw a red block? Like totally fresh.\r\n\r\nIf it happens, then send that project to me and I\u0027ll try and reproduce it. If it is not, then maybe send the iOS csproj file (remove any secrets/passwords) Maybe there is something weird there...",
+        "createdAt": "2020-06-17T18:06:02",
+        "reactions": []
+      },
+      {
+        "id": 650894422,
+        "author": "mattleibow",
+        "body": "Maybe you could attach the binlog for this project: \u0060msbuild /r /bl\u0060\r\n\r\nYou can rebuild, make a change, and then run msbuild with \u0060/bl\u0060 and attach that when it fails.\r\n\r\nBut also share the list of packages you have installed in the iOS project - should be in the \u0060obj/project.assets.json\u0060 file. Just attach that as well.",
+        "createdAt": "2020-06-29T04:12:16",
+        "reactions": []
+      }
+    ]
+  }
 }

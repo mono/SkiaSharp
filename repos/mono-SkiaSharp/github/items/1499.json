@@ -14,5 +14,31 @@
   "updatedAt": "2022-08-19T03:01:52",
   "closedAt": "2021-02-04T15:59:14",
   "commentCount": 2,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:16:00.2639286Z",
+    "reactions": [
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:16:00.2639343Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 695012029,
+        "author": "danwalmsley",
+        "body": "https://bugs.chromium.org/p/chromium/issues/detail?id=713854\r\n\r\nthis bug seems to be related to what we are seeing...\r\n\r\n\u0060\u0060\u0060\r\nHere are some options to mitigate the leak:\r\n\r\nA) Add a workaround to Skia which avoids using stencils:\r\nCurrently, we use stencils for some non-AA masks/clipping, and for some path rasterization. We could move path rasterization to use other approaches (we already have a number of fallbacks). We have a non-stencil AA mask path, we could probably use this for non-AA masks as well.\r\n\r\nB) Use real GL contexts (rather than virtualized ones):\r\nThis would mean that GL contexts would get cleaned up more regularly as renderers were created/destroyed, preventing leaks in these contexts from building up over time.\r\n\r\nC) Cause Skia to never purge stencil resources on problem systems:\r\nCurrently, the leak is made worse by the way the Skia cache purges unused resources after a short duration. This means we may allocate/release a stencil a number of times, rather than just keeping it cached. While this makes sense if the stencil is actually freed, in this case we are just making the leak worse.\r\n\r\nI think that either option (A), or a combination of options (B) and (C) would work. (B) is probably good to investigate anyway, as it also mitigates any other leaks we haven\u0027t found.\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-09-18T18:10:37",
+        "reactions": []
+      },
+      {
+        "id": 721405090,
+        "author": "mattleibow",
+        "body": "Sorry it took so long, but \u00602.80.3-pr.1529.5\u0060 should be on the preview feed. As soon as we know this is actually useful, I\u0027ll merge the PR.",
+        "createdAt": "2020-11-03T22:22:44",
+        "reactions": []
+      }
+    ]
+  }
 }

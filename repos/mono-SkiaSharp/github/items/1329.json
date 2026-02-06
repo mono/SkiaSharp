@@ -14,5 +14,59 @@
   "updatedAt": "2022-08-19T06:01:21",
   "closedAt": "2020-06-29T04:13:58",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:07.6744075Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 642188894,
+        "author": "mattleibow",
+        "body": "The error is saying that you have run out of memory on the device. I see you added a list of devices, which have the exception? All of them?\r\n\r\nDoes this app do a lot of image processing? Maybe something is not being disposed?\r\n\r\nIt may be that there is some concurrency issues with the background animations... What happens if you call the InvalidateSurface from the main thread? Device.InvokeOnMainThread or something in forms.",
+        "createdAt": "2020-06-10T18:40:16",
+        "reactions": []
+      },
+      {
+        "id": 642195022,
+        "author": "ValonK",
+        "body": "\u003E The error is saying that you have run out of memory on the device. I see you added a list of devices, which have the exception? All of them?\r\n\r\nYes on all Devices. \r\n\u003E \r\n\u003E Does this app do a lot of image processing? Maybe something is not being disposed?\r\n\u003E \r\nNo Image Processing at all. Just my own \u0060CoordinatorLayout\u0060 with Animation.\r\n\r\n\u003E It may be that there is some concurrency issues with the background animations... What happens if you call the InvalidateSurface from the main thread? Device.InvokeOnMainThread or something in forms.\r\n\r\nI will report back after trying this,\r\n\r\n",
+        "createdAt": "2020-06-10T18:54:11",
+        "reactions": []
+      },
+      {
+        "id": 642209388,
+        "author": "mattleibow",
+        "body": "How much RAM do these devices have? Is this a common exception?\r\n\r\nAlso, try this: https://developer.android.com/guide/topics/manifest/application-element#largeHeap\r\n\r\nMaybe the OS just has a restriction?",
+        "createdAt": "2020-06-10T19:24:45",
+        "reactions": []
+      },
+      {
+        "id": 642226372,
+        "author": "ValonK",
+        "body": "\u003E How much RAM do these devices have? Is this a common exception?\r\n\u003E \r\n\u003E Also, try this: https://developer.android.com/guide/topics/manifest/application-element#largeHeap\r\n\u003E \r\n\u003E Maybe the OS just has a restriction?\r\n\r\n Thank you! I will try that, that must be it. It affects only devices with low RAM ",
+        "createdAt": "2020-06-10T20:00:19",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:07.2046439Z"
+          }
+        ]
+      },
+      {
+        "id": 643242567,
+        "author": "ValonK",
+        "body": "Thank you for the help, setting MaxHeap solved the Issues",
+        "createdAt": "2020-06-12T12:23:41",
+        "reactions": []
+      },
+      {
+        "id": 650894769,
+        "author": "mattleibow",
+        "body": "Awesome! If you have any issue further, feel free to open a new issue.",
+        "createdAt": "2020-06-29T04:13:58",
+        "reactions": []
+      }
+    ]
+  }
 }

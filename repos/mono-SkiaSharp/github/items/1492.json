@@ -14,5 +14,38 @@
   "updatedAt": "2022-08-19T03:01:55",
   "closedAt": "2020-09-08T19:48:17",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:56.7587179Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 689015409,
+        "author": "mattleibow",
+        "body": "This is most probably because you have a new bitmap using the \u0022platform default\u0022 which is BGR on Windows and RGB on macOS:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar bitmap = new SKBitmap(pixelWidth, pixelHeight);\r\n\u0060\u0060\u0060\r\n\r\nIf you are wanting to make sure the color orders are as expected, use the overload that takes a \u0060SKColorType\u0060 and you can control exactly what order they are. \r\n\r\nOr, you can check the \u0060SKImageInfo.PlatformColorType\u0060 and check to see if it is \u0060Bgra8888\u0060 or \u0060Rgba8888\u0060\r\n\r\nOr, you can use \u0060SKSwizzle\u0060 so switch bytes.\r\n\r\nThe best is to o with the first option as there are no checks and no different logic and no extra work.",
+        "createdAt": "2020-09-08T17:07:03",
+        "reactions": []
+      },
+      {
+        "id": 689052183,
+        "author": "bymin",
+        "body": "@mattleibow Thanks for the quick response. You are right passing in SKColorType fixed this issue. You are AWESOME!!!",
+        "createdAt": "2020-09-08T18:18:42",
+        "reactions": []
+      },
+      {
+        "id": 689099115,
+        "author": "mattleibow",
+        "body": "No, YOU\u0027RE awesome! \uD83D\uDE04 \r\n\r\nThanks for using SkiaSharp!",
+        "createdAt": "2020-09-08T19:48:17",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:15:56.7093022Z"
+          }
+        ]
+      }
+    ]
+  }
 }

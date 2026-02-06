@@ -14,5 +14,99 @@
   "updatedAt": "2022-08-19T03:02:55",
   "closedAt": "2020-06-29T03:57:16",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:22.1045837Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 648581270,
+        "author": "mattleibow",
+        "body": "Make sure to install SkiaSharp.Views.Forms in all the projects, not SkiaSharp.Views. SVF brings the cross-platform views, the SV is just for native apps.\n\nYou should uninstall the SV from the shared project. ",
+        "createdAt": "2020-06-24T04:43:38",
+        "reactions": [
+          {
+            "user": "blmiles",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:20.0262789Z"
+          },
+          {
+            "user": "MappingSteve",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:20.0262794Z"
+          }
+        ]
+      },
+      {
+        "id": 648741122,
+        "author": "blmiles",
+        "body": "Thanks Matt,\r\nFYI, I find that version 1.60.3 works in all projects but anything above that throws a build error in iOS projects.\r\nI tried all right to latest preview.14\r\nWhen I get a chance I will update libs and send build errors I\u0027m seeing. Right now just need it to work.",
+        "createdAt": "2020-06-24T10:36:25",
+        "reactions": []
+      },
+      {
+        "id": 648746283,
+        "author": "mattleibow",
+        "body": "OK, cool. When you update, post the errors here and I\u0027ll have a look. ",
+        "createdAt": "2020-06-24T10:48:06",
+        "reactions": []
+      },
+      {
+        "id": 649856302,
+        "author": "mattleibow",
+        "body": "Did you manage to get things to work?",
+        "createdAt": "2020-06-25T22:51:01",
+        "reactions": []
+      },
+      {
+        "id": 650891333,
+        "author": "mattleibow",
+        "body": "Closing this because SkiaSharp is compatible with .NET Standard 1.3\u002B.",
+        "createdAt": "2020-06-29T03:57:16",
+        "reactions": []
+      },
+      {
+        "id": 653530723,
+        "author": "blmiles",
+        "body": "Sorry, wasn\u0027t paying attention... Yes, working but only up to 1.60.3\r\n\r\nMight have a chance soon to update incrementally and try again.\r\n",
+        "createdAt": "2020-07-03T12:44:23",
+        "reactions": []
+      },
+      {
+        "id": 707132844,
+        "author": "blmiles",
+        "body": "Hello,\r\n\r\nAn update after updating SkiaSharp from 1.60.3 to 2.80.2\r\nSolution is Xamarin.Forms (shared) and an iOS project and Android project. Android works just fine.\r\n\r\nAlso posted in this thread: https://github.com/mono/SkiaSharp/issues/855\r\n\r\nHere\u0027s the error in iOS build:\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tError while loading assemblies: /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/bin/iPhoneSimulator/Debug/libSkiaSharp.dll.\t[mycompany].iOS\t\t\r\n\r\n\r\n2\u003E  /Library/Frameworks/Xamarin.iOS.framework/Versions/Current/bin/mtouch @/Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhoneSimulator/Debug/response-file.rsp \u0022--gcc_flags=-Xlinker -sectcreate -Xlinker __TEXT -Xlinker __entitlements -Xlinker /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/obj/iPhoneSimulator/Debug/Entitlements.xcent\u0022 \r\n2\u003EC:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Professional\\MSBuild\\Xamarin\\iOS\\Xamarin.iOS.Common.targets(885,3): error MT0009: Error while loading assemblies: /Users/[user]/Library/Caches/Xamarin/mtbs/builds/[mycompany].iOS/2b8bb42efaa82e056d0923743e8a2829/bin/iPhoneSimulator/Debug/libSkiaSharp.dll.\r\n\r\nI have tried removing this from the iOS .proj file: \u0060\u003CPlatformTarget\u003Ex86\u003C/PlatformTarget\u003E\u0060\r\n\r\nAnd I\u0027ve tried adding this to the .proj file: \u0060ExcludeAssets=\u0022runtimes\u0022\u0060 in the skiaSharp reference(s).\r\n\r\nWondering if there\u0027s something lingering in my Mac as its looking for something that is no longer there...\r\n\r\nIf I regress to 1.60.3 it works just fine.\r\n\r\nEDIT: More info. Just updated the SkiaSharp packages again. I was only installing SkiaSharp and SkiaSharp.Views.Forms and getting the error above. Installed SkiaSharp.Views too (looking at dependencies, SkiaSharp.Views is listed under the iOS list).\r\n\r\nI get the same error.\r\n\r\nLooked at the Dependencies/Packages and I see this on the SkiaSharp.Views package:\r\n_Package \u0027SkiaSharp.Views 2.80.2\u0027 was restored using \u0027.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8\u0027 instead of the project target framework \u0027.NETStandard,Version=v2.1\u0027. This package may not be fully compatible with your project._\r\n\r\nIs there an upgrade sequence (if skiasharp is already installed) - like 1.60.3 to 1.68.x to 2.80.x ? Silly question but I\u0027ll try anything right now :)\r\n\r\nAny other potential fixes?\r\n\r\nThanks",
+        "createdAt": "2020-10-12T13:50:53",
+        "reactions": []
+      },
+      {
+        "id": 707207801,
+        "author": "mattleibow",
+        "body": "@blmiles could you create a new issue so we can track it better?\r\nAlso, can you delete the \u0060 /Users/[user]/Library/Caches/Xamarin/mtbs\u0060 folder and see if that fixes it? There might be some residue left behind. Or try a rebuild as well.\r\n\r\nBut, this should work, so mostly a rebuild should work.",
+        "createdAt": "2020-10-12T16:02:26",
+        "reactions": []
+      },
+      {
+        "id": 707209200,
+        "author": "mattleibow",
+        "body": "Wait a sec. You must _not_ install SkiaSharp.Views into a .NET Standard project. That is platform specific.\r\n\r\nIn that new issue, could you submit a detail build log or a binlog? Check out this blog for steps: https://www.meziantou.net/exploring-the-msbuild-log-using-the-binary-log-viewer.htm",
+        "createdAt": "2020-10-12T16:04:57",
+        "reactions": []
+      },
+      {
+        "id": 707228217,
+        "author": "blmiles",
+        "body": "Hi Matt,\r\n\r\nYes, I have not since you told me that before, but while trying to fix this, I saw a dependency to it in the Nuget package manager... so tried anyway. Un-installed everything again, cleaned, reinstalled ShiaSharp and ShiaSharp.Views.Forms ONLY. V 1.60.3 as that\u0027s the latest I can install, no later.\r\n\r\nAnd as for that path/folder, it is on the mac and I cannot seem to get to it, at least cannot get to /Caches within /library\r\nWas going to try do exactly what you suggest. Any ideas on that? \r\n\r\nI will look at submitting the binlog. Is there any way to do that privately and not expose some things here?\r\nWill also create a new issue. It is similar to this as I\u0027ve posted abaove https://github.com/mono/SkiaSharp/issues/855\r\n\r\nThanks",
+        "createdAt": "2020-10-12T16:41:43",
+        "reactions": []
+      },
+      {
+        "id": 707287964,
+        "author": "blmiles",
+        "body": "I\u0027ve tried deleting the /Users/[user]/Library/Caches/Xamarin/mtbs, updated the SkiaSharp packages t0 2.80.2\r\n\r\nCleaned and rebuilt the solution. iOS project still fails with same error.",
+        "createdAt": "2020-10-12T18:49:25",
+        "reactions": []
+      }
+    ]
+  }
 }

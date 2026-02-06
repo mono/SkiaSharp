@@ -14,5 +14,49 @@
   "updatedAt": "2022-08-19T03:02:37",
   "closedAt": "2020-08-06T11:05:05",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:51.1547838Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 657779183,
+        "author": "mattleibow",
+        "body": "@IainS1986 I am not able to reproduce this... I tried in both VS 2019 and via the console runner.\r\n\r\nI got a test project: [NUnitTestProject1.zip](https://github.com/mono/SkiaSharp/files/4914936/NUnitTestProject1.zip)\r\n",
+        "createdAt": "2020-07-13T20:33:16",
+        "reactions": []
+      },
+      {
+        "id": 661661960,
+        "author": "lothargrieb",
+        "body": "I had a similar case with android while changing from 1.68.1 to 2.80.1.\r\nAdding the SkiaSharp assemblies to the main or executing project solved it.\r\nIn your case, try to add additional SkiaSharp to the NUnit project.\r\n",
+        "createdAt": "2020-07-21T06:28:23",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:50.9039049Z"
+          }
+        ]
+      },
+      {
+        "id": 669862277,
+        "author": "IainS1986",
+        "body": "Hi, Really sorry for going AWOL on this!\r\n\r\nJust managed to fix it (i think, will confirm when Azure does a successful remote build!) but the issue was my TargetFramework (thanks mattleibow for the example project!)\r\n\r\nI was targetting net461. Changed it to net472 and I think its working now (with package reference added). \uD83D\uDC4D ",
+        "createdAt": "2020-08-06T11:05:03",
+        "reactions": [
+          {
+            "user": "IGx89",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:14:51.1051953Z"
+          },
+          {
+            "user": "less0",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:51.1051958Z"
+          }
+        ]
+      }
+    ]
+  }
 }

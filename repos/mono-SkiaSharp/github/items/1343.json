@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-19T06:01:16",
   "closedAt": "2020-06-21T19:18:58",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:16.5772841Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 646888144,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. I think it might be because for some reason I decided it would be better to dispose the managed objects _after_ I told the native side to clean up. \r\n\r\nThis meant that when the new surface is created in the exact same memory location, it\u0027s canvas had the same handle. Then the \u0060var canvas = surface.Canvas;\u0060 retrieved the old managed object, which was immediately disposed.\r\n\r\nEffectively, I was a bit dumb...\r\n\r\nI\u0027ll get a fix up ASAP and then you can let me know if it fixes things and I\u0027ll make sure it gets into the 2.80 series before it gets stable.",
+        "createdAt": "2020-06-19T22:53:55",
+        "reactions": []
+      },
+      {
+        "id": 647651357,
+        "author": "mclose90",
+        "body": "Built the latest master and tested with our test app. Did not run into any crashes over an extended period of time. Awesome Job. Thank you!",
+        "createdAt": "2020-06-22T17:07:36",
+        "reactions": []
+      },
+      {
+        "id": 647675089,
+        "author": "mattleibow",
+        "body": "That is good news! Thanks for the test and feedback!",
+        "createdAt": "2020-06-22T17:39:03",
+        "reactions": []
+      }
+    ]
+  }
 }

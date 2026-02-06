@@ -14,5 +14,52 @@
   "updatedAt": "2022-08-19T06:01:45",
   "closedAt": "2020-05-12T21:00:22",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:24.1270124Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 627542698,
+        "author": "mattleibow",
+        "body": "You might be having an issue with the assembly being loaded/run by a 32-bit process.\r\n\r\nCheck out this issue: https://github.com/mono/SkiaSharp/issues/513",
+        "createdAt": "2020-05-12T19:22:13",
+        "reactions": []
+      },
+      {
+        "id": 627544321,
+        "author": "VladislavAntonyuk",
+        "body": "@mattleibow so SkiaSharp only support x86? it is not build for x64?\r\nCan I use Prefer32bit as false, and set \u0060\u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E\u0060?\r\n\r\napp is still crashes:\r\n\u0060\u0060\u0060\r\n\u003CTargetFramework\u003Enet462\u003C/TargetFramework\u003E\r\n        \u003CPrefer32Bit\u003Efalse\u003C/Prefer32Bit\u003E\r\n\t\t\u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\r\n\t\t\u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-05-12T19:25:34",
+        "reactions": []
+      },
+      {
+        "id": 627570673,
+        "author": "Gillibald",
+        "body": "Just don\u0027t compile for AnyCpu and instead specify the arch explicitly. This is more an issue of the tooling.",
+        "createdAt": "2020-05-12T20:17:54",
+        "reactions": [
+          {
+            "user": "VladislavAntonyuk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:23.6543675Z"
+          }
+        ]
+      },
+      {
+        "id": 627712349,
+        "author": "mattleibow",
+        "body": "If \u0060\u003CPrefer32bit\u003E\u0060 is false, then you need to use \u0060x64\u0060 on 64-bit runtime - which is the default on Windows nowadays. But, yeah, Any CPU has issues.\r\n\r\nHowever, I would suggest using the new netcoreapp3.0 with WPF instead of the older net462. Then, not only do you get the inherent .NET Core performance improvements, but also you will never have to worry abut this again. .NET Core gets all the native runtimes right.",
+        "createdAt": "2020-05-13T02:48:47",
+        "reactions": []
+      },
+      {
+        "id": 627747719,
+        "author": "VladislavAntonyuk",
+        "body": "@mattleibow I use netcoreapp5.0, but it has an issue with Xamarin Forms, so I temporary switched to net462",
+        "createdAt": "2020-05-13T05:03:39",
+        "reactions": []
+      }
+    ]
+  }
 }

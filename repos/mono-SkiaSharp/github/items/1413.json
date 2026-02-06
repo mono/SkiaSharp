@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T03:02:30",
   "closedAt": "2020-07-24T00:56:28",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:05.345303Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 659450535,
+        "author": "mattleibow",
+        "body": "This is the new functionality to support Any CPU - the native binaries are in the x86/x64/arm folders. The library will now look in there first to try and find the correct library. \r\n\r\nPreviously, the file copied to the root of the bin directly would be wrong in the CPU was different on the target machine. To avoid the numerous crashes and issues, we no longer copy the possibly incorrect binary. The reason the macOS (dylib) binary is there is because it is a \u0022fat\u0022 binary with all the architectures in one.",
+        "createdAt": "2020-07-16T14:30:11",
+        "reactions": []
+      },
+      {
+        "id": 659456267,
+        "author": "msmolka",
+        "body": "But files are still copied to bin/x86 bin/x64 etc. SkiaSharp.dll is in bin folder. In bin folder are native dlls in respective folders. BUT additionally the same in web app root.",
+        "createdAt": "2020-07-16T14:39:21",
+        "reactions": []
+      },
+      {
+        "id": 659472733,
+        "author": "msmolka",
+        "body": "Also removing these folders from root does not any harm, because dll from bin/x64 is used not from root x64",
+        "createdAt": "2020-07-16T15:04:49",
+        "reactions": []
+      },
+      {
+        "id": 659480380,
+        "author": "mattleibow",
+        "body": "\u003E because dll from bin/x64 is used not from root x64\r\n\r\nIt is now in v2.x. No longer looking in the root due to Windows having issues when running in a 32-bit process but building on a 64-bit machine. VS would always copy the wrong file.",
+        "createdAt": "2020-07-16T15:16:54",
+        "reactions": []
+      }
+    ]
+  }
 }

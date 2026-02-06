@@ -15,5 +15,154 @@
   "updatedAt": "2022-08-19T06:01:24",
   "closedAt": "2021-07-12T01:45:08",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:03.5583077Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 639689611,
+        "author": "mattleibow",
+        "body": "The work to expose \u0060SKRuntimeEffect\u0060 was started in: https://github.com/mono/SkiaSharp/pull/1321\r\n\r\nAs soon as the package builds, then you can test a few things and see if it is working as expected.",
+        "createdAt": "2020-06-05T18:27:10",
+        "reactions": []
+      },
+      {
+        "id": 640529824,
+        "author": "mattleibow",
+        "body": "I have been fiddling around here and I think I got something that is pretty nice. Let me know your thoughts on the API:\r\n\r\n\u0060\u0060\u0060cs\r\n// input values\r\nSKCanvas canvas = ...;\r\nfloat threshold = 1.05f;\r\nfloat exponent = 1.5f;\r\n\r\n// shader\r\nvar src = @\u0022\r\nin fragmentProcessor color_map;\r\n\r\nuniform float scale;\r\nuniform half exp;\r\nuniform float3 in_colors0;\r\n\r\nvoid main(float2 p, inout half4 color) {\r\n\thalf4 texColor = sample(color_map, p);\r\n\tif (length(abs(in_colors0 - pow(texColor.rgb, half3(exp)))) \u003C scale)\r\n\t\tdiscard;\r\n\tcolor = texColor;\r\n}\u0022;\r\nusing var effect = SKRuntimeEffect.Create(src, out var errorText);\r\n\r\n// input values\r\nvar inputs = new SKRuntimeEffectInputs(effect);\r\ninputs.Set(\u0022scale\u0022, threshold);\r\ninputs.Set(\u0022exp\u0022, exponent);\r\ninputs.Set(\u0022in_colors0\u0022, new[] { 1f, 1f, 1f });\r\n\r\n// shader values\r\nusing var blueShirt = SKImage.FromEncodedData(Path.Combine(PathToImages, \u0022blue-shirt.jpg\u0022));\r\nusing var textureShader = blueShirt.ToShader();\r\nvar children = new SKRuntimeEffectChildren(effect);\r\nchildren.Set(\u0022color_map\u0022, textureShader);\r\n\r\n// create actual shader\r\nusing var shader = effect.ToShader(inputs, children, true);\r\n\r\n// draw as normal\r\ncanvas.Clear(SKColors.Black);\r\nusing var paint = new SKPaint { Shader = shader };\r\ncanvas.DrawRect(SKRect.Create(400, 400), paint);\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-06-08T10:54:12",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:01.8241913Z"
+          },
+          {
+            "user": "kekekeks",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:14:01.8241918Z"
+          },
+          {
+            "user": "MarchingCube",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:14:01.824192Z"
+          },
+          {
+            "user": "ziriax",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:14:01.8241921Z"
+          },
+          {
+            "user": "wieslawsoltes",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:14:01.8241922Z"
+          },
+          {
+            "user": "wieslawsoltes",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:14:01.8241998Z"
+          },
+          {
+            "user": "wieslawsoltes",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:01.8241999Z"
+          },
+          {
+            "user": "h82258652",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:01.8242Z"
+          },
+          {
+            "user": "validvoid",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:01.8242001Z"
+          },
+          {
+            "user": "HoverCatz",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:01.8242002Z"
+          },
+          {
+            "user": "mxjones",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:01.8242003Z"
+          }
+        ]
+      },
+      {
+        "id": 640577329,
+        "author": "ziriax",
+        "body": "This looks amazing!\r\n\r\nThe only think I would change is easier constructs to bind the uniforms:\r\n\r\n\u0060\u0060\u0060cs\r\nvar inputs = new SKRuntimeEffectInputs(effect);\r\ninputs[\u0022scale\u0022] = threshold;\r\ninputs[\u0022exp\u0022] = exponent;\r\ninputs[\u0022colors0\u0022] = new[] { 1f, 1f, 1f };\r\n\u0060\u0060\u0060\r\n\r\nor\r\n\r\n\u0060\u0060\u0060cs\r\nvar inputs = new SKRuntimeEffectInputs(effect) \r\n{\r\n      [\u0022scale\u0022] = threshold,\r\n      [\u0022exp\u0022] = exponent,\r\n      [\u0022colors0\u0022] = new[] { 1f, 1f, 1f }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAnd maybe allow passing \u0060Color\u0060 instead of a array, and maybe \u0060System.Numerics.VectorX\u0060?\r\n\r\n",
+        "createdAt": "2020-06-08T12:39:23",
+        "reactions": []
+      },
+      {
+        "id": 640799783,
+        "author": "mattleibow",
+        "body": "@Ziriax Thanks for the feedback. I updated the code to use the much better indexer and/or the dictionary initializer.\r\n\r\nWith regards to the color/vectorx, I need to finish binding the other math types that is used by skia. The are obsoleting/removing a few of the more clunky ones and may be pretty useful to investigate whether the system versions are compatible.",
+        "createdAt": "2020-06-08T18:34:25",
+        "reactions": []
+      },
+      {
+        "id": 640942288,
+        "author": "ziriax",
+        "body": "You are doing so much work at such a fast pace, amazing.",
+        "createdAt": "2020-06-08T23:36:30",
+        "reactions": []
+      },
+      {
+        "id": 641065590,
+        "author": "Surfrat",
+        "body": "@mattleibow this is awesome. Super excited to start testing later today. Many thanks.",
+        "createdAt": "2020-06-09T06:38:35",
+        "reactions": []
+      },
+      {
+        "id": 696033651,
+        "author": "h82258652",
+        "body": "It seems the \u0060\u0060\u0060SKRumtimeEffect\u0060\u0060\u0060 depends on the surface. I use it with the UWP \u0060\u0060\u0060SKXamlCanvas\u0060\u0060\u0060 and the app crashed. But I use \u0060\u0060\u0060SKSwapChainPanel\u0060\u0060\u0060, it works well. :confused:",
+        "createdAt": "2020-09-21T10:36:11",
+        "reactions": []
+      },
+      {
+        "id": 696228947,
+        "author": "mattleibow",
+        "body": "Ah, yeah. That is correct for now.\r\n\r\nThe current build only has the GPU support. I need to fix up some compiler issues and dependencies for the CPU interpreter for the effects.",
+        "createdAt": "2020-09-21T16:32:34",
+        "reactions": [
+          {
+            "user": "h82258652",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:03.0807923Z"
+          }
+        ]
+      },
+      {
+        "id": 696468171,
+        "author": "h82258652",
+        "body": "Great! I think it\u0027s time for me to learn SKSL. Thanks for your job on SkiaSharp.",
+        "createdAt": "2020-09-22T01:44:41",
+        "reactions": []
+      },
+      {
+        "id": 877909885,
+        "author": "mattleibow",
+        "body": "Merged in https://github.com/mono/SkiaSharp/pull/1604",
+        "createdAt": "2021-07-12T01:45:08",
+        "reactions": [
+          {
+            "user": "Bashim98",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:03.5080575Z"
+          },
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:03.5080579Z"
+          }
+        ]
+      }
+    ]
+  }
 }

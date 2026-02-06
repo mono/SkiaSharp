@@ -14,5 +14,53 @@
   "updatedAt": "2022-08-19T03:02:56",
   "closedAt": "2020-06-26T14:12:48",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:19.1967782Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 648516472,
+        "author": "mattleibow",
+        "body": "I think this is because the cap extends past the angles. Your angle is from 0, which is directly up - the \u0022line\u0022 the bad gradient makes. One solution is to make it start at -10 or something, but that is not so great. I would suggest making the tile mode be \u0060SKShaderTileMode.Repeat\u0060 which will \u0022stretch\u0022 the color to the cap.",
+        "createdAt": "2020-06-24T00:44:13",
+        "reactions": []
+      },
+      {
+        "id": 648880327,
+        "author": "GrumpyCockatiel",
+        "body": "Yea 2 minutes after I posted this I had that thought about that. Sadly it didn\u0027t work either - stayed the same. Looks like the sweep gradient can\u0027t handle starting negative angles correctly?\r\narcPaint.Shader = SKShader.CreateSweepGradient( this.Origin, colors, new Single[] { 0, 1 }, SKShaderTileMode.Clamp, -45, 45 );\r\nThanks. I\u0027ll keep looking",
+        "createdAt": "2020-06-24T15:09:10",
+        "reactions": []
+      },
+      {
+        "id": 648907205,
+        "author": "mattleibow",
+        "body": "Does \u0060SKShaderTileMode.Repeat\u0060 not work either?",
+        "createdAt": "2020-06-24T15:54:34",
+        "reactions": []
+      },
+      {
+        "id": 648977097,
+        "author": "GrumpyCockatiel",
+        "body": "Yea I tried all the combinations of the cap styles and tile mode. Nothing worked unless I missed it. However, with A LOT more code, I was get pretty close to what I needed EXCEPT rotations greater than 2Pi that end in the first quadrant (eg 114 below) have a minor issue which is where the negative start angle would be nice. But still able set caps end independent of each other would be awesome too - for now just have to draw over them.\r\nThanks\r\n\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/17300872/85608162-6b127c80-b61a-11ea-8871-afadcf72b0ee.png\u0022 width=\u002230%\u0022 /\u003E \u003Cimg src=\u0022https://user-images.githubusercontent.com/17300872/85608193-72d22100-b61a-11ea-89e4-3c9e1bc069b7.png\u0022 width=\u002230%\u0022 /\u003E \u003Cimg src=\u0022https://user-images.githubusercontent.com/17300872/85608211-7796d500-b61a-11ea-88fa-caa854825658.png\u0022 width=\u002230%\u0022 /\u003E\r\n\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/17300872/85608231-7c5b8900-b61a-11ea-9181-29855139937e.png\u0022 width=\u002230%\u0022 /\u003E \u003Cimg src=\u0022https://user-images.githubusercontent.com/17300872/85608275-85e4f100-b61a-11ea-8301-f34c2bdcfdb0.png\u0022 width=\u002230%\u0022 /\u003E",
+        "createdAt": "2020-06-24T18:02:05",
+        "reactions": []
+      },
+      {
+        "id": 649855096,
+        "author": "mattleibow",
+        "body": "Not sure why negative numbers are supported for the angles, but there is a way to draw an arc like you want. Just rotate the canvas and then draw.\r\n\r\n\u0060\u0060\u0060cs\r\ncanvas.Clear(SKColors.DarkGray);\r\n\r\n// set up the gradient colors\r\nSKColor[] colors = new SKColor[2] {  SKColors.LightGreen , SKColors.Green };\r\n\r\nfloat sweep = 0.3f * 360.0F;\r\nvar r = SKRect.Create(50, 50, 500, 500);\r\n// draw the arc\r\nusing (SKPath path = new SKPath())\r\n{\r\n\tusing (SKPaint arcPaint = new SKPaint { Style = SKPaintStyle.Stroke, Color = SKColors.Blue })\r\n\t{\r\n\t\tarcPaint.StrokeWidth = 50;\r\n\t\tarcPaint.StrokeCap = SKStrokeCap.Round;\r\n\t\tarcPaint.IsAntialias = true;\r\n\t\tarcPaint.Shader = SKShader.CreateSweepGradient(new SKPoint(200, 200), colors, new Single[] { 0, 1 }, SKShaderTileMode.Clamp, 0, sweep);\r\n\r\n\t\t// ROTATE BACK 90*\r\n\t\tcanvas.RotateDegrees(-90, r.MidX, r.MidY);\r\n\r\n\t\t// create an arc to sweep along\r\n\t\tpath.AddArc(r, 0, sweep);\r\n\t\tcanvas.DrawPath(path, arcPaint);\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/1096616/85803170-df4a3e80-b746-11ea-9b85-b5b9d0d2e8ae.png\u0022 width=\u002250%\u0022 /\u003E\r\n\r\n",
+        "createdAt": "2020-06-25T22:47:05",
+        "reactions": []
+      },
+      {
+        "id": 650201530,
+        "author": "GrumpyCockatiel",
+        "body": "Eiiiie yea, I got blinded by having already rotated the canvas once, forgot I can keep doing it as needed.\r\nThanks, this will probably get me there.",
+        "createdAt": "2020-06-26T14:12:48",
+        "reactions": []
+      }
+    ]
+  }
 }

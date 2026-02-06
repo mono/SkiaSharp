@@ -32,5 +32,65 @@
   "updatedAt": "2022-08-19T03:02:22",
   "closedAt": "2020-08-01T11:15:46",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:17.3156624Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 666699025,
+        "author": "mattleibow",
+        "body": "I am not able to reproduce this... I tried a few strings and all the fonts, but no luck.\r\n\r\nAre you able to attach an app with this happening? \r\n\r\n| Emulator (Pixel 2 v10) | Razor Phone (9.0) |\r\n| :---------: | :------------: |\r\n| ![image](https://user-images.githubusercontent.com/1096616/88974216-92630600-d2b8-11ea-9ab9-8176ed42c6ed.png) | ![image](https://user-images.githubusercontent.com/1096616/88974531-0e5d4e00-d2b9-11ea-97ca-b7547b927d69.png) |\r\n",
+        "createdAt": "2020-07-30T21:04:52",
+        "reactions": []
+      },
+      {
+        "id": 666846877,
+        "author": "DawidBester",
+        "body": "Sample app attached.\r\n[PlotTextTest.zip](https://github.com/mono/SkiaSharp/files/5004374/PlotTextTest.zip)\r\n\r\nWith 2.80.2-preview.9 sample app output as follows on Pixel 2 Emulator running Android 10 and Samsung S8 running Android 9:\r\n![image](https://user-images.githubusercontent.com/33708055/88986871-4c458b00-d328-11ea-8e77-0dc7f19e6b81.png)\r\n\r\nWith 1.68.3 sample app output as follows on Pixel 2 Emulator running Android 10 and Samsung S8 running Android 9:\r\n![image](https://user-images.githubusercontent.com/33708055/88987684-d5f65800-d32a-11ea-99d5-074e02e26dcc.png)\r\n\r\n\r\nFYI: While creating the attached sample also experience [ #1395](https://github.com/mono/SkiaSharp/issues/1395) and had to install SkiaSharp package in addition to SkiSharp.View.Forms for 2.80.2-preview.9 to function without crashing. Crash as follows:\r\n\r\n\r\n**System.DllNotFoundException:** \u0027libSkiaSharp.so assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\u0027\r\n\r\n07-31 12:36:17.577 E/mono    ( 8291): \r\n07-31 12:36:17.577 E/mono    ( 8291): Unhandled Exception:\r\n07-31 12:36:17.577 E/mono    ( 8291): System.DllNotFoundException: libSkiaSharp.so assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\n07-31 12:36:17.577 E/mono    ( 8291):   at (wrapper dynamic-method) Android.Runtime.DynamicMethodNameCounter.7(intptr,intptr,intptr)\r\n07-31 12:36:17.577 E/mono    ( 8291):   at (wrapper native-to-managed) Android.Runtime.DynamicMethodNameCounter.7(intptr,intptr,intptr)\r\n07-31 12:36:17.578 E/mono-rt ( 8291): [ERROR] FATAL UNHANDLED EXCEPTION: System.DllNotFoundException: libSkiaSharp.so assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\n07-31 12:36:17.578 E/mono-rt ( 8291):   at (wrapper dynamic-method) Android.Runtime.DynamicMethodNameCounter.7(intptr,intptr,intptr)\r\n07-31 12:36:17.578 E/mono-rt ( 8291):   at (wrapper native-to-managed) Android.Runtime.DynamicMethodNameCounter.7(intptr,intptr,intptr)\r\n",
+        "createdAt": "2020-07-31T00:49:41",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:16.448178Z"
+          }
+        ]
+      },
+      {
+        "id": 667059706,
+        "author": "mattleibow",
+        "body": "I am looking at the issue, and I think it _cause_ is due to the small font size and the new way skia calculates things.\r\n\r\nGoogle has this problem too: https://fiddle.skia.org/c/7ca3e587eeac78b4054ee40f409a5fe1\r\n\r\nI will communicate with them and see what the fix is.\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/89028625-0b9c4080-d32d-11ea-9f4c-ad5e682b96ce.png)\r\n",
+        "createdAt": "2020-07-31T10:47:13",
+        "reactions": []
+      },
+      {
+        "id": 667073749,
+        "author": "mattleibow",
+        "body": "I started a discussion about this: https://groups.google.com/g/skia-discuss/c/Qx7brrWyv9Y\r\n\r\nSeems to be just Android and Linux - or FreeType.",
+        "createdAt": "2020-07-31T11:27:29",
+        "reactions": []
+      },
+      {
+        "id": 667154923,
+        "author": "daltonks",
+        "body": "@DawidBester I came across this same issue. Adding HarfBuzzSharp and using \u0060canvas.DrawShapedText\u0060 fixed it for me. Maybe it\u0027ll help in your case too?\r\n\r\nhttps://www.nuget.org/packages/HarfBuzzSharp",
+        "createdAt": "2020-07-31T14:41:15",
+        "reactions": []
+      },
+      {
+        "id": 667425943,
+        "author": "DawidBester",
+        "body": "@daltonks Thanks, your workaround works! \r\n\r\nJust added SkiaSharp.HarfBuzz 2.80.2-preview.9 with canvas.DrawShapedText to the sample app, and the text displays correctly on an Android 10 Emulator. \r\n\r\nThe preference is to try to avoid adding another NuGet with code changes in the production app, but this will be my fallback.\r\n\r\n![image](https://user-images.githubusercontent.com/33708055/89087341-1c5dbc80-d3e8-11ea-9ee0-ea066077c288.png)\r\n\r\n\r\n",
+        "createdAt": "2020-07-31T23:30:14",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:17.2662688Z"
+          }
+        ]
+      }
+    ]
+  }
 }

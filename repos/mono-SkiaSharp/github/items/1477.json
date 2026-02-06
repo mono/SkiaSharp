@@ -14,5 +14,31 @@
   "updatedAt": "2022-08-19T03:02:00",
   "closedAt": "2020-08-24T16:47:21",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:47.3897388Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 679219794,
+        "author": "mattleibow",
+        "body": "You are _almost_ there with the code.\r\n\r\nThe issue is that \u0060surface.PeekPixels()\u0060 returns a non-referencing pointer to the raw pixel data. What is happening, you now have the pointer to the surface pixels, and then you are creating a new image around those pixels - without copying. So, all the image knows is that there is pixel data at a memory location. As far as the surface knows, no one is referencing it.\r\n\r\nTo fix this, there are 2 ways, one involves copying and the other is actually less copying.\r\n\r\n**Option A**\r\n\r\nCopy the pixel data when creating the image using \u0060SKImage.FromPixelCopy\u0060.\r\n\r\n\u0060\u0060\u0060csharp\r\nSKImage image = SKImage.FromPixelCopy(surface.PeekPixels());\r\n\u0060\u0060\u0060\r\n\r\n**Option B (i)**\r\n\r\nDon\u0027t copy anything out of the surface at all. Get the pixels and then encode directly.\r\n\r\n\u0060\u0060\u0060csharp\r\nSKImageInfo info = new SKImageInfo(resourceBitmap.Height, resourceBitmap.Width);\r\nSKSurface surface = SKSurface.Create(info);\r\n\r\n// ... draw ...\r\n\r\nreturn ImageSource.FromStream(() =\u003E surface.PeekPixels().Encode(SKEncodedImageFormat.Png, 100).AsStream());\r\n\u0060\u0060\u0060\r\n\r\n**Option B (ii)**\r\n\r\nAnother way is that you can actually use the _encoded_ data in the construction of the \u0060ImageSource\u0060.\r\n\r\nThis might be the best option because all the work is being done in the main method, and all the actual \u0060ImageSource\u0060 does is read the stream. \r\n\r\n\u0060\u0060\u0060csharp\r\nSKImageInfo info = new SKImageInfo(resourceBitmap.Height, resourceBitmap.Width);\r\nSKSurface surface = SKSurface.Create(info);\r\n\r\n// ... draw ...\r\n\r\n// get the data here\r\nSKData data = surface.PeekPixels().Encode(SKEncodedImageFormat.Png, 100);\r\n\r\nreturn ImageSource.FromStream(() =\u003E data.AsStream());\r\n\u0060\u0060\u0060\r\n\r\n**Option B (iii)**\r\n\r\nBut, since the actual work inside \u0060ImageSource.FromStream\u0060 is done on a background thread, it may be work making the entire operation in that callback.\r\n\r\n\u003E NOTE: one thing to check to see if the \u0060ImageSource\u0060 actually caches this result if you have multiple images on screen - ie: this object is reused.\r\n\r\n\u0060\u0060\u0060csharp\r\npublic static ImageSource TintableIconImageFromSource(string source, Assembly assembly)\r\n{\r\n\treturn ImageSource.FromStream(() =\u003E\r\n\t{\r\n\t\tvar resourceId = $\u0022XamarinFormsGISmapp.Images.Icons.{source}\u0022;\r\n\r\n\t\tusing var stream = assembly.GetManifestResourceStream(resourceId);\r\n\t\tvar resourceBitmap = SKBitmap.Decode(stream);\r\n\r\n\t\tvar info = new SKImageInfo(resourceBitmap.Height, resourceBitmap.Width);\r\n\t\tusing var surface = SKSurface.Create(info);\r\n\t\tusing var canvas = surface.Canvas;\r\n\r\n\t\tusing var paint = new SKPaint();\r\n\t\tpaint.ColorFilter = ColourFilterMatrix(R, G, B, alpha);\r\n\t\tcanvas.DrawBitmap(resourceBitmap, info.Rect, paint);\r\n\r\n\t\tusing var pixmap = surface.PeekPixels();\r\n\r\n\t\tvar data = pixmap.Encode(SKEncodedImageFormat.Png, 100);\r\n\t\treturn data.AsStream();\r\n\t});\r\n}\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2020-08-24T16:07:20",
+        "reactions": [
+          {
+            "user": "Stuart88",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:15:47.1394092Z"
+          }
+        ]
+      },
+      {
+        "id": 679242303,
+        "author": "Stuart88",
+        "body": "Thanks!\r\n\r\nI went for B(iii)",
+        "createdAt": "2020-08-24T16:47:21",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,60 @@
   "updatedAt": "2022-08-19T06:01:31",
   "closedAt": "2020-07-13T15:46:54",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:51.120477Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 644201864,
+        "author": "SapientGuardian",
+        "body": "@mattleibow sorry to ping you directly, but I\u0027d really appreciate any suggestions or insights you might have on this, as I\u0027m stuck on the old version until this is resolved.\r\n\r\nI tried figuring out what caused the change via git bisect, but there were so many project structure changes between the two major versions that the approach proved impractical. I also tried every pre-release build of the 1.68 series I could get my hands on, and they all behaved the same way.",
+        "createdAt": "2020-06-15T15:23:37",
+        "reactions": []
+      },
+      {
+        "id": 649850349,
+        "author": "mattleibow",
+        "body": "Could you try the v2.80 and v2.84 preview packages. I think Google changed something in the colorspace processing either on the load or save... Not sure if it is for the better...\r\n\r\nIf you open the image in Chrome, then usually it is fine. Maybe they introduced a bug that they never spotted...\r\n\r\nI\u0027ll try bump to the very latest Google code and we can test that, but for now, v2.84 is the most recent.",
+        "createdAt": "2020-06-25T22:31:42",
+        "reactions": []
+      },
+      {
+        "id": 649879498,
+        "author": "SapientGuardian",
+        "body": "Thanks for getting back to me. 2.80.0-preview.14 looks _much_ closer to 1.68.3, but is still noticeably different when compared side by side. I\u0027ve attached the rendering from 2.80.0-preview.14.\r\n\r\nYou mentioned a v2.84 preview package, but I didn\u0027t see that on nuget or on the public azure pipelines page. Where can I get that?\r\n\r\n![280](https://user-images.githubusercontent.com/14796343/85807568-4e606c80-b720-11ea-81d7-8278aee64765.jpg)\r\n",
+        "createdAt": "2020-06-26T00:16:38",
+        "reactions": []
+      },
+      {
+        "id": 650013532,
+        "author": "mattleibow",
+        "body": "You can check the preview feed https://aka.ms/skiasharp-eap/index.json\n\nThey might have done something bad... What happens when you export as png, jpg or webp? Are they all wrong? ",
+        "createdAt": "2020-06-26T07:02:22",
+        "reactions": []
+      },
+      {
+        "id": 650120009,
+        "author": "SapientGuardian",
+        "body": "Thanks. The outputs from 2.84.0-pr.1321.8 are identical to 2.80.0-preview.14. I tried saving to png, jpg, and webp, and they all looked the same. I also tried opening them in Chrome and the default Windows \u0022Photos\u0022 viewer, and they render the same.",
+        "createdAt": "2020-06-26T11:00:36",
+        "reactions": []
+      },
+      {
+        "id": 657638129,
+        "author": "SapientGuardian",
+        "body": "Analyzing the output from 2.80, even though it is different from 1.60 I believe it to be more accurate (i.e. if I apply the watermark by hand in photoshop, it looks more like the 2.80 output than the 1.60). 1.68 was definitely broken, though. I\u0027m going to revisit my watermarks with the 2.80 output, rather than try to get them to render like 1.60. We can call this fixed. Thanks!",
+        "createdAt": "2020-07-13T15:46:54",
+        "reactions": []
+      },
+      {
+        "id": 658115301,
+        "author": "mattleibow",
+        "body": "Yeah. In the 2.80 series, Google basically reworked the colorspaces. I managed to keep the .NET API the same, but much has changed under the hood. I don\u0027t think the images were even created properly previously. ",
+        "createdAt": "2020-07-14T10:58:38",
+        "reactions": []
+      }
+    ]
+  }
 }

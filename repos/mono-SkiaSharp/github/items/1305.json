@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T06:01:36",
   "closedAt": "2020-10-13T23:20:15",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:40.8680676Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 632683194,
+        "author": "Gillibald",
+        "body": "What do you expect when you write \u0060SKTypeface.FromFamilyName(\u0022T\u0022)\u0060? Should it also load a typeface named \u0060Times New Roman\u0060? The font family is called \u0060Times New Roman\u0060 and just writing \u0060Times\u0060 is a mistake.",
+        "createdAt": "2020-05-22T13:11:33",
+        "reactions": []
+      },
+      {
+        "id": 632689651,
+        "author": "VijayRM",
+        "body": "you are correct but unfortunately GDI\u002B returns correct font family name. As we using SkiaSharp, as a alternate to  GDI\u002B our customer reported as defect.\r\n\r\nSo, do we need to implement some mapping to get similar to GDI\u002B result. ",
+        "createdAt": "2020-05-22T13:26:20",
+        "reactions": []
+      },
+      {
+        "id": 708061228,
+        "author": "mattleibow",
+        "body": "@VijayRM this might be something that you might have to do. For example, you can first try the direct lookup, and if that fails use the \u0060SKFontManager.FontFamilies\u0060 property to get all the available families. This could give you more control on all the platforms to find fonts that match what you are looking for - for example do a \u0022starts with\u0022 search as well.",
+        "createdAt": "2020-10-13T23:20:15",
+        "reactions": []
+      }
+    ]
+  }
 }

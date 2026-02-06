@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T03:02:33",
   "closedAt": "2020-07-15T01:39:10",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:54.7189283Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 658204546,
+        "author": "ziriax",
+        "body": "Oh btw, it seems \u0060--skipExternals\u0060 doesn\u0027t accept multiple tokens anymore, this now gives the error:\r\n\r\n\u0060\u0060\u0060\r\n ./bootstrapper.ps1 --target=libs --skipExternals=\u0022linux,macos\u0022\r\nPreparing to run build script...\r\nRunning build script...\r\nMore than one build script specified.\r\nFor usage, use parameter --help\r\n\u0060\u0060\u0060\r\n\r\nChanging the cake code to split by semicolon instead of comma, makes it work again.\r\n",
+        "createdAt": "2020-07-14T14:13:36",
+        "reactions": []
+      },
+      {
+        "id": 658263499,
+        "author": "mattleibow",
+        "body": "This is already there with the format \u0060--target=externals-\u003Cnative\u003E\u0060. Where \u0060\u003Cnative\u003E\u0060 matches the name of the \u0022native\u0022 folder.\r\n\r\nFor example, to build just iOS, do \u0060externals-ios\u0060. \r\n\r\nThis is generated from the folder names:\r\nhttps://github.com/mono/SkiaSharp/blob/master/cake/externals.cake#L7-L18",
+        "createdAt": "2020-07-14T15:58:43",
+        "reactions": []
+      },
+      {
+        "id": 658264437,
+        "author": "mattleibow",
+        "body": "But the semicolon issue might break macos. I would have it split on both \u0060;\u0060 and \u0060,\u0060. Then i should work everywhere.",
+        "createdAt": "2020-07-14T16:00:21",
+        "reactions": []
+      },
+      {
+        "id": 658282074,
+        "author": "ziriax",
+        "body": "Oh nice. Didn\u0027t think of that. Then please ignore my PR.",
+        "createdAt": "2020-07-14T16:31:44",
+        "reactions": []
+      },
+      {
+        "id": 658495634,
+        "author": "mattleibow",
+        "body": "No prob. Thanks for the issues and general seconds set of eyes. ",
+        "createdAt": "2020-07-15T01:39:07",
+        "reactions": []
+      }
+    ]
+  }
 }

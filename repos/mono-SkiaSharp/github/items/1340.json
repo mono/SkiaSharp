@@ -14,5 +14,74 @@
   "updatedAt": "2022-08-19T06:01:17",
   "closedAt": "2020-06-20T20:07:04",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:15.2575022Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 645297539,
+        "author": "mattleibow",
+        "body": "What version are you looking to build? For the v1.68 series, this will involve you updating this file and change it to \u0060static_library\u0060\r\nhttps://github.com/mono/skia/blob/v1.68.3/BUILD.gn#L1024\r\n\r\nFor the new v2.80 series (which I will recommend you using), this just involves the normal build, but additionally passing \u0060is_static_skiasharp=true\u0060 to \u0060args\u0060.",
+        "createdAt": "2020-06-17T10:41:35",
+        "reactions": []
+      },
+      {
+        "id": 645342719,
+        "author": "dotaheor",
+        "body": "sorry, I meant \u0060is_component_build=false\u0060 doesn\u0027t work.\r\n\r\nI checked out v2.80.0-preview.3, but it looks \u0060is_static_skiasharp\u0060 is not recognized, and \u0060is_component_build=false\u0060 still doesn\u0027t work.",
+        "createdAt": "2020-06-17T12:26:38",
+        "reactions": []
+      },
+      {
+        "id": 645480129,
+        "author": "mattleibow",
+        "body": "That is correct, \u0060is_component_build=false\u0060 will not work as that is just for the parts that make up libSkiaSharp. You will have to modify this line: https://github.com/mono/skia/blob/v1.68.3/BUILD.gn#L1024\r\n\r\nBut, try the preview 12 of skia, that should do it. You will also need to use the new managed files as well - on NuGet today.",
+        "createdAt": "2020-06-17T16:29:26",
+        "reactions": []
+      },
+      {
+        "id": 645534899,
+        "author": "mattleibow",
+        "body": "The reason that I have separate build type for the SkiaSharp target is because if I do \u0060is_component_build=true\u0060, then all the variaous libraries are separate files and you will have to include all of them into the app.",
+        "createdAt": "2020-06-17T18:08:26",
+        "reactions": []
+      },
+      {
+        "id": 645919257,
+        "author": "dotaheor",
+        "body": "Thanks very much the help.\r\n\r\nI\u0027m a little confused now. For the \u0022the preview 12\u0022, I didn\u0027t find the \u0022the preview 12\u0022 tag in the \u0060mono/skia\u0060 project. Do you mean it is a tag in this \u0060mono/SkiaSharp\u0060 project? However, I haven\u0027t found how to build \u0060mono/SkiaSharp\u0060 on Linux.\r\n\r\nWhat\u0027s the relation of the two projects? Do I need build \u0060mono/skia\u0060 firstly, then build \u0060mono/SkiaSharp\u0060? If don\u0027t care about C#, then do I need to build the \u0060mono/SkiaSharp\u0060 project?\r\n\r\nModifying the BUILD.gn file, from \u0060shared_library\u0060 to \u0060static_library\u0060, works. Thanks!\r\n\r\n",
+        "createdAt": "2020-06-18T10:04:39",
+        "reactions": []
+      },
+      {
+        "id": 645981106,
+        "author": "mattleibow",
+        "body": "I meant the preview 12 as in the tag: https://github.com/mono/skia/releases/tag/v2.80.0-preview.12\r\nThe reason being that I actually did just what you were trying to do in this commit, but with a option to do either: https://github.com/mono/skia/commit/a697b65c4ceedea7934a914cf66ad9c4552d6bd2\r\n\r\nBut, if changing the type on the gn works, then that should do it. \r\n\r\nThe relationship between the two projects is that the SkiaSharp bit builds the native skia bit first, then the managed code. But, yes, if you aren\u0027t needing the C#, then just building skia is good.\r\n\r\nWhat are you doing with the static library? Are you just using the headers in a C\u002B\u002B app?",
+        "createdAt": "2020-06-18T12:18:09",
+        "reactions": []
+      },
+      {
+        "id": 646724672,
+        "author": "dotaheor",
+        "body": "Many thanks for the new information!\r\n\r\nI misused the git command so that I failed to pull the preview.12 and preview.14 to local.\r\n\r\nIt looks when \u0060is_component_build\u0060 is set \u0060false\u0060, both \u0060libSkiaSharp.a\u0060 and \u0060libSkiaSharp.so\u0060 are outputted. When \u0060is_component_build\u0060 is set \u0060false\u0060 and \u0060is_static_skiasharp\u0060 is set \u0060true\u0060, then a \u0060libskia.a\u0060 and a \u0060libSkiaSharp.a\u0060 files are outputted. Are these expected behaviors? Should I use both of the two args?\r\n\r\n\u003E What are you doing with the static library? Are you just using the headers in a C\u002B\u002B app?\r\n\r\nI plan to make a binding for another language.\r\n\r\n",
+        "createdAt": "2020-06-19T16:14:03",
+        "reactions": []
+      },
+      {
+        "id": 646731785,
+        "author": "mattleibow",
+        "body": "Things may have changed, but I use \u0060is_component_build\u0060 to make sure that all the intermediate libraries are \u0060.a\u0060, and then control the final \u0060libSkiaSharp\u0060 with \u0060is_static_skiasharp\u0060. Even though \u0060libskia.a\u0060 is there, that is not the real thing because it only has the bits from Google - although that might just be all you need. \u0060libSkiaSharp.a\u0060 is all the extra APIs that are added to help with interop (https://github.com/mono/skia/tree/xamarin-mobile-bindings/include/xamarin)\r\n\r\n",
+        "createdAt": "2020-06-19T16:29:58",
+        "reactions": []
+      },
+      {
+        "id": 646922673,
+        "author": "dotaheor",
+        "body": "Thanks very much for the valuable information!\r\nFell free to close this thread.",
+        "createdAt": "2020-06-20T02:24:51",
+        "reactions": []
+      }
+    ]
+  }
 }

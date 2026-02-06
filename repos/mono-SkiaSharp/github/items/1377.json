@@ -27,5 +27,55 @@
   "updatedAt": "2022-08-19T03:02:47",
   "closedAt": "2021-03-30T15:30:48",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:35.5313336Z",
+    "reactions": [
+      {
+        "user": "daltonks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:35.5313389Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 673235288,
+        "author": "daltonks",
+        "body": "I came across the same issue and found a workaround. You can listen for \u0060SKGLView.SizeChanged\u0060 and \u0060InvalidateSurface\u0060 whenever it\u0027s fired (this works for 2.80 at least, maybe it will for 1.68 as well).",
+        "createdAt": "2020-08-13T03:44:15",
+        "reactions": [
+          {
+            "user": "vpapenko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:35.121358Z"
+          }
+        ]
+      },
+      {
+        "id": 674212907,
+        "author": "mattleibow",
+        "body": "Thanks @vpapenko for reporting this and thanks @daltonks  for the workaround.\r\n\r\nThis is a weird thing. Looking at the code, I am listening to the size event in the underlying UWP control. And I am requesting a redraw there too.\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.UWP/AngleSwapChainPanel.cs#L158-L179\r\n\r\nHowever, it looks that when the view changes, triggers a redraw, the underlying GL surface has not yet been recreated yet, so it is the old size. I think forms runs a little later, so it has had time to recreate the GL surface.\r\n\r\nI\u0027ll have a look and see if there is some other event that needs to be subscribed to in order to get notified when the actual GL surface changes.",
+        "createdAt": "2020-08-14T18:45:46",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:35.3014611Z"
+          },
+          {
+            "user": "vpapenko",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:35.3014616Z"
+          }
+        ]
+      },
+      {
+        "id": 811104270,
+        "author": "vpapenko",
+        "body": "\uD83D\uDC4D ",
+        "createdAt": "2021-03-31T14:17:48",
+        "reactions": []
+      }
+    ]
+  }
 }

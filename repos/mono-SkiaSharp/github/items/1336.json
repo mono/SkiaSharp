@@ -14,5 +14,60 @@
   "updatedAt": "2022-08-19T06:01:18",
   "closedAt": "2020-10-13T23:42:07",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:12.6842342Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 644142271,
+        "author": "MhAllan",
+        "body": "Apparently they share underlying arrays",
+        "createdAt": "2020-06-15T13:41:04",
+        "reactions": []
+      },
+      {
+        "id": 644452580,
+        "author": "mattleibow",
+        "body": "Reoping this just in case it is a skia issue. The pixels should not be the same and it should be a full copy. I\u0027ll have a look and see what is happening.",
+        "createdAt": "2020-06-16T00:03:43",
+        "reactions": []
+      },
+      {
+        "id": 645098476,
+        "author": "MhAllan",
+        "body": "great! I am happy this is not by design.",
+        "createdAt": "2020-06-17T01:47:26",
+        "reactions": []
+      },
+      {
+        "id": 645236787,
+        "author": "ziriax",
+        "body": "Yes, this is certainly a bug, writing to a bitmap should not alter the internally shared memory buffer, that is actually an implementation detail, conceptually each bitmap/image acts as a copy IMHO",
+        "createdAt": "2020-06-17T08:35:46",
+        "reactions": []
+      },
+      {
+        "id": 708067756,
+        "author": "mattleibow",
+        "body": "I had a look at the code and I think I see what is happening here:\r\n\r\nThe \u0060Bitmap\u0060 property setter overwrites both the \u0060_original\u0060 _and_ the \u0022working\u0022 \u0060_bitmap\u0060. When you then create the new bitmap with \u0060Bitmap = new SKBitmap(newWidth, newHeight);\u0060, you are actually overwriting everything.\r\n\r\nYou might be wanting to do this instead?\r\n\r\n\u0060\u0060\u0060csharp\r\n_bitmap = new SKBitmap(newWidth, newHeight);\r\noriginalCopy.ScalePixels(_bitmap, SKFilterQuality.None);\r\n\u0060\u0060\u0060\r\n\r\nOriginal source:\r\n\r\n\u0060\u0060\u0060csharp\r\npublic class ImageEditor : SKCanvasView\r\n{\r\n    SKBitmap _original;\r\n    SKBitmap _bitmap;\r\n\r\n    public SKBitmap Bitmap\r\n    {\r\n        get =\u003E _bitmap;\r\n        set =\u003E _bitmap = _original = value;\r\n    }\r\n\r\n    protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)\r\n    {\r\n        var canvas = e.Surface.Canvas;\r\n\r\n        canvas.Clear();\r\n        canvas.DrawBitmap(Bitmap, 0, 0);\r\n    }\r\n\r\n    public void Resize()\r\n    {\r\n        using (var originalCopy = _original.Copy())\r\n        {\r\n            var width = originalCopy.Width;\r\n            var height = originalCopy.Height;\r\n\r\n            var newWidth = width / 10;\r\n            var newHeight = height / 10;\r\n\r\n            Bitmap = new SKBitmap(newWidth, newHeight);\r\n\r\n            originalCopy.ScalePixels(Bitmap, SKFilterQuality.None);\r\n\r\n            InvalidateSurface();\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-10-13T23:42:07",
+        "reactions": []
+      },
+      {
+        "id": 709034393,
+        "author": "MhAllan",
+        "body": "\uD83D\uDE11 .. was long time, that moment when you get blank, sorry for bothering :( ",
+        "createdAt": "2020-10-15T09:25:27",
+        "reactions": []
+      },
+      {
+        "id": 709434873,
+        "author": "mattleibow",
+        "body": "No prob at all. ",
+        "createdAt": "2020-10-15T16:16:30",
+        "reactions": []
+      }
+    ]
+  }
 }

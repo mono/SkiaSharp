@@ -14,5 +14,80 @@
   "updatedAt": "2022-08-19T03:02:13",
   "closedAt": "2020-08-21T20:34:13",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:28.7451952Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 671064021,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. I had a look and this is a result of the public builds not running, and are actually disabled due to reasons.\r\n\r\nSo, I have switched this using the preview NuGet feed as a temporary/permanent storage with specific IDs. I will update the docs once the changes are merged in.\r\n\r\nThe MSBuild errors are hiding the real issue. If you look at the output, you should see the real error - I think this is a result of the multitargeting not working perfectly in the IDE.",
+        "createdAt": "2020-08-09T15:14:29",
+        "reactions": []
+      },
+      {
+        "id": 671069354,
+        "author": "mattleibow",
+        "body": "The reason for the errors with your test project, it is because all the projects automatically get some assembly info generated from the VERSIONS.txt.\r\n\r\nI do need to document this, but all you have to do is add some properties to your new csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003C!-- by default, all assemblies are strong named, but some cannot, such as the Forms ones --\u003E\r\n\u003CSignAssembly\u003Efalse\u003C/SignAssembly\u003E\r\n\r\n\u003C!-- because I can\u0027t quite use multitargeting for all cases, this property represents the \u0022NuGet ID\u0022 --\u003E\r\n\u003CPackagingGroup\u003ESkiaSharp.Views.BlazorBindings\u003C/PackagingGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nOnce you have those elements in your csproj, you just need to add a line to the \u0060VERSIONS.txt\u0060 (somewhere under the \u0060# nuget versions\u0060 heading) at the repo root:\r\n\r\n\u0060\u0060\u0060\r\nSkiaSharp.Views.BlazorBindings      nuget       2.80.2\r\n\u0060\u0060\u0060\r\n\r\n\u003E NOTE: the ID can really be anything that best suits the NuGet/library.\r\n\r\nThat should be all that it takes to get a project building. After the build, all the artifacts are then copied to the \u0060output\u0060 directory into the correct folders. This \u0060PackagingGroup\u0060 will make sure to correctly place files. \r\n\r\nLet\u0027s keep this issue open, and once you have a working process, I\u0027ll create a wiki with all the steps and explanations to future library contributions are easier. I haven\u0027t really added new libraries recently, so I think I may have forgotten some gotchas that you will find \uD83D\uDE04 \r\n\r\nThanks for looking into this.",
+        "createdAt": "2020-08-09T16:01:26",
+        "reactions": []
+      },
+      {
+        "id": 671100131,
+        "author": "mattleibow",
+        "body": "So I fixed things with the script, so the new master should be working.\r\n\r\nJust an FYI, I think the content is hosted in East US, so everything is crazy slow when outside that region. I am trying to get something working on this...",
+        "createdAt": "2020-08-09T20:57:19",
+        "reactions": []
+      },
+      {
+        "id": 671112076,
+        "author": "lachlanwgordon",
+        "body": "Thanks for all your tips, I\u0027ll give it a go tonight.",
+        "createdAt": "2020-08-09T23:09:26",
+        "reactions": []
+      },
+      {
+        "id": 671113737,
+        "author": "mattleibow",
+        "body": "Just in case the download is longer than your lifetime, I also just uploaded the native files to my OneDrive: https://1drv.ms/u/s!AtbUuIrDNX_5rdJUAsENP3UAy48ozA?e=uKf3we\r\n\r\nYou can just extract that into the output folder. The result should have a list of platforms in the \u0060./output/native\u0060 folder. For example: \u0022output/native/windows\u0022, \u0022output/native/android\u0022, etc.",
+        "createdAt": "2020-08-09T23:26:03",
+        "reactions": []
+      },
+      {
+        "id": 678481173,
+        "author": "mattleibow",
+        "body": "Closing this issue as I will be creating a wiki now.",
+        "createdAt": "2020-08-21T20:34:13",
+        "reactions": []
+      },
+      {
+        "id": 678489565,
+        "author": "mattleibow",
+        "body": "Wiki found here: https://github.com/mono/SkiaSharp/wiki/Creating-New-Libraries",
+        "createdAt": "2020-08-21T20:57:22",
+        "reactions": []
+      },
+      {
+        "id": 678569560,
+        "author": "lachlanwgordon",
+        "body": "Yay, thanks for your help and for WIKIing it. I didn\u0027t end up needing to build SkiaSharp because we moved the feature to Mobile Blazor Bindings repo, but hopefully I\u0027ll contribute to SkiaSharp at some point.",
+        "createdAt": "2020-08-22T00:50:03",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:28.4655052Z"
+          }
+        ]
+      },
+      {
+        "id": 678685240,
+        "author": "mattleibow",
+        "body": "I created the wiki anyways just to collect information for any future contributors. Trying to never get anyone to say \u0022it was a bit difficult\u0022 \uD83D\uDE04 ",
+        "createdAt": "2020-08-22T19:51:26",
+        "reactions": []
+      }
+    ]
+  }
 }

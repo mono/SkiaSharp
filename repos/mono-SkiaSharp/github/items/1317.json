@@ -15,5 +15,64 @@
   "updatedAt": "2022-08-19T06:01:26",
   "closedAt": "2020-07-24T01:05:34",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:59.7933567Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 638743150,
+        "author": "Gillibald",
+        "body": "You need to set \u0060is_official_build=false\u0060 https://github.com/mono/SkiaSharp/blob/master/native/windows/build.cake#L26",
+        "createdAt": "2020-06-04T09:46:16",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:58.6318041Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:13:58.6318045Z"
+          }
+        ]
+      },
+      {
+        "id": 638766869,
+        "author": "ziriax",
+        "body": "Thanks for that.\r\n\r\nWould it make sense to have these set to \u0060false\u0060 automatically when passing \u0060Debug\u0060 to the \u0060-c|--configuration\u0060 arg? The latter seems to specify the MSBuild configuration, somehow it feels logical that the .NET debug build would use native debug bits too?\r\n\r\n\r\n",
+        "createdAt": "2020-06-04T10:34:35",
+        "reactions": []
+      },
+      {
+        "id": 638828261,
+        "author": "ziriax",
+        "body": "Just in case other people need this, I also had to add the \u0060clang\u0060 \u0060cflag\u0060  \u0060-Wno-everything\u0060 in \u0060externals\\skia\\gn\\BUILD.gn\u0060, otherwise the compiler choked on various warnings that were promoted to errors.\r\n\r\nAnd instead of wasting hours to get this done, good advise might also be to read the Skia comments, in my case the reason for \u0060ReadPixels\u0060 returning \u0060false\u0060 was trying to convert from \u0060kPremul\u0060 to \u0060kOpaque\u0060  , something that no-one asked for it seems, see below. Oh boy, now I realize how spoiled I was with the DirectX debug layer \uD83D\uDE09 \r\n\r\n\u0060\u0060\u0060\r\n/**\r\n *  Returns true if Skia has defined a pixel conversion from the |src| to the |dst|.\r\n *  Returns false otherwise.  Some discussion of false cases:\r\n *      We will not convert to kIndex8 unless it exactly matches the src, since color tables\r\n *      are immutable.\r\n *      We do not convert to kGray8 when the |src| is not kGray8 in the same color space.\r\n *      We may add this feature - it just requires some work to convert to luminance while\r\n *      handling color spaces correctly.  Currently no one is asking for this.\r\n *      We will not convert from kAlpha8 when the |dst| is not kAlpha8.  This would require\r\n *      inventing color information.\r\n *      We will not convert to kOpaque when the |src| is not kOpaque.  This could be\r\n *      implemented to set all the alpha values to 1, but there is still some ambiguity -\r\n *      should we use kPremul or kUnpremul color values with the opaque alphas?  Or should\r\n *      we just use whatever the |src| alpha is?  In the future, we could choose to clearly\r\n *      define this, but currently no one is asking for this feature.\r\n *      We will not convert to a particular color space if |src| is nullptr.  The color space\r\n *      conversion is not well-defined.\r\n */\r\nstatic inline bool SkImageInfoValidConversion(const SkImageInfo\u0026 dst, const SkImageInfo\u0026 src) {\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2020-06-04T12:53:12",
+        "reactions": []
+      },
+      {
+        "id": 638854152,
+        "author": "mattleibow",
+        "body": "@Ziriax \r\n\r\n\u003E Would it make sense to have these set to false automatically when passing Debug to the -c|--configuration arg? The latter seems to specify the MSBuild configuration, somehow it feels logical that the .NET debug build would use native debug bits too?\r\n\r\nThanks for the feedback, I\u0027ll update the cake tasks.",
+        "createdAt": "2020-06-04T13:39:44",
+        "reactions": []
+      },
+      {
+        "id": 638886275,
+        "author": "ziriax",
+        "body": "@mattleibow  Super! Please note that I also had to tweak the clang compiler settings, see my other comment (this might be because I\u0027m using a newer version of LLVM than the M68 branch on which master is based)\r\n\r\n\r\n",
+        "createdAt": "2020-06-04T14:30:47",
+        "reactions": []
+      },
+      {
+        "id": 663304605,
+        "author": "mattleibow",
+        "body": "Closing as this was added in #1418 ",
+        "createdAt": "2020-07-24T01:05:34",
+        "reactions": []
+      }
+    ]
+  }
 }

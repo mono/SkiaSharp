@@ -14,5 +14,87 @@
   "updatedAt": "2022-08-19T03:02:42",
   "closedAt": "2020-07-08T19:33:10",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:42.9301567Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 655612663,
+        "author": "Gillibald",
+        "body": "I can get around this issue by using HarfBuzz to do the measures but still, this is somehow unexpected. OSX and Windows produce the expected results.",
+        "createdAt": "2020-07-08T16:07:08",
+        "reactions": []
+      },
+      {
+        "id": 655624175,
+        "author": "mattleibow",
+        "body": "Let me have a look.",
+        "createdAt": "2020-07-08T16:28:52",
+        "reactions": []
+      },
+      {
+        "id": 655672608,
+        "author": "mattleibow",
+        "body": "Might actually be related: https://github.com/mono/SkiaSharp/issues/1350\r\n\r\nSeems linux is using some weird compressed text or something.",
+        "createdAt": "2020-07-08T18:05:22",
+        "reactions": []
+      },
+      {
+        "id": 655674308,
+        "author": "Gillibald",
+        "body": "This was measured properly with the current version (1.68.3) on the same system ",
+        "createdAt": "2020-07-08T18:09:03",
+        "reactions": []
+      },
+      {
+        "id": 655676539,
+        "author": "mattleibow",
+        "body": "Yeah. Something changed in the linux rendering and measuring. Looking at that now. If you compare windows and linux, linux is more compressed.",
+        "createdAt": "2020-07-08T18:13:44",
+        "reactions": []
+      },
+      {
+        "id": 655691999,
+        "author": "mattleibow",
+        "body": "Interesting, I set the \u0060SKPaint.IsLinearText = true\u0060 and now I get floating points on Linux and it now matches Windows.\r\n\r\nSeems this triggers the original logic to do the advanced calc: https://github.com/google/skia/blob/chrome/m80/src/ports/SkFontHost_FreeType.cpp#L1062\r\n\r\nPreviously: https://github.com/google/skia/blob/chrome/m68/src/ports/SkFontHost_FreeType.cpp#L975\r\n\r\nSeems to be the same logic... Maybe the defaults changed...",
+        "createdAt": "2020-07-08T18:46:48",
+        "reactions": []
+      },
+      {
+        "id": 655703131,
+        "author": "mattleibow",
+        "body": "@Gillibald I am having a look at this and it appears that v1.68.3 did not have floating point widths on Windows either. Seems the new functionality is to use floating points on Windows, but kept the original logic on Linux.\r\n\r\n[TEST.zip](https://github.com/mono/SkiaSharp/files/4892749/TEST.zip)\r\n",
+        "createdAt": "2020-07-08T19:11:24",
+        "reactions": []
+      },
+      {
+        "id": 655713078,
+        "author": "mattleibow",
+        "body": "@Gillibald closing this as a duplicate of #1350 ",
+        "createdAt": "2020-07-08T19:33:10",
+        "reactions": []
+      },
+      {
+        "id": 655914294,
+        "author": "Gillibald",
+        "body": "Setting \u0060IsLinearText=true\u0060 works",
+        "createdAt": "2020-07-09T05:44:47",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:42.6237331Z"
+          }
+        ]
+      },
+      {
+        "id": 655924530,
+        "author": "mattleibow",
+        "body": "I am going to keep the other issue open so I can make sure I have a look at what happens in the later versions of skia. Also, is the linear metrics the new default. How does that affect things. Should we enable it by default... ",
+        "createdAt": "2020-07-09T06:15:41",
+        "reactions": []
+      }
+    ]
+  }
 }

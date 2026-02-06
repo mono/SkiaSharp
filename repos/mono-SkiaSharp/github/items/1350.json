@@ -15,5 +15,129 @@
   "updatedAt": "2022-08-19T03:02:54",
   "closedAt": "2020-08-01T11:15:46",
   "commentCount": 16,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:26.2066658Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 648870967,
+        "author": "Gillibald",
+        "body": "You are just not using the same physical font. Better load the typeface via stream.",
+        "createdAt": "2020-06-24T14:53:39",
+        "reactions": []
+      },
+      {
+        "id": 648878102,
+        "author": "MadhanKumarasamy",
+        "body": "\u003E You are just not using the same physical font. Better load the typeface via stream.\r\n\r\nHi @Gillibald ,\r\n\r\nBut I have physical copy the Calibri font to the Linux container.",
+        "createdAt": "2020-06-24T15:05:20",
+        "reactions": []
+      },
+      {
+        "id": 648884201,
+        "author": "Gillibald",
+        "body": "Is it properly registered with Fontconfig? Otherwise, it will not be found. Also, make sure that \u0060sKPaint.Typeface.Name\u0060 matches the right name.",
+        "createdAt": "2020-06-24T15:15:43",
+        "reactions": []
+      },
+      {
+        "id": 649459450,
+        "author": "MadhanKumarasamy",
+        "body": "\u003E Is it properly registered with Fontconfig? Otherwise, it will not be found. Also, make sure that \u0060sKPaint.Typeface.Name\u0060 matches the right name.\r\n\r\nHi @Gillibald ,\r\n\r\nI am properly copying the font to Linux Docker and I have checked the \u0060sKPaint.Typeface.Name\u0060. please find the screenshot below. \r\n\u003Cimg width=\u0022234\u0022 alt=\u0022fontName\u0022 src=\u0022https://user-images.githubusercontent.com/48026813/85704801-44c60d00-b6fe-11ea-9fb9-544c0d3df2ae.png\u0022\u003E\r\n",
+        "createdAt": "2020-06-25T10:40:02",
+        "reactions": []
+      },
+      {
+        "id": 649876328,
+        "author": "mattleibow",
+        "body": "I also saw this, almost all the values are the same except that one. When measuring characters, I also notice a 1px width difference in some characters.\r\n\r\nHowever, this might just be the case of different engines for text. Windows uses DirectWrite and Linux uses FontConfig.\r\n\r\nI would even ask on the skia forums and maybe they can have more insight: https://groups.google.com/forum/#!forum/skia-discuss",
+        "createdAt": "2020-06-26T00:04:49",
+        "reactions": []
+      },
+      {
+        "id": 652875255,
+        "author": "MadhanKumarasamy",
+        "body": "Hi,\r\n\r\nI have checked the \u0060sKPaint.FontMetrics.Leading\u0060 value for Calibri font in both environment.\r\n**In Windows:**\r\n- Ascent value - 10.47. \r\n- Leading value - 0.\r\n\r\n**In Linux Docker** \r\n- Ascentvalue - 8.25.\r\n- Leading value - 2.42.\r\n\r\nThen added the leading value and ascent value from the Linux docker and it is equal to the windows ascent value. All I want is the same ascent value as Windows. So, I just want to know, can we add the leading value to the ascent value?",
+        "createdAt": "2020-07-02T08:45:07",
+        "reactions": []
+      },
+      {
+        "id": 652894028,
+        "author": "Gillibald",
+        "body": "Just use \u0060HarfBuzzSharp\u0060 and you get consistent results",
+        "createdAt": "2020-07-02T09:20:55",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:24.1837154Z"
+          }
+        ]
+      },
+      {
+        "id": 655714042,
+        "author": "mattleibow",
+        "body": "This seems very much related to #1390 \r\n\r\n\u003E Interesting, I set the \u0060SKPaint.IsLinearText = true\u0060 and now I get floating points on Linux and it now matches Windows.\r\n\u003E\r\n\u003E Seems this triggers the original logic to do the advanced calc: https://github.com/google/skia/blob/chrome/m80/src/ports/SkFontHost_FreeType.cpp#L1062\r\n\u003E\r\n\u003E Previously: https://github.com/google/skia/blob/chrome/m68/src/ports/SkFontHost_FreeType.cpp#L975\r\n\u003E\r\n\u003E Seems to be the same logic... Maybe the defaults changed...\r\n\r\n\r\n\u003E I am having a look at this and it appears that v1.68.3 did not have floating point widths on Windows either. Seems the new functionality is to use floating points on Windows, but kept the original logic on Linux.\r\n\r\nHowever, the reverse is true for the Ascent. Seems Windows had the Ascent of only integers, and Linux used floating points \u00AF\\\\_(\u30C4)_/\u00AF\r\n\r\nBut, seems setting \u0060IsLinearText = true\u0060 makes everyone work?",
+        "createdAt": "2020-07-08T19:35:11",
+        "reactions": []
+      },
+      {
+        "id": 655718334,
+        "author": "mattleibow",
+        "body": "Seems some logic changed from sub-pixel to linear logic in a few places...\r\n\r\nm68: https://github.com/google/skia/blob/chrome/m68/src/ports/SkFontHost_win.cpp#L718\r\nm80: https://github.com/google/skia/blob/chrome/m80/src/ports/SkFontHost_win.cpp#L742\r\n\r\nhttps://github.com/google/skia/commit/f460eeec99dc09408c7903b582ab90995faf2f7c or on Googles source: https://skia-review.googlesource.com/c/skia/\u002B/209174\r\n\r\n\u003E \u003E  Thanks, Ben - I think it\u0027s great if we can clarify the meaning of this flag. \r\n\u003E \u003E \r\n\u003E \u003E Could you try to give a definition of what is meant by \u0022linear metrics\u0022 and could we put such an extended explanation in the commit message or in the header docs for setLinearMetrics()?\r\n\u003E \u003E \r\n\u003E \u003E Do we need to set the flag to false on the Blink side to bring the mac tests back to subpixel font size scaling behavior? Or can you explain why they fail - or what the expected behavior there should be for that font?\r\n\u003E \r\n\u003E This is going to take a bit to roll out. The Chromium Mac change is a cff2 font which is being routed through the FreeType backend. FreeType apparently calculates slightly different metrics for this font than the scaled linear metrics.\r\n\u003E \r\n\u003E The actual change here should be that setting \u0022linear metrics\u0022 to true always produces idealized scale-able metrics. By default it is false, meaning that you should get the actual metrics the font says (potentially after hinting or some such). When we roll this out to Chromium FontPlatformData::SetupSkFont will need to be updated to state what it actually means. Before this change allowing subpixel positioning of glyphs and getting linear metrics was all mixed up, this cleanly separates these two requests (we will need a follow-on to rename \u0027subpixel\u0027 to \u0027subpixelPositioning\u0027).\r\n\r\nThis also looks related: https://groups.google.com/g/skia-discuss/c/QibriOiltFk",
+        "createdAt": "2020-07-08T19:44:16",
+        "reactions": []
+      },
+      {
+        "id": 655900858,
+        "author": "Gillibald",
+        "body": "Thanks for having a look at this. Will try that out. Fine for me if it is just a flag that has to be set for better customization.",
+        "createdAt": "2020-07-09T05:00:23",
+        "reactions": []
+      },
+      {
+        "id": 696733333,
+        "author": "VijayRM",
+        "body": "@mattleibow \u0026 @Gillibald - Still this issue occurs in v2.80.2 version. Could you please let me know whether this issue has resolved or any changes required in our side?",
+        "createdAt": "2020-09-22T13:47:34",
+        "reactions": []
+      },
+      {
+        "id": 713429632,
+        "author": "VijayRM",
+        "body": "@mattleibow \u0026 @Gillibald - Could you please look into this ?",
+        "createdAt": "2020-10-21T09:14:20",
+        "reactions": []
+      },
+      {
+        "id": 713436672,
+        "author": "mattleibow",
+        "body": "@VijayRM could you create a new issue?\n\nAlso, could you mention the fonts you are using, the platform versions, and anything else that will help.\n\nIn addition, could you let us know of a few things in this issue you have tried? Maybe some code that you are using to load the font. Is the font leading correctly? ",
+        "createdAt": "2020-10-21T09:26:03",
+        "reactions": []
+      },
+      {
+        "id": 715283793,
+        "author": "VijayRM",
+        "body": "@mattleibow - The original issue reported in this thread was not resolved. Do we want to create new one ?\r\nhttps://github.com/mono/SkiaSharp/issues/1350#issue-644666536\r\n\r\nThe **ascent** value for Calibri font is differs between Windows \u0026 Linux Docker environment. Could you please check this ?\r\n\r\nCode Snippet:\r\n\r\n\u0060\u0060\u0060\r\nSKPaint sKPaint = new SKPaint();\r\nsKPaint.Typeface = SKTypeface.FromFamilyName(\u0022Calibri\u0022, SKFontStyleWeight.Normal, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\nSystem.Diagnostics.Debug.WriteLine(sKPaint.FontMetrics.Ascent);\r\n\u0060\u0060\u0060\r\n\r\n\r\nThe below code is what we are exactly using in our product:\r\n\r\n\u0060\u0060\u0060\r\n\r\n    public class SkPaintExtension : SKPaint\r\n    {\r\n        public SkPaintExtension(Stream stream, float fontSize) : base()\r\n        {\r\n            this.TextSize = fontSize;\r\n            this.IsAntialias = true;\r\n            this.TextEncoding = SKTextEncoding.Utf8;\r\n            //As per the SkiaSharp team suggestion, enabled SubpixelText property to get valid size in Linux.\r\n            this.SubpixelText = true;\r\n            MemoryStream tempStream = new MemoryStream();\r\n            stream.CopyTo(tempStream);\r\n            stream.Position = 0;\r\n            tempStream.Position = 0;\r\n            this.Typeface = SKTypeface.FromStream(tempStream);\r\n        }\r\n    }\r\n\r\n class Program\r\n    {\r\n        \r\n        static void Main(string[] args)\r\n        {\r\n            SkPaintExtension skExtension = new SkPaintExtension(new MemoryStream(File.ReadAllBytes(basePath \u002B @\u0022Fonts\\calibri.ttf\u0022)), 12);\r\n            Console.WriteLine(\u0022Ascent - \u0022 \u002B skExtension.FontMetrics.Ascent);\r\n            Console.WriteLine(\u0022Descent - \u0022 \u002B skExtension.FontMetrics.Descent);\r\n            Console.WriteLine(\u0022Leading - \u0022 \u002B skExtension.FontMetrics.Leading);\r\n}\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**I am using same font file in both platforms.**\r\n\r\nIf you required more details, please let me know. I will share all the possible details.\r\n",
+        "createdAt": "2020-10-23T11:27:14",
+        "reactions": []
+      },
+      {
+        "id": 744171381,
+        "author": "VijayRM",
+        "body": "Could you please provide update on this ?",
+        "createdAt": "2020-12-14T05:12:47",
+        "reactions": []
+      },
+      {
+        "id": 920611040,
+        "author": "ManikandanRavichandranSync",
+        "body": "Any update on this?",
+        "createdAt": "2021-09-16T06:18:05",
+        "reactions": []
+      }
+    ]
+  }
 }

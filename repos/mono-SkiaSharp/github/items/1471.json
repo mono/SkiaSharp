@@ -15,5 +15,32 @@
   "updatedAt": "2022-08-19T03:02:03",
   "closedAt": "2020-08-21T19:41:01",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:43.8175936Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 678428046,
+        "author": "mattleibow",
+        "body": "I believe the typefaces are cached no matter what with a default cache size of 2048.\r\n\r\nThis is for the cases where you for example assign the typeface to a paint object and had that over to the the drawing system. Event though you are no longer referencing the typeface, someone else is. If you dispose the type, you are actually just disposing your reference to it.\r\n\r\nYou can actually track this cache using the ultra-brand-new \u0060SKGraphics\u0060 in the #1473 PR. I did some tests and I can see them being added to the cache. But, as the cache fills up, you can also see them being removed just fine.\r\n\r\nUsing the new members on \u0060SKGraphics\u0060 you can control the total sizes of these caches if you need to.",
+        "createdAt": "2020-08-21T18:26:59",
+        "reactions": []
+      },
+      {
+        "id": 678433388,
+        "author": "mattleibow",
+        "body": "One thing to note about loading form files and streams, there is no real way in which the engine can know that the font is the same. I can very well create a font that overwrites an existing font and have the same name and all that. So, if you are loading fonts and do not want to unnecessarily load duplicates, then a local lookup might be useful.\r\n\r\nFor example, this is a quick and dirty cache:\r\n\r\n\u0060\u0060\u0060csharp\r\n\r\npublic static class QuickFontCache\r\n{\r\n\tprivate static readonly ConcurrentDictionary\u003Cstring, WeakReference\u003CSKTypeface\u003E\u003E cache =\r\n\t\tnew ConcurrentDictionary\u003Cstring, WeakReference\u003CSKTypeface\u003E\u003E();\r\n\r\n\tpublic static SKTypeface Get(string path)\r\n\t{\r\n\t\tpath = path.ToLowerInvariant();\r\n\r\n\t\tif (cache.TryGetValue(path, out var weak) \u0026\u0026 weak.TryGetTarget(out var tf))\r\n\t\t\treturn tf;\r\n\r\n\t\ttf = SKTypeface.FromFile(path);\r\n\t\tcache[path] = new WeakReference\u003CSKTypeface\u003E(tf);\r\n\r\n\t\treturn tf;\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-08-21T18:39:19",
+        "reactions": []
+      },
+      {
+        "id": 678459645,
+        "author": "mattleibow",
+        "body": "Closing this as it is not a bug, but a feature. The new version v2.80.2 will have a way to control these caches.",
+        "createdAt": "2020-08-21T19:41:01",
+        "reactions": []
+      }
+    ]
+  }
 }

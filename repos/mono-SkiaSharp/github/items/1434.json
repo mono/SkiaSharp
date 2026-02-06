@@ -15,5 +15,38 @@
   "updatedAt": "2022-08-19T03:02:21",
   "closedAt": "2020-08-11T13:13:38",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:18.569888Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 667484079,
+        "author": "mattleibow",
+        "body": "I\u0027ll have a look. Thanks for reporting. ",
+        "createdAt": "2020-08-01T06:50:55",
+        "reactions": []
+      },
+      {
+        "id": 671189057,
+        "author": "VijayRM",
+        "body": "@mattleibow - Could you please share the progress of this issue ?",
+        "createdAt": "2020-08-10T06:40:12",
+        "reactions": []
+      },
+      {
+        "id": 671306669,
+        "author": "mattleibow",
+        "body": "@VijayRM I had a look and the issue seems to be that the write is not overwriting the underlying pixel, so the alpha is combining the pixels.\r\n\r\nHowever, since v2, the actual native method for drawing a pixel was removed and the polyfill that I added is not the greatest in terms of performance. I would suggest creating a canvas and the paint object, then drawing the point:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var destination = File.Create(\u0022dest_image.png\u0022);\r\n\r\nusing var source = File.OpenRead(@\u0022source.png\u0022);\r\nusing var bitmap = SKBitmap.Decode(source);\r\nusing var canvas = new SKCanvas(bitmap);\r\nusing var paint = new SKPaint { BlendMode = SKBlendMode.Src };\r\n\r\nfloat correctionFactor = 0.80f;\r\n\r\n// Reduce the picture color brightness\r\nfor (int i = 0; i \u003C bitmap.Width; i\u002B\u002B)\r\n{\r\n    for (int j = 0; j \u003C bitmap.Height; j\u002B\u002B)\r\n    {\r\n        SKColor color = bitmap.GetPixel(i, j);\r\n\r\n        float red = (float)color.Red;\r\n        float green = (float)color.Green;\r\n        float blue = (float)color.Blue;\r\n\r\n        red = (255 - red) * correctionFactor \u002B red;\r\n        green = (255 - green) * correctionFactor \u002B green;\r\n        blue = (255 - blue) * correctionFactor \u002B blue;\r\n\r\n        paint.Color = new SKColor((byte)red, (byte)green, (byte)blue, color.Alpha);\r\n        canvas.DrawPoint(i, j, paint);\r\n    }\r\n}\r\n\r\nusing var temp = SKImage.FromBitmap(bitmap);\r\nusing var data = temp.Encode(SKEncodedImageFormat.Png, 100);\r\nusing var stream = data.AsStream();\r\nstream.CopyTo(destination);\r\n\u0060\u0060\u0060\r\n\r\nFor even better performance, I would also have a look at using a color filter of something similar. This will stop the number of operations from each pixel to a single, one-time operation. For example, \u0060SKColorFilter.CreateLighting\u0060 might be useful or one of the \u0060SKImageFilters\u0060.",
+        "createdAt": "2020-08-10T11:42:33",
+        "reactions": [
+          {
+            "user": "VijayRM",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:18.5202525Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -14,5 +14,38 @@
   "updatedAt": "2022-08-19T03:01:54",
   "closedAt": "2020-09-21T22:49:27",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:57.9934113Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 696419802,
+        "author": "Mikolaytis",
+        "body": "I\u0027ve found, that the reason of the long flush() calls in a most of scenarios is just a small ResourceCacheLimit in GrContext. \r\nIf skia needs more then a cache limit to draw a frame - it will create and delete textures from cache on each frame to draw it. It takes a lot of time. \r\n\r\nAfter enlarging of the ResourceCacheLimit - the problem do not exist anymore, so I don\u0027t need to find a way to run flush in other thread.",
+        "createdAt": "2020-09-21T22:49:16",
+        "reactions": []
+      },
+      {
+        "id": 708090511,
+        "author": "mattleibow",
+        "body": "Thanks for the update on this. Why are there so many textures? Is it related to what you are drawing?",
+        "createdAt": "2020-10-14T00:59:26",
+        "reactions": []
+      },
+      {
+        "id": 710774698,
+        "author": "Mikolaytis",
+        "body": "Yes. In our app users can make really big files with thousands of small textures and some huge textures. Small ResourceCacheLimit is a real sneaky bottleneck. Was really hard to find.",
+        "createdAt": "2020-10-17T08:26:17",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:57.9440168Z"
+          }
+        ]
+      }
+    ]
+  }
 }

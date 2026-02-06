@@ -15,5 +15,53 @@
   "updatedAt": "2022-08-19T06:01:30",
   "closedAt": "2020-06-25T01:00:50",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:13:53.1031467Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 638240585,
+        "author": "ziriax",
+        "body": "I\u0027m facing the same issue. I made a unit  test project (.NET 4.8, Any CPU) that references a .NET Standard 2.0 library (Any CPU), and the latter references SkiaSharp 1.68.3.\r\n\r\nI got the following exception:\r\n\r\n\u0060\u0060\u0060\r\nTest method SkiaUnitTests.SkRenderTargetTests.New_RenderTarget_IsTransparent threw exception: \r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027: The specified module could not be found. (Exception from HRESULT: 0x8007007E)\r\n    at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n\u0060\u0060\u0060\r\n\r\nWhen using ProcMon, it seems the x86 and x64 directories where the \u0060libSkiaSharp.dll\u0060 is located are ignored:\r\n\r\n\u0060\u0060\u0060\r\nC:\\dev\\express\\Source\\Framework\\Solutions\\SkiaUnitTests\\SkiaUnitTests\\bin\\Debug\\libSkiaSharp.DLL =\u003E not found\r\n\u0060\u0060\u0060\r\n\r\nManually copying the \u0060x86\\libSkiaSharp.dll\u0060 to the \u0060Debug\u0060 folder works, but I would like to avoid \r\nthis. \r\n\r\nAny tips?\r\n\r\n\r\n\r\n",
+        "createdAt": "2020-06-03T14:36:50",
+        "reactions": []
+      },
+      {
+        "id": 638242852,
+        "author": "ziriax",
+        "body": "As a temporary workaround, I added the following in a static constructor in my .NET Standard 2.0 project that references SkiaSharp, but this is not a good nor secure solution:\r\n\r\n\u0060\u0060\u0060\r\n\t\t[DllImport(\u0022kernel32.dll\u0022, CharSet = CharSet.Unicode, SetLastError = true)]\r\n\t\t[return: MarshalAs(UnmanagedType.Bool)]\r\n\t\tstatic extern bool SetDllDirectory(string lpPathName);\r\n\r\n\t\tstatic SkGraphicsFactory()\r\n\t\t{\r\n\t\t\tif (Environment.OSVersion.Platform == PlatformID.Win32NT)\r\n\t\t\t{\r\n\t\t\t\t// HACK: Workaround https://github.com/mono/SkiaSharp/issues/1311\r\n\t\t\t\tSetDllDirectory(Environment.Is64BitProcess ? \u0022x64\u0022 : \u0022x86\u0022);\r\n\t\t\t}\r\n\t\t}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-06-03T14:40:30",
+        "reactions": []
+      },
+      {
+        "id": 645467295,
+        "author": "chrisfoulds",
+        "body": "Exact same issue as mine, but mine is on iOS.\r\nHow would I do a similar hack for iOS?\r\nhttps://github.com/mono/SkiaSharp/issues/1304",
+        "createdAt": "2020-06-17T16:05:53",
+        "reactions": []
+      },
+      {
+        "id": 645484934,
+        "author": "mattleibow",
+        "body": "This is slightly different as iOS is supposed to get it right. This issue is really just for the old Full Framework on Windows. The new .NET Core system does not need this. As much as I like Full Framework, it probably will not get fixed any time soon - especially since all the new platforms work.\r\n\r\nNot that this is unimportant, but we are focusing on making .NET Core work best. And, this issue has a decent workaround for now.\r\n\r\n@chrisfoulds I replied to that issue.",
+        "createdAt": "2020-06-17T16:38:23",
+        "reactions": []
+      },
+      {
+        "id": 646361885,
+        "author": "mattleibow",
+        "body": "Fixing this in https://github.com/mono/SkiaSharp/pull/1342",
+        "createdAt": "2020-06-18T23:55:17",
+        "reactions": []
+      },
+      {
+        "id": 649151995,
+        "author": "mattleibow",
+        "body": "Fixed in #1342 and will be in the next version.\r\n\r\nNo longer is libSkiaSharp.dll copied to the root directory as there is no way to know which one is meant to be used. Instead, they are copied into the x86 and x64 sub directories and the library will load the correct one.",
+        "createdAt": "2020-06-25T01:00:50",
+        "reactions": []
+      }
+    ]
+  }
 }

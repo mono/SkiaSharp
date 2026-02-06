@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T03:01:57",
   "closedAt": "2020-09-01T22:18:00",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:54.4981553Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 682013720,
+        "author": "leonbohmann",
+        "body": "To explain this a little further, here is the complete creation of the path. I truncated the \u0060new SKPoint(x,y)\u0060 to just \u0060x,y\u0060.\r\n\r\nThis example is for the first picture.\r\n\u0060\u0060\u0060\r\npath.MoveTo(0,0);\r\npath.LineTo(100,0);\r\npath.LineTo(100,100);\r\npath.LineTo(0,100);\r\npath.LineTo(0,50);\r\npath.LineTo(40,50);\r\npath.ArcTo( ... , false); // creates the correct arc around (40,60)\r\npath.LineTo(0,50);\r\npath.LineTo(0,0);\r\n\u0060\u0060\u0060\r\n\r\nI tried closing the path, as well as simplifying it. No success..",
+        "createdAt": "2020-08-27T15:15:28",
+        "reactions": []
+      },
+      {
+        "id": 682146792,
+        "author": "leonbohmann",
+        "body": "I think I already found a solution for my problem.\r\n\r\nI have to catch, if the angle for the \u0060ArcTo(...)\u0060 Function equals to 360. If that happens, I need to use:\r\n\r\n\u0060\u0060\u0060\r\nPath.MoveTo(origin);\r\nPath.Circle(center.X, center.Y, radius, ...);\r\nPath.MoveTo(next);\r\n\u0060\u0060\u0060\r\n\r\nThis way I get the desired cut-out!",
+        "createdAt": "2020-08-27T19:28:39",
+        "reactions": []
+      },
+      {
+        "id": 682155135,
+        "author": "mattleibow",
+        "body": "Yu could also try closing the path before drawing the arc. \r\n\r\nThere very well might be an optimization that incorrectly closes the path if you add an arc that is 360 degrees and is rotated. The math may be to first check to see if it can be replaced with a circle - which is closed. But an arc is not technically closed.",
+        "createdAt": "2020-08-27T19:46:58",
+        "reactions": []
+      },
+      {
+        "id": 682165366,
+        "author": "leonbohmann",
+        "body": "Hi Matthew!\r\n\r\nThanks for your answer!\r\n\r\nUnfortunately, my approach only works, if there is only one circle added to the path. When adding multiple circles, I get weird connections between the start-points of the circles and the origin, see following:\r\n\r\n![grafik](https://user-images.githubusercontent.com/13386367/91489798-aeef5f80-e8b1-11ea-9b50-fa352a35038e.png)\r\n\r\n\r\nI tried your approach as well, calling \u0060path.Close()\u0060 right before drawing the arc. That doesnt fix the issue. Any idea, where these lines may come from?",
+        "createdAt": "2020-08-27T20:08:35",
+        "reactions": []
+      },
+      {
+        "id": 682210078,
+        "author": "leonbohmann",
+        "body": "Another thing I did to locate this issue is drawing the points of the path in their respective order with a leading \u0022k\u0022. So \u0022k0\u0022 is the first point in \u0060path.Points\u0060.\r\n\r\n![grafik](https://user-images.githubusercontent.com/13386367/91498237-ba498780-e8bf-11ea-82f3-19df219c7ec3.png)\r\n\r\nAs you can see in the bottom left corner, the first three points are correct. Then, when the circle starts, we see a jump from k3 to k6. In the top right corner we see a jump from k15 on the right outer edge to k16 and k17 on the circle start point. Here is where I dont understand what is going on? Why do we see the connection to the last circle start-point AND the origin? This does not occur when using only one circular hole in the rectangle!\r\n\r\nAnother workaround I found, is to create the circle on my own, by rotating a vector by an angle around a circle center using \u0060path.LineTo(center \u002B rotatedRadiusVector)\u0060. To create a smooth circle I used a 5\u00B0 increment on the angle, which gives quite a bunch of point overhead. I\u0027m not sure if this affects performance in any way, when the drawing gets (a lot) more complicated, with possibly thousands of points.",
+        "createdAt": "2020-08-27T21:53:20",
+        "reactions": []
+      }
+    ]
+  }
 }

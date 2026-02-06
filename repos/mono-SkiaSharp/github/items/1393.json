@@ -20,5 +20,154 @@
   "updatedAt": "2022-08-19T03:02:39",
   "closedAt": "2020-08-02T07:38:08",
   "commentCount": 10,
-  "reactionCount": 8
+  "reactionCount": 8,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:14:48.3604008Z",
+    "reactions": [
+      {
+        "user": "InquisitorJax",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:48.3604069Z"
+      },
+      {
+        "user": "InquisitorJax",
+        "content": "eyes",
+        "createdAt": "2026-02-06T14:14:48.3604079Z"
+      },
+      {
+        "user": "multitracks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:48.3604082Z"
+      },
+      {
+        "user": "inforithmics",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:48.3604085Z"
+      },
+      {
+        "user": "Tragetaschen",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:48.3604089Z"
+      },
+      {
+        "user": "J-Swift",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:48.3604092Z"
+      },
+      {
+        "user": "grierson",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:48.3604096Z"
+      },
+      {
+        "user": "softlion",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:14:48.3604098Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 656254877,
+        "author": "mattleibow",
+        "body": "Looking at the sample, seems that it can\u0027t find the native library. It appears that the app is pulling the managed library, but not the framework.\r\n\r\nThis is probably related to #1296 where the native library is not embedded. This fixes issues with upgrades, but seems to break the case where the skiasharp packages were not also installed into the app project.\r\n\r\nI\u0027ll have a look at using the \u0060buildTransitive\u0060 folder as well (#1041 and #1057). \r\n\r\nBut, the easiest and quickest solution is to just install the package into iOS as well. ",
+        "createdAt": "2020-07-09T17:27:52",
+        "reactions": []
+      },
+      {
+        "id": 660092860,
+        "author": "inforithmics",
+        "body": "I had the same problem I fixed it by \r\nDisabling following Build options in the Debug Configuration:\r\n- Enable incremental builds\r\n- Enable device-specific builds\r\n\r\nafterwards it worked.",
+        "createdAt": "2020-07-17T12:59:24",
+        "reactions": [
+          {
+            "user": "TamasRemenyi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:46.6601975Z"
+          },
+          {
+            "user": "michaelstonis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:46.660198Z"
+          },
+          {
+            "user": "rmalmoe",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:46.6601981Z"
+          }
+        ]
+      },
+      {
+        "id": 662775306,
+        "author": "tstuts",
+        "body": "@mattleibow We\u0027re seeing a similar issue in our Xamarin.Mac app. After going from \u00601.68.3\u0060 to \u00602.80.1\u0060 we no longer get \u0060libSkiaSharp.dylib\u0060 in the app bundle. Adding the \u0060SkiaSharp\u0060 package to our app project directly does work as a workaround. Do you want a repro?",
+        "createdAt": "2020-07-23T01:18:42",
+        "reactions": []
+      },
+      {
+        "id": 663318697,
+        "author": "mattleibow",
+        "body": "Hi folks, I think I know what to do for this issue. I\u0027ll update with the next release.\n\nBut, installing SkiaSharp into the head projects is a good  workaround for now. ",
+        "createdAt": "2020-07-24T02:17:43",
+        "reactions": [
+          {
+            "user": "tstuts",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:47.0371691Z"
+          },
+          {
+            "user": "brunck",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:47.0371831Z"
+          },
+          {
+            "user": "tojak",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:14:47.0371833Z"
+          }
+        ]
+      },
+      {
+        "id": 678758765,
+        "author": "freever",
+        "body": "I have installed 2.80.2-preview19 into ALL my projects. \r\n\r\nThe line \u0060paint = new SKPaint();\u0060 throws a type load exception on Android:\r\n\u0022libSkiaSharp.so assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\u0022\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_compatpaint_new()\r\n  at SkiaSharp.SKPaint..ctor () [0x00000] in \u003Caa1de5d4cf3f4a939c558acca594f4c4\u003E:0 \r\n\r\nEDIT: reverting to 1.68.3 makes the problem go away",
+        "createdAt": "2020-08-23T10:50:17",
+        "reactions": []
+      },
+      {
+        "id": 685320990,
+        "author": "taublast",
+        "body": "\u003E I had the same problem I fixed it by\r\n\u003E Disabling following Build options in the Debug Configuration:\r\n\u003E \r\n\u003E * Enable incremental builds\r\n\u003E * Enable device-specific builds\r\n\u003E \r\n\u003E afterwards it worked.\r\n\r\nThe above is not working for me at all. \r\n\u0022installing SkiaSharp into the head projects is a good workaround for now.\u0022 solved this.\r\n\r\n",
+        "createdAt": "2020-09-02T06:01:49",
+        "reactions": []
+      },
+      {
+        "id": 685404275,
+        "author": "inforithmics",
+        "body": "\r\n\r\n\r\n\r\n\u003E \u003E I had the same problem I fixed it by\r\n\u003E \u003E Disabling following Build options in the Debug Configuration:\r\n\u003E \u003E \r\n\u003E \u003E * Enable incremental builds\r\n\u003E \u003E * Enable device-specific builds\r\n\u003E \u003E \r\n\u003E \u003E afterwards it worked.\r\n\u003E \r\n\u003E The above is not working for me at all.\r\n\u003E \u0022installing SkiaSharp into the head projects is a good workaround for now.\u0022 solved this.\r\n\r\nYes this is the recommanded workaround, the problem was that I had installed Skia.Sharp already in the head projects and it still didn\u0027t work. So the workaround is in addition to installing Skia.Sharp in the head projects",
+        "createdAt": "2020-09-02T07:18:08",
+        "reactions": []
+      },
+      {
+        "id": 685441291,
+        "author": "taublast",
+        "body": "Yes have installed **SkiaSharp.Views.Forms** in head projects for ok result.",
+        "createdAt": "2020-09-02T08:27:20",
+        "reactions": []
+      },
+      {
+        "id": 685556375,
+        "author": "inforithmics",
+        "body": "I forget to mention that I installed SkiaSharp and SkiaSharp.Views.Forms in the head projects. \r\n\r\nMaybe it is an issue with Svg.Skia (because this I use for Svg Images in Skia). I didn\u0027t do a Full investigation why it didn\u0027t work. \r\nOnly did trial and error until it worked.",
+        "createdAt": "2020-09-02T10:13:35",
+        "reactions": []
+      },
+      {
+        "id": 734879225,
+        "author": "mattleibow",
+        "body": "Just for future reference, it might be the issue with incremental builds, so we should be _disabling_ them.",
+        "createdAt": "2020-11-27T15:11:23",
+        "reactions": []
+      }
+    ]
+  }
 }

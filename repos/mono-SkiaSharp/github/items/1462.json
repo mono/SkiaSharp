@@ -14,5 +14,80 @@
   "updatedAt": "2022-08-19T03:02:08",
   "closedAt": "2020-08-13T09:04:06",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:15:37.324398Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 673130991,
+        "author": "hansmbakker",
+        "body": "My workaround would be to use the anonymous \u0060object\u0060 type for the \u0060RenderItem\u0060 on the \u0060LayerModel\u0060 class and checking its type using e.g. [pattern matching](https://docs.microsoft.com/en-us/archive/msdn-magazine/2019/may/csharp-8-0-pattern-matching-in-csharp-8-0#the-evolution-of-pattern-matching-in-c-80) to decide how to process each item.",
+        "createdAt": "2020-08-12T21:57:50",
+        "reactions": []
+      },
+      {
+        "id": 673144354,
+        "author": "mattleibow",
+        "body": "This is quite an interesting topic. I don\u0027t think there is a way to do this now, however, this might be something that you can do with an implicit operators to convert from any types you are interesting in to a container type.\r\n\r\nThis should be good because the actual type are classes, so object is fine and there is no boxing. I am using a struct because I can avoid an allocation. Maybe this gives some ideas?\r\n\r\nI could have gone with inheritance and all that, but this is quite simple and does not add overhead. You can even add additional implicit/explicit conversions back to the skia objects if you need to access them. But, at least you only have this switch and drawing code in a single location.\r\n\r\n\u0060\u0060\u0060csharp\r\npublic readonly struct SKRenderable\r\n{\r\n    private readonly object skiaObject;\r\n    private readonly Action\u003CSKRenderable, SKCanvas, float, float, SKPaint\u003E renderImpl;\r\n\r\n    public SKRenderable(SKBitmap bmp)\r\n    {\r\n        skiaObject = bmp;\r\n        renderImpl = RenderBitmap;\r\n    }\r\n\r\n    public SKRenderable(SKImage img)\r\n    {\r\n        skiaObject = img;\r\n        renderImpl = RenderImage;\r\n    }\r\n\r\n    public SKRenderable(SKTextBlob text)\r\n    {\r\n        skiaObject = text;\r\n        renderImpl = RenderTextBlob;\r\n    }\r\n\r\n    public float Width =\u003E\r\n        skiaObject switch\r\n        {\r\n            SKBitmap bmp =\u003E bmp.Width,\r\n            SKImage img =\u003E img.Width,\r\n            SKTextBlob text =\u003E text.Bounds.Width,\r\n            _ =\u003E 0\r\n        };\r\n\r\n    public float Height =\u003E\r\n        skiaObject switch\r\n        {\r\n            SKBitmap bmp =\u003E bmp.Height,\r\n            SKImage img =\u003E img.Height,\r\n            SKTextBlob text =\u003E text.Bounds.Height,\r\n            _ =\u003E 0\r\n        };\r\n\r\n    public void Render(SKCanvas canvas, float x, float y, SKPaint paint = null) =\u003E\r\n        renderImpl(this, canvas, x, y, paint);\r\n\r\n    public static implicit operator SKRenderable(SKBitmap bmp) =\u003E\r\n        new SKRenderable(bmp);\r\n\r\n    public static implicit operator SKRenderable(SKImage img) =\u003E\r\n        new SKRenderable(img);\r\n\r\n    public static implicit operator SKRenderable(SKTextBlob text) =\u003E\r\n        new SKRenderable(text);\r\n\r\n    private static void RenderBitmap(SKRenderable renderable, SKCanvas canvas, float x, float y, SKPaint paint) =\u003E\r\n        canvas.DrawBitmap((SKBitmap)renderable.skiaObject, x, y, paint);\r\n\r\n    private static void RenderImage(SKRenderable renderable, SKCanvas canvas, float x, float y, SKPaint paint) =\u003E\r\n        canvas.DrawImage((SKImage)renderable.skiaObject, x, y, paint);\r\n\r\n    private static void RenderTextBlob(SKRenderable renderable, SKCanvas canvas, float x, float y, SKPaint paint) =\u003E\r\n        canvas.DrawText((SKTextBlob)renderable.skiaObject, x, y, paint);\r\n}\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2020-08-12T22:37:55",
+        "reactions": []
+      },
+      {
+        "id": 673356776,
+        "author": "hansmbakker",
+        "body": "Thanks so much for thinking along!\r\n\r\nInheritance might make this easier but with what is available now this looks really helpful!",
+        "createdAt": "2020-08-13T09:01:31",
+        "reactions": []
+      },
+      {
+        "id": 673446985,
+        "author": "mattleibow",
+        "body": "I did think about inheritance, but was considering the additional allocation for each type. This might not be too bad, and might make the code less \u0022big switch\u0022.\r\nHowever, there are only like 5 different drawables (surface, drawable, image, bitmap and picture), so all the extra plumbing is just a waste.\r\n\r\nBut again, totally up to how you work - there is no right way.",
+        "createdAt": "2020-08-13T12:25:47",
+        "reactions": []
+      },
+      {
+        "id": 673452629,
+        "author": "hansmbakker",
+        "body": "out of interest: why would implementing a common interface or base class require additional allocation? Do you mean that adding \u0022alias\u0022 properties /methods to the existing classes would cause the object size to be larger?",
+        "createdAt": "2020-08-13T12:38:12",
+        "reactions": []
+      },
+      {
+        "id": 674208504,
+        "author": "mattleibow",
+        "body": "Ah, I might have said it wrong. I mean using a class to wrap the objects in the case of my snippet - so I went for a struct.\r\n\r\nIn the case of a base interface inside the SkiaSharp library, that has popped into my mind from time to time, but I thought it wasn\u0027t really useful/needed.\r\nHowever, it seems that it is. Maybe we should reopen this issue and update the title/description in the form of a request for some API that would be useful. What properties, what features. Adding an interface with 2 properties might be useful, but not particularly so. But, if we get a decent API set of a few properties and methods, then maybe this becomes a feature.\r\n\r\nOr, you can create a new issue so we can start again, linking to this one. Then we can flesh out a decent API set.",
+        "createdAt": "2020-08-14T18:34:30",
+        "reactions": []
+      },
+      {
+        "id": 674249688,
+        "author": "hansmbakker",
+        "body": "Sounds good; however I\u0027m going on vacation soon; I can think along when I am back.\n\nI got a prototype of an \u0022image composer\u0022 working yesterday with lasers of [\u0060TouchManipulationBitmap\u0060](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationBitmap.cs).\n\nI\u0027m using a \u0060ListView\u0060 control bound to the layers (\u0060ObservableCollection\u003CTouchManipulationBitmap\u003E\u0060) and the selected layer gets the touch input. In the Paint event of the SkiaSharp canvas I render the layers on top of each other.\n\nIdeally, that class would be generic so that you could also manipulate other items (SVG or something else).\nI modified the class (and related classes) so that they accept UWP \u0060PointerPressed\u0060 etc events.",
+        "createdAt": "2020-08-14T20:02:06",
+        "reactions": []
+      },
+      {
+        "id": 683956141,
+        "author": "hansmbakker",
+        "body": "I\u0027m back, and created #1486 and a proof of concept of the usecase at https://github.com/hansmbakker/SkiaSharpPoc",
+        "createdAt": "2020-08-31T18:37:36",
+        "reactions": []
+      },
+      {
+        "id": 707685353,
+        "author": "mattleibow",
+        "body": "Thanks for that. I re-read it and see if I can get you some feedback/solutions that will make things easier to work with.",
+        "createdAt": "2020-10-13T11:47:54",
+        "reactions": [
+          {
+            "user": "hansmbakker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:15:37.2741302Z"
+          }
+        ]
+      }
+    ]
+  }
 }
