@@ -21,7 +21,7 @@ public record SyncMeta(
     RateLimitInfo? RateLimit,
     Dictionary<string, FailureEntry> Failures,
     bool InitialSyncComplete = false,      // true = use incremental, false = initial sync mode
-    int LastProcessedNumber = 0            // Resume marker: highest issue number processed in initial sync
+    int LastPage = 0                       // Resume marker: last completed page (100 items/page, fixed)
 );
 
 public record SyncLayers(

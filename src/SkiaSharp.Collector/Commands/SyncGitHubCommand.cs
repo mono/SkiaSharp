@@ -54,7 +54,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             syncMeta = syncMeta with
             {
                 InitialSyncComplete = false,
-                LastProcessedNumber = 0,
+                LastPage = 0,
                 Layers = new SyncLayers(
                     new LayerStatus(null, null, 0, 0),
                     new EngagementLayerStatus(null, null, null, 0, 0, 0)
@@ -210,23 +210,22 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         
         // Initial sync: Created ASC, no since filter (paginate through all)
         // Incremental: Updated DESC with since=LastSync (for recent changes)
-        // Note: GitHub's 'since' filters by UpdatedAt, not CreatedAt, so it doesn't work for resume
         DateTimeOffset? since = isInitialSync ? null : meta.Layers.Items.LastSync;
         
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
-        var page = 1;
         var pagesProcessed = 0;
         var maxPages = settings.PageCount > 0 ? settings.PageCount : int.MaxValue;
         var startTime = DateTime.UtcNow;
         var pageTimes = new Queue<double>();
         var rateLimitHit = false;
         var allDone = false;
-        var lastProcessedNumber = meta.LastProcessedNumber;
 
-        // For initial sync resume: we'll skip items with number <= lastProcessedNumber
-        if (isInitialSync && lastProcessedNumber > 0 && !settings.Quiet)
-            AnsiConsole.MarkupLine($"[dim]  Resuming - will skip items ≤ #{lastProcessedNumber}[/]");
+        // For initial sync: resume from last completed page
+        var page = isInitialSync && meta.LastPage > 0 ? meta.LastPage + 1 : 1;
+        
+        if (isInitialSync && meta.LastPage > 0 && !settings.Quiet)
+            AnsiConsole.MarkupLine($"[dim]  Resuming from page {page} (last completed: {meta.LastPage})[/]");
 
         await AnsiConsole.Status()
             .Spinner(Spinner.Known.Dots)
@@ -270,14 +269,6 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     var earlyExit = false;
                     foreach (var issue in issues)
                     {
-                        // For initial sync: skip items we've already processed (resume)
-                        if (isInitialSync && issue.Number <= lastProcessedNumber)
-                        {
-                            if (settings.Verbose)
-                                AnsiConsole.MarkupLine($"  [dim]Skipping #{issue.Number} (already processed)[/]");
-                            continue;
-                        }
-
                         // Early exit for incremental: stop when we hit unchanged cached item
                         if (!isInitialSync && itemsDict.TryGetValue(issue.Number, out var cached))
                         {
@@ -303,10 +294,6 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         itemsDict[issue.Number] = CreateIndexItem(item);
                         processed++;
 
-                        // Track highest issue number for resume
-                        if (isInitialSync && issue.Number > lastProcessedNumber)
-                            lastProcessedNumber = issue.Number;
-
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [dim]#{issue.Number}: {Markup.Escape(issue.Title.Truncate(50))}[/]");
                     }
@@ -322,10 +309,10 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     };
                     await cache.SaveGitHubIndexAsync(index);
                     
-                    // Save last processed number for resume capability
+                    // Save last completed page for resume
                     if (isInitialSync)
                     {
-                        meta = meta with { LastProcessedNumber = lastProcessedNumber };
+                        meta = meta with { LastPage = page };
                         await cache.SaveGitHubSyncMetaAsync(meta);
                     }
 
@@ -347,10 +334,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             Items = [.. itemsDict.Values.OrderBy(i => i.Number)]
         };
 
-        // Update sync metadata
+        // Update sync metadata (LastPage already saved per-page, just update layers)
         meta = meta with 
         {
-            LastProcessedNumber = isInitialSync ? lastProcessedNumber : meta.LastProcessedNumber,
             Layers = meta.Layers with 
             {
                 Items = new LayerStatus(
@@ -367,9 +353,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             if (allDone)
                 AnsiConsole.MarkupLine($"[green]  ✓ {processed:N0} items synced in {FormatTime(elapsed)} (complete)[/]");
             else if (rateLimitHit)
-                AnsiConsole.MarkupLine($"[yellow]  → {processed:N0} items synced in {FormatTime(elapsed)} (rate limited, last: #{lastProcessedNumber})[/]");
+                AnsiConsole.MarkupLine($"[yellow]  → {processed:N0} items synced in {FormatTime(elapsed)} (rate limited, page {page - 1})[/]");
             else
-                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (batch complete, last: #{lastProcessedNumber})[/]");
+                AnsiConsole.MarkupLine($"[blue]  → {processed:N0} items synced in {FormatTime(elapsed)} (batch complete, page {page - 1})[/]");
         }
 
         return (index, meta, processed, allDone);
