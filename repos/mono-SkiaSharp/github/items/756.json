@@ -35,5 +35,58 @@
   "createdAt": "2019-01-14T07:37:30",
   "updatedAt": "2019-12-30T12:42:00",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:31:25.5249257Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 454884949,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I had a look and saw some improvements that could be made, but also asked on the skia forums just in case they have some suggestions: https://groups.google.com/forum/#!topic/skia-discuss/ZFnS-NaUcvY\r\n\r\nI hope that they will be able to provide some real suggestions and maybe some features that can be used to improve performance.\r\n\r\nThe main improvement is to not draw bitmaps as they have to be copied each frame to the GPU. I create a intermediate image that is backed by a texture:\r\n\r\n\u0060\u0060\u0060csharp\r\nfor (int i = 0; i \u003C originals.Count; i\u002B\u002B)\r\n{\r\n\t// instead of creating all the intermediates up front, do it as they come in and are rendered\r\n\tif (intermediates[i] == null)\r\n\t{\r\n\t\tvar original = originals[i];\r\n\t\tusing (var surf = SKSurface.Create(CanvasView.GRContext, true, new SKImageInfo(original.Width, original.Height)))\r\n\t\t{\r\n\t\t\tsurf.Canvas.DrawBitmap(original, 0, 0);\r\n\t\t\tsurf.Canvas.Flush();\r\n\r\n\t\t\tintermediates[i] = surf.Snapshot();\r\n\t\t}\r\n\t}\r\n\r\n\tcanvas.DrawImage(intermediates[i], rectangles[i], HighQualityImagePaint);\r\n}\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2019-01-16T18:19:55",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:31:24.6396256Z"
+          }
+        ]
+      },
+      {
+        "id": 454919309,
+        "author": "nor0x",
+        "body": "Thank you for the answer, and for reaching out to the Skia devs. I will keep an eye on the thread.",
+        "createdAt": "2019-01-16T20:01:10",
+        "reactions": []
+      },
+      {
+        "id": 457052570,
+        "author": "mattleibow",
+        "body": "Some info for filter quality: https://groups.google.com/forum/#!topic/skia-discuss/Hpjma8785HA\r\n\r\n - None - No filtering, just nearest-neighbor sampling.\r\n - Low - Bilinear filtering.\r\n - Medium - Adds mipmaps (so improves speed/quality on downscales, but still does bilinear for upscaling).\r\n  High - Adds bicubic filtering when upscaling (continues to use mipmaps for downscale).\r\n\r\nSo, if you\u0027re using High, there is an abrupt algorithm change when the scale goes \u003E 1, and the bicubic filter means many more samples for filtering.",
+        "createdAt": "2019-01-24T03:22:04",
+        "reactions": []
+      },
+      {
+        "id": 466399079,
+        "author": "nor0x",
+        "body": "Hi @mattleibow, i finally had some time to experiment with the suggestions here. Adjusting the filter quality is okay for me but not the best solution. As the community in the skia forums suggested I also tried setting \u0060SetResourceCacheLimits\u0060 which unfortunately led to a \u0060NullReferenceException\u0060 in my \u0060Xamarin.Mac\u0060 project.\r\n\r\nI get the following stacktrace:\r\n\u0060\u0022  at (wrapper managed-to-native) SkiaSharp.SkiaApi.gr_context_set_resource_cache_limits(intptr,int,intptr)\\n  at SkiaSharp.GRContext.SetResourceCacheLimits (System.Int32 maxResources, System.Int64 maxResourceBytes) [0x0000d] in \u003C273adfac44b84a14b4b6d7b5f15069bf\u003E:0 \\n  at SkiaPlayground.ViewController\u002B\u003CViewDidLoad\u003Ed__15.MoveNext () [0x002d7] in /Users/johnny/SkiaPlayground/SkiaPlayground/ViewController.cs:63 \\n--- End of stack trace from previous location where exception was thrown ---\\n  at System.Runtime.CompilerServices.AsyncMethodBuilderCore\u002B\u003C\u003Ec.\u003CThrowAsync\u003Eb__6_0 (System.Object state) [0x00000] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.15/src/Xamarin.Mac/mcs/class/referencesource/mscorlib/system/runtime/compilerservices/AsyncMethodBuilder.cs:1023 \\n  at Foundation.NSAsyncSynchronizationContextDispatcher.Apply () [0x00002] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.15/src/Xamarin.Mac/Foundation/NSAction.cs:178 \\n  at (wrapper managed-to-native) AppKit.NSApplication.NSApplicationMain(int,string[])\\n  at AppKit.NSApplication.Main (System.String[] args) [0x00040] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.15/src/Xamarin.Mac/AppKit/NSApplication.cs:100 \\n  at SkiaPlayground.MainClass.Main (System.String[] args) [0x00007] in /Users/johnny/SkiaPlayground/SkiaPlayground/Main.cs:10 \u0022\u0060",
+        "createdAt": "2019-02-22T13:39:18",
+        "reactions": []
+      },
+      {
+        "id": 569668758,
+        "author": "nor0x",
+        "body": "Hi @mattleibow,\r\ni\u0027m back at my image performance experiments. \u0060SkiaSharp 1.68.1\u0060 fixed my issues with \u0060SetResourceCacheLimits\u0060. I was able to render images on the GPU and add pan and pinch to my test canvas. As I\u0027m still trying to draw as many large images as possible with smooth performance i followed the hints in the Google Skia Thread (https://groups.google.com/forum/#!topic/skia-discuss/ZFnS-NaUcvY) _Yeah, I would try setting the GrContext budget to something absurdly large to see if that is a factor._\r\n\r\nI have also switched from \u0060SKBitmap\u0060 to \u0060SKImage\u0060 for better performance.\r\n\r\nDuring my testings i noticed that once all images are visible on the view, performance takes a big hit and FPS go down. Once i drag the canvas so that some images are off-screen everything is smooth at ~60FPS.\r\n\r\nHere is another GIF showing my test project:\r\n![1ScreenRecording2019-12-30at1249](https://user-images.githubusercontent.com/3210391/71582265-af104300-2b09-11ea-8c75-47e28c8f177b.gif)\r\n\r\n\r\nI have also updated my playground repo with the latest source:\r\n[https://github.com/nor0x/SkiaSharp_PerfomanceExperiments](https://github.com/nor0x/SkiaSharp_PerfomanceExperiments)\r\n\r\nnot sure if this is a new issue, but it\u0027s directly related to my previous performance issues with image drawing - so i drop this here.",
+        "createdAt": "2019-12-30T12:42:00",
+        "reactions": [
+          {
+            "user": "angelofb",
+            "content": "eyes",
+            "createdAt": "2026-02-06T14:31:25.4746845Z"
+          }
+        ]
+      }
+    ]
+  }
 }

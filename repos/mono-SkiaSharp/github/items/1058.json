@@ -13,5 +13,143 @@
   "createdAt": "2019-12-11T01:23:50",
   "updatedAt": "2019-12-11T11:18:38",
   "commentCount": 18,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:31:51.8001747Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 564335382,
+        "author": "mattleibow",
+        "body": "This PR (https://github.com/toptensoftware/RichTextKit/pull/6) in RichTextKit fixes it, but I am not sure if we _should_ fix this in SkiaSharp. Isn\u0027t a null match meaning that there is no match.",
+        "createdAt": "2019-12-11T01:26:07",
+        "reactions": []
+      },
+      {
+        "id": 564335532,
+        "author": "mattleibow",
+        "body": "I am thinking about this and I am starting to agree with #643 and just say it _may_ return null if no match was found.\r\n\r\nIs there a point in SkiaSharp doing the extra work on the overloads? Is a \u0060?? SKTypeface.Default\u0060 fine to add? Not even sure that is useful to do by default as when you ask for a match and then just gives you a random one? That is totally unexpected. I would even go so far as to say that we _should_ return null if none was found and then have the user decide what is actually wanted. But changing that in the core skia is going to be work, and may break other things that are using this \u0022feature\u0022.",
+        "createdAt": "2019-12-11T01:26:50",
+        "reactions": []
+      },
+      {
+        "id": 564399171,
+        "author": "Gillibald",
+        "body": "I need a way to know that a font wasn\u0027t found. If I can always compare with the default it is fine to return the default. I doubt that always works.",
+        "createdAt": "2019-12-11T06:25:22",
+        "reactions": [
+          {
+            "user": "FoggyFinder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:31:48.4235605Z"
+          }
+        ]
+      },
+      {
+        "id": 564465674,
+        "author": "mattleibow",
+        "body": "That\u0027s the thing... Deep inside the logic, it may/may not decide to use default.\r\n\r\nIt might be better to use the \u0060SKFontManager\u0060 and use \u0060GetFontStyles\u0060: https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skfontmanager.getfontstyles\r\n\r\nYou can then also find the nearest bold/italic combo that tickles your fancy. For example, there my be a black and not a bold or something.\r\n\r\n_(but Matthew starts to wonder if their promise of never null is also a lie here)_",
+        "createdAt": "2019-12-11T09:55:28",
+        "reactions": []
+      },
+      {
+        "id": 564466497,
+        "author": "mattleibow",
+        "body": "I think to be consistent, the SKTypeface should never return null, but SKFontManager is to be used to see if there was a match. I\u0027ll do some tests.",
+        "createdAt": "2019-12-11T09:57:38",
+        "reactions": []
+      },
+      {
+        "id": 564477494,
+        "author": "Gillibald",
+        "body": "FromFamilyName already does the fallback for you. https://docs.microsoft.com/en-us/dotnet/api/skiasharp.sktypeface.fromfamilyname?view=skiasharp-1.68.1#SkiaSharp_SKTypeface_FromFamilyName_System_String_SkiaSharp_SKFontStyleWeight_SkiaSharp_SKFontStyleWidth_SkiaSharp_SKFontStyleSlant_\r\n\r\nI prefer getting a null if the request can\u0027t be fulfilled so I can deside how to proceed.",
+        "createdAt": "2019-12-11T10:25:18",
+        "reactions": []
+      },
+      {
+        "id": 564478591,
+        "author": "mattleibow",
+        "body": "That\u0027s the thing, on Android and Linux, it doesn\u0027t. It _may_ return null.",
+        "createdAt": "2019-12-11T10:28:15",
+        "reactions": []
+      },
+      {
+        "id": 564478932,
+        "author": "Gillibald",
+        "body": "Currently I do this https://github.com/AvaloniaUI/Avalonia/blob/master/src/Skia/Avalonia.Skia/FontManagerImpl.cs#L97 this works as long as the default never changes. ",
+        "createdAt": "2019-12-11T10:29:13",
+        "reactions": []
+      },
+      {
+        "id": 564480822,
+        "author": "mattleibow",
+        "body": "If I do this on Android:\r\n\u0060\u0060\u0060csharp\r\nvar tf = SKTypeface.FromFamilyName(\u0022System\u0022);\r\n\u0060\u0060\u0060\r\n\r\nI get a null, on macOS I get the default. But, it is not equal to SKTypeface.Default...",
+        "createdAt": "2019-12-11T10:34:29",
+        "reactions": []
+      },
+      {
+        "id": 564482266,
+        "author": "mattleibow",
+        "body": "I tried:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar fm = SKFontManager.Default.GetFontStyles(\u0022System\u0022);\r\nvar fm2 = SKFontManager.Default.MatchFamily(\u0022System\u0022, SKFontStyle.Bold);\r\n\r\nvar tf = SKTypeface.FromFamilyName(\u0022System\u0022);\r\n\u0060\u0060\u0060\r\n\r\non macOS, none are null, but \u0060fm\u0060 is an empty set. \u0060fm2\u0060 is the default.\r\n\r\non Android, \u0060fm\u0060 is also an empty set, but \u0060fm2\u0060 and \u0060tf\u0060 are null",
+        "createdAt": "2019-12-11T10:38:37",
+        "reactions": []
+      },
+      {
+        "id": 564483799,
+        "author": "mattleibow",
+        "body": "Looking at the implementation of the matching, it pretty much always creates a new reference to the font. So we can\u0027t even use the == Default because it creates a new object each time.",
+        "createdAt": "2019-12-11T10:43:06",
+        "reactions": []
+      },
+      {
+        "id": 564485267,
+        "author": "Gillibald",
+        "body": "Is the UniqueId also different? ",
+        "createdAt": "2019-12-11T10:47:17",
+        "reactions": []
+      },
+      {
+        "id": 564486924,
+        "author": "mattleibow",
+        "body": "I haven\u0027t exposed that, but most probably as the only reference to that field is just a blind new, incrementing value:\r\n\r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/src/core/SkTypeface.cpp#L21",
+        "createdAt": "2019-12-11T10:52:09",
+        "reactions": []
+      },
+      {
+        "id": 564487538,
+        "author": "Gillibald",
+        "body": "Why on earth did they do that? So I have to cache Typefaces on my own? \uD83E\uDD14",
+        "createdAt": "2019-12-11T10:53:50",
+        "reactions": []
+      },
+      {
+        "id": 564487811,
+        "author": "mattleibow",
+        "body": "Looking at Android some more, and I see that if I match \u0060Helvetica\u0060 - it matches, but \u0060sans-serif\u0060 is the font name...",
+        "createdAt": "2019-12-11T10:54:35",
+        "reactions": []
+      },
+      {
+        "id": 564489732,
+        "author": "mattleibow",
+        "body": "Looks like the most consistent is the \u0060SKFontManager.Default.GetFontStyles(\u003Cfamily\u003E)\u0060 and that returns a list of supported styles. If there is no font, then there are no styles. \r\n\r\nYou can then use \u0060SKFontManager.Default.MatchFamily(\u003Cfamily\u003E, \u003Cstyle\u003E)\u0060 to find the specific typeface. ",
+        "createdAt": "2019-12-11T11:00:30",
+        "reactions": []
+      },
+      {
+        "id": 564489967,
+        "author": "Gillibald",
+        "body": "It depends on the actual font manager. For platforms that are using FontConfig aliases are sometimes used to resolve some font. ",
+        "createdAt": "2019-12-11T11:01:11",
+        "reactions": []
+      },
+      {
+        "id": 564495886,
+        "author": "Gillibald",
+        "body": "Good to know this. Will change my code to use the SKFontManager to resolve fonts.",
+        "createdAt": "2019-12-11T11:18:38",
+        "reactions": []
+      }
+    ]
+  }
 }

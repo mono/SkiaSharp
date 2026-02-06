@@ -13,5 +13,57 @@
   "createdAt": "2020-03-03T09:43:06",
   "updatedAt": "2020-03-03T13:52:10",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:31:16.5018422Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 593867373,
+        "author": "wieslawsoltes",
+        "body": "More documentation would be really appreciated. \r\n\r\nI am currently doing \u0060SVG Filter Effects\u0060 and using extensively \u0060SKImageFilter\u0060 in my implementation (which is sadly not yet correct on working as expected), maybe you can take some inspiration from that.\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/blob/a362239968ea7201d2e376c8c16471069c1bfe54/src/Svg.Skia/SvgFilterskExtensions.cs#L12\r\n\r\nThe image filter topic is complex as you can see in my sample code and as you can see the specification for filter effects: https://www.w3.org/TR/SVG11/filters.html\r\n\r\n",
+        "createdAt": "2020-03-03T10:03:39",
+        "reactions": []
+      },
+      {
+        "id": 593888364,
+        "author": "ziriax",
+        "body": "That is very interesting, thanks for the info.\r\n\r\nActually about 3 years ago I had to abandon using SVG filters for my customer\u0027s web image processing, because none of the browsers at the time implemented it correctly. So this must be very hard to get right. \r\n\r\n",
+        "createdAt": "2020-03-03T10:52:10",
+        "reactions": []
+      },
+      {
+        "id": 593900848,
+        "author": "wieslawsoltes",
+        "body": "The Skia has excellent building blocks for implementing SVG filter effects. In SVG you basically render all filter effects to offscreen layer and then blend it into final canvas.\r\n\r\nSo basically what I do in my library (at least currently):\r\n\r\nStep 0 - create paint with filter (you can chain filters too using input argument, you can also crop affected area)\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/blob/a362239968ea7201d2e376c8c16471069c1bfe54/src/Svg.Skia/Drawables/Drawable.cs#L444\r\n\r\nStep 1 - create layer\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/blob/a362239968ea7201d2e376c8c16471069c1bfe54/src/Svg.Skia/Drawables/Drawable.cs#L370\r\n\r\nStep 2 - draw anything that is affected by filter\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/blob/a362239968ea7201d2e376c8c16471069c1bfe54/src/Svg.Skia/Drawables/Drawable.cs#L373\r\n\r\nStep 3 - blend back the results\r\n\r\nhttps://github.com/wieslawsoltes/Svg.Skia/blob/a362239968ea7201d2e376c8c16471069c1bfe54/src/Svg.Skia/Drawables/Drawable.cs#L377\r\n\r\nA lot more goes into filters (as you can see in the SVG spec). My next task is to make SVG filters working in correct color spaces, that\u0027s not trivial either.",
+        "createdAt": "2020-03-03T11:18:29",
+        "reactions": [
+          {
+            "user": "ziriax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:31:16.0376974Z"
+          },
+          {
+            "user": "ziriax",
+            "content": "rocket",
+            "createdAt": "2026-02-06T14:31:16.0376978Z"
+          }
+        ]
+      },
+      {
+        "id": 593956918,
+        "author": "ziriax",
+        "body": "I never got SVG working as good as HTML canvas, see e.g. https://stackoverflow.com/questions/37120158/svg-opacity-mask-resolution-and-scaling\r\n\r\nYes, ideally all rendering is done in 16-bit or 32-bit float per color channel linear color space. Luckily Skia supports that now.\r\n",
+        "createdAt": "2020-03-03T13:44:30",
+        "reactions": []
+      },
+      {
+        "id": 593960640,
+        "author": "wieslawsoltes",
+        "body": "\u003E I never got SVG working as good as HTML canvas, see e.g. https://stackoverflow.com/questions/37120158/svg-opacity-mask-resolution-and-scaling\r\n\u003E \r\n\r\nDid not yet get to quality and resolution of filters. First I need make them work correctly.\r\n\r\n\u003E Yes, ideally all rendering is done in 16-bit or 32-bit float per color channel linear color space. Luckily Skia supports that now.\r\n\r\nThere is \u0060SKColorType.RgbaF16\u0060 and next release will include \u0060SKColorF\u0060 https://github.com/mono/SkiaSharp/pull/1116 and I have to figure out how to make this things work.",
+        "createdAt": "2020-03-03T13:52:09",
+        "reactions": []
+      }
+    ]
+  }
 }

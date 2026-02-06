@@ -13,5 +13,39 @@
   "createdAt": "2020-04-03T21:26:07",
   "updatedAt": "2020-04-04T21:49:48",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:31:05.4505653Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 608726619,
+        "author": "mattleibow",
+        "body": "That may be because the OpenGL needs to be initialized... And that only happens when the view is visible.\r\n\r\nBut, I don\u0027t know for sure. I will have to check that...",
+        "createdAt": "2020-04-03T22:25:15",
+        "reactions": []
+      },
+      {
+        "id": 608978030,
+        "author": "MathieuJack",
+        "body": "Could you indicate me the code to initialize OpenGL? I\u0027ll call it from App.xaml.cs\r\n\r\n",
+        "createdAt": "2020-04-04T05:37:06",
+        "reactions": []
+      },
+      {
+        "id": 609068021,
+        "author": "mattleibow",
+        "body": "I believe the initialization is done only when the view is created/inflated just before viewing. In fact, it only is started when the view is attached to the window:\r\nhttps://github.com/mono/SkiaSharp/blob/v1.68.2-preview.50/source/SkiaSharp.Views/SkiaSharp.Views.Android/GLTextureView.cs#L187-L208\r\n\r\nTypically it should be very fast since is is started as the view appears. What device are you using? Also, what version of Android OS is running?\r\n\r\nIs it possible to share the sample that you are using? That way we can have a look sooner.",
+        "createdAt": "2020-04-04T18:10:50",
+        "reactions": []
+      },
+      {
+        "id": 609093656,
+        "author": "MathieuJack",
+        "body": "Here is the sample: https://we.tl/t-JksrnWYlo9\r\nMainPage.SKGLView_PaintSurface is painting a multiple orange line (with a loop to simulate a non-negligible GPU work)\r\nIn MainPage.xaml, page background is set to green.\r\n\r\nSo you will notice that the few first frames display the green background before it is replaced by the OpenGL Drawing.\r\nIn MainPage.xaml just uncomment the line with the SKCanvasView, to notice this time that this problem won\u0027t occure with SKCanvasView.\r\n\r\nThe issue is more noticeable with real code, because first frame is the most heavy as plenty of code is jitted, some resources loaded;  So even if my apps runs at 60FPS, first frame takes 100ms (could be reduced by a factor of 2 by optimizing, but it won\u0027t be enough to avoir issue)\r\n\r\nI\u0027m working with a \u0022old\u0022 HTC Desire, with Android 4.2, and a Teeno with Android 5.1, small devices as requested by my market.\r\n\r\n\r\n",
+        "createdAt": "2020-04-04T21:49:48",
+        "reactions": []
+      }
+    ]
+  }
 }

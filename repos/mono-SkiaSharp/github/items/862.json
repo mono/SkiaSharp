@@ -58,5 +58,65 @@
       "state": "COMMENTED",
       "submittedAt": "2019-06-17T04:10:27"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:34:21.4057963Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 502491278,
+        "author": "Gillibald",
+        "body": "I was just scared performance wise to do it that way. We should probably have special interop for iOS that is enabled by compiler variable. GetTableData is called quite frequently until all tables are loaded. Just a concern. People should cache Face anyways so probably not an issue at all.",
+        "createdAt": "2019-06-16T22:31:31",
+        "reactions": []
+      },
+      {
+        "id": 502495455,
+        "author": "mattleibow",
+        "body": "\u003E I was just scared performance wise to do it that way. \r\n\r\nI suppose hitting the dictionary is going to be a bit expensive at some point.\r\n\r\n\u003E We should probably have special interop for iOS that is enabled by compiler variable. \r\n\r\n100% I think I need to start looking at this at some point. But, I also need to measure this and see if this is really necessary - and then spend some time going that. We have been mostly lucky that is it usually for large object construction (bitmaps) or once-off (GL interfaces or font faces). I\u0027m thinking we probably need to have a look at the other cases where we can make use of \u0060Span\u003CT\u003E\u0060 instead of just converting to arrays in some of the bitmap/image types.",
+        "createdAt": "2019-06-16T23:41:27",
+        "reactions": []
+      },
+      {
+        "id": 502504097,
+        "author": "mattleibow",
+        "body": "@Gillibald Let me know if this is helpful at all: https://github.com/mono/SkiaSharp/pull/862/commits/ed6e2dea9b1844bd033de77478011b314f7ab878\r\n\r\nI saw your comment about the \u0060GetTableData\u0060 that copies the memory. I have basically added an overload that works directly with \u0060IntPtr\u0060 - this means that YOU have to allocate the memory - but it allows you to create a \u0060Blob\u0060 that wraps it, and no extra copies are made. See this test using it: https://github.com/mono/SkiaSharp/blob/dev/harfbuzz-updates/tests/Tests/SKShaperTest.cs#L77-L104\r\n\r\nLet me know if is helps, or if I am going down the wrong path.",
+        "createdAt": "2019-06-17T01:21:47",
+        "reactions": []
+      },
+      {
+        "id": 502523241,
+        "author": "Gillibald",
+        "body": "This looks good and is the best we can get I guess.",
+        "createdAt": "2019-06-17T03:36:41",
+        "reactions": []
+      },
+      {
+        "id": 502527305,
+        "author": "Gillibald",
+        "body": "Just tested this with success \uD83D\uDC4D",
+        "createdAt": "2019-06-17T04:05:57",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:34:21.0932565Z"
+          }
+        ]
+      },
+      {
+        "id": 502531129,
+        "author": "mattleibow",
+        "body": "Just doing a last few tweaks to correct any breaking changes, parameter names and things. As soon as the build is done, I\u0027ll regen the docs and merge.",
+        "createdAt": "2019-06-17T04:33:53",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:34:21.3555557Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -27,5 +27,79 @@
   "deletions": 27,
   "changedFiles": 2,
   "commits": 6,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:34:52.2520216Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 506491381,
+        "author": "Gillibald",
+        "body": "Probably an oversight of mine. If we shape a buffer or mutate it in some way we should call \u0060GuessSegmentProperties\u0060 before we do that. Sry for that. ",
+        "createdAt": "2019-06-27T20:07:12",
+        "reactions": []
+      },
+      {
+        "id": 506518960,
+        "author": "mattleibow",
+        "body": "That should be done by the caller, right?",
+        "createdAt": "2019-06-27T21:30:01",
+        "reactions": []
+      },
+      {
+        "id": 506522150,
+        "author": "Gillibald",
+        "body": "Yes. GuessSegmentProperties does not guarantee everything is configured right but will work most of the time. It can be left out if you know what you have to configure.\r\n\r\nFor example if you have a sequence of codepoints that represents RTL text GuessSegmentProperties should set the buffer\u0027s direction to RTL. You can set it explicitly or implicitly by GuessSegmentProperties. I hope this helps. \r\n\r\nI will add additional tests that cover \u0022real world\u0022 scenarios. Current tests mostly just make sure that the call to some function works. I didn\u0027t think too much about the data that I use.\r\n\r\nSome example:\r\n\u0060\u0060\u0060\r\n// Direction == Invalid\r\n// ContentType == Invalid\r\nbuffer.AddUtf8(\u0022H\u0022);\r\n// ContentType == Invalid\r\n// Direction == Invalid\r\nbuffer.GuessSegmentProperties();\r\n// ContentType == Unicode\r\n// Direction == LeftToRight\r\nfont.Shape(buffer);\r\n// ContentType == Glyphs\r\n// Direction == LeftToRight\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-27T21:41:00",
+        "reactions": []
+      },
+      {
+        "id": 506525303,
+        "author": "mattleibow",
+        "body": "Ah, I see. So you will have a check - just like in the native code - to throw an exception if the direction has not been set?",
+        "createdAt": "2019-06-27T21:52:57",
+        "reactions": []
+      },
+      {
+        "id": 506525893,
+        "author": "Gillibald",
+        "body": "We probably should mimic the assertions if we want this to be more user friendly",
+        "createdAt": "2019-06-27T21:55:24",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:34:51.354252Z"
+          }
+        ]
+      },
+      {
+        "id": 506526390,
+        "author": "mattleibow",
+        "body": "Make that a separate PR as this one is just for build infrastructure.",
+        "createdAt": "2019-06-27T21:57:20",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:34:51.6069519Z"
+          }
+        ]
+      },
+      {
+        "id": 506526789,
+        "author": "Gillibald",
+        "body": "Will add exceptions shortly",
+        "createdAt": "2019-06-27T21:58:51",
+        "reactions": []
+      },
+      {
+        "id": 506553285,
+        "author": "mattleibow",
+        "body": "Moving the discussion to this issue (https://github.com/mono/SkiaSharp/issues/894) until we have a PR.",
+        "createdAt": "2019-06-28T00:06:37",
+        "reactions": []
+      }
+    ]
+  }
 }

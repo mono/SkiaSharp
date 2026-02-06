@@ -13,5 +13,39 @@
   "createdAt": "2020-03-28T11:31:25",
   "updatedAt": "2020-03-30T08:58:05",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:31:12.5661104Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 605434907,
+        "author": "hajmajeboss",
+        "body": "Maybe it\u0027s because there was no antialising in 1.68.1 and it\u0027s back in 1.68.2? ",
+        "createdAt": "2020-03-28T11:38:12",
+        "reactions": []
+      },
+      {
+        "id": 605726142,
+        "author": "mattleibow",
+        "body": "Are you able to check v1.68.1.1?\r\nIs this just a SkiaSharp update, or did you update Mapsui as well? \r\n\r\nIs it possible to attach a mini repro (or link to source) of this so I can have a closer look?\r\n\r\nI had a look at the diff between v1.68.1.1 and v1.68.2 and there is not much actual changes. Mostly just obsoletes. But, There may be something extra that was included that might have caused this. The one thing that did change was to upgrade the NDK from r15 to r19... But with a repro case I can change versions and profile to see exactly where the delays are coming in.",
+        "createdAt": "2020-03-30T00:26:25",
+        "reactions": []
+      },
+      {
+        "id": 605836080,
+        "author": "hajmajeboss",
+        "body": "I will try to make you a sample probably next weekend, I\u0027m quite stacked at the moment, mostly because I spent tons of time trying to optimize and stabilize the map, but it\u0027s all coming together now.\r\n\r\nI think there is change in the way geometries are rendered - there is no antialiasing when I run 1.68.1.1, which might cause the sudden performance gain. \r\n\r\nI noticed immediately it\u0027s slower when I installed the preview45 version, but I thought it\u0027s because I started rendering rotated labels. Then I installed 1.68.1.something and it worked better on my older phone. It works pretty much the same on my new phone - not great, but usuable. \r\n\r\n",
+        "createdAt": "2020-03-30T07:41:40",
+        "reactions": []
+      },
+      {
+        "id": 605872264,
+        "author": "mattleibow",
+        "body": "I\u0027ll have a closer look at the changes, just in case I can spot something. This is a little interesting because the native library hasn\u0027t changed - it is still the m68 series - although there were changes to the compiler version.\r\n\r\nBut, I\u0027ll look some more and see what I can see. Send in the repro as soon as you can.",
+        "createdAt": "2020-03-30T08:58:05",
+        "reactions": []
+      }
+    ]
+  }
 }

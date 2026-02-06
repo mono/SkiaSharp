@@ -88,5 +88,167 @@
       "state": "APPROVED",
       "submittedAt": "2019-06-27T11:08:42"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:33:58.8269482Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 504996502,
+        "author": "mattleibow",
+        "body": "@Gillibald looking good. I made a PR that will reduce the code to 2 lines per function: https://github.com/mono/SkiaSharp/pull/882\r\n\r\nFeel free to merge that into your PR and then I can close it. If it works, we can merge with your PR. If it doesn\u0027t then you can adjust it on your PR to fit whatever is needed.",
+        "createdAt": "2019-06-24T12:52:17",
+        "reactions": []
+      },
+      {
+        "id": 505045216,
+        "author": "Gillibald",
+        "body": "Will have a look shortly \uD83D\uDC4D",
+        "createdAt": "2019-06-24T14:52:40",
+        "reactions": []
+      },
+      {
+        "id": 505121184,
+        "author": "Gillibald",
+        "body": "@mattleibow Your PR helped a lot. This now covers all font funcs. I will write some unit tests tomorrow.",
+        "createdAt": "2019-06-24T18:14:59",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:33:54.8688532Z"
+          }
+        ]
+      },
+      {
+        "id": 505540793,
+        "author": "Gillibald",
+        "body": "@mattleibow This PR changes a lot more than just adding font funcs to the binding. I also added missing members and removed some overloads that take a \u0060signed integer\u0060 as glyph id. HarfBuzz itself and all the binding methods return an \u0060unsigned integer\u0060 as \u0060glyph id\u0060 so it makes sense to remove these overloads. Skia and most other platforms use \u0060ushort\u0060 as glyph id.\r\n\r\nI also changed some methods to follow the Try-pattern because HarfBuzz itself works that way and it doesn\u0027t make sense to get a value from HarfBuzz all the time. This lets the consumer know that something wasn\u0027t found etc.",
+        "createdAt": "2019-06-25T17:22:07",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:33:55.1298725Z"
+          }
+        ]
+      },
+      {
+        "id": 505838975,
+        "author": "Gillibald",
+        "body": "@mattleibow Sry for the refactoring of some parts. I thought better change it now before the API | ABI is frozen. Hopefully, this doesn\u0027t take too long to review.",
+        "createdAt": "2019-06-26T11:42:07",
+        "reactions": []
+      },
+      {
+        "id": 505964183,
+        "author": "Gillibald",
+        "body": "@mattleibow I have implemented the delegate for font_data(user_data). It seems to work. Feel free to rename things etc.",
+        "createdAt": "2019-06-26T17:10:36",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:33:55.6420453Z"
+          }
+        ]
+      },
+      {
+        "id": 506037389,
+        "author": "mattleibow",
+        "body": "@Gillibald this is looking really good.",
+        "createdAt": "2019-06-26T20:43:58",
+        "reactions": []
+      },
+      {
+        "id": 506041625,
+        "author": "mattleibow",
+        "body": "Something is failing on Windows. I ran the Windows test 9 times on CI and they all failed. I also fails locally. Not sure what it is... Will keep looking.\r\n\r\n**EDIT** Interesting... It appears to just be the x86 build / run. It fails for x86 in both the IDE and Cake, but both work fine for x64. There is probably the size of something that is wrong...",
+        "createdAt": "2019-06-26T20:57:14",
+        "reactions": []
+      },
+      {
+        "id": 506056818,
+        "author": "mattleibow",
+        "body": "I think I may have discovered it. I build harfbuzz in Debug mode and got a nice exception:\r\n\r\n\u003E Run-Time Check Failure #0 - The value of ESP was not properly saved across a function call.  This is usually a result of calling a function declared with one calling convention with a function pointer declared with a different calling convention.\r\n\r\nJust needed to add an attribute to the proxy delegates:\r\n\r\n\u0060\u0060\u0060csharp\r\n[UnmanagedFunctionPointer (CallingConvention.Cdecl)]\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-26T21:44:12",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:33:56.437494Z"
+          }
+        ]
+      },
+      {
+        "id": 506148967,
+        "author": "Gillibald",
+        "body": "@mattleibow Thanks for cleaning this up. Looks so much better now. I can learn a lot from you. Just tried to get this in fast. Helps a lot to have a look from another perspective.",
+        "createdAt": "2019-06-27T04:10:45",
+        "reactions": []
+      },
+      {
+        "id": 506151320,
+        "author": "Gillibald",
+        "body": "https://github.com/harfbuzz/harfbuzz/releases/tag/2.5.3\r\n\r\nI guess we have to retarget again",
+        "createdAt": "2019-06-27T04:23:57",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "laugh",
+            "createdAt": "2026-02-06T14:33:56.9707855Z"
+          }
+        ]
+      },
+      {
+        "id": 506151886,
+        "author": "mattleibow",
+        "body": "Thanks for doing all the work for the functions. I probably wouldn\u0027t have been able to get them in as fast as you did - and I probably would have gotten it wrong. Nice to bounce all the ideas off you so that it is a better API.",
+        "createdAt": "2019-06-27T04:26:53",
+        "reactions": []
+      },
+      {
+        "id": 506151954,
+        "author": "mattleibow",
+        "body": "\u003E I guess we have to retarget again\r\n\r\nlol It has only been a few days and they are already pushing out releases :)",
+        "createdAt": "2019-06-27T04:27:18",
+        "reactions": []
+      },
+      {
+        "id": 506152289,
+        "author": "Gillibald",
+        "body": "Luckily it is trivial to update the submodule",
+        "createdAt": "2019-06-27T04:29:00",
+        "reactions": []
+      },
+      {
+        "id": 506189989,
+        "author": "mattleibow",
+        "body": "I had a look at the diff between 2.5.2 and 2.5.3 and there are no new files, so that is nice.",
+        "createdAt": "2019-06-27T04:59:02",
+        "reactions": []
+      },
+      {
+        "id": 506190262,
+        "author": "mattleibow",
+        "body": "@Gillibald let me know if these changes still work for the way you consume the APIs. We can merge if it is all good. I don\u0027t think I changed anything on the public API front, except the strings in the delegates.",
+        "createdAt": "2019-06-27T05:00:35",
+        "reactions": []
+      },
+      {
+        "id": 506191307,
+        "author": "Gillibald",
+        "body": "Haven\u0027t found the time yet to adopt these changes in my code. Should be fine but we can wait until I have made these changes if you want. Let\u0027s wait for CI to finish and I will test against that build.",
+        "createdAt": "2019-06-27T05:06:34",
+        "reactions": []
+      },
+      {
+        "id": 506199030,
+        "author": "Gillibald",
+        "body": "Okay just tested against this PR and everything looks good \uD83D\uDC4D",
+        "createdAt": "2019-06-27T05:41:58",
+        "reactions": []
+      }
+    ]
+  }
 }

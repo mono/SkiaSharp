@@ -30,5 +30,38 @@
   "createdAt": "2019-11-07T02:03:07",
   "updatedAt": "2019-12-26T08:38:09",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:31:28.801938Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 550760081,
+        "author": "Gillibald",
+        "body": "https://github.com/SharpGenTools/SharpGenTools",
+        "createdAt": "2019-11-07T04:59:51",
+        "reactions": [
+          {
+            "user": "ngocdaothanh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:31:28.3695705Z"
+          }
+        ]
+      },
+      {
+        "id": 569010859,
+        "author": "mattleibow",
+        "body": "Been a long time since you asked, but this is something I am wanting to do.\r\n\r\nThere are a few reasons why this is not done yet, the simplest is that I just haven\u0027t gotten around to it. It is a bit of work, and it needs to be done. \r\n\r\nOther reasons is that the actual C\u002B\u002B API is a bit varied and will make tools a bit harder to write. However, this is no reason why we can\u0027t do it.\r\n\r\nOn thing that I do when I generate the C API is that I decide what/how I want objects to exist. For example, we could magically generate everything, but I actually want the small, frequently used objects to be structs - SKSize and SKPoint. I don\u0027t want to cross the managed/native bridge too often. This has to be taken into consideration.\r\n\r\n\u003E The reason _I_ am not doing this is that the C API is not particularly time consuming or complex to maintain. I have a few other projects that take up a lot of time so writing a few lines of C every so often is not so bad. Obviously, as time goes on, I would probably _save_ time, but...\r\n\r\nJust want to say: PRs are welcome and probably you (or anyone in the community) might be able to do it better.",
+        "createdAt": "2019-12-26T08:26:49",
+        "reactions": []
+      },
+      {
+        "id": 569012883,
+        "author": "mattleibow",
+        "body": "On the point of the don\u0027t fork the native repo, I don\u0027t think this will be possible in the near future because of the non-API changes required. We could upstream them, but this also needs to be done.\r\n\r\nSome of the things that we change to support our feature set are additional platforms as well as managed-only features that Google probably doesn\u0027t want in their code.\r\n\r\nI have no problem about parsing C\u002B\u002B and generating C into the repo, but dropping the fork is not going to be something that will be looked without some serious consideration and discussion.",
+        "createdAt": "2019-12-26T08:38:08",
+        "reactions": []
+      }
+    ]
+  }
 }

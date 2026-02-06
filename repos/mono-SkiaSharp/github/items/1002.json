@@ -13,5 +13,18 @@
   "createdAt": "2019-11-07T01:49:35",
   "updatedAt": "2019-12-26T08:51:10",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:31:27.412747Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 569015184,
+        "author": "mattleibow",
+        "body": "So, this is partially true - the C# interop is generated, but not the classes.\r\n\r\nAs I mentioned in #1003, I would like to have a magical tool to do the work, but I will need to first create it. That will take some time.\r\n\r\nBut, another (probably more important) consideration is compatibility. So far, nobody really had major issues using later versions of SkiaSharp in their apps, but the underlying C\u002B\u002B API has changed considerably. This is all thanks to the custom C# API that absorbs all the wild changes that Google has made in order to create this great graphics library. If the C# API is 100% generated, this may be harder to preserve. This doesn\u0027t mean that it will be impossible, but it does mean the generator has to be smarter.\r\n\r\nWe could generate the basic API in C# and then extend it with what we want, but again, this is work.\r\n\r\nAt the end of the day, this goes back to the reality of me being the sole maintainer of SkiaSharp (with several community contributors). The work is going to take a fair amount of time away from the actual library - and other libraries I am working on as well. This is why I have been changing the build system frequently as I work. I am trying to make this repo easier to contribute to and work with so that the community can step in where I am not able to at the moment and help out.",
+        "createdAt": "2019-12-26T08:51:09",
+        "reactions": []
+      }
+    ]
+  }
 }

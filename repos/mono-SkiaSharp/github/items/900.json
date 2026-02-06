@@ -38,5 +38,44 @@
       "state": "COMMENTED",
       "submittedAt": "2019-07-07T02:52:46"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:34:43.5190925Z",
+    "reactions": [
+      {
+        "user": "daltonks",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:34:43.5191001Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:34:43.5191011Z"
+      },
+      {
+        "user": "gritsenko",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:34:43.5191016Z"
+      },
+      {
+        "user": "Gillibald",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:34:43.519102Z"
+      },
+      {
+        "user": "sensokame",
+        "content": "heart",
+        "createdAt": "2026-02-06T14:34:43.5191024Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 516221030,
+        "author": "mattleibow",
+        "body": "This PR has a big set of changes that may be breaking due to bug fixes:\r\n\r\nThe \u0060SKAbstractManagedStream\u0060, \u0060SKAbstractManagedWStream\u0060 and \u0060SKDrawable\u0060 no longer prevent the GC from collecting them. This means that if code no longer references them, they will be disposed. \r\n - As far as I can tell, this should not be a problem for the streams as they are never kept around - they are just used for reading and writing and typically only need to live for as long as a single method, and then need to be disposed by the caller. The \u0060SKTypeface\u0060 and \u0060SKDocument\u0060 do keep it around for a bit, but then they also take ownership of the stream and keep a hard reference to the streams themselves. They will dispose the streams when they are disposed.\r\n - \u0060SKDrawable\u0060 is never kept around and is entirely a user-controlled object. If it goes out of scope, skia doesn\u0027t have a reference anyway.\r\n\r\nThe \u0060SKFontManager\u0060 and \u0060SKTypeface\u0060 no longer use the managed streams (\u0060SKManagedStream\u0060 or \u0060Stream\u0060) directly - they make a copy.\r\n - This is simply because skia streams can do things that are not possible for .NET - they can be read concurrently from different positions. If a \u0060SKFileStream\u0060 or \u0060SKMemoryStream\u0060 are passed, then the streams are not copied.\r\n - Further optimizations can be made in the case of a \u0060MemoryStream\u0060 or \u0060byte[]\u0060 to not actually copy but use GC pinning to get a handle to the managed data and work with pointers. But this can be done later so that this PR can be merged and tested.\r\n\r\n",
+        "createdAt": "2019-07-30T01:20:55",
+        "reactions": []
+      }
+    ]
+  }
 }

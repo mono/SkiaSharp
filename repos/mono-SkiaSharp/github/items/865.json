@@ -93,5 +93,177 @@
       "state": "COMMENTED",
       "submittedAt": "2019-06-26T00:27:39"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:34:15.0981831Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 504692987,
+        "author": "mattleibow",
+        "body": "@Gillibald For naming, should it be Get\u003Cplural\u003ESpan or Get\u003Csingular\u003ESpan?\r\n\r\nWe could have GetPixelsSpan or GetPixelSpan. Or GetGlyphsSpan or GetGlyphSpan. Same with GetGlyphInfosSpan or GetGlyphInfoSpan.\r\n\r\nThe plurals sound like they have too many sss, but theoretically the wording is correct. or is it?",
+        "createdAt": "2019-06-22T19:40:05",
+        "reactions": []
+      },
+      {
+        "id": 504693240,
+        "author": "mattleibow",
+        "body": "Note: the .editorconfig is a bit of a lie but you can just leave the if statements for single-line logic without braces if it is a throw or a return. Not sure how to control that. For the rules in styling... not sure of them \uD83D\uDE04  Half the time it is keep it the same or follow .net foundation or just use the mono style.",
+        "createdAt": "2019-06-22T19:44:22",
+        "reactions": []
+      },
+      {
+        "id": 504693271,
+        "author": "Gillibald",
+        "body": "Hmm hard to tell. Both are somehow correct. \u0060GetGlyphSpan\u0060 returns a span of glyphs but if we have a property called \u0060Glyphs\u0060 it makes sense to call it \u0060GetGlyphsSpan\u0060 I am in favor of \u0060GetGlyphSpan\u0060",
+        "createdAt": "2019-06-22T19:44:48",
+        "reactions": []
+      },
+      {
+        "id": 504693400,
+        "author": "Gillibald",
+        "body": "Getting the code style right for this project is kinda hard for me. I just let Visual Studio produce the right format and hope it works. Probably should try to find a config that ensures that the right style is produced.",
+        "createdAt": "2019-06-22T19:46:49",
+        "reactions": []
+      },
+      {
+        "id": 504693611,
+        "author": "mattleibow",
+        "body": "I think so too. Not a fan of the sssnakesss in the word. For the styling, I am trying to look for a rule that doesn\u0027t ask for braces on if statements.",
+        "createdAt": "2019-06-22T19:50:13",
+        "reactions": []
+      },
+      {
+        "id": 504694016,
+        "author": "mattleibow",
+        "body": "Found the braces thing: \r\n\r\n\u0060csharp_prefer_braces = true:suggestion\u0060 -\u003E \u0060csharp_prefer_braces = true:silent\u0060",
+        "createdAt": "2019-06-22T19:56:36",
+        "reactions": []
+      },
+      {
+        "id": 504694119,
+        "author": "mattleibow",
+        "body": "Also, sad choice, but all public types must start with SK :) That is for the new 3 buffer types.\r\nAnd, is there a reason to make \u0060SKTextBlobBuilderRunBuffer\u0060 public? Not sure if I want to do that yet. And, now that we have the new buffer types, we can keep that an internal thing - a sort of backing type for the classes.\r\n\r\nAnd, now that we have those 3 types, we could move the logic into the classes so the struct is just a simple container for the couple of \u0060IntPtr\u0060s. Not sure if that is helpful in any sense or just extra work.\r\n\r\nEDIT: in fact, looking at your code, you have already duplicated some of the logic and are using the spans instead, so removing the code is probably better to further indicate that the IntPtrs are more internal. And spans are nicer than IntPtrs anyway.",
+        "createdAt": "2019-06-22T19:58:19",
+        "reactions": []
+      },
+      {
+        "id": 504694607,
+        "author": "mattleibow",
+        "body": "We can probably just have \u0060SKRunBufferInternal\u0060 for pure C interop:\r\n\r\n\u0060\u0060\u0060csharp\r\n[StructLayout (LayoutKind.Sequential)]\r\ninternal struct SKRunBufferInternal\r\n{\r\n\tpublic IntPtr GlyphsBuffer;\r\n\tpublic IntPtr PositionsBuffer;\r\n\tpublic IntPtr Utf8textBuffer;\r\n\tpublic IntPtr ClustersBuffer;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nNot sure if \u0060void*\u0060 is better than \u0060IntPtr\u0060 here as well.",
+        "createdAt": "2019-06-22T20:06:18",
+        "reactions": []
+      },
+      {
+        "id": 504695315,
+        "author": "Gillibald",
+        "body": "\u0060SKTextBlobBuilderRunBuffer\u0060 doesn\u0027t need to be public, not sure why I did that. We can rename \u0060RunBuffer\u0060 to \u0060SKRunBuffer\u0060 even tho it is called \u0060RunBuffer\u0060 by Skia",
+        "createdAt": "2019-06-22T20:16:41",
+        "reactions": []
+      },
+      {
+        "id": 504696937,
+        "author": "mattleibow",
+        "body": "I renamed the types, and it looks pretty good so far. We probably need some tests for this, just in case we break something later. The reason for skia not using the SK prefix is that it was actually a nested type - that is why I actually had the full name \u0060SKTextBlobBuilderRunBuffer\u0060. Not sure if I want to go with just a plain old \u0060SKRunBuffer\u0060 - because google may introduce a new type with that name - they did it once or twice already. But, the fill name is going to get really long for the positioned buffers.",
+        "createdAt": "2019-06-22T20:42:25",
+        "reactions": []
+      },
+      {
+        "id": 504697052,
+        "author": "mattleibow",
+        "body": "Let me know if these changes work for you in the sense that the code looks intelligent when being consumed. What tests are you folks using in the app to make sure text is correct? We should probably get something like them in skia so we don\u0027t break you.\r\n\r\nSomething that I am trying to focus on is making sure the APIs are nice to use - in the beginning it was more of a \u0022just get the features out\u0022 - now I want to make sure that when we expose an API it is actually usable.",
+        "createdAt": "2019-06-22T20:44:27",
+        "reactions": []
+      },
+      {
+        "id": 504697214,
+        "author": "mattleibow",
+        "body": "Oops, still need to rename the GetXxxSpan methods.",
+        "createdAt": "2019-06-22T20:47:08",
+        "reactions": []
+      },
+      {
+        "id": 504701421,
+        "author": "Gillibald",
+        "body": "I will think about proper unit tests.\r\n\r\nIn general this is used as a replacement for DrawPositionedText. By using Span\u003CT\u003E we can directly access the allocated buffer and avoid extra copies.",
+        "createdAt": "2019-06-22T22:01:01",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:34:12.6174977Z"
+          }
+        ]
+      },
+      {
+        "id": 504702729,
+        "author": "Gillibald",
+        "body": "The usage of new HarfBuzzSharp and new Span overloads is only part of current development so it is fine if things change. I had to find the needed API surface myself during development and changed a lot in that process.",
+        "createdAt": "2019-06-22T22:24:36",
+        "reactions": []
+      },
+      {
+        "id": 504703343,
+        "author": "Gillibald",
+        "body": "I recently found this: https://github.com/google/skia/blob/master/modules/skshaper/src/SkShaper_harfbuzz.cpp They seem to implement their own font funcs that call into Skia API to better share measurements between HarfBuzz and Skia.\r\n\r\nWe can\u0027t do that in managed code because that would involve UnmanagedFunctionPointer that needs special treatment for iOS",
+        "createdAt": "2019-06-22T22:37:13",
+        "reactions": []
+      },
+      {
+        "id": 504706574,
+        "author": "mattleibow",
+        "body": "We could write our own methods in native code and then expose them in managed code - this way we can create our own layer between - sort of what we did for the managed streams. \r\n\r\nBut maybe I am not understanding, we are already doing a bit of these funcs with the new delegates in the last update you did? Sure, there is that annoying extra layer for iOS, but we _can_ use conditionals and maybe have a special compilation that only uses the intermediate layer that is _just_ for iOS. Is there a specific function that you think we won\u0027t be able to do?\r\n\r\nThere are only a few that is being used and we should be able to bind them just fine: https://github.com/google/skia/blob/master/modules/skshaper/src/SkShaper_harfbuzz.cpp#L226-L249\r\n\r\nOn the other side, I am probably going to be binding the \u0060SkShaper\u0060 as a whole when we update to the next major version - this will do away with the current sharper in the SkiaSharp.HarfBuzz package. Not only will there be less interop code, but we get all the performance of native code. And, Google maintains the code.",
+        "createdAt": "2019-06-22T23:45:57",
+        "reactions": []
+      },
+      {
+        "id": 504707372,
+        "author": "mattleibow",
+        "body": "I am renaming this PR so we can focus the scope here. If we are to merge this anytime soon, we might as well just get the bits that you need in and then merge for a release. We can always add more in another update.\r\n\r\nAnd, I don\u0027t want to add anymore members for drawing text just yet as they are going away and will need to be replaced with managed implementations. I\u0027d rather see what we are dealing with because we already have many members that are obsolete at this point.",
+        "createdAt": "2019-06-23T00:04:19",
+        "reactions": []
+      },
+      {
+        "id": 504729114,
+        "author": "Gillibald",
+        "body": "This is already a good start and covers good areas. \r\n\r\nThe SkShaper maintained by Skia should be optional because it relies on ICU and that\u0027s a dependency you kinda want to avoid when you want a small application package.\r\n\r\nWriting these font funcs in native code and exposing them in the binding could work I guess. The rest can be written in managed code.\r\n\r\nI am not an expert in terms of UnmanagedFunctionPointer performance. If that is fine to use on a hot path we could write font funcs on managed side and have conditional compilation for iOS with the required fallback. ",
+        "createdAt": "2019-06-23T07:56:41",
+        "reactions": []
+      },
+      {
+        "id": 504809024,
+        "author": "mattleibow",
+        "body": "@Gillibald how happy are you with the implementation for the spans on the text blob? Ready to merge?\r\n\r\nAlso, any final thoughts on the naming convention? Singular? Plural? Depends?\r\n\r\nAnd, any ideas for tests? Should we just draw to a canvas and make sure they match?",
+        "createdAt": "2019-06-24T01:35:09",
+        "reactions": []
+      },
+      {
+        "id": 504848312,
+        "author": "Gillibald",
+        "body": "@mattleibow For unit tests we could indeed just draw to a canvas and compare results. That\u0027s the only way to make sure everything works properly.\r\n\r\nThe naming looks right to me and we should keep that convention.\r\n\r\nWill test this now.",
+        "createdAt": "2019-06-24T03:59:57",
+        "reactions": []
+      },
+      {
+        "id": 504854326,
+        "author": "Gillibald",
+        "body": "@mattleibow \r\nWorks perfectly in combination with HarfBuzz \uD83D\uDC4D\r\n\r\nCan be merged",
+        "createdAt": "2019-06-24T04:36:53",
+        "reactions": []
+      },
+      {
+        "id": 505691269,
+        "author": "mattleibow",
+        "body": "@Gillibald I added new overloads for creating runs. Instead of allocating and then copying, you can just allocate and set in one line. The allocate methods are there, but you can use the add methods as well.\r\n\r\nOLD:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var builder = new SKTextBlobBuilder())\r\n{\r\n    var runBuffer = builder.AllocateRunPositioned(_paint,\r\n    textRun.GlyphRun.GlyphIndices.Length, 0, null);\r\n\r\n    var glyphs = runBuffer.GetGlyphSpan();\r\n    var positions = runBuffer.GetPositionSpan();\r\n\r\n    for (var i = 0; i \u003C textRun.GlyphRun.GlyphIndices.Length; i\u002B\u002B)\r\n    {\r\n        glyphs[i] = textRun.GlyphRun.GlyphIndices[i];\r\n        positions[i] = textRun.GlyphRun.GlyphPositions[i];\r\n    }\r\n\r\n    var blob = builder.Build();\r\n    canvas.DrawText(blob, 0, 0, _paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nNEW:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var builder = new SKTextBlobBuilder())\r\n{\r\n\tbuilder.AddPositionedRun(_paint, textRun.GlyphRun.GlyphIndices, textRun.GlyphRun.GlyphPositions);\r\n\tvar blob = builder.Build();\r\n\tcanvas.DrawText(blob, 0, 0, _paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nBecause the \u0060AddPositionedRun\u0060 takes an array/span, it is then passed directly to the run buffer\u0027s \u0060SetGlyphs\u0060 and \u0060SetPositions\u0060 methods. Each of those methods then use \u0022native\u0022 code in the spans to copy the buffers.\r\n\r\nRegardless of how you allocate the runs, you probably shouldn\u0027t loop through the code in the managed world as there is a lot of overhead with index checks and copying. This guy was wanting to copy memory for bitmaps and ran quite a few benchmarks: https://github.com/mono/SkiaSharp/issues/842 (https://github.com/MichaelRumpler/CopyBitmap)\r\n\r\nAs a result, it appears that the fastest way to copy memory is \u0060Span\u003CT\u003E.CopyTo()\u0060. And, this is what I am using under the hood of the various \u0060SetXxx\u0060 methods of the runs. And, the code for the \u0060CopyTo\u0060 method is very optimized with checks for the OS features.",
+        "createdAt": "2019-06-26T02:24:31",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:34:15.0479196Z"
+          }
+        ]
+      }
+    ]
+  }
 }

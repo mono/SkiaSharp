@@ -43,5 +43,107 @@
       "state": "COMMENTED",
       "submittedAt": "2019-07-13T03:56:16"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:34:48.3896472Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 508101551,
+        "author": "Gillibald",
+        "body": "I would like to remove all overloads that currently take \u0060int\u0060 as codepoints. \u0060UnicodeFunctions\u0060 returns \u0060uint\u0060 as codepoint and HarfBuzz in general uses \u0060uint\u0060 under the hood so it makes sense to remove these overloads.",
+        "createdAt": "2019-07-03T13:50:13",
+        "reactions": []
+      },
+      {
+        "id": 508217613,
+        "author": "mattleibow",
+        "body": "\u003E I would like to remove all overloads that currently take \u0060int\u0060 as codepoints. \u0060UnicodeFunctions\u0060 returns \u0060uint\u0060 as codepoint and HarfBuzz is general uses \u0060uint\u0060 under the hood so it makes sense to remove these overloads.\r\n\r\nSounds good.",
+        "createdAt": "2019-07-03T19:00:07",
+        "reactions": []
+      },
+      {
+        "id": 508219113,
+        "author": "mattleibow",
+        "body": "I am having a look at the usage of \u0060unsafe\u0060, previously I was all \u0022keep it hidden\u0022, but it just makes the code more verbose - and I have learned to not fear it. So, I am thinking that if it reduces the code a bit by adding it to the member definition, then let\u0027s do it. ",
+        "createdAt": "2019-07-03T19:05:02",
+        "reactions": []
+      },
+      {
+        "id": 508226954,
+        "author": "Gillibald",
+        "body": "I changed it to match the style of recent additions but as you mentioned defining unsafe on the member definition looks much cleaner.",
+        "createdAt": "2019-07-03T19:31:21",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:34:46.1925951Z"
+          }
+        ]
+      },
+      {
+        "id": 508232461,
+        "author": "mattleibow",
+        "body": "I have been changed since working with you. I used to be a \u0022safe\u0022 guy, but since seeing how awesome Spans and void* really are, I can see all the places where I was wrong. Thanks for putting up with me.",
+        "createdAt": "2019-07-03T19:51:01",
+        "reactions": []
+      },
+      {
+        "id": 508706663,
+        "author": "Gillibald",
+        "body": "@mattleibow Do you know why CI is always aborted?",
+        "createdAt": "2019-07-05T10:04:13",
+        "reactions": []
+      },
+      {
+        "id": 508966459,
+        "author": "mattleibow",
+        "body": "Not sure exactly... seems the builds are timing out after 2 hours - which means something got stuck. Rebuilding now, sometimes DevOps has hiccups.",
+        "createdAt": "2019-07-07T02:22:46",
+        "reactions": []
+      },
+      {
+        "id": 510520297,
+        "author": "mattleibow",
+        "body": "This looks good, just doing a last build before merging. Is this PR complete?",
+        "createdAt": "2019-07-11T14:54:08",
+        "reactions": []
+      },
+      {
+        "id": 510528584,
+        "author": "Gillibald",
+        "body": "Yes. This PR is complete. ",
+        "createdAt": "2019-07-11T15:14:09",
+        "reactions": []
+      },
+      {
+        "id": 510529357,
+        "author": "Gillibald",
+        "body": "Should we add - static-libstdc\u002B\u002B only to the linker step in the makefile to avoid these warnings?",
+        "createdAt": "2019-07-11T15:16:02",
+        "reactions": []
+      },
+      {
+        "id": 510531673,
+        "author": "mattleibow",
+        "body": "\u003E Should we add - static-libstdc\u002B\u002B only to the linker step in the makefile to avoid these warnings?\r\n\r\nAh, that might be good. Use the \u0060LDFLAGS\u0060.",
+        "createdAt": "2019-07-11T15:21:41",
+        "reactions": []
+      },
+      {
+        "id": 510532476,
+        "author": "mattleibow",
+        "body": "\u003E Are you sure we can use a Tag here? I read only branches are valid.\r\n\r\nI think I have always used the tag, not sure if it is valid... We probably don\u0027t need that at all - it was more to stop the docs tool from breaking - but that is now a separate repo. But, we can remove that in a separate PR - along with the other branches.",
+        "createdAt": "2019-07-11T15:23:44",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:34:48.3401308Z"
+          }
+        ]
+      }
+    ]
+  }
 }
