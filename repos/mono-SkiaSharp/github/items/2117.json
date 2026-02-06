@@ -13,5 +13,25 @@
   "createdAt": "2022-06-17T00:04:24",
   "updatedAt": "2022-06-27T10:47:02",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:20:47.407322Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1158674970,
+        "author": "TruckDynasty",
+        "body": "got it compiled today, had to edit more build scripts: removed -fvisibility=hidden from cflags and -fvisibility-inlines-hidden from cflags_cc, then added -shared and -rdynamic to ldflags\r\n\r\nthe symbols all show up, but the source built libHarfBuzzSharp gives me the same issues as the nuget libHarfBuzzSharp: it seg faults as soon as it loads\r\n\r\nI think I\u0027m going to throw in the bandana until arm64 platforms are better supported by dotnet and others, but I appreciate everyone\u0027s hard work!  new architectures are never fun for anyone",
+        "createdAt": "2022-06-17T09:15:34",
+        "reactions": []
+      },
+      {
+        "id": 1167194629,
+        "author": "TruckDynasty",
+        "body": "Revisiting:\r\nrun \u0027gdb dotnet\u0027 to start dotnet\r\nthen \u0027run /opt/UVtools-3.4.3/UVtools.WPF/bin/Debug/net6.0/UVtools.dll\u0027 to load up the compiled dotnet project\r\n... bunch of output as threads spawn ...\r\nThread 1 \u0022dotnet\u0022 received signal SIGSEGV, Segmentation fault.\r\n0x0000000000000000 in ?? ()\r\n(gdb) bt\r\n/#0  0x0000000000000000 in ()\r\n/#1  0x0000007f80b40c7c in ()\r\n/#2  0x0000007ff7a29000 in vtable for InlinedCallFrame () at /opt/dotnet-sdk-6.0.103/shared/Microsoft.NETCore.App/6.0.3/libcoreclr.so\r\n\r\nAlso:\r\nrun LD_DEBUG=libs dotnet /opt/UVtools-3.4.3/UVtools.WPF/bin/Debug/net6.0/UVtools.dll\r\n... bunch of library load output ...\r\ncalling init:  /opt/UVTools-3.4.3/UVtools.WPF/bin/Debug/net6.0/runtimes/linux-arm64/native/libHarfbuzzSharp.so\r\nSegmentation Fault\r\n\r\n(NOTE: I moved the libHarfbuzzSharp.so and libSkiaSharp.so from the source build dir to the directory listed above as well as to the system library)\r\n\r\ndoes this help at all??  I really wish I could help more with this, UVtools is also an app built on Avalonia, which needs libHarfbuzzSharp (at least for this project)\r\n\r\nI also just finished recompiling openssl 1.1.1, openssl 3, and dotnet from source (the prebuilt dotnet 6\u0027s have serious issues right now with the dated versions of ossl that ship with raspberry pi os).  I\u0027ll try harfbuzz, libSkiaSharp, libHarfbuzzSharp, then UVTools and see if anything changes",
+        "createdAt": "2022-06-27T10:47:02",
+        "reactions": []
+      }
+    ]
+  }
 }

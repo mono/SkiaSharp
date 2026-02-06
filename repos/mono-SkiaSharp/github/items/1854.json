@@ -46,5 +46,98 @@
       "state": "APPROVED",
       "submittedAt": "2022-06-16T17:16:46"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:20:53.3114911Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 961825928,
+        "author": "mattleibow",
+        "body": "Is this the only way to check? Or rather, is this sufficient?\r\n\r\nI am thinking if you have moved the window, does it always trigger a paint - even without a render loop? Is there some window based event that we should check? What happens if you change the display scale in the system preferences?\r\n\r\nThe code looks good, I am just wondering if we should be listening to some event...",
+        "createdAt": "2021-11-05T11:41:25",
+        "reactions": []
+      },
+      {
+        "id": 962229754,
+        "author": "HarlanHugh",
+        "body": "Yes, moving the window between two displays of different scales triggers a paint even without a render loop. A paint is also triggered when then the display scale is changed via System Preferences.\r\n\r\nThere is an event that is fired when display scale is changed via System Preferences (NSApplication.Notifications.ObserveDidChangeScreenParameters) but it does not fire when moving the window between displays. If there is another event that fires when moving the window, I am not aware of it.",
+        "createdAt": "2021-11-05T21:23:41",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:20:51.4975475Z"
+          }
+        ]
+      },
+      {
+        "id": 962278468,
+        "author": "HarlanHugh",
+        "body": "I moved the code as suggested. Great change. The result is visually perfect now, eliminated a brief flash that happened before.",
+        "createdAt": "2021-11-05T23:32:00",
+        "reactions": []
+      },
+      {
+        "id": 962280647,
+        "author": "HarlanHugh",
+        "body": "I may have just discovered a better way to do this... don\u0027t merge yet.",
+        "createdAt": "2021-11-05T23:40:09",
+        "reactions": []
+      },
+      {
+        "id": 962283684,
+        "author": "HarlanHugh",
+        "body": "Nevermind... There is an event that fires - NSView.DidChangeBackingProperties and the fix can be implemented there however doing so results in the content being redrawn at the wrong scale momentarily. Handling it in DrawRect is much better.",
+        "createdAt": "2021-11-05T23:52:52",
+        "reactions": []
+      },
+      {
+        "id": 964604329,
+        "author": "HarlanHugh",
+        "body": "I believe this code is ready to merge.",
+        "createdAt": "2021-11-09T22:29:41",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:20:52.5575419Z"
+          }
+        ]
+      },
+      {
+        "id": 1157140186,
+        "author": "mattleibow",
+        "body": "OMG, 7 months. Sorry! Let me re review and merge. Thanks for fixing this. ",
+        "createdAt": "2022-06-16T01:41:25",
+        "reactions": [
+          {
+            "user": "HarlanHugh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:20:52.7817109Z"
+          }
+        ]
+      },
+      {
+        "id": 1157141660,
+        "author": "mattleibow",
+        "body": "Actually, I am looking at this and see the logic in draw rect basically cancels and triggers a redraw.\n\nWhat happens with the reshape event?\n\nIs the chance basically to not have a flash? ",
+        "createdAt": "2022-06-16T01:45:06",
+        "reactions": []
+      },
+      {
+        "id": 1157442985,
+        "author": "HarlanHugh",
+        "body": "If we don\u0027t track whether the scale has been changed and call Reshape directly, it is never called unless the view is resized.\r\n\r\nWhen tracking the scale from inside of OnPaintSurface where I had it originally, there was a flash. Moving it to DrawRect and bailing out when a changed is detected prevents a flash entirely.\r\n\r\nFWIW, we have already been using this in production with thousands of users for the last 6 months.",
+        "createdAt": "2022-06-16T09:32:35",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:20:53.2610281Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -19,5 +19,39 @@
   "updatedAt": "2022-08-19T00:01:18",
   "closedAt": "2022-06-20T08:30:50",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:21.8878915Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1155593514,
+        "author": "TopperDEL",
+        "body": "@jeromelaban Do you have an idea on this one? The size reported from SKXamlCanvas on iOs is wrong - it is only 1/2 of the real size.",
+        "createdAt": "2022-06-14T18:44:33",
+        "reactions": []
+      },
+      {
+        "id": 1155745151,
+        "author": "jeromelaban",
+        "body": "This is likely expected if your screen is using a scale of 200%. \u0060ActualWith\u0060 and \u0060ActualHeight\u0060 are DPI independent. You\u0027ll need to use the canvas size to do your computations.",
+        "createdAt": "2022-06-14T21:50:33",
+        "reactions": []
+      },
+      {
+        "id": 1159468238,
+        "author": "mattleibow",
+        "body": "Depending on what Uno does, you can either use the \u0060XamlRoot.RasterizationScale\u0060 or the \u0060DisplayInformation.GetForCurrentView().LogicalDpi / 96.0\u0060.\r\n\r\nThat is what I do for UWP/WinUI things: https://github.com/mono/SkiaSharp/blob/main/source/SkiaSharp.Views/SkiaSharp.Views.UWP/SKXamlCanvas.cs#L100-L113",
+        "createdAt": "2022-06-18T13:47:22",
+        "reactions": []
+      },
+      {
+        "id": 1160138413,
+        "author": "TopperDEL",
+        "body": "Thanks! That did the trick. I\u0027ve used the Canvas-Size for the basic calculations and used the Dpi-Value to adjust touch points.\r\nThank you both!",
+        "createdAt": "2022-06-20T08:30:50",
+        "reactions": []
+      }
+    ]
+  }
 }

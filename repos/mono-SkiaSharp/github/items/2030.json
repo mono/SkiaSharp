@@ -14,5 +14,81 @@
   "updatedAt": "2022-08-19T00:01:32",
   "closedAt": "2022-05-12T09:30:34",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:02.4573695Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1123201473,
+        "author": "mgood7123",
+        "body": "[log.txt](https://github.com/mono/SkiaSharp/files/8666958/log.txt)\r\n\r\n![image](https://user-images.githubusercontent.com/26642847/167776881-ecb32eda-a0ce-47ad-ad86-a28d4c451e6f.png)\r\n",
+        "createdAt": "2022-05-11T05:27:59",
+        "reactions": []
+      },
+      {
+        "id": 1123705260,
+        "author": "mgood7123",
+        "body": "\u0060--target=natives\u0060 works but \u0060--target=libs\u0060 fails",
+        "createdAt": "2022-05-11T12:38:25",
+        "reactions": []
+      },
+      {
+        "id": 1124289540,
+        "author": "mattleibow",
+        "body": "Ah wait, the message is backwards. It says you are building with 5.0... Do you have a global json somewhere? ",
+        "createdAt": "2022-05-11T20:59:22",
+        "reactions": []
+      },
+      {
+        "id": 1124374106,
+        "author": "mgood7123",
+        "body": "\u003E Ah wait, the message is backwards. It says you are building with 5.0... Do you have a global json somewhere?\r\n\r\nI dont think i do, ill check when i get back",
+        "createdAt": "2022-05-11T23:14:06",
+        "reactions": []
+      },
+      {
+        "id": 1124380216,
+        "author": "mgood7123",
+        "body": "I intend to build and pack for MAUI (android, linux, macOS) and WPF (windows)",
+        "createdAt": "2022-05-11T23:26:49",
+        "reactions": []
+      },
+      {
+        "id": 1124528002,
+        "author": "mgood7123",
+        "body": "i tried adding this\r\n\r\n\u0060\u0060\u0060\r\nPS K:\\AndroidUI-SkiaSharp\u003E cat .\\global.json\r\n{\r\n  \u0022sdk\u0022: {\r\n    \u0022version\u0022: \u00226.0.300-preview\u0022,\r\n    \u0022rollForward\u0022: \u0022latestMajor\u0022,\r\n    \u0022allowPrerelease\u0022: true\r\n  }\r\n}\r\nPS K:\\AndroidUI-SkiaSharp\u003E\r\n\u0060\u0060\u0060\r\nbut i get this\r\n\u0060\u0060\u0060\r\n         K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj : error : Version 6.0.3\r\n       00-preview.22204.3 of the .NET SDK requires at least version 17.0.0 of MSBuild. The current\r\n        available version of MSBuild is 16.11.2.50704. Change the .NET SDK specified in global.jso\r\n       n to an older version that requires the MSBuild version currently available.\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-05-12T04:53:24",
+        "reactions": []
+      },
+      {
+        "id": 1124540603,
+        "author": "mgood7123",
+        "body": "i have the following msbuild\u0027s available\r\n\u0060\u0060\u0060\r\nPS K:\\AndroidUI-SkiaSharp\u003E \u0026 \u0022C:\\Program Files\\Microsoft Visual Studio\\2022\\Preview\\Msbuild\\Current\\Bin\\MSBuild.exe\u0022 -version\r\nMicrosoft (R) Build Engine version 17.2.0\u002B41abc5629 for .NET Framework\r\nCopyright (C) Microsoft Corporation. All rights reserved.\r\n\r\n17.2.0.20702\r\nPS K:\\AndroidUI-SkiaSharp\u003E \u0026 \u0027C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe\u0027 --version\r\nMicrosoft (R) Build Engine version 16.11.2\u002Bf32259642 for .NET Framework\r\nCopyright (C) Microsoft Corporation. All rights reserved.\r\n\r\n16.11.2.50704\r\nPS K:\\AndroidUI-SkiaSharp\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-05-12T05:20:14",
+        "reactions": []
+      },
+      {
+        "id": 1124546963,
+        "author": "mgood7123",
+        "body": "i tried this\r\n\r\n![image](https://user-images.githubusercontent.com/26642847/167998715-dc91f51b-60d6-449b-a8f7-8838ead2ee63.png)\r\n\r\nbut i still get the same error\r\n\u0060\u0060\u0060\r\nThe current .NET SDK does not support targeting .NET 6.0.\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-05-12T05:32:16",
+        "reactions": []
+      },
+      {
+        "id": 1124642245,
+        "author": "mgood7123",
+        "body": "if i modify the msbuild cake script to find vs2022 msbuild i then get\r\n\r\n\u0060\u0060\u0060\r\n========================================\r\nlibs\r\n========================================\r\nMicrosoft (R) Build Engine version 17.2.0\u002B41abc5629 for .NET Framework\r\nCopyright (C) Microsoft Corporation. All rights reserved.\r\n\r\nC:/Program Files/Microsoft Visual Studio/2022/Preview/MSBuild/Current/Bin/MSBuild.exe /bl:K:/AndroidUI-SkiaSharp/output/logs/binlogs/source/SkiaSharpSource.Windows-net6.slnf.binlog /m /p:Configuration=Release /p:Platform=AnyCPU /p:Platform=Any%20CPU /p:RestoreNoCache=true /p:RestorePackagesPath=K:/AndroidUI-SkiaSharp/externals/package_cache /p:BuildingForNet6=true /p:RestoreSources=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json;https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json;https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json;https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-3ba4b3f4/nuget/v3/index.json;https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-emsdk-ee0a97a0/nuget/v3/index.json;K:/AndroidUI-SkiaSharp/output/nugets /restore /target:Build /v:normal K:/AndroidUI-SkiaSharp/source/SkiaSharpSource.Windows-net6.slnf\r\nBuild started 5/12/2022 5:41:06 PM.\r\n     1\u003EProject \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 on node 1 (Restore target(s)).\r\n     1\u003EValidateSolutionConfiguration:\r\n         Building solution configuration \u0022Release|Any CPU\u0022.\r\n       _GetAllRestoreProjectPathItems:\r\n         Determining projects to restore...\r\n     1\u003EProject \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (1) is building \u0022K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj\u0022 (4:27) on node 2 (_G\r\n       enerateProjectRestoreGraph target(s)).\r\n  4:27\u003EProject \u0022K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj\u0022 (4:27) is building \u0022K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj\u0022 (4:41) on node 2 (_Gene\r\n       rateProjectRestoreGraphPerFramework target(s)).\r\n     4\u003EC:\\Program Files\\dotnet\\sdk\\6.0.300-preview.22204.3\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To build this projec\r\n       t, the following workloads must be installed: tvos [K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj]\r\n       C:\\Program Files\\dotnet\\sdk\\6.0.300-preview.22204.3\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To install these wor\r\n       kloads, run the following command: dotnet workload restore [K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj]\r\n     4\u003EDone Building Project \u0022K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj\u0022 (_GenerateProjectRestoreGraphPerFramework target(s)) -- FAILED.\r\n     4\u003EDone Building Project \u0022K:\\AndroidUI-SkiaSharp\\binding\\SkiaSharp\\SkiaSharp.csproj\u0022 (_GenerateProjectRestoreGraph target(s)) -- FAILED.\r\n     1\u003EProject \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (1) is building \u0022K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj\u0022 (6:21) on no\r\n       de 1 (_GenerateProjectRestoreGraph target(s)).\r\n  6:21\u003EProject \u0022K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj\u0022 (6:21) is building \u0022K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj\u0022 (6:35)\r\n       on node 1 (_GenerateProjectRestoreGraphPerFramework target(s)).\r\n     6\u003EC:\\Program Files\\dotnet\\sdk\\6.0.300-preview.22204.3\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To build this projec\r\n       t, the following workloads must be installed: tvos [K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj]\r\n       C:\\Program Files\\dotnet\\sdk\\6.0.300-preview.22204.3\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To install these wor\r\n       kloads, run the following command: dotnet workload restore [K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj]\r\n     6\u003EDone Building Project \u0022K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj\u0022 (_GenerateProjectRestoreGraphPerFramework target(s)) -- FAILED.\r\n     6\u003EDone Building Project \u0022K:\\AndroidUI-SkiaSharp\\binding\\HarfBuzzSharp\\HarfBuzzSharp.csproj\u0022 (_GenerateProjectRestoreGraph target(s)) -- FAILED.\r\n     1\u003EProject \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (1) is building \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.c\r\n       sproj\u0022 (8:16) on node 2 (_GenerateProjectRestoreGraph target(s)).\r\n  8:16\u003EProject \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj\u0022 (8:16) is building \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp\r\n       .Views\\SkiaSharp.Views.csproj\u0022 (8:24) on node 1 (_GenerateProjectRestoreGraphPerFramework target(s)).\r\n     8\u003EC:\\Program Files\\dotnet\\sdk\\6.0.300-preview.22204.3\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To build this projec\r\n       t, the following workloads must be installed: tvos [K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj]\r\n       C:\\Program Files\\dotnet\\sdk\\6.0.300-preview.22204.3\\Sdks\\Microsoft.NET.Sdk\\targets\\Microsoft.NET.Sdk.ImportWorkloads.targets(38,5): error NETSDK1147: To install these wor\r\n       kloads, run the following command: dotnet workload restore [K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj]\r\n     8\u003EDone Building Project \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj\u0022 (_GenerateProjectRestoreGraphPerFramework target(s)) -- FAILE\r\n       D.\r\n     8\u003EDone Building Project \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharp.Views\\SkiaSharp.Views\\SkiaSharp.Views.csproj\u0022 (_GenerateProjectRestoreGraph target(s)) -- FAILED.\r\n     1\u003EDone Building Project \u0022K:\\AndroidUI-SkiaSharp\\source\\SkiaSharpSource.Windows-net6.slnf\u0022 (Restore target(s)) -- FAILED.\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-05-12T07:42:52",
+        "reactions": []
+      },
+      {
+        "id": 1124746021,
+        "author": "mgood7123",
+        "body": "this is fixed by making msbuild.cake detect msbuild 17",
+        "createdAt": "2022-05-12T09:30:34",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -106,5 +106,205 @@
       "state": "DISMISSED",
       "submittedAt": "2021-11-13T06:00:44"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:32.871574Z",
+    "reactions": [
+      {
+        "user": "noseratio",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:19:32.8717993Z"
+      },
+      {
+        "user": "Vercidium",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:19:32.8718002Z"
+      },
+      {
+        "user": "hez2010",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:19:32.8718009Z"
+      },
+      {
+        "user": "pauldendulk",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:19:32.8718014Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 962292548,
+        "author": "toptensoftware",
+        "body": "Hi @mattleibow,  \r\n\r\nI\u0027m perfectly happy with whatever you think is the best solution - just so long as there\u0027s a way to get a non-alertable lock in there somehow.\r\n\r\nI think the biggest question is what lock it uses on Windows by default?  Personally I think it should use the non-alertable lock because of reasons [mentioned here](https://github.com/mono/SkiaSharp/issues/1383#issuecomment-927409389).  This decision doesn\u0027t really affect me because my toolkit will configure as appropriate but for general SkiaSharp users you need to make a call on that.\r\n\r\nI can make the changes if you let me know exactly how you want it to work (but probably won\u0027t get to it until Monday).  If you prefer make the changes yourself I\u0027m fine with that too.\r\n\r\nBrad",
+        "createdAt": "2021-11-06T00:31:17",
+        "reactions": []
+      },
+      {
+        "id": 962425665,
+        "author": "mattleibow",
+        "body": "Good point. Maybe we can change the default now in the previews and see what breaks. We can always change it back in a new preview. ",
+        "createdAt": "2021-11-06T09:40:24",
+        "reactions": []
+      },
+      {
+        "id": 963756601,
+        "author": "toptensoftware",
+        "body": "Hey Matt,\r\n\r\nI\u0027ve updated the PR as follows:\r\n\r\n* Moved \u0060PlatformLock\u0060 to \u0060SkiaSharp.Internals\u0060 namespace\r\n* Moved \u0060PlatformLock\u0060, \u0060IPlatformLock\u0060 and interface implementations it to a new file \u0060PlatformLock.cs\u0060\r\n* The implementations of \u0060IPlatformLock\u0060 are now nested classes in \u0060PlatformLock\u0060\r\n* \u0060PlatformLock\u0060 class has a new static property \u0060Factory\u0060 that lets you change the implementation\r\n* \u0060Factory\u0060 defaults to new static function \u0060PlatformLock.DefaultFactory\u0060\r\n* \u0060PlatformLock.DefaultFactory\u0060 does as per before, creating platform specific lock (non-alertable on Windows).\r\n\r\nSo by default it uses non-alertable lock on Windows.  \r\n\r\nIf you want to change it...\r\n\r\n\u0060\u0060\u0060cs\r\nSkiaSharp.Internals.PlatformLock.Factory = () =\u003E new MyFunkyLock();\r\n\u0060\u0060\u0060\r\n\r\nDoes that cover it?",
+        "createdAt": "2021-11-09T02:29:04",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:19:27.9044963Z"
+          }
+        ]
+      },
+      {
+        "id": 964758986,
+        "author": "mattleibow",
+        "body": "This is amazing. Thanks. Once the PR builds then it is ready to go!",
+        "createdAt": "2021-11-10T03:45:45",
+        "reactions": []
+      },
+      {
+        "id": 967799471,
+        "author": "mattleibow",
+        "body": "Just adding this for laters... I noticed this on the test run. Might be some bad code with the dictionary or lifetime things, but I will have a closer look after a nap:\r\n\r\n\u0060\u0060\u0060\r\nUnhandled Exception: System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\r\n   at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterCriticalSection(IntPtr lpCriticalSection)\r\n   at SkiaSharp.Internals.PlatformLock.NonAlertableWin32Lock.EnterWriteLock()\r\n   at SkiaSharp.HandleDictionary.DeregisterHandle(IntPtr handle, SKObject instance)\r\n   at SkiaSharp.SKObject.DeregisterHandle(IntPtr handle, SKObject instance)\r\n   at SkiaSharp.SKObject.set_Handle(IntPtr value)\r\n   at SkiaSharp.SKNativeObject.Dispose(Boolean disposing)\r\n   at SkiaSharp.SKColorSpace.Dispose(Boolean disposing)\r\n   at SkiaSharp.SKNativeObject.Finalize()\r\n\u0060\u0060\u0060\r\n\r\nLooks like the GC is collecting things and the critical section is gone. Not sure why since it is static, so maybe it is the GC that has first collected the lock and is now collecting the object. Not sure if there is a way to tell the platform lock to be the last thing to be collected... Will have to see.\r\n\r\nRe-ran the tests to see if it passes or if this is reproducible. This was with the .NET Full Framework (.NET Core seemed fine). The GC is very different for the CoreCLR, Mono and netfx, so this is very possible. ",
+        "createdAt": "2021-11-13T07:42:14",
+        "reactions": [
+          {
+            "user": "RichardD2",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:28.3848876Z"
+          }
+        ]
+      },
+      {
+        "id": 968106807,
+        "author": "mattleibow",
+        "body": "3 runs later and it is still the same error. I\u0027ll have a look and see if we are missing some lifetime thing. Hopefully a missing semicolon :)",
+        "createdAt": "2021-11-13T17:43:52",
+        "reactions": []
+      },
+      {
+        "id": 968119871,
+        "author": "mattleibow",
+        "body": "I can repro this with this command:\r\n\r\n\u0060\u0060\u0060\r\ndotnet cake --target=tests-netfx --skipExternals=all --unsupportedTests=Category=API --supportVulkan=false --buildarch=x64\r\n\u0060\u0060\u0060\r\n\r\nIf I remove the if statement and always use the slim lock, it works. It might be because the slim lock is a framework think and that outlives the tests/app.\r\n\r\nTime for some learning!",
+        "createdAt": "2021-11-13T19:08:07",
+        "reactions": []
+      },
+      {
+        "id": 968154020,
+        "author": "mattleibow",
+        "body": "I added some code to basically make every object keep a reference to the platform lock instance - to prevent the GC from collecting too soon.\r\n\r\nBut, this seemed to throw another type of exception which seems to indicate that some object in the dictionary was not really that object. Maybe a pointer was replaced underneath - meaning that the locking did not protect that:\r\n\r\n\u0060\u0060\u0060\r\nSystem.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003E System.AccessViolationException: Attempted to read or write protected memory. This is often an indication that other memory is corrupt.\r\n   at SkiaSharp.SkiaApi.sk_font_measure_text_no_return(IntPtr font, Void* text, IntPtr byteLength, SKTextEncoding encoding, SKRect* bounds, IntPtr paint, Single* measuredWidth) in C:\\Projects\\SkiaSharp\\binding\\Binding\\SkiaApi.generated.cs:line 4106\r\n   at SkiaSharp.SKFont.MeasureText(Void* text, Int32 length, SKTextEncoding encoding, SKRect* bounds, SKPaint paint) in C:\\Projects\\SkiaSharp\\binding\\Binding\\SKFont.cs:line 320\r\n   at SkiaSharp.SKFont.MeasureText(ReadOnlySpan\u00601 text, SKPaint paint) in C:\\Projects\\SkiaSharp\\binding\\Binding\\SKFont.cs:line 272\r\n   at SkiaSharp.Tests.SKFontTest.MeasureTextMeasuresTheText() in C:\\Projects\\SkiaSharp\\tests\\Tests\\SKFontTest.cs:line 144\r\n   --- End of inner exception stack trace ---\r\n   at System.RuntimeMethodHandle.InvokeMethod(Object target, Object[] arguments, Signature sig, Boolean constructor)\r\n   at System.Reflection.RuntimeMethodInfo.UnsafeInvokeInternal(Object obj, Object[] parameters, Object[] arguments)\r\n   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)\r\n   at Xunit.Sdk.TestInvoker\u00601.CallTestMethod(Object testClassInstance) in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestInvoker.cs:line 150\r\n   at Xunit.Sdk.TestInvoker\u00601.\u003C\u003Ec__DisplayClass48_1.\u003C\u003CInvokeTestMethodAsync\u003Eb__1\u003Ed.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestInvoker.cs:line 257\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestInvoker\u00601.\u003C\u003Ec__DisplayClass48_1.\u003CInvokeTestMethodAsync\u003Eb__1()\r\n   at Xunit.Sdk.ExecutionTimer.\u003CAggregateAsync\u003Ed__4.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\ExecutionTimer.cs:line 48\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.ExecutionTimer.AggregateAsync(Func\u00601 asyncAction)\r\n   at Xunit.Sdk.ExceptionAggregator.\u003CRunAsync\u003Ed__9.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.core\\Sdk\\ExceptionAggregator.cs:line 90\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.ExceptionAggregator.RunAsync(Func\u00601 code)\r\n   at Xunit.Sdk.TestInvoker\u00601.\u003CInvokeTestMethodAsync\u003Ed__48.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestInvoker.cs:line 239\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestInvoker\u00601.InvokeTestMethodAsync(Object testClassInstance)\r\n   at Xunit.Sdk.TestInvoker\u00601.\u003C\u003CRunAsync\u003Eb__47_0\u003Ed.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestInvoker.cs:line 206\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestInvoker\u00601.\u003CRunAsync\u003Eb__47_0()\r\n   at Xunit.Sdk.ExceptionAggregator.\u003CRunAsync\u003Ed__10\u00601.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.core\\Sdk\\ExceptionAggregator.cs:line 107\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.ExceptionAggregator.RunAsync[T](Func\u00601 code)\r\n   at Xunit.Sdk.XunitTestRunner.\u003CInvokeTestAsync\u003Ed__4.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\XunitTestRunner.cs:line 67\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.XunitTestRunner.InvokeTestAsync(ExceptionAggregator aggregator)\r\n   at Xunit.Sdk.ExceptionAggregator.\u003CRunAsync\u003Ed__10\u00601.MoveNext()\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.ExceptionAggregator.RunAsync[T](Func\u00601 code)\r\n   at Xunit.Sdk.TestRunner\u00601.\u003CRunAsync\u003Ed__43.MoveNext()\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestRunner\u00601.RunAsync()\r\n   at Xunit.Sdk.TestCaseRunner\u00601.\u003CRunAsync\u003Ed__19.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestCaseRunner.cs:line 82\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestCaseRunner\u00601.RunAsync()\r\n   at Xunit.Sdk.SkippableFactDiscoverer.SkippableFactTestCase.\u003CRunAsync\u003Ed__6.MoveNext()\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.SkippableFactDiscoverer.SkippableFactTestCase.RunAsync(IMessageSink diagnosticMessageSink, IMessageBus messageBus, Object[] constructorArguments, ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)\r\n   at Xunit.Sdk.XunitTestMethodRunner.RunTestCaseAsync(IXunitTestCase testCase) in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\XunitTestMethodRunner.cs:line 45\r\n   at Xunit.Sdk.TestMethodRunner\u00601.\u003CRunTestCasesAsync\u003Ed__32.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestMethodRunner.cs:line 136\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestMethodRunner\u00601.RunTestCasesAsync()\r\n   at Xunit.Sdk.TestMethodRunner\u00601.\u003CRunAsync\u003Ed__31.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestMethodRunner.cs:line 106\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestMethodRunner\u00601.RunAsync()\r\n   at Xunit.Sdk.TestClassRunner\u00601.\u003CRunTestMethodsAsync\u003Ed__38.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestClassRunner.cs:line 213\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestClassRunner\u00601.RunTestMethodsAsync()\r\n   at Xunit.Sdk.TestClassRunner\u00601.\u003CRunAsync\u003Ed__37.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestClassRunner.cs:line 171\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestClassRunner\u00601.RunAsync()\r\n   at SkiaSharp.Tests.CustomTestFramework.CollectionRunner.RunTestClassAsync(ITestClass testClass, IReflectionTypeInfo class, IEnumerable\u00601 testCases) in C:\\Projects\\SkiaSharp\\tests\\Tests\\Xunit\\CustomTestFramework.cs:line 138\r\n   at Xunit.Sdk.TestCollectionRunner\u00601.\u003CRunTestClassesAsync\u003Ed__28.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestCollectionRunner.cs:line 130\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestCollectionRunner\u00601.RunTestClassesAsync()\r\n   at Xunit.Sdk.TestCollectionRunner\u00601.\u003CRunAsync\u003Ed__27.MoveNext() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\TestCollectionRunner.cs:line 101\r\n   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder\u00601.Start[TStateMachine](TStateMachine\u0026 stateMachine)\r\n   at Xunit.Sdk.TestCollectionRunner\u00601.RunAsync()\r\n   at Xunit.Sdk.XunitTestAssemblyRunner.\u003C\u003Ec__DisplayClass14_2.\u003CRunTestCollectionsAsync\u003Eb__2() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Frameworks\\Runners\\XunitTestAssemblyRunner.cs:line 184\r\n   at System.Threading.Tasks.Task\u00601.InnerInvoke()\r\n   at System.Threading.Tasks.Task.Execute()\r\n   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)\r\n   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)\r\n   at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task\u0026 currentTaskSlot)\r\n   at System.Threading.Tasks.Task.ExecuteEntry(Boolean bPreventDoubleExecution)\r\n   at Xunit.Sdk.MaxConcurrencySyncContext.RunOnSyncContext(SendOrPostCallback callback, Object state) in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\MaxConcurrencySyncContext.cs:line 107\r\n   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)\r\n   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)\r\n   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)\r\n   at Xunit.Sdk.ExecutionContextHelper.Run(Object context, Action\u00601 action) in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\Utility\\ExecutionContextHelper.cs:line 22\r\n   at Xunit.Sdk.MaxConcurrencySyncContext.WorkerThreadProc() in C:\\Dev\\xunit\\xunit\\src\\xunit.execution\\Sdk\\MaxConcurrencySyncContext.cs:line 89\r\n   at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)\r\n   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state, Boolean preserveSyncCtx)\r\n   at System.Threading.ExecutionContext.Run(ExecutionContext executionContext, ContextCallback callback, Object state)\r\n   at System.Threading.ThreadHelper.ThreadStart(Object obj)\r\n\u0060\u0060\u0060",
+        "createdAt": "2021-11-13T21:58:00",
+        "reactions": []
+      },
+      {
+        "id": 968194036,
+        "author": "mattleibow",
+        "body": "Doing a bit more things and my logging shows that the lock is collected before all the objects are collected. No idea why since the objects invoke methods on the handle dictionary which reference the lock. Seems that the collection order is not correct.\r\n\r\nAnd the reason why there are no issues with .net core is because none of the static objects are collected. It probably has to do with AppDomains because I don\u0027t think .net core has them and the netfx unloads them at the end of all the tests - which triggers the GC.\r\n\r\n",
+        "createdAt": "2021-11-14T02:36:50",
+        "reactions": []
+      },
+      {
+        "id": 968359032,
+        "author": "mattleibow",
+        "body": "I see I do have a slight bad case where I load the statics from the C\u002B\u002B library and wrap them. I have code to avoid disposing them, but this is still incorrect as I just prevent the user disposing it. If the GC collects them and disposes of the native side, we have corrupted the native library.\r\n\r\nI fixed this by making sure I prevent all managed disposal since this is up to the native library.",
+        "createdAt": "2021-11-14T20:36:17",
+        "reactions": []
+      },
+      {
+        "id": 968395824,
+        "author": "toptensoftware",
+        "body": "Just having a look at this and a less impactful fix might be to just remove the finalizer from \u0060NonAlertableWin32Lock\u0060.  It\u0027s a tiny allocation and will get cleaned up when the process ends anyway.  Given there\u0027s only one lock for the entire process can\u0027t see it being an issue (unless somebody re-uses that lock class for something else).\r\n",
+        "createdAt": "2021-11-15T00:05:58",
+        "reactions": []
+      },
+      {
+        "id": 969244031,
+        "author": "mattleibow",
+        "body": "It seems to have fixed itself now after I stopped collecting the things I should not be collecting. The old code was disposing of things that I did not create. And I think the fails only come up if I am doing it incorrectly.\r\n\r\nI\u0027ll rebuild and merge this if it is all green now. Then I will release a preview so we can test in the wild. If people get weird crashes, they can use the old lock and we can also change the default before we go stable.",
+        "createdAt": "2021-11-15T19:27:24",
+        "reactions": []
+      },
+      {
+        "id": 969491036,
+        "author": "toptensoftware",
+        "body": "Thanks Matt, sounds good... I\u0027m hoping to put up an alpha build of the new version of my app with this early next week so seems like the timing might work out nicely.",
+        "createdAt": "2021-11-16T00:22:12",
+        "reactions": []
+      },
+      {
+        "id": 969839034,
+        "author": "mattleibow",
+        "body": "Thanks for this, merging with happy thoughts. Hopefully all is well and we just fixed other folks\u0027 weird errors.",
+        "createdAt": "2021-11-16T04:07:33",
+        "reactions": []
+      },
+      {
+        "id": 974921233,
+        "author": "toptensoftware",
+        "body": "Hey Matt,  just wondering if there\u0027s preview build of this available yet somewhere?",
+        "createdAt": "2021-11-21T23:40:49",
+        "reactions": []
+      },
+      {
+        "id": 975241540,
+        "author": "mattleibow",
+        "body": "Yep, on the preview feed. https://aka.ms/skiasharp-eap/index.json\n",
+        "createdAt": "2021-11-22T08:17:56",
+        "reactions": []
+      },
+      {
+        "id": 1203768840,
+        "author": "RichardD2",
+        "body": "I\u0027m still seeing the \u0060AccessViolationException\u0060 on the finalizer thread using v2.88.0 (via QuestPDF v2022.6.3) in a .NET Framework 4.8 / ASP.NET MVC 5 application.\r\n\r\n\u0060\u0060\u0060\r\nApplication: w3wp.exe\r\nFramework Version: v4.0.30319\r\nDescription: The process was terminated due to an unhandled exception.\r\nException Info: System.AccessViolationException\r\n   at SkiaSharp.Internals.PlatformLock\u002BNonAlertableWin32Lock.EnterCriticalSection(IntPtr)\r\n   at SkiaSharp.Internals.PlatformLock\u002BNonAlertableWin32Lock.EnterWriteLock()\r\n   at SkiaSharp.HandleDictionary.DeregisterHandle(IntPtr, SkiaSharp.SKObject)\r\n   at SkiaSharp.SKObject.DeregisterHandle(IntPtr, SkiaSharp.SKObject)\r\n   at SkiaSharp.SKObject.set_Handle(IntPtr)\r\n   at SkiaSharp.SKNativeObject.Dispose(Boolean)\r\n   at SkiaSharp.SKNativeObject.Finalize()\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-08-03T10:29:33",
+        "reactions": []
+      },
+      {
+        "id": 1204657119,
+        "author": "toptensoftware",
+        "body": "\u003E I\u0027m still seeing the \u0060AccessViolationException\u0060 on the finalizer thread using v2.88.0 (via QuestPDF v2022.6.3) in a .NET Framework 4.8 / ASP.NET MVC 5 application.\r\n\u003E \r\n\r\nIs this happening while the app is running or during process shutdown. \r\n\r\nMy guess is the PlatformLock\u0027s finalizer has run before the last native object is collected and deleting the critical section here:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/e603133c3548bbd3835cf1012eac80ce5640f209/binding/Binding/PlatformLock.cs#L107\r\n\r\nNot sure what other reason EnterCriticalSection would crash.",
+        "createdAt": "2022-08-04T01:30:18",
+        "reactions": []
+      },
+      {
+        "id": 1204895556,
+        "author": "RichardD2",
+        "body": "@toptensoftware I suspect you\u0027re right - it\u0027ll be when the AppPool is recycled.",
+        "createdAt": "2022-08-04T07:51:49",
+        "reactions": []
+      },
+      {
+        "id": 1206135023,
+        "author": "mattleibow",
+        "body": "I merged this PR that basically turns a collected lock into a no-op and I assume all the objects will be collected in parallel - potentially: https://github.com/mono/SkiaSharp/pull/2195\n\nIs that worse? ",
+        "createdAt": "2022-08-05T07:28:30",
+        "reactions": []
+      },
+      {
+        "id": 1206143902,
+        "author": "RichardD2",
+        "body": "If it happens, it\u0027s possible that the \u0060instances\u0060 dictionary\u0027s internal state could become corrupted, as the \u0060Dictionary\u003C,\u003E\u0060 class is not thread-safe.\r\n\r\nSince [the \u0060DeregisterHandle\u0060 method](https://github.com/mono/SkiaSharp/blob/dc54fa5cddc2f2f8089c851e1752a490a9072d7e/binding/Binding/HandleDictionary.cs#L167) just seems to be removing references from the dictionary, and the error only seems to occur when the AppDomain is terminating, that *might* not be a problem. The only issue would be if the dictionary state gets so corrupted that it throws an exception from the \u0060Remove\u0060 method.",
+        "createdAt": "2022-08-05T07:39:09",
+        "reactions": []
+      },
+      {
+        "id": 1207541528,
+        "author": "toptensoftware",
+        "body": "That\u0027ll should fix the crash, but I agree with @RichardD2 - it could cause the dictionary to become corrupt.\r\n\r\nAnother safer but kludgier way to fix it might be to just never delete the critical section - it\u0027s a tiny blob of memory, there\u0027s only one instance.  Just leave Windows to clean it up when the process exits.\r\n\r\nWhat I don\u0027t understand about this is there\u0027s methods being called on that lock instance after it\u0027s been GCed.  Is that possible and/or a known edge case during shutdown?",
+        "createdAt": "2022-08-08T01:13:52",
+        "reactions": []
+      },
+      {
+        "id": 1214191695,
+        "author": "mattleibow",
+        "body": "It may be calling the destruction in a random order. So first takes out the dictionary and then an object.\r\n\r\nBut yeah, I agree for safety to not actually clear the critical section on the GC of the handle. Or maybe we should implement the disposal pattern properly :) But not sure if this makes a difference.",
+        "createdAt": "2022-08-13T17:13:04",
+        "reactions": []
+      }
+    ]
+  }
 }

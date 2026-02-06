@@ -13,5 +13,64 @@
   "createdAt": "2019-11-06T21:38:30",
   "updatedAt": "2022-06-14T15:25:55",
   "commentCount": 3,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:20:56.0112054Z",
+    "reactions": [
+      {
+        "user": "jsgoupil",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:20:56.0112131Z"
+      },
+      {
+        "user": "srinathck",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:20:56.011214Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 555762633,
+        "author": "AlexeiScherbakov",
+        "body": "I have same issue in .netcoreapp3.0 service on docker",
+        "createdAt": "2019-11-19T23:24:29",
+        "reactions": []
+      },
+      {
+        "id": 555852557,
+        "author": "mattleibow",
+        "body": "I had a look at this and it is a tad annoying, but it appears that Azure Functions are not quite perfect in the way things work. Looks like the runtime does not load the native files like other .net core apps and websites.\r\n\r\nBut, this is not to say that we can\u0027t do anything about it. As part of the publish step, we can hook in there and manually copy the files we know we will need. For example, we know we are going to need the native \u0060libSkiaSharp.dll\u0060, so we can copy it in a custom target in the .csproj.\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CTarget Name=\u0022CopyRequiredNativeAssets\u0022 AfterTargets=\u0022_FunctionsPostPublish\u0022\u003E\r\n  \u003CItemGroup\u003E\r\n    \u003CNativeAssetToCopy Include=\u0022$(PublishDir)runtimes\\win-x86\\native\\libSkiaSharp.dll\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n  \u003CCopy SourceFiles=\u0022@(NativeAssetToCopy)\u0022 DestinationFolder=\u0022$(PublishDir)bin\u0022 /\u003E\r\n\u003C/Target\u003E\r\n\u0060\u0060\u0060\r\n\r\nI think this is a missing feature on the functions side, so I added a comment on an open issue there. Not sure what will happen, but we can try: https://github.com/Azure/Azure-Functions/issues/622#issuecomment-555850877 Maybe drop a vote?\r\n\r\nI did notice that the runtime seems to be 32-bit on the cloud, we we have to use that one there.\r\n\r\nI have created a test repo (https://github.com/mattleibow/SkiaSharpFunctions) and have something hosted for your viewing pleasure (https://skiasharpfunctions.azurewebsites.net/api/images)",
+        "createdAt": "2019-11-20T06:01:01",
+        "reactions": [
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:20:55.7697765Z"
+          },
+          {
+            "user": "rachelblasucci",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:20:55.7697769Z"
+          },
+          {
+            "user": "mslot",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:20:55.769777Z"
+          },
+          {
+            "user": "srinathck",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:20:55.7697771Z"
+          }
+        ]
+      },
+      {
+        "id": 1155349953,
+        "author": "BenjaminMichaelis",
+        "body": "I commented my fix here on [#622](https://github.com/Azure/Azure-Functions/issues/622) with this comment https://github.com/Azure/Azure-Functions/issues/622#issuecomment-1155320104",
+        "createdAt": "2022-06-14T15:24:38",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,24 @@
   "updatedAt": "2022-08-19T00:01:27",
   "closedAt": "2022-05-17T04:37:31",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:10.4414613Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1128402468,
+        "author": "mattleibow",
+        "body": "All the native binaries need to be built (or downloaded) and present on disk before packaging.\r\n\r\nWe could potentially build partial packages, but this could result in a successful build yet a corrupt package. For local testing, you can just use the \u0060.\\bootstrapper.ps1 --target=externals-download\u0060 and make sure all the files are there. Then you run any builds on top of that.\r\n\r\nI initially had partial packages, but then I would need to verify each package contained all the bits. I removed that in favour of simpler packaging logic and reduced testing.",
+        "createdAt": "2022-05-17T04:37:31",
+        "reactions": [
+          {
+            "user": "mgood7123",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:10.3911749Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -24,5 +24,128 @@
   "deletions": 90,
   "changedFiles": 14,
   "commits": 9,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:53.130998Z",
+    "reactions": [
+      {
+        "user": "mgnslndh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:19:53.1310062Z"
+      },
+      {
+        "user": "axel578",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:19:53.1310072Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 704157639,
+        "author": "ghost",
+        "body": "[![CLA assistant check](https://cla.opensource.microsoft.com/pull/badge/signed)](https://cla.opensource.microsoft.com/mono/SkiaSharp?pullRequest=1521) \u003Cbr/\u003EAll CLA requirements met.",
+        "createdAt": "2020-10-06T09:47:10",
+        "reactions": []
+      },
+      {
+        "id": 704173611,
+        "author": "mattleibow",
+        "body": "Maybe it will be easier to just start with a new view that is just for GPU?\n\nThen there is no need for checks and fallback. If you are adding a GPU view to a window, then you probably would want it to fail if the GPU is not available? Also, what are the conditions that it would fail? Isn\u0027t WPF built on top of DX ?\n\n",
+        "createdAt": "2020-10-06T10:17:51",
+        "reactions": [
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:50.6897112Z"
+          }
+        ]
+      },
+      {
+        "id": 704180313,
+        "author": "mattleibow",
+        "body": "For a backend rendering thread, is it a lot of work? I think that is a feature that is worth adding to the base implementation. UWP is really a backend thread loop, and then I shuttle calls to the main thread.\n\nOne downside of a background thread is that you can\u0027t access the UI, such as bounds, in that thread... But I have a property in UWP to toggle this feature on and off. ",
+        "createdAt": "2020-10-06T10:32:10",
+        "reactions": []
+      },
+      {
+        "id": 704227532,
+        "author": "Mikolaytis",
+        "body": "\u003E Maybe it will be easier to just start with a new view that is just for GPU?\r\n\u003E \r\n\u003E Then there is no need for checks and fallback. If you are adding a GPU view to a window, then you probably would want it to fail if the GPU is not available? Also, what are the conditions that it would fail? Isn\u0027t WPF built on top of DX ?\r\n\r\nThe reasons ANGLE backend will fail to initialize:\r\n1. No GPU device (server, or virtual machine, or a crazy old PC)\r\n2. ANGLE libs are missing, or no file access.\r\n3. Any driver/display issue.\r\n\r\nI think that fallback to CPU rendering is an important feature that is need to exist in a default implementation. There is a lot of cases when user do not have a GPU device and do want to run an app to do the job done. For the instance - app can be launched in the server environment or in the virtual machine. \r\n\r\nAbout async GPU rendering - I have a code already, but it\u0027s specialized for out app. All I need is to think what is needed, what is not and mindfully transfer code chunk by chunk with some refactoring afterwards. It will take me a day I think. I will do it on the weekend. Do you want it as a single PR? Or let\u0027s just do this simple PR first and then add an async things via separate PR.",
+        "createdAt": "2020-10-06T12:14:13",
+        "reactions": [
+          {
+            "user": "charlesroddie",
+            "content": "confused",
+            "createdAt": "2026-02-06T14:19:51.3088293Z"
+          }
+        ]
+      },
+      {
+        "id": 704421310,
+        "author": "mattleibow",
+        "body": "For the async bits, how much of a change to add it? I was thinking that if it is going to be a bit of re-engineering then maybe not duplicate work? ",
+        "createdAt": "2020-10-06T17:10:33",
+        "reactions": []
+      },
+      {
+        "id": 704437732,
+        "author": "mattleibow",
+        "body": "Something just occurred to me. The software fallback seemed a bit weird and I didn\u0027t recall even needing that for UWP. I didn\u0027t actually do all the testing, but I now recall that DX has a software rasterizer: WARP.\r\n\r\nIsn\u0027t that the fallback? Or is it not enough? https://docs.microsoft.com/en-us/windows/win32/direct3darticles/directx-warp#enabling-rendering-when-direct3d-hardware-is-not-available\r\nIt seems it works on machines that are virtualized and if they don\u0027t have hardware or drivers. I think all the bits are built into Windows since 7. I may be misunderstanding things, but is it not better to use that, and less work?\r\n\r\nWhen I create the dives, I try a few layers, DX11, DX9, WARP: https://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.UWP/GlesInterop/GlesContext.cs#L195",
+        "createdAt": "2020-10-06T17:40:08",
+        "reactions": []
+      },
+      {
+        "id": 704562718,
+        "author": "AnarchyMob",
+        "body": "Why do you need ANGLE?  The 84th milestone already has support for the D3D backend, you need to add bindings.\r\nhttps://github.com/mono/skia/blob/d8d90ca991feb9a45b1176e24a305f2397a5c575/include/gpu/GrContext.h#L86",
+        "createdAt": "2020-10-06T21:27:59",
+        "reactions": [
+          {
+            "user": "Mikolaytis",
+            "content": "eyes",
+            "createdAt": "2026-02-06T14:19:52.0475047Z"
+          }
+        ]
+      },
+      {
+        "id": 704627220,
+        "author": "mattleibow",
+        "body": "Do we know how far that support is? It is very recent. I\u0027ll check with them. ",
+        "createdAt": "2020-10-07T00:44:14",
+        "reactions": []
+      },
+      {
+        "id": 705768123,
+        "author": "Mikolaytis",
+        "body": "@AnarchyMob WoW. Awesome news! Can\u0027t wait to use DirectX backend in our app. Is there any issue exists about D3D backend? If no - let\u0027s create one?\r\n\r\n@mattleibow About async bits - OK. I\u0027ll add them to this PR on a weekend.\r\n\r\nAbout fallback - I\u0027ve asked my QA team to test the fallback code in our app in case I\u0027ve missed something. That\u0027s why my response have a large delay. \r\nIt works like I described earlier - ANGLE backend cannot initialize without GPU device. You are right, D3D supports CPU fallback inside. The issue is looks like in my ANGLE/GLES/D3D/SharpDX/OpenTK Interop initialization code. Maybe it requires GPU and if we tweak something - this code will work with ANGLE backend in any situation. But for now, my implementation needs a fallback, sadly.",
+        "createdAt": "2020-10-08T19:12:51",
+        "reactions": []
+      },
+      {
+        "id": 717041516,
+        "author": "fmbv",
+        "body": "Hi, thanks for your work on this issue!\r\nI\u0027m using SKElement to render charts in WPF and I\u0027m really interested in switching to GPU rendering.\r\n\r\n\u003EMy code do not support multiple instances of SKElement. I don\u0027t know if we need to make this feature.\r\n\r\nI think it would be immensely helpful to allow multiple instances.  In my case, I define a DataTemplate like\r\n\u0060\u0060\u0060\r\n\u003CDataTemplate DataType=\u0022{x:Type vm:MyViewModel}\u0022\u003E\r\n    \u003C!-- View contains 1 or more SKElement.   --\u003E\r\n    \u003Cvw:MyView/\u003E \r\n\u003C/DataTemplate\u003E\r\n\u0060\u0060\u0060\r\nand frequently create multiple instances using an ItemsControl.",
+        "createdAt": "2020-10-27T07:18:34",
+        "reactions": [
+          {
+            "user": "axel578",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:52.812369Z"
+          },
+          {
+            "user": "Mikolaytis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:52.8123694Z"
+          }
+        ]
+      },
+      {
+        "id": 727089024,
+        "author": "Mikolaytis",
+        "body": "Update on a PR status:\r\n1. [Done, will commit later] CONTEXT_LOSS / DEVICE_LOST handling - tried a lot of things this month, have some improvements, but it\u0027s not a 100% fix :(.\r\n2. [Done, will commit later] Do not use the OpenTK.\r\n3. [ToDo] SKElement multiple instances.\r\n4. [ToDo] Async execution",
+        "createdAt": "2020-11-13T23:52:11",
+        "reactions": []
+      }
+    ]
+  }
 }

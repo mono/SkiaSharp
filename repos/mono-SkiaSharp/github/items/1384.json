@@ -36,5 +36,32 @@
       "state": "COMMENTED",
       "submittedAt": "2020-07-06T01:04:40"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:39.2902246Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 654991741,
+        "author": "mattleibow",
+        "body": "From @kekekeks in [gitter](https://xamarinhq.slack.com/archives/C9A0TTQFQ/p1594121735187500):\r\n\r\n\u003E Why are you using AddOrUpdate?\r\n\u003E I think that TryAdd is better\r\n\u003E since the thread that has lost the race will just destroy its newly created object and take one from the dictionary (edited) \r\n\u003E it\u0027s way less bug prone to have a guarantee that a particular handle is only getting added to the table once",
+        "createdAt": "2020-07-07T16:51:59",
+        "reactions": []
+      },
+      {
+        "id": 656700196,
+        "author": "mattleibow",
+        "body": "from @kekekeks \r\n\u003E @mattleibow I think we could use an alternative approach\r\n\u003E 1) implement some lock abstraction that would use EnterCriticalSection on win32 and Monitor.Enter otherwise\r\n\u003E 2) copy-paste ConcurrentDictionarty from dotnet/runtime and make it use said lock abstraction\r\n\u003E might be costly due to additional P/Invoke though",
+        "createdAt": "2020-07-10T14:17:33",
+        "reactions": []
+      },
+      {
+        "id": 1213039947,
+        "author": "mattleibow",
+        "body": "This is probably not needed after #1817\r\n\r\nEither way, this is not the right approach.",
+        "createdAt": "2022-08-12T12:03:43",
+        "reactions": []
+      }
+    ]
+  }
 }

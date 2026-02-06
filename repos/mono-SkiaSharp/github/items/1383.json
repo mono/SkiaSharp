@@ -13,5 +13,179 @@
   "createdAt": "2020-07-05T22:08:40",
   "updatedAt": "2022-08-12T12:04:48",
   "commentCount": 19,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:37.7600536Z",
+    "reactions": [
+      {
+        "user": "mattleibow",
+        "content": "confused",
+        "createdAt": "2026-02-06T14:19:37.7600608Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 654902144,
+        "author": "mattleibow",
+        "body": "Having a look at this implementation of a non-blocking dictionary: https://github.com/VSadov/NonBlocking",
+        "createdAt": "2020-07-07T14:27:38",
+        "reactions": []
+      },
+      {
+        "id": 654902443,
+        "author": "mattleibow",
+        "body": "More info:\r\n - https://stackoverflow.com/questions/21571598/which-blocking-operations-cause-an-sta-thread-to-pump-com-messages\r\n - https://stackoverflow.com/a/45871120/2231814\r\n\r\nUsing a basic \u0060lock\u0060 or \u0060Monitor\u0060 also causes this issue. See this repro:\r\n\r\nhttps://gist.github.com/retran/b57e4db1a173048c2cee49ac6d523fc2",
+        "createdAt": "2020-07-07T14:28:05",
+        "reactions": []
+      },
+      {
+        "id": 927289248,
+        "author": "toptensoftware",
+        "body": "I just hit upon this issue and unfortunately this makes SkiaSharp unusable for my app.\r\n\r\nPerhaps I\u0027m missing something here, but the only way currently to prevent this issue on Windows is to not use the STA threading model.  Unfortunately this is not possible for many desktop apps because:\r\n\r\n* OLE functionality requires the STA apartment model\r\n* Anything that uses Drag/Drop uses OLE and therefore needs STA\r\n* The SHBrowseForFolder API function requires STA\r\n* Some clipboard functionality requires STA\r\n\r\nWhile some of these issues can be worked around, my app loads third party plugins that are usually written in C\u002B\u002B and often assuming the host is running STA. They also often use the above described functionality.\r\n\r\nIt should be noted that *any Windows app using SkiaSharp and STA* is at risk of deadlocking - if the GC happens to run while the lock is held, then it can easily go re-entrant and deadlock.\r\n\r\nAll that\u0027s to say I really need a reliable fix for this.  I can\u0027t help but think the easiest immediate fix might be to switch the Windows build to use PInvoke and a simple Win32 critical section for the lock?  \r\n\r\nI\u0027m going to make this change because I really need it but would rather not maintain a separate branch. Is this something you\u0027d consider including in the official build until a proper solution can be developed?",
+        "createdAt": "2021-09-26T11:30:07",
+        "reactions": []
+      },
+      {
+        "id": 927307185,
+        "author": "noseratio",
+        "body": "@toptensoftware if you control the synchronization context in your desktop app, one other workaround without patching SkiaSharp might be to install a custom STA-friendly synchronization context. It should request wait notifications (via \u0060base.SetWaitNotificationRequired()\u0060) and override \u0060SynchronizationContext.Wait\u0060 to perform real non-pumping waits (eg, via Win32 \u0060WaitForMultipleObjects\u0060, which doesn\u0027t pump). [Here\u0027s why](https://source.dot.net/#System.Private.CoreLib/WaitHandle.cs,b6f8a9590470bdae) this may work.\r\n\r\nIt should be possible to do this  just for the scope of a particular SkiaSharp call, with \u0060try\u0060/\u0060finally\u0060 to temporarily install a custom non-pumping \u0060SynchronizationContext\u0060, call SkiaSharp API, then restore the original synchronization context.",
+        "createdAt": "2021-09-26T13:29:43",
+        "reactions": []
+      },
+      {
+        "id": 927319707,
+        "author": "mattleibow",
+        "body": "@kekekeks will this also fix the issue for you? ",
+        "createdAt": "2021-09-26T15:00:32",
+        "reactions": []
+      },
+      {
+        "id": 927366629,
+        "author": "kekekeks",
+        "body": "We are currently switching to a non-pumping SynchronizationContext before doing any calls to SkiaSharp on the UI thread and when handing WM_SIZE and WM_PAINT. So the app is switching between SkiaSharp-safe and STA-safe modes.\r\nIt\u0027s not an ideal solution, but works for us for now.",
+        "createdAt": "2021-09-26T20:39:29",
+        "reactions": []
+      },
+      {
+        "id": 927397573,
+        "author": "toptensoftware",
+        "body": "I wasn\u0027t aware the locks uses the sync context - I\u0027ll look into switching that, but it really seems like a horrible hack.  All that overhead for the few instructions it takes to put something into, or get something out of a dictionary.\r\n\r\nIsn\u0027t the whole point of these locks being alertable in the STA is so you don\u0027t get a deadlock situation for COM method calls.  Unless something inside one of those HandleDictionary methods is doing COM stuff that needs to callback into the STA that\u0027s not an issue.  The non-alertable critical section seems a much safer and probably faster solution to me.",
+        "createdAt": "2021-09-26T23:59:20",
+        "reactions": []
+      },
+      {
+        "id": 927401966,
+        "author": "noseratio",
+        "body": "\u003E I wasn\u0027t aware the locks uses the sync context - I\u0027ll look into switching that, but it really seems like a horrible hack. All that overhead for the few instructions it takes to put something into, or get something out of a dictionary.\r\n\r\n@toptensoftware, as bad as this hack feels, I think it\u0027s the only way to safeguard yourself from reentrancy issues, if you\u0027re using an STA thread with \u0060WindowsFormsSynchronizationContext\u0060 (WinForms) or \u0060DispatcherSynchronizationContext\u0060 (WPF). This is how pumping in blocking \u0060WaitOne\u0060 calls was designed to work in .NET Framework (to enable COM calls and callbacks). Back in the day, I ranted about it [here](https://stackoverflow.com/a/21573637/1768303) and I don\u0027t think much has changed in .NET Core since then.\r\n\r\nThe fix you propose might be fixing it for one particular place, but are you sure nothing else is calling \u0060WaitOne\u0060 across the board, explicitly or implicitly?\r\n\r\n  ",
+        "createdAt": "2021-09-27T00:15:51",
+        "reactions": []
+      },
+      {
+        "id": 927409389,
+        "author": "toptensoftware",
+        "body": "You\u0027re right of course, but I think for SkiaSharp this is particularly troublesome because:\r\n\r\n1. I can\u0027t imagine most developers expect calls to SkiaSharp to block in a way that\u0027s re-entrant.  That might be naive but it\u0027s just not the way you think when writing drawing/rendering code.\r\n2. It\u0027s especially hard to notice and track down.  I\u0027ve had this bug in my app for years, have seen evidence of it in a couple of crash reports, but never been able to figure it out until yesterday when I stumbled upon a reproducible case under load.\r\n3. The fact that the standard wait implementation dispatches WM_PAINT messages results in the worst possible outcome... your painting code is likely to become re-entrant because it\u0027s painting.  And when it does SkiaSharp can deadlock.\r\n4. The fact that the STA, desktop GUI apps and SkiaSharp are all so closely related and used together means they really should all work together nicely out of the box.  \r\n\r\nTo say every STA desktop Windows app that uses SkiaSharp needs a custom sync context with switching whenever using Skia is a big ask.\r\n",
+        "createdAt": "2021-09-27T00:38:39",
+        "reactions": []
+      },
+      {
+        "id": 927427284,
+        "author": "toptensoftware",
+        "body": "A couple more thoughts on this.   My app uses a custom UI toolkit so isn\u0027t using WinForms or WPF\u0027s sync context but does have its own which until just now used the default implementation of Wait (the problematic one).  As an experiment I just changed it a non-alertable wait and the re-entrancy is indeed solved - but of course the STA is now broken.\r\n\r\nThe question now becomes how to reliably switch between the two modes.  The low hanging fruit is to switch around WM_PAINT, WM_SIZE and perhaps a few other key places but I\u0027m far less certain about the possibly hundreds of other places where I might be invoking SkaiSharp.  There\u0027s the Skia objects that controls create during their construction, theme loading where fonts and images are loaded, temporary objects used during measurement and layout, offscreen rendering that isn\u0027t done during paint. The list goes on and on...\r\n\r\nThe scope of this issue is quite daunting once you understand its implications and I\u0027d much rather be able to rely on SkiaSharp not going re-entrant and then not have to worry about it.\r\n\r\nTo put it another way, I\u0027m far more worried about missing a SkiaSharp invocation than I am about:  \u0022nothing else is calling WaitOne across the board, explicitly or implicitly?\u0022",
+        "createdAt": "2021-09-27T01:16:18",
+        "reactions": []
+      },
+      {
+        "id": 927470345,
+        "author": "noseratio",
+        "body": "I agree, ideally SkiaSharp would benefit from using some lower level synchronization primitives which aren\u0027t exposed to pumping. I think that \u0060Monitor.Enter\u0060/\u0060Monitor.Exit\u0060 (which is used by C# \u0060lock { ... }\u0060) should be fine, although I haven\u0027t verified it.\r\n\r\nThat said, many other things apart from Skia might still be using the .NET blocking calls, which still do [that limited amount of pumping](https://stackoverflow.com/a/45871120/1768303) by default. You\u0027re probably using Skia on tight rendering loops, so you\u0027ve become affected by this issue in an easily reproducible way. For many other scenarios, that could be a hard to track bug, which might still occasionally pop up and sporadically affect users.\r\n\r\nLuckily, because you have your own synchronization context, you have full control over this. You still pump messages in your core event loop (the top-level \u0060GetMessage/DispatchMessage\u0060 location), so you should be fine with hard OLE drag\u0026drop and other STA requirements.  Then, disabling pumping for short-lived blocking \u0060WaitOne\u0060 calls inside UI event handler (or something like a timer callback) shouldn\u0027t be a problem. That worked well for me in the past.\r\n\r\nHowever, even if we disable undesired pumping for managed code (preventing it for \u0060WaitOne\u0060 via a custom synchronization context), there still could be some 3rd party native code calling something like \u0060CoWaitForMultipleHandles\u0060, or just starting its own a nested message loop. That was pretty common back in COM days. I once had to resort to [\u0060WH_GETMESSAGE\u0060 hook](https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644981(v=vs.85)) just to ignore \u0060WM_PAINT\u0060, \u0060WM_SIZE\u0060 etc if they arrive on a nested message loop (i.e., via any place that calls \u0060GetMessage\u0060/\u0060PeekMessage\u0060, other than my core event loop).\r\n\r\n\r\n",
+        "createdAt": "2021-09-27T02:42:59",
+        "reactions": []
+      },
+      {
+        "id": 927486808,
+        "author": "toptensoftware",
+        "body": "Hi Andrew, thanks for your insight on this - that\u0027s really valuable info.  Message hooks to filter paint messages sounds like too much fun.\r\n\r\nThis is all a bit of a mess, but for understood reasons.  I think we agree SkiaSharp could improve things with a non-pumping lock, or at least a way to plugin your own sync mechanism.  \r\n\r\nUnless, or until this can be fixed SkiaSharp I\u0027m tempted to just disable the pumping wait entirely.  I feel like I\u0027m more exposed by that than anything else the app or any plugins might do.  But I\u0027m sure that\u0027ll bite me somewhere else :)\r\n",
+        "createdAt": "2021-09-27T03:04:25",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:36.2268154Z"
+          },
+          {
+            "user": "noseratio",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:36.2268159Z"
+          }
+        ]
+      },
+      {
+        "id": 927498303,
+        "author": "noseratio",
+        "body": "No worries Brad, glad if it helped... one of those evergreen subtleties of Windows Desktop development with .NET :)\r\n",
+        "createdAt": "2021-09-27T03:26:32",
+        "reactions": []
+      },
+      {
+        "id": 927569702,
+        "author": "kekekeks",
+        "body": "\u003E Unless, or until this can be fixed SkiaSharp I\u0027m tempted to just disable the pumping wait entirely.\r\n\r\nDoing that on STA thread breaks .NET itself in various ways. We\u0027ve initially tried to always use a non-pumping context and discovered that it breaks APIs like GC.WaitForPendingFinalizers, those just deadlock.",
+        "createdAt": "2021-09-27T06:26:01",
+        "reactions": []
+      },
+      {
+        "id": 927580185,
+        "author": "toptensoftware",
+        "body": "Hi @kekekeks, thanks for the info, good to know.",
+        "createdAt": "2021-09-27T06:48:45",
+        "reactions": []
+      },
+      {
+        "id": 927630172,
+        "author": "noseratio",
+        "body": "\u003E Doing that on STA thread breaks .NET itself in various ways. We\u0027ve initially tried to always use a non-pumping context and discovered that it breaks APIs like GC.WaitForPendingFinalizers, those just deadlock.\r\n\r\n@kekekeks I\u0027m curious if you create (or obtain via interop) any COM objects on that STA thread?\r\n\r\nI remember having this issue with \u0060WaitForPendingFinalizers\u0060 and RCW wrappers for MSHTML COM objects. I think, the solution back then was to enable pumping just for the scope of \u0060WaitForPendingFinalizers\u0060 call, while disabling \u0060WM_PAINT\u0060 and input messages processing, with \u0060WM_SETREDRAW\u0060 and \u0060EnableWindow(false)\u0060. As horrible as it sounds, that was effective to avoid reentrancy, but later we just got rid of \u0060WaitForPendingFinalizers\u0060.",
+        "createdAt": "2021-09-27T08:07:05",
+        "reactions": []
+      },
+      {
+        "id": 927689857,
+        "author": "mattleibow",
+        "body": "\u003E I think that Monitor.Enter/Monitor.Exit (which is used by C# lock { ... }) should be fine, although I haven\u0027t verified it.\r\n\r\n@noseratio I think using \u0060lock\u0060 also had this issue: https://gist.github.com/retran/b57e4db1a173048c2cee49ac6d523fc2",
+        "createdAt": "2021-09-27T09:27:13",
+        "reactions": [
+          {
+            "user": "toptensoftware",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:37.2875104Z"
+          }
+        ]
+      },
+      {
+        "id": 927724640,
+        "author": "noseratio",
+        "body": "\u003E @noseratio I think using \u0060lock\u0060 also had this issue: https://gist.github.com/retran/b57e4db1a173048c2cee49ac6d523fc2\r\n\r\n@mattleibow I might be wrong but I think in this particular case it\u0027s caused by  \u0060Thread.CurrentThread.Join(100)\u0060, where they call it on the main UI thread. This call does indeed pump: \r\n\r\n\u0060\u0060\u0060csharp\r\n                try\r\n                {\r\n                    Debug.Assert(Thread.CurrentThread.ManagedThreadId == mainThreadId);\r\n                    throwOnPaint = true;\r\n                    Thread.CurrentThread.Join(100);\r\n                    Lock();\r\n                }\r\n\u0060\u0060\u0060\r\n\r\nI think, \u0060Monitor.Enter\u0060/\u0060Monitor.Exit\u0060 should be mapping to Win32 \u0060EnterCriticalSection\u0060/\u0060LeaveCriticalSection\u0060 directly, maybe with some added \u0022spin-before-sleep\u0022 improvement, but I can\u0027t find anything confirming that in the \u0060dotnet\u0060 repo right away. I might try modifying the code you linked to verify this theory :)",
+        "createdAt": "2021-09-27T10:14:07",
+        "reactions": [
+          {
+            "user": "toptensoftware",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:37.5144406Z"
+          }
+        ]
+      },
+      {
+        "id": 927750884,
+        "author": "noseratio",
+        "body": "@mattleibow you were right! TIL, plain c# locks (ie., \u0060Monitor.Enter\u0060/\u0060Monitor.Exit\u0060) also pump on an STA thread \uD83D\uDC40\r\nhttps://gist.github.com/noseratio/0d93133b826339c7eaf49c9feec142e3#file-winformsapp-cs-L60\r\n\r\nNow I wonder if there\u0027s any *managed* blocking synchronization primitive that doesn\u0027t pump in this case, besides \u0060Thread.Sleep\u0060... \r\n\r\nEdited: and here\u0027s where the pumping magic is happening:\r\nhttps://github.com/dotnet/runtime/blob/0c0bd5a4066bc9b1a165a45e3553dfa14b87729b/src/coreclr/vm/threads.cpp#L3342\r\n",
+        "createdAt": "2021-09-27T10:56:23",
+        "reactions": [
+          {
+            "user": "toptensoftware",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:19:37.7109043Z"
+          }
+        ]
+      }
+    ]
+  }
 }

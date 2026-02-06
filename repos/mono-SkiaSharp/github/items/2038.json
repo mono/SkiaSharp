@@ -14,5 +14,116 @@
   "updatedAt": "2022-08-19T00:01:28",
   "closedAt": "2022-05-17T15:16:43",
   "commentCount": 15,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:09.5705051Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1125616909,
+        "author": "mgood7123",
+        "body": "you mean your content appears stretched or spaced out when resizing?",
+        "createdAt": "2022-05-13T03:17:24",
+        "reactions": []
+      },
+      {
+        "id": 1126142749,
+        "author": "DanWBR",
+        "body": "@mgood7123 check this video, you\u0027ll notice that the width and height of the canvas are defined internally (I didn\u0027t set them explicitly in my code), and are updated automatically to keep the same initial aspect ratio. I\u0027d like to have it at 100% width and height automatically.\r\n\r\nhttps://user-images.githubusercontent.com/2669419/168309528-eeb008ef-3a5f-45c0-aed9-8d2ce9689063.mov\r\n\r\n\r\n",
+        "createdAt": "2022-05-13T14:50:37",
+        "reactions": []
+      },
+      {
+        "id": 1126146102,
+        "author": "DanWBR",
+        "body": "@mgood7123 before you ask, the parent container is at 100% width and height, it is not preventing the canvas from filling the available space.",
+        "createdAt": "2022-05-13T14:54:08",
+        "reactions": []
+      },
+      {
+        "id": 1126611370,
+        "author": "mgood7123",
+        "body": "\u003E @mgood7123 check this video, you\u0027ll notice that the width and height of the canvas are defined internally (I didn\u0027t set them explicitly in my code), and are updated automatically to keep the same initial aspect ratio. I\u0027d like to have it at 100% width and height automatically.\r\n\u003E canvas.mov\r\n\r\nif the aspect ratio is not kept then this WILL result in stretching (assuming it is rendered in the same way as an image)\r\n\r\nyou could center it horizontally and vertically instead",
+        "createdAt": "2022-05-14T02:05:45",
+        "reactions": []
+      },
+      {
+        "id": 1126611993,
+        "author": "mgood7123",
+        "body": "maybe this?\r\n\r\n![image](https://user-images.githubusercontent.com/26642847/168406972-ea31ae01-040c-44b0-8b6c-0c0b06d7f43c.png)\r\n",
+        "createdAt": "2022-05-14T02:10:01",
+        "reactions": []
+      },
+      {
+        "id": 1126612679,
+        "author": "DanWBR",
+        "body": "\u003E \u003E @mgood7123 check this video, you\u0027ll notice that the width and height of the canvas are defined internally (I didn\u0027t set them explicitly in my code), and are updated automatically to keep the same initial aspect ratio. I\u0027d like to have it at 100% width and height automatically.\n\u003E \n\u003E \u003E canvas.mov\n\u003E \n\u003E \n\u003E \n\u003E if the aspect ratio is not kept then this WILL result in stretching (assuming it is rendered in the same way as an image)\n\u003E \n\u003E \n\u003E \n\u003E you could center it horizontally and vertically instead\n\n@mgood7123 it should not stretch. What I need is the same behavior that a SkCanvasView Windows Forms control has when added to a form with its DockState set to Fill. The canvas keeps filling the form as you resize it.",
+        "createdAt": "2022-05-14T02:14:00",
+        "reactions": []
+      },
+      {
+        "id": 1126621183,
+        "author": "mgood7123",
+        "body": "\u003E \u003E \u003E @mgood7123 check this video, you\u0027ll notice that the width and height of the canvas are defined internally (I didn\u0027t set them explicitly in my code), and are updated automatically to keep the same initial aspect ratio. I\u0027d like to have it at 100% width and height automatically.\r\n\u003E \u003E \r\n\u003E \u003E \r\n\u003E \u003E \u003E canvas.mov\r\n\u003E \u003E \r\n\u003E \u003E \r\n\u003E \u003E if the aspect ratio is not kept then this WILL result in stretching (assuming it is rendered in the same way as an image)\r\n\u003E \u003E you could center it horizontally and vertically instead\r\n\u003E \r\n\u003E @mgood7123 it should not stretch. What I need is the same behavior that a SkCanvasView Windows Forms control has when added to a form with its DockState set to Fill. The canvas keeps filling the form as you resize it.\r\n\r\nnot sure how else to help",
+        "createdAt": "2022-05-14T03:00:17",
+        "reactions": []
+      },
+      {
+        "id": 1126636069,
+        "author": "mattleibow",
+        "body": "I believe this is the way the canvas works.\r\n\r\nThe CSS is used to set the desired size, and then in order to make sure the image is not blurry, the html size is set to the CSS size * density:\r\n\r\nhttps://developer.mozilla.org/en-US/docs/Web/API/Window/devicePixelRatio#correcting_resolution_in_a_canvas\r\n\r\nBut maybe there is an issue with the proportions... Let me get my Blazor world back and test.",
+        "createdAt": "2022-05-14T04:25:21",
+        "reactions": []
+      },
+      {
+        "id": 1126709276,
+        "author": "DanWBR",
+        "body": "@mattleibow @mgood7123 the following CSS did the trick:\r\n\r\n\u0060\u0060\u0060\r\n.canvas-container {\r\n    width: 100%;\r\n    height: 100%;\r\n    max-width: 100%;\r\n    max-height: 100%;\r\n}\r\n\r\n    .canvas-container canvas {\r\n        position: absolute;\r\n        top: 0;\r\n        bottom: 0;\r\n        left: 0;\r\n        right: 0;\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n\u003Cimg width=\u00221369\u0022 alt=\u0022Captura de Tela 2022-05-14 a\u0300s 08 38 03\u0022 src=\u0022https://user-images.githubusercontent.com/2669419/168426101-440b5dbf-c40b-472a-89f8-9053642bf6fe.png\u0022\u003E\r\n\r\nI\u0027m closing this, thank you very much for your help!",
+        "createdAt": "2022-05-14T12:39:43",
+        "reactions": []
+      },
+      {
+        "id": 1126731630,
+        "author": "DanWBR",
+        "body": "reopening. it worked but then the canvas stayed at the top z-order blocking all other elements on the page.",
+        "createdAt": "2022-05-14T14:58:41",
+        "reactions": []
+      },
+      {
+        "id": 1128707489,
+        "author": "mattleibow",
+        "body": "I think this is just your CSS. I have a page here with all the heights set to 100% and then the canvas fits the screen without worrying about aspect.\r\n\r\nI am not sure how to actually get what you want. \r\n\r\nAlso, are you sure you don\u0027t have other CSS/JS that is resizing the canvas?\r\n\r\n\r\nhttps://user-images.githubusercontent.com/1096616/168792722-45e9bba6-5928-404c-bd5e-c21fd8c9eed1.mp4\r\n\r\n",
+        "createdAt": "2022-05-17T10:37:52",
+        "reactions": []
+      },
+      {
+        "id": 1128711678,
+        "author": "DanWBR",
+        "body": "@mattleibow it suddenly started working as expected. I\u0027m still learning to work with CSS and JS, so yes, it was on me. Thank you very much!\n\nBTW, the blazor GL view is not working well on iOS. Almost nothing is drawn.\n\n![image](https://user-images.githubusercontent.com/2669419/168793503-e92fb335-8013-4a2c-b0f4-0dd425083044.png)",
+        "createdAt": "2022-05-17T10:42:49",
+        "reactions": []
+      },
+      {
+        "id": 1128998894,
+        "author": "mattleibow",
+        "body": "Oh dear. Could you open an issue for the iOS issue?\r\n\r\nI see things there so maybe also let me know what is drawn and what is not. Also, if you can get a smaller repro it would be great.\r\n\r\nAnd, does it work with the SKCanvasView? I wonder if the fact the lines are not working it is something to do with my stencil buffers not being right...\r\n\r\n\r\nOr maybe iOS is finally blowing up on GL and demanding Metal usage. Apple is threatening us... So yeah, what version of iOS is this?",
+        "createdAt": "2022-05-17T15:16:09",
+        "reactions": []
+      },
+      {
+        "id": 1128999476,
+        "author": "mattleibow",
+        "body": "Also, glad the issue is fixed with CSS. I had to do bad things to my HTML to get it to fill the screen. ",
+        "createdAt": "2022-05-17T15:16:43",
+        "reactions": []
+      },
+      {
+        "id": 1129008602,
+        "author": "DanWBR",
+        "body": "@mattleibow yes, it works nicely with SKCanvasView. I\u0027ll create an issue with a comparison between the two. Thanks\r\n\r\nI\u0027ve managed to get it working with CSS stuff only. Height is not 100% in order to prevent the scrollbar from showing up, and then having the touchmove event working as expected (dragging objects), not trying to scroll the canvas up and down.\r\n\r\n\u0060\u0060\u0060\r\n.canvas-container {\r\n    width: 100%;\r\n    height: 90%;\r\n    max-width: 100%;\r\n    max-height: 90%;\r\n}\r\n\r\n    .canvas-container canvas {\r\n        width: 100%;\r\n        height: 98%;\r\n        max-width: 100%;\r\n        max-height: 98%;\r\n        touch-action: none;\r\n    }\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-05-17T15:24:43",
+        "reactions": []
+      }
+    ]
+  }
 }

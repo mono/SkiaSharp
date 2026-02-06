@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T00:01:16",
   "closedAt": "2022-07-02T22:00:50",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:24.0439741Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1172968991,
+        "author": "jafeucht",
+        "body": "Well, it turns out I have a bad habit of creating support tickets or bug reports, then fixing the issue on my own 5 minutes later.\r\n\r\nTurns out that SkiaSharp could not find a font. After copying cour.ttf (Courier New) from the C:\\Windows\\Fonts folder to a fonts folder in my wwwroot path, I was able to fix the functionality. Here is the resulting code:\r\n\r\n\u0060\u0060\u0060\r\npublic Byte[] TextToImage(String text) {\r\n\tByte[] imageData;\r\n\tString fontFile = Path.GetFullPath(Path.Combine(_env.WebRootPath, \u0022fonts\u0022, \u0022cour.ttf\u0022));\r\n\tif (!System.IO.File.Exists(fontFile)) {\r\n\t\tthrow new Exception(\u0022Font file \\\u0022cour.ttf\\\u0022 missing.\u0022);\r\n\t}\r\n\tusing (SKTypeface typeface = SKTypeface.FromFile(fontFile)) {\r\n\t\tusing (SKFont font = new(typeface, 16)) {\r\n\t\t\tSingle textSize;\r\n\t\t\tSKRect textBounds = new();\r\n\t\t\tusing (SKPaint tempPaint = new(font)) {\r\n\t\t\t\ttextSize = tempPaint.MeasureText(text, ref textBounds);\r\n\t\t\t}\r\n\t\t\tSKImageInfo imageInfo = new((Int32)textBounds.Width, (Int32)textBounds.Height);\r\n\t\t\tusing (SKSurface surface = SKSurface.Create(imageInfo)) {\r\n\t\t\t\tSKCanvas canvas = surface.Canvas;\r\n\t\t\t\tcanvas.Clear(SKColors.Transparent);\r\n\t\t\t\tusing (SKPaint paint = new(font)) {\r\n\t\t\t\t\tpaint.Color = SKColors.Black;\r\n\t\t\t\t\tpaint.IsAntialias = true;\r\n\t\t\t\t\tcanvas.DrawText(text, 0, textBounds.Height - textBounds.Bottom, font, paint);\r\n\t\t\t\t}\r\n\t\t\t\tusing (SKImage image = surface.Snapshot()) {\r\n\t\t\t\t\tusing (SKData data = image.Encode(SKEncodedImageFormat.Png, 100)) {\r\n\t\t\t\t\t\timageData = data.ToArray();\r\n\t\t\t\t\t}\r\n\t\t\t\t}\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n\treturn imageData;\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-07-02T21:58:10",
+        "reactions": []
+      }
+    ]
+  }
 }

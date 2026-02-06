@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T00:01:20",
   "closedAt": "2022-06-07T07:13:02",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:19:18.7465635Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1148283092,
+        "author": "71a1den",
+        "body": "Hello again. I managed to solve the problem myself. Below you will find the updated Dockerfile. \r\n\u0060\u0060\u0060\r\nFROM mcr.microsoft.com/dotnet/aspnet:6.0-focal AS base\r\nWORKDIR /app\r\nRUN apt-get update \u0026\u0026 apt-get install -y ttf-mscorefonts-installer fontconfig libc6 libc6-dev libgtk2.0-0 libnss3 libatk-bridge2.0-0 libx11-xcb1 libxcb-dri3-0 libdrm-common libgbm1 libasound2 libappindicator3-1 libxrender1 libfontconfig1 libxshmfence1\r\nRUN chmod 777 .\r\n\r\nFROM mcr.microsoft.com/dotnet/sdk:6.0-focal AS build\r\nWORKDIR /src\r\nCOPY [\u0022DataExportService.csproj\u0022, \u0022DataExportService/\u0022]\r\nRUN dotnet restore \u0022DataExportService/DataExportService.csproj\u0022\r\n\r\nWORKDIR \u0022/src/DataExportService\u0022\r\nCOPY . .\r\nRUN dotnet build \u0022DataExportService.csproj\u0022 -c Release -o /app/build\r\n\r\nFROM build AS publish\r\nRUN dotnet publish \u0022DataExportService.csproj\u0022 -c Release -o /app/publish\r\n\r\nFROM base AS final\r\nWORKDIR /app\r\nCOPY --from=publish /app/publish .\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022DataExportService.dll\u0022]\r\n\u0060\u0060\u0060\r\nAdditional info:\r\nAlso you need to specify a supported font in the document\r\n\u0060page.DefaultTextStyle(x =\u003E x.FontFamily(Fonts.Arial));\u0060",
+        "createdAt": "2022-06-07T07:13:02",
+        "reactions": []
+      }
+    ]
+  }
 }
