@@ -99,10 +99,14 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
             {
                 (index, syncMeta, itemsProcessed, itemsComplete) = await SyncLayer1Async(
                     apiClient, cache, index, syncMeta, settings, isInitialSync);
+                
+                // Detect if Layer 1 hit rate limit (it returns allDone=false, status=rate_limited)
+                if (syncMeta.Layers.Items.Status == "rate_limited")
+                    rateLimitHit = true;
             }
 
             // Layer 2: Engagement data
-            if (!settings.ItemsOnly)
+            if (!settings.ItemsOnly && !rateLimitHit)
             {
                 (index, syncMeta, engagementProcessed, rateLimitHit) = await SyncLayer2Async(
                     apiClient, cache, index, syncMeta, settings);
@@ -442,16 +446,32 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         if (item == null) continue;
 
                         var engagement = await FetchEngagementAsync(client, settings, indexItem.Number);
+
+                        // Fix for clock skew: ensure SyncedAt is at least UpdatedAt
+                        var syncedAt = engagement.SyncedAt >= item.UpdatedAt ? engagement.SyncedAt : item.UpdatedAt;
+
                         item = item with { Engagement = engagement };
                         await cache.SaveItemAsync(item);
 
                         itemsDict[indexItem.Number] = itemsDict[indexItem.Number] with 
                         { 
-                            EngagementSyncedAt = engagement.SyncedAt 
+                            EngagementSyncedAt = syncedAt 
                         };
 
                         meta = cache.RemoveFailure(meta, indexItem.Number);
                         processed++;
+
+                        // Update index and save periodically
+                        index = index with 
+                        { 
+                            Items = [.. itemsDict.Values.OrderBy(i => i.Number)]
+                        };
+
+                        if (processed % 5 == 0)
+                        {
+                            await cache.SaveGitHubIndexAsync(index);
+                            await cache.SaveGitHubSyncMetaAsync(meta);
+                        }
 
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [dim]#{indexItem.Number}: {engagement.Comments.Count} comments, {engagement.Reactions.Count} reactions[/]");
@@ -462,17 +482,26 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
 
                         await Task.Delay(100);
                     }
-                    catch (NotFoundException)
+                    catch (RateLimitExceededException)
                     {
-                        meta = cache.AddFailure(meta, indexItem.Number, "engagement", "not_found", 404, "Item not found");
-                        if (settings.Verbose)
-                            AnsiConsole.MarkupLine($"  [yellow]#{indexItem.Number}: Not found, added to skip list[/]");
+                        AnsiConsole.MarkupLine($"[yellow]Rate limit hit during item #{indexItem.Number}. Stopping.[/]");
+                        rateLimitHit = true;
+                        break;
                     }
-                    catch (ApiException ex) when (ex.StatusCode == System.Net.HttpStatusCode.InternalServerError)
+                    catch (Exception ex)
                     {
-                        meta = cache.AddFailure(meta, indexItem.Number, "engagement", "server_error", 500, ex.Message);
+                        var status = 500;
+                        var type = "server_error";
+                        var msg = ex.Message;
+
+                        if (ex is NotFoundException) { status = 404; type = "not_found"; }
+                        else if (ex is ApiException apiEx) { status = (int)apiEx.StatusCode; type = status == 404 ? "not_found" : "api_error"; }
+
+                        meta = cache.AddFailure(meta, indexItem.Number, "engagement", type, status, msg);
+                        await cache.SaveGitHubSyncMetaAsync(meta);
+                        
                         if (settings.Verbose)
-                            AnsiConsole.MarkupLine($"  [yellow]#{indexItem.Number}: Server error, added to skip list[/]");
+                            AnsiConsole.MarkupLine($"  [yellow]#{indexItem.Number}: Failed ({type}): {msg}[/]");
                     }
                 }
             });
@@ -489,14 +518,15 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         var remainingCount = index.Items.Count(i => 
             !meta.Failures.ContainsKey(i.Number.ToString()) &&
             (i.EngagementSyncedAt == null || i.UpdatedAt > i.EngagementSyncedAt));
-        var allDone = remainingCount == 0 || (processed == 0 && !rateLimitHit);
+        var itemsInCooldown = meta.Failures.Count(f => f.Value.RetryAfter > DateTime.UtcNow);
+        var allDone = remainingCount == 0 && (processed > 0 || itemsInCooldown == 0);
 
         meta = meta with 
         {
             Layers = meta.Layers with 
             {
                 Engagement = new EngagementLayerStatus(
-                    "success",
+                    rateLimitHit ? "rate_limited" : (allDone ? "success" : "partial"),
                     DateTime.UtcNow,
                     null,
                     processed,
@@ -552,6 +582,10 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                 ));
                 await Task.Delay(50);
             }
+            catch (RateLimitExceededException)
+            {
+                throw;
+            }
             catch
             {
                 // If we can't get reactions for a comment, still include the comment
@@ -594,7 +628,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     r.SubmittedAt.DateTime
                 ))];
             }
-            catch { /* Ignore PR fetch errors, use basic data */ }
+            catch (RateLimitExceededException) { throw; }
+            catch { /* Ignore other PR fetch errors, use basic data */ }
         }
 
         return new CachedItem(

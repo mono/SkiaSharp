@@ -156,16 +156,18 @@ jobs:
             EXIT_CODE=$?
             set -e
             
-            if [ $EXIT_CODE -eq 2 ]; then
-              echo "All items synced!"
-              break
-            fi
-            
+            # Always commit changes before checking exit code
             cd .data-cache
             git add -A
             if git diff --staged --quiet; then
-              echo "No changes - done!"
+              echo "No changes"
               cd ..
+              if [ $EXIT_CODE -ne 0 ]; then
+                [ $EXIT_CODE -eq 2 ] && echo "All items synced!"
+                [ $EXIT_CODE -eq 1 ] && echo "Rate limit hit - will resume next run"
+                break
+              fi
+              echo "No changes and exit 0 - done!"
               break
             else
               git commit -m "Sync: SkiaSharp items checkpoint $BATCH $(date -u +%H:%M)"
@@ -177,6 +179,11 @@ jobs:
               done
             fi
             cd ..
+            
+            if [ $EXIT_CODE -eq 2 ]; then
+              echo "All items synced!"
+              break
+            fi
             
             if [ $EXIT_CODE -eq 1 ]; then
               echo "Rate limit hit - will resume next run"
@@ -201,9 +208,6 @@ jobs:
             echo "  SkiaSharp Engagement checkpoint $BATCH"
             echo "========================================"
             
-            # No flags needed - engagement sync is always incremental
-            # (processes items where EngagementSyncedAt = null or UpdatedAt > EngagementSyncedAt)
-            
             set +e
             dotnet run --project src/SkiaSharp.Collector -- sync github \
               --repo mono/SkiaSharp \
@@ -213,16 +217,18 @@ jobs:
             EXIT_CODE=$?
             set -e
             
-            if [ $EXIT_CODE -eq 2 ]; then
-              echo "All engagement synced!"
-              break
-            fi
-            
+            # Always commit changes before checking exit code
             cd .data-cache
             git add -A
             if git diff --staged --quiet; then
-              echo "No changes - done!"
+              echo "No changes"
               cd ..
+              if [ $EXIT_CODE -ne 0 ]; then
+                [ $EXIT_CODE -eq 2 ] && echo "All engagement synced!"
+                [ $EXIT_CODE -eq 1 ] && echo "Rate limit hit - will resume next run"
+                break
+              fi
+              echo "No changes and exit 0 - done!"
               break
             else
               git commit -m "Sync: SkiaSharp engagement checkpoint $BATCH $(date -u +%H:%M)"
@@ -234,6 +240,11 @@ jobs:
               done
             fi
             cd ..
+            
+            if [ $EXIT_CODE -eq 2 ]; then
+              echo "All engagement synced!"
+              break
+            fi
             
             if [ $EXIT_CODE -eq 1 ]; then
               echo "Rate limit hit - will resume next run"
@@ -350,15 +361,14 @@ jobs:
             EXIT_CODE=$?
             set -e
             
-            if [ $EXIT_CODE -eq 2 ]; then
-              echo "All done!"
-              break
-            fi
-            
             cd .data-cache
             git add -A
             if git diff --staged --quiet; then
               cd ..
+              if [ $EXIT_CODE -ne 0 ]; then
+                [ $EXIT_CODE -eq 2 ] && echo "All done!"
+                break
+              fi
               break
             else
               git commit -m "Sync: Extended items $BATCH $(date -u +%H:%M)"
@@ -370,7 +380,7 @@ jobs:
             fi
             cd ..
             
-            if [ $EXIT_CODE -eq 1 ]; then
+            if [ $EXIT_CODE -eq 2 ] || [ $EXIT_CODE -eq 1 ]; then
               break
             fi
             
@@ -398,15 +408,14 @@ jobs:
             EXIT_CODE=$?
             set -e
             
-            if [ $EXIT_CODE -eq 2 ]; then
-              echo "All done!"
-              break
-            fi
-            
             cd .data-cache
             git add -A
             if git diff --staged --quiet; then
               cd ..
+              if [ $EXIT_CODE -ne 0 ]; then
+                [ $EXIT_CODE -eq 2 ] && echo "All done!"
+                break
+              fi
               break
             else
               git commit -m "Sync: Extended engagement $BATCH $(date -u +%H:%M)"
@@ -418,7 +427,7 @@ jobs:
             fi
             cd ..
             
-            if [ $EXIT_CODE -eq 1 ]; then
+            if [ $EXIT_CODE -eq 2 ] || [ $EXIT_CODE -eq 1 ]; then
               break
             fi
             

@@ -14,6 +14,7 @@
 ### 2026-02-06 (Sync Design Review)
 
 - Reviewed full/resume GitHub sync design and documented edge cases around page drift, resume markers, crash windows, and concurrency.
+- Completed adversarial reliability review of GitHub sync (state, rate limits, and checkpoint loop failure modes).
 
 ### 2026-02-05 (UI Enhancements - v0.12.0)
 
