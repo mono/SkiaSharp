@@ -134,8 +134,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         SyncMeta meta,
         SyncGitHubSettings settings)
     {
+        var syncMode = settings.FullRefresh ? "full (Created ASC)" : "incremental (Updated DESC)";
         if (!settings.Quiet)
-            AnsiConsole.MarkupLine("\n[bold]Layer 1: Basic item data[/]");
+            AnsiConsole.MarkupLine($"\n[bold]Layer 1: Basic item data[/] [dim]({syncMode})[/]");
 
         // Get repo info (also gives us stars/forks/watchers)
         var repo = await client.Repository.Get(_owner, _repoName);
@@ -157,8 +158,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
         if (settings.Verbose)
             AnsiConsole.MarkupLine($"  [dim]Saved repo stats: {repoStats.Stars:N0} stars, {repoStats.Forks:N0} forks[/]");
         
-        // For full refresh, ignore since timestamp
-        // For incremental, only fetch items updated since last sync
+        // Full sync: fetch all items sorted by Created ASC (stable ordering)
+        // Incremental: fetch recently updated items sorted by Updated DESC (recent first)
         var since = settings.FullRefresh ? null : meta.Layers.Items.LastSync;
         var itemsDict = index.Items.ToDictionary(i => i.Number);
         var processed = 0;
@@ -194,8 +195,8 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                     var request = new RepositoryIssueRequest
                     {
                         State = ItemStateFilter.All,
-                        SortProperty = IssueSort.Updated,
-                        SortDirection = SortDirection.Descending,
+                        SortProperty = settings.FullRefresh ? IssueSort.Created : IssueSort.Updated,
+                        SortDirection = settings.FullRefresh ? SortDirection.Ascending : SortDirection.Descending,
                         Since = since?.ToUniversalTime()
                     };
 
@@ -209,8 +210,24 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         break;
                     }
 
+                    var earlyExit = false;
                     foreach (var issue in issues)
                     {
+                        // Early exit optimization for incremental sync:
+                        // When sorted by Updated DESC, if we hit an item that's already 
+                        // in our cache with the same UpdatedAt, everything after is also synced
+                        if (!settings.FullRefresh && itemsDict.TryGetValue(issue.Number, out var cached))
+                        {
+                            if (issue.UpdatedAt.HasValue && cached.UpdatedAt == issue.UpdatedAt.Value.DateTime)
+                            {
+                                if (settings.Verbose)
+                                    AnsiConsole.MarkupLine($"  [dim]Hit cached item #{issue.Number}, stopping early[/]");
+                                earlyExit = true;
+                                allDone = true;
+                                break;
+                            }
+                        }
+
                         var isPr = issue.PullRequest != null;
                         var item = await CreateCachedItemAsync(client, issue, isPr, settings);
                         
@@ -228,6 +245,9 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                         if (settings.Verbose)
                             AnsiConsole.MarkupLine($"  [dim]#{issue.Number}: {Markup.Escape(issue.Title.Truncate(50))}[/]");
                     }
+
+                    if (earlyExit)
+                        break;
 
                     // Save index after each page to prevent data loss on crash
                     index = index with 
