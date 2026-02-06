@@ -14,5 +14,83 @@
   "updatedAt": "2023-09-14T18:00:28",
   "closedAt": "2023-08-15T16:40:13",
   "commentCount": 7,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:43:18.9349476Z",
+    "reactions": [
+      {
+        "user": "softlion",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:43:18.9349541Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 840117793,
+        "author": "ziriax",
+        "body": "I guess the reason why this isn\u0027t in Skia yet (and hence SkiaSharp) is licensing?\r\n\r\nActually, I believe that on some Android devices, Skia does support HEIF, because they already pay a license for the HEVC encoder.\r\n\r\nTechnically supporting HEIF is actually a no-brainer, just use https://github.com/strukturag/libheif, or its .NET Standard wrapper, https://www.nuget.org/packages/LibHeifSharp\r\n\r\n\r\n\r\n",
+        "createdAt": "2021-05-12T21:47:14",
+        "reactions": []
+      },
+      {
+        "id": 894146287,
+        "author": "softlion",
+        "body": "I agree with MichalJan008.\r\nHEIF is at least half the size of JPG with a much better quality.\r\n\r\nAnd it starts to be an issue in the picture picker.",
+        "createdAt": "2021-08-06T09:53:41",
+        "reactions": []
+      },
+      {
+        "id": 894278786,
+        "author": "mattleibow",
+        "body": "I\u0027ll have to see. The licence is special :)\n\nI might be able to provide a separate package with a different license or something. Maybe we can have an api for registering additional codecs.\n",
+        "createdAt": "2021-08-06T13:57:13",
+        "reactions": []
+      },
+      {
+        "id": 1303923877,
+        "author": "fmnamado",
+        "body": "Hello, has been any update? When can we count on this? Thank you.",
+        "createdAt": "2022-11-04T17:35:52",
+        "reactions": [
+          {
+            "user": "UkeHa",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:43:18.2999444Z"
+          },
+          {
+            "user": "a3linux",
+            "content": "rocket",
+            "createdAt": "2026-02-06T13:43:18.2999453Z"
+          }
+        ]
+      },
+      {
+        "id": 1678782605,
+        "author": "SrejonKhan",
+        "body": "Hello, is there any update on this?  ",
+        "createdAt": "2023-08-15T11:29:27",
+        "reactions": []
+      },
+      {
+        "id": 1679269820,
+        "author": "mattleibow",
+        "body": "I think this is all licensing. Right now, I see this in the skia headers:\r\n\r\n\u0060\u0060\u0060cpp\r\n#if __has_include(\u0022HeifDecoderAPI.h\u0022)\r\n    #include \u0022HeifDecoderAPI.h\u0022\r\n#else\r\n    #include \u0022src/codec/SkStubHeifDecoderAPI.h\u0022\r\n#endif\r\n\u0060\u0060\u0060\r\n\r\nI assume it just needs to be present for it to be enabled, the trick is that enabling it may be as legally free as we want it.\r\n\r\nThe license is \u0060GNU Lesser General Public License version 3.0\u0060\r\n\r\nHowever, as @ziriax mentions, you can actually decode using https://www.nuget.org/packages/LibHeifSharp and decode to a \u0060HeifImage\u0060 and then get the \u0060HeifPlaneData\u0060 which gives you a pointer to the memory. You can then create a \u0060SKImage\u0060 around that data.\r\n",
+        "createdAt": "2023-08-15T16:39:11",
+        "reactions": [
+          {
+            "user": "SrejonKhan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:43:18.7034505Z"
+          }
+        ]
+      },
+      {
+        "id": 1679271088,
+        "author": "mattleibow",
+        "body": "I am going to close this issue for now unless a new library appears that can load HEIF with a better license. But for now, the actual usage is pretty simple and SkiaSharp provides easy ways to use it.",
+        "createdAt": "2023-08-15T16:40:13",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -13,5 +13,78 @@
   "createdAt": "2022-09-12T21:26:07",
   "updatedAt": "2023-08-14T15:55:15",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:44:21.0596086Z",
+    "reactions": [
+      {
+        "user": "mattleibow",
+        "content": "heart",
+        "createdAt": "2026-02-06T13:44:21.0596111Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1251597811,
+        "author": "charlesroddie",
+        "body": "Is this function part of Skia? If not then it shouldn\u0027t be added. You can use any string to Color? function (there is one in System.Drawing.Color) and then convert to SKColor.",
+        "createdAt": "2022-09-19T21:48:51",
+        "reactions": [
+          {
+            "user": "ojb500",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:20.3857151Z"
+          },
+          {
+            "user": "themcoo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:20.3857156Z"
+          }
+        ]
+      },
+      {
+        "id": 1330600979,
+        "author": "uxmanz",
+        "body": "System.Drawing.Color causes major problems in linux due to its utilization of libdgiplus and its not available for every linux distro. so may be an alternative is var color = SKColor.FromName(inputClrName); if available",
+        "createdAt": "2022-11-29T12:46:41",
+        "reactions": [
+          {
+            "user": "JakubNowakWavemaker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:20.5739584Z"
+          }
+        ]
+      },
+      {
+        "id": 1637529715,
+        "author": "JakNo",
+        "body": "Hi guys, any news on it?",
+        "createdAt": "2023-07-17T07:39:09",
+        "reactions": []
+      },
+      {
+        "id": 1677603969,
+        "author": "nchabelengmc",
+        "body": "here is a sample:\r\n\r\n\u0060 private static SKColor GetColor(string colorName)\r\n        {\r\n            var skColor = typeof(SKColors).GetField(colorName);\r\n            if (skColor != null)\r\n            {\r\n                return (SKColor)skColor.GetValue(null)!;\r\n            }\r\n            return SKColors.Black;\r\n        }\u0060",
+        "createdAt": "2023-08-14T15:54:45",
+        "reactions": [
+          {
+            "user": "JakubNowakWavemaker",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:21.0103711Z"
+          },
+          {
+            "user": "harveytriana",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:21.0103716Z"
+          },
+          {
+            "user": "Saibamen",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:21.0103717Z"
+          }
+        ]
+      }
+    ]
+  }
 }

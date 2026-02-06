@@ -14,5 +14,64 @@
   "updatedAt": "2023-08-30T18:00:29",
   "closedAt": "2023-07-31T16:32:28",
   "commentCount": 6,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:43:39.7644891Z",
+    "reactions": [
+      {
+        "user": "cyraid",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:43:39.764496Z"
+      },
+      {
+        "user": "LFLumirithmic",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:43:39.7644968Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1236336689,
+        "author": "mgood7123",
+        "body": "\u003E **Is your feature request related to a problem? Please describe.**\r\n\u003E \r\n\u003E Usage of a simple shader within SKCanvasView leads to a crash.\r\n\u003E \r\n\u003E Updating to MAUI from UWP is only possible for SKCanvasView. The usage of any shader for SKCanvasView is unfortunately blocked by this crash.\r\n\u003E \r\n\u003E **Describe the solution you\u0027d like**\r\n\u003E \r\n\u003E Update to a skia milestone that has the SKVM enabled/integrated. (afaik 90\u002B)\r\n\u003E \r\n\u003E Update the Skia library to milestone 90\u002B\r\n\u003E \r\n\u003E **Additional context**\r\n\u003E \r\n\u003E code that crashes within SKCanvasView:\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E var src = \u0022half4 main(float2 coord) { return half4(1, 0, 0, 1); }\u0022;\r\n\u003E \r\n\u003E using (var effect = SKRuntimeEffect.Create(src, out var errorText))\r\n\u003E {\t\r\n\u003E \tusing (var shader = effect.ToShader(true, new SKRuntimeEffectUniforms(effect), new SKRuntimeEffectChildren(effect)))\r\n\u003E \t{\r\n\u003E \t\tvar paint = new SKPaint\r\n\u003E \t\t{\r\n\u003E \t\t  Shader = shader\r\n\u003E \t\t};\t\t\r\n\u003E \r\n\u003E \t\tcanvas.DrawRect(new SKRect(0, 0, 100, 100), paint);\r\n\u003E \t}\r\n\u003E }\r\n\u003E \u0060\u0060\u0060\r\n\r\nthe shader crash is due to the BYTECODE_COMPILER not being defined when compiling skia\r\n\r\nenabling it directly in the cpp files enables support for SKSL in CPU canvas\u0027s\r\n\r\nsee https://github.com/mono/SkiaSharp/issues/1822#issuecomment-1236014288",
+        "createdAt": "2022-09-04T13:02:42",
+        "reactions": []
+      },
+      {
+        "id": 1563226968,
+        "author": "cyraid",
+        "body": "An update of skia would be nice, then hopefully some of the shader functions would be included. \u0027mod\u0027 doesn\u0027t even seem to be included.",
+        "createdAt": "2023-05-25T16:58:25",
+        "reactions": []
+      },
+      {
+        "id": 1596294199,
+        "author": "LFLumirithmic",
+        "body": "Bumping this - I\u0027ve got a .NET MAUI app I made to reproduce this issue: https://github.com/LFLumirithmic/SkiaShaderTest\r\n\r\nThe most relevant part of the code is:\r\n\r\n\u0060\r\nvar src = @\u0022\r\n                    float4 main(float2 fragCoord) {\r\n                        return float4(1,0,0,1);\r\n                    }\u0022;\r\n                using var effect = SKRuntimeEffect.Create(src, out string error);\r\n                using var shader = effect.ToShader(true);\r\n                using (SKPaint paint = new SKPaint() { Shader = shader })\r\n                {\r\n                    try\r\n                    {\r\n                        canvas.DrawRect(info.Rect, paint);\r\n                    }\r\n                    catch (Exception e)\r\n                    {\r\n                        Debug.WriteLine($\u0022Exception {e.GetType()}: {e.Message}\u0022);\r\n                    }\r\n                 }\r\n                 \u0060\r\n\r\nIt\u0027s a bare-bones app with a custom control that inherits from SKCanvasView with basically the exact same shader as what @Bluenuance posted in his example. The canvas.DrawRect() call crashes the app immediately.\r\n\r\nI tried it on an iPad Pro (12.9 inch, 4th generation), where it crashes with no exception thrown and no console output (same thing on an iPad emulator). I tried it on a Mac Mini, where it crashes without throwing an exception, but gives me this output in the console: https://github.com/LFLumirithmic/SkiaShaderTest/blob/main/mac-console-output.rtf\r\n\r\nI also tried it on a Windows 11 laptop, where it also crashes but throws the following exception:\r\n\r\n\u0060\r\nSystem.Runtime.InteropServices.SEHException\r\n  HResult=0x80004005\r\n  Message=External component has thrown an exception.\r\n  Source=\u003CCannot evaluate the exception source\u003E\r\n  StackTrace:\r\n\u003CCannot evaluate the exception stack trace\u003E\r\n\u0060\r\n\r\nIf I try to replace the custom shader with one of the SKShader objects that can be created with the C# API, such as:\r\n\r\n\u0060using (SKPaint paint = new SKPaint())\r\n{\r\n    SKShader shader = SKShader.CreateLinearGradient(\r\n        new SKPoint(0, 0),\r\n        new SKPoint(1000, 1000),\r\n        new SKColor[]\r\n        {\r\n            new SKColor(0,0,255),\r\n            new SKColor(0,255,0)\r\n         },\r\n         null,\r\n         SKShaderTileMode.Repeat\r\n     );\r\n     paint.Shader = shader;\r\n     canvas.DrawRect(info.Rect, paint);\r\n}\u0060\r\n\r\nThat works perfectly.\r\n\r\nWould be great to know if there\u0027s a way to get this to work, as a custom fragment shader is by far the best method for the functionality I need in the actual app I\u0027m developing\r\n\r\n",
+        "createdAt": "2023-06-18T22:47:00",
+        "reactions": []
+      },
+      {
+        "id": 1645601081,
+        "author": "dbriard",
+        "body": "Hi, is there a new SkiaSharp release planned with a fix for CPU shader? I come accros this issue and it is really problematic for the app I am working on.",
+        "createdAt": "2023-07-21T13:35:28",
+        "reactions": []
+      },
+      {
+        "id": 1658737329,
+        "author": "mattleibow",
+        "body": "As of today, \u0060SKRuntimeEffect\u0060 is not supported on a raster/bitmap canvas and only on the GPU.\r\n",
+        "createdAt": "2023-07-31T16:32:14",
+        "reactions": []
+      },
+      {
+        "id": 1658737599,
+        "author": "mattleibow",
+        "body": "Duplicate of https://github.com/mono/SkiaSharp/issues/1822",
+        "createdAt": "2023-07-31T16:32:25",
+        "reactions": []
+      }
+    ]
+  }
 }

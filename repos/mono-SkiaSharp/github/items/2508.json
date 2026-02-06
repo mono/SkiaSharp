@@ -26,5 +26,25 @@
   "createdAt": "2023-06-26T02:24:54",
   "updatedAt": "2023-08-31T23:50:44",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:43:30.0814255Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1699755895,
+        "author": "mattleibow",
+        "body": "Is this ARM as in ARM32 or ARM as in ARM64?\r\n\r\nI assume ARM64 as that is what exists (plain ARM is probably Windows Phone). Do you have a sample or test case that I can check. However, UWP ARM is the least optimized platform so could very well be the case. Skia is designed for LLVM/Clang, but UWP is using MSVC that has none of the optimizations.\r\n\r\n",
+        "createdAt": "2023-08-30T19:58:07",
+        "reactions": []
+      },
+      {
+        "id": 1701920666,
+        "author": "murayayu",
+        "body": "In my case, target the device actually tested uses Surface Pro X Model 1876.\r\nThe CPU of this device uses Microsoft SQ1, which is an ARM-based CPU.\r\n\r\nWhen using this device and drawing lines using SKBlendMode.DstOver, the operation gradually becomes slower.\r\n\r\nI have prepared a sample code that is a simple modification of MainPage.cs in SkiaSharpDemo.\r\nSkiaSharpDemo:https://github.com/mattleibow/SkiaSharpDemo\r\n\r\nWhen I ran this sample code on this device, I was able to confirm the problem.\r\n\r\n*Sample Code:*\r\n\u0060\u0060\u0060\r\nusing System.Collections.Generic;\r\nusing System.Linq;\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Forms;\r\nusing Xamarin.Forms;\r\n\r\nnamespace SkiaSharpDemo\r\n{\r\n\tpublic partial class MainPage : ContentPage\r\n\t{\r\n\t\tprivate readonly Dictionary\u003Clong, SKPath\u003E temporaryPaths = new Dictionary\u003Clong, SKPath\u003E();\r\n\t\tprivate readonly List\u003C(SKPath, SKPaint)\u003E paths = new List\u003C(SKPath, SKPaint)\u003E();\r\n\t\tprivate readonly SKPaint TouchPathStroke = new SKPaint()\r\n\t\t{\r\n\t\t\tIsAntialias = true,\r\n\t\t\tStyle = SKPaintStyle.Stroke,\r\n\t\t\tColor = SKColors.Black,\r\n\t\t\tStrokeWidth = 5,\r\n\t\t\tBlendMode = SKBlendMode.DstOver\r\n\t\t};\r\n\t\t\t\r\n\t\tpublic MainPage()\r\n\t\t{\r\n\t\t\tInitializeComponent();\r\n\t\t}\r\n\r\n\t\tprivate void OnPainting(object sender, SKPaintSurfaceEventArgs e)\r\n\t\t{\r\n\t\t\t// CLEARING THE SURFACE\r\n\r\n\t\t\t// we get the current surface from the event args\r\n\t\t\tvar surface = e.Surface;\r\n\t\t\t// then we get the canvas that we can draw on\r\n\t\t\tvar canvas = surface.Canvas;\r\n\t\t\t// clear the canvas / view\r\n\t\t\tcanvas.Clear();\r\n\r\n\t\t\t// DRAWING TOUCH PATHS\r\n\r\n\t\t\t// draw the paths\r\n\t\t\tforeach (var touchPath in paths)\r\n\t\t\t{\r\n\t\t\t\tcanvas.DrawPath(touchPath.Item1, touchPath.Item2);\r\n\t\t\t}\r\n\t\t\tforeach (var touchPath in temporaryPaths)\r\n\t\t\t{\r\n\t\t\t\tcanvas.DrawPath(touchPath.Value, TouchPathStroke);\r\n\t\t\t}\r\n\t\t}\r\n\r\n\t\tprivate void OnTouch(object sender, SKTouchEventArgs e)\r\n\t\t{\r\n\t\t\tswitch (e.ActionType)\r\n\t\t\t{\r\n\t\t\t\tcase SKTouchAction.Pressed:\r\n\t\t\t\t\t// start of a stroke\r\n\t\t\t\t\tvar p = new SKPath();\r\n\t\t\t\t\tp.MoveTo(e.Location);\r\n\t\t\t\t\ttemporaryPaths[e.Id] = p;\r\n\t\t\t\t\tbreak;\r\n\t\t\t\tcase SKTouchAction.Moved:\r\n\t\t\t\t\t// the stroke, while pressed\r\n\t\t\t\t\tif (e.InContact \u0026\u0026 temporaryPaths.TryGetValue(e.Id, out var moving))\r\n\t\t\t\t\t\tmoving.LineTo(e.Location);\r\n\t\t\t\t\tbreak;\r\n\t\t\t\tcase SKTouchAction.Released:\r\n\t\t\t\t\t// end of a stroke\r\n\t\t\t\t\tif (temporaryPaths.TryGetValue(e.Id, out var releasing))\r\n\t\t\t\t\t\tpaths.Add((releasing, TouchPathStroke.Clone()));\r\n\t\t\t\t\ttemporaryPaths.Remove(e.Id);\r\n\t\t\t\t\tbreak;\r\n\t\t\t\tcase SKTouchAction.Cancelled:\r\n\t\t\t\t\t// we don\u0027t want that stroke\r\n\t\t\t\t\ttemporaryPaths.Remove(e.Id);\r\n\t\t\t\t\tbreak;\r\n\t\t\t}\r\n\r\n\t\t\t// update the UI\r\n\t\t\tif (e.InContact)\r\n\t\t\t\t((SKCanvasView)sender).InvalidateSurface();\r\n\r\n\t\t\t// we have handled these events\r\n\t\t\te.Handled = true;\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-08-31T23:50:44",
+        "reactions": []
+      }
+    ]
+  }
 }

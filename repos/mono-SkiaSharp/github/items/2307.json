@@ -14,5 +14,95 @@
   "updatedAt": "2023-08-06T03:00:43",
   "closedAt": "2023-06-19T08:38:29",
   "commentCount": 9,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:44:29.9520551Z",
+    "reactions": [
+      {
+        "user": "roubachof",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:44:29.9520602Z"
+      },
+      {
+        "user": "borrmann",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:44:29.9520608Z"
+      },
+      {
+        "user": "m1ksoftware",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:44:29.9520612Z"
+      },
+      {
+        "user": "beto-rodriguez",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:44:29.9520617Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1312819291,
+        "author": "wieslawsoltes",
+        "body": "Facing similar issue\r\n\u0060\u0060\u0060\r\n\r\n  Xamarin.Shared.Sdk.targets(1230, 3): clang\u002B\u002B exited with code 1:\r\nld: building for iOS Simulator, but linking in dylib built for iOS, file \u0027/Users/wieslawsoltes/.nuget/packages/harfbuzzsharp.nativeassets.ios/2.8.2.3/runtimes/ios/native/libHarfBuzzSharp.framework/libHarfBuzzSharp\u0027 for architecture arm64\r\nclang: error: linker command failed with exit code 1 (use -v to see invocation)\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-11-13T20:54:26",
+        "reactions": []
+      },
+      {
+        "id": 1336468782,
+        "author": "roubachof",
+        "body": "same here, I think there is no x86_64 flavor included in the lib.\r\n\r\n\u003E Application\\/1F18FC2E-105F-4ED4-8216-5D476FFDBE27\\/MauiSample.app\\/Frameworks\\/libSkiaSharp.framework\\/libSkiaSharp\u0027 (mach-o file, but is an incompatible architecture (have \u0027arm64\u0027, need \u0027x86_64\u0027))",
+        "createdAt": "2022-12-04T17:06:13",
+        "reactions": []
+      },
+      {
+        "id": 1406589624,
+        "author": "mlancione",
+        "body": "Any update on this issue?",
+        "createdAt": "2023-01-27T14:36:58",
+        "reactions": []
+      },
+      {
+        "id": 1572168316,
+        "author": "m1ksoftware",
+        "body": "Hi,\r\n\r\nsame problem for me...version 2.88.3.\r\n\r\n\u0060\u0060\u0060\r\n/usr/local/share/dotnet/packs/Microsoft.iOS.Sdk/16.4.7060/targets/Xamarin.Shared.Sdk.targets(3,3): Error: clang\u002B\u002B exited with code 1:\r\nld: building for iOS Simulator, but linking in dylib built for iOS, file \u0027/Users/michele/.nuget/packages/skiasharp.nativeassets.ios/2.88.3/runtimes/ios/native/libSkiaSharp.framework/libSkiaSharp\u0027 for architecture arm64\r\nclang: error: linker command failed with exit code 1 (use -v to see invocation)\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-06-01T14:31:05",
+        "reactions": []
+      },
+      {
+        "id": 1602286497,
+        "author": "Yves-Be",
+        "body": "@mattleibow \r\nI\u0027m still seeing the issue with 2.88.4-preview.76\r\nThe build is running on a Windows machine that remotes to an ARM Mac, maybe this matters.\r\n\u0060\u0060\u0060\r\n2\u003ETool xcrun execution finished (exit code = 1).\r\n2\u003Eld: building for iOS Simulator, but linking in dylib built for iOS, file \u0027/Users/me/Library/Caches/Xamarin/mtbs/builds/Maui.Demo/6f5be72ad50f5863a2024f136fde45cd089cd74037e55700cf6471bf0860db59/C:/Users/me/.nuget/packages/skiasharp.nativeassets.ios/2.88.4-preview.76/runtimes/ios/native/libSkiaSharp.framework/libSkiaSharp\u0027 for architecture arm64\r\n2\u003Eclang: error: linker command failed with exit code 1 (use -v to see invocation)\r\n2\u003EC:\\Program Files\\dotnet\\packs\\Microsoft.iOS.Sdk\\16.4.8525-net8-p5\\targets\\Xamarin.Shared.Sdk.targets(1306,3): error : clang\u002B\u002B exited with code 1:\r\n2\u003EC:\\Program Files\\dotnet\\packs\\Microsoft.iOS.Sdk\\16.4.8525-net8-p5\\targets\\Xamarin.Shared.Sdk.targets(1306,3): error : ld: building for iOS Simulator, but linking in dylib built for iOS, file \u0027/Users/me/Library/Caches/Xamarin/mtbs/builds/Maui.Demo/6f5be72ad50f5863a2024f136fde45cd089cd74037e55700cf6471bf0860db59/C:/Users/me/.nuget/packages/skiasharp.nativeassets.ios/2.88.4-preview.76/runtimes/ios/native/libSkiaSharp.framework/libSkiaSharp\u0027 for architecture arm64\r\n2\u003EC:\\Program Files\\dotnet\\packs\\Microsoft.iOS.Sdk\\16.4.8525-net8-p5\\targets\\Xamarin.Shared.Sdk.targets(1306,3): error : clang: error: linker command failed with exit code 1 (use -v to see invocation)\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-06-22T09:09:05",
+        "reactions": []
+      },
+      {
+        "id": 1602413688,
+        "author": "filipnavara",
+        "body": "@Yves-Be That\u0027s a different error - mismatch between iOS Device and iOS Simulator build. AFAIK Visual Studio doesn\u0027t even support deploying to ARM64 iOS Simulator yet.",
+        "createdAt": "2023-06-22T10:39:52",
+        "reactions": []
+      },
+      {
+        "id": 1603778162,
+        "author": "Yves-Be",
+        "body": "Deploying to an ARM64 iOS Simulator has been working since 2021 here (both with Xamarin and .NET 6)\r\nBuilding, deploying and running a clean .NET 8 app works fine on the simulator.\r\nAs soon as SkiaSharp is added, I\u0027m getting the issue that was being discussed here.",
+        "createdAt": "2023-06-23T07:06:55",
+        "reactions": []
+      },
+      {
+        "id": 1603796611,
+        "author": "filipnavara",
+        "body": "\u003E Deploying to an ARM64 iOS Simulator has been working since 2021 here (both with Xamarin and .NET 6)\r\n\r\nI think you are mistaken. It was never supported in legacy Xamarin and on .NET 6\u002B it was not supported in the IDE without hacks either (https://github.com/xamarin/xamarin-macios/issues/15393).",
+        "createdAt": "2023-06-23T07:12:43",
+        "reactions": []
+      },
+      {
+        "id": 1624499526,
+        "author": "RobGibbens",
+        "body": "For anybody using .NET MAUI and coming across this issue: As of this writing, the SkiaSharp.Extended.UI.MAUI Nuget package is at version 2.0.0-preview.61, and has not been updated since August 30, 2022. This package has an implicit dependency on SkiaSharp \u003E= 2.88.1, which doesn\u0027t include the merged fixes from @mattleibow. I was able to fix this compiler error by explicitly referencing the SkiaSharp Nuget package of 2.88.4-preview.84, which does include this fix.\r\n\r\ncc: @Yves-Be @m1ksoftware @mlancione @roubachof @wieslawsoltes ",
+        "createdAt": "2023-07-07T01:16:48",
+        "reactions": []
+      }
+    ]
+  }
 }

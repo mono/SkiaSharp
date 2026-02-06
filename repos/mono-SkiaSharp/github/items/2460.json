@@ -23,5 +23,83 @@
   "updatedAt": "2023-08-13T12:00:30",
   "closedAt": "2023-06-26T22:00:50",
   "commentCount": 8,
-  "reactionCount": 3
+  "reactionCount": 3,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:44:24.6760277Z",
+    "reactions": [
+      {
+        "user": "ojb500",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:44:24.6760345Z"
+      },
+      {
+        "user": "ScrubN",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:44:24.6760352Z"
+      },
+      {
+        "user": "dax-leo",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:44:24.6760356Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1597511003,
+        "author": "mattleibow",
+        "body": "\u0060DrawText\u0060 appears to have a string overload because that was the old API and it is convenient, however, no matter what API you use on the \u0060SKCanvas\u0060 API, it creates a \u0060SKTextBlob\u0060 object under the hood and draws using that.\r\n\r\nThe \u0060SKTextBlob\u0060 supports spans, so maybe that is how you can avoid hidden allocations?\r\n\r\nThis is sort of what the implementation in \u0060SKCanvas\u0060 looks like:\r\n\r\n\u0060\u0060\u0060cs\r\n\r\npublic void DrawText (string text, float x, float y, SKFont font, SKPaint paint)\r\n{\r\n\tusing var blob = SKTextBlob.Create (text, font);\r\n\tif (blob == null)\r\n\t\treturn;\r\n\tDrawText (blob, x, y, paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nLet me know if this works for you.",
+        "createdAt": "2023-06-19T17:13:35",
+        "reactions": []
+      },
+      {
+        "id": 1597518202,
+        "author": "cyraid",
+        "body": "It was more so that the garbage collector wouldn\u0027t need too much to do. I\u0027m not sure if SkiaSharp was designed with realtime rendering of every frame in mind, but those GC cleanup hiccups are very noticeable (as just drawing text is creating new objects every time). Having an allocation free setup would help with this. :) (That\u0027s why using span instead of creating an object, would use local stack space)",
+        "createdAt": "2023-06-19T17:21:19",
+        "reactions": []
+      },
+      {
+        "id": 1597520181,
+        "author": "Gillibald",
+        "body": "If you mutate your text buffer you always need to allocate a new SKTextBlob. This is how it works. If you don\u0027t mutate reuse the text blob.",
+        "createdAt": "2023-06-19T17:23:30",
+        "reactions": []
+      },
+      {
+        "id": 1597549528,
+        "author": "cyraid",
+        "body": "\u003E If you mutate your text buffer you always need to allocate a new SKTextBlob. This is how it works. If you don\u0027t mutate reuse the text blob.\r\n\r\nFor something like an FPS, it\u0027s always changing. Debug stats on a screen always change too. I know you can reuse SKTextBlob. :) With my example above using readonlyspan should not result in any new object allocations.",
+        "createdAt": "2023-06-19T17:54:44",
+        "reactions": []
+      },
+      {
+        "id": 1597592917,
+        "author": "mattleibow",
+        "body": "The issue is that string are not super draw friendly. Fonts and things require some shaping and glyphs. Technically, skia only really supports glyphs, so string - especially unicode - gets converted into a series of positions glyphs. So changing the text will trigger a change of the underlying glyphs.\r\n\r\nAnd, there are more lies. text blobs are created using a \u0060SKTextBlobBuilder\u0060.\r\n\r\nThe builder allows for allocations of \u0022runs\u0022 and then it is snapped off into text blobs, which are then drawn. Text blobs are read only as well, so updating is not possible -and it would not be simple to do as the text blob is a collection of runs which are collections of glyphs and positions.\r\n\r\nHowever, you can make a text blob builder and keep that one alive, then generate blobs off that using spans. However there are also the \u0060SKRunBuffer\u0060 objects that maybe are getting in the way of the GC as that does not do anything special. It just wraps a native struct and provides a way to add the contents of a run. It does not have any handles, so it was just a plain C# object.\r\n\r\nAre you able to verify that the hiccups are from the text drawing? Can you get some stats on what objects are actually being cleaned up as there are a few layers to this ...",
+        "createdAt": "2023-06-19T18:23:41",
+        "reactions": []
+      },
+      {
+        "id": 1604734341,
+        "author": "ghost",
+        "body": "This issue has been automatically marked as stale because it has been marked as requiring author feedback but has not had any activity for **4 days**. It will be closed if no further activity occurs **within 3 days of this comment**. If it *is* closed, feel free to comment when you are able to provide the additional information and we will re-investigate.",
+        "createdAt": "2023-06-23T19:00:51",
+        "reactions": []
+      },
+      {
+        "id": 1605019076,
+        "author": "cyraid",
+        "body": "Sorry @mattleibow , I\u0027d really like to follow up with this as I might be using more of it in the future, but I\u0027m working on a different project for a client at the moment. I will provide some insight though: It\u0027s probably not just the Text Drawing that is allocating objects, I\u0027d have to look more into your library. But it would be smooth for a few seconds, huge stutter, continue for a bit, again huge stutter. C# is at least providing spans and such for allocation-less code, and I think that\u0027s pretty important in any realtime graphics library.",
+        "createdAt": "2023-06-23T21:48:02",
+        "reactions": []
+      },
+      {
+        "id": 1630438020,
+        "author": "ScrubN",
+        "body": "If it\u0027s alright, I would like to also advocate for a DrawText overload with the signature:\r\n\u0060\u0060\u0060cs\r\npublic void DrawText(ReadOnlySpan\u003Cchar\u003E text, float x, float y, SKPaint paint)\r\n\u0060\u0060\u0060\r\n\r\nI understand that an \u0060SKTextBlob\u0060 will always be allocated, however I find it can be nicer to do text creation/manipulation via spans instead of strings and would prefer to directly pass my spans without allocating them as strings, just for them to be referenced as spans again by \u0060SKTextBlob.Create()\u0060:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/95c296bd9e8301205c7136de5670681fd1f24396/binding/Binding/SKCanvas.cs#L607-L611\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/7646bc1e68ec8711f1be9ff0547fa3d42f03a300/binding/Binding/SKTextBlob.cs#L32-L33\r\n\r\nPart of my reasoning for requesting the overload instead of just writing an extension method is because of \u0060SKPaint.GetFont()\u0060 being internal, which means either cloning the font on every call with \u0060SKPaint.ToFont()\u0060, unnecessarily holding on to a clone of the text paint\u0027s font for the duration of the renderer\u0027s lifetime, or accessing \u0060GetFont()\u0060 via reflection, none of which are very desirable.",
+        "createdAt": "2023-07-11T09:01:17",
+        "reactions": []
+      }
+    ]
+  }
 }

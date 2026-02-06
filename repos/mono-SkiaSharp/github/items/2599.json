@@ -18,5 +18,25 @@
   "createdAt": "2023-09-06T21:52:01",
   "updatedAt": "2023-09-08T11:57:51",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:43:22.3089071Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1709260086,
+        "author": "xtuzy",
+        "body": "This is not error of skiasharp, Maui deal with Resources as native resource, every platform is different\r\nOn Android, native resources see https://learn.microsoft.com/en-us/xamarin/android/app-fundamentals/resources-in-android/?tabs=windows\r\n- Maui\u0027s Resources/Raw as Android\u0027s Asserts\r\n- Maui\u0027s Resources/Images as Android\u0027s Resource/drawable\r\n\r\nSo, if you want read image in Resources/Images\r\nsee https://stackoverflow.com/questions/6301493/get-path-of-android-resource\r\n\r\nI advice you use Resources/Raw",
+        "createdAt": "2023-09-06T23:37:57",
+        "reactions": []
+      },
+      {
+        "id": 1710077060,
+        "author": "AghaKhan",
+        "body": "I looked at all the solutions, and I needed getApplicationContext but could not find such a function. So, as you know, Uri does not have a parse function. I have stored my image files in Resources\\\\drawable\\\\animal00.png\u0022 and Resources\\\\raw\\\\animal00.png\u0022 Thanks for your reply.\r\n\r\n\u0060\u0060\u0060cs\r\nif (IsAndroid())\r\n{\r\n    String pkgName = getApplicationContext().getPackageName();\r\n    Uri path = Uri.parse(\u0022android.resource://\u0022 \u002B pkgName \u002B \u0022/\u0022 \u002B R.drawable.icon);\r\n    Uri otherPath = Uri.parse(\u0022android.resource://\u0022 \u002B pkgName \u002B \u0022/drawable/icon\u0022);\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-09-07T12:35:50",
+        "reactions": []
+      }
+    ]
+  }
 }

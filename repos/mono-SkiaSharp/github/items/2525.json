@@ -14,5 +14,18 @@
   "updatedAt": "2023-08-16T12:00:28",
   "closedAt": "2023-07-17T11:21:09",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:44:15.1056029Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1637926454,
+        "author": "Webreaper",
+        "body": "Okay, so looks like I can edit my own question, based on that PR above. If I do this, I get the right behaviour. So we should just merge the PR that fixes #1831, and that would make this marginally less hacky. :)\r\n\r\n\u0060\u0060\u0060\r\n   private double GetSurfaceDPI()\r\n    {\r\n        double dpi = 1;\r\n        var obj = typeof(SKGLView).GetField(\u0022dpi\u0022, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);\r\n\r\n        if (obj != null)\r\n            dpi = (double)obj.GetValue(glViewRef)!;\r\n\r\n        return dpi;\r\n    }\r\n\r\n    private SKPoint GetCoords(MouseEventArgs e)\r\n    {\r\n        var dpi = GetSurfaceDPI();\r\n        return new SKPoint((float)e.OffsetX * (float)dpi, (float)e.OffsetY * (float)dpi);\r\n    }\r\n\r\n    private void MouseMove(MouseEventArgs e)\r\n    {\r\n        if (isDragging)\r\n        {\r\n            dragEnd = GetCoords(e);\r\n            Repaint();\r\n        }\r\n    }\r\n\r\n    private void MouseDown(MouseEventArgs e)\r\n    {\r\n        dragStart = GetCoords( e );\r\n        isDragging = true;\r\n    }\r\n\r\n    private void MouseUp(MouseEventArgs e)\r\n    {\r\n        if( dragStart.HasValue )\r\n        {\r\n            var mouseUp = GetCoords(e);\r\n\r\n            if( dragStart == mouseUp )\r\n            {\r\n                dragStart = null;\r\n                dragEnd = null;\r\n            }\r\n        }\r\n\r\n        isDragging = false;\r\n        Repaint();\r\n    }\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-07-17T11:21:09",
+        "reactions": []
+      }
+    ]
+  }
 }

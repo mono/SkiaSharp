@@ -13,5 +13,38 @@
   "createdAt": "2023-07-25T10:28:18",
   "updatedAt": "2023-08-05T15:17:10",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:44:31.2682044Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1652782827,
+        "author": "JasonLiuLiuLiuLiu",
+        "body": "Hi Team, this issue has been causing disruptions to our business. Unfortunately, we have limited expertise in debugging Skia source code related problems. If you have some free time, could you please assist us by taking a quick look at it?",
+        "createdAt": "2023-07-27T01:31:23",
+        "reactions": []
+      },
+      {
+        "id": 1666525950,
+        "author": "JasonLiuLiuLiuLiu",
+        "body": "I reproduced this issue when directly calling Skia using C\u002B\u002B code, so it should be a bug from Skia.\r\n\u0060\u0060\u0060\r\nint main()\r\n{\r\n    SkPictureRecorder skPictureRecorder;\r\n    SkCanvas* skCanvas = skPictureRecorder.beginRecording(SkRect{ 0, 0, 20000, 5000 });\r\n    SkPath path;\r\n\r\n    //float type have issue \r\n    path.addRect(SkRect{ 0, 0, 20000, 4999.7f});\r\n\r\n    skCanvas-\u003EclipPath(path, SkClipOp::kIntersect, true);\r\n    SkPath path2;\r\n    path2.addRect(SkRect{ 0, 0, 20000, 5000 });\r\n    SkPaint paint;\r\n    paint.setStyle(SkPaint::kFill_Style);\r\n    paint.setColor(SkColorSetRGB(225, 255, 0, 0));\r\n    paint.setBlendMode(SkBlendMode::kSrcOver);\r\n    skCanvas-\u003EdrawPath(path2, paint);\r\n    sk_sp\u003CSkPicture\u003E pic = skPictureRecorder.finishRecordingAsPicture();\r\n    SkFILEWStream stream(\u0022C:\\\\testspace\\\\test.png\u0022);\r\n    SkBitmap bitmap;\r\n    bitmap.allocN32Pixels(20000, 5000);\r\n    SkCanvas canvas(bitmap);\r\n    canvas.clear(SK_ColorTRANSPARENT);\r\n    canvas.drawPicture(pic);\r\n    SkEncodeImage(\u0026stream, bitmap, SkEncodedImageFormat::kPNG, 100);\r\n\r\n    return 0;\r\n}\r\n\u0060\u0060\u0060\r\nI will report this to Skia team.",
+        "createdAt": "2023-08-05T14:51:10",
+        "reactions": [
+          {
+            "user": "FoggyFinder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:44:31.0223595Z"
+          }
+        ]
+      },
+      {
+        "id": 1666531927,
+        "author": "JasonLiuLiuLiuLiu",
+        "body": "https://issues.skia.org/issues/294565262\r\n\r\nthis is the issue have reported to skia",
+        "createdAt": "2023-08-05T15:17:10",
+        "reactions": []
+      }
+    ]
+  }
 }
