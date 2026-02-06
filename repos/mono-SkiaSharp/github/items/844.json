@@ -13,5 +13,18 @@
   "createdAt": "2019-05-18T08:53:48",
   "updatedAt": "2019-06-24T11:41:09",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:07.3051114Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 493661392,
+        "author": "danien",
+        "body": "Wrapping the callback\u0027s code with InvokeOnMainThread() fixes the issue but I\u0027m not sure if this may cause performance or other issues.\r\n\r\n\u0060\u0060\u0060\r\n\tdisplayLink.SetOutputCallback(delegate\r\n\t{\r\n\t\tInvokeOnMainThread(() =\u003E\r\n\t\t{\r\n\t\t\tvar nativeView = Control;\r\n\t\t\tvar formsView = Element;\r\n\r\n\t\t\t// redraw the view\r\n\t\t\tnativeView?.Display();\r\n\r\n\t\t\t// stop the render loop if this was a one-shot, or the views are disposed\r\n\t\t\tif (nativeView == null || formsView == null || !formsView.HasRenderLoop)\r\n\t\t\t{\r\n\t\t\t\tdisplayLink.Stop();\r\n\t\t\t   \tdisplayLink.Dispose();\r\n\t\t\t   \tdisplayLink = null;\r\n\t\t   \t}\r\n\t\t});\r\n\r\n\t\treturn CVReturn.Success;\r\n\t});\r\n\r\n\u0060\u0060\u0060\r\n\r\nSee\r\n-  [Working with the UI Thread in Xamarin.iOS](https://docs.microsoft.com/en-us/xamarin/ios/user-interface/ios-ui/ui-thread).\r\n- [NSObject.InvokeOnMainThread](https://docs.microsoft.com/en-us/dotnet/api/foundation.nsobject.invokeonmainthread?view=xamarin-ios-sdk-12)\r\n\r\n\u003E Unlike BeginInvokeOnMainThread(Selector, NSObject) this method waits for the main thread to execute the method, and does not return until the code pointed by action has completed.\r\n",
+        "createdAt": "2019-05-18T09:07:39",
+        "reactions": []
+      }
+    ]
+  }
 }

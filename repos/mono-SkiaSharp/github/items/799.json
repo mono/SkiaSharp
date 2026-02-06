@@ -23,5 +23,39 @@
   "createdAt": "2019-02-26T15:17:20",
   "updatedAt": "2019-06-17T16:50:27",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:38.1144445Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 467538415,
+        "author": "Gillibald",
+        "body": "That is not a valid character. I wonder how native Skia reacts to it. Will try to find out. ",
+        "createdAt": "2019-02-26T17:40:58",
+        "reactions": []
+      },
+      {
+        "id": 467668304,
+        "author": "mattleibow",
+        "body": "I am going to mark this as a bug because it should not hang, regardless.\r\n\r\nLooking at that code, you seem to be using single quotes (as in a char type)? Can you try a string? You may have to do this:\r\n\r\n\u0060\u0060\u0060\r\nvar theChar = StringUtilities.GetUnicodeCharacterCode(\u0022\\ud83d\u0022, SKTextEncoding.Utf32);\r\n\u0060\u0060\u0060\r\n\r\nThere might be an issue converting the char to whatever skia uses under the hood. You can also try one of the other unicode formats and see what happens.",
+        "createdAt": "2019-02-27T00:10:50",
+        "reactions": []
+      },
+      {
+        "id": 467746053,
+        "author": "selvarathinamm",
+        "body": "I have tried suggested code and it throws an exception.\r\n\r\n**Exception details:**\r\nUnhandled Exception:\r\nSystem.ArgumentException: character\r\nParameter name: Only a single character can be specified. occurred\r\n",
+        "createdAt": "2019-02-27T06:53:25",
+        "reactions": []
+      },
+      {
+        "id": 467748973,
+        "author": "Gillibald",
+        "body": "\u0027\\ud83d\u0027 is a high surrogate of a pair you can\u0027t use it alone even when it was a valid character. Your calling code is probably missing some checks. \r\n\r\nSomething like this:\r\n\r\n\u0060\u0060\u0060\r\nvar codePoint = char.IsHighSurrogate(text[0])\r\n                                        ? char.ConvertToUtf32(text[0], text[1])\r\n                                        : text[0];\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-02-27T07:06:51",
+        "reactions": []
+      }
+    ]
+  }
 }

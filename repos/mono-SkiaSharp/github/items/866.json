@@ -13,5 +13,31 @@
   "createdAt": "2019-06-20T13:00:25",
   "updatedAt": "2019-11-06T12:26:21",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:35:28.7256848Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 504025994,
+        "author": "vanka78bg",
+        "body": "I have also noticed something even more strange. If I try to draw the image directly to the \u0060SKCanvasView\u0060 or \u0060SKGLView\u0060 and apply the filter on the fly, then nothing happens - the image appears unfiltered, as if the \u0060SKImageFilter\u0060 specified to the current \u0060SKPaint\u0060 is simply ignored. Here is my test paint code:\r\n\r\n\u0060\u0060\u0060\r\nprivate void OnPaintSurface(object sender, SKPaintSurfaceEventArgs eventArgs)\r\n{\r\n    var canvas = eventArgs.Surface.Canvas;\r\n    var width = eventArgs.Info.Width;\r\n    var height = eventArgs.Info.Height;\r\n    var length = Math.Min(width, height);\r\n    var left = (width - length) / 2;\r\n    var top = (height - length) / 2;\r\n    var right = left \u002B length;\r\n    var bottom = top \u002B length;\r\n    var rect = new SKRectI(left, top, right, bottom);\r\n    var kernel = new float[]\r\n    {\r\n        1.0f,  4.0f,   6.0f,  4.0f, 1.0f,\r\n        4.0f, 16.0f,  24.0f, 16.0f, 4.0f,\r\n        6.0f, 24.0f,-476.0f, 24.0f, 6.0f,\r\n        4.0f, 16.0f,  24.0f, 16.0f, 4.0f,\r\n        1.0f,  4.0f,   6.0f,  4.0f, 1.0f\r\n    };\r\n    var gain = -1.0f / 256.0f;\r\n    var bias = 0.0f;\r\n    var size = new SKSizeI(5, 5);\r\n    var offset = new SKPointI(2, 2);\r\n\r\n    using (var paint = new SKPaint())\r\n    using (var filter = SKImageFilter.CreateMatrixConvolution(size, kernel,\r\n        gain, bias, offset, SKMatrixConvolutionTileMode.Clamp, true))\r\n    {\r\n        paint.ImageFilter = filter;\r\n\r\n        canvas.Clear();\r\n        canvas.DrawImage(this.image, rect, paint);\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-20T13:29:12",
+        "reactions": []
+      },
+      {
+        "id": 550287142,
+        "author": "cmann1",
+        "body": "Being able to create a blur that clamps edge pixels is also something I\u0027ve needed.",
+        "createdAt": "2019-11-06T12:26:21",
+        "reactions": [
+          {
+            "user": "Lovrenc",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:35:28.6754323Z"
+          }
+        ]
+      }
+    ]
+  }
 }

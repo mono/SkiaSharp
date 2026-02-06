@@ -27,5 +27,109 @@
   "deletions": 0,
   "changedFiles": 2,
   "commits": 7,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:35:24.6979783Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 537458522,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2019-10-02T11:56:21",
+        "reactions": []
+      },
+      {
+        "id": 537458555,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nNo pipelines are associated with this pull request.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2019-10-02T11:56:26",
+        "reactions": []
+      },
+      {
+        "id": 537462482,
+        "author": "mattleibow",
+        "body": "Thanks for this PR @alexandrvslv! This looks like you first PR here, so welcome to prestigious position of code contributor!\r\n\r\nI am having a look at the changes now and all looks really good. Just waiting on CI. \r\n\r\nI also just noticed that our CLA bot is still pending. Just wanted to check if you got a message to sign it? If not, then I think my suspicions that the bot is having issues is confirmed. ",
+        "createdAt": "2019-10-02T12:08:00",
+        "reactions": []
+      },
+      {
+        "id": 537472095,
+        "author": "alexandrvslv",
+        "body": "Thanks for feedback @mattleibow! \r\n\r\nI just recieved email notification about comments\\notifications on this PR.",
+        "createdAt": "2019-10-02T12:36:05",
+        "reactions": []
+      },
+      {
+        "id": 547089140,
+        "author": "FoggyFinder",
+        "body": "any updates?",
+        "createdAt": "2019-10-28T18:39:59",
+        "reactions": []
+      },
+      {
+        "id": 549954651,
+        "author": "alexandrvslv",
+        "body": "Sorry, I miss CLA signing",
+        "createdAt": "2019-11-05T18:26:07",
+        "reactions": []
+      },
+      {
+        "id": 549997435,
+        "author": "alexandrvslv",
+        "body": "I figured out the latest changes (codegen SkiApi). Maybe I\u0027ll close this PR and make a new one?",
+        "createdAt": "2019-11-05T20:07:50",
+        "reactions": []
+      },
+      {
+        "id": 550011576,
+        "author": "FoggyFinder",
+        "body": "Why not just resolve conflicts?",
+        "createdAt": "2019-11-05T20:43:58",
+        "reactions": []
+      },
+      {
+        "id": 550016054,
+        "author": "alexandrvslv",
+        "body": "\u003E \r\n\u003E \r\n\u003E Why not just resolve conflicts?\r\n\r\nResolving don\u0027t handle the building error\u0027s, as of pinvoke changes require replace ref to \u0026",
+        "createdAt": "2019-11-05T20:56:05",
+        "reactions": []
+      },
+      {
+        "id": 550052208,
+        "author": "mattleibow",
+        "body": "I JUST did this, so sorry. Hopefully it is not too painful - you are going to be a guinea pig on this. Sorry.\r\n\r\nYou _should_ just be able to run this command in the SkiaSharp root:\r\n\r\n\u0060\u0060\u0060\r\ndotnet run --project=utils/SkiaSharpGenerator/SkiaSharpGenerator.csproj -- generate --config binding/libSkiaSharp.json --skia externals/skia --output binding/Binding/SkiaApi.generated.cs\r\n\u0060\u0060\u0060\r\n\r\nThat just builds and runs the generator.\r\n\r\nTo fix the conflicts, just replace with entire contents with https://raw.githubusercontent.com/mono/SkiaSharp/master/binding/Binding/SkiaApi.cs\r\n\r\nAfter all this, you should end up with your new API in the generated file.",
+        "createdAt": "2019-11-05T22:29:19",
+        "reactions": []
+      },
+      {
+        "id": 550053148,
+        "author": "mattleibow",
+        "body": "Well, actually scrap that. Just nuke your changes to \u0060SkiaApi.cs\u0060 by replacing the contents with https://raw.githubusercontent.com/mono/SkiaSharp/master/binding/Binding/SkiaApi.cs\r\n\r\nThe generator should automatically pick up new APIs as we go along.",
+        "createdAt": "2019-11-05T22:32:04",
+        "reactions": []
+      },
+      {
+        "id": 550053438,
+        "author": "mattleibow",
+        "body": "With regards to changes, you can just edit in GitHub and we _should_ be good. Hopefully it is not too painful.",
+        "createdAt": "2019-11-05T22:32:57",
+        "reactions": []
+      },
+      {
+        "id": 550138151,
+        "author": "alexandrvslv",
+        "body": "It\u0027s all by my misunderstanding of PR workflow.  Thanks for helping me to figure out, and for great feedback around just few lines of code)    ",
+        "createdAt": "2019-11-06T04:28:35",
+        "reactions": []
+      },
+      {
+        "id": 550307184,
+        "author": "mattleibow",
+        "body": "No prob! No matter how small, it all matters in the end ;)",
+        "createdAt": "2019-11-06T13:24:52",
+        "reactions": []
+      }
+    ]
+  }
 }

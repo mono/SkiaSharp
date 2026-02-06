@@ -18,5 +18,106 @@
   "createdAt": "2018-05-24T15:34:42",
   "updatedAt": "2019-06-17T16:50:40",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:32.8667454Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 393304219,
+        "author": "michaldobrodenka",
+        "body": "I\u0027ve tried also older versions of SkiaSharp and SkiaSharp.HarfBuzz, on emulator (x86) and phone (LG G4 ARMv8) and could not get usable result from Shape() (on Android).\r\n\r\nI also tried combinations with other fonts, in otf or ttf files.",
+        "createdAt": "2018-05-30T20:18:49",
+        "reactions": []
+      },
+      {
+        "id": 398522676,
+        "author": "michaldobrodenka",
+        "body": "This line:\r\n\u0060HarfBuzzApi.hb_shape(Handle, buffer.Handle, IntPtr.Zero, 0);\u0060\r\n\r\nset all buffer.GlipInfo.CodePoints from utf8 to 0, but I don\u0027t know how to debug c\u002B\u002B code. Is it possible in VS2017?",
+        "createdAt": "2018-06-19T19:48:28",
+        "reactions": []
+      },
+      {
+        "id": 398974347,
+        "author": "mattleibow",
+        "body": "Sorry for the late reply, still traveling. Just one thing to check... It it actually using the font? If you draw normal strings, is it the custom font?\r\n\r\nI haven\u0027t had a chance to look at the sample yet, but make sure you are loading the font and skia renders basic characters. Then try the shaping using simple Latin characters and see if that works. ",
+        "createdAt": "2018-06-21T04:43:25",
+        "reactions": []
+      },
+      {
+        "id": 399013603,
+        "author": "michaldobrodenka",
+        "body": "I\u0027m trying with arial ttf and otf fonts, using only Latin characters (\u0022Hello World!\u0022).\r\nI\u0027ve tested SF-UI-Display-Bold.otf, Roboto-Medium.ttf\r\n\r\n\u0060\u0060\u0060\r\n//canvas.DrawText(\u0022Hello world!\u0022, new SKPoint(10, 300), paint); // OK\r\nvar shaper = new SKShaper(paint.Typeface);\r\n//canvas.DrawShapedText(shaper, \u0022Hello world!\u0022, 10, 300, paint); // NOT OK\r\n\r\nvar result = shaper.Shape(\u0022Hello world!\u0022, 10, 300, paint); // result.Codepoints are all 0\r\n\u0060\u0060\u0060\r\n\r\nI was able to build SkiaSharp.HarfBuzz and libHarfBuzz.so but it seems that problem is on C\u002B\u002B side, I\u0027ve tried several config.h changes, no luck. Seems like Android version of HarfBuzz can not work with typeface or something like that.\r\n\r\nresult.Points are pointing to something like default/maximum character width for every letter. result.Points/Codepoints are having correct Length",
+        "createdAt": "2018-06-21T08:06:18",
+        "reactions": []
+      },
+      {
+        "id": 399927864,
+        "author": "mattleibow",
+        "body": "Looking at things still, but the \u0060SKTypeface.FromFamilyName(\u0022Times New Roman\u0022)\u0060 works... may be font related...",
+        "createdAt": "2018-06-25T12:04:04",
+        "reactions": []
+      },
+      {
+        "id": 400014527,
+        "author": "mattleibow",
+        "body": "Still looking at this. My debugger refuses to find the symbols... Now my Android Studio also doesn\u0027t want to even start the app. Supposedly debugging is possible, but I can\u0027t quite get the planets to align. ",
+        "createdAt": "2018-06-25T16:32:17",
+        "reactions": []
+      },
+      {
+        "id": 400095284,
+        "author": "michaldobrodenka",
+        "body": "I wish I could be helpful somehow. Maybe I will try to align the planets.",
+        "createdAt": "2018-06-25T21:05:21",
+        "reactions": []
+      },
+      {
+        "id": 400421695,
+        "author": "mattleibow",
+        "body": "I have been looking around, but can\u0027t find anything. We are using a quite old harfbuzz, so it may be that the font file has something...\r\n\r\nWhat you can try is to build the latest harfbuzz and then use that: https://github.com/harfbuzz/harfbuzz\r\nIt uses CMake, so it should be fairly straight-forward.\r\n\r\nJust note, I called my library libHarfBuzzSharp as I was in a dream world. If you build with CMake, you will get a harfbuzz. I can\u0027t swear on just renaming the files, but you can try that. Maybe that will work and all the problems go away.\r\n\r\nI do want to update harfbuzz, but haven\u0027t quite had the chance just yet.",
+        "createdAt": "2018-06-26T18:44:48",
+        "reactions": []
+      },
+      {
+        "id": 400652168,
+        "author": "michaldobrodenka",
+        "body": "Thank you very much for your effort!\r\n\r\nFor current release I will probably just try to workaround it on Android with \u0060\u0060\u0060SKTypeface.FromFamilyName(some similar font)\u0060\u0060\u0060 and \u0060\u0060\u0060#ifdef\u0060\u0060\u0060\u0060 (at least we have workaround) .\r\n\r\nI\u0027ve tried to fix it, it seems, that there is problem in cooperation between C\u002B\u002B/C# on Android with blobs/stream or something like that. But not sure. \r\n\r\nNew version could help, but the same version works OK on iOS/Windows. If I find some thime, I\u0027ll try to update and see if it helps.\r\n",
+        "createdAt": "2018-06-27T12:21:22",
+        "reactions": []
+      },
+      {
+        "id": 400660319,
+        "author": "michaldobrodenka",
+        "body": "Got much nicer workaround!\r\n\r\nUsing:\r\n\u0060\u0060\u0060\r\nusing (var data = SKData.Create(stream))\r\n{\r\n     result = SKTypeface.FromData(data);\r\n}\r\n\u0060\u0060\u0060\r\ninstead of:\r\n\u0060\u0060\u0060result = SKTypeface.FromStream(stream);\u0060\u0060\u0060\r\n\r\nAnd it works!\r\n\r\n\r\n",
+        "createdAt": "2018-06-27T12:51:01",
+        "reactions": [
+          {
+            "user": "azeemchaudhrry",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:36:32.3967607Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:36:32.3967612Z"
+          }
+        ]
+      },
+      {
+        "id": 432625482,
+        "author": "azeemchaudhrry",
+        "body": "Thanks @michaldobrodenka your suggestion solve the problem on xamarin android.",
+        "createdAt": "2018-10-24T11:55:23",
+        "reactions": []
+      },
+      {
+        "id": 432769860,
+        "author": "mattleibow",
+        "body": "Thanks for that comment @michaldobrodenka , I will investigate further.",
+        "createdAt": "2018-10-24T18:12:56",
+        "reactions": []
+      }
+    ]
+  }
 }

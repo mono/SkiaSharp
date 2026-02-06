@@ -31,5 +31,46 @@
   "createdAt": "2018-12-15T11:10:11",
   "updatedAt": "2019-06-17T16:50:24",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:41.080018Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 447809262,
+        "author": "deakjahn",
+        "body": "Just for illustration, in SkiaSharp.Views.Android\\SKCanvasView.cs, line 50:\r\n\r\n    info = new SKImageInfo(0, 0, SKColorType.Rgba8888, SKAlphaType.Premul);\r\n\r\nThere is no colorspace definition at the end. You can\u0027t simply assume that whatever default there is is always the one the user actually wants.",
+        "createdAt": "2018-12-17T11:12:38",
+        "reactions": []
+      },
+      {
+        "id": 448054529,
+        "author": "mattleibow",
+        "body": "This is a good point. Will a property (and maybe a constructor overload) that provides a place to set the desired colorspace be useful?\r\n\r\nHow would you want to set/specify a colorspace in your current usage? Also, if you were to specify a colorsapce, what other options will you need for the view to create a correct surface with that colorspace?",
+        "createdAt": "2018-12-18T00:48:36",
+        "reactions": []
+      },
+      {
+        "id": 448065008,
+        "author": "deakjahn",
+        "body": "A constructor could be OK with UI created in code but doesn\u0027t help much with XAML. Isn\u0027t a property too late for the initialization? If it can be solved, that would be just fine. You could have an enum with Default and all the ready made spaces but I don\u0027t know how you would supply an ICC file if need be.\r\n\r\nPerhaps if we knew if the passed SKImageInfo could be replaced later on or had to be absolutely ready and final when the surface is created.",
+        "createdAt": "2018-12-18T01:42:40",
+        "reactions": []
+      },
+      {
+        "id": 448087211,
+        "author": "mattleibow",
+        "body": "A property might work because I technically only guarantee the surface during the draw method. If you change the colorspace, all we have to do is nuke the surface and invalidate. Then the draw method will re-create the surface with the new colorspace.\r\n\r\nI probably will have to create a system like with the Brush of UWP/WPF because some of the colorspaces have additional parameters:\r\n\r\n\u0060\u0060\u0060csharp\r\nclass abstract SKBaseColorSpace {\r\n    public SKColorSpace ColorSpace { get; }\r\n}\r\nclass SKSrgbColorSpace : SKBaseColorSpace {\r\n    public bool IsLinear { get; set; }\r\n}\r\nclass SKIccColorSpace : SKBaseColorSpace {\r\n    public ImageSource Icc  { get; set; } // to byte[]\r\n}\r\nclass SKRgbColorSpace : SKBaseColorSpace {\r\n    // one of these\r\n    public SKNamedGamma Gamma { get; set; } // enum\r\n    public SKColorSpaceTransferFn Gamma { get; set; } // struct\r\n\r\n    // with one of these\r\n    public SKColorSpaceGamut Gamut { get; set; } // enum\r\n    public SKMatrix44 Gamut { get; set; } // struct\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060xaml\r\n\u003CSKCanvasView\u003E\r\n        \u003C!-- sRGB --\u003E\r\n        \u003CSKSrgbColorSpace IsLinear=\u0022true\u0022 /\u003E\r\n\r\n        \u003C!-- ICC --\u003E\r\n        \u003CSKIccColorSpace Icc=\u0022my_colors.icc\u0022 /\u003E\r\n\r\n        \u003C!-- RGB --\u003E\r\n        \u003CSKRgbColorSpace Gamma=\u0022TwoDotTwoCurve\u0022 Gamut=\u0022AdobeRgb\u0022 /\u003E\r\n        \u003CSKRgbColorSpace Gamma=\u00221.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0\u0022 Gamut=\u00220.4360747, 0.3850649, 0.1430804, 0.2225045, 0.7168786, 0.0606169, 0.0139322, 0.0971045, 0.7141733\u0022 /\u003E\r\n    \u003CSKCanvasView.ColorSpace\u003E\r\n\u003C/SKCanvasView\u003E\r\n\u0060\u0060\u0060\r\n\r\nThis may be harder to do because not everything is great in XAML. Also, this is drawing logic, so there can be no delays.\r\n\r\nWith the ICC, this file may take a second to load, and we can\u0027t have the drawing freezing. So, do we just go with nothing and have bad colors for a few frames? Do we force this to be loaded synchronously and then set - basically this is a byte[] property?\r\n\r\nWith the RGB, there is a a combo of two properties, each of which can either be an enum value or a matrix-like format.",
+        "createdAt": "2018-12-18T03:50:37",
+        "reactions": []
+      },
+      {
+        "id": 448161890,
+        "author": "deakjahn",
+        "body": "This might be more complicated than really necessary, although elegant. I could totally accept that spaces that need construction (full \u0060CreateRgb\u0060 and \u0060CreateIcc\u0060) are only available through a constructor. Even if you use XAML predominantly, it\u0027s not that big a deal to instantiate one view yourself in specific cases. Then you\u0027d only need to provide an enum for the simple cases:\r\n\r\n    Default, Srgb, SrgbLinear, AdobeRgb, etc\r\n\r\nBut you could include specific \u0060CreateRgb\u0060 cases as well, this might be where \u0060AdobeRgb\u0060 comes from.\r\nIf you only allow the \u0060CreateRgb(SKColorSpaceRenderTargetGamma.Linear, SKColorSpaceGamut, SKColorSpaceFlags)\u0060 form, then you have a still affordable solution like:\r\n\r\n    \u003CSKCanvasView ColorSpace=\u0022Default\u0022 /\u003E\r\n    \u003CSKCanvasView ColorSpace=\u0022Srgb\u0022 /\u003E\r\n    \u003CSKCanvasView ColorSpace=\u0022AdobeRgb\u0022 /\u003E\r\n\r\nOr, an alternative solution for the more complicated cases could be a static property that you need to fill in with the space before the canvas view gets created, practically in the constructor before \u0060InitializeComponent()\u0060. Then either coefficients or color profiles could be read whenever the user sees fit, during app startup, and simply provided as a ready \u0060SKColorSpace\u0060 when necessary. And it also can be reused across the application, if necessary (eg. I have a list view where each cell has a canvas, it would be logical to use a single color space instance for them all).",
+        "createdAt": "2018-12-18T09:52:52",
+        "reactions": []
+      }
+    ]
+  }
 }

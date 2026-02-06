@@ -13,5 +13,18 @@
   "createdAt": "2019-06-28T00:04:58",
   "updatedAt": "2019-06-28T00:06:09",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:04.0596393Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 506553210,
+        "author": "mattleibow",
+        "body": "As noticed by @Gillibald (https://github.com/mono/SkiaSharp/pull/891#issuecomment-506522150):\r\n\r\n\u0060GuessSegmentProperties\u0060 does not guarantee everything is configured right but will work most of the time. It can be left out if you know what you have to configure.\r\n\r\nFor example if you have a sequence of codepoints that represents RTL text \u0060GuessSegmentProperties\u0060 should set the buffer\u0027s direction to RTL. You can set it explicitly or implicitly by \u0060GuessSegmentProperties\u0060.\r\n\r\nI will add additional tests that cover \u0022real world\u0022 scenarios. Current tests mostly just make sure that the call to some function works. I didn\u0027t think too much about the data that I use.\r\n\r\nSome example:\r\n\u0060\u0060\u0060\r\n// Direction == Invalid\r\n// ContentType == Invalid\r\nbuffer.AddUtf8(\u0022H\u0022);\r\n// ContentType == Invalid\r\n// Direction == Invalid\r\nbuffer.GuessSegmentProperties();\r\n// ContentType == Unicode\r\n// Direction == LeftToRight\r\nfont.Shape(buffer);\r\n// ContentType == Glyphs\r\n// Direction == LeftToRight\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-28T00:06:08",
+        "reactions": []
+      }
+    ]
+  }
 }

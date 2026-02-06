@@ -31,5 +31,25 @@
   "createdAt": "2018-07-09T18:40:43",
   "updatedAt": "2019-06-17T16:50:42",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:27.208185Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 407266201,
+        "author": "mattleibow",
+        "body": "This line: \u0060_skiaMain.DisplayImages[plane] = surface.Snapshot();\u0060 may be the cause. What is happening here is that you are making a copy of the surface, and storing it in memory.\r\n\r\nWhat is the size of \u0060_skiaMain.DisplayImages\u0060? Chances are, each image is 30MB.\r\n\r\nA test you can do is to comment out this line: \u0060_skiaMain.Compose(surface.Canvas, plane);\u0060 and see if there is a leak in your drawing code. If it still grows, comment out \u0060_skiaMain.DisplayImages[plane] = surface.Snapshot();\u0060. If it STILL grows, then we have a bad bug.",
+        "createdAt": "2018-07-24T03:09:09",
+        "reactions": []
+      },
+      {
+        "id": 407450273,
+        "author": "mclose90",
+        "body": "The issue actually was appearing based on the snapshot() because when I would overwrite the SkImage without disposing first then the ref was getting lost and when it was getting lost in the GPU memory GC.Collect was not cleaning up the lost reference. ",
+        "createdAt": "2018-07-24T15:33:31",
+        "reactions": []
+      }
+    ]
+  }
 }

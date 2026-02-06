@@ -13,5 +13,31 @@
   "createdAt": "2019-08-22T08:45:53",
   "updatedAt": "2019-11-13T00:28:32",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:35:26.8824209Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 529809078,
+        "author": "PlanetBloopy",
+        "body": "In the meantime, this is my workaround to do what I expected from the ClipRect method. I construct a path of up to 4 rectangles representing the empty space around the rectangle to be subtracted. Then intersect with that path:\r\n\r\n        public static void SubtractRectangle(SKCanvas canvas, SKRect rect) {\r\n            SKRect bounds = canvas.LocalClipBounds;\r\n            List\u003CSKRect\u003E surrounding = new List\u003CSKRect\u003E();\r\n\r\n            if (bounds.Top \u003C rect.Top)\r\n                surrounding.Add(new SKRect(bounds.Left, bounds.Top, bounds.Right, rect.Top));\r\n            if (bounds.Left \u003C rect.Left)\r\n                surrounding.Add(new SKRect(bounds.Left, bounds.Top, rect.Left, bounds.Bottom));\r\n            if (bounds.Right \u003E rect.Right)\r\n                surrounding.Add(new SKRect(rect.Right, bounds.Top, bounds.Right, bounds.Bottom));\r\n            if (bounds.Bottom \u003E rect.Bottom)\r\n                surrounding.Add(new SKRect(bounds.Left, rect.Bottom, bounds.Right, bounds.Bottom));\r\n\r\n            SKPath path = new SKPath();\r\n            foreach (SKRect r in surrounding) {\r\n                path.AddRect(r);\r\n            }\r\n            canvas.ClipPath(path);\r\n        }",
+        "createdAt": "2019-09-10T07:26:34",
+        "reactions": []
+      },
+      {
+        "id": 553180946,
+        "author": "PlanetBloopy",
+        "body": "I got an email showing someone had commenting saying they experienced the same issue, but can\u0027t see the comment now. Anyway, I thought I\u0027d mention that the problem I needed to solve required a slightly different solution in the end.\r\n\r\nI needed to combine multiple rectangles into paths, decide which paths to keep, and then combine them and perform one subtraction. I mentioned earlier that \u0060SKCanvas.ClipPath\u0060 didn\u0027t seem to work either. However, if I put my main rectangle into a new path and use the \u0060SKPath.Op\u0060 method with the \u0060SKPathOp.Difference\u0060 parameter, it works just fine.",
+        "createdAt": "2019-11-13T00:28:32",
+        "reactions": [
+          {
+            "user": "zgww",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:35:26.8321102Z"
+          }
+        ]
+      }
+    ]
+  }
 }

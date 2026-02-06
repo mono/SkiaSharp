@@ -31,5 +31,32 @@
   "createdAt": "2019-03-13T17:15:51",
   "updatedAt": "2019-06-17T16:50:28",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:35.2828123Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 472639243,
+        "author": "mattleibow",
+        "body": "This is a good thing to do. Thanks.",
+        "createdAt": "2019-03-13T23:00:15",
+        "reactions": []
+      },
+      {
+        "id": 472673291,
+        "author": "The-MAZZTer",
+        "body": "As a side note ReadPixels returns TRUE for a successful copy, though it doesn\u0027t actually seem to copy anything (the destination buffer remains zeroed instead of having the expected image data in it).\r\n\r\nOther possible alternate solutions I thought up since my original report, for your consideration:\r\n\r\n1. Disposing the SKSurface could also Dispose the SKPixmaps created from it automatically. This could result in .GetPixels returning IntPtr.Zero or throwing ObjectDisposedException (the latter being the standard thing to do AFAIK). However again this is not usually what Dispose is expected to do.\r\n2. Create a patch for Skia itself to implement behavior on the native side and submit it upstream. I don\u0027t think there\u0027s any Dispose-like pattern in use there, so having the get pixels API return a null pointer may be the solution there.",
+        "createdAt": "2019-03-14T01:53:44",
+        "reactions": []
+      },
+      {
+        "id": 474113189,
+        "author": "The-MAZZTer",
+        "body": "If you need reproduction steps for your Triage you can Dispose the SKSurface and then call .GetPixels, and feed the IntPtr into Marshal.Copy or Texture2D.LoadRawImageData.\r\n\r\nI have found a large image size (1000x1000) the AccessViolationException happens all the time, while a smaller 500x500 it only errors occasionally. However since the Dispose itself doesn\u0027t always result in the AccessViolationException. but only sometimes, it is probably some garbage collection on the C side or the GC on the .NET side (in which case forcing a garbage collection with the GC static methods after the Dispose should help reproduce it).",
+        "createdAt": "2019-03-18T21:43:14",
+        "reactions": []
+      }
+    ]
+  }
 }

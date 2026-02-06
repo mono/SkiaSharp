@@ -18,5 +18,18 @@
   "createdAt": "2019-01-06T07:03:06",
   "updatedAt": "2019-01-06T07:06:06",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:37:21.7751511Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 451720687,
+        "author": "masums",
+        "body": "Code example\r\n\r\n                    var window = IntPtr.Zero;\r\n                    window = SDL.SDL_CreateWindow(\u0022.NET Core SDL2-CS Tutorial\u0022,\r\n                        SDL.SDL_WINDOWPOS_CENTERED,\r\n                        SDL.SDL_WINDOWPOS_CENTERED,\r\n                        1020,\r\n                        800,\r\n                        SDL.SDL_WindowFlags.SDL_WINDOW_RESIZABLE\r\n                    );\r\n\r\n                    var sdlContext = SDL.SDL_GL_CreateContext(window);\r\n                    SDL.SDL_GL_MakeCurrent(window, sdlContext);\r\n                     \r\n                    GRGlInterface glInterface = GRGlInterface.AssembleGlInterface(sdlContext, (contextHandle, name) =\u003E {\r\n                        var addr = SDL.SDL_GL_GetProcAddress(name);\r\n                        return addr;\r\n                    });\r\n\r\n                    GRContext context = GRContext.Create(GRBackend.OpenGL, glInterface);\r\n                    GRBackendRenderTargetDesc backendRenderTargetDescription = new GRBackendRenderTargetDesc\r\n                    {\r\n                        Config = GRPixelConfig.Rgba8888,\r\n                        Height = 300,\r\n                        Width = 300,\r\n                        Origin = GRSurfaceOrigin.TopLeft,\r\n                        RenderTargetHandle = new IntPtr(0),\r\n                        SampleCount = 0,\r\n                        StencilBits = 8\r\n                    };\r\n\r\n                    using (var surface = SKSurface.Create(context, backendRenderTargetDescription))\r\n                    {\r\n                        var canvas = surface.Canvas; \r\n                            canvas.Clear(SKColors.Red);\r\n                    }\r\n\r\n                   ",
+        "createdAt": "2019-01-06T07:06:06",
+        "reactions": []
+      }
+    ]
+  }
 }

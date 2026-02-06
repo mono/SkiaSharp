@@ -38,5 +38,74 @@
       "state": "DISMISSED",
       "submittedAt": "2019-10-17T08:59:21"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:35:15.8394362Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 543097739,
+        "author": "mattleibow",
+        "body": "I see an error:\r\n\u003E /usr/bin/ld:/__w/1/s/native-builds/libSkiaSharp_linux/libSkiaSharp.map:7: syntax error in VERSION script\r\n",
+        "createdAt": "2019-10-17T09:49:45",
+        "reactions": []
+      },
+      {
+        "id": 543098315,
+        "author": "Gillibald",
+        "body": "Let me fire up a VM quick\r\n",
+        "createdAt": "2019-10-17T09:51:12",
+        "reactions": []
+      },
+      {
+        "id": 543099035,
+        "author": "mattleibow",
+        "body": "I think it was missing the last semicolon... Updated the code, so let\u0027s see.\r\n\r\nTook a guess from the sample in https://www.gnu.org/software/gnulib/manual/html_node/LD-Version-Scripts.html",
+        "createdAt": "2019-10-17T09:53:11",
+        "reactions": []
+      },
+      {
+        "id": 543101169,
+        "author": "Gillibald",
+        "body": "Should have tested this after I rewrote everything from scratch :(",
+        "createdAt": "2019-10-17T09:58:49",
+        "reactions": []
+      },
+      {
+        "id": 543102021,
+        "author": "mattleibow",
+        "body": "Do you use a VM of WSL?",
+        "createdAt": "2019-10-17T10:01:04",
+        "reactions": []
+      },
+      {
+        "id": 543102530,
+        "author": "Gillibald",
+        "body": "Using a VM and running Ubuntu 18.04 LTS. Did a fresh clone. Let me check real quick what is happening.",
+        "createdAt": "2019-10-17T10:02:22",
+        "reactions": []
+      },
+      {
+        "id": 543107468,
+        "author": "mattleibow",
+        "body": "Seems to have passed the build of libSkiaSharp for Linux.",
+        "createdAt": "2019-10-17T10:16:18",
+        "reactions": []
+      },
+      {
+        "id": 543108628,
+        "author": "Gillibald",
+        "body": "Y same on my machine. Looks okay now.",
+        "createdAt": "2019-10-17T10:19:33",
+        "reactions": []
+      },
+      {
+        "id": 543110390,
+        "author": "Gillibald",
+        "body": "I wonder why Fontconfig is still exported. There seems to be a version script for glibc as well.",
+        "createdAt": "2019-10-17T10:25:00",
+        "reactions": []
+      }
+    ]
+  }
 }

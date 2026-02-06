@@ -27,5 +27,25 @@
   "deletions": 34,
   "changedFiles": 7,
   "commits": 2,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:35:58.8390461Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 495914299,
+        "author": "EmilAlipiev",
+        "body": "it is strange. i am still seeing this crash in my appcenter logs for xamarin.forms app in android. \r\nI am not able to reproduce it but i can provide stacktrace information if it any help. i am using 1.68.0 version\r\n\u0060\u0060\u0060\r\n\r\nXamarin Exception Stack:\r\nSystem.ArgumentNullException: Value cannot be null.\r\nParameter name: obj\r\n  at (wrapper managed-to-native) System.Object.__icall_wrapper_mono_monitor_enter_v4_internal(object,intptr)\r\n  at SkiaSharp.SKObject.Dispose (System.Boolean disposing) \u003C0xc95f4854 \u002B 0x0007b\u003E in \u003Ca67884bf63d049bf9455c34577d17a54\u003E:0\r\n  at SkiaSharp.SKPaint.Dispose (System.Boolean disposing) \u003C0xc95f4c8c \u002B 0x0006f\u003E in \u003Ca67884bf63d049bf9455c34577d17a54\u003E:0\r\n  at SkiaSharp.SKNativeObject.Finalize () \u003C0xc95eee3c \u002B 0x0001b\u003E in \u003Ca67884bf63d049bf9455c34577d17a54\u003E:0\r\n\r\nThread 2:\r\n0   md58432a647068b097f9637064b8985a5e0.FragmentContainer.n_onCreateView(FragmentContainer.java:-2)\r\n1   md58432a647068b097f9637064b8985a5e0.FragmentContainer.onCreateView(FragmentContainer.java:33)\r\n2   android.support.v4.app.Fragment.performCreateView(Fragment.java:2439)\r\n3   android.support.v4.app.FragmentManagerImpl.moveToState(FragmentManager.java:1460)\r\n4   android.support.v4.app.FragmentManagerImpl.moveFragmentToExpectedState(FragmentManager.java:1784)\r\n5   android.support.v4.app.FragmentManagerImpl.moveToState(FragmentManager.java:1852)\r\n6   android.support.v4.app.BackStackRecord.executeOps(BackStackRecord.java:802)\r\n7   android.support.v4.app.FragmentManagerImpl.executeOps(FragmentManager.java:2625)\r\n8   android.support.v4.app.FragmentManagerImpl.executeOpsTogether(FragmentManager.java:2411)\r\n9   android.support.v4.app.FragmentManagerImpl.removeRedundantOperationsAndExecute(FragmentManager.java:2366)\r\n10  android.support.v4.app.FragmentManagerImpl.execPendingActions(FragmentManager.java:2273)\r\n11  android.support.v4.app.FragmentManagerImpl$1.run(FragmentManager.java:733)\r\n12  android.os.Handler.handleCallback(Handler.java:873)\r\n13  android.os.Handler.dispatchMessage(Handler.java:99)\r\n14  android.os.Looper.loop(Looper.java:214)\r\n15  android.app.ActivityThread.main(ActivityThread.java:7045)\r\n16  java.lang.reflect.Method.invoke(Method.java:-2)\r\n17  com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:493)\r\n18  com.android.internal.os.ZygoteInit.main(ZygoteInit.java:964)\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-05-25T12:21:52",
+        "reactions": []
+      },
+      {
+        "id": 515601309,
+        "author": "mattleibow",
+        "body": "Thanks fo bringing this up. I have found a few other issues with the interop layer, and I am working on that in #900. I have just got to fix a few issues and then I\u2019ll merge. Hopefully it will fix all the bugs I can see.",
+        "createdAt": "2019-07-26T21:13:07",
+        "reactions": []
+      }
+    ]
+  }
 }

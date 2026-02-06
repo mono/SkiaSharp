@@ -27,5 +27,25 @@
   "createdAt": "2019-01-14T01:28:36",
   "updatedAt": "2019-06-17T16:50:26",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:39.2671789Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 454901505,
+        "author": "mattleibow",
+        "body": "Good to hear that you got most of the bits working from #688. With regards to this particular issue, all skia operations are synchronous - this means that when the method returns, it is finished the job.\r\n\r\nAs you are drawing on the GPU, using bitmaps means that the image data is being copied back and forth between memory and the GPU. You mention that if you use images, you get exceptions all over. Do you have a stack trace of some sort?\r\n\r\nI am actually not that sure about the rules about multithreaded, cross-threaded, cross-context drawing, so I asked a question on the skia forums: https://groups.google.com/forum/#!topic/skia-discuss/dj8UJT_tqcU For some reason, I seem to recall that images created with one context can\u0027t be used by another - which may be what you are seeing when using images.\r\n\r\nWith this code, are you using a single context across threads? Are you using multiple contexts at all? (this may be the case if you are creating your own context, but then drawing to a view with that context) If there is multiple threads, is the underlying OpenGLES context able to handle multiple threads? (which again may be the case because you are creating a new context - I know iOS has something called sharegroups.\r\n\r\nAs for the exception, do you have any stack traces that may give some more information.",
+        "createdAt": "2019-01-16T19:08:57",
+        "reactions": []
+      },
+      {
+        "id": 468778874,
+        "author": "Al3xlab",
+        "body": "To complete the observation of @pathw0rk3r: I copied the code of #688 to create a GRContext on UWP. My SKSurface \u0027accelerated\u0027 is running on a background thread, but the snapshot (SKImage) is empty in the main thread and can not be displayed by SKCanvasView! Similarly, like @pathw0rk3r, I created a SKBitmap from the snapshot, and the pixel array is identical from the backgroung thread to the main thread.\r\nSo far, I don\u0027t see a SystemAcesssViolation exception, but other problems: when I change the size of the accelerated SKSurface at runtime, the bitmap can no longer be created from the snapshot (become null because the snapshot is corrupt ?). I instantiate and dispose the surface, canvas, image, and bitmap in the background rendering loop.\r\nAnother surprise, when my rendering loop is repeated (only 1 FPS), multiple frames are not displayed and I get glitches on the bitmap. Have you seen anything like this before ?\r\n\r\nNormal:\r\n![img1](https://user-images.githubusercontent.com/48130657/53659994-30364980-3c5d-11e9-8d14-3cb4cf991cfa.jpg)\r\nGlitches:\r\n![img2](https://user-images.githubusercontent.com/48130657/53660046-4b08be00-3c5d-11e9-9ced-641cc0ad1f83.jpg)\r\n\r\n\r\n",
+        "createdAt": "2019-03-01T19:15:49",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -56,5 +56,106 @@
       "state": "COMMENTED",
       "submittedAt": "2019-05-27T17:32:42"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:12.2338885Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 495326317,
+        "author": "Gillibald",
+        "body": "I think we have to change the way font files are used within unit tests. Tests fail when a file is still locked by another test.",
+        "createdAt": "2019-05-23T18:10:37",
+        "reactions": []
+      },
+      {
+        "id": 495581219,
+        "author": "Gillibald",
+        "body": "@mattleibow Could you have a look at this if you have time? Would be awesome if we could merge this in for next release.",
+        "createdAt": "2019-05-24T11:20:23",
+        "reactions": []
+      },
+      {
+        "id": 495784274,
+        "author": "Gillibald",
+        "body": "I just realized that this https://github.com/mono/SkiaSharp/blob/master/binding/HarfBuzzSharp.Shared/Definitions.cs#L54 should be removed. A hb_feature can have more values other than 0 and 1. That\u0027s just the regular case. I will fix this shortly. Outch",
+        "createdAt": "2019-05-24T20:50:05",
+        "reactions": []
+      },
+      {
+        "id": 496172870,
+        "author": "mattleibow",
+        "body": "@Gillibald With regards to the pointers for the table data, we could do something like this: https://github.com/mono/SkiaSharp/blob/master/binding/HarfBuzzSharp.Shared/Buffer.cs#L287\r\n\r\nNo need to introduce breaking changes on the return type.",
+        "createdAt": "2019-05-27T10:58:41",
+        "reactions": []
+      },
+      {
+        "id": 496173997,
+        "author": "Gillibald",
+        "body": "@mattleibow I don\u0027t know which breaking change you mean. I introduced additional API.",
+        "createdAt": "2019-05-27T11:03:08",
+        "reactions": []
+      },
+      {
+        "id": 496174513,
+        "author": "Gillibald",
+        "body": "Ahh now I get it. You mean the changes to SkiaSharp API y we can just add additional API. HarfBuzzSharp is a good starting point to get a feel about how such API can look like. In general if no local copy is needed we can offer a new API that allows to access the buffer directly like we do within HarfBuzzSharp",
+        "createdAt": "2019-05-27T11:05:19",
+        "reactions": []
+      },
+      {
+        "id": 496188566,
+        "author": "Gillibald",
+        "body": "Will revert breaking changes first. Then we can work on iOS support.",
+        "createdAt": "2019-05-27T12:00:52",
+        "reactions": []
+      },
+      {
+        "id": 496804175,
+        "author": "Gillibald",
+        "body": "@mattleibow I have reverted my changes to existing Api and also introduced iOS friendly callbacks. I am not sure if thats a decent solution. It seems to work but I think only until GC potentially moves the object.",
+        "createdAt": "2019-05-29T06:33:05",
+        "reactions": []
+      },
+      {
+        "id": 502469095,
+        "author": "mattleibow",
+        "body": "@Gillibald is this PR ready to be merged?",
+        "createdAt": "2019-06-16T17:05:59",
+        "reactions": []
+      },
+      {
+        "id": 502470367,
+        "author": "Gillibald",
+        "body": "Couldn\u0027t test this on iOS other than that it is ready to be merged",
+        "createdAt": "2019-06-16T17:24:00",
+        "reactions": []
+      },
+      {
+        "id": 502490214,
+        "author": "mattleibow",
+        "body": "Awesome. I think it is ready to be merged. I made a few changes to the way the native functions are managed. I made the whole internal bit be more useful. Still a bit annoying with iOS, but a bit better.\r\nThere is also the 2 cases where the \u0060Feature\u0060 and \u0060Script\u0060 types are constructed using the \u0060FromString\u0060 method. I believe this is more of a \u0022parse\u0022 type of thing, so I changed it to be \u0060Parse\u0060 and added a \u0060TryParse\u0060 to be more consistent with .NET. (let me know if they are not a parse-y thing).\r\n\r\nJust waiting on PR #862 and then I\u0027ll merge and get it into the next preview for 1.68.1.",
+        "createdAt": "2019-06-16T22:13:48",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:36:11.8981577Z"
+          },
+          {
+            "user": "drearyrainDeng",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:36:11.8981581Z"
+          }
+        ]
+      },
+      {
+        "id": 503163176,
+        "author": "mattleibow",
+        "body": "Merged in #862",
+        "createdAt": "2019-06-18T14:33:54",
+        "reactions": []
+      }
+    ]
+  }
 }

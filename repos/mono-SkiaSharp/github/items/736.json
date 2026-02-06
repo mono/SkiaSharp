@@ -43,5 +43,25 @@
   "createdAt": "2018-12-17T18:57:01",
   "updatedAt": "2019-06-24T13:14:49",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:06.3567002Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 448049643,
+        "author": "mattleibow",
+        "body": "The reason this bug shows is that when you select the full framework option, the app actually \u0022transitions\u0022 from a \u0022mac app\u0022 to a \u0022.net framework app\u0022 and NuGet does not know that this particular app is actually both a \u0022mac app\u0022 AND a \u0022framework app\u0022.\r\n\r\nA workaround would be to do one of two things:\r\n - use packages.config and then change the HintPath to the Xamarin.Mac version\r\n - don\u0027t reference the SkiaSharp.Views package, and manually add a reference to SkiaSharp.Views.Mac.dll\r\n\r\nThere has been an issue that has been opened, closed, reopened and eventually locked with a few PRs. But, not to be outdone, I have created a new PR that hopefully gets this in: https://github.com/NuGet/NuGet.Client/pull/2572\r\n\r\nThis is not the greatest situation right now, but hopefully after this is merged, we can all be happy coders!",
+        "createdAt": "2018-12-18T00:22:41",
+        "reactions": []
+      },
+      {
+        "id": 505004247,
+        "author": "mattleibow",
+        "body": "I have not had the opportunity to test this, but it seems we have a new option to turn macOS apps into real macOS apps: https://github.com/NuGet/NuGet.Client/pull/2572#issuecomment-468690182\r\n\r\nBasically, you can add \u0060\u003CMigrateToNewXMIdentifier\u003Etrue\u003C/MigrateToNewXMIdentifier\u003E\u0060 in your project.",
+        "createdAt": "2019-06-24T13:13:42",
+        "reactions": []
+      }
+    ]
+  }
 }

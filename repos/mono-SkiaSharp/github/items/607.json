@@ -27,5 +27,39 @@
   "createdAt": "2018-08-07T14:02:23",
   "updatedAt": "2019-06-17T16:50:42",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:36:28.7439202Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 411607221,
+        "author": "j4587698",
+        "body": "@pfaucon You can do it yourself. Like \r\n\u0060\u0060\u0060\r\nif (!Bounds.Contains(e.Location.ToFormsPoint()))\r\n {\r\n             //touch outside\r\n }\r\nelse\r\n{\r\n            //touch inside\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-08-09T01:25:05",
+        "reactions": []
+      },
+      {
+        "id": 411638560,
+        "author": "pfaucon",
+        "body": "Thank you for the suggestion.  This is true, and is slightly simpler than the pseudocode provided, but is not quite the same.\r\n\r\n1) It\u0027s possible that you want to have an event that fires only once (e.g. an animation)\r\n2) UWP already fires the entered/exited events, given that they exist in the enum, and there is no mention that they do not work on Android/iOS it is reasonable to assume that they will fire.  \r\n\r\nI wrote my views on UWP first, since that has been giving me the most trouble as a platform.  As a result, once I reached iOS I spent a few hours fixing the behavior. First discovering a bug in my software (randomly, my button always clicked on iOS, and never animated down), then discovering that entered/exited wouldn\u0027t fire, then discovering that it was the expected case on iOS/Android (which required looking through the code here), and then writing my own entered/exited.  All of this could have been prevented if:\r\n1) behavior was consistent between platforms (ideal)\r\n2) it was mentioned that only certain platforms supported certain actions",
+        "createdAt": "2018-08-09T05:10:42",
+        "reactions": []
+      },
+      {
+        "id": 411721040,
+        "author": "pfaucon",
+        "body": "@j4587698 There are more important problems with the solution:\r\n1) the touch provided is not with reference to the bounds, e.g. I have a button at (450,500), but the point co-ordinates begin at 0\r\n2) The y-axis of the view is not scaled properly it seems.  The Bounds have size 110x60, the forms view has a size-request at 60 height (110 is a reasonable width), but visually 110x60 occurs about half-way through the element.  My best guess is a scale factor that is not being respected (ipad typically runs @2x), but it occurs the same on both Android and iOS.\r\n\r\nThe code that I ended up using for now is:\r\n\u0060\u0060\u0060\r\n            var touchType = e.ActionType;\r\n            var touchpt = e.Location.ToFormsPoint();\r\n            var viewScale = 2.0; // HACK: there is a bug in the point location to Bounds correlation, and in limited testing this seems to work\r\n            var touchIsInside = !(touchpt.X \u003C 0 || touchpt.Y \u003C 0 || touchpt.X \u003E Bounds.Width * viewScale || touchpt.Y \u003E Bounds.Height * viewScale);\r\n            if (touchType.Equals(SKTouchAction.Moved) \u0026\u0026 TouchesAreInside != touchIsInside \u0026\u0026\r\n                Device.RuntimePlatform.Equals(Device.iOS) || Device.RuntimePlatform.Equals(Device.Android))\r\n            {\r\n                if (TouchesAreInside)\r\n                {\r\n                    TouchesAreInside = false;\r\n                    touchType = SKTouchAction.Exited;\r\n                }\r\n                else\r\n                {\r\n                    TouchesAreInside = true;\r\n                    touchType = SKTouchAction.Entered;\r\n                }\r\n            }\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-08-09T11:05:11",
+        "reactions": []
+      },
+      {
+        "id": 444176283,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:03:04",
+        "reactions": []
+      }
+    ]
+  }
 }
