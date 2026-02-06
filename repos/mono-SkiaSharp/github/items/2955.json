@@ -30,5 +30,32 @@
   "deletions": 133,
   "changedFiles": 13,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:51:32.9851284Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2252214048,
+        "author": "github-actions[bot]",
+        "body": "The backport to \u0060release/2.x\u0060 failed:\n\u0060\u0060\u0060\nThe process \u0027/usr/bin/git\u0027 failed with exit code 1\n\u0060\u0060\u0060\nTo backport manually, run these commands in your terminal:\n\u0060\u0060\u0060bash\n# Fetch latest updates from GitHub\ngit fetch\n# Create a new working tree\ngit worktree add .worktrees/backport-release/2.x release/2.x\n# Navigate to the new working tree\ncd .worktrees/backport-release/2.x\n# Create a new branch\ngit switch --create backport/pr-2955-to-release/2.x\n# Cherry-pick the merged commit of this pull request and resolve the conflicts\ngit cherry-pick -x --mainline 1 ccde024b628e4454dfc713fb3f6f27f071883b79\n# Push it to GitHub\ngit push --set-upstream origin backport/pr-2955-to-release/2.x\n# Go back to the original working tree\ncd ../..\n# Delete the working tree\ngit worktree remove .worktrees/backport-release/2.x\n\u0060\u0060\u0060\nThen, create a pull request where the \u0060base\u0060 branch is \u0060release/2.x\u0060 and the \u0060compare\u0060/\u0060head\u0060 branch is \u0060backport/pr-2955-to-release/2.x\u0060.",
+        "createdAt": "2024-07-26T08:15:06",
+        "reactions": []
+      },
+      {
+        "id": 2356142153,
+        "author": "albilaga",
+        "body": "~@mattleibow this one is only on 3.0.0 right? 2.88 is not possible?~\r\n\r\nLooks like even in 3.0.0 preview 4 is not available yet. ",
+        "createdAt": "2024-09-17T15:00:03",
+        "reactions": []
+      },
+      {
+        "id": 2358874776,
+        "author": "mattleibow",
+        "body": "Preview 4 is out 2 months ago: https://www.nuget.org/packages/SkiaSharp/3.0.0-preview.4.1 \r\n\r\nI am getting ready to push preview 5 out with some extra things.",
+        "createdAt": "2024-09-18T16:07:15",
+        "reactions": []
+      }
+    ]
+  }
 }

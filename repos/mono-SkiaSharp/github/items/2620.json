@@ -91,5 +91,108 @@
       "state": "COMMENTED",
       "submittedAt": "2024-10-27T06:43:18"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:50:13.5868327Z",
+    "reactions": [
+      {
+        "user": "lindexi",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:50:13.5871049Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:50:13.5871059Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2023924309,
+        "author": "mattleibow",
+        "body": "This PR is not super useful since net7 and net8 don\u0027t support any of this. Maybe net9 will.",
+        "createdAt": "2024-03-27T20:29:58",
+        "reactions": []
+      },
+      {
+        "id": 2359230003,
+        "author": "mattleibow",
+        "body": "@jairbubbles does this PR help at all?",
+        "createdAt": "2024-09-18T19:18:18",
+        "reactions": []
+      },
+      {
+        "id": 2437548069,
+        "author": "mattleibow",
+        "body": "Not sure what I am doing wrong, but wasm and skia seem to be fighting\n\nhttps://github.com/mattleibow/SkiaSharpWasm\n\n\nlogging.ts:43\u00A0 MONO_WASM: instantiate_wasm_module() failed CompileError: WebAssembly.compileStreaming(): Compiling function #27054:\u0022CompressionNative_Crc32\u0022 failed: expected 1 elements on the stack for fallthru, found 3 @\u002B8047983\n\n\n",
+        "createdAt": "2024-10-25T11:31:24",
+        "reactions": []
+      },
+      {
+        "id": 2437571177,
+        "author": "jeromelaban",
+        "body": "\u003E logging.ts:43  MONO_WASM: instantiate_wasm_module() failed CompileError: WebAssembly.compileStreaming(): Compiling function #27054:\u0022CompressionNative_Crc32\u0022 failed: expected 1 elements on the stack for fallthru, found 3 @\u002B8047983\r\n\r\nI\u0027ve noticed something similar in another project, with net9 specifically. It\u0027s not related to threading nor to simd, for what I can tell. In my context, it is failing in debug but not in release. Is it the case for you as well?",
+        "createdAt": "2024-10-25T11:44:45",
+        "reactions": []
+      },
+      {
+        "id": 2437605811,
+        "author": "mattleibow",
+        "body": "\u003E  failing in debug but not in release\r\n\r\nThis appears to be the case for me too. I am trying to test the SIMD as well, but not sure how to \u0022test\u0022 that. Is there a something that fails with SIMD disabled I can try to make sure I am doing it right?\r\n\r\nSetting \u0060\u003CWasmEnableSIMD\u003Efalse\u003C/WasmEnableSIMD\u003E\u0060 still adds \u0060--enable-simd\u0060 to the wasm build CLI:",
+        "createdAt": "2024-10-25T12:04:14",
+        "reactions": []
+      },
+      {
+        "id": 2437616959,
+        "author": "jeromelaban",
+        "body": "\u003E This appears to be the case for me too. I am trying to test the SIMD as well, but not sure how to \u0022test\u0022 that. Is there a something that fails with SIMD disabled I can try to make sure I am doing it right?\r\n\r\nThe test I made was to use the non-SIMD version of skiasharp, based on the hints from @kg. Not sure why disabling SIMD entirely does have an effect, though.",
+        "createdAt": "2024-10-25T12:09:37",
+        "reactions": []
+      },
+      {
+        "id": 2437623284,
+        "author": "mattleibow",
+        "body": "\u0060\u0060\u0060\r\nTarget Name=_RunWasmOptPostLink Project=SkiaSharpWasm.csproj\r\n    Task \u0022Error\u0022 skipped, due to false condition; (\u0027$(_WasmOutputFileName)\u0027 == \u0027\u0027) was evaluated as (\u0027dotnet.native.wasm\u0027 == \u0027\u0027).\r\n    Exec\r\n        Assembly = C:\\Program Files\\dotnet\\sdk\\9.0.100-rc.2.24474.11\\Microsoft.Build.Tasks.Core.dll\r\n        Parameters\r\n            EnvironmentVariables\r\n                EMSDK_PYTHON=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Python.win-x64\\9.0.0-rc.2.24468.8\\Sdk\\..\\tools\\\\python.exe\r\n                PYTHONUTF8=1\r\n                DOTNET_EMSCRIPTEN_LLVM_ROOT=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.win-x64\\9.0.0-rc.2.24468.8\\tools\\bin\r\n                DOTNET_EMSCRIPTEN_BINARYEN_ROOT=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.win-x64\\9.0.0-rc.2.24468.8\\tools\\\r\n                DOTNET_EMSCRIPTEN_NODE_JS=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Node.win-x64\\9.0.0-rc.2.24468.8\\tools\\bin\\node.exe\r\n                PATH=........\r\n                PYTHONUTF8=1\r\n                EM_WORKAROUND_PYTHON_BUG_34780=1\r\n                EMSDK_PYTHON=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Python.win-x64\\9.0.0-rc.2.24468.8\\Sdk\\..\\tools\\python.exe\r\n                PYTHONPATH=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Python.win-x64\\9.0.0-rc.2.24468.8\\Sdk\\..\\tools\\\r\n                PYTHONHOME=\r\n                EM_CACHE=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.win-x64\\9.0.0-rc.2.24468.8\\tools\\emscripten\\cache\\\r\n                EM_FROZEN_CACHE=1\r\n                ENABLE_JS_INTEROP_BY_VALUE=0\r\n                WASM_ENABLE_SIMD=0\r\n                WASM_ENABLE_EH=1\r\n                ENABLE_AOT_PROFILER=0\r\n                ENABLE_BROWSER_PROFILER=0\r\n                ENABLE_LOG_PROFILER=0\r\n                RUN_AOT_COMPILATION=0\r\n            IgnoreStandardErrorWarningFormat = True\r\n            Command = wasm-opt.exe --enable-simd --enable-exception-handling --enable-bulk-memory --strip-dwarf \u0022D:\\GitHub\\SkiaSharpWasm\\obj\\Release\\net9.0\\wasm\\for-build\\dotnet.native.wasm\u0022 -o \u0022D:\\GitHub\\SkiaSharpWasm\\obj\\Release\\net9.0\\wasm\\for-build\\dotnet.native.wasm\u0022\r\n        CommandLineArguments = wasm-opt.exe --enable-simd --enable-exception-handling --enable-bulk-memory --strip-dwarf \u0022D:\\GitHub\\SkiaSharpWasm\\obj\\Release\\net9.0\\wasm\\for-build\\dotnet.native.wasm\u0022 -o \u0022D:\\GitHub\\SkiaSharpWasm\\obj\\Release\\net9.0\\wasm\\for-build\\dotnet.native.wasm\u0022\r\n        Messages\r\n            Environment Variables passed to tool:\r\n              EMSDK_PYTHON=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Python.win-x64\\9.0.0-rc.2.24468.8\\Sdk\\..\\tools\\\\python.exe\r\n              PYTHONUTF8=1\r\n              DOTNET_EMSCRIPTEN_LLVM_ROOT=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.win-x64\\9.0.0-rc.2.24468.8\\tools\\bin\r\n              DOTNET_EMSCRIPTEN_BINARYEN_ROOT=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Sdk.win-x64\\9.0.0-rc.2.24468.8\\tools\\\r\n              DOTNET_EMSCRIPTEN_NODE_JS=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Node.win-x64\\9.0.0-rc.2.24468.8\\tools\\bin\\node.exe\r\n              PATH=..........\r\n              PYTHONUTF8=1\r\n              EM_WORKAROUND_PYTHON_BUG_34780=1\r\n              EMSDK_PYTHON=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Python.win-x64\\9.0.0-rc.2.24468.8\\Sdk\\..\\tools\\python.exe\r\n              PYTHONPATH=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Python.win-x64\\9.0.0-rc.2.24468.8\\Sdk\\..\\tools\\\r\n              PYTHONHOME=\r\n              EM_CACHE=C:\\Program Files\\dotnet\\packs\\Microsoft.NET.Runtime.Emscripten.3.1.56.Cache.win-x64\\9.0.0-rc.2.24468.8\\tools\\emscripten\\cache\\\r\n              EM_FROZEN_CACHE=1\r\n              ENABLE_JS_INTEROP_BY_VALUE=0\r\n              WASM_ENABLE_SIMD=0\r\n              WASM_ENABLE_EH=1\r\n              ENABLE_AOT_PROFILER=0\r\n              ENABLE_BROWSER_PROFILER=0\r\n              ENABLE_LOG_PROFILER=0\r\n              RUN_AOT_COMPILATION=0\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-10-25T12:12:51",
+        "reactions": []
+      },
+      {
+        "id": 2438360957,
+        "author": "lewing",
+        "body": "cc @radekdoulik ",
+        "createdAt": "2024-10-25T17:08:49",
+        "reactions": []
+      },
+      {
+        "id": 2439796794,
+        "author": "maxkatz6",
+        "body": "When I run Avalonia with \u00602.88.9-preview.2.2\u0060 referenced, in .NET 9, I also have a similar problem:\r\n\u0060\u0060\u0060\r\nlogging.ts:43 \r\n MONO_WASM: instantiate_wasm_module() failed CompileError: WebAssembly.compileStreaming(): Compiling function #18452:\u0022mono_ppdb_load_file\u0022 failed: expected 0 elements on the stack for fallthru, found 4 @\u002B6972508\r\n\u0060\u0060\u0060\r\nNo threading or simd. Works fine in Release, but not in Debug.",
+        "createdAt": "2024-10-27T01:39:16",
+        "reactions": []
+      },
+      {
+        "id": 2441362693,
+        "author": "mattleibow",
+        "body": "Going to merge this now in an effort to get things working with .NET 9.\r\n\r\nIf there are any changes with regards to MSBuild targets or some way we can do better, feel free to open a PR. Or you can open an issue. PRs are more cool though!",
+        "createdAt": "2024-10-28T11:48:15",
+        "reactions": [
+          {
+            "user": "Webreaper",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:50:13.5365865Z"
+          },
+          {
+            "user": "maxkatz6",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:13.5365882Z"
+          },
+          {
+            "user": "jiripolasek",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:13.5365883Z"
+          }
+        ]
+      }
+    ]
+  }
 }

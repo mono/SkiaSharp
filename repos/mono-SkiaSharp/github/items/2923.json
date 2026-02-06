@@ -19,5 +19,75 @@
   "updatedAt": "2024-07-26T08:14:50",
   "closedAt": "2024-07-26T08:14:50",
   "commentCount": 5,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:52:22.7560933Z",
+    "reactions": [
+      {
+        "user": "AlexGoOn",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:52:22.7560977Z"
+      },
+      {
+        "user": "janne-hmp",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:52:22.7560985Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2222186170,
+        "author": "AlexGoOn",
+        "body": "Some DevExpress components have a memory leak due to this issue, which prevents the entire page from being released. This problem is affecting many of our customers. @mattleibow, could you please take a look at this when you have a chance?",
+        "createdAt": "2024-07-11T07:02:21",
+        "reactions": [
+          {
+            "user": "janne-hmp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:52:21.925857Z"
+          }
+        ]
+      },
+      {
+        "id": 2233677319,
+        "author": "janne-hmp",
+        "body": "@mattleibow @davidortinau I think this should be critically prioritized, since you can\u0027t use SkiaSharp with .NET MAUI on iOS seriously. I think my memory corruption problem mentioned in #2840 maybe because of the same or related issue.",
+        "createdAt": "2024-07-17T16:05:03",
+        "reactions": []
+      },
+      {
+        "id": 2240129975,
+        "author": "janne-hmp",
+        "body": "I just made a test app (see #2951) that confirms this by crashing my iPad by trying to open and close the same page 500 times. It crashes after opening the page c. 145th time.",
+        "createdAt": "2024-07-19T21:17:53",
+        "reactions": []
+      },
+      {
+        "id": 2241469669,
+        "author": "mattleibow",
+        "body": "I think I know what is happening. After all our work to fix leaks in Maui itself, it appears that an event on the platform view to the handler keeps everything.\n\nThe platform view event keeps the handler alive, the handler keeps the Xaml view alive and the xaml view keeps the parent alive. The virtual view also keeps the handler alive and the handler keeps the platform view. So basically a big web of survival. \n\nHowever, there has also been a fix in Maui to break the virtual view and it\u0027s parent: https://github.com/dotnet/maui/pull/22561\n\nWe just have to do something like this: https://github.com/dotnet/maui/pull/18682\n\nThanks to the hard work of @jonathanpeppers \u2764\uFE0F",
+        "createdAt": "2024-07-21T05:01:27",
+        "reactions": [
+          {
+            "user": "janne-hmp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:52:22.4893493Z"
+          }
+        ]
+      },
+      {
+        "id": 2243175225,
+        "author": "jonathanpeppers",
+        "body": "If some \u0060SKSomethingView\u0060 has a circular reference, I don\u0027t think https://github.com/dotnet/maui/pull/22561 will fix it.\r\n\r\nDo you have any on-device tests, can you write one like:\r\n\r\n* https://github.com/dotnet/maui/blob/9251b38bd58921df21ebcf67d84a539e39b74d5c/src/Controls/tests/DeviceTests/Memory/MemoryTests.cs#L166\r\n\r\nAnd then, the solution would be to fix some of the warnings this analyzer catches:\r\n\r\n* https://github.com/jonathanpeppers/memory-analyzers",
+        "createdAt": "2024-07-22T14:59:45",
+        "reactions": [
+          {
+            "user": "janne-hmp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:52:22.7057756Z"
+          }
+        ]
+      }
+    ]
+  }
 }

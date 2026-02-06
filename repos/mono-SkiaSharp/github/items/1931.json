@@ -14,5 +14,36 @@
   "updatedAt": "2024-08-21T15:16:07",
   "closedAt": "2024-08-21T15:16:07",
   "commentCount": 2,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:51:56.357709Z",
+    "reactions": [
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:51:56.3577138Z"
+      },
+      {
+        "user": "andreinitescu",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:51:56.3577147Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2198068594,
+        "author": "maxkatz6",
+        "body": "I have a similar exception running Avalonia in NativeAOT-LLVM, but with HarfBuzzSharp\r\n\u0060\u0060\u0060\r\nRuntimeError: null function or function signature mismatch\r\n$S_P_CoreLib_System_Runtime_ThunkBlocks__GetNewThunksBlock | @ | dotnet.native.wasm:0x5d68d1\r\n\u00A0 | $S_P_CoreLib_System_Runtime_ThunksHeap___ctor | @ | dotnet.native.wasm:0xd9869\r\n\u00A0 | $S_P_CoreLib_System_Runtime_ThunksHeap__CreateThunksHeap | @ | dotnet.native.wasm:0x5bf890\r\n\u00A0 | $S_P_CoreLib_System_Runtime_InteropServices_PInvokeMarshal__AllocateThunk | @ | dotnet.native.wasm:0xbb27b\r\n\u00A0 | $S_P_CoreLib_System_Runtime_CompilerServices_ConditionalWeakTable_2_CreateValueCallback\u003CSystem___Canon__System___Canon\u003E__InvokeOpenStaticThunk | @ | dotnet.native.wasm:0x16c9ae\r\n\u00A0 | $S_P_CoreLib_System_Runtime_CompilerServices_ConditionalWeakTable_2\u003CSystem___Canon__System___Canon\u003E__GetValueLocked | @ | dotnet.native.wasm:0x16f5f8\r\n\u00A0 | $S_P_CoreLib_System_Runtime_CompilerServices_ConditionalWeakTable_2\u003CSystem___Canon__System___Canon\u003E__GetValue | @ | dotnet.native.wasm:0x4e9f02\r\n\u00A0 | $S_P_CoreLib_System_Runtime_InteropServices_PInvokeMarshal__GetFunctionPointerForDelegate | @ | dotnet.native.wasm:0x59d17a\r\n\u00A0 | $S_P_CoreLib_System_Runtime_InteropServices_Marshal__GetFunctionPointerForDelegate | @ | dotnet.native.wasm:0xa138c\r\n\u00A0 | $S_P_CoreLib_System_Runtime_InteropServices_Marshal__GetFunctionPointerForDelegate_0\u003CSystem___Canon\u003E | @ | dotnet.native.wasm:0x4c3e9d\r\n\u00A0 | $HarfBuzzSharp_HarfBuzzSharp_HarfBuzzApi__hb_face_create_for_tables | @ | dotnet.native.wasm:0x1e8179\r\n\u00A0 | $HarfBuzzSharp_HarfBuzzSharp_Face___ctor_2 | @ | dotnet.native.wasm:0x49520c\r\n\u00A0 | $Avalonia_Skia_Avalonia_Skia_GlyphTypefaceImpl___ctor | @ | dotnet.native.wasm:0x286869\r\n\u00A0 | $Avalonia_Skia_Avalonia_Skia_FontManagerImpl__TryCreateGlyphTypeface | @ | dotnet.native.wasm:0x490633\r\n\u00A0 | $Avalonia_Base_Avalonia_Media_Fonts_SystemFontCollection__TryGetGlyphTypeface | @ | dotnet.native.wasm:0x2804f4\r\n\u00A0 | $Avalonia_Base_Avalonia_Media_FontManager__TryGetGlyphTypeface | @ | dotnet.native.wasm:0x54369e\r\n\u00A0 | $Avalonia_Base_Avalonia_Media_Typeface__get_GlyphTypeface | @ | dotnet.native.wasm:0x115cbe\r\n\u0060\u0060\u0060\r\n\r\nRemoving text rendering make app render just fine without this error (at least, a simple rectangle and software render for now).",
+        "createdAt": "2024-06-29T09:35:05",
+        "reactions": []
+      },
+      {
+        "id": 2198069160,
+        "author": "maxkatz6",
+        "body": "And to keep experiments with LLVM and SkiaSharp in one place, if I enable WebGL rendering it will throw a different exception:\r\n\u0060\u0060\u0060\r\nRuntimeError: memory access out of bounds\r\n    at dotnet.native.wasm.GrMemoryPool::allocate(:51968/unsigned long) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.SkSL::Pool::AllocIRNode(:51968/unsigned long) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.SkSL::Context::Context(:51968/) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.SkSL::Compiler::Compiler(:51968/GrShaderCaps const*, SkSL::Compiler::Flags) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.GrGLContext::compiler(:51968/) const (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.GrSkSLtoGLSL(:51968/GrGLContext const\u0026, SkSL::Program::Kind, SkSL::String const\u0026, SkSL::Program::Settings const\u0026, SkSL::String*, GrContextOptions::ShaderErrorHandler*) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.GrGLProgramBuilder::finalize(:51968/GrGLPrecompiledProgram const*) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.GrGLProgramBuilder::CreateProgram(:51968/GrGLGpu*, GrRenderTarget*, GrProgramDesc const\u0026, GrProgramInfo const\u0026, GrGLPrecompiledProgram const*) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.GrGLGpu::ProgramCache::findOrCreateProgram(:51968/GrRenderTarget*, GrProgramDesc const\u0026, GrProgramInfo const\u0026, GrGpu::Stats::ProgramCacheResult*) (http://localhost:51968/dotnet.native.wasm)\r\n    at dotnet.native.wasm.GrGLGpu::ProgramCache::findOrCreateProgram(:51968/GrRenderTarget*, GrProgramInfo const\u0026) (http://localhost:51968/dotnet.native.wasm)\r\n\u0060\u0060\u0060\r\n\r\nNot sure what triggers it yet, I want to focus on software rendering for now.",
+        "createdAt": "2024-06-29T09:36:42",
+        "reactions": []
+      }
+    ]
+  }
 }

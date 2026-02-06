@@ -19,5 +19,18 @@
   "updatedAt": "2024-09-18T15:41:27",
   "closedAt": "2024-09-18T15:41:27",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:51:33.8514841Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2358818546,
+        "author": "mattleibow",
+        "body": "This happens because you are loading the animated image, but the resize method just resizes and return the first frame.\r\n\r\nSkiaSharp is designed for drawing things to a screen as fast as possible. One of its limitations is the ability to generate complex files - like animated images or encoding codecs.\r\n\r\nImageSharp (https://github.com/SixLabors/ImageSharp) may be able to do this. That library focuses on image loading, manipulation and encoding - among other things. \r\n\r\nI will close this issue for now as this particular feature is out of scope of SkiaSharp.",
+        "createdAt": "2024-09-18T15:41:27",
+        "reactions": []
+      }
+    ]
+  }
 }

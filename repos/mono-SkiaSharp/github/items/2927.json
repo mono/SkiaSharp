@@ -25,5 +25,60 @@
   "deletions": 4180,
   "changedFiles": 285,
   "commits": 27,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:51:30.5159587Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2241496889,
+        "author": "benbaker76",
+        "body": "Please include an update to the [install-dotnet-workloads.ps1](https://github.com/mono/SkiaSharp/blob/main/scripts/install-dotnet-workloads.ps1#L27) so it will build using the latest \u0060wasm-tools\u0060",
+        "createdAt": "2024-07-21T06:35:39",
+        "reactions": []
+      },
+      {
+        "id": 2242106012,
+        "author": "mattleibow",
+        "body": "It is there:\n\nhttps://github.com/mono/SkiaSharp/blob/main/scripts%2Finstall-dotnet-workloads.ps1#L23 ",
+        "createdAt": "2024-07-22T05:14:53",
+        "reactions": []
+      },
+      {
+        "id": 2242127607,
+        "author": "benbaker76",
+        "body": "\u003E It is there:\r\n\r\nWhen publishing for a Blazor Wasm (.NET 8.0) project it forced me to install \u0060wasm-tools-net6\u0060 or it would give me an error \u0060To build this project, the following workloads must be installed: wasm-tools-net6. To install these workloads, run the following command: dotnet workload restore\u0060.\r\n\r\nI\u0027m using [Svg.Skia](https://github.com/wieslawsoltes/Svg.Skia) along with \u0060SkiaSharp.Views.Blazor\u0060. Without the latter I\u0027d get \u0060System.DllNotFoundException: libSkiaSharp\u0060 (previously I tried \u0060SkiaSharp.NativeAssets.WebAssembly\u0060 instead but it didn\u0027t work).",
+        "createdAt": "2024-07-22T05:37:41",
+        "reactions": []
+      },
+      {
+        "id": 2243535560,
+        "author": "mattleibow",
+        "body": "What are you deploying? The \u0060wasm-tools-net6\u0060 is only used in net6, and I think nothing is using that in this repo after this PR?",
+        "createdAt": "2024-07-22T18:11:37",
+        "reactions": []
+      },
+      {
+        "id": 2243549229,
+        "author": "benbaker76",
+        "body": "\u003E What are you deploying? The \u0060wasm-tools-net6\u0060 is only used in net6, and I think nothing is using that in this repo after this PR?\r\n\r\nMy concern is that the script is specifically referring to \u0060wasm-tools-net6\u0060 rather than the latest (just \u0060wasm-tools\u0060) but you may be right in that it will use the latest once this PR is merged. I look forward to it and thanks for your work on the project.",
+        "createdAt": "2024-07-22T18:18:49",
+        "reactions": []
+      },
+      {
+        "id": 2353240639,
+        "author": "jairbubbles",
+        "body": "Hi @mattleibow, do you plan to release a preview package that works on \u0060net9.0\u0060 \u002B wasm?\r\n\r\nWith \u0060SkiaSharp.Views.Blazor@3.0.0-preview.4.1\u0060 I get:\r\n\u0060\u0060\u0060\r\nSystem.DllNotFoundException: libSkiaSharp\r\n\u0060\u0060\u0060\r\n\r\nWhen tweaking \u0060SkiaSharp.NativeAssets.WebAssembly.targets\u0060 locally to include the native files I get a bit further but ends up with:\r\n\r\n\u0060\u0060\u0060\r\nUnhandled exception rendering component: Could not set up parent class, due to: Could not load type of field \u0027SkiaSharp.Views.Blazor.Internal.JSModuleInterop:moduleTask\u0027 (0) due to: Could not resolve type with token 0100003b from typeref (expected class \u0027Microsoft.JSInterop.IJSUnmarshalledObjectReference\u0027 in assembly \u0027Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60\u0027) assembly:Microsoft.JSInterop, Version=6.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60 type:Microsoft.JSInterop.IJSUnmarshalledObjectReference member:(null) assembly:SkiaSharp.Views.Blazor.dll type:JSModuleInterop member:(null)\r\n\u0060\u0060\u0060\r\n\r\nPlease note that I\u0027m trying in .NET 9 as I want to try out:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CWasmEnableThreads\u003Etrue\u003C/WasmEnableThreads\u003E\r\n\u0060\u0060\u0060\r\n\r\nWhich comes with its own set of issues \uD83D\uDE05\r\n\r\n\r\nThank you!",
+        "createdAt": "2024-09-16T15:27:34",
+        "reactions": []
+      },
+      {
+        "id": 2359228756,
+        "author": "mattleibow",
+        "body": "Lets talk on this PR that I stopped as things were not actually implemented in .NET at the time: https://github.com/mono/SkiaSharp/pull/2620",
+        "createdAt": "2024-09-18T19:17:28",
+        "reactions": []
+      }
+    ]
+  }
 }

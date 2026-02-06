@@ -19,5 +19,168 @@
   "updatedAt": "2024-10-25T16:30:39",
   "closedAt": "2024-10-25T16:30:39",
   "commentCount": 12,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:50:28.424943Z",
+    "reactions": [
+      {
+        "user": "john-hollander",
+        "content": "heart",
+        "createdAt": "2026-02-06T12:50:28.4249626Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2401734417,
+        "author": "Mangepange",
+        "body": "This is the same crash as when updating to WinUI 1.6.0 (#2999).\r\nIt seems like the latest version of VS (17.11.5) updates the version of CsWinRT to 2.1.2. And from what I\u0027ve seen, the issue is related to changes made in CsWinRT v2.1.1.",
+        "createdAt": "2024-10-09T08:54:10",
+        "reactions": [
+          {
+            "user": "john-hollander",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:26.1194127Z"
+          }
+        ]
+      },
+      {
+        "id": 2402059651,
+        "author": "christoroth",
+        "body": "Btw, this is also occurring in Windows based .Net Maui apps that use skia sharp.  Updated Visual Studio and therefore also the windows sdk and my app started to crash but only in Windows (Android is ok).  \r\n\r\nCreated a brand new Maui project and ran it from the default code that counts button clicks.  Added SkiaSharp (remembering to add the UsesSkiaSharp call to MauiProgram.cs) and adding the SkCanvasView to the mainpage.xaml introduces the crash:\r\n\r\n\u0060\u003Cskia:SKCanvasView x:Name=\u0022skCanvasView\u0022 WidthRequest=\u002230\u0022 HeightRequest=\u002250\u0022 BackgroundColor=\u0022Red\u0022 /\u003E\u0060\r\n\r\nTried the 2.88.8 SkiaSharp.Views.Maui.Controls package and also 3.0.0-preview.4.1 but same result from each",
+        "createdAt": "2024-10-09T11:29:49",
+        "reactions": [
+          {
+            "user": "bytesandwich",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:26.3233947Z"
+          },
+          {
+            "user": "john-hollander",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:26.3233951Z"
+          }
+        ]
+      },
+      {
+        "id": 2406935533,
+        "author": "TopperDEL",
+        "body": "I have the same issue. From my point of view the only change between a working version and a crashing version is the switch from .Net SDK 8.0.402 to 8.0.403. It now crashes locally and with the version build in a Github Action. The only difference in the pipeline is the switch in the SDK-version. Don\u0027t know if this is really related, though. My app silently crashes without any exception if the \u0060SkXamlCanvas\u0060 comes into view (this is an Uno app).\r\n\r\n**Update:** The SDK-version does not seem to make a difference. I\u0027m still investigating.",
+        "createdAt": "2024-10-11T08:47:56",
+        "reactions": []
+      },
+      {
+        "id": 2406990485,
+        "author": "TopperDEL",
+        "body": "This seems to be the StackTrace:\r\n\r\n   \u0060\u0060\u0060\r\nbei System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)\r\n   bei System.Reflection.MethodBase.Invoke(Object obj, Object[] parameters)\r\n   bei WinRT.IWinRTObject.\u003CIsInterfaceImplementedFallback\u003Eg__GetObjectReferenceViaVftbl|1_1(IObjectReference objRef, Type vftblType) in WinRT\\IWinRTObject.cs: Zeile204\r\n   bei WinRT.IWinRTObject.IsInterfaceImplementedFallback(RuntimeTypeHandle interfaceType, Boolean throwIfNotImplemented) in WinRT\\IWinRTObject.cs: Zeile192\r\n   bei WinRT.IWinRTObject.System.Runtime.InteropServices.IDynamicInterfaceCastable.IsInterfaceImplemented(RuntimeTypeHandle interfaceType, Boolean throwIfNotImplemented) in WinRT\\IWinRTObject.cs: Zeile30\r\n   bei WinRT.CastExtensions.As[TInterface](Object value) in WinRT\\CastExtensions.cs: Zeile17\r\n   bei SkiaSharp.Views.Windows.Utils.GetByteBuffer(IBuffer buffer)\r\n   bei SkiaSharp.Views.Windows.WindowsExtensions.GetPixels(WriteableBitmap bitmap)\r\n   bei SkiaSharp.Views.Windows.SKXamlCanvas.CreateBitmap(SKSizeI\u0026 unscaledSize, Single\u0026 dpi)\r\n   bei SkiaSharp.Views.Windows.SKXamlCanvas.DoInvalidate()\r\n   bei ABI.Microsoft.UI.Dispatching.DispatcherQueueHandler.Do_Abi_Invoke(IntPtr thisPtr) in ABI.Microsoft.UI.Dispatching\\DispatcherQueueHandler.cs: Zeile123\r\n\u0060\u0060\u0060\r\n\r\n![image](https://github.com/user-attachments/assets/52bae6fd-3de1-45b9-b7ed-23adc5e5f136)\r\n\r\n  \u0060\u0060\u0060\r\n bei WinRT.ObjectReference\u00601.GetVtable(IntPtr thisPtr) in WinRT\\ObjectReference.cs: Zeile130\r\n   bei WinRT.ObjectReference\u00601..ctor(IntPtr thisPtr) in WinRT\\ObjectReference.cs: Zeile31\r\n   bei WinRT.ObjectReference\u00601.Attach(IntPtr\u0026 thisPtr, Guid iid) in WinRT\\ObjectReference.cs: Zeile67\r\n   bei WinRT.ObjectReference\u00601.TryAs(IObjectReference sourceRef, Guid iid, ObjectReference\u00601\u0026 objRef) in WinRT\\ObjectReference.cs: Zeile155\r\n   bei WinRT.IObjectReference.TryAs[T](Guid iid, ObjectReference\u00601\u0026 objRef) in WinRT\\IObjectReference.cs: Zeile179\r\n   bei WinRT.IObjectReference.As[T](Guid iid) in WinRT\\IObjectReference.cs: Zeile140\r\n   bei WinRT.IObjectReference.As[T]() in WinRT\\IObjectReference.cs: Zeile134\r\n   bei System.RuntimeMethodHandle.InvokeMethod(Object target, Void** arguments, Signature sig, Boolean isConstructor)\r\n   bei System.Reflection.MethodBaseInvoker.InvokeWithNoArgs(Object obj, BindingFlags invokeAttr)\r\n\u0060\u0060\u0060\r\n\r\n![image](https://github.com/user-attachments/assets/0566aad6-0a49-448e-9ed1-ceebabed1b00)\r\n\r\nHope that helps :)",
+        "createdAt": "2024-10-11T09:16:21",
+        "reactions": []
+      },
+      {
+        "id": 2407001400,
+        "author": "christoroth",
+        "body": "3.0.0-preview-5.3 from package source https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json stopped the crashes for me in my test app so I have temporarily done the same in the app I\u0027m developing until 3.0.0 is formally released (hopefully before my deadline!!). ",
+        "createdAt": "2024-10-11T09:22:09",
+        "reactions": [
+          {
+            "user": "tdoell",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:26.9417081Z"
+          },
+          {
+            "user": "john-hollander",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:26.9417085Z"
+          },
+          {
+            "user": "chaibi-mustapha",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:26.9417086Z"
+          }
+        ]
+      },
+      {
+        "id": 2407018161,
+        "author": "TopperDEL",
+        "body": "Yes, just found out - this is the correct issue: https://github.com/mono/SkiaSharp/issues/2999",
+        "createdAt": "2024-10-11T09:31:07",
+        "reactions": []
+      },
+      {
+        "id": 2410605275,
+        "author": "Mangepange",
+        "body": "We were able to solve this by adding a specific WindowSDK package version in our project files:\r\n\r\n\u0060\u003CWindowsSdkPackageVersion\u003E10.0.22621.34\u003C/WindowsSdkPackageVersion\u003E\u0060\r\n\r\nVersions from .38 and above does not work for us (that\u0027s the version that WinUI 1.6.0 requires btw).",
+        "createdAt": "2024-10-14T09:37:01",
+        "reactions": []
+      },
+      {
+        "id": 2411674794,
+        "author": "tdoell",
+        "body": "@christoroth Thanks for providing that package source link and such. I have upgraded our project we are currently converting to .NET MAUI to 3.0.0-preview-5.3 and that has fixed our app from crashing this morning. Thanks!",
+        "createdAt": "2024-10-14T16:02:58",
+        "reactions": [
+          {
+            "user": "john-hollander",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:27.5388476Z"
+          },
+          {
+            "user": "chaibi-mustapha",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:27.538848Z"
+          }
+        ]
+      },
+      {
+        "id": 2431894133,
+        "author": "john-hollander",
+        "body": "\u003E We were able to solve this by adding a specific WindowSDK package version in our project files:\r\n\u003E \r\n\u003E \u0060\u003CWindowsSdkPackageVersion\u003E10.0.22621.34\u003C/WindowsSdkPackageVersion\u003E\u0060\r\n\u003E \r\n\u003E Versions from .38 and above does not work for us (that\u0027s the version that WinUI 1.6.0 requires btw).\r\n\r\nI\u0027ll try this, but it\u0027s only a temporary workaround.\r\n\r\nAll you need to reproduce in MAUI is to run in Windows with an SKCanvasView in a page, like this:\r\n\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\r\n\u003CContentPage xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:local=\u0022clr-namespace:AspectTextSizingTest\u0022\r\n             xmlns:sk=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\r\n             x:Class=\u0022AspectTextSizingTest.MainPage\u0022\u003E\r\n\r\n    \u003CGrid\u003E\r\n        \u003Csk:SKCanvasView /\u003E\r\n    \u003C/Grid\u003E\r\n\u003C/ContentPage\u003E\r\n\u0060\u0060\u0060\r\n\r\nAnd note that .UseSkiaSharp() is in the builder:\r\n\r\n \u0060\u0060\u0060\r\n   public static class MauiProgram\r\n    {\r\n        public static MauiApp CreateMauiApp()\r\n        {\r\n            var builder = MauiApp.CreateBuilder();\r\n            builder\r\n                .UseMauiApp\u003CApp\u003E()\r\n                .UseSkiaSharp()\r\n                .ConfigureFonts(fonts =\u003E\r\n                {\r\n                    fonts.AddFont(\u0022OpenSans-Regular.ttf\u0022, \u0022OpenSansRegular\u0022);\r\n                    fonts.AddFont(\u0022OpenSans-Semibold.ttf\u0022, \u0022OpenSansSemibold\u0022);\r\n                });\r\n\r\n            return builder.Build();\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2024-10-23T11:59:54",
+        "reactions": []
+      },
+      {
+        "id": 2433558546,
+        "author": "john-hollander",
+        "body": "\u003E 3.0.0-preview-5.3 from package source https://pkgs.dev.azure.com/xamarin/public/_packaging/SkiaSharp/nuget/v3/index.json stopped the crashes for me in my test app so I have temporarily done the same in the app I\u0027m developing until 3.0.0 is formally released (hopefully before my deadline!!).\r\n\r\nThanks for this. It looks like it works on my end as well. Hopefully we\u0027ll get this in the main preview stream soon.\r\n\r\nFor anyone else reading, add the package source to NuGet in the settings in the top-right corner of the NuGet window in Visual Studio, where the package sources are listed.",
+        "createdAt": "2024-10-23T22:08:46",
+        "reactions": [
+          {
+            "user": "chaibi-mustapha",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:27.9749565Z"
+          }
+        ]
+      },
+      {
+        "id": 2438200266,
+        "author": "mattleibow",
+        "body": "I pushed out new previews to NuGet.org so let me know if this fixes it!",
+        "createdAt": "2024-10-25T15:58:33",
+        "reactions": [
+          {
+            "user": "john-hollander",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:28.1593519Z"
+          }
+        ]
+      },
+      {
+        "id": 2438271534,
+        "author": "mattleibow",
+        "body": "Closing this for now as the issue is fixed for both v2 and v3 in the latest preview.",
+        "createdAt": "2024-10-25T16:30:39",
+        "reactions": [
+          {
+            "user": "john-hollander",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:28.3746901Z"
+          },
+          {
+            "user": "chaibi-mustapha",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:50:28.3746908Z"
+          }
+        ]
+      }
+    ]
+  }
 }

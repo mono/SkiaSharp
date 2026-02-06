@@ -14,5 +14,76 @@
   "updatedAt": "2024-07-23T22:26:53",
   "closedAt": "2024-07-23T22:26:53",
   "commentCount": 6,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:52:25.518407Z",
+    "reactions": [
+      {
+        "user": "jwvansickle",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:52:25.5184108Z"
+      },
+      {
+        "user": "daullmer",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:52:25.518412Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 642343389,
+        "author": "mattleibow",
+        "body": "Did you ever resolve this? Sorry for not responding sooner, but when you publish the app, the dylibs are resigned with your ID.",
+        "createdAt": "2020-06-11T01:00:08",
+        "reactions": []
+      },
+      {
+        "id": 642453240,
+        "author": "Odirb",
+        "body": "Hello Matthew,\r\nThe solution I have fount at the moment is actually to resign the libSkiaSharp.dylib binary, but it would be nice if the nugget have an already signed dylib.\r\n\r\nFor example, the native library provided by mono framework are already with a Xamarin developper ID:\r\n\r\ncodesign -dv --verbose=4 libmono-native.dylib\r\n\r\n\u003Cpre\u003E\r\nIdentifier=libmono-native-unified\r\nFormat=Mach-O thin (x86_64)\r\nCodeDirectory v=20500 size=7714 flags=0x10000(runtime) hashes=232\u002B5 location=embedded\r\nVersionPlatform=1\r\nVersionMin=658432\r\nVersionSDK=659200\r\nHash type=sha256 size=32\r\nCandidateCDHash sha256=f3f1212dbc9b01655d6a203c3a308f07438926af\r\nCandidateCDHashFull sha256=f3f1212dbc9b01655d6a203c3a308f07438926aff4b463048b08e31d687fd395\r\nHash choices=sha256\r\nCMSDigest=f3f1212dbc9b01655d6a203c3a308f07438926aff4b463048b08e31d687fd395\r\nCMSDigestType=2\r\nPage size=4096\r\nCDHash=f3f1212dbc9b01655d6a203c3a308f07438926af\r\nSignature size=8958\r\n\u003Cb\u003EAuthority=Developer ID Application: Xamarin Inc (7V723M9SQ5)\r\nAuthority=Developer ID Certification Authority\u003C/b\u003E\r\nAuthority=Apple Root CA\r\nTimestamp=26 May 2020 at 23:17:05\r\nInfo.plist=not bound\r\n\u003Cb\u003ETeamIdentifier=7V723M9SQ5\u003C/b\u003E\r\nRuntime Version=10.15.0\r\nSealed Resources=none\r\nInternal requirements count=1 size=184\r\n\u003C/pre\u003E\r\n\r\nThe command operation with SkiaSharp show an adhoc certificate:\r\n\r\ncodesign -dv --verbose=4  libSkiaSharp.dylib\r\n\r\n\u003Cpre\u003EExecutable=/Users/christophe/.nuget/packages/skiasharp/1.68.3/runtimes/osx/native/libSkiaSharp.dylib\r\nIdentifier=libSkiaSharp-555549446aa5c4f305c83fd48e87e5198b514178\r\nFormat=Mach-O universal (x86_64)\r\nCodeDirectory v=20100 size=61926 flags=0x2(adhoc) hashes=1930\u002B2 location=embedded\r\nVersionPlatform=1\r\nVersionMin=657152\r\nVersionSDK=659200\r\nHash type=sha256 size=32\r\nCandidateCDHash sha1=f5145a3e919bbd8736a534993310185fbc9c3b96\r\nCandidateCDHashFull sha1=f5145a3e919bbd8736a534993310185fbc9c3b96\r\nCandidateCDHash sha256=4559234613c1f913ff714e029b47962a7854910e\r\nCandidateCDHashFull sha256=4559234613c1f913ff714e029b47962a7854910e633e46843643bc01b986e8fe\r\nHash choices=sha1,sha256\r\nCMSDigest=5640e9aab24035e31f8ed0d7becb241a6f5a252d75efc8f831ce89b111ecf56f\r\nCMSDigestType=2\r\nPage size=4096\r\nCDHash=4559234613c1f913ff714e029b47962a7854910e\r\n\u003Cb\u003ESignature=adhoc\u003C/b\u003E\r\nInfo.plist=not bound\r\n\u003Cb\u003ETeamIdentifier=not set\u003C/b\u003E\r\nSealed Resources=none\r\nInternal requirements count=0 size=12\u003C/pre\u003E\r\n\r\n\r\n",
+        "createdAt": "2020-06-11T07:01:56",
+        "reactions": []
+      },
+      {
+        "id": 1582077697,
+        "author": "MohanaselvamJ",
+        "body": "@mattleibow  I am also facing the similar problem. Any suggestion will be really helpful?",
+        "createdAt": "2023-06-08T07:52:36",
+        "reactions": []
+      },
+      {
+        "id": 2193920219,
+        "author": "rolfbjarne",
+        "body": "\u003E but it would be nice if the nugget have an already signed dylib\r\n\r\nWhy does it matter? The dylib will be resigned when building your app.",
+        "createdAt": "2024-06-27T06:43:50",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:52:25.0461284Z"
+          }
+        ]
+      },
+      {
+        "id": 2198979028,
+        "author": "mattleibow",
+        "body": "I suppose this matters if you are making a console app? ",
+        "createdAt": "2024-07-01T02:18:27",
+        "reactions": []
+      },
+      {
+        "id": 2246413830,
+        "author": "mattleibow",
+        "body": "Building a macOS app will always require codesigning and it should be on by default, but I have now started signing the dylib for macOS: https://github.com/mono/SkiaSharp/pull/2932",
+        "createdAt": "2024-07-23T22:26:39",
+        "reactions": [
+          {
+            "user": "PathogenDavid",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:52:25.4685224Z"
+          }
+        ]
+      }
+    ]
+  }
 }

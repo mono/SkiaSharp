@@ -13,5 +13,52 @@
   "createdAt": "2021-06-24T22:26:32",
   "updatedAt": "2024-08-19T10:13:56",
   "commentCount": 5,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:52:00.4550303Z",
+    "reactions": [
+      {
+        "user": "wstaelens",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:52:00.4550354Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2178648773,
+        "author": "AndreaLabeljoy",
+        "body": "Hi @Jonesie, ran into this exact issue today on version 2.88.8.\r\nDid you ever find a way to  make it work?",
+        "createdAt": "2024-06-19T12:52:38",
+        "reactions": []
+      },
+      {
+        "id": 2236562733,
+        "author": "JonesieHexcom",
+        "body": "@AndreaLabeljoy Sorry for the late reply.  No, we gave up on XPS and just use PDF.  Ive not tried again with later versions.",
+        "createdAt": "2024-07-18T13:45:16",
+        "reactions": []
+      },
+      {
+        "id": 2291506180,
+        "author": "oatkins",
+        "body": "It turns out that this is a bug in the Google Skia code. It\u0027s even commented \uD83D\uDE06:\r\n* https://github.com/google/skia/blob/c30ba7bb38d6f368631db17d76628e89b0fe5004/src/xps/SkXPSDevice.cpp#L685\r\n* https://github.com/google/skia/blob/c30ba7bb38d6f368631db17d76628e89b0fe5004/src/xps/SkXPSDevice.cpp#L796\r\n\r\n![image](https://github.com/user-attachments/assets/c58f2786-a4f0-49de-b970-bdf8f1f99265)\r\n\r\nThe code alludes to \u0060SK_ScalarMax\u0060, which is large, but for some reason they ended up using 1000 instead. The result is that all images get cropped to a 1000 pixel square centred on the origin. Generally, that means that images get cropped to 500 pixels high and 500 pixels wide.\r\n\r\nIt looks as though Windows does *not* consider the \u0060VisualBrush.Viewport\u0060 to be a clipping rectangle, but WPF does. I had, but now can\u0027t find, a reference to that in the WPF docs; the XPS spec is vague about it, and doesn\u0027t mention clipping at all. The Windows XPS viewer (and probably the printer drivers) render content outside of the viewport, which is probably why the bug has gone unnoticed for so long. So, perhaps the WPF behaviour is wrong.\r\n\r\nIn any case, my workaround (in my own code) is going to be adding some code to find the \u0060Viewbox\u0060 and \u0060Viewport\u0060 values in XAML:\r\n![image](https://github.com/user-attachments/assets/05df24d5-9d57-4803-a6aa-d9866d8d3287)\r\n\r\nand replace them with a much, much larger box.\r\n\r\nIn short, I don\u0027t think there\u0027s much that can be done in this repo, but there is a potential workaround for those hitting this problem.",
+        "createdAt": "2024-08-15T15:18:27",
+        "reactions": []
+      },
+      {
+        "id": 2293101671,
+        "author": "Jonesie",
+        "body": "Thats good to know.  Thank you !!!",
+        "createdAt": "2024-08-16T08:48:09",
+        "reactions": []
+      },
+      {
+        "id": 2296208852,
+        "author": "AndreaLabeljoy",
+        "body": "Thanks @oatkins for the info.\r\nI\u0027ve created a bug report on the Skia group referring them to this post, let\u0027s see if someone addresses it.\r\n[https://issues.skia.org/issues/360641492](url)",
+        "createdAt": "2024-08-19T10:13:55",
+        "reactions": []
+      }
+    ]
+  }
 }

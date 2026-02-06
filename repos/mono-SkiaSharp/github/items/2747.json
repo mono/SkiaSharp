@@ -25,5 +25,58 @@
   "deletions": 9,
   "changedFiles": 5,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T12:52:49.6618159Z",
+    "reactions": [
+      {
+        "user": "taublast",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:52:49.6618226Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1959771472,
+        "author": "taublast",
+        "body": "We can let people choose the rendering backend at initialization with \u0060.UseSkiaSharp(optional settings)\u0060 with enum of kind \u0060Vulkan\u0060, \u0060GL\u0060, ..., \u0060Auto\u0060.. so the correct handler will set to be used globally for the SKGLView.\r\nA case when one would want to select backend at run-time I can think of is when one specific backend reveals itself not working on device so dev would want to programmatically select another one?..",
+        "createdAt": "2024-02-22T16:07:04",
+        "reactions": []
+      },
+      {
+        "id": 1959949927,
+        "author": "mattleibow",
+        "body": "@taublast  I copied your comment to the issue where I am thinking to track that: https://github.com/mono/SkiaSharp/issues/2104#issuecomment-1959949115",
+        "createdAt": "2024-02-22T17:43:33",
+        "reactions": []
+      },
+      {
+        "id": 2223979046,
+        "author": "gcadmes-extron",
+        "body": "I see this was merged in Feb 2024. Is the \u0060SKMetalView\u0060 supposed to be operational for macOS?  \r\nThe \u0060SKMetalView\u0060 class doesn\u0027t appear to implement the \u0060IView\u0060. Attempting to add to a \u0060VerticalStackLayout\u0060 or setting the Content of a page, this is the error displayed:\r\nWill this be available soon? Also, still seeing this issue ([#2050](https://github.com/mono/SkiaSharp/issues/2050)) regarding \u0060SKGLView\u0060, so that class is not an option either for macOS. \r\n\r\n\u003Cimg width=\u0022931\u0022 alt=\u0022image\u0022 src=\u0022https://github.com/user-attachments/assets/20ae55a7-d3c0-4d2a-914d-c7831be9d159\u0022\u003E\r\n\r\n\u0060\u0060\u0060\r\n.NET SDK (x64)\r\nSDK: /usr/local/share/dotnet/sdk/8.0.204/Sdks\r\nSDK Versions:\r\n\t8.0.204\r\n\t8.0.101\r\n\t7.0.400\r\n\t7.0.307\r\n\t6.0.422\r\n\t6.0.421\r\n\t6.0.420\r\n\t6.0.418\r\n\t6.0.417\r\n\t6.0.416\r\n\t6.0.415\r\n\t6.0.414\r\n\t6.0.413\r\nMSBuild SDKs: /Applications/Visual Studio.app/Contents/MonoBundle/MSBuild/Current/bin/Sdks\r\n\r\n.NET Runtime (x64)\r\nRuntime: /usr/local/share/dotnet/dotnet\r\nRuntime Versions:\r\n\t8.0.4\r\n\t8.0.1\r\n\t7.0.10\r\n\t6.0.30\r\n\t6.0.29\r\n\t6.0.28\r\n\t6.0.26\r\n\t6.0.25\r\n\t6.0.24\r\n\t6.0.23\r\n\t6.0.22\r\n\t6.0.21\r\n\r\nXamarin.Mac\r\nVersion: 9.3.0.23 Visual Studio Professional\r\nHash: 9defd91b3\r\nBranch: xcode14.3\r\nBuild date: 2023-10-23 16:14:59-0400\r\n\r\nXamarin.iOS\r\nVersion: 16.4.0.23 Visual Studio Professional\r\nHash: 9defd91b3\r\nBranch: xcode14.3\r\nBuild date: 2023-10-23 16:15:00-0400\r\n\r\nOperating System\r\nMac OS X 14.5.0\r\nDarwin 23.5.0 Darwin Kernel Version 23.5.0\r\n    Wed May  1 20:09:52 PDT 2024\r\n    root:xnu-10063.121.3~5/RELEASE_X86_64 x86_64\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-07-11T21:36:24",
+        "reactions": []
+      },
+      {
+        "id": 2224449159,
+        "author": "taublast",
+        "body": "The issue #2050 is closed, you can use SKGLView on iOS to profit from Metal.\r\nCannot confirm it for MacCatalyst though.",
+        "createdAt": "2024-07-12T04:04:04",
+        "reactions": [
+          {
+            "user": "gcadmes-extron",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:52:49.37377Z"
+          }
+        ]
+      },
+      {
+        "id": 2225637947,
+        "author": "gcadmes-extron",
+        "body": "@taublast  Thank you for confirming that iOS is operational. \r\nAs of right now, \u0060SKGLView\u0060 and \u0060SKMetalView\u0060 are still not supported on macOS. \r\nI sure hope this task ([2104](https://github.com/mono/SkiaSharp/issues/2104)) eventually comes to fruition for mac users.  It\u0027s a bit dated. Other than this task, I\u0027m unable to find any roadmaps that mention adding GPU support.",
+        "createdAt": "2024-07-12T13:53:31",
+        "reactions": []
+      }
+    ]
+  }
 }

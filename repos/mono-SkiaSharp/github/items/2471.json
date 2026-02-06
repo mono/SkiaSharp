@@ -13,5 +13,31 @@
   "createdAt": "2023-06-02T11:01:31",
   "updatedAt": "2024-07-12T00:57:25",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:52:54.4580096Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1574110595,
+        "author": "Sebastian1989101",
+        "body": "Alright, found a workaround how I could make it work for Android and iOS.  \r\n\r\nIn case someone else gets in the same position, this worked for me: \r\n\r\n\u0060\u0060\u0060\r\nstring fontFamily;\r\nswitch (Thread.CurrentThread.CurrentUICulture.TwoLetterISOLanguageName.ToLower())\r\n{\r\n    case \u0022ja\u0022:\r\n        fontFamily = SKFontManager.Default.MatchCharacter(\u0027\u3042\u0027).FamilyName;\r\n        break;\r\n\r\n    case \u0022ko\u0022:\r\n        fontFamily = SKFontManager.Default.MatchCharacter(\u0027\uB9E4\u0027).FamilyName;\r\n        break;\r\n\r\n    case \u0022zh\u0022:\r\n        fontFamily = Thread.CurrentThread.CurrentUICulture.IetfLanguageTag.ToLower() switch\r\n            {\r\n                \u0022zh-cn\u0022 =\u003E SKFontManager.Default.MatchCharacter(\u0027\u5B9E\u0027).FamilyName,\r\n                \u0022zh-tw\u0022 =\u003E SKFontManager.Default.MatchCharacter(\u0027\u5BE6\u0027).FamilyName,\r\n                _ =\u003E null\r\n            };\r\n        break;\r\n\r\n    default:\r\n        fontFamily = null;\r\n        break;\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2023-06-02T17:57:25",
+        "reactions": [
+          {
+            "user": "liungkejin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:52:54.2215018Z"
+          }
+        ]
+      },
+      {
+        "id": 2224232143,
+        "author": "HinTak",
+        "body": "Hmm, can you explicitly name a system font family known to be available on the corresponding platform? E.g. \u0022Noto Sans CJK\u0022?",
+        "createdAt": "2024-07-12T00:57:25",
+        "reactions": []
+      }
+    ]
+  }
 }
