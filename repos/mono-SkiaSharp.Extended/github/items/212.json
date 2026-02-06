@@ -18,5 +18,45 @@
   "createdAt": "2023-09-20T21:50:55",
   "updatedAt": "2024-12-06T10:33:09",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:08:22.0837752Z",
+    "reactions": [
+      {
+        "user": "maurictg",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:08:22.0837809Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1735482304,
+        "author": "maurictg",
+        "body": "Same issue. Also, on Android, no animation is loading within a carousel at all unless the source is set to a type of \u0060SKLottieImageSource\u0060, so a Binding to a string seems not always to work.",
+        "createdAt": "2023-09-26T12:51:23",
+        "reactions": []
+      },
+      {
+        "id": 1949239659,
+        "author": "BrandanN21",
+        "body": "@maurictg @vikher I was able to get Lottie animations to work inside a CarouselView, each \u0027page\u0027 having a different animation.\r\n\r\nYou will have to alter your ItemSource data structure to include the object \u0060SKFileLottieImageSource\u0060\r\n\r\nThe model would look something like this:\r\n\r\n\u0060\u0060\u0060\r\npublic class AnimationModel\r\n{\r\n    public SKFileLottieImageSource Animation { get; set; }\r\n    // include any other relevant information for your carousel view that you need\r\n}\r\n\u0060\u0060\u0060\r\nSince you are likely going to have different animations on each \u0027page\u0027 of the carousel you can set up your item source like so:\r\n\r\n\u0060\u0060\u0060\r\nvar itemSource = new List\u003CAnimationModel\u003E\r\n{\r\n    new AnimationModel\r\n    {\r\n        // all your other data\r\n        Animation = new SKFileLottieImageSource\r\n        {\r\n            File = [insert your json animation file here as a string]\r\n        }\r\n    },\r\n    // other items in your source list\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThen once you have that set up within your XAML or C# UI you would need to bind to the source property using the \u0060Animation\u0060 property within your Item Template.\r\n\r\nIn C#\r\n\u0060\u0060\u0060\r\nItemTemplate = new DataTemplate(() =\u003E\r\n            {\r\n                var skLottieView = new SKLottieView()\r\n                {\r\n                    HeightRequest = 440,\r\n                    WidthRequest = 440,\r\n                };\r\n                skLottieView.SetBinding(SKLottieView.SourceProperty, \u0022Animation\u0022);\r\n                \r\n                // finish setting up your carousel view layouts\r\n            });\r\n\u0060\u0060\u0060\r\n\r\nor in XAML:\r\n\u0060\u0060\u0060\r\n\u003Cskia:SKLottieView\r\nSource=\u0022{Binding Animation}\u0022 // this Animation is a SKFileLottieImageSource object\r\nHeightRequest=\u0022440\u0022\r\nWidthRequest=\u0022440\u0022 /\u003E\r\n\u0060\u0060\u0060\r\n\r\nI will try to get a sample repo up later and link to it. ",
+        "createdAt": "2024-02-16T19:58:45",
+        "reactions": []
+      },
+      {
+        "id": 2004187732,
+        "author": "dainius-r",
+        "body": "My findings:\r\nLottie animation works if used with bindings and your own custom converter (using \u0060SKLottieImageSource.FromFile\u0060).\r\n\u0060\u0060\u0060\r\n\u003CCarouselView ItemsSource=\u0022{Binding CarouselItems}\u0022 Loop=\u0022True\u0022\u003E\r\n    \u003CCarouselView.ItemTemplate\u003E\r\n        \u003CDataTemplate x:DataType=\u0022local:CarouselItem\u0022\u003E\r\n                \u003Cskia:SKLottieView Source=\u0022{Binding AnimationFileName, Converter={StaticResource FileToSKLottieImageSourceConverter}}\u0022 RepeatCount=\u0022-1\u0022 /\u003E\r\n        \u003C/DataTemplate\u003E\r\n    \u003C/CarouselView.ItemTemplate\u003E\r\n\u003C/CarouselView\u003E\r\n\u0060\u0060\u0060\r\nBut for some reason animation did not start playing for first item in the list, all other items animation playing, and event when looping around items every second first item in the list is playing.\r\nThere is some kind of bug when binding items first items animation did not start.\r\n\r\nWorkaround I used, is to add invisible dummy \u0060skia:SKLottieView\u0060 with source pointing to first item outside of CarouselView, this starts the animation.\r\n\r\n@mattleibow  if you have time, you can check for bug relating to animation start for first binding item.\r\n",
+        "createdAt": "2024-03-18T15:15:06",
+        "reactions": []
+      },
+      {
+        "id": 2522774648,
+        "author": "IeuanWalker",
+        "body": "Same issue in the CollectionView.EmptyView template",
+        "createdAt": "2024-12-06T10:33:08",
+        "reactions": []
+      }
+    ]
+  }
 }

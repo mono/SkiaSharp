@@ -18,5 +18,38 @@
   "createdAt": "2024-10-10T07:27:56",
   "updatedAt": "2024-11-11T18:54:19",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:08:26.7969968Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2406679590,
+        "author": "superwilly1",
+        "body": "I have the same issue, since updating to Visual Studio 17.11.5 (and .NET 8.0.10, SDK 8.0.403).\r\nIn the output window I see this exception:\r\n\u0060\u0060\u0060\r\nException thrown: \u0027System.NotSupportedException\u0027 in WinRT.Runtime.dll\r\nException thrown: \u0027System.Reflection.TargetInvocationException\u0027 in System.Private.CoreLib.dll\r\n\u0060\u0060\u0060\r\nAfter downgrading Visual Studio (and .NET), it works again.",
+        "createdAt": "2024-10-11T07:00:19",
+        "reactions": []
+      },
+      {
+        "id": 2457330243,
+        "author": "mattleibow",
+        "body": "I am not sure why it started crashing, but it appears that the latest previews of SkiaSharp fix it.\r\n\r\nYou can manually install the latest SkiaSharp in your csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00222.88.9-preview.2.2\u0022 /\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-11-05T14:30:19",
+        "reactions": []
+      },
+      {
+        "id": 2468816297,
+        "author": "superwilly1",
+        "body": "\u003E I am not sure why it started crashing, but it appears that the latest previews of SkiaSharp fix it.\r\n\u003E \r\n\u003E You can manually install the latest SkiaSharp in your csproj:\r\n\u003E \r\n\u003E \u0060\u0060\u0060\r\n\u003E \u003CPackageReference Include=\u0022SkiaSharp.Views.Maui.Controls\u0022 Version=\u00222.88.9-preview.2.2\u0022 /\u003E\r\n\u003E \u0060\u0060\u0060\r\n\r\nYes this appears to fix the issue indeed. The stable version is released which also works: 2.88.9.\r\nI didn\u0027t have a reference to SkiaSharp.Views.Maui.Controls yet, but did have a reference to\r\nSkiaSharp.Extended.UI.Maui (version 2.0.0)\r\nWhich has a dependency on SkiaSharp.Views.Maui.Controls (\u003E= 2.88.7).\r\nWhen I added the reference to SkiaSharp.Views.Maui.Controls 2.88.9, the app no longer crashes on Windows.",
+        "createdAt": "2024-11-11T18:43:27",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:08:26.7467776Z"
+          }
+        ]
+      }
+    ]
+  }
 }

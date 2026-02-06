@@ -19,5 +19,69 @@
   "updatedAt": "2024-04-08T08:48:50",
   "closedAt": "2024-04-08T08:48:50",
   "commentCount": 5,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:09:01.7827433Z",
+    "reactions": [
+      {
+        "user": "hwsmo",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:09:01.7827489Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:09:01.7827496Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1902257466,
+        "author": "Yannikk1996",
+        "body": "I am also facing this problem. Used lots of SKLottieViews. Does anyone knows a workaround for this?",
+        "createdAt": "2024-01-20T20:24:29",
+        "reactions": [
+          {
+            "user": "logikonline",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:09:01.0092888Z"
+          }
+        ]
+      },
+      {
+        "id": 1902261386,
+        "author": "AdamEssenmacher",
+        "body": "\u003E I am also facing this problem. Used lots of SKLottieViews. Does anyone knows a workaround for this?\r\n\r\n@Yannikk1996 set \u0060IsAnimationEnabled\u0060 to false when you\u0027re done with the animation. It will terminate the loop, which will break the reference from the Dispatcher and allow the view to be GC\u0027ed.",
+        "createdAt": "2024-01-20T20:45:54",
+        "reactions": []
+      },
+      {
+        "id": 1910145497,
+        "author": "sjorsmiltenburg",
+        "body": "Thank you Adam for finding these leaks! I hope with this evidence the team will pick them up quickly as they are blocking for production apps that need to be able to run continuously.\r\n\r\nFor reference: I removed my lottie animations because of this leak and replaced my looping animation with a static image.\r\nAlso I replaced my custom loading animations for activityindicator controls.",
+        "createdAt": "2024-01-25T12:54:04",
+        "reactions": [
+          {
+            "user": "AdamEssenmacher",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:09:01.3595954Z"
+          }
+        ]
+      },
+      {
+        "id": 1936967860,
+        "author": "logikonline",
+        "body": "\u003E \u003E I am also facing this problem. Used lots of SKLottieViews. Does anyone knows a workaround for this?\r\n\u003E \r\n\u003E @Yannikk1996 set \u0060IsAnimationEnabled\u0060 to false when you\u0027re done with the animation. It will terminate the loop, which will break the reference from the Dispatcher and allow the view to be GC\u0027ed.\r\n\r\nThe problem is we need the frame it stops on to remain.  Doing what you say removes the current frame and leaves it blank.",
+        "createdAt": "2024-02-10T10:37:54",
+        "reactions": []
+      },
+      {
+        "id": 1937115154,
+        "author": "AdamEssenmacher",
+        "body": "\u003E The problem is we need the frame it stops on to remain. Doing what you say removes the current frame and leaves it blank.\r\n\r\nSorry I should have said \u0027done with the SKLottieView\u0027 and not \u0027done with the animation\u0027.\r\n\r\nSo, whenever the view is permanently unloaded.",
+        "createdAt": "2024-02-10T20:37:13",
+        "reactions": []
+      }
+    ]
+  }
 }

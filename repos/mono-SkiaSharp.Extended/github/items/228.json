@@ -18,5 +18,107 @@
   "createdAt": "2023-09-28T10:28:39",
   "updatedAt": "2024-09-18T16:06:49",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:08:39.4517257Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1865224107,
+        "author": "JimmyPun610",
+        "body": "having the same issue, all good in debug mode (.NET 8)",
+        "createdAt": "2023-12-20T22:24:33",
+        "reactions": []
+      },
+      {
+        "id": 1867415705,
+        "author": "ThumbGen",
+        "body": "Maui or Forms? I think it works well with Xamarin Forms, Android release.",
+        "createdAt": "2023-12-22T08:53:58",
+        "reactions": []
+      },
+      {
+        "id": 1868084232,
+        "author": "JimmyPun610",
+        "body": "\u003E Maui or Forms? I think it works well with Xamarin Forms, Android release.\n\nThe MAUI one",
+        "createdAt": "2023-12-22T21:37:05",
+        "reactions": [
+          {
+            "user": "logikonline",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:08:37.7179763Z"
+          }
+        ]
+      },
+      {
+        "id": 1872411801,
+        "author": "nextdatasoftware",
+        "body": "No workaround?",
+        "createdAt": "2023-12-30T00:57:46",
+        "reactions": []
+      },
+      {
+        "id": 1873391511,
+        "author": "ThumbGen",
+        "body": "The animations work for me in MAUI, if I drop them in the Resources/Raw folder (they\u0027ll have the MauiAsset type).\r\n\r\nSee https://cedricgabrang.medium.com/implementing-lottie-animations-in-your-net-maui-application-62bd484af651",
+        "createdAt": "2024-01-01T16:30:54",
+        "reactions": []
+      },
+      {
+        "id": 1882095759,
+        "author": "JimmyPun610",
+        "body": "\u003E The animations work for me in MAUI, if I drop them in the Resources/Raw folder (they\u0027ll have the MauiAsset type).\r\n\u003E \r\n\u003E See https://cedricgabrang.medium.com/implementing-lottie-animations-in-your-net-maui-application-62bd484af651\r\n\r\nI have already followed the site.\r\nIt works on MAUI Android Debug mode but no luck in Release mode.",
+        "createdAt": "2024-01-09T00:53:50",
+        "reactions": []
+      },
+      {
+        "id": 1882535338,
+        "author": "ThumbGen",
+        "body": "Strange. I\u0027ve just rebuilt in Release mode and animations are working for me. So either my Release mode is not properly configured (although looking at the building steps it should be), or there\u0027s a problem on your end :/",
+        "createdAt": "2024-01-09T07:26:11",
+        "reactions": []
+      },
+      {
+        "id": 1905054451,
+        "author": "JimmyPun610",
+        "body": "Just got some new findings.\r\nIt will not work if we are not directly passing the file name to Source in the XAML, for example, binding the source to string will not work in android release mode.\r\nHowever, passing the SKLottieImageSource will work. So I use converter to do so...\r\n\u0060\u0060\u0060C#\r\n public class SKLottieImageSourceConverter : IValueConverter\r\n {\r\n     public object Convert(object value, Type targetType, object parameter, CultureInfo culture)\r\n     {\r\n         if (value == null)\r\n             return null;\r\n         return SKLottieImageSource.FromFile(value.ToString()) as SKLottieImageSource;\r\n     }\r\n     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)\r\n     {\r\n         return null;\r\n     }\r\n }\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060XAML\r\n                \u003Cskia:SKLottieView  Source=\u0022{Binding AnimationPath, Converter={StaticResource lottieImageConverter}}\u0022\r\n                                    RepeatMode=\u0022Restart\u0022\r\n                                    RepeatCount=\u0022-1\u0022\r\n                                    IsAnimationEnabled=\u0022True\u0022\r\n                                    HeightRequest=\u0022{Binding AnimationHeight}\u0022\r\n                                    WidthRequest=\u0022{Binding AnimationWidth}\u0022 /\u003E\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-01-23T00:06:05",
+        "reactions": [
+          {
+            "user": "ThumbGen",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:08:38.657183Z"
+          }
+        ]
+      },
+      {
+        "id": 1913557246,
+        "author": "ThumbGen",
+        "body": "Indeed, I can confirm this, I was always using such a converter, that\u0027s why it always worked for me (in Release as well) ",
+        "createdAt": "2024-01-28T11:08:56",
+        "reactions": []
+      },
+      {
+        "id": 2358840758,
+        "author": "nnproto",
+        "body": "@ThumbGen  can you show me  you xaml file so that I can understand how to apply this for mine?\r\n\r\n Source=\u0022{Binding AnimationPath, Converter={StaticResource lottieImageConverter}}",
+        "createdAt": "2024-09-18T15:51:27",
+        "reactions": []
+      },
+      {
+        "id": 2358854941,
+        "author": "ThumbGen",
+        "body": "I use exactly the code you see in the post above. A converter loading the image from file, and that converter used when defining the Source.\r\n\r\n\u0060\u003Cconverters:LottieImageSourceConverter x:Key=\u0022LottieImageSourceConverter\u0022/\u003E\u0060\r\n\r\n\u0060\u0060\u0060\r\npublic class LottieImageSourceConverter: IValueConverter\r\n    {\r\n\r\n        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)\r\n        {\r\n            try\r\n            {\r\n                var imageName = value as string;\r\n                return SKLottieImageSource.FromFile(imageName);\r\n            }\r\n            catch\r\n            {\r\n                return null;\r\n            }\r\n        }\r\n\r\n        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)\r\n        {\r\n            throw new NotImplementedException();\r\n        }\r\n    }\r\n\r\n\u0060\u0060\u0060\r\n\u0060\u0060\u0060\r\n\u003Cskia:SKLottieView    x:Name=\u0022animationView\u0022 Grid.RowSpan=\u00222\u0022\r\n                                          Source=\u0022{TemplateBinding AnimationName, Converter={StaticResource LottieImageSourceConverter}}\u0022 \r\n                                          RepeatCount=\u0022-1\u0022 RepeatMode=\u0022Restart\u0022\r\n                                          IsAnimationEnabled=\u0022{TemplateBinding IsAnimationPlaying}\u0022\r\n                                          IsVisible=\u0022{TemplateBinding IsAnimationPlaying}\u0022\r\n                                          HorizontalOptions=\u0022End\u0022\r\n                                          VerticalOptions=\u0022Start\u0022\r\n                                          WidthRequest=\u002256\u0022\r\n                                          HeightRequest=\u002256\u0022/\u003E\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2024-09-18T15:58:08",
+        "reactions": []
+      },
+      {
+        "id": 2358873844,
+        "author": "nnproto",
+        "body": "@ThumbGen  could you tell me where I should put this line?\r\n\r\n\u003Cconverters:LottieImageSourceConverter x:Key=\u0022LottieImageSourceConverter\u0022/\u003E",
+        "createdAt": "2024-09-18T16:06:48",
+        "reactions": []
+      }
+    ]
+  }
 }
