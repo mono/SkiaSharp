@@ -18,5 +18,46 @@
   "createdAt": "2024-07-01T22:30:20",
   "updatedAt": "2024-07-06T13:15:40",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:53:09.4785538Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2202714393,
+        "author": "TommiGustafsson-HMP",
+        "body": "Here\u0027s a short video of the problem:\r\n\r\nhttps://github.com/mono/SkiaSharp/assets/16661034/9e1d2e17-25d9-4f4b-9be2-2f12ff98bb6a\r\n\r\nThe line is very thin, wherefore you need to maximize the video in order to see it.\r\n",
+        "createdAt": "2024-07-02T10:46:51",
+        "reactions": []
+      },
+      {
+        "id": 2205924672,
+        "author": "TommiGustafsson-HMP",
+        "body": "Here\u0027s a screenshot of it. You need to maximize the image to see the line. It appears permanently using a specific zoom.\r\n\r\n![N\u00E4ytt\u00F6kuva 2024-07-03 150009](https://github.com/mono/SkiaSharp/assets/16661034/b9788dec-3845-45da-9174-f5ad955becbf)\r\n",
+        "createdAt": "2024-07-03T12:08:09",
+        "reactions": []
+      },
+      {
+        "id": 2206411137,
+        "author": "janne-hmp",
+        "body": "I\u0027ve got a similar problem but green vertical lines on certain zoom levels.\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/53081197/29f6b136-e3ed-4f29-b406-a7d0ccd1344d)\r\n",
+        "createdAt": "2024-07-03T14:54:46",
+        "reactions": []
+      },
+      {
+        "id": 2211437699,
+        "author": "janne-hmp",
+        "body": "@mattleibow This seems to be fixed on Windows by adding \u002B1.0f to source rectangle\u0027s left and \u002B1.0f to destination rectangle\u0027s bottom in every DrawImage call. (Thus, there appears to be two off-by-one issues in drawing images on Windows with SKGLView / SwapChainPanel.)",
+        "createdAt": "2024-07-05T21:34:18",
+        "reactions": []
+      },
+      {
+        "id": 2211766696,
+        "author": "TommiGustafsson-HMP",
+        "body": "Someone on OpenGL Reddit commented the following about the problem:\r\n\r\n\u003E Not a rounding problem.\r\n\u003E \r\n\u003E For texture atlases (sprite sheets) you need to align everything to 2x2 rectangles because bilinear texture filtering will sample 4 adjacent pixels.\r\n\u003E \r\n\u003E If you put the sprite boundary on an odd pixel, there will be some color bleeding from the neighboring sprite.",
+        "createdAt": "2024-07-06T13:15:39",
+        "reactions": []
+      }
+    ]
+  }
 }

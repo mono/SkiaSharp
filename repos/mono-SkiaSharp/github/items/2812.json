@@ -19,5 +19,39 @@
   "updatedAt": "2024-04-24T09:02:54",
   "closedAt": "2024-04-24T09:02:54",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:54:35.3054358Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2025319370,
+        "author": "mattleibow",
+        "body": "I am not sure what the core issue is here, but i see something that may be causing an issue:\r\n\r\n\u0060\u0060\u0060cs\r\ntry\r\n{\r\n    AllButPlayedCards = Cards?.Where(x =\u003E !PlayedCards.Contains(x)).ToList();\r\n}\r\ncatch(Exception ex)\r\n{\r\n    Crashes.TrackError(ex, null, ErrorAttachmentLog.AttachmentWithText(\u0022Cards is Null\u0022, string.Empty));\r\n    return;\r\n}\r\n\r\nfor (int index = 0; index \u003C AllButPlayedCards.Count; index\u002B\u002B)\r\n{\r\n    // ...\r\n\u0060\u0060\u0060\r\n\r\nThe \u0060Cards?.Where(\u0060 will probably not throw, but will assign null to the property. If you remove the \u0060?\u0060 the \u0022Cards is Null\u0022 error will then be logged.",
+        "createdAt": "2024-03-28T14:22:56",
+        "reactions": []
+      },
+      {
+        "id": 2025323065,
+        "author": "mattleibow",
+        "body": "Can you try SkiaSharp 3.0 previews? This should allow you to use the new GL things.",
+        "createdAt": "2024-03-28T14:23:57",
+        "reactions": []
+      },
+      {
+        "id": 2074441278,
+        "author": "taublast",
+        "body": "Can you please show the code you use to invalidate the SKGLView?",
+        "createdAt": "2024-04-24T08:56:28",
+        "reactions": []
+      },
+      {
+        "id": 2074453920,
+        "author": "Picao84",
+        "body": "Hi, I found the issue is related to MAUI. It seems that sometimes when the app goes into the background and Android eventually kills the activity, the MAUI process is not fully stopped. When the user re-opens the app, the existing MAUI process is resumed but the activity is gone leading to issues like this. I have mitigated it somewhat by setting Launch Mode as Single Task. I think we can close this.",
+        "createdAt": "2024-04-24T09:02:36",
+        "reactions": []
+      }
+    ]
+  }
 }

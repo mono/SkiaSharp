@@ -19,5 +19,45 @@
   "updatedAt": "2024-04-21T16:02:30",
   "closedAt": "2024-04-21T16:02:30",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:54:42.5618625Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2041581435,
+        "author": "janne-hmp",
+        "body": "@mattleibow As far as I can tell, all SKCanvasViews get updated (OnPaintSurface is called) each time one of them gets invalidated / updated. This is a pretty big performance hog in .NET MAUI compared to Xamarin, so I would prioritize fixing this, if possible. Currently, I have to run separate checks at the start of OnPaintSurface of each SKCanvasView in .NET MAUI to determine whether the control should actually be redrawn or not. For some custom controls, it is difficult to tell if they should be redrawn or not, so the result is a meaningful performance degradation from Xamarin to .NET MAUI.",
+        "createdAt": "2024-04-07T19:43:20",
+        "reactions": []
+      },
+      {
+        "id": 2045305460,
+        "author": "mattleibow",
+        "body": "The sample is quite large, are you able to create a smaller sample for me to check? Typically the invalidation is asking the view to update, so there should be no cross-invalidation. Each view is separate and in no way linked to others.",
+        "createdAt": "2024-04-09T14:22:20",
+        "reactions": []
+      },
+      {
+        "id": 2045814550,
+        "author": "janne-hmp",
+        "body": "Let me investigate this further myself, too. I checked yesterday that some of the other SKCanvases in other custom controls in fact do not update themselves, so perhaps this is something very specific to the setup. It is just a few custom controls named \u0022CustomLabel\u0022 on the main screen when the page is hidden under another page. I\u0027ll see if I can reproduce this in a smaller sample project, and will come back to you a bit later.",
+        "createdAt": "2024-04-09T18:12:42",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:54:42.1811469Z"
+          }
+        ]
+      },
+      {
+        "id": 2068108373,
+        "author": "janne-hmp",
+        "body": "Seems like this is not happening anymore, so closing this for now.",
+        "createdAt": "2024-04-21T16:02:30",
+        "reactions": []
+      }
+    ]
+  }
 }

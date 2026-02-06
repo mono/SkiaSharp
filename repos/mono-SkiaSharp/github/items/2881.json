@@ -27,5 +27,18 @@
   "updatedAt": "2024-06-03T15:15:29",
   "closedAt": "2024-06-03T15:15:29",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:53:43.1730775Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2143334617,
+        "author": "mattleibow",
+        "body": "I think the \u0022cull rect\u0022 is not the calculated bounds but rather the value you passed into the recorder:\r\n\r\n\u0060\u0060\u0060c\u002B\u002B\r\n/** Returns cull SkRect for this picture, passed in when SkPicture was created.\r\n    Returned SkRect does not specify clipping SkRect for SkPicture; cull is hint\r\n    of SkPicture bounds.\r\n\r\n    SkPicture is free to discard recorded drawing commands that fall outside\r\n    cull.\r\n\r\n    @return  bounds passed when SkPicture was created\r\n\r\n    example: https://fiddle.skia.org/c/@Picture_cullRect\r\n*/\r\nvirtual SkRect cullRect() const = 0;\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-06-01T07:07:51",
+        "reactions": []
+      }
+    ]
+  }
 }

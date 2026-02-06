@@ -13,5 +13,78 @@
   "createdAt": "2019-09-03T18:36:27",
   "updatedAt": "2024-05-13T08:37:11",
   "commentCount": 8,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:54:14.5505699Z",
+    "reactions": [
+      {
+        "user": "daltonks",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:54:14.5505758Z"
+      },
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:54:14.5505766Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 528710369,
+        "author": "charlesroddie",
+        "body": "@axeluser can you look at a fix for this?\r\nWe tried disabling the scrollview on initial touch (after your PR in Xamarin.Forms) but that doesn\u0027t prevent subsequent touch events from being eaten by the scrollview.",
+        "createdAt": "2019-09-06T05:09:05",
+        "reactions": []
+      },
+      {
+        "id": 553694781,
+        "author": "mattleibow",
+        "body": "So, I had a look and tested a few things.\r\n\r\nWhat I found was that UWP works in that as soon as you start drawing, it captures the pointer and won\u0027t scroll. This PR will fix it for Android.\r\n\r\nI checked iOS and there is no easy way to prevent the bubbling of events, so it always scrolls. I fill that it is correct to stop scrolling, so we should probably fix iOS as well.\r\n\r\nNot sure what Tizen, macOS, WPF will do.\r\n\r\nBut then again, maybe UWP is wrong. If you want to work with gestures and touch evens inside the canvas, you either disable the scroll on the scrollview, or you don\u0027t put the canvas inside the scrollview.\r\n\r\n",
+        "createdAt": "2019-11-14T02:26:49",
+        "reactions": []
+      },
+      {
+        "id": 553777683,
+        "author": "FoggyFinder",
+        "body": "I can check WPF but not iOS since I don\u0027t have device or emulator. \r\nI\u0027ve found this with quick search:\r\n\r\n[Stop ScrollView scrolling from child elements (works in Android but not iOS)](https://forums.xamarin.com/discussion/67348/stop-scrollview-scrolling-from-child-elements-works-in-android-but-not-ios)\r\n\r\nbut I think there is easier and better way to achieve it.",
+        "createdAt": "2019-11-14T08:20:51",
+        "reactions": []
+      },
+      {
+        "id": 553967157,
+        "author": "mattleibow",
+        "body": "I think the issue is there is a bug: https://github.com/xamarin/Xamarin.Forms/issues/8497\r\n\r\nThe correct way would be to track the touch events, and when you start dragging, you disable the scroll.",
+        "createdAt": "2019-11-14T16:29:45",
+        "reactions": []
+      },
+      {
+        "id": 554329208,
+        "author": "kevcrooks",
+        "body": "Matching @FoggyFinder , we have the scrolling problem on Android.\r\niOS appears to be working as expected for us though @mattleibow (clicking and dragging inside the box doesn\u0027t scroll, which is what we want)\r\n\r\nI think if your fix works for Android, then that would work in our case on all the devices we\u0027ve tested.\r\n\r\n---As an update: We were previously using a PanGestureRecognizer rather than the native SkiaSharp ones, which explains why we saw iOS working ok with the scrolling. Having just tested with the native SkiaSharp touch, we also do see a problem on iOS",
+        "createdAt": "2019-11-15T11:44:33",
+        "reactions": []
+      },
+      {
+        "id": 562078483,
+        "author": "FoggyFinder",
+        "body": "\u003E I think the issue is there is a bug: xamarin/Xamarin.Forms#8497\r\n\r\n@mattleibow I see. Almost 3 weeks past without any responses and I have feeling that it won\u0027t be changed in foreseeable future. No, really, I understand why - \u0060ScrollOrientation.Neither\u0060 was added relatively recently and there are much more important bugs to fix. \r\n\r\n\u003E The correct way would be to track the touch events, and when you start dragging, you disable the scroll.\r\n\r\nBut currently, as far as I can tell, there is no such way, isn\u0027t it?\r\n\r\nI do think having a fix (even temporary) much better than nothing.\r\n",
+        "createdAt": "2019-12-05T10:54:31",
+        "reactions": []
+      },
+      {
+        "id": 724053351,
+        "author": "vecalion",
+        "body": "Did anyone find a workaround for this issue? ",
+        "createdAt": "2020-11-09T14:37:53",
+        "reactions": []
+      },
+      {
+        "id": 2106976714,
+        "author": "imuller",
+        "body": "For .NET MAUI: https://github.com/dotnet/maui/discussions/18758",
+        "createdAt": "2024-05-13T08:37:10",
+        "reactions": []
+      }
+    ]
+  }
 }

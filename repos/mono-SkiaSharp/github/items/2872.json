@@ -18,5 +18,32 @@
   "createdAt": "2024-05-27T17:59:05",
   "updatedAt": "2024-05-27T18:26:41",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:54:09.918205Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2133890559,
+        "author": "ghost",
+        "body": "Not sure if related to https://github.com/opentk/GLWpfControl/issues/58",
+        "createdAt": "2024-05-27T18:00:03",
+        "reactions": []
+      },
+      {
+        "id": 2133905460,
+        "author": "NogginBops",
+        "body": "Currently creating GLWPFControls on separate threads is likely not going to work as GLWPFControl is using a static shared OpenGL context which can only be current on one thread. This is a problem when creating controls from another thread as this will call functions that need to access the opengl context, but this context is not going to be current on the separate thread.\r\n\r\nThere might be some ways around this, I\u0027ve been slowly refactoring the GLWPFControl code to avoid some of these types of issues (more explicit handling of contexts), but I\u0027ve not finished that work, not sure when I\u0027ll have time to.",
+        "createdAt": "2024-05-27T18:15:52",
+        "reactions": []
+      },
+      {
+        "id": 2133914815,
+        "author": "ghost",
+        "body": "\u003E Currently creating GLWPFControls on separate threads is likely not going to work as GLWPFControl is using a static shared OpenGL context which can only be current on one thread. This is a problem when creating controls from another thread as this will call functions that need to access the opengl context, but this context is not going to be current on the separate thread.\r\n\u003E \r\n\u003E There might be some ways around this, I\u0027ve been slowly refactoring the GLWPFControl code to avoid some of these types of issues (more explicit handling of contexts), but I\u0027ve not finished that work, not sure when I\u0027ll have time to.\r\n\r\nThanks for the quick response! I am going to hold off on my Winforms -\u003E WPF rewrite for the time being in that case... :grin:",
+        "createdAt": "2024-05-27T18:26:40",
+        "reactions": []
+      }
+    ]
+  }
 }

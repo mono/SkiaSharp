@@ -14,5 +14,88 @@
   "createdAt": "2020-03-19T16:21:17",
   "updatedAt": "2024-05-30T06:19:31",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:54:06.3528295Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 603107557,
+        "author": "kekekeks",
+        "body": "Also happens with CentOS 7 - https://github.com/AvaloniaUI/Avalonia/issues/3694",
+        "createdAt": "2020-03-24T08:45:24",
+        "reactions": []
+      },
+      {
+        "id": 603139775,
+        "author": "mattleibow",
+        "body": "Could it be that the apps do not have access to the fonts? Can you load them manually via a path? Either the system fonts or a custom font?",
+        "createdAt": "2020-03-24T09:53:20",
+        "reactions": []
+      },
+      {
+        "id": 603151449,
+        "author": "kekekeks",
+        "body": "Fonts are loadable via \u0060SkTypeface.FromFile\u0060. \r\n\u0060fc-match\u0060 command line utility is able to locate the font that corresponds to the \u0022Sans\u0022 name.",
+        "createdAt": "2020-03-24T10:17:44",
+        "reactions": []
+      },
+      {
+        "id": 603683074,
+        "author": "mattleibow",
+        "body": "Is this happening with just snap packages or always? ",
+        "createdAt": "2020-03-25T07:25:30",
+        "reactions": []
+      },
+      {
+        "id": 603690800,
+        "author": "Gillibald",
+        "body": "Someone had this issue on Manjaro without a container. Couldn\u0027t repro it with my local setup.",
+        "createdAt": "2020-03-25T07:47:39",
+        "reactions": []
+      },
+      {
+        "id": 605414056,
+        "author": "kekekeks",
+        "body": "Another repro https://github.com/AvaloniaUI/Avalonia/issues/3701",
+        "createdAt": "2020-03-28T08:35:52",
+        "reactions": []
+      },
+      {
+        "id": 605906241,
+        "author": "mattleibow",
+        "body": "I\u0027ll be looking at this soon, so just to get the cases together... It always happens with snap packages? And sometimes on various linux distros?\r\n\r\nHas anyone tried looking at listing all the fonts installed? https://docs.microsoft.com/dotnet/api/skiasharp.skfontmanager.fontfamilies\r\n\r\n\u0060\u0060\u0060csharp\r\nvar fonts = SKFontManager.FontFamilies.ToArray();\r\nConsole.WriteLine($\u0022first font: {fonts[0]}\u0022);\r\n\u0060\u0060\u0060\r\n\r\nIf there are fonts then something is wonky with the lookup process. If there are no fonts, then for some reason fontconfig can\u0027t find anything at all.",
+        "createdAt": "2020-03-30T10:03:05",
+        "reactions": []
+      },
+      {
+        "id": 605911678,
+        "author": "Gillibald",
+        "body": "My guess is that font matching isn\u0027t working. Some people have reported that \u0060SKTypeface.FromName(..)\u0060 is working if you specify the exact matching name of an installed font.\r\n\r\nThe \u0060SKTypeface.Default\u0060 translates to \u0060SKTypeface.FromName(null)\u0060 which is using font matching as well.\r\n\r\nMaybe newer Fontconfig has changed in a way that breaks the SKFontmanagerImpl",
+        "createdAt": "2020-03-30T10:13:57",
+        "reactions": []
+      },
+      {
+        "id": 605950736,
+        "author": "kekekeks",
+        "body": "\u003EIt always happens with snap packages?\r\n\r\nThe first report with desktop Manjaro Linux (non-snap) was about a stack overflow in Avalonia code. We\u0027ve identified that it was caused by \u0060SKTypeface.Default.FamilyName\u0060 being \u0060null\u0060 and that \u0060SKTypeface.FromFamilyName(\u0022Sans\u0022)\u0060 also fails while the rest of the desktop is working fine.\r\n\r\nWe couldn\u0027t reproduce it locally.\r\n\r\nThe second report was about the same symptoms with snap packaging which can be reproduced on any machine.\r\n\r\nThe last report is from desktop Debian 10 machine.",
+        "createdAt": "2020-03-30T11:43:50",
+        "reactions": []
+      },
+      {
+        "id": 1087363860,
+        "author": "KiruyaMomochi",
+        "body": "Not sure if this is related, but \u0060SKTypeface.Default.FamilyName\u0060 returns \u0060null\u0060 for me when using japanese. (\u0060LANG=ja_JP.UTF-8\u0060). \r\n\r\nSetting \u0060LANG\u0060 to \u0060C\u0060 solves the problem.",
+        "createdAt": "2022-04-04T10:09:32",
+        "reactions": []
+      },
+      {
+        "id": 2138763723,
+        "author": "OMMDIPTA",
+        "body": "[https://github.com/mono/SkiaSharp/issues/1131#issuecomment-583640278](https://github.com/mono/SkiaSharp/issues/1131#issuecomment-583640278)\r\n\r\nin publish folder there is no .ttf file.\r\n\r\n",
+        "createdAt": "2024-05-30T06:19:30",
+        "reactions": []
+      }
+    ]
+  }
 }
