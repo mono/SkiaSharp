@@ -14,5 +14,111 @@
   "createdAt": "2020-09-07T11:44:11",
   "updatedAt": "2025-06-13T17:24:35",
   "commentCount": 11,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:43:39.7684742Z",
+    "reactions": [
+      {
+        "user": "MartinZikmund",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:39.7684782Z"
+      },
+      {
+        "user": "martin-slater",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:39.7684789Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 688472072,
+        "author": "mattleibow",
+        "body": "Thanks for this issue, I\u0027ll have a look and see what is up.\r\n\r\nThis sounds like the thread is trying to draw on a disposed surface or something.",
+        "createdAt": "2020-09-07T18:46:50",
+        "reactions": [
+          {
+            "user": "kerego",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:43:37.6532038Z"
+          }
+        ]
+      },
+      {
+        "id": 690282661,
+        "author": "kerego",
+        "body": "I\u0027ve investigated this a bit and it seems that the issue was first introduced with https://github.com/mono/SkiaSharp/commit/8039d0d0bbb135e8013be121cddf8716e7b8ce96 commit.\r\nFor some reason, after destroying the _eglContext_ it tends to fail on the next call to _MakeCurrent()_.\r\nCommenting out the GlesContext.Cleanup() does fix the crash issue but probably introduces other issues (mem leak).\r\nHope this helps in your investigation. I am happy to help if you need any additional info.\r\n",
+        "createdAt": "2020-09-10T13:19:22",
+        "reactions": []
+      },
+      {
+        "id": 744749741,
+        "author": "MartinZikmund",
+        "body": "Hey, we have this problem as well in our Physics apps, and I have a simple repro in blank UWP app:\r\n\r\n**MainPage.xaml**\r\n\u0060\u0060\u0060\r\n\u003CGrid\u003E\r\n    \u003CButton VerticalAlignment=\u0022Top\u0022 Click=\u0022GoClick\u0022\u003EGo\u003C/Button\u003E\r\n\u003C/Grid\u003E\r\n\u0060\u0060\u0060\r\n\r\n**MainPage.xaml.cs**\r\n\u0060\u0060\u0060\r\nprivate void GoClick(object sender, RoutedEventArgs e)\r\n{\r\n    Frame.Navigate(typeof(SecondPage));\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**SecondPage.xaml**\r\n\u0060\u0060\u0060\r\n\u003CGrid\u003E\r\n    \u003CGrid.RowDefinitions\u003E\r\n        \u003CRowDefinition Height=\u0022Auto\u0022 /\u003E\r\n        \u003CRowDefinition Height=\u0022*\u0022 /\u003E\r\n    \u003C/Grid.RowDefinitions\u003E\r\n    \u003CButton Click=\u0022Button_Click\u0022\u003EBack\u003C/Button\u003E\r\n    \u003CGrid x:Name=\u0022CanvasHolder\u0022 Grid.Row=\u00221\u0022\u003E\r\n        \u003Cuwp:SKSwapChainPanel DrawInBackground=\u0022True\u0022 /\u003E\r\n    \u003C/Grid\u003E\r\n\u003C/Grid\r\n\u0060\u0060\u0060\r\n\r\nAfter clicking \u0060Go\u0060 and \u0060Back\u0060 the app will crash with \u0060AccessViolationException\u0060 after 2-3 attempts.\r\n\r\nHas someone found a workaround that would allow to keep \u0060DrawInBackground=True\u0060 while avoiding the error? Unfortunately we cannot downgrade to older versions due to dependencies, but the app now crashes quite consistently on second or third navigation between pages \uD83D\uDE05",
+        "createdAt": "2020-12-14T22:26:27",
+        "reactions": []
+      },
+      {
+        "id": 753321693,
+        "author": "MartinZikmund",
+        "body": "@mattleibow Do you have some idea how to workaround this (for example a way to swallow the exception somewhere)? I have tried \u0060try..catch\u0060 around construction of the canvas, and around navigation to the page, but the exception probably occurs on a different thread.\r\n\r\nOh, and happy new year \uD83C\uDF86 !",
+        "createdAt": "2021-01-01T14:11:01",
+        "reactions": []
+      },
+      {
+        "id": 761559556,
+        "author": "MartinZikmund",
+        "body": "@mattleibow as this is issue is now a blocker for prod release of a project I am working on, I tried to look into this issue, but I am not successful so far. Here are some observations I have made so far.\r\n\r\n- The exception occurs when \u0060ThreadPool.RunAsync(RenderOnce)\u0060 or \u0060ThreadPool.RunAsync(RenderLoop)\u0060 plan the new \u0060AngleSwapChainPanel\u0060 work on a thread that was already used before. So if I navigate to a page first time and the background thread is thread 2, later navigate again and the new control gets thread 3, the exception does not occur. However, if I later navigate again and a new control gets thread 2 or 3, the exception always happens. That sound like the cleanup does not work properly.\r\n- I have noticed that \u0060GlesContext.Dispose\u0060 is executed from \u0060Unloaded\u0060 handler of the control - that might be the cause of the problem, as \u0060Unloaded\u0060 is always executed from the UI thread, so cleanup does not run on the same thread as the rendering.\r\n- Noticed the \u0060Egl.eglMakeCurrent\u0060 is never unset - eg. not called with \u0060EGL_NO_SURFACE\u0060 etc. From [here ](https://stackoverflow.com/a/29350016/732221)it looks like it should be done before the other resources are disposed of.\r\n- Also on [this docs page](https://www.khronos.org/registry/EGL/sdk/docs/man/html/eglDestroyContext.xhtml) it seems that the context is not actually destroyed until it is no longer current of any thread. That seems to reinforce that suspicion that when the thread is reused, \u0022current\u0022 is still set, so trying to call \u0060eglMakeCurrent\u0060 again causes this exception.\r\n\r\nI tried to add a flag \u0060cleanupContext\u0060 to \u0060AngleSwapChainPanel\u0060 and then I do the following in \u0060RenderLoop\u0060 method:\r\n\r\n\u0060\u0060\u0060\r\nprivate void RenderLoop(IAsyncAction action)\r\n{\r\n\twhile (action.Status == AsyncStatus.Started)\r\n\t{\r\n\t\tif (DrawInBackground)\r\n\t\t{\r\n\t\t\tif (cleanupContext)\r\n\t\t\t{\r\n\t\t\t\tglesContext?.Dispose();\r\n\t\t\t\tglesContext = null;\r\n\t\t\t\tbreak;\r\n\t\t\t}\r\n\r\n\t\t\t// run on this background thread\r\n\t\t\tRenderFrame();\r\n\t\t}\r\n\t\telse\r\n\t\t{\r\n\t\t\t// run in the main thread, block this one\r\n\t\t\tDispatcher.RunAsync(CoreDispatcherPriority.Normal, RenderFrame).AsTask().Wait();\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThen in \u0060Dispose\u0060 of \u0060GlesContext\u0060 I added:\r\n\r\n\u0060\u0060\u0060\r\nEgl.eglMakeCurrent(eglDisplay, Egl.EGL_NO_SURFACE, Egl.EGL_NO_SURFACE, Egl.EGL_NO_CONTEXT);\r\n\u0060\u0060\u0060\r\n\r\nThat seems to help a bit, and I am actually sometimes able to navigate five times without the app crashing, but then it just suddenly completely freezes and looks like some kind of deadlock or something \uD83D\uDE02 .\r\n\r\nAlso this workaround I tried does not solve the problem for \u0060RenderOnce\u0060 - in that case the \u0060IAsyncAction\u0060 is already \u0060null\u0060 when \u0060Unloaded\u0060 is called, so it is not possible to schedule the disposal on the background thread, as I don\u0027t have access to it anymore.\r\n\r\nDo you have some ideas how to proceed please?",
+        "createdAt": "2021-01-16T12:59:43",
+        "reactions": []
+      },
+      {
+        "id": 2758372150,
+        "author": "taublast",
+        "body": "This issue affects SkiaSharp v3 on WinUI as well.  \n\nWhen you navigate to another page it can be that SKGLView handler resources are being disposed (especially when MAUI Shell disconnects previous content handlers upon navigation, a killer if you ask me).   \nThis can happen in the middle of the rendering = crash.   \nThis is caused by this line:    \nhttps://github.com/mono/SkiaSharp/blob/cefe0e6b129a3500ad203487282c19ff03cf3792/source/SkiaSharp.Views/SkiaSharp.Views.WinUI/SKSwapChainPanel.cs#L73\n\nWill just leave a custom handler here for a quick workaround, notice it will not support SkiaSharp touch gestures as they are sealed:\n\n\u0060\u0060\u0060csharp\n\n//consume at init:\nhandlers.AddHandler(typeof(YourSKGLViewSubclassed), typeof(SKGLViewHandlerSafe));\n\n//handler and view:\n\nusing System.Collections.Concurrent;\nusing SkiaSharp.Views.Maui.Handlers;\nusing SkiaSharp.Views.Windows;\nusing Rect = Windows.Foundation.Rect;\nusing SKPaintGLSurfaceEventArgs = SkiaSharp.Views.Maui.SKPaintGLSurfaceEventArgs;\n\nnamespace YourHandlersAndViews\n{\n\n    public partial class SKGLViewHandlerSafe : SKGLViewHandler\n    {\n        protected override SKSwapChainPanel CreatePlatformView()\n        {\n            return new SKSwapChainPanelFixed();\n        }\n    }\n\n    public class SKSwapChainPanelFixed : SKSwapChainPanel\n    {\n        public bool IgnorePixelScaling { get; set; }\n        public new SKSize CanvasSize =\u003E lastSize;\n        public new GRContext GRContext =\u003E context;\n        private const SKColorType colorType = SKColorType.Rgba8888;\n        private const GRSurfaceOrigin surfaceOrigin = GRSurfaceOrigin.BottomLeft;\n        private GRGlInterface glInterface;\n        private GRContext context;\n        private GRGlFramebufferInfo glInfo;\n        private GRBackendRenderTarget renderTarget;\n        private SKSurface surface;\n        private SKSizeI lastSize;\n        private bool cleanupRunning;\n        private readonly ConcurrentBag\u003CSKSurface\u003E trashBag = new();\n\n        public SKSwapChainPanelFixed()\n        {\n            cleanupRunning = true;\n            Application.Current?.Dispatcher?.StartTimer(TimeSpan.FromSeconds(2), () =\u003E\n            {\n                DisposeSafely();\n\n                return cleanupRunning;\n            });\n        }\n\n        void DisposeSafely()\n        {\n            while (trashBag.TryTake(out var pooledSurface))\n            {\n                pooledSurface.Dispose();\n                Debug.WriteLine(\u0022Disposed pooled surface safely\u0022);\n            }\n        }\n\n        protected override void OnRenderFrame(Rect rect)\n        {\n\n            if (context == null)\n            {\n                glInterface = GRGlInterface.Create();\n                context = GRContext.CreateGl(glInterface);\n            }\n\n            var newSize = new SKSizeI((int)rect.Width, (int)rect.Height);\n\n            bool needNewSurfaces = surface == null || lastSize != newSize;\n\n            if (lastSize != newSize || renderTarget == null || !renderTarget.IsValid)\n            {\n                var previousTarget = renderTarget;\n                if (previousTarget != null) //fix crash navigating into page\n                {\n                    Application.Current?.Dispatcher?.StartTimer(TimeSpan.FromSeconds(2), () =\u003E\n                    {\n                        previousTarget.Dispose();\n                        return false;\n                    });\n                }\n\n                OpenGles.GetIntegerv(OpenGles.GL_FRAMEBUFFER_BINDING, out var framebuffer);\n                OpenGles.GetIntegerv(OpenGles.GL_STENCIL_BITS, out var stencil);\n                OpenGles.GetIntegerv(OpenGles.GL_SAMPLES, out var samples);\n                var maxSamples = context.GetMaxSurfaceSampleCount(colorType);\n                samples = Math.Min(samples, maxSamples);\n                var glInfo = new GRGlFramebufferInfo((uint)framebuffer, colorType.ToGlSizedFormat());\n\n                renderTarget =\n                    new GRBackendRenderTarget(newSize.Width, newSize.Height, samples, stencil, glInfo);\n\n                needNewSurfaces = true;\n            }\n\n            if (needNewSurfaces)\n            {\n                if (surface != null)\n                {\n                    // destroy the old surface\n                    Debug.WriteLine(\u0022Abandoned surface to pool\u0022);\n                    trashBag.Add(surface);\n                    surface = null;\n                }\n\n                surface = SKSurface.Create(context, renderTarget, surfaceOrigin, colorType);\n                Debug.WriteLine(\u0022Created new surface\u0022);\n\n                lastSize = newSize;\n            }\n\n            // clear everything\n            OpenGles.Clear(OpenGles.GL_COLOR_BUFFER_BIT | OpenGles.GL_DEPTH_BUFFER_BIT | OpenGles.GL_STENCIL_BUFFER_BIT);\n\n            using (new SKAutoCanvasRestore(surface.Canvas, true))\n            {\n                // start drawing\n                OnPaintSurface(new(surface, renderTarget, surfaceOrigin, colorType));\n            }\n\n            // update the control\n            surface.Flush();\n            context.Flush();\n        }\n\n        protected override void OnPaintSurface(SkiaSharp.Views.Windows.SKPaintGLSurfaceEventArgs e)\n        {\n            if (IgnorePixelScaling)\n            {\n                var density = (float)ContentsScale;\n                var userVisibleSize = new SKSizeI((int)(e.Info.Width / density), (int)(e.Info.Height / density));\n                var canvas = e.Surface.Canvas;\n                canvas.Scale(density);\n                canvas.Save();\n\n                e = new(e.Surface, e.BackendRenderTarget, e.Origin, e.Info.WithSize(userVisibleSize), e.Info);\n            }\n\n            base.OnPaintSurface(e);\n        }\n\n        protected override void OnDestroyingContext()\n        {\n            base.OnDestroyingContext();\n\n            renderTarget?.Dispose();\n\n            cleanupRunning = false;\n\n            surface?.Dispose();\n            surface = null;\n\n            context?.AbandonContext(false);\n            context?.Dispose();\n            context = null;\n\n            glInterface?.Dispose();\n            glInterface = null;\n\n            lastSize = default;\n\n            Application.Current?.Dispatcher?.StartTimer(TimeSpan.FromSeconds(2), () =\u003E\n            {\n                DisposeSafely();\n\n                return true;\n            });\n        }\n    }\n\n}\n\n\n\u0060\u0060\u0060\n\nAnd You would need a wrapper of a sealed SkiaSharp class for that: https://github.com/taublast/DrawnUi.Maui/commit/319dfb3e80abeb7fc50bf4ae83e31633c8916b13#diff-23c5a4c0b082b4ffddb1262b5dfc9bbafef2fba9677bc9b0b2d9a2cb628c0df9\n",
+        "createdAt": "2025-03-27T14:56:07",
+        "reactions": []
+      },
+      {
+        "id": 2758387611,
+        "author": "taublast",
+        "body": "@mattleibow Could create a pr if you find this solution appropriate, or maybe there is another more elegant way to solve this.\n EDIT: Must be tired, this is the workaround for a crash when navigating AWAY FROM a page with SKGLView. No idea if it\u0027s related, might be.\nRE-EDIT: Added code to fix crash when \u0022NAVIGATING TO\u0022. :)",
+        "createdAt": "2025-03-27T15:00:53",
+        "reactions": []
+      },
+      {
+        "id": 2758444529,
+        "author": "taublast",
+        "body": "Okay funny enough just catched it, crash when NAVIGATING INTO after changing some global internal stuff inside the App. This one was due to \u0060renderTarget\u0060 becoming invalid, then disposed. Updated the workaround for this.",
+        "createdAt": "2025-03-27T15:18:47",
+        "reactions": []
+      },
+      {
+        "id": 2795295462,
+        "author": "mattleibow",
+        "body": "Could you explain the fix a bit? Looks like you got an infinite loop of disposals? You are basically creating a new surface and putting the old surface into the trash. This is all to avoid immediately disposing the surface?\n\nWhat happens if you don\u0027t do anything and just let the GC collect it?\n\nDoes the trash have more than one item sometimes? Or is it just the previous one?\n\nI wonder if you call flush / submit / synchronous on the surface before disposing? This will force the surface to be finished drawing.",
+        "createdAt": "2025-04-10T22:22:38",
+        "reactions": []
+      },
+      {
+        "id": 2795807816,
+        "author": "taublast",
+        "body": "Hello,\nAs I see it, the issue is coming from WIndows hardware-accelerated rendering using double-buffering, while our current disposal logic is for a one-buffer. So when we dispose an object that is still used by another buffer, we get a crash when the \u0022other-buffer\u0022 GPU thread accesses it afterwards.\n\nAnd we have 2 crash bombs:\n\n1 when we navigate FROM a hardware-accelerated surface. \u0060surface?.Dispose();\u0060 \n\n2 when we navigate TO a hardware accelerated surface. \u0060!renderTarget.IsValid\u0060 -\u003E \u0060renderTarget?.Dispose();\u0060 \n\nNow that we know where crashes come from we can just find some elegant solution to this.. I implemented a workaround that woks fine for me, though I \u0022just feel\u0022 it\u0027s not the best possible one but it works. At the same time just leaving this to GC without disposing works too but I\u0027m not comfortable with it.\n\n\u003EWhat happens if you don\u0027t do anything and just let the GC collect it?  \n\nIt\u0027s doesn\u0027t crash but I\u0027m feeling bad for leaving this to GC.\n\n\u003EI wonder if you call flush / submit / synchronous on the surface before disposing?\n\nOh yes, i was flushing everything \u0022flushable\u0022 before using that trashbag. Problem is I failed to flush the rendering of GPU buffer B while willing to dispose something sitting at buffer A. And the funny story they don\u0027t change like A-B-A-B so that we could predict that we would need to flush 2 times.. There are cases like A-A-B-A etc. :)\n\nYes the trash can have much items, so I\u0027m thinking to throw there weak references maybe, how would that sound? It\u0027s easy to repro, just resize Windows app window and the trash will start working, I tested it much.\n\nDogfooding this all much, before this workaround i had a hacky one to pause all rendering before navigating between MAUI pages with hardware-accelerated canvases on them and re-enable afterwards, otherwise that would crash 100%. Without any workaround i get 100% crashes for such navigations when i change MainPage.\n\n\n\n ",
+        "createdAt": "2025-04-11T04:32:15",
+        "reactions": []
+      },
+      {
+        "id": 2971030458,
+        "author": "taublast",
+        "body": "I can\u0027t tell for sure (will not get soon into running with referencing local skiasharp again) but: i replaced this messy workaround with deferred trashbag with instant disposal and had this fork fix: https://github.com/mono/SkiaSharp/pull/3291. And was disposing/leaving page okay.\nNow that i removed the fork reference and using skiasharp nuget again, it crashes again when navigating away from page \u002B not deferred disposal. So might be worth to try this fix at least for the navigating away scenario.\nAnd i need to use that trashbag again until we hopefully merge that. :)",
+        "createdAt": "2025-06-13T17:24:34",
+        "reactions": [
+          {
+            "user": "simonsarris",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:43:39.7182398Z"
+          }
+        ]
+      }
+    ]
+  }
 }

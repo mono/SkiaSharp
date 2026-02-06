@@ -18,5 +18,38 @@
   "createdAt": "2024-02-20T17:14:08",
   "updatedAt": "2025-04-29T05:07:58",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:44:21.6552299Z",
+    "reactions": [
+      {
+        "user": "jeremy-visionaid",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:44:21.6552357Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1956824305,
+        "author": "mattleibow",
+        "body": "For the platform views, I try not to change defaults. If this default is absolutely the worst option, maybe we can. But, since you are using the native view, I just kept the native values.\r\n\r\nIt will be more interesting to find the real issue causing the crash because there are several libraries using the accelerated views for rendering content: such as maps or animations. \r\n\r\nFor the Maui views, I do have an option to disable this behaviour: \u0060HasRenderLoop\u0060",
+        "createdAt": "2024-02-21T14:51:43",
+        "reactions": []
+      },
+      {
+        "id": 2837455660,
+        "author": "jeremy-visionaid",
+        "body": "I just hit this one too. Fixed it, then found there was a bug filed already!",
+        "createdAt": "2025-04-29T05:00:35",
+        "reactions": []
+      },
+      {
+        "id": 2837462897,
+        "author": "jeremy-visionaid",
+        "body": "@charlesroddie Setting EnableSetNeedsDisplay probably just masks some other problem if you\u0027re getting a crash. That said, I think I\u0027ve also seen some MAUI/SkiaSharp related crash, not sure if it\u0027s related, but there\u0027s a bug filed for an apparent GC problem with SKMetalView: #3178",
+        "createdAt": "2025-04-29T05:07:27",
+        "reactions": []
+      }
+    ]
+  }
 }

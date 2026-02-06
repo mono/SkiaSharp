@@ -19,5 +19,38 @@
   "updatedAt": "2025-07-26T18:28:29",
   "closedAt": "2025-07-26T18:28:29",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:42:55.1160506Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2589465163,
+        "author": "ha-ves",
+        "body": "As I was writing this issue, I realized it has different behavior when uploaded to github.\r\nNotice the bottom part.\r\n![image](https://github.com/user-attachments/assets/79a02b86-6105-42fe-9f0b-1f52251f797d)\r\n",
+        "createdAt": "2025-01-14T09:49:31",
+        "reactions": []
+      },
+      {
+        "id": 3121539862,
+        "author": "molesmoke",
+        "body": "Looks like a usage error. Fixing the code eliminates the problem:\n\n\u0060\u0060\u0060\n        using var bmp2 = new SKPixmap(skInfo.WithSize(640, 640), pxs);\n        image.ScalePixels(bmp2, SKSamplingOptions.Default);\n\n        using var f2 = File.Create(\u0022save2.png\u0022);\n        bmp2.Encode(f2, SKEncodedImageFormat.Png, 100);\n\n        using var enc = bmp2.Encode(SKEncodedImageFormat.Png, 100);\n        using var f3 = File.Create(\u0022save3.png\u0022);\n        enc.SaveTo(f3);\n\u0060\u0060\u0060",
+        "createdAt": "2025-07-26T09:03:36",
+        "reactions": []
+      },
+      {
+        "id": 3122204124,
+        "author": "ha-ves",
+        "body": "@molesmoke, I forgot where the excerpt originated from.\n\nI tried again in 3.119.0 by loading a .png file and then the code, but it doesn\u0027t replicate the issue.\n\nSame with 3.116.0.\n\nMaybe because this time I used .net 9, or maybe something else.\n\nAs it seems no one else encountered this issue, I\u0027ll close this one.",
+        "createdAt": "2025-07-26T18:28:29",
+        "reactions": [
+          {
+            "user": "molesmoke",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:42:55.065824Z"
+          }
+        ]
+      }
+    ]
+  }
 }

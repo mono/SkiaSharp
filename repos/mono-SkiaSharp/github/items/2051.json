@@ -18,5 +18,32 @@
   "createdAt": "2022-05-19T16:04:47",
   "updatedAt": "2025-05-29T14:10:15",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:43:53.7553843Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1133844980,
+        "author": "mattleibow",
+        "body": "You may have to set \u0060e.Handled = true\u0060, this is because you could opt to ignore touches without having to unsubscribe from events.\r\n\r\nFor example, assume you have a canvas that draws blocks and you want to drag the blocks. If the user taps on a block, you set \u0060Handled = true\u0060 and then you get all the events. If the user taps the space, there is nothing more for you todo so you can do nothing or set \u0060Handled = false\u0060 and you will not get any further events.\r\n\r\nThis was modeled after:\r\n\r\nhttps://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.handledmouseeventargs.handled\r\n\r\n\u003E You will want to use [HandledMouseEventArgs](https://docs.microsoft.com/en-us/dotnet/api/system.windows.forms.handledmouseeventargs?view=windowsdesktop-6.0) primarily when developing a control that needs to handle mouse wheel events itself, and prevent them from being seen by the control\u0027s immediate parent container.",
+        "createdAt": "2022-05-22T08:35:11",
+        "reactions": []
+      },
+      {
+        "id": 1385703991,
+        "author": "yoshiask",
+        "body": "This seems like reasonable enough behavior, but what\u0027s odd to me is that not all platforms behave the same. The WinUI target works without setting \u0060args.Handled\u0060, but Android does not. I would expect the requirements to be consistent.",
+        "createdAt": "2023-01-17T16:37:44",
+        "reactions": []
+      },
+      {
+        "id": 2919532112,
+        "author": "ceasor",
+        "body": "\u003E This seems like reasonable enough behavior, but what\u0027s odd to me is that not all platforms behave the same. The WinUI target works without setting \u0060args.Handled\u0060, but Android does not. I would expect the requirements to be consistent.\n\nYes I also have this question. Why the behavior is different?",
+        "createdAt": "2025-05-29T14:10:15",
+        "reactions": []
+      }
+    ]
+  }
 }

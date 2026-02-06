@@ -18,5 +18,46 @@
   "createdAt": "2025-04-20T03:32:35",
   "updatedAt": "2025-06-18T13:47:58",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:43:35.8587441Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2818462955,
+        "author": "DanTravison",
+        "body": "I added a sample application that illustrates the issue [here](https://github.com/DanTravison/SKInvalidateMeasure)\nThe sample has three instances of an SkLabel\n1: Directly in the root layout (VerticalStackLayout)\n2: In a nested HorizontalStackLayout\n3: In a nested Grid\nA Maui Label in a nested HorizontalStackLayout\nA \u0027Try Workaround\u0027 checkbox to enable/disable the workaround.\nA  \u0027[\u002B]\u0027 and \u0027[-]\u0027 button allow changing the font size in the view model\n\nAll labels bind the FontSize to the view model.\nSkLabel.InvalidateTextMetrics contains a workaround that set WidthRequest and HeightRequest when a font property changes.\n\nResults:\n* The Maui Label and the \u0027root\u0027 SkLabel both resize as expected when the font size changes.\n* The two nested SkLabel instances don\u0027t resize unless the \u0027Try Workaround\u0027 checkbox is checked.\n",
+        "createdAt": "2025-04-21T13:58:20",
+        "reactions": []
+      },
+      {
+        "id": 2831279037,
+        "author": "janne-hmp",
+        "body": "I had the a similar problem, which I reported over a year ago. Luckily, there\u0027s a workaround: https://github.com/mono/SkiaSharp/issues/2811#issuecomment-2028482236\n\nIt would be great if @mattleibow would have time to fix this, possibly just like in the workaround.",
+        "createdAt": "2025-04-25T19:33:33",
+        "reactions": []
+      },
+      {
+        "id": 2881877985,
+        "author": "DanTravison",
+        "body": "I\u0027m curious what the expectations are here @mattleibow. Do I need to implement the workaround or is it going to be addressed in SkiaSharp?\n\nI have 9 projects that use SkiaSharp and would rather limit the regression testing to an upgrade of SkiaSharp versus a fix now and an upgrade later.\n\nAs it stands, my current workaround where I encounter it, is just too fragile.\n\nThanks,\nDan.",
+        "createdAt": "2025-05-15T00:17:53",
+        "reactions": []
+      },
+      {
+        "id": 2972009152,
+        "author": "DanTravison",
+        "body": "@janne-hmp When I look at the suggested workaround, I have to wonder if the custom SKCanvasView is even needed.\n\nWhy isn\u0027t it sufficient to call SKCanvasView.DesiredSize in the handler and, if empty, call base.GetDesiredSize.\n\nWith this approach, I don\u0027t need to change my SKCanvasView classes to use the workaround, I simply register the handler.\n\nThis resolves my issue, but I don\u0027t know if there are other paths I\u0027m not aware of or not hitting.\n\nMy handler looks like the following:\n\u0060\u0060\u0060\n/// \u003Csummary\u003E\n/// Provides a custom \u003Csee cref=\u0022SKCanvasViewHandler\u0022/\u003E for handing issue 18700 https://github.com/mono/SkiaSharp/issues/3239\n/// \u003C/summary\u003E\ninternal class CanvasViewHandler : SKCanvasViewHandler\n{\n    public override Size GetDesiredSize(double widthConstraint, double heightConstraint)\n    {\n        Size size = Size.Zero;\n        if (this.VirtualView is SKCanvasView view)\n        {\n            size = view.DesiredSize;\n        }\n        if (size == Size.Zero)\n        {\n            size = base.GetDesiredSize(widthConstraint, heightConstraint);\n        }\n        return size;\n    }\n}\n\u0060\u0060\u0060\n\nI enable it with a MauiAppBuilder extension:\n\u0060\u0060\u0060\n/// \u003Csummary\u003E\n/// Provides a \u003Csee cref=\u0022MauiAppBuilder\u0022/\u003E for configuring the \u003Csee cref=\u0022CanvasView\u0022/\u003E.\n/// \u003C/summary\u003E\npublic static class CanvasViewExtensions\n{\n    public static MauiAppBuilder UseCanvasView(this MauiAppBuilder builder)\n    {\n        builder.ConfigureMauiHandlers(handlers =\u003E\n        {\n            handlers.AddHandler\u003CSKCanvasView, CanvasViewHandler\u003E();\n        });\n        return builder;\n    }\n}\n\u0060\u0060\u0060\n\n",
+        "createdAt": "2025-06-14T00:09:45",
+        "reactions": []
+      },
+      {
+        "id": 2984295317,
+        "author": "DanTravison",
+        "body": "FYI: It turns out the overriding SKCanvasViewHandler.GetDesiredSize does not fix the issue for me.  I must still set HeightRequest to ensure MeasureOverride is called.\n\n @mattleibow: Is this a problem with SkiaSharp or is it in Maui?  I\u0027m not aware of other cases where I need to explicitly set HeightRequest to ensure MeasureOverride is called.\n\nThanks.",
+        "createdAt": "2025-06-18T13:47:58",
+        "reactions": []
+      }
+    ]
+  }
 }

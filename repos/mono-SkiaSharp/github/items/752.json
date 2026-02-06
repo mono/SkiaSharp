@@ -18,5 +18,72 @@
   "createdAt": "2019-01-11T05:28:58",
   "updatedAt": "2025-08-04T22:18:03",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:42:49.7276452Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 455417885,
+        "author": "mattleibow",
+        "body": "List linking this issue fore reference: https://github.com/mono/SkiaSharp/issues/707",
+        "createdAt": "2019-01-18T03:43:24",
+        "reactions": []
+      },
+      {
+        "id": 455417968,
+        "author": "mattleibow",
+        "body": "Thanks for the repro, I\u0027ll investigate.",
+        "createdAt": "2019-01-18T03:44:04",
+        "reactions": []
+      },
+      {
+        "id": 455560054,
+        "author": "selvarathinamm",
+        "body": "Thank you for looking into it. Please do let me know if you need any additional info.",
+        "createdAt": "2019-01-18T14:16:36",
+        "reactions": []
+      },
+      {
+        "id": 2447074951,
+        "author": "mattleibow",
+        "body": "When measuring fonts, there are 2 components that influence the values - the font and the measuring logic.\r\n\r\nThe line:\r\n\r\n\u0060\u0060\u0060cs\r\nSKTypeface.FromFamilyName(\u0022Calibri\u0022, SKTypefaceStyle.Bold);\r\n\u0060\u0060\u0060\r\n\r\nassume the font is installed? Is this the case?\r\n\r\nAnd then it may also be the case that Windows DirectWrite and Linux FontConfig may be doing different things.\r\n\r\nSkiaSharp does not do much in the way of fonts and rendering, and in order to measure some string it needs to be shaped. This is probably a reason to use [RichTextKit](https://github.com/toptensoftware/RichTextKit).",
+        "createdAt": "2024-10-30T13:02:25",
+        "reactions": []
+      },
+      {
+        "id": 2447950011,
+        "author": "Gillibald",
+        "body": "FromFamilyName asks the current font manager for a typeface that is matching the name. This will be an installed font and it can be any font that relates to the specified name. On Linux this can be an alias.\r\n\r\nTo be sure to get the same rendering on all platforms you need to load a typeface via stream.",
+        "createdAt": "2024-10-30T17:58:49",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:42:49.2686776Z"
+          }
+        ]
+      },
+      {
+        "id": 3150552906,
+        "author": "markusrt",
+        "body": "@Gillibald and @mattleibow I face the same issue and created some tests, also including one using  [RichTextKit](https://github.com/toptensoftware/RichTextKit)\n\nRepo with tests: [markusrt/SkiaSharpMeasureText](https://github.com/markusrt/SkiaSharpMeasureText)\n\n- Font loaded via Resource\n- Tests on fonts show that the expected font is used both on Windows and Linux\n- Difference in calculation is always on width and with RichTextKit also sometimes on height\n\n[Tests](https://github.com/markusrt/SkiaSharpMeasureText/actions/runs/16723426356) failing on Linux and passing on Windows (as asserted numbers were defined on Windows)\n\nNot sure if there is a way to get it aligned due to the differences on the OS but maybe you have an idea \uD83D\uDCA1 ",
+        "createdAt": "2025-08-04T12:49:20",
+        "reactions": []
+      },
+      {
+        "id": 3152564105,
+        "author": "molesmoke",
+        "body": "My two-cents is that this is the expected outcome. As mattleibow pointed out, the font rendering backend is platform dependent and so you\u0027ll likely get platform specific results.",
+        "createdAt": "2025-08-04T22:18:03",
+        "reactions": [
+          {
+            "user": "markusrt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:42:49.6773864Z"
+          }
+        ]
+      }
+    ]
+  }
 }

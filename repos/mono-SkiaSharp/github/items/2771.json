@@ -18,5 +18,109 @@
   "createdAt": "2024-02-29T06:09:03",
   "updatedAt": "2025-05-02T19:04:45",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:44:12.8477948Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1987085961,
+        "author": "Mikolaytis",
+        "body": "make an SKTextBlob with this text once in an app and then use it to call DrawText. should work faster",
+        "createdAt": "2024-03-10T04:33:42",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:11.5141662Z"
+          }
+        ]
+      },
+      {
+        "id": 2777501695,
+        "author": "Craig-TSS",
+        "body": "Just to comment further on the performance of draw text, I recently ran a series of comparisons as I had noticed performance degradation after upgrading SkiaSharp versions.\n\nI tested this on two different Windows 10 machines, with similar very specs. In the test I am drawing 640 text strings on both SKCanvasView and SKGLView, with and without using SKTextBlob. The calls being used are\nDrawText (string text, float x, float y, SKPaint paint) and DrawText(SKTextBlob text, float x, float y, SKPaint paint) and the application was built for release mode. Timing using Stopwatch covers the entire DrawSurface call. There are a few other operations in play, but the vast majority of the time taken is from the 640 DrawText calls. All times below are the average frame render time in milliseconds over a period of around 30 seconds. \n\nTSSPOS and TSSPOS2 are the two machines the tests were run on. Both have onboard Intel HD graphics. I tested 4 SkiaSharp versions, SKTextBlob didnt appear to be available in 1.68.3 so timings for that part are not included. The first two columns are using the old DrawText(string..) method, the last two columns postifxed with TB indicate they were using the DrawText(SKTextBlob..) method where they fetch a cached text blob from a dictionary.\n\n\u0060\u0060\u0060\n1.68.3\t\t\tSKCanvas\tSKGLView\t\tSKCanvasTB\t\tSKGLViewTB\nTSSPOS\t\t\t24.0\t\t10.7\t\t\nTSSPOS2\t\t\t24.0\t\t10.5\n\n2.80.4\nTSSPOS\t\t\t34.0\t\t19.0\t\t\t25.0\t\t\t3.4\nTSSPOS2\t\t\t33.3\t\t18.8\t\t\t25.5\t\t\t3.4\n\n2.88.9\nTSSPOS\t\t\t43.0\t\t36.6\t\t\t34.0\t\t\t18.9\nTSSPOS2\t\t\t42.0\t\t40.3\t\t\t34.0\t\t\t23.6\n\n3.116.1\nTSSPOS\t\t\t50.0\t\t39.5\t\t\t38.5\t\t\t19.4\nTSSPOS2\t\t\t46.0\t\t41.3\t\t\t37.6\t\t\t24.8\n\u0060\u0060\u0060\n\nInterestingly there appears to have been a progressive decline in DrawText rendering performance with each major release of SkiaSharp. Also of note was that in SkiaSharp 2.80.4, the DrawText with SKTextBlob on the SKGLView is insanely fast for some reason.",
+        "createdAt": "2025-04-04T04:00:18",
+        "reactions": [
+          {
+            "user": "FoggyFinder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:11.7469654Z"
+          }
+        ]
+      },
+      {
+        "id": 2779838481,
+        "author": "najak3d",
+        "body": "Our app is using high battery, and heating up devices.   More than it should.  More than our competitors for like-tasks.  This started with our switchover to SKIA, as we also tripled our Render rate from 10 FPS to 30 FPS.   SKIA drawing is the bulk of our processing load here, nearly all done using SKGL context.   Since we have a lot of text, I\u0027m guessing a good portion of this load still comes.\n\nAnd so we\u0027re looking for ways to reduce the workload.   We definitely can move to using Text Blobs (where text didn\u0027t change), and would really like to see if we can revive the \u0022magic efficiency\u0022 seen in 2.80.4. (7x more efficient than current.\n\nIn our next round of performance improvement, I\u0027ll produce more specific results here.",
+        "createdAt": "2025-04-04T22:35:45",
+        "reactions": []
+      },
+      {
+        "id": 2846668386,
+        "author": "Craig-TSS",
+        "body": "I have run some updated performance numbers with the latest 3.119 build relative to my previous post. There appears to have been a significant improvement in performance which is great to see :)\n\n\u0060\u0060\u0060\n3.119.0\t\t\tSKCanvas\tSKGLView\t\tSKCanvasTB\t\tSKGLViewTB\nTSSPOS\t\t\t37.5\t\t20.9\t\t\t28.5\t\t\t4.4\n\u0060\u0060\u0060\n",
+        "createdAt": "2025-05-02T08:35:37",
+        "reactions": [
+          {
+            "user": "najak3d",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:44:12.2218725Z"
+          },
+          {
+            "user": "najak3d",
+            "content": "rocket",
+            "createdAt": "2026-02-06T12:44:12.2218729Z"
+          },
+          {
+            "user": "najak3d",
+            "content": "eyes",
+            "createdAt": "2026-02-06T12:44:12.221873Z"
+          },
+          {
+            "user": "najak3d",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:12.221873Z"
+          },
+          {
+            "user": "najak3d",
+            "content": "hooray",
+            "createdAt": "2026-02-06T12:44:12.2218731Z"
+          },
+          {
+            "user": "najak3d",
+            "content": "laugh",
+            "createdAt": "2026-02-06T12:44:12.2218731Z"
+          }
+        ]
+      },
+      {
+        "id": 2846688194,
+        "author": "najak3d",
+        "body": "@Craig-TSS  - THANKS FOR THE UPDATE!   Even more reason now to upgrade to 3.x.    This is fantastic news for us!\n\nAnd thank you @mattleibow  - you\u0027ve done a wonderful job here.   Many thanks and more.",
+        "createdAt": "2025-05-02T08:45:50",
+        "reactions": []
+      },
+      {
+        "id": 2846774333,
+        "author": "Craig-TSS",
+        "body": "Just for clarification, the tests above are all using SkiaSharp on Windows machines. \n\nI have just updated one of my MAUI projects which uses the SkiaSharp SKGLView to render text and images at 60fps and run some tests on Android and am not seeing any differences in performance on that platform. So its possible the above may only be applicable to the Windows platform implementation?",
+        "createdAt": "2025-05-02T09:24:09",
+        "reactions": [
+          {
+            "user": "najak3d",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:12.6198459Z"
+          }
+        ]
+      },
+      {
+        "id": 2847902782,
+        "author": "najak3d",
+        "body": "Thanks for that clarification! - that is very meaningful to us, as our app is primarily \u0022Android \u002B iOS\u0022, with lots of mini-text labels strewn about the map at 30 FPS.   It\u0027s a bit funny when the 100 mini-labels adds more load that all the rest of our map drawing with icons, thousands of lines, dozens of fill shapes, etc...  \n\nWe deal with it now by just limiting the amount of labels on the screen, or reducing frame rate when they are in a mode of wanting to see 100\u002B labels.   It would be nice to get rid of this somewhat odd performance concern on Android \u002B iOS.  If it can be done on Windows, hopefully this translates feasibly to the mobile platforms.",
+        "createdAt": "2025-05-02T19:04:44",
+        "reactions": []
+      }
+    ]
+  }
 }

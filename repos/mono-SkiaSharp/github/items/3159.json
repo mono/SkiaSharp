@@ -18,5 +18,77 @@
   "createdAt": "2025-02-08T01:00:25",
   "updatedAt": "2025-07-05T05:03:57",
   "commentCount": 2,
-  "reactionCount": 6
+  "reactionCount": 6,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:43:21.3748031Z",
+    "reactions": [
+      {
+        "user": "CePur",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:21.3748099Z"
+      },
+      {
+        "user": "danielcaceresm",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:21.3748109Z"
+      },
+      {
+        "user": "vitalii-sitnikov",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:21.3748115Z"
+      },
+      {
+        "user": "codelovercc",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:21.3748119Z"
+      },
+      {
+        "user": "taublast",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:21.3748122Z"
+      },
+      {
+        "user": "dpvq",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T12:43:21.3748126Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2888746726,
+        "author": "gnattu",
+        "body": "Late to the party, but I will post what the actual problem is and how we resolved our issue here.\n\nGoogle\u0027s API implementation has a leaky abstraction. That is, you have to change your behavior to match its old API internal implementation to have the same result.\n\nAlthough \u0060SKFilterQuality.High\u0060 used to imply \u0060SKCubicResampler.Mitchell\u0060, but **this is only the case for up-sampling**.\n\nIf you specified \u0060SKFilterQuality.High\u0060 and you are actually down-sampling, the image like we are doing here, skia would switch back to \u0060SKFilterQuality.Medium\u0060 internally which does not use cubic resampler at all, but instead, a bilinear filter plus mipmaps: \u0060new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)\u0060.\n\nTo migrate to this new API and retaining the quality for downsized images, you have to check if the resizing is actually upscaling and select the ideal sampling option.\n\nAfter changing our code to use \u0060new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear)\u0060 when downscaling, we are getting the results same as the old API. ",
+        "createdAt": "2025-05-18T03:46:29",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:43:21.1080086Z"
+          },
+          {
+            "user": "Dblm0",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:43:21.1080089Z"
+          },
+          {
+            "user": "snowflysky",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:43:21.108009Z"
+          },
+          {
+            "user": "MrJul",
+            "content": "heart",
+            "createdAt": "2026-02-06T12:43:21.108009Z"
+          }
+        ]
+      },
+      {
+        "id": 3037162785,
+        "author": "taublast",
+        "body": "@gnattu awesome, thanks for sharing!\n\n\u0060\u0060\u0060csharp\n// For upscaling - use cubic\nvar upsampleOptions = new SKSamplingOptions(SkCubicResampler.Mitchell);\n\n// For downscaling - consider using linear with mipmaps instead\nvar downsampleOptions = new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\n\n// Combined  \nbool isUpscaling = targetSize \u003E sourceSize;\nvar samplingOptions = isUpscaling \n    ? new SKSamplingOptions(SkCubicResampler.Mitchell)\n    : new SKSamplingOptions(SKFilterMode.Linear, SKMipmapMode.Linear);\n\u0060\u0060\u0060",
+        "createdAt": "2025-07-04T20:02:27",
+        "reactions": []
+      }
+    ]
+  }
 }

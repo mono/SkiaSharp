@@ -19,5 +19,45 @@
   "updatedAt": "2025-08-19T20:13:01",
   "closedAt": "2025-08-19T20:13:01",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:42:31.3100198Z",
+    "reactions": [
+      {
+        "user": "github-actions[bot]",
+        "content": "eyes",
+        "createdAt": "2026-02-06T12:42:31.3100262Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 3193617908,
+        "author": "janne-hmp",
+        "body": "The problem might have been that the handlers got inadvertantly disconnected before I called GRContext.Dispose. And earlier the problem was that I didn\u0027t call GRContext.Dispose manually at all. It seems like if you do not call Dispose explicitly before disconnecting the handlers, some threads will linger around and will abort at program termination.",
+        "createdAt": "2025-08-16T11:54:53",
+        "reactions": []
+      },
+      {
+        "id": 3193633711,
+        "author": "janne-hmp",
+        "body": "\u0060GRContext.Dispose\u0060 caused a crash on Windows, so I moved to using \u0060Flush \u003E ResetContext \u003E AbandonContext\u0060 pattern, which seemed to work on Windows, too.",
+        "createdAt": "2025-08-16T12:19:53",
+        "reactions": []
+      },
+      {
+        "id": 3193668699,
+        "author": "janne-hmp",
+        "body": "Neither one of those actually resolved the issue, so the problem is probably within the SkiaSharp framework itself.",
+        "createdAt": "2025-08-16T13:24:32",
+        "reactions": []
+      },
+      {
+        "id": 3202082959,
+        "author": "janne-hmp",
+        "body": "Looks like I managed to solve the problem by unsubscribing from SKGLView\u0027s PaintSurface and Touch events before disconnecting handlers.",
+        "createdAt": "2025-08-19T20:13:01",
+        "reactions": []
+      }
+    ]
+  }
 }

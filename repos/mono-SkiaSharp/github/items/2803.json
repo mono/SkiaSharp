@@ -22,5 +22,115 @@
   "createdAt": "2024-03-23T00:35:46",
   "updatedAt": "2025-05-07T06:29:05",
   "commentCount": 14,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T12:44:07.2677723Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2042635208,
+        "author": "mattleibow",
+        "body": "You should not install any other ANGLE library - it is included in the package. \r\n\r\nLet me know if removing ANGLE and rebuilding after deleting the bin/obj fixes this.",
+        "createdAt": "2024-04-08T12:35:54",
+        "reactions": []
+      },
+      {
+        "id": 2056800563,
+        "author": "TopperDEL",
+        "body": "I\u0027m running into the same problem. All I did was: create a new WinUI-project (in this case a Uno-App), add the \u0060SkiaSharp.Views.Uno.WinUI\u0060-package and the following code:\r\n\r\n\u0060\u0060\u0060\r\nxmlns:skia=\u0022using:SkiaSharp.Views.Windows\u0022\r\n\u003Cskia:SKSwapChainPanel PaintSurface=\u0022SKSwapChainPanel_PaintSurface\u0022 Height=\u0022200\u0022 Width=\u0022200\u0022/\u003E\r\n\u0060\u0060\u0060\r\n\r\nThen I get the exact same error as mentioned above.",
+        "createdAt": "2024-04-15T13:01:25",
+        "reactions": []
+      },
+      {
+        "id": 2056827268,
+        "author": "AmitParmar2005",
+        "body": "I was able to make it running. Dont install Uno package. Install WinUI Package. Here\u0027s the screenshot. Please let me know if you want me to upload entire project.\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/19598410/3d345473-9b9d-4456-b885-303fea9e08d6)\r\n",
+        "createdAt": "2024-04-15T13:14:26",
+        "reactions": []
+      },
+      {
+        "id": 2058725794,
+        "author": "TopperDEL",
+        "body": "Thanks @AmitParmar2005 - but that does not seem to help in my case. I don\u0027t get the \u0060SKSwapChainPanel\u0060 to work on Uno. I tried adding SkiaSharp itself, switchting to preview 2.1 (like you have above) - but none works. I always get the error above as soon as I add an \u0060SKSwapChainPanel\u0060-Control to my page.",
+        "createdAt": "2024-04-16T10:09:17",
+        "reactions": []
+      },
+      {
+        "id": 2058798641,
+        "author": "AmitParmar2005",
+        "body": "Try the attached zip file. Its very simple working sample. Let me know if you still have any issues.\r\n\r\n[WinUI3_SKSwap_Test.zip](https://github.com/mono/SkiaSharp/files/14995655/WinUI3_SKSwap_Test.zip)\r\n",
+        "createdAt": "2024-04-16T10:50:12",
+        "reactions": []
+      },
+      {
+        "id": 2058866962,
+        "author": "TopperDEL",
+        "body": "That works here, too. But I don\u0027t get it to work together with Uno-platform.",
+        "createdAt": "2024-04-16T11:30:08",
+        "reactions": []
+      },
+      {
+        "id": 2058885645,
+        "author": "AmitParmar2005",
+        "body": "I am not sure about Uno-Platform. I never worked on it. I will check it out and get back to you.",
+        "createdAt": "2024-04-16T11:39:21",
+        "reactions": []
+      },
+      {
+        "id": 2058889102,
+        "author": "TopperDEL",
+        "body": "Awesome, thanks!",
+        "createdAt": "2024-04-16T11:41:27",
+        "reactions": []
+      },
+      {
+        "id": 2120939450,
+        "author": "mattleibow",
+        "body": "@TopperDEL  are you able to create a sample and more info on how you are using Uno? I have not really been working on Uno views much these days, so maybe the Uno team has more info. @jeromelaban thoughts?",
+        "createdAt": "2024-05-20T18:02:32",
+        "reactions": []
+      },
+      {
+        "id": 2121967579,
+        "author": "TopperDEL",
+        "body": "I just created a new Uno-App (5.2) and tried to add \u0060SkiaSharp.Views.Uno.WinUI\u0060 to the project. But Nuget won\u0027t let me. It says that the package is explicitly referenced by a SDK. So it seems I cannot use the pre-release 3.0.0-preview.3.1 together with Uno?\r\nSo I cannot try the new SwapChainPanel.\r\n\r\nMy previous attempt was with the previous Uno-version, that where not single-prject-based. I could add the Skia-prerelease-version - but maybe it led to my issue during runtime, as it got mixed up with the binaries or so?\r\n\r\n@jeromelaban: Do you know if it would be possible (and how) to use SkiaSharp-preview-version (3.0.0-*) together with a Uno-app (5.2)?",
+        "createdAt": "2024-05-21T07:42:27",
+        "reactions": []
+      },
+      {
+        "id": 2125039442,
+        "author": "jeromelaban",
+        "body": "Uno Platform 5.2 is not compatible with SkiaSharp v3, but 5.3 will be. You can try it out with by upgrading to the latest prerelease bits. \r\n\r\nOverall though, \u0060SKSwapChainPanel\u0060 is supported on iOS, Android and WebAssembly. Catalyst does not have the right setup yet (Metal should be used) and Desktop target must \u0060SKXamlCanvas\u0060 for now. For desktop, we\u0027re making changes here  to provide https://github.com/unoplatform/uno/pull/16621 a canvas pass-through for performance.",
+        "createdAt": "2024-05-22T15:07:09",
+        "reactions": []
+      },
+      {
+        "id": 2126332647,
+        "author": "TopperDEL",
+        "body": "Thanks, @jeromelaban! Then it is not of immediate use for me as I need to target Windows and macOS. Let\u0027s see how #16621 goes. :)",
+        "createdAt": "2024-05-23T06:30:25",
+        "reactions": []
+      },
+      {
+        "id": 2855801131,
+        "author": "darenm",
+        "body": "@TopperDEL I ran into a similar issue with the latest versions of Uno and SkiaSharp - @jeromelaban suggested switching from the AnyCpu to an x64 configuration for the WinUI build of the Uno App and that fixed the issue for me.",
+        "createdAt": "2025-05-06T20:04:03",
+        "reactions": [
+          {
+            "user": "jeromelaban",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T12:44:07.0066643Z"
+          }
+        ]
+      },
+      {
+        "id": 2857262482,
+        "author": "TopperDEL",
+        "body": "I\u0027m still using the SKXamlCanvas and rewrote my rendering pipeline to get better performance. I haven\u0027t tried the SKSwapChainPanel since my last comment. I need it to work on Windows and Mac at least but I don\u0027t know what the current state is in this regard.\n\nFor the moment I\u0027m fine with the current version on my end. Appreciate the info, though!",
+        "createdAt": "2025-05-07T06:29:05",
+        "reactions": []
+      }
+    ]
+  }
 }
