@@ -20,5 +20,88 @@
   "updatedAt": "2022-08-19T12:01:49",
   "closedAt": "2019-06-25T19:02:51",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:49.5949905Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 471910712,
+        "author": "lhwsa2010",
+        "body": "I have the same issue too.\r\nCentos7 x64\r\nasp.net core 2.2\r\ndocker\r\n\r\n\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies.\r\n\r\nAnyone had worked on it?",
+        "createdAt": "2019-03-12T08:53:08",
+        "reactions": []
+      },
+      {
+        "id": 471915274,
+        "author": "knocte",
+        "body": "We use this workaround in my project: https://gitlab.com/DiginexGlobal/geewallet/blob/frontend/src/GWallet.Frontend.XF.Gtk/GWallet.Frontend.XF.Gtk.fsproj#L269",
+        "createdAt": "2019-03-12T09:07:53",
+        "reactions": []
+      },
+      {
+        "id": 472282274,
+        "author": "lhwsa2010",
+        "body": " Thanks bro.I have solved it.You code is very useful,it\u2018s inspiring.\r\nAdd this in Dockerfile\r\n\r\n\u003E RUN apt-get update;apt-get install libfontconfig1 -y;\r\n\r\nand copy\r\n\r\n\u003E  libSkiaSharp.so \r\n\r\ninto root of project.\r\n",
+        "createdAt": "2019-03-13T05:11:45",
+        "reactions": []
+      },
+      {
+        "id": 504814295,
+        "author": "mattleibow",
+        "body": "With Linux, I think it will copy the .so file only when you publish.",
+        "createdAt": "2019-06-24T02:12:26",
+        "reactions": []
+      },
+      {
+        "id": 504908937,
+        "author": "knocte",
+        "body": "\u003E With Linux, I think it will copy the .so file only when you publish.\r\n\r\nSorry, what do you mean with \u0022publish\u0022 exactly?",
+        "createdAt": "2019-06-24T08:19:04",
+        "reactions": []
+      },
+      {
+        "id": 505237867,
+        "author": "mattleibow",
+        "body": "Maybe I should not assume... Are you using .NET Core or mono?\r\n\r\nIf you are using .NET Core, then a \u0060dotnet publish\u0060 should copy everything you need. Just make sure to keep the \u0060*.deps.json\u0060 file with the .dll. If you don\u0027t publish, make sure you copy the \u0060*.runtimeconfig.dev.json\u0060 and \u0060*.deps.json\u0060 files as they contain the bits needed for dotnet core to find the .so file in your NuGet cache.\r\n\r\nThere is also a very specific publish which only copies the specific files: \u0060dotnet publish -r linux-x64\u0060 that will create a special folder with EVERYTHING that is needed to run - no additional files outside the new folder are needed. It creates an executable binary that you can run without dotnet installed.\r\n\r\nBut... If you are using mono, then things are a bit different. There is a bug :)\r\nI think I have been misunderstanding a whole bunch of issues, so apologies for that. But, I hope to get a fix out soon.\r\n\r\nThe current PR for this is https://github.com/mono/SkiaSharp/pull/886\r\n\r\nA workaround would be to add this to the bottom of the .csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CTarget Name=\u0022AfterBuild\u0022\u003E\r\n  \u003CCopy SourceFiles=\u0022$(NuGetPackageRoot)skiasharp.nativeassets.linux\\1.68.0\\runtimes\\linux-x64\\native\\libSkiaSharp.so\u0022\r\n        DestinationFiles=\u0022$(TargetDir)libSkiaSharp.so\u0022 /\u003E\r\n\u003C/Target\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-25T01:12:48",
+        "reactions": []
+      },
+      {
+        "id": 505295697,
+        "author": "knocte",
+        "body": "\u003E But... If you are using mono, then things are a bit different. There is a bug :)\r\n\r\nYes, sorry, I should have mentioned I was using mono, in the original report.\r\n\r\n\u003E The current PR for this is #886\r\n\r\nGreat to see an official fix for this!\r\n\r\n\u003E A workaround would be to add this to the bottom of the .csproj:\r\n\r\nExactly the workaround I was using, which I also pointed out in https://github.com/mono/SkiaSharp/issues/794#issuecomment-471915274. BTW, FYI my workaround is a bit more correct than yours because yours only works in case-insensitive filesystems ;)",
+        "createdAt": "2019-06-25T05:58:24",
+        "reactions": []
+      },
+      {
+        "id": 505579025,
+        "author": "mattleibow",
+        "body": "I just merged https://github.com/mono/SkiaSharp/issues/794, so as soon as the build is complete I will release to the preview feed: https://nugetized.blob.core.windows.net/skiasharp-eap/index.json",
+        "createdAt": "2019-06-25T19:02:51",
+        "reactions": []
+      },
+      {
+        "id": 505675359,
+        "author": "mattleibow",
+        "body": "@knocte the fix should be up on the preview feed. Version 1.68.1-rc.131",
+        "createdAt": "2019-06-26T00:57:20",
+        "reactions": []
+      },
+      {
+        "id": 505747921,
+        "author": "knocte",
+        "body": "\u003E @knocte the fix should be up on the preview feed. Version 1.68.1-rc.131\r\n\r\nThanks for the heads up, but for me consuming something from anything other than the official nuget feed is a bit convoluted. When will it hit nuget.org? Will \u00601.68.1\u0060 be the first version that contains this fix?",
+        "createdAt": "2019-06-26T07:02:19",
+        "reactions": []
+      },
+      {
+        "id": 505831892,
+        "author": "mattleibow",
+        "body": "I am hoping that the first public preview will hit the nuget.org feed soon, can\u0027t say exactly as I am waiting on feedback from the consumers of the preview feed. Probably in a week or so.\r\n\r\nBut, to use the preview feed, you can just add a \u0060nuget.config\u0060 to the project or solution folder and then nuget will restore from the feed as well:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\r\n\u003Cconfiguration\u003E\r\n  \u003CpackageSources\u003E\r\n    \u003Cadd key=\u0022skiasharp-eap\u0022 value=\u0022https://nugetized.blob.core.windows.net/skiasharp-eap/index.json\u0022 /\u003E\r\n  \u003C/packageSources\u003E\r\n\u003C/configuration\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-06-26T11:16:55",
+        "reactions": []
+      }
+    ]
+  }
 }

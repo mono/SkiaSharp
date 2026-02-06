@@ -19,5 +19,24 @@
   "updatedAt": "2022-08-19T12:02:34",
   "closedAt": "2018-11-30T18:53:20",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:20.3672899Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 441078401,
+        "author": "mattleibow",
+        "body": "The Index8 pixel format could, and often does, support colors. As a result, an automatic switch is not possible.\r\n\r\nHowever, this is just the default in-memory representation if it can\u0027t be detected. If you know you have only gray images, then you can decode to a gray 8 by intercepting the values:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar codec =  SKCodec.Create(data);\r\nvar newInfo = new SKImageInfo(codec.Info.Width, codec.Info.Height, SKColorType.Gray8);\r\nvar bitmap = SKBitmap.Decode(codec, newInfo);\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2018-11-22T16:28:23",
+        "reactions": [
+          {
+            "user": "HappyBullying",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:20.3170615Z"
+          }
+        ]
+      }
+    ]
+  }
 }

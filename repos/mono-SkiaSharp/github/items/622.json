@@ -14,5 +14,89 @@
   "updatedAt": "2022-08-19T15:01:43",
   "closedAt": "2019-11-20T20:50:08",
   "commentCount": 7,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:07.4791584Z",
+    "reactions": [
+      {
+        "user": "mgnslndh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:04:07.4794383Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 415900495,
+        "author": "define-private-public",
+        "body": "Looking at the code here: https://github.com/mono/SkiaSharp/blob/b8511b732b77b6e9f3b4929a5fa5598d189adf1d/source/SkiaSharp.Views/SkiaSharp.Views.WPF/SKElement.cs#L87\r\n\r\nI\u0027m pretty sure that this would be improved by fixing #552 ",
+        "createdAt": "2018-08-24T22:38:29",
+        "reactions": []
+      },
+      {
+        "id": 415973673,
+        "author": "entdark",
+        "body": "You can wrap Windows Forms SKGLControl up inside a WPF Element like it is done in the skia WPF sample:\r\nhttps://github.com/mono/SkiaSharp/blob/master/samples/Gallery/WPF/SkiaSharpSample/MainWindow.xaml#L29\r\nhttps://github.com/mono/SkiaSharp/blob/master/samples/Gallery/WPF/SkiaSharpSample/MainWindow.xaml.cs#L151",
+        "createdAt": "2018-08-25T14:39:36",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:06.3926421Z"
+          }
+        ]
+      },
+      {
+        "id": 417069395,
+        "author": "ibgorton",
+        "body": "I\u0027ve spent several days poking around, building SkiaSharp, Angle, etc.\r\n\r\nThe WPF SKElement is not GPU-accelerated.\r\n\r\nGetting ANGLE added in as a GLES context is non-trivial. I haven\u0027t succeeded yet.\r\n\r\nFor us, embedding a Winforms control is not acceptable, due to the airspace and other issues. (As an aside, it looks like Skia is built against OpenTK 1.1, which is all well and good, other than breaking changes in OpenTK between 1 and 2 and the current 3.) For now, we are going to live with the CPU-intensive software rendering, GPU offload could be nice, but we can\u0027t spend weeks or months on this one part of the application. Unfortunately, there does not seem to be any full-featured hardware-accelerated 2D option for WPF anywhere, as the problem has been asked about on various boards in various ways for about 10 years.",
+        "createdAt": "2018-08-29T19:06:18",
+        "reactions": []
+      },
+      {
+        "id": 417094287,
+        "author": "entdark",
+        "body": "@ibgorton Up to you of course, but why SKGLControl is not acceptable?\r\nYou will be still using it as a WPF FrameworkElement anyways.\r\nIt\u0027s used so in the official samples here so it\u0027s how it is designed to be used. Works pretty good for me.",
+        "createdAt": "2018-08-29T20:27:10",
+        "reactions": []
+      },
+      {
+        "id": 450695929,
+        "author": "freezy",
+        "body": "@ibgorton in case you\u0027re still using a CPU-based surface, I\u0027ve created a proof of concept using an accelerated off-screen surface without OpenTK or ANGLE that seems to work well. More info and code [here](https://github.com/freezy/wpf-skia-opengl). See also #745.",
+        "createdAt": "2018-12-31T22:32:39",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:07.0181342Z"
+          },
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:07.0181346Z"
+          }
+        ]
+      },
+      {
+        "id": 450923404,
+        "author": "ibgorton",
+        "body": "Ooh, thank you! Taking a look now.",
+        "createdAt": "2019-01-02T17:10:37",
+        "reactions": []
+      },
+      {
+        "id": 556377165,
+        "author": "mattleibow",
+        "body": "Closing this as a duplicate of #745 \r\n\r\n@freezy thanks for the work and sharing it. I\u0027mm going to add a comment in #745 to your repo as that we can have all the information in one place.\r\n\r\n@ibgorton did @freezy\u0027s code work for you? Please let us know in #745 !",
+        "createdAt": "2019-11-20T20:50:08",
+        "reactions": [
+          {
+            "user": "freezy",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:07.4289199Z"
+          }
+        ]
+      }
+    ]
+  }
 }

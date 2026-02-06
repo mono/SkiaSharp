@@ -36,5 +36,116 @@
   "updatedAt": "2022-08-19T15:01:26",
   "closedAt": "2020-10-27T00:42:55",
   "commentCount": 15,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:38.726202Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 427536486,
+        "author": "mattleibow",
+        "body": "After doing some more research, I found out several things:\r\n - it works fine in the emulator\r\n - it works fine as a debug build\r\n\r\nAs a result, there appears to be something going wrong for ARM when the optimizations are at \u0060-Os\u0060. I had a try with \u0060-O3\u0060 and it appears to solve the issue.\r\n\r\nHowever, this does incur a penalty with the size no longer being the main point. As a result, the size increases by about 800KB-1200KB depending on the architecture.\r\n\r\nFor this release, I will go with a larger binary that works over a smaller one that can\u0027t do GPU. I have reported the issue to Google along with all the information I could find. Hopefully, they can find out exactly what the issue is and provide a real fix.",
+        "createdAt": "2018-10-06T01:38:15",
+        "reactions": []
+      },
+      {
+        "id": 478235989,
+        "author": "apaatsio",
+        "body": "I found this issue on google because I\u0027m experiencing a similar bug on a Flutter app. See https://github.com/flutter/flutter/issues/29751 and [my comment](https://github.com/flutter/flutter/issues/29751#issuecomment-478231119)\r\n\r\nThere seem to be many common denominators (Pixel 2, Android 8.1, drawing text, SIGSEGV during SKCanvas.Flush()) so I was wondering if these things could be related.\r\n\r\nUnfortunately, I can\u0027t see the Skia issue 8425 that @mattleibow linked. It\u0027s giving me \u0022Permission denied\u0022 so I can\u0027t dig deeper into this.",
+        "createdAt": "2019-03-30T11:12:54",
+        "reactions": []
+      },
+      {
+        "id": 583365469,
+        "author": "blimkemann",
+        "body": "I am getting this error even in debug builds using 1.68.0 and above when targeting Android 10 as a build target. It happens every time and is repeatable. If I remove all calls to DrawText there is no crash. Even a single DrawText will cause a crash with a \u0022Could not allocate vertices\u0022 message. \r\n\r\nIs there any news on this?\r\n\r\nHere is the managed stack trace:\r\n\u0060\u0060\u0060\r\nMemory around native instruction pointer (0x73a030012cfe):0x73a030012cee  48 89 74 24 48 ff 50 18 48 8b 8c 24 e8 00 00 00  H.t$H.P.H..$....\r\n0x73a030012cfe  ff 41 08 48 89 44 24 28 48 8b 6c 24 60 48 89 4c  .A.H.D$(H.l$\u0060H.L\r\n0x73a030012d0e  24 60 48 85 ed 74 35 48 8d 5d 08 ff 4d 08 75 0d  $\u0060H..t5H.]..M.u.\r\n0x73a030012d1e  48 8d 7b f8 e8 d9 8c bf ff 84 c0 74 1f 83 7d 0c  H.{........t..}.\r\n\r\n======================================\r\n===========================\r\n\tManaged Stacktrace:\r\n=================================================================\r\n\t  at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n\t  at SkiaSharp.SkiaApi:sk_canvas_flush \u003C0x0013f\u003E\r\n\t  at SkiaSharp.SKCanvas:Flush \u003C0x00097\u003E\r\n\t  at Redbook.Mobile.Document.Renderer:RenderPage \u003C0x0051b\u003E\r\n\t  at Redbook.Mobile.Document.Page:Render \u003C0x00113\u003E\r\n\t  at \u003C\u003Ec__DisplayClass27_0:\u003COnPaintSurface\u003Eb__0 \u003C0x0172b\u003E\r\n\t  at RunnableImplementor:Run \u003C0x000d1\u003E\r\n\t  at Java.Lang.IRunnableInvoker:n_Run \u003C0x000db\u003E\r\n\t  at Android.Runtime.DynamicMethodNameCounter:32 \u003C0x0011a\u003E\r\n\t  at Android.Runtime.DynamicMethodNameCounter:32 \u003C0x000fa\u003E\r\n=================================================================\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-02-07T12:14:10",
+        "reactions": []
+      },
+      {
+        "id": 583904375,
+        "author": "mattleibow",
+        "body": "@apaatsio, I had a look at that issue on the Google bug list, no feedback at all. The only comment a long while back was:\r\n\r\n\u003E Well, it is dying while trying to upload glyphs to the font atlas.\r\n\u003E\r\n\u003E I don\u0027t know why that would be occurring though.\r\n\r\n@blimkemann could you create a test/repo project for your example. It was working when I reduced the optimization level a while back. Maybe this is a slightly different case that I can start testing on.\r\n\r\n\u003E I am looking on getting a brand new skia engine out in #986, just trying to fix the last few bugs in the current version. Moving this issue to that release so it gets at least a test.\r\n\r\n",
+        "createdAt": "2020-02-09T22:58:05",
+        "reactions": []
+      },
+      {
+        "id": 584102238,
+        "author": "blimkemann",
+        "body": "[SkiaTextBug.zip](https://github.com/mono/SkiaSharp/files/4180786/SkiaTextBug.zip)\r\n@mattleibow, here is a repro. Pretty simple really. Just start in debugger on Android and the drawing will crash as soon as Canvas.Flush is called. Please let me know if you have questions about this.",
+        "createdAt": "2020-02-10T12:37:00",
+        "reactions": []
+      },
+      {
+        "id": 584355987,
+        "author": "mattleibow",
+        "body": "Thanks! I\u0027ll have a look.",
+        "createdAt": "2020-02-10T21:11:04",
+        "reactions": []
+      },
+      {
+        "id": 649851104,
+        "author": "mattleibow",
+        "body": "This has been some time, I will try using the new v2.80 packages. Have you still been having this issue?",
+        "createdAt": "2020-06-25T22:33:51",
+        "reactions": []
+      },
+      {
+        "id": 650106641,
+        "author": "blimkemann",
+        "body": "Yes, still having this issue.\r\n",
+        "createdAt": "2020-06-26T10:23:53",
+        "reactions": []
+      },
+      {
+        "id": 650174721,
+        "author": "mattleibow",
+        "body": "Not sure how I missed it, but the issue with your code is that you are drawing outside of the main render loop.\r\n\r\nThis code:\r\n\r\n\u0060\u0060\u0060csharp\r\nMainThread.BeginInvokeOnMainThread(() =\u003E {\r\n    // drawing code\r\n});\r\n\u0060\u0060\u0060\r\n\r\nThe \u0060MainThread.BeginInvokeOnMainThread\u0060 returns immediately and the surface/GL context is reset.\r\n\r\nJust remove those blocks and draw directly.\r\n\r\n\u003Cimg src=\u0022https://user-images.githubusercontent.com/1096616/85861265-596ad980-b7c0-11ea-92cb-ba5277d45e57.png\u0022 width=\u0022300\u0022 /\u003E\r\n",
+        "createdAt": "2020-06-26T13:19:20",
+        "reactions": []
+      },
+      {
+        "id": 652597099,
+        "author": "blimkemann",
+        "body": "Thanks. That fixed that issue. I am now always wrapping InvalidateSurface in MainThread.BeginInvokeOnMainThread.\r\n\r\nHowever, as I use some commands on the page and drawing happens, after about 4 calls to InvalidateSurface, the whole SKGLView appears as a black rectangle (only on Android) and then randomly comes back after a few more redraws. Am I still missing something?\r",
+        "createdAt": "2020-07-01T19:10:17",
+        "reactions": []
+      },
+      {
+        "id": 652604232,
+        "author": "mattleibow",
+        "body": "Are there any errors in the log? Is there something you are doing just before it happens? ",
+        "createdAt": "2020-07-01T19:26:34",
+        "reactions": []
+      },
+      {
+        "id": 653075515,
+        "author": "blimkemann",
+        "body": "Each time, I call Canvas.Clear(), Canvas.Flush(), do my drawing, and Canvas.Flush() again. Other than that, exactly the same thing happens between drawings.\r\n\r\nThe logs show only this:\r\nTime\r\nDevice Name\r\nType\r\nPID\r\nTag\r\nMessage\r\n07-02 11:26:07.704\r\nmoto_g7\r\nInfo\r\n24845\r\n.redbook.mobil\r\nExplicit concurrent copying GC freed 10877(367KB) AllocSpace objects, 0(0B) LOS objects, 49% free, 3MB/6MB, paused 311us total 7.868ms\r\n07-02 11:26:07.707\r\nmoto_g7\r\nDebug\r\n24845\r\nMono\r\nGC_TAR_BRIDGE bridges 7 objects 95968 opaque 280479 colors 7 colors-bridged 7 colors-visible 7 xref 0 cache-hit 0 cache-semihit 0 cache-miss 0 setup 0.02ms tarjan 16.60ms scc-setup 0.02ms gather-xref 0.01ms xref-setup 0.01ms cleanup 2.08ms\r\n07-02 11:26:07.707\r\nmoto_g7\r\nDebug\r\n24845\r\nMono\r\nGC_BRIDGE: Complete, was running for 10.88ms\r\n07-02 11:26:07.707\r\nmoto_g7\r\nDebug\r\n24845\r\nMono\r\nGC_MINOR: (Nursery full) time 20.11ms, stw 21.25ms promoted 676K major size: 55024K in use: 50942K los size: 4096K in use: 2560K\r\n\r\n\r\nFrom: Matthew Leibowitz \u003Cnotifications@github.com\u003E\r\nSent: Wednesday, July 1, 2020 3:27 PM\r\nTo: mono/SkiaSharp \u003CSkiaSharp@noreply.github.com\u003E\r\nCc: Brian Limkemann \u003Cbrian@decisivecomputing.com\u003E; Mention \u003Cmention@noreply.github.com\u003E\r\nSubject: Re: [mono/SkiaSharp] SIGSEGV when using SKCanvas.DrawText() and then SKCanvas.Flush() (#647)\r\n\r\n\r\nAre there any errors in the log? Is there something you are doing just before it happens?\r\n\r\n\u2014\r\nYou are receiving this because you were mentioned.\r\nReply to this email directly, view it on GitHub\u003Chttps://github.com/mono/SkiaSharp/issues/647#issuecomment-652604232\u003E, or unsubscribe\u003Chttps://github.com/notifications/unsubscribe-auth/ACPIWVO4Q7FNZJ276AENGYLRZOEXRANCNFSM4FX2OECQ\u003E.\r\n",
+        "createdAt": "2020-07-02T15:31:00",
+        "reactions": []
+      },
+      {
+        "id": 708057270,
+        "author": "mattleibow",
+        "body": "@blimkemann Is this still happening? Have you tried the v2 of SkiaSharp?",
+        "createdAt": "2020-10-13T23:08:01",
+        "reactions": []
+      },
+      {
+        "id": 708366033,
+        "author": "blimkemann",
+        "body": "It is not still happening. Turns out is was a threading issue\r\n\r\nFrom: Matthew Leibowitz \u003Cnotifications@github.com\u003E\r\nSent: Tuesday, October 13, 2020 7:08 PM\r\nTo: mono/SkiaSharp \u003CSkiaSharp@noreply.github.com\u003E\r\nCc: Brian Limkemann \u003Cbrian@decisivecomputing.com\u003E; Mention \u003Cmention@noreply.github.com\u003E\r\nSubject: Re: [mono/SkiaSharp] SIGSEGV when using SKCanvas.DrawText() and then SKCanvas.Flush() (#647)\r\n\r\n\r\n@blimkemann\u003Chttps://github.com/blimkemann\u003E Is this still happening? Have you tried the v2 of SKiaSharp?\r\n\r\n\u2014\r\nYou are receiving this because you were mentioned.\r\nReply to this email directly, view it on GitHub\u003Chttps://github.com/mono/SkiaSharp/issues/647#issuecomment-708057270\u003E, or unsubscribe\u003Chttps://github.com/notifications/unsubscribe-auth/ACPIWVM2DFMHHOTPZ2AWDVDSKTMV7ANCNFSM4FX2OECQ\u003E.\r\n",
+        "createdAt": "2020-10-14T12:24:12",
+        "reactions": []
+      },
+      {
+        "id": 716904645,
+        "author": "mattleibow",
+        "body": "Thanks for the feedback. I\u0027m closing it now. If things start happening, then feel free to open a new issue and link to this for context. ",
+        "createdAt": "2020-10-27T00:43:44",
+        "reactions": []
+      }
+    ]
+  }
 }

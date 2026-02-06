@@ -37,5 +37,98 @@
   "updatedAt": "2022-08-19T12:02:25",
   "closedAt": "2020-06-09T13:01:51",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:41.5829341Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 443176013,
+        "author": "neodynamic",
+        "body": "@mattleibow it\u0027s important to not break existing code that uses DrawText method. We also use SKShaper to deal with non English text. Maybe the wrappers that Mike Reed talked about at that post could help here.",
+        "createdAt": "2018-11-30T11:28:55",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:39.5971258Z"
+          },
+          {
+            "user": "yinyue200",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:39.5971262Z"
+          }
+        ]
+      },
+      {
+        "id": 443258275,
+        "author": "mattleibow",
+        "body": "@neodynamic I will try to ensure maximum backwards-compatibility. One additional benefit of having this C# wrapper is that we can hide other breaking changes. One specific to not is the rewritten GPU interaction that has no breaking changes at all for the C# consumer.",
+        "createdAt": "2018-11-30T16:26:46",
+        "reactions": []
+      },
+      {
+        "id": 490053525,
+        "author": "yinyue200",
+        "body": "any updates?",
+        "createdAt": "2019-05-07T12:12:22",
+        "reactions": []
+      },
+      {
+        "id": 490056389,
+        "author": "Gillibald",
+        "body": "What is the benefit of the current SKFont implementation? I don\u0027t think you get anything new from it. That will probably change in the future.",
+        "createdAt": "2019-05-07T12:21:31",
+        "reactions": []
+      },
+      {
+        "id": 582962362,
+        "author": "mattleibow",
+        "body": "So things have changed, we have to use the new SKFont. But, I think we can keep the old API by doing what Google did here:\r\n\r\n\u0060\u0060\u0060\r\nclass SkXamarinPaint : SkPaint {\r\n    SkFont fFont;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nhttps://github.com/aosp-mirror/platform_frameworks_base/blob/master/libs/hwui/hwui/Paint.h#L148",
+        "createdAt": "2020-02-06T15:35:49",
+        "reactions": []
+      },
+      {
+        "id": 582965341,
+        "author": "Gillibald",
+        "body": "Do we have to live with that overhead or do you still add overloads that accept SKFont? The clean way would be getting rid of those font related members on SKPaint. ",
+        "createdAt": "2020-02-06T15:41:52",
+        "reactions": []
+      },
+      {
+        "id": 582970103,
+        "author": "mattleibow",
+        "body": "I haven\u0027t decided just yet. If I keep SkFont hidden, then we are all happy. But, doing that may make future updates harder as we will have a bigger jump.\r\n\r\nI was also thinking of converting SKPaint into a compat wrapper thing and exposing the current SkPaint as an SKBrush and the SkFont as an SKFont. So, at the end of the day, new code uses a SKBrush and SKFont, and existing code can use SKPaint - and all the old members just go paint.Font or paint.Brush.  \r\n\r\nBut, this will be annoying for everyone since they will have to change their usage of SKPaint. We do actually control what we expose to the C API, so adding a font field to paint is no biggie. Or, we could keep that as a \u0022feature\u0022. Either use Font for a lightweight thing, but the Paint for all the properties. This will also help with the fact that the TextAlign property has been moved out. So...\r\n\r\nMost - in fact all - of the SKFont uses is when using DrawText (which is pretty much useless) and SKTextBlob. So, as you mention having the font overhead for ALL operations is a bit overkill. This is why the wrapper thing may be nice.\r\n\r\nDo you have any thoughts on this? I am heading towards the \u0022SKPaint is now a big wrapper for all drawing, there are specific types as well\u0022 brain process. Comments?",
+        "createdAt": "2020-02-06T15:51:28",
+        "reactions": []
+      },
+      {
+        "id": 582972533,
+        "author": "mattleibow",
+        "body": "So, keep the C/C\u002B\u002B code as is, then I do this in C#:\r\n\r\n\u0060\u0060\u0060csharp\r\nclass SKPaint {\r\n    SKFont Font { get; set; }\r\n    SKBrush Brush { get; set; }\r\n    SKTextAlignment TextAlignment { get; set; }\r\n\r\n    SKTypeface Typeface {\r\n        get =\u003E Font.Typeface;\r\n        set =\u003E Font.Typeface = value;\r\n    }\r\n\r\n    SKColor Color {\r\n        get =\u003E Brush.Color;\r\n        set =\u003E Brush.Color = value;\r\n    }\r\n}\r\n\r\nclass SKCanvas {\r\n    void DrawText(string text, SKPaint paint) =\u003E\r\n        DrawText(text, paint.Brush, paint.Font, paint.TextAlignment);\r\n    void DrawText(string text, SKBrush brush, SKFont font, SKTextAlignment textAlign);\r\n}\r\n\r\nclass SKTextBlobBuilder {\r\n    void AddUtf16(string text, SKPaint paint) =\u003E\r\n        AddUtf16(text, paint.Font);\r\n    void AddUtf16(string text, SKFont font);\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-02-06T15:56:27",
+        "reactions": []
+      },
+      {
+        "id": 582975131,
+        "author": "Gillibald",
+        "body": "That approach would allow me to choose what ever fits my needs best. If I want a lightweight representation for font processing I can just use SKFont and if I just want things on the screen I can use SKPaint. Currently I only use SKPaint when it comes to drawing something with a brush. Everything else is meaningless in terms of text processing.",
+        "createdAt": "2020-02-06T16:01:32",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:41.3081617Z"
+          }
+        ]
+      },
+      {
+        "id": 619236499,
+        "author": "mattleibow",
+        "body": "Included in #986 .\r\n\r\nThe work was to publicly expose \u0060SKFont\u0060 and then on the native side, add an instance of \u0060SkFont\u0060 to a new \u0060SkCompatPaint : SkPaint\u0060. Everything should be backwards compatible.",
+        "createdAt": "2020-04-24T20:59:54",
+        "reactions": []
+      }
+    ]
+  }
 }

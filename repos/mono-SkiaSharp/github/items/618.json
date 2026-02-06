@@ -20,5 +20,59 @@
   "updatedAt": "2022-08-19T15:01:46",
   "closedAt": "2018-11-23T18:37:38",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:02.6498585Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 421511134,
+        "author": "LukePulverenti",
+        "body": "Is this on all images or is it isolated to specific images?",
+        "createdAt": "2018-09-14T23:41:01",
+        "reactions": []
+      },
+      {
+        "id": 421548303,
+        "author": "deakjahn",
+        "body": "I can\u0027t see anything very special with any of those (the second was a non-transparent, simpler attempt):\r\n\r\n![trans_square](https://user-images.githubusercontent.com/2234271/45585073-c14b7b00-b8de-11e8-8373-186467b3f78a.png)\r\n![trans_square2](https://user-images.githubusercontent.com/2234271/45585076-c4df0200-b8de-11e8-82f8-cd8548951312.png)\r\n\r\nBoth blow up.",
+        "createdAt": "2018-09-15T09:59:19",
+        "reactions": []
+      },
+      {
+        "id": 434666238,
+        "author": "mattleibow",
+        "body": "This is because you can\u0027t open images in the android resources in this manner. Xamarin.Forms has some custom code on Android to translate a resource into an ImageSource.\r\n\r\nTo decode an Android resource, you have to either:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var stream = Application.Context.Resources.OpenRawResource(Resource.Drawable.image)) {\r\n    return SKBitmap.Decode(stream);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nor \r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var fd = Application.Context.Resources.OpenRawResourceFd(Resource.Drawable.image))\r\nusing (var stream = fd.CreateInputStream()) {\r\n\treturn SKData.Create(stream, fd.Length);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nI am looking into creating a Xamarin.Forms / cross-platform API that will allow you to access the image from any platform resources. I am thinking something like:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar bmp = await ResourceExtensions.DecodeBitmapAsync(\u0022icon.png\u0022);\r\nvar img = ResourceExtensions.DecodeImageAsync(\u0022icon.png\u0022);\r\n\u0060\u0060\u0060\r\n\r\nNot too set on the names and types yet. Any thoughts? Comments? Suggestions?",
+        "createdAt": "2018-10-31T12:20:32",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:01.9897548Z"
+          }
+        ]
+      },
+      {
+        "id": 434668201,
+        "author": "mattleibow",
+        "body": "I am marking this as a bug because it should not just crash. Thanks for reporting this.",
+        "createdAt": "2018-10-31T12:27:40",
+        "reactions": []
+      },
+      {
+        "id": 434715116,
+        "author": "deakjahn",
+        "body": "I use the same resources in other places in the app, so this problem couldn\u0027t be XF-wide. On second thought, I might be passing it to FFImageLoading\u0027s image that could just handle it under the hood.",
+        "createdAt": "2018-10-31T14:46:25",
+        "reactions": []
+      },
+      {
+        "id": 498940778,
+        "author": "LeoJHarris",
+        "body": "\u003E I am looking into creating a Xamarin.Forms / cross-platform API that will allow you to access the image from any platform resources. I am thinking something like:\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E var bmp = await ResourceExtensions.DecodeBitmapAsync(\u0022icon.png\u0022);\r\n\u003E var img = ResourceExtensions.DecodeImageAsync(\u0022icon.png\u0022);\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E Not too set on the names and types yet. Any thoughts? Comments? Suggestions?\r\n\r\n@mattleibow \r\n\r\nThis would be very helpful and exactly what I am trying to do, is there a way provided to do this now?\r\n\r\nIve opened an issue addressing this: https://github.com/mono/SkiaSharp/issues/856",
+        "createdAt": "2019-06-05T05:10:23",
+        "reactions": []
+      }
+    ]
+  }
 }

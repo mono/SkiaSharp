@@ -33,5 +33,141 @@
   "updatedAt": "2022-08-19T12:01:53",
   "closedAt": "2019-02-15T17:02:42",
   "commentCount": 17,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:42.1623366Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 463415219,
+        "author": "dalexsoto",
+        "body": "Ugh this is because CoreGraphics used to be located somewhere else in 10.7\r\n\r\nfrom (\u003C10.7)\r\n\r\n\u0060\u0060\u0060\r\n/System/Library/Frameworks/ApplicationServices.framework/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics\r\n\u0060\u0060\u0060\r\n\r\nto (\u003E 10.7)\r\n\r\n\u0060\u0060\u0060\r\n/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics\r\n\u0060\u0060\u0060\r\n\r\nOne possible solution would be weak linking \u0060CoreGraphics\u0060",
+        "createdAt": "2019-02-13T23:16:32",
+        "reactions": []
+      },
+      {
+        "id": 463606845,
+        "author": "mattleibow",
+        "body": "@dalexsoto, thanks for looking at this. If I use weak linking, will libSkiaSharp.dylib be able to find CoreGraphics even though it was moved? Are there any disadvantages to weak linking? ",
+        "createdAt": "2019-02-14T12:19:00",
+        "reactions": []
+      },
+      {
+        "id": 463608251,
+        "author": "mattleibow",
+        "body": "@praeclarum thanks for reporting this. With regards to the minimum version of macOS, 10.9 has be the lowest with testing and what skia is compiled against.\r\n\r\nThis is not to say that we can\u0027t go lower, and if we can get things to work on 10.7 without affecting current users, we can drop the version. ",
+        "createdAt": "2019-02-14T12:24:06",
+        "reactions": []
+      },
+      {
+        "id": 463706328,
+        "author": "praeclarum",
+        "body": "Please strongly consider supporting the same versions of that Xamarin.Mac supports. They are able to work on old macs.\r\n\r\n10.7 to 10.9 account for 10% of my install base. \r\n\r\nI\u2019m hoping to hear more definitive statements on your support. I spent some effort porting my code to Skia and I am quite pleased with the results. But if I can\u2019t support my users, I can\u2019t use it. \r\n\r\n",
+        "createdAt": "2019-02-14T17:01:17",
+        "reactions": []
+      },
+      {
+        "id": 463708900,
+        "author": "praeclarum",
+        "body": "In my tests, 10.8 seems to be working (haven\u2019t thoroughly tested though).\r\n\r\nI\u2019d be willing to drop 10.7 if you commit to supporting 10.8. ",
+        "createdAt": "2019-02-14T17:08:03",
+        "reactions": []
+      },
+      {
+        "id": 463754234,
+        "author": "mattleibow",
+        "body": "Thanks for the feedback. I will see what I can do.",
+        "createdAt": "2019-02-14T19:13:45",
+        "reactions": []
+      },
+      {
+        "id": 463849424,
+        "author": "0xced",
+        "body": "Are you properly targeting macOS 10.7, i.e. using \u0060MACOSX_DEPLOYMENT_TARGET = 10.7\u0060?\r\n\r\nCoreGraphics has a special symbol instructing the linker to link \u0060ApplicationServices\u0060 instead of \u0060CoreGraphics\u0060 when targeting macOS 10.4 to 10.7 to avoid the crash you are seeing at startup:\r\n\u0060\u0060\u0060\r\n# On macOS 10.12.6\r\n$ nm /System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics | grep \u0027\\$ld\\$\u0027\r\n00000000004d22f8 S $ld$install_name$os10.4$/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices\r\n00000000004d22f9 S $ld$install_name$os10.5$/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices\r\n00000000004d22fa S $ld$install_name$os10.6$/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices\r\n00000000004d22fb S $ld$install_name$os10.7$/System/Library/Frameworks/ApplicationServices.framework/Versions/A/ApplicationServices\r\n\u0060\u0060\u0060\r\n\r\nThe output of \u0060otool -L iCircuit.app/Contents/MacOS/iCircuit\u0060 should be different when compiling with \u0060MACOSX_DEPLOYMENT_TARGET = 10.7\u0060 and with \u0060MACOSX_DEPLOYMENT_TARGET = 10.8\u0060. It should have ApplicationServices.framework when targeting 10.7 and CoreGraphics.framework when targeting 10.8.\r\n\r\nI had a similar issue with JavaScriptCore on iOS which moved between iOS 6 and iOS 7 and I wrote about it on Stack Overflow: [JavaScriptCore framework availability on iOS](https://stackoverflow.com/questions/23514579/javascriptcore-framework-availability-on-ios/23514580#23514580).",
+        "createdAt": "2019-02-14T23:48:10",
+        "reactions": []
+      },
+      {
+        "id": 463855912,
+        "author": "0xced",
+        "body": "Forget what I said, I just realised that it\u0027s libSkiaSharp.dylib who is referencing CoreGraphics.framework. And indeed libSkiaSharp.dylib targets 10.9 (see cake/BuildExternals.cake).",
+        "createdAt": "2019-02-15T00:15:40",
+        "reactions": []
+      },
+      {
+        "id": 463857928,
+        "author": "0xced",
+        "body": "Also, I don\u0027t think that weak-linking CoreGraphics.framework in iCircuit.app will help since libSkiaSharp.dylib has a hard link on CoreGraphics.framework:\r\n\u0060\u0060\u0060\r\n$ otool -l iCircuit.app/Contents/MonoBundle/libSkiaSharp.dylib | grep -C 3 CoreGraphics\r\nLoad command 12\r\n          cmd LC_LOAD_DYLIB\r\n      cmdsize 104\r\n         name /System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics (offset 24)\r\n   time stamp 2 Thu Jan  1 01:00:02 1970\r\n      current version 1245.8.4\r\ncompatibility version 64.0.0\r\n\u0060\u0060\u0060\r\nNote: LC_LOAD_DYLIB means hard-linking, it should be LC_LOAD_WEAK_DYLIB for weak-linking.\r\n",
+        "createdAt": "2019-02-15T00:24:44",
+        "reactions": []
+      },
+      {
+        "id": 463861031,
+        "author": "dalexsoto",
+        "body": "Ahh I missed the ping earlier, sorry @mattleibow :)\r\n\r\nThank you @0xced, you are completely right, I also meant weak linking CoreGraphics in our \u0060libSkiaSharp.dylib\u0060 since that comes from us but you already nailed it here\r\n\r\n\u003E Forget what I said, I just realised that it\u0027s libSkiaSharp.dylib who is referencing CoreGraphics.framework. And indeed libSkiaSharp.dylib targets 10.9 (see cake/BuildExternals.cake).\r\n\r\nBut my guess is that it needs to happen here  instead \r\nhttps://github.com/mono/SkiaSharp/tree/master/native-builds/libSkiaSharp_osx/libSkiaSharp.xcodeproj lower the deployment target to 10.7",
+        "createdAt": "2019-02-15T00:37:52",
+        "reactions": []
+      },
+      {
+        "id": 463871667,
+        "author": "mattleibow",
+        "body": "@dalexsoto @0xced If I drop the version to 10.7, will it still work on 10.8\u002B? IS there some redirection to let the new platforms know that the framework has moved?",
+        "createdAt": "2019-02-15T01:31:16",
+        "reactions": []
+      },
+      {
+        "id": 463874806,
+        "author": "dalexsoto",
+        "body": "@mattleibow yes you should be fine as long as you build using Xcode 10.1 for example (something above the Xcode that matches OS X 10.8\u002B), it should do the linker dark magic that @0xced referred above since it is aware of it.",
+        "createdAt": "2019-02-15T01:46:00",
+        "reactions": []
+      },
+      {
+        "id": 463875456,
+        "author": "mattleibow",
+        "body": "Ah. I got several errors but it appears to be going now with:\r\n\r\n\u0060\u0060\u0060\r\ncflags_cc \u002B= [ \u0022-stdlib=libc\u002B\u002B\u0022 ]\r\nldflags \u002B= [ \u0022-stdlib=libc\u002B\u002B\u0022 ]\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-02-15T01:49:08",
+        "reactions": []
+      },
+      {
+        "id": 463875744,
+        "author": "mattleibow",
+        "body": "I just checked, and 10.7 would now be a hard minimum:\r\n\r\n\u0060\u0060\u0060\r\nclang: error: invalid deployment target for -stdlib=libc\u002B\u002B (requires OS X 10.7 or later)\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-02-15T01:50:42",
+        "reactions": []
+      },
+      {
+        "id": 463885907,
+        "author": "mattleibow",
+        "body": "@praeclarum I think I have got you your 10.7 support. Seems to be working, you can confirm with the app attached to the PR #791 ",
+        "createdAt": "2019-02-15T02:46:57",
+        "reactions": []
+      },
+      {
+        "id": 463922040,
+        "author": "0xced",
+        "body": "\u003E If I drop the version to 10.7, will it still work on 10.8\u002B? IS there some redirection to let the new platforms know that the framework has moved?\r\n\r\nYes, when targeting 10.7, libSkiaSharp.dylib will load /System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices \r\nand on 10.8 and later, ApplicationServices will automatically load CoreGraphics:\r\n\u0060\u0060\u0060\r\n$ otool -L /System/Library/Frameworks/ApplicationServices.framework/Versions/Current/ApplicationServices | grep CoreGraphics\r\n\t/System/Library/Frameworks/CoreGraphics.framework/Versions/A/CoreGraphics (compatibility version 64.0.0, current version 1070.22.1)\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-02-15T06:19:11",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:41.8877454Z"
+          },
+          {
+            "user": "dalexsoto",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:41.8877459Z"
+          }
+        ]
+      },
+      {
+        "id": 482440869,
+        "author": "alexanderjung-sdxag",
+        "body": "I\u0027m running into this problem right now; when will this fix be available as nuget package?\r\nThx.",
+        "createdAt": "2019-04-12T05:19:28",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,79 @@
   "updatedAt": "2022-08-19T15:01:47",
   "closedAt": "2018-08-13T16:05:33",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:00.5956031Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 412271459,
+        "author": "Ollhax",
+        "body": "I\u0027m rendering OpenGL and using SkiaSharp for creating UI, and the best way I\u0027ve found to deal with this is to reset the OpenGL state manually after Skia is done. There are occasional issues when I hit some new setting I forgot to reset, but using Renderdoc or just guesswork to debug those problems is not overly difficult.\r\n\r\nNote that this isn\u0027t really a SkiaSharp error, it\u0027s just how Skia works. See here: https://groups.google.com/forum/#!searchin/skia-discuss/gpu$20state%7Csort:relevance/skia-discuss/pj8lF9aHJ3Y/X7oHGhpkE8gJ - the author also posted a list of states he found were changed by Skia, which I found very useful when getting this to work myself. You probably also want to reset the texture unit, e.g. \u0060GL.ActiveTexture(TextureUnit.Texture0);\u0060\r\n\r\nYou do need to be able to call GrContext.ResetContext before rendering Skia surfaces, though. If you cannot access the GrContext, I recommend filing a separate report for that, and perhaps for now just use some reflection magic to access it.",
+        "createdAt": "2018-08-11T12:15:28",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:59.7224116Z"
+          },
+          {
+            "user": "bozonsky",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:59.7224651Z"
+          }
+        ]
+      },
+      {
+        "id": 412271630,
+        "author": "Ollhax",
+        "body": "In case it\u0027s useful, this is what I use right now:\r\n\r\n\u0060\u0060\u0060\r\n// Prepare\r\ngrContext.ResetContext(GRGlBackendState.All);\r\n\r\n// (Draw canvas)\r\n\r\n// Reset (using OpenTK\u0027s GL bindings)\r\nGL.Disable(EnableCap.Blend);\r\nGL.Disable(EnableCap.VertexProgramPointSize);\r\nGL.BindVertexArray(vertexArrayObject); // Restore default VAO \r\nGL.FrontFace(FrontFaceDirection.Cw);\r\nGL.Enable(EnableCap.FramebufferSrgb);\r\nGL.ActiveTexture(TextureUnit.Texture0);\r\nGL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);\r\nGL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, 0);\r\nGL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);\r\nGL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);\r\nGL.BindFramebuffer(FramebufferTarget.FramebufferExt, 0);\r\nGL.UseProgram(0);\r\nGL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);\r\nGL.BindBuffer(BufferTarget.ArrayBuffer, 0);\r\nGL.DrawBuffer(DrawBufferMode.Back);\r\nGL.Enable(EnableCap.Dither);\r\nGL.DepthMask(true);\r\nGL.Enable(EnableCap.Multisample);\r\nGL.Disable(EnableCap.ScissorTest);\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-08-11T12:19:18",
+        "reactions": [
+          {
+            "user": "wangii",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:59.9447238Z"
+          },
+          {
+            "user": "AlexVestin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:59.944724Z"
+          },
+          {
+            "user": "xtuzy",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:59.9447241Z"
+          }
+        ]
+      },
+      {
+        "id": 412571478,
+        "author": "ReactorScram",
+        "body": "Thanks, Ollhax, it was the \u0022DisableVertexAttribArray\u0022 from your Google Groups link that I was missing.\r\n\r\nThe 3D code I have is legacy - It uses a mix of GL 1 and 2 rendering, so OpenGL must have been trying to send the generic vertex attributes when my code was only sending the fixed vertex and texcoord attributes.\r\n\r\nI couldn\u0027t get Renderdoc to work for some reason. The last time I had this issue, I was on Linux so I just used apitrace there. I know this is a common issue anywhere 2 different codebases have to share an OpenGL state, imgui has a similar reset () function and a list of GL state that the user must reset themselves.\r\n\r\nI\u0027ll close it since we all agree it\u0027s not technically a bug. Hopefully the next person with this problem finds this thread useful.",
+        "createdAt": "2018-08-13T16:05:33",
+        "reactions": [
+          {
+            "user": "eltiare",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:00.1266091Z"
+          }
+        ]
+      },
+      {
+        "id": 914105040,
+        "author": "KnIfER",
+        "body": "how to combine OpenGL 3D with Skia in C\u002B\u002B?\r\n",
+        "createdAt": "2021-09-07T08:34:26",
+        "reactions": []
+      },
+      {
+        "id": 914232425,
+        "author": "KnIfER",
+        "body": "some problem...\r\n\r\nhttps://user-images.githubusercontent.com/11593903/132338844-ab9b0a37-8ec1-4b46-ace6-f68ba53239ac.mp4\r\n\r\n\r\nhttps://groups.google.com/g/skia-discuss/c/3bl1U3D9a_Q\r\n",
+        "createdAt": "2021-09-07T11:42:39",
+        "reactions": []
+      }
+    ]
+  }
 }

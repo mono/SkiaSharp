@@ -37,5 +37,262 @@
   "updatedAt": "2022-08-19T12:02:29",
   "closedAt": "2019-11-21T19:48:20",
   "commentCount": 17,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:29.8156647Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 445557376,
+        "author": "charlesroddie",
+        "body": "We are also seeing this. CC @sir-deenicus",
+        "createdAt": "2018-12-09T17:51:14",
+        "reactions": []
+      },
+      {
+        "id": 446547864,
+        "author": "charlesroddie",
+        "body": "This also applies to 1.68.0.\r\n\r\nThis makes SkiaSharp an extremely large memory leak.\r\n\r\n@mattleibow do you have any ideas?\r\n\r\nIt\u0027s a little surprising that SKGLView is not IDisposable, since a lot of other SkiaSharp objects are.\r\n",
+        "createdAt": "2018-12-12T11:01:09",
+        "reactions": []
+      },
+      {
+        "id": 448115247,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I am having a look at this. I\u0027ll let you know what I find, and if there are any workarounds/solutions.",
+        "createdAt": "2018-12-18T06:48:53",
+        "reactions": []
+      },
+      {
+        "id": 448145127,
+        "author": "charlesroddie",
+        "body": "There is some work exploring this in the CSharpMath repo: https://github.com/verybadcat/CSharpMath/issues/23",
+        "createdAt": "2018-12-18T08:56:46",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:27.0559468Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:27.0559473Z"
+          },
+          {
+            "user": "FoggyFinder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:27.0559474Z"
+          }
+        ]
+      },
+      {
+        "id": 448146123,
+        "author": "mattleibow",
+        "body": "Thanks for that issue. I\u0027ll see if I can get back to you today. ",
+        "createdAt": "2018-12-18T09:00:23",
+        "reactions": []
+      },
+      {
+        "id": 449454894,
+        "author": "mattleibow",
+        "body": "I am having a look at this, and the sample attached to the CSharpMath issue has cycles - the renderer keeps a reference to the native view which has a reference to the renderer, and the cycle is complete.",
+        "createdAt": "2018-12-21T17:52:17",
+        "reactions": []
+      },
+      {
+        "id": 449456870,
+        "author": "mattleibow",
+        "body": "Although, something is happening here...\r\n\r\nI know this is the SKCanvasView... Will try the SKGLView in a sec.\r\n\r\nThe first block is the start/baseline. Then I add a SKCanvasView, and it goes up high. I cleared the view and did a snapshot - for some reason it still had 40 items. Then, 3 seconds later, it magically cleared up again:\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/50356492-c877ca00-055a-11e9-83c5-3050fa564238.png)\r\n",
+        "createdAt": "2018-12-21T18:00:38",
+        "reactions": [
+          {
+            "user": "sir-deenicus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:27.6650237Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:27.6650242Z"
+          }
+        ]
+      },
+      {
+        "id": 449577590,
+        "author": "mattleibow",
+        "body": "I am still looking at this...\r\n\r\nAfter several tests and all sorts of hacks, I can pretty much say that there is no leak on the MANAGED side of the GL view and SkiaSharp. If I add hundreds to the UI and then clear and do a GC, the number of objects returns to the same number. Also, all managed objects in the SkiaSharp world get collected. In fact, the actual managed memory usage stays around 6MB throughout this entire process.\r\n\r\nBut, the native memory still keeps growing. \uD83D\uDE2D \r\n\r\nI am trying to find out what is happening and what objects are still living...",
+        "createdAt": "2018-12-22T15:22:07",
+        "reactions": [
+          {
+            "user": "sir-deenicus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:27.8912839Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:27.8912843Z"
+          }
+        ]
+      },
+      {
+        "id": 449685449,
+        "author": "mattleibow",
+        "body": "Yay! \uD83C\uDF89\uD83C\uDF89\uD83C\uDF89 Found the issue - I had to dig deep! Not really, just a lot of testing.\r\n\r\nWhat was happening was the view was initializing ANGLE, and then releasing all the references and things - except for the final context. This left all sorts of references on the native side still hooked up _inside_ the ANGLE library. As a result, even though the managed GC was all free, ANGLE was never told that it should let go of the views.\r\n\r\nJust doing some final tests. As soon as CI is ready with a build, I\u0027ll link to it here so you can give it a go.",
+        "createdAt": "2018-12-24T04:42:11",
+        "reactions": [
+          {
+            "user": "FoggyFinder",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:05:28.0984397Z"
+          },
+          {
+            "user": "FoggyFinder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.0984402Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.0984403Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:05:28.0984405Z"
+          },
+          {
+            "user": "sir-deenicus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.0984406Z"
+          },
+          {
+            "user": "sir-deenicus",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:05:28.0984407Z"
+          },
+          {
+            "user": "daltonks",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:05:28.0984408Z"
+          },
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.0984408Z"
+          },
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.0984409Z"
+          }
+        ]
+      },
+      {
+        "id": 449926534,
+        "author": "mattleibow",
+        "body": "The new graph! I took the same sample, and upgraded to my \u0022preview\u0022 NuGets and this is what we see with a nested loop of creating 150 panels, 30 times:\r\n\r\n_(not only are the object cleaned up, but we also don\u0027t reach those crazy gigabyte amounts of memory)_\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/50438480-d335b480-08f6-11e9-962d-300b86120891.png)\r\n",
+        "createdAt": "2018-12-26T08:13:31",
+        "reactions": [
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.2931075Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:05:28.293108Z"
+          },
+          {
+            "user": "FoggyFinder",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.2931081Z"
+          },
+          {
+            "user": "FoggyFinder",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:05:28.2931082Z"
+          },
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.2931083Z"
+          },
+          {
+            "user": "daltonks",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.2931083Z"
+          },
+          {
+            "user": "daltonks",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:05:28.2931084Z"
+          }
+        ]
+      },
+      {
+        "id": 449967068,
+        "author": "comfr3ak",
+        "body": "How can I get the fix within vs2017? Is there a new preview version to\ninstall from nuget?\n\n\nOn Wed, Dec 26, 2018 at 3:19 AM Matthew Leibowitz \u003Cnotifications@github.com\u003E\nwrote:\n\n\u003E Closed #705 \u003Chttps://github.com/mono/SkiaSharp/issues/705\u003E.\n\u003E\n\u003E \u2014\n\u003E You are receiving this because you authored the thread.\n\u003E Reply to this email directly, view it on GitHub\n\u003E \u003Chttps://github.com/mono/SkiaSharp/issues/705#event-2044313490\u003E, or mute\n\u003E the thread\n\u003E \u003Chttps://github.com/notifications/unsubscribe-auth/Amjxo4LwGTz2GyNTvSXZ_Wxe9C4jYcDZks5u8zEbgaJpZM4YzFz3\u003E\n\u003E .\n\u003E\n",
+        "createdAt": "2018-12-26T13:31:21",
+        "reactions": []
+      },
+      {
+        "id": 449981813,
+        "author": "Happypig375",
+        "body": "I think we\u0027ll need to wait for a new NuGet prerelease to be published.",
+        "createdAt": "2018-12-26T15:29:21",
+        "reactions": []
+      },
+      {
+        "id": 450032583,
+        "author": "mattleibow",
+        "body": "I am working on merging a few branches and then I hope to get a preview release out. Can\u0027t say for sure, but might be next week sometime.",
+        "createdAt": "2018-12-26T22:01:59",
+        "reactions": [
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:28.9057516Z"
+          }
+        ]
+      },
+      {
+        "id": 450512081,
+        "author": "mattleibow",
+        "body": "@comfr3ak @charlesroddie @Happypig375 I have pushed out a preview release to our Early Access Program feed - let me know if this works for you: https://www.myget.org/F/skiasharp-eap/api/v3/index.json",
+        "createdAt": "2018-12-29T18:42:09",
+        "reactions": []
+      },
+      {
+        "id": 450800632,
+        "author": "Happypig375",
+        "body": "There is a new crash with 1.68.1-preview71.\r\n\r\nReproduction:\r\n\r\n1. Start debugging skia-leak-min (the sample in CSharpMath)\r\n2. Click \u0022GL View Mathview\u0022\r\n3. Wait for UI to respond\r\n4. Click \u0022GL View Mathview\u0022 again\r\n5. Wait for debugger to break\r\n6. Debugger breaks at \r\n\u0060\u0060\u0060cs\r\n#if DEBUG \u0026\u0026 !DISABLE_XAML_GENERATED_BREAK_ON_UNHANDLED_EXCEPTION\r\nUnhandledException \u002B= (sender, e) =\u003E\r\n{\r\n    if (global::System.Diagnostics.Debugger.IsAttached) global::System.Diagnostics.Debugger.Break();\r\n};\r\n#endif\r\n\u0060\u0060\u0060\r\n\r\n\u003Csummary\u003E\r\nException message:\r\n\u003C/summary\u003E\r\n\r\n\u0060\u0060\u0060\r\nSystem.Exception: Failed to create EGL surface\r\n   at SkiaSharp.Views.GlesInterop.GlesContext.CreateSurface(SwapChainPanel panel, Nullable\u00601 renderSurfaceSize, Nullable\u00601 resolutionScale)\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.EnsureRenderSurface()\r\n   at SkiaSharp.Views.UWP.AngleSwapChainPanel.OnSizeChanged(Object sender, SizeChangedEventArgs e)\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2019-01-02T07:32:20",
+        "reactions": []
+      },
+      {
+        "id": 450888553,
+        "author": "mattleibow",
+        "body": "Darn, let me have a look.",
+        "createdAt": "2019-01-02T15:12:25",
+        "reactions": [
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:29.568929Z"
+          }
+        ]
+      },
+      {
+        "id": 557244011,
+        "author": "mattleibow",
+        "body": "This was fixed in #1024 ",
+        "createdAt": "2019-11-21T19:48:19",
+        "reactions": []
+      }
+    ]
+  }
 }

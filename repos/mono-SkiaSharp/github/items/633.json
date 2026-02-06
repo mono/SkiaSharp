@@ -14,5 +14,120 @@
   "updatedAt": "2022-08-19T15:01:33",
   "closedAt": "2018-09-11T20:31:25",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:21.8157799Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 419754419,
+        "author": "mattleibow",
+        "body": "Ah, this might be taht your GCC is not the correct version... The \u0060xamarin-mobile-bindings\u0060 branch requires at least 4.8 I believe. I do know the new branch comming soon will require 5.x.\r\n\r\nWhat version of GCC are you using?",
+        "createdAt": "2018-09-09T23:54:14",
+        "reactions": []
+      },
+      {
+        "id": 419754699,
+        "author": "nicolasr75",
+        "body": "Thanks for the quick response!\r\n\r\ngcc (Ubuntu 4.8.5-2ubuntu1~14.04.1) 4.8.5\r\n\r\nI guess I don\u0027t need the newest SkiaSharp version though. I just need a 1.60.* version because my AvaloniaUI application doesn\u0027t work anymore after I updated Avalonia to the newest version. I guess their code depends on 1.60.*. I tried to build 1.60.1 as described in the Wiki but the branch isn\u0027t found anymore.  Any idea?\r\n\r\n",
+        "createdAt": "2018-09-09T23:59:29",
+        "reactions": []
+      },
+      {
+        "id": 419899822,
+        "author": "nicolasr75",
+        "body": "I get a similar error on Debian with\r\n\r\ngcc (Debian 6.3.0-18\u002Bdeb9u1) 6.3.0 20170516\r\n\r\nMaybe there is a misunderstanding on my side. I was under the impression that I could cross-compile SkiaSharp on an x64 system but probably that is not possible with the default gcc. Actually my first attempt was to compile it directly on my target ARM device (RPI) but there I get\r\n\r\n./gn: cannot execute binary file: Exec format error",
+        "createdAt": "2018-09-10T12:46:47",
+        "reactions": []
+      },
+      {
+        "id": 419990682,
+        "author": "mattleibow",
+        "body": "Ah. I think I see what is happening, you must cross-compile, but you can\u0027t just use \u0060gcc\u0060 raw - you need the cross-compiler.\r\n\r\nTo do this, you need to specify the other flags - see the [Customizing](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux#customizing) section of the wiki. You will have to add the \u0060cc\u0060, \u0060cxx\u0060, and \u0060ar\u0060 options to the list - each pointing to their respective tool.\r\n\r\nSee also: https://stackoverflow.com/questions/32359110/gcc-keeps-saying-mfpu-neon-is-an-unrecognoized-command",
+        "createdAt": "2018-09-10T17:16:52",
+        "reactions": []
+      },
+      {
+        "id": 420025558,
+        "author": "nicolasr75",
+        "body": "Ok, sorry to bother you again. I found this https://github.com/raspberrypi/tools\r\nAdded the bin directory to the path, set \u0060cc\u0060, \u0060cxx\u0060 and \u0060ar\u0060 as you wrote.\r\n\r\nIt compiled a few files and stopped with _fontconfig.h could not be found_.\r\nSo I took my RPI and installed fontconfig via\r\n\u0060sudo apt install libfontconfig-dev\u0060\r\nCopied over the files to the RPI tools directory on my Debian and tried again.\r\nAfter a few more files I get:\r\n\r\n\tIn file included from ../../../src/sksl/lex.layout.cpp:9:0:\r\n\tlex.layout.c:1423:17: error: \u0027void yyunput(int, char*, yyscan_t)\u0027 defined but not used [-Werror=unused-function]\r\n\tcc1plus: error: unrecognized command line option \u0022-Wno-implicit-fallthrough\u0022 [-Werror]\r\n\tcc1plus: all warnings being treated as errors\r\n\t[316/972] compile ../../../src/sksl/SkSLSPIRVCodeGenerator.cpp\r\n\tninja: build stopped: subcommand failed.\r\n\r\nThe compiler in the tools says\r\n\u0060arm-linux-gnueabihf-g\u002B\u002B (crosstool-NG crosstool-ng-1.22.0-88-g8460611) 4.9.3\u0060\r\n\r\nAs I understand it, these are warnings that are treated as errors due to the \u0060-Werror\u0060 flag. Couldn\u0027t I simply turn this off? I have no idea where though, the \u0060args.gn \u0060file does not contain the flag.\r\n",
+        "createdAt": "2018-09-10T19:07:13",
+        "reactions": []
+      },
+      {
+        "id": 420205257,
+        "author": "mattleibow",
+        "body": "Ah,we appear to be moving! This is the exact same issue, but for newer warnings. https://groups.google.com/forum/m/#!topic/skia-discuss/WybRL5GoVHI\r\n\r\nBasically, add \u0060extra_cflags = [ \u0022-w\u0022 ]\u0060 to the args to allow all warnings.\r\n\r\nIn the next release, warnings are ignored for release builds by default, so this will soon not be needed. ",
+        "createdAt": "2018-09-11T09:15:47",
+        "reactions": []
+      },
+      {
+        "id": 420415024,
+        "author": "nicolasr75",
+        "body": "Thanks, that did the trick. After adding the missing libfontconfig.so, it finally built completely. \r\n\r\nI had hoped it would have been easier though. For Linux experts all the problems I faced (cross compilation, compiler version, missing packages, compiler and linker errors) may seem trivial but interestingly enough nobody on the web gives a clear description. I am just wondering because I think there could be done so many great things with .NET Core and this library (optionally via Avalonia UI) especially on ARM devices. It would really be helpful to have a subsection in the Wiki that goes a little into the details about building it for ARM.\r\n\r\nThere seem to be quite a few people that want to get interesting projects done on a Raspberry Pi but I could imagine that many of them fail to build the library and use other tools.\r\n\r\nI could maybe set up a Github project for it myself but as I see it, a better place would be the Wiki. I know the Raspberry is just one platform, but wouldn\u0027t it be better nevertheless to have a working description for this one platform?\r\n\r\nThanks again for your time and keep up the good work!\r\n\r\n",
+        "createdAt": "2018-09-11T20:31:25",
+        "reactions": []
+      },
+      {
+        "id": 450494394,
+        "author": "LordBenjamin",
+        "body": "Adding a step-by-step summary since it\u0027s taken me quite a while to work through this:\r\n\r\n\u0060\u0060\u0060bash\r\n# check out skia and depot_tools as per https://github.com/mono/SkiaSharp/wiki/Building-on-Linux\r\ngit clone git clone https://github.com/mono/skia.git -b v1.68.0-preview28\r\ngit clone https://chromium.googlesource.com/chromium/tools/depot_tools.git\r\n\r\n# check out RPI compilers as per https://github.com/mono/SkiaSharp/issues/633#issuecomment-420025558 and add to path\r\ngit clone https://github.com/raspberrypi/tools.git\r\nexport PATH=\u0022$PATH:\u003Cpath-to-rpi-checkout\u003E/tools/arm-bcm2708/arm-linux-gnueabihf/bin\u0022\r\n\r\n# installed libfontconfig on my RPI and then copied\r\n# fcfreetype.h,  fcprivate.h and  fontconfig.h\r\n# to\r\n# \u003Cpath-to-rpi-checkout\u003E/tools/arm-bcm2708/arm-linux-gnueabihf/arm-linux-gnueabihf/include/fontconfig\r\n\r\n# copied\r\n# libfontconfig.a  libfontconfig.so  libfontconfig.so.1  libfontconfig.so.1.8.0\r\n# to\r\n# \u003Cpath-to-rpi-checkout\u003E/tools/arm-bcm2708/arm-linux-gnueabihf/arm-linux-gnueabihf/lib\r\n\r\n# would it be possible to avoid the copy steps by installing libfontconfig:armhf directly on the build machine? I tried but couldn\u0027t get it to install\r\n\r\n# change to skia directory - all work done here from now on\r\ncd skia\r\n\r\n# run git-sync-deps script (as per normal instructions)\r\npython tools/git-sync-deps\r\n\r\n# modified command line to use ARM cross-compilers from the RPI tools\r\n./bin/gn gen \u0027out/linux/x64\u0027 --args=\u0027\r\n    cc = \u0022arm-linux-gnueabihf-gcc\u0022\r\n    cxx = \u0022arm-linux-gnueabihf-g\u002B\u002B\u0022\r\n    is_official_build=true skia_enable_tools=false\r\n    target_os=\u0022linux\u0022 target_cpu=\u0022arm\u0022\r\n    skia_use_icu=false skia_use_sfntly=false skia_use_piex=true\r\n    skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false\r\n    skia_enable_gpu=true\r\n    extra_cflags=[ \u0022-DSKIA_C_DLL\u0022 ]\r\n    linux_soname_version=\u002268.0.0\u0022\u0027\r\n\r\n# compile\r\n../depot_tools/ninja \u0027SkiaSharp\u0027 -C \u0027out/linux/x64\u0027\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-12-29T13:47:22",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:04:21.0639954Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:04:21.0639959Z"
+          },
+          {
+            "user": "nicolasr75",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:04:21.0639961Z"
+          },
+          {
+            "user": "xiangzhai",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:21.0639962Z"
+          }
+        ]
+      },
+      {
+        "id": 450497848,
+        "author": "mattleibow",
+        "body": "@LordBenjamin Thanks for this work! I will try and get this into a real cake target or as a separate script soon. Just an FYI, I copied your comment to https://github.com/mono/SkiaSharp/issues/453#issuecomment-450497754 so that we can track all new linux platforms there.",
+        "createdAt": "2018-12-29T14:48:14",
+        "reactions": [
+          {
+            "user": "LordBenjamin",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:04:21.3371257Z"
+          },
+          {
+            "user": "maartenmensink",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:04:21.3371262Z"
+          }
+        ]
+      },
+      {
+        "id": 450498411,
+        "author": "LordBenjamin",
+        "body": "@mattleibow Glad it\u0027s useful! Hopefully having this scripted will make it a lot more accessible to others.",
+        "createdAt": "2018-12-29T14:58:10",
+        "reactions": []
+      },
+      {
+        "id": 671182969,
+        "author": "xiangzhai",
+        "body": ":mips-interest",
+        "createdAt": "2020-08-10T06:21:26",
+        "reactions": []
+      }
+    ]
+  }
 }

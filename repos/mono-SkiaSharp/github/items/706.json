@@ -28,5 +28,151 @@
   "updatedAt": "2022-08-19T12:02:28",
   "closedAt": "2018-12-22T05:02:24",
   "commentCount": 20,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:34.777118Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 441756939,
+        "author": "comfr3ak",
+        "body": "Can we have a flag that disables the rendering calls to the PaintSurface method so it only gets called when I call InvalidateSurface? Otherwise, it\u0027s impossible to know when the UI thread, which calls PaintSurface sometimes 3 or 4 times, is done doing the loading/resizing of the control. ",
+        "createdAt": "2018-11-26T19:01:43",
+        "reactions": []
+      },
+      {
+        "id": 441797950,
+        "author": "mattleibow",
+        "body": "@comfr3ak there is a flag to disable the render loop, bot not one to completely disable rendering. That would be a bit hard and non-deterministic. For example, assume the size of the view is 100x100, and the view is resized to 100x200. There is an additional chunk of pixels - what should be rendered there?",
+        "createdAt": "2018-11-26T21:06:48",
+        "reactions": []
+      },
+      {
+        "id": 441830966,
+        "author": "comfr3ak",
+        "body": "But how can we tell the difference between a rendering like that and calling invalidate on a background thread to draw a new bitmap? The render calls are stepping on manual calls to invalidatesurface. Do you have a recommendation for proper way to avoid this?",
+        "createdAt": "2018-11-26T22:50:36",
+        "reactions": []
+      },
+      {
+        "id": 441838509,
+        "author": "comfr3ak",
+        "body": "Basically the question is whether something underneath is allowing invalidatesirface to be called and run at the same time paintsurface is already rendering which causes the error. Shouldn\u2019t something in the skglview logic prevent this?",
+        "createdAt": "2018-11-26T23:22:11",
+        "reactions": []
+      },
+      {
+        "id": 441848087,
+        "author": "mattleibow",
+        "body": "Good point. It should be running in serial, maybe there is some bad logic somewhere. I will investigate.",
+        "createdAt": "2018-11-27T00:08:36",
+        "reactions": []
+      },
+      {
+        "id": 441848335,
+        "author": "mattleibow",
+        "body": "Wait a second... You are using the v1.60.x versions... The entire UWP view has been re-written in v1.68.x. Could you try the preview release and see if the problem goes away?",
+        "createdAt": "2018-11-27T00:09:51",
+        "reactions": []
+      },
+      {
+        "id": 442094632,
+        "author": "comfr3ak",
+        "body": "Updated to pre-release version and the same issue still exists. When the page containing the SKGLView loads and I attempt to call InvalidateSurface while the rendering passes are still happening it gives me this: \r\n\r\n\u0022An unhandled exception of type \u0027System.AccessViolationException\u0027 occurred in SkiaSharp.Views.UWP.dll\r\nAttempted to read or write protected memory. This is often an indication that other memory is corrupt.\u0022\r\n\r\nSo far the only workaround is to try and delay things long enough for the rendering to finish but there is no real way to know that since there is no Loaded event or anything that tells me when the control is finished an initial rendering. ",
+        "createdAt": "2018-11-27T15:14:51",
+        "reactions": []
+      },
+      {
+        "id": 442098060,
+        "author": "comfr3ak",
+        "body": "Some more information. It seems to be that this type of navigation sequence of events always causes the accessviolationexception: \r\n\r\n\r\nHome -\u003E Page 1  (view displays fine, page 1 built the first time before navigating)\r\nPage 1 -\u003E Home (Page 1 is stored in memory so it\u0027s not rebuilt every time)\r\nHome -\u003E Page 1 (SKGLView.InvalidateSurface() causes that exception after going back to page 1)\r\n\r\nThis is slightly different behavior than version 1.60.3 which was able to do this sequence and only intermittently fall into the same exception. Now it appears the exception is happening every single time under the prerelease 1.68.x version. ",
+        "createdAt": "2018-11-27T15:23:24",
+        "reactions": []
+      },
+      {
+        "id": 442111583,
+        "author": "mattleibow",
+        "body": "The fact that the issue is happening consistently is good as it makes it easier to test. Are you able to submit this 2-page sample so we can test?\r\n\r\nAs a workaround in the interim, is it possible to delay rendering until after the OnAppearing method of the page has been called? I believe that should only run AFTER the view has been added to the UI? Then you could try setting a flag to true/false with the OnAppearing/OnDisappearing methods.",
+        "createdAt": "2018-11-27T15:57:32",
+        "reactions": []
+      },
+      {
+        "id": 442117246,
+        "author": "comfr3ak",
+        "body": "More information, it looks like even if I delay the call to InvalidateSurface and remove everything I\u0027m doing out of the PaintSurface event, it still crashes consistently every time in that scenario when you return to the page and call InvalidateSurface at any point. The project is rather large but I can at least provide some of the code I\u0027m using to init and use the SKGLView and paint method. \r\n\r\nThe premise here is that the compressed images come in from a camera system over UDP network communication. We pass them to to be displayed approximately 16 times per second. We were using the SKCanvasView but found the performance lacked. SKGLView is much better for performance and smoothness but we encountered this crash scenario which doesn\u0027t happen with SKCanvasView\r\n\r\n[skglcanvas sample.txt](https://github.com/mono/SkiaSharp/files/2620786/skglcanvas.sample.txt)",
+        "createdAt": "2018-11-27T16:12:11",
+        "reactions": []
+      },
+      {
+        "id": 442149522,
+        "author": "mattleibow",
+        "body": "I will have a deeper look at this - it may very well be that when the page is navigated away, the OpenGL context is destroyed, but SkiaSharp does not know that. And, when you go back, the references are old.\r\n\r\nAlso, do you have any stack trace at all? That may shed some light.\r\n\r\nFinally, it may be helpful to set up a very simple case with the page navigation (if possible) and just render a red block or something. It is either the UWP view that is not working correctly, or it may be that you are accessing the SkiaSharp objects on multiple threads. ",
+        "createdAt": "2018-11-27T17:38:32",
+        "reactions": []
+      },
+      {
+        "id": 442164959,
+        "author": "comfr3ak",
+        "body": "It\u0027s down in native code, the best I could do in VS2017 is this:\r\n\r\nException thrown at 0x1933FED0 (libGLESv2.dll) in HindsightViewer.UWP.exe: 0xC0000005: Access violation reading location 0x00000010.",
+        "createdAt": "2018-11-27T18:25:34",
+        "reactions": []
+      },
+      {
+        "id": 442167084,
+        "author": "comfr3ak",
+        "body": "Also, I did test the case where I draw nothing in the PaintSurface method and it still happens. ",
+        "createdAt": "2018-11-27T18:32:00",
+        "reactions": []
+      },
+      {
+        "id": 442179701,
+        "author": "comfr3ak",
+        "body": "More information, If I call SKGLView.InvalidateSurface wrapped in Device.BeginInvokeOnMainThread then I don\u0027t encounter this error at all, I can navigate in and out dozens of times with no exception. The result, however, is that the performance is worse than compared to calling it synchronously on the background thread. ",
+        "createdAt": "2018-11-27T19:09:30",
+        "reactions": []
+      },
+      {
+        "id": 444176261,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:03:00",
+        "reactions": []
+      },
+      {
+        "id": 444177060,
+        "author": "comfr3ak",
+        "body": "Would you recommend only calling Invalidate only from the main thread in the meantime?",
+        "createdAt": "2018-12-04T17:05:14",
+        "reactions": []
+      },
+      {
+        "id": 445411382,
+        "author": "mattleibow",
+        "body": "I am having a look at the code, and I don\u0027t think there should have been any error. However, since the issue goes away when running on the main thread, I think this may be because you might be accessing the UI in the paint method.\r\n\r\nUWP is very strict, you cannot access the UI elements while in the background. Android and iOS are OK in that you can\u0027t _write_, but you can _read_. One of the main issues when drawing is to access the view size - for this, you need to use the surface size from the event args.\r\n\r\n~~What does your draw logic look like?~~\r\n\r\nIf it works to draw on the main thread, you can use that in the meantime. If there is a way to get a smaller sample here - or email me a sample/link to my work email: maleib\u003C@\u003Emicrosoft\u003C.\u003Ecom",
+        "createdAt": "2018-12-08T00:26:35",
+        "reactions": []
+      },
+      {
+        "id": 445414986,
+        "author": "mattleibow",
+        "body": "Unless... you are calling invalidate on two different threads at the same time. When you call invalidate, it runs on the thread you called - but if you call invalidate on multiple threads, it does not check to see if another thread is already running. (probably a bug) Then, when you run it on the main thread, this forces a single run at a time.\r\n\r\nSo, one way is to have some sort of locking for the invalidate to ensure only one ever calls it - but this might not fix it.\r\n\r\nThe GL canvas for UWP is not technically drawing on the background thread - it always redirects to the UI thread. And, technically, you should always call invalidate on the main thread. So, i think the reason that things are blowing up is that you are calling a UI method on a background thread - the drawing logic is fine, not the fields and other glue under the hood.\r\n\r\nSo, the fix is to actually enable a property on the native UI view - \u0060DrawInBackground\u0060 - on the \u0060SKSwapChainPanel\u0060 type. Since you are using Xamarin.Forms, you will have to create a custom renderer to do this.:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing SkiaSharp.Views.Forms;\r\nusing SkiaSharp.Views.UWP;\r\nusing Xamarin.Forms.Platform.UWP;\r\n\r\n[assembly: ExportRenderer(typeof(SKGLView), typeof(SkiaSharpSample.UWP.SKGLViewBackgroundRenderer))]\r\n\r\nnamespace SkiaSharpSample.UWP\r\n{\r\n\tpublic class SKGLViewBackgroundRenderer : SKGLViewRenderer\r\n\t{\r\n\t\tprotected override SKSwapChainPanel CreateNativeControl()\r\n\t\t{\r\n\t\t\tvar view = base.CreateNativeControl();\r\n\t\t\tview.DrawInBackground = true;\r\n\t\t\treturn view;\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThen, wrap the invalidate on a run on the main thread.",
+        "createdAt": "2018-12-08T00:57:02",
+        "reactions": []
+      },
+      {
+        "id": 448054965,
+        "author": "mattleibow",
+        "body": "Did you get around to trying the custom renderer?",
+        "createdAt": "2018-12-18T00:51:05",
+        "reactions": []
+      },
+      {
+        "id": 449545584,
+        "author": "Redth",
+        "body": "We are closing this issue since no response was received.  Please open a new issue referring to this one if you have more information.",
+        "createdAt": "2018-12-22T05:02:23",
+        "reactions": []
+      }
+    ]
+  }
 }

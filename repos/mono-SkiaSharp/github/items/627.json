@@ -24,5 +24,59 @@
   "updatedAt": "2022-08-19T15:01:39",
   "closedAt": "2018-12-15T04:31:51",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:13.3526491Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 417896282,
+        "author": "GalaxyVelocity",
+        "body": "Conducted several test.\r\n\r\nUsed code:\r\n\u0060\u0060\u0060csharp\r\nSKPaint paintFill = new SKPaint()\r\n{\r\n    Color = SKColors.White,\r\n    Style = SKPaintStyle.Fill,\r\n    ImageFilter = SKImageFilter.CreateDropShadow(5, 5, 15, 15, SKColors.Black, SKDropShadowImageFilterShadowMode.DrawShadowAndForeground)\r\n};\r\n\r\nSKPaint paintStroke = new SKPaint()\r\n{\r\n    Color = SKColors.Black,\r\n    Style = SKPaintStyle.Stroke,\r\n    StrokeWidth = 1\r\n};\r\n\r\nSKPath testPath = new SKPath();\r\ntestPath.AddRect(SKRect.Create(0, 0, 100, 100));\r\n\u0060\u0060\u0060\r\n\r\n### test 1\r\n\u0060\u0060\u0060csharp\r\nSKMatrix matrix = canvas.TotalMatrix;\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(200, 200));\r\ncanvas.SetMatrix(matrix);\r\n\r\ncanvas.DrawPath(testPath, paintFill);\r\ncanvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\nIt\u0027s OK, the rectangle and stroke have moved to the right place.\r\n\r\n### test 2\r\n\u0060\u0060\u0060csharp\r\nSKMatrix matrix = canvas.TotalMatrix;\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(5, 5));\r\ncanvas.SetMatrix(matrix);\r\n\r\ncanvas.DrawPath(testPath, paintFill);\r\ncanvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\nIt\u0027s OK, the rectangle and stroke have increased.\r\n\r\n### test 3\r\n\u0060\u0060\u0060csharp\r\nSKMatrix matrix = canvas.TotalMatrix;\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeScale(2, 2));\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(200, 200));\r\ncanvas.SetMatrix(matrix);\r\n\r\ncanvas.DrawPath(testPath, paintFill);\r\ncanvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\nIt\u0027s OK, the rectangle and stroke have increased in moved.\r\n\r\n### test 4\r\n\r\n\u0060\u0060\u0060csharp\r\nSKMatrix matrix = canvas.TotalMatrix;\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeSkew(2, 2));\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeTranslation(200, 200));\r\ncanvas.SetMatrix(matrix);\r\n\r\ncanvas.DrawPath(testPath, paintFill);\r\ncanvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\nNot everything is ok, the rectangle with the shadow with skew and moved, the stroke only increased and stayed in place, I consider this a bug.\r\n\r\n### test 5\r\n\u0060\u0060\u0060csharp\r\nSKMatrix matrix = canvas.TotalMatrix;\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeSkew(2, 2));\r\ncanvas.SetMatrix(matrix);\r\n\r\ncanvas.DrawPath(testPath, paintFill);\r\ncanvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\nNot everything is ok, the same behavior as in test 4, only without moving.\r\n\r\n### test 6\r\n\r\n\u0060\u0060\u0060\r\nSKMatrix matrix = canvas.TotalMatrix;\r\nSKMatrix.PostConcat(ref matrix, SKMatrix.MakeRotationDegrees(-25f, 50, 50));\r\ncanvas.SetMatrix(matrix);\r\n\r\ncanvas.DrawPath(testPath, paintFill);\r\ncanvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\n\r\nNot everything is ok, a rectangle with a shadow in turned, the outline remained in place.\r\n\r\nUsing canvas.DrawRect the same results.\r\n",
+        "createdAt": "2018-09-02T00:22:41",
+        "reactions": []
+      },
+      {
+        "id": 417896566,
+        "author": "GalaxyVelocity",
+        "body": "If removed \u0022ImageFilter = SKImageFilter.CreateDropShadow......\u0022 from \u0022paintFill\u0022 all tests are normal.",
+        "createdAt": "2018-09-02T00:30:58",
+        "reactions": []
+      },
+      {
+        "id": 420207689,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I will investigate further. ",
+        "createdAt": "2018-09-11T09:24:02",
+        "reactions": [
+          {
+            "user": "GalaxyVelocity",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:12.638448Z"
+          }
+        ]
+      },
+      {
+        "id": 421910434,
+        "author": "GalaxyVelocity",
+        "body": "@mattleibow Thank you for noticing this issue.\r\n\r\nSome more simple bug tests.\r\n\r\n### test 7\r\n\r\n\u0060\u0060\u0060csharp\r\n  canvas.SetMatrix(SKMatrix.MakeRotationDegrees(-25f, 50, 50));\r\n\r\n  canvas.DrawPath(testPath, paintFill);\r\n  canvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\n\r\nNot everything is ok, a rectangle with a shadow in turned, the outline remained in place.\r\n\r\n### test 8\r\n\r\n\u0060\u0060\u0060csharp\r\n  canvas.SetMatrix(SKMatrix.MakeSkew(2, 2));\r\n\r\n  canvas.DrawPath(testPath, paintFill);\r\n  canvas.DrawPath(testPath, paintStroke);\r\n\u0060\u0060\u0060\r\nNot everything is ok, the rectangle with the shadow increased and distorted (stretched out), the stroke has only increased, but not distorted.\r\n\r\nSuch impression that when using \u0022ImageFilter\u0022 where that loses the transformation matrix.\r\n\r\n",
+        "createdAt": "2018-09-17T07:10:38",
+        "reactions": []
+      },
+      {
+        "id": 447528002,
+        "author": "GalaxyVelocity",
+        "body": "I tried the new version SkiaSharp 1.68.0 in Windows Forms (.NET Framework 4.6.1) All tests from previous messages passed successfully. It\u0027s OK. The bug is gone.",
+        "createdAt": "2018-12-15T02:00:05",
+        "reactions": []
+      },
+      {
+        "id": 447536513,
+        "author": "mattleibow",
+        "body": "That is great news! The v1.68 update had many fixes.",
+        "createdAt": "2018-12-15T04:31:51",
+        "reactions": []
+      }
+    ]
+  }
 }

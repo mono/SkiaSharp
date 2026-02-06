@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T15:01:41",
   "closedAt": "2018-09-09T23:52:19",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:09.1570846Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 419754262,
+        "author": "mattleibow",
+        "body": "this is because you actually want to do the reverse. SkiaSharp drawing happens by transforming a matrix, and then drawing using that.\r\n\r\nYour code actually asks for this:\r\n - move the origin off the screen (left and up) by half the bitmap width and height\r\n - flip the origin on the y-axis (this makes the right side of the image flip over to the far left)\r\n - draw the image with the top left at the origin (right now at the very far left of the screen)\r\n\r\nWhat you want to do is the opposite, but there is also a shortcut way for flipping the matrix at the center:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.Scale(-1, 1, imageWidth / 2.0f, 0);\r\ncanvas.DrawBitmap(bitmap, 0, 0);\r\n\u0060\u0060\u0060\r\n\r\nTo do this in separate operations, you just need to translate the entire image to the right, and then flip:\r\n\r\n\u0060\u0060\u0060csharp\r\ncanvas.Translate(imageWidth , 0);\r\ncanvas.Scale(-1, 1, 0, 0);\r\n\u0060\u0060\u0060\r\n\r\nAlso, to avoid having mixed transforms and having to undo everything, just wrap them in a \u0060SKAutoCanvasRestore\u0060 (or just use the \u0060Save\u0060 and \u0060Restore\u0060 methods):\r\n\r\n\u0060\u0060\u0060csharp\r\nusing(new SKAutoCanvasRestore(canvas, true))\r\n{\r\n   // transform and draw . . .\r\n}\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2018-09-09T23:51:58",
+        "reactions": []
+      }
+    ]
+  }
 }

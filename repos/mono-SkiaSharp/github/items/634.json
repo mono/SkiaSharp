@@ -28,5 +28,74 @@
   "updatedAt": "2022-08-19T15:01:32",
   "closedAt": "2018-09-15T12:13:00",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:24.4587283Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 420725114,
+        "author": "mattleibow",
+        "body": "Nice :( It appears that if the dylib even contains the 32-bit architecture, then it is rejected. I will remove it. Are there any 32-bit macs left in the world?",
+        "createdAt": "2018-09-12T17:08:09",
+        "reactions": []
+      },
+      {
+        "id": 420728004,
+        "author": "mattleibow",
+        "body": "I did some testing and I think the linker is _supposed_ to remove the 32-bit arch when building just the 64-bit app, but appears not. I will see if I can get a workaround.",
+        "createdAt": "2018-09-12T17:17:14",
+        "reactions": []
+      },
+      {
+        "id": 420740489,
+        "author": "mattleibow",
+        "body": "Until the next release, you can remove the x86 arcitecture from the .dylib by adding this to your .csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CTarget Name=\u0022StripX86\u0022 AfterTargets=\u0022Build\u0022\u003E\r\n    \u003CItemGroup\u003E\r\n        \u003C_SkiaSharpNativeDylib Include=\u0022@(_NativeLibrary)\u0022 Condition=\u0022\u0027%(Filename)%(Extension)\u0027 == \u0027libSkiaSharp.dylib\u0027\u0022 /\u003E\r\n    \u003C/ItemGroup\u003E\r\n    \u003CExec Command=\u0022xcrun -sdk macosx lipo -remove i386 -output \u0026quot;@(_SkiaSharpNativeDylib)\u0026quot; \u0026quot;@(_SkiaSharpNativeDylib)\u0026quot;\u0022 /\u003E\r\n\u003C/Target\u003E\r\n\u0060\u0060\u0060\r\n\r\nThis basically intercepts the build and removes the i386 platform from the native file - this will also drop ~5MB from the final package (added bonus).",
+        "createdAt": "2018-09-12T17:54:57",
+        "reactions": []
+      },
+      {
+        "id": 420741700,
+        "author": "Adamster",
+        "body": "Thank you for solution, waiting for next release :)",
+        "createdAt": "2018-09-12T17:58:40",
+        "reactions": []
+      },
+      {
+        "id": 420742771,
+        "author": "mattleibow",
+        "body": "Let me know if it works for you and then I can close this issue.",
+        "createdAt": "2018-09-12T18:02:17",
+        "reactions": []
+      },
+      {
+        "id": 420908130,
+        "author": "Adamster",
+        "body": "workaround is working, but just first build , next build is generating an error\r\n![image](https://user-images.githubusercontent.com/2826917/45472802-eeacf300-b73d-11e8-9566-8e0574be55ea.png)\r\nif I do a clean build it is working again",
+        "createdAt": "2018-09-13T07:16:09",
+        "reactions": []
+      },
+      {
+        "id": 421395281,
+        "author": "mattleibow",
+        "body": "Hmm. let me have a look, I may be running after the wrong task...",
+        "createdAt": "2018-09-14T15:29:06",
+        "reactions": []
+      },
+      {
+        "id": 421400093,
+        "author": "mattleibow",
+        "body": "OK, found out what was happening and made another improvement as well:\r\n\r\n\u0060\u0060\u0060xml\r\n\r\n\u003CTarget Name=\u0022StripX86\u0022 AfterTargets=\u0022Build\u0022\u003E\r\n    \u003CItemGroup\u003E\r\n        \u003C_SkiaSharpNativeDylib Include=\u0022@(_NativeLibrary)\u0022 Condition=\u0022 \u0027%(Filename)%(Extension)\u0027 == \u0027libSkiaSharp.dylib\u0027 \u0022 /\u003E\r\n    \u003C/ItemGroup\u003E\r\n    \u003CExec Command=\u0022xcrun -sdk macosx lipo -extract x86_64 -output \u0026quot;@(_SkiaSharpNativeDylib)\u0026quot; \u0026quot;@(_SkiaSharpNativeDylib)\u0026quot;\u0022\r\n          Condition=\u0022 \u0027@(_SkiaSharpNativeDylib)\u0027 != \u0027\u0027 \u0022 /\u003E\r\n\u003C/Target\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-09-14T15:45:22",
+        "reactions": []
+      },
+      {
+        "id": 421560407,
+        "author": "Adamster",
+        "body": "Thanks, it works now",
+        "createdAt": "2018-09-15T12:13:00",
+        "reactions": []
+      }
+    ]
+  }
 }

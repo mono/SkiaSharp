@@ -19,5 +19,67 @@
   "updatedAt": "2022-08-19T12:02:06",
   "closedAt": "2020-06-10T23:08:41",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:18.1909781Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 448493356,
+        "author": "mattleibow",
+        "body": "This is because when you await the task, the draw method has completed. Then when the task actually runs, the canvas may/may not be valid still.\r\n\r\nTo do this, you actually don\u0027t await in the draw, but rather render the bitmap somewhere, and then just lit the bitmap to the canvas in a few ms. The actual draw of a bitmap is not that slow, but if you have a complex image, it may take some time. Also, if the image can be cached, you can queue the images as they appear, and render a white block. Then, as soon as the images are done, just invalidate.\r\n\r\nI created an example app that does just that to show one possible way to achieve a non-blocking render: https://github.com/mattleibow/SkiaSharpMultiThreadedLists\r\n\r\nLet me know if this helps.",
+        "createdAt": "2018-12-19T07:15:44",
+        "reactions": []
+      },
+      {
+        "id": 448540646,
+        "author": "deakjahn",
+        "body": "Certainly, that was the first thought but it didn\u0027t help because the first canvas operation crashed even then. Looking at your sample, you create a different canvas for the drawing, not using the actual one. Well, that\u0027s an idea, I\u0027ll try.",
+        "createdAt": "2018-12-19T10:10:42",
+        "reactions": []
+      },
+      {
+        "id": 448557620,
+        "author": "deakjahn",
+        "body": "Yep, that was the key, to create an independent canvas for the background drawing. The rest works OK. Having the \u0060SKImageInfo\u0060 in my hand, I could also try out the color space approach we spoke about in another thread. Besides, do you know why my drawing takes more time? I finally abandoned the idea (at least for now) of adding back the long removed \u0060SKColorCube\u0060 into the package and do the process in software. Takes more time but it definitely works now. :-)",
+        "createdAt": "2018-12-19T11:10:38",
+        "reactions": []
+      },
+      {
+        "id": 448559076,
+        "author": "mattleibow",
+        "body": "Maybe you can share your code for the color cube and I\u0027ll have a look at what you are doing. There might be something to speed it up. ",
+        "createdAt": "2018-12-19T11:15:46",
+        "reactions": []
+      },
+      {
+        "id": 448559616,
+        "author": "mattleibow",
+        "body": "The issue with the canvas is that it gets destroyed when you leave the draw method. This is because we can\u0027t guarantee that it will always be there, for example, if the canvas is resized or if the cell is recycled. ",
+        "createdAt": "2018-12-19T11:17:38",
+        "reactions": []
+      },
+      {
+        "id": 448578606,
+        "author": "deakjahn",
+        "body": "I doubt that you could speed it up :-) but I\u0027ll share for sure (it\u0027s not that slow at all, just not instantaneous as it could be with hardware support). I also started to have doubts about those color space manipulations that might need to get sorted out first (just by specifying the color space I get completely wrong results, I have to track it down but more likely than not, it will be the \u0060SKColorType\u0060 and the order of channel bytes on the platform).\r\n\r\nCan I use the e-mail address in your profile here? I already sent something there but I didn\u0027t expect an immediate answer for sure. But I could collect the code and various other suspicions I have now.",
+        "createdAt": "2018-12-19T12:29:14",
+        "reactions": []
+      },
+      {
+        "id": 448584043,
+        "author": "deakjahn",
+        "body": "I\u0027m partly on track. When I specify the color space, my image transformations using \u0060SKColorFilter.CreateTable\u0060 become crazy. Simpler \u0060SKColorFilter.CreateColorMatrix\u0060 manipulations are OK. Tables seem to be problematic with color spaces, so that should be checked and, if I\u0027m right, fixed first before color space support is added.",
+        "createdAt": "2018-12-19T12:46:38",
+        "reactions": []
+      },
+      {
+        "id": 448695400,
+        "author": "mattleibow",
+        "body": "My profile email is good. ",
+        "createdAt": "2018-12-19T18:22:15",
+        "reactions": []
+      }
+    ]
+  }
 }

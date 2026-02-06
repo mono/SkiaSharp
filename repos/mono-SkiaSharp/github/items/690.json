@@ -19,5 +19,18 @@
   "updatedAt": "2022-08-19T12:02:38",
   "closedAt": "2018-11-27T23:09:45",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:15.9004224Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 441253723,
+        "author": "mattleibow",
+        "body": "Technically yes, but not as an independent image because SkiaSharp creates PDFs as if it was a drawing canvas. So, if you want to have an SVG in a pacge, you have to draw the image as if it was any other image - maybe using the SkiaSharp.Extended.Svg package.\r\n\r\nWhen drawing, there is no distinction between the raster/GPU/PDF canvases for the drawing code - just the surface creation.\r\n\r\nFor example, here is the sample to create a PDF: https://github.com/mono/SkiaSharp/blob/master/samples/Gallery/Shared/Samples/CreatePdfSample.cs#L47\r\n\r\nIt uses the exact same drawing code as if it was a surface. The only diference is that the canvas comes from a SKDocument instad of a SKSurface.\r\n",
+        "createdAt": "2018-11-23T14:26:00",
+        "reactions": []
+      }
+    ]
+  }
 }

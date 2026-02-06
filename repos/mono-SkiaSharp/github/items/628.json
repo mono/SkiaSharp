@@ -14,5 +14,25 @@
   "updatedAt": "2022-08-19T15:01:38",
   "closedAt": "2018-09-26T14:28:30",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:14.4897471Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 424736362,
+        "author": "mattleibow",
+        "body": "Right now, there is no real plans to create a rendered view for watchOS. This is due to low demand and also, no easy way to create a watchOS view. Typically, the SkiaSharp views derive from some \u0060UIView\u0060 or OpenGL view, but none exist on the watch.\r\n\r\nI did some looking around and I found that people just created a \u0060UIImage\u0060 and then used an image view to display it. You can do the same with SkiaSharp and the \u0060SkiaSharp.Views.watchOS\u0060 namespace extension methods:\r\n\r\n\u0060\u0060\u0060csharp\r\n// sue normal SkiaSharp\r\nvar bitmap = new SKBitmap(100, 100);\r\n// \u2026 draw \u2026\r\n\r\n// use the extension methods to convert the SkiaSharp image to a watchOS image\r\nvar image = bitmap.ToUIImage(\u2026);\r\n\r\n// display\r\nimageView.SetImage(image);\r\n\u0060\u0060\u0060\r\n\r\nI have a full sample here: https://github.com/mono/SkiaSharp/blob/v1.60.3/samples/Basic/watchOS/SkiaSharpSample.OnWatchExtension/InterfaceController.cs",
+        "createdAt": "2018-09-26T14:28:00",
+        "reactions": []
+      },
+      {
+        "id": 424736546,
+        "author": "mattleibow",
+        "body": "If there is a way to create a nice view that can be used, then feel free to re-open.",
+        "createdAt": "2018-09-26T14:28:30",
+        "reactions": []
+      }
+    ]
+  }
 }

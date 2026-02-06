@@ -37,5 +37,46 @@
   "updatedAt": "2022-08-19T15:01:34",
   "closedAt": "2020-06-10T21:19:38",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:18.6044394Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 419654897,
+        "author": "danwalmsley",
+        "body": "Repro here:\r\nhttps://github.com/VitalElement/SkiaRepro",
+        "createdAt": "2018-09-08T16:18:43",
+        "reactions": []
+      },
+      {
+        "id": 419991680,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I had a look and it does indeed crash on the mac. Works fine on Windows, so it may be something weird with the way .NET Core works when it tries to dynamically load the OpenGL library. I can manually create the interface if I use my own delegate, so I think that there is something else going on here.\r\n\r\nAlso, just a note, the interface will be \u0060null\u0060 as there has to be an active and current GL context. The create GL interface method queries the current Open GL context for options - it does not create one.",
+        "createdAt": "2018-09-10T17:20:07",
+        "reactions": []
+      },
+      {
+        "id": 420200944,
+        "author": "mattleibow",
+        "body": "I did some more digging and I found that this happens with raw C\u002B\u002B. It appears to be a bug in the native skia, so I opened a bug there: https://bugs.chromium.org/p/skia/issues/detail?id=8369\r\n\r\nHopefully they have a fix soon.",
+        "createdAt": "2018-09-11T09:01:21",
+        "reactions": []
+      },
+      {
+        "id": 420383125,
+        "author": "danwalmsley",
+        "body": "@mattleibow thanks for your rapid investigation \uD83D\uDC4D ",
+        "createdAt": "2018-09-11T18:55:53",
+        "reactions": []
+      },
+      {
+        "id": 420725549,
+        "author": "mattleibow",
+        "body": "Currently, a work around is to either make sure that you have a OpenGL context already current, or assemble your own using \u0060AssembleGlInterface\u0060. Assembling your own interface will still just return null as there is no OpenGL context current.",
+        "createdAt": "2018-09-12T17:09:33",
+        "reactions": []
+      }
+    ]
+  }
 }

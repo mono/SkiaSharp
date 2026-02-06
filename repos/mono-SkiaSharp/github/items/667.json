@@ -19,5 +19,53 @@
   "updatedAt": "2022-08-19T12:02:54",
   "closedAt": "2018-11-30T18:46:06",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:52.3723517Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 435177010,
+        "author": "mattleibow",
+        "body": "If I think I understand, then you can make use of the blend modes and layers:\r\n\r\n\u0060\u0060\u0060csharp\r\n// get the image that we want to use as the \u0022stroke\u0022\r\nvar image = SKImage.FromEncodedData(SKData.Create(\u0022baboon.png\u0022));\r\n\r\n// create a paint that describes how the picture should be drawn\r\n// basically use the image as the color instead of what was in the SVG\r\nvar paint = new SkPaint {\r\n  ImageFilter = SKImageFilter.CreateBlendMode(SKBlendMode.DstIn, SKImageFilter.CreateImage(image))\r\n};\r\n\r\n// save the layer, and let SkiaSharp know that the paint is going to override something\r\ncanvas.SaveLayer(paint);\r\n\r\n// draw the SVG as normal (on to the new layer)\r\ncanvas.DrawPicture(svg.Picture, ref matrix);\r\n\r\n// apply the layer to the main canvas, through the paint\r\ncanvas.Restore();\r\n\u0060\u0060\u0060\r\n\r\nLet me know if this is what you were trying to do.",
+        "createdAt": "2018-11-01T20:32:18",
+        "reactions": []
+      },
+      {
+        "id": 435189861,
+        "author": "mattleibow",
+        "body": "This is a very detailed guide to using blend modes: https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/effects/blend-modes/",
+        "createdAt": "2018-11-01T21:15:10",
+        "reactions": []
+      },
+      {
+        "id": 435351230,
+        "author": "hongkilldong",
+        "body": "Thank you for help\r\nI think it is not what i want to get.\r\nPicture below could illustrate better my intentions\r\n\r\n![image](https://user-images.githubusercontent.com/12894312/47913134-06863500-deac-11e8-91af-aea99208ff9e.png)\r\n\r\n\r\nAs you can see some pixel pattern is distributed along curve. I try to find a way to do the same with SkiaSharp.\r\n",
+        "createdAt": "2018-11-02T11:35:03",
+        "reactions": []
+      },
+      {
+        "id": 435357393,
+        "author": "mattleibow",
+        "body": "I see what you mean now. You can always ask on the skia forums as those guys know everything https://groups.google.com/forum/#!forum/skia-discuss\r\n",
+        "createdAt": "2018-11-02T12:04:31",
+        "reactions": []
+      },
+      {
+        "id": 435363112,
+        "author": "hongkilldong",
+        "body": "Thanks a lot!",
+        "createdAt": "2018-11-02T12:31:00",
+        "reactions": []
+      },
+      {
+        "id": 443299067,
+        "author": "mattleibow",
+        "body": "I am closing this as your question is better discussed on the forums (https://forums.xamarin.com/) or on SO.",
+        "createdAt": "2018-11-30T18:41:23",
+        "reactions": []
+      }
+    ]
+  }
 }

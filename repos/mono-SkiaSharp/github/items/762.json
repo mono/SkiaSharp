@@ -19,5 +19,73 @@
   "updatedAt": "2022-08-19T12:01:57",
   "closedAt": "2019-01-18T03:53:28",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:33.2220691Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 455419220,
+        "author": "mattleibow",
+        "body": "Ah, this issue. It is almost certainly this one: https://github.com/mono/SkiaSharp/issues/682\r\n\r\nYou can get the light font by requesting it explicitly:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar typeface = SKTypeface.FromFamilyName(\r\n    \u0022Univers 45\u0022, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n\u0060\u0060\u0060\r\n\r\nhttps://docs.microsoft.com/en-us/dotnet/api/skiasharp.sktypeface.fromfamilyname?view=skiasharp-1.59.3#SkiaSharp_SKTypeface_FromFamilyName_System_String_SkiaSharp_SKFontStyleWeight_SkiaSharp_SKFontStyleWidth_SkiaSharp_SKFontStyleSlant_\r\n\r\nI am going to close this one as a duplicate, but feel free to re-open if this doesn\u0027t solve your issue.",
+        "createdAt": "2019-01-18T03:53:14",
+        "reactions": []
+      },
+      {
+        "id": 491759144,
+        "author": "VijayRM",
+        "body": "The provided solution not working for **TraditionSansXLight** font. Please find the example code.\r\n\r\n\u0060SKTypeface.FromFamilyName(\u0022TraditionSansX\u0022, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright); //Not working.\u0060\r\n\r\nThe above code creates the typeface for \u0022Segoe UI\u0022, whereas if we specify the full name of the font then the type face created as expected.\r\n\r\n\u0060SKTypeface.FromFamilyName(\u0022TraditionSansXLight\u0022, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright); // Working\u0060\r\n\r\nCould you please provide your suggestions ?\r\n",
+        "createdAt": "2019-05-13T10:02:02",
+        "reactions": []
+      },
+      {
+        "id": 491778013,
+        "author": "Gillibald",
+        "body": "Your font has the name TraditionSansXLight so this is expected. The above issue was related to automatically resolving the font weight by name. Like \u0060FontName Light\u0060 or \u0060FontName Bold\u0060. ",
+        "createdAt": "2019-05-13T11:04:58",
+        "reactions": []
+      },
+      {
+        "id": 491782324,
+        "author": "VijayRM",
+        "body": " Then why can\u0027t we use below method for \u0022Univers 45 Light\u0022 font?\r\n\r\n\u0060SKTypeface.FromFamilyName(\u0022Univers 45 Light\u0022, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\u0060\r\n\r\nWe need a common solution for these fonts. Which approach is best to create type face for following fonts.\r\n\r\n- Univers 45 Light\r\n- TraditionSansXLight\r\n",
+        "createdAt": "2019-05-13T11:20:46",
+        "reactions": []
+      },
+      {
+        "id": 491788033,
+        "author": "Gillibald",
+        "body": "That font\u0027s family name is \u0022Univers 45\u0022 and you want to use the light variant. Just call SKTypeFace.FromFamilyName(\u0022Univers 45\u0022, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)",
+        "createdAt": "2019-05-13T11:40:50",
+        "reactions": []
+      },
+      {
+        "id": 491796648,
+        "author": "VijayRM",
+        "body": "I think, we must use separate logic to create typeface for these fonts (Univers 45 Light \u0026 TraditionSansXLight)\r\n\r\n\u0060\u0060\u0060\r\nSKTypeFace.FromFamilyName(\u0022Univers 45\u0022, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright)\r\nSKTypeface.FromFamilyName(\u0022TraditionSansXLight\u0022, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n\u0060\u0060\u0060\r\n\r\nI have used below code to achieve this. Please let me know, if you have any other solution.\r\n\r\n\u0060\u0060\u0060\r\nstring fontName = \u0022TraditionSansXLight\u0022; //Or \u0022Univers 45 Light\u0022,etc.\r\nSKTypeface typeFace = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\nif(typeFace.FamilyName != fontName \u0026\u0026 fontName.Contains(\u0022Light\u0022))\r\n{\r\n        fontName = fontName.Replace(\u0022Light\u0022, string.Empty).Trim();\r\n        typeFace = SKTypeface.FromFamilyName(fontName, SKFontStyleWeight.Light, SKFontStyleWidth.Normal, SKFontStyleSlant.Upright);\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-05-13T12:10:30",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:32.7808532Z"
+          }
+        ]
+      },
+      {
+        "id": 492513201,
+        "author": "selvarathinamm",
+        "body": "Instead of replacing \u0022Light\u0022 try replacing \u0022 Light\u0022. This might be a better solution.",
+        "createdAt": "2019-05-15T05:48:58",
+        "reactions": []
+      },
+      {
+        "id": 579191386,
+        "author": "Jack-Paul",
+        "body": "Hi,\r\n\r\n\u0022Instead of replacing \u0022Light\u0022 try replacing \u0022 Light\u0022. This might be a better solution.\u0022 - this logic works for \u0022Univers 45 Light\u0022 this type of font, but for font name of \u0022FrutigerNext LT LightCn\u0022, if i remove \r\n\u0022 Light\u0022 means i will have the font name of \u0022FrutigerNext LT Cn\u0022 so this name is invalid, the valid name is\u0022FrutigerNext LT\u0022 , how to resolve this issue?\r\n it would be so much appreciable if someone could help.",
+        "createdAt": "2020-01-28T11:00:03",
+        "reactions": []
+      }
+    ]
+  }
 }

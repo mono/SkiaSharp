@@ -19,5 +19,51 @@
   "updatedAt": "2022-08-19T15:01:25",
   "closedAt": "2018-11-30T18:41:05",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:40.3487652Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 427123490,
+        "author": "mattleibow",
+        "body": "Right now there is a fair bit of support with the touch events, but I have not done any testing with the various pens, such as the S-Pen or the iOS Pencil. YOu can check out the SkiaSharp.Views and/or SkiaSharp.Views.Forms packages with native view support.\r\n\r\nIf you are just wanting to capture signatures, or something similar, there is the SignaturePad (https://github.com/xamarin/SignaturePad)\r\n\r\nIf anyone has a device with a pen and wants to give it a go and send some feedback or PR with more detailed \u0022pen\u0022 events, then I will gladly integrate it into the core library.",
+        "createdAt": "2018-10-04T18:30:53",
+        "reactions": [
+          {
+            "user": "Ponant",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:39.7222531Z"
+          }
+        ]
+      },
+      {
+        "id": 427126908,
+        "author": "mattleibow",
+        "body": "For making things scalable, that is very simple - just capture everything in a \u0060SKPath\u0060 with a few line-tos and curves. In fact, you could probably have a look at what is happening in the Android version of signature pad, as the paths are actually very similar since Android uses Skia under the hood.\r\n\r\nhttps://github.com/xamarin/SignaturePad/blob/master/src/SignaturePad.Android/InkPresenter.cs\r\nhttps://github.com/xamarin/SignaturePad/blob/master/src/SignaturePad.InkPresenter.Shared/InkPresenter.cs",
+        "createdAt": "2018-10-04T18:41:21",
+        "reactions": [
+          {
+            "user": "Ponant",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:39.9157607Z"
+          }
+        ]
+      },
+      {
+        "id": 427132044,
+        "author": "Ponant",
+        "body": "@mattleibow , thanks for the feedback.\r\nFor your question, I have the following devices:\r\nSurface pro (2014-2015 model) Windows 10 Pro\r\nThinkpad Yoga Windows 10 Pro\r\niPad Pro with its pen\r\nI should be able to get an android-based pen device, but for later.\r\nI am happy to send to you any events that maybe needed.\r\n\r\nHere is my take on the windows Ink API and what features i really need. The app is designed for writing (like OneNote), so I go beyond signatures but I do not need fancy stuff, in order of priority first:\r\n-FitToCurve, i.e. the device API takes your raw pen data and turns them into cubic B\u00E9zier curves\r\n-Pressure sensitivity, but I can do without that for a first shot\r\n-The API needs to be able to give me back the bezier curve such that I transform these data\r\n\r\nNotice that the bezier curves typically hugely reduce the number of data needed. The raw data are just too numerous in the windows ink api.\r\n\r\nTechnically it works as such:\r\n-You create an InkCanvas in XAML and set your pen mode to pen only, for instance, and FitToCurve to true (default). Assume that you set Pressure Sensitivity to false, to make it simpler.\r\n\r\n-You draw and retrieve the ink with InkPresenter.StrokeContainer.GetStrokes(). These strokes have the attributes, such as color, width, height, matrix transform, and also the data points for each stroke. If FitToCurve is to true, then you get the bezier points, which are only cubic beziers. If you set FitToCurve to false, then you get only the raw data. The FitToCurve is crucial to me as I am circulating the data around the web (hence I need light-weight data).\r\n\r\n\r\nIs this scenario possible according to you and if so can you draw some advice on the api needed? I never tried SkiaSharp so I fear I can loose myself in details as I read through the various docs. \r\n\r\n",
+        "createdAt": "2018-10-04T18:57:54",
+        "reactions": []
+      },
+      {
+        "id": 443298972,
+        "author": "mattleibow",
+        "body": "I am closing this as your question is better discussed on the forums (https://forums.xamarin.com/) or on SO.",
+        "createdAt": "2018-11-30T18:41:05",
+        "reactions": []
+      }
+    ]
+  }
 }

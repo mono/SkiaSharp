@@ -19,5 +19,81 @@
   "updatedAt": "2022-08-19T12:01:51",
   "closedAt": "2020-04-25T17:48:28",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:44.9851512Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 461929258,
+        "author": "vexx32",
+        "body": "\uD83E\uDD14 would it be better to just have Mac/Linux users install Skia separately via mono itself, and avoid bothering to package too many native libs?",
+        "createdAt": "2019-02-08T20:03:18",
+        "reactions": []
+      },
+      {
+        "id": 462333468,
+        "author": "mattleibow",
+        "body": "Well, we could go the one route and just put the x64 binaries for macOS/Windows/Linux as they have different extensions dylib/dll/so.\r\n\r\nFor Windows, you can either just ship the x64 binary, or, load each of the assemblies dynamically:\r\n\r\n\u0060\u0060\u0060\r\n[DllImport(\u0022kernel32.dll\u0022)]\r\nstatic extern IntPtr LoadLibrary(string dllToLoad);\r\n...\r\nif (is64Bit)\r\n    LoadLibrary(\u0022path/to/64.dll\u0022);\r\nelse\r\n    LoadLibrary(\u0022path/to/32.dll\u0022);\r\n\u0060\u0060\u0060\r\n\r\nSomething like this:\r\nhttps://github.com/xamarin/urho/blob/a484a103208c854aead8f0d5cdc2150429f2813a/Bindings/Desktop/DesktopUrhoInitializer.cs#L41",
+        "createdAt": "2019-02-11T13:50:03",
+        "reactions": [
+          {
+            "user": "vexx32",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:44.0896597Z"
+          },
+          {
+            "user": "vexx32",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:06:44.0896601Z"
+          }
+        ]
+      },
+      {
+        "id": 462333902,
+        "author": "mattleibow",
+        "body": "I see you opened this issue: https://github.com/PowerShell/PowerShell/issues/8861 :)",
+        "createdAt": "2019-02-11T13:51:21",
+        "reactions": []
+      },
+      {
+        "id": 462334664,
+        "author": "vexx32",
+        "body": "\uD83D\uDE04  Yeah, best to ask on both ends of the dependency chain, I figured. Also @TylerLeonhardt asked me to open one for PowerShell specifically, because clearly we need better support for this stuff in-the-box for ourselves.\r\n\r\nAppreciate the resource, thank you so much! \u003C3",
+        "createdAt": "2019-02-11T13:53:23",
+        "reactions": [
+          {
+            "user": "TylerLeonhardt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:44.5168406Z"
+          }
+        ]
+      },
+      {
+        "id": 462335055,
+        "author": "mattleibow",
+        "body": "No prob. Now that I have commented on that issue, I will keep an eye on it.",
+        "createdAt": "2019-02-11T13:54:35",
+        "reactions": []
+      },
+      {
+        "id": 619416403,
+        "author": "mattleibow",
+        "body": "\u0022Resolved\u0022 by: https://github.com/PowerShell/PowerShell/pull/11032\r\nDocs: https://docs.microsoft.com/en-us/powershell/scripting/learn/writing-portable-modules?view=powershell-7#dependency-on-native-libraries\r\n\r\n\u003E NOTE: you still have to manually copy the native binaries into the correct place in your module.",
+        "createdAt": "2020-04-25T17:48:27",
+        "reactions": [
+          {
+            "user": "vexx32",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:44.9349082Z"
+          },
+          {
+            "user": "TylerLeonhardt",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:44.9349085Z"
+          }
+        ]
+      }
+    ]
+  }
 }

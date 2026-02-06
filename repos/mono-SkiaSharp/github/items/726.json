@@ -37,5 +37,302 @@
   "updatedAt": "2022-08-19T12:02:13",
   "closedAt": "2018-12-27T15:37:17",
   "commentCount": 39,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:03.1231229Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 446920731,
+        "author": "charlenni",
+        "body": "I look into this, but it seems to be complicated. All other classes in SkiaSharp are made as wrapper classes and the native Skia objects used as standard c function calls. This doesn\u0027t work for SkDrawable, because SkDrawable is more like an interface. Childs have to implement some funktions (like OnDraw), that would be called from the native side.\r\n\r\nDoes anyone have any idea, how this could be solved?",
+        "createdAt": "2018-12-13T10:34:55",
+        "reactions": []
+      },
+      {
+        "id": 447117388,
+        "author": "mattleibow",
+        "body": "This looks like something that can be done with the way we did the managed stream wrappers:\r\n\r\nThe C\u002B\u002B class:\r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/include/xamarin/SkManagedStream.h\r\n\r\nThe C API:\r\nhttps://github.com/mono/skia/blob/xamarin-mobile-bindings/include/xamarin/sk_managedstream.h\r\n\r\nThe managed code:\r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKAbstractManagedStream.cs\r\nhttps://github.com/mono/SkiaSharp/blob/master/binding/Binding/SKManagedStream.cs",
+        "createdAt": "2018-12-13T20:55:02",
+        "reactions": []
+      },
+      {
+        "id": 447139490,
+        "author": "charlenni",
+        "body": "\u00C4h, I thought, that this class couldn\u2019t the first one.\r\n\r\nThank you for pointing me in the right direction. I will see, what I can do.",
+        "createdAt": "2018-12-13T22:13:49",
+        "reactions": []
+      },
+      {
+        "id": 447139878,
+        "author": "mattleibow",
+        "body": "I am going to leave this one open for now so we can actually do this at some point - or if you are interested, then have a place to talk.",
+        "createdAt": "2018-12-13T22:15:05",
+        "reactions": []
+      },
+      {
+        "id": 447294233,
+        "author": "charlenni",
+        "body": "I now created a first version (see [Skia](https://github.com/charlenni/skia/tree/SkDrawable) and [SkiaSharp](https://github.com/charlenni/SkiaSharp/tree/SkDrawable)). It exposes the 3 functions OnDraw, OnGetBounds and OnNewPictureSnapshot from C/C\u002B\u002B and adds the missing parts in SkiaSharp.\r\n\r\nBut how to compile to test it? Are there any scripts? Could I do this with VS 2017?",
+        "createdAt": "2018-12-14T11:12:10",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:55.7425199Z"
+          }
+        ]
+      },
+      {
+        "id": 447416497,
+        "author": "mattleibow",
+        "body": "Wow! This looks cool! I will take a closer look. \r\n\r\nFor most cases, you can actually be very specific and just build the platform and then run the unit tests. _(I need to update - or rather, create - the \u0022contributing\u0022 docs)_\r\n\r\n**Build Native Code**\r\n\r\nmacOS: \u0060./bootstrapper.sh -t externals-macos\u0060\r\nWindows: \u0060.\\bootstrapper.ps1 -t externals-windows\u0060\r\nLinux: \u0060./bootstrapper.sh -t externals-linux\u0060\r\n\r\n**Run Tests in the IDE**\r\nJust open the \u0060tests/SkiaSharp.Desktop.Tests/SkiaSharp.Desktop.Tests.sln\u0060 solution and run the tests there.\r\n\r\n**Run Tests in the Console** _(partially broken)_\r\n\r\nmacOS \u0026 Linux: \u0060./bootstrapper.sh -t tests-only\u0060\r\nWindows: \u0060.\\bootstrapper.ps1 -t tests-only\u0060\r\n\r\n_NOTE: The NetCore tests are a bit different and require the NuGet to be built - which will cause the test to fail. I need to update the \u0060tests-only\u0060 target_",
+        "createdAt": "2018-12-14T18:42:33",
+        "reactions": []
+      },
+      {
+        "id": 447419058,
+        "author": "mattleibow",
+        "body": "@charlenni Maybe open a PR to both repos if you want to start a discussion... Then we can talk on each line and stuff. If you are ready, that is.",
+        "createdAt": "2018-12-14T18:51:12",
+        "reactions": []
+      },
+      {
+        "id": 447437488,
+        "author": "charlenni",
+        "body": "Thank you for your help @mattleibow.\r\n\r\nThe above commands are for building SkiaSharp, but not for Skia. Does it build Skia too?\r\n\r\nI open a PR when I sure, that I can compile the code.",
+        "createdAt": "2018-12-14T19:58:04",
+        "reactions": []
+      },
+      {
+        "id": 447443990,
+        "author": "mattleibow",
+        "body": "Yes, the \u0060externals-xxx\u0060 target downloads dependencies and builds skia.",
+        "createdAt": "2018-12-14T20:15:38",
+        "reactions": []
+      },
+      {
+        "id": 447473484,
+        "author": "charlenni",
+        "body": "But I have my own Skia, because I changed files there too. So I assume, that I have to copy the Skia files to another place, correct?",
+        "createdAt": "2018-12-14T20:41:21",
+        "reactions": []
+      },
+      {
+        "id": 447510832,
+        "author": "mattleibow",
+        "body": "I usually just work in the skia submodule and change that to target whatever I want.\r\n\r\nFor example:\r\n 1. Fork \u0060skia\u0060 and \u0060SkiaSharp\u0060\r\n 2. Create a new \u0060skia\u0060 branch (which you have done already)\r\n 3. Clone \u0060SkiaSharp\u0060 and update submodules\r\n 4. Checkout your new \u0060SkiaSharp\u0060 branch\r\n 5. Add your fork to the \u0060skia\u0060 submodule remotes and checkout your new \u0060skia\u0060 branch\r\n\r\nNow, you should be able to work in both \u0060skia\u0060 and \u0060SkiaSharp\u0060. You can commit all the changes for now, and when I merge, I will first merge \u0060skia\u0060 and then update your branch back to \u0060xamarin-mobile-bindings\u0060.\r\n",
+        "createdAt": "2018-12-14T23:38:57",
+        "reactions": []
+      },
+      {
+        "id": 448558500,
+        "author": "charlenni",
+        "body": "Ok, I now integrated Skia into SkiaSharp, downloaded my branch and tried to compile it. But it seems, that I\u0027m missing something. The output is\r\n\u0060\u0060\u0060\u0060\r\nPreparing to run build script...\r\nRunning build script...\r\nAnalyzing build script...\r\nProcessing build script...\r\nInstalling tools...\r\nInstalling addins...\r\nThe assembly \u0027Cake.Xamarin, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null\u0027\r\nis referencing an older version of Cake.Core (0.26.1).\r\nFor best compatibility it should target Cake.Core version 0.28.0.\r\nThe assembly \u0027Cake.XCode, Version=4.0.0.0, Culture=neutral, PublicKeyToken=null\u0027\r\nis referencing an older version of Cake.Core (0.26.1).\r\nFor best compatibility it should target Cake.Core version 0.28.0.\r\nThe assembly \u0027Cake.FileHelpers, Version=3.0.0.0, Culture=neutral, PublicKeyToken=null\u0027\r\nis referencing an older version of Cake.Core (0.26.1).\r\nFor best compatibility it should target Cake.Core version 0.28.0.\r\nCompiling build script...\r\n\r\nTool Paths:\r\n  Cake.exe:   C:/Entwicklung/SkiaSharp/tools/Cake/Cake.exe\r\n  mdoc:       C:/Entwicklung/SkiaSharp/tools/mdoc.5.7.3.1/tools/mdoc.exe\r\n  msbuild:    [NULL]\r\n  nuget.exe:  C:/Entwicklung/SkiaSharp/tools/nuget.exe\r\n  python:     python\r\n\r\nBuild Paths:\r\n  ~:              C:/Users/weltz\r\n  NuGet Cache:    C:/Users/weltz/.nuget/packages\r\n  root:           C:/Entwicklung/SkiaSharp\r\n  docs:           C:/Entwicklung/SkiaSharp/docs/xml\r\n  package_cache:  C:/Entwicklung/SkiaSharp/externals/package_cache\r\n  ANGLE:          C:/Entwicklung/SkiaSharp/externals/angle\r\n  depot_tools:    C:/Entwicklung/SkiaSharp/externals/depot_tools\r\n  harfbuzz:       C:/Entwicklung/SkiaSharp/externals/harfbuzz\r\n  skia:           C:/Entwicklung/SkiaSharp/externals/skia\r\n\r\nSDK Paths:\r\n  Android SDK:   /Library/Developer/Xamarin/android-sdk-macosx\r\n  Android NDK:   /Library/Developer/Xamarin/android-ndk\r\n  Tizen Studio:  /tizen-studio\r\n\r\nEnvironment Variables (whitelisted):\r\n  NUMBER_OF_PROCESSORS:             8\r\n  OS:                               Windows_NT\r\n  Path:                             C:\\VulkanSDK\\1.1.85.0\\Bin\r\n                                    C:\\Windows\\system32\r\n                                    C:\\Windows\r\n                                    C:\\Windows\\System32\\Wbem\r\n                                    C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\\r\n                                    C:\\Windows\\System32\\OpenSSH\\\r\n                                    C:\\Program Files\\dotnet\\\r\n                                    C:\\Program Files (x86)\\Common Files\\Acronis\\VirtualFile\\\r\n                                    C:\\Program Files (x86)\\Common Files\\Acronis\\VirtualFile64\\\r\n                                    C:\\Program Files (x86)\\Common Files\\Acronis\\FileProtector\\\r\n                                    C:\\Program Files (x86)\\Common Files\\Acronis\\FileProtector64\\\r\n                                    C:\\Program Files (x86)\\Common Files\\Acronis\\SnapAPI\\\r\n                                    C:\\Program Files\\Git\\cmd\r\n                                    C:\\Users\\weltz\\AppData\\Local\\Microsoft\\WindowsApps\r\n\r\n  PROCESSOR_ARCHITECTURE:           AMD64\r\n  PROCESSOR_IDENTIFIER:             Intel64 Family 6 Model 58 Stepping 9, GenuineIntel\r\n  PSModulePath:                     C:\\Users\\weltz\\Documents\\WindowsPowerShell\\Modules\r\n                                    C:\\Program Files\\WindowsPowerShell\\Modules\r\n                                    C:\\Windows\\system32\\WindowsPowerShell\\v1.0\\Modules\r\n\r\n\r\n========================================\r\nexternals-angle-uwp\r\n========================================\r\nSkipping task: externals-angle-uwp\r\n\r\n========================================\r\nexternals-harfbuzz\r\n========================================\r\nSkipping task: externals-harfbuzz\r\n\r\n========================================\r\nexternals-init\r\n========================================\r\nExecuting task: externals-init\r\nAn error occurred when executing task \u0027externals-init\u0027.\r\nError: Mindestens ein Fehler ist aufgetreten.\r\n        Das System kann die angegebene Datei nicht finden\r\n\u0060\u0060\u0060\u0060\r\nAt the end I get a \u0022File not found\u0022 error.\r\n\r\nI assume, that I\u0027m missing a package, that is used while compiling. I added Python to VS 2017, because I havn\u0027t installed it up to now, but now succes.\r\n\r\nIf someone has a good idea...",
+        "createdAt": "2018-12-19T11:13:45",
+        "reactions": []
+      },
+      {
+        "id": 448561959,
+        "author": "mattleibow",
+        "body": "It probably is python. Make sure it is python 2 and it is in the PATH. ",
+        "createdAt": "2018-12-19T11:26:54",
+        "reactions": []
+      },
+      {
+        "id": 448562489,
+        "author": "mattleibow",
+        "body": "You can either add it to your PATH permanently or just append it temporarily as part of the script invocation. Or, you can use the PYTHON_EXE env var. ",
+        "createdAt": "2018-12-19T11:29:04",
+        "reactions": []
+      },
+      {
+        "id": 448568144,
+        "author": "charlenni",
+        "body": "@mattleibow Thank you for the fast support.\r\n\r\nYes, I found in the code, that it uses PYTHON_EXE and MSBUILD_EXE from environment. I now set this two variables and get\r\n\u0060\u0060\u0060\u0060\r\nTool Paths:\r\n  Cake.exe:   C:/Entwicklung/SkiaSharp/tools/Cake/Cake.exe\r\n  mdoc:       C:/Entwicklung/SkiaSharp/tools/mdoc.5.7.3.1/tools/mdoc.exe\r\n  msbuild:    C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\MSBuild\\15.0\\Bin\\amd64\r\n  nuget.exe:  C:/Entwicklung/SkiaSharp/tools/nuget.exe\r\n  python:     C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\Python36_64\r\n\u0060\u0060\u0060\u0060\r\nWith this, the error message changes from a \u0022File not found\u0022 to a \u0022Access denied\u0022 error. But it doesn\u0027t tell, which file or folder should be accessed :)",
+        "createdAt": "2018-12-19T11:52:46",
+        "reactions": []
+      },
+      {
+        "id": 448568860,
+        "author": "mattleibow",
+        "body": "Did you check out the submodule? There should be an externals/depot_tools",
+        "createdAt": "2018-12-19T11:55:36",
+        "reactions": []
+      },
+      {
+        "id": 448569421,
+        "author": "charlenni",
+        "body": "Yes, I did this. There are many Git Python files and a ninja.exe.",
+        "createdAt": "2018-12-19T11:57:41",
+        "reactions": []
+      },
+      {
+        "id": 448570175,
+        "author": "charlenni",
+        "body": "I didn\u0027t set the environment variables for Android and Tizen, but I assume, that this isn\u0027t the problem, because I build for Windows.",
+        "createdAt": "2018-12-19T12:00:38",
+        "reactions": []
+      },
+      {
+        "id": 448570195,
+        "author": "mattleibow",
+        "body": "Ah, your python must be to the exe itself. I see you just go to the folder\r\n\r\nSee this line as it is called directly https://github.com/mono/SkiaSharp/blob/master/cake/BuildExternals.cake#L64",
+        "createdAt": "2018-12-19T12:00:42",
+        "reactions": []
+      },
+      {
+        "id": 448571360,
+        "author": "charlenni",
+        "body": "You are right. So I changed the environment virables PYTHON_EXE and MSBUILD_EXE to the corresponding EXE files. Now I get a step further.\r\n\r\nI now get \r\n\u0060\u0060\u0060\u0060\r\n========================================\r\nexternals-init\r\n========================================\r\nExecuting task: externals-init\r\nTraceback (most recent call last):\r\n  File \u0022C:/Entwicklung/SkiaSharp/externals/skia/tools/git-sync-deps\u0022, line 253, in \u003Cmodule\u003E\r\n    exit(main(sys.argv[1:]))\r\n  File \u0022C:/Entwicklung/SkiaSharp/externals/skia/tools/git-sync-deps\u0022, line 245, in main\r\n    git_sync_deps(deps_file_path, argv, verbose)\r\n  File \u0022C:/Entwicklung/SkiaSharp/externals/skia/tools/git-sync-deps\u0022, line 190, in git_sync_deps\r\n    deps_file = parse_file_to_dict(deps_file_path)\r\n  File \u0022C:/Entwicklung/SkiaSharp/externals/skia/tools/git-sync-deps\u0022, line 170, in parse_file_to_dict\r\n    execfile(path, dictionary)\r\nNameError: name \u0027execfile\u0027 is not defined\r\nAn error occurred when executing task \u0027externals-init\u0027.\r\nError: Mindestens ein Fehler ist aufgetreten.\r\n        Process \u0027C:/Program Files (x86)/Microsoft Visual Studio/Shared/Python36_64/python.exe\u0027 failed with error: 1\r\n\u0060\u0060\u0060\u0060",
+        "createdAt": "2018-12-19T12:05:42",
+        "reactions": []
+      },
+      {
+        "id": 448572235,
+        "author": "mattleibow",
+        "body": "I would try just adding the python directory to the PATH ... I am not sure how well that has been tested. The tooling might be making some assumptions.\r\n\r\nIf it works in the PATH, but not the PYTHON_EXE env var, then I need to fix that. ",
+        "createdAt": "2018-12-19T12:09:15",
+        "reactions": []
+      },
+      {
+        "id": 448572645,
+        "author": "charlenni",
+        "body": "Ok, found the problem: Python 3.x doesn\u0027t contain \u0060\u0060\u0060\u0060execfile()\u0060\u0060\u0060\u0060 anymore. So I have to install a Python 2.x version ;)",
+        "createdAt": "2018-12-19T12:10:56",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:59.5012224Z"
+          }
+        ]
+      },
+      {
+        "id": 448581578,
+        "author": "charlenni",
+        "body": "It seems to work. The first 380 from 1056 Skia files are allready compiled ;)",
+        "createdAt": "2018-12-19T12:38:48",
+        "reactions": []
+      },
+      {
+        "id": 448614370,
+        "author": "charlenni",
+        "body": "Ok. The compiling of Skia run trough 2 times. At the end of the second round, I get an error \u0060\u0060\u0060\u0060[ERROR:winsdk.bat] Windows SDK 8.1 : \u0027include\u0027 not found\u0060\u0060\u0060\u0060 and a \u0060\u0060\u0060\u0060path not found\u0060\u0060\u0060\u0060 error. But at the end a libSkiaSharp.dll in folder output is created.\r\n\r\nThen the scripts go on and produces more errors. It stops when creating HarfBuzz with the following error\r\n\u0060\u0060\u0060\u0060\r\n\u0022C:\\Entwicklung\\SkiaSharp\\native-builds\\libHarfBuzzSharp_windows\\libHarfBuzzSharp.sln\u0022 (Build Ziel) (1) -\u003E\r\n\u0022C:\\Entwicklung\\SkiaSharp\\native-builds\\libHarfBuzzSharp_windows\\libHarfBuzzSharp.vcxproj\u0022 (Standardziel) (2) -\u003E\r\n(PlatformPrepareForBuild Ziel) -\u003E\r\n  C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community\\Common7\\IDE\\VC\\VCTargets\\Microsoft.Cpp.Platform.targets\r\n(67,5): error MSB8020: Die Buildtools f\u00FCr v140 (Plattformtoolset = \u0022v140\u0022) wurden nicht gefunden. Installieren Sie zum\r\nErstellen mithilfe der v140-Buildtools die v140-Buildtools. Alternativ k\u00F6nnen Sie ein Upgrade auf die aktuellen Visual\r\nStudio-Tools durchf\u00FChren, indem Sie das Men\u00FC \u0022Projekt\u0022 ausw\u00E4hlen oder mit der rechten Maustaste auf die Projektmappe kl\r\nicken und dann \u0022Projektmappe neu zuweisen\u0022 ausw\u00E4hlen. [C:\\Entwicklung\\SkiaSharp\\native-builds\\libHarfBuzzSharp_windows\\\r\nlibHarfBuzzSharp.vcxproj]\r\n\u0060\u0060\u0060\u0060\r\nBuild tools not found for version 140. I assume, that both errors, because I don\u0027t have VS 2015 installed.",
+        "createdAt": "2018-12-19T14:27:39",
+        "reactions": []
+      },
+      {
+        "id": 448617711,
+        "author": "charlenni",
+        "body": "It seems, that I need the VS 2015 15.3 development tools. Could be installed via VS 2017 installer. Only addinitional 3.26 GB of space ;)",
+        "createdAt": "2018-12-19T14:37:47",
+        "reactions": []
+      },
+      {
+        "id": 448654074,
+        "author": "charlenni",
+        "body": "Ok, with this, the command \u0060\u0060\u0060\u0060.\\bootstrapper.ps1 -t externals-windows\u0060\u0060\u0060\u0060 run through without any errors.\r\n\r\nNow I get finally to the real problems. The SkDrawable.OnGetBounds() returns a SkRect. But how to convert this to a IntPtr? Any idea?",
+        "createdAt": "2018-12-19T16:19:00",
+        "reactions": []
+      },
+      {
+        "id": 448691545,
+        "author": "charlenni",
+        "body": "Yes, I could compile all and run the tests. Works so far. \r\n\r\nHow to create a Nuget package, so that I could add it to an own project?",
+        "createdAt": "2018-12-19T18:09:55",
+        "reactions": []
+      },
+      {
+        "id": 448697917,
+        "author": "mattleibow",
+        "body": "Awesome! The NuGet... That will require all the Windows platforms at least. If you want to test, you can hook things up manually. Just add a reference to the SkiaSharp.dll and make sure the platform libSkiSharp.dll is marked as Content and copied to output.\r\n\r\nAlso, you could test it via one of the sample apps https://github.com/mono/SkiaSharp/blob/master/samples/Basic/Desktop/SkiaSharpSample/SkiaSharpSample.csproj",
+        "createdAt": "2018-12-19T18:30:33",
+        "reactions": []
+      },
+      {
+        "id": 448719950,
+        "author": "charlenni",
+        "body": "I test it now via the sample. Works good and so I could go for hunting of bugs.",
+        "createdAt": "2018-12-19T19:42:41",
+        "reactions": []
+      },
+      {
+        "id": 448724737,
+        "author": "charlenni",
+        "body": "It seems, that the libSkiaSharp doesn\u0027t contain any of the new C/C\u002B\u002B files. Should I add the new file names at any place, so that they compiled and added to the lib?",
+        "createdAt": "2018-12-19T19:58:52",
+        "reactions": []
+      },
+      {
+        "id": 448793328,
+        "author": "mattleibow",
+        "body": "ah, yeah. there is a \u0060\u003Cskia\u003E/src/xamarin/SkiaKeeper.c\u0060 just add a line for one symbol in the array. We have a strict linking process and that is what is kept.",
+        "createdAt": "2018-12-19T23:45:50",
+        "reactions": []
+      },
+      {
+        "id": 448962255,
+        "author": "charlenni",
+        "body": "And I had to add the new files to BUILD.gn.\r\n\r\nNow I\u0027m at a point where I could compile the library and a sample works. Now I have one more question: should I do anything when dispose the object? Need I a unref or destroy function?",
+        "createdAt": "2018-12-20T11:17:44",
+        "reactions": []
+      },
+      {
+        "id": 449002889,
+        "author": "mattleibow",
+        "body": "depending on how you created the object. if you did a \u0060new\u0060 in C\u002B\u002B, then you need a \u0060delete\u0060, but if you got it via method that had a \u0060sp_ref\u003CSkDrawable\u003E\u0060 return, then usually you can just \u0060SkSafeUnref\u0060.\r\n\r\nI see you just make a few PRs! NICE! I\u0027ll add comments to that so we can talk in code :)",
+        "createdAt": "2018-12-20T13:41:26",
+        "reactions": []
+      },
+      {
+        "id": 449006400,
+        "author": "charlenni",
+        "body": "Ok, than I should \u0060\u0060\u0060\u0060delete\u0060\u0060\u0060\u0060 the \u0060\u0060\u0060\u0060SkManagedDrawable\u0060\u0060\u0060\u0060 created [here](https://github.com/charlenni/skia/blob/SkDrawable/src/xamarin/sk_manageddrawable.cpp#L52).",
+        "createdAt": "2018-12-20T13:53:49",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:01.9871682Z"
+          }
+        ]
+      },
+      {
+        "id": 449025210,
+        "author": "mattleibow",
+        "body": "I had a look at the PRs and they are really good - I felt happy reading them :)\r\nMost of my comments relate to the inheritance as I would like to separate the Xamarin bits and the pure binding bits. This is for two reasons:\r\n 1. to match what is happening in the C\u002B\u002B world as Google is prone to changing things, and I would like to be able to just rewrite the Xamarin bits if they decide to break the world.\r\n 2. we have a dream here... to eventually upstream the C API - or at least parts of it (it is a far off dream, but it is still there, somewhere)",
+        "createdAt": "2018-12-20T14:56:03",
+        "reactions": []
+      },
+      {
+        "id": 449089312,
+        "author": "charlenni",
+        "body": "I wanted to add the \u0060\u0060\u0060\u0060sk_drawable.h\u0060\u0060\u0060\u0060 and \u0060\u0060\u0060\u0060sk_drawable.cpp\u0060\u0060\u0060\u0060. I added the h-file and a reference into SkiaKeeper.c. But it isn\u0027t respected while compile Skia? in BUILD.gn I didn\u0027t find anything about the folder include/c or src/c. Are I\u0027m missing something?",
+        "createdAt": "2018-12-20T18:17:57",
+        "reactions": []
+      },
+      {
+        "id": 449164041,
+        "author": "mattleibow",
+        "body": "I saw you found the \u0060gn/core.gni\u0060 file that did things. That is the correct place to put it.",
+        "createdAt": "2018-12-20T23:03:29",
+        "reactions": []
+      },
+      {
+        "id": 450173919,
+        "author": "mattleibow",
+        "body": "Thanks for  the PRs, I have merged them into master and CI is taking over... The development branch built fine, so I think all is well.",
+        "createdAt": "2018-12-27T15:37:17",
+        "reactions": []
+      },
+      {
+        "id": 452734417,
+        "author": "charlenni",
+        "body": "@mattleibow I hope, you had a good start into the new year.\r\n\r\nIs there a timeline, when the 1.68.1-beta is released?",
+        "createdAt": "2019-01-09T15:22:06",
+        "reactions": []
+      }
+    ]
+  }
 }

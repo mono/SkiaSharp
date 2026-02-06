@@ -19,5 +19,37 @@
   "updatedAt": "2022-08-19T12:02:41",
   "closedAt": "2018-11-15T03:34:48",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:10.7571556Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 438901524,
+        "author": "mattleibow",
+        "body": "I had a look and I think I see what is happening. This may have to do with not enough docs, but what is happening is maybe not the most intuitive.\r\n\r\nThe values returned by the measure text come in two parts:\r\n - the return value is the width of the character, including the \u0022padding\u0022 around the character to stop them overlapping when they are drawn.\r\n - the bounds value is the \u0022tight\u0022 rectangle that the character wil fit in RELATIVE to the baseline.\r\n\r\nText drawing in SkiaSharp is not from the bottom of the text, but the \u0022baseline\u0022. This means that some letters will hang below (such as y). However, this is also the case with other characters. As you noticed, the \u0022round\u0022 characters (0, 3, 5, 6, 8, 9) they overlap just a few pixels. This is all to to with the font, and how the characters were designed.\r\n\r\nTo see this, just write the text as normal, ie \u0060Drawtext(\u00220123456789\u0022)\u0060, and you will see that they ALSO overlap. So, if you are wanting to draw text as normal, then the overlap is as designed.\r\n\r\nBUT...\r\n\r\nIf you want to make the characters line up perfectly, then you have to look a little closer at the values of the rect bounds. For example, my character \u00220\u0022 reports the bounds as:\r\n - X = 6\r\n - Y = -107\r\n - W = 69\r\n - H = 109\r\n\r\nThis means that the top-most pixel of the character is 107 pixels ABOVE the baseline, and the height is 109. If you do the math (or use the \u0060Bottom\u0060 property), you can see that Y\u002BH=-107\u002B109=2! This means that the bottom most pixel is 2 pixels BELOW the baseline. The same thing is true for the left and right. With an X of 6, this means that the character starts 6 whole pixels before you expected.\r\n\r\nSo, what does this mean? Well, if you want the character to line up perfectly, you have to adjust the baseline when drawing. This means that when you draw the text, you move the character up by the amount that is below the baseline.\r\n\r\nIn the case of your example, you would do something like this on the draw: \u0060canvas.DrawText(text, x, y \u002B bounds.Bottom, paint)\u0060 I just did that for your code, and they line up perfectly. Keep in mind, if you were to draw a character with an intentional overhang, such as the letter \u0022y\u0022, your character would be moved all the way up and in line with the others.\r\n\r\nHope this explains all the numbers to you!\r\n\r\n![output](https://user-images.githubusercontent.com/1096616/48526998-44af2b80-e892-11e8-9c90-3f6ae0979e9f.png)\r\n",
+        "createdAt": "2018-11-15T03:11:44",
+        "reactions": [
+          {
+            "user": "Ghasan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:10.5038521Z"
+          }
+        ]
+      },
+      {
+        "id": 438905331,
+        "author": "scastria",
+        "body": "Thanks!  I guess the docs did say all of that but I just didn\u2019t think through the implications of what I was reading. ",
+        "createdAt": "2018-11-15T03:34:48",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:10.7069631Z"
+          }
+        ]
+      }
+    ]
+  }
 }

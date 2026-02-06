@@ -15,5 +15,170 @@
   "updatedAt": "2022-08-19T15:01:29",
   "closedAt": "2018-10-30T09:28:05",
   "commentCount": 21,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:04:32.0751865Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 423369913,
+        "author": "GalaxyVelocity",
+        "body": "Tried to open simple PNG file from MS Paint, all is well.\r\n\r\nSkiaSharp: **1.60.3**\r\n.NET Framework **4.6.1**\r\n\r\nMaybe a problem in the PNG file, wrong format.\r\n\r\nPlace the file that you are trying to open.",
+        "createdAt": "2018-09-20T23:48:58",
+        "reactions": []
+      },
+      {
+        "id": 423377398,
+        "author": "mattleibow",
+        "body": "You could try and get the error code by doing something like this:\r\n\r\n\u0060\u0060\u0060csharp\r\n// open the stream\r\nvar stream = new SKFileStream(\u0022photo.png\u0022);\r\n\r\n// create the codec\r\nvar codec = SKCodec.Create(stream));\r\n\r\n// we need a place to store the bytes\r\nvar bitmap = new SKBitmap(codec.Info);\r\n\r\n// decode!\r\n// result should be SKCodecResult.Success, but you may get more information\r\nvar result = codec.GetPixels(bitmap.Info, bitmap.GetPixels());\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2018-09-21T00:38:18",
+        "reactions": []
+      },
+      {
+        "id": 423416261,
+        "author": "anetapetryla",
+        "body": "\u003E Tried to open simple PNG file from MS Paint, all is well.\r\n\u003E \r\n\u003E SkiaSharp: **1.60.3**\r\n\u003E .NET Framework **4.6.1**\r\n\u003E \r\n\u003E Maybe a problem in the PNG file, wrong format.\r\n\u003E \r\n\u003E Place the file that you are trying to open.\r\n\r\nThe format is correct, the photo is opened in every graphic program and I tried to show in application view. So, everything is good",
+        "createdAt": "2018-09-21T05:19:04",
+        "reactions": []
+      },
+      {
+        "id": 423418089,
+        "author": "anetapetryla",
+        "body": "\u003E You could try and get the error code by doing something like this:\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E // open the stream\r\n\u003E var stream = new SKFileStream(\u0022photo.png\u0022);\r\n\u003E \r\n\u003E // create the codec\r\n\u003E var codec = SKCodec.Create(stream));\r\n\u003E \r\n\u003E // we need a place to store the bytes\r\n\u003E var bitmap = new SKBitmap(codec.Info);\r\n\u003E \r\n\u003E // decode!\r\n\u003E // result should be SKCodecResult.Success, but you may get more information\r\n\u003E var result = codec.GetPixels(bitmap.Info, bitmap.GetPixels());\r\n\u003E \u0060\u0060\u0060\r\n\r\nNot working, because SKCodec.Create(stream) return null, despite the stream was created.\r\n\r\n\u003Cimg width=\u0022398\u0022 alt=\u0022zrzut ekranu 2018-09-21 o 07 32 49\u0022 src=\u0022https://user-images.githubusercontent.com/32899557/45862127-a65e8800-bd70-11e8-82ef-c081b1ae61ad.png\u0022\u003E\r\n",
+        "createdAt": "2018-09-21T05:32:13",
+        "reactions": []
+      },
+      {
+        "id": 423428629,
+        "author": "GalaxyVelocity",
+        "body": "@aneti9862 try reading the byte array\r\n\r\n\u0060\u0060\u0060csharp\r\nvar bytes = System.IO.File.ReadAllBytes(\u0022photo.png\u0022);\r\n\r\nusing (var bitmap = SKBitmap.Decode(bytes))\r\n{\r\n  ....\r\n}\r\n\u0060\u0060\u0060\r\n\r\nWill receive an error?",
+        "createdAt": "2018-09-21T06:32:47",
+        "reactions": []
+      },
+      {
+        "id": 423430129,
+        "author": "anetapetryla",
+        "body": "@GalaxyVelocity,  decode method still returns the null, despite the bytes are filled (out of errors)\r\n\r\n![zrzut ekranu 2018-09-21 o 08 38 27](https://user-images.githubusercontent.com/32899557/45864282-cfcfe180-bd79-11e8-8473-1a73534a6c96.png)",
+        "createdAt": "2018-09-21T06:40:32",
+        "reactions": []
+      },
+      {
+        "id": 423433903,
+        "author": "GalaxyVelocity",
+        "body": "@aneti9862 Try to convert the png using GDI\u002B as a test\r\n\r\n\u0060\u0060\u0060csharp\r\n    public byte[] ImageToByteArray(System.Drawing.Image image)\r\n    {\r\n        using (var ms = new System.IO.MemoryStream())\r\n        {\r\n            image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);\r\n            return ms.ToArray();\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n\u0060\u0060\u0060csharp\r\n    var bytes = ImageToByteArray(System.Drawing.Image.FromFile(\u0022photo.png\u0022));\r\n\r\n    using (var bitmap = SKBitmap.Decode(bytes))\r\n    {\r\n        ...\r\n    }\r\n\u0060\u0060\u0060\r\n\r\nMaybe this temporary solution will help.",
+        "createdAt": "2018-09-21T06:58:34",
+        "reactions": []
+      },
+      {
+        "id": 423436115,
+        "author": "anetapetryla",
+        "body": "@GalaxyVelocity, I don\u0027t have access to System.Drawing.Image (Xamarin.Forms iOS)\r\n\r\n![zrzut ekranu 2018-09-21 o 09 07 08](https://user-images.githubusercontent.com/32899557/45865429-cc3e5980-bd7d-11e8-9a8b-3f281c518d71.png)\r\n",
+        "createdAt": "2018-09-21T07:08:11",
+        "reactions": [
+          {
+            "user": "Pangamma",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:29.1545197Z"
+          }
+        ]
+      },
+      {
+        "id": 423444719,
+        "author": "GalaxyVelocity",
+        "body": "Yes, sorry. GDI\u002B graphics library. System.Drawing.Image, is a Win32 implementation that ties into the Windows Desktop.\r\n\r\nThe test was to convert the original png file and transfer it SKBitmap.Decode.",
+        "createdAt": "2018-09-21T07:44:22",
+        "reactions": []
+      },
+      {
+        "id": 423603303,
+        "author": "mattleibow",
+        "body": "@aneti9862 Is it possible to upload the image somewhere? Maybe not here as GitHub processes the image. OneDrive, Dropbox, Google Drive, etc. Then I can check to see exactly what is happening. If you don\u0027t want to go public, just send it over to my email maleib@microsoft.com.",
+        "createdAt": "2018-09-21T16:54:17",
+        "reactions": []
+      },
+      {
+        "id": 423883961,
+        "author": "anetapetryla",
+        "body": "@mattleibow, PNG and JPG photos are set in Google Drive folder (link below):\r\n\r\nhttps://drive.google.com/drive/folders/17JSyRUXGVLIkuShWpDqRO0X_Q8jZbtrD?usp=sharing",
+        "createdAt": "2018-09-24T06:12:38",
+        "reactions": []
+      },
+      {
+        "id": 424729786,
+        "author": "mattleibow",
+        "body": "@aneti9862 I think it _may_ have to do with the fact of iOS compressing the .png images with a proprietary format. See https://github.com/mono/SkiaSharp/issues/140\r\n\r\nSee this comment to fix: https://github.com/mono/SkiaSharp/issues/140#issuecomment-326024217\r\n\r\nIf this is not the case, could you attach a simple sample? Also, how are you getting the image? is it a resource, or downloaded, or on the device?",
+        "createdAt": "2018-09-26T14:10:22",
+        "reactions": []
+      },
+      {
+        "id": 434229404,
+        "author": "mattleibow",
+        "body": "Closing this as there appears to be no more comments. The solution is that the png needs to have the optimization turned off.\r\n\r\nThe Apple optimized png is no longer a traditional png, and just retains its old extension. Apple processes it and transforms it into something else.",
+        "createdAt": "2018-10-30T09:28:05",
+        "reactions": []
+      },
+      {
+        "id": 519057012,
+        "author": "sergiokoo",
+        "body": "Despite I have \u0027Optimize PNG images\u0027 turned off in project settings, I still unable to use my *.png on iOS with exactly the same errors as aneti9862 described above. For me, the solution was to replace\r\n\u0060\u0060\u0060C#\r\nreturn SKBitmap.Decode(File.OpenRead(path));\r\n\u0060\u0060\u0060\r\nwith\r\n\u0060\u0060\u0060C#\r\nreturn UIImage.FromFile(path).ToSKBitmap();\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2019-08-07T11:30:01",
+        "reactions": []
+      },
+      {
+        "id": 657169210,
+        "author": "najak3d",
+        "body": "\u003E Despite I have \u0027Optimize PNG images\u0027 turned off in project settings, I still unable to use my *.png on iOS with exactly the same errors as aneti9862 described above. For me, the solution was to replace\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E return SKBitmap.Decode(File.OpenRead(path));\r\n\u003E \u0060\u0060\u0060\r\n\u003E \r\n\u003E with\r\n\u003E \r\n\u003E \u0060\u0060\u0060cs\r\n\u003E return UIImage.FromFile(path).ToSKBitmap();\r\n\u003E \u0060\u0060\u0060\r\n\r\nSKBitmap.Decode() - all forms were failing...  many alterations/trials to get it working failed.  It works fine on Android/UWP, but just not iOS!\r\n\r\nHOWEVER, THIS KLUDGE WORKED FOR ME!  (using UIImage.FromFile() first)\r\n\r\nIn order to make it work for our project, only our iOS Launcher included UIImage, since the rest of our project was .Net Standard 2.0.  Therefore, I inserted a plugin method to make this work from our core code, like this:\r\n\r\nclass PluginMethods\r\n{\r\n   static Func\u003Cstring, SKBitmap\u003E LoadImageFromFilepath;\r\n}\r\n\r\nAnd then from our Launcher, I hooked up this method to the method that makes it work in AppDelegate.cs:\r\n\r\nclass AppDelegate \r\n{\r\n    public override void OnActivated(.....)\r\n   {\r\n          ....\r\n          PluginMethods.LoadImageFromFilepath = _LoadImageFromFilepath;\r\n   }\r\n\r\n   static private SKBitmap _LoadImageFromFilepath(string filepath)\r\n   { \r\n     \tUIImage img = UIImage.FromFile(filepath);\r\n\tSkiaSharp.SKBitmap bm = img.ToSKBitmap();\r\n\treturn bm;\r\n   }\r\n}\r\n\r\n===\r\nSo now my .NET Standard application code is able to load PNG images from file on iOS using \u0022PluginMethods.LoadImageFromFilepath(path)\u0022.\r\n\r\nThanks for this kludge!\r\n",
+        "createdAt": "2020-07-12T03:26:55",
+        "reactions": []
+      },
+      {
+        "id": 657178888,
+        "author": "mattleibow",
+        "body": "@najak3d is it possible to attach a diagnostic build log or a binlog? I\u0027ll have a look and see what is happening to the build ",
+        "createdAt": "2020-07-12T05:50:44",
+        "reactions": []
+      },
+      {
+        "id": 657238373,
+        "author": "najak3d",
+        "body": "Please tell me how to obtain the log you are wanting?    I run from Visual Studio, and when the Decode method is called, nothing shows up in the Console log.  Maybe there is something in the Device Log, or elsewhere.",
+        "createdAt": "2020-07-12T15:35:52",
+        "reactions": []
+      },
+      {
+        "id": 657249791,
+        "author": "mattleibow",
+        "body": "@najak3d Ah, sorry. You can either run the build from the command line with:\r\n\u0060\u0060\u0060\r\nmsbuild /r /bl \u003Cpath-to-project-file\u003E\r\n\u0060\u0060\u0060\r\n\r\nOr, install the extension: https://marketplace.visualstudio.com/items?itemName=VisualStudioProductTeam.ProjectSystemTools\r\n\r\nClick the play/start button in the \u0060View \u003E Other Windows \u003E Build Logging\u0060 window:\r\n\r\n\u003Cimg width=\u0022500\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/87252281-00629d00-c472-11ea-891d-8bd3ae9d6c73.png\u0022 /\u003E\r\n\r\nWhen the window appears, you can right-click and save the logs:\r\n\r\n\u003Cimg width=\u0022450\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/87252311-39027680-c472-11ea-8b5b-19d5622d1cb4.png\u0022 /\u003E\r\n\r\nWhen the window is open and you have pressed record, then rebuild the project. The build will appear.",
+        "createdAt": "2020-07-12T17:03:36",
+        "reactions": []
+      },
+      {
+        "id": 657346705,
+        "author": "najak3d",
+        "body": "I installed those Project System Tools, and then opened the \u0022Build Logging\u0022 window.  Then did a Clean/Rebuild in Visual Studio, but the Build Logging window remained empty black (filter set to \u0022All\u0022).   So nothing shows here.",
+        "createdAt": "2020-07-13T04:03:18",
+        "reactions": []
+      },
+      {
+        "id": 657757295,
+        "author": "mattleibow",
+        "body": "@najak3d did you click the little black arrow in the top left of the tool window? You need to start a listener.",
+        "createdAt": "2020-07-13T19:50:25",
+        "reactions": []
+      },
+      {
+        "id": 711481285,
+        "author": "bennor",
+        "body": "In case anyone else runs into this, the problem for me was that I needed to keep the source stream open, so I was creating a copy:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var copy = new MemoryStream();\r\nawait source.CopyToAsync(copy);\r\n\r\nusing var bitmap = SKBitmap.Decode(copy); // sets bitmap to \u0060null\u0060 \uD83D\uDE22\r\n\u0060\u0060\u0060\r\n\r\nThe solution was to rewind the stream after \u0060CopyTo\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var copy = new MemoryStream();\r\nawait source.CopyTo(copy);\r\nsource.Position = 0;\r\ncopy.Position = 0;\r\n\r\nusing var bitmap = SKBitmap.Decode(copy); // \uD83C\uDF89\r\n\u0060\u0060\u0060",
+        "createdAt": "2020-10-19T02:52:48",
+        "reactions": [
+          {
+            "user": "nbulp",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:04:32.0249575Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -29,5 +29,248 @@
   "updatedAt": "2022-08-19T12:02:12",
   "closedAt": "2018-12-21T15:24:58",
   "commentCount": 27,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:09.9215096Z",
+    "reactions": [
+      {
+        "user": "joseluisct",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:06:09.9215168Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 446638537,
+        "author": "mattleibow",
+        "body": "I haven\u0027t seen this before, did you update in all the related projects? Also, try clean/rebuild, maybe the app is not using the new dlls...\r\n\r\nI have attached a small sample that works for me.\r\n\r\n[SkiaSharpMacTest.zip](https://github.com/mono/SkiaSharp/files/2672531/SkiaSharpMacTest-fixed.zip)\r\n",
+        "createdAt": "2018-12-12T15:56:45",
+        "reactions": []
+      },
+      {
+        "id": 447259949,
+        "author": "nor0x",
+        "body": "thanks for the reply - unfortunately I had no luck with cleaning and rebuilding the solution / restarting Visual Studio and the machine.\r\n\r\nI still get the same exception. \r\n![screenshot](https://user-images.githubusercontent.com/3210391/49993256-8b25a200-ff86-11e8-9b31-f9f38fa2c530.jpg)\r\n\r\nWith the following Stacktrace\r\n\u0060\r\n  at System.Delegate.Combine (System.Delegate a, System.Delegate b) [0x0001d] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/mcs/class/corlib/System/Delegate.cs:548 \r\n  at SkiaSharp.Views.Mac.SKGLView.add_PaintSurface (System.EventHandler1[TEventArgs] value) [0x00009] in \u003Cf196d3fbe68d4774a19d9220fd09cf57\u003E:0 \r\n  at MYPROJECT.Controller.MainVC\u002B\u003CInit\u003Ed__45.MoveNext () [0x002d2] in MYPATH/MYPROJECT/Controller/MainVC:163 \r\n--- End of stack trace from previous location where exception was thrown ---\r\n  at MYPROJECT.Controller.RootViewController\u002B\u003C\u003COpenAsync\u003Eb__22_0\u003Ed.MoveNext () [0x000de] in MYPATH/MYPROJECT/Controller/RootViewController.cs:277 \r\n--- End of stack trace from previous location where exception was thrown ---\r\n  at System.Runtime.CompilerServices.AsyncMethodBuilderCore\u002B\u003C\u003Ec.\u003CThrowAsync\u003Eb__6_0 (System.Object state) [0x00000] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/mcs/class/referencesource/mscorlib/system/runtime/compilerservices/AsyncMethodBuilder.cs:1023 \r\n  at Foundation.NSAsyncSynchronizationContextDispatcher.Apply () [0x00002] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/Foundation/NSAction.cs:178 \r\n  at (wrapper managed-to-native) AppKit.NSApplication.NSApplicationMain(int,string[])\r\n  at AppKit.NSApplication.Main (System.String[] args) [0x00040] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/AppKit/NSApplication.cs:100 \r\n  at MYPROJECT.MainClass.Main (System.String[] args) [0x00007] in MYPATH/MYPROJECT/Main.cs:10 \r\n\u0060\r\nMaybe this information is helpful - it\u0027s difficult for me to build a repro, because the project is kinda complex",
+        "createdAt": "2018-12-14T08:59:21",
+        "reactions": []
+      },
+      {
+        "id": 447262596,
+        "author": "mattleibow",
+        "body": "There appears to be talk of async in that stack trace. Is it possible to give some pseudo code with how you are attaching the event handler? Maybe there is some threading issue.\r\n\r\nWhat you can try is to wrap the attach in a run-on-main-thread code... Could it be possible that multiple event handles are attaching at the same time?\r\n\r\nIf you roll back to v1.60.3, does this issue go away?\r\n\r\nThis is weird since that code is not mine, but in system. ",
+        "createdAt": "2018-12-14T09:09:39",
+        "reactions": []
+      },
+      {
+        "id": 447264869,
+        "author": "nor0x",
+        "body": "Same exception if I try attaching the event handler wrapped in \u0060BeginInvokeOnMainThread\u0060\r\n\u0060BeginInvokeOnMainThread(() =\u003E\r\n            {\r\n                CanvasView.PaintSurface \u002B= CanvasView_PaintSurface;\r\n            });\u0060\r\n\r\nI\u0027m attaching the event handler in an async Init method. I also tried attaching in \u0060ViewDidLoad\u0060 - which gives me the exact same exception. \r\n\r\nNo issues with 1.60.3",
+        "createdAt": "2018-12-14T09:18:46",
+        "reactions": []
+      },
+      {
+        "id": 447413177,
+        "author": "mattleibow",
+        "body": "Just want to check... You are _not_ using Xamarin.Forms, are you?\r\n\r\nOne last thing to try is to create a dummy object in the constructor:\r\n\r\n\u0060\u0060\u0060\r\nvar testing = new SKGLView();\r\ntesting.PaintSurface \u002B= CanvasView_PaintSurface;\r\n\u0060\u0060\u0060\r\n\r\nIf this is in the constructor, and still fails, then there is something really wrong somewhere. If it works, could you share some code/pseudo code of that init method. Or, you can just email me that one file so I can have a look if it is confidential: \u0060maleib\u003CAT\u003Emicrosoft\u003C.\u003Ecom\u0060",
+        "createdAt": "2018-12-14T18:31:06",
+        "reactions": []
+      },
+      {
+        "id": 447430240,
+        "author": "nor0x",
+        "body": "I\u0027m using Xamarin.Mac not Xamarin.Forms.\r\n\r\nattaching \u0060CanvasView_PaintSurface\u0060 to a dummy SKGLView object works fine. I will look into my initialization method tomorrow and check what I can share. I\u0027m happy to send you some source files via email. Thank you",
+        "createdAt": "2018-12-14T19:30:20",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:05.2692026Z"
+          }
+        ]
+      },
+      {
+        "id": 447757870,
+        "author": "nor0x",
+        "body": "Here is some pseudo code from the initialization logic I\u0027m using in my application.\r\nMaybe this snippet helps identify the problem.\r\n\r\n\u0060\u0060\u0060\r\n//this is called on a button click in FirstViewController\r\nvar secondViewController = this.Storyboard.InstantiateControllerWithIdentifier(\u0022secondVC\u0022) as SecondViewController;\r\nvar window = NSApplication.SharedApplication.Windows.First();\r\nsecondViewController.View.Frame = new CGRect(0, 0, window.ContentView.Frame.Width, window.ContentView.Frame.Height);\r\nwindow.ContentViewController = secondViewController;\r\nawait secondViewController.Init();\r\n\r\n\r\n//Init method of SecondViewController\r\npublic async Task Init()\r\n{\r\n    //...\r\n    //some async init stuff\r\n    CanvasView.AcceptsTouchEvents = true;\r\n    CanvasView.BecomeFirstResponder();\r\n\r\n    var pan = new NSPanGestureRecognizer(PanEvent);\r\n    var zoom = new NSMagnificationGestureRecognizer(ZoomEvent);\r\n    var tap = new NSClickGestureRecognizer(ClickEvent);\r\n    CanvasView.AddGestureRecognizer(pan);\r\n    CanvasView.AddGestureRecognizer(zoom);\r\n    CanvasView.AddGestureRecognizer(tap);\r\n    CanvasView.AddGestureRecognizer(doubleTap);\r\n    CanvasView.PaintSurface \u002B= CanvasView_PaintSurface;\r\n\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-12-17T08:16:09",
+        "reactions": []
+      },
+      {
+        "id": 447769234,
+        "author": "nor0x",
+        "body": "One more detail - if I\u0027m using SKCanvasView instead of SKGLView attaching the event handler works fine",
+        "createdAt": "2018-12-17T09:00:30",
+        "reactions": []
+      },
+      {
+        "id": 447786259,
+        "author": "mattleibow",
+        "body": "It all looks good \uD83D\uDE41 and, the fact that one view works and another does not is even more scary. What really gets me is that the event code is nothing to do with skia at all, it is just the basic .NET event.\r\n\r\n_note: I can\u0027t seem to see where you attach the event, but that could should work if it was anywhere_\r\n\r\nI think it may be time to have a look at the code. ",
+        "createdAt": "2018-12-17T09:58:06",
+        "reactions": []
+      },
+      {
+        "id": 447918189,
+        "author": "nor0x",
+        "body": "I\u0027m still working on a repro. I tried running your example which also fails on my machine. So I have built my own mini-repro and this also fails, it\u0027s a super basic example though. Maybe the error is somewhere on my system. Could you check if this code runs fine on your machine? \r\n\r\nI\u0027m getting this error with the following stacktrace\r\n\u003Cimg width=\u0022856\u0022 alt=\u0022image\u0022 src=\u0022https://user-images.githubusercontent.com/3210391/50102381-381d4a80-0225-11e9-8fd1-3e3be11459fb.png\u0022\u003E\r\n\r\n\u0060at SkiaSharp.Views.Mac.SKGLView.DrawRect (CoreGraphics.CGRect dirtyRect) [0x000d0] in \u003Cf196d3fbe68d4774a19d9220fd09cf57\u003E:0 \\n  at (wrapper managed-to-native) AppKit.NSApplication.NSApplicationMain(int,string[])\\n  at AppKit.NSApplication.Main (System.String[] args) [0x00040] in /Library/Frameworks/Xamarin.Mac.framework/Versions/5.2.1.12/src/Xamarin.Mac/AppKit/NSApplication.cs:100 \\n  at SkiaSharpMacTest.MainClass.Main (System.String[] args) [0x00007] in /Users/profile/Downloads/SkiaSharpMacTest-fixed-3/SkiaSharpMacTest/Main.cs:10\u0060\r\n\r\n[SkiaSharp_macOS.zip](https://github.com/mono/SkiaSharp/files/2687046/SkiaSharp_macOS.zip)",
+        "createdAt": "2018-12-17T16:58:05",
+        "reactions": []
+      },
+      {
+        "id": 448089409,
+        "author": "mattleibow",
+        "body": "Totally works on my machine:\r\n\u003Cimg width=\u00221920\u0022 alt=\u0022screen shot 2018-12-18 at 06 05 12\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/50131478-f3c49580-028a-11e9-8964-bd290361d430.png\u0022\u003E\r\n",
+        "createdAt": "2018-12-18T04:05:55",
+        "reactions": []
+      },
+      {
+        "id": 448090349,
+        "author": "mattleibow",
+        "body": "Both your and my sample works just fine. Maybe you have bad NuGets - due to a preview version?\r\n\r\nYou can try clearing your nuget cache:\r\n\u003E nuget locals all -clear\r\n\r\nor maybe not so harsh, just delete:\r\n\u003E ~/.nuget/packages/skiasharp\r\n\u003E ~/.nuget/packages/skiasharp.views\r\n\r\nAlso, maybe attach your machine info from VS \u003E About \u003E Show Details \u003E Copy Information\r\n\r\nYou might have a bad mono or mac install... or something. I can check.",
+        "createdAt": "2018-12-18T04:12:27",
+        "reactions": []
+      },
+      {
+        "id": 448123719,
+        "author": "nor0x",
+        "body": "clearing the nuget cache or deleting the skiasharp packages manually didn\u0027t solve the problem. I will run the code on a second mac tomorrow.\r\nHere are the details from VS \u003E About\r\n\r\n\u0060\u0060\u0060\r\n=== Visual Studio Professional 2017 for Mac ===\r\n\r\nVersion 7.7.2 (build 21)\r\nInstallation UUID: 606b8730-5344-4f22-8895-9af524c45723\r\n\tGTK\u002B 2.24.23 (Raleigh theme)\r\n\tXamarin.Mac 4.4.1.178 (master / eeaeb7e6)\r\n\r\n\tPackage version: 516000221\r\n\r\n=== Mono Framework MDK ===\r\n\r\nRuntime:\r\n\tMono 5.16.0.221 (2018-06/b63e5378e38) (64-bit)\r\n\tPackage version: 516000221\r\n\r\n=== NuGet ===\r\n\r\nVersion: 4.8.0.5385\r\n\r\n=== .NET Core ===\r\n\r\nRuntime: /usr/local/share/dotnet/dotnet\r\nRuntime Versions:\r\n\t2.2.0\r\n\t2.1.5\r\n\t2.1.2\r\nSDK: /usr/local/share/dotnet/sdk/2.2.100/Sdks\r\nSDK Versions:\r\n\t2.2.100\r\n\t2.1.403\r\nMSBuild SDKs: /Library/Frameworks/Mono.framework/Versions/5.16.0/lib/mono/msbuild/15.0/bin/Sdks\r\n\r\n=== Xamarin.Profiler ===\r\n\r\nVersion: 1.6.4\r\nLocation: /Applications/Xamarin Profiler.app/Contents/MacOS/Xamarin Profiler\r\n\r\n=== Apple Developer Tools ===\r\n\r\nXcode 10.1 (14460.46)\r\nBuild 10B61\r\n\r\n=== Xamarin.Mac ===\r\n\r\nVersion: 5.2.1.12 (Visual Studio Professional)\r\nHash: 65ec520f\r\nBranch: \r\nBuild date: 2018-12-05 12:06:09-0500\r\n\r\n=== Xamarin.iOS ===\r\n\r\nVersion: 12.2.1.12 (Visual Studio Professional)\r\nHash: 65ec520f\r\nBranch: d15-9\r\nBuild date: 2018-12-05 12:06:09-0500\r\n\r\n=== Xamarin.Android ===\r\n\r\nVersion: 9.1.4.2 (Visual Studio Professional)\r\nAndroid SDK: /Users/johnny/Library/Developer/Xamarin/android-sdk-macosx\r\n\tSupported Android versions:\r\n\t\t7.0 (API level 24)\r\n\t\t7.1 (API level 25)\r\n\t\t8.1 (API level 27)\r\n\r\nSDK Tools Version: 26.1.1\r\nSDK Platform Tools Version: 28.0.1\r\nSDK Build Tools Version: 27.0.3\r\n\r\nJava SDK: /Users/johnny/Library/Developer/Xamarin/jdk/microsoft_dist_openjdk_1.8.0.9\r\nopenjdk version \u00221.8.0-9\u0022\r\nOpenJDK Runtime Environment (build 1.8.0-9-microsoft-b00)\r\nOpenJDK 64-Bit Server VM (build 25.71-b00, mixed mode)\r\n\r\nAndroid Designer EPL code available here:\r\nhttps://github.com/xamarin/AndroidDesigner.EPL\r\n\r\n=== Android Device Manager ===\r\n\r\nVersion: 7.7.1.0\r\nHash: 06ceaea1\r\n\r\n=== Xamarin Inspector ===\r\n\r\nVersion: 1.4.3\r\nHash: db27525\r\nBranch: 1.4-release\r\nBuild date: Mon, 09 Jul 2018 21:20:18 GMT\r\nClient compatibility: 1\r\n\r\n=== Build Information ===\r\n\r\nRelease ID: 707020021\r\nGit revision: f1fea53df9eb0bb5890a9563c0d7ea7b03922144\r\nBuild date: 2018-12-14 18:37:35\u002B00\r\nBuild branch: release-7.7\r\nXamarin extensions: 9c5cea335e6a9ce4ccfde31c4aa06c25a3576085\r\n\r\n=== Operating System ===\r\n\r\nMac OS X 10.14.2\r\nDarwin 18.2.0 Darwin Kernel Version 18.2.0\r\n    Mon Nov 12 20:24:46 PST 2018\r\n    root:xnu-4903.231.4~2/RELEASE_X86_64 x86_64\r\n\r\n=== Enabled user installed extensions ===\r\n\r\nPrism Template Studio and Developer Toolkit 2.2.0.434\r\n\r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-12-18T07:32:10",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:06.7128298Z"
+          }
+        ]
+      },
+      {
+        "id": 448282233,
+        "author": "mattleibow",
+        "body": "The only thing that I can see as a difference is the OS:\r\n\r\n**ME**\r\nMac OS X 10.13.6\r\nDarwin 17.7.0 Darwin Kernel Version 17.7.0\r\n    Fri Nov  2 20:43:16 PDT 2018\r\n    root:xnu-4570.71.17~1/RELEASE_X86_64 x86_64\r\n\r\n\r\n**YOU**\r\nMac OS X 10.14.2\r\nDarwin 18.2.0 Darwin Kernel Version 18.2.0\r\n    Mon Nov 12 20:24:46 PST 2018\r\n    root:xnu-4903.231.4~2/RELEASE_X86_64 x86_64\r\n\r\nIt appears my mac did not actually let me know there was a major update :sob: I\u0027ll update and see what happens.",
+        "createdAt": "2018-12-18T16:30:28",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:06.9347881Z"
+          }
+        ]
+      },
+      {
+        "id": 448298442,
+        "author": "mattleibow",
+        "body": "So, while I get my second mac up and running, I got some suggestions from our team here. You can share your .app file and I can test to see if it is your tools or your environment that is having issues. I have attached mine so you can test that. Let me know if it crashes for you.\r\n\r\nSource: [SkiaSharp_macOS.zip](https://github.com/mono/SkiaSharp/files/2687046/SkiaSharp_macOS.zip) (this is just your source relinked to avoid scrolling)\r\nMy .app: [SkiaSharpMacTest.app.zip](https://github.com/mono/SkiaSharp/files/2691521/SkiaSharpMacTest.app.zip)\r\n\r\nMy machine: [specs](https://gist.github.com/mattleibow/d8ea738658700869e7f69c056ed40ea9)\r\nYour machine: [specs](https://gist.github.com/mattleibow/363c5b73b91e843e49043e12bb655f5b)",
+        "createdAt": "2018-12-18T17:16:26",
+        "reactions": []
+      },
+      {
+        "id": 448307986,
+        "author": "nor0x",
+        "body": "Thank you for the .app file. I tried running it on my machine and it crashed immediately. Here is the output of the process inspected in Console.\r\n\r\nI guess there must be something wrong with my system?\r\n\r\n\u003Cimg width=\u00221410\u0022 alt=\u0022screenshot at dec 18 18-47-49\u0022 src=\u0022https://user-images.githubusercontent.com/3210391/50172462-75510d80-02f5-11e9-9bf5-0c2ff2e5c2e8.png\u0022\u003E\r\n",
+        "createdAt": "2018-12-18T17:45:56",
+        "reactions": []
+      },
+      {
+        "id": 448322867,
+        "author": "mattleibow",
+        "body": "One last thing to check is to send me your .app file and I can run it here to confirm that it is your system - it might be just the tooling used to build the package is bad and affecting the running. I have also contacted our resident mac experts to get some real advice.\r\n",
+        "createdAt": "2018-12-18T18:33:09",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:07.5992937Z"
+          }
+        ]
+      },
+      {
+        "id": 448326397,
+        "author": "nor0x",
+        "body": "Sure thing. Here is the .app file built on my system\r\n[SkiaSharpMacTest.zip](https://github.com/mono/SkiaSharp/files/2691813/SkiaSharpMacTest.zip)\r\n",
+        "createdAt": "2018-12-18T18:44:22",
+        "reactions": []
+      },
+      {
+        "id": 448334946,
+        "author": "mattleibow",
+        "body": "Good news! (which is really bad news) and a \u0022It\u0027s not you, it\u0027s me\u0022 time. I have managed to reproduce the issue on my other, older macbook.\r\n\r\nI get the same error in the drawing code (probably just manifests for you in the attach), this means that I am probably trying to create a GPU surface that the GPU does not support - maybe the wrong color type, color space or alpha type.\r\n\r\nWhat is your actual hardware there? Mine works with:\r\n\u003Cimg width=\u0022252\u0022 alt=\u0022screen shot 2018-12-18 at 21 07 33\u0022 src=\u0022https://user-images.githubusercontent.com/1096616/50176778-fbc31a80-0308-11e9-8cb1-140e952c1f61.png\u0022\u003E\r\n\r\n(I\u0027ll edit when my old macbook restarts)",
+        "createdAt": "2018-12-18T19:10:17",
+        "reactions": []
+      },
+      {
+        "id": 448339176,
+        "author": "nor0x",
+        "body": "This is the hardware of my 13 inch Macbook Pro\r\n\u003Cimg width=\u0022319\u0022 alt=\u0022screenshot at dec 18 20-18-51\u0022 src=\u0022https://user-images.githubusercontent.com/3210391/50177386-2d84b300-0302-11e9-9540-df16d4a4b23f.png\u0022\u003E\r\nThe other machine I used to test the code is a Macbook Pro 2018 15 inch with an i7 6x 2.6 GHz.",
+        "createdAt": "2018-12-18T19:23:59",
+        "reactions": []
+      },
+      {
+        "id": 448425962,
+        "author": "mattleibow",
+        "body": "All right, I have found the issue. It appears that on my old MacBook, I can only have a surface with 1 sample. And, on my new MacBook, I can have 8. In both cases, I requested 4, but appears that I only got 1 on one machine and 8 on another.\r\n\r\nI need to investigate this some more, but I can implement a fix for the time being - I can just query SkiaSharp for the number of samples that it is allowed.\r\n\r\nIn the meantime, you can see what your machine outputs but running this modified app:\r\n\r\nSource: [Modified.zip](https://github.com/mono/SkiaSharp/files/2692793/Modified.zip)\r\nApp: [SkiaSharpMacTest.app.zip](https://github.com/mono/SkiaSharp/files/2692801/SkiaSharpMacTest.app.zip)\r\n\r\nLet me know what you get on your side before I make any changes...",
+        "createdAt": "2018-12-19T00:39:42",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:08.4663778Z"
+          }
+        ]
+      },
+      {
+        "id": 448492922,
+        "author": "mattleibow",
+        "body": "I think it also may have to do with the graphics drivers... I started my Android emulator and it asked my to update some driver or something - didn\u0027t actually read that message, just checked the box to never show again lol",
+        "createdAt": "2018-12-19T07:13:49",
+        "reactions": []
+      },
+      {
+        "id": 448499432,
+        "author": "nor0x",
+        "body": "I ran the Modified SkiaSharpMacText and got the message \u0022SAMPLES = 1\u0022\r\n",
+        "createdAt": "2018-12-19T07:43:20",
+        "reactions": []
+      },
+      {
+        "id": 448561502,
+        "author": "mattleibow",
+        "body": "OK, I think I know what to do now. I can query the context for the supported sample count. In the meantime, you can use SKCanvasView or the custom view.\r\n\r\nI am going to improve the views a bit since they haven\u0027t really been touched since the beginning. I need to add colorspace support as well, see #732",
+        "createdAt": "2018-12-19T11:25:05",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:09.2166548Z"
+          }
+        ]
+      },
+      {
+        "id": 448892628,
+        "author": "nor0x",
+        "body": "Thank you so much \uD83D\uDE4C\r\nI think I will use 1.60.3 for now, it works perfectly for me. Should I close the issue now or leave it open until you are done?",
+        "createdAt": "2018-12-20T06:48:01",
+        "reactions": []
+      },
+      {
+        "id": 449035086,
+        "author": "mattleibow",
+        "body": "Leave it open. I tag the commit with this issue so we have links",
+        "createdAt": "2018-12-20T15:26:16",
+        "reactions": []
+      },
+      {
+        "id": 449285927,
+        "author": "mattleibow",
+        "body": "I believe I fixed the issue by not assuming what my samples are, but rather asking the system.\r\nI updated the way surface are created in ALL the views as well, just to prevent any future issue on other platforms.\r\nhttps://github.com/mono/SkiaSharp/pull/741",
+        "createdAt": "2018-12-21T07:13:51",
+        "reactions": [
+          {
+            "user": "nor0x",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:06:09.8707717Z"
+          }
+        ]
+      }
+    ]
+  }
 }

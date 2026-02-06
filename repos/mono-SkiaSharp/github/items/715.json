@@ -37,5 +37,70 @@
   "updatedAt": "2022-08-19T12:02:22",
   "closedAt": "2019-06-24T13:46:42",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:45.5987786Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 445128792,
+        "author": "mattleibow",
+        "body": "This is a good thing. I will update harfbuzz and get support for utf8/16/32.",
+        "createdAt": "2018-12-07T05:40:39",
+        "reactions": [
+          {
+            "user": "Gillibald",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:44.5395901Z"
+          }
+        ]
+      },
+      {
+        "id": 449485959,
+        "author": "Gillibald",
+        "body": "Will try to implement this myself the next days. In general, adding AddUtf16, AddUtf32 to Buffer and changing SKShaper to use the current TextEncoding. GlyphId will be nonvalid value. Probably need more advanced features in the future so it makes sense I implement it myself.",
+        "createdAt": "2018-12-21T20:05:02",
+        "reactions": []
+      },
+      {
+        "id": 449526472,
+        "author": "mattleibow",
+        "body": "Cool! Just an FYI, there is a \u0060SKTextEncoding\u0060 and a \u0060SKEncoding\u0060.\r\n\r\nI see Google uses both differently, \u0060SKTextEncoding\u0060 is for taking a chunk of memory, and writing it to the screen. \u0060SKEncoding\u0060 is for taking a chunk of text in memory and converting it to glyph data. There were using the \u0060SKTextEncoding\u0060 for both in the past, but they split it.\r\n\r\nBut, looking at harfbuzz, they have \u0060hb_buffer_add_codepoints\u0060 which is the glyph ids if i am not mistaken... I am not sure how that works off the top of my head, but you can try it out and it may be what you need.",
+        "createdAt": "2018-12-21T23:58:41",
+        "reactions": []
+      },
+      {
+        "id": 449530106,
+        "author": "Gillibald",
+        "body": "Codepoint\u0027s are no glyph Id\u0027s. Each character is mapped to one codepoint but one codepoint can be mapped to several glyphs. The codepoint of character \u0060a\u0060 could be mapped to glyph id \u00601\u0060 in font \u0060A\u0060 but in font \u0060B\u0060 it is mapped to \u00602\u0060. The codepoint should be the same. \r\n\r\nStill learning this stuff so I could be mistaken. This is quite a complex topic.\r\n\r\nWe will figure it out \uD83D\uDC4D",
+        "createdAt": "2018-12-22T00:29:31",
+        "reactions": [
+          {
+            "user": "prepare",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:45.1314863Z"
+          },
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:45.1314868Z"
+          }
+        ]
+      },
+      {
+        "id": 450492047,
+        "author": "Gillibald",
+        "body": "#744 ",
+        "createdAt": "2018-12-29T13:07:15",
+        "reactions": []
+      },
+      {
+        "id": 505016912,
+        "author": "mattleibow",
+        "body": "Merged in https://github.com/mono/SkiaSharp/pull/766 and others.",
+        "createdAt": "2019-06-24T13:46:42",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -19,5 +19,81 @@
   "updatedAt": "2022-08-19T12:02:27",
   "closedAt": "2018-12-24T05:02:24",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:37.617943Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 441684729,
+        "author": "mattleibow",
+        "body": "Looking at the text in the issue, there appears to be some special character?\r\n\r\nIf this character is supposed to be there, then it may be that Linux can/can\u0027t render it as a space and is replacing it with a block character. Also, are you using the same fonts? The default font on each platform is the platform-default font.",
+        "createdAt": "2018-11-26T15:43:07",
+        "reactions": []
+      },
+      {
+        "id": 441686468,
+        "author": "selvarathinamm",
+        "body": "@mattleibow  Is there any way to get rid of block character and get the exact string width?\r\nBTW The fonts are same in both systems.",
+        "createdAt": "2018-11-26T15:46:51",
+        "reactions": []
+      },
+      {
+        "id": 441697268,
+        "author": "selvarathinamm",
+        "body": "@mattleibow Yes. I need to measure those special characters also. Am I missing any property settings?",
+        "createdAt": "2018-11-26T16:11:50",
+        "reactions": []
+      },
+      {
+        "id": 441794713,
+        "author": "mattleibow",
+        "body": "Hmm. What is the font name and can you ensure that the font exists on linux? On my WSL, I only have 2 fonts. After installing Times New Roman, I got the same values as the Windows.\r\n\r\nIf you are setting the font, you can check the typeface via the \u0060SKTypeface.FamilyName\u0060 property. If you are using \u0060SKTypeface.FromFamilyName\u0060 to load the font, this will always return a valid font - just not the one you expect if the font is not available. If you use \u0060SKFontManager.Default.MatchFamily\u0060, it will return \u0060null\u0060 if the font cannot be found.",
+        "createdAt": "2018-11-26T20:55:38",
+        "reactions": []
+      },
+      {
+        "id": 441796365,
+        "author": "mattleibow",
+        "body": "It may be the text... Maybe attach a text file with the exact string - maybe GitHub is processing the text.",
+        "createdAt": "2018-11-26T21:01:09",
+        "reactions": []
+      },
+      {
+        "id": 442040468,
+        "author": "Gillibald",
+        "body": "Make sure to test this with a font loaded by stream. That way you ensure the same typeface is used on both platforms. When that fails to produce the same measures there is an issue.",
+        "createdAt": "2018-11-27T12:26:24",
+        "reactions": []
+      },
+      {
+        "id": 442042009,
+        "author": "mattleibow",
+        "body": "I tried the same font file on both platforms, and I get the same values. What font are you using?",
+        "createdAt": "2018-11-27T12:32:24",
+        "reactions": []
+      },
+      {
+        "id": 444359472,
+        "author": "selvarathinamm",
+        "body": "I\u0027m getting 190 as width in linux and 184 in windows for DejaVu sans font.",
+        "createdAt": "2018-12-05T05:00:40",
+        "reactions": []
+      },
+      {
+        "id": 444493255,
+        "author": "mattleibow",
+        "body": "Could you attach the font file you are using so I can have a look. I can\u0027t seem to replicate. Also, what other font properties are you using? It might be best just to create a sample project.",
+        "createdAt": "2018-12-05T13:56:10",
+        "reactions": []
+      },
+      {
+        "id": 449686555,
+        "author": "Redth",
+        "body": "We are closing this issue since no response was received.  Please open a new issue referring to this one if you have more information.",
+        "createdAt": "2018-12-24T05:02:24",
+        "reactions": []
+      }
+    ]
+  }
 }

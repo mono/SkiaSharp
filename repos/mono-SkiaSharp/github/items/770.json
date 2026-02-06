@@ -20,5 +20,90 @@
   "updatedAt": "2022-08-19T12:01:55",
   "closedAt": "2019-01-31T03:10:24",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:37.015949Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 458700701,
+        "author": "mattleibow",
+        "body": "Thanks for the detail. I will investigate and get this fixed as soon as possible. Just been flying around and talking at our local #MSIgniteTheTour",
+        "createdAt": "2019-01-29T20:47:10",
+        "reactions": [
+          {
+            "user": "vexx32",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:35.414601Z"
+          },
+          {
+            "user": "vexx32",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:06:35.4146015Z"
+          }
+        ]
+      },
+      {
+        "id": 458703526,
+        "author": "vexx32",
+        "body": "Thanks, much appreciated! \uD83D\uDE04 \r\n\r\nHave fun! ^^",
+        "createdAt": "2019-01-29T20:56:20",
+        "reactions": []
+      },
+      {
+        "id": 459191283,
+        "author": "mattleibow",
+        "body": "Hehe, I\u0027ll try.",
+        "createdAt": "2019-01-31T02:30:36",
+        "reactions": []
+      },
+      {
+        "id": 459194079,
+        "author": "mattleibow",
+        "body": "I had a look and I believe that either Google or I changed the signature of the \u0060Intersects\u0060 method on the native side. It was expecting a region, and I gave it a rect. This should not have happened and I am creating more tests so that this will never happen again.\r\n\r\nThis will be fixed in the next release, but as a temporary workaround, you can just create a region:\r\n\r\n\u0060\u0060\u0060csharp\r\n// the temporary region - you can cache this for performance\r\nvar rectRegion = new SKRegion();\r\n\r\n// set the rect\r\nrectRegion.SetRect(wordPath.Bounds.ToSKRectI());\r\n\r\n// do the test\r\nif (!occupiedSpace.Intersects(rectRegion))\r\n...\r\n\u0060\u0060\u0060",
+        "createdAt": "2019-01-31T02:45:39",
+        "reactions": []
+      },
+      {
+        "id": 459194706,
+        "author": "vexx32",
+        "body": "@mattleibow I\u0027ll give that a shot and see if it works. Thank you!",
+        "createdAt": "2019-01-31T02:49:08",
+        "reactions": []
+      },
+      {
+        "id": 459194796,
+        "author": "mattleibow",
+        "body": "I also just wanted to let you know about some cool methods that you can use - not as cool as the extension method, but we do have \u0060Round\u0060, \u0060Ceiling\u0060, \u0060Floor\u0060 and \u0060Truncate\u0060 that can be used like this:\r\n\r\n\u0060\u0060\u0060csharp\r\nSKRect floatRect = ...;\r\nSKRectI intRect = SKRectI.Round(floatRect);\r\n\u0060\u0060\u0060\r\n\r\nhttps://docs.microsoft.com/en-us/dotnet/api/skiasharp.skrecti.round?view=skiasharp-1.68.0#SkiaSharp_SKRectI_Round_SkiaSharp_SKRect_",
+        "createdAt": "2019-01-31T02:49:43",
+        "reactions": [
+          {
+            "user": "vexx32",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:06:36.488988Z"
+          }
+        ]
+      },
+      {
+        "id": 459219649,
+        "author": "vexx32",
+        "body": "@mattleibow Thank you for the prompt response!\r\n\r\nI recompiled my original version just using regions instead of rectangles and it does seem much more stable.\r\n\r\nInterestingly, this doesn\u0027t actually seem to detect intersections all that well. ([example](https://www.dropbox.com/s/i2xp0kx4xe7kd5z/paterson.test.svg?dl=0))\r\n\r\nI\u0027ll have to see if I can figure out whether that\u0027s my own code here or the Intersects() method once again... similar code does work with the System.Drawing intersection testing methods, though. I\u0027m wondering if the \u0060SKRegion.SetPath()\u0060 and \u0060SKRegion.Op(wordRegion, SKRegionOperation.Union)\u0060 lines are behaving as they ought, but I\u0027m not sure exactly how to test those... Have to dig a little and see what I can see.\r\n\r\nOnce again, thank you! Small progress is progress. \uD83D\uDE04 ",
+        "createdAt": "2019-01-31T05:21:45",
+        "reactions": []
+      },
+      {
+        "id": 460007400,
+        "author": "mattleibow",
+        "body": "Good to hear things are just exploding. If you get more information, just open a new issue with any deets!",
+        "createdAt": "2019-02-02T23:08:32",
+        "reactions": [
+          {
+            "user": "vexx32",
+            "content": "laugh",
+            "createdAt": "2026-02-06T14:06:36.9656832Z"
+          }
+        ]
+      }
+    ]
+  }
 }

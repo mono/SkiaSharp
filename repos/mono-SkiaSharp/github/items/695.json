@@ -14,5 +14,53 @@
   "updatedAt": "2022-08-19T12:02:33",
   "closedAt": "2018-11-26T15:07:34",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:22.3641815Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 441361093,
+        "author": "mattleibow",
+        "body": "I believe this is because of how the ContentView works. You have added content in the constructor - the SKCanvasView. But, then when the XAML is inflated, it is overridden by the label - removing the canvas.\r\n\r\nTo do what you want to do, you would create:\r\n\r\n\u0060\u0060\u0060xml\r\n\r\n\u003CStackLayout HorizontalOptions=\u0022FillAndExpand\u0022 Orientation=\u0022Vertical\u0022 VerticalOptions=\u0022FillAndExpand\u0022\u003E\r\n    \u003CGrid HeightRequest=\u0022150\u0022\u003E\r\n        \u003Cskia:SKCanvasView x:Name=\u0022skiaView\u0022 PaintSurface=\u0022OnPaintSurface\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 VerticalOptions=\u0022FillAndExpand\u0022 /\u003E\r\n        \u003CLabel Text=\u0022Hello\u0022 HorizontalOptions=\u0022Center\u0022 VerticalOptions=\u0022Center\u0022 /\u003E\r\n    \u003C/Grid\u003E\r\n\u003C/StackLayout\u003E\r\n\u0060\u0060\u0060\r\n\r\nYou could refactor the grid into a separate control, or create your own templated control that can be used to add the label via a template.\r\n",
+        "createdAt": "2018-11-24T11:26:30",
+        "reactions": []
+      },
+      {
+        "id": 441372093,
+        "author": "sylendra7",
+        "body": "Hi @mattleibow ,\r\n\r\nThanks for your reply.\r\nCan you please give sample because, I created this as an custom control where I will add many number of Xamarin Controls inside the SkiaShadow View like below\r\n\r\n\u0060\u0060\u0060xml\r\n    \u003Clocal:ShadowView HeightRequest=\u0022150\u0022 HorizontalOptions=\u0022FillAndExpand\u0022 Margin=\u002220\u0022\u003E\r\n                \u003CStackLayout Orientation=\u0022Vertical\u0022\u003E\r\n                    \u003CStackLayout Orientation=\u0022Horizontal\u0022 HorizontalOptions=\u0022FillAndExpand\u0022\u003E\r\n                        \u003CLabel Text=\u0022TOTAL INVESTMENTS\u0022 FontFamily=\u0022{StaticResource MontserratMedium}\u0022 FontSize=\u002212\u0022 TextColor=\u0022Black\u0022 HorizontalOptions=\u0022StartAndExpand\u0022 /\u003E\r\n                        \u003CLabel Text=\u0022This Month\u0022 FontSize=\u002211\u0022 TextColor=\u0022#a4a8b6\u0022 FontFamily=\u0022{StaticResource MontserratMedium}\u0022 HorizontalOptions=\u0022End\u0022 /\u003E\r\n                    \u003C/StackLayout\u003E\r\n                    \u003CStackLayout Orientation=\u0022Horizontal\u0022 HorizontalOptions=\u0022FillAndExpand\u0022\u003E\r\n                        \u003CStackLayout Orientation=\u0022Vertical\u0022 Spacing=\u00220\u0022 HorizontalOptions=\u0022StartAndExpand\u0022\u003E\r\n                            \u003CLabel HorizontalOptions=\u0022End\u0022 Text=\u0022\u0026gt;\u0022 VerticalOptions=\u0022Start\u0022 FontAttributes=\u0022Bold\u0022 FontSize=\u002215\u0022 Margin=\u00220,0,0,-10\u0022 Rotation=\u0022-90\u0022 TextColor=\u0022#51dc8e\u0022 /\u003E\r\n                            \u003CLabel HorizontalOptions=\u0022Center\u0022 FontSize=\u0022Large\u0022 Text=\u002220000\u0022 TextColor=\u0022Black\u0022 /\u003E\r\n                        \u003C/StackLayout\u003E\r\n                    \u003C/StackLayout\u003E\r\n                \u003C/StackLayout\u003E\r\n   \u003C/local:ShadowView\u003E\r\n\u0060\u0060\u0060\r\n\r\nCan you please help me... I attached the screenshots for clear understanding.\r\n\r\n\r\nRegards\r\nSylendra \r\n\u003Cimg width=\u0022353\u0022 alt=\u0022screen shot 2018-11-24 at 7 56 16 pm\u0022 src=\u0022https://user-images.githubusercontent.com/15817571/48969375-bec67980-f023-11e8-93d5-8a2e58b34216.png\u0022\u003E\r\n\u003Cimg width=\u0022555\u0022 alt=\u0022screen shot 2018-11-24 at 8 01 58 pm\u0022 src=\u0022https://user-images.githubusercontent.com/15817571/48969389-da318480-f023-11e8-9578-cacc26f91e02.png\u0022\u003E\r\n\r\n",
+        "createdAt": "2018-11-24T14:32:45",
+        "reactions": []
+      },
+      {
+        "id": 441678952,
+        "author": "sylendra7",
+        "body": "Hi @mattleibow ,\r\n\r\nWhy you closed this issue...?\r\n",
+        "createdAt": "2018-11-26T15:28:01",
+        "reactions": []
+      },
+      {
+        "id": 441681849,
+        "author": "mattleibow",
+        "body": "You cannot set the \u0060Content\u0060 property of the \u0060ContentView\u0060 (the skia canvas) and in the XAML (the stack layout).\r\n\r\nI just did a test and instead of a \u0060ContentView\u0060 (single child) I used a \u0060Grid\u0060 (multiple children) and it appears to do what you want. You may have to tweak the paddings and margins.",
+        "createdAt": "2018-11-26T15:35:35",
+        "reactions": []
+      },
+      {
+        "id": 441688670,
+        "author": "sylendra7",
+        "body": "Hi @mattleibow ,\r\n\r\nIf I use your code which you sent previously ,is it be adaptable to any screen...?\r\nWhy because by using SkiaSharp seems it can be very useful to create any 2d drawings and very customised controls which cannot be done with custom renderers.\r\n\r\nIf we want to add children to skia sharp controls what will be the alternative ...?\r\n\r\nRegards\r\nSylendra",
+        "createdAt": "2018-11-26T15:51:53",
+        "reactions": []
+      },
+      {
+        "id": 441789413,
+        "author": "mattleibow",
+        "body": "You should be able to use my code. Your code will also work if your view type is a layout - such as a grid.\r\nThe main issue here is that the skiasharp views are not layouts and cannot have children. If you want something \u0022inside\u0022 the view, you have to use a layout - such as a grid - and then add the canvas and the rest of the views.",
+        "createdAt": "2018-11-26T20:38:30",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -23,5 +23,32 @@
   "updatedAt": "2022-08-19T12:02:17",
   "closedAt": "2018-12-15T04:26:52",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:50.9230014Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 447536280,
+        "author": "mattleibow",
+        "body": "I had a look at your code and it is because you need to set the view to be non-opaque:\r\n\r\n\u0060\u0060\u0060csharp\r\nimageView.Opaque = false;\r\n\u0060\u0060\u0060\r\n\r\nhttps://developer.apple.com/documentation/uikit/uiview/1622622-isopaque\r\n\r\n\u003E This property provides a hint to the drawing system as to how it should treat the view. If set to true, the drawing system treats the view as fully opaque, which allows the drawing system to optimize some drawing operations and improve performance. If set to false, the drawing system composites the view normally with other content. The default value of this property is true.",
+        "createdAt": "2018-12-15T04:26:52",
+        "reactions": []
+      },
+      {
+        "id": 447546198,
+        "author": "MichaelRumpler",
+        "body": "Thanks Matt, that fixed it!\r\n\r\nI do understand, how this can affect the black background, but why have the images not been cleared before, i.e. why have multiple images been visible in one after scrolling?",
+        "createdAt": "2018-12-15T07:48:04",
+        "reactions": []
+      },
+      {
+        "id": 447570081,
+        "author": "mattleibow",
+        "body": "I was not able to reproduce the multiple images issue.",
+        "createdAt": "2018-12-15T13:50:42",
+        "reactions": []
+      }
+    ]
+  }
 }

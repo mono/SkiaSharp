@@ -19,5 +19,101 @@
   "updatedAt": "2022-08-19T12:02:39",
   "closedAt": "2019-01-16T19:18:27",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:14.9952785Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 439268094,
+        "author": "mattleibow",
+        "body": "The simplest answer to all of your questions is yes :)\r\n\r\nBoth the native and forms views have a \u0060GRContext\u0060 property that represents the drawing context on the GPU. You can use that, along with the \u0060SKSurface.Create\u0060 overloads to construct arbitrary surface that you can draw on.\r\n\r\nOnce you have the surface, you can draw just like if it was from the view.",
+        "createdAt": "2018-11-16T03:12:50",
+        "reactions": []
+      },
+      {
+        "id": 439575019,
+        "author": "tcuthill",
+        "body": "Hi Matt,\r\n\r\nJust to clarify the approach then.  I believe what you are saying is that the GRContext I can take from an SKGLView will survive the view being destroyed.\r\n\r\nSo the proposed image generator service will start up in its own thread, create a SKGLView to ensure that the GRContext is bound to the thread, grab its GRContext and then delete the SKGLView.  Then as images are requested of it, it will do the following, as suggested in the doco for SKCanvas, constructing a GPU surface:\r\n\r\n![image](https://user-images.githubusercontent.com/45085694/48654532-97324880-ea48-11e8-9639-89ebc32bf1b8.png)\r\n\r\nThen the required vector features can be rendered into the canvas, and the surface snapshotted to get the results as an SKImage.  The SKImage can then be passed back to the view which requested it.  That view should be able to render the image, even though it was possibly created in a different thread. (I\u0027m a bit unclear about this part, is the SKImage a set of GPU instructions(I think it is?), or is it a bitmap.  If it is instructions, then I have to convert it to a bitmap so that there are no issues going across threads?)\r\n\r\nAlso in Win2d there was a way of re-establishing the connection to the GPU device if the connection fails.  Is that something that needs to be handled somehow?\r\n\r\nThanks again for you advice.  I look forward to putting all of this into action!\r\n\r\nTom Cuthill",
+        "createdAt": "2018-11-17T01:21:55",
+        "reactions": []
+      },
+      {
+        "id": 439752505,
+        "author": "tcuthill",
+        "body": "I\u0027ve looked into some of the source code and it appears that when GL controls are disposed, the grcontext is also destroyed (eg. SKGLControl).  \r\n\r\nSo if the map service is passed the grcontext instead from external controls, the controls themselves could be in the midst of being disposed of when the map service is trying to render using the grcontext. This would likely cause memory violations, right?\r\n\r\nIf the grcontext could be captured independently of controls then there would be no issue.",
+        "createdAt": "2018-11-19T02:21:13",
+        "reactions": []
+      },
+      {
+        "id": 441419124,
+        "author": "tcuthill",
+        "body": "The approach doesn\u0027t work.  Even if the SKGLView is created in the main thread, the GRContext is null:\r\n\r\n![image](https://user-images.githubusercontent.com/45085694/48976276-9e4bfd00-f0bf-11e8-8583-05ed682cbe97.png)\r\n",
+        "createdAt": "2018-11-25T06:39:43",
+        "reactions": []
+      },
+      {
+        "id": 441875645,
+        "author": "tcuthill",
+        "body": "Ok, I\u0027ve looked into the source code and found that the GRContext is is fact, only created after the first request to draw on the surface.  That means that the widget that will receive the images in the iOS world must be a SKGLView.  So, it appears, that background rendering can not be separated from the control, which isn\u0027t ideal for an image generating service, but I\u0027ll do my best to get around this.\r\n\r\nTaking this into consideration, I\u0027ve held the GRContext associated with each SKGLView inside the service, and created a surface for each, which will service image requests, when they come in.\r\n\r\nNow there appears to be a problem rendering with a surface from the GRContext.  The first image generated is fine.  Subsequent images snapshotted from the surface are always rendered as black.  \r\n\r\nI\u0027ve been assuming that the SKSurface is reusable, and that SKSurface.Clear() would reset the surface back to the start so that it could get new drawing instructions.  I thought that every time you get a canvas from the surface and draw into it, the surface accumulates the drawing.  Am I misunderstanding?\r\n\r\nHere is the code in the service.  renderTarget.RenderingSurface is the SKSurface which has been generated from the GRContext.\r\n\r\n![image](https://user-images.githubusercontent.com/45085694/49054178-55668680-f22e-11e8-8613-edb6fa6c9a63.png)\r\n\r\nThe image callback is in the SKGLView.  All it does is to catch the image and SetNeedsToDisplay():\r\n\r\n![image](https://user-images.githubusercontent.com/45085694/49054283-ba21e100-f22e-11e8-922d-29529d24f553.png)\r\n\r\nThen in the SKGLView\u0027s OnPaintSurface, I just draw the image:\r\n![image](https://user-images.githubusercontent.com/45085694/49054352-e50c3500-f22e-11e8-9cbc-7d5540ac0830.png)\r\n\r\nIs there something I should do to prepare the SKSurface to accept new drawing instructions (am I supposed to be flushing things out? If I call canvas.Flush() at the end of the DrawRect\u0027s it produces a segmentation violation.  Also I\u0027ve made sure to use SrcOver blending).\r\n\r\nAny insights into this would be greatly appreciated.  I\u0027m up against a fairly tight deadline, and if I could just get offline rendering working, I\u0027ll be over the hump!\r\n\r\nCheers,\r\nTom Cuthill\r\n",
+        "createdAt": "2018-11-27T02:33:47",
+        "reactions": []
+      },
+      {
+        "id": 441877101,
+        "author": "tcuthill",
+        "body": "Here is the class where I generate the surface:\r\n\r\n![image](https://user-images.githubusercontent.com/45085694/49054885-bbeca400-f230-11e8-8617-2ad83fe67855.png)\r\n\r\n\r\n",
+        "createdAt": "2018-11-27T02:41:33",
+        "reactions": []
+      },
+      {
+        "id": 441878462,
+        "author": "tcuthill",
+        "body": "Also, can I render into the generated SKSurface in a background thread?  I looks like it is possible given what I saw in the UWP Swap-chain based widget.",
+        "createdAt": "2018-11-27T02:48:56",
+        "reactions": []
+      },
+      {
+        "id": 441956068,
+        "author": "tcuthill",
+        "body": "I am suspecting that some kind of flush needs to happen.  Sometimes only a partial image comes back. Does a Snapshot on the surface not guarantee that all the rendering is complete (ie. is it synchronous?)",
+        "createdAt": "2018-11-27T07:30:41",
+        "reactions": []
+      },
+      {
+        "id": 442048550,
+        "author": "mattleibow",
+        "body": "I am looking at what you are trying to do and I think I may have got it: you want to create images at arbitrary times, and then render them on the screen at some point?\r\n\r\nIf this is the case, then you don\u0027t need the views at all since you can just create your context.\r\n\r\nThe thing to remember is that SkiaSharp does not initialize OpenGL. What you need to do is rather YOU initialize OpenGL on another thread, and then initialize SkiaSharp:\r\n\r\n\u0060\u0060\u0060csharp\r\n// make sure that OpenGL is initialized\r\n// ...\r\n\r\n// set up the SkiaSharp context\r\nvar grContext = GRContext.Create(GRBackend.OpenGL);\r\n\r\n// create the GPU surface\r\nvar surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));\r\n\r\n// draw\r\nvar canvas = surface.Canvas;\r\n\u0060\u0060\u0060\r\n\r\nThe issue that you are facing is that the OpenGL context and the GRContext only live as long as the view, because they were created BY the view. But, there is nothing stopping you from just creating your own context at any time.",
+        "createdAt": "2018-11-27T12:56:37",
+        "reactions": []
+      },
+      {
+        "id": 453885941,
+        "author": "pathw0rk3r",
+        "body": "We\u0027ve been able to get the service working, the issue really was in trying to find out how to generate the GRContexts for each platform.   Here is some help for anyone who needs to follow a similar approach.\r\n\r\nFor iOS it is relatively easy:\r\n\r\n![image](https://user-images.githubusercontent.com/1115118/51093569-efcf5900-17df-11e9-9bfc-26a09feb154f.png)\r\n\r\nAdd in the OpenGLES library in the \u0027using\u0027 section.\r\n\r\nFor UWP it is much more complicated. You need to use Interop services to get to the libEGL.dll.\r\n![image](https://user-images.githubusercontent.com/1115118/51093614-71bf8200-17e0-11e9-95d2-14c8d3f93d96.png)\r\n![image](https://user-images.githubusercontent.com/1115118/51093641-a6cbd480-17e0-11e9-9806-ac3bfdb5951a.png)\r\n![image](https://user-images.githubusercontent.com/1115118/51093650-c400a300-17e0-11e9-93d8-176175c41dc0.png)\r\n\r\nMake sure to have \u0022using System.Runtime.InteropServices\u0022 at the top of the class.  Here is the class which makes use of the library to generate the context.\r\n\r\n![image](https://user-images.githubusercontent.com/1115118/51093678-0fb34c80-17e1-11e9-8e39-f7385b17b559.png)\r\n\r\n![image](https://user-images.githubusercontent.com/1115118/51093694-35d8ec80-17e1-11e9-95d8-207365a7935c.png)\r\n![image](https://user-images.githubusercontent.com/1115118/51093703-4ee19d80-17e1-11e9-9fc6-9939b0c95aec.png)\r\n![image](https://user-images.githubusercontent.com/1115118/51093716-6b7dd580-17e1-11e9-995c-ee0dc3616895.png)\r\n\r\nHope this helps!\r\n\r\nCheers,\r\nTom Cuthill\r\n\r\n",
+        "createdAt": "2019-01-14T01:49:55",
+        "reactions": [
+          {
+            "user": "charlesroddie",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:14.5405993Z"
+          }
+        ]
+      },
+      {
+        "id": 454903942,
+        "author": "mattleibow",
+        "body": "Thanks for all this info @tcuthill. Some of the code (UWP) looks similar to what I had to do for the GL view - which is great. I was wanting to put some of this logic into a public API for SkiaSharp, but I am not sure if I want to maintain that just yet - at least iOS is easy \uD83D\uDE04 Are you looking at Android at all? I wonder what you will have to do there?",
+        "createdAt": "2019-01-16T19:16:13",
+        "reactions": []
+      },
+      {
+        "id": 454904681,
+        "author": "mattleibow",
+        "body": "I am closing this now as you appear to have things in the bag, but just wanted to ad another link to https://github.com/mono/SkiaSharp/issues/755 because that may also be helpful. I need to looks some more, but that issue may be related to multiple threads, GRContexts or OpenGL contexts.\r\n\r\nIf you are reading this many years into the future and are having issues with multiple of something, then pop over there and you may have solutions \uD83E\uDD1E ",
+        "createdAt": "2019-01-16T19:18:23",
+        "reactions": []
+      }
+    ]
+  }
 }

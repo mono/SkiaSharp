@@ -14,5 +14,43 @@
   "updatedAt": "2022-08-19T12:02:09",
   "closedAt": "2019-01-26T14:48:48",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:06:13.2719231Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 453063391,
+        "author": "selvarathinamm",
+        "body": "Can you please add this line in your docker file and check whether it resolves your problem.\r\n\r\nFROM microsoft/dotnet:2.2-aspnetcore-runtime\r\n**RUN apt-get update \u0026\u0026 apt-get install libfontconfig1 -y \u0026\u0026 apt-get install libfontconfig -y**\r\nCOPY . /app\r\nWORKDIR /app\r\nEXPOSE 80\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022SkiaTest1.dll\u0022]",
+        "createdAt": "2019-01-10T11:27:41",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:12.8282643Z"
+          },
+          {
+            "user": "polakv93",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:06:12.8282647Z"
+          }
+        ]
+      },
+      {
+        "id": 457818320,
+        "author": "polakv93",
+        "body": "fix with \u0060RUN apt-get update \u0026\u0026 apt-get install libfontconfig1 -y \u0026\u0026 apt-get install libfontconfig -y\u0060 works in my case",
+        "createdAt": "2019-01-26T09:58:22",
+        "reactions": []
+      },
+      {
+        "id": 457836934,
+        "author": "mattleibow",
+        "body": "I\u0027ll close this as the issue seems to be resolved.",
+        "createdAt": "2019-01-26T14:48:48",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,43 @@
   "updatedAt": "2022-08-19T12:02:44",
   "closedAt": "2018-12-14T19:41:27",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:07.31549Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 446190122,
+        "author": "Rippletank",
+        "body": "Just stumbled upon the problem.\r\n\r\nLooks like the issue is that on Android OnTouch and OnPaintSurface calls can overlap where as on UWP they don\u0027t appear to do so at all. I haven\u0027t had chance to confirm this with IOS yet.\r\n\r\nSo interesting lesson is don\u0027t assume touch events will not happen during in the middle of a paint operation, ",
+        "createdAt": "2018-12-11T12:46:05",
+        "reactions": []
+      },
+      {
+        "id": 447159035,
+        "author": "mattleibow",
+        "body": "I finally got around to looking at this issue. I am assuming that \u0060AnimationPosition\u0060 is being set mid-draw?\r\n\r\nIt is very likely that the touch happens while drawing. If I am not mistaken, iOS has both touch and draw events on the UI thread, so they don\u0027t clash. UWP is the same as well, although the drawing on the UI thread is a specific option.\r\n\r\nAndroid... They are a bit more free when events come back, so it possibly is this.\r\n\r\nThere is a fix that shouldn\u0027t matter where events are coming from: cache the values in the draw method. In your specific example, it might be fine to just \u0060var pos = AnimationPosition;\u0060 before doing any drawing. This way, each frame is \u0022static\u0022 while drawing. I can understand that you may have many properties/fields, but then again you may not. This _should_ fix your issue as well.\r\n\r\nLet me know how you are working around it now.",
+        "createdAt": "2018-12-13T23:29:40",
+        "reactions": []
+      },
+      {
+        "id": 447433130,
+        "author": "Rippletank",
+        "body": "Thanks, that confirms what I suspected (you might have missed my comment from couple of days ago).\r\n\r\nIt\u0027s useful to know. Thinking about it, I\u0027m pretty sure it affects xamarin.forms in general. One reason I switched to using skiasharp was because after a lot of preliminary work on a recent app using uwp and ios, the android forms version had similar problems. I thought it was performance related. Not so sure now.\r\n\r\nAnyway, Skiasharp is fantastic so thanks for everything. ",
+        "createdAt": "2018-12-14T19:41:27",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:07.2652358Z"
+          },
+          {
+            "user": "taublast",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:05:07.2652364Z"
+          }
+        ]
+      }
+    ]
+  }
 }

@@ -27,5 +27,25 @@
   "updatedAt": "2022-08-19T12:02:21",
   "closedAt": "2019-01-16T19:45:38",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:05:46.9061793Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 445126386,
+        "author": "mattleibow",
+        "body": "It should be possible, see https://github.com/mono/SkiaSharp/issues/688.\r\n\r\nBasically, the GL controls create their own OpenGL context for rendering. If you want to do independent off-screen rendering, you need to create your own OpenGL context and start drawing on a new surface. I do that as part of my unit tests for GPU: https://github.com/mono/SkiaSharp/blob/master/tests/Tests/GlContexts/Wgl/WglContext.cs\r\n\r\nAt this time, the Vulkan and Metal backends are not yet implemented, nor feature complete. ANGLE is really only implemented on UWP because OpenGL works fine on the Win32/desktop world.",
+        "createdAt": "2018-12-07T05:23:48",
+        "reactions": []
+      },
+      {
+        "id": 454914042,
+        "author": "mattleibow",
+        "body": "Closing this as the question has been answered: Yes, offscreen drawing is a thing that can be done. OpenGL should be fine as it is a Windows feature. ANGLE/Vulkan may not have that much of an improvement.\r\n\r\nIssue #688 has code for iOS and UWP, but you could have a look at other Windows implementations - such as what they do for OpenTK or at the SkiaSharp Windows tests: https://github.com/mono/SkiaSharp/blob/master/tests/Tests/GlContexts/Wgl/WglContext.cs",
+        "createdAt": "2019-01-16T19:45:38",
+        "reactions": []
+      }
+    ]
+  }
 }
