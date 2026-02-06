@@ -1,0 +1,17 @@
+{
+  "number": 2506,
+  "type": "issue",
+  "state": "open",
+  "title": "Overriding View.MeasureOverride on a derived SKCanvasView does not set DesiredSize.Height",
+  "body": "**Description**\r\n\r\nI have a class derived from SKCanvasView and I\u0027m overriding View.MeasureOverride and find that the control\u0027s DesiredSize.Heightis is not being set after MeasureOverride.\r\n\r\n- Details\r\nThe control has 2 properties, double Thickness and Orientation:\r\nWhen Orientation is Vertical, MeasureOverride returns a Size.Width equal to Thickness and DesiredSize.Width is set.\r\nWhen Orientation is Horizontal, MeasureOverride returns a Size.Height = Thickness and DesiredSize.Height is always zero.\r\n\r\nThe result is the control always has a zero height when orientation is Horizontal.\r\n\r\nI\u0027ve confirmed this behavior with StackLayout, AbsoluteLayout and my own custom LayoutManager.\r\n\r\n**Code**\r\n\r\nSize measured = child.Measure(availableWidth, availableHeight);\r\nAssert child.DesiredSize.Height \u003E 0\r\n\r\n**Expected Behavior**\r\n\r\nDesiredSize.Width and DesiredSize.Height are set Measure.\r\n\r\n**Actual Behavior**\r\n\r\nDesiredSize.Height does not get set and remains at zero.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: SkiaSharp.Views.Maui.Controls  nuget package version 2.88.3\r\n- Last known good version:  Unknown\r\n- IDE:  Visual Studio 2022 Version 17.7.0 Preview 2.0\r\n\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows Classic:  Windows 11 --\u003E\r\n\r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "DanTravison",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-06-23T18:33:47",
+  "updatedAt": "2023-06-23T18:33:47",
+  "commentCount": 0,
+  "reactionCount": 0
+}

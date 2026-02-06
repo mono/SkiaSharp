@@ -1,0 +1,19 @@
+{
+  "number": 2271,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Upgrading to 2.88.3 crashed .NET (7.0) MAUI SKCanvas on Windows",
+  "body": "**Description**\r\n\r\n\u003C!-- a general description goes here --\u003E\r\nUpgrading to 2.88.3 on a basic .NET MAUI (.NET 7.0) SKCanvas causes an unhandled exception [36176/57572] on Windows\r\nPlease note this bug does not occur on .net 6.0.\r\n\r\n**Code**\r\n1. Create a .NET MAUI app (using .net 7.0)\r\n2. Add SkiaSharp (2.88.3), SkiaSharp.Views.Maui.Controls (2.88.3) \u0026 SkiaSharp.Views.Maui.Core (2.88.3) packages\r\n3. Add .UseSkiaSharp() in MauiProgram.cs builder\r\n4. Clear demo code from MainPage and code-behind\r\n5. Add an SKCanvas in MainPage.xaml\r\n\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022 ?\u003E\r\n\u003CContentPage xmlns=\u0022http://schemas.microsoft.com/dotnet/2021/maui\u0022\r\n             xmlns:x=\u0022http://schemas.microsoft.com/winfx/2009/xaml\u0022\r\n             xmlns:skia=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\r\n             x:Class=\u0022SkiaCanvasSetup.MainPage\u0022\u003E\r\n\r\n    \u003CGrid RowDefinitions=\u0022*\u0022 \u003E\r\n        \u003Cskia:SKCanvasView Grid.Row=\u00220\u0022 x:Name=\u0022skiaView\u0022 \r\n                PaintSurface=\u0022OnPaintSurface\u0022\r\n                EnableTouchEvents=\u0022True\u0022 Touch=\u0022OnTouch\u0022 \r\n                IgnorePixelScaling=\u0022True\u0022\u003E\r\n        \u003C/skia:SKCanvasView\u003E\r\n    \u003C/Grid\u003E\r\n\r\n\u003C/ContentPage\u003E\r\n\u0060\u0060\u0060\r\n    \r\n6. Add in events handler for OnTouch and OnPaintSurface\r\n \r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\n\r\nNo unhandled exceptions\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\n\r\nRun the project for Windows - unhandled exception [36176, 57572, 47724]\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3 \u003C!-- the version of SkiaSharp that has the issue --\u003E\r\n- Last known good version:  2.88.2 \u003C!-- the version of SkiaSharp that still working --\u003E\r\n- IDE:  VS 2022 Community (17.4.0 Preview 2.1)\u003C!-- Visual Studio / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: net7.0-windows10.0.19041.0\u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Windows 11 Pro (21H2) \u003C!-- the version of Windows you are building for, e.g. Windows 7 --\u003E\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - Windows Machine\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n![Screenshot 2022-10-04 101500](https://user-images.githubusercontent.com/109348188/193782317-f28ea98c-7a91-4bdf-ba31-2517a7f794e1.png)\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\nhttps://github.com/TRSkillman/Maui/tree/master/SkiaCanvasSetup",
+  "author": {
+    "login": "TRSkillman",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.4",
+  "createdAt": "2022-10-04T09:16:03",
+  "updatedAt": "2022-11-03T15:00:55",
+  "closedAt": "2022-10-04T13:45:40",
+  "commentCount": 4,
+  "reactionCount": 0
+}

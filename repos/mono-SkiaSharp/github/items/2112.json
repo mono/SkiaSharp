@@ -1,0 +1,19 @@
+{
+  "number": 2112,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Major frames per second drops on 2.88.0",
+  "body": "**Description**\r\n\r\nMy application goes from running at 30-32 FPS (on a 30hz refresh w/ vsync) down to 20 FPS after updating from 2.80.4 to 2.88.0\r\n\r\nUsing SKGLControl in WinForms .NET6\r\n\r\nAfter I downgraded back to 2.80.4 my issue went away completely with no code changes.\r\n\r\n\u0060\u0060\u0060csharp\r\n// Vsync enabled on SKGLControl\r\n\r\n  private async void MainForm_Shown(object sender, EventArgs e)\r\n  {\r\n      while (glControl.GRContext is null) await Task.Delay(1); // Wait for GL Context to be set\r\n      glControl.GRContext.SetResourceCacheLimit(503316480); // Fixes low FPS on extra big bitmaps\r\n      while (true)\r\n      {\r\n          await Task.Run(() =\u003E Thread.SpinWait(50000)); // Delay between each frame\r\n          glControl.Refresh(); // draw next frame\r\n      }\r\n  }\r\n\r\nprivate void SKGLCONTROL_PaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n{\r\n\tSKCanvas canvas = e.Surface.Canvas; // get Canvas reference to draw on\r\n\tcanvas.Clear(); // Clear canvas\r\n\tcanvas.DrawBitmap(); // Draw a cached bitmap on each render, roughly 3000x3000 resolution bitmap PNG\r\n\t// draw some lines , circles, etc. less than 1000 items\r\n\tcanvas.Flush(); // commit frame to GPU\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nI expect to get around ~30 FPS like the previous version.\r\n\r\n**Actual Behavior**\r\n\r\nI am getting 20 FPS.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0\r\n- Last known good version:  2.80.4\r\n- IDE:  VS 2022\r\n- Platform Target Frameworks: WinForms .NET6 win-x64\r\n  ",
+  "author": {
+    "login": "ghost",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.2",
+  "createdAt": "2022-06-14T21:42:02",
+  "updatedAt": "2022-09-16T00:01:14",
+  "closedAt": "2022-08-16T08:06:06",
+  "commentCount": 8,
+  "reactionCount": 1
+}

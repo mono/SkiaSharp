@@ -1,0 +1,17 @@
+{
+  "number": 2182,
+  "type": "issue",
+  "state": "open",
+  "title": "skpath.arcto svg method wont draw arc where start and and ponts are the same",
+  "body": "this method\r\nSkiaApi.sk_path_arc_to(this.Handle, rx, ry, xAxisRotate, largeArc, sweep, x, y);\r\n\r\nhas a problem as per title.\r\n\r\nthis wont work.\r\n\r\n\u0060path.MoveTo( new SKPoint( 68.404f, 187.938f ) );\u0060\r\n\u0060path.ArcTo(\r\n\t\t\t\t100.0f,\r\n\t\t\t\t200.0f,\r\n\t\t\t\t160.0f,\r\n\t\t\t\tSKPathArcSize.Large,\r\n\t\t\t\tSKPathDirection.Clockwise,\r\n\t\t\t\t68.404f,\r\n\t\t\t\t187.938f );\u0060\r\n\r\nbut modifying the end point by 0.0005 in x and y seems to work for some reason as per\r\n\r\n\u0060path.MoveTo( new SKPoint( 68.404f, 187.938f ) );\u0060\r\n\r\n\u0060path.ArcTo( 100.0f, 200.0f, 160.0f, SKPathArcSize.Large, SKPathDirection.Clockwise, 68.4045f, 187.9385f );\u0060\r\n\r\n",
+  "author": {
+    "login": "fbd-ss",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-22T20:55:35",
+  "updatedAt": "2022-11-23T15:01:30",
+  "commentCount": 1,
+  "reactionCount": 0
+}

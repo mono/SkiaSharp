@@ -1,0 +1,18 @@
+{
+  "number": 2165,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Encoding/Decoding PNG image produces artifacts in the output after upgrading to SkiaSharp 2.88.0.",
+  "body": "**Description**\r\n\r\nAfter encoding/decoding PNG image, the output image has artifacts. Everything works fine in 2.80.1 version of SkiaSharp.\r\n[images.zip](https://github.com/mono/SkiaSharp/files/9099831/images.zip)\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\n\r\nusing SKBitmap bmp = SKBitmap.Decode(@\u0022C:\\Temp\\image1.png\u0022);\r\nusing SKFileWStream output = new SKFileWStream(@\u0022C:\\Temp\\out.png\u0022);\r\nbmp.Encode(output, SKEncodedImageFormat.Png, 100);\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0\r\n- Last known good version:  2.80.1\r\n- IDE:  VS 2022\r\n  \r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/31235892/178673004-07dc09f7-ce87-4d36-a0b5-c4a4138a11ce.png)\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "AlexNosk",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-13T07:15:55",
+  "updatedAt": "2022-09-12T21:01:12",
+  "closedAt": "2022-08-13T19:05:24",
+  "commentCount": 2,
+  "reactionCount": 1
+}

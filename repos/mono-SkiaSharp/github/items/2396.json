@@ -1,0 +1,17 @@
+{
+  "number": 2396,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Using LiveCharts2 create image with dynamically compiled code",
+  "body": "I am trying to use LiveCharts2 to generate chart images by dynamically compiling code using Roslyn. Instead of using NuGet packages, I am using the DLL files directly, which include LiveChartsCore.dll, LiveChartsCore.SkiaSharpView.dll, and SkiaSharp.dll.\r\n\r\nHowever, when I run the code, I get the following error:\r\n\u0022The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception.\u0022\r\nat SkiaSharp.SKImageInfo..ctor(Int32 width, Int32 height)\r\nat LiveChartsCore.SkiaSharpView.SKCharts.InMemorySkiaSharpChart.GetImage()\r\nat LiveChartsCore.SkiaSharpView.SKCharts.InMemorySkiaSharpChart.SaveImage(String path, SKEncodedImageFormat format, Int32 quality)\r\nat AnalyzeCode.Analyze.RunBeforeAnalyzeSheet(Param param, Object\u0026 globalObject, List\u00601 allFilePathList, Boolean isExecuteInSequence)\r\n\r\nI also tried referencing HarfBuzzSharp.dll and SkiaSharp.HarfBuzz.dll, but the error persists. The code works fine when using NuGet packages, so I am unsure why this error is occurring when using the DLLs directly.\r\n\r\nHere is the sample code that I am using:\r\n\r\n\u0060\u0060\u0060\r\nusing System;\r\nusing System.Collections.Concurrent;\r\nusing System.Collections.Generic;\r\nusing LiveChartsCore.SkiaSharpView.SKCharts;\r\nusing LiveChartsCore.SkiaSharpView;\r\nusing LiveChartsCore.SkiaSharpView.Painting;\r\nusing SkiaSharp;\r\n\r\n......\r\n\r\n            SKCartesianChart ch = new SKCartesianChart();\r\n            List\u003CLineSeries\u003Cdouble\u003E\u003E lineSeriesList = new List\u003CLineSeries\u003Cdouble\u003E\u003E();\r\n            LineSeries\u003Cdouble\u003E lineSeries1 = new LineSeries\u003Cdouble\u003E{\r\n                Values = new double[] { 1, 1, 2, 3 ,5 },\r\n                Stroke = new SolidColorPaint(SKColors.Blue) { StrokeThickness = 4 }, // mark\r\n                Fill = null,\r\n                GeometryFill = null,\r\n                GeometryStroke = null\r\n            };\r\n            LineSeries\u003Cdouble\u003E lineSeries2 = new LineSeries\u003Cdouble\u003E{\r\n                Values = new double[] { 2, 1, 4, 6 ,1 },\r\n                Stroke = new SolidColorPaint(SKColors.Blue) { StrokeThickness = 4 }, // mark\r\n                Fill = null,\r\n                GeometryFill = null,\r\n                GeometryStroke = null\r\n            };\r\n            lineSeriesList.Add(lineSeries1);\r\n            lineSeriesList.Add(lineSeries2);\r\n            ch.Series = lineSeriesList;\r\n            ch.SaveImage(\u0022CartesianImageFromControl.png\u0022);\r\n\u0060\u0060\u0060\r\n\r\nCan you please help me understand why this error is occurring and how I can resolve it?",
+  "author": {
+    "login": "ZjzMisaka",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-02-22T13:14:16",
+  "updatedAt": "2023-07-20T23:56:07",
+  "commentCount": 1,
+  "reactionCount": 1
+}

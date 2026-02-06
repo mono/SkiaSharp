@@ -1,0 +1,19 @@
+{
+  "number": 2188,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Slow performance of canvas.DrawBitmap compared to 2.80.4",
+  "body": "**Description**\r\n\r\nMy app uses canvas.DrawBitmap to get large image fraction to display it on screen using SkCanvasView. \r\nPrior to update the code was amazingly fast. But after update to 2.88.0 pinching and panning of the large image on screen gets really slow.   \r\nI made some measurement, and prior to upgrade getting image fraction with Canvas.DrawBitmap takes on average 3[ms] - regardless of the Source bitmap size. After upgrade however, the larger source bitmap, the slower it runs. \r\nFor 12 Megapixel source image - it lasts on average 7[ms]. \r\nFor 42 Megapixel source - it lasts on average 19[ms].  Overall experience is then severely degraded. \r\n\r\nSee these two videos showing the difference. \r\n2.80.4 (fast)\r\nhttps://youtu.be/ZN3ki_IpPUg\r\n\r\n2.88.0 (slow)\r\nhttps://youtu.be/jNvGh4R19cA\r\n\r\n**Code**\r\n\r\nJust calling this method with some wrappers, extension method... \r\ncanvas.DrawBitmap(sourceBitmap, sourceRect, destRect, paint);\r\n\r\n**Expected Behavior**\r\n\r\nA constant performance - regardless of source image size \r\nPerformance matching previous version (2.80.4)\r\n\r\n**Actual Behavior**\r\n\r\nSlow execution. \r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.0\r\n- Last known good version:  2.80.4\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks: Xamarin Forms - running on  iOS 15.5 \r\n- iOS: 15.5\r\n- Target Devices:   \r\n  iPhone 11, Simulator running on M1\r\n \r\n\r\n  \r\n\r\n",
+  "author": {
+    "login": "MichalJan008",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.88.2",
+  "createdAt": "2022-07-26T22:41:45",
+  "updatedAt": "2022-09-16T21:01:20",
+  "closedAt": "2022-08-16T08:05:40",
+  "commentCount": 9,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 2095,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Decode PNG image problem",
+  "body": "**Description**\r\n\r\n\u003C!-- a general description goes here --\u003E\r\nWhen decoding a PNG image, some areas of the image crack.\r\n\r\n**Code**\r\n\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n\u0060\u0060\u0060\r\n// path = PNG image file path\r\n// get bitmap\r\nusing (var bitmap = SKBitmap.Decode(path))\r\n{\r\n    // check image size\r\n    if (bitmap.Info.Width \u003C= 4096 || bitmap.Info.Height \u003C= 4096)\r\n    {\r\n        // get scale information\r\n        var scale = Math.Min(1280.0f / bitmap.Width, 800.0f / bitmap.Height);\r\n        var x = (1280 - scale * bitmap.Width) / 2;\r\n        var y = (800 - scale * bitmap.Height) / 2;\r\n        var rect = new SKRect(x, y, x \u002B scale * bitmap.Width, y \u002B scale * bitmap.Height);\r\n        // draw image\r\n        canvas.DrawBitmap(bitmap, rect,\r\n            new SKPaint { IsAntialias = true, FilterQuality = SKFilterQuality.High });\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\n\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  SkiaSharp.Views.WindowsForms v2.88.0\r\n- Last known good version:  SkiaSharp.Views.WindowsForms v2.80.4\r\n- IDE:  Visual studio 2019\r\n- Platform Target Frameworks:  WinForm .NetFramework 4.8\r\n- Target Devices:  Windows 11\r\n  \r\n\u003Cdetails\u003E\r\n  \u003Csummary\u003EDetailed IDE/OS information (click to expand)\u003C/summary\u003E\r\n  \r\n\u0060\u0060\u0060\r\n\r\nPASTE ANY DETAILED VERSION INFO HERE\r\n\r\n\u0060\u0060\u0060\r\n\u003C/details\u003E\r\n\r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n![2022-06-02 11_45_04-Position](https://user-images.githubusercontent.com/36721725/171542291-d41a5b55-45f8-40cb-b43e-03931b491632.png)\r\n( v2.80.4 )\r\n\r\n![2022-06-02 11_45_49-Position](https://user-images.githubusercontent.com/36721725/171542313-545884f7-5789-4116-b238-7a40da2f2ed3.png)\r\n( v2.88.0 )\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\nimage file download : https://hantas-my.sharepoint.com/:i:/g/personal/kyungtack_kim_hantas_kr/EX0xZOqr7TlDv6NVZOs4rcYB2i1jZHhxte9U6CfGoweCkg?e=7y0T3X\r\n",
+  "author": {
+    "login": "KyungtackKim",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-06-02T02:46:45",
+  "updatedAt": "2022-08-19T00:01:21",
+  "closedAt": "2022-06-15T00:48:41",
+  "commentCount": 6,
+  "reactionCount": 1
+}

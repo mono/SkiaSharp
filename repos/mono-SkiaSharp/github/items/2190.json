@@ -1,0 +1,17 @@
+{
+  "number": 2190,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SKGLView is about 7-8 times slower in MAUI than in Xamarin",
+  "body": "**Description**\r\n\r\nIt appears that SKGLView is about 7-8 times slower in MAUI than in Xamarin. In my tests I render 100k lines. It takes about 70-80ms in Xamarin and 500-600 in MAUI. See attached projects for a full code. This is a synthetic test, but I get similar performance degradation in real app.\r\n\r\nResults are the same on emulators and real device (iPhone 13 Pro MAX).\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\n        void SKGLView_PaintSurface(System.Object sender, SKPaintGLSurfaceEventArgs e) {\r\n            var sw = new Stopwatch();\r\n            sw.Start();\r\n            var rand = new Random();\r\n            var canvas = e.Surface.Canvas;\r\n            canvas.Clear(SKColor.Parse(\u0022#003366\u0022));\r\n            var size = ((SKGLView)sender).CanvasSize;\r\n            int lineCount = 100000;\r\n\r\n            var linePaint = new SKPaint {\r\n                IsAntialias = true,\r\n                Style = SKPaintStyle.Stroke,\r\n                StrokeCap = SKStrokeCap.Butt\r\n            };\r\n\r\n            for (int i = 0; i \u003C lineCount; i\u002B\u002B) {\r\n                float lineWidth = rand.Next(1, 10);\r\n                var lineColor = new SKColor(\r\n                        red: (byte)rand.Next(255),\r\n                        green: (byte)rand.Next(255),\r\n                        blue: (byte)rand.Next(255),\r\n                        alpha: (byte)rand.Next(255));\r\n\r\n                linePaint.StrokeWidth = lineWidth;\r\n                linePaint.Color = lineColor;\r\n\r\n                int x1 = rand.Next((int)size.Width);\r\n                int y1 = rand.Next((int)size.Height);\r\n                int x2 = rand.Next((int)size.Width);\r\n                int y2 = rand.Next((int)size.Height);\r\n                canvas.DrawLine(x1, y1, x2, y2, linePaint);\r\n            }\r\n            sw.Stop();\r\n            Debug.WriteLine(sw.ElapsedMilliseconds.ToString());\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nMAUI version performs as fast as Xamarin.\r\n\r\n**Actual Behavior**\r\n\r\nMAUI version is 7-8 times slower.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  Skiasharp: 2.88.0\r\n- Last known good version:  Xamarin Forms 5.0.0.2196\r\n- IDE:  Visual Studio for Mac 17.3 Preview build 2083\r\n- Platform Target Frameworks: \r\n  - iOS:  15.4\r\n- Target Devices:   iPhone 13 Pro MAX, iOS 15.5\r\n  \r\n**Reproduction Link**\r\n\r\n[SKGLViewPerformance.zip](https://github.com/mono/SkiaSharp/files/9228966/SKGLViewPerformance.zip)\r\n\r\n",
+  "author": {
+    "login": "VitalyTVA",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-07-31T14:12:37",
+  "updatedAt": "2022-08-20T11:18:46",
+  "commentCount": 1,
+  "reactionCount": 0
+}

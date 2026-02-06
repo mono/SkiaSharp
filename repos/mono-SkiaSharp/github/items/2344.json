@@ -1,0 +1,18 @@
+{
+  "number": 2344,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG]  XmlException: Reference to undeclared entity when loading SVG file",
+  "body": "Maybe this is somehow the wrong repo? but...\r\n\r\nI installed the SkiaSharp.SVG 1.60.0 nuget package into a dotnet6 wpf project and trying to load a specific SVG file causes this exception\r\n\r\n![image](https://user-images.githubusercontent.com/2057080/208086551-8904a310-f25c-417c-998f-4058aa29391b.png)\r\n\r\nSince it seems to be an XML exception I tried running the SVG through some online XML parserrs and they are all happy. The SVG also renders fine in browsers, and another library is able to load it. Furthermore the Entity that is being reported as missing is clearly defined in the XML on line 63. \r\n\r\n![badcake](https://user-images.githubusercontent.com/2057080/208087097-e4c5b50c-8e22-4592-990b-f22d152e52dd.svg)\r\n\r\n\r\n          \r\n**Code**\r\n\r\nvar    svgSrc    =\u0022C:/Folder/badcake.svg\u0022;\r\nvar svg  = new SkiaSharp.Extended.Svg.SKSvg();\r\n var pict = svg.Load(svgSrc);\r\n\r\nSince the problem seems to be the call into System.Xml I tried callling that directly like this:\r\nvar byteArray = File.ReadAllBytes(\u0022C:/Folder/badcake.svg\u0022);\r\nusing (var stream = new MemoryStream(byteArray))\r\n{\r\n    System.Xml.Linq.XDocument.Load(stream);\r\n}\r\n\r\nWhich does not produce the exception",
+  "author": {
+    "login": "jjonj",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-12-16T11:19:44",
+  "updatedAt": "2023-01-15T12:00:54",
+  "closedAt": "2022-12-16T11:52:54",
+  "commentCount": 2,
+  "reactionCount": 0
+}

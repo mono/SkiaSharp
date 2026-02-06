@@ -1,0 +1,18 @@
+{
+  "number": 2555,
+  "type": "issue",
+  "state": "closed",
+  "title": "[PERFORMANCE] SKCanvasView (Android) is considerably slower in MAUI than in Xamarin.Forms (over 7 times slower!)",
+  "body": "## **Description**\r\n\r\nWe tested SkiaSharp performance in **.NET MAUI (.NET 7) vs. Xamarin.Forms** using the [GnollHack](https://github.com/hyvanmielenpelit/GnollHack) game. We used the same saved game and the same screen for tests. The code was exactly the same in MAUI and Xamarin.Forms. We used **Google Pixel 6a Android device** for tests. The tested versions of SkiaSharp were 2.80.3 and 2.88.3. The tests were run using **SkCanvasView**, that is, GPU Acceleration was disabled.\r\n\r\nThe test results were:\r\n\r\n### Xamarin.Forms with SkiaSharp 2.80.3 _(=situation now)_\r\n- Normal zoom: 60\u002B FPS (max)\r\n- Minimap zoom: 31.0 FPS\r\n\r\n### Xamarin.Forms with SkiaSharp 2.88.3 _(=upgraded SkiaSharp)_\r\n- Normal zoom: 40.7 FPS\r\n- Minimap zoom: 17.0 FPS\r\n\r\n### MAUI with SkiaSharp 2.88.3 _(=upgraded SkiaSharp and XF to MAUI)_\r\n- Normal zoom: 22 FPS\r\n- Minimap zoom: 4.2 FPS\r\n\r\n\r\n## **Expected Behavior**\r\n\r\n- MAUI is faster than Xamarin.Forms.\r\n- SkiaSharp 2.88.3 is faster than 2.80.3.\r\n\r\n## **Actual Behavior**\r\n\r\n- MAUI is **4 times slower** than Xamarin.Forms when using the minimap zoom _(SkiaSharp 2.88.3: MAUI 4.2 FPS vs XF 17.0 FPS)_.\r\n- SkiaSharp 2.88.3 is **1.82 times slower** than SkiaSharp 2.80.3 using the minimap zoom _(17.0 FPS vs 31.0 FPS)_.\r\n\r\nIn total, MAUI using SkiaSharp 2.88.3 is **7.38 TIMES SLOWER** than Xamarin.Forms using SkiaSharp 2.80.3 using the minimap zoom _(4.2 FPS vs 31.0 FPS)_.\r\n\r\n## Conclusion\r\n\r\nNeedless to say, 7.38x drop in FPS is not fine for the game. Is there anything that we can do to get FPS back to XF 2.80.3 levels in MAUI?\r\n\r\nWe have already implemented the immutable fix (#2188), without which SkiaSharp 2.88.3 did not work at all.",
+  "author": {
+    "login": "TommiGustafsson-HMP",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-08-15T18:37:22",
+  "updatedAt": "2024-04-14T11:56:20",
+  "closedAt": "2024-04-14T09:54:44",
+  "commentCount": 2,
+  "reactionCount": 1
+}

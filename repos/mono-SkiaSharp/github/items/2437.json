@@ -1,0 +1,18 @@
+{
+  "number": 2437,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] .NET 7 MAUI iOS DllNotFoundException: @rpath/libSkiaSharp.framework/libSkiaSharp",
+  "body": "**Description**\r\nInstal SkiaSharp using Nuget package manager:\r\n\u0060\u0060\u0060PackageReference Include=\u0022SkiaSharp\u0022 Version=\u00222.88.3\u0022\u0060\u0060\u0060\r\n\r\n.NET 7 MAUI Android:\r\nWorks fine\r\n\r\n.NET 7 MAUI IOS:\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: @rpath/libSkiaSharp.framework/libSkiaSharp\r\n   at SkiaSharp.SKAbstractManagedStream..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.SKManagedStream..ctor(Stream managedStream, Boolean disposeManagedStream)\r\n   at SkiaSharp.SKCodec.WrapManagedStream(Stream stream)\r\n   at SkiaSharp.SKCodec.Create(Stream stream, SKCodecResult\u0026 result)\r\n   at SkiaSharp.SKCodec.Create(Stream stream)\r\n   at SkiaSharp.SKBitmap.Decode(Stream stream)\r\n   at HHS.MemberZone.UserControl.UploadFilesView.SaveCompressImageToStorage(FileResult file) \r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\n            FileResult photo = await MediaPicker.Default.PickPhotoAsync();\r\n            using System.IO.Stream sourceStream = await photo.OpenReadAsync();\r\n            using var originalBitmap = SKBitmap.Decode(sourceStream);\r\n\u0060\u0060\u0060\r\n**Expected Behavior**\r\nNo Exception\r\n**Actual Behavior**\r\nException\r\n\r\n**Basic Information**\r\n- Version with issue:  2.88.3\r\n- Last known good version: -\r\n- IDE: 17.5.1\r\n- Platform Target Frameworks: .NET 7 MAUI\r\n  - iOS:  16.3.1\r\n- Target Devices:   iPhone 11\r\n\r\n\r\n",
+  "author": {
+    "login": "denhaandrei",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-04-10T08:59:30",
+  "updatedAt": "2023-09-10T15:00:30",
+  "closedAt": "2023-08-11T13:31:31",
+  "commentCount": 3,
+  "reactionCount": 1
+}

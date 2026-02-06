@@ -1,0 +1,23 @@
+{
+  "number": 2379,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies on M1 Mac",
+  "body": "**Description**\r\n\r\nUsing SkiaSharp on a M1 Max MacBook Pro is not possible because the runtime isn\u0027t able to load the shared library \u0027libSkiaSharp\u0027.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var sourceBitmap = SKBitmap.Decode(imageStream);\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nUsing SkiaSharp on the M1 Mac works as expected without throwing that error.\r\n\r\n**Actual Behavior**\r\n\r\nA TypeInitializationException is thrown because the libSkiaSharp.dylib isn\u0027t found, probably because it isn\u0027t copied to the bin/debug/net6.0/runtimes\r\n\r\nSystem.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the DYLD_PRINT_LIBRARIES environment variable: dlopen(liblibSkiaSharp, 0x0001): tried: \u0027liblibSkiaSharp\u0027 (no such file), \u0027/System/Volumes/Preboot/Cryptexes/OSliblibSkiaSharp\u0027 (no such file), \u0027/usr/lib/liblibSkiaSharp\u0027 (no such file, not in dyld cache), \u0027liblibSkiaSharp\u0027 (no such file), \u0027/usr/local/lib/liblibSkiaSharp\u0027 (no such file), \u0027/usr/lib/liblibSkiaSharp\u0027 (no such file, not in dyld cache)\r\n   at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\r\n   at SkiaSharp.SKAbstractManagedStream..cctor()\r\n\r\nThe type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the DYLD_PRINT_LIBRARIES environment variable: dlopen(liblibSkiaSharp, 0x0001): tried: \u0027liblibSkiaSharp\u0027 (no such file), \u0027/System/Volumes/Preboot/Cryptexes/OSliblibSkiaSharp\u0027 (no such file), \u0027/usr/lib/liblibSkiaSharp\u0027 (no such file, not in dyld cache), \u0027liblibSkiaSharp\u0027 (no such file), \u0027/usr/local/lib/liblibSkiaSharp\u0027 (no such file), \u0027/usr/lib/liblibSkiaSharp\u0027 (no such file, not in dyld cache)\r\n   at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\r\n   at SkiaSharp.SKAbstractManagedStream..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.SKAbstractManagedStream..ctor(Boolean owns)\r\n   at SkiaSharp.SKManagedStream..ctor(Stream managedStream, Boolean disposeManagedStream)\r\n   at SkiaSharp.SKCodec.WrapManagedStream(Stream stream)\r\n   at SkiaSharp.SKCodec.Create(Stream stream, SKCodecResult\u0026 result)\r\n   at SkiaSharp.SKCodec.Create(Stream stream)\r\n   at SkiaSharp.SKBitmap.Decode(Stream stream)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 2.88.3\r\n- Last known good version:  N/A\r\n- IDE:  JetBrains Rider\r\n- Platform Target Frameworks: \r\n  - macOS: latest\r\n  - dotnet: 6\r\n- Target Devices: MacBook Pro M1 Max\r\n \r\n\r\n",
+  "author": {
+    "login": "michaelschaffer-doka",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-02-10T10:35:09",
+  "updatedAt": "2024-07-23T22:24:42",
+  "closedAt": "2023-06-26T00:00:52",
+  "commentCount": 7,
+  "reactionCount": 0
+}

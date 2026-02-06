@@ -1,0 +1,17 @@
+{
+  "number": 2521,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] ",
+  "body": "**Description**\r\n\r\nThe method OnPaintSurface doesn\u0027t get call on iOS. I\u0027ve implemented a loop to cal the OnPaintSurface every 1 second to redraw a square with new position on the screen but i doesn\u0027t work on iOS only on android with both Xamarin Forms and Maui.\r\n\n\u0060\u0060\u0060cs\r\npublic partial class SquareSkiaView : ContentView\r\n{\r\n    int x = 100;\r\n\r\n    SKPath _detectionPath;\r\n    SKPoint[] _lastCorners;\r\n\r\n    public SquareSkiaView()\r\n\t{\r\n\t\tInitializeComponent();\r\n\r\n        var timer = new System.Timers.Timer(1000);\r\n        timer.Elapsed \u002B= new ElapsedEventHandler(RedrawSquare);\r\n        timer.Start();\r\n    }\r\n\r\n    public void RedrawSquare(object source, ElapsedEventArgs e)\r\n    {\r\n        //var clock = (ClockDrawable) this.ClockGraphicsView.Drawable;\r\n        var graphicsView = this.skiaView;\r\n\r\n        Console.WriteLine($\u0022RedrawClock called: {DateTime.Now}\u0022);\r\n\r\n        skiaView.InvalidateSurface();\r\n    }\r\n\r\n    private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)\r\n    {\r\n        SKCanvas canvas = e.Surface.Canvas;\r\n\r\n        // Clear the canvas\r\n        canvas.Clear();\r\n\r\n        // Sample values for _lastCorners\r\n        _lastCorners = new SKPoint[4]\r\n        {\r\n            new SKPoint(x, 100),\r\n            new SKPoint(200, 100),\r\n            new SKPoint(200, 200),\r\n            new SKPoint(100, 200)\r\n        };\r\n\r\n        x\u002B\u002B;\r\n\r\n        Console.WriteLine($\u0022OnPaintSurface called: {DateTime.Now} {x}\u0022);\r\n\r\n        if (false)\r\n        {\r\n            _detectionPath = new SKPath();\r\n            _detectionPath.MoveTo(_lastCorners[0]);\r\n            _detectionPath.LineTo(_lastCorners[2]);\r\n            _detectionPath.MoveTo(_lastCorners[1]);\r\n            _detectionPath.LineTo(_lastCorners[3]);\r\n        }\r\n        else\r\n        {\r\n            _detectionPath = new SKPath();\r\n            _detectionPath.MoveTo(_lastCorners[0]);\r\n            _detectionPath.LineTo(_lastCorners[1]);\r\n            _detectionPath.LineTo(_lastCorners[2]);\r\n            _detectionPath.LineTo(_lastCorners[3]);\r\n            _detectionPath.Close();\r\n        }\r\n\r\n        using (SKPaint paint = new SKPaint())\r\n        {\r\n            paint.Style = SKPaintStyle.Stroke;\r\n            paint.Color = SKColors.Yellow;\r\n            paint.StrokeWidth = 2;\r\n\r\n            // Draw the path on the canvas\r\n            canvas.DrawPath(_detectionPath, paint);\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\n\r\n**Expected Behavior**\r\n\r\nThe square should be redraw every 1 second.\r\n\r\n**Actual Behavior**\r\n\r\nThe method OnPaintSurface doesn\u0027t get call on iOS to redraw the square with a new position\r\n\r\n**Basic Information**\r\n\r\n- IDE:  Visual Studio for Mac 17.5.5\r\n- Platform Target Frameworks: \r\n  - Xamarin Forms:  5.0.0.2578\r\n  - Dotnet:  6 and 7\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "HigorPereiraMOBRJ",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2023-07-11T19:11:10",
+  "updatedAt": "2023-07-13T10:15:35",
+  "commentCount": 0,
+  "reactionCount": 0
+}

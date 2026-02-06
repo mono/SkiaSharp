@@ -1,0 +1,17 @@
+{
+  "number": 2342,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] ArgumentNullException for Arg_ParamName_Name when decoding byte array",
+  "body": "**Description**\r\n\r\nWhen trying to Decode an image from a byte array, I get the following error. The byte array has been created by SkiaSharp.\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp.SKBitmap userImage = SkiaSharp.SKBitmap.Decode(@\u0022C:\\test.jpg\u0022);\r\nusing SkiaSharp.SKBitmap secondImage = SkiaSharp.SKBitmap.Decode(userImage.Bytes);\r\n\u0060\u0060\u0060\r\n\r\n**Exception**\r\n\u0060\u0060\u0060\r\nSystem.ArgumentNullException\r\n  HResult=0x80004003\r\n  Nachricht = Value cannot be null. Arg_ParamName_Name\r\n  Quelle = SkiaSharp\r\n  Stapel\u00FCberwachung:\r\n   bei SkiaSharp.SKBitmap.Decode(SKCodec codec)\r\n   bei SkiaSharp.SKBitmap.Decode(ReadOnlySpan\u00601 buffer)\r\n   bei SkiaSharp.SKBitmap.Decode(Byte[] buffer)\r\n\u0060\u0060\u0060\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.88.3\r\n- IDE:  Visual Studio",
+  "author": {
+    "login": "AnReZa",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2022-12-15T15:08:15",
+  "updatedAt": "2022-12-15T15:08:15",
+  "commentCount": 0,
+  "reactionCount": 0
+}

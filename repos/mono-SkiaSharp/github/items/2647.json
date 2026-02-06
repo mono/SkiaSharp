@@ -1,0 +1,22 @@
+{
+  "number": 2647,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] [ Android ] [ SKGLTextureView ] ClipRect is ignored iff object isn\u0027t disposed properly",
+  "body": "### Description\r\n\r\nBug is replicable only with \u0060SKGLTextureView\u0060, \u0060SKCanvasView\u0060 works as expected.\r\nThe same bug is present if \u0022parent\u0022 object isn\u0027t disposed while SKPath is disposed, for example:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing var path = new SKPath();\r\n// ...\r\nskCanvas.DrawPath(path, paint);\r\nvar pic = picRec.EndRecording();\r\n\u0060\u0060\u0060\r\n\r\n### Code\r\n\r\n\u0060\u0060\u0060cs\r\nusing SkiaSharp;\r\nusing SkiaSharp.Views.Android;\r\n\r\nnamespace AndroidAppSkiaSharp\r\n{\r\n    public class SomeDrawer\r\n    {\r\n        private readonly float size = 400f;\r\n        public void Draw(SKCanvas canvas, int w, int h)\r\n        {\r\n            using SKPictureRecorder picRec = new();\r\n            using SKCanvas skCanvas = picRec.BeginRecording(new SKRect(0f, 0f, size, size));\r\n            using var paint = new SKPaint\r\n            {\r\n                Style = SKPaintStyle.Stroke,\r\n                IsAntialias = true,\r\n                StrokeWidth = 10f,\r\n                StrokeCap = SKStrokeCap.Round\r\n            };\r\n\r\n            // missing using\r\n            var path = new SKPath();\r\n            path.MoveTo(115f, 100f);\r\n            path.LineTo(225f, 100f);\r\n            path.MoveTo(115f, 125f);\r\n            path.LineTo(180f, 125f);\r\n\r\n            skCanvas.DrawPath(path, paint);\r\n            using var pic = picRec.EndRecording();\r\n            var matrix = SkiaSharp.SKMatrix.CreateScale(w / size, h / size);\r\n            canvas.DrawPicture(pic, ref matrix);\r\n        }\r\n    }\r\n\r\n    [Activity(Label = \u0022@string/app_name\u0022, MainLauncher = true)]\r\n    public class MainActivity : Activity\r\n    {\r\n        private SKGLTextureView skiaView;\r\n        private readonly SomeDrawer dr = new();\r\n        protected override void OnCreate(Bundle? savedInstanceState)\r\n        {\r\n            base.OnCreate(savedInstanceState);\r\n\r\n            skiaView = new SKGLTextureView(this);\r\n            SetContentView(skiaView);\r\n        }\r\n    \r\n        protected override void OnResume()\r\n        {\r\n            base.OnResume();\r\n\r\n            skiaView.PaintSurface \u002B= OnPaintSurface;\r\n        }\r\n\r\n        protected override void OnPause()\r\n        {\r\n            skiaView.PaintSurface -= OnPaintSurface;\r\n\r\n            base.OnPause();\r\n        }\r\n\r\n        private void TestDraw(SKCanvas canvas)\r\n        {\r\n            var w = canvas.DeviceClipBounds.Width;\r\n            var h = canvas.DeviceClipBounds.Height;\r\n\r\n            canvas.Clear(SKColors.LightGray);\r\n            using SKPaint paint = new()\r\n            {\r\n                Color = SKColors.LightSteelBlue,\r\n                Style = SKPaintStyle.Fill\r\n            };\r\n\r\n            var mw = w / 4;\r\n            var mh = h / 4;\r\n            var skr = new SKRect(mw, mh, w - mw, h - mh);\r\n            \r\n            canvas.DrawRect(skr, paint);\r\n\r\n            canvas.Save();\r\n            canvas.ClipRect(skr);\r\n            dr.Draw(canvas, w, h);\r\n            canvas.Restore();\r\n        }\r\n\r\n        private void OnPaintSurface(object sender, SKPaintGLSurfaceEventArgs e)\r\n        {\r\n            TestDraw(e.Surface.Canvas);\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\nSimilar to other platform specified \u0060ClipRect\u0060 is respected\r\n![actual](https://github.com/mono/SkiaSharp/assets/16510738/91bb2c5c-4fd9-440b-9702-d4519e922739)\r\n\r\n\r\n### Actual Behavior\r\n\r\nDraws outside of clipped area.\r\n![expected](https://github.com/mono/SkiaSharp/assets/16510738/cf9bfa5a-c7da-467c-8b12-ff0be41d8862)\r\n\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nNone\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "FoggyFinder",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-15T14:49:07",
+  "updatedAt": "2023-10-15T14:52:40",
+  "commentCount": 0,
+  "reactionCount": 0
+}
