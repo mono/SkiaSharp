@@ -58,6 +58,13 @@ Publish packages to NuGet.org and finalize releases.
 
 ## Step 1: Confirm Versions
 
+### ⚠️ Semver Version Ordering
+
+When identifying which version to publish, use **semver ordering**, not alphabetical:
+- `3.119.2` (bare) is NEWER than `3.119.2-preview.3` — it's the stable/final release
+- Always verify you are publishing from the correct branch
+- If both `release/3.119.2` and `release/3.119.2-preview.3` exist, the bare version is the latest
+
 **Prerequisite:** release-testing must have passed. Versions should be known from testing.
 
 The user should provide:
