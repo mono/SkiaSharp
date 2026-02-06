@@ -3,7 +3,7 @@
   "type": "pr",
   "state": "open",
   "title": "Add AnimationSpeed property to SKLottieView",
-  "body": "Adds \u0060AnimationSpeed\u0060 property to control Lottie animation playback speed.\n\n## Changes\n\n- **Added \u0060AnimationSpeed\u0060 bindable property** with default value \u00601.0\u0060\n- **Modified \u0060Update()\u0060 method** to multiply \u0060deltaTime\u0060 by speed factor before applying to progress\n- **Added XML documentation** explaining behavior including negative speed values\n- **Renamed \u0060playForwards\u0060 to \u0060isInForwardPhase\u0060** for code clarity\n- **Added overflow protection** for extreme speed values\n- **Added comprehensive unit tests** covering:\n  - Speed variations (2x, 0.5x, 0)\n  - Dynamic speed changes\n  - Negative speed (reverse playback)\n  - AnimationSpeed with RepeatMode.Reverse\n\n## Usage\n\n\u0060\u0060\u0060xml\n\u003Clottie:SKLottieView Source=\u0022animation.json\u0022 AnimationSpeed=\u00222.0\u0022 /\u003E\n\u0060\u0060\u0060\n\n\u0060\u0060\u0060csharp\n// C#\nlottieView.AnimationSpeed = 0.5;  // Half speed\nlottieView.AnimationSpeed = 2.0;  // Double speed\nlottieView.AnimationSpeed = -1.0; // Reverse playback\n\u0060\u0060\u0060\n\n## Notes\n\n- **Negative values** invert the entire playback pattern (e.g., with \u0060RepeatMode.Reverse\u0060, animation starts backwards then forwards)\n- **Zero** effectively pauses the animation\n- Consistent with other Lottie libraries (Android/Web use \u0060speed\u0060, iOS uses \u0060animationSpeed\u0060)",
+  "body": "## Summary\n\nAdds an \u0060AnimationSpeed\u0060 property to \u0060SKLottieView\u0060 to control Lottie animation playback speed, with comprehensive fixes for edge cases discovered through multi-model code review.\n\n## Features\n\n- **AnimationSpeed property** - Control playback speed (default 1.0)\n  - Values \u003E 1.0 speed up animation\n  - Values 0-1.0 slow down animation  \n  - Value 0 pauses animation\n  - Negative values reverse playback direction\n\n## Bug Fixes\n\n| Fix | Description |\n|-----|-------------|\n| Negative speed on load | Animation now initializes at Duration when speed \u003C 0 |\n| Source race condition | Added CancellationTokenSource to cancel in-flight loads |\n| Memory leak | CancellationTokenSource now properly disposed |\n| Reset order | Added \u0060isResetting\u0060 guard to prevent spurious AnimationCompleted |\n| Reverse \u002B negative speed | Fixed flip logic to consider effective direction |\n| **Reverse \u2192 Restart switch** | Fixed animation getting stuck at 0 when switching modes |\n\n## Code Quality\n\n- Renamed \u0060playForwards\u0060 \u2192 \u0060isInForwardPhase\u0060 for clarity\n- Added XML documentation to AnimationSpeed property\n- Added overflow protection for NaN/Infinity/extreme speed values\n\n## Demo App Enhancements\n\n- AnimationSpeed slider (-2x to 2x)\n- Speed preset buttons (-1x, 0.5x, 1x, 2x)\n- RepeatMode picker (Restart/Reverse)\n- RepeatCount input field\n\n## Tests\n\nAdded 18\u002B new tests covering:\n- Positive/negative/zero speed scenarios\n- Speed changes mid-playback\n- RepeatMode interactions\n- Edge cases (NaN, Infinity, extreme values)\n- Mode switching scenarios\n\n**Total: 140 MAUI tests passing**\n\n## API Naming Research\n\n| Library | Property Name |\n|---------|---------------|\n| lottie-android | \u0060speed\u0060 |\n| lottie-ios | \u0060animationSpeed\u0060 |\n| lottie-web | \u0060setSpeed()\u0060 |\n| **This PR** | \u0060AnimationSpeed\u0060 |\n\nFollows iOS convention for .NET clarity.",
   "author": {
     "login": "Copilot",
     "type": "Bot"
@@ -20,8 +20,8 @@
     }
   ],
   "createdAt": "2026-02-05T03:10:33",
-  "updatedAt": "2026-02-06T00:44:02",
-  "commentCount": 1,
+  "updatedAt": "2026-02-06T01:17:42",
+  "commentCount": 2,
   "reactionCount": 0,
   "draft": false,
   "mergeable": true,
@@ -48,10 +48,15 @@
       "author": "copilot-pull-request-reviewer[bot]",
       "state": "COMMENTED",
       "submittedAt": "2026-02-05T23:34:34"
+    },
+    {
+      "author": "copilot-pull-request-reviewer[bot]",
+      "state": "COMMENTED",
+      "submittedAt": "2026-02-06T01:17:42"
     }
   ],
   "engagement": {
-    "syncedAt": "2026-02-06T00:48:15.7034062Z",
+    "syncedAt": "2026-02-06T01:50:02.035809Z",
     "reactions": [],
     "comments": [
       {
@@ -59,6 +64,13 @@
         "author": "mattleibow",
         "body": "/azp run",
         "createdAt": "2026-02-05T03:39:51",
+        "reactions": []
+      },
+      {
+        "id": 3857269203,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2026-02-06T01:14:03",
         "reactions": []
       }
     ]
