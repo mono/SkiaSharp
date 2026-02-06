@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T18:01:18",
   "closedAt": "2018-03-24T00:04:36",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:52.0913612Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 375828751,
+        "author": "mattleibow",
+        "body": "Ah. What you are doing is keeping the surface around after the paint event. This cannot be done as the surface lives only as long as the method is running. To do what you are doing, take the snapshot _inside_ the paint event.\r\n\r\nAlthough, looking at your code, you probably can just create a new bitmap and call \u0060DrawSample\u0060 on that:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar bmp = new SKBitmap(desiredWidth, desiredHeight)\r\nvar canvas = new SKCanvas(bmp);\r\nmapDrawing.DrawSample(canvas, desiredWidth, desiredHeight);\r\nvar pixmap = bmp.PeekPixels();\r\nvar data = pixmap.Encode(SKEncodedImageFormat.Png, 100);\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-03-24T00:04:14",
+        "reactions": []
+      }
+    ]
+  }
 }

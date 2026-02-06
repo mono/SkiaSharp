@@ -14,5 +14,60 @@
   "updatedAt": "2022-08-19T15:02:38",
   "closedAt": "2018-05-11T14:38:25",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:33.0904044Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 387156967,
+        "author": "mattleibow",
+        "body": "Interesting. What device was this? Also, if you have multiple devices that this happens on, could you share that too?",
+        "createdAt": "2018-05-07T18:23:01",
+        "reactions": []
+      },
+      {
+        "id": 387295264,
+        "author": "kappesLab",
+        "body": "This problem occurs only with the device _\u0022ASUS - Thinker board/2GB - Android 6.0.1\u0022_ (Part. No. 90MB0QY1-M0EAY0) connected to an _\u0022elo Touch\u0022_ monitor model ET1093L.\r\n\r\nThe defect could be due to the fact that the Asus board has an output resolution of 1280x720px while the monitor resolution is 1280x800px ?\r\n",
+        "createdAt": "2018-05-08T06:09:29",
+        "reactions": []
+      },
+      {
+        "id": 387423838,
+        "author": "mattleibow",
+        "body": "That might be it... Are any other controls stretched? Also, what is the pixel dimensions of the canvas (\u0060e.Info\u0060) and the view dimensions?",
+        "createdAt": "2018-05-08T14:34:58",
+        "reactions": []
+      },
+      {
+        "id": 387675497,
+        "author": "kappesLab",
+        "body": "It is difficult to determine if there are any other stretched controls, with a circle, as with a square, the difference between height and width is evident. \r\n\r\nFor the information that you have requested I enclose the following _sreenshoot_:\r\n\r\n![screenshot_20180509-085606](https://user-images.githubusercontent.com/36405345/39806048-13e2139a-5379-11e8-8205-8c38affb6688.png)\r\n-------\r\nproduced by the following _code_:\r\n\r\n            SKImageInfo info = e.Info;\r\n            SKSurface surface = e.Surface;\r\n            SKCanvas canvas = surface.Canvas;\r\n\r\n            canvas.Clear(SKColors.White);\r\n\r\n            SKPaint paint = new SKPaint\r\n            {\r\n                Color = SKColors.Black,\r\n                TextSize = 40\r\n            };\r\n\r\n            float fontSpacing = paint.FontSpacing;\r\n            float x           = 20;               // left margin\r\n            float y           = fontSpacing;      // first baseline\r\n            float indent      = 100;\r\n\r\n            canvas.DrawText(\u0022SKCanvasView Height and Width:\u0022, x, y, paint);\r\n            y \u002B= fontSpacing;\r\n            canvas.DrawText(String.Format(\u0022{0:F2} x {1:F2}\u0022, canvasView.Width, canvasView.Height), x \u002B indent, y, paint);\r\n            y \u002B= fontSpacing * 2;\r\n            canvas.DrawText(\u0022SKCanvasView CanvasSize:\u0022, x, y, paint);\r\n            y \u002B= fontSpacing;\r\n            canvas.DrawText(canvasView.CanvasSize.ToString(), x \u002B indent, y, paint);\r\n            y \u002B= fontSpacing * 2;\r\n            canvas.DrawText(\u0022SKImageInfo Size:\u0022, x, y, paint);\r\n            y \u002B= fontSpacing;\r\n            canvas.DrawText(info.Size.ToString(), x \u002B indent, y, paint);\r\n\r\nTomorrow, with this accessory [elo touch cable OSD](https://www.amazon.it/dp/B00C1Q92A0/ref=pe_3310731_185740161_TE_item) I try to inhibit screen resizing on the monitor.\r\n\r\nThank you very much for your interest.",
+        "createdAt": "2018-05-09T09:11:12",
+        "reactions": []
+      },
+      {
+        "id": 387753214,
+        "author": "mattleibow",
+        "body": "Another thing that you could try is to do the same drawing without SkiaSharp and just use the native Android APIs.\r\n\r\nThis looked like an interesting case, so I have created a sample app that tries to draw using Xamarin.Forms, SkiaSharp and Android.Graphics: https://github.com/mattleibow/AndroidStretchingTests\r\n\r\nLet me know if there are any differences between drawings - they should all be exactly the same.",
+        "createdAt": "2018-05-09T14:14:49",
+        "reactions": []
+      },
+      {
+        "id": 388344347,
+        "author": "kappesLab",
+        "body": "By running the [AndroidStretchingTests](https://github.com/mattleibow/AndroidStretchingTests) on my device I get the three views exactly the same, all three stretched out in the same way along the vertical axis.\r\n\r\nI apologise for the delay, but I have only now resumed the project.\r\n\r\nIn view of the outcome, I consider this _issue_ to be closed.",
+        "createdAt": "2018-05-11T12:03:48",
+        "reactions": []
+      },
+      {
+        "id": 388383272,
+        "author": "mattleibow",
+        "body": "Ok, looks as if the screen/android is stretching the entire view/app.",
+        "createdAt": "2018-05-11T14:38:25",
+        "reactions": []
+      }
+    ]
+  }
 }

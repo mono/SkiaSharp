@@ -14,5 +14,126 @@
   "updatedAt": "2022-08-19T15:02:36",
   "closedAt": "2018-11-27T17:45:06",
   "commentCount": 11,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:38.7764865Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 387910978,
+        "author": "mattleibow",
+        "body": "Ah, this. This is hard to get right due to the way things are now. Basically, when you build AnyCPU, there is no reliable way to determine which platform you will be running on, so it copies both.\r\n\r\nFor example, I build on a x64 machine, but I may deploy to a x86 server somewhere. This causes an issue since the build doesn\u0027t know this - most probably it copied the native files for the DEV machine. \r\n\r\nHowever, all is not lost, in the output folder, there will be 2 folders \u0022x86\u0022 and \u0022x64\u0022. In these folders, there will be the native files that each arch uses. You can just copy the native files out into the main output directory (either manually or as part of the project build).\r\n\r\nOne limitation of the current SkiaSharp is to P/Invoke directly, so there is no easy way within the library to load the correct one out of the two folders - this happens at build time. But, it is just a copy and should be fine as part of the deploy.\r\n\r\nAnother thing to check if you are building on x64, but it still fails is that there is a MSBuild element: \u0060\u003CPrefer32Bit\u003E\u0060 that marks the .NET assemblies as x86 even on x64. This sometimes throws the loading out.\r\n",
+        "createdAt": "2018-05-10T00:04:01",
+        "reactions": []
+      },
+      {
+        "id": 387911354,
+        "author": "mattleibow",
+        "body": "What you can do is let me know what your setup is. Is this happening on the DEV box or the SERVER box? What are the architectures of both? What is the architecture of the native file? (I am sure there is a clever way to check this, but I just look at the file size - for libSkiaSharp, the x64 file is larger that the x86 file)\r\n\r\nIf you share this info, I may be able to help a bit more.",
+        "createdAt": "2018-05-10T00:06:11",
+        "reactions": []
+      },
+      {
+        "id": 388053419,
+        "author": "neodynamic",
+        "body": "Thanks Matt for your response. The issue happens with ASP.NET MVC or WebForms targeting .NET 4.6.1\u002B with AnyCPU in dev machines (x64 arch) using VS 2017. It happens that SkiaSharp.targets is \u0022deploying\u0022 x64 native lib in the BIN folder of the WebApp when AnyCPU is active. You have this logic in that targets file:\r\n\r\n\u0060\u0060\u0060\r\n\u003C!-- handle Any CPU, considering Prefer32Bit --\u003E\r\n        \u003CPreferredNativeSkiaSharp Condition=\u0022 \u0027$(PreferredNativeSkiaSharp)\u0027 == \u0027\u0027 and \u0027$(Prefer32Bit)\u0027 == \u0027False\u0027 \u0022\u003Ex64\u003C/PreferredNativeSkiaSharp\u003E  \r\n        \u003CPreferredNativeSkiaSharp Condition=\u0022 \u0027$(PreferredNativeSkiaSharp)\u0027 == \u0027\u0027 and \u0027$(Prefer32Bit)\u0027 == \u0027True\u0027 \u0022\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E \r\n\u0060\u0060\u0060\r\n\r\nAnd the first one of those conditions is taken place because \u0022Prefer 32-bit\u0022 is grayed out because it seems to be a setting for .NET 4.5 only and for Desktop EXE Apps only (meaning the developer cannot Enable or Disable it) which will be always false.\r\n\r\nSo x64 libSkiaSharp.dll is deployed to BIN folder and failing at runtime with BadImageFormatException. Note that by default, IIS Express runs at 32bit so we think that you should give priority to x86 libSkiaSharp.dll and maybe not considering \u0022Prefer 32-bit\u0022 option as it seems to be something available for .NET 4.5 exe projects only  ",
+        "createdAt": "2018-05-10T13:29:47",
+        "reactions": [
+          {
+            "user": "Thecentury",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:37.0873468Z"
+          }
+        ]
+      },
+      {
+        "id": 388067943,
+        "author": "mattleibow",
+        "body": "OK, I see what is happening, and this is quite easy to fix. Just add this element to the .csproj:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E\r\n\u0060\u0060\u0060\r\n\r\nThis tells the targets file to copy the x86 version of the .dll - ignoring any magical detection (which it is getting wrong). You can also use cusom logic in your own .csproj to more accurately control this value.\r\n\r\nI know this is a pain point with classic apps and Windows/Linux, but I hope to improve this sometime in the future.",
+        "createdAt": "2018-05-10T14:20:33",
+        "reactions": [
+          {
+            "user": "twilly86",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:37.3182783Z"
+          },
+          {
+            "user": "danroot",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:37.3182786Z"
+          },
+          {
+            "user": "Remolutionary",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:37.3182787Z"
+          },
+          {
+            "user": "Thecentury",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:37.3182788Z"
+          },
+          {
+            "user": "yazansh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:37.3182789Z"
+          }
+        ]
+      },
+      {
+        "id": 399283245,
+        "author": "danroot",
+        "body": "FYI, I had a similar issue publishing an ASP.NET Core app to Azure App Service.  App Service was x86, so the app would work on dev machine but not after being published.  This was my fix:\r\n\r\n\u0060\u003CShouldIncludeNativeSkiaSharp\u003ETrue\u003C/ShouldIncludeNativeSkiaSharp\u003E\r\n  \u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E\u0060",
+        "createdAt": "2018-06-22T00:24:06",
+        "reactions": [
+          {
+            "user": "IainS1986",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:37.5139526Z"
+          }
+        ]
+      },
+      {
+        "id": 442151717,
+        "author": "mattleibow",
+        "body": "I am going to close this issue as it appears to have been resolved.\r\n\r\nIf you want to avoid setting .csproj properties for development and servers, you can also use the msbuild property when creating/building on CI: \u0060/p:PreferredNativeSkiaSharp=x86\u0060.",
+        "createdAt": "2018-11-27T17:45:06",
+        "reactions": []
+      },
+      {
+        "id": 444460764,
+        "author": "peterdebruijn",
+        "body": "I have the same issue. Where should I put \u003CPreferredNativeSkiaSharp\u003Ex86\u003C/PreferredNativeSkiaSharp\u003E in the .csproj? Just adding it to the root causes my project to be invalid.",
+        "createdAt": "2018-12-05T11:57:28",
+        "reactions": []
+      },
+      {
+        "id": 444491051,
+        "author": "mattleibow",
+        "body": "You need to add it into the first \u0060\u003CPropertyGroup\u003E\u0060 element.",
+        "createdAt": "2018-12-05T13:49:10",
+        "reactions": []
+      },
+      {
+        "id": 450099174,
+        "author": "peterdebruijn",
+        "body": "Did not solve the issue for me...",
+        "createdAt": "2018-12-27T08:04:19",
+        "reactions": []
+      },
+      {
+        "id": 455329753,
+        "author": "sbosell",
+        "body": "This issue wasn\u0027t resolved for me either by adding the two new properties.  Core 2.0 app deploying to windows.",
+        "createdAt": "2019-01-17T20:58:57",
+        "reactions": []
+      },
+      {
+        "id": 455464991,
+        "author": "peterdebruijn",
+        "body": "I have a c# ASP.Net application deploying to IIS in Azure",
+        "createdAt": "2019-01-18T08:26:58",
+        "reactions": []
+      }
+    ]
+  }
 }

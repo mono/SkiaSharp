@@ -19,5 +19,44 @@
   "updatedAt": "2022-08-19T15:02:16",
   "closedAt": "2018-06-21T04:28:22",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:15.9741818Z",
+    "reactions": [
+      {
+        "user": "lucidBrot",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:03:15.9741891Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 398395893,
+        "author": "ysmoradi",
+        "body": "I was able to find a workaround for this issue by adding following to cs proj of android project.\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CAndroidNativeLibrary Include=\u0022Lib\\libSkiaSharp.so\u0022\u003E\r\n   \u003CAbi\u003Earmeabi\u003C/Abi\u003E\r\n\u003C/AndroidNativeLibrary\u003E\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-06-19T13:19:07",
+        "reactions": []
+      },
+      {
+        "id": 398972483,
+        "author": "mattleibow",
+        "body": "This is because \u0060armabi\u0060 is very old (ARM6) and is not fully supported by SkiaSharp.\r\nThe current supported architectures are ARMv7A, ARM64, x86 and x64.\r\n\r\nIf possible, try selecting the \u0060armeabi-v7a\u0060 option in the linker options and not using the old \u0060armeabi\u0060 option.\r\n\r\nHave a look here:\r\nhttps://developer.android.com/ndk/guides/abis\r\n\r\nAs you can see, the old \u0060armabi\u0060 is actually being removed entirely.",
+        "createdAt": "2018-06-21T04:28:22",
+        "reactions": [
+          {
+            "user": "mammadkoma",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:15.7498193Z"
+          }
+        ]
+      },
+      {
+        "id": 398987885,
+        "author": "ysmoradi",
+        "body": "Thanks so much :)",
+        "createdAt": "2018-06-21T06:12:29",
+        "reactions": []
+      }
+    ]
+  }
 }

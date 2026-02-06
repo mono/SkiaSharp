@@ -14,5 +14,38 @@
   "updatedAt": "2022-08-19T18:01:14",
   "closedAt": "2018-03-26T18:36:14",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:55.1947475Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 376248036,
+        "author": "mattleibow",
+        "body": "I think this is because of the master-detail.\r\n\r\nI just created a simple sample, and I can track the event even if it leaves the view. I then put it into a master-detail page, and then the events stopped as soon as I moved horizontally.\r\n\r\nI am not sure if this is a bug with the Xamarin.Forms master-detail page hijacking events mid way, or if it is an issue with the SkiaSharp view. I will investigate further, but in the meantime, I managed to stop the gestures with \u0060IsGestureEnabled = false\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\nvoid Handle_Touch(object sender, SKTouchEventArgs e)\r\n{\r\n\tif (e.ActionType == SKTouchAction.Pressed)\r\n\t{\r\n\t\t// disable gestures when we start dragging\r\n\t\tvar md = Application.Current.MainPage as MasterDetailPage;\r\n\t\tmd.IsGestureEnabled = false;\r\n\t}\r\n\r\n\t// handle usual touch events\r\n\r\n\tif (e.ActionType == SKTouchAction.Released)\r\n\t{\r\n\t\t// re-enable gestures when we are finished\r\n\t\tvar md = Application.Current.MainPage as MasterDetailPage;\r\n\t\tmd.IsGestureEnabled = true;\r\n\t}\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-03-26T17:33:36",
+        "reactions": [
+          {
+            "user": "WillAutioItrax",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:54.8002229Z"
+          }
+        ]
+      },
+      {
+        "id": 376251571,
+        "author": "sonic1015",
+        "body": "Thanks for the workaround and commitment to investigate. Sorry I didn\u0027t get a change to create a repo. Thinking about it further, it\u0027s possible this bug happens on the other platforms, but because there Master-Detail Behavior is different, it\u0027s not hijacking the touch event.",
+        "createdAt": "2018-03-26T17:44:19",
+        "reactions": []
+      },
+      {
+        "id": 376267954,
+        "author": "mattleibow",
+        "body": "Based on the Xamarin.Forms team feedback, there is no way to intercept the Master/Detail gestures. The only way now is to either disable gestures globally, or to disable as soon as you start processing them somewhere else - such as when in a list view or other scrolling view.",
+        "createdAt": "2018-03-26T18:36:14",
+        "reactions": []
+      }
+    ]
+  }
 }

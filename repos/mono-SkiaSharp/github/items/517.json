@@ -14,5 +14,262 @@
   "updatedAt": "2022-08-19T15:02:34",
   "closedAt": "2018-11-06T18:00:59",
   "commentCount": 35,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:47.6907906Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 388274492,
+        "author": "Jonesie",
+        "body": "As an aside, it would be cool if there was some better documentation or a sample app showing how to set this up.  I\u0027ve had to dig around the interwebs for a day to get this far.  Running everything on windows is a dream.  I mistakenly thought linux would be as easy.  I should have known better.\r\n\r\nOnce I get this working  I promise to blog it.",
+        "createdAt": "2018-05-11T06:35:44",
+        "reactions": []
+      },
+      {
+        "id": 388295401,
+        "author": "mattleibow",
+        "body": "The first thing to check is to make sure the libSkiaSharp.so lives next to the SkiaSharp.dll.\r\nI have a socket sample here: https://github.com/mattleibow/SkiaSharp-Docker\r\n\r\nIf this doesn\u0027t help, could you share your Dockerfile?",
+        "createdAt": "2018-05-11T08:18:15",
+        "reactions": []
+      },
+      {
+        "id": 388299169,
+        "author": "Jonesie",
+        "body": "So that\u0027s really curious.  I cant see SkiaSharp.dll anywhere in the container or on my windows build.  GAC?",
+        "createdAt": "2018-05-11T08:34:49",
+        "reactions": []
+      },
+      {
+        "id": 388302394,
+        "author": "Jonesie",
+        "body": "Here\u0027s the docker file:\r\n\r\n\u0060\u0060\u0060\r\nFROM microsoft/aspnetcore:2.0.8 AS base\r\nRUN apt-get update;apt-get install libfontconfig1 -y\r\n\r\nWORKDIR /app\r\nEXPOSE 80\r\n\r\nFROM microsoft/aspnetcore-build:2.0.5-2.1.4 AS build\r\nWORKDIR /src\r\n\r\nCOPY . .\r\nWORKDIR /src/Api\r\nRUN dotnet restore \r\nRUN dotnet build -c Release -o /app\r\n\r\nFROM build AS publish\r\nRUN dotnet publish -c Release -o /app\r\n\r\nFROM base AS final\r\nWORKDIR /app\r\nCOPY --from=publish /app .\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022Api.dll\u0022]\r\n\u0060\u0060\u0060\r\n",
+        "createdAt": "2018-05-11T08:47:10",
+        "reactions": []
+      },
+      {
+        "id": 388303105,
+        "author": "Jonesie",
+        "body": "The API is a netcore2.0 build.  It references a netstandard2.0 class lib:\r\n\r\n\u0060\u0060\u0060\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\r\n\r\n  \u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enetstandard2.0\u003C/TargetFramework\u003E\r\n    \u003CLangVersion\u003E7.3\u003C/LangVersion\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\r\n  \u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022SkiaSharp\u0022 Version=\u00221.60.0\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\r\n  \u003CItemGroup\u003E\r\n    \u003CProjectReference Include=\u0022..\\Contracts.Services\\Contracts.Services.csproj\u0022 /\u003E\r\n    \u003CProjectReference Include=\u0022..\\Models\\Models.csproj\u0022 /\u003E\r\n    \u003CProjectReference Include=\u0022..\\Problems\\Problems.csproj\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n\r\nI added a package ref for SkiaSharp to the Api project also, just in case.  \r\n\r\nNeither of the projects has SkiaSharp.dll in the output folders.\r\n\r\n",
+        "createdAt": "2018-05-11T08:50:05",
+        "reactions": []
+      },
+      {
+        "id": 388306604,
+        "author": "Jonesie",
+        "body": "In the container:\r\nSkiaSharp.dll is in ~/.nuget/packages/skiasharp/1.60.0/lib/netstandard1.3 \r\nlibSkiaSharp.so is in /app/bin/Release/netcoreapp2.0",
+        "createdAt": "2018-05-11T09:04:49",
+        "reactions": []
+      },
+      {
+        "id": 388315840,
+        "author": "Jonesie",
+        "body": "Oh, I see your docker and build is quite different to the standard one Im using.  I\u0027ll try that... after a beer or two.  Cheers",
+        "createdAt": "2018-05-11T09:43:54",
+        "reactions": []
+      },
+      {
+        "id": 388358676,
+        "author": "mattleibow",
+        "body": "@Jonesie I created a new Web API, and it also fails for me - I have spent the last 3 hours trying to figure out why. I will update s soon as I figure out what is causing the file to not be found.",
+        "createdAt": "2018-05-11T13:09:49",
+        "reactions": []
+      },
+      {
+        "id": 388367331,
+        "author": "mattleibow",
+        "body": "Struggled enough, going to contact someone who knows ;)",
+        "createdAt": "2018-05-11T13:42:50",
+        "reactions": []
+      },
+      {
+        "id": 388537605,
+        "author": "Jonesie",
+        "body": "I also created a new web api and published using -r linux-x64 and also had the prebuilt libskiasharp.so copied to the output.  The app started ok but didnt respons to web requests:\r\n\r\n\u0060\u0060\u0060\r\n        public void Configure(IApplicationBuilder app, IHostingEnvironment env)\r\n        {\r\n            if (env.IsDevelopment())\r\n            {\r\n                app.UseDeveloperExceptionPage();\r\n            }\r\n            app.Run(async (context) =\u003E\r\n            {\r\n                using (var stream = new System.IO.MemoryStream())\r\n                using (var skStream = new SkiaSharp.SKManagedWStream(stream))\r\n                {\r\n                    await context.Response.WriteAsync(\u0022Hello World!\u0022);\r\n                }\r\n            });\r\n        }\r\n\u0060\u0060\u0060\r\nSo Im not sure if it found the so - maybe not.  Doing it this way produces a Self Contained Deployment.  I didnt need to update the csproj fle - it seems publish -r RID is enough to do the correct build.\r\n\r\nMy docker file is:\r\n\r\n\u0060\u0060\u0060\r\n#FROM microsoft/aspnetcore:2.0 AS base\r\nFROM microsoft/dotnet:2.0-runtime-deps as base\r\n#FROM microsoft/aspnetcore-build:2.0 AS base\r\nRUN apt-get update;apt-get install libfontconfig1 nano -y\r\nWORKDIR /app\r\nEXPOSE 80\r\n\r\nFROM microsoft/aspnetcore-build:2.0 AS build\r\nWORKDIR /src\r\nCOPY WebApplication1/WebApplication1.csproj WebApplication1/\r\nRUN dotnet restore WebApplication1/WebApplication1.csproj\r\nCOPY . .\r\nWORKDIR /src/WebApplication1\r\nRUN dotnet build WebApplication1.csproj -c Release -o /app\r\n\r\nFROM build AS publish\r\nRUN dotnet publish WebApplication1.csproj -c Release -r linux-x64 -o /app/pub\r\n\r\nFROM base AS final\r\nWORKDIR /app\r\nCOPY --from=publish /app/pub .\r\nENTRYPOINT [\u0022WebApplication1\u0022]\r\n\u0060\u0060\u0060\r\n\r\nBuilding the compose from VS seems to do something different.  I dont get the SDD output, just the normal windows looking files.  Weird, but probably something I did.\r\n\r\nI then tried to make a similar change to my real app and all hell broke lose.  Lots of nuget downgrade warnings.  NU1605.\r\n\r\nSigh...",
+        "createdAt": "2018-05-12T07:46:22",
+        "reactions": []
+      },
+      {
+        "id": 388558297,
+        "author": "mattleibow",
+        "body": "All right, I think I discovered something. This is my current code - this is pretty mush the same as the same as the default template, but with SkiaSharp and libSkiaSharp.so added:\r\nhttps://github.com/mattleibow/SkiaSharpWebApi-Docker\r\n\r\nThis thing I noticed was that it runs from the command line, see \u0060.\\build.ps1\u0060. If you go to http://localhost:80/api/colortype after running it, it works fine.\r\n\r\nVisual Studio does something else... Not sure what, I hope to talk to Docker/VS guys and find out.",
+        "createdAt": "2018-05-12T14:17:39",
+        "reactions": []
+      },
+      {
+        "id": 388597973,
+        "author": "Jonesie",
+        "body": "I think I get it now, although I dont have anything working quite yet.\r\nWhen I run the docker project in VS it creates it\u0027s own compose file and sets this thus:\r\n\r\ndocker-compose  -f \u0022C:\\Dev\\rc\\docker-compose.yml\u0022 -f \u0022C:\\Dev\\src\\docker-compose.override.yml\u0022 -f **\u0022C:\\Dev\\src\\obj\\Docker\\docker-compose.vs.debug.g.yml\u0022** -p dockercompose10230428442250841413 --no-ansi up -d --build --force-recreate --remove-orphans\r\n1\u003E\r\n\r\nThe main thing with this is that it sets the volume for /app to the source folder for the project:\r\n\r\n\u0060\u0060\u0060\r\nvolumes:\r\n      - C:\\Dev\\src\\Api:/app\r\n      - C:\\Users\\peter\\vsdbg\\vs2017u5:/remote_debugger:ro\r\n      - C:\\Users\\peter\\.nuget\\packages\\:/root/.nuget/packages:ro\r\n      - C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder:/root/.nuget/fallbackpackages:ro\r\n\u0060\u0060\u0060\r\n\r\nSo when I bash into the container Im just seeing my own hdd and if I create the image using docker build then I see the correct (?) linux binaries.\r\n\r\nThis is hideous black magic crap that I thought Microsoft had learned not to do!",
+        "createdAt": "2018-05-13T03:14:43",
+        "reactions": []
+      },
+      {
+        "id": 388598100,
+        "author": "Jonesie",
+        "body": "Oh and that compose file also has this:\r\n\u0060\u0060\u0060\r\nbuild:\r\n      target: base\r\n\u0060\u0060\u0060\r\n\r\nWhich I think should be \u0027final\u0027",
+        "createdAt": "2018-05-13T03:18:46",
+        "reactions": []
+      },
+      {
+        "id": 388598712,
+        "author": "Jonesie",
+        "body": "Yes!  Fixed it.  I copied the so file to  C:\\Users\\peter\\\\.nuget\\packages\\skiasharp\\1.60.0\\lib\\netstandard1.3 and restarted the container from VS.  Works fine.  This sounds sort of obvious now I think about it...\r\n\r\nI\u0027ll see if I can deploy to AWS ECS with my scripted image build.",
+        "createdAt": "2018-05-13T03:39:16",
+        "reactions": []
+      },
+      {
+        "id": 388615975,
+        "author": "mattleibow",
+        "body": "I suppose that is fine for debugging... What if you copy the .so to the working directory that is used by the VS compose? Does that work?\r\n\r\nI think I must create a NuGet for each Linux platform (sharing what we can) so that you can just add that. I need to investigate moving all the native files out of the core package as it is getting quite huge now",
+        "createdAt": "2018-05-13T10:16:50",
+        "reactions": []
+      },
+      {
+        "id": 388992733,
+        "author": "Jonesie",
+        "body": "Ive got everything working again now.  I found some problems with my image build but I also managed to get a stand-alone build working nicely.  I\u0027m writing up a blog post now.",
+        "createdAt": "2018-05-14T23:18:15",
+        "reactions": []
+      },
+      {
+        "id": 389007684,
+        "author": "Jonesie",
+        "body": "Ahhh.  \r\n\r\nNUGET_FALLBACK_PACKAGES=/root/.nuget/fallbackpackages\r\n\r\n",
+        "createdAt": "2018-05-15T00:52:09",
+        "reactions": []
+      },
+      {
+        "id": 389367836,
+        "author": "Jonesie",
+        "body": "http://jonesie.kiwi/2018/05/16/skiasharp-on-a-linux-container/",
+        "createdAt": "2018-05-16T01:42:50",
+        "reactions": []
+      },
+      {
+        "id": 389380073,
+        "author": "mattleibow",
+        "body": "Ah, that was a good read. Thanks for looking around and debunking the magic.\r\nI will continue to pester my guy until this works out the box for the F5 fun.",
+        "createdAt": "2018-05-16T03:03:39",
+        "reactions": []
+      },
+      {
+        "id": 396342482,
+        "author": "AlexandreLaborde",
+        "body": "Hello @mattleibow and @Jonesie,\r\n\r\nI am trying to get the .NetCore sample to run on my Ubuntu 18.04 machine and I think I have the same issue.\r\n\r\n Basically all I did was to download the samples from the latest release [1.60.1](https://github.com/mono/SkiaSharp/releases/tag/v1.60.1), open the solution in Monodevelop and run it, and I got the following error.\r\n\r\nUnhandled Exception: System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load shared library \u0027libSkiaSharp\u0027 or one of its dependencies. In order to help diagnose loading problems, consider setting the LD_DEBUG environment variable: liblibSkiaSharp: cannot open shared object file: No such file or directory\r\n   at SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n   at SkiaSharp.SKImageInfo..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.SKImageInfo..ctor(Int32 width, Int32 height)\r\n   at SkiaSharpSample.Program.Main(String[] args) in /home/alexandre/Downloads/samples/Basic/NetCore/SkiaSharpSample/Program.cs:line 13\r\nbash: line 1: 22565 Aborted                 (core dumped) /usr/share/dotnet/dotnet \u0022/home/alexandre/Downloads/samples/Basic/NetCore/SkiaSharpSample/bin/Debug/netcoreapp2.0/SkiaSharpSample.dll\u0022\r\n\r\nPress any key to continue...\r\n\r\nI tried coping the **libSkiaSharp.so** file to where the SkiaSharpSample.dll was being created and I doesn\u0027t seem to make any difference. I have also tried to compile the libSkiaSharp.so myself using the new and legacy methods on the wiki but they have both failed.\r\n\r\n@mattleibow  I have read that the libSkiaSharp.so was built in Ubuntu 14.04, does that mean that it only works in 14.04?\r\n\r\nAm I doing something wrong ? What I am supposed to do with the **libSkiaSharp.so** file?\r\n\r\nThanks in advance!\r\n\r\n\r\n",
+        "createdAt": "2018-06-11T18:35:24",
+        "reactions": []
+      },
+      {
+        "id": 396355571,
+        "author": "AlexandreLaborde",
+        "body": "Hey I have found out the issue after some inspiration from @Jonesie  blog post.\r\nIn order to compile the .NetCore apps you need to add the  _libSkiaSharp.so_ file in\r\n/usr/share/dotnet/shared/Microsoft.NETCore.App/2.1.0/\r\n\r\nTo run the GTK example just put the file in /home/alexandre/Downloads/samples/Basic/Gtk/SkiaSharpSample/bin/Debug/\r\n\r\n \r\n",
+        "createdAt": "2018-06-11T19:18:21",
+        "reactions": []
+      },
+      {
+        "id": 405541967,
+        "author": "rjcobain",
+        "body": "I had this issue when running in one of the dotnet runtime docker images.  By enabling LD_DEBUG=all env variable, I found out that it was due to missing dependencies of libSkia.  I needed to add the following two packages, libfreetype6 libfontconfig1",
+        "createdAt": "2018-07-17T10:53:27",
+        "reactions": []
+      },
+      {
+        "id": 427610668,
+        "author": "kieronlanning",
+        "body": "Has anyone found a foolproof way of using SkiaSharp in a .NET Core 2.1 Linux image (ideally alpine, for size)?\r\n\r\nNo-matter what I try, I always endup with \u0060System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027\u0060 error.",
+        "createdAt": "2018-10-06T22:26:10",
+        "reactions": []
+      },
+      {
+        "id": 427610966,
+        "author": "Jonesie",
+        "body": "\u003E Has anyone found a foolproof way of using SkiaSharp in a .NET Core 2.1 Linux image (ideally alpine, for size)?\r\n\u003E \r\n\u003E No-matter what I try, I always endup with \u0060System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027\u0060 error.\r\n\r\nhttp://jonesie.kiwi/2018/05/16/skiasharp-on-a-linux-container/",
+        "createdAt": "2018-10-06T22:32:54",
+        "reactions": []
+      },
+      {
+        "id": 427611510,
+        "author": "kieronlanning",
+        "body": "Thanks @Jonesie. Confirmed that worked for non-alpine versions. Here\u0027s what mine looks like:\r\n\r\n\u0060\u0060\u0060\r\n# Define images.\r\nFROM microsoft/dotnet:2.1-aspnetcore-runtime AS base\r\nFROM microsoft/dotnet:2.1-sdk AS build\r\n\r\n# Copy the output from the source machine.\r\nFROM build as dotnetcore-build\r\nWORKDIR /src\r\nCOPY . .\r\n\r\n# Build the solution\r\nRUN dotnet build -v quiet -c Release --configfile ./NuGet.config ./SkiaLibTest.sln\r\n\r\n# Publish the project\r\nRUN dotnet publish -v quiet -c Release -o /app ./SkiaLibTest/SkiaLibTest.csproj\r\n\r\nWORKDIR /app\r\n\r\nRUN wget -q https://github.com/mono/SkiaSharp/releases/download/v1.60.3/libSkiaSharp.so\r\n\r\nRUN chmod -x libSkiaSharp.so\r\n\r\n# Set the content to the published results.\r\nFROM base AS final\r\n\r\n# Set working directory as /app and copy build content in.\r\nWORKDIR /app\r\n\r\nCOPY --from=dotnetcore-build /app .\r\n\r\nRUN apt-get update; apt-get install libfontconfig1 -y\r\n\r\nENV ASPNETCORE_URLS=http://\u002B:80\r\n\r\nEXPOSE 80\r\n\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022SkiaLibTest.dll\u0022]\r\n\u0060\u0060\u0060\r\n\r\nIf I get one that works for Alpine, I\u0027ll post that too.\r\n\r\n",
+        "createdAt": "2018-10-06T22:44:53",
+        "reactions": []
+      },
+      {
+        "id": 427615645,
+        "author": "mattleibow",
+        "body": "Alpine may not work as it is a very different Linux to what is used to compile libSkiaSharp. You may have to compile your own.\r\n\r\nI believe it has to do with the fact that Debian uses glibc and Alpine uses something else. AFK ATM, but I think it\u0027s that.",
+        "createdAt": "2018-10-07T00:19:28",
+        "reactions": []
+      },
+      {
+        "id": 427631694,
+        "author": "kieronlanning",
+        "body": "Thanks for the info @mattleibow. ",
+        "createdAt": "2018-10-07T07:17:42",
+        "reactions": []
+      },
+      {
+        "id": 436348754,
+        "author": "mattleibow",
+        "body": "Closing this issue as it mostly has been resolved. New NuGet packages will be released to avoid all this work.\r\n\r\nTo support Alpine, please add your vote/comment here so we can prioritize: https://github.com/mono/SkiaSharp/issues/453",
+        "createdAt": "2018-11-06T18:00:58",
+        "reactions": []
+      },
+      {
+        "id": 445456899,
+        "author": "JackyLoo",
+        "body": "\u003E \u003E Has anyone found a foolproof way of using SkiaSharp in a .NET Core 2.1 Linux image (ideally alpine, for size)?\r\n\u003E \u003E No-matter what I try, I always endup with \u0060System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027\u0060 error.\r\n\u003E \r\n\u003E http://jonesie.kiwi/2018/05/16/skiasharp-on-a-linux-container/\r\n\r\nIt shows \u0022Service Unavailable\u0022 when I hit the link, would you mind sharing your solution again, please? ",
+        "createdAt": "2018-12-08T12:50:37",
+        "reactions": []
+      },
+      {
+        "id": 445497881,
+        "author": "Jonesie",
+        "body": "\u003E \u003E \u003E Has anyone found a foolproof way of using SkiaSharp in a .NET Core 2.1 Linux image (ideally alpine, for size)?\r\n\u003E \u003E \u003E No-matter what I try, I always endup with \u0060System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027\u0060 error.\r\n\u003E \u003E \r\n\u003E \u003E \r\n\u003E \u003E http://jonesie.kiwi/2018/05/16/skiasharp-on-a-linux-container/\r\n\u003E \r\n\u003E It shows \u0022Service Unavailable\u0022 when I hit the link, would you mind sharing your solution again, please?\r\n\r\nDang.  VM died.  It\u0027s back now.",
+        "createdAt": "2018-12-08T23:30:44",
+        "reactions": []
+      },
+      {
+        "id": 445516745,
+        "author": "mattleibow",
+        "body": "@jackyloo, since the v1.68 release, you no longer need to do all this work. Just install the SkiaSharp.NativeAssets.Linux package - https://github.com/mono/SkiaSharp/issues/312",
+        "createdAt": "2018-12-09T07:23:16",
+        "reactions": [
+          {
+            "user": "Saikava",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:02:46.887239Z"
+          }
+        ]
+      },
+      {
+        "id": 447382010,
+        "author": "automagisk",
+        "body": "Hi, I\u0027m using SkiaSharp on a Synology NAS running Linux. I have had SkiaSharp working just fine but since I upgraded to .NET Core 2.2 and SkiaSharp 1.68 I have had this issue with DllNotFound. Have tried adding the NativeAssets-package but still get the same error. Have posted a question on Stack Overflow [here](https://stackoverflow.com/questions/53693042/dllnotfoundexception-using-skiasharp-1-68-on-linux). Don\u0027t know what to try really. Any suggestions?\r\nI have also tried adding the so-file manually with wget and chmod as suggested above.",
+        "createdAt": "2018-12-14T16:44:23",
+        "reactions": []
+      },
+      {
+        "id": 447409984,
+        "author": "mattleibow",
+        "body": "@automagisk what linux are you running?\r\n\r\nAlso, is it possible to make sure SkiaSharp 1.60.3 works on your upgraded 2.2 or SkiaSharp 1.68.0 runs on the older 2.1. Just need to confirm which one broke which.\r\n\r\nNote, we upgraded or build bot to Ubuntu 16.04 for new GCC. It _was_ working on the Ubuntu 14.01, but maybe there is another issue.",
+        "createdAt": "2018-12-14T18:20:04",
+        "reactions": []
+      },
+      {
+        "id": 447416981,
+        "author": "automagisk",
+        "body": "Synology DSM uses a custom Linux version it seems. Just tried reverting to 1.60.3 and got the same error so it looks like it\u0027s Core 2.2. Update: Looks to be something else that\u0027s wrong. I have reverted to Core 2.0 and 1.60.0 and it still doesn\u0027t work. Mmmm weird. I have to keep trying and reverting until it works.",
+        "createdAt": "2018-12-14T18:44:14",
+        "reactions": []
+      },
+      {
+        "id": 447434305,
+        "author": "mattleibow",
+        "body": "OK, :(\r\nI think it might be better to open a new issue with details specific to your case. This way we can track the issue and prioritize.",
+        "createdAt": "2018-12-14T19:46:21",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,46 @@
   "updatedAt": "2022-08-19T15:02:58",
   "closedAt": "2018-03-26T18:28:25",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:58.2221632Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 375813377,
+        "author": "mattleibow",
+        "body": "This may be because you are scaling _after_ drawing? As soon as you draw the image, the vector becomes a raster. To avoid pixelation, you have to draw the picture with a scale matrix.\r\n\r\nHow are you drawing the picture before/after scaling?",
+        "createdAt": "2018-03-23T22:19:55",
+        "reactions": []
+      },
+      {
+        "id": 376062209,
+        "author": "XamDevv",
+        "body": "Yeah, I figured this is happening. At the moment I don\u0027t apply any scaling to the canvas. Instead the scaling is done by the Xamarin Scale property. I hoped that the SKCanvasView used the Xamarin Scale and applied it to the drawing out of the box.\r\n\r\nSo I have to add a DrawingScale property to a CustomCanvasView and do the scaling manually? Or is it possible to disable the Xamarin default raster scaling only for the CanvasView and use the Scale property for drawing?",
+        "createdAt": "2018-03-26T06:43:14",
+        "reactions": []
+      },
+      {
+        "id": 376195605,
+        "author": "mattleibow",
+        "body": "You will have to use a separate scale when drawing as the Xamarin scale property is specifically to scale the _view_ after drawing/rendering. It relates to the fact that after the OS draws the view, it then applies a custom scale.\r\n\r\nInstead of scaling the canvas via a property on the view, create a separate property and then just use that as part of the drawing:\r\n\r\n\u0060\u0060\u0060csharp\r\nfloat DrawingScale { get; set; }\r\n...\r\nvoid Draw(SKCanvas cnv) {\r\n    cnv.Scale(DrawingScale);\r\n    // draw\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-03-26T14:56:38",
+        "reactions": []
+      },
+      {
+        "id": 376265488,
+        "author": "mattleibow",
+        "body": "Closing this as pixelation occurs because the entire view is scale as opposed to the content drawn.",
+        "createdAt": "2018-03-26T18:28:25",
+        "reactions": []
+      },
+      {
+        "id": 376465018,
+        "author": "XamDevv",
+        "body": "Thank you for the quick responses. I will try your suggestion.",
+        "createdAt": "2018-03-27T09:50:50",
+        "reactions": []
+      }
+    ]
+  }
 }

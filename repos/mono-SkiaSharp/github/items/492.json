@@ -14,5 +14,67 @@
   "updatedAt": "2022-08-19T15:02:44",
   "closedAt": "2018-10-29T17:29:18",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:24.3322591Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 386470736,
+        "author": "mattleibow",
+        "body": "Using the GPU to construct images is slightly different: bitmaps are raster based, so this is a pure CPU/memory process.\r\n\r\nTo create a GPU-backed image, you need to first set up a GL context as you would if you were just using normal OpenGL. Then, you instantiate the \u0060GRContext\u0060 to create a surface.\r\n\r\nI do this automatically for views, but for headless/.NET Standard libraries, you can have a look at what I do for my GPU tests:\r\n\r\nFor a Mac test to set up the OpenGL (or rather CGL): https://github.com/mono/SkiaSharp/blob/v1.60.0/tests/Tests/GlContexts/Cgl/CglContext.cs\r\n\r\nOnce the context is created, you can just create the \u0060SKSurface\u0060:\r\n\r\n\u0060\u0060\u0060csharp\r\n// create the context using the CURRENT OpenGL context\r\nvar grContext = GRContext.Create(GRBackend.OpenGL);\r\n\r\n// create the surface\r\nvar surface = SKSurface.Create(grContext, true, new SKImageInfo(100, 100));\r\n\r\n// get the canvas for drawing\r\nvar canvas = surface.Canvas;\r\n\u0060\u0060\u0060\r\n\r\nI really want to create a .NET Core app that uses the GPU and OpenTK (for example), but I just haven\u0027t had the chance to get to it yet.",
+        "createdAt": "2018-05-03T23:54:34",
+        "reactions": []
+      },
+      {
+        "id": 388624035,
+        "author": "pauldendulk",
+        "body": "Thanks a lot. I will try to create a sample my self. Maybe you can use it. ",
+        "createdAt": "2018-05-13T12:40:57",
+        "reactions": []
+      },
+      {
+        "id": 388625729,
+        "author": "mattleibow",
+        "body": "That will be great!",
+        "createdAt": "2018-05-13T13:10:38",
+        "reactions": []
+      },
+      {
+        "id": 434003004,
+        "author": "mattleibow",
+        "body": "Closing this as it appears to be \u0022resolved\u0022 - if a question can be marked as such.",
+        "createdAt": "2018-10-29T17:29:18",
+        "reactions": []
+      },
+      {
+        "id": 439693450,
+        "author": "aspecialkey",
+        "body": "@pauldendulk have got an example you could post?\r\nI\u0060m in the same situation \r\n[https://stackoverflow.com/questions/53360854/skiasharp-drawing-image-with-gpu-acceleration](url)\r\n",
+        "createdAt": "2018-11-18T13:38:33",
+        "reactions": []
+      },
+      {
+        "id": 439887624,
+        "author": "pauldendulk",
+        "body": "@aspecialkey I did never get around to implementing this. It looks like your solution is close to how it should work. Did you try disposing all objects you create?",
+        "createdAt": "2018-11-19T13:11:16",
+        "reactions": []
+      },
+      {
+        "id": 439889148,
+        "author": "aspecialkey",
+        "body": "@pauldendulk  disposing the objects makes no difference",
+        "createdAt": "2018-11-19T13:17:07",
+        "reactions": []
+      },
+      {
+        "id": 439892675,
+        "author": "pauldendulk",
+        "body": "@aspecialkey If you create a minimal sample as a github project I will take a look. If we can not get it to work we will submit it as an issue here.",
+        "createdAt": "2018-11-19T13:29:04",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -33,5 +33,372 @@
   "updatedAt": "2022-08-19T15:02:48",
   "closedAt": "2019-07-26T13:05:55",
   "commentCount": 29,
-  "reactionCount": 10
+  "reactionCount": 10,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:18.9544066Z",
+    "reactions": [
+      {
+        "user": "xabre",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544125Z"
+      },
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544131Z"
+      },
+      {
+        "user": "DuncWatts",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544132Z"
+      },
+      {
+        "user": "entdark",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544133Z"
+      },
+      {
+        "user": "WadeNielsen",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544134Z"
+      },
+      {
+        "user": "gritsenko",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544134Z"
+      },
+      {
+        "user": "sawiegersma",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544135Z"
+      },
+      {
+        "user": "JaggerJo",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544136Z"
+      },
+      {
+        "user": "joseluisct",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544137Z"
+      },
+      {
+        "user": "kinosang",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:18.9544137Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 389237691,
+        "author": "mterwoord",
+        "body": "Not trying to push you or rush you, but any eta on this, or semi-working preview nuget packages?",
+        "createdAt": "2018-05-15T16:53:37",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:13.2089393Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:13.2089396Z"
+          },
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:13.2089397Z"
+          }
+        ]
+      },
+      {
+        "id": 389321159,
+        "author": "mattleibow",
+        "body": "This is going to be a bit harder to do since I will have to update to Xamarin.Forms v3.0. This is mostly fine, but the packaging is going to be tougher. If I update to v3.0, then so does everyone else who uses SkiaSharp with Xamarin.Forms.\r\n\r\nI might create a new set of preview packages that target v3.0, and then when we get further on in life, I will update the existing package. But this makes life harder for everyone.\r\n\r\nAlso, I just added Tizen support, which appears to only support v2.5.0.\r\n\r\nBut, after all this, I can start a new branch and just upgrade to v3.0 for the world and hope something happens which will make life easier - maybe Tizen updates, maybe everyone does :)",
+        "createdAt": "2018-05-15T21:35:18",
+        "reactions": [
+          {
+            "user": "DuncWatts",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:13.4163105Z"
+          },
+          {
+            "user": "roustan2",
+            "content": "-1",
+            "createdAt": "2026-02-06T14:02:13.4163112Z"
+          }
+        ]
+      },
+      {
+        "id": 389406944,
+        "author": "mterwoord",
+        "body": "You updating to XF3 is per project right?\r\n\r\nFor the world to update to xamarin forms 3, well, isn\u0027t that how things just work? if people want to stay on entity framework core, you have to be careful as well...\r\n\r\n",
+        "createdAt": "2018-05-16T06:16:17",
+        "reactions": []
+      },
+      {
+        "id": 389407105,
+        "author": "mterwoord",
+        "body": "I mean, do you have things working for XF3? If so, what\u0027s the way to get things usable with XF3?\r\n",
+        "createdAt": "2018-05-16T06:17:03",
+        "reactions": []
+      },
+      {
+        "id": 389507557,
+        "author": "mterwoord",
+        "body": "In the meantime, maybe could you make ISKCanvasViewController public? That way I can implement it myself..\r\n",
+        "createdAt": "2018-05-16T12:53:07",
+        "reactions": []
+      },
+      {
+        "id": 389508461,
+        "author": "DuncWatts",
+        "body": "I see there\u0027s some WPF work included in the dev/forms-v3 branch, do you happen to know the status of this with WPF? I\u0027m currently trying to investigate the feasibility of adding a WPF client so happy to work with an unfinished build for now if it can get me started with the basics.",
+        "createdAt": "2018-05-16T12:56:16",
+        "reactions": [
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:14.3267504Z"
+          }
+        ]
+      },
+      {
+        "id": 389509967,
+        "author": "mterwoord",
+        "body": "@DuncWatts To me it seems, that if the ISKCanvasViewController interface was public, the actual work needed for xamarin forms support is minimal (matter of 2-3 event handlers that need hooking up)\r\n\r\n@mattleibow Maybe you can shed a light here?\r\nI\u0027m not even interested in using the wpf client as a real target, just as a development aid..\r\n",
+        "createdAt": "2018-05-16T13:01:27",
+        "reactions": []
+      },
+      {
+        "id": 389721605,
+        "author": "mattleibow",
+        "body": "I created a PR that makes those types public so additional platforms can be added: https://github.com/mono/SkiaSharp/pull/522\r\n\r\nThis should be in the v1.60.1 release.",
+        "createdAt": "2018-05-17T02:08:09",
+        "reactions": [
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:14.6781096Z"
+          }
+        ]
+      },
+      {
+        "id": 389721865,
+        "author": "mattleibow",
+        "body": "The \u0060dev/forms-v3\u0060 branch is a total hack that I will soon delete. I am probably going to move to Forms v3.0 after the v1.60.1 release. I hope to support one last v2.5.x version of Forms and then migrate.\r\n\r\nI had a chat to the Tizen guys, and I didn\u0027t realize that Forms 3.0 has the Tizen types built in, so that makes life much easier.",
+        "createdAt": "2018-05-17T02:10:01",
+        "reactions": []
+      },
+      {
+        "id": 389756466,
+        "author": "mterwoord",
+        "body": "Awesome!\r\n\r\nRegarding v3 etc. It seems that the v2 packages work fine there, just not for WPF (obviously)...\r\n\r\nI could hack it together with reflection, but that\u0027s not worth it for me, so I\u0027ll wait for the v1.60.1 release then. \r\nThanks for the info!",
+        "createdAt": "2018-05-17T06:14:05",
+        "reactions": [
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:15.1056054Z"
+          }
+        ]
+      },
+      {
+        "id": 389873602,
+        "author": "mattleibow",
+        "body": "The backwards compat info is good news.",
+        "createdAt": "2018-05-17T13:51:49",
+        "reactions": []
+      },
+      {
+        "id": 390537723,
+        "author": "mattleibow",
+        "body": "I merged #522 so adding additional renderers should be much easier - until I manage to add them to the official repo.\r\n\r\nIf you do get a nice version, a PR is always welcome ;)",
+        "createdAt": "2018-05-21T02:37:09",
+        "reactions": [
+          {
+            "user": "DuncWatts",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:15.505066Z"
+          },
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:15.5050664Z"
+          }
+        ]
+      },
+      {
+        "id": 390826973,
+        "author": "mattleibow",
+        "body": "No WPF renderer just yet, but you should be able to quickly whip up your own now that the interfaces are all public: https://github.com/mono/SkiaSharp/releases/tag/v1.60.1\r\n\r\nI created a test renderer for GTK#, and all I had to do was copy this code into my project and add a \u0060#if\u0060 for GTK#:\r\nhttps://github.com/mono/SkiaSharp/blob/v1.60.1/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.Native.Shared/SKCanvasViewRendererBase.cs\r\n\r\nThen I added this for GTK#:\r\nhttps://github.com/mono/SkiaSharp/blob/v1.60.1/source/SkiaSharp.Views.Forms/SkiaSharp.Views.Forms.UWP/SKCanvasViewRenderer.cs",
+        "createdAt": "2018-05-22T00:39:35",
+        "reactions": [
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:15.7147942Z"
+          }
+        ]
+      },
+      {
+        "id": 390827167,
+        "author": "mattleibow",
+        "body": "@mterwoord, I hope this helps.",
+        "createdAt": "2018-05-22T00:41:00",
+        "reactions": []
+      },
+      {
+        "id": 390911262,
+        "author": "mterwoord",
+        "body": "Works! Only thing I have to figure out for WPF is DPI translation. For me, images get shown now.\r\n",
+        "createdAt": "2018-05-22T08:44:00",
+        "reactions": []
+      },
+      {
+        "id": 391022532,
+        "author": "mattleibow",
+        "body": "Nice, with some of these things, I just have a look at how Xamarin.Forms does it. For example, I am going to look at how they do touch and do something similar.",
+        "createdAt": "2018-05-22T14:57:54",
+        "reactions": []
+      },
+      {
+        "id": 393234732,
+        "author": "mattleibow",
+        "body": "Moving this to v1.60.3 so we can get out a version that fixes a UWP bug (#536)",
+        "createdAt": "2018-05-30T16:52:58",
+        "reactions": []
+      },
+      {
+        "id": 396087548,
+        "author": "brettclutch",
+        "body": "@mterwoord , any pointers or chance to share code you have to get WPF renderer working? I\u0027ve hit road block, I created SKCanvasViewRenderer, SKCanvasViewRendererBase (Which btw there is an issue: SKTouchHandler is not accessible), and SKXamlCanvas. Its all getting called correctly but it won\u0027t attach itself to the WPF visual tree and hence has 0 actualwidth, 0 actualheigth and hence doens\u0027t render. \r\n\r\nhttps://gist.github.com/brettclutch/ec2ef9a08e2c73f7af38069106adff25",
+        "createdAt": "2018-06-10T22:37:41",
+        "reactions": []
+      },
+      {
+        "id": 399070775,
+        "author": "mterwoord",
+        "body": "Finally found time to respond. Like I said before, I\u0027m not using it to target WPF for production. Therefore, not everything is working. (For example touch..).\r\n\r\nSee attached zip file for my renderer.\r\n\r\n\r\n[Renderers.zip](https://github.com/mono/SkiaSharp/files/2123379/Renderers.zip)\r\n",
+        "createdAt": "2018-06-21T11:25:18",
+        "reactions": []
+      },
+      {
+        "id": 401183944,
+        "author": "brettclutch",
+        "body": "Thanks, your code is almost the same as what I had tried. Still not working for me but I think its a bug in Xamarin.WPF and my solution layout/setup which I\u0027ve kinda stopped working on it since then since same exact code works in a Xamarin.UWP project but not a Xamarin.WPF project . Its still beta so just need to wait I feel. ",
+        "createdAt": "2018-06-28T21:49:05",
+        "reactions": []
+      },
+      {
+        "id": 404463158,
+        "author": "amoscatelli",
+        "body": "Thanks mterwoord, your renderers worked for my WPF project, maybe a PR could be accepted.",
+        "createdAt": "2018-07-12T10:13:11",
+        "reactions": []
+      },
+      {
+        "id": 407290366,
+        "author": "mattleibow",
+        "body": "I will be upgrading to Xamarin.Forms 3.0 in the next major release. Work is currently being done in the \u0060development\u0060 branch. The currently open PRs for this update are #570 and #588 .\r\n\r\nOnce those are merged into \u0060development\u0060, I will start accepting PRs for the forms 3.0 platforms (gtk/wpf)",
+        "createdAt": "2018-07-24T05:58:48",
+        "reactions": [
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:17.4651902Z"
+          },
+          {
+            "user": "xabre",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:17.4651907Z"
+          },
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:17.4651908Z"
+          },
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:17.4651909Z"
+          }
+        ]
+      },
+      {
+        "id": 430004160,
+        "author": "roustan2",
+        "body": "Hello,\r\ntouch dont\u0027work in xamarin wpf projects.\r\nany ideas ?\r\nthanks",
+        "createdAt": "2018-10-15T20:37:19",
+        "reactions": []
+      },
+      {
+        "id": 440548312,
+        "author": "vividos",
+        "body": "I\u0027m trying to port an Xamarin.Forms Android app to WPF, and I\u0027m using SkiaSharp there. Has anyone managed to get the renderer to work? I had some issues compiling the code in the examples above.",
+        "createdAt": "2018-11-21T06:18:56",
+        "reactions": [
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:17.9090031Z"
+          }
+        ]
+      },
+      {
+        "id": 444175441,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:00:54",
+        "reactions": [
+          {
+            "user": "joseluisct",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:18.1291151Z"
+          }
+        ]
+      },
+      {
+        "id": 475174762,
+        "author": "memsom",
+        "body": "I\u0027ve hit a roadblock because the Mapsui.Forms uses SkiaSharp and seems to be using the SKGLViewRenderer for map rendering. Is there a solution in the works for WPF? I can\u0027t use UWP as need to support legacy systems. Going to look at their codebase too to see if I can switch the rendering to something else for WPF. I also can happily hack together something with the SkiaSharp.Views.Desktop.SKGLControl is that would work, just not 100% sure that road is the correct one.\r\n\r\nHappy to help, but obviously, no expert in this side of things (just using someone else\u0027s library...)",
+        "createdAt": "2019-03-21T10:16:19",
+        "reactions": []
+      },
+      {
+        "id": 510346178,
+        "author": "kinosang",
+        "body": "Nothing shown on WPF with \u0060Xamarin.Forms\u0060 and \u0060SKGLViewRenderer\u0060, Got \u0060Unable to cast object of type \u0027SkiaSharp.Views.Forms.SKGLViewRenderer\u0027 to type \u0027Xamarin.Forms.IRegisterable\u0027\u0060 when resize the window.",
+        "createdAt": "2019-07-11T06:19:47",
+        "reactions": []
+      },
+      {
+        "id": 514432356,
+        "author": "mattleibow",
+        "body": "Good news folks! Adding WPF as we speak (or as close as we can get) https://github.com/mono/SkiaSharp/pull/917",
+        "createdAt": "2019-07-24T00:31:52",
+        "reactions": [
+          {
+            "user": "kinosang",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:18.7184217Z"
+          }
+        ]
+      },
+      {
+        "id": 515443906,
+        "author": "mattleibow",
+        "body": "Just merged the bits. As soon as the build finishes, I\u0027ll push the the preview feed: https://nugetized.blob.core.windows.net/skiasharp-eap/index.json",
+        "createdAt": "2019-07-26T13:07:16",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:18.9041706Z"
+          }
+        ]
+      }
+    ]
+  }
 }

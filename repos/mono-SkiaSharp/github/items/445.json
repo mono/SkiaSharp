@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T18:01:36",
   "closedAt": "2018-02-08T12:56:28",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:15.5712006Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 364094167,
+        "author": "mattleibow",
+        "body": "What platform was this?\r\nCould you also attach the image? (if possible)",
+        "createdAt": "2018-02-08T12:14:42",
+        "reactions": []
+      },
+      {
+        "id": 364095074,
+        "author": "rick779",
+        "body": "Windows 10 (both x86 / x64)\r\nVisual Studio 2013\r\nSkiaSharp (from nuget) v. 1.59.3\r\nImage: https://we.tl/k2aBEGU1Iv",
+        "createdAt": "2018-02-08T12:19:01",
+        "reactions": []
+      },
+      {
+        "id": 364102101,
+        "author": "mattleibow",
+        "body": "Thanks. I think i found out what is happening. In some cases (specifically when decoding a SKData), the image is a \u0022lazy\u0022 image that appears not to support \u0060PeekPixels\u0060. I am not sure exactly why, even though ReadPixels works...\r\n\r\nFor your case where you need the pixel information, I would suggest using \u0060SKBitmap\u0060 - this is what \u0060SKImage\u0060 uses under the hood. \u0060SKImage\u0060 is more for representing some image, whether raster, texture or some other format.\r\n\r\nIf you really need to use an image for some reason, you can convert without copying data (the bitmap must live as long as the image):\r\n\r\n    var image = SKImage.FromBitmap(bitmap);",
+        "createdAt": "2018-02-08T12:50:09",
+        "reactions": []
+      },
+      {
+        "id": 364105855,
+        "author": "rick779",
+        "body": "many thanks",
+        "createdAt": "2018-02-08T13:05:58",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,58 @@
   "updatedAt": "2022-08-19T15:02:36",
   "closedAt": "2018-05-08T14:33:15",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:35.8190389Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 387423266,
+        "author": "mattleibow",
+        "body": "Due to the number of Linux distros, we don\u0027t provide a native binary _in_ the NuGet package. But, we do host one on the release notes:\r\nhttps://github.com/mono/SkiaSharp/releases/tag/v1.60.0\r\n\r\nAnd a direct link to the native file: [libSkiaSharp.so](https://github.com/mono/SkiaSharp/releases/download/v1.60.0/libSkiaSharp.so)",
+        "createdAt": "2018-05-08T14:33:15",
+        "reactions": [
+          {
+            "user": "ryancheung",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:34.9897011Z"
+          }
+        ]
+      },
+      {
+        "id": 631482145,
+        "author": "VesaVainio",
+        "body": "Just commenting, in case this will benefit somebody else who stumbles on the same issue. In my case we are using a third-party library that depends on SkiaSharp. Our application is using .NET Core 3.1, and it\u0027s running in Docker containers on top of Ubuntu 16.04.\r\n\r\nIn our troubleshooting case, we had to do BOTH of the following steps to get SkiaSharp to work. I tested both of them individually, and neither one alone solves it, but both of them together does solve it.\r\n\r\n1. Adding the following line to dockerfile, to install necessary libraries inside the container:\r\n\u0060RUN apt-get update \u0026\u0026 apt-get install -y libfontconfig1\u0060\r\n2. Including the SkiaSharp.NativeAssets.Linux nuget package (version 1.68.3) to the .NET Core project where SkiaSharp is used.",
+        "createdAt": "2020-05-20T13:43:28",
+        "reactions": [
+          {
+            "user": "mu88",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:02:35.1776911Z"
+          }
+        ]
+      },
+      {
+        "id": 631934737,
+        "author": "mattleibow",
+        "body": "@VesaVainio thanks for this. Yes, fontconfig is a requirement for that package. I think I must update the description or some readme to say that it needs to be installed.\n\nBut also just for info, there is also a nuget package SkiaSharp.NativeAssets.Linux.NoDependencies that does not have this requirement. But, it also does not have the same level of font management. ",
+        "createdAt": "2020-05-21T07:35:16",
+        "reactions": []
+      },
+      {
+        "id": 633457441,
+        "author": "VesaVainio",
+        "body": "@mattleibow just to clarify the background for how we stumbled on this problem: we were using a third party library, and SkiaSharp comes to us as a dependency for that package. (The library in question is Syncfusion, Syncfusion.XlsIORenderer.Net.Core nuget package.)\r\n\r\nEverything worked fine in local Windows development environments, and we only encountered the problem when deploying the software to a containerized environment that runs on top of Linux. That\u0027s the first time we actually became aware that we are using some library called SkiaSharp.\r\n\r\nI think the fundamental problem is that when you are using NuGet packages, you pretty much just think that once installed, they will work.\r\n\r\nI\u0027m not sure what would be the optimal solution to this problem. Seems that the NuGet dependency resolution is centered around the frameworks and versions of packages, not on OS. Should it be so that if SkiaSharp publishes a NuGet package, it should work as-is even on top of Linux? Or should it be so that Suncfusion should include enough packages to make sure that their dependencies work on Linux? Not sure...",
+        "createdAt": "2020-05-25T08:46:16",
+        "reactions": []
+      },
+      {
+        "id": 633467538,
+        "author": "mattleibow",
+        "body": "Maybe there is a way to determine if fontconfig is available on the Linux container... It might be something we add in the targets file... But that is just build time and won\u0027t help. Hmmm",
+        "createdAt": "2020-05-25T09:08:09",
+        "reactions": []
+      }
+    ]
+  }
 }

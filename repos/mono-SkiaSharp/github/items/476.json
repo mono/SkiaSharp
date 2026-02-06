@@ -19,5 +19,53 @@
   "updatedAt": "2022-08-19T15:02:55",
   "closedAt": "2018-12-12T05:05:27",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:02.9299959Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 377607033,
+        "author": "mattleibow",
+        "body": "Are you able to attach an example project? I also don\u0027t think I understand your term of \u0022custom Debug Modes\u0022 (and this is probably the same for \u0022release configs\u0022...",
+        "createdAt": "2018-03-30T19:48:30",
+        "reactions": []
+      },
+      {
+        "id": 378398131,
+        "author": "thomashoef",
+        "body": "Hi @mattleibow,\r\n\r\nI cannot attach the project I am referring to, but what I mean with a custom debug config or release config is simply a Visual Studio for Mac Build Configuration such as:\r\n\r\n \u0060\u0060\u0060\r\n \u003CPropertyGroup Condition=\u0022 \u0027$(Configuration)|$(Platform)\u0027 == \u0027TestDebug|iPhoneSimulator\u0027 \u0022\u003E\r\n    \u003CDebugSymbols\u003Etrue\u003C/DebugSymbols\u003E\r\n    \u003CDebugType\u003Efull\u003C/DebugType\u003E\r\n    \u003COptimize\u003Efalse\u003C/Optimize\u003E\r\n    \u003COutputPath\u003Ebin\\iPhoneSimulator\\$(Configuration)\u003C/OutputPath\u003E\r\n    \u003CDefineConstants\u003EDEBUG;ENABLE_TEST_CLOUD;\u003C/DefineConstants\u003E\r\n    \u003CCodesignEntitlements\u003EEntitlements.plist\u003C/CodesignEntitlements\u003E\r\n    \u003CErrorReport\u003Eprompt\u003C/ErrorReport\u003E\r\n    \u003CWarningLevel\u003E4\u003C/WarningLevel\u003E\r\n    \u003CMtouchDebug\u003Etrue\u003C/MtouchDebug\u003E\r\n    \u003CMtouchNoSymbolStrip\u003Etrue\u003C/MtouchNoSymbolStrip\u003E\r\n    \u003CMtouchFastDev\u003Etrue\u003C/MtouchFastDev\u003E\r\n    \u003CIOSDebuggerPort\u003E40088\u003C/IOSDebuggerPort\u003E\r\n    \u003CMtouchLink\u003ENone\u003C/MtouchLink\u003E\r\n    \u003CMtouchArch\u003Ex86_64\u003C/MtouchArch\u003E\r\n    \u003CMtouchHttpClientHandler\u003EHttpClientHandler\u003C/MtouchHttpClientHandler\u003E\r\n    \u003CDeviceSpecificBuild\u003Efalse\u003C/DeviceSpecificBuild\u003E\r\n    \u003CAssemblyName\u003EXXX.App.iOS-Test\u003C/AssemblyName\u003E\r\n    \u003CCustomBuildTarget\u003ETest\u003C/CustomBuildTarget\u003E\r\n  \u003C/PropertyGroup\u003E\r\n\u0060\u0060\u0060\r\n\r\nWhen we run and launch the app in TestDebug as a Buildconfig for example, we do not have a Skia error. If we run it in TestRelease (another set of build parameters), we have a crash. If we copy all of the build parameters of the TestDebug config over to the TestRelease config, so that they are actually an identical set of build parameters, the TestRelease still crashes.\r\n\r\nIt looks as though some Visual Studio build configurations which are based upon \u0022Release\u0022 instead of \u0022Debug\u0022 cause the app to crash. \r\n\r\nI have tried executing a method of SkiaSharp when the app fires, and I catch the method execution with a DllNotFoundException. In the given Build config which does not work, the DllNotFound is thrown, yet when we look in the binary (IPA), they look identical.\r\n\r\nI have also tried in the appdelegate to directly reference a Skia object so that the linker can not \u0022ignore\u0022 the dll, but that does not help.\r\n\r\nWe get a DllNotFoundException and we have no clue why it is doing this - the only difference we see is Release vs Debug, yet in some Release configurations, for some reason (??) the crash does not occur --\u003E so for some reason, sometimes, the DllNotFoundException is thrown...\r\n\r\nCrash log:\r\n\u003E Parameter name: obj\r\n\u003E at (wrapper managed-to-native) System.Object.__icall_wrapper_mono_monitor_enter_v4_internal(object,intptr)\r\n\u003E SkiaSharp.SKObject.Dispose(bool disposing)\r\n\u003E SkiaSharp.SKPictureRecorder.Dispose(bool disposing)\r\n\u003E SkiaSharp.SKNativeObject.Finalize()\r\n\r\nAnd device log (iPhone)\r\n\r\n\u003E 2017-11-01 13:31:59.330 ProjectName.iOS[1983:230417] Image loading failed: https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/aa.svg;(size=0x40,dip=True)\r\n\u003E System.DllNotFoundException: @rpath/libSkiaSharp.framework/libSkiaSharp\r\n\u003E   at (wrapper managed-to-native) SkiaSharp.SkiaApi:sk_picture_recorder_new ()\r\n\u003E   at SkiaSharp.SKPictureRecorder..ctor () [0x00000] in \u003C60ce313fefca407885b10c0e81558bfa\u003E:0 \r\n\u003E   at FFImageLoading.Svg.Platform.SKSvg.Load (System.Xml.Linq.XDocument xdoc) [0x00266] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:185 \r\n\u003E   at FFImageLoading.Svg.Platform.SKSvg.Load (System.Xml.XmlReader reader) [0x00000] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:115 \r\n\u003E   at FFImageLoading.Svg.Platform.SKSvg.Load (System.IO.Stream stream) [0x00012] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SkSvg.cs:109 \r\n\u003E   at FFImageLoading.Svg.Platform.SvgDataResolver\u002B\u003CResolve\u003Ed__20.MoveNext () [0x00198] in C:\\projects\\ffimageloading\\source\\FFImageLoading.Svg.Shared\\SvgDataResolver.cs:90 \r\n\u003E --- End of stack trace from previous location where exception was thrown ---",
+        "createdAt": "2018-04-03T21:02:11",
+        "reactions": []
+      },
+      {
+        "id": 378406250,
+        "author": "mattleibow",
+        "body": "I will see what I can find out... Looking at the stack trace, it looks a bit weird: \u0060DllNotFoundException: .framework/libSkiaSharp\u0060 the framework name is not correct - it should have a whole bunch of other things in it.",
+        "createdAt": "2018-04-03T21:32:23",
+        "reactions": []
+      },
+      {
+        "id": 379992856,
+        "author": "thomashoef",
+        "body": "Hi @mattleibow \r\n\r\nDo you by chance have an idea where this may come from yet? Your help is much appreciated, thanks!\r\nThomas",
+        "createdAt": "2018-04-10T06:49:20",
+        "reactions": []
+      },
+      {
+        "id": 442139833,
+        "author": "mattleibow",
+        "body": "After updating to v1.06 or the latest v1.68 preview, is this still happening? ",
+        "createdAt": "2018-11-27T17:11:11",
+        "reactions": []
+      },
+      {
+        "id": 446463416,
+        "author": "Redth",
+        "body": "We are closing this issue since no response was received.  Please open a new issue referring to this one if you have more information.",
+        "createdAt": "2018-12-12T05:05:26",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,32 @@
   "updatedAt": "2022-08-19T15:02:03",
   "closedAt": "2020-04-24T21:12:23",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:33.7226819Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 407490239,
+        "author": "mattleibow",
+        "body": "Is this still happening? I tried your test case, but the GC kicks in after a few seconds and then memory goes down.\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/43155840-c78f977e-8f78-11e8-930c-4045857304a1.png)\r\n\r\nEven at the highest memory usage, there is hardly any SkiaSharp objects around:\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/43155890-e8a84c9e-8f78-11e8-8848-9a505cf65b38.png)\r\n\r\nThere is just one region and two paths in the list of total skia objects.",
+        "createdAt": "2018-07-24T17:37:38",
+        "reactions": []
+      },
+      {
+        "id": 407777976,
+        "author": "bnoffer",
+        "body": "I can confirm this problem on Android with SkiaSharp 1.60.0 and 1.60.2, Operating Systems tested on are Android 7.0 and Android 8.0.\r\n\r\nDuring testing I was able to see the garbage collection clearing memory a few times or even one time only, this is totally random. But after a while the memory runns full.",
+        "createdAt": "2018-07-25T14:39:18",
+        "reactions": []
+      },
+      {
+        "id": 619240767,
+        "author": "mattleibow",
+        "body": "Closing this as it was fixed at some point in 1.68.x",
+        "createdAt": "2020-04-24T21:12:23",
+        "reactions": []
+      }
+    ]
+  }
 }

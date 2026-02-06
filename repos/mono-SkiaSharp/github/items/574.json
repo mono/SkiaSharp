@@ -19,5 +19,32 @@
   "updatedAt": "2022-08-19T15:02:08",
   "closedAt": "2018-11-27T15:33:22",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:28.5296235Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 403202988,
+        "author": "aeonblaire",
+        "body": "I copied \u0022bin/Debug/libSkiaSharp.dll\u0022 from the .NET 4.7 Console app\r\nand \u0022bin/Debug/netstandard2.0/bin/runtimes/osx/native/libSkiaSharp.dylib\u0022 from the Azure Function project to \u0022bin/Debug/netstandard2.0/bin/\u0022 of the Azure Function project and it worked.\r\n\r\nMaybe \u0022bin/Debug/netstandard2.0/bin/runtimes/osx/native/libSkiaSharp.dylib\u0022 from the Azure Function project is the same as \u0022bin/Debug/libSkiaSharp.dylib\u0022 from the .NET 4.7 project? Its from the Nuget package right?\r\n\r\nWhat is the difference between SkiaSharp.dll and libSkiaSharp.dll?",
+        "createdAt": "2018-07-07T09:38:52",
+        "reactions": []
+      },
+      {
+        "id": 441892283,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. I had a look and I can confirm that the VSMac runner seems to not copy the native binaries. All is working on Windows. I have contacted the VSMac teams this side to see if they know if there is a bug or something.\r\n\r\nWith regards to the differences between the assemblies... SkiaSharp.dll is a managed assembly that is written in C# and allows you to write code in C#. The libSkiaSharp.dll/.dylib/.so is the platform-specific, native binary that is the underlying skia engine. Depending on the platform, the same SkiaSharp assembly talks to the different versions of libSkiaSharp.",
+        "createdAt": "2018-11-27T03:46:56",
+        "reactions": []
+      },
+      {
+        "id": 442102042,
+        "author": "mattleibow",
+        "body": "This issue appears to be related to the tooling and will be tracked and fixed in https://github.com/mono/monodevelop/issues/6673",
+        "createdAt": "2018-11-27T15:33:22",
+        "reactions": []
+      }
+    ]
+  }
 }

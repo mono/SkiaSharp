@@ -32,5 +32,32 @@
   "updatedAt": "2022-08-19T15:01:49",
   "closedAt": "2020-06-10T23:39:27",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:54.6553437Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 411364661,
+        "author": "zhouandke",
+        "body": "As I know, in skia, DrawLine method will draw first point, and will not draw last point, for example: when position is (0,0), drawline(10,0), point(0,0) will been drawn, and point(10,0) will not been drawn.\r\n\r\nIn my code, after execute **(M 1 0 L 100 0, 100 100)**, position change to (100,100), then draw negative horizontal **(0 100)**, I think point(100,100) should be drawn, but it doesn\u0027t work",
+        "createdAt": "2018-08-08T10:45:26",
+        "reactions": []
+      },
+      {
+        "id": 445363503,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I have filed a skia bug: https://bugs.chromium.org/p/skia/issues/detail?id=8605\r\n\r\nA workaround is to use a non-zero width, ie 1\u002B",
+        "createdAt": "2018-12-07T20:58:41",
+        "reactions": []
+      },
+      {
+        "id": 642321762,
+        "author": "mattleibow",
+        "body": "Closing this not because it is resolved, but this is part by-design and part reality:\r\n\r\n\u003E Hairlines do not support joins, which would be necessary to fill in the missing corners.\r\n\r\nBasically, with a hairline, the corners may need calculations, and for perf reasons they are not done.\r\n\r\nI would have liked for it to just draw that pixel, but setting a StrokeWidth of 1 works. So, all we can do is just not draw hairline. And, if any scaling is done, you do need to set a width of \u003E 0. SO, always set a line so you know what width it is going to be.",
+        "createdAt": "2020-06-10T23:39:27",
+        "reactions": []
+      }
+    ]
+  }
 }

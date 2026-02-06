@@ -25,5 +25,732 @@
   "updatedAt": "2022-08-19T18:01:29",
   "closedAt": "2021-08-19T06:45:23",
   "commentCount": 81,
-  "reactionCount": 25
+  "reactionCount": 25,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:36.4260358Z",
+    "reactions": [
+      {
+        "user": "OmidID",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260457Z"
+      },
+      {
+        "user": "kieronlanning",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260467Z"
+      },
+      {
+        "user": "chances",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260469Z"
+      },
+      {
+        "user": "PelleRavn",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260472Z"
+      },
+      {
+        "user": "vanbukin",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260474Z"
+      },
+      {
+        "user": "romsnl",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260477Z"
+      },
+      {
+        "user": "rnsc",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260479Z"
+      },
+      {
+        "user": "kwinteng",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.426048Z"
+      },
+      {
+        "user": "aleksamagicka",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260481Z"
+      },
+      {
+        "user": "aleksamagicka",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:01:36.4260482Z"
+      },
+      {
+        "user": "aleksamagicka",
+        "content": "eyes",
+        "createdAt": "2026-02-06T14:01:36.4260625Z"
+      },
+      {
+        "user": "viceice",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260627Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260629Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:01:36.4260631Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:01:36.4260632Z"
+      },
+      {
+        "user": "AlexNosk",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260634Z"
+      },
+      {
+        "user": "maartenmensink",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260635Z"
+      },
+      {
+        "user": "sandcastle",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260636Z"
+      },
+      {
+        "user": "justinjhayes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260637Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260638Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:01:36.4260639Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "rocket",
+        "createdAt": "2026-02-06T14:01:36.426064Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "eyes",
+        "createdAt": "2026-02-06T14:01:36.4260641Z"
+      },
+      {
+        "user": "pipe01",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:36.4260642Z"
+      },
+      {
+        "user": "appleneko2001",
+        "content": "eyes",
+        "createdAt": "2026-02-06T14:01:36.4260643Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 367428176,
+        "author": "jcyuan",
+        "body": "Ahhhh. a tip although not related to this topic (but it takes a little of my time to settle things done, so this is just for those who are not familiar with linux OS like me):\r\nyum install libfontconfig1-dev will do nothing because there is no such entry. (as mentioned in [https://github.com/mono/SkiaSharp/wiki/Building-on-Linux](https://github.com/mono/SkiaSharp/wiki/Building-on-Linux) by @mattleibow )\r\napt-get is only for ubuntu while yum is for redhat (CentOS)\r\nso on RH please do:\r\nyum install **fontconfig** instead\r\nand for OpenGL lib:\r\nyum install libGL  **(note: I\u0027m not sure whether this one is corresponding to libglu1-mesa-dev or not)**\r\n\r\nso steps to install libSkiaSharp for your CentOS:\r\n1, copy the published .so file by @mattleibow to your NetCore container folder on your OS [https://github.com/mono/SkiaSharp/releases/tag/v1.59.3](https://github.com/mono/SkiaSharp/releases/tag/v1.59.3)\r\n2, ldd libSkiaSharp.so to inspect dependencies (normally it will only show libfontconfig.so.1 not found)\r\n3, yum install fontconfig\r\n4, yum install libGL (emmm, have to be confirmed)\r\n\r\nActually i found that the lib works well after only setp 3 is done. (maybe I do not use some of OpenGL features?)\r\n\r\ndone, what a good day.\r\n",
+        "createdAt": "2018-02-21T18:43:18",
+        "reactions": [
+          {
+            "user": "gavinfang-fi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:26.5852967Z"
+          }
+        ]
+      },
+      {
+        "id": 367464119,
+        "author": "mattleibow",
+        "body": "@jcyuan OpenGL is not **required**, but will be used if you are using the GPU surfaces. It is also loaded at runtime, and thus not needed at compile-time.",
+        "createdAt": "2018-02-21T20:38:50",
+        "reactions": []
+      },
+      {
+        "id": 367464463,
+        "author": "mattleibow",
+        "body": "@jcyuan Could the package name for fontconfig may differ across distros?",
+        "createdAt": "2018-02-21T20:40:07",
+        "reactions": []
+      },
+      {
+        "id": 367580654,
+        "author": "jcyuan",
+        "body": "@mattleibow I don\u0027t know, actually once installed, I found the lib you mentioned \u0027libfontconfig.so.1\u0027 is located in /usr/lib64/ path, and actually the \u0027libSkiaSharp.so\u0027 uses it correctly as the ldd command shows libSkiaSharp.so refers to this path.\r\nso I think that is only a different package name used between apt-get and yum?",
+        "createdAt": "2018-02-22T06:29:10",
+        "reactions": []
+      },
+      {
+        "id": 375963269,
+        "author": "mattleibow",
+        "body": "To make life easier for everyone, I moved code around and added a new target to the GN files. Now, the native \u0060libSkiaSharp\u0060 build is done with GN and ninja directly: https://github.com/mono/SkiaSharp/wiki/Building-on-Linux",
+        "createdAt": "2018-03-25T11:28:20",
+        "reactions": []
+      },
+      {
+        "id": 387283085,
+        "author": "mattleibow",
+        "body": "Just linking some repos here that do raspberry things:\r\n - https://github.com/terwoord/skiasharp-raspberry\r\n - https://github.com/toburger/skiasharp-raspberry/releases/tag/arm",
+        "createdAt": "2018-05-08T04:47:28",
+        "reactions": []
+      },
+      {
+        "id": 443351549,
+        "author": "wuzzeb",
+        "body": "Just FYI, I just used SkiaSharp.NativeAssets.Linux version 1.68.0-preview28 from nuget on ArchLinux and basic drawing works!  I haven\u0027t done extensive testing, but the library does initialize and I can draw on a canvas and export the SKImage to a PNG.",
+        "createdAt": "2018-11-30T21:55:36",
+        "reactions": []
+      },
+      {
+        "id": 443468385,
+        "author": "mattleibow",
+        "body": "That is great news!",
+        "createdAt": "2018-12-01T23:48:55",
+        "reactions": []
+      },
+      {
+        "id": 444388208,
+        "author": "knocte",
+        "body": "Quoting from https://github.com/mono/SkiaSharp/releases/tag/v1.68.0:\r\n\r\n\u003E More builds can be requested by leaving a comment on #453.\r\n\r\nI\u0027m wondering, what if I want to use SkiaSharp.Views.Forms in Linux? Do I need a Linux flavour of this nuget (https://www.nuget.org/packages/SkiaSharp.Views.Forms) or is it enough to have the SkiaSharp.NativeAssets.Linux dll in the same folder of the app?\r\n\r\nThanks",
+        "createdAt": "2018-12-05T07:38:03",
+        "reactions": []
+      },
+      {
+        "id": 444491721,
+        "author": "mattleibow",
+        "body": "The SkiaSharp.Views.Forms NuGet is the managed views for Xamarin.Forms, and SkiaSharp.NativeAssets.Linux is the native engine. The reason that you may not have the GTK# working is that we don\u0027t yet support that. See #379 ",
+        "createdAt": "2018-12-05T13:51:22",
+        "reactions": []
+      },
+      {
+        "id": 445020220,
+        "author": "kieronlanning",
+        "body": "\u002B1 for an Alpine NuGet build/ package please...!",
+        "createdAt": "2018-12-06T20:34:23",
+        "reactions": [
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072329Z"
+          },
+          {
+            "user": "dr3s",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072332Z"
+          },
+          {
+            "user": "sandcastle",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072333Z"
+          },
+          {
+            "user": "viceice",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072432Z"
+          },
+          {
+            "user": "gezhl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072442Z"
+          },
+          {
+            "user": "FarshanAhamed",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072443Z"
+          },
+          {
+            "user": "devsuperman",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072444Z"
+          },
+          {
+            "user": "fresnault",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072445Z"
+          },
+          {
+            "user": "Sin333",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072446Z"
+          },
+          {
+            "user": "purplepiranha",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:28.6072447Z"
+          }
+        ]
+      },
+      {
+        "id": 446024483,
+        "author": "nicolasr75",
+        "body": "Another link for the Raspberry PI enthusiasts. I have an ARM built here:\r\n\r\nhttps://github.com/nicolasr75/libSkiaSharpArm\r\n\r\nI will try to update it as soon as possible to 1.68.0. \r\nIt has been tested with .NET Core 2.1 and Avalonia UI.\r\nWould be great of course if it would be available in this repo.",
+        "createdAt": "2018-12-11T00:16:16",
+        "reactions": []
+      },
+      {
+        "id": 446392283,
+        "author": "LordBenjamin",
+        "body": "\u002B1 for a Raspberry  Pi build\r\n\r\n@nicolasr75  looking forward to seeing your 1.68.0 ARM build - I\u0027m really struggling to get it built myself. How did you go about building it?",
+        "createdAt": "2018-12-11T22:47:57",
+        "reactions": []
+      },
+      {
+        "id": 446401959,
+        "author": "nicolasr75",
+        "body": "@LordBenjamin check this issue https://github.com/mono/SkiaSharp/issues/633 where I detailed most of the steps for 1.60.3",
+        "createdAt": "2018-12-11T23:26:46",
+        "reactions": []
+      },
+      {
+        "id": 448604685,
+        "author": "danielbisar",
+        "body": "Debian - the nuget package does not restore any *.so files yet but the download version from https://github.com/mono/SkiaSharp/releases will work.",
+        "createdAt": "2018-12-19T13:56:14",
+        "reactions": []
+      },
+      {
+        "id": 448695959,
+        "author": "mattleibow",
+        "body": "It should work with Debian. Is this a. NET Core app or a net45 desktop app? ",
+        "createdAt": "2018-12-19T18:24:05",
+        "reactions": []
+      },
+      {
+        "id": 450497754,
+        "author": "mattleibow",
+        "body": "By @LordBenjamin in https://github.com/mono/SkiaSharp/issues/633#issuecomment-450494394\r\n\r\n\u003E Adding a step-by-step summary since it\u0027s taken me quite a while to work through this:\r\n\u003E \r\n\u003E \u0060\u0060\u0060bash\r\n\u003E # check out skia and depot_tools as per https://github.com/mono/SkiaSharp/wiki/Building-on-Linux\r\n\u003E git clone git clone https://github.com/mono/skia.git -b v1.68.0-preview28\r\n\u003E git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git\r\n\u003E \r\n\u003E # check out RPI compilers as per https://github.com/mono/SkiaSharp/issues/633#issuecomment-420025558 and add to path\r\n\u003E git clone https://github.com/raspberrypi/tools.git\r\n\u003E export PATH=\u0022$PATH:\u003Cpath-to-rpi-checkout\u003E/tools/arm-bcm2708/arm-linux-gnueabihf/bin\u0022\r\n\u003E \r\n\u003E # installed libfontconfig on my RPI and then copied\r\n\u003E # fcfreetype.h,  fcprivate.h and  fontconfig.h\r\n\u003E # to\r\n\u003E # \u003Cpath-to-rpi-checkout\u003E/tools/arm-bcm2708/arm-linux-gnueabihf/arm-linux-gnueabihf/include/fontconfig\r\n\u003E \r\n\u003E # copied\r\n\u003E # libfontconfig.a  libfontconfig.so  libfontconfig.so.1  libfontconfig.so.1.8.0\r\n\u003E # to\r\n\u003E # \u003Cpath-to-rpi-checkout\u003E/tools/arm-bcm2708/arm-linux-gnueabihf/arm-linux-gnueabihf/lib\r\n\u003E \r\n\u003E # would it be possible to avoid the copy steps by installing libfontconfig:armhf directly on the build machine? I tried but couldn\u0027t get it to install\r\n\u003E \r\n\u003E # change to skia directory - all work done here from now on\r\n\u003E cd skia\r\n\u003E \r\n\u003E # run git-sync-deps script (as per normal instructions)\r\n\u003E python tools/git-sync-deps\r\n\u003E \r\n\u003E # modified command line to use ARM cross-compilers from the RPI tools\r\n\u003E ./bin/gn gen \u0027out/linux/x64\u0027 --args=\u0027\r\n\u003E     cc = \u0022arm-linux-gnueabihf-gcc\u0022\r\n\u003E     cxx = \u0022arm-linux-gnueabihf-g\u002B\u002B\u0022\r\n\u003E     is_official_build=true skia_enable_tools=false\r\n\u003E     target_os=\u0022linux\u0022 target_cpu=\u0022arm\u0022\r\n\u003E     skia_use_icu=false skia_use_sfntly=false skia_use_piex=true\r\n\u003E     skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false\r\n\u003E     skia_enable_gpu=true\r\n\u003E     extra_cflags=[ \u0022-DSKIA_C_DLL\u0022 ]\r\n\u003E     linux_soname_version=\u002268.0.0\u0022\u0027\r\n\u003E \r\n\u003E # compile\r\n\u003E ../depot_tools/ninja \u0027SkiaSharp\u0027 -C \u0027out/linux/x64\u0027\r\n\u003E \u0060\u0060\u0060",
+        "createdAt": "2018-12-29T14:46:38",
+        "reactions": []
+      },
+      {
+        "id": 450498729,
+        "author": "LordBenjamin",
+        "body": "Need to figure out how to get the ARM  \u0060libfontconfig\u0060 files onto the build machine without having to copy them from a Raspian installation on a Pi.\r\n\r\nI did try \u0060sudo apt-get install libfontconfig:armhf\u0060, but I couldn\u0027t get that to work under Ubuntu 18.04.1 LTS (missing package repos).",
+        "createdAt": "2018-12-29T15:02:37",
+        "reactions": []
+      },
+      {
+        "id": 450499036,
+        "author": "LordBenjamin",
+        "body": "Here\u0027s the binary that I built earlier in case it\u0027s useful to anyone.\r\n\r\n[libSkiaSharp_1.68.0_armhf.zip](https://github.com/mono/SkiaSharp/files/2716766/libSkiaSharp_1.68.0_armhf.zip)\r\n\r\n**Edit:** Replaced the \u00601.68.0-preview28\u0060 build with a new .so built from the stable tag that @mattleibow created.",
+        "createdAt": "2018-12-29T15:08:04",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:30.163542Z"
+          }
+        ]
+      },
+      {
+        "id": 450500183,
+        "author": "mattleibow",
+        "body": "@LordBenjamin where does the image (or whatever they use to set up the hardware) live? It _might_ be possible to download some image or zip with the OS and copy out the files we need...",
+        "createdAt": "2018-12-29T15:27:30",
+        "reactions": []
+      },
+      {
+        "id": 450502970,
+        "author": "mattleibow",
+        "body": "@LordBenjamin just an FYI, I noticed you were using the preview tag of skia - I forgot to push the tag of the stable release at the time so you should be good to go with \u0060v1.68.0\u0060 now.",
+        "createdAt": "2018-12-29T16:10:56",
+        "reactions": [
+          {
+            "user": "LordBenjamin",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:01:30.5194737Z"
+          }
+        ]
+      },
+      {
+        "id": 450517615,
+        "author": "LordBenjamin",
+        "body": "Various images available for download at https://www.raspberrypi.org/downloads/raspbian/. I don\u0027t remember if \u0060libfontconfig\u0060 is installed by default. The image is pretty large as well (4GB\u002B).\r\n\r\nMy (naive) preference is to download \u0060libfontconfig\u0060 directly from the Raspian package feed. It\u0027s a Debian based OS, so there are presumably tools that can retrieve and extract the package. We can then copy the files into the right place in the \u0060tools\u0060 folder.",
+        "createdAt": "2018-12-29T20:23:21",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:30.7221822Z"
+          }
+        ]
+      },
+      {
+        "id": 450525641,
+        "author": "LordBenjamin",
+        "body": "@mattleibow I\u0027ve edited my comment on #633 to include missing steps that I noticed when rebuilding from the stable branch. Can you copy into your comment above (https://github.com/mono/SkiaSharp/issues/453#issuecomment-450497754) please?",
+        "createdAt": "2018-12-29T22:41:57",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:30.9276898Z"
+          }
+        ]
+      },
+      {
+        "id": 450525989,
+        "author": "mattleibow",
+        "body": "@LordBenjamin the package feed is probably the correct thing to do... downloading the entire OS is probably something only an idiot would say ;)",
+        "createdAt": "2018-12-29T22:47:50",
+        "reactions": []
+      },
+      {
+        "id": 450530042,
+        "author": "sergeystoma",
+        "body": "Is there any danger distributing an optimized Clang Linux build instead of GCC based? Rebuilding from scratch using wiki instructions with Clang (--args=\u0027cc=\u0022clang\u0022 cxx=\u0022clang\u002B\u002B\u0022 extra_cflags=[ \u0022-DSKIA_C_DLL\u0022, \u0022-O3\u0022]\u0027) yields up to 10x performance improvement vs SkiaSharp.NativeAssets.Linux packages on some code paths",
+        "createdAt": "2018-12-30T00:10:11",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:31.3339011Z"
+          }
+        ]
+      },
+      {
+        "id": 450550723,
+        "author": "mattleibow",
+        "body": "I will look into this. I saw the comment on skia-discuss and it looks to be getting a higher priority by the day. ",
+        "createdAt": "2018-12-30T10:10:22",
+        "reactions": []
+      },
+      {
+        "id": 452184307,
+        "author": "IvanJosipovic",
+        "body": "\u002B1 for Alpine support.",
+        "createdAt": "2019-01-08T05:54:18",
+        "reactions": []
+      },
+      {
+        "id": 452768745,
+        "author": "EraYaN",
+        "body": "I took the instructions @LordBenjamin provided, and made a dirty but working script in this repo: https://github.com/EraYaN/EraYaN.SkiaSharp.NativeAssets.LinuxArm\r\n\r\nIt\u0027s not published yet since it might move or turn out to be badly made, but it might be nice inspiration for anyone looking to build an arm32 binary.\r\n\r\nTheoretically replacing the raspbian tools for an arm64 one would let you build one for arm64 as well. Just remember to download the correct debs.\r\n\r\nEDIT: Well skia seems to be broken on aarch64 due to a gcc issue. So clang in the only option for now. \u0022Work around\u0022",
+        "createdAt": "2019-01-09T16:54:27",
+        "reactions": [
+          {
+            "user": "LordBenjamin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:31.9910483Z"
+          },
+          {
+            "user": "LordBenjamin",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:01:31.9910489Z"
+          }
+        ]
+      },
+      {
+        "id": 452959054,
+        "author": "mattleibow",
+        "body": "Yeah. I really need to switch to clang for Linux. I have a issue for that https://github.com/mono/SkiaSharp/issues/686 but haven\u0027t the opportunity yet. It should be mostly easy as we are just using the gn tools and nothing special.\r\n\r\n",
+        "createdAt": "2019-01-10T03:35:45",
+        "reactions": []
+      },
+      {
+        "id": 457209521,
+        "author": "mattleibow",
+        "body": "@sergeystoma I am looking to switch to clang in #767 :)\r\n\r\n@LordBenjamin have you tried clang with arm/rasbian? ",
+        "createdAt": "2019-01-24T14:10:21",
+        "reactions": []
+      },
+      {
+        "id": 457215503,
+        "author": "LordBenjamin",
+        "body": "@mattleibow I had quite a few attempts with clang and didn\u0027t manage to build successfully. However, I was probably holding it wrong! I\u0027ll give it another go now that I\u0027ve got a working process to compare against.",
+        "createdAt": "2019-01-24T14:27:32",
+        "reactions": []
+      },
+      {
+        "id": 457225107,
+        "author": "mattleibow",
+        "body": "This was just updated with ARM: https://www.nuget.org/packages/Avalonia.Skia.Linux.Natives/1.68.0.2",
+        "createdAt": "2019-01-24T14:54:01",
+        "reactions": [
+          {
+            "user": "nicolasr75",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:01:32.8087003Z"
+          }
+        ]
+      },
+      {
+        "id": 457323185,
+        "author": "EraYaN",
+        "body": "The Aarch64 build is also included in this one: https://www.nuget.org/packages/Jellyfin.SkiaSharp.NativeAssets.LinuxArm\r\n",
+        "createdAt": "2019-01-24T19:22:50",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:01:32.9925586Z"
+          }
+        ]
+      },
+      {
+        "id": 457329527,
+        "author": "mattleibow",
+        "body": "Sweet!\r\n\r\nIf anyone knows of any good builds/release out there, let me know and I\u0027ll link to it at the top. Or maybe a community wiki where if you have some build for some device/architecture you can send a PR. And again, votes so I can take it to PMs to talk priorities.",
+        "createdAt": "2019-01-24T19:40:48",
+        "reactions": []
+      },
+      {
+        "id": 459675367,
+        "author": "jurijr",
+        "body": "Having difficulties running latest native compiled file (1.68.0) on CentOS 7 under net471. \r\n\r\n\u0060System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---\u003E System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: libSkiaSharp\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_colortype_get_default_8888()\r\n  at SkiaSharp.SKImageInfo..cctor () [0x00000] in \u003Ca0087d635ef94b8aaf6fe37af2df4f8d\u003E:0 \r\n   --- End of inner exception stack trace ---\u0060\r\n\r\nldd output\r\n\u0060./libSkiaSharp.so: /lib64/libstdc\u002B\u002B.so.6: version CXXABI_1.3.8 not found (required by ./libSkiaSharp.so)\r\n./libSkiaSharp.so: /lib64/libstdc\u002B\u002B.so.6: version GLIBCXX_3.4.21 not found (required by ./libSkiaSharp.so)\u0060\r\n\r\nLast known \u0022official\u0022 native build that appears to be working was 1.60.3.\r\nSorry if I had misunderstood supported platforms by this build.",
+        "createdAt": "2019-02-01T10:21:04",
+        "reactions": []
+      },
+      {
+        "id": 459700174,
+        "author": "mattleibow",
+        "body": "Thanks for reporting. No, you are correct, it is a bug. It was also reported that Debian 9 was not working. SkiaSharp required a compiler/tooling bump so I bumped the Ubuntu from 14 to 16. It appears that we have quite a few older machines still in the wild.\r\n\r\nI am hoping #767 will fix not only the issues on older distros, but also give a massive performance increase.",
+        "createdAt": "2019-02-01T11:59:05",
+        "reactions": [
+          {
+            "user": "jurijr",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:33.5870467Z"
+          },
+          {
+            "user": "jcyuan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:33.5870472Z"
+          }
+        ]
+      },
+      {
+        "id": 463127217,
+        "author": "vanbukin",
+        "body": "\u002B1 for alpine3.8",
+        "createdAt": "2019-02-13T09:36:12",
+        "reactions": [
+          {
+            "user": "kieronlanning",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:33.810149Z"
+          },
+          {
+            "user": "dr3s",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:33.8101495Z"
+          },
+          {
+            "user": "sandcastle",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:33.8101496Z"
+          },
+          {
+            "user": "viceice",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:33.8101498Z"
+          }
+        ]
+      },
+      {
+        "id": 463128277,
+        "author": "sfairat15",
+        "body": "\u002B1 for alpine3.8",
+        "createdAt": "2019-02-13T09:39:25",
+        "reactions": [
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.0471066Z"
+          }
+        ]
+      },
+      {
+        "id": 463257658,
+        "author": "IvanJosipovic",
+        "body": "\u002B for alpine 3.8 and 3.9",
+        "createdAt": "2019-02-13T16:06:00",
+        "reactions": [
+          {
+            "user": "viceice",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.2255516Z"
+          },
+          {
+            "user": "gezhl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.225552Z"
+          },
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.2255521Z"
+          }
+        ]
+      },
+      {
+        "id": 466978068,
+        "author": "kobellem",
+        "body": "\u002B1 for alpine",
+        "createdAt": "2019-02-25T11:32:07",
+        "reactions": [
+          {
+            "user": "maartenvdd",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.4558594Z"
+          },
+          {
+            "user": "aleksamagicka",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.4558599Z"
+          },
+          {
+            "user": "viceice",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.45586Z"
+          },
+          {
+            "user": "gezhl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.4558602Z"
+          },
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.4558603Z"
+          }
+        ]
+      },
+      {
+        "id": 466979327,
+        "author": "maartenvdd",
+        "body": "\u002B1 for alpine",
+        "createdAt": "2019-02-25T11:36:27",
+        "reactions": [
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.6431704Z"
+          }
+        ]
+      },
+      {
+        "id": 466979606,
+        "author": "lakshmanav",
+        "body": "\u002B1 for alpine",
+        "createdAt": "2019-02-25T11:37:24",
+        "reactions": [
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:34.8348285Z"
+          }
+        ]
+      },
+      {
+        "id": 466980527,
+        "author": "woutergovaert",
+        "body": "\u002B1 for alpine",
+        "createdAt": "2019-02-25T11:40:46",
+        "reactions": [
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:35.0331896Z"
+          }
+        ]
+      },
+      {
+        "id": 475911160,
+        "author": "ababutski",
+        "body": "\u002B1 alpine =)",
+        "createdAt": "2019-03-23T22:45:23",
+        "reactions": [
+          {
+            "user": "viceice",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:35.2327143Z"
+          },
+          {
+            "user": "kotovaleksandr",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:35.2327147Z"
+          },
+          {
+            "user": "gezhl",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:35.2327149Z"
+          },
+          {
+            "user": "vanbukin",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:35.232715Z"
+          }
+        ]
+      },
+      {
+        "id": 491034294,
+        "author": "goelze",
+        "body": "I built the library for Alpine 3.9: https://www.nuget.org/packages/Goelze.SkiaSharp.NativeAssets.AlpineLinux\r\nThe repository is [here](https://github.com/gman4455/Goelze.SkiaSharp.NativeAssets.AlpineLinux), and can theoretically be modified to build for different versions of Alpine.",
+        "createdAt": "2019-05-09T19:26:28",
+        "reactions": []
+      },
+      {
+        "id": 493562991,
+        "author": "claunia",
+        "body": "I tried adding it to a ASP.NET Core 2.1 project to no avail it doesn\u0027t get copied to the output folder.",
+        "createdAt": "2019-05-17T18:58:42",
+        "reactions": []
+      },
+      {
+        "id": 493570276,
+        "author": "jcyuan",
+        "body": "@claunia yes the \u0060dotnet\u0060 only copies the CLR dll to your publish folder, it won\u0027t copy the .so file, you have to manually copy it to your linux (etc OS), and do \u0060ldd\u0060 command to inspect to see if some related .so missing in your OS, refer to: https://github.com/mono/SkiaSharp/issues/453#issuecomment-367428176",
+        "createdAt": "2019-05-17T19:22:24",
+        "reactions": []
+      },
+      {
+        "id": 493648973,
+        "author": "knocte",
+        "body": "\u003E it doesn\u0027t get copied to the output folder.\r\n\r\nThat issue is filed at https://github.com/mono/SkiaSharp/issues/794, where I mention the workaround I used.",
+        "createdAt": "2019-05-18T05:06:38",
+        "reactions": []
+      },
+      {
+        "id": 504813567,
+        "author": "mattleibow",
+        "body": "@gman4455 sweet! Thanks!",
+        "createdAt": "2019-06-24T02:07:26",
+        "reactions": []
+      },
+      {
+        "id": 504813760,
+        "author": "mattleibow",
+        "body": "I am thinking of moving most of the build logic for Linux out of the normal cake build and just using docker everywhere. This way, we can add a new Linux platform simply by adding a new Dockerfile.",
+        "createdAt": "2019-06-24T02:08:34",
+        "reactions": [
+          {
+            "user": "goelze",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:36.3757885Z"
+          },
+          {
+            "user": "jcyuan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:36.3757888Z"
+          },
+          {
+            "user": "benosmond",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:36.375789Z"
+          }
+        ]
+      }
+    ]
+  }
 }

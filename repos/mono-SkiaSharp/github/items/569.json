@@ -24,5 +24,157 @@
   "updatedAt": "2022-08-19T15:02:12",
   "closedAt": "2018-12-29T16:04:17",
   "commentCount": 16,
-  "reactionCount": 2
+  "reactionCount": 2,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:23.3874428Z",
+    "reactions": [
+      {
+        "user": "Suplanus",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:03:23.3874489Z"
+      },
+      {
+        "user": "thisisthekap",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:03:23.3874498Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 417576204,
+        "author": "duyduong",
+        "body": "I have the same issue. 100% reproduce by invalidating canvas view and redraw",
+        "createdAt": "2018-08-31T07:21:22",
+        "reactions": [
+          {
+            "user": "Suplanus",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:20.3360141Z"
+          },
+          {
+            "user": "thisisthekap",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:20.3360145Z"
+          }
+        ]
+      },
+      {
+        "id": 427122436,
+        "author": "mattleibow",
+        "body": "I was not able to reproduce this. Are you able to attach a small repro or maybe the values that it crashes on?\r\n\r\nIt may be the case that something is zero or out of order. If this is the case, I probably need to add some more error checking to make sure it doesn\u0027t just crash randomly, but does so with a real .NET exception.",
+        "createdAt": "2018-10-04T18:27:38",
+        "reactions": []
+      },
+      {
+        "id": 440949339,
+        "author": "Suplanus",
+        "body": "Here is a small app with the issue:\r\nhttps://github.com/jsuarezruiz/MyTripCountdown\r\n\r\nThe crash raised after a minute not at the first draw.",
+        "createdAt": "2018-11-22T08:23:21",
+        "reactions": []
+      },
+      {
+        "id": 444176334,
+        "author": "mattleibow",
+        "body": "This is something that we will be looking at in the future.",
+        "createdAt": "2018-12-04T17:03:12",
+        "reactions": []
+      },
+      {
+        "id": 449185961,
+        "author": "thisisthekap",
+        "body": "Same issue here. Also 100% reproducible. Also reproducible using 1.68.",
+        "createdAt": "2018-12-21T00:23:36",
+        "reactions": []
+      },
+      {
+        "id": 449285165,
+        "author": "mattleibow",
+        "body": "All right. I finally managed to reproduce this. It has to be a physical device running the later versions of iOS.\r\nIn an effort to find out what was crashing, I enabled the generation of the dSYM (https://github.com/mono/SkiaSharp/pull/742) - which is actually good for everyone.\r\n\r\nNow, the app no longer crashes. No idea what caused the crash, but it is \u0022fixed\u0022. Once the PR builds and is merged, then I will release a preview to see if that solves all the problems for everyone.\r\n\r\nThanks for reporting this issue, the world is soon going to be (hopefully) a better place.",
+        "createdAt": "2018-12-21T07:11:18",
+        "reactions": []
+      },
+      {
+        "id": 449308728,
+        "author": "thisisthekap",
+        "body": "@mattleibow So the issue was \u0022fixed\u0022 by enabling the generation of dSYM?",
+        "createdAt": "2018-12-21T08:27:27",
+        "reactions": []
+      },
+      {
+        "id": 449320175,
+        "author": "mattleibow",
+        "body": "Appears so. That is very worrying. But, I did update Xcode on my local machine. I\u0027m building on CI now. If the problem comes back from that artifacts, then it may be a clang optimization issue that was fixed on the new Xcode. I shall check and track it.\r\n\r\nThis has happened before, mostly on Android though. And Linux. ",
+        "createdAt": "2018-12-21T09:02:22",
+        "reactions": [
+          {
+            "user": "thisisthekap",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:21.7547356Z"
+          }
+        ]
+      },
+      {
+        "id": 450487961,
+        "author": "mattleibow",
+        "body": "Sadly, no deal. I am still having a look at this - I thought things were working, but it is very deceiving. The crashes are very random, and the app still seems to \u0022run\u0022 (more like just exist) after the crash.\r\nVery random. Sometimes the app will run fine for a minute, other times it crashes before the timer even ticks. I am trying to isolate the cause, maybe something is getting disposed mid-draw.\r\nWill keep you updated.",
+        "createdAt": "2018-12-29T12:01:47",
+        "reactions": []
+      },
+      {
+        "id": 450502537,
+        "author": "mattleibow",
+        "body": "RIGHT! Solutions!\r\n\r\nSo, I figured out what was happening - at least on my side. I believe that the NuGet update was not actually going through and it was still using v1.60.x. As a result, the issue was still from the previous release. I am not sure what the fix was since it is 8 releases later, and many compiler changes, but v1.68.x is working.\r\n\r\nWhen you update the NuGet, make sure to delete the obj/bin from all the solution projects. I am not sure if this is a NuGet or Visual Studio issue, but it actually does not use the new native files. \r\n\r\nThe way I found this out was when trying a \u0060SKGLView\u0060 view to see if this was just a raster bug or affects GPU as well. I then got an \u0022entrypoint not found\u0022 exception for something that should be there as it was added to the initial 1.68.x release.",
+        "createdAt": "2018-12-29T16:04:17",
+        "reactions": []
+      },
+      {
+        "id": 450502634,
+        "author": "mattleibow",
+        "body": "If this is still an issue, just re-open.",
+        "createdAt": "2018-12-29T16:05:50",
+        "reactions": []
+      },
+      {
+        "id": 454922509,
+        "author": "NirmalSubedi17",
+        "body": "This is still crashing sometimes! We never know when it does crash though. Using the latest version of Xamarin Forms and SkiaSharp (1.68...) . Getting the exact same issue! \r\nI\u0027m using the very fast timer of 10 miliseconds to produce the circle while user touches on the screen until it makes complete circle.",
+        "createdAt": "2019-01-16T20:11:33",
+        "reactions": []
+      },
+      {
+        "id": 455038645,
+        "author": "mattleibow",
+        "body": "@NirmalSubedi17 Is this happening with the countdown timer app? Are you able to attach a repro if it is happening for you, but not the countdown app?",
+        "createdAt": "2019-01-17T04:29:38",
+        "reactions": []
+      },
+      {
+        "id": 455332534,
+        "author": "NirmalSubedi17",
+        "body": "@mattleibow  I copied the same Circular Progress Control. I didn\u0027t modified that control at all.  I\u0027m starting the Progress if user touch some button. While he keeps touching the button; I start the timer (10 milisec) and it increases the Progress by 0.01f only! \r\nIf he keeps holding that button until the progress get 1 (100%) then we do something else. But if user leaves the touch before it reaches 100% then it will reset again to 0. and so forth.\r\n\r\nIt was crashing yesterday; Now i just tried crashing it but it\u0027s not. Its a same build! Nothing changed except the days that I\u0027m testing! Weird!",
+        "createdAt": "2019-01-17T21:08:25",
+        "reactions": []
+      },
+      {
+        "id": 455417577,
+        "author": "mattleibow",
+        "body": "I also noticed the issue because after I updated, the IDE kept using the old native library - which had the issue. Did you update recently? If so, did you actually do a clean and rebuild? Or have you restarted VS since the update?",
+        "createdAt": "2019-01-18T03:41:37",
+        "reactions": []
+      },
+      {
+        "id": 492737947,
+        "author": "David-Lamar",
+        "body": "For those either 1. Still suffering from this issue or 2. Using an older version of SkiaSharp and cannot update for whatever reason:\r\n\r\nOn a project where I work, we were running into this (We are forced to user an older version of SkiaSharp). It seems to be something with the handling of floating point handing under the hood.\r\n\r\nOur solution was to use something along the lines of:\r\n\u0060\u0060\u0060\r\nfloat CenterX = (float)Math.Round(bounds.Width / 2.0, 2, MidpointRounding.ToEven);\r\nfloat CenterY = (float)Math.Round(bounds.Height / 2.0, 2, MidpointRounding.ToEven);\r\nvar shader = SKShader.CreateSweepGradient(new SKPoint(CenterX, CenterY), colors, new float[] { 0.0F, (float)Math.Round(\u003CSomePercentage\u003E, 2, MidpointRounding.ToEven) });\r\n\u0060\u0060\u0060\r\n\r\nOur use case is a circle where the color changes depending on a percentage. We\u0027ve noticed that older versions of SkiaSharp don\u0027t handle certain floating point numbers very well. We\u0027ve had fairly good success with this rounding method though (even though it\u0027s obviously not ideal).",
+        "createdAt": "2019-05-15T17:00:03",
+        "reactions": [
+          {
+            "user": "Jhultink",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:23.336997Z"
+          }
+        ]
+      }
+    ]
+  }
 }

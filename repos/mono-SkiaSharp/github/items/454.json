@@ -23,5 +23,46 @@
   "updatedAt": "2022-08-19T18:01:28",
   "closedAt": "2018-02-23T12:59:26",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:38.1107247Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 367896280,
+        "author": "mattleibow",
+        "body": "You will never guess... skia just clips it so that it can fit into it\u0027s underlying type:\r\nhttps://github.com/google/skia/blob/master/src/core/SkScan_Hairline.cpp#L48-L62\r\n\r\nThey even have a note:\r\n\u003E // We have to pre-clip the line to fit in a SkFixed, so we just chop\r\n\u003E // the line. TODO find a way to actually draw beyond that range.\r\n\r\nI am not quite sure what to do at this point... You can still draw in that area (like a rect), just not with lines.",
+        "createdAt": "2018-02-23T03:06:29",
+        "reactions": []
+      },
+      {
+        "id": 367896926,
+        "author": "mattleibow",
+        "body": "I asked a question here and we will see what they say: https://groups.google.com/forum/#!topic/skia-discuss/VDuN76yRFvQ\r\n",
+        "createdAt": "2018-02-23T03:11:09",
+        "reactions": []
+      },
+      {
+        "id": 367899711,
+        "author": "ChengmingLu",
+        "body": "Appreciate the info and post to google forum!\r\n\r\nFYI, I tested with SKRect and ended up having the same issue.\r\n As indicated in the forum discussion, I think it\u0027s not only a limitation to SKPath but SKSurface as well?",
+        "createdAt": "2018-02-23T03:31:11",
+        "reactions": []
+      },
+      {
+        "id": 368002325,
+        "author": "mattleibow",
+        "body": "I just go confirmation that this will happen with lines:\r\n\r\n\u003E Yes, I confirm that Skia\u0027s CPU backend will always clip the path into 32k x 32k bounds because we\u0027re using SkFixed (16.16 format) for scan conversion. The clip may be even smaller (8k x 8k) if 4x4 supersampling AA is used. We\u0027re thinking about adding tiling to completely remove that limitation.\r\n",
+        "createdAt": "2018-02-23T12:58:07",
+        "reactions": []
+      },
+      {
+        "id": 368002613,
+        "author": "mattleibow",
+        "body": "I am going to close this as this is a core issue with skia. As soon as they fix it, it will magically appear in SkiaSharp.\r\n\r\nFor workarounds, I suggest discussing your case on their forums as they will be able to better help you.",
+        "createdAt": "2018-02-23T12:59:26",
+        "reactions": []
+      }
+    ]
+  }
 }

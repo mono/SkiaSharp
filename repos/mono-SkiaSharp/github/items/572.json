@@ -24,5 +24,43 @@
   "updatedAt": "2022-08-19T15:02:10",
   "closedAt": "2020-10-14T00:35:43",
   "commentCount": 3,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:26.3039925Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 637522844,
+        "author": "Danielku15",
+        "body": "I personally decided to rather load the native libs manually before start using SkiaSharp. It gives quite nice control about where to exactly load it from: \r\n\r\nSimplified version of the helper class I\u0027m using: \r\n\u0060\u0060\u0060cs\r\npublic static class SkiaHelper\r\n{\r\n\t[DllImport(\u0022kernel32.dll\u0022, CharSet = CharSet.Auto, SetLastError = true)]\r\n\tprivate static extern IntPtr LoadLibrary(string libname);\r\n\r\n\tpublic static void LoadNativeLibrary()\r\n\t{\r\n\t\tvar libSkiaSharpPath = Path.GetDirectoryName(typeof(Program).Assembly.Location);\r\n\t\tstring runtime;\r\n\t\tswitch (Environment.OSVersion.Platform)\r\n\t\t{\r\n\t\t\tcase PlatformID.MacOSX:\r\n\t\t\t\tlibSkiaSharpPath = Path.Combine(libSkiaSharpPath, \u0022runtimes\u0022, \u0022osx\u0022, \u0022native\u0022,\r\n\t\t\t\t\t\u0022libSkiaSharp.dylib\u0022);\r\n\t\t\t\tbreak;\r\n\t\t\tcase PlatformID.Unix:\r\n\t\t\t\truntime = IntPtr.Size == 4 ? \u0022tizen-x86\u0022 : \u0022tizen-x64\u0022;\r\n\t\t\t\tlibSkiaSharpPath = Path.Combine(libSkiaSharpPath, \u0022runtimes\u0022, runtime, \u0022native\u0022,\r\n\t\t\t\t\t\u0022libSkiaSharp.so\u0022);\r\n\t\t\t\tbreak;\r\n\t\t\tdefault:\r\n\t\t\t\truntime = IntPtr.Size == 4 ? \u0022win-x86\u0022 : \u0022win-x64\u0022;\r\n\t\t\t\tlibSkiaSharpPath = Path.Combine(libSkiaSharpPath, \u0022runtimes\u0022, runtime, \u0022native\u0022,\r\n\t\t\t\t\t\u0022libSkiaSharp.dll\u0022);\r\n\t\t\t\tbreak;\r\n\t\t}\r\n\r\n\t\tConsole.WriteLine($\u0022Loading native lib from \u0027{libSkiaSharpPath}\u0027\u0022);\r\n\t\t\r\n\t\t// for .net core\r\n\t\t// var lib = System.Runtime.InteropServices.NativeLibrary.Load(libSkiaSharpPath);\r\n\t\t// for .net framework\r\n\t\tvar lib = LoadLibrary(libSkiaSharpPath);\r\n\t\t\r\n\t\tConsole.WriteLine(lib == IntPtr.Zero\r\n\t\t\t? $\u0022Loading native lib from \u0027{libSkiaSharpPath}\u0027 failed\u0022\r\n\t\t\t: $\u0022Loading native lib from \u0027{libSkiaSharpPath}\u0027 successful\u0022\r\n\t\t);\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThe manual load is picked up by SkiaSharp. The different runtimes can be adopted based on the platforms you actually use and which libs you want to load. ",
+        "createdAt": "2020-06-02T12:53:54",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:25.8506309Z"
+          },
+          {
+            "user": "Peru-S",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:25.8506313Z"
+          }
+        ]
+      },
+      {
+        "id": 708084007,
+        "author": "mattleibow",
+        "body": "I have recently worked a bit on the targets and the library to get them to work far better with .NET Framework.\r\nHowever, I am not sure if there is a way to reliably and generically load the libSkiaSharp.dll from the NuGet package - for the designer. \r\n\r\nThe good thing is that it works with the .NET Core designer.\r\n\r\nI am going to close this as the most probably way to make use of SkiaSharp in the old .NET Framework designer is to probably use the \u0060DesignMode\u0060 on controls and not actually draw anything.\r\n\r\nIf there is another way to get the net4x designer to work, then please open a new issue with any suggestions. I will also see what I can do with the designer teams.",
+        "createdAt": "2020-10-14T00:35:43",
+        "reactions": []
+      },
+      {
+        "id": 1123041068,
+        "author": "Peru-S",
+        "body": "@Danielku15 Thank you for the great solution. \r\nThis is a major problem using a project that works on Windows 10 on a PC; the same project doesn\u0027t work on say, Windows 10 on a M1 because of the way SkiaSharp looks up the DLL.\r\nCould @Danielku15 \u0027s solution be incorporated as part of SkiaSharp itself please? @mattleibow :) \r\nI haven\u0027t experienced a similar problem with other components, so it seems particular to SkiaSharp (native lib).\r\nthank you in advance!\r\n",
+        "createdAt": "2022-05-11T00:23:48",
+        "reactions": []
+      }
+    ]
+  }
 }

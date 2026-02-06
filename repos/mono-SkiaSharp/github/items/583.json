@@ -14,5 +14,18 @@
   "updatedAt": "2022-08-19T15:02:00",
   "closedAt": "2018-07-22T03:19:31",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:37.9000787Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 406838095,
+        "author": "mattleibow",
+        "body": "SkiaSharp is already quite small, usually between 4-5 MB per platform architecture. The last few releases was actually a bug, see #573 and #584 \r\n\r\nTo further reduce the size, you could have a look at building your own. We typically include everything because we don\u0027t know what you are going to be using. You can remove quite a bit.\r\n\r\nIt is relatively simple to build your own: https://github.com/mono/SkiaSharp/blob/v1.60.2/cake/BuildExternals.cake#L532-L559\r\n\r\nIn most cases, it is just a case of running \u0060gn\u0060 to generate the build files - here you pass along all the bits that you want. and then either run \u0060ninja\u0060 or \u0060ndk-build\u0060. In fact, this is how most people build for Linux: https://github.com/mono/SkiaSharp/wiki/Building-on-Linux#building",
+        "createdAt": "2018-07-22T03:19:31",
+        "reactions": []
+      }
+    ]
+  }
 }

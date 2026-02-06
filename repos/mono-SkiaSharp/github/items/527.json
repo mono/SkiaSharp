@@ -19,5 +19,57 @@
   "updatedAt": "2022-08-19T15:02:28",
   "closedAt": "2020-03-08T07:50:38",
   "commentCount": 4,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:57.0232322Z",
+    "reactions": [
+      {
+        "user": "mgnslndh",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:57.0232397Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 393033293,
+        "author": "pauldendulk",
+        "body": "There is some information in this article: [Pixels and Device-Independent Units](https://docs.microsoft.com/en-us/xamarin/xamarin-forms/user-interface/graphics/skiasharp/basics/pixels).\r\n\r\nI don\u0027t work with Forms so measured the above values in WPF and Android.\r\n\r\n**WPF with IgnorePixelScale = false**\r\n- SkiaCanvas.ActualWidth = 785\r\n- SkiaCanvas.CanvasSize.Width = 982\r\n- args.Info.Width = 982\r\n\r\n**WPF with IgnorePixelScale = true**\r\n- SkiaCanvas.ActualWidth = 785\r\n- SkiaCanvas.CanvasSize.Width = 785\r\n- args.Info.Width = 785\r\n\r\nI think UWP it has the same pattern. On Android the pattern is different however.\r\n\r\n**Android with IgnorePixelScale = false**\r\n- _skCanvasView.Width = 1080\r\n- _skCanvasView.CanvasSize.Width = 1080\r\n- args.Info.Width = 1080\r\n\r\n**Android with IgnorePixelScale = true**\r\n- _skCanvasView.Width = 1080\r\n- _skCanvasView.CanvasSize.Width = 360\r\n- args.Info.Width = 360\r\n\r\nI now understand part of my confusion. On Android I get coordinates in device pixels and on the other platforms I get device independent units. This is why I failed to implement my platforms in a consistent way. \r\n\r\nThe article above states\r\n\r\n\u003E If you\u0027d prefer to work entirely in device-independent units, you can do so by setting the IgnorePixelScaling property of the SKCanvasView to true. However, you might not like the results. SkiaSharp renders the graphics on a smaller device surface, with a pixel size equal to the size of the view in device-independent units. \r\n\r\nSo, is it correct to say that IgnorePixelScale could be read as UseDeviceIndependentUnits? \r\n\r\nWhat I also find confusing is that with something called \u0027Ignore...\u0027 I expect things to stay the same, but on Android I does actually alter my coordinate system.\r\n\r\n \r\n \r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2018-05-30T05:17:18",
+        "reactions": []
+      },
+      {
+        "id": 596176954,
+        "author": "pauldendulk",
+        "body": "For me this item can be closed. There is documentation here on IgnorePixelScaling.\r\nhttps://docs.microsoft.com/en-us/dotnet/api/skiasharp.views.ios.skcanvasview.ignorepixelscaling?view=skiasharp-views-1.68.1.\r\n\r\nFor our purposes in Mapsui IgnorePixelScaling was just the wrong way of scaling. It caused pixelation as described in the docs. We use SKCanvas.Scale(float sx, float sy) instead.\r\n\r\nAnother part of the confusion was that on Android we get coordinates in device pixels and on the other platforms we get coordinates in device independent units. We correct for this with our PixelDensity field.\r\n\r\n",
+        "createdAt": "2020-03-08T07:50:38",
+        "reactions": []
+      },
+      {
+        "id": 599263529,
+        "author": "mattleibow",
+        "body": "@pauldendulk yeah... unfortunately I made bad decisions about that one. No idea why I did it that way, it was always bad.\r\n\r\nI am thinking of re-working that one maybe in the v2 release. This should be the same code, but the correct implementation. Effectively transparent to the user.",
+        "createdAt": "2020-03-15T20:56:10",
+        "reactions": [
+          {
+            "user": "pauldendulk",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:56.7758169Z"
+          }
+        ]
+      },
+      {
+        "id": 599412792,
+        "author": "pauldendulk",
+        "body": "\u003E I am thinking of re-working that one maybe in the v2 release. This should be the same code, but the correct implementation. Effectively transparent to the user.\r\n\r\nah, great. I also found the name IgnorePixelScaling not very clear. Perhaps something like AutoScale would be better. ",
+        "createdAt": "2020-03-16T08:44:14",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:56.9729225Z"
+          }
+        ]
+      }
+    ]
+  }
 }

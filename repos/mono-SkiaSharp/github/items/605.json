@@ -14,5 +14,42 @@
   "updatedAt": "2022-08-19T15:01:49",
   "closedAt": "2018-08-15T19:40:25",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:53.2930957Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 413311642,
+        "author": "mattleibow",
+        "body": "I think this is a \u0022feature\u0022 of the native skia, so we can\u0027t really do anything about it:\r\nhttps://fiddle.skia.org/c/51eda9db1e0301a62118213718767e4c\r\n\r\nBut, we can because we are software developers! If you really need to measure the space, maybe wrap the text with some character, say the period \u0060.\u0060, and then just subtract 2x:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar text = \u0022  SkiaSharp  \u0022;\r\nvar wrapper = \u0022.\u0022;\r\n\r\nvar wrapperWidth = paint.MeasureText(wrapper);\r\nvar textWidth = paint.MeasureText(wrapper \u002B text \u002B wrapper);\r\n\r\nvar textWidth = textWidth - (wrapperWidth \u002B wrapperWidth);\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-08-15T19:40:25",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:53.0411721Z"
+          },
+          {
+            "user": "Ghasan",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:53.0411725Z"
+          }
+        ]
+      },
+      {
+        "id": 494326383,
+        "author": "prasanthelvr",
+        "body": "@mattleibow Thanks for your answer. Previously, I have used SKRect value which is not included the white spaces. After that, I have checked the returned float value from [SKPaint.MeasureText(\u0022 Test \u0022, ref rect)](https://docs.microsoft.com/en-us/dotnet/api/skiasharp.skpaint.measuretext?view=skiasharp-1.68.0#SkiaSharp_SKPaint_MeasureText_System_String_SkiaSharp_SKRect__) which returns proper width value including while spaces.\r\n\r\n",
+        "createdAt": "2019-05-21T10:03:04",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:53.2437196Z"
+          }
+        ]
+      }
+    ]
+  }
 }

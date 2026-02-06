@@ -14,5 +14,102 @@
   "updatedAt": "2022-08-19T18:01:22",
   "closedAt": "2018-05-28T14:42:35",
   "commentCount": 13,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:46.924135Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 370688290,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I will have a look.\r\nIn the meantime, this is what I was doing: https://github.com/mono/SkiaSharp/blob/master/samples/Basic/Gtk/SkiaSharpSample/gtk-gui/gui.stetic",
+        "createdAt": "2018-03-06T07:26:13",
+        "reactions": []
+      },
+      {
+        "id": 370775324,
+        "author": "define-private-public",
+        "body": "Is this were the \u0060SkiaSharp\u0060 project(s) where included in the same solution?  If that\u0027s what I need to do, I won\u0027t mind doing it as a temporary fix.",
+        "createdAt": "2018-03-06T13:06:55",
+        "reactions": []
+      },
+      {
+        "id": 372851557,
+        "author": "define-private-public",
+        "body": "What do you think you\u0027re timeline is to work on this?  I\u0027m fairly interested in using Skia instead of Cairo for a project I\u0027m working on.  I wouldn\u0027t mind helping out, but I tried grabbing a copy of this repo (at the latest release) and it failed to fully build on my Linux system.",
+        "createdAt": "2018-03-13T23:19:33",
+        "reactions": []
+      },
+      {
+        "id": 375922919,
+        "author": "mattleibow",
+        "body": "I have been looking at this, and I am seeing weird things on my machines now, but not your error.\r\n\r\nWhat I did notice is that I have to restart monodevelop in order to get the item to display in the Toolbox. Using packages.config, the IDE sees the widget after a restart. If I used \u0060\u003CPackageReference\u003E\u0060, the widget never appeared, but I could manually add the widget:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003Cwidget class=\u0022SkiaSharp.Views.Gtk.SKWidget\u0022 id=\u0022skiaView\u0022\u003E\r\n  \u003Cproperty name=\u0022MemberName\u0022 /\u003E\r\n\u003C/widget\u003E\r\n\u0060\u0060\u0060\r\n\r\nI never got your exception, maybe try rebuilding the project or deleting the obj and bin folders.\r\n\r\nThe issue that I am seeing is that it crashes the app when it tries to swap the red and blue color components before drawing... This was working since I had a demo app that I released to my team, and other users of SkiaSharp are using this just fine. However, on my machines now it just dies... And, not consistently either - If I create a sample app on macOS, it runs fine, but if I add the same code to the unit tests, it crashes with a malloc error. Both my VM and my WSL die with a memory corruption error.\r\n\r\nAt this point, my IDE is working fine, but fails at runtime with a malloc error - which is not what you have.\r\n\r\nIs there a stack trace that you can share that may help?",
+        "createdAt": "2018-03-24T20:33:50",
+        "reactions": []
+      },
+      {
+        "id": 375923887,
+        "author": "mattleibow",
+        "body": "I found the error:\r\nhttps://github.com/mono/SkiaSharp/blob/v1.60.0/source/SkiaSharp.Views/SkiaSharp.Views.Gtk/SKWidget.cs#L46\r\n\r\n\u0060\u0060\u0060csharp\r\nSKSwizzle.SwapRedBlue(pixmap.GetPixels(), pixmap.GetPixels(), info.BytesSize);\r\n\u0060\u0060\u0060\r\n\r\nI am indicating that the number of pixels is the number of bytes, but this is not correct. The number of pixels is width*height. This probably won\u0027t fix the issue from @define-private-public , but will make sure the app will actually run when the widget finally appears.\r\n\r\nThe reason it works in some cases is that I may have been lucky because the data that I was swapping might have been empty data.",
+        "createdAt": "2018-03-24T20:49:08",
+        "reactions": []
+      },
+      {
+        "id": 375936601,
+        "author": "define-private-public",
+        "body": "Do you still me to give you that stack trace?  Aside from that, I\u0027ve got something you may want to try out:\r\n\r\nI\u0027m working on a project right now that has some custom Gtk widgets defined in it.  I had to add an explicit reference to \u0060libstetic\u0060 to the project.  My custom widgets weren\u0027t working in other projects until I added the reference.  e.g.:\r\n\r\n\u0060\u0060\u0060\r\n\u003CReference Include=\u0022libstetic\u0022\u003E\r\n  \u003CHintPath\u003E..\\..\\..\\..\\..\\..\\..\\usr\\lib\\monodevelop\\AddIns\\MonoDevelop.GtkCore\\libstetic.dll\u003C/HintPath\u003E\r\n\u003C/Reference\u003E\r\n\u0060\u0060\u0060\r\n\r\nCan you try adding that to the project for the Gtk DLL and see if it changes anything?",
+        "createdAt": "2018-03-25T00:52:36",
+        "reactions": []
+      },
+      {
+        "id": 375954234,
+        "author": "mattleibow",
+        "body": "Did you manage to get the SKWidget to work?",
+        "createdAt": "2018-03-25T08:34:54",
+        "reactions": []
+      },
+      {
+        "id": 375981838,
+        "author": "define-private-public",
+        "body": "Um, no.  Actually, I haven\u0027t been able to build the project on my machine, I tried following the steps and it failed.  I\u0027ll give it another go and report what I\u0027ve got.",
+        "createdAt": "2018-03-25T16:08:45",
+        "reactions": []
+      },
+      {
+        "id": 389041789,
+        "author": "define-private-public",
+        "body": "Sorry for not replying for a while.  I was toying with the latest release and the Gtk Sample included.  After adding NuGet packages to \u0060SkiaSharp\u0060 and \u0060SkiaSharp Views\u0060 to the project, I was able to get it to build, and run, but and error gets thrown:\r\n\r\n\u0060\u0060\u0060\r\nLoaded assembly: /home/me/Desktop/SKTest/Basic/Gtk/SkiaSharpSample/bin/Debug/SkiaSharpSample.exe\r\nLoaded assembly: /usr/lib/mono/gac/gtk-sharp/2.12.0.0__35e10195dab3c99f/gtk-sharp.dll [External]\r\nLoaded assembly: /usr/lib/mono/gac/glib-sharp/2.12.0.0__35e10195dab3c99f/glib-sharp.dll [External]\r\nLoaded assembly: /usr/lib/mono/gac/atk-sharp/2.12.0.0__35e10195dab3c99f/atk-sharp.dll [External]\r\nLoaded assembly: /usr/lib/mono/gac/System/4.0.0.0__b77a5c561934e089/System.dll [External]\r\nLoaded assembly: /home/me/Desktop/SKTest/Basic/Gtk/SkiaSharpSample/bin/Debug/SkiaSharp.Views.Gtk.dll [External]\r\nLoaded assembly: /home/me/Desktop/SKTest/Basic/Gtk/SkiaSharpSample/bin/Debug/SkiaSharp.Views.Desktop.dll [External]\r\nLoaded assembly: /usr/lib/mono/gac/gdk-sharp/2.12.0.0__35e10195dab3c99f/gdk-sharp.dll [External]\r\nLoaded assembly: /usr/lib/mono/gac/Mono.Posix/4.0.0.0__0738eb9f132ed756/Mono.Posix.dll [External]\r\nLoaded assembly: /home/me/Desktop/SKTest/Basic/Gtk/SkiaSharpSample/bin/Debug/SkiaSharp.dll [External]\r\nException in Gtk# callback delegate\r\n  Note: Applications can use GLib.ExceptionManager.UnhandledException to handle the exception.\r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKImageInfo\u0027 threw an exception. ---\u003E System.DllNotFoundException: libSkiaSharp\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi:sk_colortype_get_default_8888 ()\r\n  at SkiaSharp.SKImageInfo..cctor () [0x00000] in \u003C7d2e3bd6812e4881b5c49a3f02b476aa\u003E:0 \r\n   --- End of inner exception stack trace ---\r\n  at (wrapper managed-to-native) System.Object:__icall_wrapper_mono_generic_class_init (intptr)\r\n  at SkiaSharp.Views.Gtk.SKWidget.OnExposeEvent (Gdk.EventExpose evnt) [0x00034] in \u003C510d9f92232b4af09f32eaa2b08842ce\u003E:0 \r\n  at Gtk.Widget.exposeevent_cb (System.IntPtr widget, System.IntPtr evnt) [0x00014] in \u003C7a41aae9f05e45b7b5a8cedfab67f8ff\u003E:0 \r\n  at GLib.ExceptionManager.RaiseUnhandledException (System.Exception e, System.Boolean is_terminal) [0x00000] in \u003C5a439e0caae7469886e7119d9f6bc621\u003E:0 \r\n  at Gtk.Widget.exposeevent_cb (System.IntPtr widget, System.IntPtr evnt) [0x00000] in \u003C7a41aae9f05e45b7b5a8cedfab67f8ff\u003E:0 \r\n  at Gtk.Application.gtk_main () [0x00000] in \u003C7a41aae9f05e45b7b5a8cedfab67f8ff\u003E:0 \r\n  at Gtk.Application.Run () [0x00000] in \u003C7a41aae9f05e45b7b5a8cedfab67f8ff\u003E:0 \r\n  at SkiaSharpSample.MainClass.Main (System.String[] args) [0x00012] in /home/me/Desktop/SKTest/Basic/Gtk/SkiaSharpSample/Program.cs:13 \r\n\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-05-15T04:49:21",
+        "reactions": []
+      },
+      {
+        "id": 392395298,
+        "author": "define-private-public",
+        "body": "Hey, it working now. Thanks for getting the fix in!  When grabbing \u00601.60.1\u0060 from NuGet \u0060SKWidget\u0060 does show up in the GUI designer and I\u0027m able to drag n\u0027 drop use it.  Though, I have noticed some quirks though.\r\n\r\nI had a simple single widget window setup, with the widget sizing set \u0060auto fill=false, expanding=true, fill=true\u0060, with no signals/events attached.  Some garbage data was rendered:\r\n![leftovers](https://user-images.githubusercontent.com/4551425/40592939-a12d12b8-61f2-11e8-8274-47328ebaa8f1.png)\r\n\r\nResizing the window though gets rid of them.\r\n\r\nIf I turned the sizing back to the defaults, there were some specs still visible along the top:\r\n![sepcs](https://user-images.githubusercontent.com/4551425/40592975-e6905bd0-61f2-11e8-9596-719dfc6a6299.png)\r\n\r\nThe last thing though is a bit more important to me, redrawing (when resizing the window) isn\u0027t smooth.  It\u0027s flickering a lot, here\u0027s a video of how it\u0027s working:\r\n![skiasharp-not-so-smooth](https://user-images.githubusercontent.com/4551425/40593046-89891d68-61f3-11e8-8973-80437eceb815.gif)\r\n\r\nIIRC, Skia renders much faster than Cairo, but I\u0027ve never had this before when resizing a Cairo drawing area.  I\u0027m hoping to use SkiaSharp at 60 FPS.",
+        "createdAt": "2018-05-28T01:20:00",
+        "reactions": []
+      },
+      {
+        "id": 392437735,
+        "author": "mattleibow",
+        "body": "I see. Thanks for all the info.\r\nI may just be rendering all this wrong. I am not that much of a GTK# expert.\r\n\r\nI will see if I can get this better. Could you open a new issue to track this?\r\n\r\n_note: The garbage bits is basically the empty memory. Nothing is cleared initially, you have to do that yourself._",
+        "createdAt": "2018-05-28T07:01:55",
+        "reactions": []
+      },
+      {
+        "id": 392544983,
+        "author": "define-private-public",
+        "body": "Sure thing.",
+        "createdAt": "2018-05-28T14:42:35",
+        "reactions": []
+      },
+      {
+        "id": 392594782,
+        "author": "mattleibow",
+        "body": "Thanks!",
+        "createdAt": "2018-05-28T19:58:04",
+        "reactions": []
+      }
+    ]
+  }
 }

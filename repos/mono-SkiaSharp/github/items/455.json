@@ -14,5 +14,39 @@
   "updatedAt": "2022-08-19T18:01:27",
   "closedAt": "2018-05-10T12:21:05",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:39.5487289Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 386917603,
+        "author": "mattleibow",
+        "body": "I know this has been a long time, but I still have not been able to repro this. What platform was this on? Are you using Xamarin.Forms?",
+        "createdAt": "2018-05-06T21:39:28",
+        "reactions": []
+      },
+      {
+        "id": 386983942,
+        "author": "Ollhax",
+        "body": "That\u0027s odd. I\u0027ll test some more on my end, and see if I can get a clean repro.\r\n\r\nI\u0027m on Win 10, working on my own engine (i.e. drawing to texture with OpenGL).",
+        "createdAt": "2018-05-07T07:35:53",
+        "reactions": []
+      },
+      {
+        "id": 388037564,
+        "author": "Ollhax",
+        "body": "I found the problem. Skia seems to be changing more OpenGL settings since the last version, in particular the glFrontFace setting. I added code to swap it back after drawing the canvas, and now things work as expected. Sorry for wasting your time on this one - closing the task now.",
+        "createdAt": "2018-05-10T12:21:04",
+        "reactions": []
+      },
+      {
+        "id": 388047936,
+        "author": "mattleibow",
+        "body": "No problem. The issues that you notice will help everyone else.",
+        "createdAt": "2018-05-10T13:07:34",
+        "reactions": []
+      }
+    ]
+  }
 }

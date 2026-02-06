@@ -15,5 +15,158 @@
   "updatedAt": "2022-08-19T15:02:32",
   "closedAt": "2018-11-29T17:32:21",
   "commentCount": 12,
-  "reactionCount": 4
+  "reactionCount": 4,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:51.6435703Z",
+    "reactions": [
+      {
+        "user": "AndersMad",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:51.6435774Z"
+      },
+      {
+        "user": "mattleibow",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:51.6435782Z"
+      },
+      {
+        "user": "WorkingRobot",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:51.6435787Z"
+      },
+      {
+        "user": "deremakif",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:02:51.6435793Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 442923077,
+        "author": "mattleibow",
+        "body": "As of v1.68, this is not a problem anymore. Google has improved the resize APIs and consolidated them into the \u0060SKPixmap.ScalePixels\u0060.\r\n\r\nThen, we added more members to the 3 imaging types (\u0060SKPixmap\u0060, \u0060SKImage\u0060, \u0060SKBitmap\u0060) to be consistent:\r\n - \u0060ScalePixels\u0060 scales the current pixels and puts the result into the provided container - typically a \u0060SKPixmap\u0060\r\n - \u0060Resize\u0060 scales the current and returns them in the container that resized them - right now, just for \u0060SKBitmap\u0060",
+        "createdAt": "2018-11-29T17:32:21",
+        "reactions": []
+      },
+      {
+        "id": 444863114,
+        "author": "AndersMad",
+        "body": "Q \u0026 FYI for others who scale:\r\n\r\nThe \u0060ScalePixels\u0060 takes \u0060SKFilterQuality\u0060 - but the old \u0060SKPixmap.Resize\u0060 could take \u0060SKBitmapResizeMethod.Lanczos3\u0060. In the new version Lanczos3 is converted to \u0060SKFilterQuality.Medium\u0060.\r\n\r\n\u0060Lanczos3\u0060 is better imho, even compared to \u0060SKFilterQuality.High\u0060 for smaller images / preserves sharpness (did a blind test with a few colleagues).. \r\n\r\nIs there an alternative way than \u0060SKFilterQuality.High\u0060 to bring back the better and sharper scaling of images like \u0060Lanczos3\u0060? Or maybe this is just how Skia rolls now .oO( making Chrome images scale with lower quality in the future ).\r\n\r\nLook at face and dress (click on image to see org. to compare):\r\n\r\nNew \u0060SKFilterQuality.High\u0060:\r\n![h-q](https://user-images.githubusercontent.com/4574570/49585615-20111580-f95f-11e8-9289-991dd820232b.png)\r\n\r\nOld \u0060SKBitmapResizeMethod.Lanczos3\u0060:\r\n![lanczos3](https://user-images.githubusercontent.com/4574570/49585616-20a9ac00-f95f-11e8-8261-faf9d1672ade.png)\r\n\r\n**UPDATE!**: I applied a small sharpening filter (\u0060SKImageFilter\u0060) and now down-scaled images is actually better than before - maybe in a \u0022cheat\u0022 way(?)..\r\n\r\nNew with sharpen filter:\r\n![h-q-f](https://user-images.githubusercontent.com/4574570/49597687-3fb73680-f97d-11e8-88e8-0f12f853e040.png)\r\n",
+        "createdAt": "2018-12-06T13:01:22",
+        "reactions": [
+          {
+            "user": "dsyno",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:49.7268257Z"
+          },
+          {
+            "user": "CShepartd",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:49.726826Z"
+          },
+          {
+            "user": "omaximenco",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:49.7268261Z"
+          },
+          {
+            "user": "deremakif",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:49.7268262Z"
+          },
+          {
+            "user": "Seabizkit",
+            "content": "eyes",
+            "createdAt": "2026-02-06T14:02:49.7268263Z"
+          }
+        ]
+      },
+      {
+        "id": 444966397,
+        "author": "dsyno",
+        "body": "Thanks @AndersMad for testing this. So with your updated comment, what combination are you using now?... \u0060SKFilterQuality.High\u0060 plus the sharpening filter?\r\n\r\nP.S. Please include the code you\u0027re using for the \u0022sharpening filter\u0022. Perhaps it only became available in v1.68 because I don\u0027t see it available anywhere.",
+        "createdAt": "2018-12-06T17:55:17",
+        "reactions": []
+      },
+      {
+        "id": 444973518,
+        "author": "AndersMad",
+        "body": "@dsyno before i used \u0060ScalePixels\u0060 with some mem overhead when the image needed to scale and crop.. But now I create a canvas and do a \u0060DrawBitmap\u0060 on that - think this has less overhead when dealing with offsets and cropping etc. First mode was crisp before update - and the last mode was not usable as it was very blurry. After update they where both semi blurry :/ win some lose some.. Overall the performance is noticeable better though.\r\n\r\nNow I i do a \u0060SKImageFilter.CreateMatrixConvolution\u0060 with a tiny bit of sharpening before the draw - and it does seem to work nicely when scaling big to small.\r\n\r\nSo for now  I have this (hope this \u0022hacky cheat mode\u0022 helps):\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var surface = SKSurface.Create(info)) {\r\n\tusing (var canvas = surface.Canvas) {\r\n\t\tusing (var paint = new SKPaint()) {\r\n\t\t\tpaint.FilterQuality = SKFilterQuality.High;\r\n\t\t\tpaint.IsAntialias = false;\r\n\t\t\tpaint.IsDither = false;\r\n\r\n\t\t\tif (codec.EncodedOrigin == SKEncodedOrigin.RightTop) {\r\n\t\t\t\tcanvas.RotateDegrees(90);\r\n\t\t\t\tcanvas.Translate(0, -w);\r\n\t\t\t}\r\n\t\t\t\r\n\t\t\tvar kernel = new float[9] {\r\n\t\t\t\t   0, -.1f,    0,\r\n\t\t\t\t-.1f, 1.4f, -.1f,\r\n\t\t\t\t   0, -.1f,    0,\r\n\t\t\t};\r\n\r\n\t\t\tvar kernelSize = new SKSizeI(3, 3);\r\n\t\t\tvar kernelOffset = new SKPointI(1, 1);\r\n\r\n\t\t\tpaint.ImageFilter = SKImageFilter.CreateMatrixConvolution(\r\n\t\t\t\tkernelSize, kernel, 1f, 0f, kernelOffset,\r\n\t\t\t\tSKMatrixConvolutionTileMode.Clamp, false);\r\n\r\n\t\t\tcanvas.DrawBitmap(bmp,\r\n\t\t\t\tSKRect.Create(0, 0, w, h),\r\n\t\t\t\tSKRect.Create(-thumbInfo.OffsetX, -thumbInfo.OffsetY, thumbInfo.NewWidth, thumbInfo.NewHeight),\r\n\t\t\t\tpaint\r\n\t\t\t);\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-12-06T18:14:14",
+        "reactions": []
+      },
+      {
+        "id": 444976504,
+        "author": "dsyno",
+        "body": "Wow. Bummer all that has to be done @AndersMad, instead of Skia resize just working properly.\r\n\r\nIt doesn\u0027t seem this was fixed properly afterall, @mattleibow. It appears it still resizes blurry and hoops have to be jumped through to get a good resize.",
+        "createdAt": "2018-12-06T18:23:27",
+        "reactions": []
+      },
+      {
+        "id": 445200661,
+        "author": "AndersMad",
+        "body": "NOTE: It is less blurry than before - it\u0027s just missing some \u0022crispyness\u0022 - and my cheat way actually scored higher in the blind test. \r\n\r\nI believe its 100% the Skia and has nothing to do with SkiaSharp. My guess is - that if you use GPU/OpenGL it will be crispy - its the software scaling that\u0027s off. As Skia is primarily used for Chrome canvas - GPU rendering is the focus as almost all browsers/devices has that - and software part just a bloater (again, just me guessing). Not using Lanczos3 might be the thing that makes it faster.",
+        "createdAt": "2018-12-07T11:10:20",
+        "reactions": []
+      },
+      {
+        "id": 445313084,
+        "author": "mattleibow",
+        "body": "I have been following along and I believe that @AndersMad is probably using the resize idea as it was actually designed. SkiaSharp (and skia) is primarily a drawing API, not an image processor, and as such, they have split concepts into separate steps.\r\nIf you are using an image processing library, this is typically the case where things are batched or single-run. And, you often provide some image, perform a task (such as resize), and then output the best quality.\r\nWith SkiaSharp, you are actually going to be working with a different idea. You start with nothing and then draw what you want as fast as possible, with good-enough quality. Since this is meant for drawing a UI, chances are the user won\u0027t notice any minor flaws (as can be seen in the general improvement for the basic bitmap resize).\r\n\r\nHowever!\r\n\r\nSkiaSharp does not leave you there and provides a series of filters, shaders and effects to help provide an even better image. And this is where I think @AndersMad comes in. The base resize will always be faster that the previous version because that is what it is designed to do - be fast. But, the user code will pull together the various features and make it the best as possible.\r\n\r\nI don\u0027t think that SkiaSharp will ever provide all the little operations to get the best image, as this is more for additional libraries or frameworks. Think of SkiaSharp as the _core_ drawing engine - it does the steps as fast as possible, but leaves the actual big chunks to libraries.",
+        "createdAt": "2018-12-07T17:55:26",
+        "reactions": [
+          {
+            "user": "AndersMad",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:50.6726609Z"
+          },
+          {
+            "user": "UweKeim",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:50.6726613Z"
+          },
+          {
+            "user": "wc-matteo",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:50.6726615Z"
+          }
+        ]
+      },
+      {
+        "id": 445314377,
+        "author": "mattleibow",
+        "body": "With regards to an additional library, I have been trying to collect together a few useful APIs that provide an additional layer of usefulness to SkiaSharp. Right now, there is just a few extra geometry and a basic path interpolation: https://github.com/mono/SkiaSharp.Extended/tree/master/SkiaSharp.Extended\r\n\r\nBut, I hope to slowly add features here to make things useful. One example would be a set of extension methods that could take the basic \u0060Resize\u0060 method and turn it into a real, high-quality process. Or even a new type that can be much more useful.\r\n\r\nIf this really is an issue that needs solving within the library, please open an issue there and share code and PRs. As that is a satellite library, it is much, much easier to work with as it just depends on a NuGet.\r\n\r\nhttps://github.com/mono/SkiaSharp.Extended\r\n",
+        "createdAt": "2018-12-07T17:59:55",
+        "reactions": []
+      },
+      {
+        "id": 445319096,
+        "author": "mattleibow",
+        "body": "If you create an issue in the extended repo, just link back to this so we have some code to start with and can initiate a discussion.",
+        "createdAt": "2018-12-07T18:17:06",
+        "reactions": []
+      },
+      {
+        "id": 445766990,
+        "author": "AndersMad",
+        "body": "This might be related: \u0022Anti-aliasing change between m65 and m69\u0022 https://groups.google.com/forum/#!topic/skia-discuss/QrJadRQR5A4 - only for CPU\r\n",
+        "createdAt": "2018-12-10T10:31:30",
+        "reactions": []
+      },
+      {
+        "id": 942335657,
+        "author": "Seabizkit",
+        "body": "@AndersMad please include the c# code you used... aka in ur update u say you applied SKImageFilter could you include code sample so i can see what u did",
+        "createdAt": "2021-10-13T13:58:25",
+        "reactions": []
+      },
+      {
+        "id": 1022393767,
+        "author": "Seabizkit",
+        "body": "@AndersMad could u please had the full code! so we can see how this is done.",
+        "createdAt": "2022-01-26T16:55:11",
+        "reactions": []
+      }
+    ]
+  }
 }

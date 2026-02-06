@@ -14,5 +14,65 @@
   "updatedAt": "2022-08-19T15:02:49",
   "closedAt": "2018-04-12T14:34:37",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:12.2214525Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 380407165,
+        "author": "mattleibow",
+        "body": "You may have to check the ARM and ARM64 boxes in the \u0022Individual components\u0022:\r\n\r\n![image](https://user-images.githubusercontent.com/1096616/38611872-2f4af066-3d85-11e8-96cb-4161fdff1da5.png)\r\n",
+        "createdAt": "2018-04-11T10:38:24",
+        "reactions": [
+          {
+            "user": "michaldobrodenka",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:11.1724172Z"
+          }
+        ]
+      },
+      {
+        "id": 380495600,
+        "author": "GeorgyRezchikov",
+        "body": "Thanks very much!\r\n\r\nBut I have 1 more question.\r\nI\u0027m trying to build a project for Andriod (SkiaSharpSample.sln Andriod) on Windows\r\n![image](https://user-images.githubusercontent.com/28917934/38626596-9948141e-3db5-11e8-8ec0-aa9a0ad44c91.png)\r\n\r\nI get an error:\r\n\u0060\u0060\u0060\r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tThe \u0022CreateNativeLibraryArchive\u0022 task failed unexpectedly.\r\nSystem.IO.DirectoryNotFoundException: Could not find a part of the path \u0027..\\..\\output\\native\\android\\arm64-v8a\\libHarfBuzzSharp.so\u0027.\r\n   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)\r\n   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)\r\n   at System.IO.File.Copy(String sourceFileName, String destFileName, Boolean overwrite)\r\n   at Xamarin.Android.Tools.Files.CopyIfChanged(String source, String destination)\r\n   at Xamarin.Android.Tasks.CreateNativeLibraryArchive.Execute()\r\n   at Microsoft.Build.BackEnd.TaskExecutionHost.Microsoft.Build.BackEnd.ITaskExecutionHost.Execute()\r\n   at Microsoft.Build.BackEnd.TaskBuilder.\u003CExecuteInstantiatedTask\u003Ed__26.MoveNext()\tHarfBuzzSharp.Android\t\t\t\r\n\r\n   \r\nSeverity\tCode\tDescription\tProject\tFile\tLine\tSuppression State\r\nError\t\tThe \u0022CreateNativeLibraryArchive\u0022 task failed unexpectedly.\r\nSystem.IO.DirectoryNotFoundException: Could not find a part of the path \u0027..\\..\\output\\native\\android\\arm64-v8a\\libSkiaSharp.so\u0027.\r\n   at System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)\r\n   at System.IO.File.InternalCopy(String sourceFileName, String destFileName, Boolean overwrite, Boolean checkHost)\r\n   at System.IO.File.Copy(String sourceFileName, String destFileName, Boolean overwrite)\r\n   at Xamarin.Android.Tools.Files.CopyIfChanged(String source, String destination)\r\n   at Xamarin.Android.Tasks.CreateNativeLibraryArchive.Execute()\r\n   at Microsoft.Build.BackEnd.TaskExecutionHost.Microsoft.Build.BackEnd.ITaskExecutionHost.Execute()\r\n   at Microsoft.Build.BackEnd.TaskBuilder.\u003CExecuteInstantiatedTask\u003Ed__26.MoveNext()\tSkiaSharp.Android\t\t\t\r\n\u0060\u0060\u0060\r\nI looked at the build log SkiaSharp:\r\n\r\n\r\n\u0060\u0060\u0060\r\n========================================\r\nEverything\r\n========================================\r\nExecuting task: Everything\r\nFinished executing task: Everything\r\n\r\nTask                          Duration            \r\n--------------------------------------------------\r\nexternals-angle-uwp           Skipped             \r\nexternals-harfbuzz            Skipped             \r\nexternals-init                00:00:01.4430322    \r\nexternals-uwp                 00:00:05.2655756    \r\nexternals-windows             00:00:03.0337583    \r\nexternals-osx                 Skipped             \r\nexternals-ios                 Skipped             \r\nexternals-tvos                Skipped             \r\nexternals-watchos             Skipped             \r\nexternals-android             Skipped             \r\nexternals-linux               Skipped             \r\nexternals-native              00:00:00.0004828    \r\nexternals                     00:00:00.0004161    \r\nlibs                          00:00:16.2721508    \r\nnuget                         00:00:11.8867662    \r\ntests                         00:00:43.8222085    \r\nsamples                       00:08:29.0243833    \r\nEverything                    00:00:00.0004422    \r\n\u0060\u0060\u0060\r\nIn the BuildExternals file, the condition is IsRunningOnMac ()\r\n\u0060\u0060\u0060\r\n// this builds the native C and C\u002B\u002B externals for Android\r\nTask (\u0022externals-android\u0022)\r\n    .IsDependentOn (\u0022externals-init\u0022)\r\n    .WithCriteria (IsRunningOnMac ())\r\n    .Does (() =\u003E \r\n\u0060\u0060\u0060\r\nHow can I run an Android project on Windows?\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n",
+        "createdAt": "2018-04-11T15:32:06",
+        "reactions": []
+      },
+      {
+        "id": 380808842,
+        "author": "mattleibow",
+        "body": "@GeorgyRezchikov At this point, I have not done any Android development on Windows. When we started this project, skia was not able to build on Windows. I opened an issue so we can check this out again and see if we can get more platforms building Android: https://github.com/mono/SkiaSharp/issues/488\r\n\r\nIn the mean time, you can just download the binaries for you version you are testing with: https://github.com/mono/SkiaSharp/releases\r\n\r\nFor example, if you want to use the pre-built binaries for Android v1.60.0:\r\n\r\n1. You can go to that release: https://github.com/mono/SkiaSharp/releases/tag/v1.60.0\r\n2. Go to the Mac CI for SkiaSharp: https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/328\r\n3. In the \u0022Azure Artifacts\u0022 link on the left, just look for the binaries:\r\n    - https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/328/Azure/processDownloadRequest/ArtifactsFor-328/abf9de57d9176e73a97e82a6402cfbd0e00127c5/output/native/android/armeabi-v7a/libSkiaSharp.so\r\n    - https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/328/Azure/processDownloadRequest/ArtifactsFor-328/abf9de57d9176e73a97e82a6402cfbd0e00127c5/output/native/android/arm64-v8a/libSkiaSharp.so\r\n    - https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/328/Azure/processDownloadRequest/ArtifactsFor-328/abf9de57d9176e73a97e82a6402cfbd0e00127c5/output/native/android/x86/libSkiaSharp.so\r\n    - https://jenkins.mono-project.com/view/Components/job/Components-SkiaSharp/328/Azure/processDownloadRequest/ArtifactsFor-328/abf9de57d9176e73a97e82a6402cfbd0e00127c5/output/native/android/x86_64/libSkiaSharp.so\r\n4. Download the various files and place them in the \u0060output/native/android/\u0060 directory\r\n\r\nThis is not perfect yet, but we are slowly getting there.",
+        "createdAt": "2018-04-12T13:40:47",
+        "reactions": []
+      },
+      {
+        "id": 380809152,
+        "author": "mattleibow",
+        "body": "Let me know if this helps.",
+        "createdAt": "2018-04-12T13:41:48",
+        "reactions": []
+      },
+      {
+        "id": 380822931,
+        "author": "GeorgyRezchikov",
+        "body": "I build and run the application on Windows.\r\nThanks very much!",
+        "createdAt": "2018-04-12T14:22:09",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "hooray",
+            "createdAt": "2026-02-06T14:02:11.9713614Z"
+          }
+        ]
+      },
+      {
+        "id": 380827788,
+        "author": "mattleibow",
+        "body": "Is there a reason you didn\u0027t use the NuGet instead of the samples. If you want the samples with NuGets instead of file references, it is attached to the release: https://github.com/mono/SkiaSharp/releases/download/v1.60.0/samples.zip",
+        "createdAt": "2018-04-12T14:35:54",
+        "reactions": []
+      }
+    ]
+  }
 }

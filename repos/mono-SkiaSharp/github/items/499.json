@@ -14,5 +14,85 @@
   "updatedAt": "2022-08-19T15:02:42",
   "closedAt": "2018-05-04T19:17:23",
   "commentCount": 9,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:27.9350513Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 386650648,
+        "author": "mattleibow",
+        "body": "Ah, you may be missing some libraries that are missing. Are you using .NET Core or Mono?",
+        "createdAt": "2018-05-04T16:14:34",
+        "reactions": []
+      },
+      {
+        "id": 386651150,
+        "author": "mattleibow",
+        "body": "Make sure you have installed fontconfig.",
+        "createdAt": "2018-05-04T16:16:20",
+        "reactions": []
+      },
+      {
+        "id": 386663029,
+        "author": "ldubrois",
+        "body": "It is running on net core with a runtime identifier set to debian-x64.\r\n\r\nIs there a way to identify all the dependencies required by SkiaSharp?",
+        "createdAt": "2018-05-04T16:56:58",
+        "reactions": []
+      },
+      {
+        "id": 386666005,
+        "author": "mattleibow",
+        "body": "It _should_ just be fontconfig, but you can check the dependencies with ldd/lddtree. But, it should just be fontconfig. If you are using GPU, the you will need to install OpenGL as well.",
+        "createdAt": "2018-05-04T17:08:27",
+        "reactions": []
+      },
+      {
+        "id": 386702840,
+        "author": "mattleibow",
+        "body": "I created a sample repo with a small container that should just work:\r\nhttps://github.com/mattleibow/SkiaSharp-Docker",
+        "createdAt": "2018-05-04T19:06:11",
+        "reactions": [
+          {
+            "user": "ldubrois",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:27.0786699Z"
+          },
+          {
+            "user": "funkyOne",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:27.0786703Z"
+          }
+        ]
+      },
+      {
+        "id": 386705553,
+        "author": "mattleibow",
+        "body": "Closing this as it is working in containers.\r\nFeel free to open another issue if there is a specific problem or question.",
+        "createdAt": "2018-05-04T19:17:21",
+        "reactions": []
+      },
+      {
+        "id": 386789171,
+        "author": "ldubrois",
+        "body": "Thanks a lot, I try that in our solution ASAP.",
+        "createdAt": "2018-05-05T08:19:04",
+        "reactions": []
+      },
+      {
+        "id": 386811595,
+        "author": "ldubrois",
+        "body": "Thanks for your sample, it now does load the library correctly but i encountered an another error : \r\n\u0060Unable to find an entry point named \u0027sk_bitmap_lock_pixels\u0027 in DLL \u0027libSkiaSharp\u0027\u0060.\r\n\r\nI found previous issues indicating you have to explicitly define what is used or not. Is it still correct ?\r\n\r\nIn our project, SkiaSharp is a dependency of Flexcel. Is there a way to know / list all the method used by Flexcell to get a complete list of the missing methods ?\r\n\r\nThanks.\r\n\r\n\r\n",
+        "createdAt": "2018-05-05T15:02:32",
+        "reactions": []
+      },
+      {
+        "id": 386821298,
+        "author": "mattleibow",
+        "body": "Ah, you may be using an incorrect version of the native library vs the managed library. The native API is entirely dependent on Google\u0027s skia. \r\n\r\nGoogle removed that particular method in v1.60. The previous version (v1.59.3) still has that method. You can download that native version here: https://github.com/mono/SkiaSharp/releases/tag/v1.59.3\r\n\r\nBut, just check the version that is currently in use and download that particular one.",
+        "createdAt": "2018-05-05T17:20:58",
+        "reactions": []
+      }
+    ]
+  }
 }

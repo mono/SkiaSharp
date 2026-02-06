@@ -14,5 +14,29 @@
   "updatedAt": "2022-08-19T15:01:52",
   "closedAt": "2018-08-15T19:31:37",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:51.0780941Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 413309358,
+        "author": "mattleibow",
+        "body": "This really depends on one thing: is the \u0060byte[]\u0060 an ENCODED image or just the raw pixel bytes?\r\n\r\nIf the is encoded, then we need to have a closer look, but I think you are talking about raw memory? In this case, it is quite simple, you are trying to decode an already decoded image.\r\n\r\nTo do this correctly, you just need to create a bitmap from the memory. The simplest would be to just copy the bytes into an \u0060SKData\u0060 object (move it into native memory) and use that:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (var data = SKData.CreateCopy(imageBuffer))\r\nusing (var original = new SKBitmap()) {\r\n    // create a new bitmap using the memory\r\n    original.InstallPixels(new SKImageInfo(oldWidth, oldHeight), data.Data);\r\n\r\n    // now resize\r\n    using (var resized = original.Resize(new SKImageInfo(width, height), SKBitmapResizeMethod.Lanczos3)) {\r\n        bufferOutput = resized.Bytes;\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nIf you don\u0027t want to copy and don\u0027t mind working with marshalling:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar gc = GCHandle.Alloc(imageBuffer, GCHandleType.Pinned);\r\ntry {\r\n    using (var original = new SKBitmap()) {\r\n        original.InstallPixels(new SKImageInfo(oldWidth, oldHeight), GCHandle.ToIntPtr(gc));\r\n        using (var resized = original.Resize(new SKImageInfo(width, height), SKBitmapResizeMethod.Lanczos3)) {\r\n            bufferOutput = resized.Bytes;\r\n        }\r\n    }\r\n} finally {\r\n    gc.Free();\r\n}\r\n\u0060\u0060\u0060\r\nIf you don\u0027t want to copy and don\u0027t mind working with pointers:\r\n\u0060\u0060\u0060csharp\r\nunsafe {\r\n    fixed (byte *b = \u0026imageBuffer[0]) {\r\n        using (var original = new SKBitmap()) {\r\n            original.InstallPixels(new SKImageInfo(oldWidth, oldHeight), (IntPtr) b);\r\n            using (var resized = original.Resize(new SKImageInfo(width, height), SKBitmapResizeMethod.Lanczos3)) {\r\n                bufferOutput = resized.Bytes;\r\n            }\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-08-15T19:31:37",
+        "reactions": [
+          {
+            "user": "keesschollaart81",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:51.0278575Z"
+          },
+          {
+            "user": "pankajadev",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:51.0278579Z"
+          }
+        ]
+      }
+    ]
+  }
 }

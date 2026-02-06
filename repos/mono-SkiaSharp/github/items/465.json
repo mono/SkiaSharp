@@ -23,5 +23,44 @@
   "updatedAt": "2022-08-19T18:01:20",
   "closedAt": "2020-07-30T20:38:47",
   "commentCount": 3,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:50.2084934Z",
+    "reactions": [
+      {
+        "user": "CarmenScholte",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:01:50.2084992Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 376288819,
+        "author": "mattleibow",
+        "body": "This appears to be a bug in skia:\r\nhttps://fiddle.skia.org/c/46c321af4c4bd87ab77a17d2c75f41f9\r\n\r\nI opened a bug there:\r\nhttps://bugs.chromium.org/p/skia/issues/detail?id=7752",
+        "createdAt": "2018-03-26T19:47:06",
+        "reactions": []
+      },
+      {
+        "id": 620305773,
+        "author": "mattleibow",
+        "body": "A workaround is to use \u0060Encode(SKEncodedImageFormat.Png, 100)\u0060.\r\n\r\nThe current logic makes a mistake of thinking that if there was a source data, then just return it. When you take a subset, the data is passed around but not flagged as a subset. This means that \u0060Encode\u0060 just returns the old data. The parameters force a re-encode. \r\n\r\nThe benefit of not always re-encoding is that if the image is unchanged (and it is often the case) then no need to do the work. Not sure if this is really a benefit though... When you call encode, it is usually pretty quick and often you are prepared for it to take longer. Just passing the data back is nice, but has issues like this...",
+        "createdAt": "2020-04-28T00:27:37",
+        "reactions": []
+      },
+      {
+        "id": 666406346,
+        "author": "mattleibow",
+        "body": "This was fixed in https://github.com/google/skia/commit/cd04356804df66ce3546c3e9b61cee71c612e3d2\r\n\r\nI will bring this back down to our version.",
+        "createdAt": "2020-07-30T14:37:47",
+        "reactions": [
+          {
+            "user": "raphaelr",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:50.1582534Z"
+          }
+        ]
+      }
+    ]
+  }
 }

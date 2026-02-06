@@ -19,5 +19,67 @@
   "updatedAt": "2022-08-19T15:02:53",
   "closedAt": "2018-12-23T05:01:35",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:06.2411013Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 383476030,
+        "author": "masoud-al",
+        "body": "Same issue here\r\n\r\nVBox 5.2.8\r\nUbuntu 17\r\nMono 5.10.1.20\r\nSkiaSharp built from commit b7da89f3b870b61e032650da4dc5d4c720db43bf\r\n",
+        "createdAt": "2018-04-23T07:09:54",
+        "reactions": []
+      },
+      {
+        "id": 386448276,
+        "author": "abagorba",
+        "body": "I get the same result on ARM and x86 machines\r\n\r\nMono 5.10.1.20\r\nUbuntu 16.04\r\n\r\nlibSkiaSharp.so is built from [8644348](https://github.com/mono/skia/commit/864434895d0487be35d1435ada049870d8664203)\r\n\r\nglx works on the board without any problem",
+        "createdAt": "2018-05-03T21:50:49",
+        "reactions": []
+      },
+      {
+        "id": 386656583,
+        "author": "mattleibow",
+        "body": "Could someone attach a sample that fails? I am doing something like this in the tests and they work fine. I am using the native APIs directly via p/invoke, so maybe OpenTK is doing something wrong - or the settings don\u0027t align.\r\n\r\nOne thing to check to see what \u0060GRGlInterface.Validate()\u0060 returns.\r\n\r\nMaybe if I could see some init code, I can give some suggestions.",
+        "createdAt": "2018-05-04T16:31:57",
+        "reactions": []
+      },
+      {
+        "id": 387197560,
+        "author": "abagorba",
+        "body": "SkiaSharp sample Gallery already not working when switching the backend to OpenGL\r\n[SkiaSharp.DesktopSample](https://github.com/mono/SkiaSharp/blob/master/samples/Gallery/Desktop/SkiaSharpSample.sln)\r\n\r\nI also attached a small project which draws circle and a line using SKGLControl\r\n[SkiaSharpGRContextIssue.zip](https://github.com/mono/SkiaSharp/files/1981365/SkiaSharpGRContextIssue.zip)\r\n\r\nFor both apps you will need to add the Nuget packages and libSkiaSharp.so. I tried on an ARM machine and on an x86 machine. Didn\u0027t try x64 (I just don\u0027t have that)\r\n\r\nThe application throws an following exception when starting up, and everytime OnPaintGl is called\r\n\r\n\u0060System.NullReferenceException: Object reference not set to an instance of an object\r\n  at SkiaSharp.SKSurface.Create (SkiaSharp.GRContext context, SkiaSharp.GRBackendRenderTargetDesc desc) [0x00001] in \u003C1dae5c87da244ecaac5a0df5a40bf112\u003E:0\r\n  at SkiaSharp.Views.Desktop.SKGLControl.OnPaint (System.Windows.Forms.PaintEventArgs e) [0x0007c] in \u003Ca002c48109ff42b7ac26ae3df8ff6abb\u003E:0\r\n  at System.Windows.Forms.Control.WmPaint (System.Windows.Forms.Message\u0026 m) [0x0008a] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\r\n  at System.Windows.Forms.Control.WndProc (System.Windows.Forms.Message\u0026 m) [0x0015f] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\r\n  at System.Windows.Forms.ScrollableControl.WndProc (System.Windows.Forms.Message\u0026 m) [0x00000] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\r\n  at System.Windows.Forms.ContainerControl.WndProc (System.Windows.Forms.Message\u0026 m) [0x0003c] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\r\n  at System.Windows.Forms.UserControl.WndProc (System.Windows.Forms.Message\u0026 m) [0x00036] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\r\n  at System.Windows.Forms.Control\u002BControlWindowTarget.OnMessage (System.Windows.Forms.Message\u0026 m) [0x00000] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\r\n  at System.Windows.Forms.Control\u002BControlNativeWindow.WndProc (System.Windows.Forms.Message\u0026 m) [0x0000b] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\r\n  at System.Windows.Forms.NativeWindow.WndProc (System.IntPtr hWnd, System.Windows.Forms.Msg msg, System.IntPtr wParam, System.IntPtr lParam) [0x0008e] in \u003Cb4e6df1a5a1f4b78af726adaf5fd3ede\u003E:0\u0060\r\n",
+        "createdAt": "2018-05-07T20:36:37",
+        "reactions": []
+      },
+      {
+        "id": 388621098,
+        "author": "abagorba",
+        "body": "Today I was half-successfull in debugging my program, and found out that the interface is not validated by **_skia_**. Error come from\r\n \u0060../../../src/gpu/gl/GrGLInterface.cpp:548 GrGLInterface::validate() failed\u0060\r\nI also checked that both conditions \u0060NULL == fFunctions.fDrawArraysInstanced\u0060 and \u0060NULL == fFunctions.fDrawElementsInstanced\u0060 return \u0060true\u0060.\r\n\r\nFirst I thought that the problem is in the driver of my test board, but I installed _mesa-utils_ and _glxgears_ works fine. I know that it is not a benchmark ,but at least as I understand it shows that the graphics driver is correctly installed.\r\n\r\nAny ideas what I can do to solve the problem?",
+        "createdAt": "2018-05-13T11:49:02",
+        "reactions": []
+      },
+      {
+        "id": 412887867,
+        "author": "mneumann",
+        "body": "@abagorba @BaruchCodes @masoud-al [This patch][1] against [this commit of mono/skia][2] is specifically suited for the Vivante GC880 GPU. I guess that patch would also work in the case you are running Skia within a virtual box, because \u0060GrGLInterface()::validate()\u0060 will no longer fail, as we are removing \u0060GL_EXT_draw_instanced\u0060 from the list of extensions.\r\n\r\n[1]: https://gist.github.com/mneumann/dc6928c35ee8135ff0569a9008f91833\r\n[2]: https://github.com/mono/skia/commit/9217b23761c207bb3b6ed95c57d4427875cde0bb",
+        "createdAt": "2018-08-14T14:17:56",
+        "reactions": []
+      },
+      {
+        "id": 445129435,
+        "author": "mattleibow",
+        "body": "We just released a new version of SkiaSharp - [v1.68.0](https://github.com/mono/SkiaSharp/releases/tag/v1.68.0) - that should have hundreds of improvements. Could you test this new version and see if it fixes the issue.\r\n\r\nAlso, as noted above, make sure your GPU drivers are installed.",
+        "createdAt": "2018-12-07T05:44:29",
+        "reactions": []
+      },
+      {
+        "id": 449614734,
+        "author": "Redth",
+        "body": "We are closing this issue since no response was received.  Please open a new issue referring to this one if you have more information.",
+        "createdAt": "2018-12-23T05:01:35",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -15,5 +15,59 @@
   "updatedAt": "2022-08-19T15:02:01",
   "closedAt": "2018-07-24T01:33:07",
   "commentCount": 6,
-  "reactionCount": 1
+  "reactionCount": 1,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:36.9374149Z",
+    "reactions": [
+      {
+        "user": "DuncWatts",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:03:36.9374222Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 406538998,
+        "author": "DuncWatts",
+        "body": "I just opened the issue list to log this exact issue.\r\n\r\nExperienced this after updating from 1.60.0 to 1.60.2, I am using SkiaSharp within a Xamarin.Forms UWP application, in this instance to render a button used to navigate back, I don\u0027t get the issue in other scenarios, so it looks to me like it could be when destroying a control.\r\n\r\nTried rolling back to 1.60.1 and the issue doesn\u0027t occur here.  I also don\u0027t see an issue in iOS.",
+        "createdAt": "2018-07-20T09:09:49",
+        "reactions": []
+      },
+      {
+        "id": 406541023,
+        "author": "DuncWatts",
+        "body": "I am still hitting the exception with IgnorePixelScaling enabled on the SKCanvasView, could it be a race condition where ActualWidth is changing between doing the check and creating the Bitmap?",
+        "createdAt": "2018-07-20T09:17:15",
+        "reactions": []
+      },
+      {
+        "id": 406604977,
+        "author": "jalbertSyncroTech",
+        "body": "@DuncWatts The OnLoaded(), DoInvalidate(), and OnDpiChanged() functions are all identical between 1.60.0 and 1.60.2, so the issue isn\u0027t doesn\u0027t appear to related to the SkiaSharp version.\r\n\r\nWhat version of Xamarin.Forms are you using?  We hadn\u0027t been getting this with 2.5.0, but we are now since we\u0027ve updated to 3.1.0, however we also updated a number of other 3rd part packages so I didn\u0027t want to blame any one single package when it seemed like there was a simple fix possible in SkiaSharp.\r\n\r\nIt could be a race issue, but in either case the fix I suggested should resolve it as the width and height are local variables whose values wouldn\u0027t change once assigned.\r\n\r\nIt\u0027s also possible ActualWidth  and ActualHeight are negative values for some reason, as the validation is only checking if they\u0027re zero.  I haven\u0027t debugged into the SkiaSharp code yet, as the IgnorePixelScaling change fixed it for us.\r\n",
+        "createdAt": "2018-07-20T13:45:13",
+        "reactions": []
+      },
+      {
+        "id": 406609671,
+        "author": "DuncWatts",
+        "body": "@jalbertSyncroTech I\u0027m using Xamarin.Forms 3.1.0.\r\n\r\nAll I say at the moment is I don\u0027t see any issues if I downgrade the SkiaSharp libraries to 1.60.0 or 1.60.1, only if I update to 1.60.2.\r\n",
+        "createdAt": "2018-07-20T14:01:39",
+        "reactions": []
+      },
+      {
+        "id": 406771867,
+        "author": "rhussell",
+        "body": "Dpi is initialized in OnLoaded(). I found sometime OnSizeChanged is called before OnLoaded. So I think dpi should initialized in SKXamlCanvas.Initialize() directly. ",
+        "createdAt": "2018-07-21T05:22:49",
+        "reactions": []
+      },
+      {
+        "id": 406838205,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this, I\u0027ll try and make sure this gets into the next release.",
+        "createdAt": "2018-07-22T03:23:07",
+        "reactions": []
+      }
+    ]
+  }
 }

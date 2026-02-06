@@ -14,5 +14,63 @@
   "updatedAt": "2022-08-19T15:02:23",
   "closedAt": "2018-06-27T04:58:54",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:07.1804998Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 393519086,
+        "author": "mattleibow",
+        "body": "The world is moving towards .NET Standard, and away from PCL. Unfortunately, we can\u0027t always support everything, so something had to give. \r\n\r\nThe good news is that SkiaSharp support .NET Standard 1.3, so this really only excludes the wp8 and win8 platforms. https://docs.microsoft.com/en-us/dotnet/standard/net-standard\r\n\r\nThere is even more good news that the upgrade is not actually painful in most cases. The new project system is pretty good at getting the right things in. I have been doing this with many of my projects - no need for complex upgrades and other tools.\r\n\r\nIn fact, just open the .csproj in a text editor (such as VSCode/notepad/text edit) and then replace everything with:\r\n\r\n\u0060\u0060\u0060xml\r\n\u003CProject Sdk=\u0022Microsoft.NET.Sdk\u0022\u003E\r\n  \u003CPropertyGroup\u003E\r\n    \u003CTargetFramework\u003Enetstandard2.0\u003C/TargetFramework\u003E\r\n  \u003C/PropertyGroup\u003E\r\n  \u003CItemGroup\u003E\r\n    \u003CPackageReference Include=\u0022Xamarin.Forms\u0022 Version=\u00223.0.0.482510\u0022 /\u003E\r\n  \u003C/ItemGroup\u003E\r\n\u003C/Project\u003E\r\n\u0060\u0060\u0060\r\n\r\nThat should probably get you started right away - but you may have to add your other NuGet references as well. If you attach/send me your .csproj and your packages.config, I can show you exactly what things should look like.",
+        "createdAt": "2018-05-31T12:49:12",
+        "reactions": []
+      },
+      {
+        "id": 398534677,
+        "author": "goldmont",
+        "body": "Hi,\r\n\r\nthis issue is affecting my projects too. I need to find a quick solution because I work for a company. Could you help me please? Thanks.",
+        "createdAt": "2018-06-19T20:29:35",
+        "reactions": [
+          {
+            "user": "enghch",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:06.5149877Z"
+          }
+        ]
+      },
+      {
+        "id": 400542813,
+        "author": "mattleibow",
+        "body": "If you really need to support PCL, then the last version that supports it was v1.60.0. I conceptually removed PCL support with the v1.60.x series, but left it in for the first release so that any critical bugs in the old m59 series could be resolved.\r\n\r\nWe won\u0027t be adding PCL back, you will have to remain on the v1.60.0 release.",
+        "createdAt": "2018-06-27T04:58:09",
+        "reactions": [
+          {
+            "user": "nemexyz",
+            "content": "confused",
+            "createdAt": "2026-02-06T14:03:06.7221122Z"
+          },
+          {
+            "user": "FranRDev",
+            "content": "confused",
+            "createdAt": "2026-02-06T14:03:06.7221126Z"
+          }
+        ]
+      },
+      {
+        "id": 535676897,
+        "author": "gmagana",
+        "body": "*jawdrop* just like that, screw all the projects that were depending on this library... wow, just... wow",
+        "createdAt": "2019-09-26T20:39:00",
+        "reactions": []
+      },
+      {
+        "id": 535699266,
+        "author": "daltonks",
+        "body": "@gmagana PCL has been deprecated and considered Legacy since July of last year:\r\nhttps://github.com/MicrosoftDocs/xamarin-docs/commit/46bb04016d3c35d91ff434b38474e0cb8197961b#diff-37abf543ed880c4ccf4e8c9ce9d997bd\r\n\r\nI personally wouldn\u0027t support PCL in anything I was maintaining either \uD83E\uDD37\u200D\u2642\uFE0F\r\n\r\n",
+        "createdAt": "2019-09-26T21:49:22",
+        "reactions": []
+      }
+    ]
+  }
 }

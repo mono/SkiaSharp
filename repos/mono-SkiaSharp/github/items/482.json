@@ -29,5 +29,52 @@
   "updatedAt": "2022-08-19T15:02:52",
   "closedAt": "2018-04-13T12:44:11",
   "commentCount": 5,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:07.813769Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 379139408,
+        "author": "davkean",
+        "body": "Actually I\u0027m wrong here - while you shouldn\u0027t really touch reference fields in finalize, none of them should be null. What I suspect is happening, is that SKPaint is throwing in its constructor here: https://github.com/mono/SkiaSharp/blob/9a0bff839b2a951334252a18f94cb7367c06c5de/binding/Binding/SKPaint.cs#L21.\r\n\r\nThis leaves the base field ownedObjects null, but the finalizer still is run. The following demonstrates:\r\n\r\n\u0060\u0060\u0060 C#\r\n    class Program\r\n    {\r\n        static void Main(string[] args)\r\n        {\r\n            try\r\n            {\r\n                new SKPaint();\r\n            }\r\n            catch (Exception)\r\n            {\r\n\r\n            }\r\n        }\r\n    }\r\n\r\n\r\n    class SKPaint : SKObject\r\n    {\r\n        public SKPaint()\r\n            : base(sk_paint_new())\r\n        {\r\n        }\r\n\r\n        private static IntPtr sk_paint_new() { throw new Exception(); }\r\n    }\r\n\r\n    class SKObject\r\n    {\r\n        private readonly List\u003Cstring\u003E ownedObjects = new List\u003Cstring\u003E();\r\n\r\n        internal SKObject(IntPtr handle)\r\n        {\r\n        }\r\n\r\n        ~SKObject()\r\n        {\r\n            lock (ownedObjects)\r\n            {\r\n            }\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\nWhich outputs:\r\n\r\n\u0060\u0060\u0060\r\nUnhandled Exception: System.ArgumentNullException: Value cannot be null.\r\n   at System.Threading.Monitor.ReliableEnter(Object obj, Boolean\u0026 lockTaken)\r\n   at System.Threading.Monitor.Enter(Object obj, Boolean\u0026 lockTaken)\r\n   at ConsoleApp237.SKObject.Finalize()\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-04-06T03:36:33",
+        "reactions": []
+      },
+      {
+        "id": 380832475,
+        "author": "mattleibow",
+        "body": "Do we have a larger stack trace? I see the two you provided are different.\r\nAlso, what is the constructor throwing? Are we able to see this at all?\r\n\r\nWe can guard against this by doing a null check, but it would be great to know more.\r\n\r\nI\u0027ll write a test case and see if I can fix things.",
+        "createdAt": "2018-04-12T14:48:47",
+        "reactions": []
+      },
+      {
+        "id": 380834719,
+        "author": "aktzbn",
+        "body": "I encountered the same issue on Debian when libSkiaSharp.so was absent.",
+        "createdAt": "2018-04-12T14:55:12",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:07.3975693Z"
+          }
+        ]
+      },
+      {
+        "id": 380843538,
+        "author": "mattleibow",
+        "body": "Yeah, that is what I was thinking. The only time the methods would throw would be when the native library was not found. the C\u002B just returns null on error.\r\n\r\nThanks for the confirmation. And this issue relates to the designer and VS and debugging - that is a volatile combo that sometimes doesn\u0027t work.",
+        "createdAt": "2018-04-12T15:21:12",
+        "reactions": []
+      },
+      {
+        "id": 381123911,
+        "author": "mattleibow",
+        "body": "@davkean Thanks for your info and research. I fixed this issue and it is now in master.",
+        "createdAt": "2018-04-13T12:45:20",
+        "reactions": []
+      }
+    ]
+  }
 }

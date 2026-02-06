@@ -14,5 +14,60 @@
   "updatedAt": "2022-08-19T15:02:41",
   "closedAt": "2018-05-10T08:40:03",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:30.0108769Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 387167457,
+        "author": "mattleibow",
+        "body": "I wasn\u0027t able to find an issue with your snippet.\r\n\r\n\u0060\u0060\u0060csharp\r\nvar surface = e.Surface;\r\nvar canvas = surface.Canvas;\r\n\r\n// draw usual stuff\r\n// ...\r\n\r\n// draw the blurry version\r\nif (IsBusy) {\r\n    // take a snap\r\n    var snap = surface.Snapshot();\r\n\r\n    // set up the blur\r\n    var filter = SKImageFilter.CreateBlur(5, 5);\r\n    var paint = new SkPaint {\r\n        ImageFilter = filter\r\n    };\r\n\r\n    // draw the blurry screen\r\n    canvas.DrawImage(snap, 0, 0, paint);\r\n}\r\n\u0060\u0060\u0060\r\n\r\nTo control this, I just did this:\r\n\r\n\u0060\u0060\u0060csharp\r\nIsBusy = true;\r\ncanvasView.InvalidateSurface();\r\n\r\nawait DisplayAlert(\u0022Pop Up\u0022, \u0022This is a popup message!\u0022, \u0022OK\u0022);\r\n\r\nIsBusy = false;\r\ncanvasView.InvalidateSurface();\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-05-07T18:58:08",
+        "reactions": []
+      },
+      {
+        "id": 387333532,
+        "author": "masiri201",
+        "body": "I tried it and it didn\u0027t work,\r\n\u0060\u0060\u0060\r\n            var snap = surface.Snapshot();\r\n            SKImageFilter ImageFilter = SKImageFilter.CreateBlur(5, 5);\r\n            SKPaint paint = new SKPaint() {\r\n                ImageFilter = ImageFilter,\r\n            };\r\n            canvas.DrawImage(snap, 0, 0, paint);\u0060\r\n\u0060\u0060\u0060\r\n\r\nThe popup page i have is a full screen popup, the background is all transparent and it has a carousel view on top with two different pages. what im trying to do is blur the popup page background and then display the pages on top of that control,  but skmaskfilter or image filter don\u0027t seem to work in my App. I just tried this snippet in a normal content page with a background image and it didnt work either, Im using Visual Studio 2017 community, im compiling to android version 8.0, i don\u0027t know if my code is wrong in any way but thank you for your time and patience.",
+        "createdAt": "2018-05-08T08:56:11",
+        "reactions": []
+      },
+      {
+        "id": 387425190,
+        "author": "mattleibow",
+        "body": "I may be understanding wrong, but are you trying to create a blurred overlay under the popup?\r\n\r\nSkiaSharp can only blur what you specifically draw. Maybe attach a small sample (or create a repo) that demos this so I can see your thoughts.",
+        "createdAt": "2018-05-08T14:38:54",
+        "reactions": []
+      },
+      {
+        "id": 387429434,
+        "author": "masiri201",
+        "body": "The ideia is to blur the canvas view, it\u0027s not under the popup, it\u0027s on the surface, so basically i need to create a blured SKCanvasView, I though I could do that with SKMaskFilter but it didn\u0027t work so I tried the snapshot one. I\u0027ll try to attach a sample as soon as I\u0027m able to.",
+        "createdAt": "2018-05-08T14:51:05",
+        "reactions": []
+      },
+      {
+        "id": 387708512,
+        "author": "masiri201",
+        "body": "Here\u0027s the demo:\r\n\r\nhttps://drive.google.com/drive/folders/1RfQYd7yenQFHX9_r-n3MBJbYQhaQjw_S?usp=sharing\r\n\r\nIts only a button that opens the popup, i tried using skmaskfilter and taking the snapshot both didnt work.\r\n",
+        "createdAt": "2018-05-09T11:27:15",
+        "reactions": []
+      },
+      {
+        "id": 387890546,
+        "author": "mattleibow",
+        "body": "I think I am understanding what is happening here. In your sample you are drawing nothing (or rather a gray block) as a result, only the gray block is blurred - you just can\u0027t see it as it is a solid color.\r\n\r\nIf you want the popup to blur the underlying page behind the popup, you need to use another means. I am not sure of the best mechanism, but this involves taking a screenshot of the underlying activity, blurring that screenshot, and then drawing the image on the screen. Unfortunately, SkiaSharp cannot take this screenshot as it only will get it\u0027s own canvas.\r\n\r\nI would suggest asking on the forums for more information on this: http://forums.xamarin.com/",
+        "createdAt": "2018-05-09T22:08:50",
+        "reactions": []
+      },
+      {
+        "id": 387991536,
+        "author": "masiri201",
+        "body": "Ok, thanks for your help, I\u0027ll close the issue now.",
+        "createdAt": "2018-05-10T08:40:03",
+        "reactions": []
+      }
+    ]
+  }
 }

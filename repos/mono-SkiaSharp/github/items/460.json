@@ -28,5 +28,39 @@
   "updatedAt": "2022-08-19T18:01:24",
   "closedAt": "2018-05-04T16:32:38",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:42.7217029Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 370689365,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. It very well might be something in the new view. We switched from a GLSurfaceView under the hood, to a TextureView.\r\n\r\nI will have a look.",
+        "createdAt": "2018-03-06T07:31:37",
+        "reactions": []
+      },
+      {
+        "id": 371989711,
+        "author": "hallidev",
+        "body": "I\u0027ll second this one. Just found this thread after starting to pull my hair out. Same steps to re-create as @pragmatheorist details.",
+        "createdAt": "2018-03-10T01:18:27",
+        "reactions": []
+      },
+      {
+        "id": 376387000,
+        "author": "EEVblog",
+        "body": "I believe I have the same issue. The issue occurs when an activity is started then closed or the window is resumed. this issue has made it impossible to save files, or switch between apps on the phone without the view crashing and throwing a null reference exception.\r\n\r\nThe issue does not occur when using the software renderer.\r\n\r\nTested With Android 6.XX\r\nSkiasharp 1.60.0",
+        "createdAt": "2018-03-27T03:41:25",
+        "reactions": []
+      },
+      {
+        "id": 386623300,
+        "author": "mattleibow",
+        "body": "I managed to find out what was happening. When the app is paused, the texture is destroyed. This is all good so far. However, when the app resumed, the texture is re-created under the hood and thus follows another path - and this is where I was missing logic to recreate the SkiaSharp context.",
+        "createdAt": "2018-05-04T14:42:22",
+        "reactions": []
+      }
+    ]
+  }
 }

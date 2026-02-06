@@ -23,5 +23,39 @@
   "updatedAt": "2022-08-19T15:02:24",
   "closedAt": "2018-06-25T11:54:24",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:05.4658576Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 399925174,
+        "author": "mattleibow",
+        "body": "Thanks for reporting this. I had a look and this is what UWP does under the hood - they have incrementing numbers for touch, but just 1 for mouse.\r\n\r\nI would suggest not using the ID as a distinct across the app lifetime, but rather distinct for a single stroke. This is more work, but makes new platforms less likely to cause issues. As you noticed with UWP and Android, the ID is unique per touch/finger.\r\n\r\nTo make the code work, create two dictionaries - one for completed strokes and one for current strokes. If you are only supporting a single stroke at a time, then you only need one dictionary and a field to hold the current stroke.\r\n\r\n\u0060\u0060\u0060csharp\r\nclass MainPage {\r\n    List\u003CSKPath\u003E completedStrokes = new List\u003CSKPath\u003E();\r\n    Dictionary\u003Clong, SKPath\u003E partialStrokes = new Dictionary\u003Clong, SKPath\u003E();\r\n\r\n    void OnTouch(object sender, SKTouchEventArgs e)\r\n    {\r\n        switch (e.ActionType) {\r\n            case SKTouchAction.Entered:\r\n            case SKTouchAction.Exited:\r\n                // do nothing\r\n                break;\r\n            case SKTouchAction.Pressed:\r\n                var newPath = new SKPath();\r\n                newPath.MoveTo(e.Location);\r\n                partialStrokes[e.Id] = newPath;\r\n                break;\r\n            case SKTouchAction.Moved:\r\n                if (partialStrokes.ContainsKey(e.Id)) {\r\n                    switch (e.DeviceType) {\r\n                        case SKTouchDeviceType.Touch:\r\n                        case SKTouchDeviceType.Mouse when e.MouseButton == SKMouseButton.Left:\r\n                        case SKTouchDeviceType.Pen:\r\n                            var path = partialStrokes[e.Id];\r\n                            path.LineTo(e.Location);\r\n                            canvasView.InvalidateSurface();\r\n                            break;\r\n                    }\r\n                }\r\n                break;\r\n            case SKTouchAction.Released:\r\n                if (partialStrokes.ContainsKey(e.Id)) {\r\n                    var path = partialStrokes[e.Id];\r\n                    completedStrokes.Add(path);\r\n                    partialStrokes.Remove(e.Id);\r\n                    canvasView.InvalidateSurface();\r\n                }\r\n                break;\r\n            case SKTouchAction.Cancelled:\r\n                if (partialStrokes.ContainsKey(e.Id)) {\r\n                    partialStrokes.Remove(e.Id);\r\n                    canvasView.InvalidateSurface();\r\n                }\r\n                break;\r\n        }\r\n\r\n        e.Handled = true;\r\n    }\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-06-25T11:52:44",
+        "reactions": []
+      },
+      {
+        "id": 399925601,
+        "author": "mattleibow",
+        "body": "Closing this issue because this is working as \u0022designed\u0022 - we are just using the platform values.",
+        "createdAt": "2018-06-25T11:54:23",
+        "reactions": []
+      },
+      {
+        "id": 400048565,
+        "author": "aodpi",
+        "body": "@mattleibow Sorry, I know understand why it was designed like this, dull issue post. \uD83D\uDE28 ",
+        "createdAt": "2018-06-25T18:23:46",
+        "reactions": []
+      },
+      {
+        "id": 400542384,
+        "author": "mattleibow",
+        "body": "No problem. I still had to confirm this, so there was some fun \u0022detective\u0022 work :)",
+        "createdAt": "2018-06-27T04:54:51",
+        "reactions": []
+      }
+    ]
+  }
 }

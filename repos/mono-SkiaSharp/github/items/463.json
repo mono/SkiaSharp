@@ -33,5 +33,59 @@
   "updatedAt": "2022-08-19T18:01:21",
   "closedAt": "2018-03-23T22:13:51",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:48.8464819Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 370774753,
+        "author": "mattleibow",
+        "body": "I will check it out, but I just want to confirm that this is running on Windows?",
+        "createdAt": "2018-03-06T13:04:37",
+        "reactions": []
+      },
+      {
+        "id": 371193635,
+        "author": "8",
+        "body": "Hi,\r\nyes, it\u0027s a Win10 machine.\r\n\r\nIt\u0027s not a show stopper as the Xps Backend is marked as Experimental anyway and there is the Full .NET Framework workaround.\r\n\r\nIf you want I can try to investigate myself and check out the source code, maybe I\u0027ll find something.\r\nTake care,\r\nMartin",
+        "createdAt": "2018-03-07T16:21:14",
+        "reactions": []
+      },
+      {
+        "id": 371286898,
+        "author": "8",
+        "body": "I\u0027ve just read the source code and it seems that the Xps Backend is only supported on Windows, as it is based on a Windows COM Object. That\u0027s why it\u0027s hidden behind a \u0060#ifdef SK_BUILD_FOR_WIN\u0060 compiler flag. That\u0027s probably why it doesn\u0027t run on dotnet core.\r\nTake care,\r\nMartin",
+        "createdAt": "2018-03-07T21:14:34",
+        "reactions": []
+      },
+      {
+        "id": 375556311,
+        "author": "mattleibow",
+        "body": "I need to investigate this a bit more. It _should_ work as the .NET Core app is using the same native library as the Full .NET Framework. I am not sure why there is this difference at runtime. The .NET Core unit tests pass, and that creates both a PDF and XPS document.",
+        "createdAt": "2018-03-23T06:18:28",
+        "reactions": []
+      },
+      {
+        "id": 375784527,
+        "author": "mattleibow",
+        "body": "I managed to find the issue.\r\nIt was the fact that the COM was not initialized. \r\n\u003E https://msdn.microsoft.com/en-us/library/windows/desktop/ff485844.aspx\r\n\r\nWith the full .NET Framework, COM is already initialized as it is used by the framework itself. I am not sure how I can integrate this into SkiaSharp as this must be done outside the scope of \u0060SKDocument\u0060. the native skia has a nice utility type that I think I may be able to duplicate...\r\n\r\nHere is a workaround:\r\n\r\n\u0060\u0060\u0060csharp\r\nclass Program\r\n{\r\n\tstatic void Main(string[] args)\r\n\t{\r\n\t\tCoInitializeEx(IntPtr.Zero, COINIT.COINIT_APARTMENTTHREADED | COINIT.COINIT_DISABLE_OLE1DDE);\r\n\r\n\t\tusing (var stream = new SKFileWStream(\u0022test.xps\u0022))\r\n\t\tusing (var document = SKDocument.CreateXps(stream))\r\n\t\t{\r\n\t\t\tConsole.WriteLine($\u0022document == \u0027{document}\u0027\u0022);\r\n\r\n\t\t\tdocument.BeginPage(100, 100);\r\n\t\t\tdocument.EndPage();\r\n\t\t\tdocument.Close();\r\n\t\t}\r\n\r\n\t\tConsole.WriteLine(\u0022Hello World!\u0022);\r\n\r\n\t\tCoUninitialize();\r\n\t}\r\n\r\n\tpublic enum COINIT : uint\r\n\t{\r\n\t\tCOINIT_MULTITHREADED = 0x0,\r\n\t\tCOINIT_APARTMENTTHREADED = 0x2,\r\n\t\tCOINIT_DISABLE_OLE1DDE = 0x4,\r\n\t\tCOINIT_SPEED_OVER_MEMORY = 0x8,\r\n\t}\r\n\r\n\t[DllImport(\u0022ole32.dll\u0022, CharSet = CharSet.Auto, SetLastError = true, CallingConvention = CallingConvention.StdCall)]\r\n\tpublic static extern int CoInitializeEx([In, Optional] IntPtr pvReserved, [In]  COINIT dwCoInit);\r\n\r\n\t[DllImport(\u0022ole32.dll\u0022, CharSet = CharSet.Auto, SetLastError = true, CallingConvention = CallingConvention.StdCall)]\r\n\tpublic static extern void CoUninitialize();\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-03-23T20:10:16",
+        "reactions": [
+          {
+            "user": "8",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:48.5973711Z"
+          }
+        ]
+      },
+      {
+        "id": 375812756,
+        "author": "mattleibow",
+        "body": "The fix in v1.60.1 will be:\r\n\r\n\u0060\u0060\u0060csharp\r\nusing (new SKAutoCoInitialize()) {\r\n   // use XPS bits\r\n}\r\n\u0060\u0060\u0060\r\n\r\n**NOTE: this is only needed for _some_ .NET Core apps. The full .NET Framework already initializes COM.**",
+        "createdAt": "2018-03-23T22:16:30",
+        "reactions": []
+      }
+    ]
+  }
 }

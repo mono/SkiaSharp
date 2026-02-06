@@ -15,5 +15,125 @@
   "updatedAt": "2022-08-19T15:02:26",
   "closedAt": "2018-06-14T03:49:58",
   "commentCount": 12,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:01.7381844Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 392546162,
+        "author": "define-private-public",
+        "body": "@mattleibow ",
+        "createdAt": "2018-05-28T14:47:51",
+        "reactions": []
+      },
+      {
+        "id": 392594842,
+        "author": "mattleibow",
+        "body": "Thanks for this, I will have a look and see what can be done.",
+        "createdAt": "2018-05-28T19:58:30",
+        "reactions": []
+      },
+      {
+        "id": 393383614,
+        "author": "define-private-public",
+        "body": "Okay, did a little other testing.  It\u0027s something with the \u0060PaintSurface\u0060 event, or whatever it connected in the pipeline.  I wrote a program that used a \u0060StopWatch\u0060 and a \u0060Timer\u0060 object to try to queue up a bunch of draws for an animation (~60 FPS).  The flickering is still happening.\r\n\r\nThe Skia drawing code itself is rendering in under a millisecond (very, very fast), but it\u0027s all of that update/event logic around it that makes it slow.\r\n\r\nI was looking into creating an OpenGL context, have Skia render to it (or have it render to a texture and display that), but I\u0027m not sure how easy that might be.  Mono\u0027s \u0060GtkGLArea\u0060 bindings seem to be a tad old: https://github.com/mono/gtkglarea-sharp",
+        "createdAt": "2018-05-31T02:41:34",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:59.794685Z"
+          }
+        ]
+      },
+      {
+        "id": 393383957,
+        "author": "define-private-public",
+        "body": "While this article is more Cairo focused, it might provide some insights:\r\n\r\nhttps://cairographics.org/threaded_animation_with_cairo/\r\n\r\nSmooth animation should be possible:\r\nhttps://www.youtube.com/watch?v=Ri5R5eozUC8",
+        "createdAt": "2018-05-31T02:43:50",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:00.0107046Z"
+          }
+        ]
+      },
+      {
+        "id": 395986859,
+        "author": "define-private-public",
+        "body": "Hey, I\u0027d like to report a bit of an update: I have been able to get some smooth animation working with SkiaSharp, and the \u0060SKWidget\u0060, but it still has some issues.  Here is my code:\r\n\r\n\u0060\u0060\u0060csharp\r\n// Author:       Benjamin N. Summerton \u003Chttps://16bpp.net\u003E\r\n// Description:  X\r\nusing System.Threading;\r\nusing Gtk;\r\nusing SkiaSharp;\r\n\r\npublic partial class MainWindow : Gtk.Window\r\n{\r\n    public int Value = 75;\r\n\r\n    public MainWindow() : base(Gtk.WindowType.Toplevel)\r\n    {\r\n        Build();\r\n\r\n        // Half a second from bootup, run an animation at 60 FPS\r\n        Timer timer = new Timer((object state) =\u003E timerExe() ,null, 500, (1000 / 60));\r\n    }\r\n\r\n    protected void OnDeleteEvent(object sender, DeleteEventArgs a)\r\n    {\r\n        Application.Quit();\r\n        a.RetVal = true;\r\n    }\r\n\r\n    protected void timerExe()\r\n    {\r\n        Value \u002B= 1;\r\n        Value = Value % 100;\r\n        this.skwidget1.QueueDraw();\r\n    }\r\n\r\n    protected void onPaint(object sender, SkiaSharp.Views.Desktop.SKPaintSurfaceEventArgs e)\r\n    {\r\n        SKCanvas canvas = e.Surface.Canvas;\r\n\r\n        // Clear the canvas\r\n        canvas.Clear(SKColors.White);\r\n\r\n        // Setup paint\r\n        SKPaint paint = new SKPaint\r\n        {\r\n            Color = SKColors.Black,\r\n            IsAntialias = true,\r\n            Style = SKPaintStyle.Fill,\r\n        };\r\n\r\n        double value = (Value / 100.0) * 360;\r\n        using (SKPath path = new SKPath())\r\n        {\r\n            path.AddArc(new SKRect(50, 50, 300, 300), 0, (float)value);\r\n            canvas.DrawPath(path, paint);\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n\r\nThis is probably not the 100% best way to do animation with SkiaSharp \u0026 GTK#, but it at least works a little and is a good place to start off of.  Though, I do want to note I have the equivalent code w/ Cairo based rendering though.\r\n\r\nThis still suffers from some flicker, but not as much.  Also, sometimes the animation will just cut out, and you\u0027re left with a still frame.  Dragging the window around will also produce flicker.  I have not noticed these problems with the Cairo version.",
+        "createdAt": "2018-06-09T17:45:28",
+        "reactions": []
+      },
+      {
+        "id": 397135333,
+        "author": "define-private-public",
+        "body": "If you can, please take a look at this: https://github.com/mono/SkiaSharp/pull/550\r\n\r\nIf it\u0027s good to you, I\u0027d really appreciate a minor release on NuGet, as I have a project that\u0027s using this library, and needs this smooth animation ability.",
+        "createdAt": "2018-06-14T01:09:03",
+        "reactions": []
+      },
+      {
+        "id": 397136755,
+        "author": "define-private-public",
+        "body": "Here\u0027s what it looks like now.  This is on par with the equivalent drawing in Cairo:\r\n\r\n![smooth-skia-sharp](https://user-images.githubusercontent.com/4551425/41386453-670308b2-6f4f-11e8-824e-e540b7899345.gif)\r\n",
+        "createdAt": "2018-06-14T01:19:14",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:03:00.6149904Z"
+          }
+        ]
+      },
+      {
+        "id": 397142738,
+        "author": "mattleibow",
+        "body": "@define-private-public It is building now and I will try and get it into the v1.60.2 release this week.",
+        "createdAt": "2018-06-14T02:00:37",
+        "reactions": [
+          {
+            "user": "define-private-public",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:00.847051Z"
+          }
+        ]
+      },
+      {
+        "id": 397159826,
+        "author": "define-private-public",
+        "body": "As a side note, I\u0027ve noticed that you have this \u0022create image/drawing objects in the drawing function\u0022 going on in the other platforms as well.  e.g.:\r\n\r\nhttps://github.com/mono/SkiaSharp/blob/master/source/SkiaSharp.Views/SkiaSharp.Views.Android/SKCanvasView.cs#L84\r\n\r\nYou\u0027re probably going to want to go through all of the platform specific Views and make adjustments like in the PR I posted.  This is probably going to be a tedious pain in the butt, but it\u0027s going to be well worth it and make rendering stuff with SkiaSharp much nicer (and desirable) for your end users.",
+        "createdAt": "2018-06-14T03:35:54",
+        "reactions": []
+      },
+      {
+        "id": 397378532,
+        "author": "mattleibow",
+        "body": "Thanks. I created an issue so we don\u0027t loose this.",
+        "createdAt": "2018-06-14T17:39:21",
+        "reactions": []
+      },
+      {
+        "id": 399626801,
+        "author": "define-private-public",
+        "body": "Would it be possible to get the v1.60.2 release out soon?  I\u0027m working on a part of my software right now which needs these improvements.",
+        "createdAt": "2018-06-23T03:23:04",
+        "reactions": []
+      },
+      {
+        "id": 401158852,
+        "author": "mattleibow",
+        "body": "@define-private-public I have just pushed out the release and should be available on NuGet. Here are the release notes and all the links: https://github.com/mono/SkiaSharp/releases/tag/v1.60.2",
+        "createdAt": "2018-06-28T20:13:25",
+        "reactions": [
+          {
+            "user": "define-private-public",
+            "content": "heart",
+            "createdAt": "2026-02-06T14:03:01.6876596Z"
+          }
+        ]
+      }
+    ]
+  }
 }

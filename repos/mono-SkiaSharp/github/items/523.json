@@ -14,5 +14,53 @@
   "updatedAt": "2022-08-19T15:02:30",
   "closedAt": "2018-11-27T17:09:13",
   "commentCount": 6,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:54.4057241Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 390086883,
+        "author": "mattleibow",
+        "body": "This may be a result of you loosing the color space info. The \u0060SKImageInfo\u0060 type has a \u0060ColorSpace\u0060 property. Maybe copy the value from \u0060srcBitmap.ColorSpace\u0060.\r\n\r\nIn fact, it may be better to just take the \u0060srcBitmap.Info\u0060 value and change the dimensions. This way you can keep any future properties as well as the color type and alpha type. I do know that some color types are read-only, so that may fail - in that case just copy the color space.",
+        "createdAt": "2018-05-18T03:55:06",
+        "reactions": []
+      },
+      {
+        "id": 390274420,
+        "author": "dsyno",
+        "body": "Unfortunately, that doesn\u0027t work.\r\n\r\nIn fact, simply creating a SKBitmap from the stream, then saving the bitmap, causes the colors to be skewed. \r\n\r\nWhat am I missing?\r\n\r\n### Code\r\n\u0060\u0060\u0060\r\nSKBitmap srcBitmap = ...\r\n// use the attached sample CMYK image\r\n\r\n// save\r\nusing (SKImage image = SKImage.FromBitmap(srcBitmap))\r\nusing (SKData data = image.Encode(SKEncodedImageFormat.Jpeg, 100))\r\nusing (Stream imgStream = data.AsStream())\r\n{\r\n\t// save the stream and look at the image.\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Sample CMYK image (use this with the code above)\r\n(Note that the colors of this CMYK image will look different depending on which browser you are using. e.g. Chrome, Firefox, etc; I recommend using Chrome or IE.)\r\n![channel_digital_image_cmyk_color](https://user-images.githubusercontent.com/7843827/40247917-148f9720-5a9c-11e8-97c2-b61a220f6fc9.jpg)\r\n\r\n### Result\r\n![samplecmyk_afterskia](https://user-images.githubusercontent.com/7843827/40247980-5cb0900e-5a9c-11e8-9c20-ef7ccce9f81a.jpg)\r\n\r\n",
+        "createdAt": "2018-05-18T17:18:14",
+        "reactions": []
+      },
+      {
+        "id": 390422808,
+        "author": "dsyno",
+        "body": "The issue has been resolved. As you mentioned, it was a \u0060ColorSpace\u0060 issue.\r\n\r\nThe key piece of info for anyone else reading this: **\u0060ColorSpace\u0060 must be set on the source object AND the destination object (SKBitmap, SKImage, SKSurface, etc).** This is so Skia can know how to convert the colors between the source and destination. If the \u0060ColorSpace\u0060 is not set on either of those, or if either \u0060ColorSpace\u0060 gets lost along the way (which easily happens when you\u0027re creating new objects), Skia will use default settings which can skew the color conversion.\r\n\r\n### Example of maintaining \u0060ColorSpace\u0060 and converting CMYK to sRGB:\r\n\u0060\u0060\u0060\r\nusing (SKData origData = SKData.Create(imgStream)) // convert the stream into SKData\r\nusing (SKImage srcImg = SKImage.FromEncodedData(origData))\r\n\t// srcImg now contains the original \u0060ColorSpace\u0060 (e.g. CMYK)\r\n{\r\n\tSKImageInfo info = new SKImageInfo(resizeWidth, resizeHeight,\r\n\t\tSKImageInfo.PlatformColorType, SKAlphaType.Premul, SKColorSpace.CreateSrgb());\r\n\t// this is the important part. set the destination \u0060ColorSpace\u0060 as\r\n\t// \u0060SKColorSpace.CreateSrgb()\u0060. Skia will then automatically convert the original CMYK\r\n\t// colorspace, to this new sRGB colorspace. (Though the conversion is extremely slow!\r\n\t// More on this in at the end of this post.)\r\n\r\n\tusing (SKImage newImg = SKImage.Create(info)) // new image. \u0060ColorSpace\u0060 set via \u0060info\u0060\r\n\t{\r\n\t\tsrcImg.ScalePixels(newImg.PeekPixels(), SKFilterQuality.None);\r\n\t\t// now when doing this resize, Skia knows the original \u0060ColorSpace\u0060, and the\r\n\t\t// destination \u0060ColorSpace\u0060, and converts the colors from CMYK to sRGB.\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\n### Another way to do the CMYK to sRGB conversion:\r\n\u0060\u0060\u0060\r\nusing (SKCodec codec = SKCodec.Create(imgStream)) // create a codec with the imgStream\r\n{\r\n\tSKImageInfo info = new SKImageInfo(codec.Info.Width, codec.Info.Height,\r\n\t\tSKImageInfo.PlatformColorType, SKAlphaType.Premul, SKColorSpace.CreateSrgb());\r\n\t// set the destination \u0060ColorSpace\u0060 via SKColorSpace.CreateSrgb()\r\n\r\n\tSKBitmap srcImg = SKBitmap.Decode(codec, info);\r\n\t// Skia creates a new bitmap, converting the codec \u0060ColorSpace\u0060 (e.g. CMYK) to the\r\n\t// destination ColorSpace (sRGB)\r\n}\r\n\u0060\u0060\u0060\r\n\r\n@mattleibow, feel free to correct me, or clarify any of this to make it easier for others to understand. Thank you!\r\n\r\nOn a related note, **the operation to convert from CMYK to RGB is EXTREMELY slow.** When I simply added \u0060SKColorSpace.CreateSrgb()\u0060 to my code (so Skia then converted CMYK to RGB), the processing time went from 3 seconds to 30 seconds!... for one (4958x6990px) CMYK image.\r\n\r\nDo you want me to open a new ticket for this CMYK-to-RGB slowness? Or do you already know the answer, and whether anything can be done to speed it up?",
+        "createdAt": "2018-05-19T18:11:14",
+        "reactions": []
+      },
+      {
+        "id": 390447422,
+        "author": "mattleibow",
+        "body": "I haven\u0027t done much work with the color space area, but what happens if you use the color space from the codec?\r\n\r\nI know in \u0060SKBitmap.Decode(...)\u0060 i explicitly set the color space to null for backwards compatibility. But if this is really breaking things, I probably should not do this.",
+        "createdAt": "2018-05-20T01:05:48",
+        "reactions": []
+      },
+      {
+        "id": 390454599,
+        "author": "dsyno",
+        "body": "I haven\u0027t tried using the \u0060ColorSpace\u0060 from the codec, because I actually want to convert the CMYK to RGB. I imagine using the codec \u0060ColorSpace\u0060 to apply it to the destination, would keep it all in the CMYK \u0060ColorSpace\u0060. (On a related note, you had mentioned that \u0022some color types are read-only\u0022. If that\u0027s the case, it seems you could still copy all the image info, while replacing the \u0060ColorType\u0060 with your preference: \u0060SKImageInfo newInfo = originalInfo.WithColorType(SKImageInfo.PlatformColorType);\u0060)\r\n\r\nRegarding your other comment, if you\u0027re setting the \u0060SKBitmap.Decode(...)\u0060 \u0060ColorSpace\u0060 to null, I imagine that\u0027ll definitely cause color issues, especially if you\u0027re discarding a previously set \u0060ColorSpace\u0060. (Are you saying that\u0027s what the SkiaSharp source code is doing? If so, that may explain why the \u0060ColorSpace\u0060 has been getting lost.)\r\n\r\nHere is where I learned this: https://skia.org/user/sample/color\r\n\r\nPlease read the whole page (it\u0027s short and packed with great information that you may find very useful), and the last part was especially helpful:\r\n\r\n\u003E ### Opting In To Color Correct Skia\r\n\u003E\r\n\u003E By itself, adding a color space tag to a source will not change draw behavior. In fact, **tagging sources with color spaces is always a best practice**, regardless of whether or not we want Skia\u2019s color correct behavior.\r\n\u003E \r\n\u003E Adding a color space tag to the **destination is the trigger that turns on Skia color correct behavior**.\r\n\u003E \r\n\u003E Drawing a source without a color space to a destination with a color space is undefined. Skia cannot know how to draw without knowing the color space of the source.\r\n\u003E\r\n\u003E![colorspace](https://user-images.githubusercontent.com/7843827/40275209-52739fac-5bb7-11e8-9087-63e86935ed74.gif)",
+        "createdAt": "2018-05-20T03:17:24",
+        "reactions": []
+      },
+      {
+        "id": 442139101,
+        "author": "mattleibow",
+        "body": "Closing this as it has been resolved by setting a colorspace.",
+        "createdAt": "2018-11-27T17:09:13",
+        "reactions": []
+      }
+    ]
+  }
 }

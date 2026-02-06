@@ -19,5 +19,24 @@
   "updatedAt": "2022-08-19T15:02:30",
   "closedAt": "2018-05-17T01:53:36",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:02:52.5550411Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 389719428,
+        "author": "mattleibow",
+        "body": "This is not done in the traditional sense. To do this you would create a new surface, clear it to white and then draw the other bitmap on top (assuming the \u0022blank\u0022 is transparent).\r\n\r\nSome pseudo code:\r\n\r\n\u0060\u0060\u0060csharp\r\n// the bitmap to resize and fill\r\nSKBitmap sourceBitmap = \u2026;\r\n\r\n// the desired image size\r\nSKImageInfo info = new SKImageInfo(200, 200);\r\n\r\n// create the surface\r\nSKSurface surface = SKSurface.Create(info);\r\n\r\n// get the canvas for drawing\r\nSKCanvas canvas = surface.Canvas;\r\n\r\n// draw the white background\r\ncanvas.Clear(SKColors.White);\r\n\r\n// create a paint object so that drawing can happen at a higher resolution\r\nSKPaint paint = new SKPaint {\r\n    IsAntialias = true,\r\n    FilterQuality = SKFilterQuality.High\r\n};\r\n\r\n// draw the source bitmap over the white\r\ncanvas.DrawBitmap(sourceBitmap, info.Rect, paint);\r\n\r\n// create an image for saving/drawing\r\ncanvas.Flush();\r\nSKImage finalImage = surface.Snapshot();\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-05-17T01:53:20",
+        "reactions": [
+          {
+            "user": "lebio7",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:02:52.5047373Z"
+          }
+        ]
+      }
+    ]
+  }
 }

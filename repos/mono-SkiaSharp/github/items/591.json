@@ -15,5 +15,190 @@
   "updatedAt": "2022-08-19T15:01:58",
   "closedAt": "2018-11-06T17:56:13",
   "commentCount": 23,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:03:44.8597459Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 415382495,
+        "author": "AlexNosk",
+        "body": "Any update on this?",
+        "createdAt": "2018-08-23T11:29:48",
+        "reactions": []
+      },
+      {
+        "id": 426328622,
+        "author": "kekekeks",
+        "body": "@AlexNosk \r\n\r\nYou are probably missing Visual C\u002B\u002B runtime. See https://github.com/mono/SkiaSharp/issues/136",
+        "createdAt": "2018-10-02T15:55:46",
+        "reactions": []
+      },
+      {
+        "id": 426409837,
+        "author": "chrismellard",
+        "body": "@kekekeks This is one issue with running SkiaSharp inside Windows containers but not the only one. libSkiaSharp.dll also has a dependency on both opengl32.dll and glu32.dll. \r\n\r\n@AlexNosk In your dockerfile copy these two assemblies in to the windows/system32 folder and things work fine - least they did for me. This is a hack, and so long as you don\u0027t any of whatever skiasharp requires from those libraries to actually work you\u0027re all good. I think they\u0027re working on 3d support for windows containers at the moment.",
+        "createdAt": "2018-10-02T20:00:16",
+        "reactions": []
+      },
+      {
+        "id": 426548573,
+        "author": "kekekeks",
+        "body": "On Linux opengl references are resolved dynamically. See  https://github.com/mono/skia/pull/50 and\r\nhttps://github.com/mono/skia/commit/b5793908b1fa1510c31cf7548035d7df0566f7bc\r\n\r\nI guess on Windows we can do the same.",
+        "createdAt": "2018-10-03T08:10:11",
+        "reactions": []
+      },
+      {
+        "id": 427129728,
+        "author": "mattleibow",
+        "body": "@kekekeks I am thinking that maybe we should - it appears that those assemblies are not always distributed on some \u0022versions\u0022... What are they actually? @chrismellard what container were you using? I thought they were always part of all Windows.",
+        "createdAt": "2018-10-04T18:50:23",
+        "reactions": []
+      },
+      {
+        "id": 427287580,
+        "author": "chrismellard",
+        "body": "@mattleibow Container I had to copy those libraries in from was \r\n\r\n\u0060FROM microsoft/iis:windowsservercore-1803\u0060",
+        "createdAt": "2018-10-05T08:31:52",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:41.4787951Z"
+          }
+        ]
+      },
+      {
+        "id": 427383974,
+        "author": "mattleibow",
+        "body": "Thanks. I will investigate.",
+        "createdAt": "2018-10-05T14:25:23",
+        "reactions": []
+      },
+      {
+        "id": 427384565,
+        "author": "mattleibow",
+        "body": "~Hmm. I see opengl32.dll is already dynamically loaded: \r\nhttps://github.com/google/skia/blob/36f7e3298e9d8e21d095197db0ec72c155f7d61f/src/gpu/gl/win/GrGLMakeNativeInterface_win.cpp~ (this is untrue \uD83D\uDE1E)",
+        "createdAt": "2018-10-05T14:27:10",
+        "reactions": []
+      },
+      {
+        "id": 427604851,
+        "author": "mattleibow",
+        "body": "After that commit, the new dependency tree is basically:\r\n - fontsub.dll\r\n - ole32.dll\r\n - user32.dll\r\n - kernel32.dll\r\n - msvcp140.dll _(vcredist)_\r\n - vcruntime140.dll _(vcredist)_\r\n\r\n![deps](https://user-images.githubusercontent.com/1096616/46575612-c02adc80-c9b8-11e8-9b86-9c834009cb2d.png)\r\n\r\nI am also working on making sure that there is an easy path for Docker. I have managed to basically get this working:\r\n\r\n\u0060\u0060\u0060\r\nRUN Invoke-WebRequest -OutFile vc_redist.x64.exe https://aka.ms/vs/15/release/vc_redist.x64.exe \u0060\r\n    Start-Process vc_redist.x64.exe -ArgumentList \u0027/install /passive /norestart\u0027 -Wait\r\n\u0060\u0060\u0060\r\n\r\nI will be creating a wiki with all the steps for creating a Docker container for both Windows and Linux. \r\n\r\nRight now, nanoserver is not playing nice and several dependencies are missing, so I don\u0027t think that support will be coming soon, but it will work fine with windowsservercore variants.",
+        "createdAt": "2018-10-06T20:43:06",
+        "reactions": []
+      },
+      {
+        "id": 427604952,
+        "author": "kekekeks",
+        "body": "May be it\u0027s time to reconsider about static CRT linking? It doesn\u0027t increase binary size that much, but decreases surprise factor by a lot.",
+        "createdAt": "2018-10-06T20:44:56",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:42.2046269Z"
+          }
+        ]
+      },
+      {
+        "id": 427605252,
+        "author": "mattleibow",
+        "body": "Having a look at Nano Server... Ran the \u0060NanoServerApiScan.exe\u0060 tool from: https://blogs.technet.microsoft.com/nanoserver/2016/04/27/nanoserverapiscan-exe-updated-for-tp5/\r\n\r\n\u0060\u0060\u0060\r\n=== libSkiaSharp.dll ===\r\n\r\nERRORS:\r\n\r\n  FONTSUB.dll\r\n    CreateFontPackage(Proc not found)\r\n  USER32.dll\r\n    SystemParametersInfoW(Proc not found)\r\n  MSVCP140.dll\r\n    \u2026\r\n    \u2026\r\n    \u2026\r\n      Please copy Nano Server compliant MSVCP140.dll from %ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\redist\\onecore\\x64\\Microsoft.VC140.CRT\\\r\n  VCRUNTIME140.dll\r\n    \u2026\r\n    \u2026\r\n    \u2026\r\n      Please copy Nano Server compliant VCRUNTIME140.dll from %ProgramFiles(x86)%\\Microsoft Visual Studio 14.0\\VC\\redist\\onecore\\x64\\Microsoft.VC140.CRT\\\r\n\u0060\u0060\u0060\r\n\r\nI need to investigate the 2 usages that appear to be bad:\r\n\r\n - FONTSUB.dll (CreateFontPackage)\r\n - USER32.dll (SystemParametersInfoW)\r\n\r\n",
+        "createdAt": "2018-10-06T20:49:25",
+        "reactions": []
+      },
+      {
+        "id": 427605722,
+        "author": "mattleibow",
+        "body": "Just did some investigation :)\r\n\r\n\u0060CreateFontPackage\u0060 from FONTSUB.dll is just for XPS support - and this is also just for font subsetting. The UWP build does not have this at all, so I could just remove it for a nano build.\r\n\r\n\u0060SystemParametersInfoW\u0060 from USER32.dll is also not too essential - it is just for determining the default font. Again, this is not available for UWP - we just pick the \u0022Segoe UI\u0022 which we know is available by default.\r\n\r\nNano Server support could very well be possible in the near future - just have to check priorities.",
+        "createdAt": "2018-10-06T20:56:54",
+        "reactions": []
+      },
+      {
+        "id": 427605976,
+        "author": "mattleibow",
+        "body": "@kekekeks I have been thinking about this and I will link in #136 so we can keep the discussion linked, but that discussion should be done there. (going to make a comment there now)",
+        "createdAt": "2018-10-06T21:01:13",
+        "reactions": []
+      },
+      {
+        "id": 436347162,
+        "author": "mattleibow",
+        "body": "Closing this as I have done a few things:\r\n - the Windows Nano Server image is not yet supported. See my comment https://github.com/mono/SkiaSharp/issues/591#issuecomment-427605252 and https://github.com/mono/SkiaSharp/issues/591#issuecomment-427605722\r\n - the new version of SkiaSharp will be statically linked #136 (@kekekeks)\r\n\r\nI have opened a new issue to support Nano server: #676",
+        "createdAt": "2018-11-06T17:56:13",
+        "reactions": []
+      },
+      {
+        "id": 561430659,
+        "author": "mattleibow",
+        "body": "Nano server images are now supported after #1040 ",
+        "createdAt": "2019-12-04T01:16:42",
+        "reactions": []
+      },
+      {
+        "id": 563479968,
+        "author": "mattleibow",
+        "body": "Just linking this new issue : https://github.com/NuGet/Home/issues/8894",
+        "createdAt": "2019-12-09T23:02:03",
+        "reactions": []
+      },
+      {
+        "id": 586467887,
+        "author": "djarvis",
+        "body": "I ended up here because of some confusion over SkiaSharp in a NanoServer docker container.  While I was able to get some things working after including SkiaSharp.NativeAssets.NanoServer, I noticed that I cannot draw text onto a bitmap using a font that I load from a file:\r\n\r\n\u0060\u0060\u0060csharp\r\nvar typeFace = SKTypeface.FromFile(\u0022Font Awesome 5 Free-Solid-900.otf\u0022);\r\nvar paint = new SKPaint() { TextSize = 40, Color = SKColor.Parse(\u0022FF0000\u0022), Typeface = typeFace};\r\nSKRect bounds = new SKRect();\r\npaint.MeasureText(unicodeCharacter, ref bounds);\r\n\u0060\u0060\u0060\r\n\r\nbounds is always 0x0.\r\n\r\nI see that SkiaSharp.NativeAssets.NanoServer shows:\r\n\r\n_This variation of the Windows native assets includes the build of libSkiaSharp.dll that does not make use of the typeface subsetting when creating XPS documents (CreateFontPackage from FONTSUB.dll)._\r\n\r\nSo I\u0027m guessing this has to do with something.\r\n\r\nIs there any way to use a font in NanoServer?",
+        "createdAt": "2020-02-14T20:51:56",
+        "reactions": []
+      },
+      {
+        "id": 586469304,
+        "author": "Gillibald",
+        "body": "Unfortunately there is currently no support for text rendering on Nano Server. That will most likely change with the next major release of SkiaSharp when Freetype can be used for Windows builds.",
+        "createdAt": "2020-02-14T20:56:19",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:03:43.8384166Z"
+          }
+        ]
+      },
+      {
+        "id": 586580967,
+        "author": "mattleibow",
+        "body": "@djarvis as @Gillibald says, there is currently an issue #1105\r\n\r\nFor now, is it possible to use the Linux images? Typically they are smaller and just as good. And, if you have a Windows host, they can be run side-by-side with Windows containers. That is the best for now, or use a Windows Server Core image - [like this example](https://github.com/mono/SkiaSharp/tree/master/samples/Basic/Docker/WebApi).",
+        "createdAt": "2020-02-15T11:30:07",
+        "reactions": []
+      },
+      {
+        "id": 586597899,
+        "author": "djarvis",
+        "body": "@mattleibow We have been using solely Linux containers but now have to offer up Windows containers.  I\u0027d rather not have the 4.8GB footprint just to be able to draw a font onto a bitmap so I\u0027d like to stick to the nanoserver images.\r\n\r\nWe need to support simple, single-machine deployments.  With the need to run along side legacy Windows apps, we see Windows Server 2019 as a solution since it comes with a free Docker EE license and as of now LCOW is still in an unsupported preview.  Otherwise we\u0027d just continue with Linux containers.\r\n\r\nI just need to draw this one font onto a bitmap so I might be able to take the svg and find a renderer and draw it manually but I haven\u0027t looked too far into that.",
+        "createdAt": "2020-02-15T14:55:15",
+        "reactions": []
+      },
+      {
+        "id": 586599377,
+        "author": "Gillibald",
+        "body": "You will be soon able to generate glyph outlines with the help of HarfBuzzSharp. Maybe thats a good way to get text rendered without having to rely on a font host implementation.",
+        "createdAt": "2020-02-15T15:11:57",
+        "reactions": []
+      },
+      {
+        "id": 587131536,
+        "author": "djarvis",
+        "body": "Luckily since I just needed to draw the Font Awesome glyphs I was able to use SkiaSharp.Svg to draw the relatively simple svgs onto a bitmap\r\n  This seems to work on Linux and Windows.",
+        "createdAt": "2020-02-17T19:33:14",
+        "reactions": []
+      },
+      {
+        "id": 970096205,
+        "author": "christian289",
+        "body": "Hello.\r\nI am trying to use SkiaSharp in windows docker container.\r\nMy environment is below.\r\n- .NET 5.\r\n- Windows 10 Pro, 21H1, 19043.1348\r\n- Visual Studio 2019 Pro\r\n- SkiaSharp.NativeAsserts.Linux.NoDependencies 2.80.3\r\n\r\nBelow is a screenshot of the Docker desktop.\r\n![image](https://user-images.githubusercontent.com/8288586/141957804-4f2c31c9-bb35-4b14-9306-7705cf8f4f18.png)\r\n\r\nlog\r\n\r\nwarn\u001B]0;C:\\Program Files\\dotnet\\dotnet.exe\u0007warn: ImageAutoSliceBackgroundServiceForWindows.ImageAutoSliceWorker[0] \r\n      [11/16/2021 6:17:10 PM][ImageAutoSliceWorker]Input Message        \r\nSystem.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKAbstractManagedStream\u0027 threw an exception.\r\n ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\n   at SkiaSharp.SkiaApi.sk_managedstream_set_procs(SKManagedStreamDelegates procs)\r\n   at SkiaSharp.SKAbstractManagedStream..cctor()\r\n   --- End of inner exception stack trace ---\r\n   at SkiaSharp.SKAbstractManagedStream..ctor(Boolean owns)\r\n   at SkiaSharp.SKManagedStream..ctor(Stream managedStream, Boolean disposeManagedStream)\r\n   at ImageAutoSliceBackgroundServiceForWindows.ImageAutoSliceWorker.MakeSKBitmap(ReadOnlySpan\u00601 span) in C:\\app\\Workers\\ImageAutoSliceWorker.cs:line 192       \r\n   at ImageAutoSliceBackgroundServiceForWindows.ImageAutoSliceWorker.MessageHandler(ProcessMessageEventArgs args)\r\n   at Azure.Messaging.ServiceBus.ServiceBusProcessor.OnProcessMessageAsync(ProcessMessageEventArgs args)\r\n   at Azure.Messaging.ServiceBus.ReceiverManager.OnMessageHandler(ServiceBusReceivedMessage message, CancellationToken processorCancellationToken)\r\n   at Azure.Messaging.ServiceBus.ReceiverManager.ProcessOneMessage(ServiceBusReceivedMessage message, CancellationToken cancellationToken)\r\n\r\n\r\n\r\n\r\n\r\n\r\nThe above problem occurs when the first class related to SkiaSharp is called. The code to be called is as follows.\r\n\r\n\u0060\u0060\u0060\r\n        private SKBitmap MakeSKBitmap(ReadOnlySpan\u003Cbyte\u003E span) // 189 line\r\n        {\r\n            MemoryStream ms = new(span.ToArray()); // 191 line\r\n            SKManagedStream skStream = new(ms, false); 192 line, Exception Occured !!\r\n            SKCodec codec = SKCodec.Create(skStream);\r\n\r\n            return SKBitmap.Decode(codec);\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nDockerfile\r\n\u0060\u0060\u0060\r\nFROM mcr.microsoft.com/dotnet/sdk:5.0 AS build\r\nSHELL [\u0022pwsh\u0022, \u0022-Command\u0022, \u0022$ErrorActionPreference = \u0027Stop\u0027; $ProgressPreference = \u0027SilentlyContinue\u0027;\u0022]\r\nUSER ContainerAdministrator\r\nRUN Invoke-WebRequest https://raw.githubusercontent.com/microsoft/artifacts-credprovider/master/helpers/installcredprovider.ps1 -OutFile ./installcredprovider.ps1; \r\nRUN .\\installcredprovider.ps1;\r\nRUN del installcredprovider.ps1\r\nUSER ContainerUser\r\nWORKDIR /app\r\nCOPY [\u0022ImageAutoSliceBackgroundServiceForWindows.csproj\u0022, \u0022\u0022]\r\nCOPY [\u0022nuget.config\u0022, \u0022\u0022]\r\n\r\nARG ID\r\nARG PAT\r\nRUN dotnet restore\r\n\r\nCOPY . .\r\nRUN dotnet build -c Release -o out --no-restorehttps://github.com/dotnet/dotnet-docker/issues/1649#issuecomment-581433906\r\nRUN dotnet publish\r\n\r\nFROM mcr.microsoft.com/dotnet/runtime:5.0 AS runtime\r\nWORKDIR /app/\r\nCOPY --from=build /app/out .\r\n\r\nCOPY /app/runtimes/win-x64/native\r\nENTRYPOINT [\u0022dotnet\u0022, \u0022ImageAutoSliceBackgroundServiceForWindows.dll\u0022]\r\n\u0060\u0060\u0060\r\n\r\nnuget.config\r\n\u0060\u0060\u0060\r\n\u003C?xml version=\u00221.0\u0022 encoding=\u0022utf-8\u0022?\u003E\r\n\u003Cconfiguration\u003E\r\n  \u003CpackageSources\u003E\r\n    \u003Cclear /\u003E\r\n    \u003Cadd key=\u0022nuget.org\u0022 value=\u0022https://api.nuget.org/v3/index.json\u0022 /\u003E\r\n    \u003Cadd key=\u0022EcremmoceSDK\u0022 value=\u0022https://pkgs.dev.azure.com/ecremmoce/_packaging/EcremmoceSDK/nuget/v3/index.json\u0022 /\u003E\r\n  \u003C/packageSources\u003E\r\n  \u003CactivePackageSource\u003E\r\n    \u003Cadd key=\u0022All\u0022 value=\u0022(Aggregate source)\u0022 /\u003E\r\n  \u003C/activePackageSource\u003E\r\n  \u003CpackageSourceCredentials\u003E\r\n    \u003CEcremmoceSDK\u003E\r\n      \u003Cadd key=\u0022Username\u0022 value=\u0022%ID%\u0022 /\u003E\r\n      \u003Cadd key=\u0022ClearTextPassword\u0022 value=\u0022%PAT%\u0022 /\u003E\r\n    \u003C/EcremmoceSDK\u003E\r\n  \u003C/packageSourceCredentials\u003E\r\n\u003C/configuration\u003E\r\n\u0060\u0060\u0060\r\nIf you look at dockerfile and nuget.config, there are parts that are slightly different from the basic contents. This is all part of linking Azure DevOps Artifact and PAT, so it doesn\u0027t seem like it has anything to do with SkiaSharp, but I share it nonetheless.\r\n\r\nI used SkiaSharp when developing WPF in .NET 5. At that time, I developed using \u0027SkiaSharp.NativeAsserts.Linux.NoDependencies 2.80.3\u0027, and even MSIX packaging was successful. So, again, I tried the following to use it as a Windows Container.\r\n\r\nBut the results were not good.\r\nWhat more can I do?\r\n\r\n\r\n",
+        "createdAt": "2021-11-16T09:44:16",
+        "reactions": []
+      }
+    ]
+  }
 }

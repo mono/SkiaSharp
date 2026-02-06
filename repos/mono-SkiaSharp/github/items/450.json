@@ -14,5 +14,87 @@
   "updatedAt": "2022-08-19T18:01:32",
   "closedAt": "2018-02-16T13:28:07",
   "commentCount": 10,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T14:01:22.0388366Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 365336705,
+        "author": "galvesribeiro",
+        "body": "cc: @mattleibow ",
+        "createdAt": "2018-02-13T17:15:07",
+        "reactions": []
+      },
+      {
+        "id": 365351782,
+        "author": "mattleibow",
+        "body": "Hmm. Not sure looking at the log, but just check to see if \u0060_fb.FBSize == imgInfo.BytesSize\u0060.\r\nAlso (I don\u0027t think this matters), but try \u0060Premul\u0060.",
+        "createdAt": "2018-02-13T18:03:50",
+        "reactions": []
+      },
+      {
+        "id": 365355368,
+        "author": "galvesribeiro",
+        "body": "They are equal and premul didn\u0027t worked.",
+        "createdAt": "2018-02-13T18:15:57",
+        "reactions": []
+      },
+      {
+        "id": 365441852,
+        "author": "galvesribeiro",
+        "body": "Got a bit further but now I\u0027m getting \u0060EntryPointNotFoundException\u0060:\r\n\r\n\u0060\u0060\u0060\r\nUnhandled Exception:\r\nSystem.EntryPointNotFoundException: sk_bitmap_can_copy_to\r\n  at (wrapper managed-to-native) SkiaSharp.SkiaApi.sk_bitmap_can_copy_to(intptr,SkiaSharp.SKColorType)\r\n  at SkiaSharp.SKBitmap.CanCopyTo (SkiaSharp.SKColorType colorType) [0x00006] in \u003Ccf546bad13294f0f88da02ef9d3e7062\u003E:0\r\n  at Avalonia.Skia.FramebufferRenderTarget\u002BPixelFormatShim..ctor (SkiaSharp.SKImageInfo nfo, System.IntPtr fb, System.Int32 rowBytes) [0x00044] in \u003C8692196438c84d5788abe7f04a8a96d0\u003E:0\r\n  at Avalonia.Skia.FramebufferRenderTarget.CreateDrawingContext (Avalonia.Rendering.IVisualBrushRenderer visualBrushRenderer) [0x00051] in \u003C8692196438c84d5788abe7f04a8a96d0\u003E:0\r\n  at Avalonia.Rendering.ImmediateRenderer.Paint (Avalonia.Rect rect) [0x00028] in \u003Cd7c7eccd3ad9432e857a311635580d9d\u003E:0\r\n  at Avalonia.Controls.TopLevel.HandlePaint (Avalonia.Rect rect) [0x0000b] in \u003C7b03e24a0146413c8d34bb6dc2d4eb84\u003E:0\r\n  at Avalonia.LinuxFramebuffer.FramebufferToplevelImpl.\u003CInvalidate\u003Eb__9_0 () [0x00021] in \u003C471ad4c39a0e484d99196f0e659bb8c2\u003E:0\r\n  at Avalonia.Threading.JobRunner.RunJobs (System.Nullable\u00601[T] priority) [0x00042] in \u003C4af0fa7ae6bc4baea492b767723232be\u003E:0\r\n  at Avalonia.Controls.Platform.InternalPlatformThreadingInterface.RunLoop (System.Threading.CancellationToken cancellationToken) [0x00037] in \u003C7b03e24a0146413c8d34bb6dc2d4eb84\u003E:0\r\n  at Avalonia.Threading.Dispatcher.MainLoop (System.Threading.CancellationToken cancellationToken) [0x0002b] in \u003C4af0fa7ae6bc4baea492b767723232be\u003E:0\r\n  at Avalonia.Application.Run (Avalonia.Input.ICloseable closable) [0x00049] in \u003C7b03e24a0146413c8d34bb6dc2d4eb84\u003E:0\r\n  at LinuxFramebufferPlatformExtensions.InitializeWithLinuxFramebuffer[T] (T builder, System.Action\u00601[T] setup, System.Threading.CancellationToken stop, System.String fbdev) [0x00032] in \u003C471ad4c39a0e484d99196f0e659bb8c2\u003E:0\r\n  at HelloPOS.Program.Main () [0x00027] in \u003C851b30b57be644dfbac383845a07421b\u003E:0\r\n\u0060\u0060\u0060",
+        "createdAt": "2018-02-13T23:31:34",
+        "reactions": []
+      },
+      {
+        "id": 365445244,
+        "author": "galvesribeiro",
+        "body": "If I comment the code that calls \u0060CanCopyTo\u0060 I get the same exception as before getting the canvas...",
+        "createdAt": "2018-02-13T23:48:18",
+        "reactions": []
+      },
+      {
+        "id": 365631146,
+        "author": "galvesribeiro",
+        "body": "Ping @mattleibow ",
+        "createdAt": "2018-02-14T14:53:32",
+        "reactions": []
+      },
+      {
+        "id": 366227467,
+        "author": "mattleibow",
+        "body": "Ah, your version of libSkiaSharp and SkiaSharp are out of sync. The size of the \u0060SKImageInterface\u0060 struct changed and will crash the app. and the entry point was removed for m60. I am assuming you are using an older version of the native file?",
+        "createdAt": "2018-02-16T12:52:01",
+        "reactions": []
+      },
+      {
+        "id": 366227517,
+        "author": "mattleibow",
+        "body": "Ping @galvesribeiro ",
+        "createdAt": "2018-02-16T12:52:17",
+        "reactions": []
+      },
+      {
+        "id": 366228380,
+        "author": "galvesribeiro",
+        "body": "@mattleibow I cloned SkiaSharp repo and submodules from main branch and then used the published 1.59 nuget package.\r\n\r\nNow it work-ish. For whatever reason, Skiasharp is consuming a lot of memory form the device... Trying to investigate why...",
+        "createdAt": "2018-02-16T12:56:40",
+        "reactions": []
+      },
+      {
+        "id": 366234830,
+        "author": "galvesribeiro",
+        "body": "Closing as the current problem is another issue. Thanks!",
+        "createdAt": "2018-02-16T13:28:07",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:01:21.9886239Z"
+          }
+        ]
+      }
+    ]
+  }
 }
