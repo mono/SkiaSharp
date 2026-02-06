@@ -1,0 +1,22 @@
+{
+  "number": 2661,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] SKImage.FromEncodedData that prevents image from being lazy loaded",
+  "body": "### Is your feature request related to a problem?\n\nThis proposal is related to these 2 bugs/caveats of skia:\r\nhttps://github.com/mono/SkiaSharp/issues/1097\r\nhttps://github.com/mono/SkiaSharp/issues/445\r\n\r\nTLDR; in some cases calling \u0060PeekPixels\u0060 on \u0060SKImage\u0060 results in \u0060null\u0060 references returned from a function due to how it works.\n\n### Describe the solution you would like\n\nWould be great to have an optional parameter for \u0060SKImage.FromEncodedData(path, ensurePixelData: true)\u0060 that accepts a new boolean parameter \u0060ensurePixelData\u0060 that tells Skia to bypass it\u0027s lazy loading functionality for SKImages.\r\n\r\nSimilar to the \u0060public SKImage ToRasterImage (bool ensurePixelData);\u0060 implementation.\r\n\r\n\n\n### Describe alternatives you have considered\n\nCurrently the only alternative is to copy pixels into a preallocated buffer object which is really inefficient in some complex scenarios. \n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ggolda",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-10-30T20:03:01",
+  "updatedAt": "2023-10-30T20:03:01",
+  "commentCount": 0,
+  "reactionCount": 0
+}

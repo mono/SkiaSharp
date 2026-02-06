@@ -1,0 +1,22 @@
+{
+  "number": 2866,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] ability to disable libjpeg-turbo\u0027s do_fancy_upsampling and do_block_smoothing settings",
+  "body": "### Is your feature request related to a problem?\n\nwe have a legacy pixel-based fingerprinting routine that we are trying to port from net48 to dotnet5.\r\n\r\napparently yuv420 jpegs decoded with System.Drawing.Imaging don\u0027t have fancy upsampling or block smoothing applied, so after migrating to SkiaSharp we\u0027re encountering tiny differences that cause our fingerprints to fail.\n\n### Describe the solution you would like\n\nit seems like the upsampling and smoothing is implemented in libjpeg-turbo and disabled via [these flags](https://github.com/libjpeg-turbo/libjpeg-turbo/blob/9ddcae4a8f4aaa096ccdcddec36afc52fbc01481/jpeglib.h#L548-L549), can we have corresponding SkCodecOptions to set them?\r\n\r\n\n\n### Describe alternatives you have considered\n\nthe workaround is to use an alternative jpeg codec or call into libjpeg-turbo directly.\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "gfody",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-22T02:12:03",
+  "updatedAt": "2024-05-22T02:12:03",
+  "commentCount": 0,
+  "reactionCount": 0
+}

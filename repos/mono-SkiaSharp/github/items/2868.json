@@ -1,0 +1,27 @@
+{
+  "number": 2868,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] (preview-3.1) SKCanvas.TotalMatrix has (TransX, TransY) swapped with (Persp0, Persp1)",
+  "body": "### Description\r\n\r\nIn preview-3.1, \u0060SKCanvas.TotalMatrix\u0060 is not returning the correct value. \r\n\r\nI have to run the following to fix the value:\r\n\u0060\u0060\u0060cs\r\n(matrix.TransX, matrix.TransY) = (matrix.Persp0, matrix.Persp1);\r\n(matrix.Persp0, matrix.Persp1) = (0f, 0f);\r\n\u0060\u0060\u0060\r\n\r\n### Code\r\n\r\nIf you run the following code:\r\n\r\n\u0060\u0060\u0060cs\r\nCanvas.Save();\r\nCanvas.ResetMatrix();\r\nConsole.WriteLine($\u0022BEFORE Canvas.TotalMatrix = {Canvas.TotalMatrix.Values.Select(x =\u003E x.ToString()).Join(\u0022, \u0022)}\u0022);\r\nCanvas.Translate(100, 100);\r\nConsole.WriteLine($\u0022AFTER Canvas.TotalMatrix = {Canvas.TotalMatrix.Values.Select(x =\u003E x.ToString()).Join(\u0022, \u0022)}\u0022);\r\nCanvas.Restore();\r\n\u0060\u0060\u0060\r\n\r\nIt prints:\r\n\u0060\u0060\u0060\r\nBEFORE Canvas.TotalMatrix = 1, 0, 0, 0, 1, 0, 0, 0, 1\r\nAFTER Canvas.TotalMatrix = 1, 0, 0, 0, 1, 0, 100, 100, 1\r\n\u0060\u0060\u0060\r\n\r\nThe docs for SKMatrix.Values\r\n\u0060\u0060\u0060\r\nGets or sets the matrix as a flat array: [ScaleX, SkewX, TransX, SkewY, ScaleY, TransY, Persp0, Persp1, Persp2].\r\n\u0060\u0060\u0060\r\n\r\nso \u0060Persp0\u0060 and \u0060Persp1\u0060 have the values for \u0060TransX\u0060 and \u0060TransY\u0060 In previous versions (preview-2.1 and below), it would print:\r\n\r\n\u0060\u0060\u0060\r\nBEFORE Canvas.TotalMatrix = 1, 0, 0, 0, 1, 0, 0, 0, 1\r\nAFTER Canvas.TotalMatrix = 1, 0, 100, 0, 1, 100, 0, 0, 1\r\n\u0060\u0060\u0060\r\n\r\n\r\n### Expected Behavior\r\n\r\n_No response_\r\n\r\n### Actual Behavior\r\n\r\n_No response_\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x (Alpha)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System\r\n\r\nOther (Please indicate in the description)\r\n\r\n### Platform / Operating System Version\r\n\r\nBrave [Version 1.65.126 Chromium: 124.0.6367.118 (Official Build) (arm64)]\r\nObserved on MacOS\r\n\r\n### Devices\r\n\r\n_No response_\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "martinaxure",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-attention",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-05-23T21:13:44",
+  "updatedAt": "2024-07-23T20:38:07",
+  "closedAt": "2024-07-23T20:38:07",
+  "commentCount": 5,
+  "reactionCount": 0
+}

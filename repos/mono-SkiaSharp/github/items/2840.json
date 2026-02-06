@@ -1,0 +1,23 @@
+{
+  "number": 2840,
+  "type": "issue",
+  "state": "closed",
+  "title": "[iOS, 3.0 Preview 3.1] SkiaSharp\u0027s memory becomes corrupted and it stops to function in .NET 9.0 Preview 6",
+  "body": "### Description\r\n\r\nMy game GnollHack has several SKCanvasViews (and a few SKGLViews), and they all work well in SkiaSharp 2.88.8 (Xamarin). However, on iOS in SkiaSharp 3.0 Preview 3.1 with .NET MAUI 9.0 Preview 6, SkiaSharp\u0027s memory gets corrupted, and it stops drawing the canvases or draws a black canvas only after showing and hiding various layouts / grids many times.\r\n\r\nThe problem seems to be with just SKCanvasViews, but the problem emerges more quickly if both SKCanvasViews and SKGLViews are present on the page.\r\n\r\n### Code\r\n\r\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\n### Expected Behavior\r\n\r\nGame and SKCanvasView work as in Xamarin 2.88.8 on iOS without corrupting the memory.\r\n\r\n### Actual Behavior\r\n\r\nAfter opening many pages and showing and hiding layouts / grids, SkiaSharp\u0027s memory gets corrupted and it stops drawing on iOS. It is enough to press Play Game and then Cancel many times. If you do this with SKGLViews activated, 1-3 Play Game presses corrupts the memory; with only SKCanvasViews, 4-10 presses are needed. (Pressing Play Game opens a modal GamePage on the top of MainPage, and then on GamePage the MenuGrid covering the whole page on the top of main canvasView element. There are lots of SKCanvasViews everywhere.)\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x (Alpha)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.8 in Xamarin (Android works, too)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\niOS\r\n\r\n### Platform / Operating System Version\r\n\r\niOS 17.5.1\r\n\r\n### Devices\r\n\r\niPad 11,7\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-19T17:19:19",
+  "updatedAt": "2025-01-30T20:24:25",
+  "closedAt": "2025-01-30T20:24:24",
+  "commentCount": 17,
+  "reactionCount": 0
+}

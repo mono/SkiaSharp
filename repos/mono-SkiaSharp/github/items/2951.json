@@ -1,0 +1,23 @@
+{
+  "number": 2951,
+  "type": "issue",
+  "state": "closed",
+  "title": "[iOS, 3.0 Preview 4.1] SkiaSharp on iOS has a severe memory leak in .NET MAUI 9.0 Preview 6 (Test App Provided)",
+  "body": "### Description\n\nOn iOS, if one opens successively many pages with bitmaps drawn with SKCanvasView, SkiaSharp crashes in a memory leak. I tested this now with SkiaSharp 3.0 Preview 4.1 and .NET MAUI 9.0 Preview 6. Other platforms work fine.\r\n\r\nI made a test app based on default MAUI project through which this can be automatically tested. Just press the Click Me button, which starts opening and closing pages. Since pages are always closed, this should not cause the app to run out of memory.\r\n\r\nIn my case with an old iPad (11,7), it ran out of memory after opening the same page c. 145 times.\r\n\r\n@mattleibow Can you please download the app, and let me know what you see yourself?\n\n### Code\n\nThe sample app repository is here (just change the provisioning):\r\n\r\nhttps://github.com/hyvanmielenpelit/iOSMauiSkiaSharpMemoryLeak\n\n### Expected Behavior\n\nThe app can open the page all 500 times.\n\n### Actual Behavior\n\nOn iPad 11,7, the app crashes after opening and closing the page c. 145 times.\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\niOS\n\n### Platform / Operating System Version\n\niOS 17.5.1\n\n### Devices\n\niPad 11,7\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-19T21:15:47",
+  "updatedAt": "2024-07-23T22:19:39",
+  "closedAt": "2024-07-23T22:19:39",
+  "commentCount": 1,
+  "reactionCount": 0
+}

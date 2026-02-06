@@ -1,0 +1,22 @@
+{
+  "number": 3188,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Canvas.DrawVertices Outputs Black Image After Update to v3",
+  "body": "### Description\n\nI have a project where I\u0027m colorizing mesh data using Canvas.DrawVertices. Passing in a color array works fine in v2.88.9 but after updating to 3.116.1 the output is simply black.\n\nThe code block below was pulled from the samples project with some setup/export lines added by me to represent how I\u0027m using it. My project targets .NET 8.\n\n### Code\n\n\u0060\u0060\u0060cs\n// Setting up basic canvas\nvar imageInfo = new SKImageInfo(\n    width: 200,\n    height: 200,\n    colorType: SKColorType.Rgba8888,\n    alphaType: SKAlphaType.Premul);\n\nvar surface = SKSurface.Create(imageInfo);\n\n// Code copied from Samples\nsurface.Canvas.Clear(SKColors.White);\nvar paint = new SKPaint\n{\n    IsAntialias = true\n};\n\nvar vertices = new[] { new SKPoint(110, 20), new SKPoint(160, 200), new SKPoint(10, 200) };\nvar colors = new[] { SKColors.Red, SKColors.Green, SKColors.Blue };\n\nsurface.Canvas.DrawVertices(SKVertexMode.Triangles, vertices, colors, paint);\n\n\n// Encode the result as a png\nusing var data = surface.Snapshot();\nusing var pngImage = data.Encode(SKEncodedImageFormat.Png, 100);\n\n// Save the png to a stream\nusing var fileStream = File.Create(filePath);\npngImage.SaveTo(fileStream);\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nExpected behavior is a gradient triangle (output when run in version 2.88.9):\n\n![Image](https://github.com/user-attachments/assets/afa656d4-1966-496c-be0f-50d3d325f554)\n\n### Actual Behavior\n\nActual behavior is a black triangle (output when run in version 3.116.1):\n\n![Image](https://github.com/user-attachments/assets/5a9f1421-92d4-49f6-8f65-e7fb990cb82f)\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n.NET 8\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "rhoadscm",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-06T20:29:39",
+  "updatedAt": "2025-07-26T08:18:03",
+  "commentCount": 1,
+  "reactionCount": 0
+}

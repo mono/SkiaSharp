@@ -1,0 +1,22 @@
+{
+  "number": 3136,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] .NET MAUI app crash when new SKCanvasView() is called on Windows IoT",
+  "body": "### Description\n\nIn our .NET MAUI 8.0 application, we create a new instance of SKCanvasView and app immediately crashes on Windows 10/11 IoT edition.\r\n\r\nIt all work well on standard Windows 10/11 Home/Pro, iOS and Android.\r\n\r\nNow, I am on the latest 3.116.1 and I was not able to track down which version was working well. But it was failing on 2.88.9 as well when I tried.\r\n\r\nI was able to grab a crash dump file and analyze with WinDbg. Here is what I found:\r\n\r\n\u0060\u0060\u0060\r\n0:000\u003E !dse\r\nStowed Exception Array @ 0x000002176e9a8820\r\n\r\nStowed Exception #1 @ 0x000002176dd9e228\r\n\t0x80131534 (FACILITY_URT - .NET CLR): Uncaught exception during type initialization.\r\n\r\n\tStack : 0x2176e9a8670\r\n\t\t7ffc60448674 combase!RoOriginateLanguageException\u002B0x54\r\n\t\t7ffb8b9c3b7c\r\n\r\n\u003E\u003E\u003E Associated CLR Exception \u003C\u003C\u003C\r\n\r\nException object: 000001d6ced9dc18\r\nException type:   System.TypeInitializationException\r\nMessage:          The type initializer for \u0027SkiaSharp.Views.WinUI.Native.BufferExtensions\u0027 threw an exception.\r\nInnerException:   System.Runtime.InteropServices.COMException, Use !PrintException 000001D6CED9C2B0 to see more.\r\nStackTrace (generated):\r\n    SP               IP               Function\r\n    000000277897DB30 00007FFC47705D39 SkiaSharp_Views_WinUI_Native_Projection!SkiaSharp.Views.WinUI.Native.BufferExtensions.get__objRef_global__SkiaSharp_Views_WinUI_Native_IBufferExtensionsStatics()\u002B0x9\r\n    000000277897DB60 00007FFC47705D6D SkiaSharp_Views_WinUI_Native_Projection!SkiaSharp.Views.WinUI.Native.BufferExtensions.GetByteBuffer(Windows.Storage.Streams.IBuffer)\u002B0xd\r\n    000000277897DB90 00007FFC2CF561FD SkiaSharp_Views_Windows!SkiaSharp.Views.Windows.SKXamlCanvas.CreateBitmap()\u002B0x1fd\r\n    000000277897DC90 00007FFC2CF55C13 SkiaSharp_Views_Windows!SkiaSharp.Views.Windows.SKXamlCanvas.DoInvalidate()\u002B0x93\r\n    000000277897DDA0 00007FFBFB324C93 Microsoft_InteractiveExperiences_Projection!ABI.Microsoft.UI.Dispatching.DispatcherQueueHandler.Do_Abi_Invoke(IntPtr)\u002B0x43\r\n\r\nStackTraceString: \u003Cnone\u003E\r\nHResult: 80131534\r\n\r\n0:000\u003E !PrintException /d 000001D6CED9C2B0\r\nException object: 000001d6ced9c2b0\r\nException type:   System.Runtime.InteropServices.COMException\r\nMessage:          Class not registered (0x80040154 (REGDB_E_CLASSNOTREG))\r\nInnerException:   \u003Cnone\u003E\r\nStackTrace (generated):\r\n    SP               IP               Function\r\n    000000277897CCA0 00007FFB8AEAF55A System_Private_CoreLib!System.Runtime.InteropServices.Marshal.ThrowExceptionForHR(Int32)\u002B0x1a\r\n    000000277897CCD0 00007FFC477049C1 SkiaSharp_Views_WinUI_Native_Projection!WinRT.BaseActivationFactory..ctor(System.String, System.String)\u002B0xe1\r\n    000000277897CD40 00007FFC47705DBA SkiaSharp_Views_WinUI_Native_Projection!SkiaSharp.Views.WinUI.Native.BufferExtensions..cctor()\u002B0x2a\r\n\r\nStackTraceString: \u003Cnone\u003E\r\nHResult: 80040154\r\n\r\n\u0060\u0060\u0060\n\n### Code\n\n\u0060var canvasView = new SKCanvasView();\u0060\n\n### Expected Behavior\n\nApp should not crash\n\n### Actual Behavior\n\nApp crashes\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows IoT Enterprise\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "ivosnoza",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-01-07T16:08:25",
+  "updatedAt": "2025-09-10T15:34:29",
+  "commentCount": 9,
+  "reactionCount": 0
+}

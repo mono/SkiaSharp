@@ -1,0 +1,23 @@
+{
+  "number": 2666,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKBitmap.Encode issue with Skiasharp 2.88.6 on .NET 8.0 MacOS and iOS",
+  "body": "### Description\n\nWhen encoding images with SkiaSharp 2.88.6 on. NET 8. 0 for MacOS and iOS, there are preservation issues with the resulting images. However, in the previous version of SkiaSharp, the encoding was done correctly. The same image is encoded properly on Windows and Andriod.\r\n\r\nSkiasharp version: 2.88.6\r\nPlatform: MacIO and iOS.\n\n### Code\n\n        SKBitmap bitmap = SKBitmap.Decode(imageStream);\r\n\r\n        MemoryStream outputImage = new MemoryStream();\r\n        bitmap.Encode(SKEncodedImageFormat.Jpeg, 100).SaveTo(outputImage);\r\n\r\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio Code (macOS)\n\n### Platform / Operating System\n\nmacOS\n\n### Platform / Operating System Version\n\nMacOS 13.2\r\niOS 16.4\n\n### Devices\n\n-\n\n### Relevant Screenshots\n\nOriginal image: \r\n\r\n![pdf_succinctly_page3](https://github.com/mono/SkiaSharp/assets/65020530/614333ca-f924-40fb-9cb6-33c013a1e8f1)\r\n\r\nEncoded using Skasharp 2.88.6\r\n\r\n\r\n![output-encoded](https://github.com/mono/SkiaSharp/assets/65020530/2ba85a3e-5798-4952-8145-9df96bae7c63)\r\n\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "chinnumuniyappan",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2023-11-06T05:34:32",
+  "updatedAt": "2024-02-09T00:00:25",
+  "closedAt": "2024-01-09T21:40:07",
+  "commentCount": 5,
+  "reactionCount": 2
+}

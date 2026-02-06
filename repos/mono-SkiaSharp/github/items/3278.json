@@ -1,0 +1,22 @@
+{
+  "number": 3278,
+  "type": "issue",
+  "state": "open",
+  "title": "how to build libskiasharp.so for android",
+  "body": "### Description\n\nI try to build SkiaSharp for android. I followed the Wiki here\nhttps://github.com/mono/SkiaSharp/wiki/Building-on-Linux,skia version is 2.88.3,i use follow command to build:\n\nsudo gn gen \u0027out/android/arm64\u0027 --args=\u0027is_component_build=true target_os=\u0022android\u0022 skia_enable_tools=false is_official_build=true skia_use_icu=false skia_use_piex=true\n    skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false\n    skia_enable_gpu=true ndk_api=21 ndk=\u0022/home/vinno/net8/android-ndk-r21/\u0022 target_cpu=\u0022arm64\u0022\u0027\n\n\u0060sudo ~/net8/depot_tools/depot_tools/ninja \u0027SkiaSharp\u0027 -C \u0027out/android/arm64\u0027\u0060\n\nthan error happens:\nsudo ~/net8/depot_tools/depot_tools/ninja \u0027SkiaSharp\u0027 -C \u0027out/android/arm64\u0027\nninja: Entering directory \u0060out/android/arm64\u0027\nninja: error: \u0027../../../third_party/externals/zlib/adler32_simd.c\u0027, needed by \u0027obj/third_party/externals/zlib/zlib_adler32_simd.adler32_simd.o\u0027, missing and no known rule to make it\n\n![Image](https://github.com/user-attachments/assets/08c3406e-c45f-46dd-922f-dfadbbd60267)\n\n\n### Code\n\n\u0060sudo gn gen \u0027out/android/arm64\u0027 --args=\u0027is_component_build=true target_os=\u0022android\u0022 skia_enable_tools=false is_official_build=true skia_use_icu=false skia_use_piex=true\n    skia_use_system_expat=false skia_use_system_freetype2=false skia_use_system_libjpeg_turbo=false skia_use_system_libpng=false skia_use_system_libwebp=false skia_use_system_zlib=false\n    skia_enable_gpu=true ndk_api=21 ndk=\u0022/home/vinno/net8/android-ndk-r21/\u0022 target_cpu=\u0022arm64\u0022\u0027\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio Code (Linux)\n\n### Platform / Operating System\n\nLinux\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "llzz19851985",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-22T09:38:35",
+  "updatedAt": "2025-05-22T09:38:35",
+  "commentCount": 0,
+  "reactionCount": 0
+}

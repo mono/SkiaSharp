@@ -1,0 +1,22 @@
+{
+  "number": 2794,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Porting from 2.88.6 to 3.0.0-preview2.1 - \u0022Access Violation on Finalizer/Dispose\u0022- SKPaint object",
+  "body": "### Description\r\n\r\nThank you for SkiaSharp!  We love love love it.\r\n\r\nTonight I started our efforts to port our application from using SkiaSharp 2.88.6 (which is working like a champ, making full use of custom shaders on GLSurfaces), to the latest 3.0.0-preview2.1.\r\n\r\nWe had to change over about a dozen API\u0027s to the new API\u0027s -- very smooth, no issue.\r\n\r\nBut now when we run our previously very-stable application (in production), it now (with SkiaSharp v3.0) instantly crashes with an \u0022Access Violation\u0022 error where the stack trace shows a Native SKObject Dispose() method being called by it\u0027s finalizer.\r\n\r\nHere\u0027s what I see in Visual Studio 2022:\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/10914515/3b71f545-0541-4693-842d-7e4671105b2f)\r\n\r\n**The object type Disposed is of type \u0022SKPaint\u0022.**\r\n\r\n\r\n### Code\r\n\r\nBecause I don\u0027t know which SKObject is being Finalized, I don\u0027t know which code triggers it.   But somewhere, I\u0027ve got an SKPaint object that is being disposed via the Finalizer, which is supposed to be fine (right?).\r\n\r\n### Expected Behavior\r\n\r\nI\u0027m expecting SkiaSharp Object Finalizers to NOT cause Access Violation exceptions, but instead to operated normally.\r\n\r\n### Actual Behavior\r\n\r\nFinalizer calls Dispose() which throws a fatal \u0022Access Violoation\u0022 exception, and our app crashes.\r\n\r\n### Version of SkiaSharp\r\n\r\n3.x (Alpha)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.2 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindows 11 Home\r\n\r\n### Devices\r\n\r\nCyberPowerPC with intel i9-14900K, running Windows 11 Home\r\n\r\n### Relevant Screenshots\r\n\r\n![image](https://github.com/mono/SkiaSharp/assets/10914515/dc523b12-fe50-4ee3-923d-9ba3b05ef41e)\r\n\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "najak3d",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-12T10:17:05",
+  "updatedAt": "2025-03-12T23:52:13",
+  "commentCount": 39,
+  "reactionCount": 0
+}

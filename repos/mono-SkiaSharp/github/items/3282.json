@@ -1,0 +1,23 @@
+{
+  "number": 3282,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SKTypeface.UnitsPerEm throws System.ExecutionEngineException when created from a file",
+  "body": "### Description\n\nWhen I create an SKTypeface using FromFile, accessing UnitsPerEm throws System.ExecutionEngineException\n.\n\u0060\u0060\u0060\nSKTypeface typeface = SKTypeface.FromFile(_file.FullName);\nint units = typeface.UnitsPerEm; // throws.\n\u0060\u0060\u0060\n\nIn contrast, when I create an SKTypeface from a stream to the same file, UnitsPerEm does not throw.\n\u0060\u0060\u0060\nusing (Stream stream = _file.OpenRead())\n{\n    if (stream.Length \u003E 0)\n    {\n        SKTypeface typeface = SKTypeface.FromStream(stream);\n        int units = typeface.UnitsPerem; // returns a valid value.\n        ...\n    }\n}\n\nI\u0027m using SkiaSharp.Views.Maui.Controls v3.116.1\n\n### Code\n\nThe best way to share code for larger projects is a link to a GitHub repository: https://github.com/user/repo/tree/bug-123\n\nBut, you can also share a short block of code here:\n\u0060\u0060\u0060cs\n// some C# code here\n\u0060\u0060\u0060\nYou can also share some XAML:\n\u0060\u0060\u0060xaml\n\u003C!-- xaml code here --\u003E\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\nSurface Book 3\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "DanTravison",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-29T03:04:24",
+  "updatedAt": "2025-05-29T13:58:34",
+  "closedAt": "2025-05-29T13:58:34",
+  "commentCount": 2,
+  "reactionCount": 0
+}

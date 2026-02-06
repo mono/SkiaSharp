@@ -1,0 +1,23 @@
+{
+  "number": 2784,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Webp image color change after resize",
+  "body": "### Description\n\nWhen loading webp image and saving it in jpg without any transformation all colors preserved correctly. But when scale transformation applied colors became darker.\r\n\r\nI\u0027ve tried it on SkiaSharp \u00602.88.7\u0060 and \u00603.0.0-preview.2.1\u0060\r\n\r\nHere the source webp image: [test.zip](https://github.com/mono/SkiaSharp/files/14492382/test.zip)\r\nHere the results.\r\n\r\nNot scaled: ![test-output-not-scaled](https://github.com/mono/SkiaSharp/assets/405031/8aeccca9-5705-4e3a-80e1-266911bc54fc)\r\nScaled: ![test-output-scaled](https://github.com/mono/SkiaSharp/assets/405031/eaa41834-0591-4257-9fd3-b0840bd94293)\r\n\r\n\n\n### Code\n\n\u0060\u0060\u0060cs\r\nusing var bitmap = SKBitmap.Decode(@\u0022c:\\Temp\\test.webp\u0022);\r\n\r\nusing var bitmap2 = new SKBitmap(new SKImageInfo(bitmap.Info.Width / 2, bitmap.Info.Height / 2));\r\nbitmap.ScalePixels(bitmap2, new SKSamplingOptions(SKFilterMode.Nearest, SKMipmapMode.Nearest));\r\n\r\nusing (var file = new SKFileWStream(@\u0022c:\\Temp\\test-output-not-scaled.jpg\u0022))\r\n    bitmap.Encode(file, SKEncodedImageFormat.Jpeg, 100);\r\n\r\nusing (var file = new SKFileWStream(@\u0022c:\\Temp\\test-output-scaled.jpg\u0022))\r\n    bitmap2.Encode(file, SKEncodedImageFormat.Jpeg, 100);\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n3.x (Alpha)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nOther (Please indicate in the description)\n\n### Platform / Operating System\n\nLinux, Windows\n\n### Platform / Operating System Version\n\n_No response_\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MichaelLogutov",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-03-05T08:20:39",
+  "updatedAt": "2024-03-19T14:37:07",
+  "closedAt": "2024-03-19T14:37:07",
+  "commentCount": 4,
+  "reactionCount": 0
+}

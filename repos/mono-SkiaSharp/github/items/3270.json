@@ -1,0 +1,22 @@
+{
+  "number": 3270,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Bahnschrift Light Semicondensed font stream is not created properly",
+  "body": "### Description\n\nWe are trying to create the **\u0022Bahnschrift Light SemiCondensed\u0022** font stream using the code below. However, the resulting font stream is Bahnschrift, which is a variable font containing multiple weights and widths, instead of the specific Bahnschrift Light SemiCondensed style. This is the issue we are encountering.\n\nPlatform: ASP.NET Core\nVisual Studio version: 2022\n.NET version : .NET 8.0\nSkiaSharp version : 3.116.1\n\n\n### Code\n\n\n\u0060\u0060\u0060cs\npublic void FontCreation()\n{\n   SKFontStyleWeight weight = SKFontStyleWeight.Light;\n   SKFontStyleSlant sKFontStyleSlant = SKFontStyleSlant.Upright;\n   SKFontStyleWidth sKFontStyleWidth = SKFontStyleWidth.SemiCondensed;\n   SKTypeface typeface = SKTypeface.FromFamilyName(\u201CBahnschrift\u201D, weight, sKFontStyleWidth, sKFontStyleSlant);\n   SKStream skFontStream = typeface.OpenStream();\n   if (skFontStream != null \u0026\u0026 skFontStream.Length \u003E 0)\n   {\n       skFontStream.Rewind();\n       const int bufferSize = 8192;\n       byte[] buffer = new byte[bufferSize];\n       int bytesRead;\n       FileStream font = new FileStream(@\u0022Font.ttf\u0022, FileMode.Create, FileAccess.Write);\n       while ((bytesRead = skFontStream.Read(buffer, bufferSize)) \u003E 0)\n       {\n           font.Write(buffer, 0, bytesRead);\n       }\n       font.Position = 0;\n       font.Close();\n   }\n\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nThis should return the Bahnschrift Light SemiCondensed font stream.\n\n### Actual Behavior\n\nThis code is returning Bahnschrift font stream which is a variable font.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "MohanaselvamJ",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-05-08T13:41:09",
+  "updatedAt": "2025-07-23T07:54:47",
+  "commentCount": 3,
+  "reactionCount": 0
+}

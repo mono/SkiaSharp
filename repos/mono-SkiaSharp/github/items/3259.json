@@ -1,0 +1,22 @@
+{
+  "number": 3259,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Blazor null exception at SkiaSharp.DelegateProxies.SKManagedWStreamWriteProxyImplementation",
+  "body": "### Description\n\nI am using an SKSvgCanvas to create svgs. But if I had an exception in my render function and catch them in a try catch block, I get some time later this exception: \n\u0060Object reference not set to an instance of an object. at SkiaSharp.DelegateProxies.SKManagedWStreamWriteProxyImplementation(IntPtr s, Void* context, Void* buffer, IntPtr size) \u0060\n\n\n\n### Code\n\n\u0060\u0060\u0060\npublic class MyRenderer()\n{\n  public string DrawSVG()\n  {\n    var stream = new MemoryStream();\n    var canvas = SKSvgCanvas.Create(\n        new SKRect(\n            0,\n            0,\n            TimelineProperties.TotalWidth,\n            TimelineProperties.Size[TimelineSize.M].TotalHeight),\n        stream);\n  \n    DrawSomeStuff(canvas); //if this throws an exception, i later get the exception mentioned above.\n    \n    canvas.Dispose();\n    \n    return Encoding.Default.GetString(stream .ToArray());\n  }\n}\n\n//In my Razor-Page\nprivate void RenderSvg()\n{\n  var renderer = new MyRenderer();\n  try\n  {\n    svgString = renderer.DrawSVG();\n  }\n  catch (Exception ex)\n  {\n    Debug.WriteLine(ex.Message);\n  }\n  InvokeAsync(() =\u003E StateHasChanged());\n}\n\n\n\u0060\u0060\u0060\n\n\n### Expected Behavior\n\nNothing should happen.\n\n### Actual Behavior\n\nException gets catched and later I get an error:\n\u0060\u0060\u0060\n[UnmanagedCallersOnly(CallConvs = new Type[] { typeof(CallConvCdecl) })]\n[return: MarshalAs(UnmanagedType.I1)]\nprivate unsafe static bool SKManagedWStreamWriteProxyImplementation(nint s, void* context, void* buffer, nint size)\n{\n\tGCHandle gch;\n\tSKAbstractManagedWStream userData = GetUserData\u003CSKAbstractManagedWStream\u003E((nint)context, out gch);\n\treturn userData.OnWrite((nint)buffer, size);\n}\n\nSystem.NullReferenceException: \u0027Object reference not set to an instance of an object.\u0027\n\u0060\u0060\u0060\n\nresulting in, the whole Blazor App crashes.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.9 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nWindows 10\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "14z0r",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-30T11:01:56",
+  "updatedAt": "2025-04-30T11:02:21",
+  "commentCount": 0,
+  "reactionCount": 0
+}

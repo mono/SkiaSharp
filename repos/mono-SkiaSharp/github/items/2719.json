@@ -1,0 +1,22 @@
+{
+  "number": 2719,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] RowBytes in Bitmap does not update after subset",
+  "body": "### Description\n\nAfter subsetting a bitmap, the RowBytes in Bitmap remains unchanged at the initial bitmap size, The RowBytes in Bitmap.Info.RowBytes does get updated.\n\n### Code\n\n\u0060\u0060\u0060\r\n//Perform subset of image\r\nvar srcRect = new SKRectI(10,10,50,50); // just for example\r\nbitmap.ExtractSubset(output.Bitmap, srcRect);\r\nDebug.Assert(bitmap.RowBytes == bitmap.Info.RowBytes);\r\n\u0060\u0060\u0060\n\n### Expected Behavior\n\nI would expect the RowBytes to update after subsetting the image.\n\n### Actual Behavior\n\nThe RowBytes in Bitmap do not change.\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAll\n\n### Platform / Operating System Version\n\nAll\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "gktval",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-16T19:04:51",
+  "updatedAt": "2024-01-16T21:14:29",
+  "commentCount": 1,
+  "reactionCount": 0
+}

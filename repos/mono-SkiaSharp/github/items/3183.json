@@ -1,0 +1,22 @@
+{
+  "number": 3183,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Jpeg image size is getting bigger without any manipulations.",
+  "body": "### Description\n\nI am using SkiaSharp for a straightforward task: loading images, correcting their orientation, and resizing them if necessary. However, I\u0027ve noticed that the output \u0060jpeg\u0060 images are larger, even when no modifications are applied. I have tested this with several \u0060jpg\u0060 images and consistently observed this behavior.\n\nIn contrast, when I tested with \u0060png\u0060 images, the output sizes remained consistent with the input sizes when no changes were made. In some cases, the output size was even smaller, which I assume is due to metadata cleanup.\n\nImages I used for testing:\nhttps://github.com/user-attachments/assets/9238f33d-5ad4-4a33-9915-9924ad3aacee\nhttps://github.com/user-attachments/assets/b2f61e7c-b737-4b4f-8f98-604877fb2969\n\n\n\n### Code\n\nThe image is loaded using the following code:\n\n\u0060\u0060\u0060c#\nbyte[] imageData = File.ReadAllBytes(\u0022your-image-here.jpg\u0022);\n\u0060\u0060\u0060\n\nFor processing, I use the following method:\n\n\u0060\u0060\u0060c#\nprivate (SKBitmap image, SKEncodedImageFormat imageFormat) ResolveImage(byte[] imageData)\n{\n    using var inputStream = new SKMemoryStream(imageData);\n    using var codec = SKCodec.Create(inputStream);\n    using var originalImage = SKBitmap.Decode(codec);\n    using var outputStream = new MemoryStream();\n    originalImage.Encode(outputStream, codec.EncodedFormat, 100);\n    // the remaining code goes here.\n}\n\u0060\u0060\u0060\u0060\nIt appears that the size of \u0060outputStream\u0060 is consistently larger than the size of \u0060imageData\u0060. I have verified this with multiple images.\n\n### Expected Behavior\n\nThe size of \u0060outputStream\u0060 should be similar to that of \u0060imageData\u0060, and ideally smaller, taking into account potential metadata cleanup.\n\n### Actual Behavior\n\nThe \u0060outputStream\u0060 is much larger than \u0060imageData\u0060, even when no modifications have been made to the \u0060jpeg\u0060 image.\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nUnknown\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Windows 11 Pro\n\n### Devices\n\n- MSI Prestige 16 Evo A13M\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "yauhenibhIDT",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-03-05T18:20:36",
+  "updatedAt": "2025-07-26T08:21:48",
+  "commentCount": 6,
+  "reactionCount": 0
+}

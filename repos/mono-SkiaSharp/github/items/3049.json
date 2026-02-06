@@ -1,0 +1,32 @@
+{
+  "number": 3049,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Blazor App Crashes in AOT mode with SkiaSharp.HarfBuzz in .NET 8",
+  "body": "### Description\n\nThe library SkiaSharp.HarfBuzz does not work at all in AOT mode with .NET 8 and 9, however everything works fine in .NET 7. \r\n![image](https://github.com/user-attachments/assets/164a8fd5-333a-403a-927b-bfb7ef695b57)\r\n\n\n### Code\n\nThe github repo with minimal project to reproduce:\r\nhttps://github.com/elepner/harfbuzzsharp-wasm-aot-bug/tree/report_bug\r\n\r\nPublish the project\r\n\u0060\u0060dotnet publish -c Release -o wasm-output\u0060\u0060\r\nnavigate to the output folder \u0060\u0060wasm-output/wwwroot\u0060\u0060 and start any http-server.\n\n### Expected Behavior\n\nThe app should not crash.\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.8 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.7 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nOther (Please indicate in the description)\n\n### Platform / Operating System Version\n\nBlazor\n\n### Devices\n\nGoogle chrome\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "elepner",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/WASM",
+      "color": "fbca04"
+    },
+    {
+      "name": "area/SkiaSharp.Views.Blazor",
+      "color": "0052cc"
+    }
+  ],
+  "assignees": [],
+  "milestone": "3.118.0",
+  "createdAt": "2024-10-31T10:22:07",
+  "updatedAt": "2024-11-28T16:09:33",
+  "closedAt": "2024-11-27T22:52:47",
+  "commentCount": 6,
+  "reactionCount": 0
+}

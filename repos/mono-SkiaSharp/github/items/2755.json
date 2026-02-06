@@ -1,0 +1,22 @@
+{
+  "number": 2755,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Using SKPaint.Clone() leads to Access Violation in DisposeNative when upgrading to SkiaSharp 3.0",
+  "body": "### Description\n\nI\u0027m in the processes of upgrading an existing app to SkiaSharp version 3 to try out the exciting new GPU acceleration integration with Maui on windows. After the upgrade and before enabling acceleration, I found I was getting Access Violations in DisposeNative of SKPaint. The call Stack only starts at ~SKNativeObject, so I guessed it was something to do with the GC. I was eventually was able to stop the error appearing by replace any calls to Clone() on SKPaint objects, most of which were due to earlier bad design choices on my part.\r\n\r\nI haven\u0027t done a repo on this as its part of a large project, but wanted to flag it. \r\n\r\nAm I right in thinking that the SKPaint class has developed much deeper links with the native code than in version 3.0? Is there any discussions/bug report/notes that could help understand the changes to this class and what that means? For example, is a performance benefit to keep an SKPaint object long term to avoid creating a fresh one for each draw call? Similarly with the SKFont, the separation from the SKPaint object makes a lot of sense, I removed all of the obsolete calls, but is it ok to keep the SKFont objects around long term?\r\n\n\n### Code\n\npaint = oldPaint.Clone();\r\n\n\n### Expected Behavior\n\n_No response_\n\n### Actual Behavior\n\n_No response_\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\n2.88.2 (Previous)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\nMaui Windows11\n\n### Devices\n\n_No response_\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\nStack trace: \r\n\r\n\t[Managed to Native Transition]\t\r\n\u003E\tSkiaSharp.dll!SkiaSharp.SKPaint.DisposeNative() Line 428\tC#\r\n \tSkiaSharp.dll!SkiaSharp.SKNativeObject.Dispose(bool disposing) Line 61\tC#\r\n \tSkiaSharp.dll!SkiaSharp.SKObject.Dispose(bool disposing) Line 90\tC#\r\n \tSkiaSharp.dll!SkiaSharp.SKPaint.Dispose(bool disposing) Line 424\tC#\r\n \tSkiaSharp.dll!SkiaSharp.SKNativeObject.~SKNativeObject() Line 34\tC#\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Rippletank",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-02-14T14:35:41",
+  "updatedAt": "2025-01-04T20:34:29",
+  "commentCount": 2,
+  "reactionCount": 1
+}

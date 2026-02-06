@@ -1,0 +1,31 @@
+{
+  "number": 3067,
+  "type": "issue",
+  "state": "closed",
+  "title": "ZipArchive is not functioning in Blazor WebAssembly when using System.IO.Compression.ZipArchive and SkiaSharp v3.118.0-preview.1.2 in .NET 9.0.",
+  "body": "### Description\r\n\r\nWe are experiencing an issue with the System.IO.Compression.ZipArchive and SkiaSharp package v3.118.0-preview.1.2 in our Blazor WebAssembly .NET 9.0 project. The problem began after we added the following line in our .csproj file:\r\n![image](https://github.com/user-attachments/assets/8b552511-2211-4205-ac2f-dfd2404af650)\r\n\r\nThis issue does not occur when using the SkiaSharp package v2.88.8 or checking .NET 8.0 working fine. I have attached a sample project and a screenshot of the issue for your reference.\r\n\r\nPlatform: Blazor wasm\r\nVisual Studio version: 2022\r\n.NET version : .NET9\r\nSkiaSharp version : v3.118.0-preview.1.2\r\n\r\n### Code\r\n\u0060\u0060\u0060razor\r\n@page \u0022/\u0022\r\n@using System.IO.Compression;\r\n@using System.Xml.Linq;\r\n@inject IJSRuntime JS;\r\n\r\n\r\n\u003Cbutton @onclick=\u0022ZipArchive\u0022\u003EDownload ZIP\u003C/button\u003E\r\n\r\n\r\n@code {\r\n    public async void ZipArchive()\r\n    {\r\n        using (MemoryStream zipStream = new MemoryStream())\r\n        {\r\n            using (ZipArchive archive = new ZipArchive(zipStream, ZipArchiveMode.Create, true))\r\n            {\r\n                ZipArchiveEntry entry = archive.CreateEntry(\u0022Sample.xml\u0022);\r\n                using (Stream entryStream = entry.Open())\r\n                {\r\n                    XDocument xmlDocument = new XDocument(\r\n                        new XElement(\u0022Root\u0022,\r\n                            new XElement(\u0022Child\u0022, \u0022Content\u0022)\r\n                        )\r\n                    );\r\n                    xmlDocument.Save(entryStream);\r\n                }\r\n            }\r\n            zipStream.Position = 0;\r\n            await JS.InvokeVoidAsync(\u0022downloadFileFromByteArray\u0022, \u0022SampleArchive.zip\u0022, zipStream.ToArray());\r\n        }\r\n    }\r\n}\r\n\u0060\u0060\u0060\r\n### Expected Behavior\r\n\r\nThe program should run without any exceptions in blazor wasm while using System.IO.Compression.ZipArchive and SkiaSharp package v3.118.0-preview.1.2\r\n\r\n### Actual Behavior\r\n\r\n \r\nAborted(Assertion failed: native function \u0060stackRestore\u0060 called after runtime exit (use NO_EXIT_RUNTIME to keep it alive after main() exits))\r\nThe thread \u0027.NET TP Worker\u0027 (33996) has exited with code 0 (0x0).\r\nThe thread \u0027.NET TP Worker\u0027 (42984) has exited with code 0 (0x0).\r\nUncaught RuntimeError RuntimeError: unreachable\r\n    at $__trap (wasm/022f640e.wat:3678318:1)\r\n    at ___trap (localhost\uA7897023/_framework/dotnet.native.krq9w4nbeb.js:11275:54)\r\n    at abort (localhost\uA7897023/_framework/dotnet.native.krq9w4nbeb.js:775:5)\r\n    at assert (localhost\uA7897023/_framework/dotnet.native.krq9w4nbeb.js:468:5)\r\n    at \u003Canonymous\u003E (localhost\uA7897023/_framework/dotnet.native.krq9w4nbeb.js:808:5)\r\n    at \u003Canonymous\u003E (d:\\Net9\\ZipArchive3.118.0-preview.1.2\\ZipArchive3.118.0-preview.1.2\\wwwroot\\_framework\\https:\\raw.githubusercontent.com\\dotnet\\runtime\\9d5a6a9aa463d6d10b0b0ba6d5982cc82f363dc3\\src\\mono\\browser\\runtime\\invoke-cs.ts:328:20)\r\n    at beginInvokeDotNetFromJS (localhost\uA7897023/_framework/blazor.webassembly.js:1:43656)\r\n    at invokeDotNetMethodAsync (localhost\uA7897023/_framework/blazor.webassembly.js:1:3978)\r\n    at invokeMethodAsync (localhost\uA7897023/_framework/blazor.webassembly.js:1:5486)\r\n    at \u003Canonymous\u003E (localhost\uA7897023/_framework/blazor.webassembly.js:1:13036)\r\n    at R (localhost\uA7897023/_framework/blazor.webassembly.js:1:13214)\r\n    at \u003Canonymous\u003E (localhost\uA7897023/_framework/blazor.webassembly.js:1:52854)\r\n    at invokeWhenHeapUnlocked (localhost\uA7897023/_framework/blazor.webassembly.js:1:44875)\r\n    at \u003Canonymous\u003E (localhost\uA7897023/_framework/blazor.webassembly.js:1:52817)\r\n    at R (localhost\uA7897023/_framework/blazor.webassembly.js:1:52844)\r\n    at I (localhost\uA7897023/_framework/blazor.webassembly.js:1:13005)\r\n    at dispatchGlobalEventToAllElements (localhost\uA7897023/_framework/blazor.webassembly.js:1:15626)\r\n    at onGlobalEvent (localhost\uA7897023/_framework/blazor.webassembly.js:1:14835)\r\n\r\n### Version of SkiaSharp\r\n\r\n3.118.0-preview.1 (Next Preview)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\n2.88.8 (Previous)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nWindows\r\n\r\n### Platform / Operating System Version\r\n\r\nWindow11\r\n\r\n### Devices\r\n\r\nVisual studio v2022\r\n\r\n### Issue reproducing sample\r\n[ZipArchive3.118.0-preview.1.2.zip](https://github.com/user-attachments/files/17748587/ZipArchive3.118.0-preview.1.2.zip)\r\n\r\n### Working sample\r\n[ZipArchive 2.88.8.zip](https://github.com/user-attachments/files/17748588/ZipArchive.2.88.8.zip)\r\n\r\n\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n![image (5)](https://github.com/user-attachments/assets/469f018f-dcfa-4aad-a27a-1d3728c115d4)\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "pandi123",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "status/needs-info",
+      "color": "B8EC4A"
+    },
+    {
+      "name": "status/no-recent-activity",
+      "color": "B8EC4A"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-11-14T12:41:14",
+  "updatedAt": "2024-12-06T01:32:15",
+  "closedAt": "2024-12-06T01:32:15",
+  "commentCount": 4,
+  "reactionCount": 0
+}

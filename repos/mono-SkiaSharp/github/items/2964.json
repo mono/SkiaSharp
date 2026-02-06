@@ -1,0 +1,23 @@
+{
+  "number": 2964,
+  "type": "issue",
+  "state": "closed",
+  "title": "Use LibraryImport instead of DllImport on net7\u002B for better performance",
+  "body": "### Is your feature request related to a problem?\n\nPerformance\n\n### Describe the solution you would like\n\nUpdate SkiaSharpGenerator to use LibraryImport when possible, e.g:\r\n\r\n\u0060\u0060\u0060csharp\r\n\t\t\t\t\twriter.WriteLine($\u0022\\t\\t#if NET7_0_OR_GREATER\u0022);\r\n\t\t\t\t\twriter.WriteLine($\u0022\\t\\t[LibraryImport ({config.DllName})]\u0022);\r\n\t\t\t\t\twriter.WriteLine($\u0022\\t\\t#else\u0022);\r\n\t\t\t\t\twriter.WriteLine($\u0022\\t\\t[DllImport ({config.DllName}, CallingConvention = CallingConvention.Cdecl)]\u0022);\r\n\t\t\t\t\twriter.WriteLine($\u0022\\t\\t#endif\u0022);\r\n\u0060\u0060\u0060\r\n\r\n(Not sure if it will be that trivial)\r\n\n\n### Describe alternatives you have considered\n\nN/A\n\n### Additional context\n\n_No response_\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "Youssef1313",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/feature-request",
+      "color": "ededed"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-07-31T10:53:38",
+  "updatedAt": "2024-07-31T10:58:58",
+  "closedAt": "2024-07-31T10:58:58",
+  "commentCount": 2,
+  "reactionCount": 0
+}

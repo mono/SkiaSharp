@@ -1,0 +1,22 @@
+{
+  "number": 3242,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] Lottie animations created from movie files do not properly display with Skia Lottie",
+  "body": "### Description\n\nHere is a lottie file:\n\n[BadLottie.json](https://github.com/user-attachments/files/19828604/BadLottie.json)\n\nNormally I can play Lottie files in SkiaSharp, but this particular file does not render.  \n\nThe properties seem to load correctly:\n\n![Image](https://github.com/user-attachments/assets/b8116948-7782-4d9e-aa30-6bac4bd21422)\n\nI suspect this has to do with the data coming from a movie file which is not supported by SkiaSharp?\n\n### Code\n\nI am rendering the animation to a canvas, but nothing appears. \n\n\u0060\u0060\u0060\nanimation = SkiaSharp.Skottie.Animation.Create(sourceFileAbsolute);\n...\nanimation.Render(surface.Canvas, new SKRect(0, 0, 100, 100));\n\u0060\u0060\u0060\n\n\n\n### Expected Behavior\n\nI expect the animation to play. This animation can be previewed on a Lottie viewer such as:\n\nhttps://www.lottielab.com/preview\n\n![Image](https://github.com/user-attachments/assets/0d904b01-9099-45bb-9695-5cfa3f6c2124)\n\n### Actual Behavior\n\nNothing is rendered to the canvas - it\u0027s blank\n\n### Version of SkiaSharp\n\n3.116.0 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nWindows\n\n### Platform / Operating System Version\n\n- Windows 11\n\n### Devices\n\nTested on multiple Windows machines.\n\n### Relevant Screenshots\n\n_No response_\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n\n\u0060\u0060\u0060\n\n### Code of Conduct\n\n- [x] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "vchelaru",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2025-04-21T02:59:47",
+  "updatedAt": "2025-04-21T02:59:47",
+  "commentCount": 0,
+  "reactionCount": 0
+}

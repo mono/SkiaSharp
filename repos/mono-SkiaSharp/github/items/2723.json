@@ -1,0 +1,23 @@
+{
+  "number": 2723,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] libSkiaSharp not found MagicLeap2 (x84_64)",
+  "body": "### Description\n\nHi,\r\n\r\nWe are using skiasharp on XR devices. On Quest 3 (Android ARM64) it works well, but on the MagicLeap2 (Android x86_64) I have this error : \r\n\u0060\u0060\u00602024/01/22 10:12:39.836 1412 1448 Error Unity [10:12:39.834] ASTROLABE - GetPageAsync \u003E Id=fc69227c-7984-493d-aa3f-8ed83838f6bb Exception=System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027. Tried the load the following dynamic libraries: Unable to load dynamic library \u0027libSkiaSharp\u0027 because of \u0027Failed to open the requested dynamic library (0x06000000) dlerror() = dlopen failed: library \u0022libSkiaSharp\u0022 not found\u0060\u0060\u0060\r\n\r\nBut the lib **is** in the lib folder in the apk, and so should be found ?\r\n\r\nDo you have any advice ? thanks\n\n### Code\n\n\u0060\u0060\u0060\r\n\t\tAndroidJavaClass pdfRendererHelperClass = new AndroidJavaClass(_androidPdfRendererModule);\r\n\t\tbyte[] bmp = pdfRendererHelperClass.CallStatic\u003Cbyte[]\u003E(\u0022GetDocumentBitmap\u0022, pdfRenderer, pageIndex);\r\n\r\n\t\treturn SKBitmap.Decode(bmp);\r\n\u0060\u0060\u0060\r\n\n\n### Expected Behavior\n\nNo error and the bitmap is decoded (same code works on ARM64)\n\n### Actual Behavior\n\nError and no bmp is decoded\n\n### Version of SkiaSharp\n\n2.88.3 (Current)\n\n### Last Known Good Version of SkiaSharp\n\nOther (Please indicate in the description)\n\n### IDE / Editor\n\nVisual Studio (Windows)\n\n### Platform / Operating System\n\nAndroid\n\n### Platform / Operating System Version\n\nAndroid 10 (API 29) x86_64\n\n### Devices\n\nMagicLeap 2\n\n### Relevant Screenshots\n\n![image](https://github.com/mono/SkiaSharp/assets/22128247/ace9e790-eb0c-4653-a775-bf0fe6dae7cc)\r\n\n\n### Relevant Log Output\n\n\u0060\u0060\u0060shell\n2024/01/22 10:12:39.836 1412 1448 Error Unity [10:12:39.834] ASTROLABE - GetPageAsync \u003E Id=fc69227c-7984-493d-aa3f-8ed83838f6bb Exception=System.TypeInitializationException: The type initializer for \u0027SkiaSharp.SKData\u0027 threw an exception. ---\u003E System.DllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027. Tried the load the following dynamic libraries: Unable to load dynamic library \u0027libSkiaSharp\u0027 because of \u0027Failed to open the requested dynamic library (0x06000000) dlerror() = dlopen failed: library \u0022libSkiaSharp\u0022 not found\n\u0060\u0060\u0060\n\n\n### Code of Conduct\n\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "SashelI",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-01-22T10:22:02",
+  "updatedAt": "2024-02-21T12:00:25",
+  "closedAt": "2024-01-22T10:32:44",
+  "commentCount": 0,
+  "reactionCount": 0
+}

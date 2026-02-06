@@ -1,0 +1,23 @@
+{
+  "number": 2843,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] SkiaSharp 2.88.8 (Xamarin) crashes randomly with Mali GPUs",
+  "body": "### Description\r\n\r\nEven after upgrading to 2.88.8 (Xamarin Android), we are still seeing the following crash with Mali GPUs (from Google Play Console):\r\n\r\n\u0060\u0060\u0060\r\n*** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\r\npid: 0, tid: 21941 \u003E\u003E\u003E com.soundmindentertainment.gnollhack \u003C\u003C\u003C\r\n\r\nbacktrace:\r\n  #00  pc 0x000000000004ee70  /apex/com.android.runtime/lib64/bionic/libc.so (__memcpy\u002B192)\r\n  #01  pc 0x0000000000762b40  /vendor/lib64/egl/mt6789/libGLES_mali.so\r\n  #02  pc 0x000000000078b718  /vendor/lib64/egl/mt6789/libGLES_mali.so\r\n  #03  pc 0x000000000076aa90  /vendor/lib64/egl/mt6789/libGLES_mali.so\r\n  #04  pc 0x0000000000707d34  /vendor/lib64/egl/mt6789/libGLES_mali.so\r\n  #05  pc 0x000000000029e450  /data/app/~~SsY_xaj2CQJm0UOb0lSueQ==/com.soundmindentertainment.gnollhack-ce759vY1qUNsToHUXChJuA==/split_config.arm64_v8a.apk!libSkiaSharp.so\r\n\u0060\u0060\u0060\r\n\r\nOnly happens with SKGLView.\r\n\r\n### Code\r\n\r\nhttps://github.com/hyvanmielenpelit/GnollHack\r\n\r\n### Expected Behavior\r\n\r\nSkiaSharp and SKGLView do not crash with Mali GPUs.\r\n\r\n### Actual Behavior\r\n\r\nOn Android, SkiaSharp crashes randomly when SKGLView is used with Mali GPUs. (But seems a bit rarer than with 2.80.3, which we used before.)\r\n\r\n### Version of SkiaSharp\r\n\r\n2.88.3 (Current)\r\n\r\n### Last Known Good Version of SkiaSharp\r\n\r\nOther (Please indicate in the description)\r\n\r\n### IDE / Editor\r\n\r\nVisual Studio (Windows)\r\n\r\n### Platform / Operating System\r\n\r\nAndroid\r\n\r\n### Platform / Operating System Version\r\n\r\nAndroid 13, as reported by Google Play Console. Also, a couple of Android 14 phones.\r\n\r\n### Devices\r\n\r\nMotorola Vicky (moto g72), as reported by Google Play Console. Also, a couple of Google Tensor / Pixel phones.\r\n\r\n### Relevant Screenshots\r\n\r\n_No response_\r\n\r\n### Relevant Log Output\r\n\r\n_No response_\r\n\r\n### Code of Conduct\r\n\r\n- [X] I agree to follow this project\u0027s Code of Conduct",
+  "author": {
+    "login": "janne-hmp",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "createdAt": "2024-04-22T18:34:47",
+  "updatedAt": "2025-05-20T20:08:32",
+  "closedAt": "2025-05-20T20:08:32",
+  "commentCount": 5,
+  "reactionCount": 0
+}
