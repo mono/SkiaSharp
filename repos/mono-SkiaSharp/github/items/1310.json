@@ -1,0 +1,18 @@
+{
+  "number": 1310,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Watermarking regression",
+  "body": "**Description**\r\n\r\nSkiaSharp 1.68.3 renders a basic watermarking pattern very poorly, as compared to 1.60.1 This may be related to https://github.com/mono/SkiaSharp/issues/931. I was able to get closer to the old rendering by fiddling with the colorspace, but haven\u0027t been able to make it exactly right.\r\n\r\n**Code**\r\nAttached zip includes code and sample images\r\n\u0060\u0060\u0060\r\nusing System;\r\nusing System.IO;\r\nusing SkiaSharp;\r\n\r\nnamespace SkiaSharpBugDemo\r\n{\r\n    class Program\r\n    {\r\n                \r\n        static void Main(string[] args)\r\n        {\r\n            using var assetStream = File.OpenRead(\u0022Resources\\\\testImage.jpg\u0022);\r\n            using var assetData = SKData.Create(assetStream);\r\n            using var codec = SKCodec.Create(assetData);\r\n            if (codec == null)\r\n            {\r\n                throw new ArgumentException(\u0022Source image is corrupted or unsupported.\u0022);\r\n            }\r\n            \r\n            var testImage = SKBitmap.Decode(assetData, codec.Info);\r\n           \r\n\r\n            using (var canvas = new SKCanvas(testImage))\r\n            {\r\n                var watermarkBitmap = SKBitmap.Decode(\u0022Resources\\\\testLogo.png\u0022);\r\n                \r\n                var rect = SKRect.Create(0, 0, testImage.Width, testImage.Height);\r\n                using var shader = SKShader.CreateBitmap(watermarkBitmap, SKShaderTileMode.Repeat, SKShaderTileMode.Repeat);\r\n                \r\n                var backgroundPaint = new SKPaint\r\n                {\r\n                    Style = SKPaintStyle.Fill,\r\n                    Shader = shader\r\n                };\r\n                canvas.DrawRect(rect, backgroundPaint);\r\n\r\n                using (FileStream fileStream = File.OpenWrite(\u0022watermarkedTestImageNew.jpg\u0022))\r\n                {\r\n                    var image = SKImage.FromBitmap(testImage);\r\n                    var stream = image.Encode(SKEncodedImageFormat.Jpeg, 98).AsStream();\r\n                    stream.CopyTo(fileStream);\r\n                    fileStream.Close();\r\n\r\n                }\r\n            }\r\n\r\n        }\r\n    }\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\n![SkiaSharp1 60 1](https://user-images.githubusercontent.com/14796343/83066055-77fb7a80-a032-11ea-88d1-569a36aa73f2.jpg)\r\n\r\n\r\n**Actual Behavior**\r\n\r\n![SkiaSharp1 68 3](https://user-images.githubusercontent.com/14796343/83066065-7cc02e80-a032-11ea-84ae-a33b347a167c.jpg)\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.3\r\n- Last known good version:  1.60.1\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: .NET Core 3.1\r\n  - Linux:  Debian 10\r\n  - Windows Classic:  Windows 10\r\n\r\n**Screenshots**\r\n\r\nSee Expected vs Actual\r\n\r\n**Reproduction Link**\r\n\r\n[SkiaSharpBugDemo.zip](https://github.com/mono/SkiaSharp/files/4691456/SkiaSharpBugDemo.zip)\r\n\r\n\r\n",
+  "author": {
+    "login": "SapientGuardian",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-05-27T20:03:30",
+  "updatedAt": "2022-08-19T06:01:31",
+  "closedAt": "2020-07-13T15:46:54",
+  "commentCount": 7,
+  "reactionCount": 0
+}

@@ -1,0 +1,18 @@
+{
+  "number": 1459,
+  "type": "issue",
+  "state": "closed",
+  "title": "Unable to load DLL libSkiaSharp the specified module could not be found.",
+  "body": "**Description**\r\n\r\nWin Forms Application\r\nDebug/Build Any/CPU\r\nI installed DYMO.Connect.SDK v1.3.1.115. It auto installs SkiaSharp \u0026 SkiaSharp.Views v1.68.0 and other dependicies.\r\nWhen I debug i can print labels just fine. However when I build the program and run it, i get the following error.\r\n\r\n\u0022Error\r\nUnable to load DLL \u0027libSkiaSharp\u0027: the specified module could not be\r\nfound.(Exception from HRESULT: 0x8007007E)\u0022\r\n\r\n**Code**\r\n\r\n                        Imports DymoSDK.Implementations\r\n                        Dim dymoSDKLabel As DymoSDK.Implementations.DymoLabel\r\n\r\n                        Private Sub PrintLabelButton_Click(sender As Object, e As EventArgs) Handles PrintLabelButton.Click\r\n                        Dim gen As New QRCodeGenerator\r\n                        Dim data = gen.CreateQrCode(sid, QRCodeGenerator.ECCLevel.Q)\r\n                        Dim qrCode As New Base64QRCode(data)\r\n                        Dim base64qrcode As String = qrCode.GetGraphic(20)\r\n                        Dim LabelTextObject As DymoSDK.Interfaces.ILabelObject\r\n                        Dim LabelQRObject As DymoSDK.Interfaces.ILabelObject\r\n                        Dim SelectedPrinter As String = \u0022DYMO LabelWriter 450\u0022\r\n                        Dim copies As Integer = 1\r\n                        Dim barcodeGraphsQuality As Boolean = True\r\n                        dymoSDKLabel = New DymoLabel()\r\n                        dymoSDKLabel.LoadLabelFromFilePath(\u0022C:\\Users\\\u0022 \u0026 WindowsUsername \u0026\u0022\\Documents\\DOCS\\test.dymo\u0022)\r\n                        LabelTextObject = dymoSDKLabel.GetLabelObject(\u0022TextObject\u0022)\r\n                        dymoSDKLabel.UpdateLabelObject(LabelTextObject, rowID)\r\n                        LabelQRObject = dymoSDKLabel.GetLabelObject(\u0022ImageObject\u0022)\r\n                        dymoSDKLabel.UpdateLabelObject(LabelQRObject, base64qrcode)\r\n                        DymoPrinter.Instance.PrintLabel(dymoSDKLabel, SelectedPrinter, copies, barcodeGraphsQuality)\r\n                        End Sub\r\n\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  \u003C!-- v1.68.0 --\u003E\r\n- IDE:  \u003C!-- Visual Studio Community 2019 /  --\u003E\r\n- Platform Target Frameworks: \u003C!-- 4.7.2 --\u003E\r\n\r\n  \r\n\r\n  \r\n\r\n\r\n**Screenshots**\r\n![image](https://user-images.githubusercontent.com/67664572/89848744-c4d3f500-db3b-11ea-88d8-c0c7fa76eb3d.png)\r\n\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n\r\n",
+  "author": {
+    "login": "SampleCoordinator",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-11T02:00:50",
+  "updatedAt": "2022-08-19T03:02:11",
+  "closedAt": "2020-08-13T02:25:59",
+  "commentCount": 4,
+  "reactionCount": 0
+}

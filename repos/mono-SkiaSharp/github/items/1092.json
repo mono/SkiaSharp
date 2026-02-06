@@ -1,0 +1,18 @@
+{
+  "number": 1092,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Assigning Bitmap.Pixels changes pixel value",
+  "body": "**Description**\r\n\r\nSee attachted unit test: If a assign an array of SKColors to the SKBitmaps \u0022Pixel\u0022-Property the values arent the values I assigned.\r\n\r\n**Code**\r\n\u0060\u0060\u0060\r\n\r\n        [TestMethod]\r\n        public void TestBitmapCreation()\r\n        {\r\n            using (var bitmap = new SKBitmap(1, 1, SKColorType.Bgra8888, SKAlphaType.Unpremul))\r\n            {\r\n                var newPixels = new SKColor[] {new SKColor(208, 208, 129, 13)};\r\n                bitmap.Pixels = newPixels;\r\n                Assert.AreEqual(bitmap.Pixels[0], newPixels[0]);\r\n            }\r\n        }\r\n\u0060\u0060\u0060\r\n\r\nOutput: Assert.AreEqual failed. Expected:\u003C#0dd8d889\u003E. Actual:\u003C#0dd0d081\u003E.\r\n\r\n**Expected Behavior**\r\n\r\nAssigned values should not be modified.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.68.1.\r\n- Last known good version:  ?\r\n- IDE:  Visual Studio 2017 Professional\r\n- Platform Target Frameworks: \r\n  -  I could reproduce it as a unit test, so it should be plattform indepentent (Originally observed in WPF and UWP).\r\n\r\n",
+  "author": {
+    "login": "N-Olbert",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-01-08T10:12:58",
+  "updatedAt": "2022-08-19T09:01:31",
+  "closedAt": "2020-02-28T08:54:09",
+  "commentCount": 8,
+  "reactionCount": 0
+}

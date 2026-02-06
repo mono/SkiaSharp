@@ -1,0 +1,17 @@
+{
+  "number": 1282,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] MissingMethodExeption while using vs 2017",
+  "body": "**Description**\r\n\r\nUsing DrawText method throw a System.MissingMethodException on visual studio 2017 when SkiaSharp.Views.Forms nuget version is over 1.60.3.\r\n\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\npublic partial class MainPage : ContentPage\r\n    {\r\n        public MainPage()\r\n        {\r\n            InitializeComponent();\r\n        }\r\n\r\n        private void Handle_PaintSurface(object sender, SKPaintSurfaceEventArgs e)\r\n        {\r\n            var canvas = e.Surface.Canvas;\r\n            using (var paint = new SKPaint())\r\n            {\r\n                paint.Color = Color.Black.ToSKColor();\r\n                paint.TextSize = 30;\r\n\r\n                canvas.DrawText(\u0022I am text\u0022, 15, 15, paint);\r\n            }\r\n        }\r\n    }\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nText get drawn.\r\n\r\n**Actual Behavior**\r\n\r\nApp crash with MissingMethodExeption (screenshot below)\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  above 1.68.0 to 1.68.2.1\r\n- Last known good version:  1.60.3\r\n- IDE:  vs 2017 (correct behavior on vs 2019)\r\n- Platform Target Frameworks:  Net Standard 2.0\r\n  - Android: 9.0 Api 28, aslo tryed on 8.1 \r\n\r\n- Target Devices:   various devices running over Android Oreo 8.1\r\n\r\n\r\n**Screenshots**\r\n\r\n![image](https://user-images.githubusercontent.com/29575216/81613448-c972fb00-93de-11ea-8e93-c8b1c85ea767.png)\r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/leocdi/skia01\r\n",
+  "author": {
+    "login": "leocdi",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-05-11T21:52:16",
+  "updatedAt": "2020-05-11T21:54:18",
+  "commentCount": 0,
+  "reactionCount": 0
+}

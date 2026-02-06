@@ -1,0 +1,18 @@
+{
+  "number": 1009,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Memory leak when create and dispose SKBitmap and SKCanvas using SkiaSharp",
+  "body": "**Description**\r\nI have create a SKBitmap and SKCanvas and then i call dispose for both SKBitmap and SKCanvas but the memory is not released. I have the checked the memory usage using Visual Studio. I have compare the third and first snapshot after the dispose method but it holds some bytes. Attached screenshots shows that memory is not released after disposing the object.\r\n\u003C!-- a general description goes here --\u003E\r\n\r\n**Code**\r\n\u0060Console.WriteLine();\u0060 // First snapshot\r\n\u0060SKBitmap bitmap = new SKBitmap(10, 10);\u0060\r\n            \u0060SKCanvas sKCanvas = new SKCanvas(bitmap);\u0060\r\n\u0060Console.WriteLine();\u0060 // Second snapshot\r\n            \u0060bitmap.Dispose();\u0060\r\n            \u0060sKCanvas.Dispose();\u0060\r\n            \u0060bitmap = null;\u0060\r\n            \u0060sKCanvas = null;\u0060\r\n\u0060Console.WriteLine();\u0060 // Third snapshot\r\n\u003C!-- a snippet of code that demonstrates the issue --\u003E\r\n\r\n**Expected Behavior**\r\nIn second screenshot - Size Diff (bytes): 0.\r\n\u003C!-- a general description of what was the expected behavior or result --\u003E\r\n\r\n**Actual Behavior**\r\nIn second screenshot - Size Diff (bytes): \u002B216.\r\n\u003C!-- a general description of what really happened --\u003E\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  1.59.3\r\n- IDE: Visual Studio 2017 \u003C!--  / Visual Studio for Mac / MonoDevelop / Visual Studio Code --\u003E\r\n- Platform Target Frameworks: .NET Core 2.0\r\n\r\n**Screenshots**\r\nCompare the Second snapshot with First snapshot:\r\n![image](https://user-images.githubusercontent.com/48026813/68918257-6a1b9180-0793-11ea-90ad-09a4edbd06d0.png)\r\n\r\nCompare the Third snapshot with First snapshot: After the dispose the SKBitmap and SKCanvas\r\n\u003Cimg width=\u0022694\u0022 alt=\u0022Memoryissue\u0022 src=\u0022https://user-images.githubusercontent.com/48026813/68917898-283e1b80-0792-11ea-8904-55d079f8f023.png\u0022\u003E\r\n\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n",
+  "author": {
+    "login": "MadhanKumarasamy",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-11-14T16:25:15",
+  "updatedAt": "2022-08-19T09:02:06",
+  "closedAt": "2020-10-13T22:49:38",
+  "commentCount": 6,
+  "reactionCount": 4
+}

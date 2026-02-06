@@ -1,0 +1,19 @@
+{
+  "number": 1409,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] .Net Framework application crash after upgrade to 2.80.1 from 1.68.3",
+  "body": "**Description**\r\nAfter update from 1.68.3 to 2.80.1, application randomly either crash or throw following error: \r\nManaged Debugging Assistant \u0027FatalExecutionEngineError\u0027 : \u0022\u0027The runtime has encountered a fatal error. The address of the error was at 0x74a40bf1, on thread 0x3bac. The error code is 0xc0000005. This error may be a bug in the CLR or in the unsafe or non-verifiable portions of user code. Common sources of this bug include user marshaling errors for COM-interop or PInvoke, which may corrupt the stack.\u0027\r\n\r\nAttached a sample project to reproduce the issue.\r\n\r\nThe crash/error happens with following configurations:\r\n1. **.Net Framework** project  (framework 4.6.2 - 4.8)\r\n2. In project property dialog (Project property - \u003E Build tab)\r\n- Platform Target set to: **Any CPU**  \r\n- **AND** \u0022Prefer 32-bit\u0022 option **CHECKED**\r\n\r\n\r\n**Code**\r\n\r\nAttached a simple sample project to reproduce \r\n[SkiaSharp Crash Bug.zip](https://github.com/mono/SkiaSharp/files/4926432/SkiaSharp.Crash.Bug.zip)\r\n\r\n**Actual Behavior**\r\n\r\nThe app randomly either crash or throw error.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue:  2.80.1\r\n- Last known good version:  1.68.3\r\n- IDE:  Visual Studio 2019\r\n\r\n**Screenshots**\r\n \r\n![Skiasharp2 80 error](https://user-images.githubusercontent.com/63121477/87568444-46df1400-c68b-11ea-858a-96119c5d88e9.png)\r\n\r\n**Reproduction Link**\r\nSample project to reproduce the issue.\r\n[SkiaSharp Crash Bug.zip](https://github.com/mono/SkiaSharp/files/4926432/SkiaSharp.Crash.Bug.zip)\r\n",
+  "author": {
+    "login": "JackLi-tg",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-15T16:16:24",
+  "updatedAt": "2022-08-19T03:02:31",
+  "closedAt": "2020-08-09T19:44:46",
+  "commentCount": 22,
+  "reactionCount": 0
+}

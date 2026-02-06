@@ -1,0 +1,18 @@
+{
+  "number": 1450,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] SKBitmap.InstallPixels and general pixel memory ownership guidelines? ",
+  "body": "I\u0027m having trouble to understand the ownership of pixel memory. \r\n\r\nFor example,  the following code always saves a correct image A, and mostly saves a corrupt image B, or crashes randomly (at least in 1.68.3):\r\n\r\n\u0060\u0060\u0060cs\r\nusing System.IO;\r\nusing SkiaSharp;\r\n\r\nnamespace SkiaCropBug\r\n{\r\n\tclass Program\r\n\t{\r\n\t\tstatic SKBitmap Crop(int i)\r\n\t\t{\r\n\t\t\tusing var codec = SKCodec.Create(\u0022kitten.jpg\u0022);\r\n\t\t\tusing var bm1 = SKBitmap.Decode(codec);\r\n\t\t\tusing var pm1 = bm1.PeekPixels();\r\n\t\t\tusing var pm2 = pm1.ExtractSubset(SKRectI.Create(70, 20, 50, 45));\r\n\r\n\t\t\tvar bm2 = new SKBitmap(pm2.Info, SKBitmapAllocFlags.None);\r\n\t\t\tbm2.InstallPixels(pm2);\r\n\r\n\t\t\tusing var stream = File.Create($\u0022frames/crop_{i:02}_A.png\u0022);\r\n\t\t\tbm2.Encode(stream, SKEncodedImageFormat.Png, 9);\r\n\r\n\t\t\treturn bm2;\r\n\t\t}\r\n\r\n\t\tstatic void Main(string[] args)\r\n\t\t{\r\n\t\t\tDirectory.CreateDirectory(\u0022frames\u0022);\r\n\r\n\t\t\tfor (int i = 0; i \u003C 100; \u002B\u002Bi)\r\n\t\t\t{\r\n\t\t\t\tusing var bm2 = Crop(i);\r\n\t\t\t\tusing var stream = File.Create($\u0022frames/crop_{i:02}_B.png\u0022);\r\n\t\t\t\tbm2.Encode(stream, SKEncodedImageFormat.Png, 9);\r\n\t\t\t}\r\n\t\t}\r\n\t}\r\n}\r\n\u0060\u0060\u0060\r\n\r\nMoving the \u0060bm1\u0060 out of the loop fixes the problem, but now I would have to pass two bitmaps around, while surely it should be possible for \u0060bm1\u0060 and \u0060bm2\u0060 to share the same underlying \u0060SkPixelRef\u0060?\r\n\r\nAs a temporary workaround, I\u0027m going to copy the pixels, but I would like to know the general rule here.\r\n\r\nFrom the code above, it feels natural that ownership is managed for you, since I\u0027m not passing any \u0060IntPtr\u0060 around. However, looking the native code, \u0060SKPixmap\u0060 doesn\u0027t store a \u0060SKPixelRef\u0060, only a pointer... \r\n\r\nSo the managed bit is just an illusion, even though I\u0027m coding C# here, I still have to think carefully about C/C\u002B\u002B ownership?\r\n\r\nAs far as I understand, the rules are:\r\n- \u0060SKPixmap\u0060 never frees memory, it is purely a (non reference counted!) view on the raw pixels, using a pointer\r\n- \u0060SKBitmap\u0060 and \u0060SKImage\u0060 internally use an \u0060SKPixelRef\u0060 (reference counted), but this reference counting is lost as soon as a pixmap is involved...\r\n- So basically, one should never create a bitmap or image from a pixmap, unless this creation copies the pixels over.\r\n\r\nIs this correct?\r\n\r\n\r\n\r\n\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-07T11:24:05",
+  "updatedAt": "2022-05-17T04:33:45",
+  "closedAt": "2022-05-17T04:33:45",
+  "commentCount": 1,
+  "reactionCount": 0
+}

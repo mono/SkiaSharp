@@ -1,0 +1,24 @@
+{
+  "number": 1121,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Crashes in sk_canvas_restore_to_count on Mac 10.15",
+  "body": "Apps using \u0060SKGLView\u0060 sporadically \u0060abort()\u0060 when SkiaSharp calls \u0060sk_canvas_restore_to_count\u0060 with this typical stack trace:\r\n\r\n\u0060\u0060\u0060\r\nThread 0 Crashed:: tid_307  Dispatch queue: com.apple.main-thread\r\n0   libsystem_kernel.dylib        \t0x00007fff6f20e7fa __pthread_kill \u002B 10\r\n1   libsystem_pthread.dylib       \t0x00007fff6f2cbbc1 pthread_kill \u002B 432\r\n2   libsystem_c.dylib             \t0x00007fff6f195a1c abort \u002B 120\r\n3   com.kruegersystems.circuitmac \t0x0000000108fd3518 altstack_handle_and_restore.cold.1 \u002B 40\r\n4   com.kruegersystems.circuitmac \t0x0000000108ce490c altstack_handle_and_restore \u002B 188\r\n5   libSkiaSharp.dylib            \t0x000000010927d784 0x10924c000 \u002B 202628\r\n6   ???                           \t0x000000011062618e 0 \u002B 4569850254\r\n7   ???                           \t0x000000010f7e8b4e 0 \u002B 4554918734\t  at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n\r\n\t  at SkiaSharp.SkiaApi:sk_canvas_restore_to_count \u003C0x000ad\u003E\r\n\t  at SkiaSharp.SKCanvas:RestoreToCount \u003C0x0005a\u003E\r\n\t  at SkiaSharp.SKAutoCanvasRestore:Restore \u003C0x00052\u003E\r\n\t  at SkiaSharp.SKAutoCanvasRestore:Dispose \u003C0x00042\u003E\r\n\t  at SkiaSharp.Views.Mac.MySKGLView:DrawRect \u003C0x005d0\u003E\r\n\t  at \u003CModule\u003E:runtime_invoke_void__this___CGRect \u003C0x000fd\u003E\r\n\t  at \u003Cunknown\u003E \u003C0xffffffff\u003E\r\n\t  at AppKit.NSApplication:NSApplicationMain \u003C0x001a4\u003E\r\n\t  at AppKit.NSApplication:Main \u003C0x00112\u003E\r\n\t  at Circuit.Mac.MainClass:Main \u003C0x00052\u003E\r\n\t  at \u003CModule\u003E:runtime_invoke_void_object \u003C0x000b0\u003E\r\n\u0060\u0060\u0060\r\n\r\nAll crashes are here: https://gist.github.com/praeclarum/d5dbcda0782daa0ae81b494969b4d93f\r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060c#\r\nnew SKGLView();\r\n\u0060\u0060\u0060\r\n\r\n**Expected Behavior**\r\n\r\nNo crash\r\n\r\n**Actual Behavior**\r\n\r\nCrash after some period of time. It always crashes, but can take awhile.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 1.68.2.preview21\r\n- IDE:  Visual Studio for Mac\r\n- Platform Target Frameworks:\r\n  - macOS:  10.15\r\n\r\n",
+  "author": {
+    "login": "praeclarum",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-01-29T21:19:03",
+  "updatedAt": "2022-08-19T06:02:55",
+  "closedAt": "2020-03-24T16:09:39",
+  "commentCount": 23,
+  "reactionCount": 0
+}

@@ -1,0 +1,31 @@
+{
+  "number": 1315,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] [UWP] Crash after removing SKGLView from page",
+  "body": "**Description**\r\n\r\nWhen more than one SKGLView is added to a page, removing one will cause a crash.\r\nThis was originally discovered while integrating Mapsui (https://github.com/Mapsui/Mapsui/issues/935), but I believe the issue is within SkiaSharp.\r\nI\u0027ve tested this on Android and iOS without issue, it appears to only be within the UWP project.\r\n\r\n**STR**\r\n- Add an SKGLView to page.\r\n- Add another SKGLView to page.\r\n- Remove second SKGLView\r\n- Do something to make the first element refresh (resize window, etc.) \r\n- Crash!\r\n\r\n**Basic Information**\r\n- IDE:   VS2019\r\n- SkiaSharp.Views 1.68.3\r\n- SkiaSharp.Views.Forms 1.68.3\r\n- Xamarin.Forms 4.6.0.800\r\n- UWP:  1803\r\n\r\n\r\n**Screenshots**\r\n![image](https://user-images.githubusercontent.com/3455312/83532334-f462e300-a4a2-11ea-859e-332822632d0f.png)\r\n\r\n**Reproduction Link**\r\n[SKGLViewCrash.zip](https://github.com/mono/SkiaSharp/files/4717772/SKGLViewCrash.zip)\r\n",
+  "author": {
+    "login": "joshminor",
+    "type": "User"
+  },
+  "labels": [
+    {
+      "name": "type/bug",
+      "color": "fc2929"
+    },
+    {
+      "name": "os/Windows-Universal-UWP",
+      "color": "fbca04"
+    },
+    {
+      "name": "backend/OpenGL",
+      "color": "1acea7"
+    }
+  ],
+  "assignees": [],
+  "milestone": "v2.88.x Planning",
+  "createdAt": "2020-06-02T14:37:20",
+  "updatedAt": "2022-09-11T18:31:06",
+  "commentCount": 4,
+  "reactionCount": 6
+}

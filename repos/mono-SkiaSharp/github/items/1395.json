@@ -1,0 +1,18 @@
+{
+  "number": 1395,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Crash on SkBitmap(x,y) constructor on Android when upgrading SkiaSharp.Views.Forms from 1.68.3 to 2.80.0",
+  "body": "**Description**\r\n\r\nCode that worked now crashes when upgrading to SkiaSharp.Views.Forms to 2.80.0\r\n\r\n**Code**\r\n\r\n  var bitmap = new SKBitmap(114, 108);\r\n\r\n**Expected Behavior**\r\n\r\nnot crash \r\n\r\nException Details:\r\nSystem.DllNotFoundException\r\n  Message=libSkiaSharp.so assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\r\n\r\n07-10 18:44:08.502 D/Mono    ( 5070): DllImport error loading library \u0027libSkiaSharp.so\u0027: \u0027dlopen failed: library \u0022libSkiaSharp.so\u0022 not found\u0027.\r\n07-10 18:44:08.502 W/Mono    ( 5070): DllImport unable to load library \u0027libSkiaSharp.so\u0027.\r\n**System.DllNotFoundException:** \u0027libSkiaSharp.so assembly:\u003Cunknown assembly\u003E type:\u003Cunknown type\u003E member:(null)\u0027\r\n\r\n\r\nUpgrading to the latest SkiaSharp.Views.Forms \r\n\r\n- Version with issue:  2.8.0\r\n- Last known good version:  1.68.3\r\n- IDE:  Visual Studio 2019\r\n- Platform Target Frameworks: \u003C!-- all that apply, remove the platforms that aren\u0027t broken or haven\u0027t had any testing --\u003E\r\n  - Android: 10.0 \r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - Surface Duo Emulator \r\n\r\n**Screenshots**\r\n\r\n\u003C!-- if the issue is a visual issue, please include screenshots showing the problem if possible --\u003E\r\n\r\n**Reproduction Link**\r\n\r\n\u003C!-- please upload or provide a link to a reproduction case --\u003E\r\n",
+  "author": {
+    "login": "mscherotter",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-11T01:54:24",
+  "updatedAt": "2022-08-19T03:02:38",
+  "closedAt": "2020-07-31T11:31:52",
+  "commentCount": 4,
+  "reactionCount": 0
+}

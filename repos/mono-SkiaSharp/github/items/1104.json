@@ -1,0 +1,18 @@
+{
+  "number": 1104,
+  "type": "issue",
+  "state": "closed",
+  "title": "System.Drawing type errors with SkiaSharp.Views.Mac in F# Xamarin.Mac Modern project",
+  "body": "When I try to open the SkiaSharp.Views.Mac namespace in an F# project targeting Xamarin.Mac Modern, I get a bunch of errors for a few System.Drawing types:\r\n\r\n\u0060\u0060\u0060\r\nError: A reference to the type \u0027System.Drawing.PointF\u0027 in assembly Xamarin.Mac was found,\r\nbut the type could not be found in the assembly.\r\n\u0060\u0060\u0060\r\nincluding for Point, Size, SizeF, Rectangle, RectangleF.\r\n\r\nThis is with Visual Studio Mac 8.4.1 (build 4).\r\n\r\n\u003Cimg width=\u00221440\u0022 alt=\u0022Screenshot 2020-01-16 at 12 22 38 PM\u0022 src=\u0022https://user-images.githubusercontent.com/2024912/72510043-acd91300-3883-11ea-9c67-fc20ad3680a8.png\u0022\u003E\r\n\r\n* These types seem to coincide with this type forwarding in xamarin.macios:\r\nhttps://github.com/xamarin/xamarin-macios/blob/7f717f01ae9af6490866369b101f57baa0afb50a/src/System.Drawing/PointSizeRectangleTypeForwarders.cs\r\n\r\nAccording to this Available Assemblies doc https://docs.microsoft.com/en-us/xamarin/cross-platform/internals/available-assemblies, System.Drawing is not supportedfor Xamarin.Mac Modern.\r\n\r\nBut it seems that there are extension methods in SkiaSharp.Views.Mac that use System.Drawing classes.\r\nhttps://github.com/mono/SkiaSharp/blob/5e8dc3e2c9e72f2ad0d9feecefbef503ca9fcc15/source/SkiaSharp.Views/SkiaSharp.Views.Shared/Extensions.cs#L45\r\n\r\nThe preprocessor directives wrapping the System.Drawing extension methods indicate that they will be included for Mac.\r\n\r\n\u0060    #if !WINDOWS_UWP \u0026\u0026 !__TIZEN__\u0060\r\n\r\n---\r\n\r\nHowever, a similar project in C# seems to work fine.\r\n\r\nCould this be due to something that the F# project system does differently for the assemblies or can/should these System.Drawing extensions in SkiaSharp not be necessary for Mac (Modern target) since they aren\u0027t supported?\r\n\r\nHere is a repo containing both C# and F# projects which are identical in function and does not use any System.Drawing types. https://github.com/danien/SkiaSharpViewsMacFSharpIssue\r\nThe F# project will not even build due to the above errors.\r\n\r\nAny suggestions for how I can get around this issue if it can\u0027t be fixed, preferably without having to include the System.Drawing alternative mentioned in the Available Assemblies doc above since I don\u0027t really need it?\r\n\r\nI\u0027m not that familiar with the more advanced assemblies and project build systems in the .NET ecosystem so apologies in advance if I misunderstood something.\r\n",
+  "author": {
+    "login": "danien",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-01-16T09:12:34",
+  "updatedAt": "2022-08-19T09:01:25",
+  "closedAt": "2020-01-22T10:22:18",
+  "commentCount": 1,
+  "reactionCount": 0
+}

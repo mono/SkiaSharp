@@ -1,0 +1,18 @@
+{
+  "number": 1094,
+  "type": "issue",
+  "state": "closed",
+  "title": "NullReference exception in SKTextBlobBuilder",
+  "body": "What is the proper way to use SKTextBlobBuilder? \r\nI wrote this method and it throws \u0060NullReferenceException\u0060:\r\n\u0060\u0060\u0060\r\npublic static SKTextBlob GetTextBlob(string text)\r\n{\r\n\tusing SKTextBlobBuilder text_builder = new SKTextBlobBuilder();\r\n\ttext_builder.AddRun(LabelTextFormat, 0, 0, text.Select(c =\u003E (ushort)c).ToArray());\r\n\treturn text_builder.Build();\r\n}\r\n\u0060\u0060\u0060\r\nwhere \u0060LabelTextFormat\u0060 is a SKPaint object; Note that I ensured neither the \u0060text\u0060 nor the \u0060LabelTextFormat\u0060 is null when the method is executed. \r\n\r\nI then discovered that if I set the \u0060TextEncoding\u0060 property of the paint to \u0060SKTextEncoding.GlyphId\u0060, the method works fine, no exception.\r\n\r\nAnother problem is that, if I keep the encoding to \u0060SKTextEncoding.GlyphId\u0060, the text isn\u0027t rendered correctly. Strange characters appears instead of the text provided.",
+  "author": {
+    "login": "mdmozibur",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-01-09T20:11:23",
+  "updatedAt": "2022-08-19T09:01:29",
+  "closedAt": "2020-01-10T16:08:20",
+  "commentCount": 5,
+  "reactionCount": 0
+}

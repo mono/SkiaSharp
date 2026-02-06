@@ -1,0 +1,18 @@
+{
+  "number": 1230,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Skiasharp breaks Edit And Continue functionality in Xamarin Forms UWP application",
+  "body": "As soon as a \u003CSKCanvasView/\u003E is added in a empty Xamarin Forms UWP Application, Edit And continue does not work any more\r\n\r\n**Step to reproduce:**\r\nCreate a Mobile App (Xamarin.Forms) project.\r\nSelect UWP platform.\r\nAdd reference to SkiaSharp Nugets : SkiaSharp 1.68.1.1 SkiaSharp.View.Forms 1.61.1.1\r\nIn the Page xaml, add a \u003Cforms:SKCanvasView\u003E\u003C/forms:SKCanvasView\u003E\r\nSelect UWP project\r\nPut a breakpoint at first line of App constructor.\r\nHit F5.\r\nWhen execution is breaked on breakpoint, add a dummy line of code in App Constructor.\r\nHit F5 to continue execution.\r\n\r\n**Expected Behavior:**\r\nCode change is well applied by \u0022Edit And Continue\u0022 feature;\r\nCode execution continues normally.\r\n\r\n**Actual Behavior:**\r\nDialog box appear s: \u0022Edits were made which cannot be compiled; Execution cannot continue unitl compile erros are fixed.\u0022\r\nError panel shows following error : \u0022Failed to emit module \u0027App6\u0027: Changing the version of an assembly reference is not allowed during debugging: \u0027System.Runtime, Version=4.0.20.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a\u0027 changed version to \u00274.1.2.0\u0027.\r\n\r\n**Conditions**\r\n- Version with issue:  1.68.1.1; also reproduced with 1.68.0\r\n- IDE:  Microsoft Visual Studio Community 2019 Version 16.5.3 \r\n- UWP:  Microsoft.NETCore.UniversalWindowsPlatform v6.2.10\r\n\r\nNotes : \r\nIf \u003CSKCanvas/\u003E is removed from xaml but references to Skia# nugets kepts, then Edit and continue works again.\r\n\r\n",
+  "author": {
+    "login": "MathieuJack",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-14T21:49:34",
+  "updatedAt": "2022-08-19T06:02:02",
+  "closedAt": "2020-08-16T19:50:00",
+  "commentCount": 5,
+  "reactionCount": 0
+}

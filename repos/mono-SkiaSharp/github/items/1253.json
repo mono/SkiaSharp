@@ -1,0 +1,18 @@
+{
+  "number": 1253,
+  "type": "issue",
+  "state": "closed",
+  "title": "[QUESTION] Achieve same text rendering like Chrome",
+  "body": "The question might sound stupid at the beginning but please give it a chance \uD83D\uDE09 It might not be dedicated 100% to this library but I\u0027m giving it a shot to maybe catch an expert. \r\n\r\n\u003E **How can I achieve the exact same text/font rendering as Chrome does it with the HTML5 canvas?**\r\n\r\nI am maintaining a library available in JavaScript and in .net which is rendering music notation to a canvas. For this library I created a visual regression test suite based on images rendered in Chrome. On my .net version I use SkiaSharp and my tests fail with slight differences on the text rendering. \r\n\r\nAs Chrome is using Skia underneath and I\u0027m testing on the same machine/platform I guess it should be possible to achieve the same render output. Here an example test that fails: \r\n\r\n|  Reference (Chrome)  | SkiaSharp   |\r\n|-------------------------|-------------|\r\n| ![image](https://user-images.githubusercontent.com/674916/80408329-525e4280-88c7-11ea-98d1-37408bd4e40e.png) | ![image](https://user-images.githubusercontent.com/674916/80408271-365aa100-88c7-11ea-8210-1e7419614a73.png) |\r\n| ![image](https://user-images.githubusercontent.com/674916/80408528-95201a80-88c7-11ea-9914-c1a509aff1a3.png) | ![image](https://user-images.githubusercontent.com/674916/80408452-7de12d00-88c7-11ea-9386-6708f2444d01.png) |\r\n\r\nThe difference is subtle for humans but significant on technical comparison. On the first example you can see it very good on the character t of \u0022S**t**andard\u0022 how the character alignment is different. Also the whole anti aliasing is slightly different heavily on the second example. \r\n\r\nAre there some special settings on the font rendering and anti aliasing that chrome uses? Do they use a different text shaper than SkiaSharp? Skia [mentions ](https://skia.org/user/tips#kerning) that the text layouting is done by another library and [Chrome is using HarfBuzz](https://www.freedesktop.org/wiki/Software/HarfBuzz/). For text hinting I guess GDI is used. \r\n\r\nI am wondering if SkiaSharp is using the same settings as Chrome for compiling Skia native. Are there settings to control the text rendering allowing me to achieve the same output in SkiaSharp as in Chrome? \r\n\r\n\r\n",
+  "author": {
+    "login": "Danielku15",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-04-27T18:50:45",
+  "updatedAt": "2022-08-19T06:01:53",
+  "closedAt": "2021-02-22T20:12:01",
+  "commentCount": 23,
+  "reactionCount": 0
+}

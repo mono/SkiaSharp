@@ -1,0 +1,18 @@
+{
+  "number": 1474,
+  "type": "issue",
+  "state": "closed",
+  "title": "[Bug] SKPath AddArc does not show smooth arc when IsAntialias is true ",
+  "body": "\u003C!-- Bug report best practices: https://github.com/xamarin/Xamarin.Forms/wiki/Submitting-Issues --\u003E\r\n\r\n### Description\r\n\r\nUsing SKPath to draw an arc shows arcs a bit pixeled.\r\n\r\n### Steps to Reproduce\r\n\r\n1. Create a SKPoint in the center of the screen.\r\n\u0060\u0060\u0060csharp\r\n        SKPoint center = new SKPoint(Info.Width / 2, Info.Height / 2);\r\n            float radius = (float)Size / 2;\r\n\u0060\u0060\u0060\r\n2. Create a SKRect \r\n\u0060\u0060\u0060csharp\r\n     SKRect dimensions = new SKRect(center.X - radius, center.Y - radius,\r\n                center.X \u002B radius, center.Y \u002B radius);\r\n\u0060\u0060\u0060\r\n3. Create a SKPaint\r\n\u0060\u0060\u0060csharp\r\n          var paint = new SKPaint()\r\n            {\r\n                Style = SKPaintStyle.Stroke,\r\n                Color = color, //pick any color\r\n                StrokeWidth = strokeWidth,\r\n                IsAntialias = true,\r\n            };\r\n\u0060\u0060\u0060\r\n4. Draw the arc\r\n\u0060\u0060\u0060csharp\r\n    SKPath skPath = new SKPath();\r\n            skPath.AddArc(skRectangle, dimensions.StartAngle, dimensions.SweepAngle);\r\n            canvas.DrawPath(skPath, paint);\r\n\u0060\u0060\u0060\r\n\r\n### Expected Behavior\r\n\r\nA smooth arc.\r\n\r\n### Actual Behavior\r\n\r\nHere is a picture of my circle made using arcs (code attached). If you run the code you would see that the graphic looks chunky in some places\r\n\r\n\r\n\r\n![image](https://user-images.githubusercontent.com/16247065/90888315-a52e9f00-e37b-11ea-9545-868eb2ccffd8.png)\r\n### Basic Information\r\n\r\n- Version with issue:\r\n- Last known good version: Latest version of Skia and Xamarin Forms\r\n- IDE: VS 2019\r\n[xamarinsamples.zip](https://github.com/mono/SkiaSharp/files/5108729/xamarinsamples.zip)\r\n\r\n\r\n",
+  "author": {
+    "login": "richardvaldiviesomacias",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-08-21T12:12:52",
+  "updatedAt": "2022-08-19T03:02:01",
+  "closedAt": "2020-08-27T14:51:46",
+  "commentCount": 4,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 1172,
+  "type": "issue",
+  "state": "open",
+  "title": "[QUESTION] Performace issue with animated webp decoding (UWP)",
+  "body": "I tried to use skia to decode short animated images in gif and webp format. The gif decoding seems fine and snappy but webp gets progressively slow to a point it renders skia unusable. For example my test input is just 77 frames at 480x258 pixels and single-core decoding takes 35 seconds (i5 9600K). Quick optimization using Parallel.For can get it down to 8.3 seconds which is still horrible. From what I can observe the problem is that extracting each frame means going over all the previous frames doing the same calculations over and over and so it get\u0027s slower and slower the more frames you decoded until it basically stops.\r\n\r\nThis is the code I\u0027m using (it\u0027s based on official example):\r\n\r\n\r\n\u0060\u0060\u0060\r\nusing var memStr = new MemoryStream(inputFile);\r\nusing var skStream = new SKManagedStream(memStr);\r\nusing var codec = SKCodec.Create(skStream);\r\n\r\nfor (int i = 0; i \u003C codec.FrameCount; i\u002B\u002B)\r\n{\r\n    var skBmp = new SKBitmap(codec.Info);       \r\n             \r\n    // ReSharper disable once AccessToDisposedClosure\r\n    if (codec.GetPixels(codec.Info, skBmp.GetPixels(), new SKCodecOptions(i)) != SKCodecResult.Success)\r\n        throw new Exception(\u0022Unable to decode frame.\u0022);\r\n                    \r\n    frames.Add(skBmp);\r\n}\r\n\r\n\u0060\u0060\u0060\r\n\r\nIs there a better way to extract frames? Basically what I need is forward decoding technique where it returns each frame\u0027s pixels so I can make a SkBitmap from it rather than providing a random-access type decoder that has to go over all the previous frames every time you request a frame. Are there plans to implement something like this?\r\nThere are already some promising sounding methods like SKCodec.IncrementalDecode but they all return \u0022unimplemented\u0022 status code for me, at least on UWP so i dunno \u00AF\\_(\u30C4)_/\u00AF",
+  "author": {
+    "login": "RudolfKurka",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-03-10T21:34:42",
+  "updatedAt": "2025-04-17T15:36:10",
+  "commentCount": 2,
+  "reactionCount": 0
+}

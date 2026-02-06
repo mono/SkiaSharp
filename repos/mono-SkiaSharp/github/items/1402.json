@@ -1,0 +1,19 @@
+{
+  "number": 1402,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Passing --configuration=debug to the bootstrapper should generate a debug build",
+  "body": "Basically we just need to check for it in the \u0060Build.cake\u0060 file, e.g.\r\n\r\n\u0060\u0060\u0060\r\n       var official = CONFIGURATION.Equals(\u0022debug\u0022, StringComparison.OrdinalIgnoreCase) ? \u0022false\u0022 : \u0022true\u0022;\r\n\r\n        GnNinja($\u0022{VARIANT}/{arch}\u0022, \u0022SkiaSharp\u0022,\r\n            $\u0022target_os=\u0027win\u0027\u0022 \u002B\r\n            $\u0022target_cpu=\u0027{skiaArch}\u0027 \u0022 \u002B\r\n            $\u0022is_official_build={official} \u0022 \u002B\r\n\u0060\u0060\u0060\r\n\r\nBut maybe the \u0060--configuration\u0060 parameter is used for something else?\r\n\r\n",
+  "author": {
+    "login": "ziriax",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v2.80.2",
+  "createdAt": "2020-07-14T14:08:13",
+  "updatedAt": "2022-08-19T03:02:34",
+  "closedAt": "2020-07-19T15:48:52",
+  "commentCount": 0,
+  "reactionCount": 0
+}

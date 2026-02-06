@@ -1,0 +1,17 @@
+{
+  "number": 1330,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Complete the \u0060SKMatrix44\u0060 implementation",
+  "body": "Current we have some soon-to-be-obsolete types (in m84, so not the next version, but the next next version):\r\n - \u0060SKMatrix44\u0060\r\n - \u0060SK3dView\u0060\r\n\r\nThis is all replaced with a new \u0060SKM44\u0060.\r\n\r\nBut we have System.Numerics...\r\n\r\nHowever, Numerics does not have a matrix of 3x3 which we use all over. Having a mix is going to be weird and annoying.\r\n\r\nAlso, I may need to add members to the matrix for SkiaSharp uses, so using Numerics will get a bit messy.\r\n\r\nBut, intrinsics...\r\n\r\nWe could use SkiaSharp matrices on the members and fields, and then have then be implicitly convertible to VectorX and Matrix4x4 for things...\r\n\r\nWe also have \u0060SKPoint\u0060, \u0060SKPoint3\u0060, \u0060SKSize\u0060...\r\n\r\nAnd no breaking changes...\r\n\r\nPerformance is important...\r\n\r\nWhat to do, what to do...",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-06-10T22:29:36",
+  "updatedAt": "2024-10-30T12:14:20",
+  "commentCount": 16,
+  "reactionCount": 0
+}

@@ -1,0 +1,17 @@
+{
+  "number": 1065,
+  "type": "issue",
+  "state": "open",
+  "title": "[FEATURE] Split the SkiaSharp.Views.Forms dll into a shared and a platform dll",
+  "body": "In cases where platforms are not supported, the SkiaSharp.Views.Forms package used to allow the use of a netstandard dll. This caused issues when using the WPF package or any other packages we add in the future. (see #1011)\r\n\r\nAs a result of this issue, we moved the netstandard dll to ref-only as it was intended in #1012. The packages now work correctly (no longer crashes), but breaks in cases where JUST the netstandard dll was desired. (see #1047).\r\n\r\nTo solve this, we need 2 assemblies - 1 for the shared bits and 1 for the platform bits. Right now there is one, and this will either break as in #1011, or as in #1047 . If we split the assembly, then we can solve both issues.\r\n\r\nAlthough this may seem like a smaller issue, the code was originally designed to be a single dll and all the types are partially implemented in places. This is nice for a single dll, but not at all for split dlls.",
+  "author": {
+    "login": "mattleibow",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2019-12-17T19:44:42",
+  "updatedAt": "2020-01-08T16:27:51",
+  "commentCount": 1,
+  "reactionCount": 0
+}

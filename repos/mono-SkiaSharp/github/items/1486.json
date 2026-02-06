@@ -1,0 +1,18 @@
+{
+  "number": 1486,
+  "type": "issue",
+  "state": "closed",
+  "title": "[FEATURE] Generic way of rendering and interacting with different types of content",
+  "body": "# Introduction and use case\r\nThis feature request is a continuation of https://github.com/mono/SkiaSharp/issues/1462.\r\nI would like to create a \u0022Composition control\u0022 that allows users to make a composition of different layers that are rendered on top of each other:\r\n\r\n![image](https://user-images.githubusercontent.com/3463496/91884176-e0877280-ec85-11ea-8331-3a8e0ff75f3a.png)\r\n\r\nSuggested interaction:\r\n- one item can be added per layer\r\n- an item can be text, a bitmap or a vector image\r\n- the user can rotate, pan or scale the item in the active layer using touch\r\n- the user can pan the item in the active layer using mouse / pen\r\n- on the left, a list of layers is shown\r\n- the user can select the active layer in the list on the left\r\n\r\nFor this, it would be helpful if there was a generalized way to render those different types and interact with them (scale/pan/rotate).\r\n\r\nWhat did I investigate:\r\n- we looked at generalization of \u0022renderables\u0022 (text/vector/bitmap) in https://github.com/mono/SkiaSharp/issues/1462\r\n- I found [\u0060TouchManipulationBitmap\u0060](https://github.com/xamarin/xamarin-forms-samples/blob/master/SkiaSharpForms/Demos/Demos/SkiaSharpFormsDemos/Transforms/TouchManipulationBitmap.cs) which works for bitmaps, but not for text / paths\r\n- I built a prototype of the control at https://github.com/hansmbakker/SkiaSharpPoc",
+  "author": {
+    "login": "hansmbakker",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-09-01T17:23:02",
+  "updatedAt": "2021-03-12T00:22:05",
+  "closedAt": "2021-03-12T00:22:04",
+  "commentCount": 2,
+  "reactionCount": 0
+}

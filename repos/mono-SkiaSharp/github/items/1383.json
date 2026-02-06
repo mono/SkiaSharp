@@ -1,0 +1,17 @@
+{
+  "number": 1383,
+  "type": "issue",
+  "state": "open",
+  "title": "[BUG] SkiaSharp can call WM_PAINT handler and random COM callbacks when creating or obtaning objects",
+  "body": "\u0060\u0060\u0060\r\n   Avalonia.Win32.dll!Avalonia.Win32.WindowImpl.WndProc(System.IntPtr hWnd, uint msg, System.IntPtr wParam, System.IntPtr lParam) Line 30  C#\r\n   [Native to Managed Transition]  \r\n   [Managed to Native Transition]  \r\n   System.Private.CoreLib.dll!System.Threading.WaitHandle.WaitOneNoCheck(int millisecondsTimeout)  Unknown\r\n   System.Private.CoreLib.dll!System.Threading.WaitHandle.WaitOne(int millisecondsTimeout)  Unknown\r\n   System.Private.CoreLib.dll!System.Threading.ReaderWriterLockSlim.WaitOnEvent(System.Threading.EventWaitHandle waitEvent, ref uint numWaiters, System.Threading.ReaderWriterLockSlim.TimeoutTracker timeout, System.Threading.ReaderWriterLockSlim.EnterLockType enterLockType)  Unknown\r\n   System.Private.CoreLib.dll!System.Threading.ReaderWriterLockSlim.TryEnterWriteLockCore(System.Threading.ReaderWriterLockSlim.TimeoutTracker timeout)  Unknown\r\n   SkiaSharp.dll!SkiaSharp.HandleDictionary.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)  Unknown\r\n   SkiaSharp.dll!SkiaSharp.SKObject.RegisterHandle(System.IntPtr handle, SkiaSharp.SKObject instance)  Unknown\r\n   SkiaSharp.dll!SkiaSharp.SKObject.Handle.set(System.IntPtr value)  Unknown\r\n   SkiaSharp.dll!SkiaSharp.SKObject.SKObject(System.IntPtr handle, bool owns)  Unknown\r\n   SkiaSharp.dll!SkiaSharp.SKPath.SKPath(System.IntPtr handle, bool owns)  Unknown\r\n   SkiaSharp.dll!SkiaSharp.SKPath.SKPath()  Unknown\r\n\u0060\u0060\u0060\r\n\r\nThis is caused by all locks in .NET being alertable locks that [can still run the message pump when waiting for a lock](https://stackoverflow.com/a/4540745/2231814).\r\n\r\nThis behavior might lead to unexpected behavior in the user code or even deadlocks, since user code doesn\u0027t expect to receive WM_PAINT while calling SKPath constructor.",
+  "author": {
+    "login": "kekekeks",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "createdAt": "2020-07-05T22:08:40",
+  "updatedAt": "2022-08-12T12:04:48",
+  "commentCount": 19,
+  "reactionCount": 1
+}

@@ -1,0 +1,19 @@
+{
+  "number": 1173,
+  "type": "issue",
+  "state": "closed",
+  "title": "[BUG] Crashes on Android",
+  "body": "**Description**\r\n\r\nI\u0027m using mapping library Mapsui, error occurs randomly when moving the map, noticed some of the crashes even with map staying still. \r\n\r\n**Code**\r\n\r\n\u0060\u0060\u0060\r\nI/DEBUG   (  409): *** *** *** *** *** *** *** *** *** *** *** *** *** *** *** ***\r\nI/DEBUG   (  409): UUID: 7bf113ad-494f-44e9-a0fe-61d0704bbee9\r\nI/DEBUG   (  409): Build fingerprint: \u0027Sony/SGP321/SGP321:5.1.1/10.7.A.0.228/2020576680:user/release-keys\u0027\r\nI/DEBUG   (  409): Revision: \u00270\u0027\r\nI/DEBUG   (  409): ABI: \u0027arm\u0027\r\nI/DEBUG   (  409): pid: 19172, tid: 19229, name: GLThread 1370  \u003E\u003E\u003E eu.pds.proplamobilenet \u003C\u003C\u003C\r\nI/DEBUG   (  409): signal 11 (SIGSEGV), code 1 (SEGV_MAPERR), fault addr 0x1110\r\nI/DEBUG   (  409):     r0 00001110  r1 00000001  r2 9ec01088  r3 00000011\r\nI/DEBUG   (  409):     r4 00000000  r5 12dcc740  r6 9ec01088  r7 9a8d3848\r\nI/DEBUG   (  409):     r8 b74ebc10  r9 b849e9e0  sl 00000000  fp 9a8d3980\r\nI/DEBUG   (  409):     ip afb8acbc  sp 9a8d3838  lr 9974f96c  pc 997d391e  cpsr 600d0030\r\nI/DEBUG   (  409):\r\nI/DEBUG   (  409): backtrace:\r\nI/DEBUG   (  409):     #00 pc 0006191e  /data/app/eu.pds.proplamobilenet-1/lib/arm/libSkiaSharp.so\r\n\u0060\u0060\u0060\r\n\r\nI also noticed an error **with address 0x40,** and p**ossibly 0x1130 (no .so file path in this case)** - can\u0027t find the stack trace now.\r\n\r\n**Basic Information**\r\n\r\n- Version with issue: 1.68.1.1.\r\n- Last known good version: probably 1.60.3\r\n- IDE:  Visual Studio\r\n- Platform Target Frameworks: \u003C\r\n  - Android: API 27 (8.1)\r\n- Target Devices:   \u003C!-- the devices that you noticed this on, e.g. iPhone X --\u003E\r\n  - Xiaomi Mi A2\r\n  - Sony Xperia Tablet Z\r\n\r\n**Reproduction Link**\r\n\r\nhttps://github.com/Mapsui/Mapsui - building a Mapsui.Samples.Droid project and running it on an Android device, trying especially geometries samples . ",
+  "author": {
+    "login": "hajmajeboss",
+    "type": "User"
+  },
+  "labels": [],
+  "assignees": [],
+  "milestone": "v1.68.2",
+  "createdAt": "2020-03-12T08:19:24",
+  "updatedAt": "2022-08-19T06:02:26",
+  "closedAt": "2020-03-24T16:09:39",
+  "commentCount": 5,
+  "reactionCount": 0
+}
