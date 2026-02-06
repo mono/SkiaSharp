@@ -199,6 +199,7 @@ Planned test matrix:
   - Mac Catalyst:  Current macOS
   - Blazor:        Chromium
   - Console:       .NET runtime
+  - Linux (Docker): Docker container (mcr.microsoft.com/dotnet/sdk:8.0)
 
 Proceed with this matrix?
 ```
@@ -240,6 +241,7 @@ dotnet test -p:SkiaSharpVersion={version} -p:HarfBuzzSharpVersion={hb-version}
 # Run by category
 dotnet test --filter "FullyQualifiedName~SmokeTests" ...
 dotnet test --filter "FullyQualifiedName~ConsoleTests" ...
+dotnet test --filter "FullyQualifiedName~LinuxConsoleTests" ...
 dotnet test --filter "FullyQualifiedName~BlazorTests" ...
 dotnet test --filter "FullyQualifiedName~MauiiOSTests" ... -p:iOSDevice="iPhone 14 Pro" -p:iOSVersion="16.2"
 dotnet test --filter "FullyQualifiedName~MauiMacCatalystTests" ...
@@ -303,6 +305,7 @@ dotnet test --filter "FullyQualifiedName~MauiAndroidTests" ... \
 |------|------------|------------|------|
 | SmokeTests | Once | - | ~2s |
 | ConsoleTests | Once | - | ~20s |
+| LinuxConsoleTests | Once (Docker) | - | ~2min |
 | BlazorTests | Once | - | ~2min |
 | MauiMacCatalystTests | Once | - | ~2min |
 | MauiiOSTests | ✅ Yes | ✅ Yes | ~2min each |
@@ -360,6 +363,7 @@ Proceed to **release-publish** ONLY when:
 |------|----------|---------|--------|
 | SmokeTests | .NET | - | ✅ Passed |
 | ConsoleTests | .NET | - | ✅ Passed |
+| LinuxConsoleTests | Docker Linux | - | ✅ Passed |
 | BlazorTests | Chromium | - | ✅ Passed |
 | MauiMacCatalystTests | macOS | - | ✅ Passed |
 | MauiiOSTests | iOS 16.2 (oldest) | iPhone 14 Pro | ✅ Passed |

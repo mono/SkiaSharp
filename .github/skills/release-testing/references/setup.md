@@ -12,6 +12,17 @@ npm install -g appium
 appium driver install mac2 uiautomator2 xcuitest
 ```
 
+### Docker (Linux tests)
+
+Docker Desktop must be installed and running. Verify with:
+
+```bash
+docker --version
+docker info --format '{{.OSType}}'  # Should output "linux"
+```
+
+The `LinuxConsoleTests` use `SkiaSharp.NativeAssets.Linux.NoDependencies` (statically linked) to avoid system dependency issues in minimal containers.
+
 ### Playwright (Blazor tests)
 
 ```bash
@@ -110,6 +121,7 @@ Before running release tests, verify:
 4. **iOS runtimes available** — at least 2 different versions
 5. **Appium installed** — `which appium` returns path
 6. **Appium drivers installed** — `appium driver list --installed` shows uiautomator2, xcuitest
+7. **Docker available** — `docker info` succeeds (for Linux console tests)
 
 **If any check fails:** Fix before proceeding. Do not skip tests.
 

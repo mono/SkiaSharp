@@ -121,6 +121,16 @@ Or use Console.app → select simulator device.
 | `Timeout waiting for selector` | App didn't render | Check Blazor app console for errors |
 | `Blazor server failed to start` | Env vars from parent | Fixed in test code (ClearDotNetEnvironmentVariables) |
 
+## Docker Errors (Linux Console Tests)
+
+| Error | Cause | Fix |
+|-------|-------|-----|
+| `Docker is not available` | Docker not installed/running | Install Docker Desktop, start it |
+| `undefined symbol: uuid_generate_random` | Using `NativeAssets.Linux` instead of `NoDependencies` | Use `SkiaSharp.NativeAssets.Linux.NoDependencies` |
+| `Fontconfig error: Cannot load default config file` | No fontconfig in container | Expected with `NoDependencies` — not an error |
+| `Cannot connect to the Docker daemon` | Docker Desktop not running | Start Docker Desktop |
+| Docker image build slow | No layer cache | Normal on first run (~90s), cached after |
+
 ## Platform-Specific Notes
 
 ### macOS /var symlink issue
