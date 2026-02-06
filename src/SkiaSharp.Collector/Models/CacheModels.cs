@@ -174,6 +174,7 @@ public record ReactionInfo(
 public record CommentInfo(
     long Id,
     string Author,
+    string Body,
     DateTime CreatedAt,
     List<ReactionInfo> Reactions
 );

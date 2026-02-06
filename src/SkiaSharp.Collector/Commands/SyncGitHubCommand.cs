@@ -422,6 +422,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                 commentInfos.Add(new CommentInfo(
                     comment.Id,
                     comment.User?.Login ?? "unknown",
+                    comment.Body ?? "",
                     comment.CreatedAt.DateTime,
                     [.. commentReactions.Select(r => new ReactionInfo(
                         r.User?.Login ?? "unknown",
@@ -437,6 +438,7 @@ public class SyncGitHubCommand : AsyncCommand<SyncGitHubSettings>
                 commentInfos.Add(new CommentInfo(
                     comment.Id,
                     comment.User?.Login ?? "unknown",
+                    comment.Body ?? "",
                     comment.CreatedAt.DateTime,
                     []
                 ));
