@@ -31,5 +31,25 @@
   "deletions": 0,
   "changedFiles": 2,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:41:35.4861038Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 202520317,
+        "author": "petergolde",
+        "body": "I am happy to add documentation also, but I am not familiar with the tools to do so. If you point me to documentation on how to update the documentation I can amend this PR.\n",
+        "createdAt": "2016-03-28T18:33:23",
+        "reactions": []
+      },
+      {
+        "id": 206521516,
+        "author": "bholmes",
+        "body": "@petergolde,\n\nYes adding docs would be a great help!  We need to write up some instructions in the README.\n\nFor now what I have been doing is running in bash\n\n\u0060\u0060\u0060\nsh bootstrapper.sh -t docs\n\u0060\u0060\u0060\n\nThis will modify the docs directory, adding stubs for the classes and members that were added.  The problem that I have is that a bunch of whitespace diffs are introduced when I run this as well.  (I need to get with miguel to see why that is.)  I revert the changes I do not want, then fill in the new stubbed out doc entries.  \n\nTo verify my changes I then run...\n\n\u0060\u0060\u0060\nmdoc-export-html -o bill docs/en/\n\u0060\u0060\u0060\n\nThe output from this is not perfect either, but will give you a set of html pages to view and review your new changes.  Finally commit the changes to the docs folder.  \n\nMake sense?  \n",
+        "createdAt": "2016-04-06T19:22:47",
+        "reactions": []
+      }
+    ]
+  }
 }

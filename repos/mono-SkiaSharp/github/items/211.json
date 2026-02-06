@@ -25,5 +25,25 @@
   "deletions": 0,
   "changedFiles": 6,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:40:48.5280943Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 271462659,
+        "author": "mattleibow",
+        "body": "Is there a reason that you used a class SkMask instead of a struct? Typically we want to keep structs structs and classes classes.\r\n\r\nAlso, what exactly is the blitter being used for in this case? the blitters are \u0022internal\u0022-ish (they have no SK_API and they live under the src folder instead of the public headers/include folder). Even though you may have a 1 bpp bitmap, you are still using a 1 byte mask and blitter. How is this better/different than using a \u0060SKColorType.Gray8\u0060 image? that is also a 1 byte per pixel image.\r\n\r\nAm I correct in my understanding that this was to be able to load a nice color image. and then after loading the mask, apply the mast to the bitmap, turning that bitmap into a transparent bitmap?\r\n",
+        "createdAt": "2017-01-10T01:43:12",
+        "reactions": []
+      },
+      {
+        "id": 271465568,
+        "author": "Tylerflick",
+        "body": "\u003E Is there a reason that you used a class SkMask instead of a struct? Typically we want to keep structs structs and classes classes.\r\n\r\nMakes sense. I\u0027ll fix that.\r\n\r\n\u003E Even though you may have a 1 bpp bitmap, you are still using a 1 byte mask and blitter.\r\n\r\nThis is not true with the SkMask struct or stencil masks in general. In Skia a raw byte array is loaded into the mask. This avoids inflating 1bpp masks 8 fold.\r\n\r\n\u003E  How is this better/different than using a SKColorType.Gray8 image?\r\n\r\nFor blended/soft masks it\u0027s not. In fact for most blended masks the default color space of the mask is \r\nGray8.\r\n\r\nI\u0027m not really sure why Skia is exposing a 32-bit, 16-bit, etc. mask type. I\u0027m still doing a bit of work on this and haven\u0027t updated that branch in a bit.\r\n",
+        "createdAt": "2017-01-10T02:02:37",
+        "reactions": []
+      }
+    ]
+  }
 }

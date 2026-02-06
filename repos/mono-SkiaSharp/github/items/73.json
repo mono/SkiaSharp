@@ -26,5 +26,102 @@
   "deletions": 1,
   "changedFiles": 7,
   "commits": 9,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:41:23.8310762Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 216019001,
+        "author": "xamarin-cla-bot",
+        "body": "Hey @agallero,\nThank you for your Pull Request! We \u003C3 our contributors!\n\nHowever, it looks like you haven\u0027t signed our CLA (Contributor License Agreement) yet. In order for us to accept your pull request, you have to sign our CLA first.\nOnce you do this, we can check over your pull request. You should only have to do this once.\n\nYou can read and sign our full Contributor License Agreement [here](https://cla.xamarin.com).\n\nThanks,\n\nYour friendly Xamarin CLA Bot#\n",
+        "createdAt": "2016-05-01T06:16:03",
+        "reactions": []
+      },
+      {
+        "id": 216019059,
+        "author": "agallero",
+        "body": "Hi,\nIt might look like I haven\u0027t signed, but I actually did. Can you review it?\n",
+        "createdAt": "2016-05-01T06:17:50",
+        "reactions": []
+      },
+      {
+        "id": 216571450,
+        "author": "bholmes",
+        "body": "@agallero Yes I can confirm that you have completed the CLA.  We can now review the PR.\n",
+        "createdAt": "2016-05-03T15:44:21",
+        "reactions": []
+      },
+      {
+        "id": 218620601,
+        "author": "mattleibow",
+        "body": "Hi @agallero,\n\nThanks for this PR. I am having a look at this now and I was wondering if you could make a few changes:\n- First, could you change the whitespace around? Although not documented exactly, we are using 4 spaces in the C / C\u002B\u002B code and hard tabs in the managed C# code.\n- Also, do we really need the SkString type? As you are just getting the \u0060c_str()\u0060 result, maybe you could do that in the C method. Although we are keeping the C layer very thin, this case might be better just to return the \u0060const char *\u0060. Here is an example method in [C](https://github.com/mono/skia/blob/xamarin-mobile-bindings/include/c/xamarin/sk_x_imagedecoder.h#L22) and then the wrapper in [C#](https://github.com/mono/SkiaSharp/blob/master/binding/Binding/SkiaApi.cs#L657). This will reduce the code and boundaries on the managed side as well as remove a type.\n\nOther than those two, I think we can merge.\n",
+        "createdAt": "2016-05-11T23:33:16",
+        "reactions": []
+      },
+      {
+        "id": 218627327,
+        "author": "agallero",
+        "body": "Hi,\nI\u0027ll try to see the whitespace: the main issue is that I have VS with the standard settings and I think even if you manually change the whitespace it will reformat the file everytime you change anything. I\u0027ll try editing the files with Xamarin Studio and resaving them.\n\nAbout the strings, I\u0027ve written more about them in issue #67 but basically, as far as I know the example you  mention doesn\u0027t work. Actually it could/should be modified to return a SkString. I mention sk_imagedecoder_get_format_name_from_format specifically in issue #67 because it doesn\u0027t really allocate memory in the C side (it is returning a constant), but the managed side tries to free the char\\* anyway, causing an access violation, at least when I tried the code.\n\nsk_imagedecoder_get_format_name_from_format could be fixed by changing the bindings not to free the char\\* (since at least for now, it is returning constants that don\u0027t need to be freed). But it is a dangerous solution, if in the future sk_imagedecoder_get_format_name_from_format returns something that isn\u0027t a constant and needs to be deallocated in the .net side.\n\nIn my case, the font name can\u0027t be a constant, so I need to allocate memory for the char\\* in the C side. But then you can\u0027t free it in the .NET side, because .NET expects the memory in the C side to have been allocated with CoTaskMemAlloc (which is windows specific). So by publishing SkString, what I do is to provide a wrapper for the char\\* that is both allocated and deallocated in the C side.\n\nThe SkString approach actually mimics the SkData approach which is a similar wrapper for a byte\\* which again, in the case of SkData is allocated and deallocated at the C side. \n",
+        "createdAt": "2016-05-12T00:18:59",
+        "reactions": []
+      },
+      {
+        "id": 218646128,
+        "author": "mattleibow",
+        "body": "Apologies, I broke the merge with my update to the skia submodule :(\n",
+        "createdAt": "2016-05-12T02:48:49",
+        "reactions": []
+      },
+      {
+        "id": 218646330,
+        "author": "mattleibow",
+        "body": "My bad, clicked the wrong button there :( comment, not close!\n",
+        "createdAt": "2016-05-12T02:50:26",
+        "reactions": []
+      },
+      {
+        "id": 218741684,
+        "author": "agallero",
+        "body": "Matthew,\nThanks for all the comments. I will see to fix the whitespace and move the result of the get_typeface to the function result indeed. The original reason to have it as a parameter was to mimic as much as possible the C\u002B\u002B Api (where for some reason they have \u0060void getFamilyName(SkString* name) const;\u0060 ) but yes, I think returning the string directly will make more sense. I\u0027ll re check the possible GC issues too.\n\nThanks for all the time!\n   Adrian\n",
+        "createdAt": "2016-05-12T12:26:39",
+        "reactions": []
+      },
+      {
+        "id": 219170103,
+        "author": "agallero",
+        "body": "Hi,\nI\u0027ve modified the whitespace to be consistent with the rest, and modified sk_typeface_get_family_name to return an sk_string instead of void.\n\nBut I am not really sure if the pull request must be redone or this can be used, as it seems that all the commits from other pull requests are now also included?\n",
+        "createdAt": "2016-05-13T22:01:40",
+        "reactions": []
+      },
+      {
+        "id": 219250901,
+        "author": "mattleibow",
+        "body": "@agallero This PR is still fine. The other changes are just going to be merged back, so it won\u0027t do anything. The only thing is the skia sub-module... but your or I can fix that before I merge - no biggie.\n\nOnly these changes will get merged in as changes: https://github.com/mono/SkiaSharp/compare/master...agallero:typeface\n",
+        "createdAt": "2016-05-14T20:49:36",
+        "reactions": []
+      },
+      {
+        "id": 219253121,
+        "author": "mattleibow",
+        "body": "@agallero Just a note, if you want to chat directly, you can do so with Gitter: https://gitter.im/xamarin/XamarinComponents\n",
+        "createdAt": "2016-05-14T21:41:30",
+        "reactions": []
+      },
+      {
+        "id": 219750743,
+        "author": "migueldeicaza",
+        "body": "Can we merge this?\n",
+        "createdAt": "2016-05-17T15:16:28",
+        "reactions": []
+      },
+      {
+        "id": 219847632,
+        "author": "mattleibow",
+        "body": "All right, merging now. Thanks for the work\n",
+        "createdAt": "2016-05-17T20:43:39",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -33,5 +33,25 @@
       "state": "COMMENTED",
       "submittedAt": "2016-11-17T19:52:45"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:40:52.3390293Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 261354789,
+        "author": "mattleibow",
+        "body": "I merged the https://github.com/mono/skia/pull/36 PR, that was good. I think all that is left is to remove the \u0060null\u0060 default param value. Sorry about the conflict. \n\nThis might be interesting to you: https://github.com/mono/SkiaSharp/commit/8db2bb0534934d054acf0f98ab273bed1234566d Basically, you can tell the bitmap which pixels (memory block) to use, and when it is finished it will invoke a callback to dispose of the pixel memory correctly. See the test: https://github.com/mono/SkiaSharp/commit/8db2bb0534934d054acf0f98ab273bed1234566d#diff-bb90be898c3b02230b061ed89cb39a5aR11\n\nI see this as creating a bitmap from an existing memory location. Similar to a surface from pixels, but in this instance the bitmap can be drawn onto something else - a surface can\u0027t be drawn on another surface. eg: using some native codec not supported by SkiaSharp, then pass the memory location to a bitmap - which you can then draw somewhere, or even draw on that image.\n",
+        "createdAt": "2016-11-17T20:07:20",
+        "reactions": []
+      },
+      {
+        "id": 261378494,
+        "author": "Tylerflick",
+        "body": "Sorry about the nasty merge. I tried to rebase but git was not having it.\nI have the null optional removed.\n",
+        "createdAt": "2016-11-17T21:41:34",
+        "reactions": []
+      }
+    ]
+  }
 }

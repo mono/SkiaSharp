@@ -26,5 +26,39 @@
   "deletions": 12,
   "changedFiles": 6,
   "commits": 3,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:41:45.8121568Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 190819369,
+        "author": "mattleibow",
+        "body": "@kekekeks Thanks for this PR. I made two notes on coding style. Other than that, I\u0027ll merge it.\n\nhttp://www.mono-project.com/community/contributing/coding-guidelines/\n",
+        "createdAt": "2016-03-01T17:14:41",
+        "reactions": []
+      },
+      {
+        "id": 190825664,
+        "author": "kekekeks",
+        "body": "@mattleibow Fixed\n",
+        "createdAt": "2016-03-01T17:33:55",
+        "reactions": []
+      },
+      {
+        "id": 191580300,
+        "author": "migueldeicaza",
+        "body": "I looked at this, and I think that the approach that is being taken is wasteful.\n\nC# is passing a UTF-16 string, and we end up always creating a managed array to convert to the currently configured text encoding.   Instead, I propose that we introduce a helper method that saves the current text encoding, sets it to UTF-16, renders the passed text, and restores the previous value for the current SKPaint text encoding.\n",
+        "createdAt": "2016-03-03T04:48:41",
+        "reactions": []
+      },
+      {
+        "id": 193005065,
+        "author": "migueldeicaza",
+        "body": "I implemented the described approach.\n",
+        "createdAt": "2016-03-06T22:02:40",
+        "reactions": []
+      }
+    ]
+  }
 }

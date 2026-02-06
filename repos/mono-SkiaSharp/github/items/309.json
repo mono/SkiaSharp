@@ -32,5 +32,83 @@
   "deletions": 2,
   "changedFiles": 16,
   "commits": 11,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:40:05.9972901Z",
+    "reactions": [
+      {
+        "user": "JimSEOW",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:40:05.9973085Z"
+      },
+      {
+        "user": "djcparker",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:40:05.9973092Z"
+      },
+      {
+        "user": "michaelstonis",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:40:05.9973094Z"
+      },
+      {
+        "user": "rogihee",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:40:05.9973098Z"
+      },
+      {
+        "user": "charlesroddie",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:40:05.99731Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 305941965,
+        "author": "mattleibow",
+        "body": "All the views will get the \u0060Touch\u0060 event, with similar features. However, due to platform differences there are some limitations or restrictions.\r\n\r\nThere is a property, \u0060EnableTouchEvents\u0060 (default value is \u0060false\u0060), that can be used to enable/disable touch events. This has two main benefits:\r\n 1. The ability to subscribe to or _completely_ unsubscribe from all touch events\r\n 2. Some Xamarin.Forms platforms cannot receive touch events and use gesture recognizers simultaneously\r\n\r\nSetting this property to \u0060false\u0060 will result in the touch events being completely disabled. Setting it to \u0060true\u0060 may override existing Xamarin.Forms gesture recognizers. \r\n\r\nThis property is used to control the platforms:\r\n - **iOS** and **Android** cannot support touch events and Xamarin.Forms gesture recognizers simultaneously\r\n - **macOS** and **UWP** technically don\u0027t require this as both touch events and Xamarin.Forms gesture recognizers work simultaneously\r\n\r\n**Android**:\r\n - Touch events are consumed via the \u0060Touch\u0060 event, or the \u0060IOnTouchListener\u0060\r\n - Because the touch events are redirected to the listener, parent views cannot receive touch events\r\n - Because the parent view cannot receive events, the Xamarin.Forms gesture recognizers won\u0027t work\r\n\r\n**iOS**:\r\n - Touch events are managed via a \u0060UIGestureRecognizer\u0060\r\n - Because the view has to have user interaction enabled for touch to work, the the Xamarin.Forms gesture recognizers won\u0027t work (see https://bugzilla.xamarin.com/show_bug.cgi?id=57114)\r\n\r\n**macOS**:\r\n - Touch events are managed via a \u0060NSGestureRecognizer\u0060\r\n - Touch events do not disable the the Xamarin.Forms gesture recognizers\r\n\r\n**UWP**:\r\n - Touch events are managed via the pointer events\r\n - Touch events do not disable the the Xamarin.Forms gesture recognizers",
+        "createdAt": "2017-06-03T01:36:13",
+        "reactions": []
+      },
+      {
+        "id": 305978416,
+        "author": "michaelstonis",
+        "body": "Any considerations for multitouch? I personally feel like having an event with a single touch point is pretty great for nearly all situations, so the implementation here makes that nice and clean. If I wanted to do any kinds of pinch style event, I suppose you could switch to a pinch gesture. For what it is worth, pinch and rotate are the two primary use cases that I can think of for multitouch.",
+        "createdAt": "2017-06-03T14:30:23",
+        "reactions": []
+      },
+      {
+        "id": 305979104,
+        "author": "mattleibow",
+        "body": "Multitouch is supported fully. The \u0060Id\u0060 property on the event args tracks the various pointers. \r\n\r\nI have been testing with a sample like this, which i have gotten at least 10 pointers (I ran out of fingers):\r\n\r\n\u0060\u0060\u0060csharp\r\nprivate readonly Dictionary\u003Clong, SKPoint\u003E points = new Dictionary\u003Clong, SKPoint\u003E();\r\n\r\nprivate void OnTouching(object sender, SKTouchEventArgs e)\r\n{\r\n\tswitch (e.ActionType)\r\n\t{\r\n\t\tcase SKTouchAction.Entered:\r\n\t\tcase SKTouchAction.Pressed:\r\n\t\tcase SKTouchAction.Moved:\r\n\t\t\tpoints[e.Id] = e.Location;\r\n\t\t\tbreak;\r\n\t\tcase SKTouchAction.Released:\r\n\t\tcase SKTouchAction.Cancelled:\r\n\t\tcase SKTouchAction.Exited:\r\n\t\t\tpoints.Remove(e.Id);\r\n\t\t\tbreak;\r\n\t}\r\n\r\n\t((SKCanvasView)sender).InvalidateSurface();\r\n}\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-06-03T14:40:22",
+        "reactions": [
+          {
+            "user": "michaelstonis",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:40:05.4372541Z"
+          },
+          {
+            "user": "mgnslndh",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T14:40:05.4372554Z"
+          }
+        ]
+      },
+      {
+        "id": 346417679,
+        "author": "darylwatts",
+        "body": "Just as an aside to this - I am currently using SkiaSharp in a Xamarin Forms project (works great!) and using these features on Android (not tested iOS yet) - and I have a canvas view with Pan and Pinch Xamarin forms gestures attached to it, and the SkiaSharp touch events enabled on it too, and they all work really nicely together. I can pan and pinch, and tap to get the location/point that I need.\r\n\r\nNB - also the iOS bug mentioned above has been fixed in Xamarin forms 2.3.6-pre1 and onwards.\r\n",
+        "createdAt": "2017-11-22T17:18:39",
+        "reactions": []
+      },
+      {
+        "id": 386288775,
+        "author": "ghost",
+        "body": "@darylwatts You said all three (pinch, pan and touch) work together nicely. However when I try to pinch or pan, my code always gets to the touch eventhandler of the SKCanvasView first, and after that it gets to the pinch/pan code. Because of this, pinching or panning isn\u0027t as smooth as it should be. It\u0027s laggy, and sometimes it just won\u0027t work. \r\nIn the touch event, I thought it would be best to use the SKTouchAction.Released to run my touch code, but it never gets there. Only when I use Pressed, it gets to the code.\r\nDo you have any suggestions on how to improve the pinching/panning? Am I missing something?",
+        "createdAt": "2018-05-03T13:06:10",
+        "reactions": []
+      }
+    ]
+  }
 }

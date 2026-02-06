@@ -27,5 +27,67 @@
   "deletions": 2,
   "changedFiles": 2,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:40:35.2028874Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 291596746,
+        "author": "xamarin-cla-bot",
+        "body": "Hey @VitalyKnyazev,\r\nThank you for your Pull Request! We \u003C3 our contributors!\r\n\r\nHowever, it looks like you haven\u0027t signed our CLA (Contributor License Agreement) yet. In order for us to accept your pull request, you have to sign our CLA first.\r\nOnce you do this, we can check over your pull request. You should only have to do this once.\r\n\r\nYou can read and sign our full Contributor License Agreement [here](https://cla.xamarin.com).\r\n\r\nThanks,\r\n\r\nYour friendly Xamarin CLA Bot#",
+        "createdAt": "2017-04-04T18:50:56",
+        "reactions": []
+      },
+      {
+        "id": 291599073,
+        "author": "xamarin-cla-bot",
+        "body": "Hey @VitalyKnyazev,\r\n\r\nThanks for signing our CLA! We can now look at your pull request.\r\n\r\nAlways at your service,\r\n\r\nYour friendly Xamarin CLA Bot#",
+        "createdAt": "2017-04-04T18:59:27",
+        "reactions": []
+      },
+      {
+        "id": 291601388,
+        "author": "migueldeicaza",
+        "body": "This looks good to me.",
+        "createdAt": "2017-04-04T19:07:55",
+        "reactions": []
+      },
+      {
+        "id": 291605001,
+        "author": "mattleibow",
+        "body": "@VitalyKnyazev Thanks for this! You are correct because - we can\u0027t pass a managed object to the unmanaged method.",
+        "createdAt": "2017-04-04T19:21:44",
+        "reactions": []
+      },
+      {
+        "id": 299176967,
+        "author": "cristianmad",
+        "body": "Has the fix been released part of the 1.57.0 nuget package? I am asking because I am using it with the Infragistics controls and I am still getting the same error.\r\nThanks",
+        "createdAt": "2017-05-04T12:56:09",
+        "reactions": []
+      },
+      {
+        "id": 299318638,
+        "author": "mattleibow",
+        "body": "@cristianmad I am not able to repro this.\r\n\r\nI can AOT an app with 1.57.0, but I can\u0027t with 1.55.1 (which appears to be the version that Infragistics uses). However, when I update my version of SkiaSharp, then everything appears to AOT just fine.\r\n\r\nI even turned on LLVM with AOT, and the app builds just fine. Are you sure it is SkiaSharp? And that the update of SkiaSharp succeeded?\r\n\r\nHere is my AOT output:\r\n\r\n\u0060\u0060\u0060\r\n[aot-compiler stdout] Mono Ahead of Time compiler - compiling assembly /Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/android/assets/SkiaSharp.dll\r\n[aot-compiler stdout] AOTID 769E3BEE-32C3-AB93-78D6-B1CA8D8A37F8\r\n[aot-compiler stdout] Executing opt: \u0022/Library/Frameworks/Xamarin.Android.framework/Versions/Current/bin/opt\u0022 -f -targetlibinfo -no-aa -basicaa -notti -instcombine -simplifycfg -inline-cost -inline -sroa -domtree -early-cse -lazy-value-info -correlated-propagation -simplifycfg -instcombine -simplifycfg -reassociate -domtree -loops -loop-simplify -lcssa -loop-rotate -licm -lcssa -loop-unswitch -instcombine -scalar-evolution -loop-simplify -lcssa -indvars -loop-idiom -loop-deletion -loop-unroll -memdep -gvn -memdep -memcpyopt -sccp -instcombine -lazy-value-info -correlated-propagation -domtree -memdep -adce -simplifycfg -instcombine -strip-dead-prototypes -domtree -verify -o \u0022/Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/aot/armeabi-v7a/SkiaSharp.dll/temp.opt.bc\u0022 \u0022/Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/aot/armeabi-v7a/SkiaSharp.dll/temp.bc\u0022\r\n[aot-compiler stdout] Executing llc: \u0022/Library/Frameworks/Xamarin.Android.framework/Versions/Current/bin/llc\u0022  -mattr=\u002Bvfp2,-neon,\u002Bd16 -asm-verbose=false -mtriple=armv7-linux-gnueabi -disable-gnu-eh-frame -enable-mono-eh-frame -mono-eh-frame-symbol=mono_aot_SkiaSharp_eh_frame -relocation-model=pic -filetype=obj -o \u0022/Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/aot/armeabi-v7a/SkiaSharp.dll/temp-llvm.o\u0022 \u0022/Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/aot/armeabi-v7a/SkiaSharp.dll/temp.opt.bc\u0022\r\n[aot-compiler stdout] Code: 119132(66%) Info: 7266(4%) Ex Info: 8115(4%) Unwind Info: 11410(6%) Class Info: 10529(5%) PLT: 1365(0%) GOT Info: 13938(7%) Offsets: 9480(5%) GOT: 6732\r\n[aot-compiler stdout] Compiled: 2047/2047 (100%), LLVM: 1357 (66%), No GOT slots: 1365 (66%), Direct calls: 112 (11%)\r\n[aot-compiler stdout] Executing the native assembler: \u0022/Users/matthew/Library/Developer/Xamarin/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-as\u0022   -mfpu=vfp3 -o /var/folders/_k/kblthz_n3t9bsb6c8bxhcgxh0000gp/T/mono_aot_rX2zhF.o /var/folders/_k/kblthz_n3t9bsb6c8bxhcgxh0000gp/T/mono_aot_rX2zhF\r\n[aot-compiler stdout] Executing the native linker: \u0022/Users/matthew/Library/Developer/Xamarin/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-ld\u0022  -shared -o /Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/aot/armeabi-v7a/libaot-SkiaSharp.dll.so.tmp \u0022/Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/aot/armeabi-v7a/SkiaSharp.dll/temp-llvm.o\u0022 /var/folders/_k/kblthz_n3t9bsb6c8bxhcgxh0000gp/T/mono_aot_rX2zhF.o /Users/matthew/Library/Developer/Xamarin/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/lib/gcc/arm-linux-androideabi/4.9.x/libgcc.a /Users/matthew/Library/Developer/Xamarin/android-ndk/platforms/android-24/arch-arm/usr/lib/libc.so /Users/matthew/Library/Developer/Xamarin/android-ndk/platforms/android-24/arch-arm/usr/lib/libm.so\r\n[aot-compiler stdout] Stripping the binary: \u0022/Users/matthew/Library/Developer/Xamarin/android-ndk/toolchains/arm-linux-androideabi-4.9/prebuilt/darwin-x86_64/bin/arm-linux-androideabi-strip\u0022 --strip-symbol=\\$a --strip-symbol=\\$d /Users/matthew/Projects/Testing/TestSkiaSharpAOT/TestSkiaSharpAOT/obj/Release/aot/armeabi-v7a/libaot-SkiaSharp.dll.so.tmp\r\n[aot-compiler stdout] JIT time: 530 ms, Generation time: 3446 ms, Assembly\u002BLink time: 200 ms.\r\n\u0060\u0060\u0060",
+        "createdAt": "2017-05-04T21:47:40",
+        "reactions": []
+      },
+      {
+        "id": 299323765,
+        "author": "cristianmad",
+        "body": "@mattleibow Yes, it was SkiaSharp. Indeed Infragistics is using 1.55. I even upgraded to 1.57 and I had the same issue.\r\nAfter a good part of the day trying various ways of fixing it (including the ones indicated by you), I found what was wrong. (and it may have been my mistake).\r\n\r\nWhen you create a Xamarin Forms project, you get a PCL project (where you would define most of your Views/ViewModels and basically the bulk of the functionality) and also one platform specific project (named .Android, .iOS and .UWP).\r\nIn my case I was adding the reference to the Infragistics libraries only to PCL/common project and not to the platform specific ones. I didn\u0027t think I would need to do it since they are not directly referencing those controls. The error didn\u0027t really make things easier either.\r\nThe moment I added the references to the Infragistics assemblies to the platform specific projects it worked! I even tried using the original 1.55 SkiaSharp and also worked (which, in theory, maybe it shouldn\u0027t have...). I did not understand why it did, but I was happy :)\r\n\r\nAnyway, all is good now \uD83D\uDC4D \r\n\r\nThank you!\r\n\r\n\r\n\r\n",
+        "createdAt": "2017-05-04T22:12:21",
+        "reactions": []
+      },
+      {
+        "id": 299462061,
+        "author": "mattleibow",
+        "body": "great to hear!",
+        "createdAt": "2017-05-05T13:17:50",
+        "reactions": []
+      }
+    ]
+  }
 }

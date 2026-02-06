@@ -25,5 +25,74 @@
   "deletions": 1,
   "changedFiles": 7,
   "commits": 2,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:41:06.5690849Z",
+    "reactions": [
+      {
+        "user": "wieslawsoltes",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:41:06.5690935Z"
+      },
+      {
+        "user": "hypeartist",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:41:06.5690941Z"
+      },
+      {
+        "user": "wieslawsoltes",
+        "content": "hooray",
+        "createdAt": "2026-02-06T14:41:06.5690944Z"
+      },
+      {
+        "user": "tdenniston",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T14:41:06.5691026Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 232750655,
+        "author": "migueldeicaza",
+        "body": "LOVE IT!\n",
+        "createdAt": "2016-07-14T18:26:33",
+        "reactions": []
+      },
+      {
+        "id": 233049657,
+        "author": "bholmes",
+        "body": "@mattleibow,\n\nI am not seeing ref and unref calls on the new SKEffect object.  What is keeping the object alive or causing it to be cleaned up?\n",
+        "createdAt": "2016-07-15T19:32:23",
+        "reactions": []
+      },
+      {
+        "id": 233217729,
+        "author": "migueldeicaza",
+        "body": "@bholmes it inherits the Finalizer/Disposer from SKObject which has the unref, and the object creation creates the objects with refcount=1\n",
+        "createdAt": "2016-07-18T02:02:58",
+        "reactions": []
+      },
+      {
+        "id": 233374778,
+        "author": "mattleibow",
+        "body": "@migueldeicaza In this case, @bholmes is right because \u0060SKObject\u0060 does not have the unref. This is because not all \u0060SKObject\u0060s are \u0060SKRefCnt\u0060 objects. An example would be \u0060SKBitmap\u0060/\u0060SKPaint\u0060, which is just a plain object and the destructor is used.\n\nI think there are just those two variants, so I could create another type that uses the unref and the base uses the destructor, but for simplicity\u0027s sake, I just unref in the dispose methods. So, in this case, I forgot to add the unref, which I have added now.\n",
+        "createdAt": "2016-07-18T16:04:38",
+        "reactions": []
+      },
+      {
+        "id": 234276261,
+        "author": "bholmes",
+        "body": "@mattleibow we can merge this when you are ready.  I know you are working on a new version \u002B upstreaming changes.  So I will let you decide when is the best time to merge.\n",
+        "createdAt": "2016-07-21T14:45:14",
+        "reactions": []
+      },
+      {
+        "id": 234686514,
+        "author": "mattleibow",
+        "body": "I am merging this in #116 \n",
+        "createdAt": "2016-07-23T00:21:28",
+        "reactions": []
+      }
+    ]
+  }
 }

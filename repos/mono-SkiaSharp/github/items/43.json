@@ -26,5 +26,67 @@
   "deletions": 5,
   "changedFiles": 5,
   "commits": 2,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T14:41:39.663611Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 197019055,
+        "author": "xamarin-cla-bot",
+        "body": "Hey @petergolde,\nThank you for your Pull Request! We \u003C3 our contributors!\n\nHowever, it looks like you haven\u0027t signed our CLA (Contributor License Agreement) yet. In order for us to accept your pull request, you have to sign our CLA first.\nOnce you do this, we can check over your pull request. You should only have to do this once.\n\nYou can read and sign our full Contributor License Agreement [here](https://cla.xamarin.com).\n\nThanks,\n\nYour friendly Xamarin CLA Bot#\n",
+        "createdAt": "2016-03-15T21:06:20",
+        "reactions": []
+      },
+      {
+        "id": 197065774,
+        "author": "petergolde",
+        "body": "I have signed the CLA.\n",
+        "createdAt": "2016-03-15T23:19:12",
+        "reactions": []
+      },
+      {
+        "id": 197323598,
+        "author": "bholmes",
+        "body": "I have verified that the CLA has been signed.\n",
+        "createdAt": "2016-03-16T13:17:31",
+        "reactions": []
+      },
+      {
+        "id": 197327543,
+        "author": "bholmes",
+        "body": "We will have to pull [this commit](https://github.com/petergolde/skia/commit/45bdc31f6d735d23779b131c3e373047f2bbc8ac) into mono/skia and adjust the submodule changes of this patch.\n",
+        "createdAt": "2016-03-16T13:23:38",
+        "reactions": []
+      },
+      {
+        "id": 197389214,
+        "author": "petergolde",
+        "body": "Is there a better way to handle pull requests that span a submodule? Should I create a simultaneous pull request in mono/skia? I\u0027m new to github and pull requests so I don\u0027t know the best practices here. Please advise (I\u0027m likely to have more PRs in the same vein...)\n",
+        "createdAt": "2016-03-16T15:43:29",
+        "reactions": []
+      },
+      {
+        "id": 197469847,
+        "author": "bholmes",
+        "body": "@petergolde I think a PR in mono/skia would work well.  Be sure to link the skia PR in the comments here.  \n",
+        "createdAt": "2016-03-16T18:22:51",
+        "reactions": []
+      },
+      {
+        "id": 197531675,
+        "author": "petergolde",
+        "body": "See [pull request #1](https://github.com/mono/skia/pull/1) in mono/skia for the C part of this PR.\n",
+        "createdAt": "2016-03-16T20:25:07",
+        "reactions": []
+      },
+      {
+        "id": 198177712,
+        "author": "bholmes",
+        "body": "Nice.  When we release this to NuGet we can also change the Xamagon sample to this...\n\n\u0060\u0060\u0060\n--- /Users/billholmes/Documents/Git-Xamarin/SkiaSharp/samples/SharedDemo/SkiaSharp.Demos.cs     (base)\n\u002B\u002B\u002B /Users/billholmes/Documents/Git-Xamarin/SkiaSharp/samples/SharedDemo/SkiaSharp.Demos.cs     (working copy)\n@@ -47,6 \u002B47,8 @@\n\n\n                using (var path = new SKPath ()) {\n\u002B                   paint.Color = XamDkBlue;\n\u002B\n                    path.MoveTo (71.4311121f, 56f);\n                    path.CubicTo (68.6763107f, 56.0058575f, 65.9796704f, 57.5737917f, 64.5928855f, 59.965729f);\n                    path.LineTo (43.0238921f, 97.5342563f);\n@@ -62,13 \u002B64,6 @@\n                    path.LineTo (71.4311121f, 56f);\n                    path.Close ();\n\n-                   paint.Color = XamDkBlue;\n-                   canvas.DrawPath (path, paint);\n-\n-               }\n-\n-               using (var path = new SKPath ()) {\n-\n                    path.MoveTo (71.8225901f, 77.9780432f);\n                    path.CubicTo (71.8818491f, 77.9721857f, 71.9440029f, 77.9721857f, 72.0034464f, 77.9780432f);\n                    path.LineTo (79.444074f, 77.9780432f);\n@@ -98,7 \u002B93,8 @@\n                    path.LineTo (72.0034464f, 125.021957f);\n                    path.CubicTo (71.3274867f, 125.027814f, 70.8220664f, 124.157088f, 71.1600463f, 123.568869f);\n                    path.LineTo (83.4807624f, 101.500005f);\n                    path.LineTo (71.1600463f, 79.400867f);\n                    path.CubicTo (70.8647037f, 78.86725f, 71.2250368f, 78.0919422f, 71.8225901f, 77.9780432f);\n                    path.LineTo (71.8225901f, 77.9780432f);\n                    path.Close ();\n\n-                   paint.Color = SKColors.White;\n\u002B                   path.FillType = SKPathFillType.EvenOdd;\n\u002B\n                    canvas.DrawPath (path, paint);\n                }\n            }\n\u0060\u0060\u0060\n",
+        "createdAt": "2016-03-18T02:58:27",
+        "reactions": []
+      }
+    ]
+  }
 }
