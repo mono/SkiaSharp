@@ -18,5 +18,73 @@
   "createdAt": "2024-01-30T20:57:52",
   "updatedAt": "2024-11-13T04:09:37",
   "commentCount": 8,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:32:32.2620416Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1925032699,
+        "author": "charlesroddie",
+        "body": "Try updating netframework to latest netframework or dotnet8 so you can use netstandard2.0 at least.",
+        "createdAt": "2024-02-03T02:56:31",
+        "reactions": []
+      },
+      {
+        "id": 1931025861,
+        "author": "lbras",
+        "body": "\u003E Try updating netframework to latest netframework or dotnet8 so you can use netstandard2.0 at least.\r\n\r\nI tried updating my sample project to .NET Framework 4.8 and had no issues, SkiaSharp worked out of the box without having to add \u0060\u003CShouldIncludeNativeSkiaSharp\u003E\u0060 or \u0060\u003CPreferredNativeSkiaSharp\u003E\u0060 using platform Any CPU. I confirmed the same is true for .NET Framework 4.6.2.\r\n\r\nSo it is an issue specific for .NET Framework 4.6 / .NETStandard 1.3.\r\n\r\n",
+        "createdAt": "2024-02-07T00:36:35",
+        "reactions": []
+      },
+      {
+        "id": 1932244080,
+        "author": "charlesroddie",
+        "body": ".NET Framework 4.6 is out of support so there is no expectation that this should work or not work. A search for netstandard in the repo indicates that netstandard1.3 has been removed with netstandard2.0 and netstandard2.1 and net462 as current targets, which makes sense.",
+        "createdAt": "2024-02-07T15:07:03",
+        "reactions": []
+      },
+      {
+        "id": 1939324194,
+        "author": "lbras",
+        "body": "I do expect it to work because SkiaSharp claims it provides bindings for .NET Standard 1.3:\r\n\r\n[![image](https://github.com/mono/SkiaSharp/assets/4013113/ee006478-4857-45e7-a21d-cf74fb774f53)](https://github.com/mono/SkiaSharp)\r\n\r\n[![image](https://github.com/mono/SkiaSharp/assets/4013113/10ba1c00-27b3-41ea-a970-b7b0c85ad163)](https://www.nuget.org/packages/SkiaSharp)\r\n\r\nIf this is no longer true, then the above statements should be corrected. I specifically picked SkiaSharp because of .NET Standard 1.3 support.",
+        "createdAt": "2024-02-12T18:42:40",
+        "reactions": []
+      },
+      {
+        "id": 1939769286,
+        "author": "charlesroddie",
+        "body": "I expect those references would be removed when the current prerelease gets released. Why would this matter to you? You said you updated your project to netframework 4.8 and there was no problem.",
+        "createdAt": "2024-02-12T23:19:01",
+        "reactions": []
+      },
+      {
+        "id": 1939784543,
+        "author": "mattleibow",
+        "body": "Hi folks, looking at this issue I think the nuget UI and readme may not be the greatest source of how this all works.\r\n\r\nThe meaning of support for .NET Standard 1.3 really just refers to the API level. There is no real \u0022.NET Standard\u0022 app. So you can\u0027t \u0022run\u0022 it. This just means that if you _want_ to build a .NET Standard dll with SkiaSharp, you can do so.\r\n\r\nThe other part is the .NET Framework, and that is just supported from 4.6.2 since that is the earliest version that supports .NET Standard 2.0.\r\n\r\nI agree this is a bit confusing as you have to know that .NET Standard is not really meant to be used in the way you would expect. \r\n\r\nI need to see why I do not copy the native dlls for plain .NET Standard. I am sure there was a reason. If you were to build a net8.0 class library I think it gets copied. So, it may have been that everyone using .NET Standard just used it as a library and had some form of app.\r\n\r\n",
+        "createdAt": "2024-02-12T23:34:54",
+        "reactions": [
+          {
+            "user": "corianderhater",
+            "content": "eyes",
+            "createdAt": "2026-02-06T13:32:31.8336344Z"
+          }
+        ]
+      },
+      {
+        "id": 2152114494,
+        "author": "corianderhater",
+        "body": "I can relate. \r\n\r\nThe problem occurs on the line:\r\n\r\n\u0060var canvas = SKSvgCanvas.Create(SKRect.Create(squareSvgSize, squareSvgSize), stream);\u0060\r\n\r\nMessage:\r\nSystem.TypeInitializationException: \u0027The type initializer for \u0027SkiaSharp.SKAbstractManagedWStream\u0027 threw an exception.\u0027\r\nDllNotFoundException: Unable to load DLL \u0027libSkiaSharp\u0027 or one of its dependencies: The specified module could not be found. (0x8007007E)\r\n\r\nInstalled libs via nuget:\r\nSkiaSharp 2.88.8\r\nSkiaSkarp.Svg 1.60.0\r\n\r\nI use .NET 7, Class Library project, AnyCPU (i tried x64 too)\r\n\r\nThe libSkiaSharp.dll exisits in all subfolders of \r\n...\\bin\\Debug\\net7.0\\runtimes\\PLATFORMNAME\\native\r\nbut **not** in:\r\n...\\bin\\Debug\\net7.0\\runtimes\\win\\lib\\net7.0\r\n\r\nWeird behavior:\r\nI have another .NET8 project that is a WebAPI Console Application and it works just fine with Microcharts library that uses SkiaSharp 2.80.2.\r\n\r\nAny ideas?\r\n\r\n",
+        "createdAt": "2024-06-06T11:26:04",
+        "reactions": []
+      },
+      {
+        "id": 2472333152,
+        "author": "david3951445",
+        "body": "I encountered a similiar issue in a WinForm (.NET Framework 4.8) project that use ScottPlot: (5.0.44). My situation is:\r\n1. git clone this project from remote\r\n2. Open and debug (F5) on VS2022\r\n3. The exception \u0022Unable to load library \u0027libSkiaSharp.dll\u0027 \u0022throw\r\nAs lbras said, the expected behavior \u0022LibSkiaSharp.dll should be copied to the application bin folder\u0022 not implemented.\r\nEven if the coping logic is already written in .csproj file of th project:\r\n  \u003CImport Project=\u0022..\\packages\\SkiaSharp.NativeAssets.Win32.2.88.9\\build\\net462\\SkiaSharp.NativeAssets.Win32.targets\u0022 Condition=\u0022Exists(\u0027..\\packages\\SkiaSharp.NativeAssets.Win32.2.88.9\\build\\net462\\SkiaSharp.NativeAssets.Win32.targets\u0027)\u0022 /\u003E\r\n\r\nI just save .csproj outside VS2022 without changing anything and force VS2022 reload project and the files are copy to as it excepted.\r\nAnother solution is to not git ignore the packages folder. This allows the first debug (F5) to be successful. Although the packages folder will be automatically generated If packages folder ignored during the first debug (F5), the second debug (F5) will not \u0022interpret\u0022. csproj file again (vs2022 seems to remember some past states). This lead the coping logic will not be run.\r\n\r\n",
+        "createdAt": "2024-11-13T04:09:35",
+        "reactions": []
+      }
+    ]
+  }
 }

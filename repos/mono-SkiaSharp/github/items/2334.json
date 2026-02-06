@@ -13,5 +13,39 @@
   "createdAt": "2022-12-09T03:50:45",
   "updatedAt": "2024-11-13T17:17:58",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:32:29.076819Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 1343987856,
+        "author": "themcoo",
+        "body": "In your webapp the background is #E4E4E4, in your winforms it\u0027s #F0F0F0. Transparent color blends with the background so you will get 2 different effects when you put it on backgrounds with different colour.",
+        "createdAt": "2022-12-09T08:14:07",
+        "reactions": []
+      },
+      {
+        "id": 1345246701,
+        "author": "shuchipaharia",
+        "body": "I executed both my samples with same background color, issue persists. Rendering with 50% transparency in Web app sample (with Blazor \u002B WebAssembly) is different than rendering with 50% transparency in Windows WPF app sample. Text color is same in both apps.\r\n\r\nRefer attached image.\r\n![image](https://user-images.githubusercontent.com/120154182/206853437-5cfb6f2e-66b1-4724-bd34-7aa85367074a.png)\r\n",
+        "createdAt": "2022-12-10T11:46:11",
+        "reactions": []
+      },
+      {
+        "id": 1345257884,
+        "author": "shuchipaharia",
+        "body": "Tried code below.\r\n\u0060\u0060\u0060cs\r\ndouble transparency = 0.5;\r\npaint.Color = paint.Color.WithAlpha((byte)(0xFF * transparency));\r\n\u0060\u0060\u0060\r\nand/or\r\n\u0060\u0060\u0060cs\r\npaint.Color = paint.Color.WithAlpha((byte)(0xFF * ((double)paint.Color.Alpha / 255 * transparency)));\r\n\u0060\u0060\u0060\r\nand/or \r\n\u0060\u0060\u0060cs\r\npaint.ColorFilter = SKColorFilter.CreateBlendMode(SKColors.White.WithAlpha((byte)(0xFF * ((double)paint.Color.Alpha / 255 * transparency))), SKBlendMode.DstIn;\r\n\r\ncanvas.DrawText(\u0022Happy Morning\u0022, X, Y, paint);\r\n\u0060\u0060\u0060",
+        "createdAt": "2022-12-10T12:47:56",
+        "reactions": []
+      },
+      {
+        "id": 1345350527,
+        "author": "themcoo",
+        "body": "This flushed out color reminds me of situations when color space in an image was ignored. I wonder if this problem is somehow related",
+        "createdAt": "2022-12-10T18:04:45",
+        "reactions": []
+      }
+    ]
+  }
 }

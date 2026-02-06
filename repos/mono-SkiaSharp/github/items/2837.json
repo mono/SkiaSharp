@@ -18,5 +18,25 @@
   "createdAt": "2024-04-16T21:15:46",
   "updatedAt": "2025-01-06T18:43:38",
   "commentCount": 2,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:30:52.1308439Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2387037585,
+        "author": "romen-h",
+        "body": "I have been working around this issue by upgrading or downgrading Intel graphics drivers, it seems to be an issue on Intel\u0027s side unfortunately. It\u0027s also likely to be an issue that the upstream GlWpfControl would have to fix rather than SkiaSharp.\r\n\r\nI had a system with Intel UHD 630 and tested a bunch of driver versions to find the exact version that the problem started happening:\r\n\u0060\u0060\u0060\r\nDriver Version, \tMM/DD/YYYY, \tWorking\r\n15.40.7.4279,\t\t09/01/2015,\t        Yes\r\n15.40.14.4352,\t\t12/23/2015,\t        Yes\r\n15.40.15.4360,\t\t12/21/2015,\t        Yes\r\n15.40.16.4364,\t\t01/06/2016,\t        Yes\t\r\n15.40.21.4416,\t\t03/23/2016,\t        No\r\n15.40.23.4444,\t\t04/22/2016,        \tNo\r\n15.40.30.4531,\t\t09/29/2016,\t        No\r\n15.40.37.4835,\t\t11/06/2017,\t        No\r\n15.40.42.5063,\t\t03/19/2019,\t        No\r\n15.40.48.5171,\t\t02/05/2021,\t        No\r\n\u0060\u0060\u0060",
+        "createdAt": "2024-10-01T20:42:59",
+        "reactions": []
+      },
+      {
+        "id": 2573699525,
+        "author": "Xerxes004",
+        "body": "GLWpfControl has received several updates since this issue was created. I would suggest skia update to the latest 4.3.3 version of GLWpfControl and see if that fixes the problem. Virtually all of these issues stem from Intel drivers, and I\u0027m attempting to have Intel look at the issues with OpenTK using the WGL_NV_DX_interop extension. There are several problems with OpenTK binding to the new drivers (version 32), and the old drivers (version 31) have other issues related to MSAA and depth/stencil in D3D9.\r\n\r\nThis PR fixed some of these issues for me:\r\n\r\nhttps://github.com/opentk/GLWpfControl/pull/131\r\n\r\nCheck out these issues for some context:\r\n\r\nhttps://github.com/opentk/opentk/issues/1788\r\nhttps://github.com/opentk/GLWpfControl/issues/149\r\nhttps://github.com/opentk/GLWpfControl/issues/138\r\nhttps://github.com/opentk/GLWpfControl/issues/130\r\nhttps://github.com/opentk/GLWpfControl/issues/128",
+        "createdAt": "2025-01-06T18:43:36",
+        "reactions": []
+      }
+    ]
+  }
 }

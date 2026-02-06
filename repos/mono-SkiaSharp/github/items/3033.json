@@ -39,5 +39,100 @@
       "state": "COMMENTED",
       "submittedAt": "2024-11-11T16:12:21"
     }
-  ]
+  ],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:32:35.7459429Z",
+    "reactions": [
+      {
+        "user": "nil4",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:32:35.7459501Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 2421017296,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2024-10-18T01:05:41",
+        "reactions": []
+      },
+      {
+        "id": 2421017398,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2024-10-18T01:05:49",
+        "reactions": []
+      },
+      {
+        "id": 2446264363,
+        "author": "taublast",
+        "body": "Very nice one!! \r\n\r\nPossible to avoid \u0060ConcurrentDictionary\u0060? IMHO it affects very badly animations scenarios, triggering GC due to its allocation mechanics, thus creating messy lag spikes during animations. \r\nOnce one starts a gaming loop that might come into play. \r\n\r\nMaybe add a \u0060lock\u0060 to a \u0060Dictionary\u0060.. Just thinking.",
+        "createdAt": "2024-10-30T09:10:00",
+        "reactions": []
+      },
+      {
+        "id": 2454729682,
+        "author": "mattleibow",
+        "body": "Is it possible to use \u0060System.Runtime.Caching.MemoryCache\u0060?\r\n\r\nhttps://learn.microsoft.com/dotnet/api/system.runtime.caching.memorycache\r\n\r\nNot sure if this is a good thing or not? Do people use this API? Is this sufficient?",
+        "createdAt": "2024-11-04T13:33:23",
+        "reactions": []
+      },
+      {
+        "id": 2454729841,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2024-11-04T13:33:28",
+        "reactions": []
+      },
+      {
+        "id": 2454730066,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2024-11-04T13:33:35",
+        "reactions": []
+      },
+      {
+        "id": 2455056208,
+        "author": "MichaelRumpler",
+        "body": "I didn\u0027t want to introduce another dependency. But I can try it and see what the benchmarks say.\r\n\r\nA \u0060Dictionary\u0060 with \u0060lock\u0060 was a bit faster than the \u0060ConcurrentDictionary\u0060, but not very much. What I actually planned, but didn\u0027t find the time to is to look at the source of System.Runtime.Caching and see if I can do something similar.",
+        "createdAt": "2024-11-04T15:44:34",
+        "reactions": [
+          {
+            "user": "taublast",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:32:34.7955029Z"
+          }
+        ]
+      },
+      {
+        "id": 2459953544,
+        "author": "MichaelRumpler",
+        "body": "I tested \u0060System.Runtime.Caching.MemoryCache\u0060 but it has several drawbacks:\r\n\r\n- it uses a string as key\r\n- it stores an \u0060object\u0060 which must be boxed\r\n\r\nBoth make it slower than the \u0060Dictionary\u003Cint, Tuple\u003E\u0060.\r\n\r\nHere are the benchmarks with the cache variants:\r\n\r\n| Method                           | Mean       | Error     | StdDev    | Gen0   | Gen1   | Allocated |\r\n|--------------------------------- |-----------:|----------:|----------:|-------:|-------:|----------:|\r\n| DrawShapedAscii                  | 134.396 us | 0.4493 us | 0.4203 us | 0.2441 |      - |    3144 B |\r\n| DrawAsciiWithShaper              |  19.046 us | 0.1644 us | 0.1283 us | 0.3052 |      - |    2744 B |\r\n| DrawAsciiWithConcurrentCache     |   9.845 us | 0.0486 us | 0.0455 us | 0.0916 | 0.0763 |     848 B |\r\n| DrawAsciiWithDictionaryCache     |   9.575 us | 0.0355 us | 0.0315 us | 0.0763 | 0.0610 |     752 B |\r\n| DrawAsciiWithRuntimeCache        |  10.934 us | 0.0564 us | 0.0528 us | 0.1831 | 0.1526 |    1560 B |\r\n| DrawShapedLigatures              | 191.784 us | 1.3686 us | 1.2133 us | 0.2441 |      - |    3144 B |\r\n| DrawLigaturesWithShaper          |  72.422 us | 0.5261 us | 0.4921 us | 0.2441 |      - |    2744 B |\r\n| DrawLigaturesWithConcurrentCache |   8.561 us | 0.0280 us | 0.0262 us | 0.0916 | 0.0763 |     848 B |\r\n| DrawLigaturesWithDictionaryCache |   8.372 us | 0.0513 us | 0.0480 us | 0.0763 | 0.0610 |     752 B |\r\n| DrawLigaturesWithRuntimeCache    |  10.120 us | 0.0264 us | 0.0206 us | 0.7019 | 0.6714 |    6072 B |\r\n| DrawShapedEmojis                 |  62.447 us | 0.2296 us | 0.2035 us | 0.1221 |      - |    1888 B |\r\n| DrawEmojisWithShaper             |  17.385 us | 0.0405 us | 0.0338 us | 0.1526 |      - |    1488 B |\r\n| DrawEmojisWithConcurrentCache    |  13.649 us | 0.2212 us | 0.2069 us | 0.0916 | 0.0763 |     848 B |\r\n| DrawEmojisWithDictionaryCache    |  13.553 us | 0.1254 us | 0.1173 us | 0.0763 | 0.0610 |     752 B |\r\n| DrawEmojisWithRuntimeCache       |  15.427 us | 0.2149 us | 0.2010 us | 0.7019 | 0.6714 |    6120 B |\r\n| DrawShapedRandom                 | 125.474 us | 1.1728 us | 1.0397 us |      - |      - |    1943 B |\r\n| DrawRandomWithShaper             |  10.477 us | 0.0267 us | 0.0209 us | 0.1831 |      - |    1543 B |\r\n| DrawRandomWithConcurrentCache    |   7.811 us | 0.0747 us | 0.0662 us | 0.1068 | 0.0992 |     911 B |\r\n| DrawRandomWithDictionaryCache    |   7.538 us | 0.0872 us | 0.0773 us | 0.0916 | 0.0763 |     815 B |\r\n| DrawRandomWithRuntimeCache       |   9.752 us | 0.1542 us | 0.1367 us | 0.1831 | 0.1678 |    1582 B |\r\n\r\nThe project with the benchmarks for the various variants is on https://github.com/MichaelRumpler/SkiaTextRendering.\r\n\r\nAs you can see the simple \u0060Dictionary\u0060 with a \u0060lock\u0060 was always fastest with the least amount of memory used. So I changed it to this now.",
+        "createdAt": "2024-11-06T14:48:53",
+        "reactions": []
+      },
+      {
+        "id": 2460008783,
+        "author": "nd1012",
+        "body": "\u003E the simple Dictionary with a lock was always fastest\r\n\r\nIn comparsion with the \u0060ConcurrentDictionary\u0060 this is only true, as long as you don\u0027t use the specialized concurrent access methods like \u0060GetOrAdd\u0060, \u0060TryGetValue\u0060, \u0060TryUpdate\u0060 and \u0060TryRemove\u0060. If you\u0027d implement them using a simple \u0060lock\u0060 statement, the \u0060ConcurrentDictionary\u0060 implementation would be way faster. I can tell this, because I\u0027ve implemented it just a few days ago, and benchmarks showed me a huge performance difference - so I removed my implementation with \u0060lock\u0060, finally, because 5.000us (\u0060Dictionary\u0060 with \u0060lock\u0060) vs 79us (\u0060ConcurrentDictionary\u0060) during heavy multithreading doesn\u0027t really need a discussion - but for that result I\u0027ve used the \u0060ConcurrentDictionary\u0060 different.\r\n\r\nAnyway these are my tests results when comparing different thread-safe dictionary access methods using max. 8 threads:\r\n\r\n| Method                               | Mean      | Error     | StdDev    | Allocated |\r\n|------------------------------------- |----------:|----------:|----------:|----------:|\r\n| Dictionary                           |  2.959 ms | 0.0086 ms | 0.0076 ms |   4.03 KB |\r\n| ConcurrentDictionary                 | 15.351 ms | 0.2132 ms | 0.1994 ms |   4.74 KB |\r\n| ConcurrentLockDictionary             |  2.954 ms | 0.0322 ms | 0.0301 ms |   4.05 KB |\r\n| DictionaryManyItems                  | 20.729 ms | 0.1421 ms | 0.1329 ms |    3.8 KB |\r\n| ConcurrentDictionaryManyItems        | 10.981 ms | 0.0424 ms | 0.0376 ms |   3.73 KB |\r\n| ConcurrentLockDictionaryManyItems    | 23.529 ms | 0.3235 ms | 0.3026 ms |   3.81 KB |\r\n| DictionaryManyItemsRnd               | 53.207 ms | 1.0308 ms | 1.6048 ms |      4 KB |\r\n| ConcurrentDictionaryManyItemsRnd     | 14.295 ms | 0.0320 ms | 0.0299 ms |   3.87 KB |\r\n| ConcurrentLockDictionaryManyItemsRnd | 55.961 ms | 1.1031 ms | 1.8731 ms |   3.98 KB |\r\n\r\n\u0060Dictionary\u0060 is being used with a simple lock just as you do. \u0060ConcurrentDictionary\u0060 is the .NET implementation using \u0060AddOrUpdate\u0060, and finally \u0060ConcurrentLockDictionary\u0060 is my implementation of the \u0060ConcurrentDictionary\u0060 interface using an underlying \u0060Dictionary\u0060 with \u0060lock\u0060. The first 3 tests only work with a single item, while the \u0060ManyItems\u0060 tests contain \u0060ushort.MaxValue \u003C\u003C 3\u0060 items, which are being updated sequential using \u0060Parallel.For\u0060. The tests ending with \u0060ManyItemsRnd\u0060 use random access. The \u0060ManyItems*\u0060 tests are where the \u0060ConcurrentDictionary\u0060 can gain most points because of its data and access locking management.\r\n\r\nHowever, it depends on the \u0060ConcurrentDictionary\u0060 usage, if it has advantages or not. But anyway, a \u0060ConcurrentDictionary\u0060 uses way more memory than a \u0060Dictionary\u0060 does (which is not visible in the test results \u0027cause I use static instances).\r\n\r\nBtw. find my tests [here](https://github.com/WAN-Solutions/wan24-Core/blob/dev/src/Wan24-Core%20Benchmark%20Tests/Concurrent_Tests.cs), if you want.\r\n\r\nWhen it\u0027s only about a few items, \u0060Dictionary\u0060 with \u0060lock\u0060 should be fine - otherwise \u0060ConcurrentDictionary\u0060 may outperform.",
+        "createdAt": "2024-11-06T15:06:54",
+        "reactions": []
+      },
+      {
+        "id": 2468114851,
+        "author": "mattleibow",
+        "body": "/azp run",
+        "createdAt": "2024-11-11T12:55:05",
+        "reactions": []
+      },
+      {
+        "id": 2468115065,
+        "author": "azure-pipelines[bot]",
+        "body": "\u003Csamp\u003E\nAzure Pipelines could not run because the pipeline triggers exclude this branch/path.\u003Cbr\u003E\r\n\n\u003C/samp\u003E",
+        "createdAt": "2024-11-11T12:55:12",
+        "reactions": []
+      }
+    ]
+  }
 }

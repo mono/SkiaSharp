@@ -19,5 +19,39 @@
   "updatedAt": "2024-12-11T23:50:20",
   "closedAt": "2024-05-13T17:21:52",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:31:11.9377172Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2108091337,
+        "author": "swharden",
+        "body": "Hi @WheelerAustin, I recently ran into the same issue. Were you able to reach a solution?",
+        "createdAt": "2024-05-13T15:57:11",
+        "reactions": []
+      },
+      {
+        "id": 2108319737,
+        "author": "WheelerAustin",
+        "body": "I did find a solution. I don\u0027t believe this is actually a bug as \u0060\u0060\u0060SkiaSharp.NativeAssets.Linux.NoDependencies\u0060\u0060\u0060 is supposed to work this way. Its just not very obvious. \r\n\r\nBasically when you use \u0060\u0060\u0060SKCanvas.DrawText()\u0060\u0060\u0060 on a windows computer, the font defaults to the system font. When running on AWS lambda there is no default system font and no exception is thrown telling you this. The best path forward in my position was to simply embed a font into my project and have full control of the fonts in the jpeg.\r\n\r\nIts really not too hard.\r\n1. Just find a font file (.TTF) you want. I stole mine from my windows OS \u0060\u0060\u0060C:\\Windows\\Fonts\u0060\u0060\u0060 by coping the Consolas files and pasting into a folder I made in my project named \u0027Fonts\u0027.\r\n2. Change the build action on the files to \u0060\u0060\u0060Embedded resource\u0060\u0060\u0060. They should show up in the csproj file like so: \r\n\u0060\u0060\u0060\r\n\u003CItemGroup\u003E\r\n  \u003CEmbeddedResource Include=\u0022Fonts\\CONSOLA.TTF\u0022 /\u003E\r\n  \u003CEmbeddedResource Include=\u0022Fonts\\CONSOLAB.TTF\u0022 /\u003E\r\n  \u003CEmbeddedResource Include=\u0022Fonts\\CONSOLAI.TTF\u0022 /\u003E\r\n  \u003CEmbeddedResource Include=\u0022Fonts\\CONSOLAZ.TTF\u0022 /\u003E\r\n\u003C/ItemGroup\u003E\r\n\u0060\u0060\u0060\r\n3. Using a stream, pick the files out of your project and add them as the typeface for your \u0060\u0060\u0060SKPaint\u0060\u0060\u0060\r\n\u0060\u0060\u0060\r\nusing Stream consolaStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(\u0022{YourProjectName}.Fonts.CONSOLA.TTF\u0022)!;\r\nSKTypeface font = SKTypeface.FromStream(consolaStream);\r\n\r\nusing SKPaint textPaint = new()\r\n{\r\n    Typeface = font,\r\n    Color = SKColors.Black,\r\n    TextSize = 24,\r\n    IsAntialias = true\r\n};\r\n\u0060\u0060\u0060\r\n4. Make sure to use that paint when in your \u0060\u0060\u0060SKCanvas.DrawText(\u0022myText\u0022, myPoint,  myPaintWithConsolasTypeface);\u0060\u0060\u0060\r\n\r\nHopefully this helps!",
+        "createdAt": "2024-05-13T17:21:52",
+        "reactions": []
+      },
+      {
+        "id": 2109045907,
+        "author": "swharden",
+        "body": "Hi @WheelerAustin, thank you for this detailed response! \r\n\r\n\u003E When running on AWS lambda there is no default system font and no exception is thrown telling you this. The best path forward in my position was to simply embed a font into my project and have full control of the fonts in the jpeg.\r\n\r\nMakes sense! Your code examples really help too. \r\n\r\nConnecting some dots, I followed-up here because it seemed to be the same issue described in https://github.com/ScottPlot/ScottPlot/discussions/3825, and your response saved the day.\r\n\r\nWhen I see strangers on the internet working together to create technical solutions for complex problems like this, it reminds me how awesome the open source community really is! \uD83D\uDE80 \uD83D\uDE80 \uD83D\uDE80 Thanks again",
+        "createdAt": "2024-05-14T00:22:38",
+        "reactions": []
+      },
+      {
+        "id": 2537435791,
+        "author": "lloydjatkinson",
+        "body": "This is a terrible default... I don\u0027t see this documented anywhere.",
+        "createdAt": "2024-12-11T23:50:18",
+        "reactions": []
+      }
+    ]
+  }
 }

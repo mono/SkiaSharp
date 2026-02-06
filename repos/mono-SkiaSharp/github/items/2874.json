@@ -18,5 +18,77 @@
   "createdAt": "2024-05-30T07:12:35",
   "updatedAt": "2025-01-20T10:35:53",
   "commentCount": 7,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:30:37.1004955Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2146710144,
+        "author": "MichaelLogutov",
+        "body": "Is there any way I can diagnose that kind of problems and maybe direct bug to skia?",
+        "createdAt": "2024-06-04T06:26:55",
+        "reactions": [
+          {
+            "user": "lindexi",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:35.9145392Z"
+          }
+        ]
+      },
+      {
+        "id": 2147397844,
+        "author": "mattleibow",
+        "body": "Skia is pretty secretive about the errors, but maybe you can try reading the file and properties using \u0060SKCodec\u0060. If that reads, then try reading the pixel data and see if it fails.\r\n\r\nAlso, is it possible to attach the image in a zip file? GitHub process images and usually changes metadata which may be important.\r\n\r\nCan you also try SKImage? I wonder if there is something bad with bitmap.",
+        "createdAt": "2024-06-04T12:20:36",
+        "reactions": []
+      },
+      {
+        "id": 2149171368,
+        "author": "MichaelLogutov",
+        "body": "Tried with SKCodec with this:\r\n\u0060\u0060\u0060\r\nusing var codec = SKCodec.Create(@\u0022c:\\Temp\\temp.png\u0022);\r\nif (codec is null)\r\n    Console.WriteLine(\u0022Failed to get codec for image\u0022);\r\nelse\r\n    Console.WriteLine(\u0022GetPixels = {0}\u0022, codec.GetPixels(out _));\r\n\u0060\u0060\u0060\r\n\r\nResult:\r\n\u0060\u0060\u0060\r\nGetPixels = ErrorInInput\r\n\u0060\u0060\u0060\r\n\r\nHere is image in zip: [temp.zip](https://github.com/user-attachments/files/15580112/temp.zip)\r\n\r\n\r\n\r\n\u003E Can you also try SKImage? I wonder if there is something bad with bitmap.\r\n\r\nYou mean \u0060SKImage.FromBitmap\u0060 ?\r\n",
+        "createdAt": "2024-06-05T08:15:02",
+        "reactions": []
+      },
+      {
+        "id": 2188729874,
+        "author": "JimBobSquarePants",
+        "body": "The PNG above contains a CRC mismatch in the IEND chunk. Does Skia expose options for determining whether validation is required? ",
+        "createdAt": "2024-06-25T11:48:34",
+        "reactions": []
+      },
+      {
+        "id": 2194111002,
+        "author": "MichaelLogutov",
+        "body": "@JimBobSquarePants good question. It seems that skia in chrome browser somehow ignores CRC mismatch, so maybe there is a way.\r\n\r\nBtw, how did you managed to find about CRC mismatch?",
+        "createdAt": "2024-06-27T08:35:25",
+        "reactions": []
+      },
+      {
+        "id": 2196126771,
+        "author": "JimBobSquarePants",
+        "body": "\u003EBtw, how did you managed to find about CRC mismatch?\r\n\r\nI used ImageSharp \uD83D\uDE09 ",
+        "createdAt": "2024-06-28T04:40:01",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:30:36.872Z"
+          },
+          {
+            "user": "MichaelLogutov",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:30:36.8720004Z"
+          }
+        ]
+      },
+      {
+        "id": 2602046256,
+        "author": "MichaelLogutov",
+        "body": "Hello again. We\u0027re still experiencing this issue. Maybe there is there a way to force SkiaSharp to ignore CRC mismatch?",
+        "createdAt": "2025-01-20T10:35:51",
+        "reactions": []
+      }
+    ]
+  }
 }

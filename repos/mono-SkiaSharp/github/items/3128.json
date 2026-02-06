@@ -18,5 +18,24 @@
   "createdAt": "2024-12-21T20:18:56",
   "updatedAt": "2024-12-22T12:15:09",
   "commentCount": 1,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:30:58.6764257Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 2558435807,
+        "author": "jasminjasmin2",
+        "body": "After further investigation, it seems it is related to text align not getting properly initialized in the latest version of library. Explicitly setting the TextAlign in SKPaint did not help either. There are some TODO comments in SKCanvas.cs (e.g. below).   Will you address that TODO somehow in the future versions? \r\n \r\n\t\tpublic void DrawText (string text, SKPoint p, SKFont font, SKPaint paint) =\u003E\r\n#pragma warning disable CS0618 // Type or member is obsolete (TODO: replace paint.TextAlign with SKTextAlign.Left)\r\n\t\t\tDrawText (text, p, paint.TextAlign, font, paint);\r\n#pragma warning restore CS0618 // Type or member is obsolete",
+        "createdAt": "2024-12-22T12:15:07",
+        "reactions": [
+          {
+            "user": "raloverafsph",
+            "content": "eyes",
+            "createdAt": "2026-02-06T13:30:58.6261544Z"
+          }
+        ]
+      }
+    ]
+  }
 }

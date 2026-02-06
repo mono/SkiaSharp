@@ -25,5 +25,115 @@
   "deletions": 266,
   "changedFiles": 30,
   "commits": 1,
-  "reviews": []
+  "reviews": [],
+  "engagement": {
+    "syncedAt": "2026-02-06T13:32:16.7846741Z",
+    "reactions": [
+      {
+        "user": "gmurray81",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:32:16.7846792Z"
+      },
+      {
+        "user": "nor0x",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:32:16.7846798Z"
+      },
+      {
+        "user": "taublast",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:32:16.7846801Z"
+      },
+      {
+        "user": "r2d2Proton",
+        "content": "\u002B1",
+        "createdAt": "2026-02-06T13:32:16.7846804Z"
+      }
+    ],
+    "comments": [
+      {
+        "id": 1773770348,
+        "author": "marcojak",
+        "body": "Hi Matthew, are there any plans to have a common hw accelerated view for a MAUI app for Android, iOS, Windows and Mac?\r\n\r\nIf not possible, how could I use an hw accelerated view on Windows? (and maybe a new one for Mac)?",
+        "createdAt": "2023-10-21T12:05:25",
+        "reactions": []
+      },
+      {
+        "id": 1774511003,
+        "author": "TopperDEL",
+        "body": "@marcojak This issue might be related for you: https://github.com/mono/SkiaSharp/issues/1893",
+        "createdAt": "2023-10-23T06:25:42",
+        "reactions": []
+      },
+      {
+        "id": 1803817724,
+        "author": "r2d2Proton",
+        "body": "Definitely would like this to work on all the platforms being targeted. Windows, Mac, etc. ",
+        "createdAt": "2023-11-09T13:19:03",
+        "reactions": []
+      },
+      {
+        "id": 1837550514,
+        "author": "bogdan799",
+        "body": "@mattleibow I\u0027ve sort of tested implementation of SKGLView on ios and android. I needed metal on iOS, so I\u0027ve just replaced native view for SKGLViewHandler.iOS and seem to be fine, could be considered while implementing universal HW accelerated view. All seems to be much smoother than CPU rendering for my usecase, thank you for the solution.\r\n\r\nHowever I\u0027ve noticed following issue on android: \r\n\r\nHere when setting \u0060Rendermode\u0060 to \u0060RenderMode.WhenDirty\u0060, repaint doesn\u0027t happen althouth I\u0027m invalidating view many times:\r\n\r\nSKGLViewHandler.Android.cs\r\n\u0060\u0060\u0060c#\r\npublic static void MapHasRenderLoop(SKGLViewHandler handler, ISKGLView view)\r\n{\r\n\thandler.PlatformView.RenderMode = view.HasRenderLoop\r\n\t\t? Rendermode.Continuously\r\n\t\t: Rendermode.WhenDirty;\r\n}\r\n\u0060\u0060\u0060\r\n\r\nI checked following handler function, and seems you\u0027re using wrong method here:\r\n\r\n\u0060\u0060\u0060c#\r\n// Mapper actions / properties\r\n\r\npublic static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)\r\n{\r\n\thandler.PlatformView?.Invalidate();\r\n}\r\n\u0060\u0060\u0060\r\n\r\nAccording to MSDN:\r\n\r\nContinuously | 1 | The renderer is called continuously to re-render the scene.\r\n-- | -- | --\r\nWhenDirty | 0 | The renderer only renders when the surface is created, or when\u00A0RequestRender() is called.\r\n\r\nHere\u0027s the change I\u0027ve applied according to MSDN and it seem to work fine:\r\n\r\n\u0060\u0060\u0060c#\r\npublic static void OnInvalidateSurface(SKGLViewHandler handler, ISKGLView view, object? args)\r\n{\r\n\thandler.PlatformView?.RequestRender();\r\n}\r\n\u0060\u0060\u0060\r\n\r\n",
+        "createdAt": "2023-12-03T17:50:00",
+        "reactions": [
+          {
+            "user": "mattleibow",
+            "content": "heart",
+            "createdAt": "2026-02-06T13:32:15.0317615Z"
+          }
+        ]
+      },
+      {
+        "id": 1925407718,
+        "author": "mattleibow",
+        "body": "Thanks @bogdan799! Your findings helped.",
+        "createdAt": "2024-02-03T17:32:22",
+        "reactions": []
+      },
+      {
+        "id": 1928951716,
+        "author": "levinli303",
+        "body": "Mac Catalyst has [CAOpenGLLayer](https://developer.apple.com/documentation/quartzcore/caopengllayer). You can have a UIView backed by CAOpenGLLayer and render OpenGL in the layer so that you don\u0027t have to mess with Metal.",
+        "createdAt": "2024-02-06T07:49:21",
+        "reactions": []
+      },
+      {
+        "id": 1930140939,
+        "author": "mattleibow",
+        "body": "I am not sure if it is exposed in the .NET bindings. They left out all the deprecated APIs for Mac Catalyst :(",
+        "createdAt": "2024-02-06T16:03:58",
+        "reactions": []
+      },
+      {
+        "id": 2113663063,
+        "author": "ToolmakerSteve",
+        "body": "@mattleibow I am getting the exception \u0022Handler not found for view SkiaSharp.Views.Maui.Controls.SKGLView.\u0022 in a fresh .Net Maui App project, targetting **\u0022Windows Machine\u0022**, with an SKGLView added. \r\n\r\nThe exception occurs at run time. Commenting out the SKGLView line, the app runs w/o error.\r\n\r\n----------------------------------\r\nAdded these two lines in appropriate places in MainPage.xaml:\r\n\u0060xmlns:sk=\u0022clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls\u0022\u0060\r\n\r\n\u0060\u003Csk:SKGLView WidthRequest=\u0022500\u0022 HeightRequest=\u0022300\u0022 BackgroundColor=\u0022Green\u0022 /\u003E\u0060\r\n\r\n----------------------------------\r\nOr alternatively adding in code behind after a delay:\r\n\u0060\u0060\u0060\r\n        public MainPage()\r\n        {\r\n            InitializeComponent();\r\n\r\n            MainThread.BeginInvokeOnMainThread(async () =\u003E\r\n            {\r\n                await Task.Delay(2000);\r\n                var skv = new SKGLView() { WidthRequest = 300, HeightRequest = 300 };\r\n                layout.Children.Add(skv);   // \u0022Handler not found...\u0022 EXCEPTION HERE\r\n            });\r\n        }\r\n\u0060\u0060\u0060\r\n\r\n----------------------------------\r\n-- Other details --\r\n\r\n.csproj targetframework: **net8.0-windows10.0.19041.0**\r\n\r\nVS Community 17.9.7 on Windows 11 Home\r\n\r\nTested with Microsoft.Maui.Controls 8.0.40 \u002B \r\n\r\n SkiaSharp.Views \u0026 SkiaSharp.Views.Maui Controls:\r\n* latest stable 2.88.8, then tried\r\n* latest preview 3.0.0-preview.3.1\r\n\r\n----------------------------------\r\n\r\nIs this expected to work in Maui 8, or do I need a preview version of .Net Maui 9?\r\n\r\nShould I create a new issue and/or upload a sample project?\r\n",
+        "createdAt": "2024-05-15T23:50:06",
+        "reactions": []
+      },
+      {
+        "id": 2113909732,
+        "author": "mattleibow",
+        "body": "Please open a new issue with a repro sample. GL should be working.\n\n",
+        "createdAt": "2024-05-16T02:42:12",
+        "reactions": []
+      },
+      {
+        "id": 2116260840,
+        "author": "ToolmakerSteve",
+        "body": "https://github.com/mono/SkiaSharp/issues/2860",
+        "createdAt": "2024-05-16T21:51:23",
+        "reactions": []
+      },
+      {
+        "id": 2492873713,
+        "author": "ToolmakerSteve",
+        "body": "@mattleibow - is there a plan to backport #2598 (Maui SKGLView fix) on Windows to 2.88.x?\r\n\r\nUpdating my client from .Net Framework 4.5 to .Net 8.\r\n\r\nWe\u0027ve successfully updated on iOS and Android.  \r\n(WITHOUT Maui; these are \u0022platform native\u0022 .Net 8 apps, with GUI rendered via SkiaSharp. Plus some OpenGL.)\r\n\r\nOn Windows .Net 8, SkiaSharp 2.88.8 or .9, we\u0027ve got everything EXCEPT OpenGL working. Using Maui SKCanvasView.\r\n\r\nI made a new Maui app. Added SkiaSharp 2.88.9. Remembered to do \u0022UseSkiaSharp()\u0022. Still get \u0022Handler not found for view SkiaSharp.Views.Maui.Controls.SKGLView.\u0022.\r\n\r\nUpdating to SkiaSharp 3.118.0.0 preview, it works.  BUT this app is used in a production situation where failures must be very rare. So I can\u0027t use anything that isn\u0027t considered a stable release.\r\n",
+        "createdAt": "2024-11-22T04:54:44",
+        "reactions": []
+      }
+    ]
+  }
 }

@@ -14,5 +14,50 @@
   "updatedAt": "2024-10-30T12:58:05",
   "closedAt": "2024-10-30T12:58:04",
   "commentCount": 4,
-  "reactionCount": 0
+  "reactionCount": 0,
+  "engagement": {
+    "syncedAt": "2026-02-06T13:32:55.4402804Z",
+    "reactions": [],
+    "comments": [
+      {
+        "id": 402283362,
+        "author": "scastria",
+        "body": "Any update on this?",
+        "createdAt": "2018-07-03T20:30:30",
+        "reactions": [
+          {
+            "user": "entdark",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:32:54.7930803Z"
+          },
+          {
+            "user": "Happypig375",
+            "content": "\u002B1",
+            "createdAt": "2026-02-06T13:32:54.7930809Z"
+          }
+        ]
+      },
+      {
+        "id": 414109088,
+        "author": "scastria",
+        "body": "Anybody I can pay to have this fixed?",
+        "createdAt": "2018-08-19T07:23:58",
+        "reactions": []
+      },
+      {
+        "id": 415108822,
+        "author": "scastria",
+        "body": "I was finally able to understand what was going on.  For some reason on the UWP platform, the Animation commit which does an InvalidateSurface causes 2 calls to the paint canvas method.  My code was not expecting that which revealed a bug in my code where I forgot to set a matrix back to Identity.  I have since fixed and updated that in the GitHub repo mentioned above.  So there may not be a bug in SkiaSharp on UWP, but perhaps in the Xamarin.Forms animation engine??\r\n\r\nIn any case, someone needs to investigate why on UWP, the animation commit call to InvalidateSurface causes 2 calls to the paint canvas method.",
+        "createdAt": "2018-08-22T17:15:44",
+        "reactions": []
+      },
+      {
+        "id": 2447064796,
+        "author": "mattleibow",
+        "body": "Closing this issue as this was a Xamarin.Forms bug.",
+        "createdAt": "2024-10-30T12:58:04",
+        "reactions": []
+      }
+    ]
+  }
 }
